@@ -520,10 +520,14 @@ class TableApplyZoom(_BaseTableApplyTool):
     _state_attr = '_table_zoom_original_selection_enabled'
 
     def on_apply(self, selected_rows):
+        from astropy.coordinates import SkyCoord
+        from astropy import units as u
+
         padding = 0.02
 
         ras = self.viewer.layers[0].layer.get_component('Right Ascension').data[selected_rows]
         decs = self.viewer.layers[0].layer.get_component('Declination').data[selected_rows]
+        skycoords = SkyCoord(ra=ras * u.deg, dec=decs * u.deg)
 
         # Get the selected viewer IDs from the custom widget
         selected_viewer_ids = []
@@ -537,32 +541,57 @@ class TableApplyZoom(_BaseTableApplyTool):
 
             i_top = get_top_layer_index(viewer)
             image = viewer.layers[i_top].layer
-            x_min = 99999
-            x_max = -99999
-            y_min = 99999
-            y_max = -99999
 
-            # map RA, Dec onto axes coordinates
-            xs, ys = viewer.state.reference_data.coords.world_to_pixel_values(ras, decs)
-            x_min, x_max = np.nanmin(xs), np.nanmax(xs)
-            y_min, y_max = np.nanmin(ys), np.nanmax(ys)
+            # Get pixel coordinates in reference data frame
+            pixel_coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+            ref_xs, ref_ys = pixel_coords[0], pixel_coords[1]
 
-            pix_pad = padding * max(x_max, y_max)
+            # Transform reference data pixels to image coordinates (for centering)
+            x_min = np.inf
+            x_max = -np.inf
+            y_min = np.inf
+            y_max = -np.inf
+            for ref_x, ref_y in zip(np.atleast_1d(ref_xs), np.atleast_1d(ref_ys)):
+                cur_x, cur_y = viewer._get_real_xy(image, float(ref_x), float(ref_y))[:2]
+                if cur_x < x_min:
+                    x_min = cur_x
+                if cur_x > x_max:
+                    x_max = cur_x
+                if cur_y < y_min:
+                    y_min = cur_y
+                if cur_y > y_max:
+                    y_max = cur_y
+
+            # Handle single point case - use a fixed pixel padding
+            if x_min == x_max and y_min == y_max:
+                pix_pad = 50  # Fixed padding for single point
+            else:
+                # Use 20% padding of the larger dimension, with a minimum of 20 pixels
+                pix_pad = max(20, 0.2 * max(x_max - x_min, y_max - y_min))
+
             x_min -= pix_pad
             x_max += pix_pad
             y_min -= pix_pad
             y_max += pix_pad
 
-            # First, we center using image's coordinates.
-            viewer.center_on((0.5 * (x_min + x_max), 0.5 * (y_min + y_max)))
+            # Convert all bounds to reference data coordinates
+            new_x_min = viewer._get_real_xy(image, x_min, y_min, reverse=True)[0]
+            new_x_max = viewer._get_real_xy(image, x_max, y_max, reverse=True)[0]
+            new_y_min = viewer._get_real_xy(image, x_min, y_min, reverse=True)[1]
+            new_y_max = viewer._get_real_xy(image, x_max, y_max, reverse=True)[1]
 
-            # Then, we zoom using reference data's coordinates. This is important when WCS linked.
-            # We cannot use viewer.zoom_level because it is wonky when WCS linked.
-            # Given most displays are wider in X, we make sure Y coordinates all fit first
-            # and X will naturally all fit within after aspect ratio is taken into account.
+            # Ensure min < max (WCS can flip coordinates)
+            if new_x_min > new_x_max:
+                new_x_min, new_x_max = new_x_max, new_x_min
+            if new_y_min > new_y_max:
+                new_y_min, new_y_max = new_y_max, new_y_min
+
+            # Set all limits explicitly, then adjust aspect ratio
             with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                viewer.state.y_min = y_min
-                viewer.state.y_max = y_max
+                viewer.state.x_min = new_x_min
+                viewer.state.x_max = new_x_max
+                viewer.state.y_min = new_y_min
+                viewer.state.y_max = new_y_max
             viewer.state._adjust_limits_aspect()
 
     def is_visible(self):
