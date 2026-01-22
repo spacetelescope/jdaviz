@@ -359,23 +359,72 @@ class ViewerClone(Tool):
                                                      'rampviz']
 
 
+class _BaseTableSelectionTool(Tool):
+    """
+    Base class for table tools that enable row selection checkboxes and swap the toolbar.
+
+    Subclasses should define:
+    - icon, tool_id, action_text, tool_tip (as usual for tools)
+    - override_tools: list of tool IDs to show in the custom toolbar
+    - override_title: title for the custom toolbar
+    - _state_attr: attribute name on viewer to store original selection_enabled state
+    """
+    override_tools = []  # define in subclass
+    override_title = ''  # define in subclass
+    _state_attr = '_table_selection_original_enabled'  # define in subclass
+
+    def activate(self):
+        # Store original state on the viewer and show checkboxes
+        if not hasattr(self.viewer, self._state_attr):
+            setattr(self.viewer, self._state_attr, self.viewer.widget_table.selection_enabled)
+        self.viewer.widget_table.selection_enabled = True
+
+        # Override toolbar to show custom tools
+        self.viewer.toolbar.override_tools(self.override_tools, self.override_title)
+
+
+class _BaseTableApplyTool(Tool):
+    """
+    Base class for table tools that apply an action and restore the toolbar.
+
+    Subclasses should define:
+    - icon, tool_id, action_text, tool_tip (as usual for tools)
+    - _state_attr: attribute name on viewer where original selection_enabled state is stored
+    - on_apply(selected_rows): method to perform the action (only called if rows are selected)
+    """
+    _state_attr = '_table_selection_original_enabled'  # define in subclass
+
+    def on_apply(self, selected_rows):
+        """Override in subclass to perform the action with the selected rows."""
+        pass
+
+    def activate(self):
+        selected_rows = self.viewer.widget_table.checked
+
+        if len(selected_rows):
+            self.on_apply(selected_rows)
+
+        # Restore original state before restoring toolbar
+        if hasattr(self.viewer, self._state_attr):
+            self.viewer.widget_table.selection_enabled = getattr(self.viewer, self._state_attr)
+            delattr(self.viewer, self._state_attr)
+        else:
+            self.viewer.widget_table.selection_enabled = False
+        # Clear checked rows after applying
+        self.viewer.widget_table.checked = []
+        # Restore toolbar
+        self.viewer.toolbar.restore_tools(all_viewers=False)
+
+
 @viewer_tool
-class TableSubset(Tool):
+class TableSubset(_BaseTableSelectionTool):
     icon = os.path.join(ICON_DIR, 'table_subset.svg')
     tool_id = 'jdaviz:table_subset'
     action_text = 'Create subset from table selection'
     tool_tip = 'Enable row selection mode to create a subset from table rows'
-
-    def activate(self):
-        # Store original state on the viewer and show checkboxes
-        if not hasattr(self.viewer, '_table_subset_original_selection_enabled'):
-            self.viewer._table_subset_original_selection_enabled = self.viewer.widget_table.selection_enabled  # noqa
-        self.viewer.widget_table.selection_enabled = True
-
-        self.viewer.toolbar.override_tools(
-            ['jdaviz:table_apply_subset'],
-            'Table Subset Selection'
-        )
+    override_tools = ['jdaviz:table_apply_subset']
+    override_title = 'Table Subset Selection'
+    _state_attr = '_table_subset_original_selection_enabled'
 
     def is_visible(self):
         if self.viewer.jdaviz_app.config != 'deconfigged':
@@ -386,25 +435,15 @@ class TableSubset(Tool):
 
 
 @viewer_tool
-class TableApplySubset(Tool):
+class TableApplySubset(_BaseTableApplyTool):
     icon = os.path.join(ICON_DIR, 'check.svg')
     tool_id = 'jdaviz:table_apply_subset'
     action_text = 'Apply subset'
     tool_tip = 'Create a subset from the currently checked table rows'
+    _state_attr = '_table_subset_original_selection_enabled'
 
-    def activate(self):
-        if len(self.viewer.widget_table.checked):
-            self.viewer.apply_filter()
-        # Restore original state before restoring toolbar
-        if hasattr(self.viewer, '_table_subset_original_selection_enabled'):
-            self.viewer.widget_table.selection_enabled = self.viewer._table_subset_original_selection_enabled  # noqa
-            del self.viewer._table_subset_original_selection_enabled
-        else:
-            self.viewer.widget_table.selection_enabled = False
-        # Clear checked rows after applying
-        self.viewer.widget_table.checked = []
-        # Restore toolbar
-        self.viewer.toolbar.restore_tools(all_viewers=False)
+    def on_apply(self, selected_rows):
+        self.viewer.apply_filter()
 
     def is_visible(self):
         if self.viewer.jdaviz_app.config != 'deconfigged':
@@ -415,18 +454,36 @@ class TableApplySubset(Tool):
 
 
 @viewer_tool
-class TableZoomToSelected(Tool):
+class TableZoomToSelected(_BaseTableSelectionTool):
     icon = os.path.join(ICON_DIR, 'table_zoom_to_selected.svg')
     tool_id = 'jdaviz:table_zoom_to_selected'
     action_text = 'Zoom to selected'
-    tool_tip = 'Zoom all applicable viewers to the selected entries in the table'
+    tool_tip = 'Enable row selection mode to zoom all applicable viewers to checked entries'
+    override_tools = ['jdaviz:table_apply_zoom']
+    override_title = 'Table Zoom Selection'
+    _state_attr = '_table_zoom_original_selection_enabled'
 
-    def activate(self):
-        selected_rows = self.viewer.widget_table.checked
+    def is_visible(self):
+        if not self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
+                                                     'cubeviz', 'mosviz',
+                                                     'rampviz']:
+            return False
+        if not len(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView')):
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
 
-        if not len(selected_rows):
-            return
 
+@viewer_tool
+class TableApplyZoom(_BaseTableApplyTool):
+    icon = os.path.join(ICON_DIR, 'check.svg')
+    tool_id = 'jdaviz:table_apply_zoom'
+    action_text = 'Apply zoom'
+    tool_tip = 'Zoom all applicable viewers to the currently checked table rows'
+    _state_attr = '_table_zoom_original_selection_enabled'
+
+    def on_apply(self, selected_rows):
         padding = 0.02
 
         ras = self.viewer.layers[0].layer.get_component('Right Ascension').data[selected_rows]
