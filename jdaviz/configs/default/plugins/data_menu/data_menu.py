@@ -285,6 +285,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
         if layers is None:
             return
+        if not isinstance(self._viewer, BqplotImageView):
+            # then not an image viewer that supports WCS linking anyways
+            return
 
         hiding_due_to_pixel_sky_mismatch = []
         coord_type = None

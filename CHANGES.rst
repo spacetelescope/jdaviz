@@ -10,6 +10,8 @@ New Features
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
 
+- Astroquery loader supports cone-search for JWST or HST data products, where applicable. [#3907]
+
 Cubeviz
 ^^^^^^^
 
@@ -80,6 +82,8 @@ Bug Fixes
   into a new viewer. [#3976]
 
 - Fixed a traceback when zooming 2D spectra in deconfigged. [#3981]
+
+- Fixed filedrop bug where parsers were unable to detect file formats. [#3986]
 
 Cubeviz
 ^^^^^^^
