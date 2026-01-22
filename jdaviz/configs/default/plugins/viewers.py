@@ -556,6 +556,7 @@ class JdavizViewerWindow(TemplateMixin):
     figure_widget = Unicode().tag(sync=True)
     toolbar_widget = Unicode().tag(sync=True)
     data_menu_widget = Unicode().tag(sync=True)
+    tool_override_mode = Unicode("").tag(sync=True)
 
     viewer_destroyed = Bool(False).tag(sync=True)
 
@@ -572,7 +573,15 @@ class JdavizViewerWindow(TemplateMixin):
         self.toolbar_widget = "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else ''
         self.data_menu_widget = 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else ''  # noqa
 
+        # Link tool_override_mode from toolbar
+        if viewer.toolbar:
+            self.tool_override_mode = viewer.toolbar.tool_override_mode
+            viewer.toolbar.observe(self._on_toolbar_override_change, names=['tool_override_mode'])
+
         self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
+
+    def _on_toolbar_override_change(self, change):
+        self.tool_override_mode = change['new']
 
     @property
     def user_api(self):

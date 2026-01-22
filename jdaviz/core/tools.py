@@ -373,6 +373,13 @@ class _BaseTableSelectionTool(Tool):
     override_title = ''  # define in subclass
     _state_attr = '_table_selection_original_enabled'  # define in subclass
 
+    def get_custom_widgets(self):
+        """
+        Override in subclass to return list of custom widget dicts for the toolbar.
+        Each dict should have: 'label', 'items' (list of {'label', 'value'}), 'selected', 'multiselect'
+        """
+        return None
+
     def activate(self):
         # Store original state on the viewer and show checkboxes
         if not hasattr(self.viewer, self._state_attr):
@@ -380,7 +387,11 @@ class _BaseTableSelectionTool(Tool):
         self.viewer.widget_table.selection_enabled = True
 
         # Override toolbar to show custom tools
-        self.viewer.toolbar.override_tools(self.override_tools, self.override_title)
+        self.viewer.toolbar.override_tools(
+            self.override_tools,
+            self.override_title,
+            custom_widgets=self.get_custom_widgets()
+        )
 
 
 class _BaseTableApplyTool(Tool):
@@ -463,12 +474,37 @@ class TableZoomToSelected(_BaseTableSelectionTool):
     override_title = 'Table Zoom Selection'
     _state_attr = '_table_zoom_original_selection_enabled'
 
+    def _get_image_viewers(self):
+        """Get list of image viewers that can be zoomed."""
+        return list(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'))
+
+    def get_custom_widgets(self):
+        """Return viewer selector widget configuration."""
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
+            return None
+
+        # Build items list from available image viewers
+        items = [
+            {'label': v.reference_id, 'value': v.reference_id}
+            for v in image_viewers
+        ]
+        # Default to all viewers selected
+        selected = [v.reference_id for v in image_viewers]
+
+        return [{
+            'label': 'Viewers',
+            'items': items,
+            'selected': selected,
+            'multiselect': True
+        }]
+
     def is_visible(self):
         if not self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
                                                      'cubeviz', 'mosviz',
                                                      'rampviz']:
             return False
-        if not len(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView')):
+        if not len(self._get_image_viewers()):
             return False
         if not hasattr(self.viewer, 'widget_table'):
             return False
@@ -489,7 +525,16 @@ class TableApplyZoom(_BaseTableApplyTool):
         ras = self.viewer.layers[0].layer.get_component('Right Ascension').data[selected_rows]
         decs = self.viewer.layers[0].layer.get_component('Declination').data[selected_rows]
 
+        # Get the selected viewer IDs from the custom widget
+        selected_viewer_ids = []
+        if len(self.viewer.toolbar.custom_widget_selected) > 0:
+            selected_viewer_ids = self.viewer.toolbar.custom_widget_selected[0]
+
         for viewer in self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            # Skip viewers not in the selection (if selection exists)
+            if selected_viewer_ids and viewer.reference_id not in selected_viewer_ids:
+                continue
+
             i_top = get_top_layer_index(viewer)
             image = viewer.layers[i_top].layer
             x_min = 99999

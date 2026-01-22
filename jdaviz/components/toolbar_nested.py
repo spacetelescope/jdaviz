@@ -34,6 +34,10 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     suboptions_y = traitlets.Float().tag(sync=True)
     # string indicating the current tool override mode
     tool_override_mode = traitlets.Unicode("").tag(sync=True)
+    # list of custom widget items to display in the toolbar (list of dicts with 'label', 'value', 'items', 'multiselect')
+    custom_widget_items = traitlets.List([]).tag(sync=True)
+    # currently selected values in custom widgets (list of values, one per widget)
+    custom_widget_selected = traitlets.List([]).tag(sync=True)
 
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
@@ -61,7 +65,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             self.viewer.hub.subscribe(self, RestoreToolbarMessage,
                                       handler=lambda msg: self.restore_tools(all_viewers=False))
 
-    def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[]):
+    def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[],
+                        custom_widgets=None):
         """
         Rebuild the toolbar with passed values.
 
@@ -73,12 +78,23 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             String indicating the current tool override mode
         default_tool_priority : list, optional
             Priority list for default tool selection
+        custom_widgets : list, optional
+            List of dicts defining custom widgets to display. Each dict should have:
+            - 'label': tooltip/label for the widget
+            - 'items': list of dicts with 'label' and 'value' keys
+            - 'selected': initial selected value(s)
+            - 'multiselect': bool, whether to allow multi-select (default False)
         """
         # Store the override mode
         self.tool_override_mode = tool_override_mode
 
-        # Clear current toolbar
+        # Clear current toolbar (this also clears custom widgets)
         self._clear_toolbar()
+
+        # Set custom widgets AFTER clearing
+        if custom_widgets is not None:
+            self.custom_widget_items = custom_widgets
+            self.custom_widget_selected = [w.get('selected', []) for w in custom_widgets]
 
         # Rebuild toolbar with new configuration
         self._build_toolbar(tools_nested, default_tool_priority)
@@ -148,6 +164,9 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self.tools.clear()
         self.tools_data = {}
         self.active_tool_id = None
+        # Clear custom widgets
+        self.custom_widget_items = []
+        self.custom_widget_selected = []
 
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError
