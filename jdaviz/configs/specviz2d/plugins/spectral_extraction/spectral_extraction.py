@@ -538,7 +538,7 @@ class SpectralExtraction2D(PluginTemplateMixin):
             return
         if not len(self.trace_dataset.selected):
             return
-        
+
         trace_dataset = self.trace_dataset
 
         # If we encouter the case where the 2d spectrum being loaded
