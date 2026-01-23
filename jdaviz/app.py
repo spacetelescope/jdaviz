@@ -303,22 +303,6 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
-    # catalogs_in_dc PRs (include in changelog when removing the dev-flag):
-    # https://github.com/spacetelescope/jdaviz/pull/3761
-    # https://github.com/spacetelescope/jdaviz/pull/3777
-    # https://github.com/spacetelescope/jdaviz/pull/3778
-    # https://github.com/spacetelescope/jdaviz/pull/3799
-    # https://github.com/spacetelescope/jdaviz/pull/3814
-    # https://github.com/spacetelescope/jdaviz/pull/3835
-    # https://github.com/spacetelescope/jdaviz/pull/3854
-    # https://github.com/spacetelescope/jdaviz/pull/3856
-    # https://github.com/spacetelescope/jdaviz/pull/3863
-    # https://github.com/spacetelescope/jdaviz/pull/3867 - table viewer
-    # https://github.com/spacetelescope/jdaviz/pull/3930 - table viewer subset select
-    # https://github.com/spacetelescope/jdaviz/pull/3906 - SDSS/Gaia in astroquery resolver
-    # https://github.com/spacetelescope/jdaviz/pull/3912
-    # https://github.com/spacetelescope/jdaviz/pull/3899
-    # https://github.com/spacetelescope/jdaviz/pull/3907 - catalogs support for astroquery:JWST/HST
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(
