@@ -76,8 +76,6 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     (linking, mouseover) but it may be loaded to plot for example
     in the scatter or histrogram viewer.
     """
-    imviz_helper.app.state.catalogs_in_dc = True
-
     catalog_obj = _make_catalog_no_coordinates()
 
     # load data so we can test orientation later
@@ -107,9 +105,6 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     Test loading a catalog with string RA/Dec columns (that can be converted
     into units, e.g string representation of hourangle units) into the
     Imviz helper."""
-
-    imviz_helper.app.state.catalogs_in_dc = True
-
     catalog_obj = _make_catalog_string_coord_columns()
 
     # load catalog
@@ -147,9 +142,6 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
 @pytest.mark.parametrize("from_file", [True, False])
 @pytest.mark.parametrize("with_units", [True, False])
 def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units):
-
-    imviz_helper.app.state.catalogs_in_dc = True
-
     catalog_obj = _make_catalog_xy_radec(with_units=True)
 
     if from_file:
@@ -192,8 +184,6 @@ def test_import_enabled_disabled(imviz_helper):
     along with the same logic for X/Y) importing is disabled.
     """
 
-    imviz_helper.app.state.catalogs_in_dc = True
-
     catalog_obj = _make_catalog_xy_radec(with_units=True)
 
     loaders = imviz_helper.loaders
@@ -235,7 +225,6 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     Test cases cover both in-memory Astropy tables and ECSV files, and catalogs
     with and without units on RA/Dec columns already assigned.
     """
-    imviz_helper.app.state.catalogs_in_dc = True
 
     # basic catalog with RA, Dec, ID, and Flux columns and units
     catalog_obj = _make_catalog(with_units)
@@ -324,9 +313,6 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     """
     # test loading catalog with SkyCoord column, which should be used
     # as default for Ra and Dec
-
-    imviz_helper.app.state.catalogs_in_dc = True
-
     catalog_obj = _make_catalog(as_skycoord=True)
 
     if from_file:
@@ -357,8 +343,6 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
 
 @pytest.mark.remote_data
 def test_astroquery_load_catalog_source(deconfigged_helper):
-    deconfigged_helper.app.state.catalogs_in_dc = True
-
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = 'M4'
     ldr.telescope = 'Gaia'
@@ -377,7 +361,6 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
 
 @pytest.mark.remote_data
 def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
-    deconfigged_helper.app.state.catalogs_in_dc = True
     arr = np.ones((1489, 2048))
 
     # header is based on the data provided above
@@ -411,8 +394,6 @@ def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
 @pytest.mark.remote_data
 @pytest.mark.parametrize("telescope", ["JWST", "HST"])
 def test_astroquery_jwst_hst(deconfigged_helper, telescope):
-    deconfigged_helper.app.state.catalogs_in_dc = True
-
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = 'M4'
     ldr.telescope = telescope
@@ -431,9 +412,6 @@ def test_astroquery_jwst_hst(deconfigged_helper, telescope):
 
 
 def test_invalid(imviz_helper, tmp_path):
-
-    imviz_helper.app.state.catalogs_in_dc = True
-
     # make sure you can't load an empty table
     empty_table = Table()
 
@@ -459,8 +437,6 @@ def test_invalid(imviz_helper, tmp_path):
 
 
 def test_scatter_viewer(deconfigged_helper):
-    deconfigged_helper.app.state.catalogs_in_dc = True
-
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
     ldr.format = 'Catalog'
@@ -481,8 +457,6 @@ def test_scatter_viewer(deconfigged_helper):
 
 
 def test_histogram_viewer(deconfigged_helper):
-    deconfigged_helper.app.state.catalogs_in_dc = True
-
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
     ldr.format = 'Catalog'
@@ -511,8 +485,6 @@ def test_histogram_viewer(deconfigged_helper):
 
 
 def test_table_viewer(deconfigged_helper):
-    deconfigged_helper.app.state.catalogs_in_dc = True
-
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
     ldr.format = 'Catalog'
@@ -547,12 +519,10 @@ def test_table_viewer(deconfigged_helper):
 
 def test_catalog_visibility(imviz_helper, image_2d_wcs):
     """
-
-    # Verify that catalog visibility is toggled on/off correctly
-    # based on link type and presence of pixel and/or world coordinates
-    # in loaded catalog.
+    Verify that catalog visibility is toggled on/off correctly
+    based on link type and presence of pixel and/or world coordinates
+    in loaded catalog.
     """
-
     data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
     imviz_helper.load(data)
 
@@ -563,7 +533,6 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     # catalog with x, y only
     table_x_y_only = orig_catalog['X', 'Y', 'Obj_ID']
 
-    imviz_helper.app.state.catalogs_in_dc = True
     imviz_helper.load(table_ra_dec_only,
                       data_label='catalog0')
 

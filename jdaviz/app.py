@@ -319,8 +319,6 @@ class ApplicationState(State):
     # https://github.com/spacetelescope/jdaviz/pull/3912
     # https://github.com/spacetelescope/jdaviz/pull/3899
     # https://github.com/spacetelescope/jdaviz/pull/3907 - catalogs support for astroquery:JWST/HST
-    catalogs_in_dc = CallbackProperty(
-        False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(

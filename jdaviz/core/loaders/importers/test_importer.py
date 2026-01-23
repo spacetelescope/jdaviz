@@ -144,8 +144,6 @@ class TestResetAndCheckExistingDataInDC:
                       '2D Spectrum': spectrum2d,
                       'Catalog': sky_coord_only_source_catalog}
 
-        # TODO: Remove when this dev flag is no longer needed
-        deconfigged_helper.app.state.catalogs_in_dc = True
         for importer_name, importer in loader_importer_registry.members.items():
             if importer_name not in input_data:
                 continue

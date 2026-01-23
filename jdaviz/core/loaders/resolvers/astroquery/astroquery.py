@@ -25,25 +25,14 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # TODO: once removing the catalogs_in_dc dev-flag, just pass the full list to manual_options
         self.telescope = SelectPluginComponent(
             self, items="telescope_items", selected="telescope_selected",
             manual_options=self.telescope_options
         )
-        # observe catalogs_in_dc to update telescope options dynamically
-        self.app.state.add_callback('catalogs_in_dc', self._on_catalogs_in_dc_changed)
 
     @property
     def telescope_options(self):
-        if self.app.state.catalogs_in_dc:
-            return ['JWST', 'HST', 'SDSS', 'Gaia']
-        else:
-            return ['JWST', 'HST']
-
-    def _on_catalogs_in_dc_changed(self, new_value):
-        # update telescope options when catalogs_in_dc changes
-        self.telescope._manual_options = self.telescope_options
-        self.telescope._update_items()
+        return ['JWST', 'HST', 'SDSS', 'Gaia']
 
     @property
     def user_api(self):
