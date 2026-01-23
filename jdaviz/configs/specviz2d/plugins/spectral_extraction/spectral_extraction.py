@@ -547,9 +547,10 @@ class SpectralExtraction2D(PluginTemplateMixin):
         # dataset has 'um') do not use display units when estimating defaults.
         use_display_units = False
         orig = trace_dataset.get_selected_spectrum(use_display_units=False).spectral_axis.unit
-        display = u.Unit(self.app._get_display_unit('spectral'))
+        display = self.app._get_display_unit('spectral')
 
         if orig is not None and display is not None:
+            display = u.Unit(display)
             unit_types = [orig.physical_type, display.physical_type]
             # check if we have one pixel/unknown unit and one known unit type,
             # and if so, ignore setting of spectral axis display unit
