@@ -36,7 +36,8 @@ from jdaviz.core.events import (SnackbarMessage,
                                 NewViewerMessage,
                                 ViewerRemovedMessage,
                                 ViewerVisibleLayersChangedMessage,
-                                RestoreToolbarMessage)
+                                RestoreToolbarMessage,
+                                TableSelectRowClickMessage)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.registries import viewer_registry
@@ -1124,6 +1125,7 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
+                    ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
                     ['jdaviz:viewer_clone']
@@ -1150,6 +1152,61 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # when toolbar is restored (e.g., by clicking X on custom toolbar)
         self.hub.subscribe(self, RestoreToolbarMessage,
                            handler=self._on_restore_toolbar)
+
+        # Subscribe to TableSelectRowClickMessage to handle clicks from image viewers
+        self.hub.subscribe(self, TableSelectRowClickMessage,
+                           handler=self._on_table_select_row_click)
+
+    def _on_table_select_row_click(self, msg):
+        """Handle click from image viewer to select/toggle closest table row."""
+        from astropy.coordinates import SkyCoord
+        from astropy import units as u
+
+        # Only respond if this message is for this table viewer
+        if msg.table_viewer_id != self.reference_id:
+            return
+
+        if not len(self.layers):
+            return
+
+        # Get pixel coordinates from the message (these are in reference data frame)
+        click_x, click_y = msg.x, msg.y
+
+        # Find the image viewer that sent this message and compute distances
+        # to all table rows (not just checked ones)
+        try:
+            # Get RA/Dec for all rows in the table
+            all_ras = self.layers[0].layer.get_component('Right Ascension').data
+            all_decs = self.layers[0].layer.get_component('Declination').data
+            skycoords = SkyCoord(ra=all_ras * u.deg, dec=all_decs * u.deg)
+
+            # Find the viewer and convert all coordinates
+            for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+                if viewer.state.reference_data is None:
+                    continue
+                if viewer.state.reference_data.coords is None:
+                    continue
+
+                # Convert all table coordinates to this viewer's reference frame
+                # This works for both WCS and pixel alignment since we use the
+                # viewer's reference_data.coords
+                pixel_coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                xs, ys = pixel_coords[0], pixel_coords[1]
+
+                # Calculate distances to all points
+                distsq = (xs - click_x)**2 + (ys - click_y)**2
+                ind = int(np.argmin(distsq))
+
+                # Toggle this row in checked
+                current_checked = list(self.widget_table.checked)
+                if ind in current_checked:
+                    current_checked.remove(ind)
+                else:
+                    current_checked.append(ind)
+                self.widget_table.checked = current_checked
+                return
+        except Exception:
+            pass
 
     def _on_checked_changed(self, change):
         """Update highlight marks in image viewers when checked rows change."""
@@ -1222,8 +1279,19 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Clear selection marks
         self._clear_selection_marks()
 
-        if hasattr(self, '_table_subset_original_selection_enabled'):
-            self.widget_table.selection_enabled = self._table_subset_original_selection_enabled
-            del self._table_subset_original_selection_enabled
-        else:
+        # Check for any of the table tool state attributes and restore
+        state_attrs = [
+            '_table_subset_original_selection_enabled',
+            '_table_zoom_original_selection_enabled',
+            '_table_highlight_original_selection_enabled'
+        ]
+        restored = False
+        for attr in state_attrs:
+            if hasattr(self, attr):
+                self.widget_table.selection_enabled = getattr(self, attr)
+                delattr(self, attr)
+                restored = True
+                break
+
+        if not restored:
             self.widget_table.selection_enabled = False

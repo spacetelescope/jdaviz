@@ -16,7 +16,8 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'GlobalDisplayUnitChanged', 'ChangeRefDataMessage',
            'PluginTableAddedMessage', 'PluginTableModifiedMessage',
            'PluginPlotAddedMessage', 'PluginPlotModifiedMessage',
-           'IconsUpdatedMessage', 'RestoreToolbarMessage']
+           'IconsUpdatedMessage', 'RestoreToolbarMessage',
+           'TableSelectRowClickMessage']
 
 
 class NewViewerMessage(Message):
@@ -391,6 +392,18 @@ class CatalogSelectClickEventMessage(Message):
     def __init__(self, x, y, *args, **kwargs):
         self.x = x
         self.y = y
+        super().__init__(*args, **kwargs)
+
+
+class TableSelectRowClickMessage(Message):
+    """
+    Message emitted when a user clicks on an image viewer to select/toggle
+    the closest row in a table viewer.
+    """
+    def __init__(self, x, y, table_viewer_id, *args, **kwargs):
+        self.x = x
+        self.y = y
+        self.table_viewer_id = table_viewer_id
         super().__init__(*args, **kwargs)
 
 

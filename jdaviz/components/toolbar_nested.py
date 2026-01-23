@@ -66,7 +66,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                                       handler=lambda msg: self.restore_tools(all_viewers=False))
 
     def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[],
-                        custom_widgets=None):
+                       custom_widgets=None, custom_widgets_callback=None):
         """
         Rebuild the toolbar with passed values.
 
@@ -84,9 +84,15 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             - 'items': list of dicts with 'label' and 'value' keys
             - 'selected': initial selected value(s)
             - 'multiselect': bool, whether to allow multi-select (default False)
+        custom_widgets_callback : callable, optional
+            A callback function that returns custom_widgets. If provided, this will be
+            called on viewer add/remove to refresh the widget items dynamically.
         """
         # Store the override mode
         self.tool_override_mode = tool_override_mode
+
+        # Store callback for refreshing custom widgets
+        self._custom_widgets_callback = custom_widgets_callback
 
         # Clear current toolbar (this also clears custom widgets)
         self._clear_toolbar()
@@ -143,9 +149,11 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         """
         Restore the toolbar to its original configuration from initialization.
         """
-        self.override_tools(self._original_tools_nested,
-                            "",
-                            self._original_default_tool_priority)
+        # Only restore if currently in override mode
+        if self.tool_override_mode:
+            self.override_tools(self._original_tools_nested,
+                                "",
+                                self._original_default_tool_priority)
         if all_viewers and hasattr(self.viewer, 'hub'):
             self.viewer.hub.broadcast(RestoreToolbarMessage(sender=self))
 
@@ -164,9 +172,10 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self.tools.clear()
         self.tools_data = {}
         self.active_tool_id = None
-        # Clear custom widgets
+        # Clear custom widgets and callback
         self.custom_widget_items = []
         self.custom_widget_selected = []
+        self._custom_widgets_callback = None
 
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError
@@ -175,7 +184,46 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             return self.tools[tool_id].is_visible()
         return True
 
+    def _is_enabled(self, tool_id):
+        """Check if a tool is enabled. Returns (enabled, disabled_msg) tuple."""
+        if hasattr(self.tools[tool_id], 'is_enabled'):
+            result = self.tools[tool_id].is_enabled()
+            if isinstance(result, tuple):
+                return result
+            return (result, '')
+        return (True, '')
+
+    def _refresh_custom_widgets(self):
+        """Refresh custom widget items from callback, preserving current selections."""
+        if self._custom_widgets_callback is None:
+            return
+
+        new_widgets = self._custom_widgets_callback()
+        if new_widgets is None:
+            return
+
+        # Preserve current selections where possible
+        for i, widget in enumerate(new_widgets):
+            if i < len(self.custom_widget_selected):
+                current_selected = self.custom_widget_selected[i]
+                new_values = [item['value'] for item in widget.get('items', [])]
+                if widget.get('multiselect', False):
+                    # Filter to only values that still exist
+                    valid_selected = [v for v in current_selected if v in new_values]
+                    widget['selected'] = valid_selected if valid_selected else new_values
+                else:
+                    # Keep current if still valid, otherwise use widget default
+                    if current_selected in new_values:
+                        widget['selected'] = current_selected
+
+        self.custom_widget_items = new_widgets
+        self.custom_widget_selected = [w.get('selected', []) for w in new_widgets]
+
     def _update_tool_visibilities(self):
+        # Refresh custom widgets if callback is provided (e.g., for viewer changes)
+        if getattr(self, '_custom_widgets_callback', None) is not None:
+            self._refresh_custom_widgets()
+
         needs_deactivate_active = False
         for menu_ind in range(self._max_menu_ind):
             has_primary = False
@@ -212,9 +260,12 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 if primary:
                     has_primary = True
 
+                enabled, disabled_msg = self._is_enabled(tool_id)
                 self.tools_data[tool_id] = {**info,
                                             'primary': primary,
-                                            'visible': visible}
+                                            'visible': visible,
+                                            'disabled': not enabled,
+                                            'disabled_msg': disabled_msg}
 
             # update has_suboptions for all entries in this menu
             for tool_id, info in self.tools_data.items():
@@ -303,7 +354,9 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 'menu_ind': menu_ind,
                 'has_suboptions': has_suboptions,
                 'primary': primary,
-                'visible': visible
+                'visible': visible,
+                'disabled': False,
+                'disabled_msg': ''
             }
         }
         return tools_data

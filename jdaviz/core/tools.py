@@ -19,7 +19,7 @@ from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import (LineIdentifyMessage, SpectralMarksChangedMessage,
                                 CatalogSelectClickEventMessage, FootprintSelectClickEventMessage,
-                                FootprintOverlayClickMessage)
+                                FootprintOverlayClickMessage, TableSelectRowClickMessage)
 from jdaviz.core.marks import SpectralLine, FootprintOverlay, RegionOverlay
 from jdaviz.utils import get_top_layer_index
 
@@ -372,11 +372,24 @@ class _BaseTableSelectionTool(Tool):
     override_tools = []  # define in subclass
     override_title = ''  # define in subclass
     _state_attr = '_table_selection_original_enabled'  # define in subclass
+    # Tools to show in image viewer toolbars when this tool is activated
+    image_viewer_override_tools = [
+        ['jdaviz:homezoom'],
+        ['jdaviz:boxzoom'],
+        ['jdaviz:imagepanzoom'],
+        ['jdaviz:select_table_row']
+    ]
+    image_viewer_override_title = 'Table Selection'
+
+    def _get_image_viewers(self):
+        """Get list of image viewers."""
+        return list(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'))
 
     def get_custom_widgets(self):
         """
         Override in subclass to return list of custom widget dicts for the toolbar.
-        Each dict should have: 'label', 'items' (list of {'label', 'value'}), 'selected', 'multiselect'
+        Each dict should have: 'label', 'items' (list of {'label', 'value'}),
+        'selected', 'multiselect'
         """
         return None
 
@@ -387,11 +400,52 @@ class _BaseTableSelectionTool(Tool):
         self.viewer.widget_table.selection_enabled = True
 
         # Override toolbar to show custom tools
+        # Pass callback for dynamic widget updates (e.g., when viewers are added/removed)
+        custom_widgets = self.get_custom_widgets()
+        custom_widgets_callback = self.get_custom_widgets if custom_widgets else None
         self.viewer.toolbar.override_tools(
             self.override_tools,
             self.override_title,
-            custom_widgets=self.get_custom_widgets()
+            custom_widgets=custom_widgets,
+            custom_widgets_callback=custom_widgets_callback
         )
+
+        # Also override toolbars in all image viewers
+        for image_viewer in self._get_image_viewers():
+            # Set the table viewer ID on the select_table_row tool so it knows
+            # which table viewer to send the message to
+            image_viewer.toolbar.override_tools(
+                self.image_viewer_override_tools,
+                self.image_viewer_override_title
+            )
+            # Configure the select_table_row tool with this table viewer's ID
+            if 'jdaviz:select_table_row' in image_viewer.toolbar.tools:
+                tool = image_viewer.toolbar.tools['jdaviz:select_table_row']
+                tool._table_viewer_id = self.viewer.reference_id
+
+
+@viewer_tool
+class TableHighlightSelected(_BaseTableSelectionTool):
+    icon = os.path.join(ICON_DIR, 'table-eye.svg')
+    tool_id = 'jdaviz:table_highlight_selected'
+    action_text = 'Highlight selected'
+    tool_tip = 'Enable row selection mode to highlight checked entries in image viewers'
+    override_tools = []  # No apply button, just the close button
+    override_title = 'Highlight Selection'
+    _state_attr = '_table_highlight_original_selection_enabled'
+
+    def _get_image_viewers(self):
+        """Get list of image viewers that can show highlights."""
+        return list(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'))
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config not in ['deconfigged']:
+            return False
+        if not len(self._get_image_viewers()):
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
 
 
 class _BaseTableApplyTool(Tool):
@@ -423,8 +477,8 @@ class _BaseTableApplyTool(Tool):
             self.viewer.widget_table.selection_enabled = False
         # Clear checked rows after applying
         self.viewer.widget_table.checked = []
-        # Restore toolbar
-        self.viewer.toolbar.restore_tools(all_viewers=False)
+        # Restore toolbar (all_viewers=True to also restore image viewer toolbars)
+        self.viewer.toolbar.restore_tools(all_viewers=True)
 
 
 @viewer_tool
@@ -461,7 +515,12 @@ class TableApplySubset(_BaseTableApplyTool):
             return False
         if not hasattr(self.viewer, 'widget_table'):
             return False
-        return len(self.viewer.widget_table.checked) > 0
+        return True
+
+    def is_enabled(self):
+        if not len(self.viewer.widget_table.checked):
+            return (False, 'Select rows to create subset')
+        return (True, '')
 
 
 @viewer_tool
@@ -522,8 +581,6 @@ class TableApplyZoom(_BaseTableApplyTool):
     def on_apply(self, selected_rows):
         from astropy.coordinates import SkyCoord
         from astropy import units as u
-
-        padding = 0.02
 
         ras = self.viewer.layers[0].layer.get_component('Right Ascension').data[selected_rows]
         decs = self.viewer.layers[0].layer.get_component('Declination').data[selected_rows]
@@ -595,15 +652,18 @@ class TableApplyZoom(_BaseTableApplyTool):
             viewer.state._adjust_limits_aspect()
 
     def is_visible(self):
-        if not self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
-                                                     'cubeviz', 'mosviz',
-                                                     'rampviz']:
+        if self.viewer.jdaviz_app.config not in ['deconfigged']:
             return False
         if not len(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView')):
             return False
         if not hasattr(self.viewer, 'widget_table'):
             return False
-        return len(self.viewer.widget_table.checked) > 0
+        return True
+
+    def is_enabled(self):
+        if not len(self.viewer.widget_table.checked):
+            return (False, 'Select rows to zoom')
+        return (True, '')
 
 
 @viewer_tool
@@ -676,6 +736,35 @@ class SelectCatalogMark(CheckableTool, HubListener):
     def is_visible(self):
         # NOTE: this assumes Catalogs._marker_name remains fixed at the default of 'catalog_results'
         return 'catalog_results' in [dci.label for dci in self.viewer.jdaviz_app.data_collection]
+
+
+@viewer_tool
+class SelectTableRow(CheckableTool, HubListener):
+    """Tool for selecting/toggling the closest table row from an image viewer click."""
+    icon = os.path.join(ICON_DIR, 'catalog_select.svg')
+    tool_id = 'jdaviz:select_table_row'
+    action_text = 'Select/toggle table row'
+    tool_tip = 'Click to select/toggle the closest table row'
+
+    # This will be set when the tool is activated via override_tools
+    _table_viewer_id = None
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event, events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        if self._table_viewer_id is None:
+            return
+        msg = TableSelectRowClickMessage(
+            data['domain']['x'],
+            data['domain']['y'],
+            self._table_viewer_id,
+            sender=self
+        )
+        self.viewer.session.hub.broadcast(msg)
 
 
 @viewer_tool
