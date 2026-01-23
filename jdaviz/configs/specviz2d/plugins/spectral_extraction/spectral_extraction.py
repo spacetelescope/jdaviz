@@ -11,7 +11,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         DatasetSelect,
                                         AddResults,
-                                        _populate_viewer_items,
                                         skip_if_no_updates_since_last_active,
                                         skip_if_not_tray_instance,
                                         skip_if_not_relevant,
@@ -22,6 +21,7 @@ from jdaviz.core.marks import PluginMarkCollection, PluginLine
 
 from astropy.modeling import models
 from astropy.nddata import StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
+import astropy.units as u
 from specutils import Spectrum
 from specreduce import tracing
 from specreduce import background
@@ -152,12 +152,6 @@ class SpectralExtraction2D(PluginTemplateMixin):
     trace_results_label_overwrite = Bool().tag(sync=True)
     trace_add_to_viewer_items = List().tag(sync=True)
     trace_add_to_viewer_selected = Unicode().tag(sync=True)
-    trace_add_to_viewer_create_new_items = List().tag(sync=True)
-    trace_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
-    trace_add_to_viewer_label_value = Unicode().tag(sync=True)
-    trace_add_to_viewer_label_default = Unicode().tag(sync=True)
-    trace_add_to_viewer_label_auto = Bool(True).tag(sync=True)
-    trace_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     trace_spinner = Bool(False).tag(sync=True)
 
     # BACKGROUND
@@ -185,12 +179,6 @@ class SpectralExtraction2D(PluginTemplateMixin):
     bg_results_label_overwrite = Bool().tag(sync=True)
     bg_add_to_viewer_items = List().tag(sync=True)
     bg_add_to_viewer_selected = Unicode().tag(sync=True)
-    bg_add_to_viewer_create_new_items = List().tag(sync=True)
-    bg_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
-    bg_add_to_viewer_label_value = Unicode().tag(sync=True)
-    bg_add_to_viewer_label_default = Unicode().tag(sync=True)
-    bg_add_to_viewer_label_auto = Bool(True).tag(sync=True)
-    bg_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     bg_img_spinner = Bool(False).tag(sync=True)
 
     bg_spec_results_label = Unicode().tag(sync=True)
@@ -200,12 +188,6 @@ class SpectralExtraction2D(PluginTemplateMixin):
     bg_spec_results_label_overwrite = Bool().tag(sync=True)
     bg_spec_add_to_viewer_items = List().tag(sync=True)
     bg_spec_add_to_viewer_selected = Unicode().tag(sync=True)
-    bg_spec_add_to_viewer_create_new_items = List().tag(sync=True)
-    bg_spec_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
-    bg_spec_add_to_viewer_label_value = Unicode().tag(sync=True)
-    bg_spec_add_to_viewer_label_default = Unicode().tag(sync=True)
-    bg_spec_add_to_viewer_label_auto = Bool(True).tag(sync=True)
-    bg_spec_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     bg_spec_spinner = Bool(False).tag(sync=True)
 
     bg_sub_results_label = Unicode().tag(sync=True)
@@ -215,12 +197,6 @@ class SpectralExtraction2D(PluginTemplateMixin):
     bg_sub_results_label_overwrite = Bool().tag(sync=True)
     bg_sub_add_to_viewer_items = List().tag(sync=True)
     bg_sub_add_to_viewer_selected = Unicode().tag(sync=True)
-    bg_sub_add_to_viewer_create_new_items = List().tag(sync=True)
-    bg_sub_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
-    bg_sub_add_to_viewer_label_value = Unicode().tag(sync=True)
-    bg_sub_add_to_viewer_label_default = Unicode().tag(sync=True)
-    bg_sub_add_to_viewer_label_auto = Bool(True).tag(sync=True)
-    bg_sub_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     bg_sub_spinner = Bool(False).tag(sync=True)
 
     # EXTRACT
@@ -252,12 +228,6 @@ class SpectralExtraction2D(PluginTemplateMixin):
     ext_results_label_overwrite = Bool().tag(sync=True)
     ext_add_to_viewer_items = List().tag(sync=True)
     ext_add_to_viewer_selected = Unicode().tag(sync=True)
-    ext_add_to_viewer_create_new_items = List().tag(sync=True)
-    ext_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
-    ext_add_to_viewer_label_value = Unicode().tag(sync=True)
-    ext_add_to_viewer_label_default = Unicode().tag(sync=True)
-    ext_add_to_viewer_label_auto = Bool(True).tag(sync=True)
-    ext_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     # uses default "spinner"
 
     def __init__(self, *args, **kwargs):
@@ -297,20 +267,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                             'trace_results_label_invalid_msg',
                                             'trace_results_label_overwrite',
                                             'trace_add_to_viewer_items',
-                                            'trace_add_to_viewer_selected',
-                                            'trace_add_to_viewer_create_new_items',
-                                            'trace_add_to_viewer_create_new_selected',
-                                            'trace_add_to_viewer_label_value',
-                                            'trace_add_to_viewer_label_default',
-                                            'trace_add_to_viewer_label_auto',
-                                            'trace_add_to_viewer_label_invalid_msg')
-        # Populate viewer items using _get_trace_supported_viewers
-        supported_viewers = self._get_trace_supported_viewers()
-        viewer_create_new_items, viewer_filter = _populate_viewer_items(
-            self, supported_viewers)
-        self.trace_add_to_viewer_create_new_items = viewer_create_new_items
-        self.trace_add_results.viewer.add_filter(viewer_filter)
-        self.trace_add_results.viewer.select_default()
+                                            'trace_add_to_viewer_selected')
+        self.trace_add_results.viewer.filters = ['is_spectrum_2d_viewer']
         self.trace_results_label_default = 'trace'
 
         # BACKGROUND
@@ -341,20 +299,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                          'bg_results_label_invalid_msg',
                                          'bg_results_label_overwrite',
                                          'bg_add_to_viewer_items',
-                                         'bg_add_to_viewer_selected',
-                                         'bg_add_to_viewer_create_new_items',
-                                         'bg_add_to_viewer_create_new_selected',
-                                         'bg_add_to_viewer_label_value',
-                                         'bg_add_to_viewer_label_default',
-                                         'bg_add_to_viewer_label_auto',
-                                         'bg_add_to_viewer_label_invalid_msg')
-        # Populate viewer items using _get_bg_supported_viewers
-        supported_viewers = self._get_bg_supported_viewers()
-        viewer_create_new_items, viewer_filter = _populate_viewer_items(
-            self, supported_viewers)
-        self.bg_add_to_viewer_create_new_items = viewer_create_new_items
-        self.bg_add_results.viewer.add_filter(viewer_filter)
-        self.bg_add_results.viewer.select_default()
+                                         'bg_add_to_viewer_selected')
+        self.bg_add_results.viewer.filters = ['is_spectrum_2d_viewer']
         self.bg_results_label_default = 'background'
 
         self.bg_spec_add_results = AddResults(self, 'bg_spec_results_label',
@@ -363,20 +309,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                               'bg_spec_results_label_invalid_msg',
                                               'bg_spec_results_label_overwrite',
                                               'bg_spec_add_to_viewer_items',
-                                              'bg_spec_add_to_viewer_selected',
-                                              'bg_spec_add_to_viewer_create_new_items',
-                                              'bg_spec_add_to_viewer_create_new_selected',
-                                              'bg_spec_add_to_viewer_label_value',
-                                              'bg_spec_add_to_viewer_label_default',
-                                              'bg_spec_add_to_viewer_label_auto',
-                                              'bg_spec_add_to_viewer_label_invalid_msg')
-        # Populate viewer items using _get_bg_spec_supported_viewers
-        supported_viewers = self._get_bg_spec_supported_viewers()
-        viewer_create_new_items, viewer_filter = _populate_viewer_items(
-            self, supported_viewers)
-        self.bg_spec_add_to_viewer_create_new_items = viewer_create_new_items
-        self.bg_spec_add_results.viewer.add_filter(viewer_filter)
-        self.bg_spec_add_results.viewer.select_default()
+                                              'bg_spec_add_to_viewer_selected')
+        self.bg_spec_add_results.viewer.filters = ['is_spectrum_viewer']
         self.bg_spec_results_label_default = 'background-spectrum'
 
         self.bg_sub_add_results = AddResults(self, 'bg_sub_results_label',
@@ -385,20 +319,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                              'bg_sub_results_label_invalid_msg',
                                              'bg_sub_results_label_overwrite',
                                              'bg_sub_add_to_viewer_items',
-                                             'bg_sub_add_to_viewer_selected',
-                                             'bg_sub_add_to_viewer_create_new_items',
-                                             'bg_sub_add_to_viewer_create_new_selected',
-                                             'bg_sub_add_to_viewer_label_value',
-                                             'bg_sub_add_to_viewer_label_default',
-                                             'bg_sub_add_to_viewer_label_auto',
-                                             'bg_sub_add_to_viewer_label_invalid_msg')
-        # Populate viewer items using _get_bg_sub_supported_viewers
-        supported_viewers = self._get_bg_sub_supported_viewers()
-        viewer_create_new_items, viewer_filter = _populate_viewer_items(
-            self, supported_viewers)
-        self.bg_sub_add_to_viewer_create_new_items = viewer_create_new_items
-        self.bg_sub_add_results.viewer.add_filter(viewer_filter)
-        self.bg_sub_add_results.viewer.select_default()
+                                             'bg_sub_add_to_viewer_selected')
+        self.bg_sub_add_results.viewer.filters = ['is_spectrum_2d_viewer']
         self.bg_sub_results_label_default = 'background-subtracted'
 
         # EXTRACT
@@ -430,20 +352,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                           'ext_results_label_invalid_msg',
                                           'ext_results_label_overwrite',
                                           'ext_add_to_viewer_items',
-                                          'ext_add_to_viewer_selected',
-                                          'ext_add_to_viewer_create_new_items',
-                                          'ext_add_to_viewer_create_new_selected',
-                                          'ext_add_to_viewer_label_value',
-                                          'ext_add_to_viewer_label_default',
-                                          'ext_add_to_viewer_label_auto',
-                                          'ext_add_to_viewer_label_invalid_msg')
-        # Populate viewer items using _get_ext_supported_viewers
-        supported_viewers = self._get_ext_supported_viewers()
-        viewer_create_new_items, viewer_filter = _populate_viewer_items(
-            self, supported_viewers)
-        self.ext_add_to_viewer_create_new_items = viewer_create_new_items
-        self.ext_add_results.viewer.add_filter(viewer_filter)
-        self.ext_add_results.viewer.select_default()
+                                          'ext_add_to_viewer_selected')
+        self.ext_add_results.viewer.filters = ['is_spectrum_viewer']
         # NOTE: defaults to overwriting original spectrum
         self.ext_add_results.label_whitelist_overwrite = ['1D Spectrum', '2D Spectrum (auto-ext)']
         self.ext_results_label_default = '2D Spectrum (auto-ext)'
@@ -453,26 +363,6 @@ class SpectralExtraction2D(PluginTemplateMixin):
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['trace_dataset_items'])
-
-    def _get_trace_supported_viewers(self):
-        """Return viewer types that can display trace data."""
-        return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
-
-    def _get_bg_supported_viewers(self):
-        """Return viewer types that can display background 2D image."""
-        return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
-
-    def _get_bg_spec_supported_viewers(self):
-        """Return viewer types that can display background spectrum."""
-        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
-
-    def _get_bg_sub_supported_viewers(self):
-        """Return viewer types that can display background-subtracted image."""
-        return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
-
-    def _get_ext_supported_viewers(self):
-        """Return viewer types that can display extracted 1D spectrum."""
-        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
     @property
     def user_api(self):
@@ -538,11 +428,28 @@ class SpectralExtraction2D(PluginTemplateMixin):
         if not len(self.trace_dataset.selected):
             return
 
-        width = self.trace_dataset.get_selected_spectrum(use_display_units=True).shape[0]
+        trace_dataset = self.trace_dataset
+
+        # If we encouter the case where the 2d spectrum being loaded
+        # has spectral axis units incompatible with the selected spectral axis
+        # display unit (e.g UC plugin has the single option of 'pix' but the new
+        # dataset has 'um') do not use display units when estimating defaults.
+        use_display_units = False
+        orig = trace_dataset.get_selected_spectrum(use_display_units=False).spectral_axis.unit
+        display = u.Unit(self.app._get_display_unit('spectral'))
+
+        if orig is not None and display is not None:
+            unit_types = [orig.physical_type, display.physical_type]
+            # check if we have one pixel/unknown unit and one known unit type,
+            # and if so, ignore setting of spectral axis display unit
+            if unit_types.count('unknown') != 1:
+                use_display_units = False
+
+        width = trace_dataset.get_selected_spectrum(use_display_units=use_display_units).shape[0]
         # estimate the pixel number by taking the median of the brightest pixel index
         # in each column, ignoring columns where the sum in that column is not
         # positive (ie. columns of all zeros or nans)
-        trace_flux = self.trace_dataset.get_selected_spectrum(use_display_units=True).flux
+        trace_flux = trace_dataset.get_selected_spectrum(use_display_units=use_display_units).flux
         trace_flux_ignore_zeros = trace_flux[:, np.nansum(trace_flux, axis=0) != 0]
         if trace_flux_ignore_zeros.shape[1] == 0:
             # default to trace in middle of image
