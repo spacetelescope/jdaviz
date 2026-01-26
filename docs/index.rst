@@ -1,3 +1,5 @@
+.. title:: jdaviz documentation
+
 .. jdavizlanding::
 
 .. toctree::
