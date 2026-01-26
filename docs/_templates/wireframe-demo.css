@@ -692,9 +692,9 @@ html[data-theme="light"] {
 
 .wireframe-sidebar-tab.active {
     background: var(--tab-content-bg);
-    color: var(--text-color);
+    color: #ffffff;
     opacity: 1;
-    border-bottom-color: #C75109;
+    border-bottom-color: #ffffff;
 }
 
 .wireframe-sidebar-tab:hover {
