@@ -499,6 +499,29 @@ class ConfigHelper(HubListener):
         self.app.state.show_api_hints = enabled
 
     def _handle_display_units(self, data, use_display_units=True):
+        """
+        If use_display_units is True, convert data (Spectrum) to the app's
+        current display units, which are set by the unit conversion plugin,
+        otherwise return data unchanged. This method is called by get_data, so
+        it is intended for handling when retrieving data from the app
+        and have it automatically converted to app display units, rather than the
+        native data units.
+
+        Parameters
+        ----------
+        data : specutils.Spectrum
+            The Spectrum object to convert.
+        use_display_units : bool
+            If True (default), convert the spectrum to display units. If False,
+            return the data unchanged.
+
+        Returns
+        -------
+        specutils.Spectrum
+            A new Spectrum object with data converted to display units. If
+            use_display_units is False, returns the input data unchanged.
+
+        """
         if use_display_units:
             if isinstance(data, Spectrum):
                 spectral_unit = self.app._get_display_unit('spectral')

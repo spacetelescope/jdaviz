@@ -22,6 +22,7 @@ from jdaviz.core.marks import PluginMarkCollection, PluginLine
 
 from astropy.modeling import models
 from astropy.nddata import StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
+import astropy.units as u
 from specutils import Spectrum
 from specreduce import tracing
 from specreduce import background
@@ -547,11 +548,29 @@ class SpectralExtraction2D(PluginTemplateMixin):
         if not len(self.trace_dataset.selected):
             return
 
-        width = self.trace_dataset.get_selected_spectrum(use_display_units=True).shape[0]
+        trace_dataset = self.trace_dataset
+
+        # If we encouter the case where the 2d spectrum being loaded
+        # has spectral axis units incompatible with the selected spectral axis
+        # display unit (e.g UC plugin has the single option of 'pix' but the new
+        # dataset has 'um') do not use display units when estimating defaults.
+        use_display_units = True
+        orig = trace_dataset.get_selected_spectrum(use_display_units=False).spectral_axis.unit
+        display = self.app._get_display_unit('spectral')
+
+        if orig is not None and display is not None:
+            display = u.Unit(display)
+            unit_types = [str(x) for x in [orig.physical_type, display.physical_type]]
+            # check if we have one pixel/unknown unit and one known unit type,
+            # and if so, ignore setting of spectral axis display unit
+            if unit_types.count('unknown') == 1:
+                use_display_units = False
+
+        width = trace_dataset.get_selected_spectrum(use_display_units=use_display_units).shape[0]
         # estimate the pixel number by taking the median of the brightest pixel index
         # in each column, ignoring columns where the sum in that column is not
         # positive (ie. columns of all zeros or nans)
-        trace_flux = self.trace_dataset.get_selected_spectrum(use_display_units=True).flux
+        trace_flux = self.trace_dataset.get_selected_spectrum(use_display_units).flux
         trace_flux_ignore_zeros = trace_flux[:, np.nansum(trace_flux, axis=0) != 0]
         if trace_flux_ignore_zeros.shape[1] == 0:
             # default to trace in middle of image
