@@ -120,14 +120,12 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
                 uncerts_finite = np.isfinite(data.uncertainty.array)
                 if not np.any(uncerts_finite):
                     data.uncertainty = None
-                    set_nans_to_none = True
 
-                    if set_nans_to_none:
-                        # alert user that we have changed their all-nan uncertainty array to None
-                        msg = 'All uncertainties are nonfinite, replacing with uncertainty=None.'
-                        self.app.hub.broadcast(SnackbarMessage(msg,
-                                                               color="warning",
-                                                               sender=self.app))
+                    # alert user that we have changed their all-nan uncertainty array to None
+                    msg = 'All uncertainties are nonfinite, replacing with uncertainty=None.'
+                    self.app.hub.broadcast(SnackbarMessage(msg,
+                                                           color="warning",
+                                                           sender=self.app))
             output.append(data)
 
         if self.concatenate and len(output) > 1:
@@ -199,7 +197,6 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
     spec : `~specutils.Spectrum`
         Composite 1D spectrum.
     """
-    # COPIED FROM specviz.plugins.parsers since cannot import
     wlallarr = np.array(wl)
     fnuallarr = np.array(fnu)
     srtind = np.argsort(wlallarr)
