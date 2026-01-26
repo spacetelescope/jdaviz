@@ -106,6 +106,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Rotate image viewer orientation and choose alignment (pixel or sky).'  # noqa
 
+        self.docs_description = "Control how images are aligned (by pixel or WCS) and set the orientation/rotation of the viewer."  # noqa
+
         self.viewer._allow_multiselect = False
         self.viewer.add_filter('is_imviz_image_viewer', 'reference_has_wcs')
 
@@ -927,3 +929,4 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         # if changing from one link type to another, reset the limits:
         if align_by != old_align_by:
             viewer.state.reset_limits()
+
