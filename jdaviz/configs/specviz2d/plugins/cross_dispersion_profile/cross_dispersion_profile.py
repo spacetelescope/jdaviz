@@ -171,7 +171,7 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
         """
         data = self.dataset.selected_obj
         if data is not None:
-            if hasattr(data, 'wcs') and self.sa_display_unit != '':
+            if hasattr(data, 'wcs') and self.sa_display_unit not in ('', u.pix):
                 wcs = self.dataset.selected_obj.wcs
                 # wcs / gwcs don't necessarily have ndim attribute, so try
                 # to detect 2d/1d wcs with try / except
