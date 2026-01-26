@@ -1,15 +1,25 @@
+import logging
 import os
 import time
+import io
 from pathlib import Path
+from ipywidgets import widget_serialization
 import threading
+import solara
 
+import asyncio
+import ipywidgets as widgets
+
+from jdaviz.async_utils import (create_serial_task, queue_screenshot_async,
+                                run_kernel_events_blocking_until,
+                                serial_task_run_task, wait_for_change)
 from astropy import units as u
 from astropy.nddata import CCDData
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue_jupyter.bqplot.image import BqplotImageView
 from regions import CircleSkyRegion, EllipseSkyRegion
 from specutils import Spectrum
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.marks import ShadowMixin
@@ -31,6 +41,7 @@ else:
     HAS_OPENCV = True
 
 __all__ = ['Export']
+logger = logging.getLogger(__name__)
 
 
 @tray_registry('export', label="Export",
@@ -118,6 +129,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     # This is a temporary measure to allow server-installations to disable saving server-side until
     # saving client-side is supported for all exports.
     serverside_enabled = Bool(True).tag(sync=True)
+    _busy_doing_export = Bool(False).tag(sync=True)
+
+    file_download = Any().tag(sync=True, **widget_serialization)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -126,6 +140,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                       'filename_default',
                                       'filename_auto',
                                       'filename_invalid_msg')
+        self.file_download = solara.FileDownload.widget(data=self.export_to_buffer,
+                                                        filename=self.filename.value,
+                                                        label="Open Browser Dialog")
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Export data/plots and other outputs to a file.'
@@ -368,6 +385,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # Clear overwrite warning when user changes filename
         self.overwrite_warn = False
 
+        # Change default filename of solara's file download widget
+        if hasattr(self.file_download, 'filename'):
+            self.file_download.filename = self.filename_value
+
     def _set_subset_not_supported_msg(self, msg=None):
         """
         Check if selected subset is spectral or composite, and warn and
@@ -409,6 +430,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.data_invalid_msg = ''
 
     def _normalize_filename(self, filename=None, filetype=None, overwrite=False, default_path=False):  # noqa: E501
+        if isinstance(filename, io.BytesIO):
+            return filename
+
         # Make sure filename is valid and file does not end up in weird places in standalone mode.
         if not filename:
             raise ValueError("Invalid filename")
@@ -441,9 +465,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         return filename
 
+    async def export_to_buffer(self):
+        f = io.BytesIO()  # TODO: can we reuse this or should we close/clear it?
+        self.export(filename=f)
+        return f.getvalue()
+
     @with_spinner()
     def export(self, filename=None, show_dialog=None, overwrite=False,
-               raise_error_for_overwrite=True):
+               raise_error_for_overwrite=True, block=True):
         """
         Export selected item(s)
 
@@ -452,9 +481,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         filename : str, optional
             If not provided, plugin value will be used.
 
-        show_dialog : bool or `None`
-            If `True`, prompts dialog to save PNG/SVG from browser.
-
         overwrite : bool
             If `True`, silently overwrite an existing file.
 
@@ -462,7 +488,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             If `True`, raise exception when ``overwrite=False`` but
             output file already exists. Otherwise, a message will be sent
             to application snackbar instead.
+
+        block : bool
+            If `True`, block until the export is complete, this is useful in
+            a notebook context to ensure the export is complete before the
+            next export is started.
         """
+        if show_dialog:
+            raise ValueError("show_dialog is no longer supported, use UI to trigger browser save dialog")  # noqa
         if self.multiselect:
             raise NotImplementedError("batch export not yet supported")
 
@@ -506,9 +539,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                 width=f"{self.image_width}px" if self.image_custom_size else None,
                                 height=f"{self.image_height}px" if self.image_custom_size else None)
             else:
-                self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
+                self.save_figure(viewer, filename, filetype,
                                  width=f"{self.image_width}px" if self.image_custom_size else None,
-                                 height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa
+                                 height=f"{self.image_height}px" if self.image_custom_size else None, block=block)  # noqa
 
             # restore marks to their original state
             for restore, mark in zip(restores, viewer.figure.marks):
@@ -534,7 +567,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     raise FileExistsError(f"{filename} exists but overwrite={overwrite}")
                 return
 
-            self.save_figure(plot, filename, filetype, show_dialog=show_dialog)
+            self.save_figure(plot, filename, filetype, block=block)
 
         elif len(self.plugin_table.selected):
             filetype = self.plugin_table_format.selected
@@ -560,7 +593,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 return
 
             if self.subset_format.selected in ('fits', 'reg'):
-                self.save_subset_as_region(selected_subset_label, filename)
+                # TODO: what format should be passed for .reg?
+                # I'm getting errors for a spatial subset
+                self.save_subset_as_region(selected_subset_label, filename,
+                                           format=self.subset_format.selected)
             elif self.subset_format.selected == 'ecsv':
                 self.save_subset_as_table(filename)
             elif self.subset_format.selected == 'stcs':
@@ -575,7 +611,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
-
             # Sanitize metadata: remove keys starting with '_' from a copy
             obj = self.dataset.selected_obj
             if hasattr(obj, 'meta') and isinstance(obj.meta, dict):
@@ -584,9 +619,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 from copy import copy
                 obj_copy = copy(obj)
                 obj_copy.meta = meta_copy
-                obj_copy.write(Path(filename), overwrite=True)
+                obj_copy.write(Path(filename)
+                               if isinstance(filename, str) else filename,
+                               overwrite=True, format=filetype)
             else:
-                obj.write(Path(filename), overwrite=True)
+                obj.write(Path(filename)
+                          if isinstance(filename, str) else filename,
+                          overwrite=True, format=filetype)
         else:
             raise ValueError("nothing selected for export")
 
@@ -594,7 +633,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def vue_export_from_ui(self, *args, **kwargs):
         try:
-            filename = self.export(show_dialog=True, raise_error_for_overwrite=False)
+            filename = self.export(raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Export failed with: {e}", sender=self,
@@ -607,7 +646,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def vue_overwrite_from_ui(self, *args, **kwargs):
         """Attempt to force writing the output if the user confirms the desire to overwrite."""
         try:
-            filename = self.export(show_dialog=True, overwrite=True,
+            filename = self.export(overwrite=True,
                                    raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
@@ -619,21 +658,47 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"Exported to {filename} (overwrite)", sender=self, color="success"))
             self.overwrite_warn = False
 
-    def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False,
-                    width=None, height=None):
+    def save_figure(self, viewer, filename=None, filetype="png",
+                    width=None, height=None, block=True):
         if filename is None:
             filename = self.filename_default
 
-        # viewers in plugins will have viewer.app, other viewers have viewer.jdaviz_app
-        if hasattr(viewer, 'jdaviz_app'):
-            app = viewer.jdaviz_app
-        else:
-            app = viewer.app
+        if self._busy_doing_export:
+            raise ValueError("Saving figure is still in progress. Use ` export(..., block=True)` to make sure the previous export is complete") # noqa
+        self._busy_doing_export = True
+        self._last_error = None
 
-        def on_img_received(data):
+        async def save_figure_task():
             try:
-                with filename.open(mode='bw') as f:
-                    f.write(data)
+                await self._save_figure_async(viewer, filename, filetype, width,
+                                              height)
+            except BaseException as e:
+                logger.error(f"Error saving figure: {e}")
+                self._last_error = e
+            finally:
+                self._busy_doing_export = False
+        if block:
+            event_loop = serial_task_run_task.get()
+            logger.warning(f"event loop: {event_loop}, now creating task")
+            event_loop.create_task(save_figure_task())
+            run_kernel_events_blocking_until(lambda: self._busy_doing_export)
+            if self._last_error is not None:
+                raise self._last_error
+        else:
+            task = asyncio.create_task(save_figure_task())
+            create_serial_task(task)
+            return task
+
+    async def _save_figure_async(self, viewer, filename, filetype, width, height):
+        # Things become a bit more easy to reason about using async/await instead of callbacks
+        # So this internal method uses async/await instead of callbacks.
+        def save_to_file(data):
+            try:
+                if isinstance(filename, io.BytesIO):
+                    filename.write(data)
+                else:
+                    with filename.open(mode='bw') as f:
+                        f.write(data)
             except Exception as e:
                 self.hub.broadcast(SnackbarMessage(
                     f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
@@ -643,17 +708,15 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"{self.viewer.selected} exported to {str(filename)}",
                     sender=self, color="success"))
 
-        def get_png(figure):
-            if figure._upload_png_callback is not None:
-                raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
-
-            figure.get_png_data(on_img_received)
+        # viewers in plugins will have viewer.app, other viewers have viewer.jdaviz_app
+        if hasattr(viewer, 'jdaviz_app'):
+            app = viewer.jdaviz_app
+        else:
+            app = viewer.app
 
         if (width is not None or height is not None):
             assert width is not None and height is not None, \
                 "Both width and height must be provided"
-            import ipywidgets as widgets
-            from typing import Callable
 
             def _show_hidden(widget: widgets.Widget, width: str, height: str):
                 import ipyvuetify as v
@@ -669,17 +732,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 # TODO: we might want to remove it from the DOM
                 app.invisible_children = [*app.invisible_children, wrapper_widget]
 
-            def _widget_after_first_display(widget: widgets.Widget, callback: Callable):
+            def _widget_after_first_display(widget: widgets.Widget):
                 if widget._view_count is None:
                     widget._view_count = 0
-                called_callback = False
-
-                def view_count_changed(change):
-                    nonlocal called_callback
-                    if change["new"] == 1 and not called_callback:
-                        called_callback = True
-                        callback()
-                widget.observe(view_count_changed, "_view_count")
+                logger.debug(f"waiting for view count to change for widget {type(widget)}")
+                return wait_for_change(widget, "_view_count")
 
             cloned_viewer = viewer._clone_viewer_outside_app()
             # make sure we will the size of our container which defines the
@@ -687,24 +744,42 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             cloned_viewer.figure.layout.width = "100%"
             cloned_viewer.figure.layout.height = "100%"
 
-            def on_figure_displayed():
-                # we need a bit of a delay to ensure the figure is fully displayed
-                # maybe this can be fixed on the bqplot side in the future
-                def wait_in_other_thread():
-                    import time
-                    time.sleep(0.2)
-                    get_png(cloned_viewer.figure)
-                # wait in other thread to avoid blocking the main thread (widgets can update)
-                threading.Thread(target=wait_in_other_thread).start()
-            _widget_after_first_display(cloned_viewer.figure, on_figure_displayed)
+            logger.debug("calling _widget_after_first_display for widget")
+            display_future = _widget_after_first_display(cloned_viewer.figure)
+            logger.debug(f"calling _show_hidden for widget {display_future}")
             _show_hidden(cloned_viewer.figure, width, height)
-        elif filetype == 'png':
-            # NOTE: get_png already check if _upload_png_callback is not None
-            get_png(viewer.figure)
-        elif filetype == 'svg':
+            logger.debug("waiting for display future")
+            await display_future
+            logger.debug("display future done")
+            await asyncio.sleep(0.2)
+            logger.debug("sleeping done")
+            if cloned_viewer.figure._upload_png_callback is not None:
+                raise ValueError("previous svg export is still in progress. Wait to complete "
+                                 "before making another call to save_figure")
+            if cloned_viewer.figure._upload_svg_callback is not None:
+                raise ValueError("previous svg export is still in progress. Wait to complete "
+                                 "before  making another call to save_figure")
+            logger.debug("queueing screenshot")
+            get_image_data_method = cloned_viewer.figure.get_svg_data if filetype == 'svg' else \
+                cloned_viewer.figure.get_png_data
+            data = await queue_screenshot_async(cloned_viewer.figure, get_image_data_method)
+            logger.debug("got data, saving to file {filename}")
+            save_to_file(data)
+            logger.debug("saved to file {filename}")
+        elif filetype in ['png', 'svg']:
+            if viewer.figure._upload_png_callback is not None:
+                raise ValueError("previous png export is still in progress. Wait to complete "
+                                 "before making another call to save_figure")
             if viewer.figure._upload_svg_callback is not None:
-                raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure") # noqa
-            viewer.figure.get_svg_data(on_img_received)
+                raise ValueError("previous svg export is still in progress. Wait to complete "
+                                 "before making another call to save_figure")
+            get_image_data_method = viewer.figure.get_svg_data if filetype == 'svg' else \
+                viewer.figure.get_png_data
+            logger.debug("queueing screenshot")
+            data = await queue_screenshot_async(viewer.figure, get_image_data_method)
+            logger.debug("got data, saving to file {filename}")
+            save_to_file(data)
+            logger.debug("saved to file {filename}")
         else:
             raise ValueError(f"Unsupported filetype={filetype} for save_figure")
 
@@ -736,7 +811,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 slice_plg.vue_play_next()
                 cur_pngfile = Path(f"._cubeviz_movie_frame_{i}.png")
                 # TODO: skip success snackbars when exporting temp movie frames?
-                self.save_figure(viewer, filename=cur_pngfile, filetype="png", show_dialog=False,
+                self.save_figure(viewer, filename=cur_pngfile, filetype="png",
                                  width=width, height=height)
                 temp_png_files.append(cur_pngfile)
                 i += i_step
@@ -886,7 +961,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         with open(filename, 'w') as f:
             f.write(stcs_str)
 
-    def save_subset_as_region(self, selected_subset_label, filename):
+    def save_subset_as_region(self, selected_subset_label, filename, format):
         """
         Save a subset to file as a Region object in the working directory.
         Currently only enabled for non-composite spatial subsets. Can be saved
@@ -904,7 +979,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         region = region[0][f'{"sky_" if align_by == "wcs" else ""}region']
 
-        region.write(str(filename), overwrite=True)
+        region.write(str(filename), format=format, overwrite=True)
 
     def save_subset_as_table(self, filename):
         region = self.app.get_subsets(subset_name=self.subset.selected)

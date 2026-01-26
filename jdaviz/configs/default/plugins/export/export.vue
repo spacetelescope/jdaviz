@@ -273,22 +273,7 @@
       </v-row>
     </div>
 
-    <v-row v-if="serverside_enabled" class="row-no-outside-padding row-min-bottom-padding">
-      <v-col>
-        <v-text-field
-          :value="filepath"
-          :label="api_hints_enabled ? 'plg.filepath' : 'Filepath'"
-          :class="api_hints_enabled ? 'api-hint' : null"
-          hint="Filepath export location.  If filename is not a full path, the filepath will include the default export directory."
-          persistent-hint
-          disabled
-        ></v-text-field>
-      </v-col>
-    </v-row>
-
-    <div style="display: grid; position: relative"> <!-- overlay container -->
-    <div style="grid-area: 1/1">
-
+    <j-plugin-section-header>Save via Browser</j-plugin-section-header>
     <plugin-auto-label
       :value.sync="filename_value"
       :default="filename_default"
@@ -297,69 +282,110 @@
       label="Filename"
       api_hint="plg.filename = "
       :api_hints_enabled="api_hints_enabled"
-      hint="Export to a file on disk."
+      hint="Filename for download."
     ></plugin-auto-label>
-
     <v-row justify="end">
-      <j-tooltip v-if="movie_recording" tooltipcontent="Interrupt recording and delete movie file">
-          <plugin-action-button
-             :results_isolated_to_plugin="true"
-             @click="interrupt_recording"
-             :disabled="!movie_recording"
-          >
-            <v-icon>stop</v-icon>
-          </plugin-action-button>
-      </j-tooltip>
-
-      <plugin-action-button
-        :results_isolated_to_plugin="true"
-        @click="export_from_ui"
-        :spinner="spinner"
-        :api_hints_enabled="api_hints_enabled"
-        :disabled="filename_value.length === 0 ||
-                   movie_recording ||
-                   subset_invalid_msg.length > 0 ||
-                   data_invalid_msg.length > 0 ||
-                   subset_format_invalid_msg.length > 0 ||
-                   viewer_invalid_msg.length > 0 ||
-                   (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
-      >
-        {{ api_hints_enabled ?
-          'plg.export()'
-          :
-          'Export'
-        }}
-      </plugin-action-button>
-    </div>
-
-      <v-overlay
-        absolute
-        opacity=0.5
-        :value="overwrite_warn"
-        :zIndex=3
-        style="grid-area: 1/1;
-               margin-left: -24px;
-               margin-right: -24px">
-
-      <v-card color="transparent" elevation=0 >
-        <v-card-text width="100%">
-          <div class="white--text">
-            A file with this name is already on disk. Overwrite?
-          </div>
-        </v-card-text>
-
-        <v-card-actions>
-          <v-row justify="end">
-            <v-btn tile small color="primary" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
-            <v-btn tile small color="accent" class="mr-4" @click="overwrite_from_ui">Overwrite</v-btn>
-          </v-row>
-        </v-card-actions>
-      </v-card>
-
-      </v-overlay>
-    </div>
-
+      <span
+        v-if="filename_value.length === 0 ||
+              movie_recording ||
+              subset_invalid_msg.length > 0 ||
+              data_invalid_msg.length > 0 ||
+              subset_format_invalid_msg.length > 0 ||
+              viewer_invalid_msg.length > 0 ||
+              (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
+      >export disabled</span>
+      <jupyter-widget v-else :widget="file_download"></jupyter-widget>
     </v-row>
+
+    <div v-if="serverside_enabled">
+      <j-plugin-section-header v-if="serverside_enabled">Save via Kernel</j-plugin-section-header>
+      <div style="display: grid; position: relative"> <!-- overlay container -->
+        <div style="grid-area: 1/1">
+
+          <v-row class="row-no-outside-padding row-min-bottom-padding">
+            <v-col>
+              <!--
+              TODO: default_filepath does not exist, can we remove this row?
+              <v-text-field
+                :value="default_filepath"
+                label="Filepath"
+                hint="Filepath export location."
+                persistent-hint
+                disabled
+              ></v-text-field> -->
+            </v-col>
+          </v-row>
+
+          <plugin-auto-label
+            :value.sync="filename_value"
+            :default="filename_default"
+            :auto.sync="filename_auto"
+            :invalid_msg="filename_invalid_msg"
+            label="Filename"
+            :api_hint="'plg.filename = \''+filename_value+'\''"
+            :api_hints_enabled="api_hints_enabled"
+            hint="Export to a file on disk."
+          ></plugin-auto-label>
+
+          <v-row justify="end">
+            <j-tooltip v-if="movie_recording" tooltipcontent="Interrupt recording and delete movie file">
+                <plugin-action-button
+                  :results_isolated_to_plugin="true"
+                  @click="interrupt_recording"
+                  :disabled="!movie_recording"
+                >
+                  <v-icon>stop</v-icon>
+                </plugin-action-button>
+            </j-tooltip>
+
+            <plugin-action-button
+              :results_isolated_to_plugin="true"
+              @click="export_from_ui"
+              :spinner="spinner"
+              :api_hints_enabled="api_hints_enabled"
+              :disabled="filename_value.length === 0 ||
+                        movie_recording ||
+                        subset_invalid_msg.length > 0 ||
+                        data_invalid_msg.length > 0 ||
+                        subset_format_invalid_msg.length > 0 ||
+                        viewer_invalid_msg.length > 0 ||
+                        (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
+            >
+              {{ api_hints_enabled ?
+                'plg.export()'
+                :
+                'Export'
+              }}
+            </plugin-action-button>
+          </v-row>
+        </div>
+
+        <v-overlay
+          absolute
+          opacity=0.5
+          :value="overwrite_warn"
+          :zIndex=3
+          style="grid-area: 1/1;
+                margin-left: -24px;
+                margin-right: -24px"
+        >
+          <v-card color="transparent" elevation=0 >
+            <v-card-text width="100%">
+              <div class="white--text">
+                A file with this name is already on disk. Overwrite?
+              </div>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-row justify="end">
+                <v-btn tile small color="primary" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
+                <v-btn tile small color="accent" class="mr-4" @click="overwrite_from_ui">Overwrite</v-btn>
+              </v-row>
+            </v-card-actions>
+          </v-card>
+        </v-overlay>
+      </div>
+    </div>
 
   </j-tray-plugin>
 </template>
