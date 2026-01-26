@@ -545,7 +545,7 @@ class SpectralExtraction2D(PluginTemplateMixin):
         # has spectral axis units incompatible with the selected spectral axis
         # display unit (e.g UC plugin has the single option of 'pix' but the new
         # dataset has 'um') do not use display units when estimating defaults.
-        use_display_units = False
+        use_display_units = True
         orig = trace_dataset.get_selected_spectrum(use_display_units=False).spectral_axis.unit
         display = self.app._get_display_unit('spectral')
 
