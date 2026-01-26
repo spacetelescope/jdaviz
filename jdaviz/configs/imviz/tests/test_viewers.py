@@ -151,9 +151,6 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
     imviz_helper.load_data(data, data_label='my_data')
 
-    # TODO: remove once dev-flag no longer required
-    imviz_helper.app.state.catalogs_in_dc = True
-
     # change alignment to WCS to enable catalog visibility
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 

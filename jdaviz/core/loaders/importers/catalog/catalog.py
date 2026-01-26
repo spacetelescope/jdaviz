@@ -252,8 +252,6 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.state.catalogs_in_dc is False:
-            return False
         if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
             return False

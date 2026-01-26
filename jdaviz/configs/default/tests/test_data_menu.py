@@ -421,7 +421,6 @@ def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     # load catalog
-    imviz_helper.app.state.catalogs_in_dc = True
     imviz_helper.load(sky_coord_only_source_catalog, data_label='catalog')
 
     # load catalog. with the presence of a 'Default Orientation' layer that is
