@@ -59,6 +59,25 @@
           </v-list-item>
           <v-divider class="mt-2"></v-divider>
         </div>
+        <div v-if="!multiselect && nonmultiselect_allow_clear">
+          <v-list-item
+            ripple
+            @mousedown.prevent
+            @click="clear_selection"
+          >
+            <v-list-item-action>
+              <v-icon>
+                mdi-close-box
+              </v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>
+                Clear Selection
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-divider class="mt-2"></v-divider>
+        </div>
       </template>
       <template #selection="{ item, index }">
         <div class="single-line" style="width: 100%; display: flex; align-items: center;">
@@ -102,7 +121,8 @@
 
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
+  props: ['items', 'selected', 'label', 'hint', 'rules',
+          'show_if_single_entry', 'multiselect', 'nonmultiselect_allow_clear',
           'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading', 'exists_in_dc'],
   data() {
     return {
@@ -189,6 +209,9 @@ module.exports = {
     },
     on_search_input(value) {
       this.search_query = value;
+    },
+    clear_selection() {
+      this.$emit('update:selected', '');
     },
     toggle_select_all() {
       if (this.search_enabled && this.search_query) {

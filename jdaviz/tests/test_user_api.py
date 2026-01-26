@@ -51,10 +51,10 @@ def test_toggle_api_hints(specviz_helper):
     assert specviz_helper.app.state.show_api_hints is False
 
 
-def test_wildcard_match_sources(specviz_helper, premade_spectrum_list):
+def test_wildcard_match_extensions(specviz_helper, premade_spectrum_list):
     """
     Test wildcard matching for source selection in Specviz. This tests setting
-    the selection directly as opposed to using ``load``, via ``ldr.importer.sources``
+    the selection directly as opposed to using ``load``, via ``ldr.importer.extension``
     (whereas in the following test this is done through ``user_api.extension``, same idea).
     """
     default_choices = ['1D Spectrum at index: 0',
@@ -66,7 +66,7 @@ def test_wildcard_match_sources(specviz_helper, premade_spectrum_list):
     # Testing directly
     ldr = specviz_helper.loaders['object']
     ldr.object = premade_spectrum_list
-    selection_obj = ldr.importer.sources
+    selection_obj = ldr.importer.extension
     assert selection_obj.selected == [default_choices[0]]
     assert selection_obj.choices == default_choices
     # Resetting to empty
@@ -76,22 +76,22 @@ def test_wildcard_match_sources(specviz_helper, premade_spectrum_list):
     err_str2 = f"are one of {selection_obj.choices}, reverting selection to []"
     with pytest.raises(ValueError,
                        match=re.escape(f"{err_str1} ['bad *'] {err_str2}")):
-        ldr.importer.sources = 'bad *'
+        ldr.importer.extension = 'bad *'
 
     with pytest.raises(ValueError,
                        match=re.escape(f"{err_str1} ['bad *', '* result'] {err_str2}")):
-        ldr.importer.sources = ['bad *', '* result']
+        ldr.importer.extension = ['bad *', '* result']
 
     with pytest.raises(ValueError,
                        match=re.escape(f"{err_str1} ['another', 'bad * result'] {err_str2}")):
-        ldr.importer.sources = ['another', 'bad * result']
+        ldr.importer.extension = ['another', 'bad * result']
 
     # Check that selected is still/reverted successfully to []
     assert selection_obj.selected == []
 
     # This should get set to True automatically when multiple selections are made
     selection_obj.multiselect = False
-    ldr.importer._obj.user_api.sources = '*'
+    ldr.importer._obj.user_api.extension = '*'
     assert selection_obj.selected == selection_obj.choices
     assert selection_obj.multiselect is True
 
@@ -101,7 +101,7 @@ def test_wildcard_match_extension(imviz_helper, multi_extension_image_hdu_wcs):
     Test wildcard matching for source selection in Specviz. This tests setting
     the selection directly as opposed to using ``load``, via
     ``ldr.importer._obj.user_api.extensions`` (whereas in the previous test this is
-    done through ``user_api.sources``, same idea).
+    done through ``user_api.extension``, same idea).
     """
     default_choices = ['1: [SCI,1]',
                        '2: [MASK,1]',

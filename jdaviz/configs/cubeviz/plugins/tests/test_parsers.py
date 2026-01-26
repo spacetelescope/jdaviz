@@ -259,10 +259,3 @@ def test_invalid_data_types(cubeviz_helper):
 
     with pytest.raises(ValueError, match='no valid loaders found for input.*'):
         cubeviz_helper.load_data(WCS(naxis=3))
-
-    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
-        cubeviz_helper.load_data(Spectrum(flux=np.ones((2, 2)) * u.nJy, spectral_axis_index=1))
-
-    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
-        # 1D / 3D would be parsed as fluxes in a Spectrum (1d/3d), 2D not supported in cubeviz
-        cubeviz_helper.load_data(np.ones((2, 2)))

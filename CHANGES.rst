@@ -10,6 +10,9 @@ New Features
 
 - Astroquery loader supports cone-search for JWST or HST data products, where applicable. [#3907]
 
+- "Spectrum List" and "Spectrum List Concatenated" loaders have now been absorbed into the "1D Spectrum" loader
+  via the ``extension`` and ``concatenate`` options. [#3953]
+
 Cubeviz
 ^^^^^^^
 
