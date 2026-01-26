@@ -180,7 +180,7 @@ function initializeWireframeController(container) {
             html += '<div class="plot-options-input-bar"></div>';
             html += '</div>';
         } else {
-            html += '<div style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 16px;">No layers in selected viewer</div>';
+            html += '<div class="plot-options-empty-message" style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 16px;">No layers in selected viewer</div>';
         }
 
         return html;

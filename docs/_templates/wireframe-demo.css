@@ -926,6 +926,19 @@ html[data-theme="light"] .wireframe-cycle-control::after {
     color: #1a1a1a;
 }
 
+html[data-theme="light"] .plot-options-section-header {
+    color: rgba(26, 26, 26, 0.6);
+    border-bottom: 1px solid rgba(26, 26, 26, 0.1);
+}
+
+html[data-theme="light"] .plot-options-viewer-select label {
+    color: rgba(26, 26, 26, 0.7);
+}
+
+html[data-theme="light"] .plot-options-empty-message {
+    color: rgba(26, 26, 26, 0.5) !important;
+}
+
 .jupyter-api-snippet-header {
     display: flex;
     align-items: center;
