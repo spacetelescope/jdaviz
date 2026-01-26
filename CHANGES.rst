@@ -17,6 +17,9 @@ Bug Fixes
 
 - Fixed filedrop bug where parsers were unable to detect file formats. [#3986]
 
+- Fixed bug when initializing relevant 2D Spectrum plugins when there are viewers
+  with mixed pixel / wavelength spectral units. [#3982]
+
 Cubeviz
 ^^^^^^^
 
