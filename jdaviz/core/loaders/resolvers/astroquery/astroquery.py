@@ -27,12 +27,8 @@ class AstroqueryResolver(BaseConeSearchResolver):
         super().__init__(*args, **kwargs)
         self.telescope = SelectPluginComponent(
             self, items="telescope_items", selected="telescope_selected",
-            manual_options=self.telescope_options
+            manual_options=['JWST', 'HST', 'SDSS', 'Gaia']
         )
-
-    @property
-    def telescope_options(self):
-        return ['JWST', 'HST', 'SDSS', 'Gaia']
 
     @property
     def user_api(self):
