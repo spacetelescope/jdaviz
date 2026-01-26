@@ -54,7 +54,7 @@ class Imviz(ImageConfigHelper):
         by passing in the new viewer ID and the desired data label,
         once per dataset you wish to display.
 
-        Alternately, you can also display data interactively via the GUI.
+        Alternately, you can also display data interactively via the UI.
 
         Parameters
         ----------

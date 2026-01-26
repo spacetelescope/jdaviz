@@ -49,7 +49,6 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
         for the profile on the cross-dispersion axis, centered at y_pixel.
     * ``profile``
         Computed profile, as a Quantity array.
-
     """
 
     template_file = __file__, "cross_dispersion_profile.vue"

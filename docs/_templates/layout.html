@@ -1,0 +1,36 @@
+{# Custom layout template for pydata-sphinx-theme #}
+{# Extends the base layout to allow customization of navbar and header #}
+{% extends "!layout.html" %}
+
+{# Custom navbar - show different items based on page metadata #}
+{% block header %}
+  {% if pagename == 'index' %}
+    {# Landing page - show navbar #}
+    {{ super() }}
+  {% elif meta and meta.get('navbar_style') == 'minimal' %}
+    {# New pages - show simplified navbar #}
+    {{ super() }}
+    <style>
+      /* Customize navbar for new pages */
+      .bd-header {
+        background: var(--pst-color-primary);
+      }
+    </style>
+  {% else %}
+    {# Deprecated/legacy pages - keep original navbar #}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
+
+{# Optional: Customize the navbar contents #}
+{% block navbar_header_items %}
+  {% if not (pagename == 'index') %}
+    {# Show standard navbar items for all pages except landing page #}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
+
+{# Optional: Add custom navbar links based on platform context #}
+{% block navbar_end %}
+  {{ super() }}
+{% endblock %}

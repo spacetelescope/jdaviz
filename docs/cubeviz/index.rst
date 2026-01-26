@@ -7,6 +7,8 @@
 |cubeviz_logo| Cubeviz
 ######################
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 .. image:: https://stsci.box.com/shared/static/esod50xtbn07wvls1ia07urnr65tv2bj.gif
     :alt: Introductory video tour of the Cubeviz configuration and its features
 

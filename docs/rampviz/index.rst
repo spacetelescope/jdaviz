@@ -8,6 +8,8 @@
 |rampviz_logo| Rampviz
 ######################
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 .. warning::
 
     Heads up: Rampviz is new, and in active development.

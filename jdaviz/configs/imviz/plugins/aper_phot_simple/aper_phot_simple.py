@@ -52,8 +52,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
     * :meth:`calculate_batch_photometry`
     * :meth:`calculate_photometry`
-    * :meth:`fitted_models`
-    * :meth:`fit_radial_profile`
+    * ``fitted_models``
+      Dictionary of fitted models.
+    * ``fit_radial_profile``
+      Whether to fit a radial profile to the data.
     * :meth:`unpack_batch_options`
     * ``aperture`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
     * ``background`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):

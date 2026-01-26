@@ -45,6 +45,10 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      Dataset to use for ramp extraction.
+    * ``function`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      Function to use for the extraction (Mean, Median, Min, Max, Sum).
     * ``aperture`` (:class:`~jdaviz.core.template_mixin.ApertureSubsetSelect`):
       Subset to use for the ramp extraction, or ``Entire Cube``.
     * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):

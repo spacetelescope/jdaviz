@@ -4,6 +4,8 @@
 Data Analysis Plugins
 *********************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 The Specviz data analysis plugins are meant to aid quick-look analysis
 of 1D spectroscopic data. All plugins are accessed via the :guilabel:`plugin`
 icon in the upper right corner of the Specviz application. These plugins are
@@ -171,11 +173,11 @@ Common parameters include:
     # Get the current value of a fitter parameter
     max_iterations = plugin_mf.get_fitter_parameter('maxiter')
     print(f"Current max iterations: {max_iterations}")
-    
+
     # Set a new value for a fitter parameter
     plugin_mf.set_fitter_parameter('maxiter', 200)
     plugin_mf.set_fitter_parameter('filter_non_finite', False)
-    
+
     # Verify the change
     new_max_iterations = plugin_mf.get_fitter_parameter('maxiter')
     print(f"New max iterations: {new_max_iterations}")

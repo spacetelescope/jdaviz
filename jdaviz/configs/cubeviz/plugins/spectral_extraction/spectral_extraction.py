@@ -48,6 +48,10 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``show_live_preview``
+      Whether to show a live preview of the extracted spectrum.
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`)
+      Dataset to use for spectral extraction.
     * ``aperture`` (:class:`~jdaviz.core.template_mixin.ApertureSubsetSelect`):
       Subset to use for the spectral extraction, or ``Entire Cube``.
     * ``wavelength_dependent``:
