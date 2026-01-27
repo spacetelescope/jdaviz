@@ -64,6 +64,19 @@
         >{{ clear_btn_lbl }}
       </plugin-action-button>
     </v-row>
+
+    <div style="margin-left: 14px; margin-right: 14px">
+      <plugin-loaders-panel
+        v-if="loader_items && loader_items.length > 0"
+        :loader_panel_ind.sync="loader_panel_ind"
+        :loader_items="loader_items"
+        :loader_selected.sync="loader_selected"
+        :api_hints_enabled="api_hints_enabled"
+        :api_hints_obj="api_hints_obj"
+        title="Load Table into App"
+        :hide_resolver="true"
+      ></plugin-loaders-panel>
+    </div>
   </div>
 </template>
 

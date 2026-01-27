@@ -52,7 +52,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('clear_table', 'export_table',))
+        return PluginUserApi(self, expose=('table', 'measurements_table',
+                                           'clear_table', 'export_table'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -140,6 +141,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                      'Separation (arcsec)', 'Distance (pix)', 'Position Angle (deg)',
                      'Start X', 'End X', 'Start Y', 'End Y',
                      'Δx', 'Δy', 'Viewer', 'Data Label'],
+            enable_load_into_app=True,
         )
         return table
 
