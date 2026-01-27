@@ -929,4 +929,3 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         # if changing from one link type to another, reset the limits:
         if align_by != old_align_by:
             viewer.state.reset_limits()
-
