@@ -125,16 +125,16 @@ Some shortcuts require a specific plugin to be open.
      - 2+ images loaded
    * - ``l``
      - Plot line profiles at cursor position
-     - :ref:`Line Profile (XY) <line-profile-xy>` plugin open
+     - :ref:`Line Profile (XY) <plugins-line-profiles>` plugin open
    * - ``m``
      - Add marker at cursor position
-     - :ref:`Markers <markers-plugin>` plugin open
+     - :ref:`Markers <info-markers>` plugin open
    * - ``d``
      - Set distance measurement point (press twice to complete)
-     - :ref:`Markers <markers-plugin>` plugin open
+     - :ref:`Markers <info-markers>` plugin open
    * - ``Alt+d`` (``Option+d``)
      - Set distance point with snap to nearest marker
-     - :ref:`Markers <markers-plugin>` plugin open
+     - :ref:`Markers <info-markers>` plugin open
    * - ``r``
      - Clear all markers and distance lines
-     - :ref:`Markers <markers-plugin>` plugin open
+     - :ref:`Markers <info-markers>` plugin open
