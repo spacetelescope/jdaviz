@@ -308,17 +308,16 @@ class TestTableViewerTools:
 
         apply_tool = toolbar.tools['jdaviz:table_apply_zoom']
 
-        # Should be disabled with no rows checked
-        enabled, msg = apply_tool.is_enabled()
-        assert not enabled
+        # Should be disabled with no rows checked (non-empty disabled_msg)
+        msg = apply_tool.disabled_msg()
+        assert msg != ''
         assert 'Select rows' in msg
 
         # Check some rows
         self.table_viewer.widget_table.checked = [0, 1]
 
-        # Should now be enabled
-        enabled, msg = apply_tool.is_enabled()
-        assert enabled
+        # Should now be enabled (empty disabled_msg)
+        msg = apply_tool.disabled_msg()
         assert msg == ''
 
         toolbar.restore_tools()

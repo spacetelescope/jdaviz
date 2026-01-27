@@ -35,6 +35,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     # string indicating the current tool override mode
     tool_override_mode = traitlets.Unicode("").tag(sync=True)
     # list of custom widget items to display in the toolbar
+    # currently only supports dropdowns:
     # (list of dicts with 'label', 'value', 'items', 'multiselect')
     custom_widget_items = traitlets.List([]).tag(sync=True)
     # currently selected values in custom widgets (list of values, one per widget)
@@ -87,7 +88,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             - 'multiselect': bool, whether to allow multi-select (default False)
         custom_widgets_callback : callable, optional
             A callback function that returns custom_widgets. If provided, this will be
-            called on viewer add/remove to refresh the widget items dynamically.
+            called on viewer add/remove to refresh the widget items dynamically.  Currently
+            only supports dropdowns.
         active_tool : str, optional
             Tool ID to activate after building the toolbar. If not provided,
             the default tool selection logic will be used.
@@ -192,14 +194,11 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             return self.tools[tool_id].is_visible()
         return True
 
-    def _is_enabled(self, tool_id):
-        """Check if a tool is enabled. Returns (enabled, disabled_msg) tuple."""
-        if hasattr(self.tools[tool_id], 'is_enabled'):
-            result = self.tools[tool_id].is_enabled()
-            if isinstance(result, tuple):
-                return result
-            return (result, '')
-        return (True, '')
+    def _disabled_msg(self, tool_id):
+        """Get disabled message for a tool. Empty string means enabled."""
+        if hasattr(self.tools[tool_id], 'disabled_msg'):
+            return self.tools[tool_id].disabled_msg()
+        return ''
 
     def _refresh_custom_widgets(self):
         """Refresh custom widget items from callback, preserving current selections."""
@@ -268,11 +267,10 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 if primary:
                     has_primary = True
 
-                enabled, disabled_msg = self._is_enabled(tool_id)
+                disabled_msg = self._disabled_msg(tool_id)
                 self.tools_data[tool_id] = {**info,
                                             'primary': primary,
                                             'visible': visible,
-                                            'disabled': not enabled,
                                             'disabled_msg': disabled_msg}
 
             # update has_suboptions for all entries in this menu

@@ -568,10 +568,10 @@ class TableApplySubset(_BaseTableApplyTool):
             return False
         return True
 
-    def is_enabled(self):
+    def disabled_msg(self):
         if not len(self.viewer.widget_table.checked):
-            return (False, 'Select rows to create subset')
-        return (True, '')
+            return 'Select rows to create subset'
+        return ''
 
 
 @viewer_tool
@@ -721,10 +721,10 @@ class TableApplyZoom(_BaseTableApplyTool):
             return False
         return True
 
-    def is_enabled(self):
+    def disabled_msg(self):
         if not len(self.viewer.widget_table.checked):
-            return (False, 'Select rows to zoom')
-        return (True, '')
+            return 'Select rows to zoom'
+        return ''
 
 
 @viewer_tool

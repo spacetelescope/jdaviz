@@ -38,14 +38,14 @@
     </span>
 
     <v-btn-toggle v-model="active_tool_id" :style="" class="transparent">
-        <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled, disabled_msg}] of Object.entries(tools_data)" v-if="primary && visible" bottom>
+        <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" v-if="primary && visible" bottom>
             <template v-slot:activator="{ on }">
-                <v-btn v-on="on" icon :value="disabled ? null : id" :disabled="disabled" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''} ${disabled ? 'opacity: 0.5;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
+                <v-btn v-on="on" icon :value="id" :disabled="disabled_msg.length > 0" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''} ${disabled_msg.length > 0 ? 'opacity: 0.5;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
                     <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>
                     <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
                 </v-btn>
             </template>
-            <span>{{ disabled && disabled_msg ? disabled_msg : tooltip }}{{has_suboptions ? " [click arrow for alt. tools]" : ""}}</span>
+            <span>{{ disabled_msg.length > 0 ? disabled_msg : tooltip }}{{has_suboptions ? " [click arrow for alt. tools]" : ""}}</span>
         </v-tooltip>
     </v-btn-toggle>
     <v-menu
