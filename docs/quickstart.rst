@@ -102,3 +102,39 @@ To manually specify the anchor location, append the anchor to sidecar, separated
 Other anchors include: ``split-right``, ``split-left``, ``split-top``, ``split-bottom``,
 ``tab-before``, ``tab-after``, ``right``. An up-to-date list can be found at
 `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_.
+
+
+Keyboard Shortcuts
+------------------
+
+The following keyboard shortcuts are available when your cursor is over an image viewer.
+Some shortcuts require a specific plugin to be open.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 50 30
+
+   * - Key
+     - Action
+     - Requirements
+   * - ``b``
+     - Blink to next image
+     - 2+ images loaded
+   * - ``B`` 
+     - Blink to previous image
+     - 2+ images loaded
+   * - ``l``
+     - Plot line profiles at cursor position
+     - :ref:`Line Profile (XY) <line-profile-xy>` plugin open
+   * - ``m``
+     - Add marker at cursor position
+     - :ref:`Markers <markers-plugin>` plugin open
+   * - ``d``
+     - Set distance measurement point (press twice to complete)
+     - :ref:`Markers <markers-plugin>` plugin open
+   * - ``Alt+d`` (``Option+d``)
+     - Set distance point with snap to nearest marker
+     - :ref:`Markers <markers-plugin>` plugin open
+   * - ``r``
+     - Clear all markers and distance lines
+     - :ref:`Markers <markers-plugin>` plugin open
