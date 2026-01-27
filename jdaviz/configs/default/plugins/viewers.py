@@ -574,8 +574,8 @@ class JdavizViewerWindow(TemplateMixin):
         self.toolbar_widget = "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else ''
         self.data_menu_widget = 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else ''  # noqa
 
-        # Link tool_override_mode from toolbar
-        if viewer.toolbar:
+        # Link tool_override_mode from toolbar (only for NestedJupyterToolbar)
+        if viewer.toolbar and hasattr(viewer.toolbar, 'tool_override_mode'):
             self.tool_override_mode = viewer.toolbar.tool_override_mode
             viewer.toolbar.observe(self._on_toolbar_override_change, names=['tool_override_mode'])
 
@@ -1159,9 +1159,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def _on_table_select_row_click(self, msg):
         """Handle click from image viewer to select/toggle closest table row."""
-        from astropy.coordinates import SkyCoord
-        from astropy import units as u
-
         # Only respond if this message is for this table viewer
         if msg.table_viewer_id != self.reference_id:
             return
@@ -1175,10 +1172,13 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Find the image viewer that sent this message and compute distances
         # to all table rows (not just checked ones)
         try:
+            from jdaviz.core.tools import _get_skycoords_from_table
+
             # Get RA/Dec for all rows in the table
-            all_ras = self.layers[0].layer.get_component('Right Ascension').data
-            all_decs = self.layers[0].layer.get_component('Declination').data
-            skycoords = SkyCoord(ra=all_ras * u.deg, dec=all_decs * u.deg)
+            layer = self.layers[0].layer
+            skycoords = _get_skycoords_from_table(layer)
+            if skycoords is None:
+                return
 
             # Find the viewer and convert all coordinates
             for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
@@ -1233,8 +1233,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def _update_selection_marks(self):
         """Update selection highlight marks in all image viewers."""
-        from astropy.coordinates import SkyCoord
-        from astropy import units as u
+        from jdaviz.core.tools import _get_skycoords_from_table
 
         if not self.widget_table.selection_enabled:
             return
@@ -1245,11 +1244,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             return
 
         # Get RA/Dec for checked rows
-        try:
-            ras = self.layers[0].layer.get_component('Right Ascension').data[checked_rows]
-            decs = self.layers[0].layer.get_component('Declination').data[checked_rows]
-            skycoords = SkyCoord(ra=ras * u.deg, dec=decs * u.deg)
-        except Exception:
+        layer = self.layers[0].layer
+        skycoords = _get_skycoords_from_table(layer, checked_rows)
+        if skycoords is None:
             # If we can't get coordinates, clear marks
             self._clear_selection_marks()
             return

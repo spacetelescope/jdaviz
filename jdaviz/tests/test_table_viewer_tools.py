@@ -19,9 +19,13 @@ class TestTableViewerTools:
         ndd = NDData(arr, wcs=image_2d_wcs)
         deconfigged_helper.load(ndd, data_label='test_image')
 
-        # Use the existing catalog fixture - load with format='Catalog'
+        # Use the existing catalog fixture - load into a Table viewer
         self.catalog = sky_coord_only_source_catalog
-        deconfigged_helper.load(self.catalog, format='Catalog', data_label='test_catalog')
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = self.catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Table'
+        ldr.load()
 
         self.app = deconfigged_helper
         self.wcs = image_2d_wcs
@@ -35,10 +39,8 @@ class TestTableViewerTools:
         self.viewer.shape = (400, 400)
         self.viewer.state._set_axes_aspect_ratio(1)
 
-        # Get the table viewer (created automatically when catalog is loaded)
-        table_viewers = list(deconfigged_helper.app.get_viewers_of_cls('JdavizTableViewer'))
-        assert len(table_viewers) > 0, "No table viewer found after loading catalog"
-        self.table_viewer = table_viewers[0]
+        # Get the table viewer
+        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
 
     def test_table_highlight_tool_activates(self):
         """Test that TableHighlightSelected tool activates properly."""
@@ -192,9 +194,10 @@ class TestTableViewerTools:
 
         # The point should be within bounds
         from astropy.coordinates import SkyCoord
+        from astropy import units as u
         ra = self.catalog['ra'][0]
         dec = self.catalog['dec'][0]
-        skycoord = SkyCoord(ra=ra, dec=dec)
+        skycoord = SkyCoord(ra=ra * u.deg, dec=dec * u.deg)
 
         pixel_coords = self.viewer.state.reference_data.coords.world_to_pixel(skycoord)
         px, py = float(pixel_coords[0]), float(pixel_coords[1])
@@ -332,14 +335,21 @@ class TestTableViewerToolsMultipleViewers:
         ndd = NDData(arr, wcs=image_2d_wcs)
         deconfigged_helper.load(ndd, data_label='test_image')
 
-        # Load catalog using existing fixture
+        # Load catalog into a Table viewer
         self.catalog = sky_coord_only_source_catalog
-        deconfigged_helper.load(self.catalog, format='Catalog', data_label='test_catalog')
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = self.catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Table'
+        ldr.load()
 
         self.app = deconfigged_helper
 
-        # Create a second image viewer
-        deconfigged_helper.create_image_viewer(viewer_name='image-viewer-1')
+        # Create a second image viewer using new_viewers
+        vc = deconfigged_helper.new_viewers['Image']
+        vc.dataset = 'test_image[DATA]'
+        vc.viewer_label = 'Image (2)'
+        vc()
 
         # Get viewers
         image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
@@ -352,8 +362,7 @@ class TestTableViewerToolsMultipleViewers:
             v.state._set_axes_aspect_ratio(1)
 
         # Get table viewer
-        table_viewers = list(deconfigged_helper.app.get_viewers_of_cls('JdavizTableViewer'))
-        self.table_viewer = table_viewers[0]
+        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
 
     def test_zoom_applies_to_all_viewers_by_default(self):
         """Test that zoom applies to all viewers when no specific viewer is selected."""

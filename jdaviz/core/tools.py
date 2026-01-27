@@ -21,7 +21,7 @@ from jdaviz.core.events import (LineIdentifyMessage, SpectralMarksChangedMessage
                                 CatalogSelectClickEventMessage, FootprintSelectClickEventMessage,
                                 FootprintOverlayClickMessage, TableSelectRowClickMessage)
 from jdaviz.core.marks import SpectralLine, FootprintOverlay, RegionOverlay
-from jdaviz.utils import get_top_layer_index
+from jdaviz.utils import get_top_layer_index, in_ra_comps, in_dec_comps
 
 __all__ = []
 
@@ -37,6 +37,54 @@ BqplotEllipseMode.icon = os.path.join(ICON_DIR, 'select_ellipse.svg')
 BqplotCircularAnnulusMode.icon = os.path.join(ICON_DIR, 'select_annulus.svg')
 BqplotXRangeMode.icon = os.path.join(ICON_DIR, 'select_x.svg')
 BqplotYRangeMode.icon = os.path.join(ICON_DIR, 'select_y.svg')
+
+
+def _get_skycoords_from_table(layer, rows=None):
+    """
+    Get SkyCoord for rows in a table layer.
+
+    Searches for RA and Dec columns using flexible name matching.
+
+    Parameters
+    ----------
+    layer : glue Data
+        The table data layer
+    rows : array-like, optional
+        Row indices to select. If None, returns all rows.
+
+    Returns
+    -------
+    SkyCoord or None
+        SkyCoord for the selected rows, or None if RA/Dec columns not found.
+    """
+    from astropy.coordinates import SkyCoord
+    from astropy import units as u
+
+    # Find RA and Dec component IDs
+    ra_comp = None
+    dec_comp = None
+
+    for comp_id in layer.component_ids():
+        comp_name = str(comp_id)
+        if in_ra_comps(comp_name) and ra_comp is None:
+            ra_comp = comp_id
+        elif in_dec_comps(comp_name) and dec_comp is None:
+            dec_comp = comp_id
+
+    if ra_comp is None or dec_comp is None:
+        return None
+
+    try:
+        ras = layer.get_component(ra_comp).data
+        decs = layer.get_component(dec_comp).data
+
+        if rows is not None:
+            ras = ras[rows]
+            decs = decs[rows]
+
+        return SkyCoord(ra=ras * u.deg, dec=decs * u.deg)
+    except Exception:
+        return None
 
 
 class _BaseZoomHistory:
@@ -583,12 +631,10 @@ class TableApplyZoom(_BaseTableApplyTool):
     _state_attr = '_table_zoom_original_selection_enabled'
 
     def on_apply(self, selected_rows):
-        from astropy.coordinates import SkyCoord
-        from astropy import units as u
-
-        ras = self.viewer.layers[0].layer.get_component('Right Ascension').data[selected_rows]
-        decs = self.viewer.layers[0].layer.get_component('Declination').data[selected_rows]
-        skycoords = SkyCoord(ra=ras * u.deg, dec=decs * u.deg)
+        layer = self.viewer.layers[0].layer
+        skycoords = _get_skycoords_from_table(layer, selected_rows)
+        if skycoords is None:
+            return
 
         # Get the selected viewer IDs from the custom widget
         selected_viewer_ids = []
