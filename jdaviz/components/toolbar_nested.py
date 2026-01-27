@@ -66,7 +66,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                                       handler=lambda msg: self.restore_tools(all_viewers=False))
 
     def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[],
-                       custom_widgets=None, custom_widgets_callback=None):
+                       custom_widgets=None, custom_widgets_callback=None, active_tool=None):
         """
         Rebuild the toolbar with passed values.
 
@@ -87,6 +87,9 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         custom_widgets_callback : callable, optional
             A callback function that returns custom_widgets. If provided, this will be
             called on viewer add/remove to refresh the widget items dynamically.
+        active_tool : str, optional
+            Tool ID to activate after building the toolbar. If not provided,
+            the default tool selection logic will be used.
         """
         # Store the override mode
         self.tool_override_mode = tool_override_mode
@@ -104,6 +107,10 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
 
         # Rebuild toolbar with new configuration
         self._build_toolbar(tools_nested, default_tool_priority)
+
+        # Activate the specified tool if provided
+        if active_tool is not None and active_tool in self.tools:
+            self.active_tool_id = active_tool
 
     def _build_toolbar(self, tools_nested, default_tool_priority):
         """

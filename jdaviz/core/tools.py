@@ -379,7 +379,7 @@ class _BaseTableSelectionTool(Tool):
         ['jdaviz:imagepanzoom'],
         ['jdaviz:select_table_row']
     ]
-    image_viewer_override_title = 'Table Selection'
+    image_viewer_override_title = ''  # define in subclass
 
     def _get_image_viewers(self):
         """Get list of image viewers."""
@@ -416,7 +416,8 @@ class _BaseTableSelectionTool(Tool):
             # which table viewer to send the message to
             image_viewer.toolbar.override_tools(
                 self.image_viewer_override_tools,
-                self.image_viewer_override_title
+                self.image_viewer_override_title,
+                active_tool='jdaviz:select_table_row'
             )
             # Configure the select_table_row tool with this table viewer's ID
             if 'jdaviz:select_table_row' in image_viewer.toolbar.tools:
@@ -431,7 +432,8 @@ class TableHighlightSelected(_BaseTableSelectionTool):
     action_text = 'Highlight selected'
     tool_tip = 'Enable row selection mode to highlight checked entries in image viewers'
     override_tools = []  # No apply button, just the close button
-    override_title = 'Highlight Selection'
+    override_title = 'Table Highlight Selection'
+    image_viewer_override_title = 'Table Highlight Selection'
     _state_attr = '_table_highlight_original_selection_enabled'
 
     def _get_image_viewers(self):
@@ -489,6 +491,7 @@ class TableSubset(_BaseTableSelectionTool):
     tool_tip = 'Enable row selection mode to create a subset from table rows'
     override_tools = ['jdaviz:table_apply_subset']
     override_title = 'Table Subset Selection'
+    image_viewer_override_title = 'Table Subset Selection'
     _state_attr = '_table_subset_original_selection_enabled'
 
     def is_visible(self):
@@ -531,6 +534,7 @@ class TableZoomToSelected(_BaseTableSelectionTool):
     tool_tip = 'Enable row selection mode to zoom all applicable viewers to checked entries'
     override_tools = ['jdaviz:table_apply_zoom']
     override_title = 'Table Zoom Selection'
+    image_viewer_override_title = 'Table Zoom Selection'
     _state_attr = '_table_zoom_original_selection_enabled'
 
     def _get_image_viewers(self):
@@ -597,56 +601,67 @@ class TableApplyZoom(_BaseTableApplyTool):
                 continue
 
             i_top = get_top_layer_index(viewer)
+            if i_top is None:
+                continue
             image = viewer.layers[i_top].layer
 
-            # Get pixel coordinates in reference data frame
-            pixel_coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
-            ref_xs, ref_ys = pixel_coords[0], pixel_coords[1]
-
-            # Transform reference data pixels to image coordinates (for centering)
-            x_min = np.inf
-            x_max = -np.inf
-            y_min = np.inf
-            y_max = -np.inf
-            for ref_x, ref_y in zip(np.atleast_1d(ref_xs), np.atleast_1d(ref_ys)):
-                cur_x, cur_y = viewer._get_real_xy(image, float(ref_x), float(ref_y))[:2]
-                if cur_x < x_min:
-                    x_min = cur_x
-                if cur_x > x_max:
-                    x_max = cur_x
-                if cur_y < y_min:
-                    y_min = cur_y
-                if cur_y > y_max:
-                    y_max = cur_y
-
-            # Handle single point case - use a fixed pixel padding
-            if x_min == x_max and y_min == y_max:
-                pix_pad = 50  # Fixed padding for single point
+            # Get pixel coordinates in the TOP LAYER's coordinate system
+            # (this is what center_on expects)
+            if hasattr(image, 'coords') and image.coords is not None:
+                try:
+                    pixel_coords = image.coords.world_to_pixel(skycoords)
+                    xs, ys = np.atleast_1d(pixel_coords[0]), np.atleast_1d(pixel_coords[1])
+                except Exception:
+                    continue
             else:
-                # Use 20% padding of the larger dimension, with a minimum of 20 pixels
-                pix_pad = max(20, 0.2 * max(x_max - x_min, y_max - y_min))
+                # No WCS on top layer, skip this viewer
+                continue
 
-            x_min -= pix_pad
-            x_max += pix_pad
-            y_min -= pix_pad
-            y_max += pix_pad
+            # Filter out NaN values
+            valid = np.isfinite(xs) & np.isfinite(ys)
+            if not np.any(valid):
+                continue
+            xs, ys = xs[valid], ys[valid]
 
-            # Convert all bounds to reference data coordinates
-            new_x_min = viewer._get_real_xy(image, x_min, y_min, reverse=True)[0]
-            new_x_max = viewer._get_real_xy(image, x_max, y_max, reverse=True)[0]
-            new_y_min = viewer._get_real_xy(image, x_min, y_min, reverse=True)[1]
-            new_y_max = viewer._get_real_xy(image, x_max, y_max, reverse=True)[1]
+            # Calculate center in top layer coordinates
+            x_center = 0.5 * (np.min(xs) + np.max(xs))
+            y_center = 0.5 * (np.min(ys) + np.max(ys))
 
-            # Ensure min < max (WCS can flip coordinates)
-            if new_x_min > new_x_max:
-                new_x_min, new_x_max = new_x_max, new_x_min
-            if new_y_min > new_y_max:
-                new_y_min, new_y_max = new_y_max, new_y_min
+            # Calculate radius as max distance from center to any point
+            # This ensures all points are visible
+            distances = np.sqrt((xs - x_center)**2 + (ys - y_center)**2)
+            radius = np.max(distances) if len(distances) > 0 else 0
 
-            # Set all limits explicitly, then adjust aspect ratio
+            # For single point or very close points, use a minimum radius
+            if radius < 20:
+                radius = 50
+
+            # Add 20% padding
+            radius *= 1.2
+
+            # Center on the middle point (in top layer coordinates)
+            viewer.center_on((x_center, y_center))
+
+            # Now convert center and radius to reference data coordinates for zoom
+            # Get center in reference data coordinates
+            ref_center = viewer._get_real_xy(image, x_center, y_center, reverse=True)
+
+            # Get a point at the edge to determine radius in reference coordinates
+            # We need to check both x and y directions in case of rotation/scale differences
+            ref_x_edge = viewer._get_real_xy(image, x_center + radius, y_center, reverse=True)
+            ref_y_edge = viewer._get_real_xy(image, x_center, y_center + radius, reverse=True)
+
+            # Calculate effective radius in reference coordinates
+            ref_radius_x = abs(ref_x_edge[0] - ref_center[0])
+            ref_radius_y = abs(ref_y_edge[1] - ref_center[1])
+            ref_radius = max(ref_radius_x, ref_radius_y)
+
+            # Set Y limits (most displays are wider, so fit Y first)
+            # Then _adjust_limits_aspect will expand X as needed
+            new_y_min = ref_center[1] - ref_radius
+            new_y_max = ref_center[1] + ref_radius
+
             with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                viewer.state.x_min = new_x_min
-                viewer.state.x_max = new_x_max
                 viewer.state.y_min = new_y_min
                 viewer.state.y_max = new_y_max
             viewer.state._adjust_limits_aspect()
