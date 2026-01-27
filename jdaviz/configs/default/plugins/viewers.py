@@ -1205,7 +1205,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     current_checked.append(ind)
                 self.widget_table.checked = current_checked
                 return
-        except Exception:
+        except Exception:  # nosec # pragma: no cover
             pass
 
     def _on_checked_changed(self, change):

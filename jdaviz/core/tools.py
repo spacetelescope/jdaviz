@@ -611,7 +611,7 @@ class TableApplyZoom(_BaseTableApplyTool):
                 try:
                     pixel_coords = image.coords.world_to_pixel(skycoords)
                     xs, ys = np.atleast_1d(pixel_coords[0]), np.atleast_1d(pixel_coords[1])
-                except Exception:
+                except Exception:  # nosec # pragma: no cover
                     continue
             else:
                 # No WCS on top layer, skip this viewer
