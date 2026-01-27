@@ -1263,7 +1263,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                 mark = self._get_selection_mark(viewer)
                 mark.update_xy(xs, ys)
                 mark.visible = True
-            except Exception:
+            except Exception:  # nosec # pragmas: no cover
                 pass
 
     def _clear_selection_marks(self):
