@@ -92,40 +92,16 @@
       hint="Select the viewer to use for the new data entry."
     ></plugin-viewer-create-new>
 
-    <v-row justify="end">
-      <j-tooltip :tooltipcontent="data_label_overwrite ? 'Import and replace existing entries' : 'Import data'">
-        <plugin-action-button
-          :spinner="import_spinner"
-          :disabled="import_disabled"
-          :results_isolated_to_plugin="false"
-          :api_hints_enabled="api_hints_enabled"
-          @click="import_clicked">
-          {{ api_hints_enabled ?
-            'ldr.load()'
-            :
-            importButtonText
-          }}
-        </plugin-action-button>
-      </j-tooltip>
-    </v-row>
+    <plugin-import-button
+      :spinner="import_spinner"
+      :disabled="import_disabled"
+      :api_hints_enabled="api_hints_enabled"
+      api_hint="ldr.load()"
+      :data_label_overwrite="data_label_overwrite"
+      :data_label_is_prefix="data_label_is_prefix"
+      :data_label_suffices="data_label_suffices"
+      :data_label_overwrite_by_index="data_label_overwrite_by_index"
+      @click="import_clicked">
+    </plugin-import-button>
   </v-container>
 </template>
-
-<script>
-module.exports = {
-  computed: {
-    overwriteCount() {
-      if (!this.data_label_overwrite_by_index) return 0;
-      return this.data_label_overwrite_by_index.filter(x => x).length;
-    },
-    importButtonText() {
-      if (this.data_label_is_prefix && this.overwriteCount > 0) {
-        return 'Import (overwrite ' + this.overwriteCount + '/' + this.data_label_suffices.length + ')';
-      } else if (this.data_label_overwrite) {
-        return 'Import (overwrite)';
-      }
-      return 'Import';
-    }
-  }
-};
-</script>

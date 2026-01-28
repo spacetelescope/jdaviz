@@ -30,22 +30,14 @@
       hint="Select the viewer to use for the new data entry."
     ></plugin-viewer-create-new>
 
-    <v-row justify="end">
-      <j-tooltip :tooltipcontent="data_label_overwrite ? 'Import and replace existing entry' : 'Import data'">
-        <plugin-action-button
-          :spinner="import_spinner"
-          :disabled="import_disabled"
-          :results_isolated_to_plugin="false"
-          :api_hints_enabled="api_hints_enabled"
-          @click="import_clicked">
-          {{ api_hints_enabled ?
-            'ldr.load()'
-            :
-            (data_label_overwrite ? 'Import (overwrite)' : 'Import')
-          }}
-        </plugin-action-button>
-      </j-tooltip>
-    </v-row>
+    <plugin-import-button
+      :spinner="import_spinner"
+      :disabled="import_disabled"
+      :api_hints_enabled="api_hints_enabled"
+      api_hint="ldr.load()"
+      :data_label_overwrite="data_label_overwrite"
+      @click="import_clicked">
+    </plugin-import-button>
 
   </v-container>
 </template>
