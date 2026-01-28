@@ -1,14 +1,15 @@
 from astropy.coordinates import SkyCoord
+from astropy.io.fits import BinTableHDU, HDUList, TableHDU
 from astropy.table import Table, QTable
 import astropy.units as u
 import numpy as np
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Any, Bool, Int, List, Unicode, observe
 
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
-from jdaviz.core.template_mixin import SelectPluginComponent
+from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import RA_COMPS, DEC_COMPS
+from jdaviz.utils import RA_COMPS, DEC_COMPS, create_data_hash
 
 __all__ = ['CatalogImporter']
 
@@ -47,21 +48,79 @@ class CatalogImporter(BaseImporterToDataCollection):
     col_other_selected = List().tag(sync=True)
     col_other_multiselect = Bool(True).tag(sync=True)
 
+    # HDUList-specific options
+    input_as_table = Any(None)
+    idx_first_table_hdu = Int(None)
+    input_has_extensions = Bool(False).tag(sync=True)
+    extension_items = List().tag(sync=True)
+    extension_selected = Any().tag(sync=True)
+    extension_multiselect = Bool(True).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if not self.is_valid:
             return
 
+        if isinstance(self.input, HDUList):
+            self.input_has_extensions = True
+
+            ext_options = [{'label': f"{index}: [{hdu.name},{hdu.ver}]",
+                            'name': hdu.name,
+                            'ver': hdu.ver,
+                            'name_ver': f"{hdu.name},{hdu.ver}",
+                            'index': index,
+                            'data_hash': create_data_hash(hdu),
+                            'obj': hdu} for index, hdu in enumerate(self.input)]
+
+            self.extension = SelectFileExtensionComponent(self,
+                                                          items='extension_items',
+                                                          selected='extension_selected',
+                                                          multiselect='extension_multiselect',
+                                                          manual_options=ext_options)
+            self.extension.selected = [self.extension.choices[self.idx_first_table_hdu]]
+
+        else:
+            # otherwise, we got a Table object as input and can proceed
+            # to create the column selection components directly
+            self.input_has_extensions = False
+            self._create_col_selection_components(msg=None)
+
+    @observe('extension_selected')
+    def _on_ext_selected(self, msg):
+        """
+        When a HDUList extension is selected, convert to a Table and set
+        self.input_as_table.
+        """
+        if msg['new'] is not None and hasattr(self, 'extension'):
+            table_ext = self.extension.selected_obj[0]
+            if isinstance(table_ext, (TableHDU, BinTableHDU)):
+                self.input_as_table = QTable(table_ext.data)
+            else:
+                self.input_as_table = None
+
+    @observe('input_as_table')
+    def _create_col_selection_components(self, msg):
+        """
+        Create SelectPluginComponents for special table column selections
+        (e.g. RA/Dec, X/Y). This is either called straight away in init to create
+        these components when the input is already a table, or after an extension
+        is selected and converted to a table by setting self.input_as_table.
+        """
+        input = self.input_as_table if self.input_as_table is not None else self.input
+
+        if input is None:
+            return
+
         # dropdowns for catalogs with source positions in sky coordinates
         self.col_ra = SelectPluginComponent(self,
                                             items='col_ra_items',
                                             selected='col_ra_selected',
-                                            manual_options=self._guess_coord_cols('ra'))
+                                            manual_options=self._guess_coord_cols('ra', input))
         self.col_dec = SelectPluginComponent(self,
                                              items='col_dec_items',
                                              selected='col_dec_selected',
-                                             manual_options=self._guess_coord_cols('dec'))
+                                             manual_options=self._guess_coord_cols('dec', input))
 
         self.col_ra_unit = SelectPluginComponent(self,
                                                  items='col_ra_unit_items',
@@ -76,26 +135,40 @@ class CatalogImporter(BaseImporterToDataCollection):
         self.col_id = SelectPluginComponent(self,
                                             items='col_id_items',
                                             selected='col_id_selected',
-                                            manual_options=['Default (index)'] + self.input.colnames)  # noqa
+                                            manual_options=['Default (index)'] + input.colnames)  # noqa
 
         # dropdowns for tables with pixel source positions
         self.col_x = SelectPluginComponent(self,
                                            items='col_x_items',
                                            selected='col_x_selected',
-                                           manual_options=self._guess_coord_cols('x'))
+                                           manual_options=self._guess_coord_cols('x', input))
         self.col_y = SelectPluginComponent(self,
                                            items='col_y_items',
                                            selected='col_y_selected',
-                                           manual_options=self._guess_coord_cols('y'))
+                                           manual_options=self._guess_coord_cols('y', input))
 
         # dropdowns for (optional) additional columns
         self.col_other = SelectPluginComponent(self,
                                                items='col_other_items',
                                                selected='col_other_selected',
-                                               manual_options=self.input.colnames,
+                                               manual_options=input.colnames,
                                                multiselect='col_other_multiselect')
 
-    def _guess_coord_cols(self, col):
+    @property
+    def is_valid(self):
+        if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
+            # NOTE: temporary during deconfig process
+            return False
+        if isinstance(self.input, (Table, QTable)) and len(self.input):
+            return True
+        elif isinstance(self.input, HDUList):
+            for i, hdu in enumerate(self.input):
+                if isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0:
+                    self.idx_first_table_hdu = i
+                    return True
+        return False
+
+    def _guess_coord_cols(self, col, tab):
         """
         Rough guess at detecting RA/Dec/X/Y columns from input table to determine
         the initial selections for the column select dropdown. This starts
@@ -106,8 +179,9 @@ class CatalogImporter(BaseImporterToDataCollection):
         columns will be '---' (no selection)
         """
 
-        tab = self.input
-        colnames = self.input.colnames
+        input = self.input_as_table if self.input_as_table is not None else self.input
+
+        colnames = input.colnames
 
         if colnames is None:
             return
@@ -186,6 +260,8 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         import_disabled = False
 
+        input = self.input_as_table if self.input_as_table is not None else self.input
+
         if msg['name'] in ('col_ra_selected', 'col_dec_selected'):
 
             axis = ra if msg['name'] == 'col_ra_selected' else dec
@@ -202,13 +278,13 @@ class CatalogImporter(BaseImporterToDataCollection):
                 return
 
             has_units = False
-            if isinstance(self.input[axis], SkyCoord):
+            if isinstance(input[axis], SkyCoord):
                 has_units = True
-            elif hasattr(self.input[axis], 'unit'):
-                if self.input[axis].unit is not None:
+            elif hasattr(input[axis], 'unit'):
+                if input[axis].unit is not None:
                     has_units = True
                     # unit must be an angle unit
-                    if self.input[axis].unit.physical_type != 'angle':
+                    if input[axis].unit.physical_type != 'angle':
                         has_units = False
 
             # set the 'has units' traitlets for ra/dec, which determine if the unit
@@ -220,7 +296,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
             # disable import if the same ra and dec columns are selected
             # and they are NOT a SkyCoord column (which contains both RA and Dec),
-            if ra == dec and not isinstance(self.input[axis], SkyCoord):
+            if ra == dec and not isinstance(input[axis], SkyCoord):
                 import_disabled = True
             else:
                 import_disabled = False
@@ -251,16 +327,9 @@ class CatalogImporter(BaseImporterToDataCollection):
         return ImporterUserApi(self, expose=expose)
 
     @property
-    def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
-            # NOTE: temporary during deconfig process
-            return False
-        if isinstance(self.input, (Table, QTable)) and len(self.input):
-            return True
-        return False
-
-    @property
     def output_cols(self):
+
+        input = self.input_as_table if self.input_as_table is not None else self.input
 
         coordinate_cols = []
         for col in [self.col_ra_selected, self.col_dec_selected]:
@@ -274,18 +343,23 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         cols_all = coordinate_cols + self.col_other_selected
 
-        return [col for col in set(cols_all) if col in self.input.colnames]
+        return [col for col in set(cols_all) if col in input.colnames]
 
     @property
     def output(self):
 
-        table = self.input[self.output_cols]
+        input = self.input_as_table if self.input_as_table is not None else self.input
+
+        if self.input_as_table is None and not isinstance(input, (Table, QTable)):
+            return
+
+        table = input[self.output_cols]
         output_table = QTable()
 
         # Handle RA / Dec columns, if selected
         if (self.col_ra_selected in table.colnames) and (self.col_dec_selected in table.colnames):  # noqa
-            ra = self.input[self.col_ra_selected]
-            dec = self.input[self.col_dec_selected]
+            ra = input[self.col_ra_selected]
+            dec = input[self.col_dec_selected]
 
             # The only modification made to the output table is the addition of individual
             # RA, Dec columns if the input columns are SkyCoord. This avoids unpacking
@@ -330,7 +404,7 @@ class CatalogImporter(BaseImporterToDataCollection):
         # handle output construction for X and Y coordinate columns, if selected
         if (self.col_x_selected in table.colnames) and (self.col_y_selected in table.colnames):  # noqa
             # if input is a string, try to convert to floats
-            if isinstance(self.input[self.col_x_selected][0], str):
+            if isinstance(input[self.col_x_selected][0], str):
                 try:
                     x_col = [float(x) for x in table[self.col_x_selected]]
                     output_table['X'] = x_col
@@ -339,7 +413,7 @@ class CatalogImporter(BaseImporterToDataCollection):
             else:
                 output_table['X'] = table[self.col_x_selected].astype(float)
 
-            if isinstance(self.input[self.col_y_selected][0], str):
+            if isinstance(input[self.col_y_selected][0], str):
                 try:
                     y_col = [float(y) for y in table[self.col_y_selected]]
                     output_table['Y'] = y_col
