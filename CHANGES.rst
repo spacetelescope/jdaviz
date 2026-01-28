@@ -17,6 +17,9 @@ New Features
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
 
+- Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
+
+
 Cubeviz
 ^^^^^^^
 
