@@ -169,6 +169,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
                      'j-about-menu': 'components/about_menu.vue',
                      'j-custom-toolbar-toggle': 'components/custom_toolbar_toggle.vue',
+                     'loader-import-button': 'components/loader_import_button.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-select': 'components/plugin_select.vue',
