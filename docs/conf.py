@@ -167,7 +167,8 @@ extlinks = {
         f'https://github.com/spacetelescope/jdaviz/tree/{commit_hash}/%s', '%s'
     ),
     'gh-notebook': (
-        f'https://github.com/spacetelescope/jdaviz/blob/{commit_hash}/notebooks/%s.ipynb', '%s notebook'
+        f'https://github.com/spacetelescope/jdaviz/blob/{commit_hash}/notebooks/%s.ipynb',
+        '%s notebook'
     )
 }
 
@@ -523,7 +524,6 @@ def check_extensions_exists(base_path, directory):
     if os.path.exists(extensions_path):
         return os.path.join(directory, 'extensions')
     return None
-
 
 
 # Unified descriptions for grid items and wireframe sidebars
@@ -1172,14 +1172,18 @@ WIREFRAME_CONTENT_REGISTRY = {
         'tab_content': {
             'Data': {
                 'form_elements': [
-                    {'type': 'select', 'label': 'Source', 'options': ['file', 'file drop', 'url', 'object', 'astroquery', 'virtual observatory']},
-                    {'type': 'select', 'label': 'Format', 'options': ['1D Spectrum', '2D Spectrum', 'Image']},
+                    {'type': 'select', 'label': 'Source', 'options':
+                        ['file', 'file drop', 'url',
+                         'object', 'astroquery', 'virtual observatory']},
+                    {'type': 'select', 'label': 'Format', 'options':
+                        ['1D Spectrum', '2D Spectrum', 'Image']},
                     {'type': 'button', 'label': 'Load'}
                 ]
             },
             'Viewer': {
                 'form_elements': [
-                    {'type': 'select', 'label': 'Viewer Type', 'options': ['1D Spectrum', '2D Spectrum', 'Histogram', 'Scatter']},
+                    {'type': 'select', 'label': 'Viewer Type', 'options':
+                        ['1D Spectrum', '2D Spectrum', 'Histogram', 'Scatter']},
                     {'type': 'button', 'label': 'Create Viewer'}
                 ]
             }
@@ -1197,8 +1201,10 @@ WIREFRAME_CONTENT_REGISTRY = {
             },
             'Units': {
                 'form_elements': [
-                    {'type': 'select', 'label': 'Spectral Unit', 'options': ['Angstrom', 'nm', 'micron']},
-                    {'type': 'select', 'label': 'Flux Unit', 'options': ['Jy', 'erg/s/cm²/Å']}
+                    {'type': 'select', 'label': 'Spectral Unit', 'options':
+                        ['Angstrom', 'nm', 'micron']},
+                    {'type': 'select', 'label': 'Flux Unit', 'options':
+                        ['Jy', 'erg/s/cm²/Å']}
                 ]
             }
         }
@@ -1522,7 +1528,6 @@ def validate_wireframe_sequence(sequence_str, option_name, docname, lineno, logg
             continue
 
         working_item = item
-        duration_specified = False
 
         # Parse @duration syntax
         if '@' in item:
@@ -1547,7 +1552,6 @@ def validate_wireframe_sequence(sequence_str, option_name, docname, lineno, logg
             if duration_part:
                 try:
                     int(duration_part)
-                    duration_specified = True
                 except ValueError:
                     logger.warning(
                         f"wireframe-demo: Invalid duration '{duration_part}' in '{item}' "
@@ -1808,7 +1812,8 @@ class WireframeDemoDirective(SphinxDirective):
         # Add unique ID to the wireframe container
         html_content = html_content.replace(
             '<div class="wireframe-container">',
-            f'<div class="wireframe-container" id="{unique_id}" data-wireframe-config="{config_json_escaped}">'
+            f'<div class="wireframe-container" id="{unique_id}" '
+            f'data-wireframe-config="{config_json_escaped}">'
         )
 
         # Construct the complete HTML with embedded CSS and JS

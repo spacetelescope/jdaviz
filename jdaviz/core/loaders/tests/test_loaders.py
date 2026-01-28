@@ -132,8 +132,6 @@ def test_fits_spectrum2d(deconfigged_helper):
         ldr = deconfigged_helper.loaders['file']
         ldr.filepath = uri
 
-    # Default format may not be 2D Spectrum
-    assert 'Image' in ldr.format.choices
     assert '2D Spectrum' in ldr.format.choices
     ldr.format = '2D Spectrum'
     assert ldr.importer._obj._parser.__class__.__name__ == 'FITSParser'
@@ -219,7 +217,7 @@ def test_resolver_url(deconfigged_helper):
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
 
     # may change with future importers
-    assert len(loader.format.choices) == 3
+    assert len(loader.format.choices) == 2
     assert loader.format.selected == 'Image'  # default may change with future importers
 
     # test target filtering
