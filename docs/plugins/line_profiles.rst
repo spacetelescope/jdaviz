@@ -1,4 +1,4 @@
-.. _plugins-line_profiles:
+.. _plugins-line-profiles:
 .. rst-class:: section-icon-mdi-tune-variant
 
 *************
