@@ -1,6 +1,7 @@
 from jdaviz.app import Application
 from jdaviz.core.loaders.resolvers.resolver import BaseResolver, find_closest_polygon_mark
 from jdaviz.core.marks import RegionOverlay
+from jdaviz.utils import find_polygon_mark_with_skewer
 
 import numpy as np
 from astropy.table import Table
@@ -307,3 +308,143 @@ def test_remove_footprints_from_viewer(deconfigged_helper, image_nddata_wcs):
     ldr._obj.toggle_custom_toolbar()
     # Assert footprints removed
     assert not any(isinstance(m, RegionOverlay) for m in viewer.figure.marks)
+
+
+def test_skewer_selection_inside_footprint(deconfigged_helper, image_nddata_wcs):
+    """Test that skewer selection only selects when click is inside a footprint."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 1
+
+    # Get center of footprint (should be inside)
+    mark = footprints[0]
+    center_x = np.mean(mark.x)
+    center_y = np.mean(mark.y)
+
+    # Test skewer selection finds the footprint when clicking inside
+    idx = find_polygon_mark_with_skewer(center_x, center_y, viewer, footprints)
+    assert idx == 0
+
+    # Test clicking outside footprint (using a point far away)
+    far_x = mark.x[0] - 1000
+    far_y = mark.y[0] - 1000
+    idx_outside = find_polygon_mark_with_skewer(far_x, far_y, viewer, footprints)
+    assert idx_outside is None
+
+
+def test_skewer_selection_smallest_footprint(deconfigged_helper, image_nddata_wcs):
+    """Test that skewer selection picks smallest footprint when multiple contain the click."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['large', 'small']
+    # Create two overlapping footprints - small one inside large one
+    table['s_region'] = [
+        # Large footprint
+        'POLYGON 337.498 -20.832 337.502 -20.832 337.502 -20.828 337.498 -20.828',
+        # Small footprint (inside large one)
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 2
+
+    # Find the small footprint's center
+    small_mark = [m for m in footprints if m.label == 1][0]
+    center_x = np.mean(small_mark.x)
+    center_y = np.mean(small_mark.y)
+
+    # Click in the center of small footprint (which is also inside large)
+    # Should select the smaller one (label 1)
+    idx = find_polygon_mark_with_skewer(center_x, center_y, viewer, footprints)
+    assert idx == 1
+
+
+def test_skewer_selection_vs_nearest_edge(deconfigged_helper, image_nddata_wcs):
+    """Test that skewer selection differs from nearest-edge selection for edge clicks."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 2
+
+    # Click between the two footprints (outside both)
+    mark1 = [m for m in footprints if m.label == 0][0]
+    mark2 = [m for m in footprints if m.label == 1][0]
+
+    # Point between the two footprints
+    between_x = (np.max(mark1.x) + np.min(mark2.x)) / 2
+    between_y = (np.max(mark1.y) + np.min(mark2.y)) / 2
+
+    # Nearest-edge selection should find something (closest edge)
+    nearest_idx = find_closest_polygon_mark(between_x, between_y, footprints)
+    assert nearest_idx is not None
+
+    # Skewer selection should return None (not inside any footprint)
+    skewer_idx = find_polygon_mark_with_skewer(between_x, between_y, viewer, footprints)
+    assert skewer_idx is None
+
+
+def test_skewer_selection_with_empty_region(deconfigged_helper, image_nddata_wcs):
+    """Test skewer selection handles empty s_region gracefully."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        ''  # Empty region
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    # Only one footprint should be created (second one is empty)
+    assert len(footprints) == 1
+
+    mark = footprints[0]
+    center_x = np.mean(mark.x)
+    center_y = np.mean(mark.y)
+
+    # Should still work with the single valid footprint
+    idx = find_polygon_mark_with_skewer(center_x, center_y, viewer, footprints)
+    assert idx == 0

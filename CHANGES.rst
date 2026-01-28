@@ -8,6 +8,8 @@ New Features
 
 - Allow creating new viewers (in deconfigged) when adding results from plugins. [#3966]
 
+- Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
+
 - Astroquery loader supports cone-search for JWST or HST data products, where applicable. [#3907]
 
 - "Spectrum List" and "Spectrum List Concatenated" loaders have now been absorbed into the "1D Spectrum" loader
