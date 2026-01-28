@@ -9,7 +9,7 @@ from astropy.utils.exceptions import AstropyWarning
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from gwcs import WCS as GWCS
-from specutils import Spectrum, SpectrumList
+from specutils import Spectrum
 from stdatamodels import asdf_in_fits
 from traitlets import Bool, List, Any, Unicode, observe
 
@@ -171,7 +171,7 @@ class ImageImporter(BaseImporterToDataCollection):
             # Spectrum objects subclass NDData so they must be rejected explicitly
             supported_input_type = False
         elif isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                   NDData, np.ndarray, Data)):
+                                     NDData, np.ndarray, Data)):
             supported_input_type = True
         elif isinstance(self.input, (asdf.AsdfFile)) or \
                 (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))):
