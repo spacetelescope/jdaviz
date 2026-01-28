@@ -112,14 +112,14 @@
     hint="Select the viewer to use for the new data entry."
   ></plugin-viewer-create-new>
 
-  <plugin-import-button
+  <loader-import-button
     :spinner="import_spinner"
     :disabled="import_disabled"
     :api_hints_enabled="api_hints_enabled"
     api_hint="ldr.load()"
     :data_label_overwrite="data_label_overwrite"
     @click="import_clicked">
-  </plugin-import-button>
+  </loader-import-button>
 
 </v-container>
 </template>

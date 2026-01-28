@@ -92,7 +92,7 @@
       hint="Select the viewer to use for the new data entry."
     ></plugin-viewer-create-new>
 
-    <plugin-import-button
+    <loader-import-button
       :spinner="import_spinner"
       :disabled="import_disabled"
       :api_hints_enabled="api_hints_enabled"
@@ -102,6 +102,6 @@
       :data_label_suffices="data_label_suffices"
       :data_label_overwrite_by_index="data_label_overwrite_by_index"
       @click="import_clicked">
-    </plugin-import-button>
+    </loader-import-button>
   </v-container>
 </template>
