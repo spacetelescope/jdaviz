@@ -39,9 +39,11 @@ from jdaviz.core.events import (SnackbarMessage,
                                 RestoreToolbarMessage,
                                 TableSelectRowClickMessage)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
-from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
+from jdaviz.core.marks import (LineUncertainties, ScatterMask,
+                               OffscreenLinesMarks, TableSelectionMark)
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import WithCache, TemplateMixin, show_widget
+from jdaviz.core.tools import _get_skycoords_from_table
 from jdaviz.core.user_api import ViewerUserApi
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
@@ -1170,10 +1172,8 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         click_x, click_y = msg.x, msg.y
 
         # Find the image viewer that sent this message and compute distances
-        # to all table rows (not just checked ones)
+        # to all table rows
         try:
-            from jdaviz.core.tools import _get_skycoords_from_table
-
             # Get RA/Dec for all rows in the table
             layer = self.layers[0].layer
             skycoords = _get_skycoords_from_table(layer)
@@ -1223,7 +1223,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def _get_selection_mark(self, viewer):
         """Get or create a selection highlight mark for the given viewer."""
-        from jdaviz.core.marks import TableSelectionMark
         matches = [mark for mark in viewer.figure.marks if isinstance(mark, TableSelectionMark)]
         if len(matches):
             return matches[0]
@@ -1233,8 +1232,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def _update_selection_marks(self):
         """Update selection highlight marks in all image viewers."""
-        from jdaviz.core.tools import _get_skycoords_from_table
-
         if not self.widget_table.selection_enabled:
             return
 
@@ -1265,7 +1262,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def _clear_selection_marks(self):
         """Clear selection highlight marks from all image viewers."""
-        from jdaviz.core.marks import TableSelectionMark
         for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
             for mark in viewer.figure.marks:
                 if isinstance(mark, TableSelectionMark):
@@ -1276,19 +1272,5 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Clear selection marks
         self._clear_selection_marks()
 
-        # Check for any of the table tool state attributes and restore
-        state_attrs = [
-            '_table_subset_original_selection_enabled',
-            '_table_zoom_original_selection_enabled',
-            '_table_highlight_original_selection_enabled'
-        ]
-        restored = False
-        for attr in state_attrs:
-            if hasattr(self, attr):
-                self.widget_table.selection_enabled = getattr(self, attr)
-                delattr(self, attr)
-                restored = True
-                break
-
-        if not restored:
-            self.widget_table.selection_enabled = False
+        # Hide checkboxes (they should always be hidden when default toolbar is shown)
+        self.widget_table.selection_enabled = False

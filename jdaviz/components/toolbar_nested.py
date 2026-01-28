@@ -217,7 +217,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 if widget.get('multiselect', False):
                     # Filter to only values that still exist
                     valid_selected = [v for v in current_selected if v in new_values]
-                    widget['selected'] = valid_selected if valid_selected else new_values
+                    widget['selected'] = valid_selected if len(valid_selected) else new_values
                 else:
                     # Keep current if still valid, otherwise use widget default
                     if current_selected in new_values:

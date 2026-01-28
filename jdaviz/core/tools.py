@@ -2,6 +2,8 @@ import os
 import time
 
 import numpy as np
+from astropy.coordinates import SkyCoord
+from astropy import units as u
 from echo import delay_callback
 from functools import cached_property
 from glue.config import viewer_tool
@@ -57,9 +59,6 @@ def _get_skycoords_from_table(layer, rows=None):
     SkyCoord or None
         SkyCoord for the selected rows, or None if RA/Dec columns not found.
     """
-    from astropy.coordinates import SkyCoord
-    from astropy import units as u
-
     # Find RA and Dec component IDs
     ra_comp = None
     dec_comp = None
@@ -412,14 +411,13 @@ class _BaseTableSelectionTool(Tool):
     Base class for table tools that enable row selection checkboxes and swap the toolbar.
 
     Subclasses should define:
-    - icon, tool_id, action_text, tool_tip (as usual for tools)
+    - icon, tool_id, action_text, tool_tip
     - override_tools: list of tool IDs to show in the custom toolbar
     - override_title: title for the custom toolbar
-    - _state_attr: attribute name on viewer to store original selection_enabled state
+    - image_viewer_override_tools: tools to show in image viewer toolbars when this tool is active
     """
     override_tools = []  # define in subclass
     override_title = ''  # define in subclass
-    _state_attr = '_table_selection_original_enabled'  # define in subclass
     # Tools to show in image viewer toolbars when this tool is activated
     image_viewer_override_tools = [
         ['jdaviz:homezoom'],
@@ -427,7 +425,6 @@ class _BaseTableSelectionTool(Tool):
         ['jdaviz:imagepanzoom'],
         ['jdaviz:select_table_row']
     ]
-    image_viewer_override_title = ''  # define in subclass
 
     def _get_image_viewers(self):
         """Get list of image viewers."""
@@ -436,15 +433,14 @@ class _BaseTableSelectionTool(Tool):
     def get_custom_widgets(self):
         """
         Override in subclass to return list of custom widget dicts for the toolbar.
+        Currently only implemented for dropdowns, but could be extended in the future.
         Each dict should have: 'label', 'items' (list of {'label', 'value'}),
         'selected', 'multiselect'
         """
         return None
 
     def activate(self):
-        # Store original state on the viewer and show checkboxes
-        if not hasattr(self.viewer, self._state_attr):
-            setattr(self.viewer, self._state_attr, self.viewer.widget_table.selection_enabled)
+        # Show checkboxes (they're hidden by default and should be hidden when toolbar restores)
         self.viewer.widget_table.selection_enabled = True
 
         # Override toolbar to show custom tools
@@ -464,38 +460,15 @@ class _BaseTableSelectionTool(Tool):
             # which table viewer to send the message to
             image_viewer.toolbar.override_tools(
                 self.image_viewer_override_tools,
-                self.image_viewer_override_title,
+                self.override_title,
                 active_tool='jdaviz:select_table_row'
             )
             # Configure the select_table_row tool with this table viewer's ID
+            # for now we'll hardcode this, but could generalize if there are cases
+            # where we want other default tools in the future
             if 'jdaviz:select_table_row' in image_viewer.toolbar.tools:
                 tool = image_viewer.toolbar.tools['jdaviz:select_table_row']
                 tool._table_viewer_id = self.viewer.reference_id
-
-
-@viewer_tool
-class TableHighlightSelected(_BaseTableSelectionTool):
-    icon = os.path.join(ICON_DIR, 'table-eye.svg')
-    tool_id = 'jdaviz:table_highlight_selected'
-    action_text = 'Highlight selected'
-    tool_tip = 'Enable row selection mode to highlight checked entries in image viewers'
-    override_tools = []  # No apply button, just the close button
-    override_title = 'Table Highlight Selection'
-    image_viewer_override_title = 'Table Highlight Selection'
-    _state_attr = '_table_highlight_original_selection_enabled'
-
-    def _get_image_viewers(self):
-        """Get list of image viewers that can show highlights."""
-        return list(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'))
-
-    def is_visible(self):
-        if self.viewer.jdaviz_app.config not in ['deconfigged']:
-            return False
-        if not len(self._get_image_viewers()):
-            return False
-        if not hasattr(self.viewer, 'widget_table'):
-            return False
-        return True
 
 
 class _BaseTableApplyTool(Tool):
@@ -504,10 +477,8 @@ class _BaseTableApplyTool(Tool):
 
     Subclasses should define:
     - icon, tool_id, action_text, tool_tip (as usual for tools)
-    - _state_attr: attribute name on viewer where original selection_enabled state is stored
     - on_apply(selected_rows): method to perform the action (only called if rows are selected)
     """
-    _state_attr = '_table_selection_original_enabled'  # define in subclass
 
     def on_apply(self, selected_rows):
         """Override in subclass to perform the action with the selected rows."""
@@ -519,16 +490,35 @@ class _BaseTableApplyTool(Tool):
         if len(selected_rows):
             self.on_apply(selected_rows)
 
-        # Restore original state before restoring toolbar
-        if hasattr(self.viewer, self._state_attr):
-            self.viewer.widget_table.selection_enabled = getattr(self.viewer, self._state_attr)
-            delattr(self.viewer, self._state_attr)
-        else:
-            self.viewer.widget_table.selection_enabled = False
+        # Hide checkboxes (they should always be hidden when default toolbar is shown)
+        self.viewer.widget_table.selection_enabled = False
         # Clear checked rows after applying
         self.viewer.widget_table.checked = []
         # Restore toolbar (all_viewers=True to also restore image viewer toolbars)
         self.viewer.toolbar.restore_tools(all_viewers=True)
+
+
+@viewer_tool
+class TableHighlightSelected(_BaseTableSelectionTool):
+    icon = os.path.join(ICON_DIR, 'table-eye.svg')
+    tool_id = 'jdaviz:table_highlight_selected'
+    action_text = 'Highlight selected'
+    tool_tip = 'Enable row selection mode to highlight checked entries in image viewers'
+    override_tools = []  # just the close button
+    override_title = 'Table Highlight Selection'
+
+    def _get_image_viewers(self):
+        """Get list of image viewers that can show highlights."""
+        return list(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'))
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not len(self._get_image_viewers()):
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
 
 
 @viewer_tool
@@ -539,8 +529,6 @@ class TableSubset(_BaseTableSelectionTool):
     tool_tip = 'Enable row selection mode to create a subset from table rows'
     override_tools = ['jdaviz:table_apply_subset']
     override_title = 'Table Subset Selection'
-    image_viewer_override_title = 'Table Subset Selection'
-    _state_attr = '_table_subset_original_selection_enabled'
 
     def is_visible(self):
         if self.viewer.jdaviz_app.config != 'deconfigged':
@@ -556,7 +544,6 @@ class TableApplySubset(_BaseTableApplyTool):
     tool_id = 'jdaviz:table_apply_subset'
     action_text = 'Apply subset'
     tool_tip = 'Create a subset from the currently checked table rows'
-    _state_attr = '_table_subset_original_selection_enabled'
 
     def on_apply(self, selected_rows):
         self.viewer.apply_filter()
@@ -582,8 +569,6 @@ class TableZoomToSelected(_BaseTableSelectionTool):
     tool_tip = 'Enable row selection mode to zoom all applicable viewers to checked entries'
     override_tools = ['jdaviz:table_apply_zoom']
     override_title = 'Table Zoom Selection'
-    image_viewer_override_title = 'Table Zoom Selection'
-    _state_attr = '_table_zoom_original_selection_enabled'
 
     def _get_image_viewers(self):
         """Get list of image viewers that can be zoomed."""
@@ -611,9 +596,7 @@ class TableZoomToSelected(_BaseTableSelectionTool):
         }]
 
     def is_visible(self):
-        if not self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
-                                                     'cubeviz', 'mosviz',
-                                                     'rampviz']:
+        if self.viewer.jdaviz_app.config != 'deconfigged':
             return False
         if not len(self._get_image_viewers()):
             return False
@@ -628,7 +611,6 @@ class TableApplyZoom(_BaseTableApplyTool):
     tool_id = 'jdaviz:table_apply_zoom'
     action_text = 'Apply zoom'
     tool_tip = 'Zoom all applicable viewers to the currently checked table rows'
-    _state_attr = '_table_zoom_original_selection_enabled'
 
     def on_apply(self, selected_rows):
         layer = self.viewer.layers[0].layer
@@ -713,7 +695,7 @@ class TableApplyZoom(_BaseTableApplyTool):
             viewer.state._adjust_limits_aspect()
 
     def is_visible(self):
-        if self.viewer.jdaviz_app.config not in ['deconfigged']:
+        if self.viewer.jdaviz_app.config != 'deconfigged':
             return False
         if not len(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView')):
             return False

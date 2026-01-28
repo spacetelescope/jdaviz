@@ -5,7 +5,11 @@ Tests for table viewer tools: TableHighlightSelected, TableZoomToSelected, Table
 import numpy as np
 import pytest
 
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
+
+from jdaviz.core.marks import PluginScatter
 
 
 class TestTableViewerTools:
@@ -32,7 +36,7 @@ class TestTableViewerTools:
 
         # Get the image viewer
         image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
-        assert len(image_viewers) > 0, "No image viewer found"
+        assert len(image_viewers) == 1
         self.viewer = image_viewers[0]
 
         # Set viewer shape for zoom testing
@@ -83,11 +87,10 @@ class TestTableViewerTools:
         self.table_viewer.widget_table.checked = [0, 2]
 
         # Check that marks are visible in the image viewer
-        from jdaviz.core.marks import PluginScatter
         marks = [m for m in self.viewer.figure.marks if isinstance(m, PluginScatter)]
 
         # There should be at least one PluginScatter mark for selection
-        assert len(marks) > 0, "No selection marks found in viewer"
+        assert len(marks) > 0
 
         # Restore and check marks are cleared
         toolbar.restore_tools()
@@ -144,8 +147,7 @@ class TestTableViewerTools:
         new_x_min, new_x_max, new_y_min, new_y_max = new_limits
 
         # Check that limits changed (zoomed in to the selected points)
-        assert new_limits != initial_limits, \
-            "Viewer limits should have changed after zoom"
+        assert new_limits != initial_limits
 
         # Convert the catalog coordinates to pixels and verify they're within bounds
         from astropy.coordinates import SkyCoord
@@ -189,12 +191,10 @@ class TestTableViewerTools:
         y_range = new_y_max - new_y_min
 
         # Single point should still have some reasonable zoom range
-        assert x_range > 0, "X range should be positive"
-        assert y_range > 0, "Y range should be positive"
+        assert x_range > 0
+        assert y_range > 0
 
         # The point should be within bounds
-        from astropy.coordinates import SkyCoord
-        from astropy import units as u
         ra = self.catalog['ra'][0]
         dec = self.catalog['dec'][0]
         skycoord = SkyCoord(ra=ra * u.deg, dec=dec * u.deg)
@@ -245,8 +245,7 @@ class TestTableViewerTools:
 
         # A new subset should have been created
         new_subset_count = len(self.app.app.data_collection.subset_groups)
-        assert new_subset_count == initial_subset_count + 1, \
-            "A new subset should have been created"
+        assert new_subset_count == initial_subset_count + 1
 
     def test_select_table_row_tool_in_image_viewer(self):
         """Test that SelectTableRow tool is available in image viewer when table tool is active."""
@@ -387,7 +386,7 @@ class TestTableViewerToolsMultipleViewers:
             self.viewer1.state.y_min, self.viewer1.state.y_max
         )
 
-        assert v1_new_limits != v1_initial_limits, "Viewer 1 limits should have changed"
+        assert v1_new_limits != v1_initial_limits
 
     def test_all_image_viewers_get_override_toolbar(self):
         """Test that all image viewers get override toolbar when table tool is activated."""
