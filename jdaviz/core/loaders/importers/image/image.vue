@@ -32,15 +32,18 @@
       :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.  Will resolve to the following data labels:' : 'Label to assign to the new data entry.'"
     ></plugin-auto-label>
     <v-row v-if="data_label_is_prefix">
-        <v-chip
-          v-for="suff in data_label_suffices"
-          outlined
-          label
+        <j-tooltip v-for="(suff, index) in data_label_suffices"
           :key="suff"
-          style="margin: 4px"
-        >
-          {{data_label_value}}{{suff}}
-        </v-chip>
+          :tooltipcontent="data_label_overwrite_by_index[index] ? 'Will overwrite existing entry' : 'New entry'">
+          <v-chip
+            outlined
+            label
+            style="margin: 4px"
+          >
+            <v-icon v-if="data_label_overwrite_by_index[index]" small left color="warning">mdi-file-replace</v-icon>
+            {{data_label_value}}{{suff}}
+          </v-chip>
+        </j-tooltip>
     </v-row>
 
     <v-row>
@@ -90,18 +93,39 @@
     ></plugin-viewer-create-new>
 
     <v-row justify="end">
-      <plugin-action-button
-        :spinner="import_spinner"
-        :disabled="import_disabled"
-        :results_isolated_to_plugin="false"
-        :api_hints_enabled="api_hints_enabled"
-        @click="import_clicked">
-        {{ api_hints_enabled ?
-          'ldr.load()'
-          :
-          'Import'
-        }}
-      </plugin-action-button>
+      <j-tooltip :tooltipcontent="data_label_overwrite ? 'Import and replace existing entries' : 'Import data'">
+        <plugin-action-button
+          :spinner="import_spinner"
+          :disabled="import_disabled"
+          :results_isolated_to_plugin="false"
+          :api_hints_enabled="api_hints_enabled"
+          @click="import_clicked">
+          {{ api_hints_enabled ?
+            'ldr.load()'
+            :
+            importButtonText
+          }}
+        </plugin-action-button>
+      </j-tooltip>
     </v-row>
   </v-container>
 </template>
+
+<script>
+module.exports = {
+  computed: {
+    overwriteCount() {
+      if (!this.data_label_overwrite_by_index) return 0;
+      return this.data_label_overwrite_by_index.filter(x => x).length;
+    },
+    importButtonText() {
+      if (this.data_label_is_prefix && this.overwriteCount > 0) {
+        return 'Import (overwrite ' + this.overwriteCount + '/' + this.data_label_suffices.length + ')';
+      } else if (this.data_label_overwrite) {
+        return 'Import (overwrite)';
+      }
+      return 'Import';
+    }
+  }
+};
+</script>

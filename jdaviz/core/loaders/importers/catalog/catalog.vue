@@ -113,18 +113,20 @@
   ></plugin-viewer-create-new>
 
   <v-row justify="end">
-    <plugin-action-button
-      :spinner="import_spinner"
-      :disabled="import_disabled"
-      :results_isolated_to_plugin="false"
-      :api_hints_enabled="api_hints_enabled"
-      @click="import_clicked">
-      {{ api_hints_enabled ?
-        'ldr.load()'
-        :
-        'Import'
-      }}
-    </plugin-action-button>
+    <j-tooltip :tooltipcontent="data_label_overwrite ? 'Import and replace existing entry' : 'Import data'">
+      <plugin-action-button
+        :spinner="import_spinner"
+        :disabled="import_disabled"
+        :results_isolated_to_plugin="false"
+        :api_hints_enabled="api_hints_enabled"
+        @click="import_clicked">
+        {{ api_hints_enabled ?
+          'ldr.load()'
+          :
+          (data_label_overwrite ? 'Import (overwrite)' : 'Import')
+        }}
+      </plugin-action-button>
+    </j-tooltip>
   </v-row>
 
 </v-container>
