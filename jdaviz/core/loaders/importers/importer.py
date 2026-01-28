@@ -248,7 +248,7 @@ class BaseImporterToDataCollection(BaseImporter):
         dc_labels = [data.label for data in self.app.data_collection]
 
         if self.data_label_is_prefix and len(self.data_label_suffices):
-            # prefix mode: check each suffix
+            # prefix/multiselect mode: check each suffix
             overwrite_by_index = []
             for suffix in self.data_label_suffices:
                 full_label = f"{self.data_label_value}{suffix}"
@@ -257,10 +257,9 @@ class BaseImporterToDataCollection(BaseImporter):
             self.data_label_overwrite = any(overwrite_by_index)
             self.data_label_invalid_msg = ''
         else:
-            # simple mode: check if label already exists
+            # single mode
             self.data_label_overwrite_by_index = []
             if self.data_label_value in dc_labels:
-                # allow overwrite for loaders (data originally came from an importer)
                 self.data_label_overwrite = True
                 self.data_label_invalid_msg = ''
             else:
