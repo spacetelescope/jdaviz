@@ -3,7 +3,7 @@ from astropy.io.fits import BinTableHDU, HDUList, TableHDU
 from astropy.table import Table, QTable
 import astropy.units as u
 import numpy as np
-from traitlets import Any, Bool, Int, List, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
@@ -50,7 +50,6 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     # HDUList-specific options
     input_as_table = Any(None)
-    idx_first_table_hdu = Int(None)
     input_has_extensions = Bool(False).tag(sync=True)
     extension_items = List().tag(sync=True)
     extension_selected = Any().tag(sync=True)
@@ -77,8 +76,12 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                           items='extension_items',
                                                           selected='extension_selected',
                                                           multiselect='extension_multiselect',
-                                                          manual_options=ext_options)
-            self.extension.selected = [self.extension.choices[self.idx_first_table_hdu]]
+                                                          manual_options=ext_options,
+                                                          filters=[_validate_fits_tablehdu])
+
+            # the choices have already been filtered to only valid table HDUs, so
+            # choose the 0th to select the first valid table HDU by default
+            self.extension.selected = [self.extension.choices[0]]
 
         else:
             # otherwise, we got a Table object as input and can proceed
@@ -162,9 +165,9 @@ class CatalogImporter(BaseImporterToDataCollection):
         if isinstance(self.input, (Table, QTable)) and len(self.input):
             return True
         elif isinstance(self.input, HDUList):
+            # check for the presence of at least one TableHDU/BinTableHDU extension
             for i, hdu in enumerate(self.input):
                 if isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0:
-                    self.idx_first_table_hdu = i
                     return True
         return False
 
@@ -446,3 +449,8 @@ class CatalogImporter(BaseImporterToDataCollection):
                 output_table[col] = table[col]
 
         return output_table
+
+
+def _validate_fits_tablehdu(item):
+    hdu = item.get('obj')
+    return isinstance(hdu, (TableHDU, BinTableHDU))
