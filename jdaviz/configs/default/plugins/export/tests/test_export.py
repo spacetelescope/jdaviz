@@ -1,5 +1,6 @@
 import os
 import re
+from unittest import mock
 
 import numpy as np
 import pytest
@@ -7,6 +8,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
 from glue.core.roi import CircularROI, EllipticalROI
+from jdaviz.conftest import ipython_kernel_context
 from regions import Regions, CircleSkyRegion
 from specutils import Spectrum, SpectralRegion
 from pathlib import Path
@@ -320,15 +322,23 @@ class TestExportSubsets:
 
 @pytest.mark.usefixtures('_jail')
 def test_export_cubeviz_spectrum_viewer(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    async def mock_queue_screenshot_async(*args, **kwargs):
+        return b"test"
 
-    ep = cubeviz_helper.plugins["Export"]
-    ep.viewer = 'spectrum-viewer'
-    ep.viewer_format = 'png'
-    ep.export()
+    with mock.patch("jdaviz.configs.default.plugins.export.export.queue_screenshot_async",
+                    mock_queue_screenshot_async):
+        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
 
-    ep.viewer_format = 'svg'
-    ep.export()
+        ep = cubeviz_helper.plugins["Export"]
+        # this test fails on the next line when we use the ipython_kernel fixture, so
+        # use the ipython_kernel_context context manager
+        ep.viewer = 'spectrum-viewer'
+        ep.viewer_format = 'png'
+        with ipython_kernel_context():
+            ep.export()
+
+            ep.viewer_format = 'svg'
+            ep.export()
 
 
 @pytest.mark.usefixtures('_jail')
@@ -373,16 +383,20 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
     assert ep.data_invalid_msg == "Export Disabled: The unit DN / s could not be saved in native FITS format."  # noqa
 
 
-class TestExportPluginPlots:
+async def test_basic_export_plugin_plots(imviz_helper, ipython_kernel):
+    """
+    Test basic funcionality of exporting plugin plots
+    from the export plugin. Tests on the 'Plot Options: stretch_hist'
+    plot, which exists upon loading data, and also that plots that
+    may have been initialized but are empty are not displayed in
+    the Export plugin.
+    """
 
-    def test_basic_export_plugin_plots(self, imviz_helper):
-        """
-        Test basic funcionality of exporting plugin plots
-        from the export plugin. Tests on the 'Plot Options: stretch_hist'
-        plot, which exists upon loading data, and also that plots that
-        may have been initialized but are empty are not displayed in
-        the Export plugin.
-        """
+    async def mock_queue_screenshot_async(*args, **kwargs):
+        return b"test"
+
+    with mock.patch("jdaviz.configs.default.plugins.export.export.queue_screenshot_async",
+                    mock_queue_screenshot_async):
         data = NDData(np.ones((500, 500)) * u.nJy)
 
         imviz_helper.load_data(data)
@@ -408,12 +422,18 @@ class TestExportPluginPlots:
         assert len(available_plots) == 1
         assert available_plots[0] == 'Plot Options: stretch_hist'
 
-    def test_ap_phot_plot_export(self, imviz_helper):
-        """
-        Test export functionality for plot from the aperture photometry
-        plugin.
-        """
 
+async def test_ap_phot_plot_export(imviz_helper, ipython_kernel):
+    """
+    Test export functionality for plot from the aperture photometry
+    plugin.
+    """
+
+    async def mock_queue_screenshot_async(*args, **kwargs):
+        return b"test"
+
+    with mock.patch("jdaviz.configs.default.plugins.export.export.queue_screenshot_async",
+                    mock_queue_screenshot_async):
         data = NDData(np.ones((500, 500)) * u.nJy)
 
         imviz_helper.load_data(data)
@@ -441,8 +461,13 @@ class TestExportPluginPlots:
         # just check that it doesn't crash, since we can't download
         export_plugin.export()
 
-    def test_figure_export(self, imviz_helper):
 
+async def test_figure_export(imviz_helper, ipython_kernel):
+    async def mock_queue_screenshot_async(*args, **kwargs):
+        return b"test"
+
+    with mock.patch("jdaviz.configs.default.plugins.export.export.queue_screenshot_async",
+                    mock_queue_screenshot_async):
         data = NDData(np.ones((500, 500)) * u.nJy)
 
         imviz_helper.load_data(data)
@@ -457,6 +482,8 @@ class TestExportPluginPlots:
         except ValueError as e:
             assert str(e) == "previous png export is still in progress. Wait to complete before making another call to save_figure"  # noqa: E501
 
+
+class TestExportPluginPlots:
     def test_filepath_convention(self, imviz_helper):
         data = NDData(np.ones((500, 500)) * u.nJy)
         imviz_helper.load_data(data)
