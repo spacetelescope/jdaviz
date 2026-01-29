@@ -19,6 +19,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     template_file = __file__, "./catalog.vue"
 
+
     # for catalogs with source positions in sky coordinates
     col_ra_items = List().tag(sync=True)
     col_ra_selected = Unicode().tag(sync=True)
@@ -327,6 +328,8 @@ class CatalogImporter(BaseImporterToDataCollection):
     @property
     def user_api(self):
         expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other']
+        if self.input_has_extensions:
+            expose += ['extension']
         return ImporterUserApi(self, expose=expose)
 
     @property
