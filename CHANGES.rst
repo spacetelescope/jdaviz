@@ -15,6 +15,8 @@ New Features
 
 - Catalog public API exposed [#3761, #3777, #3778, #3799, #3814, #3835, #3854, #3856, #3863, #3867, #3930, #3906, #3912, #3899, #3907, #3990]
 
+- Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
+
 Cubeviz
 ^^^^^^^
 
