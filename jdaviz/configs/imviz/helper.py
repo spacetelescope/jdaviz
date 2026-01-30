@@ -1,6 +1,5 @@
 import os
 import re
-import warnings
 from copy import deepcopy
 
 import numpy as np

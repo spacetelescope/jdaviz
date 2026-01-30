@@ -133,8 +133,8 @@ class ImageImporter(BaseImporterToDataCollection):
                 # Handle 3D numpy arrays as multiple 2D slices
                 n_slices = min(input.shape[0], MAX_N_SLICE)
                 if input.shape[0] > MAX_N_SLICE:
-                    warnings.warn(f'{MAX_N_SLICE} or more slices found, only the first {MAX_N_SLICE}' \
-                                  'will be loaded.  If applicable, use \'3D Spectrum\' instead.',
+                    warnings.warn(f'Only the first {MAX_N_SLICE} will be loaded.'
+                                  'If applicable, use \'3D Spectrum\' instead.',
                                   UserWarning)
                 filters = []  # No filtering needed for array slices
                 ext_options = [{'label': f"slice {i}",
