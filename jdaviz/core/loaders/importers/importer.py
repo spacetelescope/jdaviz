@@ -247,10 +247,8 @@ class BaseImporterToDataCollection(BaseImporter):
 
         if self.data_label_is_prefix and len(self.data_label_suffices):
             # prefix/multiselect mode: check each suffix
-            overwrite_by_index = []
-            for suffix in self.data_label_suffices:
-                full_label = f"{self.data_label_value}{suffix}"
-                overwrite_by_index.append(full_label in dc_labels)
+            overwrite_by_index = [f"{self.data_label_value}{suffix}" in dc_labels
+                                  for suffix in self.data_label_suffices]
             self.data_label_overwrite_by_index = overwrite_by_index
             self.data_label_overwrite = any(overwrite_by_index)
             self.data_label_invalid_msg = ''
