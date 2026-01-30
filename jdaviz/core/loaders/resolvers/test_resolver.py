@@ -336,8 +336,8 @@ def test_skewer_selection_inside_footprint(deconfigged_helper, image_nddata_wcs)
     center_y = np.mean(mark.y)
 
     # Test skewer selection finds the footprint when clicking inside
-    idx = find_polygon_mark_with_skewer(center_x, center_y, viewer, footprints)
-    assert idx == 0
+    indices = find_polygon_mark_with_skewer(center_x, center_y, viewer, footprints)
+    assert indices == [0]
 
     # Test clicking outside footprint (using a point far away)
     far_x = mark.x[0] - 1000
@@ -347,7 +347,7 @@ def test_skewer_selection_inside_footprint(deconfigged_helper, image_nddata_wcs)
 
 
 def test_skewer_selection_smallest_footprint(deconfigged_helper, image_nddata_wcs):
-    """Test that skewer selection picks smallest footprint when multiple contain the click."""
+    """Test that skewer selection selects all footprints when multiple contain the click."""
     deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
 
     table = Table()
@@ -376,9 +376,9 @@ def test_skewer_selection_smallest_footprint(deconfigged_helper, image_nddata_wc
     center_y = np.mean(small_mark.y)
 
     # Click in the center of small footprint (which is also inside large)
-    # Should select the smaller one (label 1)
-    idx = find_polygon_mark_with_skewer(center_x, center_y, viewer, footprints)
-    assert idx == 1
+    # Should select both footprints (labels 0 and 1)
+    indices = find_polygon_mark_with_skewer(center_x, center_y, viewer, footprints)
+    assert set(indices) == {0, 1}
 
 
 def test_skewer_selection_vs_nearest_edge(deconfigged_helper, image_nddata_wcs):
@@ -446,5 +446,5 @@ def test_skewer_selection_with_empty_region(deconfigged_helper, image_nddata_wcs
     center_y = np.mean(mark.y)
 
     # Should still work with the single valid footprint
-    idx = find_polygon_mark_with_skewer(center_x, center_y, viewer, footprints)
-    assert idx == 0
+    indices = find_polygon_mark_with_skewer(center_x, center_y, viewer, footprints)
+    assert indices == [0]

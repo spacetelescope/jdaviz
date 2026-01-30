@@ -1287,7 +1287,7 @@ def find_closest_polygon_mark(px, py, marks):
 def find_polygon_mark_with_skewer(px, py, viewer, marks):
     """
     Spherical (great-circle) selection: only selects if the click is INSIDE a mark.
-    If multiple marks contain the click, picks the one with smallest area.
+    If multiple marks contain the click, returns all of them.
 
     Parameters
     ----------
@@ -1302,8 +1302,9 @@ def find_polygon_mark_with_skewer(px, py, viewer, marks):
 
     Returns
     -------
-    chosen_label : int or None
-        The observation index of the selected mark, or None if no mark contains the click.
+    chosen_labels : list of int or None
+        List of observation indices for all marks containing the click,
+        or None if no marks contain it.
     """
     # Convert pixel coordinates to sky coordinates (ICRS)
     skycoord_icrs = viewer.state.reference_data.coords.pixel_to_world(px, py).icrs
@@ -1311,7 +1312,6 @@ def find_polygon_mark_with_skewer(px, py, viewer, marks):
     dec_deg = skycoord_icrs.dec.deg
 
     containing_labels = []
-    areas_by_label = {}
 
     for mark in marks:
         label = mark.label
@@ -1334,17 +1334,9 @@ def find_polygon_mark_with_skewer(px, py, viewer, marks):
         # Check if the click point is inside this polygon
         if spherical_polygon.contains_lonlat(ra_deg, dec_deg, degrees=True):
             containing_labels.append(label)
-            area_deg2 = spherical_polygon.area() * (180.0 / np.pi) ** 2
-            prev = areas_by_label.get(label)
-            areas_by_label[label] = area_deg2 if prev is None else min(prev, area_deg2)
 
-    if len(containing_labels) == 1:
-        return containing_labels[0]
-
-    if len(containing_labels) > 1:
-        # Multiple marks contain the click - choose the smallest one
-        areas_arr = np.array([areas_by_label[lbl] for lbl in containing_labels], dtype=float)
-        min_idx = np.argmin(areas_arr)
-        return containing_labels[min_idx]
+    # Return all footprints that contain the click point
+    if containing_labels:
+        return containing_labels
 
     return None

@@ -662,22 +662,27 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         # Determine selection mode
         mode = getattr(msg, 'mode', 'nearest')
         if mode == 'skewer':
-            selected_idx = find_polygon_mark_with_skewer(
+            selected_indices = find_polygon_mark_with_skewer(
                 click_x, click_y, click_viewer, region_marks)
         else:
             selected_idx = find_closest_polygon_mark(click_x, click_y, region_marks)
+            selected_indices = [selected_idx] if selected_idx is not None else None
 
-        if selected_idx is not None:
+        if selected_indices is not None:
             currently_selected = set()
             for row in self.observation_table.selected_rows:
                 idx = self.observation_table.items.index(row)
                 currently_selected.add(idx)
 
-            # Toggle selection
-            if selected_idx in currently_selected:
-                currently_selected.discard(selected_idx)
+            # Toggle all found footprints as a group
+            # If ALL are selected, deselect ALL; otherwise select ALL
+            selected_indices_set = set(selected_indices)
+            if selected_indices_set.issubset(currently_selected):
+                # All found footprints are already selected - deselect them all
+                currently_selected -= selected_indices_set
             else:
-                currently_selected.add(selected_idx)
+                # At least one is not selected - select them all
+                currently_selected |= selected_indices_set
 
             # Update the table selection
             if currently_selected:
