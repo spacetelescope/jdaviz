@@ -224,6 +224,9 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @observe('extension_selected', 'data_label_as_prefix')
     def _set_default_data_label(self, *args):
+        if not hasattr(self, 'data_label'):
+            return
+
         if self.default_data_label_from_resolver:
             prefix = self.default_data_label_from_resolver
         else:
@@ -236,24 +239,25 @@ class ImageImporter(BaseImporterToDataCollection):
                 # selected_obj may be an ndarray object if input is a roman data model
                 ver = getattr(self.extension.selected_obj[0], 'ver', None)
                 # only a single extension selected
-                self.data_label_default = self._get_label_with_extension(prefix,
-                                                                         ext=self.extension.selected_name[0],  # noqa
-                                                                         ver=ver)  # noqa
+                self.data_label.default = self._get_label_with_extension(
+                    prefix,
+                    ext=self.extension.selected_name[0],
+                    ver=ver)
                 self.data_label_is_prefix = False
             else:
                 # multiple extensions selected,
                 # only show the prefix and append the extension later during import
-                self.data_label_default = prefix
+                self.data_label.default = prefix
                 self.data_label_is_prefix = True
         elif (self.data_label_as_prefix or
               (isinstance(self.input, NDData) and
                getattr(self.input, 'meta', {}).get('plugin', None) is None)):
             # will append with [DATA]/[UNCERTAINTY]/[MASK] later
             # TODO: allow user to select extensions and include in same logic as HDUList
-            self.data_label_default = prefix
+            self.data_label.default = prefix
             self.data_label_is_prefix = True
         else:
-            self.data_label_default = prefix
+            self.data_label.default = prefix
             self.data_label_is_prefix = False
 
         if self.data_label_is_prefix:

@@ -163,9 +163,10 @@ class BaseImporterToDataCollection(BaseImporter):
         self.data_label = AutoTextField(self, 'data_label_value',
                                         'data_label_default',
                                         'data_label_auto',
-                                        'data_label_invalid_msg')
+                                        'data_label_invalid_msg',
+                                        unique_in_data_collection=True)
 
-        self.data_label_default = self.app.return_unique_name(self._registry_label)
+        self.data_label.default = self._registry_label
 
         self.viewer = ViewerSelectCreateNew(self, 'viewer_items',
                                             'viewer_selected',
@@ -242,9 +243,6 @@ class BaseImporterToDataCollection(BaseImporter):
             self.data_label_overwrite_by_index = []
             return
 
-        # ensure the default label is unique for the data-collection
-        self.data_label_default = self.app.return_unique_name(self.data_label_default)
-
         dc_labels = [data.label for data in self.app.data_collection]
 
         if self.data_label_is_prefix and len(self.data_label_suffices):
@@ -284,7 +282,11 @@ class BaseImporterToDataCollection(BaseImporter):
         else:
             data_label = data_label.strip()
 
-        # Handle overwriting existing data
+        # Handle overwriting existing data when label matches.
+        # Since data_label.default always applies return_unique_name,
+        # overwrite only triggers when:
+        # 1. User explicitly passed a data_label that matches existing, OR
+        # 2. User manually set the label in UI to match an existing entry
         if data_label in self.app.data_collection:
             # Remove from all viewers first, then from data collection
             for viewer in self.app._viewer_store.values():
