@@ -19,7 +19,6 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     template_file = __file__, "./catalog.vue"
 
-
     # for catalogs with source positions in sky coordinates
     col_ra_items = List().tag(sync=True)
     col_ra_selected = Unicode().tag(sync=True)
