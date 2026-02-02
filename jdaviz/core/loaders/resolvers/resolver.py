@@ -4,11 +4,10 @@ import threading
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
-from traitlets import Bool, Float, Instance, List, Unicode, observe, default
+from traitlets import Bool, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
-from astropy.coordinates import SkyCoord
 from astropy.coordinates.builtin_frames import __all__ as all_astropy_frames
 from astropy.table import Table as astropyTable
 from astroquery.mast import MastMissions
@@ -1084,7 +1083,7 @@ class BaseConeSearchResolver(BaseResolver):
     viewer_centered = Bool(False).tag(sync=True)
     coordframe_choices = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
-    radius = Float(1).tag(sync=True)
+    radius = FloatHandleEmpty(1).tag(sync=True)
     radius_unit_items = List().tag(sync=True)
     radius_unit_selected = Unicode("deg").tag(sync=True)
 
