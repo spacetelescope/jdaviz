@@ -427,10 +427,10 @@ def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):
 
 
 @pytest.mark.parametrize(
-    ('align_by', ), ('WCS', 'Pixel')
+    ('align_by', ), (('WCS', ), ('Pixel', ))
 )
 def test_load_image_align_by_and_astroquery_loader(deconfigged_helper, image_nddata_wcs, align_by):
-
+    deconfigged_helper.load(image_nddata_wcs, format='image')
     astroquery_loader = deconfigged_helper.loaders['astroquery']
     astroquery_loader.viewer = 'Image'
 
