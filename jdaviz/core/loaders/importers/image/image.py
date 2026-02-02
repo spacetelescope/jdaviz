@@ -184,15 +184,14 @@ class ImageImporter(BaseImporterToDataCollection):
 
         try:
             output = self.output
+        except Exception:  # noqa
+            return False
+        else:
             is_spectral = all([wcs_is_spectral(getattr(data, 'coords', None)) for data in output])
             if is_spectral:
                 # Reject 2D spectra with spectral WCS coordinates
                 # that pass the FITS/NDData condition
                 return False
-
-        except Exception:  # noqa
-            return False
-        else:
             return True
 
     def _glue_data_wcs_to_fits(self, glue_data):
