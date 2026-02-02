@@ -377,7 +377,8 @@ class ImageImporter(BaseImporterToDataCollection):
 
 def _validate_fits_image2d(item):
     hdu = item.get('obj')
-    return hdu.data is not None and hdu.is_image and hdu.data.ndim == 2 and not wcs_is_spectral(getattr(hdu, 'coords', None))
+    return (hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
+            and not wcs_is_spectral(getattr(hdu, 'coords', None)))
 
 
 def _validate_roman_ext(item):
