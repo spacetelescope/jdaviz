@@ -139,11 +139,11 @@ module.exports = {
           'api_hint', 'api_hint_multiselect', 'api_hints_enabled'],
   computed: {
     normalizedApiHint() {
-      // Remove any trailing '=' and surrounding whitespace so appended fields produce ".suffix"
+      // Remove trailing '=' and any whitespace so appended fields produce ".suffix"
       if (!this.api_hint) {
         return '';
       }
-      return this.api_hint.replace(/\s*=\s*$/g, '');
+      return this.api_hint.replace(/\s*=\s*$/, '').trimEnd();
     }
   }
 };
