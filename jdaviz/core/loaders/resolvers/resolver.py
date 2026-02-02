@@ -1197,26 +1197,23 @@ class BaseConeSearchResolver(BaseResolver):
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
+        ref_data = viewer.state.reference_data
 
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
         if (
-            len(self._app._jdaviz_helper.datasets) < 1
-            or viewer.state.reference_data is None
-            or viewer.state.reference_data.coords is None
+
+            len(self.app._jdaviz_helper.datasets) < 1
+            or ref_data is None
+            or ref_data.coords is None
         ):
             self.source = ""
             return
 
         # Obtain center point of the current image and convert into sky coordinates
-        if self._app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
-            skycoord_center = SkyCoord(
-                viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
-            )
-        else:
-            skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
-                viewer.state.zoom_center_x, viewer.state.zoom_center_y
-            )
+        skycoord_center = ref_data.coords.pixel_to_world(
+            viewer.state.zoom_center_x, viewer.state.zoom_center_y
+        )
 
         # Extract SkyCoord values as strings for plugin display
         ra_deg = skycoord_center.ra.deg
