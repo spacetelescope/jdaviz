@@ -110,6 +110,7 @@
         :auto-edit="true"
         :api-hint-rename="api_hint_rename"
         :show-api-hint="api_hints_enabled"
+        font-size="16px"
         @input="(newLabel) => {$emit('update:edit_value', newLabel)}"
         @rename="handleRename"
         @cancel="handleCancel"

@@ -1,5 +1,5 @@
 <template>
-  <div style="display: flex; flex-direction: column; min-width: 0; width: 100%;">
+  <div :style="'display: flex; flex-direction: column; min-width: 0; width: 100%;' + (fontSize ? ' font-size: ' + fontSize + ';' : '')">
     <span v-if="isEditing && apiHintRename && showApiHint" class="api-hint" style="display: block; margin-bottom: 8px;">
       {{ apiHintRename }}('{{ value }}', '{{ editValue }}')
     </span>
@@ -99,6 +99,10 @@ module.exports = {
     showApiHint: {
       type: Boolean,
       default: false
+    },
+    fontSize: {
+      type: String,
+      default: ''
     }
   },
   data() {
