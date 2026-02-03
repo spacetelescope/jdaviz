@@ -47,13 +47,13 @@
           @mousedown.stop
           class="rename-inline-input"
         />
-        <span style="display: inline-flex; align-items: center; flex-shrink: 0; margin-left: auto; min-width: 48px; justify-content: flex-end;">
+        <span :style="'display: inline-flex; align-items: center; flex-shrink: 0; margin-left: auto; justify-content: flex-end;' + (smallIcons ? ' min-width: 48px;' : ' min-width: 56px;')">
           <j-tooltip tooltipcontent="Cancel change">
-            <v-icon small style="cursor: pointer" @click.stop="cancelEdit" @mousedown.stop>mdi-close</v-icon>
+            <v-icon :small="smallIcons" style="cursor: pointer" @click.stop="cancelEdit" @mousedown.stop>mdi-close</v-icon>
           </j-tooltip>
           <j-tooltip :tooltipcontent="renameErrorMessage || 'Accept change'">
             <v-icon
-              small
+              :small="smallIcons"
               style="cursor: pointer"
               :style="renameErrorMessage ? 'opacity: 0.5; cursor: not-allowed;' : ''"
               @click.stop="renameErrorMessage ? null : acceptEdit()"
@@ -103,6 +103,10 @@ module.exports = {
     fontSize: {
       type: String,
       default: ''
+    },
+    smallIcons: {
+      type: Boolean,
+      default: true
     }
   },
   data() {
