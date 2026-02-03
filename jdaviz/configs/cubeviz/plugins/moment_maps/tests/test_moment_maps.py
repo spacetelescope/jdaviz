@@ -200,12 +200,7 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
         mm.calculate_moment()
 
     mm.reference_wavelength = 4.63e-7
-    if GWCS_LT_0_26_2:
-        mm.calculate_moment()
-    else:
-        # GWCS changed from logging package to warnings for this
-        with pytest.warns(UserWarning, match="Physical type may be ambiguous"):
-            mm.calculate_moment()
+    mm.calculate_moment()
 
     # Make sure coordinate display works
     label_mouseover = cubeviz_helper._coords_info
@@ -224,12 +219,7 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
 
     # Test moment 2 in velocity
     mm.n_moment = 2
-    if GWCS_LT_0_26_2:
-        mm.calculate_moment()
-    else:
-        # GWCS changed from logging package to warnings for this
-        with pytest.warns(UserWarning, match="Physical type may be ambiguous"):
-            mm.calculate_moment()
+    mm.calculate_moment()
 
     label_mouseover._viewer_mouse_event(uncert_viewer, {'event': 'mousemove',
                                                         'domain': {'x': 1, 'y': 1}})
