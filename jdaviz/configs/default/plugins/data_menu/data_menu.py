@@ -119,8 +119,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     subset_edit_modes = List().tag(sync=True)
 
     rename_error_messages = Dict({}).tag(sync=True)
-    # Track pending renames: {old_label: {'new_label': str, 'is_subset': bool}}
-    _pending_renames = Dict({}).tag(sync=True)
+    # Track pending rename targets: {old_label: {'new_label': str, 'is_subset': bool}}
+    _pending_renames = {}
 
     def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -730,34 +730,23 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                                       for label, msg in self.rename_error_messages.items()
                                       if label != old_label and old_label not in msg}
         # Also remove from pending renames
-        self._pending_renames = {label: info
-                                 for label, info in self._pending_renames.items()
-                                 if label != old_label}
+        self._pending_renames.pop(old_label, None)
 
     def _revalidate_pending_renames(self):
         """
-        Re-validate all pending renames.
-
-        Called after a rename is completed to update error messages for any
-        other items that may now have conflicts with the newly used name.
+        Re-validate all pending renames after a rename completes.
         """
-        # Take a snapshot of pending renames to avoid modifying during iteration
-        pending_snapshot = dict(self._pending_renames)
-        for old_label, info in pending_snapshot.items():
-            new_label = info.get('new_label')
-            is_subset = info.get('is_subset', False)
+        for old_label, info in list(self._pending_renames.items()):
             try:
-                self.app.check_rename_availability(old_label, new_label, is_subset=is_subset)
+                self.app.check_rename_availability(
+                    old_label, info['new_label'], is_subset=info.get('is_subset', False)
+                )
             except ValueError as e:
                 self.rename_error_messages = {**self.rename_error_messages, old_label: str(e)}
             else:
-                # Clear any existing error for this label
                 if old_label in self.rename_error_messages:
-                    # Remove just the error message, keep the pending rename tracked
                     self.rename_error_messages = {
-                        label: msg
-                        for label, msg in self.rename_error_messages.items()
-                        if label != old_label
+                        k: v for k, v in self.rename_error_messages.items() if k != old_label
                     }
 
     def vue_check_rename(self, info, *args):  # pragma: no cover
@@ -769,21 +758,18 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self._reset_rename_error_messages(old_label)
             return
 
-        # Track this pending rename for later revalidation
-        self._pending_renames = {**self._pending_renames,
-                                 old_label: {'new_label': new_label, 'is_subset': is_subset}}
+        # Track for revalidation when other renames complete
+        self._pending_renames[old_label] = {'new_label': new_label, 'is_subset': is_subset}
 
         try:
             self.app.check_rename_availability(old_label, new_label, is_subset=is_subset)
         except ValueError as e:
-            # Store error message for this specific layer
             self.rename_error_messages = {**self.rename_error_messages, old_label: str(e)}
         else:
-            # Clear error for this specific layer
-            self._reset_rename_error_messages(old_label)
-            # Re-add to pending since _reset clears it
-            self._pending_renames = {**self._pending_renames,
-                                     old_label: {'new_label': new_label, 'is_subset': is_subset}}
+            if old_label in self.rename_error_messages:
+                self.rename_error_messages = {
+                    k: v for k, v in self.rename_error_messages.items() if k != old_label
+                }
 
     def vue_rename_item(self, info, *args):  # pragma: no cover
         old_label = info.get('old_label')
