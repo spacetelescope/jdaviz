@@ -19,6 +19,8 @@ New Features
 
 - Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
 
+- Add support for viewers with mixed pixel and wavelength/frequency spectral axis units. [#4001]
+
 
 Cubeviz
 ^^^^^^^
@@ -94,7 +96,8 @@ Bug Fixes
 - Fixed filedrop bug where parsers were unable to detect file formats. [#3986]
 
 - Fixed bug when initializing relevant 2D Spectrum plugins when there are viewers
-  with mixed pixel / wavelength spectral units. [#3982]
+  with mixed pixel / wavelength spectral axis units. [#3982]
+
 
 - Fixed API hint styling for viewer labels. [#4003]
 
