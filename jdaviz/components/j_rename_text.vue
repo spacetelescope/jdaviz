@@ -24,7 +24,7 @@
         <v-icon
           v-if="showPencil"
           small
-          style="margin-left: auto; cursor: pointer; flex-shrink: 0; visibility: hidden; width: 24px; min-width: 24px;"
+          style="margin-left: auto; cursor: pointer; flex-shrink: 0; visibility: hidden; width: 48px; min-width: 48px; text-align: right;"
           :style="hovering ? 'visibility: visible;' : ''"
           @click.stop="startEditing"
           @mousedown.stop
@@ -34,35 +34,38 @@
       </span>
 
       <!-- Edit mode: shows text field with cancel and confirm buttons -->
-      <v-text-field
+      <span
         v-if="isEditing"
-        v-model="editValue"
-        @keydown.enter.prevent="acceptEdit"
-        @keydown.escape.prevent="cancelEdit"
-        @click.stop
-        @mousedown.stop
-        autofocus
-        dense
-        :hint="renameErrorMessage"
-        :error-messages="renameErrorMessage ? [renameErrorMessage] : []"
-        persistent-hint
-        style="flex-grow: 1; margin: 0; padding: 0; width: 100%;"
+        style="display: inline-flex; align-items: center; min-width: 0; flex: 1; width: 100%;"
       >
-        <template v-slot:append>
+        <input
+          ref="editInput"
+          v-model="editValue"
+          @keydown.enter.prevent="acceptEdit"
+          @keydown.escape.prevent="cancelEdit"
+          @click.stop
+          @mousedown.stop
+          class="rename-inline-input"
+        />
+        <span style="display: inline-flex; align-items: center; flex-shrink: 0; margin-left: auto; min-width: 48px; justify-content: flex-end;">
           <j-tooltip tooltipcontent="Cancel change">
-            <v-icon style="cursor: pointer" @click.stop="cancelEdit" @mousedown.stop>mdi-close</v-icon>
+            <v-icon small style="cursor: pointer" @click.stop="cancelEdit" @mousedown.stop>mdi-close</v-icon>
           </j-tooltip>
           <j-tooltip :tooltipcontent="renameErrorMessage || 'Accept change'">
             <v-icon
+              small
               style="cursor: pointer"
               :style="renameErrorMessage ? 'opacity: 0.5; cursor: not-allowed;' : ''"
               @click.stop="renameErrorMessage ? null : acceptEdit()"
               @mousedown.stop
             >mdi-check</v-icon>
           </j-tooltip>
-        </template>
-      </v-text-field>
+        </span>
+      </span>
     </span>
+    <div v-if="isEditing && renameErrorMessage" class="rename-error-message">
+      {{ renameErrorMessage }}
+    </div>
   </div>
 </template>
 
@@ -121,13 +124,17 @@ module.exports = {
   },
   methods: {
     startEditing() {
-
       this.isEditing = true;
       this.editValue = this.value;
       // Suppress propagation when entering edit mode to prevent selection change
       this.suppressPropagation = true;
       this.$nextTick(() => {
         this.suppressPropagation = false;
+        // Focus the input element
+        if (this.$refs.editInput) {
+          this.$refs.editInput.focus();
+          this.$refs.editInput.select();
+        }
       });
     },
     cancelEdit() {
@@ -177,6 +184,33 @@ module.exports = {
 };
 </script>
 
-<style scoped>
+<style>
+/* Inline input styled to match static text display */
+.rename-inline-input {
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid currentColor;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  min-width: 50px;
+  flex: 1;
+}
+
+.rename-inline-input:focus {
+  border-bottom: 1px solid #1976d2;
+}
+
+/* Error message styling */
+.rename-error-message {
+  color: #ff5252;
+  font-size: 12px;
+  margin-top: 2px;
+}
 </style>
 
