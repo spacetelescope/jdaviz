@@ -143,10 +143,9 @@ module.exports = {
       if (!this.api_hint) {
         return '';
       }
-      const parts = this.api_hint.split('=');
-      if (parts.length > 1) {
+      if (this.api_hint.includes("=")) {
         // There's a '=' in the string, return just the part before it
-        return parts[0].trimEnd();
+        return this.api_hint.split("=")[0].trimEnd();
       }
       // No '=' found, return as-is but trim trailing space
       return this.api_hint.trimEnd();
