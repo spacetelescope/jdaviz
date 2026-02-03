@@ -48,7 +48,7 @@
         v-model="selected"
         @change="$emit('update:selected', $event)"
         :class="api_hints_enabled && api_hint ? 'api-hint' : null"
-        :label="api_hints_enabled && api_hint ? normalizedApiHint(): (label ? label : 'Viewer')"
+        :label="api_hints_enabled && api_hint ? normalizedApiHint() + ' =': (label ? label : 'Viewer')"
         :hint="hint ? hint : 'Select viewer.'"
         :rules="rules ? rules : []"
         :multiple="multiselect"
