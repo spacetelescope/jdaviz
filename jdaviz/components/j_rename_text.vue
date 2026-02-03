@@ -11,7 +11,7 @@
         @mouseleave="hovering = false"
         @mousedown.stop
         @dblclick.stop="startEditing"
-        style="display: inline-flex; align-items: center; min-width: 0; flex: 1; width: 100%;"
+        style="display: inline-flex; align-items: center; min-width: 0; flex: 1; width: 100%; caret-color: transparent;"
       >
         <span
           :style="hovering ? 'cursor: pointer; text-decoration: underline;' : 'cursor: pointer;'"
@@ -184,7 +184,7 @@ module.exports = {
 };
 </script>
 
-<style>
+<style scoped>
 /* Inline input styled to match static text display */
 .rename-inline-input {
   font-size: inherit;
@@ -211,6 +211,12 @@ module.exports = {
   color: #ff5252;
   font-size: 12px;
   margin-top: 2px;
+}
+
+/* Ensure display mode text doesn't show any input cursor */
+.rename-display-text {
+  caret-color: transparent;
+  user-select: text;
 }
 </style>
 

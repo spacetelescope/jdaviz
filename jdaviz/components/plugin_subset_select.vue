@@ -175,3 +175,11 @@ module.exports = {
       text-overflow: ellipsis;
   }
 </style>
+
+<style>
+  /* Hide caret in v-select internal input to prevent errant cursor display */
+  .v-select input {
+    caret-color: transparent !important;
+  }
+</style>
+
