@@ -110,6 +110,7 @@
         :auto-edit="true"
         :api-hint-rename="api_hint_rename"
         :show-api-hint="api_hints_enabled"
+        :rename-error-message="rename_error_message || ''"
         font-size="16px"
         :small-icons="false"
         @input="(newLabel) => {$emit('update:edit_value', newLabel)}"
@@ -137,7 +138,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'has_subregions', 'has_subregions_warning', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled', 'api_hint_rename', 'api_hint_remove', 'edit_value', 'mode'
+          'api_hint', 'api_hints_enabled', 'api_hint_rename', 'api_hint_remove', 'edit_value', 'mode', 'rename_error_message'
   ],
   methods: {
     handleRename(newLabel) {
