@@ -415,31 +415,53 @@ def test_get_loader_default_args(deconfigged_helper, spectrum1d):
     assert isinstance(parser, ObjectParser)
 
 
-def test_load_mixed_spectral_axis_units(deconfigged_helper):
+@pytest.mark.parametrize('load_first', ['1D Spectrum', '2D Spectrum'])
+@pytest.mark.parametrize('unitless_data', ['1D Spectrum', '2D Spectrum'])
+def test_load_mixed_spectral_axis_units(deconfigged_helper, unitless_data, load_first):
     """
-    Test that loading 1D and 2D spectra with mixed units works as expected.
-    Two viewers should be created, and the automatic spectral extraction will fail
-    (until JDAT-5891 is addressed), but the instantiation of 2D Spectrum viewer
-    plugins is sucessful and does not prevent data from being loaded into the app.
+    Test that loading 1D and 2D spectra with mixed units (pixels and nm)
+    works as expected. Tests the case where either the 1D or 2D spectrum have no,
+    wavelength info, as well as loading the 2D spectrum first as well as second to
+    trigger the automatic spectral extraction when there is/is not already an existing
+    viewer with incompatible units.
+
+    Two viewers should be created, and the automatic spectral extraction should
+    be sucessful and create a new viewer for the extracted spectrum.
     """
 
+    # for test parameterization, either the 1D or 2D spectrum will be unitless
+    sa_units = [u.pix, u.nm] if unitless_data == '2D Spectrum' else [u.nm, u.pix]
+
     # create 1D spectrum with spectral axis in pixels
-    spec_1d = Spectrum(flux=(1, 2, 3) * u.Jy, spectral_axis=(1, 2, 3) * u.pix)
+    spec_1d = Spectrum(flux=(1, 2, 3) * u.Jy, spectral_axis=(1, 2, 3) * sa_units[0])
 
     # create 2D spectrum with spectral axis in nm
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
-    spec_2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.nm)
+    spec_2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3] * sa_units[1])
 
-    # first load 1D spectrum
-    deconfigged_helper.load(spec_1d, data_label='spec1d', format='1D Spectrum')
-    assert len(deconfigged_helper.viewers) == 1
+    if load_first == '1D Spectrum':
+        # first load 1D spectrum
+        deconfigged_helper.load(spec_1d, data_label='spec1d', format='1D Spectrum')
+        assert len(deconfigged_helper.viewers) == 1
 
-    # then load 2D spectrum. This should create a new viewer, and trigger the
-    # automatic spectral extraction (which is added to the 1D viewer, already in
-    # pixels) without error.
-    deconfigged_helper.load(spec_2d, data_label='spec2d', format='2D Spectrum')
-    assert len(deconfigged_helper.viewers) == 2
+        # then load 2D spectrum. This should create a new viewer, and trigger the
+        # automatic spectral extraction (which is added to the 1D viewer, already in
+        # pixels) without error.
+        deconfigged_helper.load(spec_2d, data_label='spec2d', format='2D Spectrum')
+        assert len(deconfigged_helper.viewers) == 3  # 2 1D viewers (pix, nm), 1 2D viewer
 
-    # uncomment after JDAT-5891
-    # assert len(deconfigged_helper.app.data_collection) == 3  # 2 spectra + 1 extracted
+    elif load_first == '2D Spectrum':
+        # first load 2D spectrum. this will create 2 new viewers: one 2D viewer and
+        # one 1D viewer for the automatic spectral extraction in nm
+        deconfigged_helper.load(spec_2d, data_label='spec2d', format='2D Spectrum')
+        assert len(deconfigged_helper.viewers) == 2
+
+        # then load 1D spectrum. This should create a new viewer for the 1D
+        # spectrum in pixels
+        deconfigged_helper.load(spec_1d, data_label='spec1d', format='1D Spectrum')
+        assert len(deconfigged_helper.viewers) == 3  # 2 1D viewers (pix, nm), 1 2D viewer
+
+    # check that there are 2 spectra in the data collection, the one loaded and
+    # the one auto-extracted
+    assert len(deconfigged_helper.app.data_collection) == 3  # 2 spectra + 1 extracted

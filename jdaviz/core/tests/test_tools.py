@@ -166,6 +166,12 @@ def test_unit_conversion_limits_update(specviz2d_helper, mos_spectrum2d):
 
 
 def test_match_limits_without_wave_component(specviz2d_helper):
+    """
+    Test that reset_limits() works correctly when loading a 2D spectrum without
+    a Wave or Wavelength component. Ensures that resetting limits from either
+    the 1D spectrum viewer or 2D spectrum viewer does not crash and that the
+    limits remain unchanged (since there's no wavelength axis to reset to).
+    """
     data = np.zeros((5, 10))
     spec2d = Spectrum(flux=data*u.MJy, spectral_axis_index=1)
     specviz2d_helper.load_data(spec2d)

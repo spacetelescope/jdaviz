@@ -450,9 +450,48 @@ def handle_squared_flux_unit_conversions(value, original_unit=None,
     return converted
 
 
-def spectral_axis_conversion(values, original_units, target_units):
+def spectral_axis_conversion(values, original_units, target_units, with_unit=False):
+    """
+    Attempt to convert ``original_units``, and ``target_units``, which
+    are spectral axis quantities, between different units. The conversion
+    is skipped if only one of the units is 'pix' to allow for mixed
+    pixel/world unit viewing.
+
+    Parameters
+    ----------
+    values : array-like
+        Spectral axis values to convert.
+    original_units : str
+        Current units of ``values``.
+    target_units : str
+        Desired output units for ``values``.
+    with_unit : bool, optional
+        If True, the returned value is a Quantity. If False, only the numerical
+        values are returned. (Default is False).
+
+    Returns
+    -------
+    converted_values : array-like or `~astropy.units.Quantity`
+        Converted values, or original values unchanged if converting between
+        pixel and world coordinates (to support mixed-unit viewing).
+    """
+
+    # do not convert values if one of the units is pixel and the other is not.
+    original_unit = u.Unit(original_units)
+    target_unit = u.Unit(target_units)
+
+    if u.pix in (original_unit, target_unit) and original_unit != target_unit:
+        if with_unit:
+            return values * original_units
+        return values
+
     eqv = u.spectral() + u.pixel_scale(1*u.pix)
-    return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
+    converted_values = (values * original_unit).to_value(target_unit, equivalencies=eqv)
+
+    if with_unit:
+        converted_values = converted_values * target_unit
+
+    return converted_values
 
 
 def supported_sq_angle_units(as_strings=False):
