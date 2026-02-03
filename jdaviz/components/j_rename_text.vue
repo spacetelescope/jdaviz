@@ -157,6 +157,10 @@ module.exports = {
       });
     },
     acceptEdit() {
+      // Don't accept if there's a validation error
+      if (this.renameErrorMessage) {
+        return;
+      }
       const trimmedValue = this.editValue.trim();
       if (trimmedValue && trimmedValue !== this.value) {
         // Emit with old_label and new_label keys for data_menu.vue handler
