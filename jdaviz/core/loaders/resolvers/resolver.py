@@ -660,8 +660,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         click_x, click_y = msg.x, msg.y
 
         # Determine selection mode
-        mode = getattr(msg, 'mode', 'nearest')
-        if mode == 'skewer':
+        if msg.mode == 'skewer':
             selected_indices = find_polygon_mark_with_skewer(
                 click_x, click_y, click_viewer, region_marks)
         else:
