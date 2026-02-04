@@ -45,7 +45,8 @@ def _get_skycoords_from_table(layer, rows=None):
     """
     Get SkyCoord for rows in a table layer.
 
-    Searches for RA and Dec columns using flexible name matching.
+    First checks for RA/Dec column names stored in metadata by the catalog importer,
+    then falls back to flexible name matching.
 
     Parameters
     ----------
@@ -59,16 +60,30 @@ def _get_skycoords_from_table(layer, rows=None):
     SkyCoord or None
         SkyCoord for the selected rows, or None if RA/Dec columns not found.
     """
-    # Find RA and Dec component IDs
     ra_comp = None
     dec_comp = None
 
-    for comp_id in layer.component_ids():
-        comp_name = str(comp_id)
-        if in_ra_comps(comp_name) and ra_comp is None:
-            ra_comp = comp_id
-        elif in_dec_comps(comp_name) and dec_comp is None:
-            dec_comp = comp_id
+    # First, check if the catalog importer stored the RA/Dec column names in metadata
+    ra_col_name = layer.meta.get('_jdaviz_loader_ra_col')
+    dec_col_name = layer.meta.get('_jdaviz_loader_dec_col')
+
+    if ra_col_name and dec_col_name:
+        # Find the component IDs that match these column names
+        for comp_id in layer.component_ids():
+            comp_name = str(comp_id)
+            if comp_name == ra_col_name:
+                ra_comp = comp_id
+            elif comp_name == dec_col_name:
+                dec_comp = comp_id
+
+    # Fall back to flexible name matching if metadata not found or columns not matched
+    if ra_comp is None or dec_comp is None:
+        for comp_id in layer.component_ids():
+            comp_name = str(comp_id)
+            if in_ra_comps(comp_name) and ra_comp is None:
+                ra_comp = comp_id
+            elif in_dec_comps(comp_name) and dec_comp is None:
+                dec_comp = comp_id
 
     if ra_comp is None or dec_comp is None:
         return None
