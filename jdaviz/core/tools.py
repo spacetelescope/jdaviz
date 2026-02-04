@@ -634,13 +634,15 @@ class TableApplyZoom(_BaseTableApplyTool):
             return
 
         # Get the selected viewer IDs from the custom widget
-        selected_viewer_ids = []
         if len(self.viewer.toolbar.custom_widget_selected) > 0:
             selected_viewer_ids = self.viewer.toolbar.custom_widget_selected[0]
+        else:
+            # no selected viewers, do nothing
+            return
 
         for viewer in self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
             # Skip viewers not in the selection (if selection exists)
-            if selected_viewer_ids and viewer.reference_id not in selected_viewer_ids:
+            if viewer.reference_id not in selected_viewer_ids:
                 continue
 
             i_top = get_top_layer_index(viewer)
@@ -674,7 +676,7 @@ class TableApplyZoom(_BaseTableApplyTool):
 
             # For single point or very close points, use a minimum radius
             if radius < 20:
-                radius = 50
+                radius = 20
 
             # Add 20% padding
             radius *= 1.2
