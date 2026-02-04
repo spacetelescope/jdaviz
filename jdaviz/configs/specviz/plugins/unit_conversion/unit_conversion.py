@@ -327,10 +327,8 @@ class UnitConversion(PluginTemplateMixin):
                     except ValueError:
                         self.spectral_unit.selected = ''
 
-                flux_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else getattr(data_obj, 'unit', None)  # noqa
-                if flux_unit is None:
-                    self.flux_unit.selected = ''
-                elif not self.flux_unit_selected:
+                if not self.flux_unit_selected:
+                    flux_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
                     # get flux/sb unit from data object, and solid angle to turn sb into flux
                     angle_unit = check_if_unit_is_per_solid_angle(flux_unit,
                                                                   return_unit=True)
@@ -343,6 +341,7 @@ class UnitConversion(PluginTemplateMixin):
                         self.flux_unit.selected = ''
 
                 if not self.angle_unit_selected:
+                    flux_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
                     angle_unit = check_if_unit_is_per_solid_angle(flux_unit,
                                                                   return_unit=True)
                     self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
