@@ -636,11 +636,8 @@ class TableApplyZoom(_BaseTableApplyTool):
             # Get pixel coordinates in the TOP LAYER's coordinate system
             # (this is what center_on expects)
             if hasattr(image, 'coords') and image.coords is not None:
-                try:
-                    pixel_coords = image.coords.world_to_pixel(skycoords)
-                    xs, ys = np.atleast_1d(pixel_coords[0]), np.atleast_1d(pixel_coords[1])
-                except Exception:  # nosec # pragma: no cover
-                    continue
+                pixel_coords = image.coords.world_to_pixel(skycoords)
+                xs, ys = np.atleast_1d(pixel_coords[0]), np.atleast_1d(pixel_coords[1])
             else:
                 # No WCS on top layer, skip this viewer
                 continue
