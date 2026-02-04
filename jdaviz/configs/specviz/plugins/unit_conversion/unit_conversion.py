@@ -327,7 +327,7 @@ class UnitConversion(PluginTemplateMixin):
                     except ValueError:
                         self.spectral_unit.selected = ''
 
-                flux_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else getattr(data_obj, 'unit', None)
+                flux_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else getattr(data_obj, 'unit', None)  # noqa
                 if flux_unit is None:
                     self.flux_unit.selected = ''
                 elif not self.flux_unit_selected:
