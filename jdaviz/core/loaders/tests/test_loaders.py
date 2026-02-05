@@ -218,7 +218,7 @@ def test_resolver_url(deconfigged_helper):
 
     # may change with future importers
     assert len(loader.format.choices) == 2
-    assert loader.format.selected == 'Image'  # default may change with future importers
+    assert loader.format.selected == '2D Spectrum'  # default may change with future importers
 
     # test target filtering
     assert len(loader.target.choices) > 1
