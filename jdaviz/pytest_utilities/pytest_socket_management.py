@@ -1,35 +1,25 @@
-import requests.adapters
+import gc
+import requests
 
 
 def cleanup_leaked_sockets():
     """
-    Close any leaked SSL/HTTP connections from astroquery or other libraries.
+    Close any leaked HTTP connections.
 
-    This targets a known issue where astroquery (particularly Gaia) can leave
-    SSL sockets open, which prevents pytest-xdist workers from exiting cleanly,
+    This targets a recurring issue where astroquery (or others) can leave
+    SSL sockets open, which prevents pytest (workers) from exiting cleanly,
     causing exit code 143 (SIGTERM).
     """
-    # try:
-    #     # Specifically close Gaia session if it exists
-    #     # This is the most common source of lingering sockets
-    #     try:
-    #         from astroquery.gaia import Gaia
-    #         if hasattr(Gaia, '_session') and Gaia._session is not None:
-    #             try:
-    #                 Gaia._session.close()
-    #             except Exception:
-    #                 pass
-    #     except ImportError:
-    #         pass
+    # Find and close all requests.Session objects in memory.
+    # This is the general solution - Session.close() properly closes all
+    # underlying adapters and their urllib3 connection pools.
+    for obj in gc.get_objects():
+        try:
+            if isinstance(obj, requests.Session):
+                obj.close()
+        except (ReferenceError, TypeError):
+            # Object deleted during iteration or not comparable
+            pass
 
-    # Close any lingering requests.Session objects (used by astroquery)
-    try:
-        # Check if _pool_cache exists before iterating
-        if hasattr(requests.adapters.HTTPAdapter, '_pool_cache'):
-            for adapter in requests.adapters.HTTPAdapter._pool_cache.values():
-                try:
-                    adapter.poolmanager.clear()
-                except (AttributeError, Exception):
-                    pass
-    except (ImportError, AttributeError):
-        pass
+    # Trigger garbage collection to release file descriptors
+    gc.collect()
