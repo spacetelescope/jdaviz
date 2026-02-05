@@ -33,6 +33,7 @@ from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
                                                    memlog_terminal_summary)
 from jdaviz.pytest_utilities.pytest_remote_skip import (remote_skip_addoption,
                                                         remote_skip_runtest_makereport)
+from jdaviz.pytest_utilities.pytest_socket_management import cleanup_leaked_sockets
 
 
 if not NUMPY_LT_2_0:
@@ -113,6 +114,16 @@ def pytest_terminal_summary(terminalreporter, config=None):
         memlog_terminal_summary(terminalreporter, config)
     except ValueError:
         pass
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """
+    Hook that runs at the end of each pytest session (per worker in xdist).
+
+    This is called after all tests in the session complete, before each worker
+    exits.
+    """
+    cleanup_leaked_sockets()
 
 
 @pytest.fixture
