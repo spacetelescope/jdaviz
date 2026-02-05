@@ -463,6 +463,17 @@
     margin-top: 1px !important;
     margin-bottom: 1px !important;
   }
+  /* Reduce padding between icon, content, and action in layer items */
+  .layer-select > .v-list-item__icon {
+    margin-right: 12px !important;
+  }
+  .layer-select > .v-list-item__content {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+  .layer-select > .v-list-item__action {
+    margin-left: 2px !important;
+  }
   .layer-select:nth-child(even) {
     /* alternating row colors */
     background-color: #f1f2f85a;

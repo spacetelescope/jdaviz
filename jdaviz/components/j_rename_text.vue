@@ -24,7 +24,7 @@
         <v-icon
           v-if="showPencil"
           small
-          style="margin-left: auto; cursor: pointer; flex-shrink: 0; visibility: hidden; width: 48px; min-width: 48px; text-align: right;"
+          style="margin-left: auto; cursor: pointer; flex-shrink: 0; visibility: hidden;"
           :style="hovering ? 'visibility: visible;' : ''"
           @click.stop="startEditing"
           @mousedown.stop
