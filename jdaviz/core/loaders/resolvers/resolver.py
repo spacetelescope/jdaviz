@@ -33,7 +33,8 @@ from jdaviz.core.registries import (loader_resolver_registry,
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.region_translators import is_stcs_string, stcs_string2region
-from jdaviz.utils import download_uri_to_path, find_closest_polygon_mark, layer_is_image_data
+from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
+                          find_polygon_mark_with_skewer, layer_is_image_data)
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
 
@@ -320,7 +321,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
                     's_region' in self.observation_table.headers_avail):
-                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion']], 'jdaviz:selectregion'  # noqa: E501
+                return viewer.toolbar._original_tools_nested[:3] + ['jdaviz:selectregion', 'jdaviz:skewerregion'], 'jdaviz:selectregion'  # noqa: E501
             return None, None
 
         self.custom_toolbar.callable = custom_toolbar
@@ -657,19 +658,30 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         ]
 
         click_x, click_y = msg.x, msg.y
-        selected_idx = find_closest_polygon_mark(click_x, click_y, region_marks)
 
-        if selected_idx is not None:
+        # Determine selection mode
+        if msg.mode == 'skewer':
+            selected_indices = find_polygon_mark_with_skewer(
+                click_x, click_y, click_viewer, region_marks)
+        else:
+            selected_idx = find_closest_polygon_mark(click_x, click_y, region_marks)
+            selected_indices = [selected_idx] if selected_idx is not None else None
+
+        if selected_indices is not None:
             currently_selected = set()
             for row in self.observation_table.selected_rows:
                 idx = self.observation_table.items.index(row)
                 currently_selected.add(idx)
 
-            # Toggle selection
-            if selected_idx in currently_selected:
-                currently_selected.discard(selected_idx)
+            # Toggle all found footprints as a group
+            # If ALL are selected, deselect ALL; otherwise select ALL
+            selected_indices_set = set(selected_indices)
+            if selected_indices_set.issubset(currently_selected):
+                # All found footprints are already selected - deselect them all
+                currently_selected -= selected_indices_set
             else:
-                currently_selected.add(selected_idx)
+                # At least one is not selected - select them all
+                currently_selected |= selected_indices_set
 
             # Update the table selection
             if currently_selected:
