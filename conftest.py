@@ -65,10 +65,10 @@ def pytest_terminal_summary(terminalreporter, config=None):
 
 def pytest_sessionfinish(session, exitstatus):
     """
-    Hook that runs at the end of each pytest session (per worker in xdist).
+    Hook that runs at the end of each pytest session.
 
-    This is called after all tests in the session complete, before each worker
-    exits.
+    In xdist mode, this runs in each worker AND the controller process,
+    ensuring all sockets are cleaned up before exit.
     """
     cleanup_leaked_sockets()
 
@@ -85,6 +85,7 @@ except ImportError:
 def pytest_configure(config):
     # Initialize memlog
     memlog_configure(config)
+
 
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
