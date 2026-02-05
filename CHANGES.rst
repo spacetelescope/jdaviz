@@ -93,6 +93,8 @@ Bug Fixes
 - Fixed bug when initializing relevant 2D Spectrum plugins when there are viewers
   with mixed pixel / wavelength spectral units. [#3982]
 
+- Fixed API hint styling for viewer labels. [#4003]
+
 Cubeviz
 ^^^^^^^
 
