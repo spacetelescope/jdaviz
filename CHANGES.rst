@@ -17,6 +17,8 @@ New Features
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
 
+- Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
+
 Cubeviz
 ^^^^^^^
 

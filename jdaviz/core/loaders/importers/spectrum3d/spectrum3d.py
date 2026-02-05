@@ -106,11 +106,11 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         # FLUX CUBE
         if self.default_data_label_from_resolver:
-            self.data_label_default = self.default_data_label_from_resolver
+            self.data_label.default = self.default_data_label_from_resolver
         elif self.config == 'cubeviz':
-            self.data_label_default = '3D Spectrum [FLUX]'
+            self.data_label.default = '3D Spectrum [FLUX]'
         else:
-            self.data_label_default = '3D Spectrum'
+            self.data_label.default = '3D Spectrum'
 
         if self.config == 'cubeviz':
             self.viewer.selected = ['flux-viewer']

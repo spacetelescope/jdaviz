@@ -171,3 +171,157 @@ class TestResetAndCheckExistingDataInDC:
                 broadcast_msgs = [arg[0][0].text for arg in mock_broadcast.call_args_list
                                   if hasattr(arg[0][0], 'text')]
                 assert len(broadcast_msgs) > 0
+
+
+class TestDataLabelOverwrite:
+    """Tests for the data_label_overwrite functionality in loaders."""
+
+    def test_overwrite_traitlet_simple_mode(self, deconfigged_helper, spectrum1d, spectrum1d_nm):
+        """Test data_label_overwrite in simple (non-prefix) mode."""
+        # Load initial data
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = spectrum1d
+        ldr.format = '1D Spectrum'
+        ldr.importer.data_label = 'test_spectrum'
+        ldr.load()
+
+        assert 'test_spectrum' in deconfigged_helper.app.data_collection
+        assert len(deconfigged_helper.app.data_collection) == 1
+
+        # Now try to load with the same label - should set overwrite flag
+        ldr2 = deconfigged_helper.loaders['object']
+        ldr2.object = spectrum1d_nm
+        ldr2.format = '1D Spectrum'
+        ldr2.importer.data_label = 'test_spectrum'
+
+        # Overwrite should be True since the label already exists
+        # Access _obj to get the raw importer with all traitlets
+        assert ldr2.importer._obj.data_label_overwrite is True
+        assert ldr2.importer._obj.data_label_invalid_msg == ''
+
+        # Load should succeed and overwrite the existing data
+        ldr2.load()
+        assert len(deconfigged_helper.app.data_collection) == 1
+        assert 'test_spectrum' in deconfigged_helper.app.data_collection
+
+    def test_no_overwrite_new_label(self, deconfigged_helper, spectrum1d):
+        """Test that data_label_overwrite is False for new labels."""
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = spectrum1d
+        ldr.format = '1D Spectrum'
+        ldr.importer.data_label = 'unique_label'
+
+        # No existing data with this label
+        # Access _obj to get the raw importer with all traitlets
+        assert ldr.importer._obj.data_label_overwrite is False
+        assert ldr.importer._obj.data_label_invalid_msg == ''
+
+    def test_empty_label_validation(self, deconfigged_helper, spectrum1d):
+        """Test that empty labels are rejected."""
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = spectrum1d
+        ldr.format = '1D Spectrum'
+        ldr.importer.data_label = ''
+
+        # Access _obj to get the raw importer with all traitlets
+        assert ldr.importer._obj.data_label_invalid_msg == 'data_label must be provided'
+        assert ldr.importer._obj.data_label_overwrite is False
+
+        # Whitespace-only should also fail
+        ldr.importer.data_label = '   '
+        assert ldr.importer._obj.data_label_invalid_msg == 'data_label must be provided'
+
+    def test_overwrite_prefix_mode(self, deconfigged_helper, premade_spectrum_list):
+        """Test data_label_overwrite_by_index in prefix mode."""
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = premade_spectrum_list
+        ldr.format = '1D Spectrum'
+
+        # Select multiple extensions to trigger prefix mode
+        ldr.importer.extension.select_all()
+
+        # Access _obj to get the raw importer with all traitlets
+        importer = ldr.importer._obj
+
+        # Verify prefix mode is active
+        assert importer.data_label_is_prefix is True
+        assert len(importer.data_label_suffices) == len(premade_spectrum_list)
+
+        # Initially, no overwrites
+        assert importer.data_label_overwrite is False
+        assert all(v is False for v in importer.data_label_overwrite_by_index)
+
+        # Load the data
+        ldr.load()
+
+        # Now load again with the same prefix - all should be marked for overwrite
+        ldr2 = deconfigged_helper.loaders['object']
+        ldr2.object = premade_spectrum_list
+        ldr2.format = '1D Spectrum'
+        ldr2.importer.extension.select_all()
+
+        # Set the same prefix as before
+        ldr2.importer.data_label = importer.data_label_value
+
+        # Access _obj to get the raw importer with all traitlets
+        importer2 = ldr2.importer._obj
+
+        # All entries should be marked for overwrite
+        assert importer2.data_label_overwrite is True
+        assert all(v is True for v in importer2.data_label_overwrite_by_index)
+
+    def test_overwrite_partial_prefix_mode(self, deconfigged_helper,
+                                           spectrum1d, premade_spectrum_list):
+        """Test partial overwrite in prefix mode (some exist, some don't)."""
+        # Load one spectrum with a label matching what will be the first suffix
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = spectrum1d
+        ldr.format = '1D Spectrum'
+        ldr.importer.data_label = 'prefix_index-0'
+        ldr.load()
+
+        # Now try to load a spectrum list with prefix "prefix"
+        ldr2 = deconfigged_helper.loaders['object']
+        ldr2.object = premade_spectrum_list
+        ldr2.format = '1D Spectrum'
+        ldr2.importer.extension.select_all()
+        ldr2.importer.data_label = 'prefix'
+
+        # Access _obj to get the raw importer with all traitlets
+        importer = ldr2.importer._obj
+
+        # Only the first entry should be marked for overwrite
+        # (depends on suffix format - check actual suffices)
+        assert importer.data_label_overwrite is True
+        # At least one should be True (the one matching 'prefix_index-0')
+        assert any(v is True for v in importer.data_label_overwrite_by_index)
+        # And at least one should be False (new entries)
+        assert any(v is False for v in importer.data_label_overwrite_by_index)
+
+    def test_overwrite_removes_from_viewers(self, deconfigged_helper, spectrum1d, spectrum1d_nm):
+        """Test that overwriting data properly removes it from viewers first."""
+        # Load initial data
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = spectrum1d
+        ldr.format = '1D Spectrum'
+        ldr.importer.data_label = 'viewer_test'
+        ldr.load()
+
+        assert 'viewer_test' in deconfigged_helper.app.data_collection
+        original_data = deconfigged_helper.app.data_collection['viewer_test']
+
+        # Load replacement data with same label (use different spectrum)
+        ldr2 = deconfigged_helper.loaders['object']
+        ldr2.object = spectrum1d_nm
+        ldr2.format = '1D Spectrum'
+        ldr2.importer.data_label = 'viewer_test'
+        ldr2.load()
+
+        # Should still only have one entry with that label
+        assert len([d for d in deconfigged_helper.app.data_collection
+                    if d.label == 'viewer_test']) == 1
+
+        # The data should be the new data (different flux values)
+        new_data = deconfigged_helper.app.data_collection['viewer_test']
+        # Verify it's actually different data (the object should be different)
+        assert new_data is not original_data

@@ -88,7 +88,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         # override SpectrumInputExtensionsMixin method to handle concatenate case
         self._clear_cache('spectra')
 
-        if not hasattr(self, 'extension'):
+        if not hasattr(self, 'extension') or not hasattr(self, 'data_label'):
             return
         self.data_label_is_prefix = (self.multiselect
                                      and len(self.extension.selected) > 1
@@ -96,14 +96,14 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         # data_label_is_prefix is set in SpectrumInputExtensionsMixin,
         # but may be updated after this
         if not hasattr(self, 'extension'):
-            self.data_label_default = self.default_data_label_prefix
+            self.data_label.default = self.default_data_label_prefix
         elif self.multiselect and len(self.extension.selected) > 1 and self.concatenate:
-            self.data_label_default = f"{self.default_data_label_prefix}_concat"
+            self.data_label.default = f"{self.default_data_label_prefix}_concat"
         elif self.multiselect and len(self.extension.selected) == 1 and len(self.extension.choices) > 1:  # noqa
             item_dict = self.extension.selected_item_list[0]
-            self.data_label_default = f"{self.default_data_label_prefix}_{item_dict['suffix']}"
+            self.data_label.default = f"{self.default_data_label_prefix}_{item_dict['suffix']}"
         else:
-            self.data_label_default = self.default_data_label_prefix
+            self.data_label.default = self.default_data_label_prefix
             if self.multiselect and len(self.extension.selected) > 1:
                 self.data_label_suffices = [f"_{item_dict['suffix']}" for item_dict in
                                             self.extension.selected_item_list]
