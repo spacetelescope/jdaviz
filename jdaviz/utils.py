@@ -26,6 +26,7 @@ import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
 from regions import CirclePixelRegion, CircleAnnulusPixelRegion
 from specutils.utils.wcs_utils import SpectralGWCS
+from spherical_geometry.polygon import SphericalPolygon
 import stdatamodels
 
 from glue.config import settings
@@ -1281,3 +1282,61 @@ def find_closest_polygon_mark(px, py, marks):
             closest_idx = mark.label
 
     return closest_idx
+
+
+def find_polygon_mark_with_skewer(px, py, viewer, marks):
+    """
+    Spherical (great-circle) selection: only selects if the click is INSIDE a mark.
+    If multiple marks contain the click, returns all of them.
+
+    Parameters
+    ----------
+    px : float
+        X coordinate of the click in pixel space.
+    py : float
+        Y coordinate of the click in pixel space.
+    viewer : JdavizViewer
+        The viewer instance where the click occurred.
+    marks : list of RegionOverlay
+        List of mark objects to check.
+
+    Returns
+    -------
+    chosen_labels : list of int or None
+        List of observation indices for all marks containing the click,
+        or None if no marks contain it.
+    """
+    # Convert pixel coordinates to sky coordinates (ICRS)
+    skycoord_icrs = viewer.state.reference_data.coords.pixel_to_world(px, py).icrs
+    ra_deg = skycoord_icrs.ra.deg
+    dec_deg = skycoord_icrs.dec.deg
+
+    containing_labels = []
+
+    for mark in marks:
+        label = mark.label
+        x_pix = np.asarray(mark.x)
+        y_pix = np.asarray(mark.y)
+
+        if len(x_pix) == 0 or len(y_pix) == 0:
+            continue
+
+        # Drop duplicate closing vertex if present
+        if len(x_pix) > 1 and x_pix[0] == x_pix[-1] and y_pix[0] == y_pix[-1]:
+            x_pix = x_pix[:-1]
+            y_pix = y_pix[:-1]
+
+        # Convert mark vertices to sky coordinates
+        verts_icrs = viewer.state.reference_data.coords.pixel_to_world(x_pix, y_pix).icrs
+        spherical_polygon = SphericalPolygon.from_lonlat(
+            verts_icrs.ra.deg, verts_icrs.dec.deg, degrees=True)
+
+        # Check if the click point is inside this polygon
+        if spherical_polygon.contains_lonlat(ra_deg, dec_deg, degrees=True):
+            containing_labels.append(label)
+
+    # Return all footprints that contain the click point
+    if containing_labels:
+        return containing_labels
+
+    return None

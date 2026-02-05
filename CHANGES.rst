@@ -15,6 +15,8 @@ New Features
 
 - Catalog public API exposed [#3761, #3777, #3778, #3799, #3814, #3835, #3854, #3856, #3863, #3867, #3930, #3906, #3912, #3899, #3907, #3990]
 
+- Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
+
 - Table viewer tools to highlight selected, zoom-to-selected, and create subset from selected. [#3994]
 
 Cubeviz
@@ -92,6 +94,8 @@ Bug Fixes
 
 - Fixed bug when initializing relevant 2D Spectrum plugins when there are viewers
   with mixed pixel / wavelength spectral units. [#3982]
+
+- Fixed API hint styling for viewer labels. [#4003]
 
 Cubeviz
 ^^^^^^^

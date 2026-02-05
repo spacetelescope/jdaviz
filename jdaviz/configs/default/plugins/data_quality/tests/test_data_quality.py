@@ -231,12 +231,7 @@ def test_cubeviz_layer_visibility_bug(cubeviz_helper):
     mm.n_moment = 1
     mm.reference_wavelength = 6
     mm._obj.add_to_viewer_selected = 'uncert-viewer'
-    if GWCS_LT_0_26_2:
-        mm.calculate_moment()
-    else:
-        # GWCS changed from logging package to warnings for this
-        with pytest.warns(UserWarning, match="Physical type may be ambiguous"):
-            mm.calculate_moment()
+    mm.calculate_moment()
 
     # add the moment map to the flux viewer
     dc = cubeviz_helper.app.data_collection
