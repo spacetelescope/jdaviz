@@ -86,7 +86,6 @@ def pytest_configure(config):
     # Initialize memlog
     memlog_configure(config)
 
-
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
     PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'
