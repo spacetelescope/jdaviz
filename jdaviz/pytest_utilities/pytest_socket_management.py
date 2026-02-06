@@ -12,7 +12,7 @@ def cleanup_leaked_sockets():
     Close leaked HTTP/SSL connections that prevent clean pytest-xdist exit.
 
     Gaia's TAP+ service (and potentially other HTTP clients) can leave SSL
-    sockets open, which prevents pytest-xdist workers from exiting cleanly,
+    sockets open, which prevents pytest from exiting cleanly (whether xdist or not),
     causing exit code 143 (SIGTERM).
 
     This function closes HTTPSConnection objects found via gc, which is the
@@ -29,7 +29,7 @@ def cleanup_leaked_sockets():
         return
 
     # Find and close any lingering HTTP(S) connections
-    # These are the actual source of socket leaks from Gaia/astroquery
+    # These are the source of socket leaks from Gaia/astroquery
     gc.collect()  # First collect to get accurate object list
 
     for obj in gc.get_objects():
