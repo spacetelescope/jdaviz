@@ -4,124 +4,45 @@ Socket cleanup utilities for pytest.
 This module provides cleanup functions to close leaked HTTP connections that
 can prevent pytest-xdist workers from exiting cleanly (exit code 143).
 """
-
-import atexit
 import gc
-
-# Track if cleanup has been registered with atexit
-_atexit_registered = False
 
 
 def cleanup_leaked_sockets():
     """
-    Close any leaked HTTP/SSL connections.
+    Close leaked HTTP/SSL connections that prevent clean pytest-xdist exit.
 
-    This targets a recurring issue where astroquery (particularly Gaia) leaves
-    SSL sockets open, which prevents pytest-xdist workers from exiting cleanly,
+    Gaia's TAP+ service (and potentially other HTTP clients) can leave SSL
+    sockets open, which prevents pytest-xdist workers from exiting cleanly,
     causing exit code 143 (SIGTERM).
 
-    The cleanup strategy is multi-layered:
-    1. Close astroquery.gaia.Gaia's internal connection handler
-    2. Close all requests.Session objects (closes their connection pools)
-    3. Close all urllib3 PoolManager and ConnectionPool objects directly
-    4. Close any remaining raw sockets as a last resort
-    5. Trigger garbage collection to release file descriptors
+    This function closes HTTPSConnection objects found via gc, which is the
+    actual source of leaked sockets. We target HTTPSConnection (and
+    HTTPConnection) rather than raw sockets because closing the connection
+    object properly tears down the SSL layer and socket.
     """
-    # Layer 0: Close Gaia's internal connection handler specifically
-    # Gaia uses a TAP+ service with its own connection management
+    # Import http.client to check for connection types
     try:
-        from astroquery.gaia import Gaia
-        # Gaia has a _Tap__connHandler that holds the connection
-        if hasattr(Gaia, '_Tap__connHandler'):
-            conn_handler = Gaia._Tap__connHandler
-            if conn_handler is not None:
-                # Try to close any session on the connection handler
-                if hasattr(conn_handler, '_TapConn__postConnHandler'):
-                    post_handler = conn_handler._TapConn__postConnHandler
-                    if post_handler is not None and hasattr(post_handler, 'close'):
-                        try:
-                            post_handler.close()
-                        except (AttributeError, OSError):
-                            # Close may fail if attributes changed or the socket was
-                            # already closed; these are expected and safe to ignore.
-                            pass
-                if hasattr(conn_handler, '_TapConn__getConnHandler'):
-                    get_handler = conn_handler._TapConn__getConnHandler
-                    if get_handler is not None and hasattr(get_handler, 'close'):
-                        try:
-                            get_handler.close()
-                        except (AttributeError, OSError):
-                            # Same reasoning as above.
-                            pass
+        import http.client
     except ImportError:
-        pass
+        gc.collect()
+        return
 
-    # Layer 1: Close all requests.Session objects
-    try:
-        import requests
-        for obj in gc.get_objects():
-            try:
-                if isinstance(obj, requests.Session):
+    # Find and close any lingering HTTP(S) connections
+    # These are the actual source of socket leaks from Gaia/astroquery
+    gc.collect()  # First collect to get accurate object list
+
+    for obj in gc.get_objects():
+        try:
+            if isinstance(obj, (http.client.HTTPSConnection,
+                                http.client.HTTPConnection)):
+                # Close the connection - this properly tears down socket + SSL
+                try:
                     obj.close()
-            except (ReferenceError, TypeError, AttributeError, OSError):
-                # Some objects from gc may be in transient states; these
-                # exceptions are benign for cleanup and can be ignored.
-                pass
-    except ImportError:
-        pass
+                except Exception:
+                    pass
+        except (TypeError, ReferenceError):
+            # Object may have been collected or is a weird type
+            pass
 
-    # Layer 2: Close urllib3 connection pools directly
-    # This catches pools that may not be attached to a Session
-    PoolManager = None
-    HTTPConnectionPool = None
-    try:
-        from urllib3 import PoolManager
-        from urllib3.connectionpool import HTTPConnectionPool
-        for obj in gc.get_objects():
-            try:
-                if isinstance(obj, PoolManager):
-                    obj.clear()
-                elif isinstance(obj, HTTPConnectionPool):
-                    obj.close()
-            except (ReferenceError, TypeError, AttributeError, OSError):
-                # Ignore transient/reference-related errors during cleanup.
-                pass
-    except ImportError:
-        pass
-
-    # Layer 3: Close raw sockets that are still open
-    # This is the nuclear option for any remaining leaked sockets
-    try:
-        import socket
-        for obj in gc.get_objects():
-            try:
-                if isinstance(obj, socket.socket):
-                    # Only close if socket appears to be open
-                    if obj.fileno() != -1:
-                        obj.close()
-            except (ReferenceError, TypeError, AttributeError, OSError):
-                # Closing a socket can raise OSError or the object may be
-                # partially collected; those errors are safe to ignore here.
-                pass
-    except ImportError:
-        pass
-
-    # Final garbage collection to release file descriptors
+    # Final gc to release any file descriptors
     gc.collect()
-
-
-def register_atexit_cleanup():
-    """
-    Register cleanup_leaked_sockets with atexit as a backup.
-
-    This ensures sockets are cleaned up even if pytest hooks don't run
-    or run too late. Safe to call multiple times.
-    """
-    global _atexit_registered
-    if not _atexit_registered:
-        atexit.register(cleanup_leaked_sockets)
-        _atexit_registered = True
-
-
-# Auto-register atexit handler when module is imported
-register_atexit_cleanup()

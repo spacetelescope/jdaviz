@@ -36,11 +36,6 @@ def pytest_runtest_teardown(item, nextitem):
     """
     memlog_runtest_teardown(item, nextitem)
 
-    # Clean up sockets after remote_data tests to prevent accumulation
-    # of leaked connections that can cause xdist workers to hang
-    if item.get_closest_marker('remote_data'):
-        cleanup_leaked_sockets()
-
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
