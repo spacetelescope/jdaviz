@@ -41,18 +41,19 @@ def cleanup_leaked_sockets():
                     if post_handler is not None and hasattr(post_handler, 'close'):
                         try:
                             post_handler.close()
-                        except Exception:
+                        except (AttributeError, OSError):
+                            # Close may fail if attributes changed or the socket was
+                            # already closed; these are expected and safe to ignore.
                             pass
                 if hasattr(conn_handler, '_TapConn__getConnHandler'):
                     get_handler = conn_handler._TapConn__getConnHandler
                     if get_handler is not None and hasattr(get_handler, 'close'):
                         try:
                             get_handler.close()
-                        except Exception:
+                        except (AttributeError, OSError):
+                            # Same reasoning as above.
                             pass
     except ImportError:
-        pass
-    except Exception:
         pass
 
     # Layer 1: Close all requests.Session objects
@@ -62,13 +63,17 @@ def cleanup_leaked_sockets():
             try:
                 if isinstance(obj, requests.Session):
                     obj.close()
-            except (ReferenceError, TypeError, Exception):
+            except (ReferenceError, TypeError, AttributeError, OSError):
+                # Some objects from gc may be in transient states; these
+                # exceptions are benign for cleanup and can be ignored.
                 pass
     except ImportError:
         pass
 
     # Layer 2: Close urllib3 connection pools directly
     # This catches pools that may not be attached to a Session
+    PoolManager = None
+    HTTPConnectionPool = None
     try:
         from urllib3 import PoolManager
         from urllib3.connectionpool import HTTPConnectionPool
@@ -78,7 +83,8 @@ def cleanup_leaked_sockets():
                     obj.clear()
                 elif isinstance(obj, HTTPConnectionPool):
                     obj.close()
-            except (ReferenceError, TypeError, Exception):
+            except (ReferenceError, TypeError, AttributeError, OSError):
+                # Ignore transient/reference-related errors during cleanup.
                 pass
     except ImportError:
         pass
@@ -93,7 +99,9 @@ def cleanup_leaked_sockets():
                     # Only close if socket appears to be open
                     if obj.fileno() != -1:
                         obj.close()
-            except (ReferenceError, TypeError, OSError, Exception):
+            except (ReferenceError, TypeError, AttributeError, OSError):
+                # Closing a socket can raise OSError or the object may be
+                # partially collected; those errors are safe to ignore here.
                 pass
     except ImportError:
         pass
