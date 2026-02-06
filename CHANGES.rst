@@ -17,6 +17,8 @@ New Features
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
 
+- Table viewer tools to highlight selected, zoom-to-selected, and create subset from selected. [#3994]
+
 Cubeviz
 ^^^^^^^
 
