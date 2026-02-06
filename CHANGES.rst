@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- Datasets can now be renamed via API and UI through the viewer data-menu. [#3960, #3968]
+- Datasets can now be renamed via API and UI through the viewer data-menu. [#3960, #3968, #4010]
 
 - Allow creating new viewers (in deconfigged) when adding results from plugins. [#3966]
 

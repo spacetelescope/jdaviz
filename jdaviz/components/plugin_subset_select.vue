@@ -102,7 +102,7 @@
         </j-tooltip>
       </template>
     </v-alert>
-    <div v-else-if="['rename'].indexOf(mode) !== -1" style="width: 100%">
+    <div v-else-if="['rename'].indexOf(mode) !== -1" class="rename-container">
       <j-rename-text
         :value="selected"
         :edit-hint="'Rename '+label.toLowerCase()"
@@ -110,6 +110,9 @@
         :auto-edit="true"
         :api-hint-rename="api_hint_rename"
         :show-api-hint="api_hints_enabled"
+        :rename-error-message="rename_error_message || ''"
+        font-size="16px"
+        :small-icons="false"
         @input="(newLabel) => {$emit('update:edit_value', newLabel)}"
         @rename="handleRename"
         @cancel="handleCancel"
@@ -135,7 +138,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'has_subregions', 'has_subregions_warning', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled', 'api_hint_rename', 'api_hint_remove', 'edit_value', 'mode'
+          'api_hint', 'api_hints_enabled', 'api_hint_rename', 'api_hint_remove', 'edit_value', 'mode', 'rename_error_message'
   ],
   methods: {
     handleRename(newLabel) {
@@ -174,4 +177,20 @@ module.exports = {
       overflow: hidden;
       text-overflow: ellipsis;
   }
+  .rename-container {
+    width: 100%;
+    /* Match v-select padding: 20px top for label, content area, then hint space */
+    padding-top: 20px;
+    padding-bottom: 22px;
+    display: flex;
+    align-items: center;
+  }
 </style>
+
+<style>
+  /* Hide caret in v-select internal input to prevent errant cursor display */
+  .v-select input {
+    caret-color: transparent !important;
+  }
+</style>
+

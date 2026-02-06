@@ -2040,7 +2040,7 @@ class LayerSelect(SelectPluginComponent):
                            handler=lambda _: self._on_subset_created(),
                            priority=0)
         self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda _: self._update_items())
+                           handler=self._on_subset_updated)
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetRenameMessage,
@@ -2273,6 +2273,12 @@ class LayerSelect(SelectPluginComponent):
                         layer.add_callback('visible', self._update_items)
                     # TODO: Add ability to add new item to self.items instead of recompiling
         self._update_items({'source': 'subset_added'})
+
+    def _on_subset_updated(self, msg):
+        # Skip update if a subset rename is in progress
+        if getattr(self.app, '_renaming_subset', False):
+            return
+        self._update_items()
 
     def _on_subset_renamed(self, msg):
         # Find the subset in self.items and update the label
