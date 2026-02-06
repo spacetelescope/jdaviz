@@ -58,7 +58,12 @@ class URLResolver(BaseResolver):
 
     @cached_property
     def _uri_output_file(self):
-        if self.url_scheme == 's3':
+        fits_extensions = ['fits', 'fit']
+        is_prefix_to_fits = any(
+            self.url.strip().lower().endswith(ext)
+            for ext in fits_extensions
+        )
+        if self.url_scheme == 's3' and is_prefix_to_fits:
             return get_cloud_fits(self.url.strip())
         return download_uri_to_path(self.url.strip(), cache=self.cache,
                                     local_path=self.local_path, timeout=self.timeout)
