@@ -2950,8 +2950,7 @@ class Application(VuetifyTemplate, HubListener):
         new_existing_data_in_dc = self.existing_data_in_dc.copy()
 
         if data_added:
-            if data_hash not in new_existing_data_in_dc:
-                new_existing_data_in_dc.append(data_hash)
+            new_existing_data_in_dc.append(data_hash)
         else:
             if data_hash in new_existing_data_in_dc:
                 new_existing_data_in_dc.remove(data_hash)
