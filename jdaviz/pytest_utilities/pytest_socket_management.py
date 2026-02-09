@@ -55,20 +55,3 @@ def cleanup_leaked_sockets():
 
     # Final gc to release any file descriptors
     gc.collect()
-
-
-def is_remote_test(item):
-    """
-    Check if a test item has the remote_data marker.
-
-    Parameters
-    ----------
-    item : pytest.Item
-        The test item to check.
-
-    Returns
-    -------
-    bool
-        True if the test has the remote_data marker.
-    """
-    return item.get_closest_marker('remote_data') is not None
