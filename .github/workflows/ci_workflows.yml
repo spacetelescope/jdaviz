@@ -44,11 +44,18 @@ jobs:
             toxenv: securityaudit
             allow_failure: false
 
-          - name: Python 3.11 with coverage checking, all deps, and remote data
+          - name: Python 3.11 with coverage checking and all deps
             os: ubuntu-latest
             python: '3.11'
             toxenv: py311-test-alldeps-cov
-            toxposargs: --remote-data --run-slow
+            toxposargs: --run-slow
+            allow_failure: false
+
+          - name: Python 3.11 with only remote data
+            os: ubuntu-latest
+            python: '3.11'
+            toxenv: py311-test-remote-data
+            toxposargs: --remote-data --run-slow -m remote_data
             allow_failure: false
 
           - name: OS X - Python 3.12
@@ -71,11 +78,18 @@ jobs:
 
           # This also runs on cron but we want to make sure new changes
           # won't break this job at the PR stage.
-          - name: Python 3.13 with latest dev versions of key dependencies, and remote data
+          - name: Python 3.13 with latest dev versions of key dependencies
             os: ubuntu-latest
             python: '3.13'
             toxenv: py313-test-devdeps
-            toxposargs: --remote-data --run-slow
+            toxposargs: --run-slow
+            allow_failure: true
+
+          - name: Python 3.13 with only remote data
+            os: ubuntu-latest
+            python: '3.13'
+            toxenv: py313-test-remote-data
+            toxposargs: --remote-data --run-slow -m remote_data
             allow_failure: true
 
           - name: Python 3.11 with stable versions of dependencies and Roman
