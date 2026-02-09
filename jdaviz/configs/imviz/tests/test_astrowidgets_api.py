@@ -337,7 +337,7 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
 
 
 @pytest.mark.remote_data
-@pytest.mark.filterwarnings('ignore:.*unraisable exception warnings.*')
+@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_markers_gwcs_lonlat(imviz_helper):
     """GWCS uses Lon/Lat for ICRS."""
     gw_file = get_pkg_data_filename('data/miri_i2d_lonlat_gwcs.asdf')
