@@ -187,7 +187,12 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
                             # It's 2D, so this is the only option
                             wav = wcs.pixel_to_world(self.pixel, 0)[0]
 
-                self.wav = wav.to(u.Unit(self.sa_display_unit), u.spectral()).value
+                # if the resulting wcs transformation gave us a unit that is still
+                # in pixels, do not attempt to convert units and set wav to None.
+                if wav.unit == u.pix:
+                    self.wav = None
+                else:
+                    self.wav = wav.to(u.Unit(self.sa_display_unit), u.spectral()).value
             else:
                 self.wav = None
 

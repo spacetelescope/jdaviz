@@ -521,6 +521,14 @@ class ConfigHelper(HubListener):
             A new Spectrum object with data converted to display units. If
             use_display_units is False, returns the input data unchanged.
 
+        Notes
+        -----
+        If the spectral axis unit of data is pixels, and the
+        display unit is not pixels (or vice versa), no conversion is done to allow
+        for mixed pixel/world unit viewing (this logic is handled by
+        spectral_axis_conversion, which is called from this method when converting
+        the spectral axis).
+
         """
         if use_display_units:
             if isinstance(data, Spectrum):
@@ -589,8 +597,7 @@ class ConfigHelper(HubListener):
                 if data.spectral_axis.unit != spectral_unit:
                     new_spec = (spectral_axis_conversion(data.spectral_axis.value,
                                                          data.spectral_axis.unit,
-                                                         spectral_unit)
-                                * u.Unit(spectral_unit))
+                                                         spectral_unit, with_unit=True))
                 else:
                     new_spec = data.spectral_axis
 

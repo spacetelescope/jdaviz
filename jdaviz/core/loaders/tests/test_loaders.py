@@ -217,7 +217,7 @@ def test_resolver_url(deconfigged_helper):
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
 
     # may change with future importers
-    assert len(loader.format.choices) == 4
+    assert len(loader.format.choices) == 3
     assert loader.format.selected == 'Image'  # default may change with future importers
 
     # test target filtering

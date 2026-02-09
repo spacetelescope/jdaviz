@@ -230,12 +230,18 @@ class UnitConversion(PluginTemplateMixin):
 
         # sync viewer and UC plugin units when new data is loaded. this is necessary, for
         # example, when all data is unloaded but unit selections are set in the UC plugin,
-        # and new data is loaded which should use those units
+        # and new data is loaded which should use those units.
         if len(self.spectral_unit_selected) and hasattr(viewer.state, 'x_display_unit'):
             if viewer.state.x_display_unit != self.spectral_unit_selected:
-                xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
-                viewer.state.x_display_unit = xunit
-                viewer.set_plot_axes()
+                # if the unit conversion plugin is set to 'pixels', but the new loaded data
+                # has a spectral axis with physical units, do not sync units
+                orig_unit = u.Unit(viewer.state.x_display_unit)
+                display_unit = u.Unit(self.spectral_unit_selected)
+                unit_types = [str(x) for x in [orig_unit.physical_type, display_unit.physical_type]]
+                if unit_types.count('unknown') + unit_types.count('dimensionless') != 1:
+                    xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
+                    viewer.state.x_display_unit = xunit
+                    viewer.set_plot_axes()
         if len(self.spectral_y_unit) and hasattr(viewer.state, 'y_display_unit'):
             if viewer.state.y_display_unit != self.spectral_y_unit:
                 self._handle_spectral_y_unit()
@@ -305,6 +311,15 @@ class UnitConversion(PluginTemplateMixin):
             if (viewer.state.x_display_unit == self.spectral_unit_selected
                     and viewer.state.y_display_unit == self.spectral_y_unit):
                 # data already existed in this viewer and display units were already set
+                return
+
+            orig_unit = u.Unit(viewer.state.x_display_unit)
+            display_unit = u.Unit(self.spectral_unit_selected)
+            unit_types = [str(x) for x in [orig_unit.physical_type, display_unit.physical_type]]
+            if unit_types.count('unknown') + unit_types.count('dimensionless') == 1:
+                # if the unit conversion plugin is set to 'pixels', but the new loaded data
+                # has a spectral axis with physical units, do not sync units between
+                # plugin and viewer
                 return
 
             # this spectral viewer was empty (did not have display units set yet),˜
