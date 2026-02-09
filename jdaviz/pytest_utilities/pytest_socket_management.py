@@ -19,18 +19,24 @@ def cleanup_leaked_sockets():
     actual source of leaked sockets. We target HTTPSConnection (and
     HTTPConnection) rather than raw sockets because closing the connection
     object properly tears down the SSL layer and socket.
+
+    Notes
+    -----
+    The order of operations is critical on Python 3.13+:
+
+    1. First, iterate gc.get_objects() and close all HTTP(S) connections
+    2. Then run gc.collect() to finalize the now-closed objects
+
+    If we call gc.collect() first, the finalizer runs on unclosed sockets,
+    triggering unraisable exceptions. By closing connections explicitly first,
+    the finalizer has nothing to do.
     """
-    # Import http.client and ssl to check for connection types and SSL
     try:
         import http.client
         import ssl
     except ImportError:
         gc.collect()
         return
-
-    # Find and close any lingering HTTP(S) connections
-    # These are the source of socket leaks from Gaia/astroquery
-    gc.collect()  # First collect to get accurate object list
 
     for obj in gc.get_objects():
         try:
@@ -49,3 +55,20 @@ def cleanup_leaked_sockets():
 
     # Final gc to release any file descriptors
     gc.collect()
+
+
+def is_remote_test(item):
+    """
+    Check if a test item has the remote_data marker.
+
+    Parameters
+    ----------
+    item : pytest.Item
+        The test item to check.
+
+    Returns
+    -------
+    bool
+        True if the test has the remote_data marker.
+    """
+    return item.get_closest_marker('remote_data') is not None
