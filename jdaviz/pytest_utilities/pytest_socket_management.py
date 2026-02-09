@@ -5,6 +5,7 @@ This module provides cleanup functions to close leaked HTTP connections that
 can prevent pytest-xdist workers from exiting cleanly (exit code 143).
 """
 import gc
+import sys
 
 
 def cleanup_leaked_sockets():
@@ -12,8 +13,7 @@ def cleanup_leaked_sockets():
     Close leaked HTTP/SSL connections that prevent clean pytest-xdist exit.
 
     Gaia's TAP+ service (and potentially other HTTP clients) can leave SSL
-    sockets open, which prevents pytest from exiting cleanly (whether xdist or not),
-    causing exit code 143 (SIGTERM).
+    sockets open, which prevents pytest from exiting cleanly (whether xdist or not).
 
     This function closes HTTPSConnection objects found via gc, which is the
     actual source of leaked sockets. We target HTTPSConnection (and
@@ -22,14 +22,13 @@ def cleanup_leaked_sockets():
 
     Notes
     -----
-    The order of operations is critical on Python 3.13+:
-
-    1. First, iterate gc.get_objects() and close all HTTP(S) connections
-    2. Then run gc.collect() to finalize the now-closed objects
-
-    If we call gc.collect() first, the finalizer runs on unclosed sockets,
-    triggering unraisable exceptions. By closing connections explicitly first,
-    the finalizer has nothing to do.
+    The order of operations differs by Python version. This is due to changes
+    in how unraisable exceptions from finalizers are handled in Python 3.13+.
+     - Python 3.13+: We close connections BEFORE gc.collect() to prevent
+       unraisable exceptions from finalizers. This allows us to clean up
+       connections without triggering warnings.
+     - Python < 3.13: We need gc.collect() first to make objects visible,
+       then close them, then collect again to finalize.
     """
     try:
         import http.client
@@ -38,20 +37,41 @@ def cleanup_leaked_sockets():
         gc.collect()
         return
 
+    is_py313_plus = sys.version_info >= (3, 13)
+
+    if is_py313_plus:
+        # Python 3.13+: Close connections BEFORE gc.collect() to prevent
+        # unraisable exceptions from finalizers.
+        _close_http_connections(http.client, ssl)
+        gc.collect()
+    else:
+        # Python < 3.13: Need gc.collect() first to make objects visible,
+        # then close them, then collect again to finalize.
+        gc.collect()
+        _close_http_connections(http.client, ssl)
+        gc.collect()
+
+
+def _close_http_connections(http_client, ssl):
+    """
+    Close all HTTP(S) connections found in gc.get_objects().
+
+    Parameters
+    ----------
+    http_client : module
+        The http.client module.
+    ssl : module
+        The ssl module.
+    """
     for obj in gc.get_objects():
         try:
-            if isinstance(obj, (http.client.HTTPSConnection,
-                                http.client.HTTPConnection)):
-                # Close the connection - this properly tears down socket + SSL
+            if isinstance(obj, (http_client.HTTPSConnection,
+                                http_client.HTTPConnection)):
                 try:
                     obj.close()
                 except (OSError, ssl.SSLError):
-                    # Underlying socket/SSL close failed; ignore and continue.
+                    # Close failed; ignore and continue.
                     pass
         except (TypeError, ReferenceError, AttributeError):
-            # Object may have been collected or is a weird type that raises
-            # on isinstance checks; ignore these specific cases only.
+            # Object may have been collected or is a weird type; ignore.
             pass
-
-    # Final gc to release any file descriptors
-    gc.collect()
