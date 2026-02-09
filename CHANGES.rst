@@ -17,6 +17,8 @@ New Features
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
 
+- Refactored footprint display logic into ``FootprintDisplayMixin``. [#4019]
+
 Cubeviz
 ^^^^^^^
 
