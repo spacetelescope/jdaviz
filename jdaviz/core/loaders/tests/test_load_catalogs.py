@@ -342,6 +342,8 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
 
 
 @pytest.mark.remote_data
+@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
+@pytest.mark.filterwarnings('ignore:.*unraisable exception warnings.*')
 def test_astroquery_load_catalog_source(deconfigged_helper):
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = 'M4'
