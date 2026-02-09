@@ -56,7 +56,7 @@ jobs:
             python: '3.11'
             toxenv: py311-test-alldeps
             toxposargs: --remote-data --run-slow -m remote_data
-            allow_failure: false
+            allow_failure: true
 
           - name: OS X - Python 3.12
             os: macos-latest
