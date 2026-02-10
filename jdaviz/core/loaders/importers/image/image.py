@@ -9,6 +9,7 @@ from astropy.utils.exceptions import AstropyWarning
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from gwcs import WCS as GWCS
+from specutils import Spectrum
 from stdatamodels import asdf_in_fits
 from traitlets import Bool, List, Any, Unicode, observe
 
@@ -20,6 +21,7 @@ from jdaviz.core.template_mixin import (SelectFileExtensionComponent,
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
+from jdaviz.utils import wcs_is_spectral
 
 from jdaviz.utils import (
     PRIHDR_KEY, in_dec_comps, in_ra_comps, standardize_metadata, standardize_roman_metadata,
@@ -184,8 +186,11 @@ class ImageImporter(BaseImporterToDataCollection):
         if self.input_has_extensions and not len(self.extension.choices):
             return False
 
-        if isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                   NDData, np.ndarray, Data)):
+        if isinstance(self.input, Spectrum):
+            # Spectrum objects subclass NDData so they must be rejected explicitly
+            supported_input_type = False
+        elif isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
+                                     NDData, np.ndarray, Data)):
             supported_input_type = True
         elif isinstance(self.input, (asdf.AsdfFile)) or \
                 (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))):
@@ -201,10 +206,15 @@ class ImageImporter(BaseImporterToDataCollection):
             return len(self.extension.choices) > 0
 
         try:
-            _ = self.output
+            output = self.output
         except Exception:  # noqa
             return False
         else:
+            is_spectral = all([wcs_is_spectral(getattr(data, 'coords', None)) for data in output])
+            if is_spectral:
+                # Reject 2D spectra with spectral WCS coordinates
+                # that pass the FITS/NDData condition
+                return False
             return True
 
     def _glue_data_wcs_to_fits(self, glue_data):
@@ -406,7 +416,8 @@ class ImageImporter(BaseImporterToDataCollection):
 
 def _validate_fits_image2d(item):
     hdu = item.get('obj')
-    return hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
+    return (hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
+            and not wcs_is_spectral(getattr(hdu, 'coords', None)))
 
 
 def _validate_roman_ext(item):

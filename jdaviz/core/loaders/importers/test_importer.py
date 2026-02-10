@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import pytest
 
 from specutils import SpectrumList
 from jdaviz.core.loaders.importers.importer import BaseImporter
@@ -171,6 +172,29 @@ class TestResetAndCheckExistingDataInDC:
                 broadcast_msgs = [arg[0][0].text for arg in mock_broadcast.call_args_list
                                   if hasattr(arg[0][0], 'text')]
                 assert len(broadcast_msgs) > 0
+
+
+def test_reject_2d_spectrum_as_image(deconfigged_helper, spectrum2d, mos_spectrum2d_as_hdulist):
+    """
+    Test that 2D spectra being read in as images are rejected.
+    """
+    # Attempt to load should raise a helpful error
+    with pytest.raises(ValueError, match="'object > Image': 'not valid'"):
+        deconfigged_helper.load(spectrum2d, format='Image')
+
+    # Verify no data was loaded
+    assert len(deconfigged_helper.app.data_collection) == 0
+
+    # Try again with 2D Spectrum as HDU with spectral wcs
+    with pytest.raises(ValueError, match="'object > Image': 'not valid'"):
+        deconfigged_helper.load(mos_spectrum2d_as_hdulist[1], format='Image')
+
+    # Verify no data was loaded
+    assert len(deconfigged_helper.app.data_collection) == 0
+
+    # Verify we're able to load as 2d spectrum in follow-up
+    deconfigged_helper.load(spectrum2d, format='2D Spectrum')
+    assert len(deconfigged_helper.app.data_collection) > 0
 
 
 class TestDataLabelOverwrite:

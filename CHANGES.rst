@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- Datasets can now be renamed via API and UI through the viewer data-menu. [#3960, #3968]
+- Datasets can now be renamed via API and UI through the viewer data-menu. [#3960, #3968, #4010]
 
 - Allow creating new viewers (in deconfigged) when adding results from plugins. [#3966]
 
@@ -16,6 +16,10 @@ New Features
 - Catalog public API exposed [#3761, #3777, #3778, #3799, #3814, #3835, #3854, #3856, #3863, #3867, #3930, #3906, #3912, #3899, #3907, #3990]
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
+
+- Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
+
+- Add support for viewers with mixed pixel and wavelength/frequency spectral axis units. [#4001]
 
 - Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
 
@@ -93,7 +97,8 @@ Bug Fixes
 - Fixed filedrop bug where parsers were unable to detect file formats. [#3986]
 
 - Fixed bug when initializing relevant 2D Spectrum plugins when there are viewers
-  with mixed pixel / wavelength spectral units. [#3982]
+  with mixed pixel / wavelength spectral axis units. [#3982]
+
 
 - Fixed API hint styling for viewer labels. [#4003]
 

@@ -1,6 +1,18 @@
 <template>
 <v-container>
 
+  <plugin-select v-if="extension_items.length"
+    :items="extension_items"
+    :exists_in_dc="existing_data_in_dc"
+    :selected.sync="extension_selected"
+    :show_if_single_entry="true"
+    :multiselect="extension_multiselect"
+    label="Extension"
+    api_hint="ldr.importer.extension ="
+    :api_hints_enabled="api_hints_enabled"
+    hint="Extension to use for the catalog."
+  ></plugin-select>
+
   <j-plugin-section-header>Select coordinate columns</j-plugin-section-header>
 
   <div style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">

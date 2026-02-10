@@ -1,5 +1,6 @@
 import numpy as np
 from astropy.nddata import StdDevUncertainty
+import astropy.units as u
 from specutils import Spectrum
 from traitlets import Bool, List, observe
 import warnings
@@ -27,6 +28,30 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Add filter for unit compatibility
+        def viewer_incompatible_units(viewer):
+            viewer_x_unit = getattr(viewer.state, 'x_display_unit', None)
+
+            # if the viewer unit is None, its an empty viewer and anything
+            # can be loaded into it
+            if viewer_x_unit is None:
+                return True
+
+            if len(self.output):
+                # look at first, assuming that they all have the same spectral axis unit.
+                spectrum_unit = self.output[0].spectral_axis.unit
+
+                if not isinstance(spectrum_unit, u.Unit):
+                    spectrum_unit = u.Unit(spectrum_unit)
+                if not isinstance(viewer_x_unit, u.Unit):
+                    viewer_x_unit = u.Unit(viewer_x_unit)
+                if u.pix in (viewer_x_unit, spectrum_unit) and viewer_x_unit != spectrum_unit:
+                    return False
+                return True
+
+        self.viewer.add_filter(viewer_incompatible_units)
+        self.viewer.select_default()
 
         # set default data-label
         self._on_extension_change()
