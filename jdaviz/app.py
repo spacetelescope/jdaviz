@@ -390,6 +390,8 @@ class Application(VuetifyTemplate, HubListener):
         # Flag to indicate a data rename operation is in progress
         # Handlers can check this to skip processing during renames
         self._renaming_data = False
+        # Flag to indicate a subset rename operation is in progress
+        self._renaming_subset = False
 
         from jdaviz.core.events import PluginTableAddedMessage, PluginPlotAddedMessage
         self._plugin_tables = {}
@@ -2506,39 +2508,47 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 raise ValueError(f"No subset named {old_label} to rename")
 
-        if check_valid:
-            if self._check_valid_subset_label(new_label):
+        # Set flag to indicate rename is in progress
+        # This allows handlers to skip processing during renames
+        self._renaming_subset = True
+        try:
+            if check_valid:
+                if self._check_valid_subset_label(new_label):
+                    subset_group.label = new_label
+            else:
                 subset_group.label = new_label
-        else:
-            subset_group.label = new_label
 
-        # Update layer icon
-        self._update_layer_icons(old_label, new_label)
+            # Update layer icon
+            self._update_layer_icons(old_label, new_label)
 
-        # Updated derived data if applicable
-        for d in self.data_collection:
-            data_renamed = False
-            # Extracted spectra are named, e.g., 'Data (Subset 1, sum)'
-            if d.label.split('(')[-1].split(',')[0] == old_label:
-                old_data_label = d.label
-                new_data_label = d.label.replace(old_label, new_label)
-                d.label = new_data_label
-                self._update_layer_icons(old_data_label, new_data_label)
+            # Updated derived data if applicable
+            for d in self.data_collection:
+                data_renamed = False
+                # Extracted spectra are named, e.g., 'Data (Subset 1, sum)'
+                if d.label.split('(')[-1].split(',')[0] == old_label:
+                    old_data_label = d.label
+                    new_data_label = d.label.replace(old_label, new_label)
+                    d.label = new_data_label
+                    self._update_layer_icons(old_data_label, new_data_label)
 
-                # Update the entries in the old data menu
-                self._update_data_items_list(old_data_label, new_data_label)
-                data_renamed = True
+                    # Update the entries in the old data menu
+                    self._update_data_items_list(old_data_label, new_data_label)
+                    data_renamed = True
 
-            # Update live plugin results subscriptions
-            modified = self._update_live_plugin_results_metadata(d, old_label, new_label, 'subset')
+                # Update live plugin results subscriptions
+                modified = self._update_live_plugin_results_metadata(
+                    d, old_label, new_label, 'subset'
+                )
 
-            # If derived data was renamed, update the label in add_results
-            if data_renamed and modified:
-                if hasattr(d, 'meta') and '_update_live_plugin_results' in d.meta:
-                    results_dict = d.meta['_update_live_plugin_results']
-                    if 'add_results' in results_dict:
-                        results_dict['add_results']['label'] = new_data_label
-                        d.meta['_update_live_plugin_results'] = results_dict
+                # If derived data was renamed, update the label in add_results
+                if data_renamed and modified:
+                    if hasattr(d, 'meta') and '_update_live_plugin_results' in d.meta:
+                        results_dict = d.meta['_update_live_plugin_results']
+                        if 'add_results' in results_dict:
+                            results_dict['add_results']['label'] = new_data_label
+                            d.meta['_update_live_plugin_results'] = results_dict
+        finally:
+            self._renaming_subset = False
 
         self.hub.broadcast(SubsetRenameMessage(subset_group, old_label, new_label, sender=self))
 
@@ -2950,8 +2960,7 @@ class Application(VuetifyTemplate, HubListener):
         new_existing_data_in_dc = self.existing_data_in_dc.copy()
 
         if data_added:
-            if data_hash not in new_existing_data_in_dc:
-                new_existing_data_in_dc.append(data_hash)
+            new_existing_data_in_dc.append(data_hash)
         else:
             if data_hash in new_existing_data_in_dc:
                 new_existing_data_in_dc.remove(data_hash)

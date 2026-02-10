@@ -102,6 +102,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     subset_edit_value = Any().tag(sync=True)
     subset_items = List([]).tag(sync=True)
     subset_selected = Any().tag(sync=True)
+    rename_error_message = Unicode('').tag(sync=True)
 
     mode_selected = Unicode('add').tag(sync=True)
     show_region_info = Bool(True).tag(sync=True)
@@ -414,6 +415,29 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             return
         self.subset_items = [{'label': self.subset.default_text}] + [
             self.subset._subset_to_dict(subset) for subset in self.data_collection.subset_groups]
+
+    @observe('subset_edit_value')
+    def _check_rename_value(self, change):
+        """Validate rename value and update error message."""
+        new_label = change['new']
+        old_label = self.subset_selected
+
+        if new_label is None or new_label == old_label:
+            self.rename_error_message = ''
+            return
+
+        try:
+            self.app.check_rename_availability(old_label, new_label, is_subset=True)
+        except ValueError as e:
+            self.rename_error_message = str(e)
+        else:
+            self.rename_error_message = ''
+
+    @observe('subset_select_mode')
+    def _on_subset_select_mode_changed(self, change):
+        """Clear error message when exiting rename mode."""
+        if change['new'] != 'rename':
+            self.rename_error_message = ''
 
     @observe('subset_selected')
     def _sync_selected_from_ui(self, change):

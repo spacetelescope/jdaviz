@@ -451,7 +451,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     unc_data = unc_data.T
                 if mask_data is not None:
                     mask_data = mask_data.T
-                wcs = wcs.swapaxes(0, 1)
+                if getattr(wcs, 'naxis', 0) == 2:
+                    wcs = wcs.swapaxes(0, 1)
                 self.app.hub.broadcast(SnackbarMessage(
                     f"Transposed input data to {data.shape}",
                     sender=self, color="warning"))
@@ -482,6 +483,13 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                         # Check needed for BSUB files, which we want to allow without worrying
                         # about the wavelength solution for now
                         if len(wcs.forward_transform.inputs) == 5:
+                            wcs = None
+                        # TODO: This is a temporary fix until handled upstream in glue
+                        # For 2D spectra, disable 3D GWCS
+                        # This prevents glue-astronomy from misidentifying component
+                        # units (setting Wavelength to 'deg' instead of wavelength unit).
+                        elif (self.supported_flux_ndim == 2 and
+                              getattr(wcs, 'world_n_dim', 0) > self.supported_flux_ndim):
                             wcs = None
                     else:
                         wcs = None
