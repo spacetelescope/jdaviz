@@ -342,6 +342,7 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
 
 
 @pytest.mark.remote_data
+@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_astroquery_load_catalog_source(deconfigged_helper):
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = 'M4'
@@ -515,6 +516,59 @@ def test_table_viewer(deconfigged_helper):
     assert toolbar.tools['jdaviz:table_subset'].is_visible() is True
     tv._obj.glue_viewer.widget_table.checked = []
     assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
+
+
+@pytest.mark.parametrize("from_file", [True, False])
+def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
+    """
+    Test loading a catalog from a FITS file HDUList (from opened file in memory,
+    and from a fits file) containing a BinTableHDU extension and verify that it
+    can be loaded through the catalog importer.
+    """
+
+    # create an HDUList with a table extension
+    catalog_obj = _make_catalog(with_units=True)
+    primary_hdu = fits.PrimaryHDU()
+    table_hdu = fits.BinTableHDU(catalog_obj, name='CATALOG')
+    hdulist = fits.HDUList([primary_hdu, table_hdu])
+
+    if from_file:
+        # Write to file
+        fn = os.path.join(tmp_path, "catalog_hdulist.fits")
+        hdulist.writeto(fn)
+
+        ldr = deconfigged_helper.loaders['file']
+        ldr.filepath = fn
+    else:
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = hdulist
+
+    # Verify Catalog format is available
+    assert 'Catalog' in ldr.format.choices
+
+    ldr.format = 'Catalog'
+
+    # Check that Primary HDU (index 0) is not in the extension choices, it should
+    # have been filtered out because it is not a table extension
+    extension_labels = ldr.importer.extension.choices
+    assert len(extension_labels) == 1
+    assert extension_labels[0] == '1: [CATALOG,1]'
+
+    # load catalog
+    ldr.load()
+
+    # verify catalog is in the data collection
+    dc = deconfigged_helper.app.data_collection
+    assert len(dc) == 1
+    assert 'Catalog' in dc.labels
+
+    # verify the table contents
+    qtab = dc[0].get_object(QTable)
+    assert 'RA' in qtab.colnames
+    assert 'Dec' in qtab.colnames
+    assert len(qtab) == len(catalog_obj)
+    assert_quantity_allclose(qtab['RA'], catalog_obj['RA'])
+    assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'])
 
 
 def test_catalog_visibility(imviz_helper, image_2d_wcs):

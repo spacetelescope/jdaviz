@@ -7,9 +7,9 @@ from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
                                                    memlog_runtest_makereport,
                                                    memlog_runtest_logreport,
                                                    memlog_terminal_summary)
-
 from jdaviz.pytest_utilities.pytest_remote_skip import (remote_skip_addoption,
                                                         remote_skip_runtest_makereport)
+from jdaviz.pytest_utilities.pytest_socket_management import cleanup_leaked_sockets
 
 
 # ============================================================================
@@ -61,6 +61,16 @@ def pytest_terminal_summary(terminalreporter, config=None):
     Terminal summary hook that prints memlog summary.
     """
     memlog_terminal_summary(terminalreporter, config)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """
+    Hook that runs at the end of each pytest session.
+
+    In xdist mode, this runs in each worker AND the controller process,
+    ensuring all sockets are cleaned up before exit.
+    """
+    cleanup_leaked_sockets()
 
 
 try:

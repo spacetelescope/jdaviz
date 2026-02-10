@@ -2178,7 +2178,7 @@ class LayerSelect(SelectPluginComponent):
                            handler=lambda _: self._on_subset_created(),
                            priority=0)
         self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda _: self._update_items())
+                           handler=self._on_subset_updated)
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetRenameMessage,
@@ -2411,6 +2411,12 @@ class LayerSelect(SelectPluginComponent):
                         layer.add_callback('visible', self._update_items)
                     # TODO: Add ability to add new item to self.items instead of recompiling
         self._update_items({'source': 'subset_added'})
+
+    def _on_subset_updated(self, msg):
+        # Skip update if a subset rename is in progress
+        if getattr(self.app, '_renaming_subset', False):
+            return
+        self._update_items()
 
     def _on_subset_renamed(self, msg):
         # Find the subset in self.items and update the label
@@ -4552,6 +4558,28 @@ class DatasetSelect(SelectPluginComponent):
         return self.get_object(cls=self.default_data_cls)
 
     def get_selected_spectrum(self, use_display_units=True):
+        """
+        Get the selected spectrum, optionally converted to display units.
+
+        Parameters
+        ----------
+        use_display_units : bool, optional
+            Whether to convert the spectrum to the current display units set in
+            the unit conversion plugin. Default is True.
+
+        Returns
+        -------
+        spectrum : `~specutils.Spectrum1D`
+            The selected spectrum, converted to display units if requested.
+
+        Notes
+        -----
+        If the spectral axis unit of data is pixels, and the
+        display unit is not pixels (or vice versa), no conversion is done to allow
+        for mixed pixel/world unit viewing (this logic is handled by
+        spectral_axis_conversion, which is called from this method when converting
+        the spectral axis).
+        """
         # retrieves the 1d spectrum
         if isinstance(self.selected_obj, NDData):
             shape = self.selected_obj.data.shape

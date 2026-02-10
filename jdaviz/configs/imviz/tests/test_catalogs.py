@@ -237,6 +237,7 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 
 
 @pytest.mark.remote_data
+@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_catalog_reingestion(imviz_helper, tmp_path):
     # load data that we know has Gaia sources
     arr = np.ones((1489, 2048))
