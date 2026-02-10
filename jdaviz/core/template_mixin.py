@@ -323,7 +323,10 @@ class CustomToolbarToggleMixin(VuetifyTemplate, HubListener):
 
 
 class FootprintDisplayMixin:
-
+    """
+    Mixin for displaying selectable footprint regions 
+    in image viewers.
+    """
     def vue_link_by_wcs(self, *args):
         plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
         if plg is not None:
