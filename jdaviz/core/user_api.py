@@ -1,6 +1,8 @@
 import warnings
 
 import astropy.units as u
+from astropy.utils.exceptions import AstropyDeprecationWarning
+
 
 __all__ = ['UserApiWrapper', 'PluginUserApi',
            'LoaderUserApi', 'ImporterUserApi',
@@ -43,7 +45,7 @@ class UserApiWrapper:
             return super().__getattribute__(attr)
 
         if attr in self._deprecated:
-            warnings.warn(f"{attr} is deprecated", DeprecationWarning)
+            warnings.warn(f"{attr} is deprecated", AstropyDeprecationWarning)
 
         exp_obj = getattr(self._obj, attr)
         return getattr(exp_obj, 'user_api', exp_obj)
@@ -206,9 +208,16 @@ class PluginUserApi(UserApiWrapper):
 
     def __repr__(self):
         if self._deprecation_msg:
-            warnings.warn(self._deprecation_msg, DeprecationWarning)
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
+            #self._deprecation_msg = None
             super().__setattr__('_deprecation_msg', None)
         return f'<{self._obj._registry_label} API>'
+
+    def __setattr__(self, *args, **kwargs):
+        if hasattr(self, '_deprecation_msg') and self._deprecation_msg:
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
+            super().__setattr__('_deprecation_msg', None)
+        return super().__setattr__(*args, **kwargs)
 
 
 class LoaderUserApi(UserApiWrapper):
@@ -299,13 +308,13 @@ class ViewerUserApi(UserApiWrapper):
 
     def __getattr__(self, *args, **kwargs):
         if super().__getattr__('_deprecation_msg'):
-            warnings.warn(self._deprecation_msg, DeprecationWarning)
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return super().__getattr__(*args, **kwargs)
 
     def __setattr__(self, *args, **kwargs):
         if hasattr(self, '_deprecation_msg') and self._deprecation_msg:
-            warnings.warn(self._deprecation_msg, DeprecationWarning)
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return super().__setattr__(*args, **kwargs)
 
