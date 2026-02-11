@@ -6,10 +6,25 @@ from astropy.utils.exceptions import AstropyDeprecationWarning
 
 __all__ = ['UserApiWrapper', 'PluginUserApi',
            'LoaderUserApi', 'ImporterUserApi',
-           'ViewerUserApi', 'ViewerWindowUserApi']
+           'ViewerUserApi', 'ViewerWindowUserApi',
+           'DataApi']
 
 _internal_attrs = ('_obj', '_expose', '_expose_nested', '_items', '_readonly', '_exclude_from_dict',
                    '__doc__', '_deprecation_msg', '_deprecated', '_repr_callable')
+
+
+class DataApi:
+    def __init__(self, app, data_label):
+        self._app = app
+        self._data_label = data_label
+
+    def __repr__(self):
+        return f'<Data API for {self._data_label}>'
+
+    def get_object(self, cls=None, use_display_units=False):
+        return self._app._jdaviz_helper.get_data(self._data_label,
+                                                 cls=cls,
+                                                 use_display_units=use_display_units)
 
 
 class UserApiWrapper:
