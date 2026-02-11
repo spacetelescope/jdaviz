@@ -29,7 +29,8 @@ from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
 from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
-from jdaviz.core.user_api import DataApi
+from jdaviz.core.user_api import (DataApi, SpectralDataApi, SpatialDataApi,
+                                  TemporalSpatialDataApi, SpectralSpatialDataApi)
 from jdaviz.utils import data_has_valid_wcs, CONFIGS_WITH_LOADERS
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
@@ -231,7 +232,44 @@ class ConfigHelper(HubListener):
         data : dict
             dict of data objects, with keys corresponding to data labels
         """
-        return {data.label: DataApi(self.app, data.label)
+        def _get_data_api_class(data):
+            """
+            Determine the appropriate DataApi subclass for a given data object.
+
+            Parameters
+            ----------
+            data : glue.core.Data
+                The data object from the data collection.
+
+            Returns
+            -------
+            cls : type
+                The appropriate DataApi subclass.
+            """
+            config = self.app.config
+            ndim = data.ndim
+            is_spectral = 'spectral_axis_index' in data.meta
+
+            if ndim == 1:
+                # 1D spectrum
+                return SpectralDataApi
+            elif ndim == 2:
+                if config == 'specviz2d' or is_spectral:
+                    # 2D spectrum
+                    return SpectralDataApi
+                else:
+                    # 2D image (imviz, etc.)
+                    return SpatialDataApi
+            elif ndim == 3:
+                if config == 'rampviz':
+                    return TemporalSpatialDataApi
+                else:
+                    # Cube data (cubeviz, mosviz)
+                    return SpectralSpatialDataApi
+            else:
+                # Fallback to base class
+                return DataApi
+        return {data.label: _get_data_api_class(data)(self.app, data.label)
                 for data in self.app.data_collection}
 
     @property
