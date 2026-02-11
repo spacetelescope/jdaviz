@@ -29,6 +29,7 @@ from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
 from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
+from jdaviz.core.user_api import DataApi
 from jdaviz.utils import data_has_valid_wcs, CONFIGS_WITH_LOADERS
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
@@ -219,6 +220,19 @@ class ConfigHelper(HubListener):
         # force cleanup before returning
         resolver._obj._cleanup()
         return out
+
+    @property
+    def data(self):
+        """
+        Access API object for data loaded in jdaviz.
+
+        Returns
+        -------
+        data : dict
+            dict of data objects, with keys corresponding to data labels
+        """
+        return {data.label: DataApi(self.app, data.label)
+                for data in self.app.data_collection}
 
     @property
     def data_labels(self):
