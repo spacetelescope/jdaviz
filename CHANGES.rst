@@ -76,6 +76,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
+
 4.5.1 (unreleased)
 ==================
 
