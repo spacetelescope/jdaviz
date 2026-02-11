@@ -27,6 +27,18 @@ class DataApi:
                                                  cls=cls,
                                                  use_display_units=use_display_units)
 
+    def add_to_viewer(self, viewer_label):
+        viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
+        if viewer is None:
+            raise ValueError(f"{viewer_label} is not a valid viewer.  Valid viewers are: {list(self._app._jdaviz_helper.viewers.keys())}")  # noqa
+        dm = viewer.data_menu
+        unloaded_data = dm._obj.dataset.choices
+        if self._data_label in dm.layer.choices:
+            raise ValueError(f"{self._data_label} is already loaded into {viewer_label}.  Valid data to be loaded are: {unloaded_data}")  # noqa
+        if self._data_label not in unloaded_data:
+            raise ValueError(f"{self._data_label} is not one of the valid data to be loaded into {viewer_label}.  Valid data are: {unloaded_data}")  # noqa
+        dm.add_data(self._data_label)
+
 
 class SpectralDataApi(DataApi):
     """DataApi for spectral data that supports spectral subsets."""
