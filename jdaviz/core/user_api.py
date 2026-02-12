@@ -45,7 +45,7 @@ class UserApiWrapper:
             return super().__getattribute__(attr)
 
         if attr in self._deprecated:
-            warnings.warn(f"{attr} is deprecated", AstropyDeprecationWarning)
+            warnings.warn(f"{attr} is deprecated", DeprecationWarning)
 
         exp_obj = getattr(self._obj, attr)
         return getattr(exp_obj, 'user_api', exp_obj)
