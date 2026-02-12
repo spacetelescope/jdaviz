@@ -21,6 +21,9 @@ New Features
 
 - Add support for viewers with mixed pixel and wavelength/frequency spectral axis units. [#4001]
 
+- Renaming data will now propagate the new label to derived data in the same way as renaming subsets. For example,
+  renaming 'Cube' to 'CubeFlux' will rename 'Cube (Subset 1, sum)' to 'CubeFlux (Subset 1, sum)'. [#4025]
+
 
 Cubeviz
 ^^^^^^^

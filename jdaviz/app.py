@@ -1951,11 +1951,46 @@ class Application(VuetifyTemplate, HubListener):
                         and viewer.state.reference_data is not None
                         and viewer.state.reference_data.label == old_label):
                     viewer.state.reference_data = data
+
+            # Updated derived data if applicable
+            self._renamed_derived_data(old_label, new_label, 'data')
+
         finally:
             # Reset the renaming flag after all callbacks have been processed
             # This ensures that _apply_default_selection in plugin components
             # will skip resetting the selected value during the rename process
             self._renaming_data = False
+
+    def _renamed_derived_data(self, old_label, new_label, data_type):
+        for d in self.data_collection:
+            data_renamed = False
+            if data_type == 'subset':
+                # Extracted spectra are named, e.g., 'Data (Subset 1, sum)'
+                label_base = d.label.split('(')[-1].split(',')[0]
+            else:
+                label_base = d.label.split(' (')[0].split('[')[0]
+            # Extracted spectra are named, e.g., 'Data (Subset 1, sum)'
+            if label_base == old_label:
+                old_data_label = d.label
+                new_data_label = d.label.replace(old_label, new_label)
+                d.label = new_data_label
+                self._update_layer_icons(old_data_label, new_data_label)
+
+                # Update the entries in the old data menu
+                self._update_data_items_list(old_data_label, new_data_label)
+                data_renamed = True
+
+            # Update live plugin results subscriptions
+            modified = self._update_live_plugin_results_metadata(d, old_label, new_label,
+                                                                 data_type)
+
+            # If derived data was renamed, update the label in add_results
+            if data_renamed and modified:
+                if hasattr(d, 'meta') and '_update_live_plugin_results' in d.meta:
+                    results_dict = d.meta['_update_live_plugin_results']
+                    if 'add_results' in results_dict:
+                        results_dict['add_results']['label'] = new_data_label
+                        d.meta['_update_live_plugin_results'] = results_dict
 
     def return_data_label(self, loaded_object, ext=None, alt_name=None, check_unique=True):
         """
@@ -2522,31 +2557,8 @@ class Application(VuetifyTemplate, HubListener):
             self._update_layer_icons(old_label, new_label)
 
             # Updated derived data if applicable
-            for d in self.data_collection:
-                data_renamed = False
-                # Extracted spectra are named, e.g., 'Data (Subset 1, sum)'
-                if d.label.split('(')[-1].split(',')[0] == old_label:
-                    old_data_label = d.label
-                    new_data_label = d.label.replace(old_label, new_label)
-                    d.label = new_data_label
-                    self._update_layer_icons(old_data_label, new_data_label)
+            self._renamed_derived_data(old_label, new_label, 'subset')
 
-                    # Update the entries in the old data menu
-                    self._update_data_items_list(old_data_label, new_data_label)
-                    data_renamed = True
-
-                # Update live plugin results subscriptions
-                modified = self._update_live_plugin_results_metadata(
-                    d, old_label, new_label, 'subset'
-                )
-
-                # If derived data was renamed, update the label in add_results
-                if data_renamed and modified:
-                    if hasattr(d, 'meta') and '_update_live_plugin_results' in d.meta:
-                        results_dict = d.meta['_update_live_plugin_results']
-                        if 'add_results' in results_dict:
-                            results_dict['add_results']['label'] = new_data_label
-                            d.meta['_update_live_plugin_results'] = results_dict
         finally:
             self._renaming_subset = False
 
