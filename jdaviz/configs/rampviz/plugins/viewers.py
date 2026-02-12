@@ -20,21 +20,31 @@ class RampvizProfileView(JdavizProfileView, WithSliceIndicator):
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['jdaviz:selectslice'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
     default_class = NDDataArray
     _default_profile_subset_type = 'temporal'
+    _x_axis_initialized = False
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('default_tool_priority', ['jdaviz:selectslice'])
         super().__init__(*args, **kwargs)
 
+        self.data_menu._obj.dataset.add_filter('is_ramp_integration')
+
     def _initialize_x_axis(self):
+        if self._x_axis_initialized:
+            return
         if len(self.state.x_att_helper.choices):
             self.state.x_att = self.state.x_att_helper.choices[-1]
             self.set_plot_axes()
             self.reset_limits()
+            self._x_axis_initialized = True
+
+    def add_data(self, *args, **kwargs):
+        super().add_data(*args, **kwargs)
+        self._initialize_x_axis()
 
     def reset_limits(self):
         # override to reset to the global y limits including marks:
@@ -97,7 +107,7 @@ class RampvizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                     ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse',
                      'bqplot:circannulus'],
                     ['jdaviz:rampperpixel'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
     default_class = NDDataArray
@@ -110,6 +120,8 @@ class RampvizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         self._subscribe_to_layers_update()
         self.state.add_callback('reference_data', self._initial_x_axis)
+
+        self.data_menu._obj.dataset.add_filter('is_ramp_cube')
 
         # Hide axes by default
         self.state.show_axes = False

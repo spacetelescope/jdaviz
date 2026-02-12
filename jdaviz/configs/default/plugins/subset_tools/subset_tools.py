@@ -28,7 +28,7 @@ from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
 
 from jdaviz.core.region_translators import regions2roi, aperture2regions
 from jdaviz.core.events import (SnackbarMessage, GlobalDisplayUnitChanged,
-                                LinkUpdatedMessage, SubsetRenameMessage)
+                                LinkUpdatedMessage, SubsetRenameMessage, DataRenamedMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelect,
                                         SubsetSelect, SelectPluginComponent,
@@ -102,6 +102,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     subset_edit_value = Any().tag(sync=True)
     subset_items = List([]).tag(sync=True)
     subset_selected = Any().tag(sync=True)
+    rename_error_message = Unicode('').tag(sync=True)
 
     mode_selected = Unicode('add').tag(sync=True)
     show_region_info = Bool(True).tag(sync=True)
@@ -160,6 +161,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                    handler=self._on_link_update)
         self.session.hub.subscribe(self, SubsetRenameMessage,
                                    handler=self._sync_available_from_state)
+        self.session.hub.subscribe(self, DataRenamedMessage,
+                                   handler=self._on_data_renamed)
 
         self.subset = SubsetSelect(self,
                                    items='subset_items',
@@ -393,13 +396,48 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         subset_to_update = self.session.edit_subset_mode.edit_subset[0]
         self.subset._update_subset(subset_to_update, attribute="type")
 
+    def _on_data_renamed(self, msg):
+        """
+        Update displayed subset definitions when a dataset is renamed.
+        This ensures the UI reflects the new dataset name without requiring a subset
+        selection change.
+        """
+        # Only refresh if a subset is currently selected and displayed
+        if (self.subset_selected and
+                self.subset_selected != self.subset.default_text and
+                self.subset_definitions):
+            # Re-generate the subset definitions to pick up any parent label changes
+            self._get_subset_definition()
+
     def _sync_available_from_state(self, *args):
         if not hasattr(self, 'subset'):
             # during initial init, this can trigger before the component is initialized
             return
         self.subset_items = [{'label': self.subset.default_text}] + [
-                             self.subset._subset_to_dict(subset) for subset in
-                             self.data_collection.subset_groups]
+            self.subset._subset_to_dict(subset) for subset in self.data_collection.subset_groups]
+
+    @observe('subset_edit_value')
+    def _check_rename_value(self, change):
+        """Validate rename value and update error message."""
+        new_label = change['new']
+        old_label = self.subset_selected
+
+        if new_label is None or new_label == old_label:
+            self.rename_error_message = ''
+            return
+
+        try:
+            self.app.check_rename_availability(old_label, new_label, is_subset=True)
+        except ValueError as e:
+            self.rename_error_message = str(e)
+        else:
+            self.rename_error_message = ''
+
+    @observe('subset_select_mode')
+    def _on_subset_select_mode_changed(self, change):
+        """Clear error message when exiting rename mode."""
+        if change['new'] != 'rename':
+            self.rename_error_message = ''
 
     @observe('subset_selected')
     def _sync_selected_from_ui(self, change):

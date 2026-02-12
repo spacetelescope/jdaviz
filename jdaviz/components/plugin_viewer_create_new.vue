@@ -1,7 +1,7 @@
 <template>
   <div>
   <span v-if="api_hints_enabled" class="api-hint" style="margin-left: -12px">
-    {{(api_hint.endsWith(' = ') ? api_hint.slice(0, -3) : api_hint)}}.create_new = '{{ create_new_selected }}'
+    {{ normalizedApiHint() }}.create_new = '{{ create_new_selected }}'
   </span>
   <div v-if="create_new_selected.length > 0">
     <plugin-auto-label
@@ -13,7 +13,7 @@
       @update:auto="$emit('update:new_label_auto', $event)"
       :invalid_msg="new_label_invalid_msg"
       :label="'New ' + create_new_selected + ' Viewer Label'"
-      :api_hint="(api_hint.endsWith(' = ') ? api_hint.slice(0, -3) : api_hint) + '.new_label ='"
+      :api_hint="normalizedApiHint() + '.new_label ='"
       :api_hints_enabled="api_hints_enabled"
       :hint="'Label for the newly created ' + create_new_selected + ' viewer.'"
     >
@@ -48,7 +48,7 @@
         v-model="selected"
         @change="$emit('update:selected', $event)"
         :class="api_hints_enabled && api_hint ? 'api-hint' : null"
-        :label="api_hints_enabled && api_hint ? api_hint : (label ? label : 'Viewer')"
+        :label="api_hints_enabled && api_hint ? normalizedApiHint() + ' =': (label ? label : 'Viewer')"
         :hint="hint ? hint : 'Select viewer.'"
         :rules="rules ? rules : []"
         :multiple="multiselect"
@@ -136,7 +136,21 @@ module.exports = {
           'create_new_items', 'create_new_selected',
           'new_label_value', 'new_label_default', 'new_label_auto', 'new_label_invalid_msg',
           'show_multiselect_toggle', 'icon_checktoradial', 'icon_radialtocheck',
-          'api_hint', 'api_hint_multiselect', 'api_hints_enabled']
+          'api_hint', 'api_hint_multiselect', 'api_hints_enabled'],
+  methods: {
+    normalizedApiHint() {
+      // Always strip trailing '=' (and any whitespace around it)
+      if (!this.api_hint) {
+        return '';
+      }
+      if (this.api_hint.includes("=")) {
+        // There's a '=' in the string, return just the part before it
+        return this.api_hint.split("=")[0].trimEnd();
+      }
+      // No '=' found, return as-is but trim trailing space
+      return this.api_hint.trimEnd();
+    }
+  }
 };
 </script>
 

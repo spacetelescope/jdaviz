@@ -76,8 +76,6 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     (linking, mouseover) but it may be loaded to plot for example
     in the scatter or histrogram viewer.
     """
-    imviz_helper.app.state.catalogs_in_dc = True
-
     catalog_obj = _make_catalog_no_coordinates()
 
     # load data so we can test orientation later
@@ -107,9 +105,6 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     Test loading a catalog with string RA/Dec columns (that can be converted
     into units, e.g string representation of hourangle units) into the
     Imviz helper."""
-
-    imviz_helper.app.state.catalogs_in_dc = True
-
     catalog_obj = _make_catalog_string_coord_columns()
 
     # load catalog
@@ -123,8 +118,8 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     # X and Y in the data collection for consistency, and that RA / Dec always
     # has units
     qtab = dc[0].get_object(QTable)
-    assert 'Right Ascension' in qtab.colnames
-    assert 'Declination' in qtab.colnames
+    assert 'RA' in qtab.colnames
+    assert 'Dec' in qtab.colnames
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
     # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
@@ -136,20 +131,17 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     # go through SkyCoord to parse weird string format into deg units for comparison
     sc = SkyCoord(ra=catalog_obj['RA'], dec=catalog_obj['Dec'])
 
-    assert_quantity_allclose(qtab['Right Ascension'], sc.ra.deg * u.deg)
-    assert_quantity_allclose(qtab['Declination'], sc.dec.deg * u.deg)
+    assert_quantity_allclose(qtab['RA'], sc.ra.deg * u.deg)
+    assert_quantity_allclose(qtab['Dec'], sc.dec.deg * u.deg)
 
     # cast data collection X/Y back to strings for comparison
-    assert np.all(qtab['X'].astype(str) == catalog_obj['X'])
-    assert np.all(qtab['Y'].astype(str) == catalog_obj['Y'])
+    assert np.all(qtab['X'].astype(str) == catalog_obj['X'].astype(str))
+    assert np.all(qtab['Y'].astype(str) == catalog_obj['Y'].astype(str))
 
 
 @pytest.mark.parametrize("from_file", [True, False])
 @pytest.mark.parametrize("with_units", [True, False])
 def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units):
-
-    imviz_helper.app.state.catalogs_in_dc = True
-
     catalog_obj = _make_catalog_xy_radec(with_units=True)
 
     if from_file:
@@ -170,16 +162,16 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
     # in the data collection for consistency, and that the table in the data
     # collection always has units
     qtab = imviz_helper.app.data_collection[0].get_object(QTable)
-    assert 'Right Ascension' in qtab.colnames
-    assert 'Declination' in qtab.colnames
+    assert 'RA' in qtab.colnames
+    assert 'Dec' in qtab.colnames
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
 
     # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
     assert len(qtab.colnames) == 5
     # and that it has the correct contents
-    assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['RA'])
-    assert_quantity_allclose(qtab['Declination'], catalog_obj['Dec'])
+    assert_quantity_allclose(qtab['RA'], catalog_obj['RA'])
+    assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'])
     assert_quantity_allclose(qtab['X'], catalog_obj['X'])
     assert_quantity_allclose(qtab['Y'], catalog_obj['Y'])
 
@@ -191,8 +183,6 @@ def test_import_enabled_disabled(imviz_helper):
     importing is enabled, and when RA is selected but Dec is not (and vice versa,
     along with the same logic for X/Y) importing is disabled.
     """
-
-    imviz_helper.app.state.catalogs_in_dc = True
 
     catalog_obj = _make_catalog_xy_radec(with_units=True)
 
@@ -235,7 +225,6 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     Test cases cover both in-memory Astropy tables and ECSV files, and catalogs
     with and without units on RA/Dec columns already assigned.
     """
-    imviz_helper.app.state.catalogs_in_dc = True
 
     # basic catalog with RA, Dec, ID, and Flux columns and units
     catalog_obj = _make_catalog(with_units)
@@ -265,8 +254,8 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     # in the data collection for consistency, and that the table in the data
     # collection always has units
     qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
-    assert 'Right Ascension' in qtab.colnames
-    assert 'Declination' in qtab.colnames
+    assert 'RA' in qtab.colnames
+    assert 'Dec' in qtab.colnames
     # there should also be an ID column
     assert 'ID' in qtab.colnames
     # we didn't specify a specific ID column, so it should just be the index
@@ -280,9 +269,9 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     un = 1
     if not with_units:
         un = u.deg
-    assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['RA'] * un)
-    assert_quantity_allclose(qtab['Declination'], catalog_obj['Dec'] * un)
-    assert qtab['Right Ascension'].unit == qtab['Declination'].unit == u.deg
+    assert_quantity_allclose(qtab['RA'], catalog_obj['RA'] * un)
+    assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'] * un)
+    assert qtab['RA'].unit == qtab['Dec'].unit == u.deg
 
     # make sure 'col_ra_has_unit' is True if the input catalog has units, and is
     # False if the input doesn't have units. This controls the dropdown to
@@ -309,8 +298,8 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     assert len(dc) == 6  # image, orientation layer, and 4 catalogs
     assert 'flux' in dc['with_flux'].get_object(QTable).colnames
     qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
-    assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['Dec'] * un)
-    assert_quantity_allclose(qtab['Declination'], catalog_obj['RA'] * un)
+    assert_quantity_allclose(qtab['RA'], catalog_obj['RA'] * un)
+    assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'] * un)
 
 
 @pytest.mark.parametrize("from_file", [True, False])
@@ -324,9 +313,6 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     """
     # test loading catalog with SkyCoord column, which should be used
     # as default for Ra and Dec
-
-    imviz_helper.app.state.catalogs_in_dc = True
-
     catalog_obj = _make_catalog(as_skycoord=True)
 
     if from_file:
@@ -343,25 +329,90 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     assert len(dc) == 1
     assert 'Catalog' in imviz_helper.app.data_collection.labels
 
-    # make sure 'RA' column was renamed to Right Ascension and 'Dec' to 'Declination'
-    # in the data collection for consistency, and that the table in the data
-    # collection always has units
     qtab = imviz_helper.app.data_collection[0].get_object(QTable)
-    assert 'Right Ascension' in qtab.colnames
-    assert 'Declination' in qtab.colnames
+    assert 'SkyCoord_RA' in qtab.colnames
+    assert 'SkyCoord_Dec' in qtab.colnames
     # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
     assert len(qtab.colnames) == 3
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
-    assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['SkyCoord'].ra)
-    assert_quantity_allclose(qtab['Declination'], catalog_obj['SkyCoord'].dec)
+    assert_quantity_allclose(qtab['SkyCoord_RA'], catalog_obj['SkyCoord'].ra)
+    assert_quantity_allclose(qtab['SkyCoord_Dec'], catalog_obj['SkyCoord'].dec)
+
+
+@pytest.mark.remote_data
+@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
+def test_astroquery_load_catalog_source(deconfigged_helper):
+    ldr = deconfigged_helper.loaders['astroquery']
+    ldr.source = 'M4'
+    ldr.telescope = 'Gaia'
+    ldr.max_results = 10
+    ldr.query_archive()
+    assert 'Catalog' in ldr.format.choices
+    ldr.format = 'Catalog'
+
+    ldr.importer.col_id = 'source_id'
+    ldr.importer.col_other = ['parallax', 'pm', 'bp_rp', 'phot_rp_mean_mag']
+    ldr.importer.viewer.create_new = 'Scatter'
+    ldr.load()
+    assert 'Scatter' in deconfigged_helper.viewers
+    assert 'Catalog' in deconfigged_helper.viewers['Scatter'].data_menu.layer.choices
+
+
+@pytest.mark.remote_data
+def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
+    arr = np.ones((1489, 2048))
+
+    # header is based on the data provided above
+    hdu1 = fits.ImageHDU(arr, name='SCI')
+    hdu1.header.update({'CTYPE1': 'RA---TAN',
+                        'CUNIT1': 'deg',
+                        'CD1_1': -7.80378407867e-05,
+                        'CD1_2': 7.74904339463e-05,
+                        'CRPIX1': 1025.0,
+                        'CRVAL1': 6.62750450757,
+                        'NAXIS1': 2048,
+                        'CTYPE2': 'DEC--TAN',
+                        'CUNIT2': 'deg',
+                        'CD2_1': 7.74973322238e-05,
+                        'CD2_2': 7.80788034973e-05,
+                        'CRPIX2': 745.0,
+                        'CRVAL2': 1.54470013629,
+                        'NAXIS2': 1489})
+    deconfigged_helper.load(hdu1, format='Image', data_label='has_wcs')
+
+    ldr = deconfigged_helper.loaders['astroquery']
+    ldr.viewer = list(deconfigged_helper.viewers.keys())[0]
+    ldr.telescope = 'SDSS'
+    ldr.max_results = 10
+    ldr.query_archive()
+    assert 'Catalog' in ldr.format.choices
+    ldr.format = 'Catalog'
+    ldr.load()
+
+
+@pytest.mark.remote_data
+@pytest.mark.parametrize("telescope", ["JWST", "HST"])
+def test_astroquery_jwst_hst(deconfigged_helper, telescope):
+    ldr = deconfigged_helper.loaders['astroquery']
+    ldr.source = 'M4'
+    ldr.telescope = telescope
+    ldr.max_results = 10
+    ldr.query_archive()
+
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr.treat_table_as_query is True
+
+    # note: querying coverage covered by test_resolver_table_as_query_astroquery
+
+    ldr.treat_table_as_query = False
+    assert 'Catalog' in ldr.format.choices
+    ldr.load()
+    assert len(deconfigged_helper.app.data_collection) == 1
 
 
 def test_invalid(imviz_helper, tmp_path):
-
-    imviz_helper.app.state.catalogs_in_dc = True
-
     # make sure you can't load an empty table
     empty_table = Table()
 
@@ -387,8 +438,6 @@ def test_invalid(imviz_helper, tmp_path):
 
 
 def test_scatter_viewer(deconfigged_helper):
-    deconfigged_helper.app.state.catalogs_in_dc = True
-
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
     ldr.format = 'Catalog'
@@ -409,8 +458,6 @@ def test_scatter_viewer(deconfigged_helper):
 
 
 def test_histogram_viewer(deconfigged_helper):
-    deconfigged_helper.app.state.catalogs_in_dc = True
-
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
     ldr.format = 'Catalog'
@@ -433,14 +480,12 @@ def test_histogram_viewer(deconfigged_helper):
 
     po = deconfigged_helper.plugins['Plot Options']
     po.viewer = 'Added Histogram Viewer'
-    po.xatt = 'Right Ascension'
+    po.xatt = 'RA'
 
-    assert str(deconfigged_helper.viewers['Histogram']._obj.glue_viewer.state.x_att) == 'Right Ascension'  # noqa
+    assert str(deconfigged_helper.viewers['Histogram']._obj.glue_viewer.state.x_att) == 'RA'  # noqa
 
 
 def test_table_viewer(deconfigged_helper):
-    deconfigged_helper.app.state.catalogs_in_dc = True
-
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
     ldr.format = 'Catalog'
@@ -458,3 +503,116 @@ def test_table_viewer(deconfigged_helper):
 
     assert len(deconfigged_helper.viewers) == 2
     assert len(nv._obj.glue_viewer.layers) == 1
+
+    # subset creation tool should not be visible because no entries checked
+    toolbar = tv._obj.glue_viewer.toolbar
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
+
+    tv._obj.glue_viewer.widget_table.checked = [1, 2]
+
+    toolbar.select_tool('jdaviz:table_subset')
+    assert 'Subset 1' in deconfigged_helper.plugins['Subset Tools'].subset.choices
+
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is True
+    tv._obj.glue_viewer.widget_table.checked = []
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
+
+
+@pytest.mark.parametrize("from_file", [True, False])
+def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
+    """
+    Test loading a catalog from a FITS file HDUList (from opened file in memory,
+    and from a fits file) containing a BinTableHDU extension and verify that it
+    can be loaded through the catalog importer.
+    """
+
+    # create an HDUList with a table extension
+    catalog_obj = _make_catalog(with_units=True)
+    primary_hdu = fits.PrimaryHDU()
+    table_hdu = fits.BinTableHDU(catalog_obj, name='CATALOG')
+    hdulist = fits.HDUList([primary_hdu, table_hdu])
+
+    if from_file:
+        # Write to file
+        fn = os.path.join(tmp_path, "catalog_hdulist.fits")
+        hdulist.writeto(fn)
+
+        ldr = deconfigged_helper.loaders['file']
+        ldr.filepath = fn
+    else:
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = hdulist
+
+    # Verify Catalog format is available
+    assert 'Catalog' in ldr.format.choices
+
+    ldr.format = 'Catalog'
+
+    # Check that Primary HDU (index 0) is not in the extension choices, it should
+    # have been filtered out because it is not a table extension
+    extension_labels = ldr.importer.extension.choices
+    assert len(extension_labels) == 1
+    assert extension_labels[0] == '1: [CATALOG,1]'
+
+    # load catalog
+    ldr.load()
+
+    # verify catalog is in the data collection
+    dc = deconfigged_helper.app.data_collection
+    assert len(dc) == 1
+    assert 'Catalog' in dc.labels
+
+    # verify the table contents
+    qtab = dc[0].get_object(QTable)
+    assert 'RA' in qtab.colnames
+    assert 'Dec' in qtab.colnames
+    assert len(qtab) == len(catalog_obj)
+    assert_quantity_allclose(qtab['RA'], catalog_obj['RA'])
+    assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'])
+
+
+def test_catalog_visibility(imviz_helper, image_2d_wcs):
+    """
+    Verify that catalog visibility is toggled on/off correctly
+    based on link type and presence of pixel and/or world coordinates
+    in loaded catalog.
+    """
+    data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
+    imviz_helper.load(data)
+
+    # catalog with ra, dec, x, y
+    orig_catalog = _make_catalog_xy_radec(with_units=True)
+    # catalog with ra, dec only
+    table_ra_dec_only = orig_catalog['RA', 'Dec', 'Obj_ID']
+    # catalog with x, y only
+    table_x_y_only = orig_catalog['X', 'Y', 'Obj_ID']
+
+    imviz_helper.load(table_ra_dec_only,
+                      data_label='catalog0')
+
+    # since we're pixel linked and catalog has only world coordinates,
+    # visiblity should be off by default
+    dm = imviz_helper.viewers['imviz-0'].data_menu
+    assert dm.data_labels_visible == ['Image[DATA]']
+
+    # but if we load the catalog with X, Y, it should be visible
+    imviz_helper.load(table_x_y_only,
+                      data_label='catalog1')
+    assert dm.data_labels_visible == ['catalog1', 'Image[DATA]']
+
+    # now change to WCS linking
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+    # load catalog with RA, Dec only again. It's default visiblity should
+    # now be on since we're WCS linked
+    imviz_helper.load(table_ra_dec_only,
+                      data_label='catalog2')
+
+    # the pixel-only 'catalog1' should now be hidden
+    assert dm.data_labels_visible == ['catalog2', 'Image[DATA]']
+
+    # loading a pixel-coordinate-only catalog should now be hidden by default
+    # since were WCS linked
+    imviz_helper.load(table_x_y_only,
+                      data_label='catalog3')
+    assert 'catalog3' not in dm.data_labels_visible

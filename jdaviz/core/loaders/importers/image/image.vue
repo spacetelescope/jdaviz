@@ -29,8 +29,20 @@
       label="Data Label"
       api_hint="ldr.importer.data_label ="
       :api_hints_enabled="api_hints_enabled"
-      :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.' : 'Label to assign to the new data entry.'"
+      :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.  Will resolve to the following data labels:' : 'Label to assign to the new data entry.'"
     ></plugin-auto-label>
+    <v-row v-if="data_label_is_prefix">
+        <v-chip
+          v-for="suff in data_label_suffices"
+          outlined
+          label
+          :key="suff"
+          style="margin: 4px"
+        >
+          {{data_label_value}}{{suff}}
+        </v-chip>
+    </v-row>
+
     <v-row>
       <plugin-switch
         :value.sync="gwcs_to_fits_sip"
@@ -39,6 +51,24 @@
         :api_hints_enabled="api_hints_enabled"
         hint="If GWCS exists, try to convert into FITS SIP for better performance aligning images (typical precision <0.1 pixels)."
       />
+    </v-row>
+    <v-row>
+      <v-radio-group
+        :label="api_hints_enabled ? 'ldr.importer.align_by = ' : 'Align by'"
+        :class="api_hints_enabled ? 'api-hint' : null"
+        hint="Align individual image layers by pixels or on the sky by WCS (affects all image and image viewers)."
+        v-model="align_by_selected"
+        @change="delete_subsets($event)"
+        persistent-hint
+        row>
+        <v-radio
+          v-for="item in align_by_items"
+          :key="item.label"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          :label="item.label == 'WCS' && !api_hints_enabled ? 'WCS (Sky)' : (api_hints_enabled ? '\''+item.label+'\'' : item.label)"
+          :value="item.label"
+        ></v-radio>
+      </v-radio-group>
     </v-row>
 
     <plugin-viewer-create-new

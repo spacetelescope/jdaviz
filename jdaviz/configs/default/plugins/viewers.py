@@ -188,7 +188,7 @@ class JdavizViewerMixin(WithCache):
                     continue
                 setattr(new_layer_state, k, v)
 
-        return new_viewer.user_api
+        return JdavizViewerWindow(new_viewer, app=self.jdaviz_app).user_api
 
     def reset_limits(self):
         """
@@ -1113,6 +1113,7 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
+                    ['jdaviz:table_subset'],
                     ['jdaviz:viewer_clone']
                    ]
 
@@ -1123,3 +1124,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self.widget_table.scrollable = True
 
         self.data_menu._obj.dataset.add_filter('is_catalog')
+
+        self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
+                                  names=['checked'])

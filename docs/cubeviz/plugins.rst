@@ -2,6 +2,8 @@
 Data Analysis Plugins
 *********************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 The Cubeviz data analysis plugins are meant to aid quick-look analysis
 of 2D image data, and both 1D and 3D spectroscopic data.
 All plugins are accessed via the :guilabel:`plugin`

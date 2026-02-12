@@ -355,7 +355,29 @@ class ViewerClone(Tool):
         self.viewer.clone_viewer()
 
     def is_visible(self):
-        return self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d', 'cubeviz', 'mosviz']
+        return self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
+                                                     'cubeviz', 'mosviz',
+                                                     'rampviz']
+
+
+@viewer_tool
+class TableSubset(Tool):
+    icon = os.path.join(ICON_DIR, 'table_subset.svg')
+    tool_id = 'jdaviz:table_subset'
+    action_text = 'Create subset from table selection'
+    tool_tip = 'Create a new subset based on the current table selection'
+
+    def activate(self):
+        if not len(self.viewer.widget_table.checked):
+            return
+        self.viewer.apply_filter()
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return len(self.viewer.widget_table.checked) > 0
 
 
 @viewer_tool
@@ -456,6 +478,29 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
 
 
 @viewer_tool
+class SkewerSelectRegion(CheckableTool, HubListener):
+    icon = os.path.join(ICON_DIR, 'skewer_select.svg')
+    tool_id = 'jdaviz:skewerregion'
+    action_text = 'Select/identify smallest region containing cursor'
+    tool_tip = 'Select/identify smallest region containing cursor'
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event,
+                                       events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        msg = FootprintOverlayClickMessage(data, mode="skewer", sender=self)
+        self.viewer.session.hub.broadcast(msg)
+
+    def is_visible(self):
+        return any(isinstance(m, RegionOverlay) and m.visible
+                   for m in self.viewer.figure.marks)
+
+
+@viewer_tool
 class SelectRegionOverlay(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'footprint_select.svg')
     tool_id = 'jdaviz:selectregion'
@@ -470,7 +515,7 @@ class SelectRegionOverlay(CheckableTool, HubListener):
         self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
-        msg = FootprintOverlayClickMessage(data, sender=self)
+        msg = FootprintOverlayClickMessage(data, mode="nearest", sender=self)
         self.viewer.session.hub.broadcast(msg)
 
     def is_visible(self):

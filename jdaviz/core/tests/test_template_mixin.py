@@ -98,7 +98,7 @@ class TestObserveTraitletsForRelevancy:
     def setup_plugin_obj_and_traitlets(self, config_helper):
         plugins = config_helper.plugins
 
-        plugin_obj = plugins['Test Fake Plugin']._obj
+        plugin_obj = plugins['Subset Tools']._obj
 
         self.if_all_truthy = plugin_obj.relevant_if_all_truthy
         self.if_any_truthy = plugin_obj.relevant_if_any_truthy
@@ -369,8 +369,11 @@ def test_export_table_special_cases():
 
 
 @pytest.mark.parametrize('valid_format', astropy_table_write_formats())
-def test_export_table(deconfigged_helper, source_catalog, tmp_path, valid_format):
-    table_obj = FakeTable(deconfigged_helper.app.session, source_catalog)
+def test_export_table(deconfigged_helper, sky_coord_only_source_catalog,
+                      tmp_path, valid_format):
+
+    table_obj = FakeTable(deconfigged_helper.app.session,
+                          sky_coord_only_source_catalog)
 
     tmp_filename = tmp_path / 'temp_table'
     filename = f"{tmp_filename}_{valid_format}"

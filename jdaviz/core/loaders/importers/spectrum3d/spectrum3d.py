@@ -26,6 +26,7 @@ __all__ = ['Spectrum3DImporter']
 class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "./spectrum3d.vue"
     parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
+    multiselect = Bool(False).tag(sync=True)
 
     # Uncertainty Cube
     unc_data_label_value = Unicode().tag(sync=True)
@@ -215,6 +216,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def user_api(self):
+        # TODO: remove flux_only and just have plugins set the extensions for mask/unc
         expose = ['auto_extract', 'ext_data_label', 'ext_viewer', 'flux_only']
         if self.has_unc:
             expose += ['unc_data_label', 'unc_viewer']
@@ -337,12 +339,12 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # we'll add the data manually instead of through add_results_from_plugin
             # but still want to preserve the plugin metadata
             ext.meta['plugin'] = spext._plugin_name
-        except Exception:
+        except Exception as e:
             ext = None
             msg = SnackbarMessage(
                 "Automatic spectrum extraction failed. See the 3D spectral extraction"
                 " plugin to perform a custom extraction",
-                color='error', sender=self, timeout=10000)
+                color='error', sender=self, timeout=10000, traceback=e)
         else:
             msg = SnackbarMessage(
                 "The extracted 1D spectrum was generated automatically."

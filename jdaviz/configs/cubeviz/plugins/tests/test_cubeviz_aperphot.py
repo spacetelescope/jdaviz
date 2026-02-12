@@ -18,14 +18,12 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
     if helper_str == 'cubeviz_helper':
         helper.load_data(image_cube_hdu_obj_microns, data_label="test")
         flux_label = 'test[FLUX]'
-        unc_label = 'test[ERR]'
         unc_viewer = 'uncert-viewer'
         match_str = r'No data item found with label.*'
 
     elif helper_str == 'deconfigged_helper':
-        helper.load(image_cube_hdu_obj_microns, data_label="test")
+        helper.load(image_cube_hdu_obj_microns, format='3D Spectrum', data_label="test")
         flux_label = 'test'
-        unc_label = 'test [UNC]'
         unc_viewer = '3D Spectrum (1)'
         match_str = r'Could not identify viewer with reference.*'
 
@@ -41,7 +39,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
         helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
 
     plg = helper.plugins["Aperture Photometry"]
-    assert plg.dataset.labels == [flux_label, unc_label]
+    assert plg.dataset.labels == [flux_label]
     assert plg._obj.cube_slice == "4.894e+00 um"
 
     plg.dataset.selected = flux_label
@@ -63,7 +61,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
     assert_quantity_allclose(row["slice_wave"], 4.894499866699333 * u.um)
 
     # Move slider and make sure it recomputes for a new slice automatically.
-    cube_slice_plg = helper.plugins["Slice"]._obj
+    cube_slice_plg = helper.plugins["Spectral Slice"]._obj
     cube_slice_plg.vue_goto_first()
     plg._obj.vue_do_aper_phot()
     row = plg.export_table()[1]

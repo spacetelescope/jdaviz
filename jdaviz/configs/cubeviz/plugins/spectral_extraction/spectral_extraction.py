@@ -17,6 +17,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ApertureSubsetSelectMixin,
                                         ApertureSubsetSelect,
                                         AddResults, AddResultsMixin,
+                                        _populate_viewer_items,
                                         skip_if_not_tray_instance,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner, with_temp_disable)
@@ -47,6 +48,10 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``show_live_preview``
+      Whether to show a live preview of the extracted spectrum.
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`)
+      Dataset to use for spectral extraction.
     * ``aperture`` (:class:`~jdaviz.core.template_mixin.ApertureSubsetSelect`):
       Subset to use for the spectral extraction, or ``Entire Cube``.
     * ``wavelength_dependent``:
@@ -102,6 +107,12 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     bg_spec_results_label_overwrite = Bool().tag(sync=True)
     bg_spec_add_to_viewer_items = List().tag(sync=True)
     bg_spec_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_create_new_items = List().tag(sync=True)
+    bg_spec_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_value = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_default = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_auto = Bool(True).tag(sync=True)
+    bg_spec_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     bg_spec_spinner = Bool(False).tag(sync=True)
 
     function_items = List().tag(sync=True)
@@ -156,8 +167,20 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                               'bg_spec_results_label_invalid_msg',
                                               'bg_spec_results_label_overwrite',
                                               'bg_spec_add_to_viewer_items',
-                                              'bg_spec_add_to_viewer_selected')
-        self.bg_spec_add_results.viewer.filters = ['is_slice_indicator_viewer']
+                                              'bg_spec_add_to_viewer_selected',
+                                              'bg_spec_add_to_viewer_create_new_items',
+                                              'bg_spec_add_to_viewer_create_new_selected',
+                                              'bg_spec_add_to_viewer_label_value',
+                                              'bg_spec_add_to_viewer_label_default',
+                                              'bg_spec_add_to_viewer_label_auto',
+                                              'bg_spec_add_to_viewer_label_invalid_msg')
+        # Populate viewer items using _get_bg_spec_supported_viewers
+        supported_viewers = self._get_bg_spec_supported_viewers()
+        viewer_create_new_items, viewer_filter = _populate_viewer_items(
+            self, supported_viewers)
+        self.bg_spec_add_to_viewer_create_new_items = viewer_create_new_items
+        self.bg_spec_add_results.viewer.add_filter(viewer_filter)
+        self.bg_spec_add_results.viewer.select_default()
         self.bg_spec_results_label_default = f'background-{self.resulting_product_name}'
 
         self.function = SelectPluginComponent(
@@ -175,6 +198,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         )
         self._set_default_results_label()
         self.add_results.viewer.filters = ['is_slice_indicator_viewer']
+        self.add_results.viewer.select_default()
 
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
@@ -209,6 +233,14 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 f"{self.__class__.__name__} requires a 3d cube dataset to be loaded, "
                 "please load data to enable this plugin."
             )
+
+    def _get_supported_viewers(self):
+        """Return viewer types that can display the extracted spectrum."""
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
+
+    def _get_bg_spec_supported_viewers(self):
+        """Return viewer types that can display the background spectrum."""
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
     @property
     def live_update_subscriptions(self):
@@ -245,7 +277,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_plugin(self):
-        return self.app._jdaviz_helper.plugins['Slice']
+        return self.app._jdaviz_helper.plugins['Spectral Slice']
 
     @observe('aperture_items')
     @skip_if_not_tray_instance()
@@ -260,6 +292,20 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         for item in msg['new']:
             if item['label'] not in orig_labels:
                 subset_lbl = item.get('label')
+                # Check if an auto-extracted spectrum already exists for this subset
+                # by checking metadata (not data labels, since user may have renamed)
+                already_has_extraction = False
+                for data in self.app.data_collection:
+                    plugin_inputs = data.meta.get('_update_live_plugin_results', None)
+                    if plugin_inputs is None:
+                        continue
+                    # Simply check if aperture and dataset match - covers all rename scenarios
+                    if (plugin_inputs.get('aperture') == subset_lbl and
+                            plugin_inputs.get('dataset') == self.dataset.selected):
+                        already_has_extraction = True
+                        break
+                if already_has_extraction:
+                    continue
                 try:
                     self._extract_in_new_instance(subset_lbl=subset_lbl,
                                                   auto_update=True, add_data=True)
@@ -285,6 +331,9 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         plg.aperture_method.selected = 'Center'
         plg.function.selected = function
         plg.add_results.auto_update_result = auto_update
+        # TODO: once add_results.viewer supports multiselect, this should call select_all()
+        # for now it will select the first valid viewer to send results.
+        plg.add_results.viewer.select_default()
         # all other settings remain at their plugin defaults
         return plg(add_data=add_data)
 
@@ -680,7 +729,11 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if add_data:
             if default_color := self.aperture.selected_item.get('color', None):
                 spec.meta['_default_color'] = default_color
-            self.add_results.add_results_from_plugin(spec, format=self.extracted_format)
+            viewer = self.add_results.viewer.selected
+            if viewer == 'None':
+                viewer = []
+            self.add_results.add_results_from_plugin(spec, format=self.extracted_format,
+                                                     load_kwargs={'viewer': viewer})
 
             snackbar_message = SnackbarMessage(
                 f"{self.resulting_product_name.title()} extracted successfully.",

@@ -9,18 +9,23 @@ from astropy.utils.exceptions import AstropyWarning
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from gwcs import WCS as GWCS
+from specutils import Spectrum
 from stdatamodels import asdf_in_fits
-from traitlets import Bool, List, Any, observe
+from traitlets import Bool, List, Any, Unicode, observe
 
-from jdaviz.core.template_mixin import SelectFileExtensionComponent, DatasetSelect
+from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.template_mixin import (SelectFileExtensionComponent,
+                                        DatasetSelect,
+                                        SelectPluginComponent)
 
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
+from jdaviz.utils import wcs_is_spectral
 
 from jdaviz.utils import (
-    PRIHDR_KEY, standardize_metadata, standardize_roman_metadata,
-    _try_gwcs_to_fits_sip, create_data_hash, RA_COMPS, DEC_COMPS
+    PRIHDR_KEY, in_dec_comps, in_ra_comps, standardize_metadata, standardize_roman_metadata,
+    _try_gwcs_to_fits_sip, create_data_hash
 )
 
 try:
@@ -39,9 +44,9 @@ def _spatial_assign_component_type(comp_id, comp, units, physical_type):
         physical_type = 'pixel'
         return f'{comp_id[-2]}:pixel'
 
-    if comp_id.lower() in RA_COMPS and physical_type == 'angle':
+    if in_ra_comps(comp_id) and physical_type == 'angle':
         return f'RA:{physical_type}'
-    elif comp_id.lower() in DEC_COMPS and physical_type == 'angle':
+    elif in_dec_comps(comp_id) and physical_type == 'angle':
         return f'DEC:{physical_type}'
 
     return physical_type
@@ -64,11 +69,17 @@ class ImageImporter(BaseImporterToDataCollection):
     # Use FITS approximation instead of original image GWCS
     gwcs_to_fits_sip = Bool(False).tag(sync=True)
 
+    # Alignment options
+    align_by_items = List().tag(sync=True)
+    align_by_selected = Unicode().tag(sync=True)
+
     # user-settable option to treat the data_label as prefix and append the extension later
     data_label_as_prefix = Bool(False).tag(sync=True)
     # whether the current data_label should be treated as a prefix
     # either based on user-setting above or current extension selection
     data_label_is_prefix = Bool(False).tag(sync=True)
+    # suffices that will be applied to the prefix (read-only)
+    data_label_suffices = List().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -77,6 +88,16 @@ class ImageImporter(BaseImporterToDataCollection):
                                     multiselect=None, manual_options=['Auto'])
         self.parent.add_filter('is_image', 'not_from_plugin')
         self.parent.selected = 'Auto'
+
+        self.align_by = SelectPluginComponent(self,
+                                              items='align_by_items',
+                                              selected='align_by_selected',
+                                              manual_options=['Pixels', 'WCS'])
+        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        if align_plg is not None:
+            self.align_by.selected = align_plg.align_by.selected
+        else:
+            self.align_by.selected = 'Pixels'
 
         input = self.input
         if isinstance(input, fits.hdu.image.ImageHDU):
@@ -131,7 +152,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['parent', 'data_label_as_prefix', 'gwcs_to_fits_sip']
+        expose = ['parent', 'data_label_as_prefix', 'gwcs_to_fits_sip', 'align_by']
         if self.input_has_extensions:
             expose += ['extension']
         return ImporterUserApi(self, expose)
@@ -146,8 +167,11 @@ class ImageImporter(BaseImporterToDataCollection):
         if self.input_has_extensions and not len(self.extension.choices):
             return False
 
-        if isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                   NDData, np.ndarray, Data)):
+        if isinstance(self.input, Spectrum):
+            # Spectrum objects subclass NDData so they must be rejected explicitly
+            supported_input_type = False
+        elif isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
+                                     NDData, np.ndarray, Data)):
             supported_input_type = True
         elif isinstance(self.input, (asdf.AsdfFile)) or \
                 (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))):
@@ -159,10 +183,15 @@ class ImageImporter(BaseImporterToDataCollection):
             return False
 
         try:
-            _ = self.output
+            output = self.output
         except Exception:  # noqa
             return False
         else:
+            is_spectral = all([wcs_is_spectral(getattr(data, 'coords', None)) for data in output])
+            if is_spectral:
+                # Reject 2D spectra with spectral WCS coordinates
+                # that pass the FITS/NDData condition
+                return False
             return True
 
     def _glue_data_wcs_to_fits(self, glue_data):
@@ -214,6 +243,13 @@ class ImageImporter(BaseImporterToDataCollection):
             self.data_label_default = prefix
             self.data_label_is_prefix = False
 
+        if self.data_label_is_prefix:
+            self.data_label_suffices = [self._get_label_with_extension("",
+                                                                       ext_item.get('name'),
+                                                                       ver=ext_item.get('ver', None)
+                                                                       )
+                                        for ext_item in self.ext_items]
+
     @property
     def output(self):
         # NOTE: this should ALWAYS return a list of objects able to be imported into DataCollection
@@ -261,18 +297,21 @@ class ImageImporter(BaseImporterToDataCollection):
 
         return data
 
+    @property
+    def ext_items(self):
+        if self.input_has_extensions:
+            return self.extension.selected_item_list
+        elif isinstance(self.input, NDData):
+            return [{'name': name} for name in ('DATA', 'MASK', 'UNCERTAINTY')]  # noqa must match order in _nddata_to_glue_data
+        else:
+            return [{}] * len(self.output)
+
     def __call__(self):
 
         base_data_label = self.data_label_value
         # self.output is always a list of Data objects
         outputs = self.output
-
-        if self.input_has_extensions:
-            ext_items = self.extension.selected_item_list
-        elif isinstance(self.input, NDData):
-            ext_items = [{'name': name} for name in ('DATA', 'MASK', 'UNCERTAINTY')]  # noqa must match order in _nddata_to_glue_data
-        else:
-            ext_items = [{}] * len(outputs)
+        ext_items = self.ext_items
 
         parent_selected = self.parent.selected
         for output, ext_item in zip(outputs, ext_items):
@@ -325,13 +364,21 @@ class ImageImporter(BaseImporterToDataCollection):
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
 
+        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        if align_plg is not None:
+            align_plg.align_by.selected = self.align_by.selected
+        else:
+            msg = f"could not change align_by to {self.align_by.selected}"
+            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return _spatial_assign_component_type(comp_id, comp, units, physical_type)
 
 
 def _validate_fits_image2d(item):
     hdu = item.get('obj')
-    return hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
+    return (hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
+            and not wcs_is_spectral(getattr(hdu, 'coords', None)))
 
 
 def _validate_roman_ext(item):

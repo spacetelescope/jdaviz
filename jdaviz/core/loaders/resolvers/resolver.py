@@ -2,32 +2,43 @@ import os
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
-from traitlets import Bool, Instance, List, Unicode, observe, default
+from traitlets import Bool, Float, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
+from astropy.coordinates import SkyCoord
+from astropy.coordinates.builtin_frames import __all__ as all_astropy_frames
 from astropy.table import Table as astropyTable
 from astroquery.mast import MastMissions
 
-from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage, FootprintOverlayClickMessage, LinkUpdatedMessage
+from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
+from jdaviz.core.events import (AddDataMessage,
+                                RemoveDataMessage,
+                                SnackbarMessage,
+                                FootprintOverlayClickMessage,
+                                LinkUpdatedMessage,
+                                ViewerAddedMessage)
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         Table,
                                         CustomToolbarToggleMixin,
-                                        with_spinner)
+                                        FootprintDisplayMixin,
+                                        UnitSelectPluginComponent,
+                                        ViewerSelect,
+                                        with_spinner,
+                                        _is_image_viewer)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core.region_translators import is_stcs_string, stcs_string2region
-from jdaviz.utils import download_uri_to_path, find_closest_polygon_mark, layer_is_image_data
+from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
+                          find_polygon_mark_with_skewer, layer_is_image_data)
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
 
-__all__ = ['BaseResolver', 'find_matching_resolver']
+__all__ = ['BaseResolver', 'BaseConeSearchResolver', 'find_matching_resolver']
 
 
 class FormatSelect(SelectPluginComponent):
@@ -223,13 +234,15 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
+class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
     requires_api_support = False
 
     spinner = Unicode("").tag(sync=True)
+
+    parsed_input_is_empty = Bool(True).tag(sync=True)
 
     # whether the current output could be interpretted as a list of data products
     parsed_input_is_query = Bool(False).tag(sync=True)
@@ -271,9 +284,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         self.close_callback = kwargs.pop('close_callback', None)
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
 
-        self._footprint_marks = []
-        self._footprint_groups = {}
-
         super().__init__(*args, **kwargs)
 
         self.observation_table.enable_clear = False
@@ -298,16 +308,20 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             self.image_data_loaded = any(layer_is_image_data(data)
                                          for data in self.app.data_collection)
             self.app.hub.subscribe(self, DataCollectionAddMessage,
-                                   handler=self._on_data_added)
+                                   handler=self._on_collection_data_added)
             self.app.hub.subscribe(self, DataCollectionDeleteMessage,
                                    handler=self._on_data_removed)
             self.app.hub.subscribe(self, LinkUpdatedMessage,
                                    handler=self._on_link_type_updated)
+            self.app.hub.subscribe(self, ViewerAddedMessage,
+                                   handler=self._on_viewer_added)
+            self.app.hub.subscribe(self, AddDataMessage,
+                                   handler=self._on_viewer_data_added)
 
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
-                    self.observation_table_populated and 's_region' in self.observation_table.headers_avail):  # noqa: E501
-                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion']], 'jdaviz:selectregion'  # noqa: E501
+                    's_region' in self.observation_table.headers_avail):
+                return viewer.toolbar._original_tools_nested[:3] + ['jdaviz:selectregion', 'jdaviz:skewerregion'], 'jdaviz:selectregion'  # noqa: E501
             return None, None
 
         self.custom_toolbar.callable = custom_toolbar
@@ -334,12 +348,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         # Listen for changes to app.state.settings and update traitlet
         self.app.state.add_callback('settings', self._on_app_settings_changed)
 
-    def vue_link_by_wcs(self, *args):
-        plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
-        if plg is not None:
-            plg.align_by = 'WCS'
-        self.is_wcs_linked = True
-
     @default('observation_table')
     def _default_observation_table(self):
         return Table(self,
@@ -363,8 +371,46 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         """
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
-    def _on_data_added(self, msg):
+    def _on_collection_data_added(self, msg):
         self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
+
+    def _on_viewer_data_added(self, msg):
+        """
+        If footprint selection is enabled and this is an image viewer
+        with valid WCS, add footprints to this viewer.
+        """
+
+        if not self.custom_toolbar_enabled:
+            return
+        if not (self.parsed_input_is_query and self.treat_table_as_query):
+            return
+        if 's_region' not in self.observation_table.headers_avail:
+            return
+        # Get the viewer from the message
+        if not hasattr(msg, 'viewer_id') or msg.viewer_id is None:
+            return
+
+        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        if viewer is None:
+            return
+        # Check if it's an image viewer
+        if not _is_image_viewer(viewer):
+            return
+        # Does this viewer already have footprints? If so, don't re-add.
+        existing_labels = [
+            mark.label for mark in viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+        if existing_labels:
+            return
+        # Check for valid WCS
+        if (not hasattr(viewer.state, "reference_data") or
+            viewer.state.reference_data is None or
+            not hasattr(viewer.state.reference_data, "coords") or
+                viewer.state.reference_data.coords is None):
+            # No WCS yet; nothing to do
+            return
+        self._add_footprints_to_viewer(viewer)
 
     def _on_data_removed(self, msg):
         self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
@@ -473,6 +519,17 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         try:
             parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
         except Exception:  # nosec
+            self.parsed_input_is_empty = True
+            self.parsed_input_is_query = False
+            self.observation_table_populated = False
+            self.file_table_populated = False
+            self.observation_table._clear_table()
+            self.file_table._clear_table()
+            self._update_format_items()
+            return
+
+        if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
+            self.parsed_input_is_empty = True
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
@@ -486,7 +543,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         # if the input could be parsed as a table, try to interpret it as
         # either an observation table or file table.  parsed_input_table
         # will be None if it could not be parsed as a table.
-        if parsed_input_table is not None:
+        if self.treat_table_as_query and parsed_input_table is not None:
             file_table = self._parsed_input_to_file_table(parsed_input_table)
             if file_table is not None:
                 self.observation_table._clear_table()
@@ -506,11 +563,14 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
 
                 for row in observation_table:
                     self.observation_table.add_item(row)
+                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible # noqa
+                                                          if h not in ['s_region']]
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True
                 self.file_table_populated = False
                 return
 
+        self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
         self.observation_table_populated = False
         self.file_table_populated = False
@@ -535,41 +595,26 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             return 'hst'
 
     def on_observation_select_changed(self, _=None):
+        # Sync footprint selection across all viewers (only if footprints are displayed)
+        if self.custom_toolbar_enabled and self.parsed_input_is_query and self.treat_table_as_query:
+            self._sync_footprint_selection_to_viewers()
+        # Fetch products if rows are selected
         if len(self.observation_table.selected_rows) == 0:
             self.app.hub.broadcast(SnackbarMessage("No observation currently selected",
                                                    sender=self, color="warning"))
-            # Update footprint selection if applicable
-            if self.parsed_input_is_query and self.treat_table_as_query and self._footprint_groups:
-                for idx, marks in self._footprint_groups.items():
-                    for mark in marks:
-                        mark.selected = False
-            return
-
-        datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
-        results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
-        file_table = self._parsed_input_to_file_table(results)
-        if file_table is not None:
-            self.file_table._clear_table()
-            for row in file_table:
-                self.file_table.add_item(row)
-            self.file_table_populated = True
         else:
-            self.app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
-                                                   sender=self, color="error"))
-            self.file_table_populated = False
-
-        # Update footprint selection to match table selection
-        if self.parsed_input_is_query and self.treat_table_as_query and self._footprint_groups:
-            selected_indices = set()
-            for row in self.observation_table.selected_rows:
-                idx = self.observation_table.items.index(row)
-                selected_indices.add(idx)
-
-            # Update footprint marks based on selection
-            for idx, marks in self._footprint_groups.items():
-                selected = idx in selected_indices
-                for mark in marks:
-                    mark.selected = selected
+            datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
+            results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
+            file_table = self._parsed_input_to_file_table(results)
+            if file_table is not None:
+                self.file_table._clear_table()
+                for row in file_table:
+                    self.file_table.add_item(row)
+                self.file_table_populated = True
+            else:
+                self.app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
+                                                       sender=self, color="error"))
+                self.file_table_populated = False
 
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""
@@ -582,98 +627,85 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             if self.parsed_input_is_query and self.treat_table_as_query:
                 self._remove_observation_footprints()
 
+    @observe('custom_toolbar_enabled')
+    def _on_custom_toolbar_enabled_changed(self, change={}):
+        if not change.get('new', self.custom_toolbar_enabled):
+            # Toolbar was disabled - remove footprints from all viewers
+            if self.parsed_input_is_query and self.treat_table_as_query:
+                self._remove_observation_footprints()
+
     def _on_region_select(self, msg):
         """Handle footprint click events."""
-        if not self._footprint_marks:
+        if not (self.parsed_input_is_query and self.treat_table_as_query):
+            return
+
+        click_viewer = msg.sender.viewer if hasattr(msg.sender, 'viewer') else None
+        if click_viewer is None:
+            return
+        region_marks = [
+            mark for mark in click_viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+
+        click_x, click_y = msg.x, msg.y
+
+        # Determine selection mode
+        if msg.mode == 'skewer':
+            selected_indices = find_polygon_mark_with_skewer(
+                click_x, click_y, click_viewer, region_marks)
+        else:
+            selected_idx = find_closest_polygon_mark(click_x, click_y, region_marks)
+            selected_indices = [selected_idx] if selected_idx is not None else None
+
+        if selected_indices is not None:
+            currently_selected = set()
+            for row in self.observation_table.selected_rows:
+                idx = self.observation_table.items.index(row)
+                currently_selected.add(idx)
+
+            # Toggle all found footprints as a group
+            # If ALL are selected, deselect ALL; otherwise select ALL
+            selected_indices_set = set(selected_indices)
+            if selected_indices_set.issubset(currently_selected):
+                # All found footprints are already selected - deselect them all
+                currently_selected -= selected_indices_set
+            else:
+                # At least one is not selected - select them all
+                currently_selected |= selected_indices_set
+
+            # Update the table selection
+            if currently_selected:
+                self.observation_table.select_rows(sorted(list(currently_selected)))
+            else:
+                # Clear selection
+                self.observation_table.selected_rows = []
+
+    def _on_viewer_added(self, msg):
+        """When a new viewer is created, add footprints if toolbar is enabled."""
+        if not self.custom_toolbar_enabled:
             return
         if not (self.parsed_input_is_query and self.treat_table_as_query):
             return
 
-        click_x, click_y = msg.x, msg.y
-        selected_idx = find_closest_polygon_mark(click_x, click_y, self._footprint_marks)
-
-        if selected_idx is not None:
-            # Get viewer - deconfigged (TODO: factor this out for multiviewer support)
-            viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
-            if viewer_ref is None:
-                return
-            viewer = self.app.get_viewer(viewer_ref)
-            # Get selected rows from the table
-            currently_selected = set()
-            if hasattr(self, 'observation_table') and self.observation_table is not None:
-                for row in self.observation_table.selected_rows:
-                    idx = self.observation_table.items.index(row)
-                    currently_selected.add(idx)
-
-            if selected_idx in currently_selected:
-                currently_selected.discard(selected_idx)
-                viewer._deselect_region_overlay(region_label=selected_idx)
-            else:
-                currently_selected.add(selected_idx)
-                viewer._select_region_overlay(region_label=selected_idx)
-
-            # Update the table selection
-            if hasattr(self, 'observation_table') and self.observation_table is not None:
-                if currently_selected:
-                    self.observation_table.select_rows(sorted(list(currently_selected)))
-                else:
-                    # Clear selection
-                    self.observation_table.selected_rows = []
-
-    def _display_observation_footprints(self):
+        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        if viewer is None:
+            return
+        # Check if it's an image viewer
+        if not _is_image_viewer(viewer):
+            return
         if 's_region' not in self.observation_table.headers_avail:
             return
-
-        # Get viewer - works for both Imviz and deconfigged
-        viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
-        if viewer_ref is None:
+        # Check if viewer has valid WCS before attempting to add footprints
+        # New viewers may not have data/WCS yet, so we skip and wait for AddDataMessage
+        if (not hasattr(viewer.state, 'reference_data') or
+            viewer.state.reference_data is None or
+            not hasattr(viewer.state.reference_data, 'coords') or
+                viewer.state.reference_data.coords is None):
+            # No WCS yet - footprints will be added later when data is loaded
+            # via _on_viewer_data_added handler
             return
-        viewer = self.app.get_viewer(viewer_ref)
-        regions = []
-        region_labels = []
-
-        for idx, row in enumerate(self.observation_table.items):
-            s_region_str = row.get('s_region', '')
-
-            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
-                continue
-            if not is_stcs_string(s_region_str):
-                continue
-
-            region = stcs_string2region(s_region_str)
-            regions.append(region)
-            region_labels.append(idx)
-
-        if regions:
-            viewer._add_region_overlay(
-                region=regions,
-                region_label=region_labels,
-                selected=False,
-                fill_opacities=[0]
-            )
-            for mark in viewer.figure.marks:
-                if isinstance(mark, RegionOverlay) and mark.label in region_labels:
-                    self._footprint_marks.append(mark)
-                    self._footprint_groups[mark.label] = [mark]
-
-    def _remove_observation_footprints(self):
-        """Remove all observation footprints from the viewer."""
-        if not self._footprint_marks:
-            return
-
-        # Get viewer - for deconfigged (TODO: factor this out for multiviewer support)
-        viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
-        if viewer_ref is None:
-            return
-        viewer = self.app.get_viewer(viewer_ref)
-
-        region_labels = [mark.label for mark in self._footprint_marks]
-
-        if region_labels:
-            viewer._remove_region_overlay(region_label=region_labels)
-
-        self._footprint_marks = []
-        self._footprint_groups = {}
+        # Viewer has WCS, safe to add footprints
+        self._add_footprints_to_viewer(viewer)
 
     def on_file_select_changed(self, _=None):
         self._clear_cache('output')
@@ -801,6 +833,157 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         self.set_active_loader_callback(self._registry_label)
         if self.open_callback is not None:
             self.open_callback()
+
+
+class BaseConeSearchResolver(BaseResolver):
+    viewer_items = List([]).tag(sync=True)
+    viewer_selected = Unicode().tag(sync=True)
+
+    source = Unicode("").tag(sync=True)
+    coord_follow_viewer_pan = Bool(False).tag(sync=True)
+    viewer_centered = Bool(False).tag(sync=True)
+    coordframe_choices = List([]).tag(sync=True)
+    coordframe_selected = Unicode("icrs").tag(sync=True)
+    radius = Float(1).tag(sync=True)
+    radius_unit_items = List().tag(sync=True)
+    radius_unit_selected = Unicode("deg").tag(sync=True)
+
+    max_results = IntHandleEmpty(1000).tag(sync=True)
+    returned_no_results = Bool(False).tag(sync=True)
+    returned_max_results = Bool(False).tag(sync=True)
+
+    results_loading = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._output = None
+
+        self.viewer = ViewerSelect(
+            self, "viewer_items", "viewer_selected", manual_options=["Manual"],
+            filters=['is_image_viewer']
+        )
+
+        self.coordframe = SelectPluginComponent(
+            self, items="coordframe_choices", selected="coordframe_selected"
+        )
+        self.coordframe.choices = [frame.lower() for frame in all_astropy_frames]
+        self.coordframe.selected = self.coordframe.choices[0]
+
+        self.radius_unit = UnitSelectPluginComponent(
+            self, items="radius_unit_items", selected="radius_unit_selected"
+        )
+        self.radius_unit.choices = ["deg", "rad", "arcmin", "arcsec"]
+        self.radius_unit.selected = "deg"
+
+        self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
+        self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
+        self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
+
+    @observe("viewer_selected", type="change")
+    def vue_viewer_changed(self, _=None):
+        # Check mixin object initialized
+        if not hasattr(self, "viewer"):
+            return
+
+        # Clear all existing subscriptions and resubscribe to selected viewer
+        # NOTE: Viewer subscription needed regardless of coord_follow_viewer_pan in order
+        #   to detect when coords are centered on viewer, regardless of viewer tracking
+        for viewer in self.viewer.viewers:
+            if viewer == self.viewer.selected_obj:
+                viewer.state.add_callback(
+                    "zoom_center_x",
+                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                )
+                viewer.state.add_callback(
+                    "zoom_center_y",
+                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                )
+            else:
+                # If not subscribed anyways, remove_callback should produce a no-op
+                viewer.state.remove_callback(
+                    "zoom_center_x",
+                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                )
+                viewer.state.remove_callback(
+                    "zoom_center_y",
+                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                )
+        self.vue_center_on_data()
+
+    @observe("coord_follow_viewer_pan", type="change")
+    def _toggle_viewer_pan_tracking(self, _=None):
+        """Detects when live viewer tracking toggle is clicked and centers on data if necessary"""
+        # Center on data if we're enabling the toggle
+        if self.coord_follow_viewer_pan:
+            self.vue_center_on_data()
+
+    def vue_center_on_data(self, _=None, user_zoom_trigger=False):
+        """
+        This vue method serves two purposes:
+        * UI entrypoint for the manual viewer center button
+        * Callback method for user panning (sub'ed to zoom_center_x/zoom_center_y)
+        """
+        # If plugin is in "Manual" mode, we should never
+        # autocenter and potentially wipe the user's data
+        if not self.viewer_selected or self.viewer_selected == "Manual":
+            return
+
+        # If the user panned but tracking not enabled, don't recenter
+        if (user_zoom_trigger) and not self.coord_follow_viewer_pan:
+            # Thus, we're no longer centered
+            self.viewer_centered = False
+            return
+
+        self.center_on_data()
+
+    def center_on_data(self):
+        """
+        If data is present in the default viewer, center the plugin's coordinates on
+        the viewer's center WCS coordinates.
+        """
+        if not hasattr(self, "viewer"):
+            # mixin object not yet initialized
+            return
+
+        # gets the current viewer
+        viewer = self.viewer.selected_obj
+
+        # nothing happens in the case there is no image in the viewer
+        # additionally if the data does not have WCS
+        if (
+            len(self.app._jdaviz_helper.data_labels) < 1
+            or viewer.state.reference_data is None
+            or viewer.state.reference_data.coords is None
+        ):
+            self.source = ""
+            return
+
+        # Obtain center point of the current image and convert into sky coordinates
+        if self.app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
+            skycoord_center = SkyCoord(
+                viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
+            )
+        else:
+            skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
+                viewer.state.zoom_center_x, viewer.state.zoom_center_y
+            )
+
+        # Extract SkyCoord values as strings for plugin display
+        ra_deg = skycoord_center.ra.deg
+        dec_deg = skycoord_center.dec.deg
+        frame = skycoord_center.frame.name.lower()
+
+        # Show center value in plugin
+        self.source = f"{ra_deg} {dec_deg}"
+        self.coordframe_selected = frame
+
+        self.viewer_centered = True
+
+    @property
+    def is_valid(self):
+        # these resolvers do not accept any direct, (default_input = None), so can
+        # always be considered valid
+        return True
 
 
 def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):

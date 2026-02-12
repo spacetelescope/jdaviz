@@ -85,8 +85,24 @@ jobs:
             allow_failure: true
 
     steps:
+    - name: Build toxposargs from labels
+      id: build-toxposargs
+      shell: bash
+      env:
+        LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+      run: |
+        toxposargs="${{ matrix.toxposargs }}"
+
+        # Add --skip-remote-failures if 'skip-remote-failures' label is present
+        if echo "$LABELS" | grep -q 'skip-remote-failures'; then
+          toxposargs="$toxposargs --skip-remote-failures"
+        fi
+
+        # Export as step output so later steps can reference it.
+        echo "toxposargs=$toxposargs" >> $GITHUB_OUTPUT
+
     - name: Checkout code
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       with:
         fetch-depth: 0
     - name: Set up python ${{ matrix.python }} on ${{ matrix.os }}
@@ -104,6 +120,7 @@ jobs:
     - name: Get components for cache key
       id: date
       if: "contains(matrix.toxposargs, '--remote-data')"
+      shell: bash
       run: |
         echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
         echo "week=$(date +'%V')" >> $GITHUB_OUTPUT
@@ -111,7 +128,7 @@ jobs:
     - name: Restore MAST cache
       if: "contains(matrix.toxposargs, '--remote-data')"
       id: cache-restore
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: ./
         key: use-restore-keys-below-to-match-in-priority-order
@@ -122,6 +139,7 @@ jobs:
           mast-cache-
     - name: Move cache to tox working directory
       if: "contains(matrix.toxposargs, '--remote-data')"
+      shell: bash
       run: |
         # Create cache directories for all possible tox environments
         # tox runs from .tmp/{envname}, so we need to place cache files there
@@ -137,14 +155,16 @@ jobs:
           echo "No .fits files found in cache - tests will download files as needed"
         fi
     - name: Test/run with tox
-      run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
+      run: tox -e ${{ matrix.toxenv }} -- ${{ steps.build-toxposargs.outputs.toxposargs }}
+
     - name: Upload coverage to artifacts
       if: "contains(matrix.toxenv, '-cov')"
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
       with:
         name: coverage_${{ matrix.toxenv }}.xml
         path: coverage.xml
         if-no-files-found: error
+
 
   upload-codecov:
     needs: [ ci_tests ]
@@ -155,16 +175,16 @@ jobs:
     steps:
     # work around CodeCov upload issue
     # see: https://github.com/codecov/codecov-action/issues/1801
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6.0.2
     - name: Download coverage artifacts
-      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53  # v6.0.0
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
       with:
         path: coverage
         pattern: coverage_*
         merge-multiple: true
     - name: Upload report to Codecov
       if: ${{ hashFiles('coverage/') != '' }}
-      uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7  # v5.5.1
+      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de  # v5.5.2
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: coverage

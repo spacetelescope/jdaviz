@@ -116,7 +116,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                                                                  'Velocity',
                                                                  'Velocity^N'])
 
-        self.dataset.add_filter('is_cube')
+        self.dataset.add_filter('is_flux_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._set_data_units)
@@ -128,6 +128,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
+
+    def _get_supported_viewers(self):
+        """Return viewer types that can display moment map 2D image."""
+        return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
 
     @property
     def _default_image_viewer_reference_name(self):

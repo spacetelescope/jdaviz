@@ -165,9 +165,10 @@
               <div>
                 <draggable v-model="layer_items">
                   <v-list-item
-                    v-for="item in layer_items"
-                    :key="item.label"
+                    v-for="(item, index) in layer_items"
+                    :key="index"
                     class="layer-select"
+                    :style="/\d/.test(item.icon) ? 'padding-left: 32px' : ''"
                     @dragstart="onDragStart($event)"
                     @dragend="onDragEnd"
                   >
@@ -185,17 +186,28 @@
                         />
                     </v-list-item-icon>
                     <v-list-item-content>
-                      <span style="display: inline-block">
-                        <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                        <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
-                        <j-plugin-live-results-icon v-if="item.live_plugin_results" />
-                        {{ item.label }}
-                      </span>
+                      <div style="display: flex; align-items: flex-start; line-height: 28px; min-width: 0;">
+                        <span style="display: inline-flex; align-items: center; flex-shrink: 0; margin-right: 4px;">
+                          <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
+                          <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
+                          <j-plugin-live-results-icon v-if="item.live_plugin_results" />
+                        </span>
+                        <j-rename-text
+                          :value="item.label"
+                          :show-pencil="true"
+                          :rename-error-message="rename_error_messages[item.label] || ''"
+                          :api-hint-rename="api_hints_enabled ? 'dm.rename(\'' + item.label + '\', \'<new_name>\')' : ''"
+                          :show-api-hint="api_hints_enabled"
+                          @input="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
+                          @cancel="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
+                          @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
+                        />
+                      </div>
                     </v-list-item-content>
                     <v-list-item-action>
                       <j-tooltip
-                        v-if="disabled_layers_due_to_pixel_link.includes(item.label)"
-                        tooltipcontent="Layer cannot be made visible when viewer is aligned by pixel coordinates."
+                        v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
+                        tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
                       >
                         <v-btn icon disabled>
                           <v-icon>mdi-eye-off</v-icon>
@@ -451,9 +463,28 @@
     margin-top: 1px !important;
     margin-bottom: 1px !important;
   }
+  /* Reduce padding between icon, content, and action in layer items */
+  .layer-select > .v-list-item__icon {
+    margin-right: 12px !important;
+  }
+  .layer-select > .v-list-item__content {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+  .layer-select > .v-list-item__action {
+    margin-left: 2px !important;
+  }
   .layer-select:nth-child(even) {
     /* alternating row colors */
     background-color: #f1f2f85a;
+  }
+  .theme--dark .layer-select:nth-child(even) {
+    /* darker alternating row colors in dark mode */
+    background-color: #1a1a1a;
+  }
+  .theme--dark .layer-select:nth-child(odd) {
+    /* slightly darker odd rows in dark mode */
+    background-color: #0d0d0d;
   }
   .active-list-item {
     background-color: #d1f4ff75 !important;

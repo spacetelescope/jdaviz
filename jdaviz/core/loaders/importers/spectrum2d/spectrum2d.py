@@ -1,5 +1,7 @@
 from traitlets import Any, Bool, List, Unicode, observe
 
+import astropy.units as u
+
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
@@ -17,6 +19,7 @@ __all__ = ['Spectrum2DImporter']
 class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "./spectrum2d.vue"
     parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
+    multiselect = Bool(False).tag(sync=True)
 
     auto_extract = Bool(True).tag(sync=True)
 
@@ -73,7 +76,33 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             classes = [viewer_registry.members.get(item.get('reference')).get('cls')
                        for item in supported_viewers]
             return isinstance(viewer, tuple(classes))
+
+        def ext_viewer_incompatible_units(viewer):
+
+            # get display unit from viewer state if it exists
+            viewer_x_unit = getattr(viewer.state, 'x_display_unit', None)
+
+            # if the viewer unit is None, its an empty viewer and anything
+            # can be loaded into it
+            if viewer_x_unit is None:
+                return True
+
+            # compare viewer display unit to the spectral axis unit of the spectrum
+            spectrum_unit = getattr(self.output.spectral_axis, 'unit', None)
+
+            if not isinstance(spectrum_unit, u.Unit):
+                spectrum_unit = u.Unit(spectrum_unit)
+            if not isinstance(viewer_x_unit, u.Unit):
+                viewer_x_unit = u.Unit(viewer_x_unit)
+
+            if u.pix in (viewer_x_unit, spectrum_unit) and viewer_x_unit != spectrum_unit:
+                return False
+
+            return True
+
         self.ext_viewer.add_filter(viewer_in_registry_names)
+        self.ext_viewer.add_filter(ext_viewer_incompatible_units)
+
         self.ext_viewer.select_default()
 
     @staticmethod

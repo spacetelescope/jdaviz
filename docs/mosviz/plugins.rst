@@ -2,6 +2,8 @@
 Data Analysis Plugins
 *********************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 The Mosviz data analysis plugins include operations on both
 2D images and Spectrum one dimensional datasets.
 Plugins that are specific to 1D spectra are described in

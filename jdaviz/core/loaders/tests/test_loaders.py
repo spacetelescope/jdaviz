@@ -53,9 +53,9 @@ def test_resolver_matching(specviz_helper):
 
     res_sp = find_matching_resolver(specviz_helper.app, sp)
     assert res_sp._obj._registry_label == 'object'
-    assert res_sp.format == '1D Spectrum'
+    assert '1D Spectrum' in res_sp.format.choices
 
-    specviz_helper._load(sp)
+    specviz_helper.load(sp)
     assert len(specviz_helper.app.data_collection) == 1
 
 
@@ -94,6 +94,7 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
 def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = spectrum2d
+    ldr.format = '2D Spectrum'
 
     assert ldr.importer.viewer.create_new == '2D Spectrum'
     assert ldr.importer.viewer.new_label == '2D Spectrum'
@@ -131,8 +132,6 @@ def test_fits_spectrum2d(deconfigged_helper):
         ldr = deconfigged_helper.loaders['file']
         ldr.filepath = uri
 
-    # Default format may not be 2D Spectrum
-    assert 'Image' in ldr.format.choices
     assert '2D Spectrum' in ldr.format.choices
     ldr.format = '2D Spectrum'
     assert ldr.importer._obj._parser.__class__.__name__ == 'FITSParser'
@@ -158,7 +157,7 @@ def test_jwst_wfss_bsub(deconfigged_helper):
     ldr.cache = True
     ldr.url = uri
 
-    assert ldr.format == '2D Spectrum'
+    ldr.format = '2D Spectrum'  # may also be 'Image' depending on importer registry order
 
     ldr.load()
 
@@ -176,7 +175,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
 
     # ldr = deconfigged_helper.loaders['file']
     # ldr.filepath = './jdaviz/notebooks/WFSS_fits/jw01076-o103_t0000_nircam_f356w-grismr_x1d.fits'  # noqa
-    ldr.format = '1D Spectrum List'
+    ldr.format = '1D Spectrum'
 
     # 1_117 is completely masked
     sources_obj = ldr.importer.sources
@@ -198,10 +197,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
 
 
 @pytest.mark.remote_data
-def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
-
-    def ignore_custom_loaders(existing_choices):
-        return [choice for choice in existing_choices if choice not in fake_classes_in_registries]
+def test_resolver_url(deconfigged_helper):
 
     loader = deconfigged_helper.loaders['url']
 
@@ -217,11 +213,11 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
     assert loader._obj.url_scheme == 's3'
     assert len(loader.format.choices) > 0
 
-    # https valid input
+    # https valid input (2D Spectrum)
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
 
     # may change with future importers
-    assert len(ignore_custom_loaders(loader.format.choices)) == 4
+    assert len(loader.format.choices) == 3
     assert loader.format.selected == 'Image'  # default may change with future importers
 
     # test target filtering
@@ -230,12 +226,12 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
     loader.target = '1D Spectrum'
 
     # may change with future importers
-    assert len(ignore_custom_loaders(loader.format.choices)) == 2
-    assert loader.format == '1D Spectrum List'  # default may change with future importers
-    assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
+    assert len(loader.format.choices) == 1
+    assert loader.format == '1D Spectrum'  # default may change with future importers
+    assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw_index-0'  # noqa
 
     loader.target = 'Any'
-    assert len(ignore_custom_loaders(loader.format.choices)) == 4
+    assert len(loader.format.choices) == 4
     loader.format = '2D Spectrum'
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
@@ -410,6 +406,24 @@ def test_loaders_extension_select(imviz_helper):
     assert ldr.importer.extension.selected == ['1: [SCI,1]', '3: [SCI,2]']
 
 
+def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = image_nddata_wcs
+    assert 'Image' in ldr.format.choices
+    ldr.format = 'Image'
+
+    assert ldr.importer.align_by == 'Pixels'
+
+    ldr.load()
+
+    assert deconfigged_helper.plugins['Orientation'].align_by.selected == 'Pixels'
+
+    ldr.importer.align_by = 'WCS'
+    ldr.load()
+
+    assert deconfigged_helper.plugins['Orientation'].align_by.selected == 'WCS'
+
+
 @pytest.mark.remote_data
 @pytest.mark.parametrize(
     ('gwcs_to_fits_sip', 'expected_cls'),
@@ -428,25 +442,51 @@ def test_gwcs_to_fits_sip(gwcs_to_fits_sip, expected_cls, deconfigged_helper):
 
 
 @pytest.mark.remote_data
-def test_roman_1d_spectrum(deconfigged_helper):
-    ldr = deconfigged_helper.loaders['url']
-    # wfi_spec_combined_1d_r0000201001001001001_0002_WFI01.asdf
-    ldr.url = 'https://stsci.box.com/shared/static/rgasl942so9hno2rq9f1xgdeolav59o5.asdf'
-    assert len(ldr.importer.extension.choices) > 1
-    ldr.format = '1D Spectrum'
+class TestRomanLoaders:
+    # Use dictionary to make it easier to parametrize tests
+    # and extend in the future via parametrization of test_rdd_open
+    roman_uris = {
+        '1D Spectrum': 'https://stsci.box.com/shared/static/rgasl942so9hno2rq9f1xgdeolav59o5.asdf',
+        '2D Spectrum': 'https://stsci.box.com/shared/static/g8yb9hxguy3aedveef9su67lesgd8c6w.asdf'
+    }
 
-    ldr.load()
-    assert len(deconfigged_helper.app.data_collection) == 1
+    # roman_datamodels isn't a required dependency and some workflows don't install it
+    try:
+        from roman_datamodels import datamodels as rdd
+    except ImportError:
+        rdd = None
 
+    @pytest.mark.skip
+    @pytest.mark.parametrize('data_type', roman_uris.keys())
+    def test_rdd_open(self, data_type):
+        if self.rdd is not None:
+            # Ensure that roman_datamodels can open the test files
+            self.rdd.open(self.roman_uris[data_type])
+        else:
+            # Skip the test if roman_datamodels is not installed
+            pytest.skip("roman_datamodels not installed")
 
-@pytest.mark.remote_data
-def test_roman_2d_spectrum(deconfigged_helper):
-    ldr = deconfigged_helper.loaders['url']
-    # wfi_spec_decontaminated_2d_r0000201001001001001_0002_WFI01.asdf
-    ldr.url = 'https://stsci.box.com/shared/static/g8yb9hxguy3aedveef9su67lesgd8c6w.asdf'
-    assert len(ldr.importer.extension.choices) > 1
-    ldr.format = '2D Spectrum'
+    @pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz_helper'])
+    def test_roman_1d_spectrum(self, helper, request):
+        helper = request.getfixturevalue(helper)
+        ldr = helper.loaders['url']
+        # wfi_spec_combined_1d_r0000201001001001001_0002_WFI01.asdf
+        ldr.url = self.roman_uris['1D Spectrum']
+        ldr.format = '1D Spectrum'
+        assert len(ldr.importer.extension.choices) > 1
 
-    ldr.load()
-    # 2D spectrum and auto-extracted 1D spectrum
-    assert len(deconfigged_helper.app.data_collection) == 2
+        ldr.load()
+        assert len(helper.app.data_collection) == 1
+
+    @pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz2d_helper'])
+    def test_roman_2d_spectrum(self, helper, request):
+        helper = request.getfixturevalue(helper)
+        ldr = helper.loaders['url']
+        # wfi_spec_decontaminated_2d_r0000201001001001001_0002_WFI01.asdf
+        ldr.url = self.roman_uris['2D Spectrum']
+        ldr.format = '2D Spectrum'
+        assert len(ldr.importer.extension.choices) > 1
+
+        ldr.load()
+        # 2D spectrum and auto-extracted 1D spectrum
+        assert len(helper.app.data_collection) == 2

@@ -1,6 +1,8 @@
 import warnings
 import pytest
 
+from astropy.utils import minversion
+import gwcs
 import numpy as np
 from stdatamodels.jwst.datamodels.dqflags import pixel as pixel_jwst
 from glue.core.subset import RectangularROI
@@ -10,6 +12,8 @@ from jdaviz.configs.default.plugins.data_quality.dq_utils import (
     load_flag_map, write_flag_map
 )
 from jdaviz.utils import cached_uri
+
+GWCS_LT_0_26_2 = not minversion(gwcs, "0.26.2.dev")
 
 
 @pytest.mark.parametrize(

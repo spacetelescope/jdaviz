@@ -298,7 +298,7 @@ class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
 
     def _update_reference_data(self, reference_data):
         # don't update x units before initialization or in rampviz
-        if reference_data is None or self.viewer.jdaviz_app.config == 'rampviz':
+        if reference_data is None or 'Rampviz' in self.viewer.__class__.__name__:
             return
 
         self._update_unit(reference_data.get_object(cls=Spectrum).spectral_axis.unit)
@@ -536,12 +536,12 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
 
     def _update_label(self):
         def _formatted_value(value):
-            power = abs(np.log10(value))
-            if power >= 3:
-                # use scientific notation
-                return f'{value:0.4e}'
-            else:
-                return f'{value:0.4f}'
+            if value > 0:
+                power = abs(np.log10(value))
+                if power >= 3:
+                    # use scientific notation
+                    return f'{value:0.4e}'
+            return f'{value:0.4f}'
 
         valuestr = _formatted_value(self.value)
         xunit = str(self.xunit) if self.xunit is not None else ''
@@ -693,7 +693,9 @@ class PluginLine(Lines, PluginMark, HubListener):
         # color is same blue as import button
         kwargs.setdefault('colors', [accent_color])
         self.label = kwargs.get('label')
-        super().__init__(x=x, y=y, scales=kwargs.pop('scales', viewer.scales), **kwargs)
+        # default to viewer scales, overriding any keys sent through scales kwarg
+        scales = {**viewer.scales, **kwargs.pop('scales', {})}
+        super().__init__(x=x, y=y, scales=scales, **kwargs)
 
 
 class PluginScatter(Scatter, PluginMark, HubListener):
@@ -701,7 +703,9 @@ class PluginScatter(Scatter, PluginMark, HubListener):
         self.viewer = viewer
         # default color is same blue as import button
         kwargs.setdefault('colors', [accent_color])
-        super().__init__(x=x, y=y, scales=kwargs.pop('scales', viewer.scales), **kwargs)
+        # default to viewer scales, overriding any keys sent through scales kwarg
+        scales = {**viewer.scales, **kwargs.pop('scales', {})}
+        super().__init__(x=x, y=y, scales=scales, **kwargs)
 
 
 class LineAnalysisContinuum(PluginLine):

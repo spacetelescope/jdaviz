@@ -26,6 +26,7 @@
 # be accessible, and the documentation will not build correctly.
 
 import datetime
+import os
 import subprocess
 import sys
 
@@ -55,6 +56,9 @@ highlight_language = 'python3'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 exclude_patterns.append('_templates')  # noqa: F405
+
+# Templates path for custom layouts (separate from excluded RST templates)
+templates_path = ['_templates']
 
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
@@ -163,7 +167,8 @@ extlinks = {
         f'https://github.com/spacetelescope/jdaviz/tree/{commit_hash}/%s', '%s'
     ),
     'gh-notebook': (
-        f'https://github.com/spacetelescope/jdaviz/blob/{commit_hash}/notebooks/%s.ipynb', '%s notebook'
+        f'https://github.com/spacetelescope/jdaviz/blob/{commit_hash}/notebooks/%s.ipynb',
+        '%s notebook'
     )
 }
 
@@ -177,14 +182,24 @@ extlinks = {
 # global configuration are listed below, commented out.
 
 html_static_path = ["_static"]
-html_css_files = ["jdaviz.css"]
+html_css_files = [
+    "jdaviz.css",
+    "https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css"
+]
 html_copy_source = False
 
 html_theme_options.update(  # noqa: F405
     {
         "github_url": "https://github.com/spacetelescope/jdaviz",
-        "external_links": [
-            {"name": "Help Desk", "url": "http://jwsthelp.stsci.edu/"},
+        "navbar_start": ["navbar-logo"],  # Keep logo
+        # navbar_center will auto-populate from top-level toctree
+        "navbar_end": ["theme-switcher", "navbar-icon-links"],  # Help Desk will be in icon links
+        "icon_links": [
+            {
+                "name": "Help Desk",
+                "url": "http://jwsthelp.stsci.edu/",
+                "icon": "fa-solid fa-circle-question",
+            }
         ],
         "use_edit_page_button": True,
         # https://github.com/pydata/pydata-sphinx-theme/issues/1492
@@ -200,6 +215,7 @@ html_context = {
     "github_repo": "jdaviz",
     "github_version": "main",
     "doc_path": "docs",
+    "jdaviz_version": version if dev else release,  # Use short version for dev builds
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -303,7 +319,585 @@ linkcheck_ignore = [
     'https://pypi.org/project/jdaviz/#files'
 ]
 
+
+# -- Grid items data for landing page -------------------------------------------
+
+# Plugin data type mappings for filtering
+plugin_data_types = {
+    'aperture_photometry': ['image'],
+    'catalog_search': ['image', 'catalog'],
+    'collapse': ['3d'],
+    'compass': ['image'],
+    'cross_dispersion_profile': ['2d'],
+    'data_quality': ['image', '1d', '2d', '3d'],
+    'footprints': ['image'],
+    'gaussian_smooth': ['1d', '2d', '3d'],
+    'line_analysis': ['1d'],
+    'line_lists': ['1d', '2d'],
+    'line_profiles': ['3d'],
+    'model_fitting': ['1d'],
+    'moment_maps': ['3d'],
+    'orientation': ['image'],
+    'ramp_extraction': ['ramp'],
+    'ramp_slice': ['ramp'],
+    'slit_overlay': ['image', '2d'],
+    'sonify': ['1d'],
+    'spectral_extraction_2d': ['2d'],
+    'spectral_extraction_3d': ['3d'],
+    'spectral_slice': ['2d'],
+}
+
+
+def scan_directory_for_links(base_path, directory, data_type_map=None):
+    """Scan a directory for RST files and return link information.
+
+    Reads metadata from RST files in the format:
+    :data-types: image 2d 3d
+    :excl_platforms: desktop mast
+    """
+    links = []
+    dir_path = os.path.join(base_path, directory)
+    if not os.path.exists(dir_path):
+        return links
+
+    # Special case handling for acronyms in titles
+    acronyms = {
+        'vo': 'VO',
+        'api': 'API',
+        'url': 'URL',
+    }
+
+    for filename in sorted(os.listdir(dir_path)):
+        if filename.endswith('.rst') and filename != 'index.rst' and filename != 'extensions.rst':
+            # Convert filename to title (e.g., 'file_drop.rst' -> 'File Drop')
+            name = filename[:-4].replace('_', ' ').title()
+
+            # Replace known acronyms with proper capitalization
+            name_words = name.split()
+            for i, word in enumerate(name_words):
+                word_lower = word.lower()
+                if word_lower in acronyms:
+                    name_words[i] = acronyms[word_lower]
+            name = ' '.join(name_words)
+
+            # Create relative path for Sphinx
+            rel_path = os.path.join(directory, filename[:-4])
+
+            link_data = {'text': name, 'href': rel_path}
+
+            # Parse RST file for metadata
+            rst_path = os.path.join(dir_path, filename)
+            try:
+                with open(rst_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    # Look for field list metadata at the start of the file
+                    for line in content.split('\n')[:20]:  # Check first 20 lines
+                        line = line.strip()
+                        if line.startswith(':data-types:'):
+                            data_types = line.split(':', 2)[2].strip()
+                            if data_types:
+                                link_data['data_types'] = data_types
+                        elif line.startswith(':excl_platforms:'):
+                            excl_platforms = line.split(':', 2)[2].strip()
+                            if excl_platforms:
+                                link_data['excl_platforms'] = excl_platforms
+            except Exception as e:
+                print(f"Warning: Could not parse {rst_path}: {e}")
+
+            # Fallback to data_type_map if provided and no metadata found
+            if 'data_types' not in link_data and data_type_map and filename[:-4] in data_type_map:
+                link_data['data_types'] = ' '.join(data_type_map[filename[:-4]])
+
+            # For plugins directory, automatically extract data-types from Python code
+            if 'data_types' not in link_data and directory == 'plugins':
+                extracted_types = extract_data_types_from_plugin(
+                    base_path, filename[:-4]
+                )
+                if extracted_types:
+                    link_data['data_types'] = ' '.join(sorted(extracted_types))
+
+            links.append(link_data)
+
+    return links
+
+
+def extract_data_types_from_plugin(base_path, plugin_name):
+    """
+    Extract data types from plugin Python code by analyzing dataset.filters.
+
+    Returns a set of data type strings (e.g., {'1d', '2d', '3d', 'image', ...})
+    """
+    import re
+
+    # Mapping from filter names to data types
+    filter_to_datatype = {
+        'is_flux_cube': '3d',
+        'is_cube': '3d',
+        'is_ramp_cube': 'ramp',
+        'is_ramp_group_cube': 'ramp',
+        'is_ramp_diff_cube': 'ramp',
+        'is_ramp_integration': 'ramp',
+        'is_spectrum': '1d',
+        'is_spectrum_2d': '2d',
+        'is_image': 'image',
+        'is_catalog': 'catalog',
+        'is_image_not_spectrum': 'image',
+        'is_catalog_or_image_not_spectrum': ['catalog', 'image'],
+    }
+
+    generic_filters = {
+        'is_not_wcs_only', 'not_child_layer', 'layer_in_viewers',
+        'layer_is_not_dq', 'not_ramp', 'same_mosviz_row',
+    }
+
+    # Find the plugin Python file
+    jdaviz_dir = os.path.abspath(os.path.join(base_path, '..', 'jdaviz'))
+    configs = ['default', 'cubeviz', 'specviz', 'specviz2d',
+               'mosviz', 'imviz', 'rampviz']
+
+    python_files = []
+
+    # Strategy 1: Exact match
+    for config in configs:
+        plugin_py_file = os.path.join(
+            jdaviz_dir, 'configs', config, 'plugins',
+            plugin_name, f'{plugin_name}.py'
+        )
+        if os.path.exists(plugin_py_file):
+            python_files.append(plugin_py_file)
+
+    # Strategy 2: Partial match
+    if not python_files:
+        for config in configs:
+            plugins_dir = os.path.join(jdaviz_dir, 'configs', config, 'plugins')
+            if os.path.exists(plugins_dir):
+                for subdir in os.listdir(plugins_dir):
+                    if (subdir in plugin_name or plugin_name in subdir):
+                        subdir_path = os.path.join(plugins_dir, subdir)
+                        if os.path.isdir(subdir_path):
+                            for py_file in os.listdir(subdir_path):
+                                if (py_file.endswith('.py') and
+                                        not py_file.startswith('__')):
+                                    python_files.append(
+                                        os.path.join(subdir_path, py_file)
+                                    )
+
+    if not python_files:
+        return set()
+
+    # Parse the first matching file for filters
+    try:
+        with open(python_files[0], 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Look for self.dataset.filters = [...]
+        filter_match = re.search(
+            r'self\.dataset\.filters\s*=\s*\[(.*?)\]',
+            content, re.DOTALL
+        )
+
+        if not filter_match:
+            return set()
+
+        filter_names = re.findall(r"'([^']+)'", filter_match.group(1))
+
+        data_types = set()
+        for filter_name in filter_names:
+            if filter_name in generic_filters:
+                continue
+            if filter_name in filter_to_datatype:
+                dtype = filter_to_datatype[filter_name]
+                if isinstance(dtype, list):
+                    data_types.update(dtype)
+                else:
+                    data_types.add(dtype)
+
+        return data_types
+
+    except Exception:
+        return set()
+
+
+def check_extensions_exists(base_path, directory):
+    """Check if extensions.rst exists in the directory."""
+    extensions_path = os.path.join(base_path, directory, 'extensions.rst')
+    if os.path.exists(extensions_path):
+        return os.path.join(directory, 'extensions')
+    return None
+
+
+# Unified descriptions for grid items and wireframe sidebars
+descriptions = {
+    'loaders': 'Import data of multiple formats and from multiple sources into jdaviz',
+    'plugins': 'Do basic data reduction and analysis tasks for specific science use-cases',
+    'viewers': ('Show data in a variety of different viewers '
+                'custom built for exploring astronomical data'),
+    'subsets': ('Select regions of interest in your data, see that synced across all '
+                'viewers, and use as inputs to data analysis tasks'),
+    'export': 'Export generated data, selected subsets, and viewers',
+    'settings': 'Choose how to visualize your data',
+    'settings_plot': ('Customize viewer appearance including axes labels, limits, stretching, '
+                      'color maps, markers, and display options.'),
+    'settings_units': ('Convert and display data in different unit systems. Choose spectral '
+                       'units (wavelength, frequency, energy) and flux units appropriate for '
+                       'your analysis.'),
+    'info': 'Interactive access to information about your data and generated results',
+    'info_metadata': ('View FITS header information, WCS coordinates, and other metadata for '
+                      'loaded datasets.'),
+    'info_markers': ('Interactively create markers in any viewer and information about the '
+                     'underlying data will be exposed and available to export into the notebook'),
+    'info_logger': ('System messages, warnings, and operation history. Monitor plugin execution, '
+                    'data loading status, and any issues that arise during analysis.'),
+    'userapi': 'Script advanced and reproducible workflows in the notebook mimicing UI-operations',
+    'data_menu': 'Control data and subset layer order and visibility for each viewer',
+    'mouseover': 'See information about the data directly below your cursor',
+}
+
+
+# Build grid items structure
+docs_dir = os.path.dirname(__file__)
+
+# Data type mappings for loaders/formats
+loader_formats_data_types = {
+    '1d_spectrum': ['1d'],
+    '2d_spectrum': ['2d'],
+    '3d_spectrum': ['3d'],
+    'catalog': ['catalog'],
+    'image': ['image'],
+    'ramp': ['ramp']
+}
+
+# Data type mappings for viewers
+viewer_data_types = {
+    'spectrum_1d': ['1d'],
+    'profile_1d': ['1d', '2d', '3d'],
+    'spectrum_2d': ['2d'],
+    'image_2d': ['image', '2d', '3d'],
+    'table': ['catalog'],
+    'histogram': ['1d', 'image', '2d', '3d'],
+    'scatter': ['catalog']
+}
+
+grid_items_data = [
+    {
+        'title': 'Data Loaders',
+        'description': descriptions['loaders'],
+        'icon': 'mdi-plus-box',
+        'grid_id': 'grid-loaders',
+        'two_column': True,
+        'column_headers': ['Sources:', 'Formats:'],
+        'links': [
+            scan_directory_for_links(docs_dir, 'loaders/sources'),
+            scan_directory_for_links(docs_dir, 'loaders/formats', loader_formats_data_types)
+        ],
+        'extensions_path': check_extensions_exists(docs_dir, 'loaders')
+    },
+    {
+        'title': 'Data Analysis Plugins',
+        'description': descriptions['plugins'],
+        'icon': 'mdi-tune-variant',
+        'grid_id': 'grid-plugins',
+        'filters': [
+            {'name': 'All', 'id': 'all', 'active': True},
+            {'name': 'Images', 'id': 'image'},
+            {'name': '1D Spectra', 'id': '1d'},
+            {'name': '2D Spectra', 'id': '2d'},
+            {'name': '3D Spectra', 'id': '3d'},
+            {'name': 'Catalog', 'id': 'catalog'},
+            {'name': 'Ramp', 'id': 'ramp'}
+        ],
+        'links': scan_directory_for_links(docs_dir, 'plugins', plugin_data_types),
+        'extensions_path': check_extensions_exists(docs_dir, 'plugins')
+    },
+    {
+        'title': 'Viewers',
+        'description': descriptions['viewers'],
+        'icon': 'mdi-plus-box',
+        'grid_id': 'grid-viewers',
+        'links': scan_directory_for_links(docs_dir, 'viewers', viewer_data_types),
+        'extensions_path': check_extensions_exists(docs_dir, 'viewers')
+    },
+    {
+        'title': 'Subsets',
+        'description': descriptions['subsets'],
+        'icon': 'mdi-selection',
+        'grid_id': 'grid-subsets',
+        'links': scan_directory_for_links(docs_dir, 'subsets'),
+        'extensions_path': check_extensions_exists(docs_dir, 'subsets')
+    },
+    {
+        'title': 'Export',
+        'description': descriptions['export'],
+        'icon': 'mdi-content-save',
+        'grid_id': 'grid-export',
+        'links': scan_directory_for_links(docs_dir, 'export')
+    },
+    {
+        'title': 'Flexible Settings & Options',
+        'description': descriptions['settings'],
+        'icon': 'mdi-cog',
+        'grid_id': 'grid-settings',
+        'links': scan_directory_for_links(docs_dir, 'settings')
+    },
+    {
+        'title': 'Access to Data Info',
+        'description': descriptions['info'],
+        'icon': 'mdi-information-outline',
+        'grid_id': 'grid-info',
+        'links': scan_directory_for_links(docs_dir, 'info')
+    },
+    {
+        'title': 'Data Menu',
+        'description': descriptions['data_menu'],
+        'icon': 'mdi-alpha-a-box-outline',
+        'grid_id': 'grid-data-menu',
+        'links': [{'text': 'Data Menu', 'href': 'data_menu/index'}]
+    },
+    {
+        'title': 'Mouseover Information',
+        'description': descriptions['mouseover'],
+        'icon': 'mdi-auto-fix',
+        'grid_id': 'grid-mouseover',
+        'links': scan_directory_for_links(docs_dir, 'mouseover')
+    },
+    {
+        'title': 'API Access in Notebook',
+        'description': descriptions['userapi'],
+        'icon': 'api',
+        'grid_id': 'grid-userapi',
+        'links': scan_directory_for_links(docs_dir, 'userapi')
+    }
+]
+
+# Make grid items available to templates
+if 'html_context' not in locals():
+    html_context = {}
+html_context['grid_items'] = grid_items_data
+html_context['descriptions'] = descriptions
+
+
 # -- Custom directive -------------------------------------------
+
+class PluginAvailabilityDirective(SphinxDirective):
+    """
+    Automatically generate plugin availability information from Python code.
+
+    Reads the plugin's __init__ to extract:
+    - observe_traitlets_for_relevancy
+    - dataset.filters
+    - viewer filters
+
+    Generates a banner showing when the plugin is available/visible.
+    """
+
+    def run(self):
+        # Get the current document's name (e.g., 'plugins/spectral_extraction_3d')
+        doc_name = self.env.docname
+
+        # Extract plugin name from doc path
+        if not doc_name.startswith('plugins/'):
+            error_node = nodes.warning(
+                '',
+                nodes.paragraph(text='This directive can only be used in plugin documentation.')
+            )
+            return [error_node]
+
+        plugin_name = doc_name.split('/')[-1]  # e.g., 'spectral_extraction_3d'
+
+        # Find the plugin Python file
+        jdaviz_dir = os.path.abspath(os.path.join(self.env.srcdir, '..', 'jdaviz'))
+        python_file = self._find_plugin_file(jdaviz_dir, plugin_name)
+
+        if not python_file:
+            # No plugin file found - skip silently
+            return []
+
+        # Parse the plugin file
+        try:
+            with open(python_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except Exception as e:
+            error_node = nodes.warning(
+                '',
+                nodes.paragraph(text=f'Could not read plugin file: {e}')
+            )
+            return [error_node]
+
+        # Extract information
+        data_types = self._extract_data_types(content)
+        relevancy_info = self._extract_relevancy(content)
+
+        # Generate availability text
+        availability_parts = []
+
+        if data_types:
+            dtype_names = {
+                '1d': '1D spectra',
+                '2d': '2D spectra',
+                '3d': '3D spectral cubes',
+                'image': 'images',
+                'catalog': 'catalogs',
+                'ramp': 'ramp data'
+            }
+            dtype_list = [dtype_names.get(dt, dt) for dt in sorted(data_types)]
+            if len(dtype_list) == 1:
+                availability_parts.append(f"This plugin works with **{dtype_list[0]}**.")
+            else:
+                availability_parts.append(
+                    f"This plugin works with **{', '.join(dtype_list[:-1])} "
+                    f"and {dtype_list[-1]}**."
+                )
+
+        if relevancy_info:
+            if relevancy_info['type'] == 'dataset_items':
+                # Build dataset type requirement text
+                if data_types:
+                    dtype_names = {
+                        '1d': '1D spectrum',
+                        '2d': '2D spectrum',
+                        '3d': '3D spectral cube',
+                        'image': 'image',
+                        'catalog': 'catalog',
+                        'ramp': 'ramp data'
+                    }
+                    dtype_list = [dtype_names.get(dt, dt) for dt in sorted(data_types)]
+                    if len(dtype_list) == 1:
+                        dataset_desc = f"**{dtype_list[0]}** dataset"
+                    else:
+                        dataset_desc = "dataset: **{}, or {}**".format(
+                            '**, **'.join(dtype_list[:-1]), dtype_list[-1]
+                        )
+                    availability_parts.append(
+                        f"The plugin will be visible when at least one {dataset_desc} "
+                        "is loaded."
+                    )
+                else:
+                    # Fallback if no data types detected
+                    availability_parts.append(
+                        "The plugin will be visible when at least one compatible dataset "
+                        "is loaded."
+                    )
+            elif relevancy_info['type'] == 'viewer_items':
+                availability_parts.append(
+                    "The plugin will be visible when at least one viewer is available."
+                )
+            elif relevancy_info['type'] == 'trace_dataset_items':
+                availability_parts.append(
+                    "The plugin will be visible when trace data is loaded."
+                )
+
+        if not availability_parts:
+            # No specific information found
+            return []
+
+        # Create an admonition node
+        admonition_node = nodes.admonition()
+        admonition_node += nodes.title(text='Plugin Availability')
+        admonition_node['classes'].append('note')
+
+        for part in availability_parts:
+            # Parse the reStructuredText to handle inline markup
+            paragraph = nodes.paragraph()
+            # Use string list for nested_parse
+            from docutils.statemachine import StringList
+            text_list = StringList([part], source='<plugin-availability>')
+            self.state.nested_parse(text_list, 0, paragraph)
+            admonition_node += paragraph
+
+        return [admonition_node]
+
+    def _find_plugin_file(self, jdaviz_dir, plugin_name):
+        """Find the Python file for a plugin."""
+        configs = ['default', 'cubeviz', 'specviz', 'specviz2d',
+                   'mosviz', 'imviz', 'rampviz']
+
+        # Strategy 1: Exact match
+        for config in configs:
+            plugin_py_file = os.path.join(
+                jdaviz_dir, 'configs', config, 'plugins',
+                plugin_name, f'{plugin_name}.py'
+            )
+            if os.path.exists(plugin_py_file):
+                return plugin_py_file
+
+        # Strategy 2: Partial match (e.g., spectral_extraction_3d -> spectral_extraction)
+        for config in configs:
+            plugins_dir = os.path.join(jdaviz_dir, 'configs', config, 'plugins')
+            if os.path.exists(plugins_dir):
+                for subdir in os.listdir(plugins_dir):
+                    if subdir in plugin_name or plugin_name in subdir:
+                        for py_file in os.listdir(os.path.join(plugins_dir, subdir)):
+                            if py_file.endswith('.py') and not py_file.startswith('__'):
+                                full_path = os.path.join(plugins_dir, subdir, py_file)
+                                return full_path
+
+        return None
+
+    def _extract_data_types(self, content):
+        """Extract data types from dataset.filters."""
+        import re
+
+        # Mapping from filter names to data types
+        filter_to_datatype = {
+            'is_flux_cube': '3d',
+            'is_cube': '3d',
+            'is_ramp_cube': 'ramp',
+            'is_ramp_group_cube': 'ramp',
+            'is_ramp_diff_cube': 'ramp',
+            'is_ramp_integration': 'ramp',
+            'is_spectrum': '1d',
+            'is_spectrum_2d': '2d',
+            'is_image': 'image',
+            'is_catalog': 'catalog',
+            'is_image_not_spectrum': 'image',
+            'is_catalog_or_image_not_spectrum': ['catalog', 'image'],
+        }
+
+        generic_filters = {
+            'is_not_wcs_only', 'not_child_layer', 'layer_in_viewers',
+            'layer_is_not_dq', 'not_ramp', 'same_mosviz_row',
+        }
+
+        # Look for self.dataset.filters = [...]
+        filter_match = re.search(
+            r'self\.dataset\.filters\s*=\s*\[(.*?)\]',
+            content, re.DOTALL
+        )
+
+        if not filter_match:
+            return set()
+
+        filter_names = re.findall(r"'([^']+)'", filter_match.group(1))
+
+        data_types = set()
+        for filter_name in filter_names:
+            if filter_name in generic_filters:
+                continue
+            if filter_name in filter_to_datatype:
+                dtype = filter_to_datatype[filter_name]
+                if isinstance(dtype, list):
+                    data_types.update(dtype)
+                else:
+                    data_types.add(dtype)
+
+        return data_types
+
+    def _extract_relevancy(self, content):
+        """Extract relevancy observation info."""
+        import re
+
+        # Look for observe_traitlets_for_relevancy
+        relevancy_match = re.search(
+            r'observe_traitlets_for_relevancy\s*\(\s*traitlets_to_observe\s*=\s*\[\'([^\']+)\'\]',
+            content
+        )
+
+        if relevancy_match:
+            traitlet = relevancy_match.group(1)
+            return {'type': traitlet}
+
+        return None
+
 
 class JdavizCLIHelpDirective(SphinxDirective):
 
@@ -313,5 +907,995 @@ class JdavizCLIHelpDirective(SphinxDirective):
         return [paragraph_node]
 
 
+class JdavizLandingPageDirective(SphinxDirective):
+    """Render the landing page template with Jinja2 processing."""
+
+    def run(self):
+        import jinja2
+
+        # Get the template directory
+        template_dir = os.path.join(self.env.srcdir, '_templates')
+
+        # Create a Jinja2 environment
+        jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
+
+        # Add pathto function to the environment
+        def pathto(otheruri, resource=False):
+            """Generate relative path to another document."""
+            if resource:
+                return otheruri
+            if not otheruri.endswith('.html') and not otheruri.startswith('#'):
+                otheruri = otheruri + '.html'
+            return otheruri
+
+        # Load and render the template with context
+        template = jinja_env.get_template('index.html')
+
+        # Get html_context from the Sphinx app config
+        app_html_context = self.env.app.config.html_context
+
+        context = {
+            'grid_items': app_html_context.get('grid_items', []),
+            'jdaviz_version': app_html_context.get('jdaviz_version', ''),
+            'descriptions': app_html_context.get('descriptions', {}),
+            'pathto': pathto
+        }
+        html_content = template.render(context)
+
+        # Create raw HTML node
+        raw_node = nodes.raw('', html_content, format='html')
+        return [raw_node]
+
+
+class PluginApiReferencesDirective(SphinxDirective):
+    """
+    Auto-generate API reference links for plugin exposed attributes.
+
+    Usage:
+        .. plugin-api-refs::
+           :module: jdaviz.configs.default.plugins.collapse.collapse
+           :class: Collapse
+    """
+    required_arguments = 0
+    optional_arguments = 0
+    option_spec = {
+        'module': str,
+        'class': str,
+    }
+
+    def run(self):
+        module_path = self.options.get('module')
+        class_name = self.options.get('class')
+
+        if not module_path or not class_name:
+            error_node = nodes.error()
+            error_node += nodes.paragraph(
+                text='plugin-api-refs directive requires :module: and :class: options'
+            )
+            return [error_node]
+
+        try:
+            # Import the module and get the class
+            import importlib
+            module = importlib.import_module(module_path)
+            plugin_class = getattr(module, class_name)
+
+            # Create a temporary instance to access user_api
+            # We need to mock the required attributes for plugin initialization
+            class MockApp:
+                hub = None
+
+                def __init__(self):
+                    from unittest.mock import MagicMock
+                    self.hub = MagicMock()
+
+            # Get the class docstring and process it
+            rst_lines = [
+                '',
+                'API References',
+                '--------------',
+                '',
+            ]
+
+            # Extract exposed attributes to validate documentation coverage
+            exposed_attrs = []
+            try:
+                # Try to get the exposed attributes from user_api
+                from unittest.mock import MagicMock
+                mock_app = MagicMock()
+                mock_app.hub = MagicMock()
+                instance = plugin_class(app=mock_app)
+                user_api = instance.user_api
+                exposed_attrs = list(user_api._expose)
+            except Exception:
+                # If instantiation fails, parse source to get exposed list
+                import inspect
+                try:
+                    source = inspect.getsource(plugin_class.user_api.fget)
+                    import re
+                    match = re.search(
+                        r"expose\s*=\s*[\(\[]([^\)\]]+)[\)\]]",
+                        source,
+                        re.DOTALL
+                    )
+                    if match:
+                        expose_str = match.group(1)
+                        exposed_attrs = re.findall(r"['\"]([^'\"]+)['\"]", expose_str)
+                except Exception:
+                    exposed_attrs = []
+
+            if plugin_class.__doc__:
+                docstring = plugin_class.__doc__.strip()
+
+                # Remove the intro paragraph that references the current page
+                # This typically ends with "for more details."
+                lines = docstring.split('\n')
+                filtered_lines = []
+                skip_intro = False
+
+                for i, line in enumerate(lines):
+                    stripped = line.strip()
+                    # Check if this line contains a self-reference to the plugin page
+                    if ':ref:`' in stripped and 'for more details' in stripped.lower():
+                        skip_intro = True
+                        continue
+                    # Skip the sentence before the self-reference too
+                    next_line = lines[i+1] if i < len(lines) - 1 else ''
+                    if ':ref:`' in next_line and 'for more details' in next_line.lower():
+                        skip_intro = True
+                        continue
+                    # Once we hit the "Only the following" section, stop skipping
+                    starts_list = stripped.startswith('*')
+                    if skip_intro and ('Only the following' in stripped or starts_list):
+                        skip_intro = False
+
+                    if not skip_intro:
+                        filtered_lines.append(line)
+
+                # Join and clean up
+                docstring_content = '\n'.join(filtered_lines).strip()
+
+                # Expand short-form Sphinx references to full paths
+                # This converts :meth:`method_name` to :meth:`~module.Class.method_name`
+                if docstring_content:
+                    import re
+
+                    # Pattern for short-form :meth: without module path
+                    # Matches :meth:`name` but not :meth:`~path.name` or :meth:`path.name`
+                    def expand_meth_ref(match):
+                        method_name = match.group(1)
+                        # If already has a path, leave it alone
+                        if '.' in method_name or method_name.startswith('~'):
+                            return match.group(0)
+                        # Otherwise, expand to full path with ~ to show just the method name
+                        return f':meth:`~{module_path}.{class_name}.{method_name}`'
+
+                    docstring_content = re.sub(
+                        r':meth:`([^`]+)`',
+                        expand_meth_ref,
+                        docstring_content
+                    )
+
+                    # Pattern for short-form :attr: without module path
+                    def expand_attr_ref(match):
+                        attr_name = match.group(1)
+                        if '.' in attr_name or attr_name.startswith('~'):
+                            return match.group(0)
+                        return f':attr:`~{module_path}.{class_name}.{attr_name}`'
+
+                    docstring_content = re.sub(
+                        r':attr:`([^`]+)`',
+                        expand_attr_ref,
+                        docstring_content
+                    )
+
+                # Validate that all exposed attributes are documented
+                if exposed_attrs and docstring_content:
+                    import re
+                    # Find all documented attributes (methods and properties)
+                    # Look for :meth:`method_name` or ``attr_name``
+                    documented = set()
+                    # Match :meth:`name` or :meth:`~path.name`
+                    for match in re.finditer(r':meth:`[~]?(?:[^.`]+\.)*([^`]+)`',
+                                             docstring_content):
+                        documented.add(match.group(1))
+                    # Match ``attr_name`` patterns
+                    for match in re.finditer(r'``([a-z_][a-z0-9_]*)``', docstring_content):
+                        documented.add(match.group(1))
+
+                    # Check for undocumented attributes
+                    undocumented = [
+                        attr for attr in exposed_attrs if attr not in documented
+                    ]
+
+                    if undocumented:
+                        from sphinx.util import logging
+                        logger = logging.getLogger(__name__)
+                        logger.warning(
+                            f'{class_name}: The following user API attributes are not '
+                            f'documented in the class docstring: {", ".join(undocumented)}',
+                            location=(self.env.docname, self.lineno)
+                        )
+
+                # Add the docstring content
+                if docstring_content:
+                    rst_lines.append(docstring_content)
+                    rst_lines.append('')
+                else:
+                    rst_lines.append(
+                        'This plugin is primarily UI-driven. '
+                        'See the :ref:`plugin-apis` documentation for general '
+                        'plugin API methods.'
+                    )
+                    rst_lines.append('')
+            else:
+                rst_lines.append(
+                    'This plugin is primarily UI-driven. '
+                    'See the :ref:`plugin-apis` documentation for general '
+                    'plugin API methods.'
+                )
+                rst_lines.append('')
+
+            # Add a simple reference to the full class documentation
+            # Use full module path with ~ to show just the class name
+            rst_lines.append(
+                f'For detailed API documentation, see :class:`~{module_path}.{class_name}`.'
+            )
+            rst_lines.append('')
+
+            # Parse the RST and return nodes
+            from docutils.parsers.rst import Parser
+            from docutils.utils import new_document
+
+            rst_text = '\n'.join(rst_lines)
+            parser = Parser()
+            doc = new_document('<plugin-api-refs>')
+            doc.settings = self.state.document.settings
+            parser.parse(rst_text, doc)
+
+            return doc.children
+
+        except Exception as e:
+            # Return an error node if something goes wrong
+            error_node = nodes.error()
+            error_node += nodes.paragraph(
+                text=f'Error generating plugin API references: {str(e)}'
+            )
+            return [error_node]
+
+
+# Wireframe Content Registry
+# Defines form elements and content for all sidebars, tabs, and plugins
+WIREFRAME_CONTENT_REGISTRY = {
+    'loaders': {
+        'tabs': ['Data', 'Viewer'],
+        'tab_content': {
+            'Data': {
+                'form_elements': [
+                    {'type': 'select', 'label': 'Source', 'options':
+                        ['file', 'file drop', 'url',
+                         'object', 'astroquery', 'virtual observatory']},
+                    {'type': 'select', 'label': 'Format', 'options':
+                        ['1D Spectrum', '2D Spectrum', 'Image']},
+                    {'type': 'button', 'label': 'Load'}
+                ]
+            },
+            'Viewer': {
+                'form_elements': [
+                    {'type': 'select', 'label': 'Viewer Type', 'options':
+                        ['1D Spectrum', '2D Spectrum', 'Histogram', 'Scatter']},
+                    {'type': 'button', 'label': 'Create Viewer'}
+                ]
+            }
+        }
+    },
+    'settings': {
+        'tabs': ['Plot Options', 'Units'],
+        'tab_content': {
+            'Plot Options': {
+                'form_elements': [
+                    {'type': 'checkbox', 'label': 'Show grid'},
+                    {'type': 'checkbox', 'label': 'Show axes labels'},
+                    {'type': 'select', 'label': 'Layer', 'options': ['Layer 1', 'Layer 2']}
+                ]
+            },
+            'Units': {
+                'form_elements': [
+                    {'type': 'select', 'label': 'Spectral Unit', 'options':
+                        ['Angstrom', 'nm', 'micron']},
+                    {'type': 'select', 'label': 'Flux Unit', 'options':
+                        ['Jy', 'erg/s/cm²/Å']}
+                ]
+            }
+        }
+    },
+    'info': {
+        'tabs': ['Metadata', 'Markers', 'Logger'],
+        'tab_content': {
+            'Metadata': {'text': 'Display file metadata and header information'},
+            'Markers': {'text': 'Interactive table of markers placed on the viewer'},
+            'Logger': {'text': 'View history of operations and messages'}
+        }
+    },
+    'plugins': {
+        'Aperture Photometry': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data', 'options': ['Image 1', 'Image 2']},
+                {'type': 'select', 'label': 'Aperture',
+                 'options': ['Subset 1', 'Subset 2']},
+                {'type': 'select', 'label': 'Background',
+                 'options': ['Manual', 'Subset 1', 'Subset 2']},
+                {'type': 'input', 'label': 'Background value',
+                 'placeholder': '0.0'},
+                {'type': 'input', 'label': 'Pixel area',
+                 'placeholder': 'arcsec²'},
+                {'type': 'select', 'label': 'Plot Type',
+                 'options': ['Curve of Growth', 'Radial Profile',
+                             'Radial Profile (Raw)']},
+                {'type': 'checkbox', 'label': 'Fit Gaussian'},
+                {'type': 'button', 'label': 'Calculate'}
+            ]
+        },
+        'Line Analysis': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 1', 'Spectrum 2']},
+                {'type': 'select', 'label': 'Spectral region',
+                 'options': ['Subset 1', 'Subset 2']},
+                {'type': 'select', 'label': 'Continuum',
+                 'options': ['Subset 3', 'Subset 4']},
+                {'type': 'button', 'label': 'Calculate'}
+            ]
+        },
+        'Model Fitting': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 1', 'Spectrum 2']},
+                {'type': 'select', 'label': 'Spectral region',
+                 'options': ['Entire Spectrum', 'Subset 1']},
+                {'type': 'select', 'label': 'Model Component',
+                 'options': ['Gaussian', 'Lorentzian', 'Polynomial']},
+                {'type': 'input', 'label': 'Order', 'placeholder': '3'},
+                {'type': 'button', 'label': 'Add Component'}
+            ]
+        },
+        'Catalog Search': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Viewer',
+                 'options': ['Viewer 1', 'Viewer 2']},
+                {'type': 'select', 'label': 'Catalog',
+                 'options': ['Gaia', 'Custom (.ecsv)']},
+                {'type': 'input', 'label': 'Max sources',
+                 'placeholder': '1000'},
+                {'type': 'button', 'label': 'Search'}
+            ]
+        },
+        'Collapse': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Cube 1', 'Cube 2']},
+                {'type': 'select', 'label': 'Spectral region',
+                 'options': ['Entire Spectrum', 'Subset 1']},
+                {'type': 'select', 'label': 'Function',
+                 'options': ['Sum', 'Mean', 'Median', 'Min', 'Max']},
+                {'type': 'button', 'label': 'Collapse'}
+            ]
+        },
+        'Gaussian Smooth': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 1', 'Cube 1']},
+                {'type': 'input', 'label': 'Standard deviation',
+                 'placeholder': '3'},
+                {'type': 'button', 'label': 'Smooth'}
+            ]
+        },
+        'Moment Maps': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Cube 1', 'Cube 2']},
+                {'type': 'select', 'label': 'Spectral region',
+                 'options': ['Entire Spectrum', 'Subset 1']},
+                {'type': 'select', 'label': 'Continuum',
+                 'options': ['None', 'Surrounding']},
+                {'type': 'input', 'label': 'Moment', 'placeholder': '0'},
+                {'type': 'input', 'label': 'Reference Wavelength',
+                 'placeholder': '6563'},
+                {'type': 'button', 'label': 'Calculate'}
+            ]
+        },
+        '2D Spectral Extraction': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 2D 1', 'Cube 1']},
+                {'type': 'select', 'label': 'Spatial aperture',
+                 'options': ['Subset 1', 'Subset 2']},
+                {'type': 'select', 'label': 'Background',
+                 'options': ['None', 'Subset 3']},
+                {'type': 'select', 'label': 'Function',
+                 'options': ['Sum', 'Mean']},
+                {'type': 'button', 'label': 'Extract'}
+            ]
+        },
+        '3D Spectral Extraction': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 3D 1', 'Cube 1']},
+                {'type': 'select', 'label': 'Spatial aperture',
+                 'options': ['Subset 1', 'Subset 2']},
+                {'type': 'select', 'label': 'Background',
+                 'options': ['None', 'Subset 3']},
+                {'type': 'select', 'label': 'Function',
+                 'options': ['Sum', 'Mean']},
+                {'type': 'button', 'label': 'Extract'}
+            ]
+        },
+        'Data Quality': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Science data',
+                 'options': ['Image 1', 'Image 2']},
+                {'type': 'select', 'label': 'Data quality',
+                 'options': ['DQ Layer']},
+                {'type': 'select', 'label': 'Flag definitions',
+                 'options': ['JWST', 'HST']},
+                {'type': 'button', 'label': 'Show All'},
+                {'type': 'button', 'label': 'Hide All'}
+            ]
+        },
+        'Ramp Extraction': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Spatial aperture',
+                 'options': ['Subset 1', 'Subset 2']},
+                {'type': 'select', 'label': 'Function',
+                 'options': ['Sum', 'Mean', 'Median']},
+                {'type': 'checkbox', 'label': 'Show live ramp extraction'},
+                {'type': 'button', 'label': 'Extract'}
+            ]
+        },
+        'Compass': {
+            'form_elements': [
+                {'type': 'checkbox', 'label': 'Show compass'},
+                {'type': 'select', 'label': 'Display',
+                 'options': ['Arrows', 'Letters']},
+            ]
+        },
+        'Footprints': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Preset',
+                 'options': ['JWST NIRCam', 'JWST MIRI', 'HST']},
+                {'type': 'checkbox', 'label': 'Show footprints'},
+            ]
+        },
+        'Orientation': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Link Type',
+                 'options': ['WCS', 'Pixels']},
+                {'type': 'button', 'label': 'Rotate 90° CW'},
+                {'type': 'button', 'label': 'Rotate 90° CCW'},
+            ]
+        },
+        'Line Lists': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Available lists',
+                 'options': ['Common Atomic', 'Common Molecular']},
+                {'type': 'button', 'label': 'Load List'},
+                {'type': 'button', 'label': 'Erase All'}
+            ]
+        },
+        'Slit Overlay': {
+            'form_elements': [
+                {'type': 'checkbox', 'label': 'Show slit overlay'},
+            ]
+        },
+        'Sonify Data': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 1', 'Image 1']},
+                {'type': 'select', 'label': 'Sample rate',
+                 'options': ['22050 Hz', '44100 Hz']},
+                {'type': 'button', 'label': 'Play'},
+                {'type': 'button', 'label': 'Stop'}
+            ]
+        }
+    },
+    'subsets': {
+        'form_elements': [
+            {'type': 'select', 'label': 'Subset', 'options': ['Subset 1', 'Subset 2']},
+            {'type': 'button', 'label': 'Recenter'},
+            {'type': 'button', 'label': 'Delete'}
+        ]
+    }
+}
+
+
+def generate_form_html(form_elements):
+    """Generate HTML for a list of form elements."""
+    html_parts = []
+
+    for element in form_elements:
+        if element['type'] == 'select':
+            options_html = ''.join(f"<option>{opt}</option>" for opt in element['options'])
+            # Generate ID from label (lowercase, replace spaces with hyphens)
+            select_id = element['label'].lower().replace(' ', '-') + '-select'
+            html_parts.append(
+                f'<div class="wireframe-form-group">'
+                f'<label class="wireframe-form-label">{element["label"]}</label>'
+                f'<select id="{select_id}" class="wireframe-select">{options_html}</select>'
+                f'</div>'
+            )
+        elif element['type'] == 'input':
+            placeholder = element.get('placeholder', '')
+            html_parts.append(
+                f'<div class="wireframe-form-group">'
+                f'<label class="wireframe-form-label">{element["label"]}</label>'
+                f'<input type="text" class="wireframe-input" placeholder="{placeholder}" />'
+                f'</div>'
+            )
+        elif element['type'] == 'checkbox':
+            html_parts.append(
+                f'<div class="wireframe-form-group">'
+                f'<label class="wireframe-checkbox-label">'
+                f'<input type="checkbox" class="wireframe-checkbox" /> {element["label"]}'
+                f'</label></div>'
+            )
+        elif element['type'] == 'button':
+            html_parts.append(
+                f'<button class="wireframe-button">{element["label"]}</button>'
+            )
+
+    return ''.join(html_parts)
+
+
+def generate_content_for_sidebar(sidebar_type, plugin_name=None):
+    """Generate content for any sidebar/tab/plugin combination."""
+    if sidebar_type not in WIREFRAME_CONTENT_REGISTRY:
+        return None
+
+    registry_entry = WIREFRAME_CONTENT_REGISTRY[sidebar_type]
+
+    # Handle plugins sidebar with specific plugin
+    if sidebar_type == 'plugins' and plugin_name:
+        if plugin_name in registry_entry:
+            plugin_def = registry_entry[plugin_name]
+            if 'form_elements' in plugin_def:
+                return {'main': generate_form_html(plugin_def['form_elements'])}
+            elif 'text' in plugin_def:
+                return {'main': plugin_def['text']}
+
+    # Handle sidebars with tabs
+    if 'tabs' in registry_entry and 'tab_content' in registry_entry:
+        tab_content_map = {}
+        for tab_name, tab_def in registry_entry['tab_content'].items():
+            if 'form_elements' in tab_def:
+                tab_content_map[tab_name] = generate_form_html(tab_def['form_elements'])
+            elif 'text' in tab_def:
+                tab_content_map[tab_name] = tab_def['text']
+        return tab_content_map
+
+    # Handle simple sidebar with form elements
+    if 'form_elements' in registry_entry:
+        return {'main': generate_form_html(registry_entry['form_elements'])}
+
+    return None
+
+
+def validate_wireframe_sequence(sequence_str, option_name, docname, lineno, logger):
+    """
+    Validate a wireframe demo sequence string and log warnings for issues.
+
+    Parameters
+    ----------
+    sequence_str : str
+        The sequence string (e.g., from :initial: or :demo: options)
+    option_name : str
+        Name of the option being validated (for error messages)
+    docname : str
+        Document name (for error location)
+    lineno : int
+        Line number (for error location)
+    logger : sphinx.util.logging.SphinxLoggerAdapter
+        Logger to use for warnings
+    """
+    if not sequence_str:
+        return
+
+    # Known sidebar types
+    valid_sidebars = {'loaders', 'save', 'settings', 'info', 'plugins', 'subsets', 'pause'}
+
+    # Known viewer actions
+    valid_viewer_actions = {
+        'viewer-add', 'viewer-image', 'viewer-legend', 'viewer-focus',
+        'viewer-remove', 'viewer-open-data-menu', 'viewer-tool-toggle'
+    }
+
+    # Known sidebar actions
+    valid_actions = {
+        'show', 'open-panel', 'select-tab', 'select-dropdown', 'select-data',
+        'select-aperture', 'click-button', 'api-toggle', 'open-data-menu',
+        'highlight', 'select-viewer', 'select-layer', 'set-color'
+    }
+
+    # Known tool names for viewer-tool-toggle
+    valid_tools = {
+        'home', 'panzoom', 'pan-zoom', 'pan_zoom', 'rectroi', 'rect-roi',
+        'rect_roi', 'rectangle', 'circroi', 'circ-roi', 'circ_roi', 'circle', 'subset'
+    }
+
+    items = [s.strip() for s in sequence_str.split(',')]
+
+    for item in items:
+        if not item:
+            continue
+
+        working_item = item
+
+        # Parse @duration syntax
+        if '@' in item:
+            at_index = item.index('@')
+            before_at = item[:at_index]
+            after_at = item[at_index + 1:]
+
+            # Extract duration part
+            colon_after_at = after_at.find(':')
+            if colon_after_at != -1:
+                duration_part = after_at[:colon_after_at]
+                working_item = before_at + after_at[colon_after_at:]
+            else:
+                duration_part = after_at
+                working_item = before_at
+
+            # Remove ! suffix if present
+            if duration_part.endswith('!'):
+                duration_part = duration_part[:-1]
+
+            # Validate duration is a number
+            if duration_part:
+                try:
+                    int(duration_part)
+                except ValueError:
+                    logger.warning(
+                        f"wireframe-demo: Invalid duration '{duration_part}' in '{item}' "
+                        f"(:{option_name}:). Duration must be an integer.",
+                        location=(docname, lineno)
+                    )
+
+        # Parse sidebar:action or sidebar:action=value
+        if ':' in working_item:
+            colon_index = working_item.index(':')
+            sidebar = working_item[:colon_index]
+            action_part = working_item[colon_index + 1:]
+        else:
+            sidebar = working_item
+            action_part = None
+
+        # Check for viewer-* actions
+        if sidebar.startswith('viewer-'):
+            if sidebar not in valid_viewer_actions:
+                logger.warning(
+                    f"wireframe-demo: Unknown viewer action '{sidebar}' in '{item}' "
+                    f"(:{option_name}:). Valid viewer actions: {sorted(valid_viewer_actions)}",
+                    location=(docname, lineno)
+                )
+            else:
+                # Validate viewer-tool-toggle tool name
+                if sidebar == 'viewer-tool-toggle' and action_part:
+                    params = action_part.split(':')
+                    if len(params) >= 2:
+                        tool_name = params[1].lower()
+                        if tool_name not in valid_tools:
+                            logger.warning(
+                                f"wireframe-demo: Unknown tool '{params[1]}' in '{item}' "
+                                f"(:{option_name}:). Valid tools: {sorted(valid_tools)}",
+                                location=(docname, lineno)
+                            )
+        elif sidebar == 'pause':
+            # pause is valid, no action needed
+            pass
+        elif sidebar not in valid_sidebars and not sidebar.startswith(':'):
+            # Check if it might be a typo or unknown sidebar
+            # Allow standalone actions starting with :
+            if sidebar:
+                logger.warning(
+                    f"wireframe-demo: Unknown sidebar '{sidebar}' in '{item}' "
+                    f"(:{option_name}:). Valid sidebars: {sorted(valid_sidebars)}",
+                    location=(docname, lineno)
+                )
+
+        # Validate action if present
+        if action_part and sidebar in valid_sidebars:
+            # Extract action name (before = if present)
+            if '=' in action_part:
+                action_name = action_part[:action_part.index('=')]
+            else:
+                action_name = action_part
+
+            if action_name not in valid_actions:
+                logger.warning(
+                    f"wireframe-demo: Unknown action '{action_name}' in '{item}' "
+                    f"(:{option_name}:). Valid actions: {sorted(valid_actions)}",
+                    location=(docname, lineno)
+                )
+
+
+class WireframeDemoDirective(SphinxDirective):
+    """
+    Embed an interactive wireframe demonstration.
+
+    This directive loads the wireframe HTML, CSS, and JavaScript from separate files
+    and injects them into the documentation page.
+
+    Usage:
+        .. wireframe-demo::
+           :initial: loaders,loaders:select-tab=Data
+           :demo: plugins
+           :enable-only: plugins
+           :plugin-name: Aperture Photometry
+           :plugin-panel-opened: false
+           :custom-content: plugins=<html content>
+
+    Options:
+        initial: Initial state applied before demo starts, when repeating, or on restart.
+                 Uses same syntax as demo. Applied quickly without delays.
+        demo: Custom demo sidebar order (comma-separated list) or demo sequence.
+              Default: 'loaders,save,settings,info,plugins,subsets'
+              Can also specify actions like: 'plugins:open-panel,plugins:select-data=Image 2'
+              Can specify timing with @: 'plugins@1000:open-panel' (1000ms delay)
+        enable-only: Only enable clicking on these sidebars (comma-separated).
+                     Others will be disabled. If not specified, all are enabled.
+        show-scroll-to: Whether to show "Learn more" scroll-to buttons.
+                       Default: false
+        demo-repeat: Whether demo should loop continuously. Default: true
+        plugin-name: Name of the plugin expansion panel.
+                     Default: 'Data Analysis Plugin'
+        plugin-panel-opened: Whether plugin panel is open by default.
+                             Default: true
+        custom-content: Custom HTML content for sidebars.
+                       Format: sidebar=content or sidebar:tab=content
+                       Replaces the default description content.
+        viewer-image: Path to an image (relative to _static) to display in the viewer area.
+                     The image will fill the viewer area with overflow hidden.
+    """
+
+    option_spec = {
+        'initial': str,
+        'demo': str,
+        'enable-only': str,
+        'show-scroll-to': str,
+        'demo-repeat': str,
+        'plugin-name': str,
+        'plugin-panel-opened': str,
+        'custom-content': str,
+        'viewer-image': str,
+    }
+
+    def run(self):
+        # Get the template directory
+        template_dir = os.path.join(self.env.srcdir, '_templates')
+
+        # Read the three component files
+        try:
+            with open(os.path.join(template_dir, 'wireframe-base.html'), 'r') as f:
+                html_content = f.read()
+
+            with open(os.path.join(template_dir, 'wireframe-demo.css'), 'r') as f:
+                css_content = f.read()
+
+            with open(os.path.join(template_dir, 'wireframe-controller.js'), 'r') as f:
+                js_content = f.read()
+        except IOError as e:
+            error_node = nodes.error()
+            error_node += nodes.paragraph(
+                text=f'Error loading wireframe components: {e}'
+            )
+            return [error_node]
+
+        # Fix relative paths in CSS for inline embedding
+        # When CSS is embedded in a page (e.g., /plugins/foo.html), url('api.svg')
+        # needs to become a relative path to _static/api.svg
+        # Calculate the relative path from current document to _static
+        docname = self.env.docname  # e.g., 'plugins/aperture_photometry'
+        depth = docname.count('/')
+        if depth > 0:
+            static_prefix = '../' * depth + '_static/'
+        else:
+            static_prefix = '_static/'
+        css_content = css_content.replace("url('api.svg')", f"url('{static_prefix}api.svg')")
+
+        # Replace Jinja2 variables with actual values
+        app_html_context = self.env.app.config.html_context
+        jdaviz_version = app_html_context.get('jdaviz_version', '')
+        descriptions = app_html_context.get('descriptions', {})
+
+        # Replace version in HTML
+        html_content = html_content.replace('{{ jdaviz_version }}', jdaviz_version)
+
+        # Add modifier class for docs pages (to distinguish from landing page)
+        html_content = html_content.replace(
+            '<div class="wireframe-section">',
+            '<div class="wireframe-section wireframe-docs">'
+        )
+
+        # Replace version and descriptions in JS
+        js_content = js_content.replace('{{ jdaviz_version }}', jdaviz_version)
+        for key, value in descriptions.items():
+            # Escape single quotes in description values for JS strings
+            escaped_value = value.replace("'", "\\'")
+            # Replace with capitalize filter
+            capitalized_value = escaped_value.capitalize()
+            js_content = js_content.replace(
+                f'{{{{ descriptions.{key}|capitalize }}}}', capitalized_value
+            )
+            # Replace without filter
+            js_content = js_content.replace(f'{{{{ descriptions.{key} }}}}', escaped_value)
+
+        # Process directive options
+        initial_state = self.options.get('initial', None)
+        demo_order = self.options.get('demo', None)
+        enable_only = self.options.get('enable-only', None)
+        show_scroll_to = self.options.get('show-scroll-to', 'false').lower() == 'true'
+        demo_repeat = self.options.get('demo-repeat', 'true').lower() == 'true'
+        plugin_name = self.options.get('plugin-name', None)
+        plugin_panel_opened = self.options.get('plugin-panel-opened', 'true').lower() == 'true'
+        custom_content = self.options.get('custom-content', None)
+        viewer_image = self.options.get('viewer-image', None)
+
+        # Validate directive sequences at build time
+        from sphinx.util import logging
+        logger = logging.getLogger(__name__)
+        docname = self.env.docname
+        lineno = self.lineno
+
+        if initial_state:
+            validate_wireframe_sequence(
+                initial_state, 'initial', docname, lineno, logger
+            )
+        if demo_order:
+            validate_wireframe_sequence(
+                demo_order, 'demo', docname, lineno, logger
+            )
+
+        # Generate unique ID for this wireframe instance
+        import time
+        unique_id = f"wireframe-{int(time.time() * 1000000) % 1000000}"
+
+        # Build custom content map - first from explicit custom-content option
+        custom_content_map = {}
+        if custom_content:
+            # Parse custom content (format: sidebar=content or sidebar|tab=content)
+            for item in custom_content.split('|'):
+                if '=' in item:
+                    sidebar, content = item.split('=', 1)
+                    custom_content_map[sidebar.strip()] = {'main': content.strip()}
+
+        # Auto-generate missing content from registry for common sidebars
+        for sidebar_type in ['loaders', 'save', 'settings', 'info', 'subsets']:
+            if sidebar_type not in custom_content_map:
+                generated = generate_content_for_sidebar(sidebar_type)
+                if generated:
+                    custom_content_map[sidebar_type] = generated
+
+        # Special handling for plugins - auto-generate if plugin_name provided
+        if plugin_name and 'plugins' not in custom_content_map:
+            generated = generate_content_for_sidebar('plugins', plugin_name=plugin_name)
+            if generated:
+                custom_content_map['plugins'] = generated
+
+        # Inject configuration into the JavaScript as instance-specific
+        # Instead of global window.wireframeConfig, we'll use data attributes on the container
+        # Build a proper JSON object
+        import json
+        import html as html_module
+
+        config_obj = {}
+        if initial_state:
+            config_obj['initialState'] = [s.strip() for s in initial_state.split(',')]
+        if demo_order:
+            config_obj['customDemo'] = [s.strip() for s in demo_order.split(',')]
+        if enable_only is not None:
+            # Split by comma and filter out empty strings
+            enabled_list = [s.strip() for s in enable_only.split(',') if s.strip()]
+            config_obj['enableOnly'] = enabled_list
+        config_obj['showScrollTo'] = show_scroll_to
+        config_obj['demoRepeat'] = demo_repeat
+        if plugin_name:
+            config_obj['pluginName'] = plugin_name
+        config_obj['pluginPanelOpened'] = plugin_panel_opened
+        if custom_content_map:
+            config_obj['customContentMap'] = json.dumps(custom_content_map)
+        if viewer_image:
+            config_obj['viewerImage'] = viewer_image
+
+        # Convert to JSON and escape for HTML attribute
+        config_json = json.dumps(config_obj)
+        config_json_escaped = html_module.escape(config_json)
+
+        # Add unique ID to the wireframe container
+        html_content = html_content.replace(
+            '<div class="wireframe-container">',
+            f'<div class="wireframe-container" id="{unique_id}" '
+            f'data-wireframe-config="{config_json_escaped}">'
+        )
+
+        # Construct the complete HTML with embedded CSS and JS
+        complete_html = f'''
+<style>
+{css_content}
+</style>
+
+{html_content}
+
+<script>
+{js_content}
+</script>
+'''
+
+        # Create raw HTML node
+        raw_node = nodes.raw('', complete_html, format='html')
+        return [raw_node]
+
+
+def copy_wireframe_assets(app, exception):
+    """Copy wireframe files from _templates to _static for landing page."""
+    if exception is None and app.builder.name == 'html':
+        import shutil
+        template_dir = os.path.join(app.srcdir, '_templates')
+        static_dir = os.path.join(app.outdir, '_static')
+
+        # Get context variables for replacement
+        html_context = app.config.html_context
+        jdaviz_version = html_context.get('jdaviz_version', '')
+        descriptions = html_context.get('descriptions', {})
+
+        # Files to copy without processing
+        simple_files = [
+            'wireframe-demo.css',
+            'api.svg',
+        ]
+
+        # Files that need template variable replacement
+        template_files = [
+            'wireframe-base.html',
+            'wireframe-controller.js'
+        ]
+
+        # Copy simple files
+        for filename in simple_files:
+            src = os.path.join(template_dir, filename)
+            dst = os.path.join(static_dir, filename)
+            if os.path.exists(src):
+                shutil.copy2(src, dst)
+
+        # Process and copy template files
+        for filename in template_files:
+            src = os.path.join(template_dir, filename)
+            dst = os.path.join(static_dir, filename)
+            if os.path.exists(src):
+                with open(src, 'r') as f:
+                    content = f.read()
+
+                # Replace jdaviz_version
+                content = content.replace('{{ jdaviz_version }}', jdaviz_version)
+
+                # Replace descriptions with and without filters
+                for key, value in descriptions.items():
+                    # Escape single quotes in description values for JS/HTML
+                    escaped_value = value.replace("'", "\\'")
+                    # Replace with capitalize filter
+                    capitalized_value = escaped_value.capitalize()
+                    content = content.replace(
+                        f'{{{{ descriptions.{key}|capitalize }}}}', capitalized_value
+                    )
+                    # Replace without filter
+                    content = content.replace(f'{{{{ descriptions.{key} }}}}', escaped_value)
+
+                with open(dst, 'w') as f:
+                    f.write(content)
+
+
 def setup(app):
     app.add_directive('jdavizclihelp', JdavizCLIHelpDirective)
+    app.add_directive('jdavizlanding', JdavizLandingPageDirective)
+    app.add_directive('plugin-api-refs', PluginApiReferencesDirective)
+    app.add_directive('plugin-availability', PluginAvailabilityDirective)
+    app.add_directive('wireframe-demo', WireframeDemoDirective)
+    app.connect('build-finished', copy_wireframe_assets)

@@ -83,7 +83,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     linking_in_progress = Bool(False).tag(sync=True)
     need_clear_subsets = Bool(False).tag(sync=True)
 
-    # rotation angle, counterclockwise [degrees]
+    # this `rotation_angle` traitlet contains the contents of
+    # the orientation plugin's `Rotation angle` user input textbox,
+    # it is *not* necessarily the current rotation state of the viewer
     rotation_angle = FloatHandleEmpty(0).tag(sync=True)
     east_left = Bool(True).tag(sync=True)  # set convention for east left of north
 
@@ -103,6 +105,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Rotate image viewer orientation and choose alignment (pixel or sky).'  # noqa
+
+        self.docs_description = "Control how images are aligned (by pixel or WCS) and set the orientation/rotation of the viewer."  # noqa
 
         self.viewer._allow_multiselect = False
         self.viewer.add_filter('is_imviz_image_viewer', 'reference_has_wcs')
@@ -198,13 +202,16 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self.app._jdaviz_helper._in_batch_load > 0:
             return
         if isinstance(msg, DataCollectionAddMessage):
-            components = [str(comp) for comp in msg.data.main_components]
-            if "ra" in components or "Lon" in components:
-                # linking currently removes any markers, so we want to skip
-                # linking immediately after new markers are added.
-                # Eventually we'll probably want to support linking WITH markers,
-                # at which point this if-statement should be removed.
-                return
+            if msg.data.meta.get('_importer') != 'CatalogImporter':
+                components = [str(comp) for comp in msg.data.main_components]
+                if "ra" in components or "Lon" in components:
+                    # linking currently removes any markers, so we want to skip
+                    # linking immediately after new markers are added. Check if
+                    # data was added by the Catalog importer because these may have
+                    # columns called 'ra' or "Lon". Eventually we'll probably
+                    # want to support linking WITH markers, # at which point this
+                    # if-statement should be removed.
+                    return
         self._link_image_data()
         self._check_if_data_with_wcs_exists()
 
@@ -298,6 +305,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def _get_wcs_angles(self, first_loaded_image=None):
         if first_loaded_image is None:
+            if self.viewer.selected_obj is None:
+                # No viewer selected, return default values
+                return 0, 0, 0
             first_loaded_image = self.viewer.selected_obj.first_loaded_data
             if first_loaded_image is None:
                 # These won't end up getting used in this case, but we need an actual number
@@ -363,6 +373,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if wrt_data is None:
             # if not specified, use first-loaded image layer as the
             # default rotation:
+            if self.viewer.selected_obj is None:
+                msg = "Viewer must be selected to add an orientation."
+                if from_ui:
+                    self.hub.broadcast(SnackbarMessage(msg, color="error",
+                                                       timeout=6000, sender=self))
+                else:
+                    raise ValueError(msg)
+                return
             wrt_data = self.viewer.selected_obj.first_loaded_data
             if wrt_data is None:  # Nothing in viewer
                 msg = "Viewer must have data loaded to add an orientation."
@@ -441,13 +459,18 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
         for viewer_ref in viewers_to_update:
             viewer_dm = self.app._jdaviz_helper.viewers.get(viewer_ref).data_menu
+
+            # Get list of data labels currently loaded in the viewer
+            viewer_data_labels = viewer_dm.data_labels_loaded
+
             for wcs_layer in wcs_only_layers:
-                if wcs_layer not in self.viewer.selected_obj.layers:
+                if wcs_layer not in viewer_data_labels:
                     self.app.add_data_to_viewer(viewer_ref, wcs_layer)
             if (
                 self.orientation.selected not in
                     wcs_only_layers and
-                    self.align_by_selected == 'WCS'
+                    self.align_by_selected == 'WCS' and
+                    base_wcs_layer_label in viewer_dm.orientation.choices
             ):
                 viewer_dm.orientation.selected = base_wcs_layer_label
         self._ensure_layer_icon_exists(base_wcs_layer_label)
@@ -473,7 +496,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 orientation, viewer_id=viewer_id
             )
             viewer_item = self.app._viewer_item_by_id(viewer_id)
-            if viewer_item['reference_data_label'] != orientation:
+            if viewer_item is not None and viewer_item['reference_data_label'] != orientation:
                 viewer_item['reference_data_label'] = orientation
 
     @observe('orientation_layer_selected')
@@ -485,6 +508,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if hasattr(self, 'viewer'):
             ref_data = self.ref_data
             viewer = self.viewer.selected_obj
+
+            if viewer is None:
+                return
 
             # don't select until reference data are available:
             if ref_data is not None:
@@ -515,13 +541,15 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if not hasattr(self, 'viewer'):
             return None
         viewer = self.app.get_viewer(self.viewer.selected)
-        if not hasattr(viewer, 'state'):
+        if viewer is None or not hasattr(viewer, 'state'):
             return None
-        return self.app.get_viewer_by_id(self.viewer.selected).state.reference_data
+        return viewer.state.reference_data
 
     @property
     def _refdata_change_available(self):
         viewer = self.app.get_viewer(self.viewer.selected)
+        if viewer is None:
+            return False
         selected_layer = [lyr.layer for lyr in viewer.layers
                           if lyr.layer.label == self.orientation.selected]
         if len(selected_layer):
@@ -755,7 +783,14 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
 
     # Re-use current reference data.
     else:
-        refdata, iref = get_reference_image_data(app)
+        # If 'Default Orientation' is loaded, reference that image
+        if base_wcs_layer_label in app.data_collection:
+            refdata = app.data_collection[base_wcs_layer_label]
+            iref = app.data_collection.index(refdata)
+        # otherwise, re-use the current image. Note: this will degrade performance
+        else:
+            refdata, iref = get_reference_image_data(app)
+
         # App just loaded, nothing yet, so take first image.
         if refdata is None:
             refdata = image_viewers[0].first_loaded_data
@@ -781,9 +816,13 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         # and use ComponentLink instead of WCSLink because Catalogs do not
         # have coords (wcs) attribute.
         if data.meta.get('_importer') == 'CatalogImporter':
+
             comp_labels = [str(x) for x in data.component_ids()]
+
             if align_by == 'wcs':
-                if 'Right Ascension' in comp_labels and 'Declination' in comp_labels:
+                ra_col = data.meta.get('_jdaviz_loader_ra_col')
+                dec_col = data.meta.get('_jdaviz_loader_dec_col')
+                if ra_col in comp_labels and dec_col in comp_labels:
                     ref_labels = [str(x) for x in refdata.component_ids()]
                     try:  # default orientation will have components named 'Lat' and 'Lon'
                         ref_ra = refdata.components[ref_labels.index('Lon')]
@@ -792,16 +831,18 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
                         ref_ra = refdata.components[ref_labels.index('Right Ascension')]
                         ref_dec = refdata.components[ref_labels.index('Declination')]
 
-                    # source catalogs will always have RA/Dec components with
-                    # these exact labels, so this is safe to do with exact labels
-                    cat_ra = data.components[comp_labels.index('Right Ascension')]
-                    cat_dec = data.components[comp_labels.index('Declination')]
+                    cat_ra = data.components[comp_labels.index(ra_col)]
+                    cat_dec = data.components[comp_labels.index(dec_col)]
 
                     links_list += [ComponentLink([ref_ra], cat_ra),
                                    ComponentLink([ref_dec], cat_dec)]
+
                     continue
+
             elif align_by == 'pixels':
-                if 'X' in comp_labels and 'Y' in comp_labels:
+                x_col = data.meta.get('_jdaviz_loader_x_col')
+                y_col = data.meta.get('_jdaviz_loader_y_col')
+                if x_col in comp_labels and y_col in comp_labels:
                     # Image components should always be called 'Pixel Axis 1 [x]'
                     # and 'Pixel Axis 0 [y]' If an error ever arises from trying
                     # to access these directly, generalize it, but this should be safe.
@@ -811,11 +852,12 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
 
                     # source catalogs will always have X/Y components with
                     # these exact labels, so this is safe to do with exact labels
-                    cat_x = data.components[comp_labels.index('X')]
-                    cat_y = data.components[comp_labels.index('Y')]
+                    cat_x = data.components[comp_labels.index(x_col)]
+                    cat_y = data.components[comp_labels.index(y_col)]
 
                     links_list += [ComponentLink([ref_x], cat_x),
                                    ComponentLink([ref_y], cat_y)]
+
                     continue
 
         else:

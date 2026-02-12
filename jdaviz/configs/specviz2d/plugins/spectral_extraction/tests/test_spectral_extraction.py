@@ -35,12 +35,10 @@ def test_plugin(specviz2d_helper):
 
     # test trace marks - won't be created until after opening the plugin
     sp2dv = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    # includes 2 hidden marks from cross-dispersion profile plugin
-    assert len(sp2dv.figure.marks) == 5
+    assert len(sp2dv.figure.marks) == 3
 
     pext.keep_active = True
-    # includes 2 hidden marks from cross-dispersion profile plugin
-    assert len(sp2dv.figure.marks) == 14
+    assert len(sp2dv.figure.marks) == 12
     assert pext.marks['trace'].marks_list[0].visible is True
     assert len(pext.marks['trace'].marks_list[0].x) > 0
 
@@ -246,7 +244,7 @@ def test_horne_extract_self_profile(specviz2d_helper):
                           flux=spec2d*u.Jy,
                           uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
 
-    specviz2d_helper.load(objectspec)
+    specviz2d_helper.load(objectspec, format='2D Spectrum')
     pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
 
     trace_fit = tracing.FitTrace(objectspec,
@@ -303,7 +301,7 @@ def test_horne_extract_self_profile(specviz2d_helper):
 
 
 def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectrum2d):
-    specviz2d_helper.load(mos_spectrum2d)
+    specviz2d_helper.load(mos_spectrum2d, format='2D Spectrum')
 
     uc = specviz2d_helper.plugins["Unit Conversion"]
     pext = specviz2d_helper.plugins['2D Spectral Extraction']

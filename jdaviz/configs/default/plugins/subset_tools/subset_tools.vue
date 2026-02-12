@@ -45,6 +45,7 @@
           :show_if_single_entry="true"
           :mode.sync="subset_select_mode"
           :edit_value.sync="subset_edit_value"
+          :rename_error_message="rename_error_message"
           label="Subset"
           api_hint="plg.subset ="
           api_hint_rename="plg.rename_subset"
@@ -185,6 +186,9 @@
             }}
           </plugin-action-button>
         </j-tooltip>
+        <v-alert v-if="api_hints_enabled" type="info" dense>
+          see individual commands above to update subset properties
+        </v-alert>
         <plugin-action-button
           :disabled="subset_selected === 'Create New'"
           :results_isolated_to_plugin="false"

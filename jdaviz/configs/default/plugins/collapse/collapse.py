@@ -33,6 +33,8 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to use for computing line statistics.
+    * ``function`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      Function to use for the collapse operation (Mean, Median, Min, Max, Sum).
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Subset to use for the line, or ``Entire Spectrum``.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
@@ -55,7 +57,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
                                               selected='function_selected',
                                               manual_options=['Mean', 'Median', 'Min', 'Max', 'Sum'])  # noqa
 
-        self.dataset.add_filter('is_cube')
+        self.dataset.add_filter('is_flux_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
 
         # description displayed under plugin title in tray
@@ -63,6 +65,13 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
+
+    def _get_supported_viewers(self):
+        """Return viewer types that can display collapsed 2D image."""
+        if self.config == 'cubeviz':
+            return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
+        else:
+            return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -76,7 +85,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     @observe("dataset_selected", "dataset_items")
     def _set_default_results_label(self, event={}):
         label_comps = []
-        if hasattr(self, 'dataset') and len(self.dataset.labels) > 1:
+        if hasattr(self, 'dataset'):
             label_comps += [self.dataset_selected]
         label_comps += ["collapsed"]
         self.results_label_default = " ".join(label_comps)

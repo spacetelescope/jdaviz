@@ -6,9 +6,10 @@ from traitlets import Bool, Dict, Unicode, Integer, List, observe
 from jdaviz.core.template_mixin import (SnackbarMessage, TemplateMixin, LayerSelect,
                                         LayerSelectMixin, DatasetSelectMixin)
 from jdaviz.core.user_api import UserApiWrapper
-from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
-                                ChangeRefDataMessage, ViewerRenamedMessage)
-from glue.core.message import SubsetDeleteMessage, SubsetUpdateMessage
+from jdaviz.core.events import (AddDataMessage, ChangeRefDataMessage,
+                                IconsUpdatedMessage, LayersFinalizedMessage,
+                                LinkUpdatedMessage, ViewerRenamedMessage)
+from glue.core.message import SubsetDeleteMessage
 from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
@@ -20,6 +21,8 @@ from glue.core.subset import CompositeSubsetState, RangeSubsetState, RoiSubsetSt
 
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
+from glue.viewers.scatter.state import ScatterLayerState
+from glue_jupyter.bqplot.image import BqplotImageView
 
 import ipyvuedraggable
 
@@ -88,7 +91,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     orientation_layer_selected = Unicode().tag(sync=True)
 
     viewer_supports_visible_toggle = Bool(True).tag(sync=True)
-    disabled_layers_due_to_pixel_link = List().tag(sync=True)
+    disabled_layers_due_to_pixel_sky_mismatch = List().tag(sync=True)
 
     cmap_samples = Dict(cmap_samples).tag(sync=True)
     subset_tools = List().tag(sync=True)
@@ -114,6 +117,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     subset_resize_in_viewer_enabled = Bool(True).tag(sync=True)
 
     subset_edit_modes = List().tag(sync=True)
+
+    rename_error_messages = Dict({}).tag(sync=True)
+    # Track pending rename targets: {old_label: {'new_label': str, 'is_subset': bool}}
+    _pending_renames = {}
 
     def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -155,10 +162,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
-        self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=lambda msg: self._remove_subset_from_layers(msg.subset))
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda _: self._allow_resize_subset_in_viewer())
+        self.hub.subscribe(self, LayersFinalizedMessage, handler=self._on_layers_finalized)
+        self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_changed)
+        self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._remove_subset_from_layers(msg.subset))  # noqa
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
         self.viewer_icons = dict(self.app.state.viewer_icons)
@@ -183,7 +189,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def user_api(self):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
                   'create_subset', 'modify_subset', 'resize_subset_in_viewer', 'add_data',
-                  'view_info', 'remove_from_viewer', 'remove_from_app']
+                  'rename', 'view_info', 'remove_from_viewer', 'remove_from_app']
         if not self.viewer_supports_visible_toggle:
             expose = [e for e in expose
                       if e not in ('set_layer_visibility', 'toggle_layer_visibility',
@@ -253,6 +259,72 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self.layer_icons = msg.icons
         self._set_viewer_id()
 
+    def _on_layers_finalized(self, msg=None):
+        # when a catalog is added, set visibility based on alignment type
+        # and presence of pixel and/or world coordinates.
+        new_data = msg.data
+        if new_data.meta.get('_importer') == 'CatalogImporter':
+            self._handle_catalog_layer_visibility(layers=[new_data])
+
+    def _on_link_changed(self, msg=None):
+
+        if len(self._viewer.layers):
+            layers = [layer.layer for layer in self._viewer.layers]
+            self._handle_catalog_layer_visibility(layers=layers)
+
+    def _handle_catalog_layer_visibility(self, layers=None):
+        """
+        When a catalog layer is added, check if it should be visible based on
+        presence of pixel/world coordinates and viewer alignment.
+
+        If a catalog contains sky coordinates only and the viewer is aligned by
+        pixels, hide the layer and show a snackbar message (and vice versa for
+        world coordinates only and viewer aligned by WCS). If visibility is
+        toggled off for this reason, the visibility toggle is greyed out in the
+        data menu so it can not be toggled on again until the viewer alignment
+        is changed.
+        """
+
+        if layers is None:
+            return
+        if not isinstance(self._viewer, BqplotImageView):
+            # then not an image viewer that supports WCS linking anyways
+            return
+
+        hiding_due_to_pixel_sky_mismatch = []
+        coord_type = None
+        align_type = None
+
+        for layer in layers:
+            if hasattr(layer, 'meta'):
+                if layer.meta.get('_importer') == 'CatalogImporter':
+                    ra_col = layer.meta.get('_jdaviz_loader_ra_col')
+                    dec_col = layer.meta.get('_jdaviz_loader_dec_col')
+                    x_col = layer.meta.get('_jdaviz_loader_x_col')
+                    y_col = layer.meta.get('_jdaviz_loader_y_col')
+
+                    comp_labels = [str(x) for x in layer.component_ids()]
+
+                    has_world = ra_col in comp_labels and dec_col in comp_labels
+                    has_pixel = x_col in comp_labels and y_col in comp_labels
+                    align_by_wcs = self.orientation_align_by_wcs
+
+                    if not ((align_by_wcs and has_world) or (not align_by_wcs and has_pixel)):  # noqa
+                        coord_type = "pixel" if has_pixel else "world"
+                        align_type = "WCS" if align_by_wcs else "Pixel"
+                        self.set_layer_visibility(layer.label, False)
+                        hiding_due_to_pixel_sky_mismatch.append(layer.label)
+
+            if len(hiding_due_to_pixel_sky_mismatch):
+                plural = 's' if len(hiding_due_to_pixel_sky_mismatch) > 1 else ''
+                m = (f"Hiding Catalog layer{plural} {hiding_due_to_pixel_sky_mismatch} in "
+                     f"'{self.viewer_reference}. Catalog{plural} contains {coord_type} "
+                     f"coordinates only, which do not match current viewer alignment "
+                     f"({align_type}).")
+                self.hub.broadcast(SnackbarMessage(m, color='warning', sender=self))
+
+        self.disabled_layers_due_to_pixel_sky_mismatch = hiding_due_to_pixel_sky_mismatch
+
     def _on_refdata_change(self, msg=None):
         if msg is not None and msg.viewer_id != self.viewer_id:
             return
@@ -265,29 +337,12 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 if ref_label not in self.orientation.choices:
                     self.orientation._update_items()
                 self.orientation.selected = str(ref_label)
-            self.disabled_layers_due_to_pixel_link = []
         else:
-            # disable any scatter layers.  In the future, this may be dependent
-            # on whether sky coordinates exist in the data (and vice versa when
-            # aligned by WCS)
-            hiding_due_to_pixel_link = []
-            for layer in self._viewer.layers:
-                if getattr(layer.layer, 'coords', None) is None:
-                    if layer.visible:
-                        data = layer.layer.data
-                        comp_labels = [str(x) for x in data.component_ids()]
-                        # if layer is a catalog that has pixel coordinates, we
-                        # don't need to hide the layer
-                        if data.meta.get('_importer') == 'CatalogImporter' and \
-                                'X' in comp_labels and 'Y' in comp_labels:
-                            continue
-                        else:
-                            hiding_due_to_pixel_link.append(layer.layer.label)
-                            layer.visible = False
-            if len(hiding_due_to_pixel_link):
-                self.hub.broadcast(SnackbarMessage(f"Hiding layers {hiding_due_to_pixel_link} in '{self.viewer_reference}' viewer due to change in align_by to 'Pixel'.",  # noqa
-                                                   color='warning', sender=self))
-                self.disabled_layers_due_to_pixel_link = hiding_due_to_pixel_link
+            # update catalog layer visibility based on alignment / presence
+            # of pixel/world coordinates
+            if len(self._viewer.layers):
+                layers = [layer.layer for layer in self._viewer.layers if layer.visible is True]
+                self._handle_catalog_layer_visibility(layers)
 
     def _on_viewer_renamed_message(self, msg):
         if self.viewer_reference == msg.old_viewer_ref:
@@ -366,18 +421,73 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
             self.prevent_layer_items_recursion = True
 
-            label_order = [li['label'] for li in event["new"] if li['is_subset'] is not None]
-            not_in_order = [layer.layer.label for layer in self._viewer.layers if layer.layer.label
-                            not in label_order]
+            label_order = [li['label'] for li in event["new"]
+                           if li['is_subset'] is not None]
+            not_in_order = [layer.layer.label for layer in self._viewer.layers
+                            if layer.layer.label not in label_order]
+
+            children_blocks = []
+            data_and_children = []
+
+            def _return_zorder_of_layers(layers):
+                return [x.zorder for x in self._viewer.state.layers
+                        if x.layer.label in layers]
+            for data in self.app.data_collection:
+                if self.app._get_assoc_data_children(data.label):
+                    # If data has children, find their zorder blocks
+                    # and return that as a list within a list of all
+                    # data+children blocks
+                    data_and_children.append(data.label)
+                    data_and_children += (
+                        self.app._get_assoc_data_children(data.label))
+                    children_blocks.append(
+                        _return_zorder_of_layers(
+                            [data.label] +
+                            self.app._get_assoc_data_children(data.label)))
+
+            # Find old zorder of all layers previous to change
+            old_layers = {item['label']: item['zorder'] for item in event['old']}
+
+            # Build a map of child to parent for zorder adjustments
+            child_to_parent = {child: data.label for data in self.app.data_collection
+                               for child in self.app._get_assoc_data_children(data.label)}
 
             for layer in self._viewer.layers:
+                # Skip reordering scatter layers in image viewers.
+                if isinstance(self._viewer, BqplotImageView) and isinstance(layer.state, ScatterLayerState):  # noqa
+                    continue
                 if layer.layer.label in label_order:
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
+                    if layer.layer.label not in data_and_children:
+                        for x in children_blocks:
+                            # If the projected new_zorder falls within a block of
+                            # data+children, adjust to be just above or below the block
+                            # depending on if the layer came from below or above, respectively
+                            if min(x) <= new_zorder <= max(x):
+                                # The old zorder was above the block and is moving down
+                                if new_zorder < old_layers[layer.layer.label]:
+                                    new_zorder = min(x)
+                                # The old zorder was below the block and is moving up
+                                else:
+                                    new_zorder = max(x)
+                    # If this is a child layer, ensure it stays above its parent
+                    elif layer.layer.label in child_to_parent:
+                        parent_label = child_to_parent[layer.layer.label]
+                        # Find the parent's zorder
+                        parent_zorder = None
+                        for parent_layer in self._viewer.layers:
+                            if parent_layer.layer.label == parent_label:
+                                parent_zorder = parent_layer.zorder
+                                break
+                        # Child must have higher zorder than parent (rendered on top)
+                        if parent_zorder is not None and new_zorder <= parent_zorder:
+                            new_zorder = parent_zorder + 0.1
                 else:
                     new_zorder = len(not_in_order) + len(label_order) - not_in_order.index(layer.layer.label)  # noqa
 
                 if new_zorder != layer.zorder:
                     layer.zorder = new_zorder
+                    self.layer._update_items()
 
             self.prevent_layer_items_recursion = False
 
@@ -514,7 +624,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         dict
             A dictionary of the current visible layers.
         """
-        if visible and layer_label in self.disabled_layers_due_to_pixel_link:
+        if visible and layer_label in self.disabled_layers_due_to_pixel_sky_mismatch:
             raise ValueError(f"Layer '{layer_label}' cannot be made visible when "
                              "viewer is aligned by pixel coordinates.")
         for layer in self._viewer.layers:
@@ -533,7 +643,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             if layer.state.visible != layer.visible:
                 layer.state.visible = layer.visible
 
-            self.layer._update_items()
+        # Update items once after all visibility changes are made
+        self.layer._update_items()
 
         if visible and (parent_label := self.app._get_assoc_data_parent(layer_label)):
             # ensure the parent layer is also visible
@@ -580,6 +691,101 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def vue_add_data_to_viewer(self, info, *args):
         self.add_data(info.get('data_label'))  # pragma: no cover
+
+    def rename(self, old_label, new_label):
+        """
+        Rename a data item in the application.
+
+        Parameters
+        ----------
+        old_label : str
+            The current label of the data item.
+        new_label : str
+            The new label to assign to the data item.
+        -----------
+        """
+        # Check if this is a subset by looking in subset_groups
+        is_subset = any(sg.label == old_label for sg in self.app.data_collection.subset_groups)
+
+        if is_subset:
+            self.app._rename_subset(old_label, new_label)
+        else:
+            self.app.rename_data(old_label, new_label)
+
+    def _reset_rename_error_messages(self, old_label):
+        """
+        Clear rename error messages for the given label.
+
+        Also clears error messages in other labels that reference this label
+        (e.g., if editing label A and error says "same as label B", when B is renamed,
+        this clears the error for A since the conflict no longer exists).
+
+        Parameters
+        ----------
+        old_label : str
+            The label for which to clear error messages.
+        """
+        # Build new dictionary excluding old_label and any messages that mention it
+        self.rename_error_messages = {label: msg
+                                      for label, msg in self.rename_error_messages.items()
+                                      if label != old_label and old_label not in msg}
+        # Also remove from pending renames
+        self._pending_renames.pop(old_label, None)
+
+    def _revalidate_pending_renames(self):
+        """
+        Re-validate all pending renames after a rename completes.
+        """
+        for old_label, info in list(self._pending_renames.items()):
+            try:
+                self.app.check_rename_availability(
+                    old_label, info['new_label'], is_subset=info.get('is_subset', False)
+                )
+            except ValueError as e:
+                self.rename_error_messages = {**self.rename_error_messages, old_label: str(e)}
+            else:
+                if old_label in self.rename_error_messages:
+                    self.rename_error_messages = {
+                        k: v for k, v in self.rename_error_messages.items() if k != old_label
+                    }
+
+    def vue_check_rename(self, info, *args):  # pragma: no cover
+        old_label = info.get('old_label')
+        new_label = info.get('new_label')
+        is_subset = info.get('is_subset', False)
+
+        if old_label == new_label or new_label is None:
+            self._reset_rename_error_messages(old_label)
+            return
+
+        # Track for revalidation when other renames complete
+        self._pending_renames[old_label] = {'new_label': new_label, 'is_subset': is_subset}
+
+        try:
+            self.app.check_rename_availability(old_label, new_label, is_subset=is_subset)
+        except ValueError as e:
+            self.rename_error_messages = {**self.rename_error_messages, old_label: str(e)}
+        else:
+            if old_label in self.rename_error_messages:
+                self.rename_error_messages = {
+                    k: v for k, v in self.rename_error_messages.items() if k != old_label
+                }
+
+    def vue_rename_item(self, info, *args):  # pragma: no cover
+        old_label = info.get('old_label')
+        new_label = info.get('new_label')
+
+        try:
+            self.rename(old_label, new_label)
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(f"Failed to rename: {repr(e)}",
+                                               color='error', sender=self, traceback=e))
+        else:
+            self._reset_rename_error_messages(old_label)
+            self.hub.broadcast(SnackbarMessage(f"Renamed '{old_label}' to '{new_label}'",
+                                               color='info', sender=self))
+            # Re-validate other pending renames in case they now conflict
+            self._revalidate_pending_renames()
 
     def create_subset(self, subset_type):
         """

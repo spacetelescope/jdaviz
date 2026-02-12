@@ -146,16 +146,17 @@ def test_zoom_center_radius_init(imviz_helper):
     assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_radius > 0
 
 
-def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
+def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
+                                 sky_coord_only_source_catalog):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
     imviz_helper.load_data(data, data_label='my_data')
+
+    # change alignment to WCS to enable catalog visibility
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
-    # TODO: remove once dev-flag no longer required
-    imviz_helper.app.state.catalogs_in_dc = True
-
     # Load the source catalog into the data collection, and into the image viewer
-    imviz_helper.load(source_catalog, format='Catalog', data_label='my_catalog')
+    imviz_helper.load(sky_coord_only_source_catalog, format='Catalog',
+                      data_label='my_catalog')
 
     iv = imviz_helper.viewers['imviz-0']
     dm = iv.data_menu

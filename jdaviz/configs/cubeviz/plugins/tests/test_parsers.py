@@ -229,15 +229,7 @@ def test_loading_with_mask(cubeviz_helper):
 
 
 @pytest.mark.remote_data
-@pytest.mark.parametrize(
-    'function, expected_value,',
-    (
-        ('Mean', 5.566169e-18),
-        ('Sum', 1.553518e-14),
-        ('Max', 1e20),
-    )
-)
-def test_manga_with_mask(cubeviz_helper, function, expected_value):
+def test_manga_with_mask(cubeviz_helper):
     # Remote data test of loading and extracting an up-to-date (as of 11/19/2024) MaNGA cube
     # This also tests that spaxel is converted to pix**2
     with warnings.catch_warnings():
@@ -248,14 +240,17 @@ def test_manga_with_mask(cubeviz_helper, function, expected_value):
     uc.spectral_y_type = "Surface Brightness"
 
     se = cubeviz_helper.plugins['3D Spectral Extraction']
-    se.function = function
-    se.extract()
-    extracted_max = cubeviz_helper.get_data(f"Spectrum ({function.lower()})").max()
-    assert_allclose(extracted_max.value, expected_value, rtol=5e-7)
-    if function == "Sum":
-        assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2")
-    else:
-        assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
+    for function, expected_value in [('Mean', 5.566169e-18),
+                                     ('Sum', 1.553518e-14),
+                                     ('Max', 1e20)]:
+        se.function = function
+        se.extract()
+        extracted_max = cubeviz_helper.get_data(f"Spectrum ({function.lower()})").max()
+        assert_allclose(extracted_max.value, expected_value, rtol=5e-7)
+        if function == "Sum":
+            assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2")
+        else:
+            assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
 
 
 def test_invalid_data_types(cubeviz_helper):
@@ -264,10 +259,3 @@ def test_invalid_data_types(cubeviz_helper):
 
     with pytest.raises(ValueError, match='no valid loaders found for input.*'):
         cubeviz_helper.load_data(WCS(naxis=3))
-
-    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
-        cubeviz_helper.load_data(Spectrum(flux=np.ones((2, 2)) * u.nJy, spectral_axis_index=1))
-
-    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
-        # 1D / 3D would be parsed as fluxes in a Spectrum (1d/3d), 2D not supported in cubeviz
-        cubeviz_helper.load_data(np.ones((2, 2)))

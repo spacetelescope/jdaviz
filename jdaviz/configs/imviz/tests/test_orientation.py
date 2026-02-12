@@ -5,7 +5,11 @@ from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose
 from regions import EllipseSkyRegion, RectangleSkyRegion
+from astropy.nddata import NDData
+from astropy.wcs import WCS
+import numpy as np
 
+import jdaviz as jd
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
 
@@ -119,6 +123,36 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
             mp.clear_table()
 
 
+def test_delete_create_viewer_preserves_wcs_linking():
+    """Test that WCS linking is preserved when viewer is deleted and recreated."""
+    wcs = WCS(naxis=2)
+    wcs.wcs.ctype = ['RA---TAN', 'DEC--TAN']
+    wcs.wcs.crval = [337.5, -20.8]
+    wcs.wcs.crpix = [5, 5]
+    wcs.wcs.cdelt = [0.1, 0.1]
+
+    data = NDData(np.random.random((10, 10)), wcs=wcs)
+    jd.load(data, data_label='image1', format='Image')
+
+    orientation = jd.plugins['Orientation']
+    orientation.align_by = 'WCS'
+    assert orientation.align_by.selected == 'WCS'
+
+    # delete the existing viewer
+    jd.gca().app.vue_destroy_viewer_item('Image')
+    assert not jd.viewers
+
+    # add a new viewer with the same data
+    vc = jd.new_viewers['Image']
+    vc.dataset = 'image1[DATA]'
+    vc.viewer_label = 'Image (2)'
+    vc()
+
+    # verify linking is preserved
+    assert 'Image (2)' in jd.viewers
+    assert orientation.align_by.selected == 'WCS'
+
+
 class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
     def test_N_up_multi_viewer(self):
         lc_plugin = self.imviz.plugins['Orientation']
@@ -206,8 +240,8 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
 
         # Check that E-right still linked to default
         assert len(self.imviz.app.data_collection.external_links) == 3
-        assert self.imviz.app.data_collection.external_links[2].data1.label == "North-up, East-right"  # noqa: E501
-        assert self.imviz.app.data_collection.external_links[2].data2.label == "Default orientation"
+        assert self.imviz.app.data_collection.external_links[2].data1.label == "Default orientation"
+        assert self.imviz.app.data_collection.external_links[2].data2.label == "North-up, East-right"  # noqa: E501
 
         # Check that the subset got reparented and the angle is correct in the display
         subset_group = self.imviz.app.data_collection.subset_groups[0]

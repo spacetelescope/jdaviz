@@ -1,4 +1,5 @@
 import pytest
+import re
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -114,6 +115,7 @@ def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
 
 def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
     imviz_helper.load_data(image_hdu_wcs)
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     viewer = imviz_helper.app.get_viewer('imviz-0')
 
@@ -129,3 +131,23 @@ def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
 
     # todo: investigate why this tolerance needs to be larger than expected:
     np.testing.assert_allclose(new_viewport['fov'], new_viewport_settings['fov'], atol=1e-4)
+
+
+def test_set_rotation_not_aligned(imviz_helper, image_hdu_wcs):
+    imviz_helper.load_data(image_hdu_wcs)
+    viewer = imviz_helper.app.get_viewer('imviz-0')
+
+    # change only the center:
+    new_viewport_settings = dict(
+        rotation=90 * u.deg
+    )
+    with pytest.raises(ValueError, match=re.escape("The viewer must be aligned by WCS to use `set_rotation`.")):  # noqa
+        viewer.aid.set_viewport(**new_viewport_settings)
+
+
+def test_get_fov_no_wcs(imviz_helper, image_hdu_nowcs):
+    imviz_helper.load_data(image_hdu_nowcs)
+    viewer = imviz_helper.app.get_viewer('imviz-0')
+
+    with pytest.raises(ValueError, match=re.escape("The image must have valid WCS to return `fov` in `sky`.")):  # noqa
+        viewer.aid.get_viewport()

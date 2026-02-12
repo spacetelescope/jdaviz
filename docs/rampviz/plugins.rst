@@ -2,6 +2,8 @@
 Data Analysis Plugins
 *********************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 
 
 .. _rampviz-metadata-viewer:

@@ -9,12 +9,12 @@
       <v-toolbar-items v-if="config === 'deconfigged'">
         <j-tooltip v-if="(!state.settings.server_is_remote || state.settings.remote_enable_importers)" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
-            <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
+            <img :src="state.icons['plus-box']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-save">
           <v-btn icon @click="() => {if (state.drawer_content === 'save') {state.drawer_content = ''} else {state.drawer_content = 'save'}}" :class="{active : state.drawer_content === 'save'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Export')].is_relevant">
-            <v-icon medium style="padding-top: 2px">mdi-content-save</v-icon>
+            <img :src="state.icons['content-save']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
 
@@ -22,24 +22,22 @@
 
         <j-tooltip tipid="app-toolbar-settings">
           <v-btn icon @click="() => {if (state.drawer_content === 'settings') {state.drawer_content = ''} else {state.drawer_content = 'settings'}}" :class="{active : state.drawer_content === 'settings'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
-            <v-icon medium style="padding-top: 2px">mdi-cog</v-icon>
+            <img :src="state.icons['cog']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-info">
           <v-btn icon @click="() => {if (state.drawer_content === 'info') {state.drawer_content = ''} else {state.drawer_content = 'info'}}" :class="{active : state.drawer_content === 'info'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant">
-            <v-icon medium style="padding-top: 2px">mdi-information-outline</v-icon>
+            <img :src="state.icons['information-outline']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-plugins">
           <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}" :disabled="state.tray_items.filter(ti => {return (ti.is_relevant && ti.sidebar === 'plugins')}).length === 0">
-            <v-icon>mdi-tune-variant</v-icon>
+            <img :src="state.icons['tune']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-subsets">
           <v-btn icon @click="() => {if (state.drawer_content === 'subsets') {state.drawer_content = ''} else {state.drawer_content = 'subsets'}}" :class="{active : state.drawer_content === 'subsets'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
-            <v-icon>
-              {{ state.subset_mode_create ? 'mdi-selection-drag' : 'mdi-selection' }}
-            </v-icon>
+            <img :src="state.subset_mode_create ? state.icons['selection-drag'] : state.icons['selection']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
 
@@ -497,6 +495,20 @@ export default {
       this.outputCellHasHeight = entries[0].contentRect.height > 0;
     }).observe(this.$refs.mainapp.$el);
     this.outputCellHasHeight = this.$refs.mainapp.$el.offsetHeight > 0
+
+    /* Workaround for Lab 4.5: cells outside the viewport get the style "contentVisibility: auto" which causes wrong
+     * size calculations of golden layout from which it doesn't recover.    
+     */
+    const jpCell = this.$el.closest('.jp-Cell.jp-CodeCell');
+    if (jpCell) {
+      const observer = new MutationObserver((mutationsList) => {
+        if (jpCell.style.contentVisibility !== 'visible') {
+          jpCell.style.contentVisibility = 'visible';
+        }
+      });
+      observer.observe(jpCell, { attributes: true, attributeFilter: ['style'] });
+      jpCell.style.contentVisibility = 'visible';
+    }
 
     /* workaround: when initializing with an existing golden_layout state, the layout doesn't show. rendering it a
      * second time the layout does show.

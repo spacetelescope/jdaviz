@@ -4,6 +4,8 @@
 Importing Data into Imviz
 *************************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 Imviz can load data in the form of a filename (FITS, JPEG, or PNG),
 an `~astropy.nddata.NDData` object, or a NumPy array if the data is 2D.
 See :py:meth:`~jdaviz.configs.imviz.helper.Imviz.load` for more information.
@@ -29,8 +31,8 @@ Multiple data files may be provided:
 
 .. _imviz-import-gui:
 
-Importing data through the GUI
-==============================
+Importing data through the UI
+=============================
 
 You can load your data into the Imviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's
@@ -55,7 +57,7 @@ The plugin will search for registered archives with observations that intersect 
 specified by the user.
 
 To search the VO, enter a source location and a radius around which to search. The source utilizes
-:class:`~astropy.coordinates.SkyCoord`'s resolver and can accept a common source name (e.g. Messier or NGC) or 
+:class:`~astropy.coordinates.SkyCoord`'s resolver and can accept a common source name (e.g. Messier or NGC) or
 any string representations of astronomical coordinates understood by ``SkyCoord``. For more information,
 see :ref:`astropy:astropy-coordinates-high-level`. If a radius is not provided, a circular field of 1 degree
 centered on the source will be assumed.

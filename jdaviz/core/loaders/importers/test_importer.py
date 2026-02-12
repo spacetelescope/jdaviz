@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import pytest
 
 from specutils import SpectrumList
 from jdaviz.core.loaders.importers.importer import BaseImporter
@@ -73,14 +74,14 @@ class TestResetAndCheckExistingDataInDC:
         # Now load the data into the data collection
         ldr = deconfigged_helper.loaders['object']
         ldr.object = spectrum_list
-        ldr.format = '1D Spectrum List'
-        ldr.importer.sources.selected = '1D Spectrum at index: 0'
+        ldr.format = '1D Spectrum'
+        ldr.importer.extension.selected = '1D Spectrum at index: 0'
         ldr.load()
 
         # The data hashes update in the SpectrumList importer but are different from the
         # data hashes in our original test_obj
-        dh_list = ldr.importer.sources.data_hashes
-        labels_list = ldr.importer.sources.labels
+        dh_list = ldr.importer.extension.data_hashes
+        labels_list = ldr.importer.extension.labels
         # The obj would otherwise have all the data hashes/labels from the SpectrumList
         test_obj.data_hashes = dh_list
         test_obj.hash_map_to_label = dict(zip(dh_list, labels_list))
@@ -113,11 +114,11 @@ class TestResetAndCheckExistingDataInDC:
 
         # Choose a source at the end to guarantee everything is different from before
         ldr.object = new_spectrum_list
-        ldr.format = '1D Spectrum List'
-        ldr.importer.sources.selected = '1D Spectrum at index: 5'
+        ldr.format = '1D Spectrum'
+        ldr.importer.extension.selected = '1D Spectrum at index: 5'
         ldr.load()
 
-        dh_list = ldr.importer.sources.data_hashes
+        dh_list = ldr.importer.extension.data_hashes
         test_obj.data_hashes = dh_list
 
         # Although two SpectrumList objects are loaded into the data collection,
@@ -136,17 +137,14 @@ class TestResetAndCheckExistingDataInDC:
 
     def test_reset_and_check_all_importers(self, deconfigged_helper,
                                            image_hdu_wcs, spectrum1d, spectrum2d,
-                                           premade_spectrum_list, source_catalog):
+                                           premade_spectrum_list,
+                                           sky_coord_only_source_catalog):
 
         input_data = {'Image': image_hdu_wcs,
                       '1D Spectrum': spectrum1d,
                       '2D Spectrum': spectrum2d,
-                      '1D Spectrum List': premade_spectrum_list,
-                      '1D Spectrum Concatenated': premade_spectrum_list,
-                      'Catalog': source_catalog}
+                      'Catalog': sky_coord_only_source_catalog}
 
-        # TODO: Remove when this dev flag is no longer needed
-        deconfigged_helper.app.state.catalogs_in_dc = True
         for importer_name, importer in loader_importer_registry.members.items():
             if importer_name not in input_data:
                 continue
@@ -174,3 +172,26 @@ class TestResetAndCheckExistingDataInDC:
                 broadcast_msgs = [arg[0][0].text for arg in mock_broadcast.call_args_list
                                   if hasattr(arg[0][0], 'text')]
                 assert len(broadcast_msgs) > 0
+
+
+def test_reject_2d_spectrum_as_image(deconfigged_helper, spectrum2d, mos_spectrum2d_as_hdulist):
+    """
+    Test that 2D spectra being read in as images are rejected.
+    """
+    # Attempt to load should raise a helpful error
+    with pytest.raises(ValueError, match="'object > Image': 'not valid'"):
+        deconfigged_helper.load(spectrum2d, format='Image')
+
+    # Verify no data was loaded
+    assert len(deconfigged_helper.app.data_collection) == 0
+
+    # Try again with 2D Spectrum as HDU with spectral wcs
+    with pytest.raises(ValueError, match="'object > Image': 'not valid'"):
+        deconfigged_helper.load(mos_spectrum2d_as_hdulist[1], format='Image')
+
+    # Verify no data was loaded
+    assert len(deconfigged_helper.app.data_collection) == 0
+
+    # Verify we're able to load as 2d spectrum in follow-up
+    deconfigged_helper.load(spectrum2d, format='2D Spectrum')
+    assert len(deconfigged_helper.app.data_collection) > 0

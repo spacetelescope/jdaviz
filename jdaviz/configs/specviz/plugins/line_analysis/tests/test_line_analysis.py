@@ -546,3 +546,55 @@ def test_invalid_subset(specviz_helper, spectrum1d):
 
     plugin.dataset = 'left_spectrum'
     assert plugin._obj.spectral_subset_valid
+
+
+def test_line_analysis_deconfig(deconfigged_helper):
+    def _check_line_visible(viewer):
+        line_visible = False
+        for mark in viewer.figure.marks:
+            if isinstance(mark, LineAnalysisContinuum) and mark.visible:
+                line_visible = True
+                break
+        return line_visible
+    s = Spectrum(spectral_axis=np.arange(0, 100, 1) * u.um, flux=np.arange(0, 100, 1) * u.Jy)
+    deconfigged_helper.load(s, format='1D Spectrum')
+    # Create 1D viewer
+    vc = deconfigged_helper.new_viewers['1D Spectrum']
+    vc()
+
+    viewer_1d_1 = deconfigged_helper.viewers['1D Spectrum']._obj.glue_viewer
+    viewer_1d_2 = deconfigged_helper.viewers['1D Spectrum (1)']._obj.glue_viewer
+
+    # Add smoothed spectrum to new viewer
+    gs = deconfigged_helper.plugins['Gaussian Smooth']
+    gs.add_results.viewer = '1D Spectrum (1)'
+    gs.smooth()
+
+    subset_plugin = deconfigged_helper.plugins['Subset Tools']
+    subset_plugin.import_region(SpectralRegion(40 * u.um, 50 * u.um))
+
+    # Line analysis using subset on input spectrum
+    la = deconfigged_helper.plugins['Line Analysis']
+    la.keep_active = True  # Ensure plugin is active so marks are visible
+    la.dataset = '1D Spectrum'
+    la.spectral_subset = 'Subset 1'
+
+    assert _check_line_visible(viewer_1d_1)
+    assert not _check_line_visible(viewer_1d_2)
+
+    # Line analysis using subset on smoothed spectrum
+    la.dataset = '1D Spectrum smooth stddev-1.0'
+    la.spectral_subset = 'Subset 1'
+
+    assert _check_line_visible(viewer_1d_2)
+    assert not _check_line_visible(viewer_1d_1)
+
+    viewer_1d_2.data_menu.add_data('1D Spectrum')
+
+    la.dataset = '1D Spectrum'
+    la.spectral_subset = 'Subset 1'
+    la.continuum = 'Surrounding'
+
+    # Make sure lines are visible on both viewers
+    assert _check_line_visible(viewer_1d_2)
+    assert _check_line_visible(viewer_1d_1)

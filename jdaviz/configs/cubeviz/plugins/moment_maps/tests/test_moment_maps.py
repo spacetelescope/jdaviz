@@ -5,12 +5,16 @@ import pytest
 from astropy import units as u
 from astropy.nddata import CCDData
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.utils import minversion
 from astropy.wcs import WCS
+import gwcs
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.utils import cached_uri
+
+GWCS_LT_0_26_2 = not minversion(gwcs, "0.26.2.dev")
 
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])

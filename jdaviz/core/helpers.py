@@ -247,9 +247,14 @@ class ConfigHelper(HubListener):
 
         msg_temp = "in the future, the formerly named \"{}\" plugin will only be available by its new name: \"{}\""  # noqa
 
-        old_new = (('Imviz Line Profiles (XY)', 'Image Profiles (XY)'),  # renamed in 4.0
+        old_new = [('Imviz Line Profiles (XY)', 'Image Profiles (XY)'),  # renamed in 4.0
                    ('Spectral Extraction', '2D Spectral Extraction'),  # renamed in 4.3
-                   ('Spectral Extraction', '3D Spectral Extraction'))  # renamed in 4.3
+                   ('Spectral Extraction', '3D Spectral Extraction')]  # renamed in 4.3
+
+        if self.app.config == 'cubeviz':
+            old_new.append(('Slice', 'Spectral Slice'))  # renamed in 4.5
+        elif self.app.config == 'rampviz':
+            old_new.append(('Slice', 'Ramp Slice'))  # renamed in 4.5
 
         # handle renamed plugins during deprecation
         for old, new in old_new:
@@ -494,6 +499,37 @@ class ConfigHelper(HubListener):
         self.app.state.show_api_hints = enabled
 
     def _handle_display_units(self, data, use_display_units=True):
+        """
+        If use_display_units is True, convert data (Spectrum) to the app's
+        current display units, which are set by the unit conversion plugin,
+        otherwise return data unchanged. This method is called by get_data, so
+        it is intended for handling when retrieving data from the app
+        and have it automatically converted to app display units, rather than the
+        native data units.
+
+        Parameters
+        ----------
+        data : specutils.Spectrum
+            The Spectrum object to convert.
+        use_display_units : bool
+            If True (default), convert the spectrum to display units. If False,
+            return the data unchanged.
+
+        Returns
+        -------
+        specutils.Spectrum
+            A new Spectrum object with data converted to display units. If
+            use_display_units is False, returns the input data unchanged.
+
+        Notes
+        -----
+        If the spectral axis unit of data is pixels, and the
+        display unit is not pixels (or vice versa), no conversion is done to allow
+        for mixed pixel/world unit viewing (this logic is handled by
+        spectral_axis_conversion, which is called from this method when converting
+        the spectral axis).
+
+        """
         if use_display_units:
             if isinstance(data, Spectrum):
                 spectral_unit = self.app._get_display_unit('spectral')
@@ -561,8 +597,7 @@ class ConfigHelper(HubListener):
                 if data.spectral_axis.unit != spectral_unit:
                     new_spec = (spectral_axis_conversion(data.spectral_axis.value,
                                                          data.spectral_axis.unit,
-                                                         spectral_unit)
-                                * u.Unit(spectral_unit))
+                                                         spectral_unit, with_unit=True))
                 else:
                     new_spec = data.spectral_axis
 
@@ -1047,7 +1082,7 @@ class CubeConfigHelper(ImageConfigHelper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @deprecated(since="4.1", alternative="plugins['Slice'].slice")
+    @deprecated(since="4.1", alternative="plugins['Spectral Slice'].slice")
     def select_slice(self, value):
         """
         Select the slice closest to the provided value.

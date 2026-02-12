@@ -171,6 +171,8 @@ All optional dependencies can be installed using the ``all`` flag::
 
     pip install -U "jdaviz[all]"
 
+.. _dev-install:
+
 Developer Installation
 ----------------------
 
