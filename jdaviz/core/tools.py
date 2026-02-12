@@ -632,7 +632,19 @@ class _BaseSidebarShortcut(Tool):
     viewer_attr = 'viewer'
 
     def activate(self):
-        plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
+
+        # This is a temporary patch to fix an issue when both jdaviz and lcviz
+        # are imported in the same session. This block of code should be removed
+        # before 5.0 and the bug from JDAT-5881 should be re-tested (the
+        # ticket for this is JDAT-5923).
+        if self.plugin_name == 'lcviz-plot-options':
+            try:
+                plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
+            except KeyError:
+                plugin = self.viewer.jdaviz_app.get_tray_item_from_name('g-plot-options')
+        else:
+            plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
+
         plugin.open_in_tray(scroll_to=True)
         viewer_id = self.viewer.reference_id
         viewer_select = getattr(plugin, self.viewer_attr)
