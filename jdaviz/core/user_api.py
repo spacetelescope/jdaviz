@@ -209,7 +209,6 @@ class PluginUserApi(UserApiWrapper):
     def __repr__(self):
         if self._deprecation_msg:
             warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
-            #self._deprecation_msg = None
             super().__setattr__('_deprecation_msg', None)
         return f'<{self._obj._registry_label} API>'
 

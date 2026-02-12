@@ -263,7 +263,7 @@ class ConfigHelper(HubListener):
                 plugins[old]._deprecation_msg = msg_temp.format(old, new)
 
         if 'Catalog Search' in plugins.keys():
-            plugins['Catalog Search']._deprecation_msg = ("The Catalogs plugin is deprecated, please see the "
+            plugins['Catalog Search']._deprecation_msg = ("The Catalogs plugin is deprecated, please see the "  # noqa
                                                           "warning at https://jdaviz.readthedocs.io/en/latest/plugins/catalog_search.html")  # noqa
 
         return plugins
