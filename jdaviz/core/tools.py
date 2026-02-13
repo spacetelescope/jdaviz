@@ -641,8 +641,8 @@ class _BaseSidebarShortcut(Tool):
             try:
                 plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
             except KeyError:
-                plugin_name = 'g-plot-options' if self.plugin_name == 'lcviz-plot-options' else 'export'
-                plugin = self.viewer.jdaviz_app.get_tray_item_from_name(plugin_name)
+                name = 'g-plot-options' if self.plugin_name == 'lcviz-plot-options' else 'export'
+                plugin = self.viewer.jdaviz_app.get_tray_item_from_name(name)
         else:
             plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
 
