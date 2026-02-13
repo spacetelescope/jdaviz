@@ -28,7 +28,7 @@ within a Jupyter notebook cell, as a standalone desktop application,
 or as embedded windows within a website -- all with nearly-identical
 user interfaces. ``jdaviz`` is under active development, and users who
 encounter bugs in existing features are encouraged to open issues in this
-repository.
+repository..
 
 ``jdaviz`` provides data viewers and analysis plugins that can be flexibly
 combined as desired to create interactive applications that fit your workflow.
