@@ -2285,6 +2285,11 @@ class LayerSelect(SelectPluginComponent):
                 return getattr(lyr, 'coords', None) is not None
             return True
 
+        def not_in_table_viewer(lyr):
+            # exclude layers when all selected viewers are table viewers
+            return not np.all([hasattr(viewer.state, 'hidden_components')
+                               for viewer in self.viewer_objs])
+
         return super()._is_valid_item(lyr, locals())
 
     def _layer_to_dict(self, layer_label):
