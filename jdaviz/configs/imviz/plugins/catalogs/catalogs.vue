@@ -9,6 +9,12 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
+    <v-alert type="warning">
+      This plugin will be deprecated in a future version of Jdaviz. Please see
+      <a href="https://jdaviz.readthedocs.io/en/latest/plugins/catalog_search.html">the docs</a>
+      for more information.
+    </v-alert>
+
     <plugin-viewer-select
        :items="viewer_items"
        :selected.sync="viewer_selected"

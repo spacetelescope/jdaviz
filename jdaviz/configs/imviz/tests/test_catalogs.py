@@ -238,6 +238,7 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
+@pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
 def test_catalog_reingestion(imviz_helper, tmp_path):
     # load data that we know has Gaia sources
     arr = np.ones((1489, 2048))
@@ -288,6 +289,7 @@ def test_catalog_reingestion(imviz_helper, tmp_path):
     assert len(catalog_plg.table._obj.selected_rows) == 10
 
 
+@pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
 def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # Since we are not really displaying, need this to test zoom.
     viewer = imviz_helper.default_viewer._obj.glue_viewer
