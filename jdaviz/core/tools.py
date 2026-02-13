@@ -31,7 +31,9 @@ ICON_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'data'
 
 # Override icons for built-in tools from glue-jupyter
 BqplotRectangleMode.icon = os.path.join(ICON_DIR, 'select_xy.svg')
+BqplotRectangleMode.show_handles = True
 BqplotCircleMode.icon = os.path.join(ICON_DIR, 'select_circle.svg')
+BqplotCircleMode.show_handles = True
 BqplotEllipseMode.icon = os.path.join(ICON_DIR, 'select_ellipse.svg')
 BqplotCircularAnnulusMode.icon = os.path.join(ICON_DIR, 'select_annulus.svg')
 BqplotXRangeMode.icon = os.path.join(ICON_DIR, 'select_x.svg')
