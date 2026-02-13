@@ -798,13 +798,20 @@ class Application(VuetifyTemplate, HubListener):
 
         new_links = []
         for new_comp in new_data.components:
-            is_pixel_comp = 'Pixel Axis' in str(new_comp.label)
             comp_type = getattr(new_comp, '_component_type', None)
 
-            if comp_type in (None, 'unknown') and not is_pixel_comp:
+            is_pixel_comp = (
+                comp_type == 'pixel' or
+                (comp_type and 'pixel' in comp_type) or
+                'Pixel Axis' in str(new_comp.label)
+            )
+
+            has_linkable_type = comp_type not in (None, 'unknown')
+            if not has_linkable_type and not is_pixel_comp:
                 continue
+
             # Don't link flux to flux in cubes
-            elif new_comp.label.lower() in ('flux', 'uncertainty', 'mask') and new_data.ndim == 3:
+            if new_comp.label.lower() in ('flux', 'uncertainty', 'mask') and new_data.ndim == 3:
                 continue
 
             found_match = False
@@ -821,9 +828,16 @@ class Application(VuetifyTemplate, HubListener):
 
                 for existing_comp in existing_data.components:
                     existing_comp_type = getattr(existing_comp, '_component_type', None)
-                    existing_is_pixel = 'Pixel Axis' in str(existing_comp.label)
 
-                    if existing_comp_type in (None, 'unknown') and not existing_is_pixel:
+                    # Identify pixel components by type or label
+                    existing_is_pixel = (
+                        existing_comp_type == 'pixel' or
+                        (existing_comp_type and 'pixel' in existing_comp_type) or
+                        'Pixel Axis' in str(existing_comp.label)
+                    )
+
+                    existing_has_linkable_type = existing_comp_type not in (None, 'unknown')
+                    if not existing_has_linkable_type and not existing_is_pixel:
                         continue
 
                     # Create link if component-types match or
