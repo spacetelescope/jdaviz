@@ -504,18 +504,25 @@ def test_table_viewer(deconfigged_helper):
     assert len(deconfigged_helper.viewers) == 2
     assert len(nv._obj.glue_viewer.layers) == 1
 
-    # subset creation tool should not be visible because no entries checked
+    # subset creation tool should always be visible (no longer requires checked rows)
     toolbar = tv._obj.glue_viewer.toolbar
-    assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is True
 
-    tv._obj.glue_viewer.widget_table.checked = [1, 2]
+    # checkboxes should be hidden by default
+    assert tv._obj.glue_viewer.widget_table.selection_enabled is False
 
+    # activate the tool to show checkboxes
     toolbar.select_tool('jdaviz:table_subset')
+    assert tv._obj.glue_viewer.widget_table.selection_enabled is True
+
+    # check some rows and apply
+    tv._obj.glue_viewer.widget_table.checked = [1, 2]
+    # apply subset via the custom toolbar tool
+    toolbar.tools['jdaviz:table_apply_subset'].activate()
     assert 'Subset 1' in deconfigged_helper.plugins['Subset Tools'].subset.choices
 
-    assert toolbar.tools['jdaviz:table_subset'].is_visible() is True
-    tv._obj.glue_viewer.widget_table.checked = []
-    assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
+    # after applying, checkboxes should be hidden again
+    assert tv._obj.glue_viewer.widget_table.selection_enabled is False
 
 
 @pytest.mark.parametrize("from_file", [True, False])
