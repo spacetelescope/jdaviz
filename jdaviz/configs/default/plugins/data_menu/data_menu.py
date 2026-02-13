@@ -24,7 +24,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue.viewers.scatter.state import ScatterLayerState
 from glue_jupyter.bqplot.image import BqplotImageView
 
-import ipyvuedraggable
+# import ipyvuedraggable
 
 __all__ = ['DataMenu']
 
