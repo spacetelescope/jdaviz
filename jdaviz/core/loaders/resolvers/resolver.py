@@ -265,6 +265,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     # Set remote server options based on the app configuration
     # read-only: change via app.state.settings['server_is_remote']
     server_is_remote = Bool(False).tag(sync=True)
+    # Hide the resolver UI (title, input fields, query results) and show only importer selection
+    hide_resolver = Bool(False).tag(sync=True)
 
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
