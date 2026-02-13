@@ -21,6 +21,7 @@ New Features
 
 - Add support for viewers with mixed pixel and wavelength/frequency spectral axis units. [#4001]
 
+- Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
 
 Cubeviz
 ^^^^^^^

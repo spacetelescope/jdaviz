@@ -4887,10 +4887,11 @@ class AutoTextField(BasePluginComponent):
     """
 
     def __init__(self, plugin, value, default, auto,
-                 invalid_msg):
+                 invalid_msg, unique_in_data_collection=False):
         super().__init__(plugin, value=value,
                          default=default, auto=auto,
                          invalid_msg=invalid_msg)
+        self._unique_in_data_collection = unique_in_data_collection
 
         if getattr(plugin, auto):
             # ensure value starts at the default value
@@ -4907,6 +4908,12 @@ class AutoTextField(BasePluginComponent):
     def __hash__(self):
         # defining __eq__ without defining __hash__ makes the object unhashable
         return super().__hash__()
+
+    def map_value(self, attr, value):
+        # Apply return_unique_name when setting default if unique_in_data_collection is True
+        if attr == 'default' and self._unique_in_data_collection and value:
+            return self.app.return_unique_name(value)
+        return value
 
     def _on_set_to_default(self, msg={}):
         if self.auto:
