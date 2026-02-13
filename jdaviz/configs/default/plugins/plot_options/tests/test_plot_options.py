@@ -505,8 +505,8 @@ def test_table_viewer_plot_options(deconfigged_helper):
     assert len(po.table_columns_visible.sync['choices']) > 0
 
     # By default all columns should be visible (hidden_components empty)
-    all_columns = po.table_columns_visible.sync['choices']
-    assert po.table_columns_visible.value == all_columns
+    all_column_names = [c['value'] for c in po.table_columns_visible.sync['choices']]
+    assert po.table_columns_visible.value == all_column_names
     assert viewer.state.hidden_components == []
 
     # Hide some columns by setting visible columns to a subset
@@ -515,7 +515,7 @@ def test_table_viewer_plot_options(deconfigged_helper):
 
     # Check that the hidden_components on the viewer state reflects this
     hidden = [str(c) for c in viewer.state.hidden_components]
-    for col in all_columns:
+    for col in all_column_names:
         if col in visible_cols:
             assert col not in hidden, f"{col} should be visible but is hidden"
         else:

@@ -5417,6 +5417,7 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._processing_change_from_glue = False
         self._processing_change_to_glue = False
         self._cached_properties = ["subscribed_states", "subscribed_icons"]
+        self._layer_watch_viewers = []  # viewers with layer callbacks for table columns
 
         self._viewer_select = viewer_select
         self._layer_select = layer_select
@@ -5603,8 +5604,25 @@ class PlotOptionsSyncState(BasePluginComponent):
         values, labels = _get_glue_choices(state, glue_name)
         return [{'text': l, 'value': v} for v, l in zip(values, labels)]
 
+    def _on_table_viewer_layers_changed(self, msg=None):
+        """Callback when layers change on a table viewer - refresh choices."""
+        # Only refresh choices if we're tracking hidden_components
+        glue_name = self._glue_name if isinstance(self._glue_name, str) else ''
+        if glue_name != 'hidden_components':
+            return
+        # Re-run viewer/layer changed to refresh choices
+        self._on_viewer_layer_changed()
+
     def _on_viewer_layer_changed(self, msg=None):
         self._clear_cache(*self._cached_properties)
+
+        # Clear layer watch callbacks from previously tracked viewers
+        for viewer in self._layer_watch_viewers:
+            try:
+                viewer.widget_table.unobserve(self._on_table_viewer_layers_changed, names=['data'])
+            except (ValueError, AttributeError):
+                pass
+        self._layer_watch_viewers = []
 
         # clear existing callbacks - we'll re-create those we need later
         for state in self.linked_states:
@@ -5612,6 +5630,15 @@ class PlotOptionsSyncState(BasePluginComponent):
             state.remove_callback(glue_name, self._on_glue_value_changed)
             if glue_name in ['contour_visible', 'bitmap_visible']:
                 state.remove_callback('visible', self._on_glue_layer_visible_changed)
+
+        # Add data callbacks to table viewers to refresh choices when data changes
+        glue_name_str = self._glue_name if isinstance(self._glue_name, str) else ''
+        if glue_name_str == 'hidden_components':
+            for viewer in self.subscribed_viewers:
+                if viewer is not None and hasattr(viewer, 'widget_table'):
+                    viewer.widget_table.observe(self._on_table_viewer_layers_changed,
+                                                names=['data'])
+                    self._layer_watch_viewers.append(viewer)
 
         in_subscribed_states = False
         icons = []
