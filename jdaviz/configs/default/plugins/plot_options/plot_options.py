@@ -240,6 +240,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
       only exposed for Imviz and deconfigged. Controls marker colormap minimum value.
     * ``marker_colormap_vmax`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       only exposed for Imviz and deconfigged. Controls marker colormap maximum value.
+    * ``table_columns_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      Controls which columns are visible in the table viewer. Only applicable when a
+      table viewer is selected.
     """
     template_file = __file__, "plot_options.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -477,6 +480,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     hist_update_bins_on_reset_limits_value = Bool().tag(sync=True)
     hist_update_bins_on_reset_limits_sync = Dict().tag(sync=True)
 
+    # Table viewer options
+    table_columns_visible_value = List().tag(sync=True)
+    table_columns_visible_sync = Dict().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -486,7 +493,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected',
                                  'viewer_selected', 'layer_multiselect')
 
-        self.layer.filters += [is_not_wcs_only, 'has_wcs_if_image_viewer_pixel_linked']
+        self.layer.filters += [is_not_wcs_only, 'has_wcs_if_image_viewer_pixel_linked',
+                               'not_in_table_viewer']
 
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
@@ -534,6 +542,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         def is_sonified(state):
             return isinstance(state, SonifiedLayerState)
+
+        def is_table_viewer(state):
+            return hasattr(state, 'hidden_components')
 
         def line_visible(state):
             # exclude for scatter layers where the marker is shown instead of the line
@@ -767,6 +778,13 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                                      'hist_update_bins_on_reset_limits_sync',  # noqa
                                                                      state_filter=is_histogram)
 
+        # Table viewer options:
+        self.table_columns_visible = PlotOptionsSyncState(self, self.viewer, self.layer,
+                                                          'hidden_components',
+                                                          'table_columns_visible_value',
+                                                          'table_columns_visible_sync',
+                                                          state_filter=is_table_viewer)
+
         # Add layer callback to image viewers to track active layer
         for viewer in self.app._viewer_store.values():
             viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
@@ -782,7 +800,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def user_api(self):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
-                  'select_all', 'subset_visible', 'reset_viewer_bounds']
+                  'select_all', 'subset_visible', 'reset_viewer_bounds', 'table_columns_visible']
         if self.config == "cubeviz":
             expose += ['uncertainty_visible', 'volume_level', 'sonified_audible']
         if self.config != "imviz":

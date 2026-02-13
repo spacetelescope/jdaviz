@@ -335,7 +335,7 @@ class JdavizViewerMixin(WithCache):
                         return layer.color
                 # then this is a data-layer in colormap mode, so we'll ignore the color
                 return ''
-            return layer.color
+            return getattr(layer, 'color', '')
 
         def _get_layer_linewidth(layer):
             linewidth = getattr(layer, 'linewidth', 0)
