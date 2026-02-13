@@ -296,6 +296,29 @@
       />
     </glue-state-sync-wrapper>
 
+    <glue-state-sync-wrapper :sync="table_columns_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('table_columns_visible')">
+      <v-select
+        attach
+        :menu-props="{ left: true }"
+        :items="table_columns_visible_sync.choices"
+        v-model="table_columns_visible_value"
+        :label="api_hints_enabled ? 'plg.table_columns_visible =' : 'Visible Columns'"
+        :class="api_hints_enabled ? 'api-hint' : null"
+        hint="Select which columns are shown in the table."
+        persistent-hint
+        multiple
+        chips
+        deletable-chips
+        dense
+      >
+        <template v-slot:selection="{ index }">
+          <span v-if="index === 0">
+            {{ table_columns_visible_value.length === table_columns_visible_sync.choices.length ? 'All columns' : `${table_columns_visible_value.length} of ${table_columns_visible_sync.choices.length} columns` }}
+          </span>
+        </template>
+      </v-select>
+    </glue-state-sync-wrapper>
+
     <!-- LAYER OPTIONS -->
     <div v-if="api_hints_enabled">
       <v-row v-if="layer_items.length > 1">

@@ -2367,8 +2367,10 @@ class LayerSelect(SelectPluginComponent):
                 for layer in old_viewer.state.layers:
                     if is_wcs_only(layer.layer):
                         continue
-                    layer.remove_callback('color', self._update_items)
-                    layer.remove_callback('zorder', self._update_items)
+                    if hasattr(layer, 'color'):
+                        layer.remove_callback('color', self._update_items)
+                    if hasattr(layer, 'zorder'):
+                        layer.remove_callback('zorder', self._update_items)
                     if hasattr(layer, 'cmap'):
                         layer.remove_callback('cmap', self._update_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -5547,6 +5549,20 @@ class PlotOptionsSyncState(BasePluginComponent):
         if glue_name in ('x_att', 'y_att', 'z_att'):
             # return the name of the attribute, not the object
             return str(getattr(state, glue_name))
+        if glue_name == 'hidden_components':
+            # Return visible columns (all - hidden) as list of strings.
+            # Access viewer from the state's parent to get data components.
+            viewer = self._viewer_select.selected_obj
+            if isinstance(viewer, list):
+                viewer = viewer[0] if len(viewer) else None
+            if viewer is None or not hasattr(viewer, 'widget_table'):
+                return []
+            data = viewer.widget_table.data
+            if data is None:
+                return []
+            all_components = data.main_components + data.derived_components
+            hidden_names = [str(c) for c in getattr(state, glue_name, [])]
+            return [str(c) for c in all_components if str(c) not in hidden_names]
 
         return getattr(state, glue_name)
 
@@ -5566,6 +5582,18 @@ class PlotOptionsSyncState(BasePluginComponent):
                     {'text': 'Color',
                      'value': 'One color per layer',
                      'description': 'Select a color per-layer. Layers will be composited.'}]
+        if glue_name == 'hidden_components':
+            # Return all available columns as choices
+            viewer = self._viewer_select.selected_obj
+            if isinstance(viewer, list):
+                viewer = viewer[0] if len(viewer) else None
+            if viewer is None or not hasattr(viewer, 'widget_table'):
+                return []
+            data = viewer.widget_table.data
+            if data is None:
+                return []
+            all_components = data.main_components + data.derived_components
+            return [{'text': str(c), 'value': str(c)} for c in all_components]
 
         values, labels = _get_glue_choices(state, glue_name)
         return [{'text': l, 'value': v} for v, l in zip(values, labels)]
@@ -5617,7 +5645,7 @@ class PlotOptionsSyncState(BasePluginComponent):
                 ) or (
                     # update choices in `sync` if glue state choices are updated
                     # during glue Component add/rename/delete:
-                    glue_name in ('cmap_att', 'x_att', 'y_att')
+                    glue_name in ('cmap_att', 'x_att', 'y_att', 'hidden_components')
                 ):
                     # then we can access and populate/update the choices.
                     self.sync = {**self.sync, 'choices': self._get_glue_choices(state)}
@@ -5707,6 +5735,19 @@ class PlotOptionsSyncState(BasePluginComponent):
                 self.value = msg['old']
                 self._processing_change_to_glue = False
                 return
+            elif glue_name == 'hidden_components':
+                # Convert visible column names to hidden component IDs
+                # msg['new'] is list of visible column names (strings)
+                viewer = self._viewer_select.selected_obj
+                if isinstance(viewer, list):
+                    viewer = viewer[0] if len(viewer) else None
+                if viewer is not None and hasattr(viewer, 'widget_table'):
+                    data = viewer.widget_table.data
+                    if data is not None:
+                        all_components = data.main_components + data.derived_components
+                        visible_names = set(msg['new'])
+                        hidden = [c for c in all_components if str(c) not in visible_names]
+                        setattr(glue_state, glue_name, hidden)
             else:
                 setattr(glue_state, glue_name, msg['new'])
 
