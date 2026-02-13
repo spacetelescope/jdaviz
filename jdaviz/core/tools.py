@@ -637,11 +637,12 @@ class _BaseSidebarShortcut(Tool):
         # are imported in the same session. This block of code should be removed
         # before 5.0 and the bug from JDAT-5881 should be re-tested (the
         # ticket for this is JDAT-5923).
-        if self.plugin_name == 'lcviz-plot-options':
+        if self.plugin_name in ['lcviz-plot-options', 'lcviz-export']:
             try:
                 plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
             except KeyError:
-                plugin = self.viewer.jdaviz_app.get_tray_item_from_name('g-plot-options')
+                plugin_name = 'g-plot-options' if self.plugin_name == 'lcviz-plot-options' else 'export'
+                plugin = self.viewer.jdaviz_app.get_tray_item_from_name(plugin_name)
         else:
             plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
 
