@@ -26,11 +26,9 @@
     </v-btn-toggle>
     <v-menu
       v-model="show_suboptions"
-      :position-x="suboptions_x"
-      :position-y="suboptions_y"
+      :target="[suboptions_x, suboptions_y]"
       absolute
-      offset-y
-      dense
+      location="bottom"
       :close-on-click="close_on_click"
     >
       <v-list>
@@ -38,7 +36,7 @@
           v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)"
           v-if="menu_ind==suboptions_ind && visible"
           :key="id"
-          left
+          location="start"
         >
           <template v-slot:activator="{ props }">
             <v-list-item v-bind="props" :input-value="primary" @click="() => select_primary([menu_ind, id])">
@@ -107,7 +105,8 @@
 .suboptions-carrot:hover {
   scale: 1.75;
 }
-.theme--dark .invert-if-dark {
+.theme--dark .invert-if-dark,
+.v-theme--dark .invert-if-dark {
   filter: invert(1) !important;
 }
 </style>

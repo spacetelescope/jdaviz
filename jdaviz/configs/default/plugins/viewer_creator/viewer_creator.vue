@@ -1,5 +1,5 @@
 <template>
-  <v-menu offset-y>
+  <v-menu location="bottom">
     <template v-slot:activator="{ props }">
       <!-- <v-tooltip> -->
         <!-- <template v-slot:activator="{ props }"> -->

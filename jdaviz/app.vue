@@ -4,7 +4,7 @@
     <div style="overflow: hidden; width: 0px; height: 0px">
       <jupyter-widget :widget="widget" v-for="widget in invisible_children" :key="widget"></jupyter-widget>
     </div>
-    <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
+    <v-app-bar color="toolbar" theme="dark" :density="state.settings.dense_toolbar ? 'compact' : 'default'" flat absolute :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
 
       <v-toolbar-items v-if="config === 'deconfigged'">
         <j-tooltip v-if="(!state.settings.server_is_remote || state.settings.remote_enable_importers)" tipid="app-toolbar-loaders">
@@ -93,10 +93,10 @@
       </v-toolbar-items>
 
       <v-toolbar-items v-if="config === 'deconfigged'">
-        <v-layout column  class="app-bar-right" style="height: 28px; padding-bottom: 12px; margin-top: 2px" v-if="state.show_toolbar_buttons || state.global_search_menu || state.about_popup">
+        <div class="app-bar-right d-flex flex-column" style="height: 28px; padding-bottom: 12px; margin-top: 2px" v-if="state.show_toolbar_buttons || state.global_search_menu || state.about_popup">
           <span style="align-items: right; display: inline-flex; margin-right: 2px">
             <v-menu
-              offset-y
+              location="bottom"
               style="max-width: 600px"
             >
               <template v-slot:activator="{ props }">
@@ -104,7 +104,7 @@
                     v-model='state.global_search'
                     append-icon='mdi-magnify'
                     style="width: 200px; margin-right: 8px; margin-top: 2px"
-                    dense
+                    density="compact"
                     clearable
                     hide-details
                     single-line
@@ -202,11 +202,11 @@
               <jupyter-widget :widget="popout_button" ></jupyter-widget>
             </j-tooltip>
           </span>
-        </v-layout>
+        </div>
       </v-toolbar-items>
     </v-app-bar>
 
-    <v-content
+    <v-main
       :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5; border-top: 0px' : ''"
       :class="checkNotebookContext() ? '' : 'jdaviz__content--not-in-notebook'"
     >
@@ -214,12 +214,12 @@
         <splitpanes>
           <pane size="25" min-size="25" v-if="config === 'deconfigged' && state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 320px">
             <v-card v-if="state.drawer_content === 'loaders'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
-              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.add_subtab">
+              <v-tabs fixed-tabs theme="dark" bg-color="viewer_toolbar" v-model="state.add_subtab">
                 <v-tab>Data</v-tab>
                 <v-tab>Viewer</v-tab>
               </v-tabs>
-              <v-tabs-items v-model="state.add_subtab" style="overflow-y: auto">
-                <v-tab-item style="padding-bottom: 40px">
+              <v-window v-model="state.add_subtab" style="overflow-y: auto">
+                <v-window-item style="padding-bottom: 40px">
                   <j-loader-panel
                     :loader_items="state.loader_items"
                     v-model:loader_selected="state.loader_selected"
@@ -227,16 +227,16 @@
                     :api_hints_obj="api_hints_obj || config"
                     :server_is_remote="state.settings.server_is_remote"
                   ></j-loader-panel>
-                </v-tab-item>
-                <v-tab-item style="padding-bottom: 40px">
+                </v-window-item>
+                <v-window-item style="padding-bottom: 40px">
                   <j-new-viewer-panel
                     :new_viewer_items="state.new_viewer_items"
                     v-model:new_viewer_selected="state.new_viewer_selected"
                     :api_hints_enabled="state.show_api_hints"
                     :api_hints_obj="api_hints_obj || config"
                   ></j-new-viewer-panel>
-                </v-tab-item>
-              </v-tabs-items>
+                </v-window-item>
+              </v-window>
             </v-card>
             <v-card v-if="state.drawer_content === 'save'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Export']</span>
@@ -280,45 +280,45 @@
               <v-divider></v-divider>
             </v-card>
             <v-card v-if="state.drawer_content === 'info'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
-              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.info_subtab">
+              <v-tabs fixed-tabs theme="dark" bg-color="viewer_toolbar" v-model="state.info_subtab">
                 <v-tab>Metadata</v-tab>
                 <v-tab>Markers</v-tab>
                 <v-tab>Logger</v-tab>
               </v-tabs>
-              <v-tabs-items v-model="state.info_subtab" style="overflow-y: auto">
-                <v-tab-item style="padding-bottom: 40px">
+              <v-window v-model="state.info_subtab" style="overflow-y: auto">
+                <v-window-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
-                </v-tab-item>
-                <v-tab-item style="padding-bottom: 40px">
+                </v-window-item>
+                <v-window-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Markers')].widget"></jupyter-widget>
-                </v-tab-item>
-                <v-tab-item style="padding-bottom: 40px">
+                </v-window-item>
+                <v-window-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Logger']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Logger')].widget"></jupyter-widget>
-                </v-tab-item>
-              </v-tabs-items>
+                </v-window-item>
+              </v-window>
             </v-card>
             <v-card v-if="state.drawer_content === 'subsets'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</span>
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Subset Tools')].widget"></jupyter-widget>
             </v-card>
             <v-card v-if="state.drawer_content === 'settings'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
-              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.settings_subtab">
+              <v-tabs fixed-tabs theme="dark" bg-color="viewer_toolbar" v-model="state.settings_subtab">
                 <v-tab :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">Plot Options</v-tab>
                 <v-tab>Units</v-tab>
               </v-tabs>
-              <v-tabs-items v-model="state.settings_subtab" style="overflow-y: auto">
-                <v-tab-item style="padding-bottom: 40px">
+              <v-window v-model="state.settings_subtab" style="overflow-y: auto">
+                <v-window-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].widget"></jupyter-widget>
-                </v-tab-item>
-                <v-tab-item style="padding-bottom: 40px">
+                </v-window-item>
+                <v-window-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Unit Conversion']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Unit Conversion')].widget"></jupyter-widget>
-                </v-tab-item>
-              </v-tabs-items>
+                </v-window-item>
+              </v-window>
             </v-card>
 
           </pane>
@@ -410,7 +410,7 @@
 
         </splitpanes>
       </v-container>
-    </v-content>
+    </v-main>
     <v-snackbar
       v-model="state.snackbar.show"
       :timeout="state.snackbar.timeout"
@@ -430,7 +430,7 @@
 
       <v-btn
               v-if="!state.snackbar.loading"
-              text
+              variant="text"
               @click="close_snackbar_message($event)"
       >
         Close

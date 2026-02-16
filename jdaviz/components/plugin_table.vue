@@ -25,7 +25,7 @@
             @click="() => {if (headers_visible.length < headers_avail.length) { headers_visible = headers_avail} else {headers_visible = []}}"
           >
             <v-list-item-action>
-              <v-icon>
+ <v-icon>
                 {{ headers_visible.length == headers_avail.length ? 'mdi-close-box' : headers_visible.length ? 'mdi-minus-box' : 'mdi-checkbox-blank-outline' }}
               </v-icon>
             </v-list-item-action>
@@ -46,7 +46,7 @@
 
     <v-row style="margin: 0px 0px 8px 0px !important">
       <v-data-table
-        dense
+        density="compact"
         :headers="headers_visible_sorted.map(item => {return {'text': item, 'value': item}})"
         :items="items"
         :item-key="item_key"

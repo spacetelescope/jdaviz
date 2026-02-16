@@ -8,15 +8,14 @@
       >
         <v-alert color="error">This viewer has been closed at the app-level and this instance is no longer connected or functional.</v-alert>
       </v-overlay>
-      <v-row dense style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
+      <v-row style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
         <j-tooltip v-if="config !== 'deconfigged'" tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
           <v-btn
-            text
+            variant="outlined"
             elevation="3"
             color="white"
             tile
             icon
-            outlined
             style="height: 42px; width: 42px"
             @click="$emit('call-viewer-method', {'id': id, 'method': '_deprecated_data_menu'})"
             >

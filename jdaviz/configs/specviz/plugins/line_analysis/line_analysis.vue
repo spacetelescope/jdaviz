@@ -209,7 +209,7 @@
               <v-btn
               color="accent"
               style="padding-left: 8px; padding-right: 8px;"
-              text
+              variant="text"
               :disabled="!selected_line"
               @click="line_assign">
                 Assign

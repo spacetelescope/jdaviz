@@ -61,12 +61,12 @@
             tile
             :elevation=0
             x-small
-            dense
+            density="compact"
             color="turquoise"
-            dark
+            theme="dark"
             style="padding-left: 8px; padding-right: 6px;"
             @click="show_all_flags">
-            <v-icon left small dense style="margin-right: 2px">mdi-eye</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye</v-icon>
             Show All
           </v-btn>
         </j-tooltip>
@@ -77,12 +77,12 @@
             tile
             :elevation=0
             x-small
-            dense
+            density="compact"
             color="turquoise"
-            dark
+            theme="dark"
             style="padding-left: 8px; padding-right: 6px;"
             @click="hide_all_flags">
-            <v-icon left small dense style="margin-right: 2px">mdi-eye-off</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye-off</v-icon>
             Hide All
           </v-btn>
         </j-tooltip>
@@ -123,7 +123,7 @@
         </template>
       </v-select>
       <v-col align="right">
-        <v-btn text @click="clear_flags_filter" color="accent">
+        <v-btn variant="text" @click="clear_flags_filter" color="accent">
           Clear Filter
         </v-btn>
       </v-col>
@@ -163,7 +163,7 @@
               <v-row no-gutters align="center">
                 <v-col cols=2 align="left">
                   <v-btn :color="item.show ? 'accent' : 'default'" icon @click="toggleVisibility(index)">
-                    <v-icon>{{item.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+ <v-icon>{{item.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
                   </v-btn>
                 </v-col>
               <v-col cols=8 align="left">

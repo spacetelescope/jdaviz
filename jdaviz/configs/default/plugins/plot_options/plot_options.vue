@@ -215,7 +215,7 @@
           :class="api_hints_enabled ? 'api-hint' : null"
           hint="Whether each layer gets a single color or colormap."
           persistent-hint
-          dense
+          density="compact"
         >
           <template v-slot:selection="{ item }">
             <span :class="api_hints_enabled ? 'api-hint' : null">
@@ -669,7 +669,7 @@
             v-model="image_colormap_value"
             :label="api_hints_enabled ? 'plg.image_colormap =' : 'Colormap'"
             :class="api_hints_enabled ? 'api-hint' : null"
-            dense
+            density="compact"
           >
             <template v-slot:selection="{ item, index }">
               <span :class="api_hints_enabled ? 'api-hint' : null">
@@ -908,7 +908,7 @@
 
           <div v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">
             <glue-state-sync-wrapper :sync="contour_mode_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_mode')">
-              <v-btn-toggle dense v-model="contour_mode_value" style="margin-right: 8px; margin-top: 8px">
+              <v-btn-toggle density="compact" v-model="contour_mode_value" style="margin-right: 8px; margin-top: 8px">
                   <v-tooltip bottom>
                       <template v-slot:activator="{ props }">
                           <v-btn v-bind="props" small value="Linear">
@@ -1056,7 +1056,8 @@ export default {
     background-color: rgba(0,0,0,0.1);
   }
 
-  .theme--dark .layer-tab-selected {
+  .theme--dark .layer-tab-selected,
+  .v-theme--dark .layer-tab-selected {
     background-color: rgba(255,255,255,0.1);
   }
 

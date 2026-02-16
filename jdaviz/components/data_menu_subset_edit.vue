@@ -2,9 +2,7 @@
   <v-menu
     v-if="selected_n_subsets > 0"
     absolute
-    offset-y
-    bottom
-    left
+    location="bottom start"
   >
     <template v-slot:activator="{ props }">
       <j-tooltip
@@ -12,7 +10,7 @@
         :tooltipcontent="subset_edit_tooltip"
       >
         <v-btn
-          text
+          variant="text"
           class="invert-if-dark"
           v-bind="props"
 
@@ -22,7 +20,7 @@
         </v-btn>
       </j-tooltip>
     </template>
-    <v-list dense style="width: 300px">
+    <v-list density="compact" style="width: 300px">
       <v-list-item v-if="subset_resize_in_viewer_enabled">
         <div class="v-list-item-content">
           <j-tooltip :tooltipcontent="'Interactively resize '+subset_selected+' in the viewer'">

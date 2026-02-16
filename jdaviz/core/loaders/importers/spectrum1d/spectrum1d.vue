@@ -35,7 +35,7 @@
     <v-row v-if="data_label_is_prefix">
         <v-chip
           v-for="suff in data_label_suffices"
-          outlined
+          variant="outlined"
           label
           :key="suff"
           style="margin: 4px"

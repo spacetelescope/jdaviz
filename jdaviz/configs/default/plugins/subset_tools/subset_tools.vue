@@ -88,7 +88,7 @@
               <j-tooltip tooltipcontent="Recenter subset to centroid of selected data">
                 <v-btn
                   color="primary"
-                  text
+                  variant="text"
                   @click="recenter_subset"
                   :class="api_hints_enabled ? 'api-hint' : null"
                 >
@@ -186,7 +186,7 @@
             }}
           </plugin-action-button>
         </j-tooltip>
-        <v-alert v-if="api_hints_enabled" type="info" dense>
+        <v-alert v-if="api_hints_enabled" type="info" density="compact">
           see individual commands above to update subset properties
         </v-alert>
         <plugin-action-button

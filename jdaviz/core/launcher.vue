@@ -21,8 +21,8 @@
             v-model="filepath"
             class="my-4"
             autofocus="true"
-            dark
-            outlined
+            theme="dark"
+            variant="outlined"
             label="File Path"
             :hint="hint"
             persistent-hint
@@ -40,7 +40,7 @@
                       color="#1E617F"
                       style="top: 7px; height: 57px"
                       dark>
-                      <v-icon large>mdi-file-upload</v-icon>
+ <v-icon large>mdi-file-upload</v-icon>
                   </v-btn>
               </template>
               <v-card max-height="800">
@@ -60,8 +60,8 @@
 
                   <v-card-actions>
                   <div class="flex-grow-1"></div>
-                      <v-btn color="primary" text @click="file_browser_visible = false">Cancel</v-btn>
-                      <v-btn color="primary" text @click="choose_file">Import</v-btn>
+                      <v-btn color="primary" variant="text" @click="file_browser_visible = false">Cancel</v-btn>
+                      <v-btn color="primary" variant="text" @click="choose_file">Import</v-btn>
                   </v-card-actions>
 
               </v-card>

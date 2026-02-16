@@ -29,14 +29,14 @@
           </span>
           <v-chip v-else-if="multiselect" style="width: calc(100% - 10px)">
             <span>
-              <v-icon v-if="item.color" left :color="item.color">
+              <v-icon v-if="item.color" start :color="item.color">
                 {{ item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
               </v-icon>
               {{ item.label }}
             </span>
           </v-chip>
           <span v-else>
-            <v-icon v-if="item.color" left :color="item.color">
+            <v-icon v-if="item.color" start :color="item.color">
               {{ item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
             </v-icon>
             {{ item.label }}
@@ -73,7 +73,7 @@
       </template>
       <template v-slot:item="data">
         <div class="single-line">
-          <v-icon v-if="data.item.color" left :color="data.item.color">
+          <v-icon v-if="data.item.color" start :color="data.item.color">
             {{ data.item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
           </v-icon>
           <span>

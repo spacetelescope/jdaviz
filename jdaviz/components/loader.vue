@@ -76,7 +76,7 @@
                       <span style="padding: 6px">File Download Options</span>
                     </v-expansion-panel-title>
                     <v-expansion-panel-text class="plugin-expansion-panel-content">
-                      <v-content>
+                      <v-main>
                         <v-row>
                           <v-text-field
                             v-model.number='file_timeout'
@@ -95,7 +95,7 @@
                           :api_hints_enabled="api_hints_enabled"
                           hint="Whether to attempt to read from the cache if this same URL has been previously fetched."
                         ></plugin-switch>
-                      </v-content>
+                      </v-main>
                     </v-expansion-panel-text>
                   </v-expansion-panel>
                 </v-expansion-panels>

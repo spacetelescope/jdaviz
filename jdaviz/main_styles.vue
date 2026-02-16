@@ -3,7 +3,11 @@
 <script>
 export default {
   created() {
-    this.$vuetify.theme.themes.light = {
+    const vuetifyThemes = this.$vuetify?.theme?.themes;
+    if (!vuetifyThemes) {
+      return;
+    }
+    vuetifyThemes.light = {
       toolbar: "#003B4D",
       primary: "#00617E",
       secondary: "#007DA4",
@@ -19,7 +23,7 @@ export default {
       active: '#C75109',
       viewer_toolbar: '#205f76',
     };
-    this.$vuetify.theme.themes.dark = {
+    vuetifyThemes.dark = {
       toolbar: "#153A4B",
       primary: "#53CBFF",
       secondary: "#007DA4",
@@ -83,7 +87,8 @@ div.output_wrapper {
   align-items: center;
 }
 
-.v-tabs-items {
+.v-tabs-items,
+.v-window {
   height: 100%;
 }
 
@@ -189,7 +194,7 @@ a:active {
   text-decoration: none;
 }
 
-.invert, .invert-if-dark.theme--dark {
+.invert, .invert-if-dark.theme--dark, .v-theme--dark .invert-if-dark {
   filter: invert(1) saturate(1) brightness(100);
   color: white;
 }
@@ -232,7 +237,8 @@ a:active {
   background-color: #c7510996 !important;
 }
 
-.v-divider.theme--dark {
+.v-divider.theme--dark,
+.v-theme--dark .v-divider {
   /* make the v-divider standout more */
   border-color: hsla(0,0%,100%,.35) !important;
 }
