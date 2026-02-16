@@ -1714,6 +1714,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Create new data entry for glue
         if add_data:
+            load_kwargs = {'viewer': self.add_results.viewer.selected}
             self.add_results.add_results_from_plugin(output_cube, load_kwargs=load_kwargs)
             self._set_default_results_label()
 
