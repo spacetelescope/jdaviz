@@ -36,7 +36,7 @@
           :key="suff"
           :tooltipcontent="data_label_overwrite_by_index[index] ? 'Will overwrite existing entry' : 'New entry'">
           <v-chip
-            outlined
+            variant="outlined"
             label
             style="margin: 4px"
           >

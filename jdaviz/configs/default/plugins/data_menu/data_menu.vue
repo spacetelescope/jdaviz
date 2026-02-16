@@ -3,9 +3,8 @@
     <div class="viewer-label-container">
       <div>
         <v-menu
-          offset-x
-          left
-          nudge-left="8"
+          location="start"
+          :offset="[-8, 0]"
           transition="slide-x-reverse-transition"
           :close-on-content-click="false"
           v-model="data_menu_open">
@@ -113,7 +112,7 @@
                 </j-tooltip>
                 <v-select
                   v-if="orientation_enabled && orientation_align_by_wcs && orientation_layer_items.length > 0"
-                  dense
+                  density="compact"
                   :items="orientation_layer_items"
                   v-model="orientation_layer_selected"
                   :label="api_hints_enabled ? 'dm.orientation = ' : 'Orientation'"
@@ -168,12 +167,12 @@
                 <span class="api-hint">dm.layer = {{ layer_selected }}</span>
               </div>
             </v-list-item>
-            <v-list-item-group
+            <v-item-group
               v-model="dm_layer_selected"
               active-class="active-list-item"
               style="max-height: 265px; overflow-y: auto;"
               multiple
-              dense
+              density="compact"
             >
               <div>
                 <draggable v-model="layer_items">
@@ -243,7 +242,7 @@
                   </v-list-item>
                 </draggable>
               </div>
-            </v-list-item-group>
+            </v-item-group>
             <hover-api-hint
               v-if="api_hints_enabled"
               v-model:hover_api_hint="hover_api_hint"
@@ -564,11 +563,13 @@
     /* alternating row colors */
     background-color: #f1f2f85a;
   }
-  .theme--dark .layer-select:nth-child(even) {
+  .theme--dark .layer-select:nth-child(even),
+  .v-theme--dark .layer-select:nth-child(even) {
     /* darker alternating row colors in dark mode */
     background-color: #1a1a1a;
   }
-  .theme--dark .layer-select:nth-child(odd) {
+  .theme--dark .layer-select:nth-child(odd),
+  .v-theme--dark .layer-select:nth-child(odd) {
     /* slightly darker odd rows in dark mode */
     background-color: #0d0d0d;
   }

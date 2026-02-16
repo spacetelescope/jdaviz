@@ -7,7 +7,7 @@
     @change="$emit('update:selected', $event)"
     :label="api_hints_enabled && api_hint ? api_hint : label"
     :class="api_hints_enabled && api_hint ? 'api-hint no-hint' : 'no-hint'"
-    dense
+    density="compact"
   >
     <template v-slot:selection="{ item, index }">
       <span :class="api_hints_enabled ? 'api-hint' : null">

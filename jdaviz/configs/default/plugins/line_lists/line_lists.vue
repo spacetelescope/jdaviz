@@ -144,7 +144,7 @@
                   small="true"
                   icon
                 >
-                  <v-icon>mdi-close-circle</v-icon>
+ <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
               </v-col>
               <v-col cols=2>
@@ -170,7 +170,7 @@
                     <v-text-field
                       label="Line Name"
                       v-model="custom_name"
-                      dense
+                      density="compact"
                     >
                     </v-text-field>
                   </j-tooltip>
@@ -181,7 +181,7 @@
                   <v-text-field
                     label="Rest Value"
                     v-model="custom_rest"
-                    dense
+                    density="compact"
                   >
                   </v-text-field>
                 </j-tooltip>
@@ -193,14 +193,14 @@
                       :items="custom_unit_choices"
                       v-model:selected="custom_unit"
                       label="Unit"
-                      dense
+                      density="compact"
                     />
                 </j-tooltip>
               </v-row>
 
               <v-row justify="end">
                 <j-tooltip tipid='plugin-line-lists-add-custom-line'>
-                  <v-btn color="primary" text @click="add_custom_line">Add Line</v-btn>
+                  <v-btn color="primary" variant="text" @click="add_custom_line">Add Line</v-btn>
                 </j-tooltip>
               </v-row>
             </div>
@@ -214,12 +214,12 @@
                       tile
                       :elevation=0
                       x-small
-                      dense
+                      density="compact"
                       color="turquoise"
-                      dark
+                      theme="dark"
                       style="padding-left: 8px; padding-right: 6px;"
                       @click="show_all_in_list(item)">
-                      <v-icon left small dense style="margin-right: 2px">mdi-eye</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye</v-icon>
                       Plot All
                     </v-btn>
                   </j-tooltip>
@@ -230,12 +230,12 @@
                       tile
                       :elevation=0
                       x-small
-                      dense
+                      density="compact"
                       color="turquoise"
-                      dark
+                      theme="dark"
                       style="padding-left: 8px; padding-right: 6px;"
                       @click="hide_all_in_list(item)">
-                      <v-icon left small dense style="margin-right: 2px">mdi-eye-off</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye-off</v-icon>
                       Erase All
                     </v-btn>
                   </j-tooltip>
@@ -290,7 +290,7 @@
                     <v-col cols=3 align="right" style="padding: 0">
                       <j-tooltip tipid='plugin-line-lists-line-visible'>
                         <v-btn :color="line.show ? 'accent' : 'default'" icon @click="change_visible([item, line, line_ind])">
-                          <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+ <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
                         </v-btn>
                       </j-tooltip style="padding: 0">
                     </v-col>
@@ -302,7 +302,7 @@
                       <v-text-field
                         v-model="line.rest"
                         class="mt-0 pt-0"
-                        dense
+                        density="compact"
                         :hint="line.unit"
                         persistent-hint
                         disabled
@@ -316,7 +316,7 @@
                         @blur="unpause_tables"
                         step="0.1"
                         class="mt-0 pt-0"
-                        dense
+                        density="compact"
                         type="number"
                         :hint="line.unit"
                         persistent-hint
@@ -338,12 +338,12 @@
             tile
             :elevation=0
             x-small
-            dense
+            density="compact"
             color="turquoise"
-            dark
+            theme="dark"
             style="padding-left: 8px; padding-right: 6px;"
             @click="plot_all_lines">
-            <v-icon left small dense style="margin-right: 2px">mdi-eye</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye</v-icon>
             Plot All
           </v-btn>
         </j-tooltip>
@@ -354,12 +354,12 @@
             tile
             :elevation=0
             x-small
-            dense
+            density="compact"
             color="turquoise"
-            dark
+            theme="dark"
             style="padding-left: 8px; padding-right: 6px;"
             @click="erase_all_lines">
-            <v-icon left small dense style="margin-right: 2px">mdi-eye-off</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye-off</v-icon>
             Erase All
           </v-btn>
         </j-tooltip>

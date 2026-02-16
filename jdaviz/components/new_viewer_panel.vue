@@ -11,7 +11,7 @@
       item-title="label"
       item-value="label"
       persistent-hint
-      outlined
+      variant="outlined"
       style="width: 100%; margin-top: 12px; padding-left: 6px; padding-right: 6px;"
     ></v-select>
 
