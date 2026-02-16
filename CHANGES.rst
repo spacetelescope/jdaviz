@@ -104,6 +104,8 @@ Bug Fixes
 - Fixed bug when opening plot options or export from shortcut button when jdaviz
   and lcviz are simultaneously imported. [#4027]
 
+- Avoid incorrectly showing "no viewer selected" warning when adding data from some plugins. [#4037]
+
 Cubeviz
 ^^^^^^^
 
