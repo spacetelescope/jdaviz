@@ -166,11 +166,12 @@ class AID:
 
         if sky_or_pixel == 'pixel':
             return pixel_fov
-        if not any(c.strip() for c in wcs.wcs.ctype):
-            raise ValueError("The image must have valid WCS to return `fov` in `sky`.")
 
         if isinstance(wcs, GWCS):
             wcs = WCS(wcs.to_fits_sip())
+
+        if not any(c.strip() for c in wcs.wcs.ctype):
+            raise ValueError("The image must have valid WCS to return `fov` in `sky`.")
 
         # compute the mean of the height and width of the
         # viewer's FOV on ``data`` in world units:
