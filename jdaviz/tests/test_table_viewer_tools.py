@@ -402,3 +402,105 @@ class TestTableViewerToolsMultipleViewers:
         # Both should be restored
         assert self.viewer1.toolbar.tool_override_mode == ''
         assert self.viewer2.toolbar.tool_override_mode == ''
+
+
+class TestTableViewerToolsPixelLinked:
+    """Test table viewer tools with pixel-linked catalogs."""
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, deconfigged_helper, pixel_coord_source_catalog):
+        """Set up deconfigged app with image and pixel-coordinate catalog."""
+        # Create a simple image (no WCS needed for pixel-linked)
+        from astropy.nddata import NDData
+        arr = np.arange(10000).reshape((100, 100))
+        ndd = NDData(arr)
+        deconfigged_helper.load(ndd, data_label='test_image')
+
+        # Load the pixel-coordinate catalog into a Table viewer
+        self.catalog = pixel_coord_source_catalog
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = self.catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Table'
+        ldr.importer.col_x.selected = 'x'
+        ldr.importer.col_y.selected = 'y'
+        ldr.load()
+
+        self.app = deconfigged_helper
+
+        # Get the image viewer
+        image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
+        assert len(image_viewers) == 1
+        self.viewer = image_viewers[0]
+
+        # Set viewer shape
+        self.viewer.shape = (400, 400)
+        self.viewer.state._set_axes_aspect_ratio(1)
+
+        # Get the table viewer
+        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+
+    def test_pixel_linked_zoom_applies_correct_limits(self):
+        """Test that zoom-to-selected works with pixel-linked catalogs."""
+        # Verify we're pixel-linked
+        assert self.app.app._align_by == 'pixels'
+
+        toolbar = self.table_viewer.toolbar
+        tool = toolbar.tools['jdaviz:table_zoom_to_selected']
+        tool.activate()
+
+        # Get initial viewer limits
+        initial_limits = (
+            self.viewer.state.x_min, self.viewer.state.x_max,
+            self.viewer.state.y_min, self.viewer.state.y_max
+        )
+
+        # Check some rows (use first 3 catalog sources)
+        self.table_viewer.widget_table.checked = [0, 1, 2]
+
+        # Get the apply tool and activate it
+        apply_tool = toolbar.tools['jdaviz:table_apply_zoom']
+        apply_tool.activate()
+
+        # The viewer limits should have changed
+        new_limits = (
+            self.viewer.state.x_min, self.viewer.state.x_max,
+            self.viewer.state.y_min, self.viewer.state.y_max
+        )
+        new_x_min, new_x_max, new_y_min, new_y_max = new_limits
+
+        # Check that limits changed (zoomed in to the selected points)
+        assert new_limits != initial_limits
+
+        # Verify that the selected pixel coordinates are within the view bounds
+        selected_rows = [0, 1, 2]
+        xs = [self.catalog['x'][i] for i in selected_rows]
+        ys = [self.catalog['y'][i] for i in selected_rows]
+
+        for x, y in zip(xs, ys):
+            assert new_x_min <= x <= new_x_max, \
+                f"Point x={x} outside view bounds [{new_x_min}, {new_x_max}]"
+            assert new_y_min <= y <= new_y_max, \
+                f"Point y={y} outside view bounds [{new_y_min}, {new_y_max}]"
+
+    def test_pixel_linked_highlight_marks_appear(self):
+        """Test that highlight marks appear with pixel-linked catalogs."""
+        # Verify we're pixel-linked
+        assert self.app.app._align_by == 'pixels'
+
+        toolbar = self.table_viewer.toolbar
+        tool = toolbar.tools['jdaviz:table_highlight_selected']
+        tool.activate()
+
+        # Check some rows
+        self.table_viewer.widget_table.checked = [0, 2]
+
+        # Check that marks are visible in the image viewer
+        from jdaviz.core.marks import PluginScatter
+        marks = [m for m in self.viewer.figure.marks if isinstance(m, PluginScatter)]
+
+        # There should be at least one PluginScatter mark for selection
+        assert len(marks) > 0
+
+        # Restore and check marks are cleared
+        toolbar.restore_tools()

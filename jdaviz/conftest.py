@@ -228,6 +228,28 @@ def sky_coord_only_source_catalog():
 
 
 @pytest.fixture
+def pixel_coord_source_catalog():
+    """
+    Create a sample source catalog with pixel coordinates (x, y) for testing
+    pixel-linked catalog workflows.
+
+    The catalog contains 5 sources spread across a 128x128 pixel image field.
+    """
+    catalog = Table()
+
+    # x and y pixel coordinates
+    catalog['x'] = [50.0, 70.0, 30.0, 80.0, 25.0]
+    catalog['y'] = [50.0, 60.0, 40.0, 75.0, 55.0]
+
+    # additional columns
+    catalog['magnitude'] = [12.5, 14.2, 13.8, 15.1, 16.3] * u.mag
+    catalog['flux'] = [1.23e-12, 8.45e-13, 9.87e-13, 6.12e-13, 4.33e-13] * u.erg / (u.cm**2 * u.s)
+    catalog['source_id'] = ['src_001', 'src_002', 'src_003', 'src_004', 'src_005']
+
+    return catalog
+
+
+@pytest.fixture
 def spectral_cube_wcs():
     # A simple spectral cube WCS used by some tests
     wcs = WCS(naxis=3)

@@ -43,7 +43,7 @@ from jdaviz.core.marks import (LineUncertainties, ScatterMask,
                                OffscreenLinesMarks, TableSelectionMark)
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import WithCache, TemplateMixin, show_widget
-from jdaviz.core.tools import _get_skycoords_from_table
+from jdaviz.core.tools import _get_skycoords_from_table, _get_pixel_coords_from_table
 from jdaviz.core.user_api import ViewerUserApi
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
@@ -1171,40 +1171,43 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Get pixel coordinates from the message (these are in reference data frame)
         click_x, click_y = msg.x, msg.y
 
-        # Find the image viewer that sent this message and compute distances
-        # to all table rows
         try:
-            # Get RA/Dec for all rows in the table
             layer = self.layers[0].layer
-            skycoords = _get_skycoords_from_table(layer)
-            if skycoords is None:
+
+            # Try pixel coordinates first (if catalog has X/Y columns)
+            # Fall back to sky coordinates with WCS conversion if needed
+            xs, ys = None, None
+            pixel_coords = _get_pixel_coords_from_table(layer)
+
+            if pixel_coords is not None:
+                # Catalog has pixel coordinates, use them directly
+                xs, ys = pixel_coords
+            else:
+                # Try sky coordinates with WCS conversion
+                skycoords = _get_skycoords_from_table(layer)
+                if skycoords is not None:
+                    for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+                        if viewer.state.reference_data is None:
+                            continue
+                        if viewer.state.reference_data.coords is None:
+                            continue
+                        pixel_result = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                        xs, ys = pixel_result[0], pixel_result[1]
+                        break
+
+            if xs is None or ys is None:
                 return
 
-            # Find the viewer and convert all coordinates
-            for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
-                if viewer.state.reference_data is None:
-                    continue
-                if viewer.state.reference_data.coords is None:
-                    continue
+            # Find nearest point and toggle its selection
+            distsq = (xs - click_x)**2 + (ys - click_y)**2
+            ind = int(np.argmin(distsq))
 
-                # Convert all table coordinates to this viewer's reference frame
-                # This works for both WCS and pixel alignment since we use the
-                # viewer's reference_data.coords
-                pixel_coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
-                xs, ys = pixel_coords[0], pixel_coords[1]
-
-                # Calculate distances to all points
-                distsq = (xs - click_x)**2 + (ys - click_y)**2
-                ind = int(np.argmin(distsq))
-
-                # Toggle this row in checked
-                current_checked = list(self.widget_table.checked)
-                if ind in current_checked:
-                    current_checked.remove(ind)
-                else:
-                    current_checked.append(ind)
-                self.widget_table.checked = current_checked
-                return
+            current_checked = list(self.widget_table.checked)
+            if ind in current_checked:
+                current_checked.remove(ind)
+            else:
+                current_checked.append(ind)
+            self.widget_table.checked = current_checked
         except Exception:  # nosec # pragma: no cover
             pass
 
@@ -1240,24 +1243,37 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             self._clear_selection_marks()
             return
 
-        # Get RA/Dec for checked rows
         layer = self.layers[0].layer
-        skycoords = _get_skycoords_from_table(layer, checked_rows)
-        if skycoords is None:
-            # If we can't get coordinates, clear marks
-            self._clear_selection_marks()
-            return
+
+        # Try pixel coordinates first (if catalog has X/Y columns)
+        # Fall back to sky coordinates with WCS conversion if needed
+        pixel_xs, pixel_ys = None, None
+        skycoords = None
+
+        pixel_coords = _get_pixel_coords_from_table(layer, checked_rows)
+        if pixel_coords is not None:
+            pixel_xs, pixel_ys = pixel_coords
+        else:
+            skycoords = _get_skycoords_from_table(layer, checked_rows)
+            if skycoords is None:
+                self._clear_selection_marks()
+                return
 
         # Update marks in all image viewers
         for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
             try:
-                # Convert RA/Dec to pixel coordinates for this viewer
-                pixel_coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
-                xs, ys = pixel_coords[0], pixel_coords[1]
+                if pixel_xs is not None:
+                    # Use pixel coordinates directly
+                    xs, ys = pixel_xs, pixel_ys
+                else:
+                    # Convert sky coordinates to pixels for this viewer
+                    coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                    xs, ys = coords[0], coords[1]
+
                 mark = self._get_selection_mark(viewer)
                 mark.update_xy(xs, ys)
                 mark.visible = True
-            except Exception:  # nosec # pragmas: no cover
+            except Exception:  # nosec # pragma: no cover
                 pass
 
     def _clear_selection_marks(self):

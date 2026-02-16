@@ -41,6 +41,56 @@ BqplotXRangeMode.icon = os.path.join(ICON_DIR, 'select_x.svg')
 BqplotYRangeMode.icon = os.path.join(ICON_DIR, 'select_y.svg')
 
 
+def _get_pixel_coords_from_table(layer, rows=None):
+    """
+    Get pixel coordinates for rows in a table layer.
+
+    Checks for X/Y column names stored in metadata by the catalog importer.
+
+    Parameters
+    ----------
+    layer : glue Data
+        The table data layer
+    rows : array-like, optional
+        Row indices to select. If None, returns all rows.
+
+    Returns
+    -------
+    tuple or None
+        (xs, ys) arrays for the selected rows, or None if X/Y columns not found.
+    """
+    x_comp = None
+    y_comp = None
+
+    # Check if the catalog importer stored the X/Y column names in metadata
+    x_col_name = layer.meta.get('_jdaviz_loader_x_col')
+    y_col_name = layer.meta.get('_jdaviz_loader_y_col')
+
+    if x_col_name and y_col_name:
+        # Find the component IDs that match these column names
+        for comp_id in layer.component_ids():
+            comp_name = str(comp_id)
+            if comp_name == x_col_name:
+                x_comp = comp_id
+            elif comp_name == y_col_name:
+                y_comp = comp_id
+
+    if x_comp is None or y_comp is None:
+        return None
+
+    try:
+        xs = layer.get_component(x_comp).data
+        ys = layer.get_component(y_comp).data
+
+        if rows is not None:
+            xs = xs[rows]
+            ys = ys[rows]
+
+        return (np.atleast_1d(xs), np.atleast_1d(ys))
+    except Exception:
+        return None
+
+
 def _get_skycoords_from_table(layer, rows=None):
     """
     Get SkyCoord for rows in a table layer.
@@ -629,9 +679,17 @@ class TableApplyZoom(_BaseTableApplyTool):
 
     def on_apply(self, selected_rows):
         layer = self.viewer.layers[0].layer
-        skycoords = _get_skycoords_from_table(layer, selected_rows)
-        if skycoords is None:
-            return
+
+        # Try pixel coordinates first (if catalog has X/Y columns)
+        # Fall back to sky coordinates with WCS conversion if needed
+        pixel_coords_from_table = _get_pixel_coords_from_table(layer, selected_rows)
+        skycoords = None
+
+        if pixel_coords_from_table is None:
+            # Try sky coordinates
+            skycoords = _get_skycoords_from_table(layer, selected_rows)
+            if skycoords is None:
+                return
 
         # Get the selected viewer IDs from the custom widget
         if len(self.viewer.toolbar.custom_widget_selected) > 0:
@@ -650,13 +708,19 @@ class TableApplyZoom(_BaseTableApplyTool):
                 continue
             image = viewer.layers[i_top].layer
 
-            # Get pixel coordinates in the TOP LAYER's coordinate system
-            # (this is what center_on expects)
-            if hasattr(image, 'coords') and image.coords is not None:
-                pixel_coords = image.coords.world_to_pixel(skycoords)
-                xs, ys = np.atleast_1d(pixel_coords[0]), np.atleast_1d(pixel_coords[1])
-            else:
-                # No WCS on top layer, skip this viewer
+            # Determine pixel coordinates based on what's available
+            xs, ys = None, None
+
+            if pixel_coords_from_table is not None:
+                # Use pixel coordinates directly
+                xs, ys = pixel_coords_from_table
+            elif skycoords is not None:
+                # Convert sky coordinates to pixel
+                if hasattr(image, 'coords') and image.coords is not None:
+                    pixel_coords = image.coords.world_to_pixel(skycoords)
+                    xs, ys = np.atleast_1d(pixel_coords[0]), np.atleast_1d(pixel_coords[1])
+
+            if xs is None or ys is None:
                 continue
 
             # Filter out NaN values
