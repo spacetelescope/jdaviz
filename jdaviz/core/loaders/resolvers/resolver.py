@@ -663,13 +663,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 idx = self.observation_table.items.index(row)
                 currently_selected.add(idx)
 
-            # Toggle all found footprints as a group
-            # If ALL are selected, deselect ALL; otherwise select ALL
             selected_indices_set = set(selected_indices)
             ctrl_key = msg.ctrl_key
 
             if ctrl_key:
-                # If Ctrl key is pressed, add to selection without toggling
+                # If Ctrl key is pressed, toggle selection
                 if selected_indices_set.issubset(currently_selected):
                     # All found footprints are already selected - deselect them all
                     currently_selected -= selected_indices_set
@@ -677,8 +675,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     # At least one is not selected - select them all
                     currently_selected |= selected_indices_set
             else:
-                # Default Click: Replace selection with only the clicked footprints
-                currently_selected = selected_indices_set
+                # Default Click: Replace selection unless already selected
+                if not selected_indices_set.issubset(currently_selected):
+                    # Not selected - replace selection with just this footprint
+                    currently_selected = selected_indices_set
+                # If already selected, keep current selection (no change)
+
             # Update the table selection
             if currently_selected:
                 self.observation_table.select_rows(sorted(list(currently_selected)))
