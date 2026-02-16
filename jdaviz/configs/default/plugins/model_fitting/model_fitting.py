@@ -1459,6 +1459,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         spec = self.dataset.get_selected_spectrum(use_display_units=True)
 
+        # Pass selected viewer to load explicitly so we don't get a warning
+        load_kwargs = {'viewer': self.add_results.viewer.selected}
+
         masked_spectrum = self._apply_subset_masks(spec,
                                                    self.spectral_subset)
 
@@ -1533,7 +1536,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             if add_data:
                 self._fitted_models[self.results_label] = fitted_model
                 self.add_results.add_results_from_plugin(
-                    fitted_spectrum, format="1D Spectrum"
+                    fitted_spectrum, format="1D Spectrum", load_kwargs=load_kwargs
                 )
                 if self.residuals_calculate:
                     self.add_results.add_results_from_plugin(
@@ -1541,6 +1544,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                         label=self.residuals.value,
                         format="1D Spectrum",
                         replace=False,
+                        load_kwargs=load_kwargs
                     )
 
             self._set_default_results_label()
@@ -1576,7 +1580,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if add_data:
             self._fitted_models[self.results_label] = fitted_model
             self.add_results.add_results_from_plugin(fitted_spectrum,
-                                                     format='1D Spectrum')
+                                                     format='1D Spectrum',
+                                                     load_kwargs=load_kwargs)
 
             if self.residuals_calculate:
                 # NOTE: this will NOT load into the viewer since we have already called
@@ -1584,7 +1589,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 self.add_results.add_results_from_plugin(masked_spectrum-fitted_spectrum,
                                                          label=self.residuals.value,
                                                          format='1D Spectrum',
-                                                         replace=False)
+                                                         replace=False,
+                                                         load_kwargs=load_kwargs)
 
         self._set_default_results_label()
 
@@ -1708,7 +1714,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Create new data entry for glue
         if add_data:
-            self.add_results.add_results_from_plugin(output_cube)
+            self.add_results.add_results_from_plugin(output_cube, load_kwargs=load_kwargs)
             self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(
