@@ -557,8 +557,6 @@ class _BaseTableApplyTool(Tool):
 
         # Hide checkboxes (they should always be hidden when default toolbar is shown)
         self.viewer.widget_table.selection_enabled = False
-        # Clear checked rows after applying
-        self.viewer.widget_table.checked = []
         # Restore toolbar (all_viewers=True to also restore image viewer toolbars)
         self.viewer.toolbar.restore_tools(all_viewers=True)
 
