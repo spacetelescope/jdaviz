@@ -49,7 +49,7 @@
           style="width: 60px"
           label="Pixel"
           hide-details
-          dense
+          density="compact"
           single-line
         />
       </v-col>
@@ -87,7 +87,7 @@
             style="width: 60px"
             label="Pixel"
             hide-details
-            dense
+            density="compact"
             single-line
           />
         </v-col>
@@ -116,7 +116,7 @@
             style="width: 60px"
             label="Pixel"
             hide-details
-            dense
+            density="compact"
             single-line
           />
         </v-col>

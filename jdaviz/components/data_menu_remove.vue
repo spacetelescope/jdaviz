@@ -1,8 +1,7 @@
 <template>
   <v-menu
     absolute
-    offset-y
-    left
+    location="bottom start"
   >
     <template v-slot:activator="{ props }">
       <j-tooltip
@@ -19,7 +18,7 @@
         </v-btn>
       </j-tooltip>
     </template>
-    <v-list dense style="width: 200px">
+    <v-list density="compact" style="width: 200px">
       <v-list-item>
         <div class="v-list-item-content">
           <j-tooltip

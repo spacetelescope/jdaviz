@@ -10,7 +10,7 @@
     </v-btn>
     <span :class="api_hints_enabled ? 'api-hint' : null">
       <j-layer-viewer-icon v-if="item.icon && !api_hints_enabled" :icon="item.icon" :prevent_invert_if_dark="false"></j-layer-viewer-icon>
-      <v-icon v-else-if="item.color && item.type && !api_hints_enabled" left :color="item.color">
+      <v-icon v-else-if="item.color && item.type && !api_hints_enabled" start :color="item.color">
         {{ item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
       </v-icon>
       {{ api_hints_enabled ?

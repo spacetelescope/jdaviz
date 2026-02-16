@@ -23,11 +23,10 @@
                border: 2px solid #00617E;
                background-color: rgb(245 245 245 / 70%);">
         <v-icon
-          large 
-          dark
+          large
           color="#00617E"
           style="height: 100%"
-          >mdi-link-off</v-icon>
+        >mdi-link-off</v-icon>
       </div> 
     </j-tooltip>
   </div>

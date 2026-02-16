@@ -62,7 +62,7 @@
         </v-card-text>
         <v-card-actions>
           <div class="flex-grow-1"></div>
-          <v-btn color="primary" text @click="$emit('click-cancel')">Cancel</v-btn>
+          <v-btn color="primary" variant="text" @click="$emit('click-cancel')">Cancel</v-btn>
         </v-card-actions>
       </v-card>
       <v-card v-else>
@@ -86,8 +86,8 @@
 
         <v-card-actions>
           <div class="flex-grow-1"></div>
-          <v-btn color="primary" text @click="$emit('click-cancel')">Cancel</v-btn>
-          <v-btn color="primary" text @click="$emit('click-import')" :disabled="from_file_message.length > 0">Load</v-btn>
+          <v-btn color="primary" variant="text" @click="$emit('click-cancel')">Cancel</v-btn>
+          <v-btn color="primary" variant="text" @click="$emit('click-import')" :disabled="from_file_message.length > 0">Load</v-btn>
         </v-card-actions>
 
       </v-card>

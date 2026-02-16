@@ -49,7 +49,7 @@
     </v-row>
 
     <v-row justify="end" class="ignore-api-hints">
-      <v-btn color="primary" text v-if="!cube_viewer_exists" @click="create_cube_viewer">
+      <v-btn color="primary" variant="text" v-if="!cube_viewer_exists" @click="create_cube_viewer">
         Show Cube Viewer
       </v-btn>
     </v-row>

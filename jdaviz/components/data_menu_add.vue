@@ -1,8 +1,7 @@
 <template>
   <v-menu
     absolute
-    offset-y
-    left
+    location="bottom start"
     v-if="dataset_items.length > 0 || subset_tools.length > 0"
     >
     <template v-slot:activator="{ props }">
@@ -20,7 +19,7 @@
         </v-btn>
       </j-tooltip>
     </template>
-    <v-list dense style="width: 300px; max-height: 300px; overflow-y: auto;">
+    <v-list density="compact" style="width: 300px; max-height: 300px; overflow-y: auto;">
       <v-subheader v-if="dataset_items.length > 0"><span>Load Data</span></v-subheader>
       <v-list-item
         v-for="data in dataset_items"

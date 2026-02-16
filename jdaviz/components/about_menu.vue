@@ -1,7 +1,7 @@
 <template>
   <v-menu
     v-model="popup_open"
-    offset-y
+    location="bottom"
     absolute
     style="max-width: 600px"
     :close-on-content-click="false"
@@ -9,7 +9,7 @@
     <template v-slot:activator="{ props }">
       <j-tooltip tooltipcontent="Show app information and docs">
         <v-btn
-          text
+          variant="text"
           id="about-scroll-target"
           v-bind="props"
 

@@ -41,15 +41,15 @@
       </plugin-action-button>
     </v-row>
 
-    <v-alert v-if="history.length === 0" dense type="info">No logger messages</v-alert>
+    <v-alert v-if="history.length === 0" density="compact" type="info">No logger messages</v-alert>
     <v-row
-        dense
+        density="compact"
         @click="(e) => {e.stopImmediatePropagation()}"
         v-for="(hist, index) in history.slice().reverse()"
         style="margin: 6px 0px 0px 0px; max-width: 100%; overflow: hidden"
     >
       <v-alert
-        dense
+        density="compact"
         style="width: 100%; overflow: scroll; white-space: wrap; word-wrap: break-word;"
         :type="hist.color">
           <v-row v-if="api_hints_enabled">

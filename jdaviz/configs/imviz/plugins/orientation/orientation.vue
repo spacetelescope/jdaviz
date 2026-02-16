@@ -217,7 +217,7 @@
                         :disabled="rotation_angle===''"
                         :class="api_hints_enabled ? 'api-hint' : null"
                         @click="add_orientation"
-                        text
+                        variant="text"
                       >
                         {{ api_hints_enabled ?
                           'plg.add_orientation()'

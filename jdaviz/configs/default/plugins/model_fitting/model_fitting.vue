@@ -116,12 +116,12 @@
             tile
             :elevation=0
             x-small
-            dense
+            density="compact"
             color="turquoise"
-            dark
+            theme="dark"
             style="padding-left: 8px; padding-right: 6px;"
             @click="reestimate_model_parameters(null)">
-            <v-icon left small dense style="margin-right: 2px">mdi-restart</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-restart</v-icon>
             Re-estimate free parameters
           </v-btn>
         </j-tooltip>
@@ -135,7 +135,7 @@
               <v-row no-gutters align="center">
                 <v-col cols=3>
                   <v-btn @click.native.stop="remove_model(item.id)" icon style="width: 60%">
-                    <v-icon>mdi-close-circle</v-icon>
+ <v-icon>mdi-close-circle</v-icon>
                   </v-btn>
                 </v-col>
                 <v-col cols=9 class="text--secondary" :style="componentInEquation(item.id) ? '': 'color: #80808087 !important'">
@@ -164,12 +164,12 @@
                         tile
                         :elevation=0
                         x-small
-                        dense
+                        density="compact"
                         color="turquoise"
-                        dark
+                        theme="dark"
                         style="padding-left: 8px; padding-right: 6px;"
                         @click="reestimate_model_parameters(item.id)">
-                        <v-icon left small dense style="margin-right: 2px">mdi-restart</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-restart</v-icon>
                         Re-estimate free parameters
                       </v-btn>
                     </j-tooltip>
@@ -190,12 +190,12 @@
                     tile
                     :elevation=0
                     x-small
-                    dense
+                    density="compact"
                     color="turquoise"
-                    dark
+                    theme="dark"
                     style="padding-left: 8px; padding-right: 6px;"
                     @click="reestimate_model_parameters(item.id)">
-                    <v-icon left small dense style="margin-right: 2px">mdi-restart</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-restart</v-icon>
                     Re-estimate free parameters
                   </v-btn>
                 </j-tooltip>
@@ -214,7 +214,7 @@
                   class="py-0 my-0">
                 <v-col cols=12 class="py-my-0">
                   <j-tooltip tipid='plugin-model-fitting-param-fixed'>
-                    <v-checkbox v-model="param.fixed" :disabled="!componentInEquation(item.id)" dense>
+                    <v-checkbox v-model="param.fixed" :disabled="!componentInEquation(item.id)" density="compact">
                       <template v-slot:label>
                         <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 12pt">
                           {{param.name}}
@@ -230,7 +230,7 @@
                   class="py-0 my-0">
                   <v-col class="py-my-0">
                     <v-text-field
-                      dense
+                      density="compact"
                       v-model="param.value"
                     >
                     </v-text-field>

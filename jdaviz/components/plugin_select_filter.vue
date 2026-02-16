@@ -11,7 +11,7 @@
                 tile
                 :elevation=0
                 x-small
-                dense 
+                density="compact" 
                 :color="selected === item.label ? 'turquoise' : 'transparent'"
                 :dark="selected === item.label"
                 style="padding-left: 8px; padding-right: 6px;"
@@ -20,7 +20,7 @@
                     <span v-if="api_hints_enabled && api_hint && selected === item.label" style="text-transform: none">'{{ item.label }}'</span>
                     <span v-else>
                         <img v-if="item.icon && !item.icon.startsWith('mdi')" :src="item.icon" width="16" class="invert-if-dark" style="margin-right: 2px"/>
-                        <v-icon v-if="item.icon && item.icon.startsWith('mdi')" style="margin-right: 2px" small>{{ item.icon }}</v-icon>
+ <v-icon v-if="item.icon && item.icon.startsWith('mdi')" style="margin-right: 2px" small>{{ item.icon }}</v-icon>
                         {{ item.label }}
                     </span>
                 </v-btn>
