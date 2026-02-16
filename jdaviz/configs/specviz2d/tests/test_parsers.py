@@ -13,6 +13,10 @@ from jdaviz.configs.imviz.tests.utils import create_example_gwcs
 
 
 @pytest.mark.remote_data
+@pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'
+                          ' used to avoid an error when handling 3D WCS with 2D data.'
+                          'The temporary fix will be removed once an upstream solution'
+                          'is implemented.')
 def test_2d_parser_jwst(specviz2d_helper):
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
 
