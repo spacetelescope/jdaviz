@@ -21,6 +21,7 @@ New Features
 
 - Add support for viewers with mixed pixel and wavelength/frequency spectral axis units. [#4001]
 
+- Add handles to subset to allow interactive resizing. [#3919]
 
 Cubeviz
 ^^^^^^^
