@@ -28,8 +28,8 @@
 
         <v-card-actions>
           <div class="flex-grow-1"></div>
-          <v-btn color="primary" text @click="dialog = false">Cancel</v-btn>
-          <v-btn color="primary" text @click="load_data" :disabled="!valid_path">Import</v-btn>
+          <v-btn color="primary" variant="text" @click="dialog = false">Cancel</v-btn>
+          <v-btn color="primary" variant="text" @click="load_data" :disabled="!valid_path">Import</v-btn>
         </v-card-actions>
 
       </v-card>

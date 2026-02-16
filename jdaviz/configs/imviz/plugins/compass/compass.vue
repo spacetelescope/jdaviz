@@ -29,7 +29,8 @@
 </template>
 
 <style>
-.theme--dark .invert-in-dark {
+.theme--dark .invert-in-dark,
+.v-theme--dark .invert-in-dark {
   filter: brightness(0.88) invert(1);
 }
 </style>

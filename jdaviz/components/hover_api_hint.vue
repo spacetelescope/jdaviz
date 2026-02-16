@@ -12,7 +12,7 @@
       >
         <v-btn
           small
-          text
+          variant="text"
           width="24"
           :style="lock_hover_api_hint ? 'background-color: #c7510996 !important' : null"
           @click="(e) => {e.stopPropagation(); $emit('update:lock_hover_api_hint', !lock_hover_api_hint); $emit('update:hover_api_hint', '')}"
