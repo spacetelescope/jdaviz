@@ -222,7 +222,7 @@ def test_resolver_url(deconfigged_helper):
 
     # may change with future importers
     assert len(loader.format.choices) == 3
-    assert loader.format.selected == 'Image'  # default may change with future importers
+    assert loader.format.selected == '2D Spectrum'
 
     # test target filtering
     assert len(loader.target.choices) > 1
@@ -235,7 +235,7 @@ def test_resolver_url(deconfigged_helper):
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw_index-0'  # noqa
 
     loader.target = 'Any'
-    assert len(loader.format.choices) == 4
+    assert len(loader.format.choices) == 3
     loader.format = '2D Spectrum'
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
