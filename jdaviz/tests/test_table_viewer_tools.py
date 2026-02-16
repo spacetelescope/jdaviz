@@ -284,8 +284,8 @@ class TestTableViewerTools:
 
             table_toolbar.restore_tools()
 
-    def test_checked_rows_cleared_after_apply(self):
-        """Test that checked rows are cleared after applying zoom or subset."""
+    def test_checked_rows_persist_after_apply(self):
+        """Test that checked rows persist after applying zoom or subset."""
         toolbar = self.table_viewer.toolbar
 
         # Test with zoom tool
@@ -295,8 +295,8 @@ class TestTableViewerTools:
 
         toolbar.tools['jdaviz:table_apply_zoom'].activate()
 
-        # Checked rows should be cleared
-        assert len(self.table_viewer.widget_table.checked) == 0
+        # Checked rows should persist (not cleared)
+        assert len(self.table_viewer.widget_table.checked) == 3
 
     def test_is_enabled_returns_correct_state(self):
         """Test that apply tools are disabled when no rows are checked."""

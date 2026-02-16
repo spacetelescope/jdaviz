@@ -1159,6 +1159,11 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self.hub.subscribe(self, TableSelectRowClickMessage,
                            handler=self._on_table_select_row_click)
 
+        # Subscribe to ViewerRemovedMessage to clean up toolbar overrides
+        # if this table viewer is removed while tools are active
+        self.hub.subscribe(self, ViewerRemovedMessage,
+                           handler=self._on_viewer_removed)
+
     def _on_table_select_row_click(self, msg):
         """Handle click from image viewer to select/toggle closest table row."""
         # Only respond if this message is for this table viewer
@@ -1290,3 +1295,12 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         # Hide checkboxes (they should always be hidden when default toolbar is shown)
         self.widget_table.selection_enabled = False
+
+    def _on_viewer_removed(self, msg):
+        """Clean up selection marks if this table viewer is removed."""
+        if msg.viewer_id != self.reference_id:
+            return
+
+        # Clear selection marks in image viewers when this table viewer is removed
+        # (toolbar cleanup is handled generically by NestedJupyterToolbar)
+        self._clear_selection_marks()

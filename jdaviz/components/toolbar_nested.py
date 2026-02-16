@@ -58,14 +58,30 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         # toolbars in the main app viewers need to respond to the data-collection, etc,
         # but those in plugins do not
         if hasattr(self.viewer, 'hub'):
-            for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage, ViewerRemovedMessage,
+            for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage,
                         SpectralMarksChangedMessage, CatalogResultsChangedMessage,
                         FootprintMarkVisibilityChangedMessage):
                 self.viewer.hub.subscribe(self, msg,
                                           handler=lambda _: self._update_tool_visibilities())
+            # ViewerRemovedMessage needs special handling - both update visibilities
+            # and clean up toolbar overrides if this viewer is being removed
+            self.viewer.hub.subscribe(self, ViewerRemovedMessage,
+                                      handler=self._on_viewer_removed)
             # Subscribe to restore toolbar message with dedicated handler
             self.viewer.hub.subscribe(self, RestoreToolbarMessage,
                                       handler=lambda msg: self.restore_tools(all_viewers=False))
+
+    def _on_viewer_removed(self, msg):
+        """Handle viewer removal - clean up toolbar overrides if this viewer is removed."""
+        # Always update tool visibilities when any viewer is removed
+        self._update_tool_visibilities()
+
+        # If THIS viewer is being removed and has a toolbar override active,
+        # restore toolbars in all other viewers before removal
+        if (hasattr(self.viewer, 'reference_id') and
+                msg.viewer_id == self.viewer.reference_id and
+                self.tool_override_mode):
+            self.restore_tools(all_viewers=True)
 
     def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[],
                        custom_widgets=None, custom_widgets_callback=None, active_tool=None):
