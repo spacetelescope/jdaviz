@@ -48,7 +48,7 @@ class TestMouseoverMultiple2DSpectra:
 
     # TODO: Move this into parametrized test above once mouseover handling for 2D spectra
     #  with no wavelength mapping is resolved.
-    @pytest.mark.skip(reason="Mouseover handling for 2D spectra with no wavelength mapping is being investigated.")  # noqa
+    @pytest.mark.xfail(reason="Mouseover handling for 2D spectra with no wavelength mapping is being investigated.")  # noqa
     def test_single_2d_spectrum_no_wavelength(self, deconfigged_helper, spectrum_no_wavelength):
         """
         Test mouseover handling for a single 2D spectrum with WCS, no WCS,
