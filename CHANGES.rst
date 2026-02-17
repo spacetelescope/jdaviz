@@ -99,8 +99,10 @@ Bug Fixes
 - Fixed bug when initializing relevant 2D Spectrum plugins when there are viewers
   with mixed pixel / wavelength spectral axis units. [#3982]
 
-
 - Fixed API hint styling for viewer labels. [#4003]
+
+- Fixed bug when opening plot options or export from shortcut button when jdaviz
+  and lcviz are simultaneously imported. [#4027]
 
 Cubeviz
 ^^^^^^^
