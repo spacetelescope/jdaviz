@@ -25,6 +25,7 @@ calspec_url = "https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_ca
 # subset of possible units to test various conversions, testing all is time intensive
 FLUX_UNITS = ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']
 
+
 def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
     # Also test that plugin is disabled before data is loaded.
     plg = cubeviz_helper.plugins['3D Spectral Extraction']
