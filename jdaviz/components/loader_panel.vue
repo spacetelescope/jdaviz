@@ -16,11 +16,11 @@
       style="width: 100%; margin-top: 12px; padding-left: 6px; padding-right: 6px;"
     ></v-select>
 
-    <span v-if="loader_selected.length && (api_hints_enabled || (loader_selected === 'object' && !hide_resolver))" class="api-hint" style="font-weight: bold; padding-left: 6px">
+    <span v-if="loader_selected && loader_selected.length && (api_hints_enabled || (loader_selected === 'object' && !hide_resolver))" class="api-hint" style="font-weight: bold; padding-left: 6px">
       ldr = {{ api_hints_obj }}.loaders['{{ loader_selected }}']
     </span>
 
-    <jupyter-widget v-if="loader_selected" :widget="loader_items.find((loader) => loader.name === loader_selected).widget"></jupyter-widget>
+    <jupyter-widget v-if="selected_loader_widget" :widget="selected_loader_widget" :key="selected_loader_widget"></jupyter-widget>
 
   </div>
 </template>
@@ -46,6 +46,10 @@ export default {
         return (!item.requires_api_support || has_api_support) &&
                !disabled_loaders.includes(item.name);
       });
+    },
+    selected_loader_widget() {
+      const loader = this.loader_items.find(item => item.name === this.loader_selected);
+      return loader ? loader.widget : '';
     },
   },
   watch: {

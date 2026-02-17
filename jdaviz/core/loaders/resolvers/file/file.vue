@@ -36,6 +36,10 @@
         ldr.filepath = '{{ filepath }}'
       </span>
     </v-row>
-    <jupyter-widget v-if="file_chooser_widget && !server_is_remote && !hide_resolver_inputs" :widget="file_chooser_widget"></jupyter-widget>
+    <jupyter-widget
+      v-if="file_chooser_widget && !server_is_remote && !hide_resolver_inputs"
+      :widget="file_chooser_widget"
+      :key="file_chooser_widget"
+    ></jupyter-widget>
   </j-loader>
 </template>

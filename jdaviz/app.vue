@@ -1,8 +1,12 @@
 <template>
   <v-app id="web-app" :style="checkNotebookContext() ? 'display: inline' : 'display: flex'" :class="'jdaviz ' + config" ref="mainapp">
-    <jupyter-widget :widget="style_registry_instance"></jupyter-widget>
+    <jupyter-widget v-if="style_registry_instance" :widget="style_registry_instance" :key="style_registry_instance"></jupyter-widget>
     <div style="overflow: hidden; width: 0px; height: 0px">
-      <jupyter-widget :widget="widget" v-for="widget in invisible_children" :key="widget"></jupyter-widget>
+      <jupyter-widget
+        v-for="(widget, index) in invisible_children"
+        :widget="widget"
+        :key="typeof widget === 'string' ? widget : index"
+      ></jupyter-widget>
     </div>
     <v-app-bar color="toolbar" theme="dark" :density="state.settings.dense_toolbar ? 'compact' : 'default'" flat absolute :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
 
@@ -44,7 +48,7 @@
         <v-divider vertical style="margin: 0px 10px"></v-divider>
       </v-toolbar-items>
 
-      <v-toolbar-items v-for="(item, index) in state.tool_items">
+      <v-toolbar-items v-for="(item, index) in state.tool_items" :key="item.name || index">
         <!-- this logic assumes the first entry is g-data-tools, if that changes, this may need to be modified -->
         <v-divider v-if="config !== 'deconfigged' && index > 1" vertical style="margin: 0px 10px"></v-divider>
         <j-tooltip v-if="item.name === 'g-data-tools' && config!=='mosviz'" tooltipcontent="Open data menu in sidebar (this button will be removed in a future release)">
@@ -53,8 +57,8 @@
           </v-btn>
         </j-tooltip>
         <j-tooltip v-else-if="config==='mosviz' && item.name == 'g-data-tools' && state.data_items.length !== 0"></j-tooltip>
-        <j-tooltip v-else :tipid="item.name">
-          <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
+        <j-tooltip v-else-if="item.widget" :tipid="item.name">
+          <jupyter-widget :widget="item.widget" :key="item.widget"></jupyter-widget>
         </j-tooltip>
         <v-divider v-if="config !== 'deconfigged' && item.name === 'g-data-tools'" vertical style="margin: 0px 10px; border-width: 0"></v-divider>
       </v-toolbar-items>
@@ -62,7 +66,7 @@
       <v-spacer></v-spacer>
       <v-toolbar-items v-if="config !== 'deconfigged'">
         <j-tooltip tipid="app-toolbar-popout" span_style="scale: 0.8; margin-left: -4px; margin-right: -4px">
-          <jupyter-widget :widget="popout_button" ></jupyter-widget>
+          <jupyter-widget v-if="popout_button" :widget="popout_button" :key="popout_button"></jupyter-widget>
         </j-tooltip>
         <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-help">
           <v-btn icon :href="docs_link" target="_blank">
@@ -123,9 +127,11 @@
                         <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                           <span class="api-hint">ldr = {{  api_hints_obj || config }}.loaders['{{ ldrItem.label }}']</span>
                         </v-list-item-subtitle>
-                        <v-list-item-subtitle v-if="state.show_api_hints && state.global_search.length" v-for="api_method in trayItemMethodMatch(ldrItem, state.global_search)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint">ldr.{{ api_method }}</span>
-                        </v-list-item-subtitle>
+                        <template v-if="state.show_api_hints && state.global_search.length">
+                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(ldrItem, state.global_search)" :key="`loader-${ldrItem.label}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                            <span class="api-hint">ldr.{{ api_method }}</span>
+                          </v-list-item-subtitle>
+                        </template>
                       </v-list-item>
                     </v-row>
                   </div>
@@ -138,9 +144,11 @@
                         <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                           <span class="api-hint">vc = {{  api_hints_obj || config }}.new_viewers['{{ vcItem.label }}']</span>
                         </v-list-item-subtitle>
-                        <v-list-item-subtitle v-if="state.show_api_hints && state.global_search.length" v-for="api_method in trayItemMethodMatch(vcItem, state.global_search)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint">vc.{{ api_method }}</span>
-                        </v-list-item-subtitle>
+                        <template v-if="state.show_api_hints && state.global_search.length">
+                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(vcItem, state.global_search)" :key="`new-viewer-${vcItem.label}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                            <span class="api-hint">vc.{{ api_method }}</span>
+                          </v-list-item-subtitle>
+                        </template>
                       </v-list-item>
                     </v-row>
                   </div>
@@ -153,9 +161,11 @@
                         <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                           <span class="api-hint">dm = {{  api_hints_obj || config }}.viewers['{{ dmItem.name }}'].data_menu</span>
                         </v-list-item-subtitle>
-                        <v-list-item-subtitle v-if="state.show_api_hints && state.global_search.length" v-for="api_method in trayItemMethodMatch(dmItem, state.global_search)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint">dm.{{ api_method }}</span>
-                        </v-list-item-subtitle>
+                        <template v-if="state.show_api_hints && state.global_search.length">
+                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(dmItem, state.global_search)" :key="`data-menu-${dmItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                            <span class="api-hint">dm.{{ api_method }}</span>
+                          </v-list-item-subtitle>
+                        </template>
                       </v-list-item>
                     </v-row>
                   </div>
@@ -168,9 +178,11 @@
                         <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                           <span class="api-hint">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
                         </v-list-item-subtitle>
-                        <v-list-item-subtitle v-if="state.show_api_hints && state.global_search.length" v-for="api_method in trayItemMethodMatch(trayItem, state.global_search)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint">plg.{{ api_method }}</span>
-                        </v-list-item-subtitle>
+                        <template v-if="state.show_api_hints && state.global_search.length">
+                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(trayItem, state.global_search)" :key="`tray-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                            <span class="api-hint">plg.{{ api_method }}</span>
+                          </v-list-item-subtitle>
+                        </template>
                         <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
                           {{ trayItem.tray_item_description }}
                         </v-list-item-subtitle>
@@ -199,7 +211,7 @@
               </v-btn>
             </j-tooltip>
             <j-tooltip tipid="app-toolbar-popout" span_style="scale: 0.8; margin-left: -4px; margin-right: -4px">
-              <jupyter-widget :widget="popout_button" ></jupyter-widget>
+              <jupyter-widget v-if="popout_button" :widget="popout_button" :key="popout_button"></jupyter-widget>
             </j-tooltip>
           </span>
         </div>
@@ -241,7 +253,7 @@
             </v-card>
             <v-card v-if="state.drawer_content === 'save' && !state.settings.server_is_remote" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Export']</span>
-              <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Export')].widget"></jupyter-widget>
+              <jupyter-widget v-if="trayWidget('Export')" :widget="trayWidget('Export')" :key="trayWidget('Export')"></jupyter-widget>
             </v-card>
             <v-card v-if="state.drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-text-field
@@ -264,16 +276,18 @@
                         <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                           <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
                         </v-list-item-subtitle>
-                        <v-list-item-subtitle v-if="state.show_api_hints && state.tray_items_filter.length" v-for="api_method in trayItemMethodMatch(trayItem, state.tray_items_filter)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint">plg.{{ api_method }}</span>
-                        </v-list-item-subtitle>
+                        <template v-if="state.show_api_hints && state.tray_items_filter.length">
+                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(trayItem, state.tray_items_filter)" :key="`drawer-decfg-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                            <span class="api-hint">plg.{{ api_method }}</span>
+                          </v-list-item-subtitle>
+                        </template>
                         <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
                           {{ trayItem.tray_item_description }}
                         </v-list-item-subtitle>
                       </v-list-item>
                     </v-expansion-panel-title>
                     <v-expansion-panel-text style="margin-left: -12px; margin-right: -12px;">
-                      <jupyter-widget v-if="state.tray_items_open.includes(index)" :widget="trayItem.widget"></jupyter-widget>
+                      <jupyter-widget v-if="state.tray_items_open.includes(index) && trayItem.widget" :widget="trayItem.widget" :key="trayItem.widget"></jupyter-widget>
                     </v-expansion-panel-text>
                   </div>
                 </v-expansion-panel>
@@ -289,21 +303,21 @@
               <v-window v-model="state.info_subtab" style="overflow-y: auto">
                 <v-window-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
-                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
+                  <jupyter-widget v-if="trayWidget('Metadata')" :widget="trayWidget('Metadata')" :key="trayWidget('Metadata')"></jupyter-widget>
                 </v-window-item>
                 <v-window-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
-                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Markers')].widget"></jupyter-widget>
+                  <jupyter-widget v-if="trayWidget('Markers')" :widget="trayWidget('Markers')" :key="trayWidget('Markers')"></jupyter-widget>
                 </v-window-item>
                 <v-window-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Logger']</span>
-                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Logger')].widget"></jupyter-widget>
+                  <jupyter-widget v-if="trayWidget('Logger')" :widget="trayWidget('Logger')" :key="trayWidget('Logger')"></jupyter-widget>
                 </v-window-item>
               </v-window>
             </v-card>
             <v-card v-if="state.drawer_content === 'subsets'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</span>
-              <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Subset Tools')].widget"></jupyter-widget>
+              <jupyter-widget v-if="trayWidget('Subset Tools')" :widget="trayWidget('Subset Tools')" :key="trayWidget('Subset Tools')"></jupyter-widget>
             </v-card>
             <v-card v-if="state.drawer_content === 'settings'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
               <v-tabs fixed-tabs theme="dark" bg-color="viewer_toolbar" v-model="state.settings_subtab">
@@ -313,11 +327,11 @@
               <v-window v-model="state.settings_subtab" style="overflow-y: auto">
                 <v-window-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
-                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].widget"></jupyter-widget>
+                  <jupyter-widget v-if="trayWidget('Plot Options')" :widget="trayWidget('Plot Options')" :key="trayWidget('Plot Options')"></jupyter-widget>
                 </v-window-item>
                 <v-window-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Unit Conversion']</span>
-                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Unit Conversion')].widget"></jupyter-widget>
+                  <jupyter-widget v-if="trayWidget('Unit Conversion')" :widget="trayWidget('Unit Conversion')" :key="trayWidget('Unit Conversion')"></jupyter-widget>
                 </v-window-item>
               </v-window>
             </v-card>
@@ -367,7 +381,7 @@
             </v-card>
 
             <v-card v-if="state.drawer_content === 'logger'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Logger')].widget"></jupyter-widget>
+              <jupyter-widget v-if="trayWidget('Logger')" :widget="trayWidget('Logger')" :key="trayWidget('Logger')"></jupyter-widget>
             </v-card>
 
             <v-card v-if="state.drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
@@ -391,16 +405,18 @@
                         <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                           <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
                         </v-list-item-subtitle>
-                        <v-list-item-subtitle v-if="state.show_api_hints && state.tray_items_filter.length" v-for="api_method in trayItemMethodMatch(trayItem, state.tray_items_filter)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint">plg.{{ api_method }}</span>
-                        </v-list-item-subtitle>
+                        <template v-if="state.show_api_hints && state.tray_items_filter.length">
+                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(trayItem, state.tray_items_filter)" :key="`drawer-cfg-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                            <span class="api-hint">plg.{{ api_method }}</span>
+                          </v-list-item-subtitle>
+                        </template>
                         <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
                           {{ trayItem.tray_item_description }}
                         </v-list-item-subtitle>
                       </v-list-item>
                     </v-expansion-panel-title>
                     <v-expansion-panel-text style="margin-left: -12px; margin-right: -12px;">
-                      <jupyter-widget v-if="state.tray_items_open.includes(index)" :widget="trayItem.widget"></jupyter-widget>
+                      <jupyter-widget v-if="state.tray_items_open.includes(index) && trayItem.widget" :widget="trayItem.widget" :key="trayItem.widget"></jupyter-widget>
                     </v-expansion-panel-text>
                   </div>
                 </v-expansion-panel>
@@ -499,6 +515,13 @@ export default {
       this.golden_layout_state = v;
       /* Workaround for #1677, can be removed when bqplot/bqplot#1531 is released */
       window.dispatchEvent(new Event('resize'));
+    },
+    trayWidget(label) {
+      const index = this.state.tray_items.findIndex(ti => ti.label === label);
+      if (index === -1) {
+        return '';
+      }
+      return this.state.tray_items[index].widget || '';
     }
   },
   mounted() {

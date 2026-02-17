@@ -38,15 +38,17 @@
     </span>
 
     <v-btn-toggle v-model="active_tool_id" :style="" class="transparent">
-        <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" v-if="primary && visible" bottom>
-            <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" icon :value="id" :disabled="disabled_msg.length > 0" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''} ${disabled_msg.length > 0 ? 'opacity: 0.5;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
-                    <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>
-                    <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
-                </v-btn>
-            </template>
-            <span>{{ disabled_msg.length > 0 ? disabled_msg : tooltip }}{{has_suboptions ? " [click arrow for alt. tools]" : ""}}</span>
+      <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" :key="id">
+        <v-tooltip v-if="primary && visible" bottom>
+          <template v-slot:activator="{ props }">
+            <v-btn v-bind="props" icon :value="id" :disabled="disabled_msg.length > 0" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''} ${disabled_msg.length > 0 ? 'opacity: 0.5;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
+              <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>
+              <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ disabled_msg.length > 0 ? disabled_msg : tooltip }}{{has_suboptions ? " [click arrow for alt. tools]" : ""}}</span>
         </v-tooltip>
+      </template>
     </v-btn-toggle>
     <v-menu
       v-model="show_suboptions"
@@ -56,19 +58,19 @@
       :close-on-click="close_on_click"
     >
       <v-list>
-        <v-tooltip
-          v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)"
-          v-if="menu_ind==suboptions_ind && visible"
-          :key="id"
-          location="start"
-        >
-          <template v-slot:activator="{ props }">
-            <v-list-item v-bind="props" :input-value="primary" @click="() => select_primary([menu_ind, id])">
-              <v-list-item-title><img class='invert-if-dark' :src="img" width="20"/></v-list-item-title>
-            </v-list-item>
-          </template>
-          <span>{{ tooltip }}</span>
-        </v-tooltip>
+        <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)" :key="id">
+          <v-tooltip
+            v-if="menu_ind==suboptions_ind && visible"
+            location="start"
+          >
+            <template v-slot:activator="{ props }">
+              <v-list-item v-bind="props" :input-value="primary" @click="() => select_primary([menu_ind, id])">
+                <v-list-item-title><img class='invert-if-dark' :src="img" width="20"/></v-list-item-title>
+              </v-list-item>
+            </template>
+            <span>{{ tooltip }}</span>
+          </v-tooltip>
+        </template>
       </v-list>
     </v-menu>
   </div>

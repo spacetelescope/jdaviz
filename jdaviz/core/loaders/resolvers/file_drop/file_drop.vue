@@ -31,7 +31,7 @@
     <v-alert v-if="api_hints_enabled" type="info">
       Use UI to select file (no API access available).
     </v-alert>
-    <jupyter-widget :widget="file_drop_widget"></jupyter-widget>
+    <jupyter-widget v-if="file_drop_widget" :widget="file_drop_widget" :key="file_drop_widget"></jupyter-widget>
     <v-progress-linear v-if="progress !== 100" :value="progress"></v-progress-linear>
     <v-alert v-if="nfiles > 1" type="warning">
       Multiple files dropped, only using first entry.

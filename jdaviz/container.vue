@@ -26,6 +26,7 @@
     >
       <jupyter-widget
         :widget="viewer.widget"
+        :key="viewer.widget || viewer.id"
         :ref="'viewer-widget-'+viewer.id"
        ></jupyter-widget>
     </gl-component>

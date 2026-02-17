@@ -44,9 +44,9 @@
     </v-row>
 
     <v-row v-if="plot_available">
-      <jupyter-widget :widget="plot_across_x_widget"/>
+      <jupyter-widget v-if="plot_across_x_widget" :widget="plot_across_x_widget" :key="plot_across_x_widget"/>
       <br/>
-      <jupyter-widget :widget="plot_across_y_widget"/>
+      <jupyter-widget v-if="plot_across_y_widget" :widget="plot_across_y_widget" :key="plot_across_y_widget"/>
     </v-row>
 
   </j-tray-plugin>

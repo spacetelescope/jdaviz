@@ -104,7 +104,7 @@
       <v-icon>mdi-crosshairs-gps</v-icon>
     </j-custom-toolbar-toggle>
 
-    <jupyter-widget :widget="table_selected_widget"></jupyter-widget>
+    <jupyter-widget v-if="table_selected_widget" :widget="table_selected_widget" :key="table_selected_widget"></jupyter-widget>
     <v-row v-if="row_selected_count > 0">
         <v-col>
          <plugin-action-button
@@ -121,7 +121,7 @@
         </v-col>
     </v-row>
 
-    <jupyter-widget :widget="table_widget"></jupyter-widget>
+    <jupyter-widget v-if="table_widget" :widget="table_widget" :key="table_widget"></jupyter-widget>
 
   </j-tray-plugin>
 </template>
