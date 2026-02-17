@@ -33,6 +33,6 @@
         ldr.filepath = '{{ filepath }}'
       </span>
     </v-row>
-    <jupyter-widget :widget="file_chooser_widget"></jupyter-widget>
+    <jupyter-widget v-if="file_chooser_widget" :widget="file_chooser_widget" :key="file_chooser_widget"></jupyter-widget>
   </j-loader>
 </template>

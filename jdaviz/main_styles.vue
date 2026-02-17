@@ -3,11 +3,13 @@
 <script>
 export default {
   created() {
-    const vuetifyThemes = this.$vuetify?.theme?.themes;
+    const theme = this.$vuetify?.theme;
+    const vuetifyThemes = theme?.themes?.value;
     if (!vuetifyThemes) {
       return;
     }
-    vuetifyThemes.light = {
+
+    const lightColors = {
       toolbar: "#003B4D",
       primary: "#00617E",
       secondary: "#007DA4",
@@ -23,7 +25,8 @@ export default {
       active: '#C75109',
       viewer_toolbar: '#205f76',
     };
-    vuetifyThemes.dark = {
+
+    const darkColors = {
       toolbar: "#153A4B",
       primary: "#53CBFF",
       secondary: "#007DA4",
@@ -38,6 +41,24 @@ export default {
       gray: '#141414',
       active: '#C75109',
       viewer_toolbar: '#205f76',
+    };
+
+    // Vuetify 3 theme entries include metadata (`dark`, `variables`) plus `colors`.
+    // Update only the colors to avoid replacing the full theme object.
+    if (!vuetifyThemes.light) {
+      vuetifyThemes.light = { dark: false, colors: {}, variables: {} };
+    }
+    if (!vuetifyThemes.dark) {
+      vuetifyThemes.dark = { dark: true, colors: {}, variables: {} };
+    }
+
+    vuetifyThemes.light.colors = {
+      ...(vuetifyThemes.light.colors || {}),
+      ...lightColors,
+    };
+    vuetifyThemes.dark.colors = {
+      ...(vuetifyThemes.dark.colors || {}),
+      ...darkColors,
     };
   },
 }

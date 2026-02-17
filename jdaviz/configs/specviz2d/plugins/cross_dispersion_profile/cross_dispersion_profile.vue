@@ -11,7 +11,7 @@
     v-model:scroll_to="scroll_to">
 
     <v-row v-if="plot_available" style="padding: 0px">
-      <jupyter-widget :widget="plot_widget"/>
+      <jupyter-widget v-if="plot_widget" :widget="plot_widget" :key="plot_widget"/>
     </v-row>
 
     <plugin-dataset-select

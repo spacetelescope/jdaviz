@@ -52,7 +52,7 @@
                   <v-container>
                       <v-row>
                       <v-col>
-                          <jupyter-widget :widget="file_browser_widget" v-if="file_browser_widget"/>
+                          <jupyter-widget v-if="file_browser_widget" :widget="file_browser_widget" :key="file_browser_widget"/>
                       </v-col>
                       </v-row>
                   </v-container>

@@ -155,7 +155,7 @@
         </div>
 
         <j-plugin-section-header>Results History</j-plugin-section-header>
-        <jupyter-widget :widget="table_widget"></jupyter-widget>
+        <jupyter-widget v-if="table_widget" :widget="table_widget" :key="table_widget"></jupyter-widget>
 
         <div v-if="line_menu_items.length > 0">
           <j-plugin-section-header>Redshift from Centroid</j-plugin-section-header>

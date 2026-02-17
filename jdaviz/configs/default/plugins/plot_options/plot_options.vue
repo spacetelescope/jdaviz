@@ -807,7 +807,7 @@
                                            'stretch_vmin', 'stretch_vmax',
                                            'image_color_mode', 'image_color', 'image_colormap'])"
             >
-              <jupyter-widget :widget="stretch_histogram_widget"/>
+              <jupyter-widget v-if="stretch_histogram_widget" :widget="stretch_histogram_widget" :key="stretch_histogram_widget"/>
             </glue-state-sync-wrapper>
           </div>
           <div v-if="stretch_hist_spinner"
