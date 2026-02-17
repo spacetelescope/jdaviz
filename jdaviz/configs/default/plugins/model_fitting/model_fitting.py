@@ -1460,7 +1460,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         spec = self.dataset.get_selected_spectrum(use_display_units=True)
 
         # Pass selected viewer to load explicitly so we don't get a warning
-        load_kwargs = {'viewer': self.add_results.viewer.selected}
+        load_kwargs = {}
+        if self.add_results.viewer.selected not in (None, 'None'):
+            load_kwargs['viewer'] = self.add_results.viewer.selected
 
         masked_spectrum = self._apply_subset_masks(spec,
                                                    self.spectral_subset)
@@ -1714,7 +1716,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Create new data entry for glue
         if add_data:
-            load_kwargs = {'viewer': self.add_results.viewer.selected}
+            load_kwargs = {}
+            if self.add_results.viewer.selected not in (None, 'None'):
+                load_kwargs['viewer'] = self.add_results.viewer.selected
             self.add_results.add_results_from_plugin(output_cube, load_kwargs=load_kwargs)
             self._set_default_results_label()
 
