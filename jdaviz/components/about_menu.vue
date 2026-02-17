@@ -23,7 +23,7 @@
 
     <v-card id="about-scroll-content">
       <span v-if="api_hints_enabled" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj }}.plugins['About']</span>
-      <jupyter-widget :widget="about_widget"></jupyter-widget>
+      <jupyter-widget v-if="about_widget" :widget="about_widget" :key="about_widget"></jupyter-widget>
     </v-card>
   </v-menu>
 </template>

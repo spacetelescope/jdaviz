@@ -68,7 +68,7 @@
               <span class="table-title">Observations</span>
               <span v-if="api_hints_enabled" class="api-hint">ldr.observation_table</span>
 
-              <jupyter-widget v-if="treat_table_as_query" :widget="observation_table"></jupyter-widget>
+              <jupyter-widget v-if="treat_table_as_query && observation_table" :widget="observation_table" :key="observation_table"></jupyter-widget>
             </div>
             <div v-if="treat_table_as_query && file_table_populated">
               <span class="table-title">Files</span>
@@ -105,7 +105,7 @@
               </v-row>
 
               <span v-if="api_hints_enabled" class="api-hint">ldr.file_table</span>
-              <jupyter-widget v-if="treat_table_as_query" :widget="file_table"></jupyter-widget>
+              <jupyter-widget v-if="treat_table_as_query && file_table" :widget="file_table" :key="file_table"></jupyter-widget>
             </div>
           </div>
           <!-- end observation/file table -->
@@ -155,7 +155,7 @@
               hint="Choose input format"
           ></plugin-select>
           <div v-if="format_selected.length > 0" style="margin-top: 16px; margin-left: -12px; margin-right: -12px">
-              <jupyter-widget :widget="importer_widget"></jupyter-widget>
+              <jupyter-widget v-if="importer_widget" :widget="importer_widget" :key="importer_widget"></jupyter-widget>
           </div>
         </v-container>
       </v-card-text>

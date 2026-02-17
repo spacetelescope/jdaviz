@@ -208,7 +208,7 @@
     </v-row>
 
     <v-row v-if="!multiselect && plot_available">
-      <jupyter-widget :widget="plot_widget"/>
+      <jupyter-widget v-if="plot_widget" :widget="plot_widget" :key="plot_widget"/>
     </v-row>
 
     <div v-if="!multiselect && plot_available && fit_radial_profile && current_plot_type != 'Curve of Growth'">
@@ -248,7 +248,7 @@
 
     <div v-if="result_available">
       <j-plugin-section-header>Results History</j-plugin-section-header>
-      <jupyter-widget :widget="table_widget"></jupyter-widget>
+      <jupyter-widget v-if="table_widget" :widget="table_widget" :key="table_widget"></jupyter-widget>
     </div>
   </j-tray-plugin>
 </template>
