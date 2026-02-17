@@ -242,7 +242,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             raise ValueError("Link type can only be changed after existing subsets "
                              f"are deleted, but {len(self.app.data_collection.subset_groups)} "
                              f"subset(s) still exist. To delete them, you can use "
-                             f"`delete_subsets()` from the plugin API.")
+                             f"`remove_from_app()` from the data menu API.")
 
         if self.need_clear_astrowidget_markers:
             setattr(self, msg.get('name'), msg.get('old'))
