@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { Splitpanes } from 'https://esm.sh/splitpanes@4.0.4?bundle'
+import { Splitpanes } from 'https://esm.sh/splitpanes@4.0.4?external=vue'
 </script>
 
 <style>

@@ -5,5 +5,5 @@
 </template>
 
 <script setup>
-import { Pane } from 'https://esm.sh/splitpanes@4.0.4?bundle'
+import { Pane } from 'https://esm.sh/splitpanes@4.0.4?external=vue'
 </script>

@@ -257,7 +257,8 @@
       <jupyter-widget
           v-if='plugin_plot_selected_widget.length > 0'
           style="position: absolute; left: -100%"
-          :widget="plugin_plot_selected_widget"/>
+          :widget="plugin_plot_selected_widget"
+          :key="plugin_plot_selected_widget"/>
       <v-row class="row-min-bottom-padding">
         <div class="category-content">
           <plugin-select
