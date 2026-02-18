@@ -38,7 +38,7 @@ def test_specviz_data_labels(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_data(spectrum1d, data_label=label)
 
-    assert specviz_helper.data_labels == [label]
+    assert list(specviz_helper.datasets.keys()) == [label]
     assert specviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_loaded == [label]
     assert specviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_visible == [label]
 
@@ -196,29 +196,24 @@ def test_wildcard_match_through_load(imviz_helper, multi_extension_image_hdu_wcs
 
     # Through load
     imviz_helper.load(multi_extension_image_hdu_wcs, extension=selection)
-    assert imviz_helper.data_labels == [data_labels[i] for i in matches]
+    assert list(imviz_helper.datasets.keys()) == [data_labels[i] for i in matches]
 
 
 def test_data_access_deconfigged(deconfigged_helper, mos_spectrum2d):
     """Test the .datasets property access for the deconfigged helper."""
     # Initially no data loaded
     assert deconfigged_helper.datasets == {}
-    assert deconfigged_helper.data_labels == []
 
     # Load data
     deconfigged_helper.load(mos_spectrum2d, data_label='Test 2D Spectrum',
                             format='2D Spectrum', auto_extract=True)
-
-    # Test data_labels property
-    assert 'Test 2D Spectrum' in deconfigged_helper.data_labels
-    assert 'Test 2D Spectrum (auto-ext)' in deconfigged_helper.data_labels
-    assert len(deconfigged_helper.data_labels) == 2
 
     # Test datasets property returns dict of DataApi objects
     data_dict = deconfigged_helper.datasets
     assert isinstance(data_dict, dict)
     assert 'Test 2D Spectrum' in data_dict
     assert 'Test 2D Spectrum (auto-ext)' in data_dict
+    assert len(data_dict) == 2
 
     # Test that spectral data uses SpectralDataApi (subclass of DataApi)
     assert isinstance(data_dict['Test 2D Spectrum'], DataApi)

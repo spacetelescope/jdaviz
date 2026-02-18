@@ -184,7 +184,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
                             for e_num, s_id in number_combos]
     ldr.load()
 
-    assert len(deconfigged_helper.data_labels) == len(sources_obj.selected)
+    assert len(deconfigged_helper.datasets) == len(sources_obj.selected)
     dc = deconfigged_helper.app.data_collection
     assert len(dc) == len(sources_obj.selected)
     assert len(deconfigged_helper.viewers) == 1

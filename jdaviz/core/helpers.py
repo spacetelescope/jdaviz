@@ -273,6 +273,7 @@ class ConfigHelper(HubListener):
                 for data in self.app.data_collection}
 
     @property
+    @deprecated(since="5.0", alternative="datasets")
     def data_labels(self):
         """
         List of data labels loaded and available in jdaviz
