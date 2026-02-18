@@ -233,7 +233,8 @@ def test_data_access_deconfigged(deconfigged_helper, mos_spectrum2d):
     viewer_1d = deconfigged_helper.viewers['1D Spectrum']
 
     # Remove data from viewer to test add_to_viewer
-    viewer_1d.data_menu.remove_data_from_viewer('Test 2D Spectrum (auto-ext)')
+    viewer_1d.data_menu.layer = 'Test 2D Spectrum (auto-ext)'
+    viewer_1d.data_menu.remove_from_viewer()
     assert 'Test 2D Spectrum (auto-ext)' not in viewer_1d.data_menu.layer.choices
     data_dict['Test 2D Spectrum (auto-ext)'].add_to_viewer('1D Spectrum')
     assert 'Test 2D Spectrum (auto-ext)' in viewer_1d.data_menu.layer.choices
