@@ -200,9 +200,9 @@ def test_wildcard_match_through_load(imviz_helper, multi_extension_image_hdu_wcs
 
 
 def test_data_access_deconfigged(deconfigged_helper, mos_spectrum2d):
-    """Test the .data property access for the deconfigged helper."""
+    """Test the .datasets property access for the deconfigged helper."""
     # Initially no data loaded
-    assert deconfigged_helper.data == {}
+    assert deconfigged_helper.datasets == {}
     assert deconfigged_helper.data_labels == []
 
     # Load data
@@ -214,8 +214,8 @@ def test_data_access_deconfigged(deconfigged_helper, mos_spectrum2d):
     assert 'Test 2D Spectrum (auto-ext)' in deconfigged_helper.data_labels
     assert len(deconfigged_helper.data_labels) == 2
 
-    # Test data property returns dict of DataApi objects
-    data_dict = deconfigged_helper.data
+    # Test datasets property returns dict of DataApi objects
+    data_dict = deconfigged_helper.datasets
     assert isinstance(data_dict, dict)
     assert 'Test 2D Spectrum' in data_dict
     assert 'Test 2D Spectrum (auto-ext)' in data_dict

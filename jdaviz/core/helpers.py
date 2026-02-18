@@ -223,13 +223,13 @@ class ConfigHelper(HubListener):
         return out
 
     @property
-    def data(self):
+    def datasets(self):
         """
         Access API object for data loaded in jdaviz.
 
         Returns
         -------
-        data : dict
+        datasets : dict
             dict of data objects, with keys corresponding to data labels
         """
         def _get_data_api_class(data):
