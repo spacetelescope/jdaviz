@@ -22,7 +22,11 @@ Bug Fixes
 
 - Fixed API hint styling for viewer labels. [#4003]
 
+- Fixed bug when opening plot options or export from shortcut button when jdaviz
+  and lcviz are simultaneously imported. [#4027]
+
 - Fixed astroquery and virtual observatory loaders not responding properly to link type changes. [#4038]
+
 
 Cubeviz
 ^^^^^^^
