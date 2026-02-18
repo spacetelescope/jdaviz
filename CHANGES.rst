@@ -23,6 +23,8 @@ New Features
 
 - Add handles to subset to allow interactive resizing. [#3919]
 
+- Top level access to datasets API. [#4024]
+
 Cubeviz
 ^^^^^^^
 
