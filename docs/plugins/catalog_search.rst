@@ -8,6 +8,12 @@ Catalog Search
 
 Query astronomical catalogs and overlay sources on images.
 
+.. warning::
+
+    This plugin will be deprecated in a future version of Jdaviz. Please transition to using the loaders
+    (e.g., the :ref:`astroquery loader <loaders-source-astroquery>`) with the :ref:`catalog format <loaders-format-catalog>`
+    to search and load catalogs, and the :ref:`table viewer <viewers-table>` to view and interact with the results.
+
 Description
 ===========
 
