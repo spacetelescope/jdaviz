@@ -176,7 +176,7 @@ def test_rename_data_no_auto_extraction_on_2d_spectrum(deconfigged_helper, spect
     # Verify rename (of 2d spectrum only) was successful
     assert '2d_spectrum' not in dcf_dc.labels
     assert '2d_spectrum_renamed' in dcf_dc.labels
-    assert '2d_spectrum (auto-ext)' in dcf_dc.labels
+    assert '2d_spectrum_renamed (auto-ext)' in dcf_dc.labels
 
     # Verify no new data was auto-extracted
     # The number of data items should remain the same (or only increase
