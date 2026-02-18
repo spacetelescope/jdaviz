@@ -187,7 +187,8 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
                             # It's 2D, so this is the only option
                             wav = wcs.pixel_to_world(self.pixel, 0)[0]
                 else:
-                    raise ValueError("WCS with more than 2 dimensions is not supported")
+                    self.disabled_msg = "WCS with more than 2 pixel dimensions is not supported."
+                    raise ValueError(self.disabled_msg)
                 # if the resulting wcs transformation gave us a unit that is still
                 # in pixels, do not attempt to convert units and set wav to None.
                 if wav.unit == u.pix:
