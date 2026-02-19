@@ -320,6 +320,7 @@ class FakeTable(TableMixin):
 
     def __init__(self, session, catalog, *args, **kwargs):
         self.session = session
+        self.app = session.application
         self._plugin_name = 'test-fake-table'
         super().__init__(*args, **kwargs)
         self.table._qtable = catalog
