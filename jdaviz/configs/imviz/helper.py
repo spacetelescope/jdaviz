@@ -1,6 +1,5 @@
 import os
 import re
-import warnings
 from copy import deepcopy
 
 import numpy as np
@@ -212,20 +211,14 @@ class Imviz(ImageConfigHelper):
                 if data.ndim != 3:
                     raise ValueError(f'Imviz cannot load this array with ndim={data.ndim}')
 
-            max_n_slice = 16  # Arbitrary limit for performance reasons
-            for i in range(data.shape[0]):
-                if i == max_n_slice:
-                    warnings.warn(f'{max_n_slice} or more 3D slices found, stopping; '
-                                  'please use Cubeviz')
-                    break
-
-                self.load(data[i, :, :],
-                          format='Image',
-                          data_label=data_label,
-                          extension=extensions,
-                          parent=kwargs.pop('parent', None),
-                          viewer=viewer,
-                          gwcs_to_fits_sip=gwcs_to_fits_sip)
+            # default to extension='*' to select all slices with default suffix logic
+            self.load(data,
+                      format='Image',
+                      data_label=data_label,
+                      extension='*',  # Select all slices
+                      parent=kwargs.pop('parent', None),
+                      viewer=viewer,
+                      gwcs_to_fits_sip=gwcs_to_fits_sip)
         elif isinstance(data, str) and data.endswith('.reg'):
             self.load(data,
                       format='Subset',

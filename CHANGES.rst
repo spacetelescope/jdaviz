@@ -23,6 +23,8 @@ New Features
 
 - Add handles to subset to allow interactive resizing. [#3919]
 
+- Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
+
 Cubeviz
 ^^^^^^^
 
@@ -77,6 +79,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
+
 4.5.1 (unreleased)
 ==================
 
@@ -103,6 +107,8 @@ Bug Fixes
 
 - Fixed bug when opening plot options or export from shortcut button when jdaviz
   and lcviz are simultaneously imported. [#4027]
+
+- Fixed astroquery and virtual observatory loaders not responding properly to link type changes. [#4038]
 
 - Avoid incorrectly showing "no viewer selected" warning when adding data from some plugins. [#4037]
 

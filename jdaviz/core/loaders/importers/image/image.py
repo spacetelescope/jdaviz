@@ -35,6 +35,7 @@ except ImportError:
 else:
     HAS_ROMAN_DATAMODELS = True
 
+MAX_N_SLICE = 16
 
 __all__ = ['ImageImporter', '_spatial_assign_component_type']
 
@@ -105,8 +106,10 @@ class ImageImporter(BaseImporterToDataCollection):
 
         input_is_roman = (HAS_ROMAN_DATAMODELS and
                           isinstance(input, (rdd.ImageModel, rdd.DataModel)))
+        input_is_3d_array = isinstance(input, np.ndarray) and input.ndim == 3
         self.input_has_extensions = (isinstance(input, fits.HDUList) or
-                                     input_is_roman)
+                                     input_is_roman or
+                                     input_is_3d_array)
         if self.input_has_extensions:
             if isinstance(input, fits.HDUList):
                 filters = [_validate_fits_image2d]
@@ -128,6 +131,22 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'data_hash': create_data_hash(value),
                                 'obj': value}
                                for index, (key, value) in enumerate(input.items())]
+            elif input_is_3d_array:
+                # Handle 3D numpy arrays as multiple 2D slices
+                n_slices = min(input.shape[0], MAX_N_SLICE)
+                if input.shape[0] > MAX_N_SLICE:
+                    warnings.warn(f'Only the first {MAX_N_SLICE} will be loaded.'
+                                  'If applicable, use \'3D Spectrum\' instead.',
+                                  UserWarning)
+                filters = []  # No filtering needed for array slices
+                ext_options = [{'label': f"slice {i}",
+                                'name': f"slice-{i}",
+                                'ver': None,
+                                'name_ver': f"slice-{i}",
+                                'index': i,
+                                'data_hash': create_data_hash(input[i, :, :]),
+                                'obj': input[i, :, :]}
+                               for i in range(n_slices)]
             else:
                 raise NotImplementedError()
 
@@ -182,6 +201,10 @@ class ImageImporter(BaseImporterToDataCollection):
         if not supported_input_type:
             return False
 
+        # 3D numpy arrays are valid if they have extension choices set up
+        if isinstance(self.input, np.ndarray) and self.input.ndim == 3:
+            return len(self.extension.choices) > 0
+
         try:
             output = self.output
         except Exception:  # noqa
@@ -211,6 +234,9 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @observe('extension_selected', 'data_label_as_prefix')
     def _set_default_data_label(self, *args):
+        if not hasattr(self, 'data_label'):
+            return
+
         if self.default_data_label_from_resolver:
             prefix = self.default_data_label_from_resolver
         else:
@@ -223,24 +249,25 @@ class ImageImporter(BaseImporterToDataCollection):
                 # selected_obj may be an ndarray object if input is a roman data model
                 ver = getattr(self.extension.selected_obj[0], 'ver', None)
                 # only a single extension selected
-                self.data_label_default = self._get_label_with_extension(prefix,
-                                                                         ext=self.extension.selected_name[0],  # noqa
-                                                                         ver=ver)  # noqa
+                self.data_label.default = self._get_label_with_extension(
+                    prefix,
+                    ext=self.extension.selected_name[0],
+                    ver=ver)
                 self.data_label_is_prefix = False
             else:
                 # multiple extensions selected,
                 # only show the prefix and append the extension later during import
-                self.data_label_default = prefix
+                self.data_label.default = prefix
                 self.data_label_is_prefix = True
         elif (self.data_label_as_prefix or
               (isinstance(self.input, NDData) and
                getattr(self.input, 'meta', {}).get('plugin', None) is None)):
             # will append with [DATA]/[UNCERTAINTY]/[MASK] later
             # TODO: allow user to select extensions and include in same logic as HDUList
-            self.data_label_default = prefix
+            self.data_label.default = prefix
             self.data_label_is_prefix = True
         else:
-            self.data_label_default = prefix
+            self.data_label.default = prefix
             self.data_label_is_prefix = False
 
         if self.data_label_is_prefix:
@@ -266,7 +293,19 @@ class ImageImporter(BaseImporterToDataCollection):
         elif isinstance(input, NDData):
             data = _nddata_to_glue_data(input)  # list of Data
         elif isinstance(input, np.ndarray):
-            data = [_ndarray_to_glue_data(input)]
+            if input.ndim == 3 and len(getattr(self.extension, 'choices', [])) > 0:
+                # 3D array with slices as extensions - use selected slices
+                # selected_obj retrieves from manual_options which preserves the 'obj' key
+                data = [_ndarray_to_glue_data(slice_arr)
+                        for slice_arr in self.extension.selected_obj]
+            elif input.ndim == 2:
+                # 2D array
+                data = [_ndarray_to_glue_data(input)]
+            elif input.ndim == 3:
+                n_slices = min(input.shape[0], MAX_N_SLICE)
+                data = [_ndarray_to_glue_data(input[i, :, :]) for i in range(n_slices)]
+            else:
+                raise ValueError(f'Cannot load as image with ndim={input.ndim}')
         # asdf
         elif (isinstance(input, asdf.AsdfFile)):
             data = [_roman_asdf_2d_to_glue_data(input, ext='data')]
@@ -281,7 +320,7 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             data = [_hdu2data(hdu, input) for hdu in self.extension.selected_obj]
 
-        ext_names = self.extension.selected_name if self.input_has_extensions else [None] * len(data)  # noqa
+        ext_names = self.extension.selected_name if self.input_has_extensions and len(getattr(self.extension, 'choices', [])) > 0 else [None] * len(data)  # noqa
         for d, ext_name in zip(data, ext_names):
             if d is None:
                 continue

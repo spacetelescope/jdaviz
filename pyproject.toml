@@ -80,7 +80,8 @@ all = [
 test = [
     "pytest",
     "pytest-astropy",
-    "pytest-tornasync"
+    "pytest-tornasync",
+    "pytest-xdist"
 ]
 docs = [
     "sphinx-astropy[confv2]>=1.9.1",

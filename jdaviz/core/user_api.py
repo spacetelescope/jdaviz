@@ -1,6 +1,8 @@
 import warnings
 
 import astropy.units as u
+from astropy.utils.exceptions import AstropyDeprecationWarning
+
 
 __all__ = ['UserApiWrapper', 'PluginUserApi',
            'LoaderUserApi', 'ImporterUserApi',
@@ -206,9 +208,15 @@ class PluginUserApi(UserApiWrapper):
 
     def __repr__(self):
         if self._deprecation_msg:
-            warnings.warn(self._deprecation_msg, DeprecationWarning)
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return f'<{self._obj._registry_label} API>'
+
+    def __setattr__(self, *args, **kwargs):
+        if hasattr(self, '_deprecation_msg') and self._deprecation_msg:
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
+            super().__setattr__('_deprecation_msg', None)
+        return super().__setattr__(*args, **kwargs)
 
 
 class LoaderUserApi(UserApiWrapper):
@@ -299,13 +307,13 @@ class ViewerUserApi(UserApiWrapper):
 
     def __getattr__(self, *args, **kwargs):
         if super().__getattr__('_deprecation_msg'):
-            warnings.warn(self._deprecation_msg, DeprecationWarning)
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return super().__getattr__(*args, **kwargs)
 
     def __setattr__(self, *args, **kwargs):
         if hasattr(self, '_deprecation_msg') and self._deprecation_msg:
-            warnings.warn(self._deprecation_msg, DeprecationWarning)
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return super().__setattr__(*args, **kwargs)
 

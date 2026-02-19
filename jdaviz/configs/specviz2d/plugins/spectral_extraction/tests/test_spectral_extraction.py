@@ -14,7 +14,6 @@ from specutils import Spectrum, SpectralRegion
 from glue.core.link_helpers import LinkSameWithUnits
 from glue.core.roi import XRangeROI
 
-from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.utils import cached_uri
 from jdaviz.core.marks import Lines
 
@@ -306,7 +305,8 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
     uc = specviz2d_helper.plugins["Unit Conversion"]
     pext = specviz2d_helper.plugins['2D Spectral Extraction']
 
-    for new_flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+    # test a subset of unit options, testing all is slow
+    for new_flux_unit in ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']:
 
         # iterate through flux units verifying that selected object/spectrum is obtained using
         # display units
