@@ -6,6 +6,7 @@ import time
 import warnings
 from contextlib import contextmanager
 from functools import cached_property, wraps
+from traitlets import link
 
 import astropy.units as u
 import bqplot
@@ -63,7 +64,7 @@ from jdaviz.core.region_translators import (regions2roi,
                                             stcs_string2region)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
-from jdaviz.core.registries import tray_registry, viewer_registry
+from jdaviz.core.registries import tray_registry, viewer_registry, loader_resolver_registry
 from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
@@ -5965,10 +5966,8 @@ class Table(PluginSubcomponent):
 
     def _setup_object_loader(self):
         """Set up the object loader for 'Load into App' functionality."""
-        # ensure registry has been populated
+        # ensure the loaders are in registy
         import jdaviz.core.loaders  # noqa
-        from jdaviz.core.registries import loader_resolver_registry
-        from traitlets import link
 
         def close_accordion():
             self.loader_panel_ind = None
