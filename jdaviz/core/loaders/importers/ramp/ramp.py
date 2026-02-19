@@ -110,12 +110,12 @@ class RampImporter(BaseImporterToDataCollection):
 
         # RAMP GROUP CUBE
         if self.default_data_label_from_resolver:
-            self.data_label_default = self.default_data_label_from_resolver + '[DATA]'
+            self.data_label.default = self.default_data_label_from_resolver + '[DATA]'
         elif self.config == 'rampviz':
             # TODO: backwards compaibility for other inputs
-            self.data_label_default = self.input.__class__.__name__ + '[DATA]'
+            self.data_label.default = self.input.__class__.__name__ + '[DATA]'
         else:
-            self.data_label_default = 'Ramp[DATA]'
+            self.data_label.default = 'Ramp[DATA]'
 
         if self.config == 'rampviz':
             self.viewer.selected = ['group-viewer']
