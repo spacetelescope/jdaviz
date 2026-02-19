@@ -56,8 +56,11 @@ from jdaviz.core.marks import (PluginMarkCollection,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
-                               ShadowLine, ApertureMark)
-from jdaviz.core.region_translators import regions2roi, regions2aperture
+                               ShadowLine, ApertureMark, RegionOverlay)
+from jdaviz.core.region_translators import (regions2roi,
+                                            regions2aperture,
+                                            is_stcs_string,
+                                            stcs_string2region)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.core.registries import tray_registry, viewer_registry
@@ -317,6 +320,140 @@ class CustomToolbarToggleMixin(VuetifyTemplate, HubListener):
 
     def vue_toggle_custom_toolbar(self, *args):
         self.toggle_custom_toolbar()
+
+
+class FootprintDisplayMixin:
+    """
+    Mixin for displaying selectable footprint regions
+    in image viewers.
+    """
+    def vue_link_by_wcs(self, *args):
+        plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        if plg is not None:
+            plg.align_by = 'WCS'
+        self.is_wcs_linked = True
+
+    def _get_image_viewers(self):
+        return [viewer for viewer in self.app._viewer_store.values()
+                if _is_image_viewer(viewer)]
+
+    def _display_observation_footprints(self):
+        if 's_region' not in self.observation_table.headers_avail:
+            return
+
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
+            return
+
+        regions = []
+        region_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            region = stcs_string2region(s_region_str)
+            regions.append(region)
+            region_labels.append(idx)
+
+        if not regions:
+            return
+
+        for viewer in image_viewers:
+            viewer._add_region_overlay(
+                region=regions,
+                region_label=region_labels,
+                selected=False,
+                fill_opacities=[0]
+            )
+
+        self._sync_footprint_selection_to_viewers()
+
+    def _remove_observation_footprints(self):
+        """Remove all observation footprints from all image viewers."""
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
+            return
+
+        # Get all labels (row indices) from observation table
+        all_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            all_labels.append(idx)
+
+        if not all_labels:
+            return
+
+        # Remove footprints from all viewers
+        for viewer in image_viewers:
+            # Only remove labels that actually exist in this viewer
+            existing_labels = [
+                mark.label for mark in viewer.figure.marks
+                if isinstance(mark, RegionOverlay)
+            ]
+            labels_to_remove = [label for label in all_labels if label in existing_labels]
+            if labels_to_remove:
+                viewer._remove_region_overlay(region_label=labels_to_remove)
+
+    def _sync_footprint_selection_to_viewers(self):
+        """Sync footprint selection state across all viewers based on table selection."""
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
+            return
+
+        selected_indices = set()
+        for row in self.observation_table.selected_rows:
+            idx = self.observation_table.items.index(row)
+            selected_indices.add(idx)
+
+        valid_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            valid_labels.append(idx)
+
+        # Update selection in all viewers
+        for viewer in image_viewers:
+            for label in valid_labels:
+                if label in selected_indices:
+                    viewer._select_region_overlay(region_label=label)
+                else:
+                    viewer._deselect_region_overlay(region_label=label)
+
+    def _add_footprints_to_viewer(self, viewer):
+        # Build regions from table
+        regions = []
+        region_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            region = stcs_string2region(s_region_str)
+            regions.append(region)
+            region_labels.append(idx)
+
+        if not regions:
+            return
+
+        viewer._add_region_overlay(
+            region=regions,
+            region_label=region_labels,
+            selected=False,
+            fill_opacities=[0]
+        )
+        # Sync selection state with table
+        self._sync_footprint_selection_to_viewers()
 
 
 class LoadersMixin(VuetifyTemplate, HubListener):
@@ -1784,6 +1921,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         hint="Select an item to modify."
       </plugin-editable-select>
     """
+
     def __init__(self, *args, **kwargs):
         """
         Parameters
@@ -2604,6 +2742,7 @@ class SubsetSelect(SelectPluginComponent):
       />
 
     """
+
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
                  dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
                  default_mode='default_text', subset_selected_changed_callback=None, mode=None,
@@ -3130,6 +3269,7 @@ class ApertureSubsetSelect(SubsetSelect):
       />
 
     """
+
     def __init__(self, plugin, items, selected, selected_validity,
                  scale_factor, multiselect=None,
                  dataset=None, viewers=None, default_text=None,
@@ -3885,7 +4025,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             return spectrum, np.zeros_like(spectrum.flux.value), spectrum
 
         # compute continuum
-        if self.continuum_subset_selected == "Surrounding" and spectral_subset.selected == "Entire Spectrum": # noqa
+        if self.continuum_subset_selected == "Surrounding" and spectral_subset.selected == "Entire Spectrum":  # noqa
             # we know we'll just use the endpoints, so let's be efficient and not even
             # try extracting from the region
             continuum_mask = np.array([0, len(spectral_axis)-1])
@@ -4747,10 +4887,11 @@ class AutoTextField(BasePluginComponent):
     """
 
     def __init__(self, plugin, value, default, auto,
-                 invalid_msg):
+                 invalid_msg, unique_in_data_collection=False):
         super().__init__(plugin, value=value,
                          default=default, auto=auto,
                          invalid_msg=invalid_msg)
+        self._unique_in_data_collection = unique_in_data_collection
 
         if getattr(plugin, auto):
             # ensure value starts at the default value
@@ -4767,6 +4908,12 @@ class AutoTextField(BasePluginComponent):
     def __hash__(self):
         # defining __eq__ without defining __hash__ makes the object unhashable
         return super().__hash__()
+
+    def map_value(self, attr, value):
+        # Apply return_unique_name when setting default if unique_in_data_collection is True
+        if attr == 'default' and self._unique_in_data_collection and value:
+            return self.app.return_unique_name(value)
+        return value
 
     def _on_set_to_default(self, msg={}):
         if self.auto:
