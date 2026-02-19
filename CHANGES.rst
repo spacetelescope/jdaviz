@@ -25,7 +25,7 @@ New Features
 
 - Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
 
-
+- Improve default marker styling options (size and color cycler) for scatter layers. [#4044]
 
 Cubeviz
 ^^^^^^^
