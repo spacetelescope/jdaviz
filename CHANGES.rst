@@ -27,6 +27,7 @@ Bug Fixes
 
 - Fixed astroquery and virtual observatory loaders not responding properly to link type changes. [#4038]
 
+- Avoid incorrectly showing "no viewer selected" warning when adding data from some plugins. [#4037]
 
 Cubeviz
 ^^^^^^^
