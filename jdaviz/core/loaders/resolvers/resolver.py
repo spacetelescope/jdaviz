@@ -23,6 +23,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         Table,
                                         CustomToolbarToggleMixin,
+                                        FootprintDisplayMixin,
                                         UnitSelectPluginComponent,
                                         ViewerSelect,
                                         with_spinner,
@@ -32,7 +33,6 @@ from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core.region_translators import is_stcs_string, stcs_string2region
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
                           find_polygon_mark_with_skewer, layer_is_image_data)
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
@@ -234,7 +234,7 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
+class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
@@ -347,12 +347,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         # Set up bidirectional synchronization
         # Listen for changes to app.state.settings and update traitlet
         self.app.state.add_callback('settings', self._on_app_settings_changed)
-
-    def vue_link_by_wcs(self, *args):
-        plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
-        if plg is not None:
-            plg.align_by = 'WCS'
-        self.is_wcs_linked = True
 
     @default('observation_table')
     def _default_observation_table(self):
@@ -622,10 +616,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
                                                        sender=self, color="error"))
                 self.file_table_populated = False
 
-    def _get_image_viewers(self):
-        return [viewer for viewer in self.app._viewer_store.values()
-                if _is_image_viewer(viewer)]
-
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""
         if not self.custom_toolbar_enabled:
@@ -690,97 +680,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
                 # Clear selection
                 self.observation_table.selected_rows = []
 
-    def _display_observation_footprints(self):
-        if 's_region' not in self.observation_table.headers_avail:
-            return
-
-        image_viewers = self._get_image_viewers()
-        if not image_viewers:
-            return
-        regions = []
-        region_labels = []
-        for idx, row in enumerate(self.observation_table.items):
-            s_region_str = row.get('s_region', '')
-
-            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
-                continue
-            if not is_stcs_string(s_region_str):
-                continue
-            region = stcs_string2region(s_region_str)
-            regions.append(region)
-            region_labels.append(idx)
-
-        if not regions:
-            return
-
-        for viewer in image_viewers:
-            viewer._add_region_overlay(
-                region=regions,
-                region_label=region_labels,
-                selected=False,
-                fill_opacities=[0]
-            )
-
-        self._sync_footprint_selection_to_viewers()
-
-    def _remove_observation_footprints(self):
-        """Remove all observation footprints from all image viewers."""
-        image_viewers = self._get_image_viewers()
-        if not image_viewers:
-            return
-
-        # Get all labels (row indices) from observation table
-        all_labels = []
-        for idx, row in enumerate(self.observation_table.items):
-            s_region_str = row.get('s_region', '')
-            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
-                continue
-            if not is_stcs_string(s_region_str):
-                continue
-            all_labels.append(idx)
-
-        if not all_labels:
-            return
-
-        # Remove footprints from all viewers
-        for viewer in image_viewers:
-            # Only remove labels that actually exist in this viewer
-            existing_labels = [
-                mark.label for mark in viewer.figure.marks
-                if isinstance(mark, RegionOverlay)
-            ]
-            labels_to_remove = [label for label in all_labels if label in existing_labels]
-            if labels_to_remove:
-                viewer._remove_region_overlay(region_label=labels_to_remove)
-
-    def _sync_footprint_selection_to_viewers(self):
-        """Sync footprint selection state across all viewers based on table selection."""
-        image_viewers = self._get_image_viewers()
-        if not image_viewers:
-            return
-
-        selected_indices = set()
-        for row in self.observation_table.selected_rows:
-            idx = self.observation_table.items.index(row)
-            selected_indices.add(idx)
-
-        valid_labels = []
-        for idx, row in enumerate(self.observation_table.items):
-            s_region_str = row.get('s_region', '')
-            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
-                continue
-            if not is_stcs_string(s_region_str):
-                continue
-            valid_labels.append(idx)
-
-        # Update selection in all viewers
-        for viewer in image_viewers:
-            for label in valid_labels:
-                if label in selected_indices:
-                    viewer._select_region_overlay(region_label=label)
-                else:
-                    viewer._deselect_region_overlay(region_label=label)
-
     def _on_viewer_added(self, msg):
         """When a new viewer is created, add footprints if toolbar is enabled."""
         if not self.custom_toolbar_enabled:
@@ -807,31 +706,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             return
         # Viewer has WCS, safe to add footprints
         self._add_footprints_to_viewer(viewer)
-
-    def _add_footprints_to_viewer(self, viewer):
-        # Build regions from table
-        regions = []
-        region_labels = []
-        for idx, row in enumerate(self.observation_table.items):
-            s_region_str = row.get('s_region', '')
-            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
-                continue
-            if not is_stcs_string(s_region_str):
-                continue
-            region = stcs_string2region(s_region_str)
-            regions.append(region)
-            region_labels.append(idx)
-
-        if not regions:
-            return
-        viewer._add_region_overlay(
-            region=regions,
-            region_label=region_labels,
-            selected=False,
-            fill_opacities=[0]
-        )
-        # Sync selection state with table
-        self._sync_footprint_selection_to_viewers()
 
     def on_file_select_changed(self, _=None):
         self._clear_cache('output')
@@ -1003,7 +877,7 @@ class BaseConeSearchResolver(BaseResolver):
 
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
-        self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
+        self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
@@ -1042,6 +916,10 @@ class BaseConeSearchResolver(BaseResolver):
         # Center on data if we're enabling the toggle
         if self.coord_follow_viewer_pan:
             self.vue_center_on_data()
+
+    def _on_link_type_updated(self, _=None, user_zoom_trigger=False):
+        super()._on_link_type_updated()
+        self.vue_center_on_data(user_zoom_trigger=user_zoom_trigger)
 
     def vue_center_on_data(self, _=None, user_zoom_trigger=False):
         """
