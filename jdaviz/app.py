@@ -798,10 +798,20 @@ class Application(VuetifyTemplate, HubListener):
 
         new_links = []
         for new_comp in new_data.components:
-            if getattr(new_comp, '_component_type', None) in (None, 'unknown'):
+            comp_type = getattr(new_comp, '_component_type', None)
+
+            is_pixel_comp = (
+                comp_type == 'pixel' or
+                (comp_type and 'pixel' in comp_type) or
+                'Pixel Axis' in str(new_comp.label)
+            )
+
+            has_linkable_type = comp_type not in (None, 'unknown')
+            if not has_linkable_type and not is_pixel_comp:
                 continue
+
             # Don't link flux to flux in cubes
-            elif new_comp.label.lower() in ('flux', 'uncertainty', 'mask') and new_data.ndim == 3:
+            if new_comp.label.lower() in ('flux', 'uncertainty', 'mask') and new_data.ndim == 3:
                 continue
 
             found_match = False
@@ -809,25 +819,39 @@ class Application(VuetifyTemplate, HubListener):
                 if existing_data.label == new_data_label:
                     continue
 
-                # Skip linking WCS coordinate components between 2D spectra
+                # Skip linking WCS angle components between 2D spectra
                 # (these can interfere with coordinate transformations)
-                # But allow flux/uncertainty and pixel_spectral_axis linking for subset propagation
+                # But allow pixel & spectral_axis linking for proper display & subset propagation
                 if new_data.ndim == existing_data.ndim == 2:
-                    has_spectral = any(
-                        (getattr(c, '_component_type', None) or '').startswith('spectral_axis')
-                        for c in new_data.components
-                    )
-                    if has_spectral and (new_comp._component_type in ('spectral_axis', 'angle') or
-                       (new_comp._component_type and ':angle' in new_comp._component_type)):
+                    if comp_type == 'angle' or (comp_type and ':angle' in comp_type):
                         continue
 
                 for existing_comp in existing_data.components:
-                    if getattr(existing_comp, '_component_type', None) in (None, 'unknown'):
+                    existing_comp_type = getattr(existing_comp, '_component_type', None)
+
+                    # Identify pixel components by type or label
+                    existing_is_pixel = (
+                        existing_comp_type == 'pixel' or
+                        (existing_comp_type and 'pixel' in existing_comp_type) or
+                        'Pixel Axis' in str(existing_comp.label)
+                    )
+
+                    existing_has_linkable_type = existing_comp_type not in (None, 'unknown')
+                    if not existing_has_linkable_type and not existing_is_pixel:
                         continue
 
-                    # Create link if component-types match
-                    if new_comp._component_type == existing_comp._component_type:
-                        msg_text = f"Creating link {new_data.label}:{new_comp.label}({new_comp._component_type}) > {existing_data.label}:{existing_comp.label}({existing_comp._component_type})"  # noqa
+                    # Create link if component-types match or
+                    # if both are pixel components with same label
+                    components_match = False
+                    if comp_type is not None and comp_type == existing_comp_type:
+                        components_match = True
+                    elif (is_pixel_comp and existing_is_pixel and
+                          new_comp.label == existing_comp.label):
+                        # Link pixel components by label for 2D spectra
+                        components_match = True
+
+                    if components_match:
+                        msg_text = f"Creating link {new_data.label}:{new_comp.label}({comp_type}) > {existing_data.label}:{existing_comp.label}({existing_comp_type})"  # noqa
                         msg = SnackbarMessage(text=msg_text,
                                               color='info', sender=self)
                         self.hub.broadcast(msg)

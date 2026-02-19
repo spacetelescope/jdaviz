@@ -124,6 +124,36 @@ def test_load_two_2d_spectra_deconfigged(deconfigged_helper):
     assert dc_2d_2.get_component('flux').shape == (10, 20)
     assert dc_1d_2.get_component('flux').ndim == 1
 
+    links = deconfigged_helper.app.data_collection.external_links
+
+    # Should have links between:
+    # - 2D Spectrum 1 <-> 2D Spectrum 1 (auto-ext) [World 0]
+    # - 2D Spectrum 2 <-> 2D Spectrum 2 (auto-ext) [World 0]
+    # - 2D Spectrum 1 <-> 2D Spectrum 2 [Pixel Axis 0, Pixel Axis 1, World 0, flux]
+    # - Additional links between 1D and opposite 2D spectra
+    assert len(links) == 11, f"Expected 11 links, got {len(links)}"
+
+    # Verify the pixel axes are linked between the two 2D spectra
+    pixel_links_between_2d_spectra = []
+    for link in links:
+        if hasattr(link, 'cids1') and hasattr(link, 'cids2') and link.cids1 and link.cids2:
+            # Check if this link connects the two 2D spectra
+            data1 = link.cids1[0].parent
+            data2 = link.cids2[0].parent
+            if ((data1.label == '2D Spectrum 1' and data2.label == '2D Spectrum 2') or
+               (data1.label == '2D Spectrum 2' and data2.label == '2D Spectrum 1')):
+                # Found a link between the two 2D spectra
+                comp1_label = str(link.cids1[0].label)
+                comp2_label = str(link.cids2[0].label)
+                if 'Pixel Axis' in comp1_label or 'Pixel Axis' in comp2_label:
+                    pixel_links_between_2d_spectra.append((comp1_label, comp2_label))
+
+    # Expected: Pixel Axis 0 [y] and Pixel Axis 1 [x]
+    assert len(pixel_links_between_2d_spectra) == 2, (
+            "Expected 2 pixel axis links between 2D spectra, found "
+            f"{len(pixel_links_between_2d_spectra)}: {pixel_links_between_2d_spectra}"
+            )
+
 
 def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(mos_spectrum2d, spectrum_2d_label='my_2d_spec')
