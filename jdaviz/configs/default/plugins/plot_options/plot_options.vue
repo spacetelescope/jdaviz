@@ -1030,7 +1030,7 @@ export default {
       var colors = []
       var style = 'repeating-linear-gradient( 90deg, '
       colors = cmap_samples[item.value]
-      for ([ci, color] of colors.entries()) {
+      for (let [ci, color] of colors.entries()) {
         var start = ci*cmap_strip_width
         var end = (ci+1)*cmap_strip_width
         style += color + ' '+start+'%, ' + color + ' '+end+'%'
