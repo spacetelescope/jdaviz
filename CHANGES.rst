@@ -13,7 +13,7 @@ New Features
 - "Spectrum List" and "Spectrum List Concatenated" loaders have now been absorbed into the "1D Spectrum" loader
   via the ``extension`` and ``concatenate`` options. [#3953]
 
-- Catalog public API exposed [#3761, #3777, #3778, #3799, #3814, #3835, #3854, #3856, #3863, #3867, #3930, #3906, #3912, #3899, #3907, #3990]
+- Catalog public API exposed [#3761, #3777, #3778, #3799, #3814, #3835, #3854, #3856, #3863, #3867, #3930, #3906, #3912, #3899, #3907, #3990, #4039]
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
 
@@ -25,7 +25,6 @@ New Features
 
 - Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
 
-- Improvements for loading catalogs from multi-extension FITS files. [#4039]
 
 
 Cubeviz

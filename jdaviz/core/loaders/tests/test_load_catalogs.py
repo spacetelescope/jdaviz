@@ -673,6 +673,9 @@ def test_hdulist_multiple_table_extensions(deconfigged_helper):
     assert 'dec1' in col_dec_labels
     assert 'dec2' not in col_dec_labels
 
+    # test selecting no extension to make sure nothing crashes
+    ldr.importer.extension.selected = []
+
     # switch to second extension
     ldr.importer.extension.selected = ['2: [CATALOG2,1]']
 
