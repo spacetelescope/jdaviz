@@ -318,7 +318,7 @@ class JdavizViewerMixin(WithCache):
             # x and y dimensions to account for viewer not being square), and
             # fall back on a 10 pt marker size if we can't get the viewer
             # dimensions for some reason (e.g., no image layers)
-            marker_size = 10  # default fallback
+            marker_size = 10  # default fallback default for marker size in points d
             for layer in self.state.layers:
                 if (hasattr(layer, 'layer') and
                         hasattr(layer.layer, 'data') and
@@ -327,7 +327,11 @@ class JdavizViewerMixin(WithCache):
                     shape = layer.layer.data.shape
                     avg_dimension = (shape[-2] + shape[-1]) / 2
                     marker_size = avg_dimension * 0.01
+                    # set a lower limit on marker size, which is the glue default
+                    # of three pixels.
+                    marker_size = max(marker_size, 3)
                     break
+
             layer_state.size = marker_size
 
         # use echo-validator to ensure visible sets & updates properly in plot options & data menu
