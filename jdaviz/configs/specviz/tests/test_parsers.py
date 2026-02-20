@@ -138,7 +138,7 @@ class TestSpecvizSpectrum1DParser:
 
         specviz_spectrum1d_parser(specviz_helper.app, spec, data_label='test_meta')
 
-        loaded_spec = specviz_helper.get_data('test_meta')
+        loaded_spec = specviz_helper.datasets['test_meta'].get_data()
         assert 'TELESCOPE' in loaded_spec.meta
 
     def test_parse_show_in_viewer_false(self, specviz_helper, spectrum1d):

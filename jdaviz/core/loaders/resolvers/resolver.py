@@ -955,7 +955,7 @@ class BaseConeSearchResolver(BaseResolver):
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
         if (
-            len(self.app._jdaviz_helper.data_labels) < 1
+            len(self.app._jdaviz_helper.datasets) < 1
             or viewer.state.reference_data is None
             or viewer.state.reference_data.coords is None
         ):
