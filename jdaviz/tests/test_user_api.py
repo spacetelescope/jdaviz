@@ -200,23 +200,32 @@ def test_wildcard_match_through_load(imviz_helper, multi_extension_image_hdu_wcs
     assert list(imviz_helper.datasets.keys()) == [data_labels[i] for i in matches]
 
 
-@pytest.mark.parametrize(
-    ['input_data', 'input_format', 'expected_api'], [
-        ('image_hdu_wcs', 'Image', SpatialDataApi),
-        ('spectrum1d', '1D Spectrum', SpectralDataApi),
-        ('spectrum2d', '2D Spectrum', SpectralDataApi),
-        ('spectrum1d_cube', '3D Spectrum', SpectralSpatialDataApi),
-        ('sky_coord_only_source_catalog', 'Catalog', DataApi)
-])
 def test_correct_data_api_class(deconfigged_helper,
-                                input_data, input_format, expected_api,
-                                request):
-    input_data = request.getfixturevalue(input_data)
-    deconfigged_helper.load(input_data, format=input_format, data_label='test_data')
+                                image_hdu_wcs, spectrum1d, spectrum2d,
+                                spectrum1d_cube, sky_coord_only_source_catalog):
+    """Test that correct DataApi classes are returned for different data types."""
+    test_cases = [
+        (image_hdu_wcs, 'Image', SpatialDataApi),
+        (spectrum1d, '1D Spectrum', SpectralDataApi),
+        (spectrum2d, '2D Spectrum', SpectralDataApi),
+        (spectrum1d_cube, '3D Spectrum', SpectralSpatialDataApi),
+        (sky_coord_only_source_catalog, 'Catalog', DataApi)
+    ]
+
+    # Disable linking to speed up test
+    deconfigged_helper.app.auto_link = False
+
+    # Load all data at once
+    for data, data_format, expected_api in test_cases:
+        deconfigged_helper.load(data, format=data_format, data_label=data_format)
+
+    # Check each dataset has the correct API type
     data_dict = deconfigged_helper.datasets
-    assert isinstance(data_dict['test_data'], expected_api)
-    if 'test_data (auto-ext)' in data_dict:
-        assert isinstance(data_dict['test_data (auto-ext)'], SpectralDataApi)
+    for data, data_format, expected_api in test_cases:
+        assert isinstance(data_dict[data_format], expected_api)
+
+        if f'{data_format} (auto-ext)' in data_dict:
+            assert isinstance(data_dict[f'{data_format} (auto-ext)'], SpectralDataApi)
 
 
 def test_data_access_deconfigged(deconfigged_helper, mos_spectrum2d):
