@@ -99,7 +99,6 @@ Bug Fixes
 - Fixed bug when initializing relevant 2D Spectrum plugins when there are viewers
   with mixed pixel / wavelength spectral axis units. [#3982]
 
-
 - Fixed API hint styling for viewer labels. [#4003]
 
 Cubeviz
@@ -120,6 +119,7 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fixed an issue with GWCS 1.0.3 by updating the ``try/except`` to an if check against ``pixel_n_dim``. [#4032]
 
 4.5 (2025-12-15)
 ================
