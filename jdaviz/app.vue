@@ -527,7 +527,8 @@ export default {
   mounted() {
     /* Workaround for https://github.com/jupyter-widgets/ipywidgets/issues/2499, can be removed when ipywidgets 8 is
      * released */
-    const jpOutputElem = this.$refs.mainapp.$el.closest('.jp-OutputArea-output');
+    const el = this.$refs.mainapp.$el;
+    const jpOutputElem = el.closest('.jp-OutputArea-output');
     if (jpOutputElem) {
       jpOutputElem.classList.remove('jupyter-widgets');
     }
@@ -535,14 +536,14 @@ export default {
      * have height. This causes an error in size calculations of golden layout from which it doesn't recover.
      */
     new ResizeObserver(entries => {
-      this.outputCellHasHeight = entries[0].contentRect.height > 0;
-    }).observe(this.$refs.mainapp.$el);
-    this.outputCellHasHeight = this.$refs.mainapp.$el.offsetHeight > 0
+      this.outputCellHasHeight = this.outputCellHasHeight || entries[0].contentRect.height > 0;
+    }).observe(el);
+    this.outputCellHasHeight = el.offsetHeight > 0
 
     /* Workaround for Lab 4.5: cells outside the viewport get the style "contentVisibility: auto" which causes wrong
      * size calculations of golden layout from which it doesn't recover.
      */
-    const jpCell = this.$el.closest('.jp-Cell.jp-CodeCell');
+    const jpCell = el.closest('.jp-Cell.jp-CodeCell');
     if (jpCell) {
       const observer = new MutationObserver((mutationsList) => {
         if (jpCell.style.contentVisibility !== 'visible') {
