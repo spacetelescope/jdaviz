@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.nddata import NDData
+from astropy.table import QTable
 import matplotlib
 from numpy.testing import assert_allclose
 from photutils.datasets import make_4gaussians_image
@@ -463,3 +464,63 @@ def test_imviz_select_all_layers(imviz_helper):
     # and make sure each layer picked up this change
     for layer in plot_options.image_colormap.linked_states:
         assert layer.as_dict()['stretch'] == 'log'
+
+
+def test_table_viewer_plot_options(deconfigged_helper):
+    """
+    Test that table viewers appear in plot options and that
+    table_columns_visible works to control hidden columns.
+    """
+    # Create a sample table with several columns
+    ra = [9.423, 9.421, 9.415] * u.deg
+    dec = [-33.711, -33.716, -33.717] * u.deg
+    obj_id = ['source1', 'source2', 'source3']
+    flux = [10, 20, 30] * u.Jy
+
+    catalog = QTable(data=[ra, dec, obj_id, flux],
+                     names=['RA', 'Dec', 'Obj_ID', 'flux'])
+
+    # Load catalog into a table viewer
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = catalog
+    ldr.format = 'Catalog'
+    ldr.importer.viewer.create_new = 'Table'
+    ldr.load()
+
+    assert len(deconfigged_helper.viewers) == 1
+    tv = deconfigged_helper.viewers['Table']
+    viewer = tv._obj.glue_viewer
+
+    # Get plot options plugin
+    po = deconfigged_helper.plugins['Plot Options']._obj
+
+    # Table viewer should appear in viewer choices
+    assert 'Table' in po.viewer.choices
+
+    # Select the table viewer
+    po.viewer.selected = 'Table'
+
+    # table_columns_visible should be available and have choices
+    assert po.table_columns_visible.sync['in_subscribed_states'] is True
+    assert len(po.table_columns_visible.sync['choices']) > 0
+
+    # By default all columns should be visible (hidden_components empty)
+    all_column_names = [c['value'] for c in po.table_columns_visible.sync['choices']]
+    assert po.table_columns_visible.value == all_column_names
+    assert viewer.state.hidden_components == []
+
+    # Hide some columns by setting visible columns to a subset
+    visible_cols = ['RA', 'Dec']
+    po.table_columns_visible.value = visible_cols
+
+    # Check that the hidden_components on the viewer state reflects this
+    hidden = [str(c) for c in viewer.state.hidden_components]
+    for col in all_column_names:
+        if col in visible_cols:
+            assert col not in hidden, f"{col} should be visible but is hidden"
+        else:
+            assert col in hidden, f"{col} should be hidden but is visible"
+
+    # Layer options should be empty/excluded when only table viewer is selected
+    # (layers are excluded via the not_in_table_viewer filter)
+    assert len(po.layer.choices) == 0
