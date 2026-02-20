@@ -69,7 +69,7 @@ export default {
       var style_colors = []
       var style = 'repeating-linear-gradient( 135deg, '
 
-      for ([mi, color_or_cmap] of colors.entries()) {
+      for (let [mi, color_or_cmap] of colors.entries()) {
         if (color_or_cmap == 'from_list') {
           /* follow-up: use actual colors from the DQ plugins */
           color_or_cmap = 'rainbow'
@@ -82,7 +82,7 @@ export default {
         }
 
         cmap_strip_width = strip_width / style_colors.length
-        for ([ci, color] of style_colors.entries()) {
+        for (let [ci, color] of style_colors.entries()) {
           var start = mi*strip_width + ci*cmap_strip_width
           var end = mi*strip_width+(ci+1)*cmap_strip_width
           style += color + ' '+start+'px, ' + color + ' '+end+'px'
