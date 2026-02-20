@@ -2765,7 +2765,13 @@ class Application(VuetifyTemplate, HubListener):
             # unless it is used
             color = data.meta.get('_default_color')
             if color is None:
-                color = viewer.color_cycler()
+                # check if this is a catalog/scatter layer and use scatter_color_cycler,
+                # which has brighter colors.
+                is_catalog = data.meta.get('_importer') == 'CatalogImporter'
+                if is_catalog and hasattr(viewer, 'scatter_color_cycler'):
+                    color = viewer.scatter_color_cycler()
+                else:
+                    color = viewer.color_cycler()
             viewer.add_data(data, percentile=95, color=color)
 
             # Specviz removes the data from collection in viewer.py if flux unit incompatible.
