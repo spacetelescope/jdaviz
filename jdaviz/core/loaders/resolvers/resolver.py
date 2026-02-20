@@ -2,11 +2,10 @@ import os
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
-from traitlets import Bool, Float, Instance, List, Unicode, observe, default
+from traitlets import Bool, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
-from astropy.coordinates import SkyCoord
 from astropy.coordinates.builtin_frames import __all__ as all_astropy_frames
 from astropy.table import Table as astropyTable
 from astroquery.mast import MastMissions
@@ -844,7 +843,7 @@ class BaseConeSearchResolver(BaseResolver):
     viewer_centered = Bool(False).tag(sync=True)
     coordframe_choices = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
-    radius = Float(1).tag(sync=True)
+    radius = FloatHandleEmpty(1).tag(sync=True)
     radius_unit_items = List().tag(sync=True)
     radius_unit_selected = Unicode("deg").tag(sync=True)
 
@@ -951,26 +950,22 @@ class BaseConeSearchResolver(BaseResolver):
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
+        ref_data = viewer.state.reference_data
 
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
         if (
             len(self.app._jdaviz_helper.data_labels) < 1
-            or viewer.state.reference_data is None
-            or viewer.state.reference_data.coords is None
+            or ref_data is None
+            or ref_data.coords is None
         ):
             self.source = ""
             return
 
         # Obtain center point of the current image and convert into sky coordinates
-        if self.app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
-            skycoord_center = SkyCoord(
-                viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
-            )
-        else:
-            skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
-                viewer.state.zoom_center_x, viewer.state.zoom_center_y
-            )
+        skycoord_center = ref_data.coords.pixel_to_world(
+            viewer.state.zoom_center_x, viewer.state.zoom_center_y
+        )
 
         # Extract SkyCoord values as strings for plugin display
         ra_deg = skycoord_center.ra.deg

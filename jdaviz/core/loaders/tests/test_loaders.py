@@ -424,6 +424,23 @@ def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):
     assert deconfigged_helper.plugins['Orientation'].align_by.selected == 'WCS'
 
 
+@pytest.mark.parametrize(
+    ('align_by', ), (('WCS', ), ('Pixels', ))
+)
+def test_load_image_align_by_and_astroquery_loader(deconfigged_helper, image_nddata_wcs, align_by):
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = image_nddata_wcs
+    ldr.format = 'Image'
+    ldr.load()
+
+    astroquery_loader = deconfigged_helper.loaders['astroquery']
+    astroquery_loader.viewer = 'Image'
+
+    deconfigged_helper.plugins['Orientation'].align_by = align_by
+    assert len(astroquery_loader.source)
+
+
 @pytest.mark.remote_data
 @pytest.mark.parametrize(
     ('gwcs_to_fits_sip', 'expected_cls'),
