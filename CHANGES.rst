@@ -23,6 +23,8 @@ New Features
 
 - Add handles to subset to allow interactive resizing. [#3919]
 
+- Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
+
 - Table viewer tools to highlight selected, zoom-to-selected, and create subset from selected. [#3994]
 
 Cubeviz
@@ -79,6 +81,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
+
 4.5.1 (unreleased)
 ==================
 
@@ -101,8 +105,14 @@ Bug Fixes
 - Fixed bug when initializing relevant 2D Spectrum plugins when there are viewers
   with mixed pixel / wavelength spectral axis units. [#3982]
 
-
 - Fixed API hint styling for viewer labels. [#4003]
+
+- Fixed bug when opening plot options or export from shortcut button when jdaviz
+  and lcviz are simultaneously imported. [#4027]
+
+- Fixed astroquery and virtual observatory loaders not responding properly to link type changes. [#4038]
+
+- Avoid incorrectly showing "no viewer selected" warning when adding data from some plugins. [#4037]
 
 Cubeviz
 ^^^^^^^
@@ -122,6 +132,7 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fixed an issue with GWCS 1.0.3 by updating the ``try/except`` to an if check against ``pixel_n_dim``. [#4032]
 
 4.5 (2025-12-15)
 ================

@@ -15,12 +15,15 @@ from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRe
 from specutils import Spectrum
 from specutils.manipulation import FluxConservingResampler
 
-from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_conversion_general)
 from jdaviz.utils import cached_uri
 
 calspec_url = "https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_calspec/"
+
+# subset of possible units to test various conversions, testing all is time intensive
+FLUX_UNITS = ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']
 
 
 def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
@@ -648,8 +651,9 @@ def test_spectral_extraction_scientific_validation(
     assert median_abs_relative_dev < expected_rtol
 
 
-@pytest.mark.parametrize("flux_angle_unit", [(u.Unit(x), u.sr) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS]  # noqa
-                                              + [(u.Unit(x), PIX2) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])  # noqa
+@pytest.mark.slow
+@pytest.mark.parametrize("flux_angle_unit", [(u.Unit(x), u.sr) for x in FLUX_UNITS]  # noqa
+                                              + [(u.Unit(x), PIX2) for x in FLUX_UNITS])  # noqa
 def test_spectral_extraction_flux_unit_conversions(cubeviz_helper,
                                                    spectrum1d_cube_custom_fluxunit,
                                                    flux_angle_unit):
@@ -679,7 +683,7 @@ def test_spectral_extraction_flux_unit_conversions(cubeviz_helper,
     equivs = all_flux_unit_conversion_equivs(se.dataset.selected_obj.meta.get('PIXAR_SR', 1.0),
                                              se.dataset.selected_obj.spectral_axis)
 
-    for new_flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+    for new_flux_unit in FLUX_UNITS:
         if new_flux_unit != flux_unit:
 
             uc.flux_unit.selected = flux_unit.to_string()

@@ -877,7 +877,7 @@ class BaseConeSearchResolver(BaseResolver):
 
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
-        self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
+        self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
@@ -922,6 +922,10 @@ class BaseConeSearchResolver(BaseResolver):
         # Center on data if we're enabling the toggle
         if self.coord_follow_viewer_pan:
             self.vue_center_on_data()
+
+    def _on_link_type_updated(self, _=None, user_zoom_trigger=False):
+        super()._on_link_type_updated()
+        self.vue_center_on_data(user_zoom_trigger=user_zoom_trigger)
 
     def vue_center_on_data(self, _=None, user_zoom_trigger=False):
         """

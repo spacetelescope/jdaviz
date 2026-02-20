@@ -31,7 +31,7 @@ dependencies = [
     "vispy>=0.6.5",
     "asdf>=2.14.3",
     "stdatamodels>=1.3",
-    "gwcs>=0.16.1,<1.0.3",
+    "gwcs>=0.16.1",
     "regions>=0.6",
     "scikit-image",
     "sidecar>=0.5.2",
@@ -80,7 +80,8 @@ all = [
 test = [
     "pytest",
     "pytest-astropy",
-    "pytest-tornasync"
+    "pytest-tornasync",
+    "pytest-xdist"
 ]
 docs = [
     "sphinx-astropy[confv2]>=1.9.1",

@@ -144,8 +144,9 @@ class TestViewerCreatorObject:
         # Load in a second spectrum but first check that the observer works
         assert self.creator.is_relevant is True
         initial_item_count = len(self.creator.dataset.items)
-        # Load another one in
-        self.dcf_helper.load(self.spectrum1d_nm, format='1D Spectrum')
+        # Load another one in with a different label
+        self.dcf_helper.load(self.spectrum1d_nm, format='1D Spectrum',
+                             data_label='1D Spectrum (nm)')
 
         # Should still be relevant with more items per the observer
         assert self.creator.is_relevant is True
