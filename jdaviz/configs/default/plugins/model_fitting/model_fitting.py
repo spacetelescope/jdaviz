@@ -254,7 +254,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    'equation', 'equation_components',
                    'add_results', 'residuals_calculate',
                    'residuals']
-        expose += ['calculate_fit', 'clear_table', 'export_table',
+        expose += ['calculate_fit', 'table', 'clear_table', 'export_table',
                    'fitted_models', 'get_models', 'get_model_parameters', 'fitter',
                    'get_fitter_parameter', 'set_fitter_parameter']
         return PluginUserApi(self, expose=expose+['fitter_component'],
