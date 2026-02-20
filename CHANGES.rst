@@ -23,6 +23,8 @@ New Features
 
 - Add handles to subset to allow interactive resizing. [#3919]
 
+- Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
+
 - Top level access to datasets API dictionary, deprecating top-level access to data_labels list. [#4024]
 
 Cubeviz
@@ -110,6 +112,8 @@ Bug Fixes
 
 - Fixed astroquery and virtual observatory loaders not responding properly to link type changes. [#4038]
 
+- Avoid incorrectly showing "no viewer selected" warning when adding data from some plugins. [#4037]
+
 Cubeviz
 ^^^^^^^
 
@@ -128,6 +132,7 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fixed an issue with GWCS 1.0.3 by updating the ``try/except`` to an if check against ``pixel_n_dim``. [#4032]
 
 4.5 (2025-12-15)
 ================

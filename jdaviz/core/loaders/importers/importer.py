@@ -139,6 +139,12 @@ class BaseImporterToDataCollection(BaseImporter):
     data_label_default = Unicode().tag(sync=True)
     data_label_auto = Bool(True).tag(sync=True)
     data_label_invalid_msg = Unicode().tag(sync=True)
+    data_label_overwrite = Bool(False).tag(sync=True)
+    # for prefix mode with multiple extensions
+    data_label_is_prefix = Bool(False).tag(sync=True)
+    data_label_suffices = List([]).tag(sync=True)
+    # for prefix mode: list of bools (parallel to data_label_suffices) indicating overwrite status
+    data_label_overwrite_by_index = List([]).tag(sync=True)
 
     viewer_create_new_items = List([]).tag(sync=True)
     viewer_create_new_selected = Unicode().tag(sync=True)
@@ -157,9 +163,10 @@ class BaseImporterToDataCollection(BaseImporter):
         self.data_label = AutoTextField(self, 'data_label_value',
                                         'data_label_default',
                                         'data_label_auto',
-                                        'data_label_invalid_msg')
+                                        'data_label_invalid_msg',
+                                        unique_in_data_collection=True)
 
-        self.data_label_default = self.app.return_unique_name(self._registry_label)
+        self.data_label.default = self._registry_label
 
         self.viewer = ViewerSelectCreateNew(self, 'viewer_items',
                                             'viewer_selected',
@@ -227,22 +234,33 @@ class BaseImporterToDataCollection(BaseImporter):
         else:
             return {}
 
-    @observe('data_label_value')
+    @observe('data_label_value', 'data_label_is_prefix', 'data_label_suffices')
     def _on_label_changed(self, msg={}):
         if not len(self.data_label_value.strip()):
             # strip will raise the same error for a label of all spaces
             self.data_label_invalid_msg = 'data_label must be provided'
+            self.data_label_overwrite = False
+            self.data_label_overwrite_by_index = []
             return
 
-        # ensure the default label is unique for the data-collection
-        self.data_label_default = self.app.return_unique_name(self.data_label_default)
+        dc_labels = [data.label for data in self.app.data_collection]
 
-        for data in self.app.data_collection:
-            if self.data_label_value == data.label:
-                self.data_label_invalid_msg = f"data_label='{self.data_label_value}' already in use"
-                return
-
-        self.data_label_invalid_msg = ''
+        if self.data_label_is_prefix and len(self.data_label_suffices):
+            # prefix/multiselect mode: check each suffix
+            overwrite_by_index = [f"{self.data_label_value}{suffix}" in dc_labels
+                                  for suffix in self.data_label_suffices]
+            self.data_label_overwrite_by_index = overwrite_by_index
+            self.data_label_overwrite = any(overwrite_by_index)
+            self.data_label_invalid_msg = ''
+        else:
+            # single mode
+            self.data_label_overwrite_by_index = []
+            if self.data_label_value in dc_labels:
+                self.data_label_overwrite = True
+                self.data_label_invalid_msg = ''
+            else:
+                self.data_label_overwrite = False
+                self.data_label_invalid_msg = ''
 
     @observe('data_label_invalid_msg', 'viewer_label_invalid_msg')
     def _set_import_disabled(self, change={}):
@@ -261,6 +279,19 @@ class BaseImporterToDataCollection(BaseImporter):
             data_label = self.data_label_value.strip()
         else:
             data_label = data_label.strip()
+
+        # Handle overwriting existing data when label matches.
+        # Since data_label.default always applies return_unique_name,
+        # overwrite only triggers when:
+        # 1. User explicitly passed a data_label that matches existing, OR
+        # 2. User manually set the label in UI to match an existing entry
+        if data_label in self.app.data_collection:
+            # Remove from all viewers first, then from data collection
+            for viewer in self.app._viewer_store.values():
+                if hasattr(viewer, '_data_menu'):
+                    if data_label in viewer._data_menu.data_labels_loaded:
+                        self.app.remove_data_from_viewer(viewer.reference_id, data_label)
+            self.app.data_collection.remove(self.app.data_collection[data_label])
 
         if hasattr(data, 'meta'):
             try:
