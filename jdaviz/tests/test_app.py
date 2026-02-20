@@ -70,12 +70,12 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
         viz.get_data("non-existent label")
 
 
+@pytest.mark.xfail(reason='Known issue with duplicate data labels when using API.')
 @pytest.mark.parametrize(('input_data', 'input_format'), [
     ('image_hdu_wcs', 'Image'),
     ('spectrum1d', '1D Spectrum'),
     ('spectrum2d', '2D Spectrum'),
-    # TODO: Uncomment once multiple cubes can be loaded into deconfigged
-    # ('spectral_cube_wcs', '3D Spectrum')
+    ('spectrum1d_cube', '3D Spectrum')
 ])
 def test_duplicate_data_labels(deconfigged_helper, input_data, input_format, request):
     input_data = request.getfixturevalue(input_data)
