@@ -1,7 +1,6 @@
 from specutils import Spectrum
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
-from jdaviz.core.user_api import (DataApi, SpectralDataApi, SpatialDataApi,
-                                  TemporalSpatialDataApi, SpectralSpatialDataApi)
+from jdaviz.core.user_api import DataApi, SpectralDataApi, SpatialDataApi, SpectralSpatialDataApi
 import pytest
 import re
 
@@ -201,8 +200,8 @@ def test_wildcard_match_through_load(imviz_helper, multi_extension_image_hdu_wcs
 
 
 def test_expected_data_api_class(deconfigged_helper,
-                                image_hdu_wcs, spectrum1d, spectrum2d,
-                                spectrum1d_cube, sky_coord_only_source_catalog):
+                                 image_hdu_wcs, spectrum1d, spectrum2d,
+                                 spectrum1d_cube, sky_coord_only_source_catalog):
     """Test that expected DataApi classes are returned for different data types."""
     test_cases = [
         (image_hdu_wcs, 'Image', SpatialDataApi),
