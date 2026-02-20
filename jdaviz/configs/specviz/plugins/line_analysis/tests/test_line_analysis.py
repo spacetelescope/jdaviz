@@ -598,3 +598,53 @@ def test_line_analysis_deconfig(deconfigged_helper):
     # Make sure lines are visible on both viewers
     assert _check_line_visible(viewer_1d_2)
     assert _check_line_visible(viewer_1d_1)
+
+
+def test_line_analysis_load_table_into_data_collection(deconfigged_helper, spectrum1d):
+    """
+    Test that line analysis table can be loaded back into the data collection
+    using the 'Load into App' functionality.
+    """
+    # Load data into deconfigged helper
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+
+    # Create 1D viewer
+    vc = deconfigged_helper.new_viewers['1D Spectrum']
+    vc()
+
+    # Create a spectral subset
+    subset_plugin = deconfigged_helper.plugins['Subset Tools']
+    subset_plugin.import_region(SpectralRegion(6200 * u.AA, 7000 * u.AA))
+
+    # Use Line Analysis plugin
+    la = deconfigged_helper.plugins['Line Analysis']
+    la.dataset = '1D Spectrum'
+    la.spectral_subset = 'Subset 1'
+
+    # Perform line analysis
+    _ = la.get_results()
+
+    # Verify the table has results
+    la_table = la.export_table()
+    assert la_table is not None
+    assert len(la_table) == 1
+
+    # Now test loading the table back into the data collection
+    # Open the loader panel
+    la._obj.table.loader_panel_ind = 0
+
+    # Access the object loader via the loaders property
+    loaders = la._obj.table.user_api.loaders
+    object_loader = loaders['object']
+
+    # The object should be set to the table
+    assert object_loader.object is not None
+    assert len(object_loader.object) == 1
+
+    # Verify the loaded table has the expected columns
+    loaded_table = object_loader.object
+    assert 'Line Flux' in loaded_table.colnames
+    assert 'Centroid' in loaded_table.colnames
+
+    # Verify the table can be accessed and has correct data
+    assert len(loaded_table) == 1
