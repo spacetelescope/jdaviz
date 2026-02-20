@@ -200,10 +200,10 @@ def test_wildcard_match_through_load(imviz_helper, multi_extension_image_hdu_wcs
     assert list(imviz_helper.datasets.keys()) == [data_labels[i] for i in matches]
 
 
-def test_correct_data_api_class(deconfigged_helper,
+def test_expected_data_api_class(deconfigged_helper,
                                 image_hdu_wcs, spectrum1d, spectrum2d,
                                 spectrum1d_cube, sky_coord_only_source_catalog):
-    """Test that correct DataApi classes are returned for different data types."""
+    """Test that expected DataApi classes are returned for different data types."""
     test_cases = [
         (image_hdu_wcs, 'Image', SpatialDataApi),
         (spectrum1d, '1D Spectrum', SpectralDataApi),
@@ -222,10 +222,15 @@ def test_correct_data_api_class(deconfigged_helper,
     # Check each dataset has the correct API type
     data_dict = deconfigged_helper.datasets
     for data, data_format, expected_api in test_cases:
-        assert isinstance(data_dict[data_format], expected_api)
+        msg = (f'Expected {expected_api.__name__} for {data_format}, '
+               f'got {type(data_dict[data_format]).__name__}')
+        assert isinstance(data_dict[data_format], expected_api), msg
 
         if f'{data_format} (auto-ext)' in data_dict:
-            assert isinstance(data_dict[f'{data_format} (auto-ext)'], SpectralDataApi)
+            auto_ext_key = f'{data_format} (auto-ext)'
+            msg = (f'Expected SpectralDataApi for {auto_ext_key}, '
+                   f'got {type(data_dict[auto_ext_key]).__name__}')
+            assert isinstance(data_dict[auto_ext_key], SpectralDataApi), msg
 
 
 def test_data_access_deconfigged(deconfigged_helper, mos_spectrum2d):
