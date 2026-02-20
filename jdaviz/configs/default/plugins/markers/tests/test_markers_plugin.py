@@ -675,3 +675,73 @@ def test_distance_tool_snapping_by_pixel_scale(cubeviz_helper, spectrum1d_cube):
 
     assert mp._obj._distance_first_point is not None
     assert_allclose(mp._obj._distance_first_point['axes_x'], marker_coords['axes_x'])
+
+
+def test_markers_load_table_into_data_collection(deconfigged_helper, spectrum1d):
+    """
+    Test that markers table can be loaded back into the data collection
+    using the 'Load into App' functionality.
+    """
+    # Load data into deconfigged helper
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+
+    # Create a 1D viewer
+    vc = deconfigged_helper.new_viewers['1D Spectrum']
+    vc()
+
+    viewer_1d = deconfigged_helper.viewers['1D Spectrum']._obj.glue_viewer
+
+    # Get the markers plugin
+    mp = deconfigged_helper.plugins['Markers']
+    mp.keep_active = True
+
+    # Place a few markers
+    label_mouseover = deconfigged_helper._coords_info
+
+    # Add first marker
+    label_mouseover._viewer_mouse_event(viewer_1d,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 4623, 'y': 50}})
+    mp._obj._on_viewer_key_event(viewer_1d, {'event': 'keydown', 'key': 'm'})
+
+    # Add second marker
+    label_mouseover._viewer_mouse_event(viewer_1d,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 5000, 'y': 60}})
+    mp._obj._on_viewer_key_event(viewer_1d, {'event': 'keydown', 'key': 'm'})
+
+    # Add third marker
+    label_mouseover._viewer_mouse_event(viewer_1d,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 6000, 'y': 70}})
+    mp._obj._on_viewer_key_event(viewer_1d, {'event': 'keydown', 'key': 'm'})
+
+    # Verify table has 3 rows
+    markers_table = mp.export_table()
+    assert len(markers_table) == 3
+
+    # Now test loading the table back into the data collection
+    # Open the loader panel
+    mp._obj.table.loader_panel_ind = 0
+
+    # Access the object loader via the loaders property
+    loaders = mp._obj.table.user_api.loaders
+    object_loader = loaders['object']
+
+    # The object should be set to the table
+    assert object_loader.object is not None
+    assert len(object_loader.object) == 3
+
+    # Verify the loaded table has the expected columns
+    loaded_table = object_loader.object
+    assert 'spectral_axis' in loaded_table.colnames
+    assert 'value' in loaded_table.colnames
+    assert 'data_label' in loaded_table.colnames
+    assert 'viewer' in loaded_table.colnames
+
+    # Verify the table can be accessed and has correct data
+    assert len(loaded_table) == 3
+    # Verify marker values are preserved
+    assert loaded_table['spectral_axis'][0] == 4623
+    assert loaded_table['spectral_axis'][1] == 5000
+    assert loaded_table['spectral_axis'][2] == 6000

@@ -1069,3 +1069,56 @@ def test_spline(specviz_helper, spectrum1d):
                                  'SLSQPLSQFitter',
                                  'SimplexLSQFitter',
                                  'SplineSmoothingFitter']
+
+
+def test_model_fitting_load_table_into_data_collection(specviz_helper, spectrum1d):
+    """
+    Test that model fitting table can be loaded back into the data collection
+    using the 'Load into App' functionality.
+    """
+    # Load data
+    specviz_helper.load_data(spectrum1d, data_label='test_spectrum')
+
+    # Get Model Fitting plugin
+    mf = specviz_helper.plugins['Model Fitting']
+
+    # Create and fit a linear model
+    mf.create_model_component('Linear1D')
+    mf.add_results.label = 'linear_fit_1'
+    mf._obj.parallel_n_cpu = 1
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
+        mf.calculate_fit(add_data=True)
+
+    # Create and fit a Gaussian model
+    mf.create_model_component('Gaussian1D', model_component_label='L')
+    mf.add_results.label = 'composite_fit'
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
+        warnings.filterwarnings('ignore', message='The fit may be unsuccessful*')
+        mf.calculate_fit(add_data=True)
+
+    # Verify the table has results
+    mf_table = mf.export_table()
+    assert len(mf_table) == 2
+
+    # Now test loading the table back into the data collection
+    # Open the loader panel
+    mf.table.loader_panel_ind = 0
+
+    # Access the object loader via the loaders property
+    loaders = mf.table.user_api.loaders
+    object_loader = loaders['object']
+
+    # The object should be set to the table
+    assert object_loader.object is not None
+    assert len(object_loader.object) == 2
+
+    # Verify the loaded table has the expected columns
+    loaded_table = object_loader.object
+    assert 'model' in loaded_table.colnames
+    assert 'data_label' in loaded_table.colnames
+    assert 'equation' in loaded_table.colnames
+
+    # Verify the table can be accessed and has correct data
+    assert len(loaded_table) == 2

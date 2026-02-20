@@ -564,3 +564,58 @@ def test_aper_phot_basic(helper_name, image_2d_wcs, request):
 
     tbl = phot_plugin.export_table()
     assert len(tbl) == 1
+
+
+def test_aper_phot_load_table_into_data_collection(imviz_helper, image_2d_wcs):
+    """
+    Test that aperture photometry table can be loaded back into the data collection
+    using the 'Load into App' functionality.
+    """
+    # Load data
+    data = NDData(np.ones((10, 10)) * 100, wcs=image_2d_wcs)
+    imviz_helper.load_data(data, data_label='test_image')
+
+    # Create multiple apertures
+    reg1 = CirclePixelRegion(center=PixCoord(x=3.5, y=3.5), radius=2.0)
+    imviz_helper.plugins['Subset Tools'].import_region(reg1)
+
+    reg2 = CirclePixelRegion(center=PixCoord(x=6.5, y=6.5), radius=3.0)
+    imviz_helper.plugins['Subset Tools'].combination_mode = 'new'
+    imviz_helper.plugins['Subset Tools'].import_region(reg2)
+
+    # Perform aperture photometry on both subsets
+    phot_plugin = imviz_helper.plugins['Aperture Photometry']
+    phot_plugin.aperture.selected = 'Subset 1'
+    phot_plugin.calculate_photometry()
+
+    phot_plugin.aperture.selected = 'Subset 2'
+    phot_plugin.calculate_photometry()
+
+    # Verify the table has results
+    phot_table = phot_plugin.export_table()
+    assert len(phot_table) == 2
+
+    # Now test loading the table back into the data collection
+    # Open the loader panel
+    phot_plugin._obj.table.loader_panel_ind = 0
+
+    # Access the object loader via the loaders property
+    loaders = phot_plugin._obj.table.user_api.loaders
+    object_loader = loaders['object']
+
+    # The object should be set to the table
+    assert object_loader.object is not None
+    assert len(object_loader.object) == 2
+
+    # Verify the loaded table has the expected columns
+    loaded_table = object_loader.object
+    assert 'xcenter' in loaded_table.colnames
+    assert 'ycenter' in loaded_table.colnames
+    assert 'sum' in loaded_table.colnames
+    assert 'data_label' in loaded_table.colnames
+    assert 'subset_label' in loaded_table.colnames
+
+    # Verify the table can be accessed and has correct data
+    assert len(loaded_table) == 2
+    assert loaded_table['id'][0] == 1
+    assert loaded_table['id'][1] == 2

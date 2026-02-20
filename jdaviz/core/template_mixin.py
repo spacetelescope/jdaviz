@@ -6,6 +6,7 @@ import time
 import warnings
 from contextlib import contextmanager
 from functools import cached_property, wraps
+from traitlets import link
 
 import astropy.units as u
 import bqplot
@@ -63,7 +64,7 @@ from jdaviz.core.region_translators import (regions2roi,
                                             stcs_string2region)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
-from jdaviz.core.registries import tray_registry, viewer_registry
+from jdaviz.core.registries import tray_registry, viewer_registry, loader_resolver_registry
 from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
@@ -5899,16 +5900,28 @@ class Table(PluginSubcomponent):
     enable_clear = Bool(True).tag(sync=True)
     clear_btn_lbl = Unicode('Clear Table').tag(sync=True)
 
+    # Loader panel traitlets for "Load into App" functionality
+    loader_items = List([]).tag(sync=True)
+    loader_selected = Unicode('object').tag(sync=True)
+    loader_panel_ind = Any(None).tag(sync=True)  # None: close, 0: open
+    api_hints_enabled = Bool(False).tag(sync=True)
+    api_hints_obj = Unicode("").tag(sync=True)
+
     def __init__(self, plugin, name='table', selected_rows_changed_callback=None,
-                 clear_callback=None,
+                 clear_callback=None, enable_load_into_app=False,
                  *args, **kwargs):
         self._qtable = None
         self._table_name = name
         self._selected_rows_changed_callback = selected_rows_changed_callback
         self._clear_callback = clear_callback
+        self._enable_load_into_app = enable_load_into_app
+        self._object_loader = None
         super().__init__(plugin, 'Table', *args, **kwargs)
 
         plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
+
+        if self._enable_load_into_app:
+            self._setup_object_loader()
 
     @property
     def user_api(self):
@@ -5917,7 +5930,19 @@ class Table(PluginSubcomponent):
                   'select_none')
         if self.enable_clear:
             expose += ('clear_table',)
+        if self._enable_load_into_app:
+            expose += ('loaders',)
         return UserApiWrapper(self, expose)
+
+    @property
+    def loaders(self):
+        """Access loaders for loading the table into the app."""
+        if not self._enable_load_into_app:
+            raise AttributeError("loaders are not enabled for this table")
+        from ipywidgets.widgets import widget_serialization
+        loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
+                   for item in self.loader_items}
+        return loaders
 
     def default_value_for_column(self, colname=None, value=None):
         if colname in self._default_values_by_colname:
@@ -5938,6 +5963,72 @@ class Table(PluginSubcomponent):
     def _selected_rows_changed(self, msg):
         if self._selected_rows_changed_callback is not None:
             self._selected_rows_changed_callback(msg)
+
+    def _setup_object_loader(self):
+        """Set up the object loader for 'Load into App' functionality."""
+        # ensure the loaders are in registy
+        import jdaviz.core.loaders  # noqa
+
+        def close_accordion():
+            self.loader_panel_ind = None
+
+        ObjectResolver = loader_resolver_registry.members.get('object')
+        if ObjectResolver is None:
+            return
+
+        self._object_loader = ObjectResolver(
+            app=self._plugin.app,
+            close_callback=close_accordion
+        )
+        # Hide the resolver UI since we're using a fixed object (the table itself)
+        self._object_loader.hide_resolver = True
+
+        self.loader_items = [{
+            'name': 'object',
+            'label': 'object',
+            'requires_api_support': self._object_loader.requires_api_support,
+            'widget': "IPY_MODEL_" + self._object_loader.model_id
+        }]
+        self.loader_selected = 'object'
+
+        # Link api_hints_enabled from parent plugin to keep it in sync
+        link((self._plugin, 'api_hints_enabled'), (self, 'api_hints_enabled'))
+        # Also link api_hints_enabled to the ObjectResolver so it respects the app toggle
+        link((self._plugin, 'api_hints_enabled'), (self._object_loader, 'api_hints_enabled'))
+        # Set api_hints_obj to reflect the table path (e.g., plg.table)
+        self.api_hints_obj = f"{self._plugin.api_hints_obj}.{self._table_name}"
+
+    @observe('loader_panel_ind')
+    def _loader_panel_ind_changed(self, change):
+        """Update the object loader with the current table when the panel is opened."""
+        if self.loader_panel_ind == 0 and self._enable_load_into_app:
+            self._update_object_loader()
+
+    @observe('items')
+    def _items_changed(self, change):
+        """Update the object loader when the table data changes."""
+        # Only update if the loader panel is currently open
+        if self.loader_panel_ind == 0 and self._enable_load_into_app:
+            # Defer the loader update to allow the UI to update first
+            self._schedule_loader_update()
+
+    def _schedule_loader_update(self):
+        """Schedule a deferred update to the object loader."""
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            loop.call_soon(self._update_object_loader)
+        except RuntimeError:
+            # No event loop running, update synchronously
+            self._update_object_loader()
+
+    def _update_object_loader(self):
+        """Update the object loader with the current table object."""
+        if self._object_loader is None:
+            return
+        table = self.export_table()
+        if table is not None:
+            self._object_loader.object = table
 
     def add_item(self, item):
         """
@@ -6256,7 +6347,7 @@ class TableMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, table_attr_name='table', *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.table = Table(self, name=table_attr_name)
+        self.table = Table(self, name=table_attr_name, enable_load_into_app=True)
         self.table_widget = 'IPY_MODEL_'+self.table.model_id
 
     def clear_table(self):
