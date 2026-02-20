@@ -1,6 +1,7 @@
 from specutils import Spectrum
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
-from jdaviz.core.user_api import DataApi, SpectralDataApi
+from jdaviz.core.user_api import (DataApi, SpectralDataApi, SpatialDataApi,
+                                  TemporalSpatialDataApi, SpectralSpatialDataApi)
 import pytest
 import re
 
@@ -199,6 +200,25 @@ def test_wildcard_match_through_load(imviz_helper, multi_extension_image_hdu_wcs
     assert list(imviz_helper.datasets.keys()) == [data_labels[i] for i in matches]
 
 
+@pytest.mark.parametrize(
+    ['input_data', 'input_format', 'expected_api'], [
+        ('image_hdu_wcs', 'Image', SpatialDataApi),
+        ('spectrum1d', '1D Spectrum', SpectralDataApi),
+        ('spectrum2d', '2D Spectrum', SpectralDataApi),
+        ('spectrum1d_cube', '3D Spectrum', SpectralSpatialDataApi),
+        ('sky_coord_only_source_catalog', 'Catalog', DataApi)
+])
+def test_correct_data_api_class(deconfigged_helper,
+                                input_data, input_format, expected_api,
+                                request):
+    input_data = request.getfixturevalue(input_data)
+    deconfigged_helper.load(input_data, format=input_format, data_label='test_data')
+    data_dict = deconfigged_helper.datasets
+    assert isinstance(data_dict['test_data'], expected_api)
+    if 'test_data (auto-ext)' in data_dict:
+        assert isinstance(data_dict['test_data (auto-ext)'], SpectralDataApi)
+
+
 def test_data_access_deconfigged(deconfigged_helper, mos_spectrum2d):
     """Test the .datasets property access for the deconfigged helper."""
     # Initially no data loaded
@@ -214,11 +234,6 @@ def test_data_access_deconfigged(deconfigged_helper, mos_spectrum2d):
     assert 'Test 2D Spectrum' in data_dict
     assert 'Test 2D Spectrum (auto-ext)' in data_dict
     assert len(data_dict) == 2
-
-    # Test that spectral data uses SpectralDataApi (subclass of DataApi)
-    assert isinstance(data_dict['Test 2D Spectrum'], DataApi)
-    assert isinstance(data_dict['Test 2D Spectrum'], SpectralDataApi)
-    assert isinstance(data_dict['Test 2D Spectrum (auto-ext)'], SpectralDataApi)
 
     # Test DataApi.get_data() returns Spectrum
     spectrum_obj = data_dict['Test 2D Spectrum'].get_data()
