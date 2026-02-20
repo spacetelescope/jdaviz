@@ -295,7 +295,6 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         assert data.label == 'my_sky'
         assert data.style.color in ((0, 1, 0), '#00ff00')
         assert data.style.marker == 'o'
-        print('MARKER SIZE', data.style.markersize)
         assert_allclose(data.style.markersize, 3)
         assert_allclose(data.style.alpha, 0.8)
         assert_allclose(data.get_component('ra').data, sky.ra.deg)
