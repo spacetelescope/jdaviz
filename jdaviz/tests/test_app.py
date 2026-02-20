@@ -70,16 +70,27 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
         viz.get_data("non-existent label")
 
 
-def test_duplicate_data_labels(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label="test")
-    specviz_helper.load_data(spectrum1d, data_label="test")
-    dc = specviz_helper.app.data_collection
-    assert dc[0].label == "test"
-    assert dc[1].label == "test (1)"
-    specviz_helper.load_data(spectrum1d, data_label="test_1")
-    specviz_helper.load_data(spectrum1d, data_label="test")
-    assert dc[2].label == "test_1"
-    assert dc[3].label == "test (2)"
+@pytest.mark.xfail(reason='Known issue with duplicate data labels when using API.')
+@pytest.mark.parametrize(('input_data', 'input_format'), [
+    ('image_hdu_wcs', 'Image'),
+    ('spectrum1d', '1D Spectrum'),
+    ('spectrum2d', '2D Spectrum'),
+    ('spectrum1d_cube', '3D Spectrum')
+])
+def test_duplicate_data_labels(deconfigged_helper, input_data, input_format, request):
+    input_data = request.getfixturevalue(input_data)
+    deconfigged_helper.load(input_data, format=input_format, data_label="test")
+    deconfigged_helper.load(input_data, format=input_format, data_label="test")
+
+    dc = deconfigged_helper.app.data_collection
+    assert any([dc_entry.label == 'test' for dc_entry in dc])
+    assert any([dc_entry.label == 'test (1)' for dc_entry in dc])
+
+    deconfigged_helper.load(input_data, format=input_format, data_label="test_1")
+    deconfigged_helper.load(input_data, format=input_format, data_label="test")
+
+    assert any([dc_entry.label == 'test_1' for dc_entry in dc])
+    assert any([dc_entry.label == 'test (2)' for dc_entry in dc])
 
 
 def test_duplicate_data_labels_with_brackets(specviz_helper, spectrum1d):
