@@ -2765,7 +2765,6 @@ class Application(VuetifyTemplate, HubListener):
             # unless it is used
             color = data.meta.get('_default_color')
             if color is None:
-                print('no default color in metadata, using color cycler')
                 # check if this is a catalog/scatter layer and use scatter_color_cycler,
                 # which has brighter colors.
                 is_catalog = data.meta.get('_importer') == 'CatalogImporter'

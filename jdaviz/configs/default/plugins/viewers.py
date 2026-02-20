@@ -300,7 +300,6 @@ class JdavizViewerMixin(WithCache):
                 return layer
 
     def _apply_layer_defaults(self, layer_state):
-        print('we in apply layer defaults')
         if hasattr(layer_state, 'as_steps'):
             if layer_state.layer.label != layer_state.layer.data.label:
                 # then this is a subset, so default based on the parent data layer
