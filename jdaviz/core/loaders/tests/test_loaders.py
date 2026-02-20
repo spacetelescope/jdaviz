@@ -222,7 +222,7 @@ def test_resolver_url(deconfigged_helper):
 
     # may change with future importers
     assert len(loader.format.choices) == 3
-    assert loader.format.selected == '2D Spectrum'
+    assert loader.format.selected == '2D Spectrum'  # default may change with future importers
 
     # test target filtering
     assert len(loader.target.choices) > 1
