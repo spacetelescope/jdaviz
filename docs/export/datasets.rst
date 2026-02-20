@@ -48,7 +48,7 @@ Each dataset is wrapped in a specialized data API object depending on the data t
 
 All data API objects provide common methods for working with your data.
 
-- :meth:`~jdaviz.core.user_api.DataApi.get_object`
+- :meth:`~jdaviz.core.user_api.DataApi.get_data`
 - :meth:`~jdaviz.core.user_api.DataApi.add_to_viewer`
 
 
@@ -57,7 +57,7 @@ All data API objects provide common methods for working with your data.
 .. code-block:: python
 
     # Get the data object
-    spectrum = jd.datasets['spectrum'].get_object()
+    spectrum = jd.datasets['spectrum'].get_data()
 
     # Work with the returned object
     print(spectrum.spectral_axis)

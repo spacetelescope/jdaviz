@@ -220,12 +220,12 @@ def test_data_access_deconfigged(deconfigged_helper, mos_spectrum2d):
     assert isinstance(data_dict['Test 2D Spectrum'], SpectralDataApi)
     assert isinstance(data_dict['Test 2D Spectrum (auto-ext)'], SpectralDataApi)
 
-    # Test DataApi.get_object() returns Spectrum
-    spectrum_obj = data_dict['Test 2D Spectrum'].get_object()
+    # Test DataApi.get_data() returns Spectrum
+    spectrum_obj = data_dict['Test 2D Spectrum'].get_data()
     assert isinstance(spectrum_obj, Spectrum)
 
     # Test that SpectralDataApi accepts spectral_subset argument (even if None)
-    spectrum_no_subset = data_dict['Test 2D Spectrum (auto-ext)'].get_object(spectral_subset=None)
+    spectrum_no_subset = data_dict['Test 2D Spectrum (auto-ext)'].get_data(spectral_subset=None)
     assert isinstance(spectrum_no_subset, Spectrum)
 
     # Test add_to_viewer method

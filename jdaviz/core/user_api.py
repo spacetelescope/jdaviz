@@ -22,10 +22,10 @@ class DataApi:
     def __repr__(self):
         return f'<Data API for {self._data_label}>'
 
-    def get_object(self, cls=None, use_display_units=False):
-        return self._app._jdaviz_helper.get_data(self._data_label,
-                                                 cls=cls,
-                                                 use_display_units=use_display_units)
+    def get_data(self, cls=None, use_display_units=False):
+        return self._app._jdaviz_helper._get_data(self._data_label,
+                                                  cls=cls,
+                                                  use_display_units=use_display_units)
 
     def add_to_viewer(self, viewer_label):
         viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
@@ -43,7 +43,7 @@ class DataApi:
 class SpectralDataApi(DataApi):
     """DataApi for spectral data that supports spectral subsets."""
 
-    def get_object(self, spectral_subset=None, cls=None, use_display_units=False):
+    def get_data(self, spectral_subset=None, cls=None, use_display_units=False):
         """
         Get the data as an object with optional spectral subset applied.
 
@@ -61,16 +61,16 @@ class SpectralDataApi(DataApi):
         data : object
             The data object with subset applied.
         """
-        return self._app._jdaviz_helper.get_data(self._data_label,
-                                                 spectral_subset=spectral_subset,
-                                                 cls=cls,
-                                                 use_display_units=use_display_units)
+        return self._app._jdaviz_helper._get_data(self._data_label,
+                                                  spectral_subset=spectral_subset,
+                                                  cls=cls,
+                                                  use_display_units=use_display_units)
 
 
 class SpatialDataApi(DataApi):
     """DataApi for spatial/image data that supports spatial subsets."""
 
-    def get_object(self, spatial_subset=None, cls=None, use_display_units=False):
+    def get_data(self, spatial_subset=None, cls=None, use_display_units=False):
         """
         Get the data as an object with optional spatial subset applied.
 
@@ -88,17 +88,17 @@ class SpatialDataApi(DataApi):
         data : object
             The data object with subset applied.
         """
-        return self._app._jdaviz_helper.get_data(self._data_label,
-                                                 spatial_subset=spatial_subset,
-                                                 cls=cls,
-                                                 use_display_units=use_display_units)
+        return self._app._jdaviz_helper._get_data(self._data_label,
+                                                  spatial_subset=spatial_subset,
+                                                  cls=cls,
+                                                  use_display_units=use_display_units)
 
 
 class TemporalSpatialDataApi(DataApi):
     """DataApi for ramp data that supports spatial and temporal subsets."""
 
-    def get_object(self, spatial_subset=None, temporal_subset=None,
-                   cls=None, use_display_units=False):
+    def get_data(self, spatial_subset=None, temporal_subset=None,
+                 cls=None, use_display_units=False):
         """
         Get the data as an object with optional spatial and temporal subsets applied.
 
@@ -118,18 +118,18 @@ class TemporalSpatialDataApi(DataApi):
         data : object
             The data object with subsets applied.
         """
-        return self._app._jdaviz_helper.get_data(self._data_label,
-                                                 spatial_subset=spatial_subset,
-                                                 temporal_subset=temporal_subset,
-                                                 cls=cls,
-                                                 use_display_units=use_display_units)
+        return self._app._jdaviz_helper._get_data(self._data_label,
+                                                  spatial_subset=spatial_subset,
+                                                  temporal_subset=temporal_subset,
+                                                  cls=cls,
+                                                  use_display_units=use_display_units)
 
 
 class SpectralSpatialDataApi(DataApi):
     """DataApi for cube data that supports both spectral and spatial subsets."""
 
-    def get_object(self, spatial_subset=None, spectral_subset=None,
-                   cls=None, use_display_units=False):
+    def get_data(self, spatial_subset=None, spectral_subset=None,
+                 cls=None, use_display_units=False):
         """
         Get the data as an object with optional spatial and spectral subsets applied.
 
@@ -149,11 +149,11 @@ class SpectralSpatialDataApi(DataApi):
         data : object
             The data object with subsets applied.
         """
-        return self._app._jdaviz_helper.get_data(self._data_label,
-                                                 spatial_subset=spatial_subset,
-                                                 spectral_subset=spectral_subset,
-                                                 cls=cls,
-                                                 use_display_units=use_display_units)
+        return self._app._jdaviz_helper._get_data(self._data_label,
+                                                  spatial_subset=spatial_subset,
+                                                  spectral_subset=spectral_subset,
+                                                  cls=cls,
+                                                  use_display_units=use_display_units)
 
 
 class UserApiWrapper:
