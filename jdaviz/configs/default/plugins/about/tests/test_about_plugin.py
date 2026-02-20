@@ -16,11 +16,8 @@ def test_get_latest_version_from_pypi():
     assert v is None
 
 
-# NOTE: Theoretically now all the tests in jdaviz are remote data tests
-# because all the viz loads About plugin and About plugin always polls
-# PyPI for the latest release version. If that bothers you or PyPI
-# starts blocking us as spammer, we can consider caching it at package level
-# but that introduces new non-standard package attributes.
+# NOTE: The PyPI version check is cached per-process, so only the first
+# Application init in a given process triggers a network request.
 def test_about_basic(specviz_helper):
     plg = specviz_helper.plugins["About"]._obj
 

@@ -15,6 +15,9 @@ except ImportError:  # pragma: no cover
 
 __all__ = ['About']
 
+# Module-level cache so the PyPI check runs at most once per process.
+_pypi_version_cache = {}
+
 
 @tray_registry('about', label="About",
                category='core', sidebar='popup')
@@ -55,18 +58,28 @@ class About(PluginTemplateMixin):
 
 
 def latest_version_from_pypi(package_name):
-    """Version info for given package or `None`."""
-    url = f"https://pypi.org/pypi/{package_name}/json"
+    """
+    Version info for given package or ``None``.
+
+    Results are cached per-process so repeated calls do not incur
+    additional network overhead.
+    """
+    if package_name in _pypi_version_cache:
+        return _pypi_version_cache[package_name]
+
+    url = f'https://pypi.org/pypi/{package_name}/json'
+    version = None
     try:
-        r = requests.get(url, timeout=60)
+        r = requests.get(url, timeout=10)
     except Exception:  # nosec # pragma: no cover
         pass
     else:
         if r.ok:
             try:
                 d = json.loads(r.text)
-                v = d["info"]["version"]
+                version = d['info']['version']
             except Exception:  # nosec # pragma: no cover
                 pass
-            else:
-                return v
+
+    _pypi_version_cache[package_name] = version
+    return version
