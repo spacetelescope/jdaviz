@@ -128,7 +128,7 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     uc.flux_unit.selected = 'MJy'
 
     # find the index of the marker's x-coordinate in the spectral axis of the original input data
-    spec = cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True)
+    spec = cubeviz_helper.datasets['Spectrum (sum)'].get_data(use_display_units=True)
     marker_index = np.where(spec.spectral_axis.value == mp._obj.marks['cubeviz-2'].x)
     # use the index to find the associated flux value of the original input
     flux_value = spec.flux[marker_index].value
@@ -139,7 +139,7 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     # now check if marks update with a unit that requires spectral density equivalency
     uc.flux_unit.selected = 'erg / (Angstrom s cm2)'
 
-    spec = cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True)
+    spec = cubeviz_helper.datasets['Spectrum (sum)'].get_data(use_display_units=True)
     flux_value = spec.flux[marker_index].value
 
     assert_allclose(mp._obj.marks['cubeviz-2'].y[0], flux_value)

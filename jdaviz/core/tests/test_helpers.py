@@ -316,7 +316,7 @@ def test_get_data_cls_spectrum_for_specviz2d(specviz2d_helper, spectrum2d):
     label = specviz2d_helper.app.data_collection[0].label
 
     # Spectrum should infer Spectrum2d for multi-dimensional data
-    result = specviz2d_helper.get_data(data_label=label)
+    result = specviz2d_helper.datasets[label].get_data()
     assert isinstance(result, Spectrum)
 
 
@@ -328,9 +328,14 @@ def test_get_data_cls_nddataarray_for_rampviz(rampviz_helper, jwst_level_1b_ramp
     # Get the actual label from data collection
     label = rampviz_helper.app.data_collection[0].label
 
-    # Rampviz should infer NDDataArray for multi-dimensional data
-    result = rampviz_helper.get_data(data_label=label)
+    # Test both the old and new API
+    result = rampviz_helper.datasets[label].get_data()
+    result_old_api = rampviz_helper.get_data(data_label=label)
+
     assert isinstance(result, NDDataArray)
+    assert isinstance(result_old_api, NDDataArray)
+    # Verify both APIs return equivalent data
+    assert np.array_equal(result.data, result_old_api.data)
 
 
 def test_delete_region_with_valid_subset(cubeviz_helper, image_cube_hdu_obj):

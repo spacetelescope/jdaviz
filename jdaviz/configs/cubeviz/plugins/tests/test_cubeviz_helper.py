@@ -49,7 +49,7 @@ def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
         EllipsePixelRegion(center=PixCoord(x=4.5, y=4), width=9, height=8),  # Subset 1 (spatial)
         SpectralRegion(4.62440061e-07 * unit, 4.62520112e-07 * unit),  # Subset 2 (spectral)
     ], combination_mode="new")
-    spatial_with_spec = cubeviz_helper.get_data(data_label="Spectrum (Subset 1, sum)",
+    spatial_with_spec = cubeviz_helper.datasets["Spectrum (Subset 1, sum)"].get_data(
                                                 spectral_subset="Subset 2")
     assert spatial_with_spec.flux.ndim == 1
     assert list(spatial_with_spec.mask) == [True, True, False, False, True,
