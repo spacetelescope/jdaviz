@@ -1091,7 +1091,7 @@ def test_model_fitting_load_table_into_data_collection(specviz_helper, spectrum1
         mf.calculate_fit(add_data=True)
 
     # Create and fit a Gaussian model
-    mf.create_model_component('Gaussian1D', model_component='L')
+    mf.create_model_component('Gaussian1D', model_component_label='L')
     mf.add_results.label = 'composite_fit'
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
