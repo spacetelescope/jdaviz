@@ -35,11 +35,15 @@ from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
 from jdaviz.core.events import (SnackbarMessage,
                                 NewViewerMessage,
                                 ViewerRemovedMessage,
-                                ViewerVisibleLayersChangedMessage)
+                                ViewerVisibleLayersChangedMessage,
+                                RestoreToolbarMessage,
+                                TableSelectRowClickMessage)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
-from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
+from jdaviz.core.marks import (LineUncertainties, ScatterMask,
+                               OffscreenLinesMarks, TableSelectionMark)
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import WithCache, TemplateMixin, show_widget
+from jdaviz.core.tools import _get_skycoords_from_table, _get_pixel_coords_from_table
 from jdaviz.core.user_api import ViewerUserApi
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
@@ -173,7 +177,8 @@ class JdavizViewerMixin(WithCache):
         for layer in self.data_menu.data_labels_loaded[::-1]:
             visible = layer in visible_layers
             new_viewer.data_menu.add_data(layer)
-            new_viewer.data_menu.set_layer_visibility(layer, visible)
+            if hasattr(new_viewer.data_menu, 'set_layer_visibility'):
+                new_viewer.data_menu.set_layer_visibility(layer, visible)
             # TODO: don't revert color when adding same data to a new viewer
 
         # allow viewers to set attributes (not in state) on cloned viewers
@@ -554,6 +559,7 @@ class JdavizViewerWindow(TemplateMixin):
     figure_widget = Unicode().tag(sync=True)
     toolbar_widget = Unicode().tag(sync=True)
     data_menu_widget = Unicode().tag(sync=True)
+    tool_override_mode = Unicode("").tag(sync=True)
 
     viewer_destroyed = Bool(False).tag(sync=True)
 
@@ -570,7 +576,15 @@ class JdavizViewerWindow(TemplateMixin):
         self.toolbar_widget = "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else ''
         self.data_menu_widget = 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else ''  # noqa
 
+        # Link tool_override_mode from toolbar (only for NestedJupyterToolbar)
+        if viewer.toolbar and hasattr(viewer.toolbar, 'tool_override_mode'):
+            self.tool_override_mode = viewer.toolbar.tool_override_mode
+            viewer.toolbar.observe(self._on_toolbar_override_change, names=['tool_override_mode'])
+
         self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
+
+    def _on_toolbar_override_change(self, change):
+        self.tool_override_mode = change['new']
 
     @property
     def user_api(self):
@@ -1113,6 +1127,8 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
+                    ['jdaviz:table_highlight_selected'],
+                    ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
                     ['jdaviz:viewer_clone']
                    ]
@@ -1123,7 +1139,168 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True
 
+        # hide checkboxes by default (shown when TableSubset tool is activated)
+        self.widget_table.selection_enabled = False
+
         self.data_menu._obj.dataset.add_filter('is_catalog')
 
         self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
                                   names=['checked'])
+        # Also update selection highlight marks when checked rows change
+        self.widget_table.observe(self._on_checked_changed, names=['checked'])
+        self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
+
+        # Subscribe to RestoreToolbarMessage to clean up checkbox state
+        # when toolbar is restored (e.g., by clicking X on custom toolbar)
+        self.hub.subscribe(self, RestoreToolbarMessage,
+                           handler=self._on_restore_toolbar)
+
+        # Subscribe to TableSelectRowClickMessage to handle clicks from image viewers
+        self.hub.subscribe(self, TableSelectRowClickMessage,
+                           handler=self._on_table_select_row_click)
+
+        # Subscribe to ViewerRemovedMessage to clean up toolbar overrides
+        # if this table viewer is removed while tools are active
+        self.hub.subscribe(self, ViewerRemovedMessage,
+                           handler=self._on_viewer_removed)
+
+    def _on_table_select_row_click(self, msg):
+        """Handle click from image viewer to select/toggle closest table row."""
+        # Only respond if this message is for this table viewer
+        if msg.table_viewer_id != self.reference_id:
+            return
+
+        if not len(self.layers):
+            return
+
+        # Get pixel coordinates from the message (these are in reference data frame)
+        click_x, click_y = msg.x, msg.y
+
+        try:
+            layer = self.layers[0].layer
+
+            # Try pixel coordinates first (if catalog has X/Y columns)
+            # Fall back to sky coordinates with WCS conversion if needed
+            xs, ys = None, None
+            pixel_coords = _get_pixel_coords_from_table(layer)
+
+            if pixel_coords is not None:
+                # Catalog has pixel coordinates, use them directly
+                xs, ys = pixel_coords
+            else:
+                # Try sky coordinates with WCS conversion
+                skycoords = _get_skycoords_from_table(layer)
+                if skycoords is not None:
+                    for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+                        if viewer.state.reference_data is None:
+                            continue
+                        if viewer.state.reference_data.coords is None:
+                            continue
+                        pixel_result = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                        xs, ys = pixel_result[0], pixel_result[1]
+                        break
+
+            if xs is None or ys is None:
+                return
+
+            # Find nearest point and toggle its selection
+            distsq = (xs - click_x)**2 + (ys - click_y)**2
+            ind = int(np.argmin(distsq))
+
+            current_checked = list(self.widget_table.checked)
+            if ind in current_checked:
+                current_checked.remove(ind)
+            else:
+                current_checked.append(ind)
+            self.widget_table.checked = current_checked
+        except Exception:  # nosec # pragma: no cover
+            pass
+
+    def _on_checked_changed(self, change):
+        """Update highlight marks in image viewers when checked rows change."""
+        self._update_selection_marks()
+
+    def _on_selection_enabled_changed(self, change):
+        """Show/hide selection marks when selection is enabled/disabled."""
+        if not change['new']:
+            # Selection disabled, clear all marks
+            self._clear_selection_marks()
+        else:
+            # Selection enabled, update marks
+            self._update_selection_marks()
+
+    def _get_selection_mark(self, viewer):
+        """Get or create a selection highlight mark for the given viewer."""
+        matches = [mark for mark in viewer.figure.marks if isinstance(mark, TableSelectionMark)]
+        if len(matches):
+            return matches[0]
+        mark = TableSelectionMark(viewer)
+        viewer.figure.marks = viewer.figure.marks + [mark]
+        return mark
+
+    def _update_selection_marks(self):
+        """Update selection highlight marks in all image viewers."""
+        if not self.widget_table.selection_enabled:
+            return
+
+        checked_rows = self.widget_table.checked
+        if not len(checked_rows) or not len(self.layers):
+            self._clear_selection_marks()
+            return
+
+        layer = self.layers[0].layer
+
+        # Try pixel coordinates first (if catalog has X/Y columns)
+        # Fall back to sky coordinates with WCS conversion if needed
+        pixel_xs, pixel_ys = None, None
+        skycoords = None
+
+        pixel_coords = _get_pixel_coords_from_table(layer, checked_rows)
+        if pixel_coords is not None:
+            pixel_xs, pixel_ys = pixel_coords
+        else:
+            skycoords = _get_skycoords_from_table(layer, checked_rows)
+            if skycoords is None:
+                self._clear_selection_marks()
+                return
+
+        # Update marks in all image viewers
+        for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            try:
+                if pixel_xs is not None:
+                    # Use pixel coordinates directly
+                    xs, ys = pixel_xs, pixel_ys
+                else:
+                    # Convert sky coordinates to pixels for this viewer
+                    coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                    xs, ys = coords[0], coords[1]
+
+                mark = self._get_selection_mark(viewer)
+                mark.update_xy(xs, ys)
+                mark.visible = True
+            except Exception:  # nosec # pragma: no cover
+                pass
+
+    def _clear_selection_marks(self):
+        """Clear selection highlight marks from all image viewers."""
+        for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            for mark in viewer.figure.marks:
+                if isinstance(mark, TableSelectionMark):
+                    mark.visible = False
+
+    def _on_restore_toolbar(self, msg={}):
+        """Clean up checkbox state when toolbar is restored."""
+        # Clear selection marks
+        self._clear_selection_marks()
+
+        # Hide checkboxes (they should always be hidden when default toolbar is shown)
+        self.widget_table.selection_enabled = False
+
+    def _on_viewer_removed(self, msg):
+        """Clean up selection marks if this table viewer is removed."""
+        if msg.viewer_id != self.reference_id:
+            return
+
+        # Clear selection marks in image viewers when this table viewer is removed
+        # (toolbar cleanup is handled generically by NestedJupyterToolbar)
+        self._clear_selection_marks()

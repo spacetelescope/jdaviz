@@ -25,6 +25,8 @@ New Features
 
 - Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
 
+- Table viewer tools to highlight selected, zoom-to-selected, and create subset from selected. [#3994]
+
 Cubeviz
 ^^^^^^^
 

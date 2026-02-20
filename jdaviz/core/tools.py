@@ -2,6 +2,8 @@ import os
 import time
 
 import numpy as np
+from astropy.coordinates import SkyCoord
+from astropy import units as u
 from echo import delay_callback
 from functools import cached_property
 from glue.config import viewer_tool
@@ -19,8 +21,9 @@ from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import (LineIdentifyMessage, SpectralMarksChangedMessage,
                                 CatalogSelectClickEventMessage, FootprintSelectClickEventMessage,
-                                FootprintOverlayClickMessage)
+                                FootprintOverlayClickMessage, TableSelectRowClickMessage)
 from jdaviz.core.marks import SpectralLine, FootprintOverlay, RegionOverlay
+from jdaviz.utils import get_top_layer_index, in_ra_comps, in_dec_comps
 
 __all__ = []
 
@@ -38,6 +41,116 @@ BqplotEllipseMode.icon = os.path.join(ICON_DIR, 'select_ellipse.svg')
 BqplotCircularAnnulusMode.icon = os.path.join(ICON_DIR, 'select_annulus.svg')
 BqplotXRangeMode.icon = os.path.join(ICON_DIR, 'select_x.svg')
 BqplotYRangeMode.icon = os.path.join(ICON_DIR, 'select_y.svg')
+
+
+def _get_pixel_coords_from_table(layer, rows=None):
+    """
+    Get pixel coordinates for rows in a table layer.
+
+    Checks for X/Y column names stored in metadata by the catalog importer.
+
+    Parameters
+    ----------
+    layer : glue Data
+        The table data layer
+    rows : array-like, optional
+        Row indices to select. If None, returns all rows.
+
+    Returns
+    -------
+    tuple or None
+        (xs, ys) arrays for the selected rows, or None if X/Y columns not found.
+    """
+    x_comp = None
+    y_comp = None
+
+    # Check if the catalog importer stored the X/Y column names in metadata
+    x_col_name = layer.meta.get('_jdaviz_loader_x_col')
+    y_col_name = layer.meta.get('_jdaviz_loader_y_col')
+
+    if x_col_name and y_col_name:
+        # Find the component IDs that match these column names
+        for comp_id in layer.component_ids():
+            comp_name = str(comp_id)
+            if comp_name == x_col_name:
+                x_comp = comp_id
+            elif comp_name == y_col_name:
+                y_comp = comp_id
+
+    if x_comp is None or y_comp is None:
+        return None
+
+    try:
+        xs = layer.get_component(x_comp).data
+        ys = layer.get_component(y_comp).data
+
+        if rows is not None:
+            xs = xs[rows]
+            ys = ys[rows]
+
+        return (np.atleast_1d(xs), np.atleast_1d(ys))
+    except Exception:
+        return None
+
+
+def _get_skycoords_from_table(layer, rows=None):
+    """
+    Get SkyCoord for rows in a table layer.
+
+    First checks for RA/Dec column names stored in metadata by the catalog importer,
+    then falls back to flexible name matching.
+
+    Parameters
+    ----------
+    layer : glue Data
+        The table data layer
+    rows : array-like, optional
+        Row indices to select. If None, returns all rows.
+
+    Returns
+    -------
+    SkyCoord or None
+        SkyCoord for the selected rows, or None if RA/Dec columns not found.
+    """
+    ra_comp = None
+    dec_comp = None
+
+    # First, check if the catalog importer stored the RA/Dec column names in metadata
+    ra_col_name = layer.meta.get('_jdaviz_loader_ra_col')
+    dec_col_name = layer.meta.get('_jdaviz_loader_dec_col')
+
+    if ra_col_name and dec_col_name:
+        # Find the component IDs that match these column names
+        for comp_id in layer.component_ids():
+            comp_name = str(comp_id)
+            if comp_name == ra_col_name:
+                ra_comp = comp_id
+            elif comp_name == dec_col_name:
+                dec_comp = comp_id
+
+    # Fall back to flexible name matching if metadata not found or columns not matched
+    if ra_comp is None or dec_comp is None:
+        for comp_id in layer.component_ids():
+            comp_name = str(comp_id)
+            if in_ra_comps(comp_name) and ra_comp is None:
+                ra_comp = comp_id
+            elif in_dec_comps(comp_name) and dec_comp is None:
+                dec_comp = comp_id
+
+    if ra_comp is None or dec_comp is None:
+        return None
+
+    try:
+        ras = layer.get_component(ra_comp).data
+        decs = layer.get_component(dec_comp).data
+
+        if rows is not None:
+            ras = ras[rows]
+            decs = decs[rows]
+
+        return SkyCoord(ra=ras * u.deg, dec=decs * u.deg)
+    except Exception:
+        return None
 
 
 class _BaseZoomHistory:
@@ -360,16 +473,144 @@ class ViewerClone(Tool):
                                                      'rampviz']
 
 
+class _BaseTableSelectionTool(Tool):
+    """
+    Base class for table tools that enable row selection checkboxes and swap the toolbar.
+
+    Subclasses should define:
+    - icon, tool_id, action_text, tool_tip
+    - override_tools: list of tool IDs to show in the custom toolbar
+    - override_title: title for the custom toolbar
+    - image_viewer_override_tools: tools to show in image viewer toolbars when this tool is active
+    """
+    override_tools = []  # define in subclass
+    override_title = ''  # define in subclass
+    # Tools to show in image viewer toolbars when this tool is activated
+    image_viewer_override_tools = [
+        ['jdaviz:homezoom'],
+        ['jdaviz:boxzoom'],
+        ['jdaviz:imagepanzoom'],
+        ['jdaviz:select_table_row']
+    ]
+
+    def _get_image_viewers(self):
+        """Get list of image viewers."""
+        return list(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'))
+
+    def get_custom_widgets(self):
+        """
+        Override in subclass to return list of custom widget dicts for the toolbar.
+        Currently only implemented for dropdowns, but could be extended in the future.
+        Each dict should have: 'label', 'items' (list of {'label', 'value'}),
+        'selected', 'multiselect'
+        """
+        return None
+
+    def activate(self):
+        # Show checkboxes (they're hidden by default and should be hidden when toolbar restores)
+        self.viewer.widget_table.selection_enabled = True
+
+        # Override toolbar to show custom tools
+        # Pass callback for dynamic widget updates (e.g., when viewers are added/removed)
+        custom_widgets = self.get_custom_widgets()
+        custom_widgets_callback = self.get_custom_widgets if custom_widgets else None
+        self.viewer.toolbar.override_tools(
+            self.override_tools,
+            self.override_title,
+            custom_widgets=custom_widgets,
+            custom_widgets_callback=custom_widgets_callback
+        )
+
+        # Also override toolbars in all image viewers
+        for image_viewer in self._get_image_viewers():
+            # Set the table viewer ID on the select_table_row tool so it knows
+            # which table viewer to send the message to
+            image_viewer.toolbar.override_tools(
+                self.image_viewer_override_tools,
+                self.override_title,
+                active_tool='jdaviz:select_table_row'
+            )
+            # Configure the select_table_row tool with this table viewer's ID
+            # for now we'll hardcode this, but could generalize if there are cases
+            # where we want other default tools in the future
+            if 'jdaviz:select_table_row' in image_viewer.toolbar.tools:
+                tool = image_viewer.toolbar.tools['jdaviz:select_table_row']
+                tool._table_viewer_id = self.viewer.reference_id
+
+
+class _BaseTableApplyTool(Tool):
+    """
+    Base class for table tools that apply an action and restore the toolbar.
+
+    Subclasses should define:
+    - icon, tool_id, action_text, tool_tip (as usual for tools)
+    - on_apply(selected_rows): method to perform the action (only called if rows are selected)
+    """
+
+    def on_apply(self, selected_rows):
+        """Override in subclass to perform the action with the selected rows."""
+        pass
+
+    def activate(self):
+        selected_rows = self.viewer.widget_table.checked
+
+        if len(selected_rows):
+            self.on_apply(selected_rows)
+
+        # Hide checkboxes (they should always be hidden when default toolbar is shown)
+        self.viewer.widget_table.selection_enabled = False
+        # Restore toolbar (all_viewers=True to also restore image viewer toolbars)
+        self.viewer.toolbar.restore_tools(all_viewers=True)
+
+
 @viewer_tool
-class TableSubset(Tool):
+class TableHighlightSelected(_BaseTableSelectionTool):
+    icon = os.path.join(ICON_DIR, 'table-eye.svg')
+    tool_id = 'jdaviz:table_highlight_selected'
+    action_text = 'Highlight selected'
+    tool_tip = 'Enable row selection mode to highlight checked entries in image viewers'
+    override_tools = []  # just the close button
+    override_title = 'Table Highlight Selection'
+
+    def _get_image_viewers(self):
+        """Get list of image viewers that can show highlights."""
+        return list(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'))
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not len(self._get_image_viewers()):
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
+
+
+@viewer_tool
+class TableSubset(_BaseTableSelectionTool):
     icon = os.path.join(ICON_DIR, 'table_subset.svg')
     tool_id = 'jdaviz:table_subset'
     action_text = 'Create subset from table selection'
-    tool_tip = 'Create a new subset based on the current table selection'
+    tool_tip = 'Enable row selection mode to create a subset from table rows'
+    override_tools = ['jdaviz:table_apply_subset']
+    override_title = 'Table Subset Selection'
 
-    def activate(self):
-        if not len(self.viewer.widget_table.checked):
-            return
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
+
+
+@viewer_tool
+class TableApplySubset(_BaseTableApplyTool):
+    icon = os.path.join(ICON_DIR, 'check.svg')
+    tool_id = 'jdaviz:table_apply_subset'
+    action_text = 'Apply subset'
+    tool_tip = 'Create a subset from the currently checked table rows'
+
+    def on_apply(self, selected_rows):
         self.viewer.apply_filter()
 
     def is_visible(self):
@@ -377,7 +618,173 @@ class TableSubset(Tool):
             return False
         if not hasattr(self.viewer, 'widget_table'):
             return False
-        return len(self.viewer.widget_table.checked) > 0
+        return True
+
+    def disabled_msg(self):
+        if not len(self.viewer.widget_table.checked):
+            return 'Select rows to create subset'
+        return ''
+
+
+@viewer_tool
+class TableZoomToSelected(_BaseTableSelectionTool):
+    icon = os.path.join(ICON_DIR, 'table_zoom_to_selected.svg')
+    tool_id = 'jdaviz:table_zoom_to_selected'
+    action_text = 'Zoom to selected'
+    tool_tip = 'Enable row selection mode to zoom all applicable viewers to checked entries'
+    override_tools = ['jdaviz:table_apply_zoom']
+    override_title = 'Table Zoom Selection'
+
+    def _get_image_viewers(self):
+        """Get list of image viewers that can be zoomed."""
+        return list(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'))
+
+    def get_custom_widgets(self):
+        """Return viewer selector widget configuration."""
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
+            return None
+
+        # Build items list from available image viewers
+        items = [
+            {'label': v.reference_id, 'value': v.reference_id}
+            for v in image_viewers
+        ]
+        # Default to all viewers selected
+        selected = [v.reference_id for v in image_viewers]
+
+        return [{
+            'label': 'Viewers',
+            'items': items,
+            'selected': selected,
+            'multiselect': True
+        }]
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not len(self._get_image_viewers()):
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
+
+
+@viewer_tool
+class TableApplyZoom(_BaseTableApplyTool):
+    icon = os.path.join(ICON_DIR, 'check.svg')
+    tool_id = 'jdaviz:table_apply_zoom'
+    action_text = 'Apply zoom'
+    tool_tip = 'Zoom all applicable viewers to the currently checked table rows'
+
+    def on_apply(self, selected_rows):
+        layer = self.viewer.layers[0].layer
+
+        # Try pixel coordinates first (if catalog has X/Y columns)
+        # Fall back to sky coordinates with WCS conversion if needed
+        pixel_coords_from_table = _get_pixel_coords_from_table(layer, selected_rows)
+        skycoords = None
+
+        if pixel_coords_from_table is None:
+            # Try sky coordinates
+            skycoords = _get_skycoords_from_table(layer, selected_rows)
+            if skycoords is None:
+                return
+
+        # Get the selected viewer IDs from the custom widget
+        if len(self.viewer.toolbar.custom_widget_selected) > 0:
+            selected_viewer_ids = self.viewer.toolbar.custom_widget_selected[0]
+        else:
+            # no selected viewers, do nothing
+            return
+
+        for viewer in self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            # Skip viewers not in the selection (if selection exists)
+            if viewer.reference_id not in selected_viewer_ids:
+                continue
+
+            i_top = get_top_layer_index(viewer)
+            if i_top is None:
+                continue
+            image = viewer.layers[i_top].layer
+
+            # Determine pixel coordinates based on what's available
+            xs, ys = None, None
+
+            if pixel_coords_from_table is not None:
+                # Use pixel coordinates directly
+                xs, ys = pixel_coords_from_table
+            elif skycoords is not None:
+                # Convert sky coordinates to pixel
+                if hasattr(image, 'coords') and image.coords is not None:
+                    pixel_coords = image.coords.world_to_pixel(skycoords)
+                    xs, ys = np.atleast_1d(pixel_coords[0]), np.atleast_1d(pixel_coords[1])
+
+            if xs is None or ys is None:
+                continue
+
+            # Filter out NaN values
+            valid = np.isfinite(xs) & np.isfinite(ys)
+            if not np.any(valid):
+                continue
+            xs, ys = xs[valid], ys[valid]
+
+            # Calculate center in top layer coordinates
+            x_center = 0.5 * (np.min(xs) + np.max(xs))
+            y_center = 0.5 * (np.min(ys) + np.max(ys))
+
+            # Calculate radius as max distance from center to any point
+            # This ensures all points are visible
+            distances = np.sqrt((xs - x_center)**2 + (ys - y_center)**2)
+            radius = np.max(distances) if len(distances) > 0 else 0
+
+            # For single point or very close points, use a minimum radius
+            if radius < 20:
+                radius = 20
+
+            # Add 20% padding
+            radius *= 1.2
+
+            # Center on the middle point (in top layer coordinates)
+            viewer.center_on((x_center, y_center))
+
+            # Now convert center and radius to reference data coordinates for zoom
+            # Get center in reference data coordinates
+            ref_center = viewer._get_real_xy(image, x_center, y_center, reverse=True)
+
+            # Get a point at the edge to determine radius in reference coordinates
+            # We need to check both x and y directions in case of rotation/scale differences
+            ref_x_edge = viewer._get_real_xy(image, x_center + radius, y_center, reverse=True)
+            ref_y_edge = viewer._get_real_xy(image, x_center, y_center + radius, reverse=True)
+
+            # Calculate effective radius in reference coordinates
+            ref_radius_x = abs(ref_x_edge[0] - ref_center[0])
+            ref_radius_y = abs(ref_y_edge[1] - ref_center[1])
+            ref_radius = max(ref_radius_x, ref_radius_y)
+
+            # Set Y limits (most displays are wider, so fit Y first)
+            # Then _adjust_limits_aspect will expand X as needed
+            new_y_min = ref_center[1] - ref_radius
+            new_y_max = ref_center[1] + ref_radius
+
+            with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+                viewer.state.y_min = new_y_min
+                viewer.state.y_max = new_y_max
+            viewer.state._adjust_limits_aspect()
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not len(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView')):
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
+
+    def disabled_msg(self):
+        if not len(self.viewer.widget_table.checked):
+            return 'Select rows to zoom'
+        return ''
 
 
 @viewer_tool
@@ -450,6 +857,35 @@ class SelectCatalogMark(CheckableTool, HubListener):
     def is_visible(self):
         # NOTE: this assumes Catalogs._marker_name remains fixed at the default of 'catalog_results'
         return 'catalog_results' in [dci.label for dci in self.viewer.jdaviz_app.data_collection]
+
+
+@viewer_tool
+class SelectTableRow(CheckableTool, HubListener):
+    """Tool for selecting/toggling the closest table row from an image viewer click."""
+    icon = os.path.join(ICON_DIR, 'catalog_select.svg')
+    tool_id = 'jdaviz:select_table_row'
+    action_text = 'Select/toggle table row'
+    tool_tip = 'Click to select/toggle the closest table row'
+
+    # This will be set when the tool is activated via override_tools
+    _table_viewer_id = None
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event, events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        if self._table_viewer_id is None:
+            return
+        msg = TableSelectRowClickMessage(
+            data['domain']['x'],
+            data['domain']['y'],
+            self._table_viewer_id,
+            sender=self
+        )
+        self.viewer.session.hub.broadcast(msg)
 
 
 @viewer_tool

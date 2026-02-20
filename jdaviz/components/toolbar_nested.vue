@@ -13,15 +13,39 @@
       </v-btn>
     </v-btn-toggle>
 
+    <!-- Custom widgets (e.g., viewer selector) -->
+    <span v-if="custom_widget_items.length > 0" style="display: inline-flex; align-items: center; vertical-align: top; height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
+      <v-select
+        v-for="(widget, idx) in custom_widget_items"
+        :key="idx"
+        :value="custom_widget_selected[idx]"
+        @input="(val) => update_widget_selection(idx, val)"
+        :items="widget.items"
+        :placeholder="widget.label"
+        :multiple="widget.multiselect"
+        :chips="widget.multiselect"
+        :small-chips="widget.multiselect"
+        deletable-chips
+        dense
+        solo
+        flat
+        hide-details
+        style="min-width: 120px; max-width: 250px;"
+        class="custom-toolbar-select"
+        item-text="label"
+        item-value="value"
+      ></v-select>
+    </span>
+
     <v-btn-toggle v-model="active_tool_id" :style="" class="transparent">
-        <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)" v-if="primary && visible" bottom>
+        <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" v-if="primary && visible" bottom>
             <template v-slot:activator="{ on }">
-                <v-btn v-on="on" icon :value="id" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
+                <v-btn v-on="on" icon :value="id" :disabled="disabled_msg.length > 0" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''} ${disabled_msg.length > 0 ? 'opacity: 0.5;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
                     <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>
                     <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
                 </v-btn>
             </template>
-            <span>{{ tooltip }}{{has_suboptions ? " [click arrow for alt. tools]" : ""}}</span>
+            <span>{{ disabled_msg.length > 0 ? disabled_msg : tooltip }}{{has_suboptions ? " [click arrow for alt. tools]" : ""}}</span>
         </v-tooltip>
     </v-btn-toggle>
     <v-menu
@@ -68,6 +92,12 @@
       }
     },
     methods: {
+      update_widget_selection(idx, val) {
+        // Update the selection for a specific widget index
+        let newSelected = [...this.custom_widget_selected];
+        newSelected[idx] = val;
+        this.custom_widget_selected = newSelected;
+      },
       show_submenu (e, has_suboptions, menu_ind) {
         // needed to prevent browser context-menu
         e.preventDefault()
@@ -109,5 +139,48 @@
 }
 .theme--dark .invert-if-dark {
   filter: invert(1) !important;
+}
+.custom-toolbar-select {
+  background-color: #007ba1 !important;
+  border-radius: 4px !important;
+}
+.custom-toolbar-select.v-text-field.v-text-field--solo .v-input__slot {
+  background-color: #007ba1 !important;
+}
+.custom-toolbar-select >>> .v-input__slot {
+  min-height: 32px !important;
+  padding: 0 8px !important;
+  background-color: #007ba1 !important;
+}
+.custom-toolbar-select >>> .v-text-field__slot {
+  background-color: #007ba1 !important;
+}
+.custom-toolbar-select >>> .v-select__slot {
+  background-color: #007ba1 !important;
+}
+.custom-toolbar-select >>> .v-input__control {
+  min-height: 32px !important;
+}
+.custom-toolbar-select >>> .v-select__selections {
+  min-height: 28px !important;
+  padding: 0 !important;
+}
+.custom-toolbar-select >>> .v-select__selection {
+  color: white !important;
+  font-size: 12px;
+  margin: 2px 4px 2px 0 !important;
+}
+.custom-toolbar-select >>> .v-chip {
+  height: 22px !important;
+  margin: 2px !important;
+}
+.custom-toolbar-select >>> .v-chip .v-chip__content {
+  font-size: 11px;
+}
+.custom-toolbar-select >>> .v-icon {
+  color: white !important;
+}
+.custom-toolbar-select >>> input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 </style>
