@@ -46,7 +46,7 @@
 
     <v-row v-if="show_viewer_switch !== false && add_to_viewer_items.length === 2">
       <v-switch v-if="label_overwrite"
-        :input-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
+        :model-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
         :label="addToViewerText"
         :class="api_hints_enabled && add_results_api_hint ? 'api-hint hide-input' : 'hide-input'"
         :disabled="true"
@@ -54,8 +54,8 @@
         persistent-hint
       ></v-switch>
       <v-switch v-else
-        :input-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
-        @change="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
+        :model-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
+        @update:modelValue="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
         :label="addToViewerText"
         :class="api_hints_enabled && add_results_api_hint ? 'api-hint' : null"
         hint='Immediately plot results.  Data entry will be available to toggle in the data dropdown'

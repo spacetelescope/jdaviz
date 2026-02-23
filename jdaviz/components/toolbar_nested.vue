@@ -67,7 +67,12 @@
             location="start"
           >
             <template v-slot:activator="{ props }">
-              <v-list-item v-bind="props" :input-value="primary" @click="() => select_primary([menu_ind, id])">
+              <v-list-item
+                v-bind="props"
+                :active="primary"
+                :class="{ 'suboptions-item-active': primary }"
+                @click="() => select_primary([menu_ind, id])"
+              >
                 <v-list-item-title><img class='invert-if-dark' :src="img" width="20"/></v-list-item-title>
               </v-list-item>
             </template>
