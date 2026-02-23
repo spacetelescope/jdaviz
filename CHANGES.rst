@@ -122,6 +122,8 @@ Bug Fixes
 
 - Avoid incorrectly showing "no viewer selected" warning when adding data from some plugins. [#4037]
 
+- Fix layer filtering logic for plot options to properly show/hide layers based on coordinate and link type. [#4046]
+
 Cubeviz
 ^^^^^^^
 

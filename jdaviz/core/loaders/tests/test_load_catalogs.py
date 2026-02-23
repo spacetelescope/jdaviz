@@ -595,10 +595,17 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     dm = imviz_helper.viewers['imviz-0'].data_menu
     assert dm.data_labels_visible == ['Image[DATA]']
 
+    # and it should not be available as a layer in plot options
+    po = imviz_helper.plugins['Plot Options']
+    po.viewer = 'imviz-0'
+    assert po.layer.choices == ['Image[DATA]']  # catalog layer not an option
+
     # but if we load the catalog with X, Y, it should be visible
     imviz_helper.load(table_x_y_only,
                       data_label='catalog1')
     assert dm.data_labels_visible == ['catalog1', 'Image[DATA]']
+
+    assert po.layer.choices == ['Image[DATA]', 'catalog1']  # catalog layer is now an option
 
     # now change to WCS linking
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
