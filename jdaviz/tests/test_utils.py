@@ -59,7 +59,12 @@ def test_uri_to_download_specviz_local_path_check():
 
     # Wrong: '.\\JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits'
     # Correct:  '.\\jw02732-c1001_t004_miri_ch1-short_x1d.fits'
-    assert local_path == os.path.join(os.curdir, "jw02732-c1001_t004_miri_ch1-short_x1d.fits")  # noqa: E501
+    # In one of the workflows, the environment variable JDAVIZ_START_DIR
+    # is set so we need to account for that.
+    assert local_path == os.path.join(
+        os.environ.get("JDAVIZ_START_DIR", ""),
+        os.curdir,
+        "jw02732-c1001_t004_miri_ch1-short_x1d.fits")
 
 
 @pytest.mark.remote_data

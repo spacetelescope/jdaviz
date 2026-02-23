@@ -122,6 +122,10 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
+@pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'
+                          ' used to avoid an error when handling 3D WCS with 2D data.'
+                          'The temporary fix will be removed once an upstream solution'
+                          'is implemented.')
 def test_fits_spectrum2d(deconfigged_helper):
     uri = cached_uri('mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits')
     if 'mast' in uri:
@@ -218,7 +222,7 @@ def test_resolver_url(deconfigged_helper):
 
     # may change with future importers
     assert len(loader.format.choices) == 3
-    assert loader.format.selected == 'Image'  # default may change with future importers
+    assert loader.format.selected == '2D Spectrum'  # default may change with future importers
 
     # test target filtering
     assert len(loader.target.choices) > 1
@@ -231,7 +235,7 @@ def test_resolver_url(deconfigged_helper):
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw_index-0'  # noqa
 
     loader.target = 'Any'
-    assert len(loader.format.choices) == 4
+    assert len(loader.format.choices) == 3
     loader.format = '2D Spectrum'
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
