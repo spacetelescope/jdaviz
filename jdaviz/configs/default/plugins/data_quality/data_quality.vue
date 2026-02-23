@@ -106,7 +106,7 @@
         <template v-slot:item="{ active, item, props }">
           <v-list-item v-bind="props" #default="{active}">
             <v-list-item-action>
-            <v-checkbox :input-value="active"></v-checkbox>
+            <v-checkbox :model-value="active"></v-checkbox>
             </v-list-item-action>
             <div class="v-list-item-content">
               <v-list-item-title v-if="flag_map_definitions_selected[flagItemKey(item)].name.length > 0">
