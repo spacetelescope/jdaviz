@@ -28,9 +28,12 @@
     </v-btn-toggle>
     <v-menu
       v-model="show_suboptions"
-      :target="[suboptions_x, suboptions_y]"
-      absolute
-      location="bottom"
+      :activator="suboptions_target"
+      location="bottom start"
+      origin="top start"
+      :open-on-click="false"
+      :open-on-focus="false"
+      :open-on-hover="false"
       :close-on-click="close_on_click"
     >
       <v-list>
@@ -54,6 +57,11 @@
 
 <script>
   export default {
+    data() {
+      return {
+        suboptions_target: null,
+      }
+    },
     watch: {
       show_suboptions(value) {
         /* workaround for safari on MacOS, which triggers an extra click when using ctrl-click as right-click. The
@@ -76,16 +84,18 @@
         if (!has_suboptions) {
           return
         }
-        /* find the absolute position of the clicked button and position the overlaying
-           submenu directly below.  Note that scrolling while the menu is open will leave
-           the menu fixed on the window */
+        /* Find the clicked button and use it as the Vuetify menu activator. */
         this.show_suboptions = false
         this.suboptions_ind = menu_ind
         // e.path is not standard and not available in all browsers: https://stackoverflow.com/questions/39245488/event-path-is-undefined-running-in-firefox
-        const path = e.path || (e.composedPath && e.composedPath());
-        const bb = path.find(element => element.nodeName == 'BUTTON').getBoundingClientRect()
-        this.suboptions_x = bb.left
-        this.suboptions_y = bb.bottom
+        const path = e.path || (e.composedPath && e.composedPath()) || []
+        const buttonEl = path.find(element => element && element.nodeName === 'BUTTON')
+          || (e.currentTarget && e.currentTarget.closest && e.currentTarget.closest('button'))
+          || (e.target && e.target.closest && e.target.closest('button'));
+        if (!buttonEl) {
+          return
+        }
+        this.suboptions_target = buttonEl
         this.$nextTick(() => {
           this.show_suboptions = true
         })
