@@ -13,7 +13,7 @@ New Features
 - "Spectrum List" and "Spectrum List Concatenated" loaders have now been absorbed into the "1D Spectrum" loader
   via the ``extension`` and ``concatenate`` options. [#3953]
 
-- Catalog public API exposed [#3761, #3777, #3778, #3799, #3814, #3835, #3854, #3856, #3863, #3867, #3930, #3906, #3912, #3899, #3907, #3990]
+- Catalog public API exposed [#3761, #3777, #3778, #3799, #3814, #3835, #3854, #3856, #3863, #3867, #3930, #3906, #3912, #3899, #3907, #3990, #4039]
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
 
@@ -24,6 +24,8 @@ New Features
 - Add handles to subset to allow interactive resizing. [#3919]
 
 - Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
+
+- Improve default marker styling options (size and color cycler) for scatter layers. [#4044]
 
 - Allow ingesting tables in plugins back into the app. [#4021]
 
@@ -112,6 +114,8 @@ Bug Fixes
 
 - Fixed astroquery and virtual observatory loaders not responding properly to link type changes. [#4038]
 
+- Avoid incorrectly showing "no viewer selected" warning when adding data from some plugins. [#4037]
+
 Cubeviz
 ^^^^^^^
 
@@ -130,6 +134,7 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fixed an issue with GWCS 1.0.3 by updating the ``try/except`` to an if check against ``pixel_n_dim``. [#4032]
 
 4.5 (2025-12-15)
 ================
