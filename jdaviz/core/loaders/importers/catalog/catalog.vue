@@ -13,6 +13,7 @@
     hint="Extension to use for the catalog."
   ></plugin-select>
 
+  <div v-if="!input_has_extensions || (extension_selected && extension_selected.length > 0)">
   <j-plugin-section-header>Select coordinate columns</j-plugin-section-header>
 
   <div style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
@@ -94,6 +95,7 @@
     api_hint="ldr.importer.col_other ="
     :api_hints_enabled="api_hints_enabled"
   />
+  </div>
 
   <plugin-auto-label
     :value.sync="data_label_value"

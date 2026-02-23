@@ -616,3 +616,86 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     imviz_helper.load(table_x_y_only,
                       data_label='catalog3')
     assert 'catalog3' not in dm.data_labels_visible
+
+
+def test_hdulist_multiple_table_extensions(deconfigged_helper):
+    """
+    Test loading a catalog from an HDUList with multiple table extensions,
+    each with different column names. Verify that when switching between
+    extensions, the column selection dropdowns update correctly.
+    """
+    # Create two (identical, doesn't matter) tables with different column names
+    ra = [9.423, 9.421, 9.415] * u.deg
+    dec = [-33.711, -33.716, -33.717] * u.deg
+    x = [1.0, 2.0, 3.0]
+    y = [4.0, 5.0, 6.0]
+    table1 = QTable(data=[ra, dec, x, y],
+                    names=['ra1', 'dec1', 'x1', 'y1'])
+    table2 = QTable(data=[ra, dec, x, y],
+                    names=['ra2', 'dec2', 'x2', 'y2'])
+
+    # create two HDULists that also contain a primary HDU to verify that is
+    # filtered out of the extension choices
+    primary_hdu = fits.PrimaryHDU()
+    image_hdu = fits.ImageHDU(np.ones((32, 25)), name='SCI')
+    table_hdu1 = fits.BinTableHDU(table1, name='CATALOG1')
+    table_hdu2 = fits.BinTableHDU(table2, name='CATALOG2')
+    hdulist = fits.HDUList([primary_hdu, table_hdu1, table_hdu2, image_hdu])
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdulist
+    ldr.format = 'Catalog'
+
+    # check that both table extensions are available. Checking this indirectly
+    # verifies that the primary and image HDUs were correctly filtered out of
+    # the extension choices
+    extension_labels = ldr.importer.extension.choices
+    assert len(extension_labels) == 2
+    assert extension_labels[0] == '1: [CATALOG1,1]'
+    assert extension_labels[1] == '2: [CATALOG2,1]'
+
+    # check that first extension is selected by default and that column items
+    # include ra1, dec1, x1, y1 and do not include ra2, dec2, x2, y2
+    assert ldr.importer.extension.selected == ['1: [CATALOG1,1]']
+    col_x_labels = [item['label'] for item in ldr.importer.col_x.items]
+    assert 'x1' in col_x_labels
+    assert 'x2' not in col_x_labels
+
+    col_y_labels = [item['label'] for item in ldr.importer.col_y.items]
+    assert 'y1' in col_y_labels
+    assert 'y2' not in col_y_labels
+
+    col_ra_labels = [item['label'] for item in ldr.importer.col_ra.items]
+    assert 'ra1' in col_ra_labels
+    assert 'ra2' not in col_ra_labels
+
+    col_dec_labels = [item['label'] for item in ldr.importer.col_dec.items]
+    assert 'dec1' in col_dec_labels
+    assert 'dec2' not in col_dec_labels
+
+    # test selecting no extension to make sure nothing crashes
+    ldr.importer.extension.selected = []
+
+    # switch to second extension
+    ldr.importer.extension.selected = ['2: [CATALOG2,1]']
+
+    # check that column items now include ra2, dec2, x2, y2
+    # but not ra1, dec1, x1, y1
+    col_x_labels = [item['label'] for item in ldr.importer.col_x.items]
+    assert 'x2' in col_x_labels
+    assert 'x1' not in col_x_labels
+
+    col_y_labels = [item['label'] for item in ldr.importer.col_y.items]
+    assert 'y2' in col_y_labels
+    assert 'y1' not in col_y_labels
+
+    col_ra_labels = [item['label'] for item in ldr.importer.col_ra.items]
+    assert 'ra2' in col_ra_labels
+    assert 'ra1' not in col_ra_labels
+
+    col_dec_labels = [item['label'] for item in ldr.importer.col_dec.items]
+    assert 'dec2' in col_dec_labels
+    assert 'dec1' not in col_dec_labels
+
+    # check that a non-selection does not cause an error
+    ldr.importer.extension.selected = []
