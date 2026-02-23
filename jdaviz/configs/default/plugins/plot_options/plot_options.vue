@@ -110,7 +110,7 @@
                 :suffix="display_units['image'] || 'pix'"
               />
             </glue-state-sync-wrapper>
-            <v-row justify="end">
+            <v-row v-if="x_min_sync.in_subscribed_states || x_max_sync.in_subscribed_states || y_min_sync.in_subscribed_states || y_max_sync.in_subscribed_states" justify="end">
               <plugin-action-button
                 :results_isolated_to_plugin="false"
                 :api_hints_enabled="api_hints_enabled"

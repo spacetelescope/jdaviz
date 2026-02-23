@@ -1064,7 +1064,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         # This button is currently only exposed if only the spectrum viewer is selected
         viewers = [self.viewer.selected_obj] if not self.viewer_multiselect else self.viewer.selected_obj # noqa
         for viewer in viewers:
-            viewer.toolbar.tools['jdaviz:homezoom'].activate()
+            tool = viewer.toolbar.tools.get('jdaviz:homezoom', None)
+            if tool is not None:
+                tool.activate()
 
     @observe('stretch_function_sync', 'stretch_params_sync',
              'stretch_vmin_sync', 'stretch_vmax_sync',
