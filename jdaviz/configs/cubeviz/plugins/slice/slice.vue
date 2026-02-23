@@ -69,7 +69,7 @@
 
     <v-row class="row-no-outside-padding row-min-bottom-padding ignore-api-hints">
       <v-col>
-        <v-tooltip top>
+        <v-tooltip location="top">
           <template v-slot:activator="{ props }">
             <v-btn color="primary" icon @click="goto_first" v-bind="props" :disabled="is_playing">
               <v-icon>skip_previous</v-icon>
@@ -77,7 +77,7 @@
           </template>
           <span>Jump to first</span>
         </v-tooltip>
-        <v-tooltip top>
+        <v-tooltip location="top">
           <template v-slot:activator="{ props }">
             <v-btn color="primary" icon @click="play_prev" v-bind="props" :disabled="is_playing">
               <v-icon>exposure_minus_1</v-icon>
@@ -85,7 +85,7 @@
           </template>
           <span>Previous</span>
         </v-tooltip>
-        <v-tooltip top>
+        <v-tooltip location="top">
           <template v-slot:activator="{ props }">
             <v-btn color="primary" icon @click="play_start_stop" v-bind="props">
               <v-icon>mdi-play-pause</v-icon>
@@ -93,7 +93,7 @@
           </template>
           <span>Play/Pause</span>
         </v-tooltip>
-        <v-tooltip top>
+        <v-tooltip location="top">
           <template v-slot:activator="{ props }">
             <v-btn color="primary" icon @click="play_next" v-bind="props" :disabled="is_playing">
               <v-icon>exposure_plus_1</v-icon>
@@ -101,7 +101,7 @@
           </template>
           <span>Next</span>
         </v-tooltip>
-        <v-tooltip top>
+        <v-tooltip location="top">
           <template v-slot:activator="{ props }">
             <v-btn color="primary" icon @click="goto_last" v-bind="props" :disabled="is_playing">
               <v-icon>skip_next</v-icon>
