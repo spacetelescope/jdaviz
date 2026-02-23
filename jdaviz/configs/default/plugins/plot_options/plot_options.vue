@@ -28,7 +28,7 @@
 
     <v-row v-if="viewer_selected.length > 0">
       <v-expansion-panels accordion>
-        <v-expansion-panel>
+        <v-expansion-panel v-if="x_min_sync.in_subscribed_states || x_max_sync.in_subscribed_states || y_min_sync.in_subscribed_states || y_max_sync.in_subscribed_states || zoom_center_x_sync.in_subscribed_states || zoom_center_y_sync.in_subscribed_states || zoom_radius_sync.in_subscribed_states">
           <v-expansion-panel-header v-slot="{ open }">
             <span style="padding: 6px">Viewer Bounds</span>
           </v-expansion-panel-header>
