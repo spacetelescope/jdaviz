@@ -245,12 +245,17 @@ a:active {
   height: 42px !important;
   border: none !important;
   min-width: 42px !important;
-  /* remove "dimming" since we use orange background for active */
-  color: transparent !important;
+  /* keep icons visible in Vuetify 3 (older transparent-color hack hides content) */
+  color: inherit !important;
 }
 
 .jdaviz-nested-toolbar .v-btn-toggle>.v-btn.v-btn {
     opacity: 1;
+}
+
+.jdaviz-nested-toolbar .v-btn .v-btn__content,
+.plugin-nested-toolbar .v-btn .v-btn__content {
+  opacity: 1 !important;
 }
 
 .suboptions-carrot {
