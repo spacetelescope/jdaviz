@@ -1035,8 +1035,8 @@ class TestRegionsFromSubsets:
         subset_plugin = specviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
                                                    7200 * spectrum1d.spectral_axis.unit))
-        get_data_no_sub = specviz_helper.get_data('myfile')
-        get_data_1 = specviz_helper.get_data('myfile', spectral_subset='Subset 1')
+        get_data_no_sub = specviz_helper.datasets['myfile'].get_data()
+        get_data_1 = specviz_helper.datasets['myfile'].get_data(spectral_subset='Subset 1')
 
         get_data_1_mask = np.where(~get_data_1.mask)
 
@@ -1047,7 +1047,7 @@ class TestRegionsFromSubsets:
         # rename subset to 'diffname'
         subset_group = specviz_helper.app.data_collection.subset_groups
         subset_group[0].label = 'diffname'
-        get_data_2 = specviz_helper.get_data('myfile', spectral_subset='diffname')
+        get_data_2 = specviz_helper.datasets['myfile'].get_data(spectral_subset='diffname')
 
         assert_quantity_allclose(get_data_1.flux, get_data_2.flux)
         assert_quantity_allclose(get_data_1.spectral_axis, get_data_2.spectral_axis)
@@ -1059,7 +1059,7 @@ class TestRegionsFromSubsets:
         # and handle it appropriately
         subset_group = specviz_helper.app.data_collection.subset_groups
         subset_group[0].label = 'myfile'
-        get_data_3 = specviz_helper.get_data('myfile', spectral_subset='myfile')
+        get_data_3 = specviz_helper.datasets['myfile'].get_data(spectral_subset='myfile')
 
         get_data_3_mask = np.where(~get_data_3.mask)
         assert (get_data_1_mask[0] == get_data_3_mask[0]).all()

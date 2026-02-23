@@ -2285,6 +2285,11 @@ class LayerSelect(SelectPluginComponent):
                 return getattr(lyr, 'coords', None) is not None
             return True
 
+        def not_in_table_viewer(lyr):
+            # exclude layers when all selected viewers are table viewers
+            return not np.all([hasattr(viewer.state, 'hidden_components')
+                               for viewer in self.viewer_objs])
+
         return super()._is_valid_item(lyr, locals())
 
     def _layer_to_dict(self, layer_label):
@@ -2367,8 +2372,10 @@ class LayerSelect(SelectPluginComponent):
                 for layer in old_viewer.state.layers:
                     if is_wcs_only(layer.layer):
                         continue
-                    layer.remove_callback('color', self._update_items)
-                    layer.remove_callback('zorder', self._update_items)
+                    if hasattr(layer, 'color'):
+                        layer.remove_callback('color', self._update_items)
+                    if hasattr(layer, 'zorder'):
+                        layer.remove_callback('zorder', self._update_items)
                     if hasattr(layer, 'cmap'):
                         layer.remove_callback('cmap', self._update_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -5417,6 +5424,7 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._processing_change_from_glue = False
         self._processing_change_to_glue = False
         self._cached_properties = ["subscribed_states", "subscribed_icons"]
+        self._layer_watch_viewers = []  # viewers with layer callbacks for table columns
 
         self._viewer_select = viewer_select
         self._layer_select = layer_select
@@ -5554,6 +5562,20 @@ class PlotOptionsSyncState(BasePluginComponent):
         if glue_name in ('x_att', 'y_att', 'z_att'):
             # return the name of the attribute, not the object
             return str(getattr(state, glue_name))
+        if glue_name == 'hidden_components':
+            # Return visible columns (all - hidden) as list of strings.
+            # Access viewer from the state's parent to get data components.
+            viewer = self._viewer_select.selected_obj
+            if isinstance(viewer, list):
+                viewer = viewer[0] if len(viewer) else None
+            if viewer is None or not hasattr(viewer, 'widget_table'):
+                return []
+            data = viewer.widget_table.data
+            if data is None:
+                return []
+            all_components = data.main_components + data.derived_components
+            hidden_names = [str(c) for c in getattr(state, glue_name, [])]
+            return [str(c) for c in all_components if str(c) not in hidden_names]
 
         return getattr(state, glue_name)
 
@@ -5573,12 +5595,41 @@ class PlotOptionsSyncState(BasePluginComponent):
                     {'text': 'Color',
                      'value': 'One color per layer',
                      'description': 'Select a color per-layer. Layers will be composited.'}]
+        if glue_name == 'hidden_components':
+            # Return all available columns as choices
+            viewer = self._viewer_select.selected_obj
+            if isinstance(viewer, list):
+                viewer = viewer[0] if len(viewer) else None
+            if viewer is None or not hasattr(viewer, 'widget_table'):
+                return []
+            data = viewer.widget_table.data
+            if data is None:
+                return []
+            all_components = data.main_components + data.derived_components
+            return [{'text': str(c), 'value': str(c)} for c in all_components]
 
         values, labels = _get_glue_choices(state, glue_name)
         return [{'text': l, 'value': v} for v, l in zip(values, labels)]
 
+    def _on_table_viewer_layers_changed(self, msg=None):
+        """Callback when layers change on a table viewer - refresh choices."""
+        # Only refresh choices if we're tracking hidden_components
+        glue_name = self._glue_name if isinstance(self._glue_name, str) else ''
+        if glue_name != 'hidden_components':
+            return
+        # Re-run viewer/layer changed to refresh choices
+        self._on_viewer_layer_changed()
+
     def _on_viewer_layer_changed(self, msg=None):
         self._clear_cache(*self._cached_properties)
+
+        # Clear layer watch callbacks from previously tracked viewers
+        for viewer in self._layer_watch_viewers:
+            try:
+                viewer.widget_table.unobserve(self._on_table_viewer_layers_changed, names=['data'])
+            except (ValueError, AttributeError):
+                pass
+        self._layer_watch_viewers = []
 
         # clear existing callbacks - we'll re-create those we need later
         for state in self.linked_states:
@@ -5586,6 +5637,15 @@ class PlotOptionsSyncState(BasePluginComponent):
             state.remove_callback(glue_name, self._on_glue_value_changed)
             if glue_name in ['contour_visible', 'bitmap_visible']:
                 state.remove_callback('visible', self._on_glue_layer_visible_changed)
+
+        # Add data callbacks to table viewers to refresh choices when data changes
+        glue_name_str = self._glue_name if isinstance(self._glue_name, str) else ''
+        if glue_name_str == 'hidden_components':
+            for viewer in self.subscribed_viewers:
+                if viewer is not None and hasattr(viewer, 'widget_table'):
+                    viewer.widget_table.observe(self._on_table_viewer_layers_changed,
+                                                names=['data'])
+                    self._layer_watch_viewers.append(viewer)
 
         in_subscribed_states = False
         icons = []
@@ -5624,7 +5684,7 @@ class PlotOptionsSyncState(BasePluginComponent):
                 ) or (
                     # update choices in `sync` if glue state choices are updated
                     # during glue Component add/rename/delete:
-                    glue_name in ('cmap_att', 'x_att', 'y_att')
+                    glue_name in ('cmap_att', 'x_att', 'y_att', 'hidden_components')
                 ):
                     # then we can access and populate/update the choices.
                     self.sync = {**self.sync, 'choices': self._get_glue_choices(state)}
@@ -5714,6 +5774,19 @@ class PlotOptionsSyncState(BasePluginComponent):
                 self.value = msg['old']
                 self._processing_change_to_glue = False
                 return
+            elif glue_name == 'hidden_components':
+                # Convert visible column names to hidden component IDs
+                # msg['new'] is list of visible column names (strings)
+                viewer = self._viewer_select.selected_obj
+                if isinstance(viewer, list):
+                    viewer = viewer[0] if len(viewer) else None
+                if viewer is not None and hasattr(viewer, 'widget_table'):
+                    data = viewer.widget_table.data
+                    if data is not None:
+                        all_components = data.main_components + data.derived_components
+                        visible_names = set(msg['new'])
+                        hidden = [c for c in all_components if str(c) not in visible_names]
+                        setattr(glue_state, glue_name, hidden)
             else:
                 setattr(glue_state, glue_name, msg['new'])
 

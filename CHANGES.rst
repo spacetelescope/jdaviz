@@ -15,6 +15,8 @@ New Features
 
 - Catalog public API exposed [#3761, #3777, #3778, #3799, #3814, #3835, #3854, #3856, #3863, #3867, #3930, #3906, #3912, #3899, #3907, #3990, #4039]
 
+- Support in plot options to set which columns are visible for table viewers. [#4033]
+
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
 
 - Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
@@ -26,6 +28,8 @@ New Features
 - Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
 
 - Improve default marker styling options (size and color cycler) for scatter layers. [#4044]
+
+- Top level access to datasets API dictionary, deprecating top-level access to data_labels list. [#4024]
 
 - Table viewer tools to highlight selected, zoom-to-selected, and create subset from selected. [#3994]
 

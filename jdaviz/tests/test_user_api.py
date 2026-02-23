@@ -1,4 +1,6 @@
+from specutils import Spectrum
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+from jdaviz.core.user_api import DataApi, SpectralDataApi, SpatialDataApi, SpectralSpatialDataApi
 import pytest
 import re
 
@@ -36,7 +38,7 @@ def test_specviz_data_labels(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_data(spectrum1d, data_label=label)
 
-    assert specviz_helper.data_labels == [label]
+    assert list(specviz_helper.datasets.keys()) == [label]
     assert specviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_loaded == [label]
     assert specviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_visible == [label]
 
@@ -194,4 +196,77 @@ def test_wildcard_match_through_load(imviz_helper, multi_extension_image_hdu_wcs
 
     # Through load
     imviz_helper.load(multi_extension_image_hdu_wcs, extension=selection)
-    assert imviz_helper.data_labels == [data_labels[i] for i in matches]
+    assert list(imviz_helper.datasets.keys()) == [data_labels[i] for i in matches]
+
+
+def test_expected_data_api_class(deconfigged_helper,
+                                 image_hdu_wcs, spectrum1d, spectrum2d,
+                                 spectrum1d_cube, sky_coord_only_source_catalog):
+    """Test that expected DataApi classes are returned for different data types."""
+    test_cases = [
+        (image_hdu_wcs, 'Image', SpatialDataApi),
+        (spectrum1d, '1D Spectrum', SpectralDataApi),
+        (spectrum2d, '2D Spectrum', SpectralDataApi),
+        (spectrum1d_cube, '3D Spectrum', SpectralSpatialDataApi),
+        (sky_coord_only_source_catalog, 'Catalog', DataApi)
+    ]
+
+    # Disable linking to speed up test
+    deconfigged_helper.app.auto_link = False
+
+    # Load all data at once
+    for data, data_format, expected_api in test_cases:
+        deconfigged_helper.load(data, format=data_format, data_label=data_format)
+
+    # Check each dataset has the correct API type
+    data_dict = deconfigged_helper.datasets
+    for data, data_format, expected_api in test_cases:
+        msg = (f'Expected {expected_api.__name__} for {data_format}, '
+               f'got {type(data_dict[data_format]).__name__}')
+        assert isinstance(data_dict[data_format], expected_api), msg
+
+        if f'{data_format} (auto-ext)' in data_dict:
+            auto_ext_key = f'{data_format} (auto-ext)'
+            msg = (f'Expected SpectralDataApi for {auto_ext_key}, '
+                   f'got {type(data_dict[auto_ext_key]).__name__}')
+            assert isinstance(data_dict[auto_ext_key], SpectralDataApi), msg
+
+
+def test_data_access_deconfigged(deconfigged_helper, mos_spectrum2d):
+    """Test the .datasets property access for the deconfigged helper."""
+    # Initially no data loaded
+    assert deconfigged_helper.datasets == {}
+
+    # Load data
+    deconfigged_helper.load(mos_spectrum2d, data_label='Test 2D Spectrum',
+                            format='2D Spectrum', auto_extract=True)
+
+    # Test datasets property returns dict of DataApi objects
+    data_dict = deconfigged_helper.datasets
+    assert isinstance(data_dict, dict)
+    assert 'Test 2D Spectrum' in data_dict
+    assert 'Test 2D Spectrum (auto-ext)' in data_dict
+    assert len(data_dict) == 2
+
+    # Test DataApi.get_data() returns Spectrum
+    spectrum_obj = data_dict['Test 2D Spectrum'].get_data()
+    assert isinstance(spectrum_obj, Spectrum)
+
+    # Test that SpectralDataApi accepts spectral_subset argument (even if None)
+    spectrum_no_subset = data_dict['Test 2D Spectrum (auto-ext)'].get_data(spectral_subset=None)
+    assert isinstance(spectrum_no_subset, Spectrum)
+
+    # Test add_to_viewer method
+    # Get current viewer references
+    viewer_1d = deconfigged_helper.viewers['1D Spectrum']
+
+    # Remove data from viewer to test add_to_viewer
+    viewer_1d.data_menu.layer = 'Test 2D Spectrum (auto-ext)'
+    viewer_1d.data_menu.remove_from_viewer()
+    assert 'Test 2D Spectrum (auto-ext)' not in viewer_1d.data_menu.layer.choices
+    data_dict['Test 2D Spectrum (auto-ext)'].add_to_viewer('1D Spectrum')
+    assert 'Test 2D Spectrum (auto-ext)' in viewer_1d.data_menu.layer.choices
+
+    # Test add_to_viewer with invalid data for viewer raises error
+    with pytest.raises(ValueError, match="not one of the valid data"):
+        data_dict['Test 2D Spectrum'].add_to_viewer('1D Spectrum')

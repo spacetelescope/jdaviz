@@ -139,11 +139,11 @@ def test_fits_spectrum2d(deconfigged_helper):
     ldr.load()
 
     # ensure get_data works, retrieves a Spectrum1D object, and has spectral WCS attached correctly
-    sp2d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d')  # noqa
+    sp2d = deconfigged_helper.datasets['jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d'].get_data()  # noqa
     assert isinstance(sp2d, Spectrum)
     assert str(sp2d.spectral_axis.unit) == 'um'
 
-    sp1d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d (auto-ext)')  # noqa
+    sp1d = deconfigged_helper.datasets['jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d (auto-ext)'].get_data()  # noqa
     assert isinstance(sp1d, Spectrum)
     assert str(sp1d.spectral_axis.unit) == 'um'
 
@@ -161,7 +161,7 @@ def test_jwst_wfss_bsub(deconfigged_helper):
 
     ldr.load()
 
-    sp1d = deconfigged_helper.get_data('k5l446jid348jk343m8r4vvbkzk4syom (auto-ext)')  # noqa
+    sp1d = deconfigged_helper.datasets['k5l446jid348jk343m8r4vvbkzk4syom (auto-ext)'].get_data()  # noqa
     assert isinstance(sp1d, Spectrum)
     assert str(sp1d.spectral_axis.unit) == 'pix'
 
@@ -184,14 +184,14 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
                             for e_num, s_id in number_combos]
     ldr.load()
 
-    assert len(deconfigged_helper.data_labels) == len(sources_obj.selected)
+    assert len(deconfigged_helper.datasets) == len(sources_obj.selected)
     dc = deconfigged_helper.app.data_collection
     assert len(dc) == len(sources_obj.selected)
     assert len(deconfigged_helper.viewers) == 1
 
     filestem = Path(ldr.filepath).stem
     for e_num, s_id in number_combos:
-        spec = deconfigged_helper.get_data(f'{filestem}_EXP-{e_num}_ID-{s_id}')
+        spec = deconfigged_helper.datasets[f'{filestem}_EXP-{e_num}_ID-{s_id}'].get_data()
         assert isinstance(spec, Spectrum)
         assert str(spec.spectral_axis.unit) == 'um'
 

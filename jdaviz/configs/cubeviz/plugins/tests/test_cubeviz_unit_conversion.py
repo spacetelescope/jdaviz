@@ -169,7 +169,7 @@ def test_unit_translation(cubeviz_helper, angle_unit):
 
     # accessing from get_data(use_display_units=True) should return flux-like units
     assert cubeviz_helper.app._get_display_unit('spectral_y') == u.MJy
-    assert cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True).unit == u.MJy
+    assert cubeviz_helper.datasets['Spectrum (sum)'].get_data(use_display_units=True).unit == u.MJy
 
     # to have access to display units
     viewer_1d = cubeviz_helper.app.get_viewer(
@@ -186,7 +186,7 @@ def test_unit_translation(cubeviz_helper, angle_unit):
 
     # get_data(use_display_units=True) should return surface brightness-like units
     assert cubeviz_helper.app._get_display_unit('spectral_y') == u.MJy / angle_unit
-    assert cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True).unit == u.MJy / angle_unit  # noqa
+    assert cubeviz_helper.datasets['Spectrum (sum)'].get_data(use_display_units=True).unit == u.MJy / angle_unit  # noqa
 
 
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
