@@ -134,6 +134,8 @@ class CatalogImporter(BaseImporterToDataCollection):
     @property
     def input_as_table(self):
         if hasattr(self, 'extension'):
+            if self.extension.selected in [None, '', []]:
+                return None
             table_ext = self.extension.selected_obj[0]
             if isinstance(table_ext, (TableHDU, BinTableHDU)):
                 return QTable(table_ext.data)
@@ -153,6 +155,44 @@ class CatalogImporter(BaseImporterToDataCollection):
                     return True
         return False
 
+    def _update_col_items_and_selected(self, base_attr, options, select_first=True):
+        """update column items and selected value."""
+        items_attr = f'{base_attr}_items'
+        selected_attr = f'{base_attr}_selected'
+
+        setattr(self, items_attr, [{'label': item} for item in options])
+        self.send_state(items_attr)
+
+        if select_first:
+            setattr(self, selected_attr, options[0] if options else None)
+        else:
+            setattr(self, selected_attr, [])
+        self.send_state(selected_attr)
+
+    @observe('extension_selected')
+    def _on_extension_selected_change(self, event):
+        # when the selected extension changes, we need to update the column selection dropdowns
+        # with the columns from the newly selected extension
+        if not hasattr(self, 'extension'):
+            return
+
+        # if no column selection dropdowns have been created yet, we can skip
+        # the update since they will be created with the correct columns based
+        # on the selected extension in the __init__
+        if not hasattr(self, 'col_x'):
+            return
+
+        input = self.input_as_table
+
+        if not isinstance(input, (Table, QTable)):
+            return
+
+        # update column selection dropdowns with columns from the newly selected extension
+        for col in ['ra', 'dec', 'x', 'y']:
+            self._update_col_items_and_selected(f'col_{col}', self._guess_coord_cols(col))
+
+        self._update_col_items_and_selected('col_other', input.colnames, select_first=False)
+
     def _guess_coord_cols(self, col):
         """
         Rough guess at detecting RA/Dec/X/Y columns from input table to determine
@@ -165,6 +205,9 @@ class CatalogImporter(BaseImporterToDataCollection):
         """
 
         input = self.input_as_table
+
+        if not isinstance(input, (Table, QTable)):
+            return
 
         colnames = input.colnames
 
@@ -220,9 +263,9 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         choices = ['deg', 'rad', 'arcmin', 'arcsec']
 
-        if coord == 'ra':
+        if 'ra' in coord:
             choices += ['hour minute second']
-        elif coord == 'dec':
+        elif 'dec' in coord:
             choices += ['degree arcmin arcsec']
 
         return choices
@@ -246,6 +289,9 @@ class CatalogImporter(BaseImporterToDataCollection):
         import_disabled = False
 
         input = self.input_as_table
+
+        if not isinstance(input, (Table, QTable)):
+            return
 
         if msg['name'] in ('col_ra_selected', 'col_dec_selected'):
 
@@ -317,6 +363,9 @@ class CatalogImporter(BaseImporterToDataCollection):
     def output_cols(self):
 
         input = self.input_as_table
+
+        if not isinstance(input, (Table, QTable)):
+            return
 
         coordinate_cols = []
         for col in [self.col_ra_selected, self.col_dec_selected]:
