@@ -380,7 +380,9 @@ class LoaderUserApi(UserApiWrapper):
                                           'observation_table', 'file_table',
                                           'file_cache',
                                           'file_timeout',
-                                          'file_local_path']))
+                                          'file_local_path',
+                                          'enable_footprint_selection_tools',
+                                          'disable_footprint_selection_tools']))
         super().__init__(loader, expose, readonly, excl_from_dict, deprecated)
 
     def __repr__(self):
