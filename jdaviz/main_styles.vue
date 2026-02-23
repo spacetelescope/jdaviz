@@ -277,9 +277,10 @@ a:active {
   filter: brightness(0) saturate(100%) invert(100%);
 }
 
-.v-overlay__content {
-  position: unset !important;
-}
+// TODO: is this still needed? It breaks tooltip positioning
+//.v-overlay__content {
+//  position: unset !important;
+//}
 
 .jdaviz__content--not-in-notebook {
   max-height: calc(100% - 48px);

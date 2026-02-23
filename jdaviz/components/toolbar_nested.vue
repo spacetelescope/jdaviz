@@ -15,7 +15,7 @@
 
     <v-btn-toggle v-model="active_tool_id" :style="" class="transparent">
       <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)" :key="id">
-        <v-tooltip v-if="primary && visible" bottom>
+        <v-tooltip v-if="primary && visible" location="bottom">
           <template v-slot:activator="{ props }">
             <v-btn v-bind="props" icon :value="id" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
               <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>

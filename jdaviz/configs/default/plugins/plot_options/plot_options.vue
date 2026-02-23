@@ -909,7 +909,7 @@
           <div v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">
             <glue-state-sync-wrapper :sync="contour_mode_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_mode')">
               <v-btn-toggle density="compact" v-model="contour_mode_value" style="margin-right: 8px; margin-top: 8px">
-                  <v-tooltip bottom>
+                  <v-tooltip location="bottom">
                       <template v-slot:activator="{ props }">
                           <v-btn v-bind="props" small value="Linear">
                               <v-icon>mdi-call-made</v-icon>
@@ -918,7 +918,7 @@
                       <span>linear</span>
                   </v-tooltip>
 
-                  <v-tooltip bottom>
+                  <v-tooltip location="bottom">
                       <template v-slot:activator="{ props }">
                           <v-btn v-bind="props" small value="Custom">
                               <v-icon>mdi-wrench</v-icon>
