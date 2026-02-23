@@ -97,8 +97,10 @@ def test_rename_data_errors(deconfigged_helper, image_hdu_wcs):
     with pytest.raises(ValueError):
         deconfigged_helper.app.rename_data('data1', 'data2')
 
-    # Try to rename with a reserved label
-    reserved_label = list(deconfigged_helper.app._reserved_labels)[0]
+    # Try to rename with a reserved label (exclude old_label from candidates
+    # to avoid picking the same name, which would skip the validation check)
+    reserved_label = next(label for label in deconfigged_helper.app._reserved_labels
+                          if label != 'data1')
     with pytest.raises(ValueError):
         deconfigged_helper.app.rename_data('data1', reserved_label)
 

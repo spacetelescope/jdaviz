@@ -74,6 +74,20 @@ class JdavizViewerMixin(WithCache):
         # Allow each viewer to cycle through colors for each new addition to the viewer:
         self.color_cycler = ColorCycler()
 
+        # Separate color cycler for scatter layers (catalogs) that has brighter colors,
+        # starting with neon green
+        self.scatter_color_cycler = ColorCycler()
+        self.scatter_color_cycler.default_color_palette = [
+            '#00FF00',  # neon green
+            '#FF00FF',  # magenta
+            '#00FFFF',  # cyan
+            '#FF0000',  # red
+            '#FFFF00',  # yellow
+            '#FF8800',  # orange
+            '#8800FF',  # purple
+            '#0088FF',  # blue
+        ]
+
         self._data_menu = DataMenu(viewer=self, app=self.jdaviz_app)
 
     @property
@@ -295,6 +309,30 @@ class JdavizViewerMixin(WithCache):
                 layer_state.as_steps = False
             # whenever as_steps changes, we need to redraw the uncertainties (if enabled)
             layer_state.add_callback('as_steps', self._show_uncertainty_changed)
+
+        # set default size for scatter layers (e.g., catalog markers)
+        # based on 1% of the average viewer dimension
+        if isinstance(layer_state, BqplotScatterLayerState):
+
+            # set the marker default size to 1% of the size of the viewer (average
+            # x and y dimensions to account for viewer not being square), and
+            # fall back on a 10 pt marker size if we can't get the viewer
+            # dimensions for some reason (e.g., no image layers)
+            marker_size = 10  # default fallback default for marker size in points d
+            for layer in self.state.layers:
+                if (hasattr(layer, 'layer') and
+                        hasattr(layer.layer, 'data') and
+                        hasattr(layer.layer.data, 'shape') and
+                        len(layer.layer.data.shape) >= 2):
+                    shape = layer.layer.data.shape
+                    avg_dimension = (shape[-2] + shape[-1]) / 2
+                    marker_size = avg_dimension * 0.01
+                    # set a lower limit on marker size, which is the glue default
+                    # of three pixels.
+                    marker_size = max(marker_size, 3)
+                    break
+
+            layer_state.size = marker_size
 
         # use echo-validator to ensure visible sets & updates properly in plot options & data menu
         if (hasattr(layer_state, 'visible') and get_subset_type(layer_state.layer) != 'spatial'):

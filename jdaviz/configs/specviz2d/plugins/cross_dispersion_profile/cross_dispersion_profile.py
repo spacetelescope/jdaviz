@@ -171,12 +171,12 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
         data = self.dataset.selected_obj
         if data is not None:
             if hasattr(data, 'wcs') and self.sa_display_unit not in ('', u.pix):
+                # APE 14 WCS objects should have a `pixel_n_dim` attribute which
+                # indicates its input dimensionality
                 wcs = self.dataset.selected_obj.wcs
-                # wcs / gwcs don't necessarily have ndim attribute, so try
-                # to detect 2d/1d wcs with try / except
-                try:  # dataset selected wcs is 1d
+                if wcs.pixel_n_dim == 1:
                     wav = wcs.pixel_to_world(self.pixel)
-                except ValueError:  # dataset selected wcs is 2d
+                elif wcs.pixel_n_dim == 2:
                     wav = [c for c in wcs.pixel_to_world(self.pixel, 0) if isinstance(c, SpectralCoord)]  # noqa
                     if len(wav):
                         wav = wav[0]
@@ -186,7 +186,9 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
                         else:
                             # It's 2D, so this is the only option
                             wav = wcs.pixel_to_world(self.pixel, 0)[0]
-
+                else:
+                    self.disabled_msg = "WCS with more than 2 pixel dimensions is not supported."
+                    raise ValueError(self.disabled_msg)
                 # if the resulting wcs transformation gave us a unit that is still
                 # in pixels, do not attempt to convert units and set wav to None.
                 if wav.unit == u.pix:
