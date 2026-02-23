@@ -17,8 +17,8 @@
       <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)" :key="id">
         <v-tooltip v-if="primary && visible" location="bottom">
           <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" icon :value="id" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
-              <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>
+            <v-btn v-bind="props" variant="text" density="comfortable" :value="id" :style="`min-width: 40px !important; width: 40px !important; height: 40px !important; padding: 0px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
+              <img class="invert-if-dark toolbar-icon-img" :src="img" @click.ctrl.stop=""/>
               <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
             </v-btn>
           </template>
@@ -103,6 +103,11 @@
   /* the parent button will invert everything anyways, so we need to override this to be black first,
      regardless of light or dark theme */
   color: black !important;
+}
+.toolbar-icon-img {
+  width: 20px;
+  height: 20px;
+  display: block;
 }
 .suboptions-carrot:hover {
   scale: 1.75;
