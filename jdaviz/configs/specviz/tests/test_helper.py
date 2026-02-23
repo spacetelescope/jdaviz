@@ -31,9 +31,15 @@ class TestSpecvizHelper:
         assert dc_0.label == self.label
         assert dc_0.meta['uncertainty_type'] == 'std'
 
-        data = self.spec_app.get_data()
+        # Test both the old and new API
+        data = self.spec_app.datasets[self.label].get_data()
+        data_old_api = self.spec_app.get_data(data_label=self.label)
 
         assert isinstance(data, Spectrum)
+        assert isinstance(data_old_api, Spectrum)
+        # Verify both APIs return equivalent data
+        assert np.array_equal(data.flux, data_old_api.flux)
+        assert np.array_equal(data.spectral_axis, data_old_api.spectral_axis)
 
     def test_load_hdulist(self):
         # Create a fake fits file with a 1D spectrum for testing.
@@ -51,7 +57,7 @@ class TestSpecvizHelper:
         fake_hdulist = fits.HDUList([primary_hdu, spectrum_table])
         self.label = "Test 1D Spectrum"
         self.spec_app.load_data(fake_hdulist)
-        data = self.spec_app.get_data(data_label=self.label)
+        data = self.spec_app.datasets[self.label].get_data()
         # HDUList should load as Spectrum
         assert isinstance(data, Spectrum)
 

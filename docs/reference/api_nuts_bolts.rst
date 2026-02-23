@@ -59,6 +59,10 @@ Utilities API
    :no-inheritance-diagram:
    :no-inherited-members:
 
+.. automodapi:: jdaviz.core.user_api
+   :no-inheritance-diagram:
+   :no-inherited-members:
+
 .. automodapi:: jdaviz.core.linelists
    :no-inheritance-diagram:
    :no-inherited-members:

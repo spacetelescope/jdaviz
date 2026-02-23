@@ -163,7 +163,7 @@ def test_plugin(specviz2d_helper):
         pext.export_extract(invalid_kwarg=5)
 
     # test importing traces
-    img = specviz2d_helper.get_data('Spectrum 2D')
+    img = specviz2d_helper.datasets['Spectrum 2D'].get_data()
     flat_trace = tracing.FlatTrace(img, trace_pos=25)
     fit_trace = tracing.FitTrace(img)
 
@@ -343,8 +343,8 @@ def test_spectral_extraction_preview(deconfigged_helper, spectrum2d):
     spext.ext_add_results.label = custom_extraction_label
     spext.export_extract_spectrum(add_data=True)  # added as layer to "1D Spectrum" viewer
 
-    default_extraction_data = deconfigged_helper.get_data(default_extraction_label)
-    custom_extraction_data = deconfigged_helper.get_data(custom_extraction_label)
+    default_extraction_data = deconfigged_helper.datasets[default_extraction_label].get_data()
+    custom_extraction_data = deconfigged_helper.datasets[custom_extraction_label].get_data()
 
     assert np.any(~np.isnan(default_extraction_data.flux))
     assert np.any(~np.isnan(custom_extraction_data.flux))
@@ -490,16 +490,16 @@ class TestTwo2dSpectra:
 
         assert self.spec2d_label in dc.labels
         assert self.spec2d_ext_label in dc.labels
-        spec2d = helper.get_data(self.spec2d_label)
-        extracted_spec2d = helper.get_data(self.spec2d_ext_label)
+        spec2d = helper.datasets[self.spec2d_label].get_data()
+        extracted_spec2d = helper.datasets[self.spec2d_ext_label].get_data()
         # Check for any non-NaN data, if all NaNs, something went wrong
         assert np.any(~np.isnan(spec2d.flux))
         assert np.any(~np.isnan(extracted_spec2d.flux))
 
         assert self.another_spec2d_label in dc.labels
         assert self.another_spec2d_ext_label in dc.labels
-        another_spec2d = helper.get_data(self.another_spec2d_label)
-        extracted_another_spec2d = helper.get_data(self.another_spec2d_ext_label)
+        another_spec2d = helper.datasets[self.another_spec2d_label].get_data()
+        extracted_another_spec2d = helper.datasets[self.another_spec2d_ext_label].get_data()
         # Check for any non-NaN data, if all NaNs, something went wrong
         assert np.any(~np.isnan(another_spec2d.flux))
         assert np.any(~np.isnan(extracted_another_spec2d.flux))

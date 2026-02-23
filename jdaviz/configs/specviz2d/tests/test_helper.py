@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from specutils import Spectrum
 
@@ -10,9 +11,15 @@ def test_helper(specviz2d_helper, mos_spectrum2d):
 
     specviz2d_helper.app.data_collection[0].meta['Trace'] = "Test"
 
-    returned_data = specviz2d_helper.get_data("Spectrum 2D")
+    # Test both the old and new API
+    returned_data = specviz2d_helper.datasets["Spectrum 2D"].get_data()
+    returned_data_old_api = specviz2d_helper.get_data("Spectrum 2D")
+
     assert len(returned_data.shape) == 1
     assert isinstance(returned_data, Spectrum)
+    assert isinstance(returned_data_old_api, Spectrum)
+    # Verify both APIs return equivalent data
+    assert np.array_equal(returned_data.flux, returned_data_old_api.flux)
 
 
 # Some API might be going through deprecation, so ignore the warning.

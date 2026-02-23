@@ -28,7 +28,7 @@
 
     <v-row v-if="viewer_selected.length > 0">
       <v-expansion-panels accordion>
-        <v-expansion-panel>
+        <v-expansion-panel v-if="x_min_sync.in_subscribed_states || x_max_sync.in_subscribed_states || y_min_sync.in_subscribed_states || y_max_sync.in_subscribed_states || zoom_center_x_sync.in_subscribed_states || zoom_center_y_sync.in_subscribed_states || zoom_radius_sync.in_subscribed_states">
           <v-expansion-panel-header v-slot="{ open }">
             <span style="padding: 6px">Viewer Bounds</span>
           </v-expansion-panel-header>
@@ -110,7 +110,7 @@
                 :suffix="display_units['image'] || 'pix'"
               />
             </glue-state-sync-wrapper>
-            <v-row justify="end">
+            <v-row v-if="x_min_sync.in_subscribed_states || x_max_sync.in_subscribed_states || y_min_sync.in_subscribed_states || y_max_sync.in_subscribed_states" justify="end">
               <plugin-action-button
                 :results_isolated_to_plugin="false"
                 :api_hints_enabled="api_hints_enabled"
@@ -294,6 +294,29 @@
         api_hint="plg.yatt = "
         :api_hints_enabled="api_hints_enabled"
       />
+    </glue-state-sync-wrapper>
+
+    <glue-state-sync-wrapper :sync="table_columns_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('table_columns_visible')">
+      <v-select
+        attach
+        :menu-props="{ left: true }"
+        :items="table_columns_visible_sync.choices"
+        v-model="table_columns_visible_value"
+        :label="api_hints_enabled ? 'plg.table_columns_visible =' : 'Visible Columns'"
+        :class="api_hints_enabled ? 'api-hint' : null"
+        hint="Select which columns are shown in the table."
+        persistent-hint
+        multiple
+        chips
+        deletable-chips
+        dense
+      >
+        <template v-slot:selection="{ index }">
+          <span v-if="index === 0">
+            {{ table_columns_visible_value.length === table_columns_visible_sync.choices.length ? 'All columns' : `${table_columns_visible_value.length} of ${table_columns_visible_sync.choices.length} columns` }}
+          </span>
+        </template>
+      </v-select>
     </glue-state-sync-wrapper>
 
     <!-- LAYER OPTIONS -->

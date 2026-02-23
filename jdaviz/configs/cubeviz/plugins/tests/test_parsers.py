@@ -223,7 +223,7 @@ def test_loading_with_mask(cubeviz_helper):
     se = cubeviz_helper.plugins['3D Spectral Extraction']
     se.function = "Mean"
     se.extract()
-    extracted = cubeviz_helper.get_data("Spectrum (mean)")
+    extracted = cubeviz_helper.datasets["Spectrum (mean)"].get_data()
     assert_allclose(extracted.flux.value, [6, 1])
     assert extracted.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
 
@@ -245,7 +245,7 @@ def test_manga_with_mask(cubeviz_helper):
                                      ('Max', 1e20)]:
         se.function = function
         se.extract()
-        extracted_max = cubeviz_helper.get_data(f"Spectrum ({function.lower()})").max()
+        extracted_max = cubeviz_helper.datasets[f"Spectrum ({function.lower()})"].get_data().max()
         assert_allclose(extracted_max.value, expected_value, rtol=5e-7)
         if function == "Sum":
             assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2")
