@@ -4,11 +4,11 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-viewer-select
        :items="viewer_items"
-       :selected.sync="viewer_selected"
+       v-model:selected="viewer_selected"
        label="Viewer"
        :show_if_single_entry="false"
        hint="Select a viewer to show lines."
@@ -135,7 +135,7 @@
     <v-row>
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="item in loaded_lists" key=":item">
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-title v-slot="{ open }">
             <v-row no-gutters align="center" style="max-width: calc(100% - 26px)">
               <v-col cols=2>
                 <v-btn
@@ -161,8 +161,8 @@
 
 
             </v-row>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
 
             <div v-if="item == 'Custom'" style="padding-top: 16px">
               <v-row class="row-min-bottom-padding" style="display: block">
@@ -191,7 +191,7 @@
                 <j-tooltip tipid='plugin-line-lists-custom-unit'>
                     <plugin-select
                       :items="custom_unit_choices"
-                      :selected.sync="custom_unit"
+                      v-model:selected="custom_unit"
                       label="Unit"
                       dense
                     />
@@ -326,7 +326,7 @@
                 </div>
               </v-row>
             </div>
-          </v-expansion-panel-content>
+          </v-expansion-panel-text>
         <v-expansion-panel>
       </v-expansion-panels>
     </v-row>
@@ -371,7 +371,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     methods: {
       lineItemVisible(lineItem, lines_filter, filter_range) {
         if (lines_filter === null || lines_filter.length == 0) {

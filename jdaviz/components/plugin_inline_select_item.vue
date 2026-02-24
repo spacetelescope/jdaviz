@@ -23,7 +23,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['item', 'selected', 'multiselect', 'single_select_allow_blank', 'api_hints_enabled'],
   methods: {
     isSelected() {

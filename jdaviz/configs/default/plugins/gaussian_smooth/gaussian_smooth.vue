@@ -2,16 +2,16 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Gaussian Smooth"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
       <plugin-select
         v-if="show_modes"
         :items="mode_items.map(i => i.label)"
-        :selected.sync="mode_selected"
+        v-model:selected="mode_selected"
         label="Mode"
         api_hint="plg.mode ="
         :api_hints_enabled="api_hints_enabled"
@@ -23,7 +23,7 @@
            so let's always show the dropdown for those cases to make the selection clear -->
       <plugin-dataset-select
         :items="dataset_items"
-        :selected.sync="dataset_selected"
+        v-model:selected="dataset_selected"
         :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1"
         label="Data"
         api_hint='plg.dataset ='
@@ -46,20 +46,20 @@
       </v-row>
 
       <plugin-add-results
-        :label.sync="results_label"
+        v-model:label="results_label"
         :label_default="results_label_default"
-        :label_auto.sync="results_label_auto"
+        v-model:label_auto="results_label_auto"
         :label_invalid_msg="results_label_invalid_msg"
         :label_overwrite="results_label_overwrite"
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
-        :add_to_viewer_selected.sync="add_to_viewer_selected"
+        v-model:add_to_viewer_selected="add_to_viewer_selected"
         :show_viewer_switch="show_viewer_switch"
         :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
-        :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
-        :add_to_viewer_label_value.sync="add_to_viewer_label_value"
+        v-model:add_to_viewer_create_new_selected="add_to_viewer_create_new_selected"
+        v-model:add_to_viewer_label_value="add_to_viewer_label_value"
         :add_to_viewer_label_default="add_to_viewer_label_default"
-        :add_to_viewer_label_auto.sync="add_to_viewer_label_auto"
+        v-model:add_to_viewer_label_auto="add_to_viewer_label_auto"
         :add_to_viewer_label_invalid_msg="add_to_viewer_label_invalid_msg"
         action_label="Smooth"
         action_tooltip="Smooth data"

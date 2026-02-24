@@ -4,18 +4,18 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#ramp-extraction'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to"
+    v-model:scroll_to="scroll_to"
     :disabled_msg="disabled_msg">
 
     <v-row>
       <v-expansion-panels popout>
         <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Settings</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
             <v-row>
               <v-switch
                 v-model="show_live_preview"
@@ -32,7 +32,7 @@
                 persistent-hint
               ></v-switch>
             </v-row>
-          </v-expansion-panel-content>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
@@ -42,7 +42,7 @@
 
       <plugin-subset-select
         :items="aperture_items"
-        :selected.sync="aperture_selected"
+        v-model:selected="aperture_selected"
         :show_if_single_entry="true"
         label="Spatial aperture"
         :hint="'Select a spatial region to extract its '+resulting_product_name+'.'"
@@ -75,7 +75,7 @@
 
       <plugin-select
         :items="function_items.map(i => i.label)"
-        :selected.sync="function_selected"
+        v-model:selected="function_selected"
         label="Function"
         :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
       />
@@ -87,27 +87,27 @@
       </v-row>
 
       <plugin-previews-temp-disabled
-        :previews_temp_disabled.sync="previews_temp_disabled"
+        v-model:previews_temp_disabled="previews_temp_disabled"
         :previews_last_time="previews_last_time"
-        :show_live_preview.sync="show_live_preview"
+        v-model:show_live_preview="show_live_preview"
       />
 
       <plugin-add-results
-        :label.sync="results_label"
+        v-model:label="results_label"
         :label_default="results_label_default"
-        :label_auto.sync="results_label_auto"
+        v-model:label_auto="results_label_auto"
         :label_invalid_msg="results_label_invalid_msg"
         :label_overwrite="results_label_overwrite"
         :label_hint="'Label for the extracted '+resulting_product_name+'.'"
         :add_to_viewer_items="add_to_viewer_items"
-        :add_to_viewer_selected.sync="add_to_viewer_selected"
+        v-model:add_to_viewer_selected="add_to_viewer_selected"
         :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
-        :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
-        :add_to_viewer_label_value.sync="add_to_viewer_label_value"
+        v-model:add_to_viewer_create_new_selected="add_to_viewer_create_new_selected"
+        v-model:add_to_viewer_label_value="add_to_viewer_label_value"
         :add_to_viewer_label_default="add_to_viewer_label_default"
-        :add_to_viewer_label_auto.sync="add_to_viewer_label_auto"
+        v-model:add_to_viewer_label_auto="add_to_viewer_label_auto"
         :add_to_viewer_label_invalid_msg="add_to_viewer_label_invalid_msg"
-        :auto_update_result.sync="auto_update_result"
+        v-model:auto_update_result="auto_update_result"
         action_label="Extract"
         action_tooltip="Run ramp extraction with error and mask propagation"
         :action_spinner="spinner"

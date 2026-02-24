@@ -20,7 +20,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   // tooltip: undefined will use default generated, empty will skip tooltips, any other string will be used directly
   props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'linewidth', 'colormode', 'cmap_samples', 'btn_style', 'icon_style', 'tooltip', 'disabled'],
   methods: {

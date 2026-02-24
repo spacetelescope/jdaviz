@@ -10,7 +10,7 @@
       :min="min !== undefined ? min : 0"
       :max="max !== undefined ? max : 1"
       :step="step !== undefined ? step : 0.01"
-      :value.sync="value"
+      v-model:value="value"
       @update:value="$emit('update:value', $event)"
       hide-details
       class="no-hint"
@@ -19,7 +19,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     props: ['label', 'api_hint', 'api_hints_enabled', 'wait', 'min', 'max', 'step', 'value'],
   };
 </script>
