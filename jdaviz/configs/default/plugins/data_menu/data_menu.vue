@@ -162,71 +162,72 @@
               density="compact"
             >
               <div>
-                <draggable v-model="layer_items">
-                  <v-list-item
-                    v-for="(item, index) in layer_items"
-                    :key="index"
-                    class="layer-select"
-                    :style="/\d/.test(item.icon) ? 'padding-left: 32px' : ''"
-                    @dragstart="onDragStart($event)"
-                    @dragend="onDragEnd"
-                  >
-                    <v-list-item-action>
-                      <j-layer-viewer-icon-stylized
-                          :label="item.label"
-                          :icon="item.icon"
-                          :visible="item.visible"
-                          :is_subset="item.is_subset"
-                          :colors="item.colors"
-                          :linewidth="item.linewidth"
-                          :cmap_samples="cmap_samples"
-                          btn_style="margin-bottom: 0px"
-                          disabled="true"
-                        />
-                    </v-list-item-action>
-                    <div class="v-list-item-content">
-                      <div style="display: flex; align-items: flex-start; line-height: 28px; min-width: 0;">
-                        <span style="display: inline-flex; align-items: center; flex-shrink: 0; margin-right: 4px;">
-                          <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                          <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
-                          <j-plugin-live-results-icon v-if="item.live_plugin_results" />
-                        </span>
-                        <j-rename-text
-                          :value="item.label"
-                          :show-pencil="true"
-                          :rename-error-message="rename_error_messages[item.label] || ''"
-                          :api-hint-rename="api_hints_enabled ? 'dm.rename(\'' + item.label + '\', \'<new_name>\')' : ''"
-                          :show-api-hint="api_hints_enabled"
-                          @input="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
-                          @cancel="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
-                          @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
-                        />
+                <draggable v-model="layer_items" item-key="label">
+                  <template #item="{ element: item }">
+                    <v-list-item
+                      :key="item.label"
+                      class="layer-select"
+                      :style="/\d/.test(item.icon) ? 'padding-left: 32px' : ''"
+                      @dragstart="onDragStart($event)"
+                      @dragend="onDragEnd"
+                    >
+                      <v-list-item-action>
+                        <j-layer-viewer-icon-stylized
+                            :label="item.label"
+                            :icon="item.icon"
+                            :visible="item.visible"
+                            :is_subset="item.is_subset"
+                            :colors="item.colors"
+                            :linewidth="item.linewidth"
+                            :cmap_samples="cmap_samples"
+                            btn_style="margin-bottom: 0px"
+                            disabled="true"
+                          />
+                      </v-list-item-action>
+                      <div class="v-list-item-content">
+                        <div style="display: flex; align-items: flex-start; line-height: 28px; min-width: 0;">
+                          <span style="display: inline-flex; align-items: center; flex-shrink: 0; margin-right: 4px;">
+                            <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
+                            <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
+                            <j-plugin-live-results-icon v-if="item.live_plugin_results" />
+                          </span>
+                          <j-rename-text
+                            :value="item.label"
+                            :show-pencil="true"
+                            :rename-error-message="rename_error_messages[item.label] || ''"
+                            :api-hint-rename="api_hints_enabled ? 'dm.rename(\'' + item.label + '\', \'<new_name>\')' : ''"
+                            :show-api-hint="api_hints_enabled"
+                            @input="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
+                            @cancel="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
+                            @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <v-list-item-action>
-                      <j-tooltip
-                        v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
-                        tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
-                      >
-                        <v-btn icon disabled>
-                          <v-icon>mdi-eye-off</v-icon>
-                        </v-btn>
-                      </j-tooltip>
-                      <j-tooltip
-                        v-else-if="viewer_supports_visible_toggle"
-                        :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
-                      >
-                        <plugin-switch
-                          :value="item.visible"
-                          @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-                          @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
-                          @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
-                          :api_hints_enabled="false"
-                          :use_icon="item.is_sonified ? 'speaker' : 'eye'"
-                        />
-                      </j-tooltip>
-                    </v-list-item-action>
-                  </v-list-item>
+                      <v-list-item-action>
+                        <j-tooltip
+                          v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
+                          tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
+                        >
+                          <v-btn icon disabled>
+                            <v-icon>mdi-eye-off</v-icon>
+                          </v-btn>
+                        </j-tooltip>
+                        <j-tooltip
+                          v-else-if="viewer_supports_visible_toggle"
+                          :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
+                        >
+                          <plugin-switch
+                            :value="item.visible"
+                            @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
+                            @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
+                            @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
+                            :api_hints_enabled="false"
+                            :use_icon="item.is_sonified ? 'speaker' : 'eye'"
+                          />
+                        </j-tooltip>
+                      </v-list-item-action>
+                    </v-list-item>
+                  </template>
                 </draggable>
               </div>
             </v-item-group>
@@ -305,7 +306,12 @@
 </template>
 
 <script>
+  import draggable from 'https://esm.sh/vuedraggable@4.1.0?external=vue'
+
   export default {
+    components: {
+      draggable
+    },
     data: function () {
       return {
         data_menu_open: false,
