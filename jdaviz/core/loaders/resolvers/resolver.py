@@ -239,6 +239,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     default_input = None
     default_input_cast = None
     requires_api_support = False
+    _update_format_spinner_text = 'searching for valid formats...'
 
     spinner = Unicode("").tag(sync=True)
 
@@ -713,7 +714,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self._clear_cache('output')
         self._update_format_items()
 
-    @with_spinner('spinner', 'searching for valid formats...')
+    @with_spinner('spinner', '_update_format_spinner_text')
     def _update_format_items(self):
         # NOTE: this will call self.output
         self.format._update_items()

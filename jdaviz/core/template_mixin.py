@@ -698,15 +698,24 @@ def with_spinner(spinner_traitlet='spinner', truthy=True):
 
     Each plugin gets a 'spinner' traitlet by default, but some plugins
     may want different controls for different sections/actions within the plugin.
+
+    If ``truthy`` is a string that matches an attribute name on the instance,
+    the attribute's value will be used instead. This allows subclasses to
+    override the spinner text by defining a class attribute.
     """
     def decorator(meth):
         @wraps(meth)
         def wrapper(self, *args, **kwargs):
-            setattr(self, spinner_traitlet, truthy)
+            # If truthy is a string matching an attribute name, use that attribute's value
+            if isinstance(truthy, str) and hasattr(self, truthy):
+                spinner_value = getattr(self, truthy)
+            else:
+                spinner_value = truthy
+            setattr(self, spinner_traitlet, spinner_value)
             try:
                 ret_ = meth(self, *args, **kwargs)
             finally:
-                setattr(self, spinner_traitlet, False if truthy is True else '')
+                setattr(self, spinner_traitlet, False if spinner_value is True else '')
             return ret_
         return wrapper
     return decorator
@@ -6055,6 +6064,8 @@ class Table(PluginSubcomponent):
         )
         # Hide the resolver UI since we're using a fixed object (the table itself)
         self._object_loader.hide_resolver = True
+        # Customize spinner text for plugin tables
+        self._object_loader._update_format_spinner_text = 'parsing table...'
 
         self.loader_items = [{
             'name': 'object',
