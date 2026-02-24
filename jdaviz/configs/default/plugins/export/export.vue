@@ -2,15 +2,15 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Export"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#export'"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <j-multiselect-toggle
       v-if="dev_multi_support"
-      :multiselect.sync="multiselect"
+      v-model:multiselect="multiselect"
       :icon_checktoradial="icon_checktoradial"
       :icon_radialtocheck="icon_radialtocheck"
     ></j-multiselect-toggle>
@@ -22,7 +22,7 @@
       </v-row>
       <plugin-inline-select
         :items="viewer_items"
-        :selected.sync="viewer_selected"
+        v-model:selected="viewer_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
         api_hint="plg.viewer ="
@@ -33,7 +33,7 @@
         <div class="category-content">
           <plugin-select
             :items="viewer_format_items.map(i => i.label)"
-            :selected.sync="viewer_format_selected"
+            v-model:selected="viewer_format_selected"
             label="Format"
             api_hint="plg.viewer_format ="
             :api_hints_enabled="api_hints_enabled"
@@ -43,7 +43,7 @@
           <div v-if="viewer_selected.length > 0 && ['png', 'mp4'].includes(viewer_format_selected)">
             <v-row>
               <plugin-switch
-                :value.sync="image_custom_size"
+                v-model:value="image_custom_size"
                 label="Custom Resolution"
                 api_hint="plg.image_custom_size = "
                 :api_hints_enabled="api_hints_enabled"
@@ -140,7 +140,7 @@
       </v-row>
       <plugin-inline-select
         :items="dataset_items"
-        :selected.sync="dataset_selected"
+        v-model:selected="dataset_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
         api_hint="plg.dataset ="
@@ -157,7 +157,7 @@
         <div class="category-content">
           <plugin-select
             :items="dataset_format_items.map(i => i.label)"
-            :selected.sync="dataset_format_selected"
+            v-model:selected="dataset_format_selected"
             label="Format"
             api_hint="plg.dataset_format ="
             :api_hints_enabled="api_hints_enabled"
@@ -175,7 +175,7 @@
       </v-row>
       <plugin-inline-select
         :items="subset_items"
-        :selected.sync="subset_selected"
+        v-model:selected="subset_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
         api_hint="plg.subset ="
@@ -193,7 +193,7 @@
         <div class="category-content">
           <plugin-select
             :items="subset_format_items.map(i => i.label)"
-            :selected.sync="subset_format_selected"
+            v-model:selected="subset_format_selected"
             label="Format"
             api_hint="plg.subset_format ="
             :api_hints_enabled="api_hints_enabled"
@@ -218,7 +218,7 @@
       </v-row>
       <plugin-inline-select
         :items="plugin_table_items"
-        :selected.sync="plugin_table_selected"
+        v-model:selected="plugin_table_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
         api_hint="plg.table ="
@@ -229,7 +229,7 @@
         <div class="category-content">
           <plugin-select
             :items="plugin_table_format_items.map(i => i.label)"
-            :selected.sync="plugin_table_format_selected"
+            v-model:selected="plugin_table_format_selected"
             label="Format"
             api_hint="plg.table_format ="
             :api_hints_enabled="api_hints_enabled"
@@ -247,7 +247,7 @@
       </v-row>
       <plugin-inline-select
         :items="plugin_plot_items"
-        :selected.sync="plugin_plot_selected"
+        v-model:selected="plugin_plot_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
         api_hint="plg.plugin_plot ="
@@ -262,7 +262,7 @@
         <div class="category-content">
           <plugin-select
             :items="plugin_plot_format_items.map(i => i.label)"
-            :selected.sync="plugin_plot_format_selected"
+            v-model:selected="plugin_plot_format_selected"
             label="Format"
             api_hint="plg.plugin_plot_format ="
             :api_hints_enabled="api_hints_enabled"
@@ -290,9 +290,9 @@
     <div style="grid-area: 1/1">
 
     <plugin-auto-label
-      :value.sync="filename_value"
+      v-model:value="filename_value"
       :default="filename_default"
-      :auto.sync="filename_auto"
+      v-model:auto="filename_auto"
       :invalid_msg="filename_invalid_msg"
       label="Filename"
       api_hint="plg.filename = "

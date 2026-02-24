@@ -4,9 +4,9 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#cubeviz-sonify-data'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to"
+    v-model:scroll_to="scroll_to"
     :disabled_msg="disabled_msg">
 
     <j-plugin-section-header>Cube Pre-Sonification Options</j-plugin-section-header>
@@ -19,7 +19,7 @@
     </v-row>
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="false"
       label="Data"
       api_hint="plg.dataset ="
@@ -29,7 +29,7 @@
     />
     <plugin-subset-select
       :items="spectral_subset_items"
-      :selected.sync="spectral_subset_selected"
+      v-model:selected="spectral_subset_selected"
       :show_if_single_entry="true"
       label="Spectral range"
       api_hint="plg.spectral_subset ="
@@ -39,10 +39,10 @@
     <v-row>
       <v-expansion-panels accordion>
         <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Advanced Sound Options</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
             <v-row>
               <v-text-field
                 ref="audfrqmin"
@@ -109,7 +109,7 @@
                  persistent-hint
                 ></v-switch>
             </v-row>
-          </v-expansion-panel-content>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
@@ -135,23 +135,23 @@
 
     <v-row>
         Overall Volume
-        <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
+        <glue-throttled-slider label="Volume" wait="300" max="100" step="1" v-model:value="volume" hide-details class="no-hint" />
     </v-row>
     <j-plugin-section-header>Add Results Options</j-plugin-section-header>
       <plugin-add-results
-          :label.sync="results_label"
+          v-model:label="results_label"
           :label_default="results_label_default"
-          :label_auto.sync="results_label_auto"
+          v-model:label_auto="results_label_auto"
           :label_invalid_msg="results_label_invalid_msg"
           :label_overwrite="results_label_overwrite"
           label_hint="Label for the sonified data"
           :add_to_viewer_items="add_to_viewer_items"
-          :add_to_viewer_selected.sync="add_to_viewer_selected"
+          v-model:add_to_viewer_selected="add_to_viewer_selected"
           :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
-          :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
-          :add_to_viewer_label_value.sync="add_to_viewer_label_value"
+          v-model:add_to_viewer_create_new_selected="add_to_viewer_create_new_selected"
+          v-model:add_to_viewer_label_value="add_to_viewer_label_value"
           :add_to_viewer_label_default="add_to_viewer_label_default"
-          :add_to_viewer_label_auto.sync="add_to_viewer_label_auto"
+          v-model:add_to_viewer_label_auto="add_to_viewer_label_auto"
           :add_to_viewer_label_invalid_msg="add_to_viewer_label_invalid_msg"
           add_to_viewer_hint="Add sonified layer to selected viewer. The sonified data will be available to add to all relevant viewers after creation."
           action_label="Sonify data"

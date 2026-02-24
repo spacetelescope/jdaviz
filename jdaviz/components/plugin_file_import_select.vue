@@ -5,7 +5,7 @@
         :menu-props="{ left: true }"
         attach
         :items="items"
-        item-text="label"
+        item-title="label"
         item-value="label"
         v-model="selected"
         @change="$emit('update:selected', $event)"
@@ -96,7 +96,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'from_file', 'from_file_message',
           'dialog_title', 'dialog_hint', 'api_hint', 'api_hints_enabled', 'deprecate_from_file'],
 };

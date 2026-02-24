@@ -19,7 +19,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     props: ['enabled', 'text', 'api_hints_enabled', 'api_hint_enable', 'api_hint_disable']
   };
 </script>

@@ -12,11 +12,11 @@
       :class="api_hints_enabled && api_hint ? 'api-hint' : null"
       :hint="hint"
       :rules="rules ? rules : []"
-      item-text="label"
+      item-title="label"
       item-value="label"
       persistent-hint
     >
-      <template slot="selection" slot-scope="data">
+      <template v-slot:selection="data">
         <div class="single-line" style="width: 100%">
           <span :class="api_hints_enabled ? 'api-hint' : null">
             {{ api_hints_enabled ?
@@ -91,7 +91,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['mode', 'edit_value', 'items', 'selected', 'multiselect', 'label', 'hint', 'rules',
           'api_hint', 'api_hint_add', 'api_hint_rename', 'api_hint_remove', 'api_hints_enabled'
   ],

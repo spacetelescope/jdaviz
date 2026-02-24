@@ -2,15 +2,15 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Line Analysis"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-analysis'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <j-plugin-section-header>Line</j-plugin-section-header>
     <v-row>
@@ -21,7 +21,7 @@
          to make sure that is clear -->
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="config=='mosviz'"
       label="Data"
       api_hint="plg.dataset ="
@@ -31,7 +31,7 @@
 
     <plugin-subset-select
       :items="spectral_subset_items"
-      :selected.sync="spectral_subset_selected"
+      v-model:selected="spectral_subset_selected"
       :show_if_single_entry="true"
       label="Spectral region"
       api_hint="plg.spectral_subset ="
@@ -56,7 +56,7 @@
 
     <plugin-subset-select
       :items="continuum_subset_items"
-      :selected.sync="continuum_subset_selected"
+      v-model:selected="continuum_subset_selected"
       :show_if_single_entry="true"
       :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
       label="Continuum"
@@ -182,7 +182,7 @@
                 :menu-props="{ left: true }"
                 attach
                 :items="line_menu_items"
-                item-text="title"
+                item-title="title"
                 item-value="value"
                 v-model="selected_line"
                 label="Line"

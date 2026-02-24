@@ -9,7 +9,7 @@
       @change="$emit('update:loader_selected', $event)"
       label="Source"
       hint="Select source to get data"
-      item-text="name"
+      item-title="name"
       item-value="name"
       persistent-hint
       outlined
@@ -26,7 +26,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'server_is_remote', 'disabled_loaders', 'hide_resolver'],
   computed: {
     loader_items_filtered() {

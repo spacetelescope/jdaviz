@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     :description="docs_description"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'" linktext="Jdaviz Documentation">

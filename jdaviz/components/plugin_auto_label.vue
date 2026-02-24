@@ -28,7 +28,7 @@
   </v-row>
 </template>
 <script>
-module.exports = {
+export default {
   props: ['value', 'default', 'auto', 'label', 'hint', 'invalid_msg', 'api_hint', 'api_hints_enabled'],
   data: function() {
       return {

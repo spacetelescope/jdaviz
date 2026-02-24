@@ -19,7 +19,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['multiselect', 'icon_checktoradial', 'icon_radialtocheck', 'tooltip']
 };
 </script>

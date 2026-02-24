@@ -2,15 +2,15 @@
   <j-tray-plugin
     plugin_key="Cross Dispersion Profile"
     :config="config"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link"
     :uses_active_status="uses_active_status"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button"
     :disabled_msg="disabled_msg"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <v-row v-if="plot_available" style="padding: 0px">
       <jupyter-widget :widget="plot_widget"/>
@@ -18,7 +18,7 @@
 
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="false"
       label="Data"
       api_hint="plg.dataset ="
@@ -56,7 +56,7 @@
     </v-row>
 
     <plugin-switch
-      :value.sync="use_full_width"
+      v-model:value="use_full_width"
       label="Use full cross-dispersion width."
       api_hint="plg.use_full_width = "
       :api_hints_enabled="api_hints_enabled"

@@ -15,7 +15,6 @@
     </span>
 
     <h1 class="mt-8 mb-6" style="color: white">Welcome to Jdaviz!</h1>
-
     <v-row align-center>
       <v-col>
         <span class="white--text">
@@ -46,7 +45,6 @@
         <span class="mx-4 white--text font-weight-bold">The functionality below is deprecated as of version 5.0.</span>
         <v-divider style="border-color: white !important; border-width: 3px 0 0 0; opacity: 1"></v-divider>
     </div>
-
     <v-row>
         <v-text-field
             v-model="filepath"
@@ -63,9 +61,9 @@
 
         <j-tooltip tooltipcontent="select file from disk" span_style="height: 80px">
           <v-dialog v-model="file_browser_visible" max-width="1000" max-height="800">
-              <template v-slot:activator="{ on }">
+              <template v-slot:activator="{ props }">
                   <v-btn
-                      v-on="on"
+                      v-bind="props"
                       @click="open_file_dialog"
                       class="ma-2"
                       color="#1E617F"

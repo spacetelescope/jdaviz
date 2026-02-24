@@ -101,7 +101,7 @@
 </style>
 
 <script>
-  module.exports = {
+  export default {
     props: ['add_results_api_hint',
             'label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
             'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint', 'show_viewer_switch',

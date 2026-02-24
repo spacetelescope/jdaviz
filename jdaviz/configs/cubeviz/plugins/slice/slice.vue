@@ -2,23 +2,23 @@
   <j-tray-plugin
     :config="config"
     :plugin_key="plugin_key || 'Slice'"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :irrelevant_msg="irrelevant_msg"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slice'"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <v-row>
       <v-expansion-panels popout>
         <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Indicator Settings</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
             <v-row v-if="allow_disable_snapping">
               <plugin-switch
-                :value.sync="snap_to_slice"
+                v-model:value="snap_to_slice"
                 label="Snap to Slice"
                 api_hint="plg.snap_to_slice = "
                 :api_hints_enabled="api_hints_enabled"
@@ -27,7 +27,7 @@
             </v-row>
             <v-row>
               <plugin-switch
-                :value.sync="show_indicator"
+                v-model:value="show_indicator"
                 label="Show Indicator"
                 api_hint="plg.show_indicator = "
                 :api_hints_enabled="api_hints_enabled"
@@ -36,14 +36,14 @@
             </v-row>
             <v-row>
               <plugin-switch
-                :value.sync="show_value"
+                v-model:value="show_value"
                 label="Show Value"
                 api_hint="plg.show_value = "
                 :api_hints_enabled="api_hints_enabled"
                 :hint="'Show slice '+value_label.toLowerCase()+' in label to right of indicator.'"
               />
             </v-row>
-          </v-expansion-panel-content>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
@@ -70,40 +70,40 @@
     <v-row class="row-no-outside-padding row-min-bottom-padding ignore-api-hints">
       <v-col>
         <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="goto_first" v-bind="attrs" v-on="on" :disabled="is_playing">
+          <template v-slot:activator="{ props }">
+            <v-btn color="primary" icon @click="goto_first" v-bind="props" :disabled="is_playing">
               <v-icon>skip_previous</v-icon>
             </v-btn>
           </template>
           <span>Jump to first</span>
         </v-tooltip>
         <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="play_prev" v-bind="attrs" v-on="on" :disabled="is_playing">
+          <template v-slot:activator="{ props }">
+            <v-btn color="primary" icon @click="play_prev" v-bind="props" :disabled="is_playing">
               <v-icon>exposure_minus_1</v-icon>
             </v-btn>
           </template>
           <span>Previous</span>
         </v-tooltip>
         <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="play_start_stop" v-bind="attrs" v-on="on">
+          <template v-slot:activator="{ props }">
+            <v-btn color="primary" icon @click="play_start_stop" v-bind="props">
               <v-icon>mdi-play-pause</v-icon>
             </v-btn>
           </template>
           <span>Play/Pause</span>
         </v-tooltip>
         <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="play_next" v-bind="attrs" v-on="on" :disabled="is_playing">
+          <template v-slot:activator="{ props }">
+            <v-btn color="primary" icon @click="play_next" v-bind="props" :disabled="is_playing">
               <v-icon>exposure_plus_1</v-icon>
             </v-btn>
           </template>
           <span>Next</span>
         </v-tooltip>
         <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="goto_last" v-bind="attrs" v-on="on" :disabled="is_playing">
+          <template v-slot:activator="{ props }">
+            <v-btn color="primary" icon @click="goto_last" v-bind="props" :disabled="is_playing">
               <v-icon>skip_next</v-icon>
             </v-btn>
           </template>
@@ -115,7 +115,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     created() {
       this.throttledSetValue = _.throttle(
         (v) => { this.slice = v; },

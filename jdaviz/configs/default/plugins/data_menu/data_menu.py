@@ -126,7 +126,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         super().__init__(*args, **kwargs)
 
         # Trigger the loading of ipyvuedraggable in the frontend in notebook and Solara.
-        ipyvuedraggable.Draggable()
+        # ipyvuedraggable.Draggable()
         self._viewer = viewer
         self._during_select_sync = False
 

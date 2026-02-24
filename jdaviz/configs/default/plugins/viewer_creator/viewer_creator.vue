@@ -1,9 +1,9 @@
 <template>
   <v-menu offset-y>
-    <template v-slot:activator="{ on: menu }">
+    <template v-slot:activator="{ props }">
       <!-- <v-tooltip> -->
-        <!-- <template v-slot:activator="{ on: tooltip }"> -->
-          <v-btn icon tile v-on="{...menu}">
+        <!-- <template v-slot:activator="{ props }"> -->
+          <v-btn icon tile v-bind="props">
             <v-icon>mdi-chart-histogram</v-icon>
           </v-btn>
         <!-- </template> -->
@@ -12,7 +12,7 @@
     </template>
     <v-list>
       <v-list-item v-for="(viewer, i) in viewer_types" @click="create_viewer(viewer.name)">
-        <v-list-item-content>{{ viewer.label }}</v-list-item-content>
+        <div class="v-list-item-content">{{ viewer.label }}</div>
       </v-list-item>
     </v-list>
   </v-menu>

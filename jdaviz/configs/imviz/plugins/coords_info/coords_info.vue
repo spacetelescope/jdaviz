@@ -41,7 +41,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     data: function () {
       return {
         show_dataset_selected: false,

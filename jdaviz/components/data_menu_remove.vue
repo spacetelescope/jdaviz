@@ -4,15 +4,15 @@
     offset-y
     left
   >
-    <template v-slot:activator="{ on, attrs }">
+    <template v-slot:activator="{ props }">
       <j-tooltip
         :span_style="'display: inline-block; float: right; ' + (delete_enabled ? '' : 'cursor: default;')"
         :tooltipcontent="delete_tooltip"
       >
         <v-btn
             icon
-            v-bind="attrs"
-            v-on="on"
+            v-bind="props"
+
             :disabled="!delete_enabled"
             >
             <v-icon class="invert-if-dark">mdi-delete</v-icon>
@@ -21,7 +21,7 @@
     </template>
     <v-list dense style="width: 200px">
       <v-list-item>
-        <v-list-item-content>
+        <div class="v-list-item-content">
           <j-tooltip
             :tooltipcontent="delete_viewer_tooltip"
           >
@@ -37,10 +37,10 @@
               }}
             </span>
           </j-tooltip>
-        </v-list-item-content>
+        </div>
       </v-list-item>
       <v-list-item>
-        <v-list-item-content>
+        <div class="v-list-item-content">
           <j-tooltip
             :span_style="'display: inline-block; float: right; ' + (delete_app_enabled ? '' : 'cursor: default;')"
             :tooltipcontent="delete_app_tooltip"
@@ -58,14 +58,14 @@
               }}
             </span>
           </j-tooltip>
-        </v-list-item-content>
+        </div>
       </v-list-item>
     </v-list>
   </v-menu>
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['delete_enabled', 'delete_tooltip', 'delete_viewer_tooltip', 'delete_app_enabled', 'delete_app_tooltip', 'api_hints_enabled'],
 };
 </script>
