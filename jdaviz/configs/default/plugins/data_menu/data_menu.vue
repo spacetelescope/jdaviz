@@ -9,8 +9,8 @@
           transition="slide-x-reverse-transition"
           :close-on-content-click="false"
           v-model="data_menu_open">
-          <template v-slot:activator="{ on, attrs }">
-            <div :id="'layer-legend-'+ viewer_id" class="layer-legend">
+          <template v-slot:activator="{ props }">
+            <div :id="'layer-legend-'+ viewer_id" class="layer-legend" v-bind="props">
               <div
                 v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0 || data_menu_open"
                 :class="loaded_n_data === 0 && !data_menu_open ? 'viewer-label pulse' : 'viewer-label'"
@@ -60,14 +60,14 @@
           </template>
           <v-list :id="'dm-content-' + viewer_id" style="width: 400px" class="overflow-y-auto">
             <v-list-item v-if="api_hints_enabled" style="min-height: 12px">
-              <v-list-item-content>
+              <div class="v-list-item-content">
                 <span class="api-hint">
                   <b>dm = {{ api_hints_obj }}.viewers['{{viewer_reference}}'].data_menu</b>
                 </span>
-              </v-list-item-content>
+              </div>
             </v-list-item>
             <v-list-item class="dm-header">
-              <v-list-item-icon>
+              <v-list-item-action>
                 <j-tooltip
                   v-if="false"
                   tooltipcontent="Reorder layers (COMING SOON)"
@@ -79,8 +79,8 @@
                     <v-icon class="invert-if-dark">mdi-format-vertical-align-center</v-icon>
                   </v-btn>
                 </j-tooltip>
-              </v-list-item-icon>
-              <v-list-item-content
+              </v-list-item-action>
+              <div class="v-list-item-content"
                 v-if="loaded_n_data > 0"
                 style="display: inline-block"
               >
@@ -105,12 +105,12 @@
                   v-model="orientation_layer_selected"
                   :label="api_hints_enabled ? 'dm.orientation = ' : 'Orientation'"
                   :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : 'invert-if-dark'"
-                  item-text="label"
+                  item-title="label"
                   item-value="label"
                   :hide-details="true"
                   style="padding-top: 8px !important; padding-bottom: 4px !important; display: inline-block; width: 212px"
                 >
-                  <template slot="selection" slot-scope="data">
+                  <template v-slot:selection="data">
                     <div class="single-line" style="width: 100%">
                       <span :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : null">
                         <j-layer-viewer-icon v-if="data.item.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
@@ -122,7 +122,7 @@
                       </span>
                     </div>
                   </template>
-                  <template slot="item" slot-scope="data">
+                  <template v-slot:item="data">
                     <div class="single-line">
                       <span>
                         <j-layer-viewer-icon span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
@@ -131,10 +131,10 @@
                     </div>
                   </template>
                 </v-select>
-              </v-list-item-content>
-              <v-list-item-content v-else>
+              </div>
+              <div class="v-list-item-content" v-else>
                 <span>No data in viewer</span>
-              </v-list-item-content>
+              </div>
               <v-list-item-action>
                 <data-menu-add
                   :dataset_items="dataset_items"
@@ -151,9 +151,9 @@
             <v-list-item
               v-if="api_hints_enabled"
             >
-              <v-list-item-content>
+              <div class="v-list-item-content">
                 <span class="api-hint">dm.layer = {{ layer_selected }}</span>
-              </v-list-item-content>
+              </div>
             </v-list-item>
             <v-list-item-group
               v-model="dm_layer_selected"
@@ -172,7 +172,7 @@
                     @dragstart="onDragStart($event)"
                     @dragend="onDragEnd"
                   >
-                    <v-list-item-icon>
+                    <v-list-item-action>
                       <j-layer-viewer-icon-stylized
                           :label="item.label"
                           :icon="item.icon"
@@ -184,8 +184,8 @@
                           btn_style="margin-bottom: 0px"
                           disabled="true"
                         />
-                    </v-list-item-icon>
-                    <v-list-item-content>
+                    </v-list-item-action>
+                    <div class="v-list-item-content">
                       <div style="display: flex; align-items: flex-start; line-height: 28px; min-width: 0;">
                         <span style="display: inline-flex; align-items: center; flex-shrink: 0; margin-right: 4px;">
                           <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
@@ -203,7 +203,7 @@
                           @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
                         />
                       </div>
-                    </v-list-item-content>
+                    </div>
                     <v-list-item-action>
                       <j-tooltip
                         v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
@@ -233,12 +233,12 @@
             </v-list-item-group>
             <hover-api-hint
               v-if="api_hints_enabled"
-              :hover_api_hint.sync="hover_api_hint"
-              :lock_hover_api_hint.sync="lock_hover_api_hint"
+              v-model:hover_api_hint="hover_api_hint"
+              v-model:lock_hover_api_hint="lock_hover_api_hint"
               :icons="icons"
             />
             <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
-              <v-list-item-content style="display: inline-block">
+              <div class="v-list-item-content" style="display: inline-block">
                 <data-menu-remove
                   :delete_enabled="delete_enabled"
                   :delete_tooltip="delete_tooltip"
@@ -276,7 +276,7 @@
                                                               data_menu_open = false}"
                   @resize-subset-in-viewer="() => {resize_subset_in_viewer(); data_menu_open = false}"
                 />
-              </v-list-item-content>
+              </div>
             </v-list-item>
           </v-list>
         </v-menu>
@@ -289,7 +289,7 @@
         <v-list-item
           v-for="data in dataset_items"
         >
-          <v-list-item-content>
+          <div class="v-list-item-content">
             <j-tooltip tooltipcontent="add data to viewer">
               <span
                 style="cursor: pointer; width: 100%"
@@ -298,7 +298,7 @@
                 {{ data.label }}
               </span>
             </j-tooltip>
-          </v-list-item-content>
+          </div>
         </v-list-item>
       </v-list>
     </div>
@@ -306,7 +306,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     data: function () {
       return {
         data_menu_open: false,
@@ -327,7 +327,7 @@
       }
       this.jupyterLabCell = this.$el.closest(".jp-Notebook-cell");
     },
-    beforeDestroy() {
+    beforeUnmount() {
       let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
       if (element === null) {
         return

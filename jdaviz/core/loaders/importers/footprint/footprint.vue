@@ -1,9 +1,9 @@
 <template>
   <v-container>
     <plugin-auto-label
-      :value.sync="footprint_label_value"
+      v-model:value="footprint_label_value"
       :default="footprint_label_default"
-      :auto.sync="footprint_label_auto"
+      v-model:auto="footprint_label_auto"
       :invalid_msg="footprint_label_invalid_msg"
       label="Footprint Label"
       api_hint="ldr.importer.footprint_label ="

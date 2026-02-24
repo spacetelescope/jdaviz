@@ -1,9 +1,9 @@
 <template>
   <v-container>
     <plugin-auto-label
-      :value.sync="data_label_value"
+      v-model:value="data_label_value"
       :default="data_label_default"
-      :auto.sync="data_label_auto"
+      v-model:auto="data_label_auto"
       :invalid_msg="data_label_invalid_msg"
       label="Data Label"
       api_hint="ldr.importer.data_label ="
@@ -14,12 +14,12 @@
 
     <plugin-viewer-create-new
       :items="viewer_items"
-      :selected.sync="viewer_selected"
+      v-model:selected="viewer_selected"
       :create_new_items="viewer_create_new_items"
-      :create_new_selected.sync="viewer_create_new_selected"
-      :new_label_value.sync="viewer_label_value"
+      v-model:create_new_selected="viewer_create_new_selected"
+      v-model:new_label_value="viewer_label_value"
       :new_label_default="viewer_label_default"
-      :new_label_auto.sync="viewer_label_auto"
+      v-model:new_label_auto="viewer_label_auto"
       :new_label_invalid_msg="viewer_label_invalid_msg"
       :multiselect="viewer_multiselect"
       :show_multiselect_toggle="false"

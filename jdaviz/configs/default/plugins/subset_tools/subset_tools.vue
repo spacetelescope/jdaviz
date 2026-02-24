@@ -2,16 +2,16 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Subset Tools"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#subset-tools'"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-loaders-panel
-      :loader_panel_ind.sync="loader_panel_ind"
+      v-model:loader_panel_ind="loader_panel_ind"
       :loader_items="loader_items"
-      :loader_selected.sync="loader_selected"
+      v-model:loader_selected="loader_selected"
       :api_hints_enabled="api_hints_enabled"
     ></plugin-loaders-panel>
 
@@ -40,11 +40,11 @@
       <v-col cols=10 justify="left">
         <plugin-subset-select
           :items="subset_items"
-          :selected.sync="subset_selected"
+          v-model:selected="subset_selected"
           :multiselect="multiselect"
           :show_if_single_entry="true"
-          :mode.sync="subset_select_mode"
-          :edit_value.sync="subset_edit_value"
+          v-model:mode="subset_select_mode"
+          v-model:edit_value="subset_edit_value"
           :rename_error_message="rename_error_message"
           label="Subset"
           api_hint="plg.subset ="
@@ -71,13 +71,13 @@
     <v-row v-if="config=='imviz' && is_centerable">
       <v-expansion-panels accordion v-model="subplugins_opened">
         <v-expansion-panel>
-          <v-expansion-panel-header >
+          <v-expansion-panel-title >
             <span style="padding: 6px">Recenter</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
             <plugin-dataset-select
              :items="recenter_dataset_items"
-             :selected.sync="recenter_dataset_selected"
+             v-model:selected="recenter_dataset_selected"
              :show_if_single_entry="true"
              label="Data"
              api_hint="plg.recenter_dataset ="
@@ -100,7 +100,7 @@
                 </v-btn>
               </j-tooltip>
             </v-row>
-          </v-expansion-panel-content>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
@@ -201,7 +201,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   methods: {
     boolToString(b) {
       if (b) {

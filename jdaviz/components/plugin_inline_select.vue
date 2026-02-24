@@ -8,7 +8,7 @@
     <v-row v-for="item in items" class="row-min-bottom-padding">
       <plugin-inline-select-item
         :item="item"
-        :selected.sync="selected"
+        v-model:selected="selected"
         @update:selected="$emit('update:selected', $event)"
         :multiselect="multiselect"
         :single_select_allow_blank="single_select_allow_blank"
@@ -19,7 +19,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['items', 'selected', 'multiselect', 'single_select_allow_blank', 'api_hint', 'api_hints_enabled']
 };
 </script>

@@ -15,7 +15,7 @@
     </span>
 
     <h1 class="mt-8 mb-6" style="color: white">Welcome to Jdaviz!</h1>
-    
+
     <v-row>
         <v-text-field
             v-model="filepath"
@@ -26,15 +26,15 @@
             label="File Path"
             :hint="hint"
             persistent-hint
-            :loading="hint === 'Identifying which tool is best to visualize your file...' ? '#C75109' : 'false' " 
+            :loading="hint === 'Identifying which tool is best to visualize your file...' ? '#C75109' : 'false' "
         >
         </v-text-field>
 
         <j-tooltip tooltipcontent="select file from disk" span_style="height: 80px">
           <v-dialog v-model="file_browser_visible" max-width="1000" max-height="800">
-              <template v-slot:activator="{ on }">
+              <template v-slot:activator="{ props }">
                   <v-btn
-                      v-on="on"
+                      v-bind="props"
                       @click="open_file_dialog"
                       class="ma-2"
                       color="#1E617F"
@@ -85,7 +85,7 @@
                     :title="config.charAt(0).toUpperCase() + config.slice(1)"
                     :style="!compatible_configs.includes(config) ? 'filter: opacity(25%) saturate(0)' : ''"
                     :src="config_icons[config]"></v-img>
-                
+
                 <span class="bold" :style="compatible_configs.includes(config) ? 'font-size: 1.3em; color: #013B4D'
                                                                             : 'font-size: 1.3em; color: #013B4D75'">
                     <br>

@@ -3,15 +3,15 @@
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#catalog-search'"
     :uses_active_status="uses_active_status"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     @plugin-ping="plugin_ping($event)"
     :keep_active_sync="keep_active"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-viewer-select
        :items="viewer_items"
-       :selected.sync="viewer_selected"
+       v-model:selected="viewer_selected"
        label="Viewer"
        :show_if_single_entry="false"
        hint="Select a viewer to search."
@@ -19,12 +19,12 @@
 
     <plugin-file-import-select
       :items="catalog_items"
-      :selected.sync="catalog_selected"
+      v-model:selected="catalog_selected"
       label="Catalog"
       hint="Select a catalog to search."
       api_hint="plg.catalog ="
       :api_hints_enabled="api_hints_enabled"
-      :from_file.sync="from_file"
+      v-model:from_file="from_file"
       :from_file_message="from_file_message"
       dialog_title="Import Catalog"
       dialog_hint="Select a file containing a catalog"

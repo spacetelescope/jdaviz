@@ -2,11 +2,11 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Orientation"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#imviz-orientation'"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to"
+    v-model:scroll_to="scroll_to"
     :disabled_msg='disabled_msg'>
 
     <div style="display: grid"> <!-- overlay container -->
@@ -83,7 +83,7 @@
         <v-row>
           <plugin-switch
             v-if="align_by_selected == 'WCS'"
-            :value.sync="wcs_fast_approximation"
+            v-model:value="wcs_fast_approximation"
             label="Fast approximation"
             api_hint="plg.wcs_fast_approximation = "
             :api_hints_enabled="api_hints_enabled"
@@ -93,7 +93,7 @@
 
         <v-row v-if="false">
           <plugin-switch
-            :value.sync="wcs_use_fallback"
+            v-model:value="wcs_use_fallback"
             label="Fallback on Pixels"
             api_hint="plg.wcs_use_fallback ="
             :api_hints_enabled="api_hints_enabled"
@@ -106,7 +106,7 @@
           <j-plugin-section-header>Orientation</j-plugin-section-header>
           <plugin-viewer-select
             :items="viewer_items"
-            :selected.sync="viewer_selected"
+            v-model:selected="viewer_selected"
             :multiselect="false"
             label="Viewer"
             api_hint="plg.viewer = "
@@ -116,7 +116,7 @@
           />
           <plugin-layer-select
             :items="orientation_layer_items"
-            :selected.sync="orientation_layer_selected"
+            v-model:selected="orientation_layer_selected"
             :multiselect="false"
             :icons="icons"
             :show_if_single_entry="true"
@@ -175,10 +175,10 @@
           <v-row>
             <v-expansion-panels accordion>
               <v-expansion-panel>
-                <v-expansion-panel-header v-slot="{ open }">
+                <v-expansion-panel-title v-slot="{ open }">
                   <span style="padding: 6px">Create Custom Orientation</span>
-                </v-expansion-panel-header>
-                <v-expansion-panel-content class="plugin-expansion-panel-content">
+                </v-expansion-panel-title>
+                <v-expansion-panel-text class="plugin-expansion-panel-content">
                   <v-row>
                     <v-text-field
                       v-model.number="rotation_angle"
@@ -192,7 +192,7 @@
                   </v-row>
                   <v-row>
                     <plugin-switch
-                      :value.sync="east_left"
+                      v-model:value="east_left"
                       label="East-left convention"
                       api_hint="plg.east_left = "
                       :api_hints_enabled="api_hints_enabled"
@@ -201,9 +201,9 @@
                   </v-row>
 
                   <plugin-auto-label
-                    :value.sync="new_layer_label"
+                    v-model:value="new_layer_label"
                     :default="new_layer_label_default"
-                    :auto.sync="new_layer_label_auto"
+                    v-model:auto="new_layer_label_auto"
                     label="Name for orientation option"
                     api_hint="plg.new_layer = "
                     :api_hints_enabled="api_hints_enabled"
@@ -227,7 +227,7 @@
                       </v-btn>
                     </j-tooltip>
                   </v-row>
-                </v-expansion-panel-content>
+                </v-expansion-panel-text>
               </v-expansion-panel>
             </v-expansion-panels>
           </v-row>

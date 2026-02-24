@@ -1,9 +1,9 @@
 <template>
   <v-container>
     <plugin-auto-label
-      :value.sync="subset_label_value"
+      v-model:value="subset_label_value"
       :default="subset_label_default"
-      :auto.sync="subset_label_auto"
+      v-model:auto="subset_label_auto"
       :invalid_msg="subset_label_invalid_msg"
       label="Subset Label"
       api_hint="ldr.importer.subset_label ="

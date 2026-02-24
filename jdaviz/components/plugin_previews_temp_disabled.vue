@@ -22,7 +22,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['previews_temp_disabled', 'show_live_preview', 'previews_last_time']
 };
 </script>

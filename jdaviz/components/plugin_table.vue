@@ -29,11 +29,11 @@
                 {{ headers_visible.length == headers_avail.length ? 'mdi-close-box' : headers_visible.length ? 'mdi-minus-box' : 'mdi-checkbox-blank-outline' }}
               </v-icon>
             </v-list-item-action>
-            <v-list-item-content>
+            <div class="v-list-item-content">
               <v-list-item-title>
                 {{ headers_visible.length < headers_avail.length ? "Select All" : "Clear All" }}
               </v-list-item-title>
-            </v-list-item-content>
+            </div>
           </v-list-item>
           <v-divider class="mt-2"></v-divider>
         </template>
@@ -68,7 +68,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   computed: {
     headers_visible_sorted() {
       return this.headers_avail.filter(item => this.headers_visible.indexOf(item) !== -1);

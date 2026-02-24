@@ -1,8 +1,8 @@
 <template>
   <v-tooltip v-if="getTooltipHtml()" bottom :open-delay="getOpenDelay()"
       :nudge-bottom="getNudgeBottom()">
-    <template v-slot:activator="{ on, attrs }">
-      <span v-bind="attrs" v-on="on" :style="getSpanStyle()">
+    <template v-slot:activator="{ props }">
+      <span v-bind="props" :style="getSpanStyle()">
         <slot></slot>
       </span>
     </template>
@@ -118,7 +118,7 @@ const tooltips = {
 }
 
 
-module.exports = {
+export default {
   props: ['tooltipcontent', 'tipid', 'delay', 'nudgebottom', 'span_style'],
   methods: {
     getTooltipHtml() {

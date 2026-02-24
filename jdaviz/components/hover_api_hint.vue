@@ -1,11 +1,11 @@
 <template>
   <v-list-item
   >
-    <v-list-item-content>
+    <div class="v-list-item-content">
         <span class="api-hint">
         {{ hover_api_hint }}
         </span>
-    </v-list-item-content>
+    </div>
     <v-list-item-action style="margin-right: -8px">
       <j-tooltip
         tooltipcontent="toggle whether API hints persist after hovering to allow for copying text"
@@ -28,7 +28,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     props: ['hover_api_hint', 'lock_hover_api_hint', 'icons'],
   };
 </script>

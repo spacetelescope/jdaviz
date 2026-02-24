@@ -30,7 +30,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['items', 'selected', 'tooltip_suffix', 'api_hint', 'api_hints_enabled'],
 }
 </script>

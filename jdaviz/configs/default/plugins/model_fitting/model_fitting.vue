@@ -2,15 +2,15 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Model Fitting"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#model-fitting'"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <v-row v-if="config=='cubeviz'">
       <plugin-switch
-        :value.sync="cube_fit"
+        v-model:value="cube_fit"
         label="Cube Fit"
         api_hint="plg.cube_fit ="
         :api_hints_enabled="api_hints_enabled"
@@ -23,7 +23,7 @@
          so let's always show the dropdown for those cases to make the selection clear -->
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1 || api_hints_enabled"
       label="Data"
       api_hint="plg.dataset ="
@@ -33,7 +33,7 @@
 
     <plugin-subset-select
       :items="spectral_subset_items"
-      :selected.sync="spectral_subset_selected"
+      v-model:selected="spectral_subset_selected"
       :show_if_single_entry="true"
       label="Spectral region"
       api_hint="plg.spectral_subset ="
@@ -75,10 +75,10 @@
       </v-row>
 
       <plugin-auto-label
-        :value.sync="comp_label"
+        v-model:value="comp_label"
         @update:value="sanitizeCompLabel"
         :default="comp_label_default"
-        :auto.sync="comp_label_auto"
+        v-model:auto="comp_label_auto"
         :invalid_msg="comp_label_invalid_msg"
         api_hint="plg.model_component_label ="
         :api_hints_enabled="api_hints_enabled"
@@ -131,7 +131,7 @@
           <v-expansion-panel
             v-for="item in component_models" :key="item.id"
           >
-            <v-expansion-panel-header v-slot="{ open }">
+            <v-expansion-panel-title v-slot="{ open }">
               <v-row no-gutters align="center">
                 <v-col cols=3>
                   <v-btn @click.native.stop="remove_model(item.id)" icon style="width: 60%">
@@ -149,8 +149,8 @@
                   </v-row>
                 </v-col>
               </v-row>
-            </v-expansion-panel-header>
-            <v-expansion-panel-content class="plugin-expansion-panel-content">
+            </v-expansion-panel-title>
+            <v-expansion-panel-text class="plugin-expansion-panel-content">
               <v-row v-if="!item.compat_display_units">
                 <v-alert :type="componentInEquation(item.id) ? 'error' : 'warning'">
                   <b>{{ item.id }}</b> is inconsistent with the current display units so cannot be used in the model equation.
@@ -244,7 +244,7 @@
                 </v-row>
                 <v-divider></v-divider>
               </v-div>
-            </v-expansion-panel-content>
+            </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
       </v-row>
@@ -253,9 +253,9 @@
     <div v-if="component_models.length">
       <j-plugin-section-header>Equation Editor</j-plugin-section-header>
       <plugin-auto-label
-        :value.sync="model_equation"
+        v-model:value="model_equation"
         :default="model_equation_default"
-        :auto.sync="model_equation_auto"
+        v-model:auto="model_equation_auto"
         :invalid_msg="model_equation_invalid_msg"
         :label="api_hints_enabled ? 'plg.equation =' : null"
         :class="api_hints_enabled ? 'api-hint' : null"
@@ -286,10 +286,10 @@
       </v-row>
       <v-expansion-panels accordion v-if="fitter_parameters.parameters.length">
          <v-expansion-panel>
-              <v-expansion-panel-header v-slot="{ open }">
+              <v-expansion-panel-title v-slot="{ open }">
                 <span style="padding: 6px">Fitter Parameters</span>
-              </v-expansion-panel-header>
-              <v-expansion-panel-content class="plugin-expansion-panel-content">
+              </v-expansion-panel-title>
+              <v-expansion-panel-text class="plugin-expansion-panel-content">
               <div v-for="item in fitter_parameters.parameters">
                 <v-switch v-if="isBoolean(item.value)"
                   v-model="item.value"
@@ -313,23 +313,23 @@
                     :class="api_hints_enabled ? 'api-hint' : null"
                   ></v-text-field>
               </div>
-              </v-expansion-panel-content>
+              </v-expansion-panel-text>
          </v-expansion-panel>
       </v-expansion-panels accordion>
       <plugin-add-results
-        :label.sync="results_label"
+        v-model:label="results_label"
         :label_default="results_label_default"
-        :label_auto.sync="results_label_auto"
+        v-model:label_auto="results_label_auto"
         :label_invalid_msg="results_label_invalid_msg"
         :label_overwrite="results_label_overwrite"
         label_hint="Label for the model"
         :add_to_viewer_items="add_to_viewer_items"
-        :add_to_viewer_selected.sync="add_to_viewer_selected"
+        v-model:add_to_viewer_selected="add_to_viewer_selected"
         :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
-        :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
-        :add_to_viewer_label_value.sync="add_to_viewer_label_value"
+        v-model:add_to_viewer_create_new_selected="add_to_viewer_create_new_selected"
+        v-model:add_to_viewer_label_value="add_to_viewer_label_value"
         :add_to_viewer_label_default="add_to_viewer_label_default"
-        :add_to_viewer_label_auto.sync="add_to_viewer_label_auto"
+        v-model:add_to_viewer_label_auto="add_to_viewer_label_auto"
         :add_to_viewer_label_invalid_msg="add_to_viewer_label_invalid_msg"
         action_label="Fit Model"
         action_tooltip="Fit the model to the data"
@@ -344,7 +344,7 @@
         <div v-if="config!=='cubeviz' || !cube_fit">
           <v-row>
             <plugin-switch
-              :value.sync="residuals_calculate"
+              v-model:value="residuals_calculate"
               label="Calculate residuals"
               api_hint="plg.residuals_calculate = "
               :api_hints_enabled="api_hints_enabled"
@@ -355,9 +355,9 @@
 
           <plugin-auto-label
             v-if="residuals_calculate"
-            :value.sync="residuals_label"
+            v-model:value="residuals_label"
             :default="residuals_label_default"
-            :auto.sync="residuals_label_auto"
+            v-model:auto="residuals_label_auto"
             :invalid_msg="residuals_label_invalid_msg"
             label="Residuals Data Label"
             api_hint="plg.residuals ="
@@ -393,7 +393,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     created() {
       this.sanitizeCompLabel = (v) => {
         // strip non-word character entries

@@ -8,7 +8,7 @@
       @change="$emit('update:new_viewer_selected', $event)"
       label="Viewer Type"
       hint="Select new viewer type"
-      item-text="label"
+      item-title="label"
       item-value="label"
       persistent-hint
       outlined
@@ -33,7 +33,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['new_viewer_items', 'new_viewer_selected', 'api_hints_enabled', 'api_hints_obj'],
   computed: {
     new_viewer_items_filtered() {

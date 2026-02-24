@@ -57,7 +57,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   mounted() {
     this.ensureFullHeightChain();
   },

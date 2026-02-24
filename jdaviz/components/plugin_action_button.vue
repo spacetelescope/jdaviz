@@ -19,7 +19,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['spinner', 'disabled', 'results_isolated_to_plugin', 'api_hints_enabled'],
   computed: {
     buttonColor() {
