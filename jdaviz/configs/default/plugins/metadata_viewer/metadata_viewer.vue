@@ -2,17 +2,17 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Metadata"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#metadata-viewer'"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <!-- for specviz, we'll allow this to hide for a single entry, but since filters are being
          applied on other configs, we'll always show -->
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="config!='specviz'"
       label="Data"
       api_hint='plg.dataset ='
@@ -22,7 +22,7 @@
 
     <v-row v-if="has_primary || api_hints_enabled">
       <plugin-switch
-        :value.sync="show_primary"
+        v-model:value="show_primary"
         label='Show primary header'
         api_hint='plg.show_primary = '
         :api_hints_enabled="api_hints_enabled"

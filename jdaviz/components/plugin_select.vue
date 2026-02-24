@@ -15,7 +15,7 @@
       :disabled="disabled"
       :dense="dense"
       :loading="loading"
-      item-text="label"
+      item-title="label"
       item-value="label"
       persistent-hint
       style="width: 100%"
@@ -46,7 +46,7 @@
                 {{ selected.length === items.length ? 'mdi-close-box' : selected.length ? 'mdi-minus-box' : 'mdi-checkbox-blank-outline' }}
               </v-icon>
             </v-list-item-action>
-            <v-list-item-content>
+            <div class="v-list-item-content">
               <v-list-item-title>
                 <template v-if="search_enabled && search_query">
                   {{ selected.length < filtered_items.length ? 'Select All from Search' : 'Clear All from Search' }}
@@ -55,7 +55,7 @@
                   {{ selected.length < items.length ? 'Select All' : 'Clear All' }}
                 </template>
               </v-list-item-title>
-            </v-list-item-content>
+            </div>
           </v-list-item>
           <v-divider class="mt-2"></v-divider>
         </div>
@@ -70,11 +70,11 @@
                 mdi-close-box
               </v-icon>
             </v-list-item-action>
-            <v-list-item-content>
+            <div class="v-list-item-content">
               <v-list-item-title>
                 Clear Selection
               </v-list-item-title>
-            </v-list-item-content>
+            </div>
           </v-list-item>
           <v-divider class="mt-2"></v-divider>
         </div>
@@ -90,7 +90,7 @@
                 {{ getExistsIcon(item) }}
               </v-icon>
             </j-tooltip>
-            <span>{{ typeof item === 'string' ? item : (item.label || item.text || item) }}</span>
+            <span>{{ itemLabel(item) }}</span>
           </v-chip>
           <span v-else style="flex: 1; display: flex; align-items: center;">
             <j-tooltip v-if="exists_in_dc !== null && exists_in_dc !== undefined && !api_hints_enabled" :tipid="getExistsTooltipId(item)">
@@ -98,19 +98,19 @@
                 {{ getExistsIcon(item) }}
               </v-icon>
             </j-tooltip>
-            {{ typeof item === 'string' ? item : (item.label || item.text || item) }}
+            {{ itemLabel(item) }}
           </span>
         </div>
       </template>
-      <template #item="{ item, attrs, on }">
-        <v-list-item v-bind="attrs" v-on="on" style="margin-top: 4px; margin-bottom: 4px; align-items: center;">
+      <template #item="{ props, item }">
+        <v-list-item v-bind="props" style="margin-top: 4px; margin-bottom: 4px; align-items: center;">
           <v-list-item-action v-if="exists_in_dc !== null && exists_in_dc !== undefined" style="min-width: 16px; margin-right: 8px; margin-top: 0px; margin-bottom: 0px;">
             <j-tooltip :tipid="getExistsTooltipId(item)">
               <v-icon small :color="getExistsIconColor(item)">{{ getExistsIcon(item) }}</v-icon>
             </j-tooltip>
           </v-list-item-action>
             <v-list-item-title style="margin-top: 0px; margin-bottom: 0px">
-              {{ typeof item === 'string' ? item : (item.label || item.text) }}
+              {{ itemLabel(item) }}
               </v-list-item-title>
         </v-list-item>
       </template>
@@ -120,7 +120,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['items', 'selected', 'label', 'hint', 'rules',
           'show_if_single_entry', 'multiselect', 'nonmultiselect_allow_clear',
           'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading', 'exists_in_dc'],
@@ -139,7 +139,7 @@ module.exports = {
       }
       const query = this.search_query.toLowerCase().trim();
       const selected_set = new Set(
-        Array.isArray(this.selected) ? this.selected.map(sel => (typeof sel === 'string' ? sel : sel.label || sel.text || sel)) : [this.selected]
+        Array.isArray(this.selected) ? this.selected.map(sel => this.itemLabel(sel)) : [this.selected]
       );
       let filtered;
       // Wildcard matching: if query contains * or ?
@@ -150,19 +150,19 @@ module.exports = {
         // Remove ^ and $ anchors for partial match
         const regex = new RegExp(regex_str, 'i');
         filtered = this.items.filter(item => {
-          const label = (typeof item === 'string') ? item : (item.label || item.text || '');
+          const label = this.itemLabel(item);
           return regex.test(label);
         });
       } else {
         filtered = this.items.filter(item => {
-          const label = (typeof item === 'string') ? item : (item.label || item.text || '');
+          const label = this.itemLabel(item);
           return label.toLowerCase().includes(query);
         });
       }
       // Add back any selected items not in filtered
-      const all_labels = new Set(filtered.map(item => (typeof item === 'string' ? item : item.label || item.text || '')));
+      const all_labels = new Set(filtered.map(item => this.itemLabel(item)));
       this.items.forEach(item => {
-        const label = (typeof item === 'string') ? item : (item.label || item.text || '');
+        const label = this.itemLabel(item);
         if (selected_set.has(label) && !all_labels.has(label)) {
           filtered.push(item);
         }
@@ -171,21 +171,38 @@ module.exports = {
     },
   },
   methods: {
+    normalizeItem(item) {
+      if (item && typeof item === 'object' && Object.prototype.hasOwnProperty.call(item, 'raw')) {
+        return item.raw;
+      }
+      return item;
+    },
+    itemLabel(item) {
+      const normalized = this.normalizeItem(item);
+      if (typeof normalized === 'string') {
+        return normalized;
+      }
+      if (normalized && typeof normalized === 'object') {
+        return normalized.label || normalized.title || normalized.text || normalized.value || '';
+      }
+      return normalized;
+    },
     existsFor(item) {
+      const normalized_item = this.normalizeItem(item);
       // Check if this item's data_hash exists in the exists_in_dc list
       if (!this.exists_in_dc || !Array.isArray(this.exists_in_dc)) {
         return false;
       }
 
       // If item is an object with data_hash, check directly
-      if (typeof item === 'object' && item !== null && item.data_hash) {
-        return this.exists_in_dc.includes(item.data_hash);
+      if (typeof normalized_item === 'object' && normalized_item !== null && normalized_item.data_hash) {
+        return this.exists_in_dc.includes(normalized_item.data_hash);
       }
 
       // If item is a string (label), find the corresponding object in items
-      const key = (typeof item === 'string') ? item : (item.label || item.text || item);
+      const key = this.itemLabel(normalized_item);
       const item_obj = this.items.find(i => {
-        const i_key = (typeof i === 'string') ? i : (i.label || i.text || i);
+        const i_key = this.itemLabel(i);
         return i_key === key;
       });
 
@@ -216,7 +233,7 @@ module.exports = {
     toggle_select_all() {
       if (this.search_enabled && this.search_query) {
         // When search is active, select/clear only filtered items
-        const filtered_labels = this.filtered_items.map(item => item.label || item.text || item);
+        const filtered_labels = this.filtered_items.map(item => this.itemLabel(item));
         const selected_set = new Set(this.selected);
         if (filtered_labels.some(label => !selected_set.has(label))) {
           // Select all filtered items (add to selection)
@@ -235,7 +252,7 @@ module.exports = {
       } else {
         // No search: select/clear all items
         if (this.selected.length < this.items.length) {
-          this.$emit('update:selected', this.items.map(item => item.label || item.text || item));
+          this.$emit('update:selected', this.items.map(item => this.itemLabel(item)));
         } else {
           this.$emit('update:selected', []);
         }

@@ -2,21 +2,21 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Footprints"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#footprints'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-loaders-panel
       v-if="!server_is_remote"
-      :loader_panel_ind.sync="loader_panel_ind"
+      v-model:loader_panel_ind="loader_panel_ind"
       :loader_items="loader_items"
-      :loader_selected.sync="loader_selected"
+      v-model:loader_selected="loader_selected"
       :api_hints_enabled="api_hints_enabled"
     ></plugin-loaders-panel>
 
@@ -33,10 +33,10 @@
     </j-custom-toolbar-toggle>
 
     <plugin-editable-select
-      :mode.sync="overlay_mode"
-      :edit_value.sync="overlay_edit_value"
+      v-model:mode="overlay_mode"
+      v-model:edit_value="overlay_edit_value"
       :items="overlay_items"
-      :selected.sync="overlay_selected"
+      v-model:selected="overlay_selected"
       label="Overlay"
       api_hint="plg.overlay ="
       api_hint_add="plg.add_overlay"
@@ -68,7 +68,7 @@
 
       <plugin-viewer-select
         :items="viewer_items"
-        :selected.sync="viewer_selected"
+        v-model:selected="viewer_selected"
         :multiselect="true"
         label="Viewers"
         api_hint="plg.viewer ="
@@ -79,7 +79,7 @@
 
       <v-row>
         <plugin-switch
-          :value.sync="visible"
+          v-model:value="visible"
           label="Visible"
           api_hint="plg.visible = "
           :api_hints_enabled="api_hints_enabled"
@@ -105,7 +105,7 @@
           :wait="300"
           max="1"
           step="0.01"
-          :value.sync="fill_opacity"
+          v-model:value="fill_opacity"
         />
       </v-row>
 
@@ -117,7 +117,7 @@
 
       <plugin-select-filter
         :items="preset_obs_items"
-        :selected.sync="preset_obs_selected"
+        v-model:selected="preset_obs_selected"
         @update:selected="($event) => {preset_obs_selected = $event}"
         tooltip_suffix="footprints in preset list"
         api_hint="plg.preset_obs ="
@@ -126,12 +126,12 @@
 
       <plugin-file-import-select
         :items="preset_items"
-        :selected.sync="preset_selected"
+        v-model:selected="preset_selected"
         label="Preset"
         hint="Preset instrument or import from a file."
         api_hint="plg.preset ="
         :api_hints_enabled="api_hints_enabled"
-        :from_file.sync="from_file"
+        v-model:from_file="from_file"
         :from_file_message="from_file_message"
         :deprecate_from_file="true"
         dialog_title="Import Region"
@@ -230,7 +230,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     created() {
       this.throttledSetColor = _.throttle(
         (v) => { this.color = v },

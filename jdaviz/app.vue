@@ -99,7 +99,7 @@
               offset-y
               style="max-width: 600px"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template v-slot:activator="{ props }">
                 <v-text-field
                     v-model='state.global_search'
                     append-icon='mdi-magnify'
@@ -108,8 +108,8 @@
                     clearable
                     hide-details
                     single-line
-                    v-bind="attrs"
-                    v-on="on"
+                    v-bind="props"
+
                 ></v-text-field>
               </template>
               <v-card style="min-width: 350px; max-height: 500px; overflow-y: scroll">
@@ -190,7 +190,7 @@
               :api_hints_obj="api_hints_obj"
               :api_hints_enabled="state.show_api_hints"
               :about_widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('About')].widget"
-              :force_open_about.sync="force_open_about"
+              v-model:force_open_about="force_open_about"
             ></j-about-menu>
 
             <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
@@ -222,7 +222,7 @@
                 <v-tab-item style="padding-bottom: 40px">
                   <j-loader-panel
                     :loader_items="state.loader_items"
-                    :loader_selected.sync="state.loader_selected"
+                    v-model:loader_selected="state.loader_selected"
                     :api_hints_enabled="state.show_api_hints"
                     :api_hints_obj="api_hints_obj || config"
                     :server_is_remote="state.settings.server_is_remote"
@@ -232,7 +232,7 @@
                 <v-tab-item style="padding-bottom: 40px">
                   <j-new-viewer-panel
                     :new_viewer_items="state.new_viewer_items"
-                    :new_viewer_selected.sync="state.new_viewer_selected"
+                    v-model:new_viewer_selected="state.new_viewer_selected"
                     :api_hints_enabled="state.show_api_hints"
                     :api_hints_obj="api_hints_obj || config"
                   ></j-new-viewer-panel>
@@ -254,7 +254,7 @@
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
                   <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && (trayItem.sidebar === 'plugins' || config !== 'deconfigged')">
-                    <v-expansion-panel-header class="plugin-header">
+                    <v-expansion-panel-title class="plugin-header">
                       <v-list-item style="display: grid; min-height: 6px" class="plugin-title">
                         <v-list-item-title>
                           <j-tooltip :tipid="trayItem.name">
@@ -271,10 +271,10 @@
                           {{ trayItem.tray_item_description }}
                         </v-list-item-subtitle>
                       </v-list-item>
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px;">
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text style="margin-left: -12px; margin-right: -12px;">
                       <jupyter-widget v-if="state.tray_items_open.includes(index)" :widget="trayItem.widget"></jupyter-widget>
-                    </v-expansion-panel-content>
+                    </v-expansion-panel-text>
                   </div>
                 </v-expansion-panel>
               </v-expansion-panels>
@@ -358,7 +358,7 @@
             <v-card v-if="state.drawer_content === 'loaders'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <j-loader-panel
                 :loader_items="state.loader_items"
-                :loader_selected.sync="state.loader_selected"
+                v-model:loader_selected="state.loader_selected"
                 :api_hints_enabled="state.show_api_hints"
                 :api_hints_obj="api_hints_obj || config"
                 :server_is_remote="state.settings.server_is_remote"
@@ -381,7 +381,7 @@
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
                   <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && trayItem.label !== 'Logger'">
-                    <v-expansion-panel-header class="plugin-header">
+                    <v-expansion-panel-title class="plugin-header">
                       <v-list-item style="display: grid; min-height: 6px" class="plugin-title">
                         <v-list-item-title>
                           <j-tooltip :tipid="trayItem.name">
@@ -398,10 +398,10 @@
                           {{ trayItem.tray_item_description }}
                         </v-list-item-subtitle>
                       </v-list-item>
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px;">
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text style="margin-left: -12px; margin-right: -12px;">
                       <jupyter-widget v-if="state.tray_items_open.includes(index)" :widget="trayItem.widget"></jupyter-widget>
-                    </v-expansion-panel-content>
+                    </v-expansion-panel-text>
                   </div>
                 </v-expansion-panel>
               </v-expansion-panels>
@@ -546,7 +546,7 @@ export default {
 </script>
 
 <style scoped>
-.plugin-header.v-expansion-panel-header {
+.plugin-header.v-expansion-panel-title {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 4px;

@@ -1,5 +1,5 @@
 <template>
-  <v-container 
+  <v-container
     class="tray-plugin"
     style="padding-left: 24px; padding-right: 24px; padding-top: 12px" >
     <v-row>
@@ -19,7 +19,7 @@
       <v-row v-if="uses_active_status && keep_active !== undefined" style="padding-bottom: 24px">
         <!-- TODO: update:keep_active is not working!!! -->
         <plugin-switch
-          :value.sync="keep_active"
+          v-model:value="keep_active"
           @update:value="$emit('update:keep_active', $event)"
           label="Keep active"
           api_hint="plg.keep_active = "
@@ -34,7 +34,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['config', 'plugin_key', 'irrelevant_msg', 'disabled_msg', 'description',
           'api_hints_enabled', 'link', 'popout_button',
           'uses_active_status', 'keep_active', 'scroll_to'],
@@ -67,7 +67,7 @@ module.exports = {
         return
       }
       setTimeout(() => {
-        this.sendPing(true)          
+        this.sendPing(true)
       }, 200)  // ms
     },
     checkNotebookContext() {
@@ -118,12 +118,12 @@ module.exports = {
     padding-right: 0px !important;
   }
 
-  .v-expansion-panel-header {
+  .v-expansion-panel-title {
     /* tighten default padding on any sub expansion headers */
     padding: 6px !important;
   }
-  
-  .v-expansion-panel-header .row {
+
+  .v-expansion-panel-title .row {
     /* override margin from above and replace with equal top and bottom margins
     for the text in the panel header */
     margin-top: 2px !important;

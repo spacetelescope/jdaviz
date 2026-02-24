@@ -57,7 +57,7 @@
             <j-plugin-section-header>Query Results</j-plugin-section-header>
             <plugin-switch
               label="Treat Table as Query"
-              :value.sync="treat_table_as_query"
+              v-model:value="treat_table_as_query"
               @update:value="$emit('update:treat_table_as_query', $event)"
               api_hint="ldr.treat_table_as_query ="
               :api_hints_enabled="api_hints_enabled"
@@ -75,10 +75,10 @@
               <v-row>
                 <v-expansion-panels popout>
                   <v-expansion-panel>
-                    <v-expansion-panel-header v-slot="{ open }">
+                    <v-expansion-panel-title v-slot="{ open }">
                       <span style="padding: 6px">File Download Options</span>
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content class="plugin-expansion-panel-content">
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text class="plugin-expansion-panel-content">
                       <v-content>
                         <v-row>
                           <v-text-field
@@ -92,14 +92,14 @@
                         </v-row>
 
                         <plugin-switch
-                          :value.sync="file_cache"
+                          v-model:value="file_cache"
                           label="Cache File"
                           api_hint="ldr.file_cache = "
                           :api_hints_enabled="api_hints_enabled"
                           hint="Whether to attempt to read from the cache if this same URL has been previously fetched."
                         ></plugin-switch>
                       </v-content>
-                    </v-expansion-panel-content>
+                    </v-expansion-panel-text>
                   </v-expansion-panel>
                 </v-expansion-panels>
               </v-row>
@@ -116,7 +116,7 @@
           <v-row v-if="target_items.length >= 2" style="padding-right: 16px">
             <plugin-select-filter
               :items="target_items"
-              :selected.sync="target_selected"
+              v-model:selected="target_selected"
               @update:selected="$emit('update:target_selected', $event)"
               tooltip_suffix="compatible formats"
               api_hint="ldr.target ="
@@ -147,7 +147,7 @@
               v-if="format_items.length >= 2"
               :show_if_single_entry="false"
               :items="format_items.map(i => i.label)"
-              :selected.sync="format_selected"
+              v-model:selected="format_selected"
               @update:selected="$emit('update:format_selected', $event)"
               label="Format"
               api_hint="ldr.format ="
@@ -164,7 +164,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['title', 'popout_button', 'spinner',
           'parsed_input_is_empty', 'parsed_input_is_resolvable',
           'parsed_input_is_query', 'treat_table_as_query',

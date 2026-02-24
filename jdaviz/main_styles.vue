@@ -68,7 +68,7 @@ div.output_wrapper {
   align-items: start !important;
 }
 
-.plugin-header .v-expansion-panel-header__icon {
+.plugin-header .v-expansion-panel-title__icon {
   margin-top: 4px;
 }
 
@@ -169,7 +169,7 @@ div.output_wrapper {
   z-index: 10000 !important;
 }
 
-.v-expansion-panel-content__wrap {
+.v-expansion-panel-text__wrapper {
   padding-left: 12px !important;
   padding-right: 12px !important;
 }

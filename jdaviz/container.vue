@@ -36,7 +36,7 @@
 </style>
 
 <script>
-module.exports = {
+export default {
   name: "g-viewer-tab",
   props: ["stack", "data_items", "closefn", "app_settings", "config", "icons", "viewer_icons", "layer_icons"],
   created() {

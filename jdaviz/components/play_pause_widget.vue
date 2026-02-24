@@ -28,7 +28,7 @@
 
 //var activeInterval = null;
 
-module.exports = {
+export default {
   data: function () {
     return {
       activeInterval: null,

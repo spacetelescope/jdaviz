@@ -3,14 +3,14 @@
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#aperture-photometry'"
     :uses_active_status="uses_active_status"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <j-multiselect-toggle
-      :multiselect.sync="multiselect"
+      v-model:multiselect="multiselect"
       :icon_checktoradial="icon_checktoradial"
       :icon_radialtocheck="icon_radialtocheck"
       tooltip="Toggle batch mode"
@@ -18,7 +18,7 @@
 
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :multiselect="multiselect"
       :show_if_single_entry="false"
       label="Data"
@@ -45,7 +45,7 @@
     <div v-if='dataset_selected.length > 0'>
       <plugin-subset-select
         :items="aperture_items"
-        :selected.sync="aperture_selected"
+        v-model:selected="aperture_selected"
         :multiselect="multiselect"
         :show_if_single_entry="true"
         label="Aperture"
@@ -63,7 +63,7 @@
       <div v-if="aperture_selected.length > 0">
         <plugin-subset-select
           :items="background_items"
-          :selected.sync="background_selected"
+          v-model:selected="background_selected"
           :show_if_single_entry="true"
           label="Background"
           hint="Select subset region for background calculation (cannot be a composite subset)."
@@ -159,7 +159,7 @@
         <plugin-select
           v-if="!multiselect"
           :items="plot_types"
-          :selected.sync="current_plot_type"
+          v-model:selected="current_plot_type"
           label="Plot Type"
           hint="Aperture photometry plot type"
           api_hint="plg.current_plot_type = "

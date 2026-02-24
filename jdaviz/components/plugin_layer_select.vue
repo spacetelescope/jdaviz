@@ -13,7 +13,7 @@
       :rules="rules ? rules : []"
       :multiple="multiselect"
       :chips="multiselect && !api_hints_enabled"
-      item-text="label"
+      item-title="label"
       item-value="label"
       :persistent-hint="!disable_persistent_hint"
       :hide-details="disable_persistent_hint"
@@ -50,15 +50,15 @@
             {{ selected.length == items.length ? 'mdi-close-box' : selected.length ? 'mdi-minus-box' : 'mdi-checkbox-blank-outline' }}
           </v-icon>
         </v-list-item-action>
-        <v-list-item-content>
+        <div class="v-list-item-content">
           <v-list-item-title>
             {{ selected.length < items.length ? "Select All" : "Clear All" }}
           </v-list-item-title>
-        </v-list-item-content>
+        </div>
       </v-list-item>
       <v-divider class="mt-2"></v-divider>
     </template>
-    <template slot="item" slot-scope="data">
+    <template v-slot:item="data">
       <div class="single-line">
         <span>
           <j-layer-viewer-icon span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
@@ -72,7 +72,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'icons', 'show_if_single_entry', 'multiselect',
           'api_hint', 'api_hints_enabled', 'disable_persistent_hint'
   ]

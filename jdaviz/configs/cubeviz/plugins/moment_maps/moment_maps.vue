@@ -2,15 +2,15 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Moment Maps"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :popout_button="popout_button"
     :disabled_msg="disabled_msg"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <j-plugin-section-header>Cube</j-plugin-section-header>
     <v-row>
@@ -19,7 +19,7 @@
 
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="false"
       label="Data"
       api_hint="plg.dataset ="
@@ -29,7 +29,7 @@
 
     <plugin-subset-select
       :items="spectral_subset_items"
-      :selected.sync="spectral_subset_selected"
+      v-model:selected="spectral_subset_selected"
       :has_subregions="spectral_subset_selected_has_subregions"
       :show_if_single_entry="true"
       has_subregions_warning="The selected selected subset has subregions, the entire range will be used, ignoring any gaps."
@@ -54,7 +54,7 @@
 
     <plugin-subset-select
       :items="continuum_subset_items"
-      :selected.sync="continuum_subset_selected"
+      v-model:selected="continuum_subset_selected"
       :show_if_single_entry="true"
       :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
       label="Continuum"
@@ -66,7 +66,7 @@
     <plugin-dataset-select
       v-if="continuum_subset_selected !== 'None'"
       :items="continuum_dataset_items"
-      :selected.sync="continuum_dataset_selected"
+      v-model:selected="continuum_dataset_selected"
       :show_if_single_entry="false"
       label="Continuum Spectrum"
       api_hint="plg.continuum_dataset ="
@@ -145,19 +145,19 @@
     </div>
 
     <plugin-add-results
-      :label.sync="results_label"
+      v-model:label="results_label"
       :label_default="results_label_default"
-      :label_auto.sync="results_label_auto"
+      v-model:label_auto="results_label_auto"
       :label_invalid_msg="results_label_invalid_msg"
       :label_overwrite="results_label_overwrite"
       label_hint="Label for the collapsed cube"
       :add_to_viewer_items="add_to_viewer_items"
-      :add_to_viewer_selected.sync="add_to_viewer_selected"
+      v-model:add_to_viewer_selected="add_to_viewer_selected"
       :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
-      :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
-      :add_to_viewer_label_value.sync="add_to_viewer_label_value"
+      v-model:add_to_viewer_create_new_selected="add_to_viewer_create_new_selected"
+      v-model:add_to_viewer_label_value="add_to_viewer_label_value"
       :add_to_viewer_label_default="add_to_viewer_label_default"
-      :add_to_viewer_label_auto.sync="add_to_viewer_label_auto"
+      v-model:add_to_viewer_label_auto="add_to_viewer_label_auto"
       :add_to_viewer_label_invalid_msg="add_to_viewer_label_invalid_msg"
       action_label="Calculate"
       action_tooltip="Calculate moment map"

@@ -27,7 +27,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     props: ['value', 'label', 'hint', 'api_hint', 'api_hints_enabled', 'use_icon'],
     methods: {
       boolToString(b) {

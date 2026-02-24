@@ -5,11 +5,11 @@
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-viewer-select
       :items="viewer_items"
-      :selected.sync="viewer_selected"
+      v-model:selected="viewer_selected"
       label="Viewer"
       :show_if_single_entry="false"
       hint="Select a viewer to plot."

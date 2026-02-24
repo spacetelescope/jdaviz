@@ -2,14 +2,14 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Logger"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-select
       :items="popup_verbosity_items.map(i => i.label)"
-      :selected.sync="popup_verbosity_selected"
+      v-model:selected="popup_verbosity_selected"
       label="Popup Verbosity Level"
       api_hint="plg.popup_verbosity ="
       :api_hints_enabled="api_hints_enabled"
@@ -18,7 +18,7 @@
 
     <plugin-select
       :items="history_verbosity_items.map(i => i.label)"
-      :selected.sync="history_verbosity_selected"
+      v-model:selected="history_verbosity_selected"
       label="History Verbosity Level"
       api_hint="plg.history_verbosity ="
       :api_hints_enabled="api_hints_enabled"

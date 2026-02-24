@@ -2,40 +2,40 @@
   <j-tray-plugin
     :config="config"
     :plugin_key="plugin_key || '3D Spectral Extraction'"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to"
+    v-model:scroll_to="scroll_to"
     :disabled_msg="disabled_msg">
 
     <v-row>
       <v-expansion-panels popout>
         <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Settings</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
             <v-row>
               <plugin-switch
-                :value.sync="show_live_preview"
+                v-model:value="show_live_preview"
                 label="Show live-extraction"
                 api_hint="plg.show_live_preview = "
                 :api_hints_enabled="api_hints_enabled"
                 hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
               />
             </v-row>
-          </v-expansion-panel-content>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
 
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="api_hints_enabled"
       label="Data"
       api_hint="plg.dataset ="
@@ -49,7 +49,7 @@
 
       <plugin-subset-select
         :items="aperture_items"
-        :selected.sync="aperture_selected"
+        v-model:selected="aperture_selected"
         :show_if_single_entry="true"
         label="Spatial aperture"
         api_hint="plg.aperture ="
@@ -67,7 +67,7 @@
         <div v-if="aperture_selected_validity.is_aperture">
           <v-row>
             <plugin-switch
-              :value.sync="wavelength_dependent"
+              v-model:value="wavelength_dependent"
               label="Wavelength dependent"
               api_hint="plg.wavelength_dependent = "
               :api_hints_enabled="api_hints_enabled"
@@ -109,7 +109,7 @@
       <j-plugin-section-header :active="active_step==='bg'">Background</j-plugin-section-header>
       <plugin-subset-select
         :items="bg_items"
-        :selected.sync="bg_selected"
+        v-model:selected="bg_selected"
         :show_if_single_entry="true"
         label="Background"
         api_hint="plg.background ="
@@ -134,7 +134,7 @@
                  && wavelength_dependent">
         <v-row>
           <plugin-switch
-            :value.sync="bg_wavelength_dependent"
+            v-model:value="bg_wavelength_dependent"
             label="Wavelength dependent"
             api_hint="bg_wavelength_dependent ="
             :api_hints_enabled="api_hints_enabled"
@@ -160,13 +160,13 @@
       <v-row v-if="bg_selected !== 'None' && bg_export_available">
         <v-expansion-panels accordion>
           <v-expansion-panel>
-            <v-expansion-panel-header v-slot="{ open }">
+            <v-expansion-panel-title v-slot="{ open }">
               <span style="padding: 6px; text-transform: capitalize;">Export Background {{resulting_product_name}}</span>
-            </v-expansion-panel-header>
-            <v-expansion-panel-content class="plugin-expansion-panel-content">
+            </v-expansion-panel-title>
+            <v-expansion-panel-text class="plugin-expansion-panel-content">
               <v-row v-if="function_selected === 'Sum'">
                 <plugin-switch
-                  :value.sync="bg_spec_per_spaxel"
+                  v-model:value="bg_spec_per_spaxel"
                   label="Normalize per-spaxel"
                   api_hint="bg_spec_per_spaxel ="
                   :api_hints_enabled="api_hints_enabled"
@@ -174,14 +174,14 @@
                 />
               </v-row>
               <plugin-add-results
-                :label.sync="bg_spec_results_label"
+                v-model:label="bg_spec_results_label"
                 :label_default="bg_spec_results_label_default"
-                :label_auto.sync="bg_spec_results_label_auto"
+                v-model:label_auto="bg_spec_results_label_auto"
                 :label_invalid_msg="bg_spec_results_label_invalid_msg"
                 :label_overwrite="bg_spec_results_label_overwrite"
                 :label_hint="'Label for the background '+resulting_product_name+'.'"
                 :add_to_viewer_items="bg_spec_add_to_viewer_items"
-                :add_to_viewer_selected.sync="bg_spec_add_to_viewer_selected"
+                v-model:add_to_viewer_selected="bg_spec_add_to_viewer_selected"
                 action_label="Export"
                 :action_tooltip="'Create background '+resulting_product_name"
                 add_results_api_hint='plg.bg_spec_results'
@@ -189,7 +189,7 @@
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_spec"
               ></plugin-add-results>
-            </v-expansion-panel-content>
+            </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
       </v-row>
@@ -215,7 +215,7 @@
                  && (bg_selected === 'None' || bg_selected_validity.is_aperture)">
         <plugin-select
           :items="aperture_method_items.map(i => i.label)"
-          :selected.sync="aperture_method_selected"
+          v-model:selected="aperture_method_selected"
           label="Aperture masking method"
           api_hint="plg.aperture_method ="
           :api_hints_enabled="api_hints_enabled"
@@ -232,7 +232,7 @@
       <plugin-select
         v-if="function_items.length > 1"
         :items="function_items.map(i => i.label)"
-        :selected.sync="function_selected"
+        v-model:selected="function_selected"
         label="Function"
         api_hint="plg.function ="
         :api_hints_enabled="api_hints_enabled"
@@ -245,27 +245,27 @@
       </v-row>
 
       <plugin-previews-temp-disabled
-        :previews_temp_disabled.sync="previews_temp_disabled"
+        v-model:previews_temp_disabled="previews_temp_disabled"
         :previews_last_time="previews_last_time"
-        :show_live_preview.sync="show_live_preview"
+        v-model:show_live_preview="show_live_preview"
       />
 
       <plugin-add-results
-        :label.sync="results_label"
+        v-model:label="results_label"
         :label_default="results_label_default"
-        :label_auto.sync="results_label_auto"
+        v-model:label_auto="results_label_auto"
         :label_invalid_msg="results_label_invalid_msg"
         :label_overwrite="results_label_overwrite"
         :label_hint="'Label for the extracted '+resulting_product_name+'.'"
         :add_to_viewer_items="add_to_viewer_items"
-        :add_to_viewer_selected.sync="add_to_viewer_selected"
+        v-model:add_to_viewer_selected="add_to_viewer_selected"
         :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
-        :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
-        :add_to_viewer_label_value.sync="add_to_viewer_label_value"
+        v-model:add_to_viewer_create_new_selected="add_to_viewer_create_new_selected"
+        v-model:add_to_viewer_label_value="add_to_viewer_label_value"
         :add_to_viewer_label_default="add_to_viewer_label_default"
-        :add_to_viewer_label_auto.sync="add_to_viewer_label_auto"
+        v-model:add_to_viewer_label_auto="add_to_viewer_label_auto"
         :add_to_viewer_label_invalid_msg="add_to_viewer_label_invalid_msg"
-        :auto_update_result.sync="auto_update_result"
+        v-model:auto_update_result="auto_update_result"
         action_label="Extract"
         action_tooltip="Run spectral extraction with error and mask propagation"
         :action_spinner="spinner"

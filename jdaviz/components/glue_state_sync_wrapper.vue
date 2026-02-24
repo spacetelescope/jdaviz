@@ -34,7 +34,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['sync', 'multiselect']
 };
 </script>
