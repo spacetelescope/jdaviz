@@ -755,9 +755,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         Only available when loading observation tables with s_region data
         and images are linked by WCS.
 
-        Note: Images must be linked by WCS before enabling footprint selection.
-        Use ``imviz.link_data(align_by='wcs')`` to link images by WCS.
-
         Raises
         ------
         ValueError
@@ -771,8 +768,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
         if not self.is_wcs_linked:
             raise ValueError(
-                "Images must be linked by WCS before enabling footprint selection tools. "
-                "Use imviz.link_data(align_by='wcs') to link images by WCS."
+                "Images must be linked by WCS before enabling footprint selection tools."
             )
 
         if not self.custom_toolbar_enabled:
