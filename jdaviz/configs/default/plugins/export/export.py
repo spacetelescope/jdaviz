@@ -7,6 +7,7 @@ from astropy import units as u
 from astropy.nddata import CCDData
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue_jupyter.bqplot.image import BqplotImageView
+from pyavm import AVM
 from regions import CircleSkyRegion, EllipseSkyRegion
 from specutils import Spectrum
 from traitlets import Bool, List, Unicode, observe
@@ -443,7 +444,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     @with_spinner()
     def export(self, filename=None, show_dialog=None, overwrite=False,
-               raise_error_for_overwrite=True):
+               raise_error_for_overwrite=True, embed_avm=False):
         """
         Export selected item(s)
 
@@ -462,6 +463,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             If `True`, raise exception when ``overwrite=False`` but
             output file already exists. Otherwise, a message will be sent
             to application snackbar instead.
+
+        embed_avm : bool
+            If `True` and the file type is PNG, embed
+            Astronomy Visualization Metadata (including WCS) using ``pyAVM``.
         """
         if self.multiselect:
             raise NotImplementedError("batch export not yet supported")
@@ -509,6 +514,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
                                  width=f"{self.image_width}px" if self.image_custom_size else None,
                                  height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa
+
+                if embed_avm and filetype == "png":
+                    AVM.embed()
+
 
             # restore marks to their original state
             for restore, mark in zip(restores, viewer.figure.marks):
