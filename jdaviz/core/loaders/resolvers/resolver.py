@@ -761,7 +761,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         Raises
         ------
         ValueError
-            If images are not linked by WCS or if no observation table with 
+            If images are not linked by WCS or if no observation table with
             s_region data has been loaded.
         """
         if not (self.parsed_input_is_query and self.treat_table_as_query):
