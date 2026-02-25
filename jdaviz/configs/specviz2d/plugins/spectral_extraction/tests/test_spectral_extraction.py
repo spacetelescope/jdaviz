@@ -1,5 +1,6 @@
 import gwcs
 import pytest
+import specreduce
 
 from astropy.modeling import models
 from astropy.nddata import VarianceUncertainty, StdDevUncertainty
@@ -19,6 +20,7 @@ from jdaviz.utils import cached_uri
 from jdaviz.core.marks import Lines
 
 GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
+SPECREDUCE_LT_1_8_0 = Version(specreduce.__version__) < Version('1.8.0')
 
 
 @pytest.mark.remote_data
@@ -301,6 +303,7 @@ def test_horne_extract_self_profile(specviz2d_helper):
 
 
 @pytest.mark.filterwarnings('ignore')
+@pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
 def test_boxcar_uncertainty_propagation_via_plugin(specviz2d_helper):
     """
     This is an identical test to the test for uncertainty propogation in
@@ -345,6 +348,7 @@ def test_boxcar_uncertainty_propagation_via_plugin(specviz2d_helper):
 
 
 @pytest.mark.filterwarnings('ignore')
+@pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
 def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper):
     """
     This is an identical test to the test for uncertainty propogation in
@@ -400,6 +404,7 @@ def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper):
     assert np.allclose(var_uncert.array, expected_variance, rtol=1e-5)
 
 
+@pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
 def test_background_uncertainty_propagation_via_plugin(deconfigged_helper):
     """
     This is an identical test to the test for uncertainty propogation in
