@@ -261,6 +261,42 @@ def pixel_coord_source_catalog():
 
 
 @pytest.fixture
+def wcs_linked_mixed_coord_catalog(image_2d_wcs):
+    """
+    Create a source catalog with BOTH sky coordinates AND pixel coordinates,
+    where the pixel coordinates are intentionally from a different image frame.
+
+    This simulates a common case: loading a catalog derived from one image
+    (e.g., f090w) into a viewer showing a different image (e.g., f277w),
+    where the catalog's xcentroid/ycentroid are in the original image's pixel
+    frame but the viewer should use RA/Dec -> WCS conversion for correct placement.
+
+    Sky coordinates match the image_2d_wcs fixture, but pixel coordinates are
+    offset by 1000 pixels to simulate being from a different image.
+    """
+    from astropy.coordinates import SkyCoord
+
+    catalog = Table()
+
+    # RA/Dec that are valid for image_2d_wcs (within 100x100 pixel field)
+    catalog['ra'] = [337.50293, 337.52763, 337.52844, 337.47438, 337.47432] * u.deg
+    catalog['dec'] = [-20.81483, -20.80438, -20.82707, -20.82683, -20.80342] * u.deg
+
+    # Pixel coordinates that are INTENTIONALLY WRONG for image_2d_wcs.
+    # These represent pixel coords from the catalog's source image (a different image),
+    # offset by ~1000 pixels to clearly not match the viewer's reference frame.
+    # The correct pixel coords for image_2d_wcs would be ~50-80, but these are ~1050-1080.
+    catalog['xcentroid'] = [1050.0, 1070.0, 1030.0, 1080.0, 1025.0]
+    catalog['ycentroid'] = [1050.0, 1060.0, 1040.0, 1075.0, 1055.0]
+
+    # additional columns
+    catalog['magnitude'] = [12.5, 14.2, 13.8, 15.1, 16.3] * u.mag
+    catalog['source_id'] = ['src_001', 'src_002', 'src_003', 'src_004', 'src_005']
+
+    return catalog
+
+
+@pytest.fixture
 def spectral_cube_wcs():
     # A simple spectral cube WCS used by some tests
     wcs = WCS(naxis=3)

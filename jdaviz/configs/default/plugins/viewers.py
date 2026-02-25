@@ -1217,26 +1217,27 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         try:
             layer = self.layers[0].layer
 
-            # Try pixel coordinates first (if catalog has X/Y columns)
-            # Fall back to sky coordinates with WCS conversion if needed
+            # Get sky coordinates for WCS-accurate comparison.
+            # Click coordinates are in the viewer's reference frame, so catalog
+            # coordinates must also be converted to that frame for proper matching.
             xs, ys = None, None
-            pixel_coords = _get_pixel_coords_from_table(layer)
+            skycoords = _get_skycoords_from_table(layer)
 
-            if pixel_coords is not None:
-                # Catalog has pixel coordinates, use them directly
-                xs, ys = pixel_coords
+            if skycoords is not None:
+                # Convert sky coordinates to pixels in the viewer's reference frame
+                for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+                    if viewer.state.reference_data is None:
+                        continue
+                    if viewer.state.reference_data.coords is None:
+                        continue
+                    pixel_result = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                    xs, ys = pixel_result[0], pixel_result[1]
+                    break
             else:
-                # Try sky coordinates with WCS conversion
-                skycoords = _get_skycoords_from_table(layer)
-                if skycoords is not None:
-                    for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
-                        if viewer.state.reference_data is None:
-                            continue
-                        if viewer.state.reference_data.coords is None:
-                            continue
-                        pixel_result = viewer.state.reference_data.coords.world_to_pixel(skycoords)
-                        xs, ys = pixel_result[0], pixel_result[1]
-                        break
+                # Fall back to pixel coordinates only if no sky coordinates available
+                pixel_coords = _get_pixel_coords_from_table(layer)
+                if pixel_coords is not None:
+                    xs, ys = pixel_coords
 
             if xs is None or ys is None:
                 return
@@ -1288,30 +1289,28 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         layer = self.layers[0].layer
 
-        # Try pixel coordinates first (if catalog has X/Y columns)
-        # Fall back to sky coordinates with WCS conversion if needed
-        pixel_xs, pixel_ys = None, None
-        skycoords = None
-
-        pixel_coords = _get_pixel_coords_from_table(layer, checked_rows)
-        if pixel_coords is not None:
-            pixel_xs, pixel_ys = pixel_coords
-        else:
-            skycoords = _get_skycoords_from_table(layer, checked_rows)
-            if skycoords is None:
+        # Get sky coordinates for WCS-accurate placement across different images.
+        # Pixel coordinates from the catalog are in the catalog's original image frame,
+        # which may differ from the viewer's reference data frame.
+        skycoords = _get_skycoords_from_table(layer, checked_rows)
+        pixel_coords = None
+        if skycoords is None:
+            # Fall back to pixel coordinates only if no sky coordinates available
+            pixel_coords = _get_pixel_coords_from_table(layer, checked_rows)
+            if pixel_coords is None:
                 self._clear_selection_marks()
                 return
 
         # Update marks in all image viewers
         for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
             try:
-                if pixel_xs is not None:
-                    # Use pixel coordinates directly
-                    xs, ys = pixel_xs, pixel_ys
-                else:
-                    # Convert sky coordinates to pixels for this viewer
+                if skycoords is not None:
+                    # Convert sky coordinates to pixels for this viewer's reference frame
                     coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
                     xs, ys = coords[0], coords[1]
+                else:
+                    # Use pixel coordinates directly (last resort when no sky coords)
+                    xs, ys = pixel_coords[0], pixel_coords[1]
 
                 mark = self._get_selection_mark(viewer)
                 mark.update_xy(xs, ys)

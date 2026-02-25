@@ -680,15 +680,16 @@ class TableApplyZoom(_BaseTableApplyTool):
     def on_apply(self, selected_rows):
         layer = self.viewer.layers[0].layer
 
-        # Try pixel coordinates first (if catalog has X/Y columns)
-        # Fall back to sky coordinates with WCS conversion if needed
-        pixel_coords_from_table = _get_pixel_coords_from_table(layer, selected_rows)
-        skycoords = None
+        # Get sky coordinates for WCS-accurate placement across different images.
+        # Pixel coordinates from the catalog are in the catalog's original image frame,
+        # which may differ from the viewer's reference data frame.
+        skycoords = _get_skycoords_from_table(layer, selected_rows)
+        pixel_coords_from_table = None
 
-        if pixel_coords_from_table is None:
-            # Try sky coordinates
-            skycoords = _get_skycoords_from_table(layer, selected_rows)
-            if skycoords is None:
+        if skycoords is None:
+            # Fall back to pixel coordinates only if no sky coordinates available
+            pixel_coords_from_table = _get_pixel_coords_from_table(layer, selected_rows)
+            if pixel_coords_from_table is None:
                 return
 
         # Get the selected viewer IDs from the custom widget
@@ -711,14 +712,14 @@ class TableApplyZoom(_BaseTableApplyTool):
             # Determine pixel coordinates based on what's available
             xs, ys = None, None
 
-            if pixel_coords_from_table is not None:
-                # Use pixel coordinates directly
-                xs, ys = pixel_coords_from_table
-            elif skycoords is not None:
-                # Convert sky coordinates to pixel
+            if skycoords is not None:
+                # Convert sky coordinates to pixel in the image's coordinate frame
                 if hasattr(image, 'coords') and image.coords is not None:
                     pixel_coords = image.coords.world_to_pixel(skycoords)
                     xs, ys = np.atleast_1d(pixel_coords[0]), np.atleast_1d(pixel_coords[1])
+            elif pixel_coords_from_table is not None:
+                # Use pixel coordinates directly (last resort when no sky coords)
+                xs, ys = pixel_coords_from_table
 
             if xs is None or ys is None:
                 continue

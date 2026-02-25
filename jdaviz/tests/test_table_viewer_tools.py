@@ -9,7 +9,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 
-from jdaviz.core.marks import PluginScatter
+from jdaviz.core.marks import PluginScatter, TableSelectionMark
 
 
 class TestTableViewerTools:
@@ -150,7 +150,6 @@ class TestTableViewerTools:
         assert new_limits != initial_limits
 
         # Convert the catalog coordinates to pixels and verify they're within bounds
-        from astropy.coordinates import SkyCoord
         selected_rows = [0, 1, 2]
         ras = self.catalog['ra'][selected_rows]
         decs = self.catalog['dec'][selected_rows]
@@ -404,6 +403,147 @@ class TestTableViewerToolsMultipleViewers:
         assert self.viewer2.toolbar.tool_override_mode == ''
 
 
+class TestTableViewerToolsWcsLinkedMixedCoords:
+    """
+    Test table viewer tools with WCS-linked catalogs that have BOTH pixel and sky coordinates.
+
+    This tests the critical case where a catalog has xcentroid/ycentroid pixel coordinates
+    from its source image, but is being displayed in a viewer with a DIFFERENT reference
+    image. The code must use sky coordinates (RA/Dec) and WCS conversion, NOT the catalog's
+    pixel coordinates, to correctly place marks in the viewer.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, deconfigged_helper, image_2d_wcs, wcs_linked_mixed_coord_catalog):
+        """Set up deconfigged app with WCS image and mixed-coordinate catalog."""
+        # Create image using the fixture WCS
+        arr = np.arange(10000).reshape((100, 100))
+        ndd = NDData(arr, wcs=image_2d_wcs)
+        deconfigged_helper.load(ndd, data_label='test_image')
+
+        # Load the catalog that has BOTH pixel coords AND sky coords
+        # The pixel coords are intentionally wrong for this image's WCS
+        self.catalog = wcs_linked_mixed_coord_catalog
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = self.catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Table'
+        # Set xcentroid/ycentroid as pixel columns - these are the "wrong" coords
+        ldr.importer.col_x.selected = 'xcentroid'
+        ldr.importer.col_y.selected = 'ycentroid'
+        ldr.load()
+
+        self.app = deconfigged_helper
+        self.wcs = image_2d_wcs
+
+        # Get the image viewer
+        image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
+        assert len(image_viewers) == 1
+        self.viewer = image_viewers[0]
+
+        # Set viewer shape
+        self.viewer.shape = (400, 400)
+        self.viewer.state._set_axes_aspect_ratio(1)
+
+        # Get the table viewer
+        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+
+    def test_highlight_uses_wcs_not_pixel_coords(self):
+        """
+        Test that highlight marks use WCS conversion, not the catalog's pixel coordinates.
+
+        The catalog's xcentroid/ycentroid are ~1050 (intentionally wrong for this image),
+        but the RA/Dec should convert to ~50-80 in the viewer's reference frame.
+        """
+        toolbar = self.table_viewer.toolbar
+        tool = toolbar.tools['jdaviz:table_highlight_selected']
+        tool.activate()
+
+        # Check the first 3 rows
+        self.table_viewer.widget_table.checked = [0, 1, 2]
+
+        # Get the selection mark
+        selection_marks = [m for m in self.viewer.figure.marks
+                          if isinstance(m, TableSelectionMark)]
+        assert len(selection_marks) == 1
+        mark = selection_marks[0]
+
+        # The mark should be visible
+        assert mark.visible
+
+        # The mark coordinates should be from WCS conversion (~50-80),
+        # NOT from the catalog's pixel coords (~1050)
+        # If the bug exists, mark.x would be [1050, 1070, 1030]
+        assert np.all(mark.x < 200), (
+            f"Mark x coords {mark.x} appear to use catalog pixel coords instead of WCS conversion"
+        )
+        assert np.all(mark.y < 200), (
+            f"Mark y coords {mark.y} appear to use catalog pixel coords instead of WCS conversion"
+        )
+
+        # Verify the marks are at the WCS-converted positions
+        selected_rows = [0, 1, 2]
+        ras = self.catalog['ra'][selected_rows]
+        decs = self.catalog['dec'][selected_rows]
+        skycoords = SkyCoord(ra=ras, dec=decs)
+
+        # Convert using the viewer's reference data WCS
+        expected_pixel = self.viewer.state.reference_data.coords.world_to_pixel(skycoords)
+        expected_x, expected_y = expected_pixel[0], expected_pixel[1]
+
+        # Check that mark positions match the WCS-converted positions
+        np.testing.assert_array_almost_equal(mark.x, expected_x, decimal=3)
+        np.testing.assert_array_almost_equal(mark.y, expected_y, decimal=3)
+
+        toolbar.restore_tools()
+
+    def test_zoom_uses_wcs_not_pixel_coords(self):
+        """
+        Test that zoom-to-selected uses WCS conversion, not the catalog's pixel coordinates.
+        """
+        toolbar = self.table_viewer.toolbar
+        tool = toolbar.tools['jdaviz:table_zoom_to_selected']
+        tool.activate()
+
+        # Check the first 3 rows
+        self.table_viewer.widget_table.checked = [0, 1, 2]
+
+        # Apply zoom
+        toolbar.tools['jdaviz:table_apply_zoom'].activate()
+
+        # Get the new limits
+        new_x_min = self.viewer.state.x_min
+        new_x_max = self.viewer.state.x_max
+        new_y_min = self.viewer.state.y_min
+        new_y_max = self.viewer.state.y_max
+
+        # The view should NOT be zoomed to ~1050 (the wrong pixel coords)
+        # It should be zoomed to somewhere in the 0-100 range (the correct WCS-converted coords)
+        assert new_x_max < 200, (
+            f"Zoom x_max {new_x_max} suggests catalog pixel coords were used instead of WCS"
+        )
+        assert new_y_max < 200, (
+            f"Zoom y_max {new_y_max} suggests catalog pixel coords were used instead of WCS"
+        )
+
+        # Verify the WCS-converted coords are within the view
+        selected_rows = [0, 1, 2]
+        ras = self.catalog['ra'][selected_rows]
+        decs = self.catalog['dec'][selected_rows]
+        skycoords = SkyCoord(ra=ras, dec=decs)
+
+        # Convert using the viewer's reference data WCS
+        expected_pixel = self.viewer.state.reference_data.coords.world_to_pixel(skycoords)
+        expected_x, expected_y = expected_pixel[0], expected_pixel[1]
+
+        # All WCS-converted points should be within the view bounds
+        for x, y in zip(expected_x, expected_y):
+            assert new_x_min <= x <= new_x_max, \
+                f"WCS point x={x} outside view bounds [{new_x_min}, {new_x_max}]"
+            assert new_y_min <= y <= new_y_max, \
+                f"WCS point y={y} outside view bounds [{new_y_min}, {new_y_max}]"
+
+
 class TestTableViewerToolsPixelLinked:
     """Test table viewer tools with pixel-linked catalogs."""
 
@@ -411,7 +551,6 @@ class TestTableViewerToolsPixelLinked:
     def setup_method(self, deconfigged_helper, pixel_coord_source_catalog):
         """Set up deconfigged app with image and pixel-coordinate catalog."""
         # Create a simple image (no WCS needed for pixel-linked)
-        from astropy.nddata import NDData
         arr = np.arange(10000).reshape((100, 100))
         ndd = NDData(arr)
         deconfigged_helper.load(ndd, data_label='test_image')
@@ -496,7 +635,6 @@ class TestTableViewerToolsPixelLinked:
         self.table_viewer.widget_table.checked = [0, 2]
 
         # Check that marks are visible in the image viewer
-        from jdaviz.core.marks import PluginScatter
         marks = [m for m in self.viewer.figure.marks if isinstance(m, PluginScatter)]
 
         # There should be at least one PluginScatter mark for selection
