@@ -43,7 +43,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
         """
         Update telescope options when settings change.
         """
-        # Check if disabled_astroquery_telescopes changed
+        # Recalculate available telescopes based on new settings
         all_telescopes = ['JWST', 'HST', 'SDSS', 'Gaia']
         disabled_telescopes = new_settings_dict.get('disabled_astroquery_telescopes', [])
         available_telescopes = [t for t in all_telescopes if t not in disabled_telescopes]
@@ -51,7 +51,15 @@ class AstroqueryResolver(BaseConeSearchResolver):
         # Update the manual options and refresh items
         if self.telescope._manual_options != available_telescopes:
             self.telescope._manual_options = available_telescopes
-            self.telescope._update_items()
+            # Directly update the items list to ensure sync
+            manual_options_dicts = [self.telescope._to_item(opt) for opt in available_telescopes]
+            self.telescope.items = manual_options_dicts
+            # Reset selection if current selection is no longer valid
+            if self.telescope_selected and self.telescope_selected not in available_telescopes:
+                if len(available_telescopes) > 0:
+                    self.telescope_selected = available_telescopes[0]
+                else:
+                    self.telescope_selected = ''
 
     @property
     def user_api(self):
