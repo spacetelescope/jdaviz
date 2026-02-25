@@ -48,7 +48,7 @@ class URLResolver(BaseResolver):
             self.url_prefix_whitelist = whitelist
         else:
             self.url_prefix_whitelist = []
-        
+
         if whitelist is not None and len(whitelist) > 0:
             url_stripped = self.url.strip()
             self.url_not_whitelisted = not any(
