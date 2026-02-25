@@ -1,6 +1,6 @@
 from astropy.coordinates import SkyCoord
 from astropy.io.fits import BinTableHDU, HDUList, TableHDU
-from astropy.table import Table, QTable
+from astropy.table import Table, QTable, vstack
 import astropy.units as u
 import numpy as np
 from traitlets import Any, Bool, List, Unicode, observe
@@ -136,9 +136,35 @@ class CatalogImporter(BaseImporterToDataCollection):
         if hasattr(self, 'extension'):
             if self.extension.selected in [None, '', []]:
                 return None
-            table_ext = self.extension.selected_obj[0]
-            if isinstance(table_ext, (TableHDU, BinTableHDU)):
-                return QTable(table_ext.data)
+
+            table_ext = self.extension.selected_obj
+
+            if len(table_ext) == 1 and isinstance(table_ext[0], (TableHDU, BinTableHDU)):
+                return QTable(table_ext[0].data)
+
+            # elif len(table_ext) > 1 and all(isinstance(t, (TableHDU, BinTableHDU)) for t in table_ext):
+            #     print('brother we have multiple extensions')
+            #     # combine tables, only including columns that are common beween
+            #     # all tables in the selection. There will be text in the UI to
+            #     # indicate this and suggest loading tables individually if the
+            #     # the selected extensions contain different column names.
+            #     tables = [QTable(ext.data) for ext in table_ext]
+            #     common_cols = set(tables[0].colnames)
+            #     for tab in tables[1:]:
+            #         common_cols = common_cols & set(tab.colnames)
+
+            #     common_cols = list(common_cols)
+
+            #     # if no common columns, we can't combine the tables
+
+            #     # combined_table = vstack([t[common_cols] for t in tables],
+            #     #                         join_type="exact")
+
+            #     # print('combined table', combined_table)
+                
+            #     print('returning', tables[0])
+            #     return tables[0]
+
         return self.input
 
     @property
