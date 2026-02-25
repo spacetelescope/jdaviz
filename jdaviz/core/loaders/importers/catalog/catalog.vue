@@ -99,7 +99,6 @@
         api_hint="ldr.importer.col_other ="
         :api_hints_enabled="api_hints_enabled"
       />
-    </div>
 
     <plugin-auto-label
       :value.sync="data_label_value"
@@ -139,6 +138,7 @@
       @click="import_clicked">
     </loader-import-button>
 
+  </div>
 
   </v-container>
 </template>

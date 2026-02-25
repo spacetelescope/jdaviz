@@ -149,7 +149,6 @@ class CatalogImporter(BaseImporterToDataCollection):
                 return QTable(table_ext[0].data)
 
             elif len(table_ext) > 1 and all(isinstance(t, (TableHDU, BinTableHDU)) for t in table_ext):
-                print('brother we have multiple extensions')
                 # combine tables, only including columns that are common beween
                 # all tables in the selection. There will be text in the UI to
                 # indicate this and suggest loading tables individually if the
@@ -165,17 +164,19 @@ class CatalogImporter(BaseImporterToDataCollection):
                 # them. return None and the UI will indicate that the user should
                 # load tables separately.
                 if len(common_cols) == 0:
-                    msg = f"The selected extensions have no columns in common. Please select a single extension to load, or select multiple extensions that have at least one column name in common to enable loading in multiselect mode."  # noqa
+                    msg = (
+                        "The selected extensions have no columns in common. "
+                        "Please select a single extension to load, or select "
+                        "multiple extensions that have at least one column "
+                        "name in common to enable loading in multiselect mode."
+                    )
                     self.no_common_col_msg = msg
                     return None
 
                 combined_table = vstack([t[common_cols] for t in tables],
                                         join_type="exact")
 
-                print('combined table', combined_table)
-                
-                print('returning', tables[0])
-                return tables[0]
+                return combined_table
 
         return self.input
 
@@ -225,6 +226,7 @@ class CatalogImporter(BaseImporterToDataCollection):
         if input is None:
             # if input is None, that means the selected extensions had no common
             # columns, so we should clear out the column selection dropdowns
+            # options (this section will be hidden in the UI)
             for col in ['ra', 'dec', 'x', 'y']:
                 self._update_col_items_and_selected(f'col_{col}', ['---'])
             self._update_col_items_and_selected('col_other', ['---'], select_first=False)
