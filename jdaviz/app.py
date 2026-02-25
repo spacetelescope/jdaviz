@@ -3522,6 +3522,9 @@ class Application(VuetifyTemplate, HubListener):
             set_active_loader_callback=set_active_loader
         )
 
+        # Set the registry label to match the name for open_in_tray to work
+        loader._registry_label = name
+
         # Add to loader_items
         self.state.loader_items.append({
             'name': name,
