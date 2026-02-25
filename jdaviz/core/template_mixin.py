@@ -2273,7 +2273,13 @@ class LayerSelect(SelectPluginComponent):
         def is_dq_layer(lyr):
             return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
 
-        def has_wcs_if_image_viewer_pixel_linked(lyr):
+        def catalog_has_correct_coords_based_on_link_type(lyr):
+            """
+            For catalogs in image viewers, filter based on link type. Catalog
+            must have X+Y coordinate columns assigned if pixel linked, and RA+Dec
+            coordinate columns assigned if WCS linked.
+            """
+
             # this filter is only relevant for image viewers
             if not np.all([viewer.__class__.__name__ == 'ImvizImageView'
                            for viewer in self.viewer_objs]):
