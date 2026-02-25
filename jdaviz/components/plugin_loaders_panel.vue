@@ -21,7 +21,17 @@
 
 <script>
 module.exports = {
-  props: ['loader_panel_ind', 'loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj',
-          'title', 'hide_resolver']
+  props: {
+    loader_panel_ind: {},
+    loader_items: {},
+    loader_selected: {},
+    api_hints_enabled: {},
+    api_hints_obj: {},
+    title: {
+      type: String,
+      default: 'Import'
+    },
+    hide_resolver: {}
+  }
 }
 </script>
