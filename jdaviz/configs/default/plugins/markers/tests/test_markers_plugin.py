@@ -6,10 +6,13 @@ from numpy.testing import assert_allclose
 import pytest
 from specutils import Spectrum
 
-from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.marks import MarkersMark, DistanceLine
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 from bqplot.scales import LinearScale
+
+# subset of possible units to test various conversions, testing all is time intensive
+FLUX_UNITS = ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']
 
 
 def _get_markers_from_viewer(viewer):
@@ -183,14 +186,14 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     assert len(_get_markers_from_viewer(sv).x) == 0
 
 
-@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in FLUX_UNITS])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in FLUX_UNITS])
 def test_markers_cubeviz_flux_unit_conversion(cubeviz_helper,
                                               spectrum1d_cube_custom_fluxunit,
                                               flux_unit, angle_unit, new_flux_unit):
     """
-    Test the markers plugin with all possible unit conversions for
+    Test the markers plugin with a subset of all possible unit conversions for
     cubes in spectral/photon surface brightness units (e.g. Jy/sr, Jy/pix2).
 
     The markers plugin should respect the choice of flux and angle

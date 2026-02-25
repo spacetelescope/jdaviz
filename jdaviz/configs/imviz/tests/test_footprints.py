@@ -22,8 +22,8 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
     arr = np.ones((10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
     # load the image twice to test linking
-    imviz_helper.load_data(ndd)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load_data(ndd, data_label='data1')
+    imviz_helper.load_data(ndd, data_label='data2')
 
     plugin = imviz_helper.plugins['Footprints']
     default_color = plugin.color
@@ -209,8 +209,8 @@ def test_api_after_linking(imviz_helper):
     viewer = imviz_helper.app.get_viewer_by_id('imviz-0')
 
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load_data(ndd, data_label='data1')
+    imviz_helper.load_data(ndd, data_label='data2')
 
     plugin = imviz_helper.plugins['Footprints']
     with plugin.as_active():
