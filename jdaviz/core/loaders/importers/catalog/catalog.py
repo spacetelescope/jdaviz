@@ -144,11 +144,12 @@ class CatalogImporter(BaseImporterToDataCollection):
             # we get the input as table, so that if the user changes to a different
             # extension or selection of extensions, the message will be cleared
             self.no_common_col_msg = ''
+            table_types = (TableHDU, BinTableHDU)
 
-            if len(table_ext) == 1 and isinstance(table_ext[0], (TableHDU, BinTableHDU)):
+            if len(table_ext) == 1 and isinstance(table_ext[0], table_types):
                 return QTable(table_ext[0].data)
 
-            elif len(table_ext) > 1 and all(isinstance(t, (TableHDU, BinTableHDU)) for t in table_ext):
+            elif len(table_ext) > 1 and all(isinstance(t, table_types) for t in table_ext):
                 # combine tables, only including columns that are common beween
                 # all tables in the selection. There will be text in the UI to
                 # indicate this and suggest loading tables individually if the
