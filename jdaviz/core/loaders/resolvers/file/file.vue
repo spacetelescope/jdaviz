@@ -1,6 +1,6 @@
 <template>
   <j-loader
-    title="Load Local File"
+    :title="title"
     :popout_button="popout_button"
     :spinner="spinner"
     :parsed_input_is_empty="parsed_input_is_empty"
@@ -25,7 +25,7 @@
     :footprint_select_icon="footprint_select_icon"
     :custom_toolbar_enabled="custom_toolbar_enabled"
   >
-    <v-row style="padding-left: 12px; margin-bottom: 16px">
+    <v-row v-if="!server_is_remote" style="padding-left: 12px; margin-bottom: 16px">
       Select a file with data you want to load into this instance of Jdaviz.
     </v-row>
     <v-row v-if="api_hints_enabled">
@@ -33,6 +33,6 @@
         ldr.filepath = '{{ filepath }}'
       </span>
     </v-row>
-    <jupyter-widget :widget="file_chooser_widget"></jupyter-widget>
+    <jupyter-widget v-if="file_chooser_widget && !server_is_remote" :widget="file_chooser_widget"></jupyter-widget>
   </j-loader>
 </template>

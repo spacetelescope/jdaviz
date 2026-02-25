@@ -13,14 +13,14 @@
     </div>
 
     <v-card flat>
-      <v-card-title v-if="!server_is_remote" class="headline" color="primary" primary-title style="display: block; width: 100%">
+      <v-card-title class="headline" color="primary" primary-title style="display: block; width: 100%">
         {{title}}
         <span style="float: right">
           <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
         </span>
       </v-card-title>
       <v-card-text>
-        <v-container v-if="!server_is_remote" style="padding: 4px">
+        <v-container style="padding: 4px">
           <slot/>
         </v-container>
 

@@ -48,6 +48,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 RemoveDataFromViewerMessage, ViewerAddedMessage,
                                 ViewerRemovedMessage, ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage, LayersFinalizedMessage)
+from jdaviz.core.loaders.resolvers.file.file import PresetFileResolver
 from jdaviz.core.registries import (tool_registry, tray_registry,
                                     viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
@@ -265,15 +266,17 @@ class ApplicationState(State):
             'tab_headers': True,
         },
         'dense_toolbar': True,
-        # In the context of a remote server, allow/disallow showing the loader
-        # server_is_remote == False -> Usual behavior, show loader, etc.
-        # server_is_remote + remote_enable_importers==False -> hide loader panel completely,
-        #   prepopulate the data
-        # server_is_remote + remote_enable_importers==True -> hide the loader,
-        #   but allow selecting and loading items from the file. This is used for
-        #   Spectrum Lists or multi-extension images.
+        # In the context of a remote server, set default values for loader visibility
+        # server_is_remote == False -> Usual behavior, show all loaders
+        # server_is_remote == True -> Sets default disabled_loaders to exclude loaders
+        #   that require local file access or external APIs
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
-        'remote_enable_importers': True,  # Depends on server_is_remote, see above
+        'remote_enable_importers': True,  # Legacy setting, kept for backward compatibility
+        # List of loader names to exclude from the loaders panel source dropdown.
+        # If not provided (None), defaults to excluding loaders that typically require
+        # local file access or API support when server_is_remote is True.
+        # Set to [] to enable all loaders regardless of server_is_remote.
+        'disabled_loaders': None,
         'context': {
             'notebook': {
                 'max_height': '600px'
@@ -3410,7 +3413,18 @@ class Application(VuetifyTemplate, HubListener):
         # registry will be populated at import
         if self.config in CONFIGS_WITH_LOADERS:
             import jdaviz.core.loaders  # noqa
+            # Determine which loaders to disable
+            disabled_loaders = self.state.settings.get('disabled_loaders')
+            if disabled_loaders is None:
+                # Default: disable loaders based on server_is_remote setting
+                if self.state.settings.get('server_is_remote', False):
+                    disabled_loaders = ['file', 'file drop', 'url', 'object',
+                                        'astroquery', 'virtual observatory']
+                else:
+                    disabled_loaders = []
             for name, Resolver in loader_resolver_registry.members.items():
+                if name in disabled_loaders:
+                    continue
                 loader = Resolver(app=self,
                                   open_callback=open,
                                   close_callback=close,
@@ -3442,6 +3456,87 @@ class Application(VuetifyTemplate, HubListener):
                                       "implemented for the deconfigged app")
         for loader in self._jdaviz_helper.loaders.values():
             loader.format._update_items()
+
+    def _add_file_loader(self, filepath, name=None, open_in_tray=False, load=False):
+        """
+        Private method to programmatically add a file loader with a preset path.
+
+        This creates a loader entry that appears in the source dropdown but doesn't
+        show the file browser UI (similar to server_is_remote behavior).
+
+        Parameters
+        ----------
+        filepath : str
+            Absolute path to the file to load.
+        name : str, optional
+            Custom name for this loader. If None, uses the filename without extension.
+        open_in_tray : bool, optional
+            Whether to set this as the selected loader in the tray.
+        load : bool, optional
+            Whether to immediately load the file after adding the loader.
+
+        Returns
+        -------
+        str
+            The name of the added loader.
+
+        Examples
+        --------
+        >>> app._add_file_loader(filepath='/path/to/data.fits', name='my_special_file')
+        'my_special_file'
+        """
+        # Validate filepath (PresetFileResolver will also validate, but check early)
+        if not os.path.exists(filepath) or not os.path.isfile(filepath):
+            raise ValueError(f"'{filepath}' is not a valid file path.")
+
+        # Generate name if not provided
+        if name is None:
+            name = os.path.splitext(os.path.basename(filepath))[0]
+
+        # Ensure unique name
+        existing_names = [item['name'] for item in self.state.loader_items]
+        original_name = name
+        counter = 1
+        while name in existing_names:
+            name = f"{original_name}_{counter}"
+            counter += 1
+
+        # Define callbacks (same as in initialization)
+        def open():
+            self.state.drawer_content = 'loaders'
+            self.state.add_subtab = 0
+
+        def close():
+            self.state.loader_selected = ''
+
+        def set_active_loader(resolver):
+            self.state.loader_selected = resolver
+
+        # Create the preset resolver instance
+        loader = PresetFileResolver(
+            filepath=filepath,
+            title=name,
+            app=self,
+            open_callback=open,
+            close_callback=close,
+            set_active_loader_callback=set_active_loader
+        )
+
+        # Add to loader_items
+        self.state.loader_items.append({
+            'name': name,
+            'label': name,
+            'requires_api_support': False,
+            'widget': "IPY_MODEL_" + loader.model_id,
+            'api_methods': loader.api_methods,
+        })
+
+        if open_in_tray:
+            self._jdaviz_helper.loaders[name].open_in_tray()
+        if load:
+            self._jdaviz_helper.loaders[name].load()
+
+        return name
 
     def update_tray_items_from_registry(self):
         if self.config != 'deconfigged':

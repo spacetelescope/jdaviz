@@ -1,7 +1,6 @@
 <template>
   <div>
     <v-select
-      v-if="!server_is_remote"
       :menu-props="{ left: true }"
       attach
       :items="loader_items_filtered"
@@ -27,11 +26,25 @@
 
 <script>
 module.exports = {
-  props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'server_is_remote'],
+  props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'server_is_remote', 'disabled_loaders'],
   computed: {
     loader_items_filtered() {
       var has_api_support = this.checkNotebookContext();
-      return this.loader_items.filter(item => {return !item.requires_api_support || has_api_support});
+      // Determine which loaders to disable
+      var disabled_loaders = this.disabled_loaders;
+      if (disabled_loaders === null || disabled_loaders === undefined) {
+        // Default: disable loaders based on server_is_remote setting
+        if (this.server_is_remote) {
+          disabled_loaders = ['file', 'file drop', 'url', 'object',
+                              'astroquery', 'virtual observatory'];
+        } else {
+          disabled_loaders = [];
+        }
+      }
+      return this.loader_items.filter(item => {
+        return (!item.requires_api_support || has_api_support) &&
+               !disabled_loaders.includes(item.name);
+      });
     },
   },
   methods: {
