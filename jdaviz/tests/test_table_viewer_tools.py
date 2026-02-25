@@ -464,7 +464,7 @@ class TestTableViewerToolsWcsLinkedMixedCoords:
 
         # Get the selection mark
         selection_marks = [m for m in self.viewer.figure.marks
-                          if isinstance(m, TableSelectionMark)]
+                           if isinstance(m, TableSelectionMark)]
         assert len(selection_marks) == 1
         mark = selection_marks[0]
 

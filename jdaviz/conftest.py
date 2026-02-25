@@ -274,8 +274,6 @@ def wcs_linked_mixed_coord_catalog(image_2d_wcs):
     Sky coordinates match the image_2d_wcs fixture, but pixel coordinates are
     offset by 1000 pixels to simulate being from a different image.
     """
-    from astropy.coordinates import SkyCoord
-
     catalog = Table()
 
     # RA/Dec that are valid for image_2d_wcs (within 100x100 pixel field)
