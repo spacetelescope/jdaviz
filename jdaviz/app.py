@@ -277,6 +277,15 @@ class ApplicationState(State):
         # local file access or API support when server_is_remote is True.
         # Set to [] to enable all loaders regardless of server_is_remote.
         'disabled_loaders': None,
+        # List of telescope names to exclude from the astroquery loader telescope dropdown.
+        # Available telescopes: 'JWST', 'HST', 'SDSS', 'Gaia'
+        # Set to [] (default) to enable all telescopes.
+        'disabled_astroquery_telescopes': [],
+        # List of URL prefixes to allow in the URL loader.
+        # If None (default), any valid URL is allowed.
+        # If set to a list, only URLs starting with one of the prefixes will be accepted.
+        # Example: ['https://data.example.com/', 'https://archive.science.org/']
+        'url_prefix_whitelist': None,
         'context': {
             'notebook': {
                 'max_height': '600px'

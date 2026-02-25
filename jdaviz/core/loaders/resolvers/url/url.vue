@@ -32,6 +32,12 @@
       ></v-text-field>
     </v-row>
 
+    <v-row v-if="url_not_whitelisted">
+      <v-alert type="warning" style="margin-right: -12px; width: 100%">
+        The URL must start with: {{ url_prefix_whitelist.join(', ') }}
+      </v-alert>
+    </v-row>
+
     <v-row v-if="url_scheme !== 's3'">
       <v-text-field
         v-model.number='timeout'
