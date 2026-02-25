@@ -2296,7 +2296,7 @@ class LayerSelect(SelectPluginComponent):
                 ra_col = lyr.meta.get('_jdaviz_loader_ra_col')
                 dec_col = lyr.meta.get('_jdaviz_loader_dec_col')
                 return ra_col in comp_labels and dec_col in comp_labels
-            
+
             # this should never be encountered, but just in case raise an error
             # instead of just returning None so we know something went wrong
             else:
