@@ -90,18 +90,22 @@ def test_duplicate_data_labels(deconfigged_helper, input_data, input_format, req
     assert any([dc_entry.label == expected_label_base for dc_entry in dc])
     assert any([dc_entry.label == f'{expected_label_base} (1)' for dc_entry in dc])
 
-    # Test duplicate custom labels
+    # Test overwrite when using custom labels
     deconfigged_helper.load(input_data, format=input_format, data_label="test")
     deconfigged_helper.load(input_data, format=input_format, data_label="test")
 
-    assert any([dc_entry.label == 'test' for dc_entry in dc])
-    assert any([dc_entry.label == 'test (1)' for dc_entry in dc])
+    test_labels = [dc_entry.label == 'test' for dc_entry in dc]
+    assert any(test_labels)
+    assert sum(test_labels) == 1
+    assert 'test (1)' not in dc
 
+    deconfigged_helper.load(input_data, format=input_format, data_label=expected_label_base)
     deconfigged_helper.load(input_data, format=input_format, data_label="test_1")
-    deconfigged_helper.load(input_data, format=input_format, data_label="test")
 
+    # Test second attempt at overwrite using custom label
+    # that matches the expected auto-generated label
+    assert f'{expected_label_base} (2)' not in dc
     assert any([dc_entry.label == 'test_1' for dc_entry in dc])
-    assert any([dc_entry.label == 'test (2)' for dc_entry in dc])
 
 
 def test_duplicate_data_labels_with_brackets(specviz_helper, spectrum1d):
