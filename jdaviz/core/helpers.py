@@ -217,13 +217,6 @@ class ConfigHelper(HubListener):
 
         importer = resolver.importer
         importer._obj._apply_kwargs(kwargs)
-        # When data_label is explicitly passed via API, ensure uniqueness
-        # so that loading the same label twice creates incremented labels
-        # (e.g. "test", "test (1)") rather than overwriting.
-        if 'data_label' in kwargs and hasattr(importer._obj, 'data_label'):
-            importer._obj.data_label.value = self.app.return_unique_name(
-                importer._obj.data_label.value
-            )
         out = resolver.load()
         # force cleanup before returning
         resolver._obj._cleanup()

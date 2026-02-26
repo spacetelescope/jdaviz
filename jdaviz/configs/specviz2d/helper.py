@@ -120,8 +120,6 @@ class Specviz2d(Specviz):
             load_kwargs['local_path'] = local_path
 
         if spectrum_2d is not None:
-            if spectrum_2d_label is not None:
-                spectrum_2d_label = self.app.return_unique_name(spectrum_2d_label)
             if isinstance(spectrum_2d, Spectrum):
                 # don't pass ext if input is not a file
                 ext = None
@@ -133,8 +131,6 @@ class Specviz2d(Specviz):
                       extension=ext,
                       **load_kwargs)
         if spectrum_1d is not None:
-            if spectrum_1d_label is not None:
-                spectrum_1d_label = self.app.return_unique_name(spectrum_1d_label)
             self.load(spectrum_1d, format='1D Spectrum',
                       data_label=spectrum_1d_label,
                       viewer='*' if show_in_viewer else [],
