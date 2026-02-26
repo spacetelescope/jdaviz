@@ -7,9 +7,12 @@ from astropy.utils.exceptions import AstropyUserWarning
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 
-from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
                                                handle_squared_flux_unit_conversions)
+
+# subset of possible units to test various conversions, testing all is time intensive
+FLUX_UNITS = ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']
 
 
 @pytest.mark.parametrize('helper_str', ('cubeviz_helper', 'deconfigged_helper'))
@@ -289,16 +292,15 @@ def _compare_table_units(orig_tab, new_tab, orig_flux_unit=None,
             assert_quantity_allclose(orig_converted, new, rtol=1e-03)
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in FLUX_UNITS])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in FLUX_UNITS])
 def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
                                            spectrum1d_cube_custom_fluxunit,
                                            flux_unit, angle_unit, new_flux_unit):
     """
-    Test cubeviz aperture photometry with all possible unit conversions for
-    cubes in spectral/photon surface brightness units (e.g. Jy/sr, Jy/pix2).
+    Test cubeviz aperture photometry with a subset of all possible unit conversions
+    for cubes in spectral/photon surface brightness units (e.g. Jy/sr, Jy/pix2).
 
     The aperture photometry plugin should respect the choice of flux and angle
     unit selected in the Unit Conversion plugin, and inputs and results should
