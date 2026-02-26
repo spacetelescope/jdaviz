@@ -34,6 +34,8 @@ New Features
 - Renaming data will now propagate the new label to derived data in the same way as renaming subsets. For example,
   renaming 'Cube' to 'CubeFlux' will rename 'Cube (Subset 1, sum)' to 'CubeFlux (Subset 1, sum)'. [#4025]
 
+- Enable multiselect mode for selecting multiple table extensions in the Catalog loader. [#4051]
+
 
 Cubeviz
 ^^^^^^^
