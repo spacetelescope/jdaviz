@@ -1104,10 +1104,10 @@ def test_model_fitting_load_table_into_data_collection(specviz_helper, spectrum1
 
     # Now test loading the table back into the data collection
     # Open the loader panel
-    mf.table.loader_panel_ind = 0
+    mf.table._obj.loader_panel_ind = 0
 
     # Access the object loader via the loaders property
-    loaders = mf.table.user_api.loaders
+    loaders = mf.table.loaders
     object_loader = loaders['object']
 
     # The object should be set to the table
