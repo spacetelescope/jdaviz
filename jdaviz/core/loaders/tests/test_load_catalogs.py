@@ -30,7 +30,7 @@ def _make_catalog(with_units=True, as_skycoord=False):
                    names=['RA', 'Dec', 'Obj_ID', 'flux'])
 
 
-def _make_catalog_xy_radec(with_units=True):
+def _make_catalog_xy_radec(with_units=True, colnames=None):
 
     ra = [337.52274, 337.48273, 337.48296, 337.52333] * (u.deg if with_units else 1)
     dec = [-20.80742, -20.80741, -20.82380, -20.82425] * (u.deg if with_units else 1)
@@ -41,8 +41,11 @@ def _make_catalog_xy_radec(with_units=True):
 
     tab_cls = QTable if with_units else Table
 
+    if colnames is None:
+        colnames = ['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux']
+
     return tab_cls(data=[ra, dec, x, y, obj_id, flux],
-                   names=['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux'])
+                   names=colnames)
 
 
 def _make_catalog_string_coord_columns():
@@ -699,3 +702,95 @@ def test_hdulist_multiple_table_extensions(deconfigged_helper):
 
     # check that a non-selection does not cause an error
     ldr.importer.extension.selected = []
+
+
+def test_load_catalog_from_fits_multiselect(deconfigged_helper):
+    """
+    Test loading multiple catalogs from a multi-extension FITS file at once
+    using multiselect mode.
+    """
+
+    # create two catalogs with the same column names
+    # this will be in individual FITS table extensions, and because they
+    # have the same column names they can be loaded in multiselect mode
+    table1 = _make_catalog_xy_radec()
+    table2 = _make_catalog_xy_radec()
+
+    # make columns distinct for second table so we can make sure the tables
+    # were combined properly and contain both table1 and table2
+    table2['RA'] += + 1. * u.deg
+    table2['Dec'] += 1. * u.deg
+    table2['X'] += + 1.
+    table2['Y'] += 1.
+
+    # put both tables in a HDUList
+    hdul = fits.HDUList([fits.PrimaryHDU(), fits.BinTableHDU(table1),
+                        fits.BinTableHDU(table2)])
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdul
+    ldr.format = 'Catalog'
+
+    assert ldr.importer.extension.multiselect is True
+
+    # select all available extensions, which should already be filtered to only
+    # include table extensions
+    ldr.importer.extension.selected = ldr.importer.extension.choices
+
+    # since these two tables share common column names, we should not see a warning
+    # in the UI
+    assert ldr.importer._obj.no_common_col_msg == ''
+
+    # check that the logic to find common column names across both tables and
+    # populate the column selection dropdowns accordingly works correctly
+    assert ldr.importer.col_ra.selected == 'RA'
+    assert ldr.importer.col_dec.selected == 'Dec'
+    assert ldr.importer.col_x.selected == 'X'
+    assert ldr.importer.col_y.selected == 'Y'
+
+    ldr.importer()
+
+    # verify that the table in the data collection contains the combined data
+    # from both tables, and that the correct number of rows are present
+    dc = deconfigged_helper.app.data_collection
+    assert len(dc) == 1
+    qtab = dc[0].get_object(QTable)
+    assert len(qtab) == len(table1) + len(table2)
+
+    # check that the first part of the table matches table1 and the second part
+    # matches table2, which verifies that the tables were combined in the correct order
+    assert_quantity_allclose(qtab['RA'][:len(table1)], table1['RA'])
+    assert_quantity_allclose(qtab['Dec'][:len(table1)], table1['Dec'])
+    assert_quantity_allclose(qtab['X'][:len(table1)], table1['X'])
+    assert_quantity_allclose(qtab['Y'][:len(table1)], table1['Y'])
+    assert_quantity_allclose(qtab['RA'][len(table1):], table2['RA'])
+    assert_quantity_allclose(qtab['Dec'][len(table1):], table2['Dec'])
+    assert_quantity_allclose(qtab['X'][len(table1):], table2['X'])
+    assert_quantity_allclose(qtab['Y'][len(table1):], table2['Y'])
+
+    # now test attempting to load two tables that don't share any common column names.
+    # in this case, there should be a message displayed in the UI indicating this
+    # and prompting the user to load tables individually, and the column selection
+    # dropdowns should not be populated
+    table3 = _make_catalog_xy_radec(colnames=['RA2', 'Dec2', 'X2', 'Y2', 'Obj_ID2', 'flux2'])
+    hdul2 = fits.HDUList([fits.PrimaryHDU(), fits.BinTableHDU(table1),
+                          fits.BinTableHDU(table3)])
+
+    ldr.object = hdul2
+    ldr.format = 'Catalog'
+
+    ldr.importer.extension.selected = ldr.importer.extension.choices
+
+    assert ldr.importer.col_ra.choices == ['---']
+    assert ldr.importer.col_dec.choices == ['---']
+    assert ldr.importer.col_x.choices == ['---']
+    assert ldr.importer.col_y.choices == ['---']
+
+    msg = (
+        "The selected extensions have no columns in common. "
+        "Please select a single extension to load, or select "
+        "multiple extensions that have at least one column "
+        "name in common to enable loading in multiselect mode."
+    )
+
+    assert ldr.importer._obj.no_common_col_msg == msg
