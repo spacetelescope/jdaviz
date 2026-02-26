@@ -138,8 +138,6 @@ class Specviz(ConfigHelper, LineListMixin):
                 or (isinstance(data, Spectrum) and len(data.shape) == 2)):
             load_kwargs['concatenate'] = False
 
-        if data_label is not None:
-            data_label = self.app.return_unique_name(data_label)
         self.load(data, format='1D Spectrum',
                   data_label=data_label,
                   viewer='*' if show_in_viewer else [],
