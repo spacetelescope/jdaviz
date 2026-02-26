@@ -70,7 +70,6 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
         viz.datasets["non-existent label"]
 
 
-@pytest.mark.xfail(reason='Known issue with duplicate data labels when using API.')
 @pytest.mark.parametrize(('input_data', 'input_format'), [
     ('image_hdu_wcs', 'Image'),
     ('spectrum1d', '1D Spectrum'),
