@@ -18,7 +18,7 @@ def _make_catalog(with_units=True, as_skycoord=False):
 
     ra = [9.423, 9.421, 9.415] * (u.deg if with_units else 1)
     dec = [-33.711, -33.716, -33.717] * (u.deg if with_units else 1)
-    obj_id = ['source1', 'souce2', 'source3']
+    obj_id = ['source1', 'source2', 'source3']
     flux = [10, 20, 30] * (u.Jy if with_units else 1)
 
     tab_cls = QTable if with_units else Table
@@ -49,12 +49,12 @@ def _make_catalog_xy_radec(with_units=True, colnames=None):
 
 
 def _make_catalog_string_coord_columns():
-    # complelete nonsense coordinates, just care about parsing the units
+    # complete nonsense coordinates, just care about parsing the units
     ra = ['5° 55′ 55″', '5° 55′ 55″', '5° 55′ 55″']
     dec = ['4° 44′ 44″', '4° 44′ 44″', '4° 44′ 44″']
     x = ['1', '2', '3']
     y = ['4', '5', '6']
-    obj_id = ['source1', 'souce2', 'source3']
+    obj_id = ['source1', 'source2', 'source3']
     flux = [10, 20, 30] * u.Jy
 
     return QTable(data=[ra, dec, x, y, obj_id, flux],
@@ -75,9 +75,9 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     """
     A table should be able to be loaded without selecting
     an RA/Dec or X/Y pair. This table will not have the functionality
-    of a 'Souce Catalog' that does have source positions
+    of a 'Source Catalog' that does have source positions
     (linking, mouseover) but it may be loaded to plot for example
-    in the scatter or histrogram viewer.
+    in the scatter or histogram viewer.
     """
     catalog_obj = _make_catalog_no_coordinates()
 
@@ -95,7 +95,7 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     tab = imviz_helper.app.data_collection[1].get_object(Table)
     assert 'col1' in tab.colnames
 
-    # make sure linking doesn't produce any errors when alingment changes.
+    # make sure linking doesn't produce any errors when alignment changes.
     # this isn't relevant for this catalog with no source positons,
     # but orientation will check for the presence of certain
     # components in a table to decide not to link and we
@@ -594,7 +594,7 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
                       data_label='catalog0')
 
     # since we're pixel linked and catalog has only world coordinates,
-    # visiblity should be off by default
+    # visibility should be off by default
     dm = imviz_helper.viewers['imviz-0'].data_menu
     assert dm.data_labels_visible == ['Image[DATA]']
 
@@ -606,7 +606,7 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     # now change to WCS linking
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
-    # load catalog with RA, Dec only again. It's default visiblity should
+    # load catalog with RA, Dec only again. Its default visibility should
     # now be on since we're WCS linked
     imviz_helper.load(table_ra_dec_only,
                       data_label='catalog2')
@@ -718,9 +718,9 @@ def test_load_catalog_from_fits_multiselect(deconfigged_helper):
 
     # make columns distinct for second table so we can make sure the tables
     # were combined properly and contain both table1 and table2
-    table2['RA'] += + 1. * u.deg
+    table2['RA'] += 1. * u.deg
     table2['Dec'] += 1. * u.deg
-    table2['X'] += + 1.
+    table2['X'] += 1.
     table2['Y'] += 1.
 
     # put both tables in a HDUList
