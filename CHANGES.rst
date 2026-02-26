@@ -26,7 +26,7 @@ New Features
 - Add handles to subset to allow interactive resizing. [#3919]
 
 - Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
-  
+
 - Added ``enable_footprint_selection_tools()`` and ``disable_footprint_selection_tools()`` APIs
   to programmatically control footprint selection toolbar. [#4048]
 
@@ -133,6 +133,8 @@ Bug Fixes
 - Fix layer filtering logic for plot options to properly show/hide layers based on coordinate and link type. [#4046]
 
 - Fixed WCS layer being pushed to incorrect viewer types in deconfigged when changing between pixel and WCS linking. [#4049]
+
+- Fixed an inconsistency with loading duplicate user-supplied labels. [#4055]
 
 - Avoid crashing Jdaviz if the PyVO vocabularies can't be downloaded. [#4059]
 
