@@ -78,10 +78,22 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
 ])
 def test_duplicate_data_labels(deconfigged_helper, input_data, input_format, request):
     input_data = request.getfixturevalue(input_data)
+    # Test duplicate auto-generated labels
+    deconfigged_helper.load(input_data, format=input_format)
+    deconfigged_helper.load(input_data, format=input_format)
+    dc = deconfigged_helper.app.data_collection
+
+    expected_label_base = input_format
+    if input_format == 'Image':
+        expected_label_base = 'Image[SCI,1]'
+
+    assert any([dc_entry.label == expected_label_base for dc_entry in dc])
+    assert any([dc_entry.label == f'{expected_label_base} (1)' for dc_entry in dc])
+
+    # Test duplicate custom labels
     deconfigged_helper.load(input_data, format=input_format, data_label="test")
     deconfigged_helper.load(input_data, format=input_format, data_label="test")
 
-    dc = deconfigged_helper.app.data_collection
     assert any([dc_entry.label == 'test' for dc_entry in dc])
     assert any([dc_entry.label == 'test (1)' for dc_entry in dc])
 
