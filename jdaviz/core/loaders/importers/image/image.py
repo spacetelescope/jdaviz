@@ -13,7 +13,6 @@ from specutils import Spectrum
 from stdatamodels import asdf_in_fits
 from traitlets import Bool, List, Any, Unicode, observe
 
-from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.template_mixin import (SelectFileExtensionComponent,
                                         DatasetSelect,
                                         SelectPluginComponent)
@@ -82,6 +81,10 @@ class ImageImporter(BaseImporterToDataCollection):
     # suffices that will be applied to the prefix (read-only)
     data_label_suffices = List().tag(sync=True)
 
+    # if orientation plugin exists or create new viewer selection is an Image
+    # viewer, expose options to align by pixels or WCS.
+    expose_align_by_options = Bool(True).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -94,11 +97,17 @@ class ImageImporter(BaseImporterToDataCollection):
                                               items='align_by_items',
                                               selected='align_by_selected',
                                               manual_options=['Pixels', 'WCS'])
+
         align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
         if align_plg is not None:
+            self.expose_align_by_options = True
             self.align_by.selected = align_plg.align_by.selected
         else:
-            self.align_by.selected = 'Pixels'
+            if self.viewer_create_new_selected == 'Image':
+                self.expose_align_by_options = True
+            else:
+                self.expose_align_by_options = False
+                self.align_by.selected = 'Pixels'
 
         input = self.input
         if isinstance(input, fits.hdu.image.ImageHDU):
@@ -216,6 +225,19 @@ class ImageImporter(BaseImporterToDataCollection):
                 # that pass the FITS/NDData condition
                 return False
             return True
+
+    @observe('viewer_create_new_selected')
+    def _on_create_new_viewer_selected(self, msg):
+        """
+        If the orientation plugin does not exist but the new selected viewer to
+        create is an image viewer, expose the option to align by pixels or WCS
+        because the creation of the app's first image viewer will cause the
+        Orientation plugin relevancy to change.
+        """
+
+        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        if align_plg is None:
+            self.expose_align_by_options = (msg['new'] == 'Image')
 
     def _glue_data_wcs_to_fits(self, glue_data):
         """
@@ -406,9 +428,6 @@ class ImageImporter(BaseImporterToDataCollection):
         align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
         if align_plg is not None:
             align_plg.align_by.selected = self.align_by.selected
-        else:
-            msg = f"could not change align_by to {self.align_by.selected}"
-            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return _spatial_assign_component_type(comp_id, comp, units, physical_type)
