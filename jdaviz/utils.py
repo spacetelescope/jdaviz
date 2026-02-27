@@ -47,7 +47,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'wildcard_match', 'cmap_samples', 'glue_colormaps',
            'att_to_componentid', 'create_data_hash',
            'in_ra_comps', 'in_dec_comps', 'RA_COMPS', 'DEC_COMPS',
-           'SPECTRAL_AXIS_COMP_LABELS']
+           'SPECTRAL_AXIS_COMP_LABELS', 'format_invalid_resolvers']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -1342,3 +1342,96 @@ def find_polygon_mark_with_skewer(px, py, viewer, marks):
         return containing_labels
 
     return None
+
+
+def format_invalid_resolvers(invalid_resolvers, format=None, target=None):
+    """
+    Format invalid resolvers dictionary into a readable table string.
+
+    This function takes the dictionary of attempted but failed resolvers
+    and formats it into a human-readable table for error messages. If format
+    or target are specified, the output is filtered to only show relevant
+    failures for that format/target combination.
+
+    Parameters
+    ----------
+    invalid_resolvers : dict or None
+        Dictionary containing resolver names as keys and either status strings
+        or nested dictionaries (for 'object' resolver) as values. Each entry
+        describes why that resolver/importer failed. Can also be None.
+    format : str, list, tuple, or None, optional
+        If provided, filters the output to only show failures related to the
+        specified format(s). This can be a single format string or a list/tuple
+        of format strings. Nested dictionaries will be filtered to only show
+        entries matching the format labels, parsers, or importers.
+    target : str or None, optional
+        If provided, used in conjunction with format to further filter output
+        to show only failures relevant to the target (e.g., specific data type
+        like '1D Spectrum'). Currently only used for documentation purposes in
+        output filtering logic.
+
+    Returns
+    -------
+    formatted_table : str
+        A formatted text table displaying the resolver names and their failure
+        reasons, suitable for displaying to users.
+    """
+    if not invalid_resolvers:
+        return 'No resolver information available.'
+
+    # Normalize format to a list for easier comparison
+    formats = (format if isinstance(format, (list, tuple)) else [format]
+               if format is not None else None)
+
+    def should_include_entry(key):
+        """
+        Determine if a format/importer entry should be included based on
+        the specified format filter.
+        """
+        if formats is None:
+            return True
+
+        # Check if the key matches any of the specified formats
+        # Keys can be either simple names or compound like "parser > importer"
+        for fmt in formats:
+            if fmt is None:
+                continue
+            # Check if format matches the key directly or is part of a compound key
+            if fmt in key or fmt == key:
+                return True
+        return False
+
+    # Width of resolver name + number of dots used for alignment in the table
+    resolver_alignment_width = 40
+    # Need to account for the '...' we add to truncated messages
+    truncation_len = 57
+    full_table_width = resolver_alignment_width + truncation_len
+    lines = ['=' * full_table_width]
+
+    for resolver_name, resolver_info in invalid_resolvers.items():
+        # Handle nested dictionaries (like 'object' resolver with multiple formats)
+        if isinstance(resolver_info, dict):
+            # Filter nested dict based on format if specified
+            filtered_items = {k: v for k, v in resolver_info.items()
+                              if should_include_entry(k)}
+
+            if not filtered_items:
+                # Skip this resolver if no entries match the filter
+                continue
+
+            lines.append(f'\n{resolver_name}:')
+            lines.append('-' * full_table_width)
+            for format_name, status in filtered_items.items():
+                # Truncate long messages for readability
+                status_str = str(status)[:truncation_len - 3] + '...'
+                lines.append(f'  {format_name:.<{resolver_alignment_width - 2}} {status_str}')
+            # Add spacing after nested section
+            lines.append('')
+        else:
+            # Handle simple string values (no filtering needed, always include)
+            status_str = str(resolver_info)[:truncation_len - 3] + '...'
+            lines.append(f'{resolver_name:.<{resolver_alignment_width}} {status_str}')
+
+    lines.append('=' * full_table_width)
+
+    return '\n'.join(lines)

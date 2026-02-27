@@ -34,7 +34,8 @@ from jdaviz.core.registries import (loader_resolver_registry,
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
-                          find_polygon_mark_with_skewer, layer_is_image_data)
+                          find_polygon_mark_with_skewer, format_invalid_resolvers,
+                          layer_is_image_data)
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
 
@@ -1049,7 +1050,9 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
             valid_resolvers.append((this_resolver, resolver_name, fmt_item['label']))
 
     if len(valid_resolvers) == 0:
-        raise ValueError("no valid loaders found for input, tried", invalid_resolvers)
+        msg = (f'No valid loaders found for input. Tried:\n'
+               f'{format_invalid_resolvers(invalid_resolvers, format=format, target=target)}\n')
+        raise ValueError(msg)
     elif len(valid_resolvers) > 1:
         vrs = [f"resolver={vr[1]} > format={vr[2]}" for vr in valid_resolvers]
         raise ValueError(f"multiple valid loaders found for input: {vrs}")
