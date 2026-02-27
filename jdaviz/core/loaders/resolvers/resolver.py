@@ -34,7 +34,7 @@ from jdaviz.core.registries import (loader_resolver_registry,
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
-                          find_polygon_mark_with_skewer, format_invalid_resolvers,
+                          find_polygon_mark_with_skewer,
                           layer_is_image_data)
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
@@ -1034,7 +1034,7 @@ class BaseConeSearchResolver(BaseResolver):
         return True
 
 
-def _format_invalid_resolvers(invalid_resolvers, formats=None):
+def _format_resolver_error(invalid_resolvers, formats=None):
     """
     Format invalid resolvers dictionary into a readable table string.
 
@@ -1066,7 +1066,7 @@ def _format_invalid_resolvers(invalid_resolvers, formats=None):
         Determine if a format/importer entry should be included based on
         the specified format filter.
         """
-        if formats is None:
+        if not any(formats):
             return True
 
         # Check if the key matches any of the specified formats
@@ -1084,7 +1084,7 @@ def _format_invalid_resolvers(invalid_resolvers, formats=None):
     # Need to account for the '...' we add to truncated messages
     truncation_len = 57
     full_table_width = resolver_alignment_width + truncation_len
-    lines = ['=' * full_table_width]
+    lines = []
 
     for resolver_name, resolver_info in invalid_resolvers.items():
         # Handle nested dictionaries (like 'object' resolver with multiple formats)
@@ -1092,12 +1092,13 @@ def _format_invalid_resolvers(invalid_resolvers, formats=None):
             # Filter nested dict based on format if specified
             filtered_items = {k: v for k, v in resolver_info.items()
                               if should_include_entry(k)}
+            print(filtered_items)
 
             if not filtered_items:
                 # Skip this resolver if no entries match the filter
                 continue
 
-            lines.append(f'\n{resolver_name}:')
+            lines.append(f'{resolver_name}:')
             lines.append('-' * full_table_width)
             for format_name, status in filtered_items.items():
                 # Truncate long messages for readability
@@ -1113,8 +1114,6 @@ def _format_invalid_resolvers(invalid_resolvers, formats=None):
             if len(status_str) > truncation_len:
                 status_str = status_str[:truncation_len - 3] + '...'
             lines.append(f'{resolver_name:.<{resolver_alignment_width}} {status_str}')
-
-    lines.append('=' * full_table_width)
 
     return '\n'.join(lines)
 
@@ -1170,10 +1169,18 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
 
     if len(valid_resolvers) == 0:
         msg = (f'No valid loaders found for input. Tried:\n'
-               f'{format_invalid_resolvers(invalid_resolvers, format=formats, target=target)}\n')
+               f'{_format_resolver_error(invalid_resolvers, formats=formats)}\n')
         raise ValueError(msg)
     elif len(valid_resolvers) > 1:
-        vrs = [f"resolver={vr[1]} > format={vr[2]}" for vr in valid_resolvers]
-        raise ValueError(f"multiple valid loaders found for input: {vrs}")
+        # Convert valid_resolvers to a dict structure for formatting
+        valid_resolvers_dict = {}
+        for resolver, resolver_name, fmt_label in valid_resolvers:
+            if resolver_name not in valid_resolvers_dict:
+                valid_resolvers_dict[resolver_name] = {}
+            valid_resolvers_dict[resolver_name][fmt_label] = 'valid'
+
+        msg = (f'Multiple valid loaders found for input. Please specify a format:\n'
+               f'{_format_resolver_error(valid_resolvers_dict, formats=formats)}\n')
+        raise ValueError(msg)
     else:
         return valid_resolvers[0][0].user_api
