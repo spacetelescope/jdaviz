@@ -1034,19 +1034,17 @@ class BaseConeSearchResolver(BaseResolver):
         return True
 
 
-def _format_resolver_error(invalid_resolvers, formats=None,
-                           show_full_error=False):
+def _format_resolver_error(resolver_dict, formats=None, show_full_error=False):
     """
     Format a resolver results dictionary into a readable table string.
 
     Formats the dictionary of resolver outcomes (failed or valid) into a
-    human-readable, dot-aligned table suitable for error messages. When
-    ``formats`` is provided, only entries whose key contains one of the
-    requested format strings are shown.
+    human-readable, dot-aligned table. When ``formats`` is provided,
+    only entries whose key contains one of the requested format strings are shown.
 
     Parameters
     ----------
-    invalid_resolvers : dict
+    resolver_dict : dict
         Dictionary of resolver names to either a status string or a nested
         dictionary mapping format/importer names to status strings.
     formats : list or None, optional
@@ -1091,7 +1089,7 @@ def _format_resolver_error(invalid_resolvers, formats=None,
 
     lines = []
 
-    for resolver_name, resolver_info in invalid_resolvers.items():
+    for resolver_name, resolver_info in resolver_dict.items():
         if isinstance(resolver_info, dict):
             filtered = {k: v for k, v in resolver_info.items()
                         if _matches_format(k)}
@@ -1102,17 +1100,13 @@ def _format_resolver_error(invalid_resolvers, formats=None,
             lines.append('-' * full_table_width)
             for fmt_name, status in filtered.items():
                 status_str = _trim_status(str(status))
-                lines.append(
-                    f'  {fmt_name:.<{resolver_alignment_width - 2}}'
-                    f' {status_str}'
-                )
+                lines.append(f'  {fmt_name:.<{resolver_alignment_width - 2}}'
+                             f' {status_str}')
             lines.append('')
         else:
             status_str = _trim_status(str(resolver_info))
-            lines.append(
-                f'{resolver_name:.<{resolver_alignment_width}}'
-                f' {status_str}'
-            )
+            lines.append(f'{resolver_name:.<{resolver_alignment_width}}'
+                         f' {status_str}')
 
     return '\n'.join(lines)
 
