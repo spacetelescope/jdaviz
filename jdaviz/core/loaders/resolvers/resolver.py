@@ -1034,85 +1034,85 @@ class BaseConeSearchResolver(BaseResolver):
         return True
 
 
-def _format_resolver_error(invalid_resolvers, formats=None, show_full_error=False):
+def _format_resolver_error(invalid_resolvers, formats=None,
+                           show_full_error=False):
     """
-    Format invalid resolvers dictionary into a readable table string.
+    Format a resolver results dictionary into a readable table string.
 
-    This function takes the dictionary of attempted but failed resolvers
-    and formats it into a human-readable table for error messages. If format
-    or target are specified, the output is filtered to only show relevant
-    failures for that format/target combination.
+    Formats the dictionary of resolver outcomes (failed or valid) into a
+    human-readable, dot-aligned table suitable for error messages. When
+    ``formats`` is provided, only entries whose key contains one of the
+    requested format strings are shown.
 
     Parameters
     ----------
-    invalid_resolvers : dict or None
-        Dictionary containing resolver names as keys and either status strings
-        or nested dictionaries (for 'object' resolver) as values. Each entry
-        describes why that resolver/importer failed. Can also be None.
-    formats : list, tuple, or None, optional
-        If provided, filters the output to only show failures related to the
-        specified format(s). This can be a single format string or a list/tuple
-        of format strings. Nested dictionaries will be filtered to only show
-        entries matching the format labels, parsers, or importers.
+    invalid_resolvers : dict
+        Dictionary of resolver names to either a status string or a nested
+        dictionary mapping format/importer names to status strings.
+    formats : list or None, optional
+        When not None (and contains at least one non-None element), only
+        nested entries whose key contains a requested format string are
+        included. Top-level (non-nested) entries are always shown.
+    show_full_error : bool, optional
+        If False (default), strip the first 20 characters of each status
+        string (the dev-relevant prefix such as ``"resolver exception: "``)
+        and truncate long messages. If True, show the full status string.
 
     Returns
     -------
-    formatted_table : str
-        A formatted text table displaying the resolver names and their failure
-        reasons.
+    table : str
+        Formatted text table of resolver names and their statuses.
     """
-    def include_format_entry(key):
-        """
-        Determine if a format entry should be included based on
-        the specified format filter.
-        """
-        if not any(formats):
-            return True
-
-        # Check if the key matches any of the specified formats
-        # Keys can be either simple names or compound like "parser > importer"
-        for fmt in formats:
-            if fmt is None:
-                continue
-            # Check if format matches the key directly or is part of a compound key
-            if fmt in key or fmt == key:
-                return True
-        return False
-
-    # Width of resolver name + number of dots used for alignment in the table
+    # Width of the dot-aligned resolver/format name column
     resolver_alignment_width = 40
-    # Need to account for the '...' we add to truncated messages
+    # Maximum length for a (possibly trimmed) status string
     truncation_len = 57
     full_table_width = resolver_alignment_width + truncation_len
+
+    def _matches_format(key):
+        """
+        Return True if *key* matches the requested formats filter.
+        """
+        if formats is None or not any(formats):
+            return True
+        return any(fmt in key for fmt in formats if fmt is not None)
+
+    def _trim_status(status_str):
+        """
+        Optionally strip the dev prefix and truncate a status string.
+        """
+        if show_full_error:
+            return status_str
+        # Strip leading 20 chars (e.g. "resolver exception: ")
+        trimmed = status_str[20:]
+        if len(status_str) - 20 > truncation_len:
+            trimmed = trimmed[:truncation_len - 4] + '...'
+        return trimmed
+
     lines = []
 
     for resolver_name, resolver_info in invalid_resolvers.items():
-        # Handle nested dictionaries (like 'object' resolver with multiple formats)
         if isinstance(resolver_info, dict):
-            # Filter nested dict based on format if specified
-            filtered_items = {k: v for k, v in resolver_info.items()
-                              if include_format_entry(k)}
-
-            if not filtered_items:
-                # Skip this resolver if no entries match the filter
+            filtered = {k: v for k, v in resolver_info.items()
+                        if _matches_format(k)}
+            if not filtered:
                 continue
 
-            lines.append(f'{resolver_name}:')
+            lines.append(f'\n{resolver_name}:')
             lines.append('-' * full_table_width)
-            for format_name, status in filtered_items.items():
-                # Truncate long messages for readability
-                status_str = str(status)
-                if not show_full_error and len(status_str) > truncation_len:
-                    status_str = status_str[:truncation_len - 3] + '...'
-                lines.append(f'  {format_name:.<{resolver_alignment_width - 2}} {status_str}')
-            # Add spacing after nested section
+            for fmt_name, status in filtered.items():
+                status_str = _trim_status(str(status))
+                lines.append(
+                    f'  {fmt_name:.<{resolver_alignment_width - 2}}'
+                    f' {status_str}'
+                )
             lines.append('')
         else:
-            # Handle simple string values (no filtering needed, always include)
-            status_str = str(resolver_info)
-            if not show_full_error and len(status_str) > truncation_len:
-                status_str = status_str[:truncation_len - 3] + '...'
-            lines.append(f'{resolver_name:.<{resolver_alignment_width}} {status_str}')
+            status_str = _trim_status(str(resolver_info))
+            lines.append(
+                f'{resolver_name:.<{resolver_alignment_width}}'
+                f' {status_str}'
+            )
 
     return '\n'.join(lines)
 
