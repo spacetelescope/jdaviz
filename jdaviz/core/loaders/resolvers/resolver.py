@@ -1092,7 +1092,6 @@ def _format_resolver_error(invalid_resolvers, formats=None):
             # Filter nested dict based on format if specified
             filtered_items = {k: v for k, v in resolver_info.items()
                               if should_include_entry(k)}
-            print(filtered_items)
 
             if not filtered_items:
                 # Skip this resolver if no entries match the filter
