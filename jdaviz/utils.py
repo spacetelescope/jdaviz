@@ -47,7 +47,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'wildcard_match', 'cmap_samples', 'glue_colormaps',
            'att_to_componentid', 'create_data_hash',
            'in_ra_comps', 'in_dec_comps', 'RA_COMPS', 'DEC_COMPS',
-           'SPECTRAL_AXIS_COMP_LABELS', 'format_invalid_resolvers']
+           'SPECTRAL_AXIS_COMP_LABELS']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
