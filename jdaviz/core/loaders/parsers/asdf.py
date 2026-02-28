@@ -53,7 +53,7 @@ class ASDFParser(BaseParser):
                 "This file will be loaded with the `asdf` package instead.\n\n",
                 UserWarning
             )
-        return asdf.open(self.input)
+        return asdf.open(self.input, memmap=False)
 
     def _cleanup(self):
         if 'output' not in self.__dict__:
