@@ -4,6 +4,7 @@
     :popout_button="popout_button"
     :spinner="spinner"
     :parsed_input_is_empty="parsed_input_is_empty"
+    :parsed_input_is_resolvable="parsed_input_is_resolvable"
     :parsed_input_is_query="parsed_input_is_query"
     :treat_table_as_query.sync="treat_table_as_query"
     :observation_table="observation_table"

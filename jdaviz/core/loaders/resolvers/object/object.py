@@ -46,4 +46,4 @@ class ObjectResolver(BaseResolver):
         self._resolver_input_updated()
 
     def parse_input(self):
-        return self.object
+        return self.object, self.is_valid
