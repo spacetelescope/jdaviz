@@ -120,7 +120,7 @@ class FormatSelect(SelectPluginComponent):
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     label = f"{parser_name} > {importer_name}"
-                    if self.plugin._restrict_to_formats is not None and \
+                    if getattr(self.plugin, '_restrict_to_formats', None) is not None and \
                             importer_name not in self.plugin._restrict_to_formats:
                         self._invalid_importers[label] = 'not matching format restriction'  # noqa
                         continue
@@ -245,8 +245,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     spinner = Unicode("").tag(sync=True)
 
     parsed_input_is_empty = Bool(True).tag(sync=True)
+    parsed_input_is_resolvable = Bool(True).tag(sync=True)
 
-    # whether the current output could be interpretted as a list of data products
+    # whether the current output could be interpreted as a list of data products
     parsed_input_is_query = Bool(False).tag(sync=True)
     # if parsed_input_is_query is True, whether to treat it as such
     # or pass it on directly to the parsers/importers
@@ -289,6 +290,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
 
         super().__init__(*args, **kwargs)
+        self._raised_parser_exception = False
 
         self.observation_table.enable_clear = False
         self.observation_table.show_if_empty = False
@@ -514,47 +516,79 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if self._defer_resolver_input_updated:
             return
         if msg.get('name') == 'treat_table_as_query':
-            # the input itself has remain unchanged, but how that
+            # the input itself has remained unchanged, but how that
             # is mapped to output has
             self._clear_cache('output')
         else:
             self._cleanup()
 
+        parsed_input = None
         try:
-            parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
-        except Exception:  # nosec
-            self.parsed_input_is_empty = True
+            # calls self.parse_input() on the subclass and caches
+            parsed_input, is_valid = self.parsed_input
+            if not is_valid:
+                raise ValueError("Input is not valid for the selected resolver")
+        except Exception as e:  # nosec
+            # Capture full traceback for proper error attribution
+            self.parsed_input_is_empty = False
+            self.parsed_input_is_resolvable = False
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
+
+            # Avoid raising the same exception multiple times
+            # if the user is using the UI to type the URL.
+            if not self._raised_parser_exception:
+                self._raised_parser_exception = True
+                msg = (f'Parsing failed: {e}.\n'
+                       f'If re-attempted, this message will not be raised again.')
+                raise ValueError(msg) from e
+
             return
+        else:
+            # Reset the flag if the item is now parseable.
+            self._raised_parser_exception = False
 
         if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
             self.parsed_input_is_empty = True
+            self.parsed_input_is_resolvable = False
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
+
+            # Avoid raising the same exception multiple times
+            # if the user is using the UI to type the URL.
+            if not self._raised_parser_exception:
+                self._raised_parser_exception = True
+                raise ValueError('Parsed input is empty or None, cannot resolve. '
+                                 'If re-attempted, this message will not be raised again.')
+
             return
 
         # first attempt to parse the input as a table
         parsed_input_table = self._parsed_input_to_table(parsed_input)
         # if the input could be parsed as a table, try to interpret it as
-        # either an observation table or file table.  parsed_input_table
+        # either an observation table or file table. parsed_input_table
         # will be None if it could not be parsed as a table.
         if self.treat_table_as_query and parsed_input_table is not None:
             file_table = self._parsed_input_to_file_table(parsed_input_table)
+            observation_table = self._parsed_input_to_observation_table(parsed_input_table)
             if file_table is not None:
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
 
                 for row in file_table:
                     self.file_table.add_item(row)
+
+                # Technically input isn't complete yet but if we don't set this now
+                # the UI will appear bugged with the 'input is empty' message for astroquery
+                self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = False
                 self.file_table_populated = True
@@ -569,11 +603,15 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     self.observation_table.add_item(row)
                 self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible # noqa
                                                           if h not in ['s_region']]
+
+                # See 'input is empty' comment above
+                self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True
                 self.file_table_populated = False
                 return
 
+        self.parsed_input_is_resolvable = True
         self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
         self.observation_table_populated = False
@@ -746,7 +784,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if self.parsed_input_is_query and self.treat_table_as_query:
             return self._download_from_file_table()
         else:
-            return self.parsed_input
+            parsed_input, _ = self.parsed_input
+            return parsed_input
 
     def enable_footprint_selection_tools(self):
         """
