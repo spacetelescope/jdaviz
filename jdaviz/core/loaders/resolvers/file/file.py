@@ -72,4 +72,4 @@ class FileResolver(BaseResolver):
         return os.path.splitext(os.path.basename(self.filepath))[0] if self.filepath else None
 
     def parse_input(self):
-        return self.filepath
+        return self.filepath, self.is_valid
