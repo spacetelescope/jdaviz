@@ -38,7 +38,7 @@ The Line Analysis plugin can be run from the API:
 .. code-block:: python
 
     # Open line analysis plugin
-    plugin_la = specviz.plugins['Line Analysis']
+    plugin_la = jd.plugins['Line Analysis']
     plugin_la.open_in_tray()
     # Input the appropriate spectrum and region
     plugin_la.dataset = 'my spectrum'

@@ -46,7 +46,7 @@ API Access
 
 .. code-block:: python
 
-    plg = app.plugins['Line Lists']
+    plg = jd.plugins['Line Lists']
 
     # Load a line list
     plg.load_line_list('SDSS')
