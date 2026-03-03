@@ -1073,7 +1073,7 @@ class BaseConeSearchResolver(BaseResolver):
         return True
 
 
-def _format_resolver_error(resolver_dict, formats=None, show_full_error=False):
+def _format_resolver_error(resolver_dict, formats=None, show_full_error=False, no_align=False):
     """
     Format a resolver results dictionary into a readable table string.
 
@@ -1094,6 +1094,8 @@ def _format_resolver_error(resolver_dict, formats=None, show_full_error=False):
         If False (default), strip the first 20 characters of each status
         string (the dev-relevant prefix such as ``"resolver exception: "``)
         and truncate long messages. If True, show the full status string.
+    no_align : bool, optional
+        If True, do not attempt to align resolver/format names with dots.
 
     Returns
     -------
@@ -1102,6 +1104,8 @@ def _format_resolver_error(resolver_dict, formats=None, show_full_error=False):
     """
     # Width of the dot-aligned resolver/format name column
     resolver_alignment_width = 40
+    if no_align:
+        resolver_alignment_width = 2
     # Maximum length for a (possibly trimmed) status string
     truncation_len = 57
     full_table_width = resolver_alignment_width + truncation_len
@@ -1218,10 +1222,12 @@ def find_matching_resolver(app,
         for resolver, resolver_name, fmt_label in valid_resolvers:
             if resolver_name not in valid_resolvers_dict:
                 valid_resolvers_dict[resolver_name] = {}
+            fmt_label = f"{fmt_label}: jd.load(obj_to_load, format='{fmt_label})'"
             valid_resolvers_dict[resolver_name][fmt_label] = 'valid'
 
-        msg = (f'Multiple valid loaders found for input. Please specify a format:\n'
-               f'{_format_resolver_error(valid_resolvers_dict, formats=formats)}\n')
+        msg = (f'Multiple valid loaders found for input. '
+               f'Please specify a format from the following as:\n'
+               f'{_format_resolver_error(valid_resolvers_dict, formats=formats, no_align=True)}\n')
         raise ValueError(msg)
     else:
         return valid_resolvers[0][0].user_api
