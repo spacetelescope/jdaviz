@@ -326,7 +326,8 @@ class TestVOImvizRemote:
         # Clear existing messages
         imviz_helper.plugins['Logger'].clear_history()
         vo_ldr.resource.selected = "HST.M51"
-        vo_ldr.query_archive()
+        with pytest.raises(ValueError, match='Parsed input is empty or None'):
+            vo_ldr.query_archive()
         assert any(
             expected_error_msg in d["text"]
             for d in imviz_helper.plugins['Logger'].history
