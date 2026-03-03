@@ -527,7 +527,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # calls self.parse_input() on the subclass and caches
             parsed_input, is_valid = self.parsed_input
             if not is_valid:
-                raise ValueError("Input is not valid for the selected resolver.")
+                raise ValueError("input is not valid for the selected resolver.")
         except Exception as e:  # nosec
             # Capture full traceback for proper error attribution
             self.parsed_input_is_empty = False
