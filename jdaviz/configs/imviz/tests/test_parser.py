@@ -523,7 +523,7 @@ def test_load_valid_not_valid(imviz_helper):
     imviz_helper.load_data(arr, data_label='valid', show_in_viewer=False)
 
     # Load something invalid.
-    with pytest.raises(ValueError, match='no valid loaders found for input'):
+    with pytest.raises(ValueError, match='No valid loaders found for input.'):
         imviz_helper.load_data(np.zeros(2), show_in_viewer=False)
 
     # Make sure valid data is still there.

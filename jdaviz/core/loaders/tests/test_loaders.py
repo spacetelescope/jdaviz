@@ -209,7 +209,8 @@ def test_resolver_url(deconfigged_helper):
     assert len(loader.format.choices) == 0
 
     # non-valid input
-    loader.url = 'not-valid-url'
+    with pytest.raises(ValueError, match="Parsing failed: The input file"):
+        loader.url = 'not-valid-url'
     assert len(loader.format.choices) == 0
 
     # s3 input
