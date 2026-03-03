@@ -507,7 +507,7 @@ def test_disable_footprint_selection_tools_api(deconfigged_helper, image_nddata_
 
     # Now disable
     ldr.disable_footprint_selection_tools()
-    assert ldr._obj.custom_toolbar_enabled is False
+    assert not ldr._obj.custom_toolbar_enabled
 
     # Verify footprints are removed
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]

@@ -365,12 +365,12 @@ def test_footprint_enable_disable_api(imviz_helper, image_2d_wcs):
         plugin.add_overlay('second')
 
         # Initially disabled
-        assert plugin._obj.custom_toolbar_enabled is False
+        assert not plugin._obj.custom_toolbar_enabled
 
         # Enable using API
         plugin.enable_footprint_selection_tools()
-        assert plugin._obj.custom_toolbar_enabled is True
+        assert plugin._obj.custom_toolbar_enabled
 
         # Disable using API
         plugin.disable_footprint_selection_tools()
-        assert plugin._obj.custom_toolbar_enabled is False
+        assert not plugin._obj.custom_toolbar_enabled
