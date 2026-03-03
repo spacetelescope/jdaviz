@@ -4,6 +4,7 @@ from astropy import units as u
 from pyvo.utils import vocabularies  # noqa: F401
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError, DALQueryError
+from pyvo.utils.vocabularies import VocabularyError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Any, List, observe
 
@@ -39,7 +40,12 @@ class VOResolver(BaseConeSearchResolver):
         )
 
         self.waveband.choices = (
-            w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
+                    try:
+                        self.waveband.choices = (
+                            w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
+                        )
+                    except VocabularyError:
+                        self.waveband.choices = []
         )
 
         self.waveband_selected = ""
