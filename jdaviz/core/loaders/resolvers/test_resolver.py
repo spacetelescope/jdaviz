@@ -472,9 +472,9 @@ def test_enable_footprint_selection_tools_api(deconfigged_helper, image_nddata_w
     # Link by WCS
     ldr._obj.vue_link_by_wcs()
 
-    assert ldr._obj.custom_toolbar_enabled is False
+    assert not ldr._obj.custom_toolbar_enabled
     ldr.enable_footprint_selection_tools()
-    assert ldr._obj.custom_toolbar_enabled is True
+    assert ldr._obj.custom_toolbar_enabled
 
     # Verify footprints are displayed
     viewer = list(deconfigged_helper.app._viewer_store.values())[0]
@@ -499,7 +499,7 @@ def test_disable_footprint_selection_tools_api(deconfigged_helper, image_nddata_
 
     # Enable first
     ldr.enable_footprint_selection_tools()
-    assert ldr._obj.custom_toolbar_enabled is True
+    assert ldr._obj.custom_toolbar_enabled
 
     viewer = list(deconfigged_helper.app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
