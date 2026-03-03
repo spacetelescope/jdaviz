@@ -7,11 +7,13 @@ from astropy import units as u
 from astropy.nddata import CCDData
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue_jupyter.bqplot.image import BqplotImageView
+from PIL import Image
 from pyavm import AVM
 from regions import CircleSkyRegion, EllipseSkyRegion
 from specutils import Spectrum
 from traitlets import Bool, List, Unicode, observe
 
+from jdaviz.configs.default.plugins.export.avm import png_to_jpg_avm
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.marks import ShadowMixin
 from jdaviz.core.registries import tray_registry
@@ -138,7 +140,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         self.viewer.add_filter('is_not_empty')
 
-        viewer_format_options = ['png', 'svg']
+        viewer_format_options = ['png', 'svg', 'jpg']
         if self.config == 'cubeviz':
             if not self.app.state.settings.get('server_is_remote'):
                 viewer_format_options += ['mp4']
@@ -515,10 +517,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                  width=f"{self.image_width}px" if self.image_custom_size else None,
                                  height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa
 
-                if embed_avm and filetype == "png":
-                    AVM.embed()
-
-
             # restore marks to their original state
             for restore, mark in zip(restores, viewer.figure.marks):
                 for k, v in restore.items():
@@ -641,8 +639,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         def on_img_received(data):
             try:
-                with filename.open(mode='bw') as f:
-                    f.write(data)
+                if filetype == 'jpg':
+                    print(f'{filename=}')
+                    with filename.open(mode='bw') as f:
+                        f.write(data)
+                else:
+                    with filename.open(mode='bw') as f:
+                        f.write(data)
+
             except Exception as e:
                 self.hub.broadcast(SnackbarMessage(
                     f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
@@ -710,6 +714,15 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         elif filetype == 'png':
             # NOTE: get_png already check if _upload_png_callback is not None
             get_png(viewer.figure)
+        elif filetype == 'jpg':
+            # NOTE: get_png already check if _upload_png_callback is not None
+            get_png(viewer.figure)
+
+            viz = self.app._jdaviz_helper
+            viewer_name = 'imviz-0'
+            old_filename = str(filename)
+            png_to_jpg_avm(viz, viewer_name, filename)
+
         elif filetype == 'svg':
             if viewer.figure._upload_svg_callback is not None:
                 raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure") # noqa
