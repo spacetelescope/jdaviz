@@ -527,7 +527,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # calls self.parse_input() on the subclass and caches
             parsed_input, is_valid = self.parsed_input
             if not is_valid:
-                raise ValueError("Input is not valid for the selected resolver")
+                raise ValueError("Input is not valid for the selected resolver.")
         except Exception as e:  # nosec
             # Capture full traceback for proper error attribution
             self.parsed_input_is_empty = False
@@ -543,7 +543,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # if the user is using the UI to type the URL.
             if not self._raised_parser_exception:
                 self._raised_parser_exception = True
-                msg = (f'Parsing failed: {e}.\n'
+                msg = (f'Parsing failed: {e}\n'
                        f'If re-attempted, this message will not be raised again.')
                 raise ValueError(msg) from e
 
