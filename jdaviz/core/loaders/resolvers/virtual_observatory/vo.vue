@@ -26,6 +26,15 @@
     :custom_toolbar_enabled="custom_toolbar_enabled"
   >
     <v-form v-model="all_fields_filled">
+
+      <plugin-select
+        :items="servicetype_choices.map(i => i.label)"
+        :selected.sync="servicetype_selected"
+        label="Data Product"
+        hint="Type of Data Products to Query"
+        :disabled="false"
+      ></plugin-select>
+
       <j-plugin-section-header>Source Selection</j-plugin-section-header>
 
       <plugin-viewer-select

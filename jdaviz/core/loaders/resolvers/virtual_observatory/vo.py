@@ -5,7 +5,7 @@ from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError, DALQueryError
 from pyvo.utils.vocabularies import VocabularyError
 from requests.exceptions import ConnectionError as RequestConnectionError
-from traitlets import Bool, Any, List, observe
+from traitlets import Bool, Any, List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_resolver_registry
@@ -24,6 +24,14 @@ __all__ = ["VOResolver"]
 class VOResolver(BaseConeSearchResolver):
     template_file = __file__, "vo.vue"
 
+    servicetype_selected = Unicode("sia").tag(sync=True)
+    servicetype_choices = List(
+        [
+            {"label": "Images", "value": "sia"},
+            {"label": "Spectra", "value": "ssa"},
+        ]
+    ).tag(sync=True)
+
     waveband_items = List().tag(sync=True)
     waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
     resource_filter_coverage = Bool(False).tag(sync=True)
@@ -33,6 +41,11 @@ class VOResolver(BaseConeSearchResolver):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.servicetype = SelectPluginComponent(
+            self, items="servicetype_choices", selected="servicetype_selected"
+        )
+        self.servicetype.selected = self.servicetype.choices[0]
 
         # Waveband properties to filter available registry resources
         self.waveband = SelectPluginComponent(
@@ -106,7 +119,7 @@ class VOResolver(BaseConeSearchResolver):
 
         try:
             registry_args = [
-                registry.Servicetype("sia"),
+                registry.Servicetype(self.servicetype_selected),
                 registry.Waveband(self.waveband_selected),
             ]
             # If coverage filtering is enabled, lookup current
@@ -184,7 +197,7 @@ class VOResolver(BaseConeSearchResolver):
             # consider indexing on the full IVOID, which is guaranteed unique.
             sia_service = self._full_registry_results[
                 self.resource_selected
-            ].get_service(service_type="sia")
+            ].get_service(service_type=self.servicetype_selected)
             try:
                 # First parse user-provided source as direct coordinates
                 coord = SkyCoord(
@@ -248,7 +261,7 @@ class VOResolver(BaseConeSearchResolver):
             else:
                 self.hub.broadcast(
                     SnackbarMessage(
-                        f"{len(sia_results)} SIA results found!",
+                        f"{len(sia_results)} {self.servicetype_selected} results found!",
                         sender=self,
                         color="success",
                     )
