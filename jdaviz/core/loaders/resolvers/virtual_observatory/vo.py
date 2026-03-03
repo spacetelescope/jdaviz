@@ -39,14 +39,12 @@ class VOResolver(BaseConeSearchResolver):
             self, items="waveband_items", selected="waveband_selected"
         )
 
-        self.waveband.choices = (
-                    try:
-                        self.waveband.choices = (
-                            w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
-                        )
-                    except VocabularyError:
-                        self.waveband.choices = []
-        )
+        try:
+            self.waveband.choices = (
+                w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
+            )
+        except VocabularyError:
+            self.waveband.choices = []
 
         self.waveband_selected = ""
 
