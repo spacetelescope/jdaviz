@@ -222,11 +222,13 @@ class VOResolver(BaseConeSearchResolver):
             try:
                 sia_results = sia_service.search(
                     coord,
-                    size=(
-                        (self.radius * u.Unit(self.radius_unit.selected))
-                        if self.radius > 0.0
-                        else None
-                    ),
+                    **{
+                        "diameter" if self.servicetype_selected == "ssa" else "size": (
+                            (self.radius * u.Unit(self.radius_unit.selected))
+                            if self.radius > 0.0
+                            else None
+                        )
+                    },
                     format="image/fits",
                 )
             except DALQueryError as e:
@@ -235,11 +237,13 @@ class VOResolver(BaseConeSearchResolver):
                 if "Wrong FORMAT=image/fits,image/fits" in str(e):
                     sia_results = sia_service.search(
                         coord,
-                        size=(
-                            (self.radius * u.Unit(self.radius_unit.selected))
-                            if self.radius > 0.0
-                            else None
-                        ),
+                        **{
+                            "diameter" if self.servicetype_selected == "ssa" else "size": (
+                                (self.radius * u.Unit(self.radius_unit.selected))
+                                if self.radius > 0.0
+                                else None
+                            )
+                        },
                     )
                 else:
                     self.hub.broadcast(
