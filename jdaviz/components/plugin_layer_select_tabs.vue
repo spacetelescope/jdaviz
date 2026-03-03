@@ -29,6 +29,20 @@
  </div>
 </template>
 
+<style scoped>
+  .layer-tab-selected {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .theme--dark .layer-tab-selected {
+    background-color: rgba(255,255,255,0.1);
+  }
+
+  .layer-tab-selected .strike:first-of-type {
+    padding-top: 16px;
+  }
+</style>
+
 <script>
 module.exports = {
   props: ['items', 'selected', 'multiselect', 'colormode', 'cmap_samples',
