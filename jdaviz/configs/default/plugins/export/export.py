@@ -1,5 +1,6 @@
 import os
 import time
+from functools import partial
 from pathlib import Path
 import threading
 
@@ -512,6 +513,29 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 self.save_movie(viewer, filename, filetype,
                                 width=f"{self.image_width}px" if self.image_custom_size else None,
                                 height=f"{self.image_height}px" if self.image_custom_size else None)
+
+            elif filetype == "jpg":
+                # export screenshot to JPG with AVM by:
+                #   (1) export a temporary PNG
+                #   (2) convert temporary PNG to a temporary JPG with PIL
+                #   (3) use pyAVM to embed AVM into a final copy of the temporary JPG
+
+                # first export PNG
+                tmp_filename = Path(str(Path(filename)).replace('.jpg', '.png'))
+                self.save_figure(viewer, tmp_filename, 'png', show_dialog=show_dialog,
+                                 width=f"{self.image_width}px" if self.image_custom_size else None,
+                                 height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa
+
+                # wait for PNG to be available before continuing
+                while viewer.figure._upload_png_callback is not None:
+                    time.sleep(0.05)
+
+                # now convert to JPG with AVM
+                png_to_jpg_avm(self.app._jdaviz_helper, viewer, tmp_filename)
+
+                # remove temporary png file
+                os.remove(tmp_filename)
+
             else:
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
                                  width=f"{self.image_width}px" if self.image_custom_size else None,
@@ -637,15 +661,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         else:
             app = viewer.app
 
-        def on_img_received(data):
+        def on_img_received(data, filename=filename):
             try:
-                if filetype == 'jpg':
-                    print(f'{filename=}')
-                    with filename.open(mode='bw') as f:
-                        f.write(data)
-                else:
-                    with filename.open(mode='bw') as f:
-                        f.write(data)
+                with filename.open(mode='bw') as f:
+                    f.write(data)
 
             except Exception as e:
                 self.hub.broadcast(SnackbarMessage(
@@ -656,7 +675,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"{self.viewer.selected} exported to {str(filename)}",
                     sender=self, color="success"))
 
-        def get_png(figure):
+        def get_png(figure, on_img_received=on_img_received):
             if figure._upload_png_callback is not None:
                 raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
 
@@ -715,13 +734,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             # NOTE: get_png already check if _upload_png_callback is not None
             get_png(viewer.figure)
         elif filetype == 'jpg':
-            # NOTE: get_png already check if _upload_png_callback is not None
-            get_png(viewer.figure)
+            # the expected filename at this point is a JPG, but we're going to
+            # produce a PNG first, and convert to JPG later:
+            tmp_filename = Path(str(filename).replace('.jpg', '.png'))
 
-            viz = self.app._jdaviz_helper
-            viewer_name = 'imviz-0'
-            old_filename = str(filename)
-            png_to_jpg_avm(viz, viewer_name, filename)
+            # below is equivalent to `get_png`
+            # viewer.figure.get_png_data(partial(on_img_received, filename=tmp_filename))
+            get_png(viewer.figure, partial(on_img_received, filename=tmp_filename))
 
         elif filetype == 'svg':
             if viewer.figure._upload_svg_callback is not None:
