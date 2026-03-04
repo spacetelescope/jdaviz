@@ -40,12 +40,9 @@ class VOResolver(BaseConeSearchResolver):
             self, items="waveband_items", selected="waveband_selected"
         )
 
-        try:
-            self.waveband.choices = (
-                w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
-            )
-        except VocabularyError:
-            self.waveband.choices = ["",]
+        # How often are we really discovering a new astronomical messenger? I think we can hard code this.
+        self.waveband.choices = ['photon', 'radio', 'millimeter', 'infrared', 'optical',
+                                 'uv', 'euv', 'x-ray', 'gamma-ray', 'neutrino']
 
         self.waveband_selected = ""
 
