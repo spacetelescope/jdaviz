@@ -29,6 +29,8 @@ Bug Fixes
 
 - Avoid incorrectly showing "no viewer selected" warning when adding data from some plugins. [#4037]
 
+- Avoid crashing Jdaviz if the PyVO vocabularies can't be downloaded. [#4059]
+
 Cubeviz
 ^^^^^^^
 
