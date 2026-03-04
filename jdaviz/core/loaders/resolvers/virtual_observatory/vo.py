@@ -3,7 +3,6 @@ from astropy import units as u
 
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError, DALQueryError
-from pyvo.utils.vocabularies import VocabularyError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Any, List, observe
 
