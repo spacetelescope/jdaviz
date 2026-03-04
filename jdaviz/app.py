@@ -417,7 +417,6 @@ class Application(VuetifyTemplate, HubListener):
         if self.config == "imviz":
             self._wcs_fast_approximation = None
 
-
         # Subscribe to messages indicating that a new viewer needs to be
         #  created. When received, information is passed to the application
         #  handler to generate the appropriate viewer instance.
@@ -2799,7 +2798,6 @@ class Application(VuetifyTemplate, HubListener):
             self._get_data_item_by_id(event['item_id'])['name'],
             viewer_id=self._get_viewer_item(event['id'])['name']
         )
-
 
     def set_data_visibility(self, viewer_reference, data_label, visible=True, replace=False):
         """
