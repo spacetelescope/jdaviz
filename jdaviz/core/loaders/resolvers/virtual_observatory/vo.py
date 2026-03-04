@@ -16,7 +16,6 @@ from jdaviz.core.template_mixin import (
 )
 from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.user_api import LoaderUserApi
-from jdaviz.pytest_utilities.pytest_socket_management import cleanup_leaked_sockets
 
 
 __all__ = ["VOResolver"]
@@ -46,8 +45,7 @@ class VOResolver(BaseConeSearchResolver):
                 w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
             )
         except VocabularyError:
-            self.waveband.choices = []
-            cleanup_leaked_sockets()
+            self.waveband.choices = ["",]
 
         self.waveband_selected = ""
 
