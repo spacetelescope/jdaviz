@@ -2046,17 +2046,40 @@ class LayerSelect(SelectPluginComponent):
         def is_dq_layer(lyr):
             return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
 
-        def has_wcs_if_image_viewer_pixel_linked(lyr):
+        def catalog_has_correct_coords_based_on_link_type(lyr):
+            """
+            For catalogs in image viewers, filter based on link type. Catalog
+            must have X+Y coordinate columns assigned if pixel linked, and RA+Dec
+            coordinate columns assigned if WCS linked.
+            """
+
+            # this filter is only relevant for image viewers
             if not np.all([viewer.__class__.__name__ == 'ImvizImageView'
                            for viewer in self.viewer_objs]):
                 return True
+
+            # non-catalog layers should remain available regardless of link type
             if getattr(lyr, 'meta', {}).get('_importer', '') != 'CatalogImporter':
-                # for now, allow any non-catalog layers to reproduce
-                # expected behavior from tests
                 return True
+
+            comp_labels = [str(x) for x in lyr.component_ids()]
+
+            # if pixel linked, only show catalog layers if they have X and Y coords
             if self.app._align_by.lower() == 'pixels':
-                return getattr(lyr, 'coords', None) is not None
-            return True
+                x_col = lyr.meta.get('_jdaviz_loader_x_col')
+                y_col = lyr.meta.get('_jdaviz_loader_y_col')
+                return x_col in comp_labels and y_col in comp_labels
+
+            # if WCS linked, only show catalog layers if they have RA and Dec coords
+            elif self.app._align_by.lower() == 'wcs':
+                ra_col = lyr.meta.get('_jdaviz_loader_ra_col')
+                dec_col = lyr.meta.get('_jdaviz_loader_dec_col')
+                return ra_col in comp_labels and dec_col in comp_labels
+
+            # this should never be encountered, but just in case raise an error
+            # instead of just returning None so we know something went wrong
+            else:
+                raise ValueError("_align_by must be 'wcs' or 'pixels'")
 
         return super()._is_valid_item(lyr, locals())
 
