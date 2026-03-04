@@ -111,6 +111,12 @@ class ConfigHelper(HubListener):
         if not self._in_batch_load:
             self.app.hub.broadcast(ExitBatchLoadMessage(sender=self.app))
 
+            # Process any deferred set_data_visibility calls that were queued during batch_load
+            pending_calls = getattr(self, '_pending_set_data_visibility', [])
+            for call_kwargs in pending_calls:
+                self.app.set_data_visibility(**call_kwargs)
+            self._pending_set_data_visibility = []
+
             # add any data to viewers that were requested but deferred
             for data_label, viewer_ref in self._delayed_show_in_viewer_labels.items():
                 self.app.set_data_visibility(viewer_ref, data_label,

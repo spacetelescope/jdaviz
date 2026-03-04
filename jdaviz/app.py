@@ -417,6 +417,7 @@ class Application(VuetifyTemplate, HubListener):
         if self.config == "imviz":
             self._wcs_fast_approximation = None
 
+
         # Subscribe to messages indicating that a new viewer needs to be
         #  created. When received, information is passed to the application
         #  handler to generate the appropriate viewer instance.
@@ -2799,6 +2800,7 @@ class Application(VuetifyTemplate, HubListener):
             viewer_id=self._get_viewer_item(event['id'])['name']
         )
 
+
     def set_data_visibility(self, viewer_reference, data_label, visible=True, replace=False):
         """
         Set the visibility of the layers corresponding to ``data_label`` in a given viewer.
@@ -2808,13 +2810,27 @@ class Application(VuetifyTemplate, HubListener):
         viewer_reference : str
             Reference (or ID) of the viewer
         data_label : str
-            Label of the data to set the visiblity.  If not already loaded in the viewer, the
+            Label of the data to set the visibility.  If not already loaded in the viewer, the
             data will automatically be loaded before setting the visibility
         visible : bool
             Whether to set the layer(s) to visible.
         replace : bool
             Whether to disable the visibility of all other layers in the viewer
         """
+        # During batch_load, defer the entire set_data_visibility call to prevent rendering
+        # issues with multiple layers being added in quick succession
+        if getattr(self._jdaviz_helper, '_in_batch_load', 0) > 0:
+            # Store for processing after batch_load exits
+            if not hasattr(self._jdaviz_helper, '_pending_set_data_visibility'):
+                self._jdaviz_helper._pending_set_data_visibility = []
+            self._jdaviz_helper._pending_set_data_visibility.append({
+                'viewer_reference': viewer_reference,
+                'data_label': data_label,
+                'visible': visible,
+                'replace': replace
+            })
+            return
+
         viewer_item = self._get_viewer_item(viewer_reference)
         viewer_id = viewer_item['id']
         viewer = self.get_viewer_by_id(viewer_id)
@@ -2837,7 +2853,7 @@ class Application(VuetifyTemplate, HubListener):
             data = self.data_collection[data_label]
 
             # set the original color based on metadata preferences, if provided, and otherwise
-            # based on the colorcycler
+            # based on the color-cycler
             # NOTE: this is intentionally not a single line to avoid incrementing the color-cycler
             # unless it is used
             color = data.meta.get('_default_color')
@@ -2916,13 +2932,12 @@ class Application(VuetifyTemplate, HubListener):
         # Sets the plot axes labels to be the units of the most recently
         # active data.
         viewer_data_labels = [layer.layer.label for layer in viewer.layers]
-        if len(viewer_data_labels) > 0 and getattr(self._jdaviz_helper, '_in_batch_load', 0) == 0:
+        if len(viewer_data_labels) > 0:
             # This "if" is nested on purpose to make parent "if" available
             # for other configs in the future, as needed.
             if self.config == 'imviz':
                 viewer.on_limits_change()  # Trigger compass redraw
-
-        if layers_finalized_message:
+        if layers_finalized_message is not None:
             self.hub.broadcast(layers_finalized_message)
 
     def data_item_remove(self, data_label):
