@@ -1,7 +1,6 @@
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-from pyvo.utils import vocabularies  # noqa: F401
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError, DALQueryError
 from pyvo.utils.vocabularies import VocabularyError
@@ -40,7 +39,8 @@ class VOResolver(BaseConeSearchResolver):
             self, items="waveband_items", selected="waveband_selected"
         )
 
-        # How often are we really discovering a new astronomical messenger? I think we can hard code this.
+        # How often are we really discovering a new astronomical messenger?
+        # I think we can hard code this.
         self.waveband.choices = ['photon', 'radio', 'millimeter', 'infrared', 'optical',
                                  'uv', 'euv', 'x-ray', 'gamma-ray', 'neutrino']
 
