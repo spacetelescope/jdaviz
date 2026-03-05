@@ -239,6 +239,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     default_input = None
     default_input_cast = None
     requires_api_support = False
+    _update_format_spinner_text = 'searching for valid formats...'
 
     spinner = Unicode("").tag(sync=True)
 
@@ -265,6 +266,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     # Set remote server options based on the app configuration
     # read-only: change via app.state.settings['server_is_remote']
     server_is_remote = Bool(False).tag(sync=True)
+    # Hide the resolver UI (title, input fields, query results) and show only importer selection
+    hide_resolver = Bool(False).tag(sync=True)
 
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
@@ -711,7 +714,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self._clear_cache('output')
         self._update_format_items()
 
-    @with_spinner('spinner', 'searching for valid formats...')
+    @with_spinner('spinner', '_update_format_spinner_text')
     def _update_format_items(self):
         # NOTE: this will call self.output
         self.format._update_items()
@@ -900,14 +903,20 @@ class BaseConeSearchResolver(BaseResolver):
                 )
             else:
                 # If not subscribed anyways, remove_callback should produce a no-op
-                viewer.state.remove_callback(
-                    "zoom_center_x",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
-                viewer.state.remove_callback(
-                    "zoom_center_y",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
+                try:
+                    viewer.state.remove_callback(
+                        "zoom_center_x",
+                        lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                    )
+                except TypeError:
+                    pass
+                try:
+                    viewer.state.remove_callback(
+                        "zoom_center_y",
+                        lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                    )
+                except TypeError:
+                    pass
         self.vue_center_on_data()
 
     @observe("coord_follow_viewer_pan", type="change")

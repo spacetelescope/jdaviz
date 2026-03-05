@@ -205,6 +205,15 @@ a:active {
   filter: invert(1) saturate(1) brightness(100);
 }
 
+.theme--dark .jdaviz-nested-toolbar .v-icon:not(.suboptions-carrot),
+.theme--dark .plugin-nested-toolbar .v-icon:not(.suboptions-carrot) {
+  /* in dark mode, Vuetify icons are already white; cancel the inversion above
+     so they remain white on the dark toolbar background.
+     .suboptions-carrot is excluded because it has color: black forced, so it
+     still needs the inversion to appear white. */
+  filter: none;
+}
+
 .jdaviz-nested-toolbar .v-btn, .plugin-nested-toolbar .v-btn {
   height: 42px !important;
   border: none !important;
@@ -338,12 +347,6 @@ span.api-hint-header {
 
 .api-hint-invert-color :is(.v-select__slot) > .v-label {
   color: #C6F0FD !important;
-}
-
-/* Hide filter button in v-data-table header */
-.v-data-table-header .v-btn:has(.v-icon),
-.v-data-table th .v-btn:has(.v-icon) {
-  display: none !important;
 }
 
 </style>

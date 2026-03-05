@@ -507,18 +507,25 @@ def test_table_viewer(deconfigged_helper):
     assert len(deconfigged_helper.viewers) == 2
     assert len(nv._obj.glue_viewer.layers) == 1
 
-    # subset creation tool should not be visible because no entries checked
+    # subset creation tool should always be visible (no longer requires checked rows)
     toolbar = tv._obj.glue_viewer.toolbar
-    assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is True
 
-    tv._obj.glue_viewer.widget_table.checked = [1, 2]
+    # checkboxes should be hidden by default
+    assert tv._obj.glue_viewer.widget_table.selection_enabled is False
 
+    # activate the tool to show checkboxes
     toolbar.select_tool('jdaviz:table_subset')
+    assert tv._obj.glue_viewer.widget_table.selection_enabled is True
+
+    # check some rows and apply
+    tv._obj.glue_viewer.widget_table.checked = [1, 2]
+    # apply subset via the custom toolbar tool
+    toolbar.tools['jdaviz:table_apply_subset'].activate()
     assert 'Subset 1' in deconfigged_helper.plugins['Subset Tools'].subset.choices
 
-    assert toolbar.tools['jdaviz:table_subset'].is_visible() is True
-    tv._obj.glue_viewer.widget_table.checked = []
-    assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
+    # after applying, checkboxes should be hidden again
+    assert tv._obj.glue_viewer.widget_table.selection_enabled is False
 
 
 @pytest.mark.parametrize("from_file", [True, False])
@@ -598,10 +605,17 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     dm = imviz_helper.viewers['imviz-0'].data_menu
     assert dm.data_labels_visible == ['Image[DATA]']
 
+    # and it should not be available as a layer in plot options
+    po = imviz_helper.plugins['Plot Options']
+    po.viewer = 'imviz-0'
+    assert po.layer.choices == ['Image[DATA]']  # catalog layer not an option
+
     # but if we load the catalog with X, Y, it should be visible
     imviz_helper.load(table_x_y_only,
                       data_label='catalog1')
     assert dm.data_labels_visible == ['catalog1', 'Image[DATA]']
+
+    assert po.layer.choices == ['Image[DATA]', 'catalog1']  # catalog layer is now an option
 
     # now change to WCS linking
     imviz_helper.plugins['Orientation'].align_by = 'WCS'

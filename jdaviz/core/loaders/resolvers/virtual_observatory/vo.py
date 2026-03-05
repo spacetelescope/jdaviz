@@ -1,7 +1,6 @@
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-from pyvo.utils import vocabularies  # noqa: F401
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError, DALQueryError
 from requests.exceptions import ConnectionError as RequestConnectionError
@@ -15,6 +14,7 @@ from jdaviz.core.template_mixin import (
 )
 from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.user_api import LoaderUserApi
+
 
 __all__ = ["VOResolver"]
 
@@ -38,9 +38,10 @@ class VOResolver(BaseConeSearchResolver):
             self, items="waveband_items", selected="waveband_selected"
         )
 
-        self.waveband.choices = (
-            w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
-        )
+        # How often are we really discovering a new astronomical messenger?
+        # I think we can hard code this.
+        self.waveband.choices = ['photon', 'radio', 'millimeter', 'infrared', 'optical',
+                                 'uv', 'euv', 'x-ray', 'gamma-ray', 'neutrino']
 
         self.waveband_selected = ""
 

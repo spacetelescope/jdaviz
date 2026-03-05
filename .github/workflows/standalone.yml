@@ -79,14 +79,14 @@ jobs:
 
     - name: Upload Test artifacts
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (non-OSX)
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: |
@@ -185,14 +185,14 @@ jobs:
 
     - name: Upload Test artifacts
       if: always()
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (OSX)
       if: ${{ always() && (matrix.os == 'macos-14') }}
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: standalone/dist/jdaviz.dmg
