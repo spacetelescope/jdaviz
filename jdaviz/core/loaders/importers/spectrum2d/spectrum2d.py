@@ -23,6 +23,14 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     auto_extract = Bool(True).tag(sync=True)
 
+    @observe('extension_selected')
+    def _on_extension_selected_changed(self, change={}):
+        # Set import_disabled_msg if no extension is selected
+        if hasattr(self, 'extension') and len(self.extension.selected) == 0:
+            self.import_disabled_msg = "Please select an extension to import."
+        else:
+            self.import_disabled_msg = ""
+
     ext_data_label_value = Unicode().tag(sync=True)
     ext_data_label_default = Unicode().tag(sync=True)
     ext_data_label_auto = Bool(True).tag(sync=True)

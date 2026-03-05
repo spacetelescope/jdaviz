@@ -66,7 +66,7 @@ class TestSubsetImporter:
 
         # Default label should be valid
         assert importer.subset_label_invalid_msg == ''
-        assert importer.import_disabled is False
+        assert len(importer.import_disabled_msg) == 0
 
         # Label validation works correctly.
         for label_value in ('', '    '):
@@ -84,8 +84,8 @@ class TestSubsetImporter:
                      "is reserved for auto-generated labels")
         assert importer.subset_label_invalid_msg == error_msg
 
-        # check import_disabled updates correctly
-        assert importer.import_disabled is True
+        # check import_disabled_msg updates correctly
+        assert len(importer.import_disabled_msg) > 0
 
         # test that calling with invalid label raises ValueError
         with pytest.raises(ValueError, match=error_msg):

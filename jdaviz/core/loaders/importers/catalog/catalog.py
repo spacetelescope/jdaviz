@@ -392,9 +392,15 @@ class CatalogImporter(BaseImporterToDataCollection):
             if (x in ['---', ''] or x is None) != (y in ['---', ''] or y is None):
                 import_disabled = True
 
-        # finally, set the import_disabled traitlet based on what was determined
-        # from the checks above
-        self.import_disabled = import_disabled
+        # finally, set the import_disabled_msg traitlet based on what was determined
+        # from the checks above. Empty msg = enabled, non-empty = disabled
+        if import_disabled:
+            self.import_disabled_msg = (
+                "Cannot import catalog without valid coordinate column pair. "
+                "Select both RA and Dec, or both X and Y coordinates."
+            )
+        else:
+            self.import_disabled_msg = ''
 
     @staticmethod
     def _get_supported_viewers():
