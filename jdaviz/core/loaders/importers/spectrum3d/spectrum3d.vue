@@ -133,6 +133,34 @@
       </div>
     </div>
 
+    <div v-if="dq_extension_items.length >= 1">
+      <j-plugin-section-header>DQ (Data Quality) Cube</j-plugin-section-header>
+      <plugin-select
+        :items="dq_extension_items"
+        :selected.sync="dq_extension_selected"
+        :show_if_single_entry="true"
+        :multiselect="multiselect"
+        :nonmultiselect_allow_clear="true"
+        :exists_in_dc="existing_data_in_dc"
+        label="DQ Extension"
+        api_hint="ldr.importer.dq_extension ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Extension from the FITS HDUList to use for the data quality cube."
+      />
+      <div v-if="dq_extension_selected.length > 0">
+        <plugin-auto-label
+          :value.sync="dq_data_label_value"
+          :default="dq_data_label_default"
+          :auto.sync="dq_data_label_auto"
+          :invalid_msg="dq_data_label_invalid_msg"
+          label="Data Label for the DQ Cube"
+          api_hint="ldr.importer.dq_data_label ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Label to assign to the new DQ cube data entry."
+        ></plugin-auto-label>
+      </div>
+    </div>
+
     <j-plugin-section-header>Extracted Spectrum</j-plugin-section-header>
     <plugin-switch
       :value.sync="auto_extract"

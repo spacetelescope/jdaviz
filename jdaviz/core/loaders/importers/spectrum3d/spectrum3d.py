@@ -69,6 +69,13 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     mask_viewer_label_auto = Bool(True).tag(sync=True)
     mask_viewer_label_invalid_msg = Unicode().tag(sync=True)
 
+    # DQ (Data Quality) Cube
+    has_dq = Bool(False).tag(sync=True)
+    dq_data_label_value = Unicode().tag(sync=True)
+    dq_data_label_default = Unicode().tag(sync=True)
+    dq_data_label_auto = Bool(True).tag(sync=True)
+    dq_data_label_invalid_msg = Unicode().tag(sync=True)
+
     # Extraction Options
     auto_extract = Bool(True).tag(sync=True)
     function_items = List().tag(sync=True)
@@ -190,6 +197,14 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         else:
             self.mask_viewer.selected = []
 
+        # DQ (DATA QUALITY) CUBE
+        self.has_dq = len(self.dq_extension_items) > 0
+        self.dq_data_label = AutoTextField(self,
+                                           'dq_data_label_value',
+                                           'dq_data_label_default',
+                                           'dq_data_label_auto',
+                                           'dq_data_label_invalid_msg')
+
         # AUTO-EXTRACTION
         self.function = SelectPluginComponent(
             self,
@@ -276,17 +291,21 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def user_api(self):
-        # TODO: remove flux_only and just have plugins set the extensions for mask/unc
+        # TODO: remove flux_only and just have plugins set the extensions for mask/unc/dq
         expose = ['auto_extract', 'ext_data_label', 'ext_viewer', 'flux_only']
         if self.has_unc:
             expose += ['unc_data_label', 'unc_viewer']
         if self.has_mask:
             expose += ['mask_data_label', 'mask_viewer']
+        if self.has_dq:
+            expose += ['dq_data_label']
         expose += ['extension']
         if self.has_unc:
             expose += ['unc_extension']
         if self.has_mask:
             expose += ['mask_extension']
+        if self.has_dq:
+            expose += ['dq_extension']
         return ImporterUserApi(self, expose)
 
     @property
@@ -312,6 +331,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         self.ext_data_label_default = f"{base} ({self.function_selected.lower()})"
         self.unc_data_label_default = f"{base} [UNC]"
         self.mask_data_label_default = f"{base} [MASK]"
+        self.dq_data_label_default = f"{base} [DQ]"
 
     @property
     def supported_flux_ndim(self):
@@ -355,6 +375,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         data_label = self.data_label_value
         unc_data_label = self.unc_data_label_value
         mask_data_label = self.mask_data_label_value
+        dq_data_label = self.dq_data_label_value
         ext_data_label = self.ext_data_label_value
 
         super().__call__()
@@ -415,6 +436,31 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         if ext is not None:
             self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
+
+            if self.has_dq and not self.flux_only:
+                dq_hdu = self.dq_extension.selected_obj
+
+            # for DQ components, map zeros to nans
+            # so that they are not displayed in the DQ colormap
+            dq_data = np.float32(dq_hdu.data)
+            dq_data[dq_data == 0] = np.nan
+
+            # Set _extname so the DQ plugin can identify this as a DQ layer
+            dq_meta = dict(self.output.meta)
+            dq_meta['_extname'] = 'DQ'
+
+            dq_cube = Spectrum(spectral_axis=self.output.spectral_axis,
+                               flux=dq_data * u.dimensionless_unscaled,
+                               wcs=self.output.wcs,
+                               meta=dq_meta,
+                               spectral_axis_index=self.output.spectral_axis_index)
+
+            self.add_to_data_collection(dq_cube,
+                                        dq_data_label,
+                                        parent=data_label,
+                                        viewer_select=self.viewer)
+
+            self.app._jdaviz_helper._loaded_dq_cube = self.app.data_collection[dq_data_label]
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         comp_type = _spatial_assign_component_type(comp_id, comp, units, physical_type)
