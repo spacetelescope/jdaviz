@@ -487,8 +487,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                  'viewer_selected', 'layer_multiselect')
 
         self.layer.filters += [is_not_wcs_only,
-                               'catalog_has_correct_coords_based_on_link_type',
-                               'not_in_table_viewer']
+                               'catalog_has_correct_coords_based_on_link_type']
 
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
