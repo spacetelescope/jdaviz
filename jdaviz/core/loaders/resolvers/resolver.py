@@ -491,7 +491,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _parsed_input_to_file_table(self, parsed_input_table):
         if 'url' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_url in ('URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
+        for map_to_url in ('URL', 'uri', 'URI', 'dataURI', 'download', 'Filename', 'access_url'):
             if map_to_url in parsed_input_table.colnames:
                 parsed_input_table.rename_column(map_to_url, 'url')
                 return parsed_input_table
