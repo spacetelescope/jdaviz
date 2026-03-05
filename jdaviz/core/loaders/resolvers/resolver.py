@@ -548,9 +548,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 raise ValueError(msg) from e
 
             return
-        else:
-            # Reset the flag if the item is now parseable.
-            self._raised_parser_exception = False
 
         if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
             self.parsed_input_is_empty = True
@@ -570,6 +567,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                                  'If re-attempted, this message will not be raised again.')
 
             return
+
+        # Reset the flag if the item is now parseable.
+        self._raised_parser_exception = False
 
         # first attempt to parse the input as a table
         parsed_input_table = self._parsed_input_to_table(parsed_input)
