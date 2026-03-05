@@ -4,10 +4,12 @@ import re
 import pytest
 import numpy as np
 import astropy.units as u
-from astropy.table import Table
+from astropy.table import Table as AstropyTable
 from specutils import SpectralRegion
 
-from jdaviz.core.template_mixin import TableMixin
+from ipyvuetify import VuetifyTemplate
+from glue.core import HubListener
+from jdaviz.core.template_mixin import TableMixin, Table
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -320,13 +322,19 @@ class FakeTable(TableMixin):
 
     def __init__(self, session, catalog, *args, **kwargs):
         self.session = session
+        self.app = session.jdaviz_app
         self._plugin_name = 'test-fake-table'
-        super().__init__(*args, **kwargs)
+        # Don't call TableMixin.__init__ directly to avoid enable_load_into_app
+        VuetifyTemplate.__init__(self, *args, **kwargs)
+        HubListener.__init__(self)
+        # Create table without loader support
+        self.table = Table(self, name='table', enable_load_into_app=False)
+        self.table_widget = 'IPY_MODEL_'+self.table.model_id
         self.table._qtable = catalog
 
 
 def astropy_table_write_formats():
-    table_obj = Table({'a': [1, 2], 'b': [3, 4]})
+    table_obj = AstropyTable({'a': [1, 2], 'b': [3, 4]})
     buf = io.StringIO()
     table_obj.write.list_formats(out=buf)
     output = buf.getvalue()

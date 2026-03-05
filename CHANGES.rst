@@ -36,6 +36,8 @@ New Features
 
 - Table viewer tools to highlight selected, zoom-to-selected, and create subset from selected. [#3994]
 
+- Allow ingesting tables in plugins back into the app. [#4021]
+
 Cubeviz
 ^^^^^^^
 

@@ -13,14 +13,14 @@
     </div>
 
     <v-card flat>
-      <v-card-title v-if="!server_is_remote" class="headline" color="primary" primary-title style="display: block; width: 100%">
+      <v-card-title v-if="!server_is_remote && !hide_resolver" class="headline" color="primary" primary-title style="display: block; width: 100%">
         {{title}}
         <span style="float: right">
           <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
         </span>
       </v-card-title>
       <v-card-text>
-        <v-container v-if="!server_is_remote" style="padding: 4px">
+        <v-container v-if="!server_is_remote && !hide_resolver" style="padding: 4px">
           <slot/>
         </v-container>
 
@@ -50,7 +50,7 @@
           </j-custom-toolbar-toggle>
 
           <!-- observation/file table -->
-          <div v-if="parsed_input_is_query">
+          <div v-if="parsed_input_is_query && !hide_resolver">
             <j-plugin-section-header>Query Results</j-plugin-section-header>
             <plugin-switch
               label="Treat Table as Query"
@@ -164,7 +164,7 @@ module.exports = {
           'file_cache', 'file_timeout',
           'target_items', 'target_selected',
           'format_items', 'format_selected',
-          'importer_widget', 'server_is_remote',
+          'importer_widget', 'server_is_remote', 'hide_resolver',
           'api_hints_enabled', 'valid_import_formats',
           'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled','image_data_loaded'],
 
