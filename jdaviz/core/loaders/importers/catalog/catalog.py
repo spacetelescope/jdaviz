@@ -1,6 +1,6 @@
 from astropy.coordinates import SkyCoord
 from astropy.io.fits import BinTableHDU, HDUList, TableHDU
-from astropy.table import Table, QTable
+from astropy.table import Table, QTable, vstack
 import astropy.units as u
 import numpy as np
 from traitlets import Any, Bool, List, Unicode, observe
@@ -53,6 +53,7 @@ class CatalogImporter(BaseImporterToDataCollection):
     extension_items = List().tag(sync=True)
     extension_selected = Any().tag(sync=True)
     extension_multiselect = Bool(True).tag(sync=True)
+    no_common_col_msg = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -136,9 +137,48 @@ class CatalogImporter(BaseImporterToDataCollection):
         if hasattr(self, 'extension'):
             if self.extension.selected in [None, '', []]:
                 return None
-            table_ext = self.extension.selected_obj[0]
-            if isinstance(table_ext, (TableHDU, BinTableHDU)):
-                return QTable(table_ext.data)
+
+            table_ext = self.extension.selected_obj
+
+            # reset message about no common columns between extensions each time
+            # we get the input as table, so that if the user changes to a different
+            # extension or selection of extensions, the message will be cleared
+            self.no_common_col_msg = ''
+            table_types = (TableHDU, BinTableHDU)
+
+            if len(table_ext) == 1 and isinstance(table_ext[0], table_types):
+                return QTable(table_ext[0].data)
+
+            elif len(table_ext) > 1 and all(isinstance(t, table_types) for t in table_ext):
+                # combine tables, only including columns that are common beween
+                # all tables in the selection. There will be text in the UI to
+                # indicate this and suggest loading tables individually if the
+                # the selected extensions contain different column names.
+                tables = [QTable(ext.data) for ext in table_ext]
+                common_cols = set(tables[0].colnames)
+                for tab in tables[1:]:
+                    common_cols = common_cols & set(tab.colnames)
+
+                common_cols = list(common_cols)
+
+                # if there are no common columns between tables, we can't combine
+                # them. return None and the UI will indicate that the user should
+                # load tables separately.
+                if len(common_cols) == 0:
+                    msg = (
+                        "The selected extensions have no columns in common. "
+                        "Please select a single extension to load, or select "
+                        "multiple extensions that have at least one column "
+                        "name in common to enable loading in multiselect mode."
+                    )
+                    self.no_common_col_msg = msg
+                    return None
+
+                combined_table = vstack([t[common_cols] for t in tables],
+                                        join_type="exact")
+
+                return combined_table
+
         return self.input
 
     @property
@@ -183,6 +223,15 @@ class CatalogImporter(BaseImporterToDataCollection):
             return
 
         input = self.input_as_table
+
+        if input is None:
+            # if input is None, that means the selected extensions had no common
+            # columns, so we should clear out the column selection dropdowns
+            # options (this section will be hidden in the UI)
+            for col in ['ra', 'dec', 'x', 'y']:
+                self._update_col_items_and_selected(f'col_{col}', ['---'])
+            self._update_col_items_and_selected('col_other', ['---'], select_first=False)
+            return
 
         if not isinstance(input, (Table, QTable)):
             return
@@ -241,12 +290,14 @@ class CatalogImporter(BaseImporterToDataCollection):
             elif col == 'x':
                 col_possibilities = ["x", "xpos", "xcentroid", "xcenter",
                                      "xpixel", "pixelx", "xpix", "ximage", "ximg",
-                                     "xcoord", "xcoordinate", "sourcex", "xsource"]
+                                     "xcoord", "xcoordinate", "sourcex", "xsource",
+                                     "x1", "x2"]
                 idx = get_idx(all_column_names, col_possibilities, None)
             elif col == 'y':
                 col_possibilities = ["y", "ypos", "ycentroid", "ycenter",
                                      "ypixel", "pixely", "ypix", "yimage", "yimg",
-                                     "ycoord", "ycoordinate", "sourcey", "ysource"]
+                                     "ycoord", "ycoordinate", "sourcey", "ysource",
+                                     "y1", "y2"]
                 idx = get_idx(all_column_names, col_possibilities, None)
 
         # if no good candidate found, default to '---' (no selection) for
