@@ -74,4 +74,4 @@ class FileDropResolver(BaseResolver):
 
     def parse_input(self):
         # this will return a bytes object of the file contents
-        return io.BytesIO(self._file_info.get('data')), self.is_valid
+        return io.BytesIO(self._file_info.get('data'))
