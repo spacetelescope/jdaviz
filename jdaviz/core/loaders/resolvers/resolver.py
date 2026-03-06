@@ -245,7 +245,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     spinner = Unicode("").tag(sync=True)
 
     parsed_input_is_empty = Bool(True).tag(sync=True)
-    parsed_input_is_resolvable = Bool(True).tag(sync=True)
+    parsed_input_is_resolvable = Unicode("").tag(sync=True)
 
     # whether the current output could be interpreted as a list of data products
     parsed_input_is_query = Bool(False).tag(sync=True)
@@ -531,42 +531,23 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         except Exception as e:  # nosec
             # Capture full traceback for proper error attribution
             self.parsed_input_is_empty = False
-            self.parsed_input_is_resolvable = False
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
-
-            # Avoid raising the same exception multiple times
-            # if the user is using the UI to type the URL.
-            if not self._raised_parser_exception:
-                self._raised_parser_exception = True
-                msg = (f'Parsing failed: {e}\n'
-                       f'\tIf re-attempted, this message will not be raised again.')
-                raise ValueError(msg) from e
-
-            return
+            self.parsed_input_is_resolvable = str(e)
 
         if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
             self.parsed_input_is_empty = True
-            self.parsed_input_is_resolvable = False
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
-
-            # Avoid raising the same exception multiple times
-            # if the user is using the UI to type the URL.
-            if not self._raised_parser_exception:
-                self._raised_parser_exception = True
-                raise ValueError('Parsed input is empty or None, cannot resolve.\n'
-                                 '\tIf re-attempted, this message will not be raised again.')
-
-            return
+            self.parsed_input_is_resolvable = 'Parsed input is empty or None, cannot resolve.'
 
         # Reset the flag if the item is now parseable.
         self._raised_parser_exception = False
@@ -611,7 +592,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.file_table_populated = False
                 return
 
-        self.parsed_input_is_resolvable = True
+        self.parsed_input_is_resolvable = ""
         self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
         self.observation_table_populated = False

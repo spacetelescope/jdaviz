@@ -38,6 +38,7 @@
       :disabled="true"
       label="ldr.object ="
       class="api-hint"
+      :error-messages="parsed_input_is_resolvable ? [parsed_input_is_resolvable] : []"
     ></v-text-field>
   </j-loader>
 </template>
