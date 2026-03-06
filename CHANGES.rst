@@ -35,7 +35,6 @@ Bug Fixes
 
 - Avoid crashing Jdaviz if the PyVO vocabularies can't be downloaded. [#4059]
 
-- Fix layer filtering logic for plot options to properly show/hide layers based on coordinate and link type. [#4046]
 
 Cubeviz
 ^^^^^^^
@@ -55,6 +54,7 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fixed an issue with GWCS 1.0.3 by updating the ``try/except`` to an if check against ``pixel_n_dim``. [#4032]
 
 4.5 (2025-12-15)
 ================
