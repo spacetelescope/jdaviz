@@ -5294,7 +5294,7 @@ class AddResults(BasePluginComponent):
             subscriptions = getattr(self.plugin, 'live_update_subscriptions', def_subs)
             data_item.meta['_update_live_plugin_results']['_subscriptions'] = subscriptions
 
-        # Use loader when format is provided, ensures component types are set consistently 
+        # Use loader when format is provided, ensures component types are set consistently
         # by importers. Mosviz still uses app.add_data(), as does the sonify_data plugin.
         if self.app.config in CONFIGS_WITH_LOADERS and format is not None:
             self.app._jdaviz_helper.load(data_item,
