@@ -29,9 +29,13 @@ import datetime
 import os
 import subprocess
 import sys
+import warnings
 
 from docutils import nodes
 from sphinx.util.docutils import SphinxDirective
+
+# Suppress deprecation warning for data_labels during documentation build
+warnings.filterwarnings('ignore', message='.*data_labels function is deprecated.*')
 
 from jdaviz import __version__
 

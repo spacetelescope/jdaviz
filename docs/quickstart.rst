@@ -106,7 +106,7 @@ Other anchors include: ``split-right``, ``split-left``, ``split-top``, ``split-b
 Multiple Jdaviz Instances
 -------------------------
 
-By default, any commands sent to `jdaviz` will be sent to the "current"/default application.
+By default, any commands sent to ``jdaviz`` will be sent to the "current"/default application.
 For example:
 
 .. code-block:: python
@@ -133,9 +133,7 @@ To do so, create a new Jdaviz app instance and store it in a custom variable:
     app2.load('filename2.fits', format='Image')
 
 
-You can also access the current/default application with :py:func:`jdaviz.gca`
-(get current application), and pass arguments to :py:func:`~jdaviz.app` or :py:func:`~jdaviz.gca`
-to manage which is considered the current application.
+You can also access the current/default application with :py:func:`jdaviz.gca` (get current application), and pass arguments to :py:func:`~jdaviz.app` or :py:func:`~jdaviz.gca` to manage which is considered the current application.
 
 
 
