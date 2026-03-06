@@ -126,7 +126,7 @@
                 Input is empty.
             </v-alert>
           </v-row>
-          <v-row v-if="!parsed_input_is_resolvable">
+          <v-row v-if="parsed_input_is_resolvable">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input cannot be resolved.
             </v-alert>
