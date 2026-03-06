@@ -81,6 +81,10 @@ EXT_TYPES = dict(flux=['flux', 'sci'],
                  mask=['mask', 'dq'])
 ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
 
+# See https://github.com/widgetti/ipyvue#scoped-css-support
+# This enables scoped css for ipyvue VueTemplate and ipyvuetify VuetifyTemplate.
+# Without this turned on, and before ipyvue 1.12.0 the scoped attribute was ignored.
+ipyvue.scoped_css_support = True
 
 @unit_converter('custom-jdaviz')
 class UnitConverterWithSpectral:
