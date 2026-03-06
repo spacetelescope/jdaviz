@@ -388,6 +388,14 @@ class LoaderUserApi(UserApiWrapper):
     def __repr__(self):
         return f'<{self._obj._registry_label} API>'
 
+    def __setattr__(self, attr, value):
+        result = super().__setattr__(attr, value)
+        if attr not in _internal_attrs:
+            resolver_err = getattr(self._obj, 'parsed_input_is_resolvable', '')
+            if resolver_err:
+                raise ValueError(resolver_err)
+        return result
+
 
 class ImporterUserApi(UserApiWrapper):
     """
