@@ -34,7 +34,11 @@ New Features
 - Renaming data will now propagate the new label to derived data in the same way as renaming subsets. For example,
   renaming 'Cube' to 'CubeFlux' will rename 'Cube (Subset 1, sum)' to 'CubeFlux (Subset 1, sum)'. [#4025]
 
+- Enable multiselect mode for selecting multiple table extensions in the Catalog loader. [#4051]
+
 - Table viewer tools to highlight selected, zoom-to-selected, and create subset from selected. [#3994]
+
+- Allow ingesting tables in plugins back into the app. [#4021]
 
 Cubeviz
 ^^^^^^^
@@ -126,6 +130,8 @@ Bug Fixes
 - Fix layer filtering logic for plot options to properly show/hide layers based on coordinate and link type. [#4046]
 
 - Fixed WCS layer being pushed to incorrect viewer types in deconfigged when changing between pixel and WCS linking. [#4049]
+
+- Avoid crashing Jdaviz if the PyVO vocabularies can't be downloaded. [#4059]
 
 Cubeviz
 ^^^^^^^

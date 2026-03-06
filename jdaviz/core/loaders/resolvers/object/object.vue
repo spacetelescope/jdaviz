@@ -19,6 +19,7 @@
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
     :server_is_remote="server_is_remote"
+    :hide_resolver="hide_resolver"
     :is_wcs_linked="is_wcs_linked"
     :footprint_select_icon="footprint_select_icon"
     :custom_toolbar_enabled="custom_toolbar_enabled"

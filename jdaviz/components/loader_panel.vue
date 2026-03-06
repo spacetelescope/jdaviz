@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-select
-      v-if="!server_is_remote"
+      v-if="!server_is_remote && !hide_resolver"
       :menu-props="{ left: true }"
       attach
       :items="loader_items_filtered"
@@ -16,7 +16,7 @@
       style="width: 100%; margin-top: 12px; padding-left: 6px; padding-right: 6px;"
     ></v-select>
 
-    <span v-if="loader_selected.length && (api_hints_enabled || loader_selected === 'object')" class="api-hint" style="font-weight: bold; padding-left: 6px">
+    <span v-if="loader_selected.length && (api_hints_enabled || (loader_selected === 'object' && !hide_resolver))" class="api-hint" style="font-weight: bold; padding-left: 6px">
       ldr = {{ api_hints_obj }}.loaders['{{ loader_selected }}']
     </span>
 
@@ -27,7 +27,7 @@
 
 <script>
 module.exports = {
-  props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'server_is_remote'],
+  props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'server_is_remote', 'hide_resolver'],
   computed: {
     loader_items_filtered() {
       var has_api_support = this.checkNotebookContext();
