@@ -147,9 +147,8 @@ class TestFileDropResolverParseInput:
         """
         file_drop_resolver._file_info = _FILE_INFO[0]
 
-        result, is_valid = file_drop_resolver.parse_input()
+        result = file_drop_resolver.parse_input()
 
-        assert is_valid
         assert isinstance(result, io.BytesIO)
         assert result.read() == _FILE_INFO[0]['data']
 
@@ -290,8 +289,7 @@ class TestFileDropResolverEdgeCases:
         large_data = b'x' * (10 * 1024 * 1024)  # 10 MB
         file_drop_resolver._file_info = {'name': 'large_file.dat',
                                          'data': large_data}
-        result, is_valid = file_drop_resolver.parse_input()
-        assert is_valid
+        result = file_drop_resolver.parse_input()
         assert isinstance(result, io.BytesIO)
         # Read in chunks to avoid memory issues in test
         chunk = result.read(1024)
@@ -331,8 +329,7 @@ class TestFileDropResolverEdgeCases:
 
         # parse_input uses .get() which returns None
         # io.BytesIO(None) creates empty BytesIO, doesn't raise
-        result, is_valid = file_drop_resolver.parse_input()
-        assert is_valid
+        result = file_drop_resolver.parse_input()
         assert isinstance(result, io.BytesIO)
         # Should be empty since data was None
         assert result.read() == b''
@@ -367,8 +364,7 @@ class TestFileDropResolverIntegration:
                 assert file_drop_resolver.default_label == 'data'
 
                 # Parse input
-                parsed, is_valid = file_drop_resolver.parse_input()
-                assert is_valid
+                parsed = file_drop_resolver.parse_input()
                 assert isinstance(parsed, io.BytesIO)
 
                 # Convert to table
@@ -392,8 +388,7 @@ class TestFileDropResolverIntegration:
                 assert file_drop_resolver.default_label == 'invalid'
 
                 # Parsing - astropy is lenient, may parse as table
-                parsed, is_valid = file_drop_resolver.parse_input()
-                assert is_valid
+                parsed = file_drop_resolver.parse_input()
 
                 table = file_drop_resolver._parsed_input_to_table(parsed)
                 # Either returns None or a table (astropy is very lenient)
