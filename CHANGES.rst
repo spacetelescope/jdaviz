@@ -35,7 +35,6 @@ Bug Fixes
 
 - Avoid crashing Jdaviz if the PyVO vocabularies can't be downloaded. [#4059]
 
-- Fix layer filtering logic for plot options to properly show/hide layers based on coordinate and link type. [#4046]
 
 Cubeviz
 ^^^^^^^
