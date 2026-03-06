@@ -1,3 +1,5 @@
+<script setup>
+</script>
 <template>
   <j-loader
     title="Download from URL"
