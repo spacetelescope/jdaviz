@@ -134,7 +134,8 @@ Bug Fixes
 
 - Fixed WCS layer being pushed to incorrect viewer types in deconfigged when changing between pixel and WCS linking. [#4049]
 
-- Fixed an inconsistency with loading duplicate user-supplied labels. [#4055]
+- Fixed an inconsistency with 1/2D Spectra when loading duplicate user-supplied labels. With those data types,
+user-supplied labels would auto-increment whereas with others, they would not. Now all user-supplied labels do not auto-increment. [#4055]
 
 - Avoid crashing Jdaviz if the PyVO vocabularies can't be downloaded. [#4059]
 
