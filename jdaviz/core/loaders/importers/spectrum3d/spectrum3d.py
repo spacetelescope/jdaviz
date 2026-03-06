@@ -228,7 +228,16 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         Check if a flux cube is already loaded in the data collection.
         If so, disable import by setting import_disabled_msg.
         Empty message = enabled, non-empty = disabled.
+
+        This check only applies when loading from user-provided inputs, not
+        when loading plugin-generated results (which have meta['plugin'] set).
         """
+        # Check if this is a plugin-generated result by looking for the 'plugin' metadata
+        if hasattr(self.input, 'meta') and 'plugin' in self.input.meta:
+            # This is a plugin-generated result, so skip the flux cube check
+            self._check_extension_selected()
+            return
+
         loaded_flux_cube = getattr(self.app._jdaviz_helper, '_loaded_flux_cube', None)
 
         # Check if the flux cube reference exists and is still in the data collection
@@ -252,7 +261,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # Flux cube message takes precedence
             return
 
-        if hasattr(self, 'extension') and len(self.extension.selected) == 0:
+        # For non-multiselect, extension.selected is a string (not a list), so check if empty/falsy
+        if hasattr(self, 'extension') and not self.extension.selected:
             self.import_disabled_msg = "Please select an extension to import."
         else:
             self.import_disabled_msg = ""

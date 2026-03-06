@@ -88,7 +88,9 @@ class TestSubsetImporter:
         assert len(importer.import_disabled_msg) > 0
 
         # test that calling with invalid label raises ValueError
-        with pytest.raises(ValueError, match=error_msg):
+        # Note: The error message from import_region is different from the validation message
+        with pytest.raises(ValueError,
+                           match=r"subset_label contained invalid labels: \['Subset 2'\]"):  # noqa
             importer()
 
     def test_is_valid(self, regions_input, spectral_region):

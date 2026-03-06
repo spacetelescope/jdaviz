@@ -9,7 +9,7 @@
       <j-tooltip :tooltipcontent="tooltipText">
         <plugin-action-button
           :spinner="spinner"
-          :disabled="disabled_msg && disabled_msg.length > 0"
+          :disabled="isDisabled"
           :results_isolated_to_plugin="false"
           :api_hints_enabled="api_hints_enabled"
           @click="$emit('click')">
@@ -26,6 +26,10 @@ module.exports = {
           'data_label_overwrite', 'data_label_is_prefix',
           'data_label_suffices', 'data_label_overwrite_by_index'],
   computed: {
+    isDisabled() {
+      // Ensure Vue tracks changes to disabled_msg
+      return !!(this.disabled_msg && this.disabled_msg.length > 0);
+    },
     overwriteCount() {
       if (!this.data_label_overwrite_by_index) return 0;
       return this.data_label_overwrite_by_index.filter(x => x).length;
