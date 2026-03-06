@@ -3,6 +3,7 @@ from traitlets import Any, Bool, List, Unicode, observe
 from astropy import units as u
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum
+from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import SnackbarMessage
@@ -96,6 +97,18 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Subscribe to data collection changes to update import disabled state
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=lambda _: self._check_flux_cube_loaded())
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=lambda _: self._check_flux_cube_loaded())
+
+        # Check initially if a flux cube already exists
+        self._check_flux_cube_loaded()
+
+        # Check extension selection for disabling import
+        self._check_extension_selected()
 
         def viewer_in_registry_names(supported_viewers):
             def viewer_filter(viewer):
@@ -209,6 +222,50 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         self.ext_viewer.add_filter(viewer_in_registry_names(supported_viewers))
         self.ext_viewer.select_default()
+
+    def _check_flux_cube_loaded(self):
+        """
+        Check if a flux cube is already loaded in the data collection.
+        If so, disable import by setting import_disabled_msg.
+        Empty message = enabled, non-empty = disabled.
+
+        This check only applies when loading from user-provided inputs, not
+        when loading plugin-generated results (which have meta['plugin'] set).
+        """
+        # Check if this is a plugin-generated result by looking for the 'plugin' metadata
+        if hasattr(self.input, 'meta') and 'plugin' in self.input.meta:
+            # This is a plugin-generated result, so skip the flux cube check
+            self._check_extension_selected()
+            return
+
+        loaded_flux_cube = getattr(self.app._jdaviz_helper, '_loaded_flux_cube', None)
+
+        # Check if the flux cube reference exists and is still in the data collection
+        if loaded_flux_cube is not None and loaded_flux_cube in self.app.data_collection:
+            self.import_disabled_msg = (
+                "Only one 3D spectrum (flux cube) can be loaded at a time. "
+                "To load a different cube, first remove the existing cube from the data collection."
+            )
+        else:
+            # No flux cube loaded or it was removed, check extension selection instead
+            self._check_extension_selected()
+
+    @observe('extension_selected')
+    def _check_extension_selected(self, change={}):
+        """
+        Check if an extension is selected. If not, disable import with a message.
+        This is only checked if no flux cube is already loaded.
+        """
+        loaded_flux_cube = getattr(self.app._jdaviz_helper, '_loaded_flux_cube', None)
+        if loaded_flux_cube is not None and loaded_flux_cube in self.app.data_collection:
+            # Flux cube message takes precedence
+            return
+
+        # For non-multiselect, extension.selected is a string (not a list), so check if empty/falsy
+        if hasattr(self, 'extension') and not self.extension.selected:
+            self.import_disabled_msg = "Please select an extension to import."
+        else:
+            self.import_disabled_msg = ""
 
     @staticmethod
     def _get_supported_viewers():

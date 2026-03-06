@@ -199,14 +199,14 @@ def test_import_enabled_disabled(imviz_helper):
     ldr.importer.col_x.selected = '---'
     ldr.importer.col_y.selected = '---'
     # no coordinate column pair selected, import should still be enabled
-    assert ldr.importer._obj.import_disabled is False
+    assert len(ldr.importer._obj.import_disabled_msg) == 0
 
     # when RA is selected but Dec is not, import should be disabled
     ldr.importer.col_ra.selected = 'RA'
-    assert ldr.importer._obj.import_disabled is True
+    assert len(ldr.importer._obj.import_disabled_msg) > 0
     # and then when Dec is selected too, import should be enabled
     ldr.importer.col_dec.selected = 'Dec'
-    assert ldr.importer._obj.import_disabled is False
+    assert len(ldr.importer._obj.import_disabled_msg) == 0
 
     # reset and test the same logic for X/Y
     ldr.importer.col_ra.selected = '---'
@@ -214,10 +214,10 @@ def test_import_enabled_disabled(imviz_helper):
     ldr.importer.col_x.selected = 'X'
     ldr.importer.col_y.selected = '---'
     # now with no coordinate column pair selected, import should be disabled
-    assert ldr.importer._obj.import_disabled is True
+    assert len(ldr.importer._obj.import_disabled_msg) > 0
     # when Y is selected too, import should be enabled
     ldr.importer.col_y.selected = 'Y'
-    assert ldr.importer._obj.import_disabled is False
+    assert len(ldr.importer._obj.import_disabled_msg) == 0
 
 
 @pytest.mark.parametrize("from_file", [True, False])

@@ -807,6 +807,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         """
         Import into jdaviz with all selected options.
         """
+        # Check if import is disabled before attempting to load
+        if len(self.importer.import_disabled_msg) > 0:
+            raise ValueError(self.importer.import_disabled_msg)
         return self.importer()
 
     @observe('target_selected')
