@@ -99,6 +99,8 @@ Other Changes and Additions
 
 - Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
 
+- Update example notebooks and add examples for deconfigged. [#4052]
+
 4.5.1 (unreleased)
 ==================
 
