@@ -149,7 +149,6 @@ class ConfigHelper(HubListener):
         """
         ldr = self.loaders.get(resolver_name)
         resolver = ldr._obj
-        print('parsers', ldr.format._parsers)
         if parser_name is None:
             return resolver
 
