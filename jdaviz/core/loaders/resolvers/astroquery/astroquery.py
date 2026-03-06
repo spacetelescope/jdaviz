@@ -102,4 +102,4 @@ class AstroqueryResolver(BaseConeSearchResolver):
         self.query_archive()
 
     def parse_input(self):
-        return self._output, self.is_valid
+        return self._output

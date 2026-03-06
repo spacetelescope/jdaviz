@@ -525,8 +525,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         parsed_input = None
         try:
             # calls self.parse_input() on the subclass and caches
-            parsed_input, is_valid = self.parsed_input
-            if not is_valid:
+            parsed_input = self.parsed_input
+            if not self.is_valid:
                 raise ValueError("input is not valid for the selected resolver.")
         except Exception as e:  # nosec
             # Capture full traceback for proper error attribution
@@ -784,8 +784,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if self.parsed_input_is_query and self.treat_table_as_query:
             return self._download_from_file_table()
         else:
-            parsed_input, _ = self.parsed_input
-            return parsed_input
+            return self.parsed_input
 
     def enable_footprint_selection_tools(self):
         """

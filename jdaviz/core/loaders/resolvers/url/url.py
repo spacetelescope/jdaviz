@@ -64,4 +64,4 @@ class URLResolver(BaseResolver):
                                     local_path=self.local_path, timeout=self.timeout)
 
     def parse_input(self):
-        return self._uri_output_file, self.is_valid
+        return self._uri_output_file
