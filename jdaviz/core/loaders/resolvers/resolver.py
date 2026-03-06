@@ -544,7 +544,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             if not self._raised_parser_exception:
                 self._raised_parser_exception = True
                 msg = (f'Parsing failed: {e}\n'
-                       f'If re-attempted, this message will not be raised again.')
+                       f'\tIf re-attempted, this message will not be raised again.')
                 raise ValueError(msg) from e
 
             return
@@ -563,8 +563,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # if the user is using the UI to type the URL.
             if not self._raised_parser_exception:
                 self._raised_parser_exception = True
-                raise ValueError('Parsed input is empty or None, cannot resolve. '
-                                 'If re-attempted, this message will not be raised again.')
+                raise ValueError('Parsed input is empty or None, cannot resolve.\n'
+                                 '\tIf re-attempted, this message will not be raised again.')
 
             return
 
@@ -1088,6 +1088,10 @@ def _format_resolver_error(resolver_dict, formats=None, show_full_error=False, n
         """
         Optionally strip the dev prefix and truncate a status string.
         """
+        # This is to avoid showing the 're-attempted' message
+        # when using load since it's not relevant.
+        to_remove = '\tIf re-attempted, this message will not be raised again.'
+        status_str = status_str.replace(to_remove, '')
         if show_full_error:
             return status_str
         # Strip leading 20 chars (e.g. "resolver exception: ")
