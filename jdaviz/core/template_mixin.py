@@ -5333,7 +5333,7 @@ class AddResults(BasePluginComponent):
             self.app._jdaviz_helper.load(data_item,
                                          loader='object', format=format,
                                          data_label=label, viewer=load_kwargs.pop('viewer', []),
-                                         auto_extract=False,
+                                         auto_extract=load_kwargs.pop('auto_extract', False),
                                          **load_kwargs)
         else:
             self.app.add_data(data_item, label)
