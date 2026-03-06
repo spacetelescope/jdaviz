@@ -209,7 +209,9 @@ def test_resolver_url(deconfigged_helper):
     assert len(loader.format.choices) == 0
 
     # non-valid input
-    with pytest.raises(ValueError, match="Parsing failed: The input file"):
+    with pytest.raises(ValueError, match="The input file 'not-valid-url' cannot be parsed as a "
+                                         "URL or URI, and no existing local file is available at "
+                                         "this path."):
         loader.url = 'not-valid-url'
     assert len(loader.format.choices) == 0
 
