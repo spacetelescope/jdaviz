@@ -9,10 +9,7 @@ Top-Level API
 .. automodapi:: jdaviz
    :no-inheritance-diagram:
    :no-inherited-members:
-   :skip: data_labels, app
-
-.. autofunction:: jdaviz.app
-   :noindex:
+   :skip: data_labels
 
 Application Module
 ------------------
