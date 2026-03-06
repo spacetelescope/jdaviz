@@ -26,7 +26,7 @@ New Features
 - Add handles to subset to allow interactive resizing. [#3919]
 
 - Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
-  
+
 - Added ``enable_footprint_selection_tools()`` and ``disable_footprint_selection_tools()`` APIs
   to programmatically control footprint selection toolbar. [#4048]
 
@@ -151,6 +151,9 @@ Mosviz
 
 Specviz
 ^^^^^^^
+
+- Fixed an inconsistency with 1/2D Spectra when loading duplicate user-supplied labels. With those data types,
+user-supplied labels would auto-increment whereas with others, they would not. Now all user-supplied labels do not auto-increment. [#4055]
 
 Specviz2d
 ^^^^^^^^^
