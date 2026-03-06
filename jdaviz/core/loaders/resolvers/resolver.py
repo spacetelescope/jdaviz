@@ -747,6 +747,40 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         else:
             return self.parsed_input
 
+    def enable_footprint_selection_tools(self):
+        """
+        Enable footprint selection tools in the viewer toolbar.
+
+        This allows clicking on observation footprints to select them.
+        Only available when loading observation tables with s_region data
+        and images are linked by WCS.
+
+        Raises
+        ------
+        ValueError
+            If images are not linked by WCS or if no observation table with
+            s_region data has been loaded.
+        """
+        if not (self.parsed_input_is_query and self.treat_table_as_query):
+            raise ValueError(
+                "Footprint selection tools require an observation table with s_region data."
+            )
+
+        if not self.is_wcs_linked:
+            raise ValueError(
+                "Images must be linked by WCS before enabling footprint selection tools."
+            )
+
+        if not self.custom_toolbar_enabled:
+            self.toggle_custom_toolbar()
+
+    def disable_footprint_selection_tools(self):
+        """
+        Disable footprint selection tools in the viewer toolbar.
+        """
+        if self.custom_toolbar_enabled:
+            self.toggle_custom_toolbar()
+
     @property
     def user_api(self):
         return LoaderUserApi(self)

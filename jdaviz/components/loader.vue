@@ -43,6 +43,9 @@
             v-if="footprint_select_icon && treat_table_as_query && is_wcs_linked && observation_table_populated"
             :enabled="custom_toolbar_enabled"
             text="footprint selection tools"
+            :api_hints_enabled="api_hints_enabled"
+            api_hint_enable="ldr.enable_footprint_selection_tools()"
+            api_hint_disable="ldr.disable_footprint_selection_tools()"
             @toggle-custom-toolbar="$emit('toggle-custom-toolbar')"
             style="margin-bottom: 16px"
           >
