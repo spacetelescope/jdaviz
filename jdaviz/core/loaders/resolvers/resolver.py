@@ -1091,7 +1091,7 @@ def _format_resolver_error(resolver_dict, formats=None, show_full_error=False, n
         # This is to avoid showing the 're-attempted' message
         # when using load since it's not relevant.
         to_remove = '\tIf re-attempted, this message will not be raised again.'
-        status_str = status_str.replace(to_remove, '')
+        status_str = status_str.replace(to_remove, '').rstrip()
         if show_full_error:
             return status_str
         # Strip leading 20 chars (e.g. "resolver exception: ")
