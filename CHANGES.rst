@@ -99,6 +99,9 @@ Other Changes and Additions
 
 - Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
 
+- Provide better error reporting when attempting to load data via `load`
+  and loaders infrastructure. [#4058]
+
 4.5.1 (unreleased)
 ==================
 

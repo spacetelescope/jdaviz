@@ -421,7 +421,8 @@ def test_invalid(imviz_helper, tmp_path):
 
     # empty table from object
     ldr = imviz_helper.loaders['object']
-    ldr.object = empty_table
+    with pytest.raises(ValueError, match="Parsed input is empty or None, cannot resolve."):
+        ldr.object = empty_table
     assert 'Catalog' not in ldr.format.choices
 
     # empty table from file
@@ -429,6 +430,8 @@ def test_invalid(imviz_helper, tmp_path):
     empty_table.write(fn)
 
     ldr = imviz_helper.loaders['file']
+    # Since no parsing of the actual file happens with the file parser
+    # we don't error out as we did above.
     ldr.filepath = fn
     assert 'Catalog' not in ldr.format.choices
 
