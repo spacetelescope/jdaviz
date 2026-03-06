@@ -28,7 +28,7 @@ New Features
 - Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
   
 - Added ``enable_footprint_selection_tools()`` and ``disable_footprint_selection_tools()`` APIs
-  to programmatically control footprint selection toolbar in Imviz. [#4048]
+  to programmatically control footprint selection toolbar. [#4048]
 
 - Improve default marker styling options (size and color cycler) for scatter layers. [#4044]
 
