@@ -43,6 +43,9 @@ New Features
 
 - Allow ingesting tables in plugins back into the app. [#4021]
 
+- Allow creating new image viewers from moment map plugin. Remove option to select 'align by' in image
+  importer unless orientation plugin exists, or new viewer creation selection is Image. [#4054]
+
 Cubeviz
 ^^^^^^^
 

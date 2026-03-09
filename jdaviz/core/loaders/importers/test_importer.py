@@ -197,6 +197,30 @@ def test_reject_2d_spectrum_as_image(deconfigged_helper, spectrum2d, mos_spectru
     assert len(deconfigged_helper.app.data_collection) > 0
 
 
+def test_image_importer_expose_align_by_options(deconfigged_helper, image_hdu_wcs):
+    """
+    Verify that the logic for expose_align_by_options, the traitlet in the image
+    importer that determines whether or not to expose option to align by pixels
+    or WCS, is correct. It should be True (to show options) if there is an
+    Orientation plugin or if the selection for the new viewer creation is 'Image',
+    and False otherwise.
+    """
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = image_hdu_wcs
+    ldr.format = 'Image'
+
+    importer = ldr.importer._obj
+
+    # selecting Image viewer for create new should expose options
+    importer.viewer.create_new.selected = 'Image'
+    assert importer.expose_align_by_options is True
+
+    # clearing create new Image viewer selection should hide options again
+    importer.viewer.create_new.selected = ''
+    assert importer.expose_align_by_options is False
+
+
 class TestDataLabelOverwrite:
     """Tests for the data_label_overwrite functionality in loaders."""
 
