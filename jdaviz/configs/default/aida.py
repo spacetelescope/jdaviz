@@ -130,6 +130,13 @@ class AID:
 
             Set the viewport with respect to the image
             with the data label: ``image_label``.
+        
+        rotation : `~astropy.coordinates.Angle`, float
+            Set the angle between "+y" or "up" in the viewport and north in
+            degrees east of north (counter-clockwise). It can be set with
+            an `~astropy.coordinates.Angle` or floats interpreted
+            as angles in units of degrees.
+        
         """
         with ignore_callback(
             self.viewer.state,
@@ -225,6 +232,9 @@ class AID:
 
         return rotation
 
+    def _get_current_projection(self):
+        return self.app.data_collection["Default orientation"].coords.wcs.ctype[0][5:8]
+    
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """
         sky_or_pixel : str, optional
@@ -246,6 +256,8 @@ class AID:
             The keys are 'center', 'fov', and 'image_label'.
             - 'center' is an `astropy.coordinates.SkyCoord` object or a tuple of floats.
             - 'fov' is an `astropy.units.Quantity` object or a float.
+            - 'rotation' is an `~astropy.coordinates.Angle`
+            - 'projection' is a string representing the projection of the viewer
             - 'image_label' is a string representing the label of the image.
         """
         image, image_label = self._get_image_glue_data(image_label)
@@ -254,5 +266,6 @@ class AID:
             center=self._get_current_center(sky_or_pixel=sky_or_pixel, image_label=image_label),
             fov=self._get_current_fov(sky_or_pixel=sky_or_pixel),
             rotation=self._get_current_rotation(),
+            projection=self._get_current_projection(),
             image_label=image_label
         )
