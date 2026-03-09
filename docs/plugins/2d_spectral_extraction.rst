@@ -38,7 +38,7 @@ A preview of the trace will update in real time in the 2D spectrum viewer.
 
 To export the trace as a data object into the 2D spectrum viewer (to access via the API or to
 adjust plotting options), open the "Export Trace" panel, choose a label for the new data entry,
-and click "Create".  Note that this step is not required to create an extraction with simple
+and click "Create".  Note that this step is not required to create an extraction with simplex
 workflows.
 
 Suppose you have 2D spectra of an extended source, and you have already created a trace that follows the
@@ -157,45 +157,6 @@ To visualize or export the resulting 2D spectrum, provide a data label and click
 The resulting spectrum object can be :ref:`accessed from the API <specviz2d-export-data-1d>`
 in the same way as any other data product in the spectrum viewer.
 
-From the API
-^^^^^^^^^^^^
-
-Extraction parameters can be set from the notebook by accessing the plugin.
-
-.. code-block:: python
-
-    sp_ext.ext_type = 'Boxcar'
-    sp_ext.ext_width = 8
-
-To export and access
-the :py:class:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction2D` object defined
-in the plugin,
-call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction2D.export_extract`:
-
-.. code-block:: python
-
-  ext = sp_ext.export_extract()
-
-To access the extracted spectrum as a :class:`~specutils.Spectrum` object,
-call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction2D.export_extract_spectrum`.
-
-To import the parameters from
-a :py:class:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction2D` object
-(either a new object, or an exported one modified in the notebook) into the plugin,
-call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction2D.import_extract`:
-
-.. code-block:: python
-
-  sp_ext.import_extract(ext)
-
-
-.. note::
-
-    Horne extraction uses uncertainties on the input 2D spectrum. If the
-    spectrum uncertainties are not explicitly assigned a type, they are assumed
-    to be standard deviation uncertainties. If no uncertainty is provided,
-    it is assumed to be an array of ones.
-
 UI Access
 =========
 
@@ -216,11 +177,44 @@ Click the :guilabel:`Spectral Extraction` icon in the plugin toolbar to:
 API Access
 ==========
 
+Extraction parameters can be set from the notebook by accessing the plugin.
+
 .. code-block:: python
 
-    plg = specviz2d.plugins['Spectral Extraction']
+    plg = jd.plugins['Spectral Extraction']
     plg.aperture_width = 5  # pixels
+    plg.ext_type = 'Boxcar'
+    plg.ext_width = 8
     plg.extract()
+
+To export and access
+the :py:class:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction2D` object defined
+in the plugin,
+call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction2D.export_extract`:
+
+.. code-block:: python
+
+  ext = plg.export_extract()
+
+To access the extracted spectrum as a :class:`~specutils.Spectrum` object,
+call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction2D.export_extract_spectrum`.
+
+To import the parameters from
+a :py:class:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction2D` object
+(either a new object, or an exported one modified in the notebook) into the plugin,
+call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction2D.import_extract`:
+
+.. code-block:: python
+
+  sp_ext.import_extract(ext)
+
+
+.. note::
+
+    Horne extraction uses uncertainties on the input 2D spectrum. If the
+    spectrum uncertainties are not explicitly assigned a type, they are assumed
+    to be standard deviation uncertainties. If no uncertainty is provided,
+    it is assumed to be an array of ones.
 
 .. plugin-api-refs::
    :module: jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction

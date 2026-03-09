@@ -85,16 +85,10 @@ UI Access
    :plugin-panel-opened: false
    :demo-repeat: false
 
-Opening the Plugin
-------------------
-
-**Cubeviz:**
-  Click the :guilabel:`Collapse` icon in the plugin toolbar.
-
 Workflow
 --------
 
-1. **Load data cube** into Cubeviz
+1. **Load data cube** into Jdaviz
 2. **Select dataset** from :guilabel:`Data` dropdown
 3. **Select collapse function** from :guilabel:`Function` dropdown
 4. **(Optional) Define spectral region**:
@@ -126,11 +120,11 @@ Accessing the Plugin
 
 .. code-block:: python
 
-    from jdaviz import Cubeviz
+    import Jdaviz
 
-    cubeviz = Cubeviz()
-    cubeviz.show()
-    cubeviz.load('cube.fits', format='3D Spectrum')
+    jd = Jdaviz()
+    jd.show()
+    jd.load('cube.fits', format='3D Spectrum')
 
     # Access plugin
     plg = cubeviz.plugins['Collapse']
@@ -208,6 +202,5 @@ Example Notebooks
 See Also
 ========
 
-* :ref:`collapse` - Detailed Cubeviz collapse documentation
-* :ref:`moment-maps` - Alternative method for creating integrated flux maps
-* :ref:`spectral-extraction` - Extract 1D spectra from cubes
+* :ref:`plugin-moment-maps` - Alternative method for creating integrated flux maps
+* :ref:`plugin-spectral-extraction_3d` - Extract 1D spectra from cubes
