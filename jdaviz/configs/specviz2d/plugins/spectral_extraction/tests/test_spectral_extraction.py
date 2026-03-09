@@ -516,10 +516,13 @@ class TestTwo2dSpectra:
         # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral flux density]
         # Another 2D Spectrum <=> 2D Spectrum [spectral axis]
         # Another 2D Spectrum <=> 2D Spectrum [spectral flux density]
+        # Another 2D Spectrum <=> 2D Spectrum [Pixel Axis 1 [x]]
         # Another 2D Spectral Extraction <=> 2D Spectrum [spectral axis]
+        # NOTE: The exact link count varies by environment (10 or 11) due to
+        # pixel-component matching differences across package versions.
+        # assert len(dc.external_links) == 9  # pre pixel-linking
         # Another 2D Spectral Extraction <=> 2D Spectrum
-        # TODO: Investigate number of links in py313 dev tests
-        # assert len(dc.external_links) == 9
+        assert len(dc.external_links) in (10, 11)
         for link in dc.external_links:
             # Check that linking is correct by confirming that both
             # are in `expected_labels`

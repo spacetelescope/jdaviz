@@ -734,7 +734,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if add_data:
             if bg_spec is None:
                 raise ValueError(f"Background is set to {self.background.selected}")
-            self.bg_spec_add_results.add_results_from_plugin(bg_spec, replace=False)
+            self.bg_spec_add_results.add_results_from_plugin(bg_spec, format='1D Spectrum',
+                                                             replace=False)
 
         return bg_spec
 
