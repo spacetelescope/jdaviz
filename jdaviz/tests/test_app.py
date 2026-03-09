@@ -70,7 +70,6 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
         viz.datasets["non-existent label"]
 
 
-@pytest.mark.xfail(reason='Known issue with duplicate data labels when using API.')
 @pytest.mark.parametrize(('input_data', 'input_format'), [
     ('image_hdu_wcs', 'Image'),
     ('spectrum1d', '1D Spectrum'),
@@ -79,27 +78,34 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
 ])
 def test_duplicate_data_labels(deconfigged_helper, input_data, input_format, request):
     input_data = request.getfixturevalue(input_data)
-    deconfigged_helper.load(input_data, format=input_format, data_label="test")
-    deconfigged_helper.load(input_data, format=input_format, data_label="test")
-
+    # Test duplicate auto-generated labels
+    deconfigged_helper.load(input_data, format=input_format)
+    deconfigged_helper.load(input_data, format=input_format)
     dc = deconfigged_helper.app.data_collection
-    assert any([dc_entry.label == 'test' for dc_entry in dc])
-    assert any([dc_entry.label == 'test (1)' for dc_entry in dc])
 
-    deconfigged_helper.load(input_data, format=input_format, data_label="test_1")
+    expected_label_base = input_format
+    if input_format == 'Image':
+        expected_label_base = 'Image[SCI,1]'
+
+    assert any([dc_entry.label == expected_label_base for dc_entry in dc])
+    assert any([dc_entry.label == f'{expected_label_base} (1)' for dc_entry in dc])
+
+    # Test overwrite when using custom labels
+    deconfigged_helper.load(input_data, format=input_format, data_label="test")
     deconfigged_helper.load(input_data, format=input_format, data_label="test")
 
+    test_labels = [dc_entry.label == 'test' for dc_entry in dc]
+    assert any(test_labels)
+    assert sum(test_labels) == 1
+    assert 'test (1)' not in dc
+
+    deconfigged_helper.load(input_data, format=input_format, data_label=expected_label_base)
+    deconfigged_helper.load(input_data, format=input_format, data_label="test_1")
+
+    # Test second attempt at overwrite using custom label
+    # that matches the expected auto-generated label
+    assert f'{expected_label_base} (2)' not in dc
     assert any([dc_entry.label == 'test_1' for dc_entry in dc])
-    assert any([dc_entry.label == 'test (2)' for dc_entry in dc])
-
-
-def test_duplicate_data_labels_with_brackets(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label="test[test]")
-    specviz_helper.load_data(spectrum1d, data_label="test[test]")
-    dc = specviz_helper.app.data_collection
-    assert len(dc) == 2
-    assert dc[0].label == "test[test]"
-    assert dc[1].label == "test[test] (1)"
 
 
 def test_return_data_label_is_none(specviz_helper):
@@ -144,26 +150,18 @@ def test_substring_in_label(specviz_helper, spectrum1d):
     assert data_label == "M"
 
 
-@pytest.mark.parametrize('data_label', ('111111', 'aaaaa', '///(#$@)',
-                                        'two  spaces  repeating',
-                                        'word42word42word  two  spaces'))
-def test_edge_cases(specviz_helper, spectrum1d, data_label):
-    dc = specviz_helper.app.data_collection
+def test_edge_cases(deconfigged_helper, spectrum1d):
+    data_labels = ['111111',
+                   'aaaaa',
+                   '///(#$@)',
+                   'two  spaces  repeating',
+                   'word42word42word  two  spaces']
 
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
-    assert dc[1].label == f"{data_label} (1)"
+    dc = deconfigged_helper.app.data_collection
 
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
-    assert dc[2].label == f"{data_label} (2)"
-
-
-def test_case_that_used_to_break_return_label(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label="this used to break (1)")
-    specviz_helper.load_data(spectrum1d, data_label="this used to break")
-    dc = specviz_helper.app.data_collection
-    assert dc[0].label == "this used to break (1)"
-    assert dc[1].label == "this used to break (2)"
+    for dl in data_labels:
+        deconfigged_helper.load(spectrum1d, data_label=dl)
+        assert dl in dc
 
 
 def test_viewer_renaming_specviz(specviz_helper):
