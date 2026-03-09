@@ -103,6 +103,40 @@ Other anchors include: ``split-right``, ``split-left``, ``split-top``, ``split-b
 ``tab-before``, ``tab-after``, ``right``. An up-to-date list can be found at
 `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_.
 
+Multiple Jdaviz Instances
+-------------------------
+
+By default, any commands sent to ``jdaviz`` will be sent to the current default application.
+For example:
+
+.. code-block:: python
+
+    import jdaviz as jd
+
+    jd.show()  # shows the default application
+    jd.load('filename.fits', format='Image')  # loads into the default application
+
+However, multiple independent instances of Jdaviz can be created and displayed in the same notebook.
+To do so, create a new Jdaviz app instance and store it in a custom variable:
+
+.. code-block:: python
+
+    import jdaviz as jd
+
+    app1 = jd.new_app()
+    app2 = jd.new_app()
+
+    app1.show(loc='sidecar:right')
+    app2.show(loc='sidecar:left')
+
+    app1.load('filename1.fits', format='Image')
+    app2.load('filename2.fits', format='Image')
+
+
+You can also access the current default application with :py:func:`jdaviz.gca` (get current application), and pass arguments to :py:func:`jdaviz.new_app` or :py:func:`jdaviz.gca` to manage which is considered the current application.
+
+
+
 
 Keyboard Shortcuts
 ------------------
@@ -120,7 +154,7 @@ Some shortcuts require a specific plugin to be open.
    * - ``b``
      - Blink to next image
      - 2+ images loaded
-   * - ``B`` 
+   * - ``B``
      - Blink to previous image
      - 2+ images loaded
    * - ``l``

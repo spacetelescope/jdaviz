@@ -144,7 +144,7 @@ class ConfigHelper(HubListener):
 
     def _get_loader(self, resolver_name, parser_name=None, importer_name=None):
         """
-        Attempt to retrieve an resolver/parser/importer for debugging purposes.
+        Attempt to retrieve a resolver/parser/importer for debugging purposes.
         Can be used to debug an importer that shows as invalid because of an internal error.
         """
         ldr = self.loaders.get(resolver_name)
@@ -182,9 +182,14 @@ class ConfigHelper(HubListener):
                        for item in self.app.state.new_viewer_items if item['is_relevant']}
         return new_viewers
 
-    def _load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+    def _load(self,
+              inp=None,
+              loader=None,
+              format=None,
+              target=None,
+              **kwargs):
         """
-        Load data into the app.  A single valid loader/importer must be able to be
+        Load data into the app. A single valid loader/importer must be able to be
         matched based on the input, otherwise an error will be raised suggesting
         what further information to provide.  For an interactive approach,
         see ``loaders``.

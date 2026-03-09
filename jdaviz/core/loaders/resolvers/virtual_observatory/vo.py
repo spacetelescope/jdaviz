@@ -3,6 +3,7 @@ from astropy import units as u
 
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError, DALQueryError
+from pyvo.utils.vocabularies import VocabularyError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Any, List, observe
 
@@ -144,8 +145,10 @@ class VOResolver(BaseConeSearchResolver):
             self.resource.choices = list(
                 self._full_registry_results.getcolumn("short_name")
             )
-        except DALFormatError as e:
-            if type(e.cause) is RequestConnectionError:
+        except (DALFormatError, VocabularyError) as e:
+            # HTTP Error 403 is being issued as a string as part of the
+            # VocabularyError when the registry is having issues.
+            if type(e.cause) is RequestConnectionError or 'HTTP Error 403' in e:
                 self.hub.broadcast(
                     SnackbarMessage(
                         f"Can't connect to VO registry. Check your internet connection: {e}",

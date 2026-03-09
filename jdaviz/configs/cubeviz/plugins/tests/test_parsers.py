@@ -254,8 +254,8 @@ def test_manga_with_mask(cubeviz_helper):
 
 
 def test_invalid_data_types(cubeviz_helper):
-    with pytest.raises(ValueError, match=r"no valid loaders found for input.*"):
+    with pytest.raises(ValueError, match=r"No valid loaders found for input.*"):
         cubeviz_helper.load_data('does_not_exist.fits')
 
-    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
+    with pytest.raises(ValueError, match='No valid loaders found for input.*'):
         cubeviz_helper.load_data(WCS(naxis=3))

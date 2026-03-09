@@ -34,7 +34,8 @@ from jdaviz.core.registries import (loader_resolver_registry,
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
-                          find_polygon_mark_with_skewer, layer_is_image_data)
+                          find_polygon_mark_with_skewer,
+                          layer_is_image_data)
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
 
@@ -119,7 +120,7 @@ class FormatSelect(SelectPluginComponent):
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     label = f"{parser_name} > {importer_name}"
-                    if self.plugin._restrict_to_formats is not None and \
+                    if getattr(self.plugin, '_restrict_to_formats', None) is not None and \
                             importer_name not in self.plugin._restrict_to_formats:
                         self._invalid_importers[label] = 'not matching format restriction'  # noqa
                         continue
@@ -244,8 +245,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     spinner = Unicode("").tag(sync=True)
 
     parsed_input_is_empty = Bool(True).tag(sync=True)
+    parsed_input_is_resolvable = Unicode("").tag(sync=True)
 
-    # whether the current output could be interpretted as a list of data products
+    # whether the current output could be interpreted as a list of data products
     parsed_input_is_query = Bool(False).tag(sync=True)
     # if parsed_input_is_query is True, whether to treat it as such
     # or pass it on directly to the parsers/importers
@@ -513,22 +515,26 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if self._defer_resolver_input_updated:
             return
         if msg.get('name') == 'treat_table_as_query':
-            # the input itself has remain unchanged, but how that
+            # the input itself has remained unchanged, but how that
             # is mapped to output has
             self._clear_cache('output')
         else:
             self._cleanup()
 
         try:
-            parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
-        except Exception:  # nosec
-            self.parsed_input_is_empty = True
+            # calls self.parse_input() on the subclass and caches
+            parsed_input = self.parsed_input
+            if not self.is_valid:
+                raise ValueError("input is not valid for the selected resolver.")
+        except Exception as e:  # nosec
+            self.parsed_input_is_empty = False
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
+            self.parsed_input_is_resolvable = str(e)
             return
 
         if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
@@ -539,21 +545,27 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
+            self.parsed_input_is_resolvable = 'Parsed input is empty or None, cannot resolve.'
             return
 
         # first attempt to parse the input as a table
         parsed_input_table = self._parsed_input_to_table(parsed_input)
         # if the input could be parsed as a table, try to interpret it as
-        # either an observation table or file table.  parsed_input_table
+        # either an observation table or file table. parsed_input_table
         # will be None if it could not be parsed as a table.
         if self.treat_table_as_query and parsed_input_table is not None:
             file_table = self._parsed_input_to_file_table(parsed_input_table)
+            observation_table = self._parsed_input_to_observation_table(parsed_input_table)
             if file_table is not None:
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
 
                 for row in file_table:
                     self.file_table.add_item(row)
+
+                # Technically input isn't complete yet but if we don't set this now
+                # the UI will appear bugged with the 'input is empty' message for astroquery
+                self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = False
                 self.file_table_populated = True
@@ -568,11 +580,15 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     self.observation_table.add_item(row)
                 self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible # noqa
                                                           if h not in ['s_region']]
+
+                # See 'input is empty' comment above
+                self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True
                 self.file_table_populated = False
                 return
 
+        self.parsed_input_is_resolvable = ""
         self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
         self.observation_table_populated = False
@@ -746,6 +762,40 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             return self._download_from_file_table()
         else:
             return self.parsed_input
+
+    def enable_footprint_selection_tools(self):
+        """
+        Enable footprint selection tools in the viewer toolbar.
+
+        This allows clicking on observation footprints to select them.
+        Only available when loading observation tables with s_region data
+        and images are linked by WCS.
+
+        Raises
+        ------
+        ValueError
+            If images are not linked by WCS or if no observation table with
+            s_region data has been loaded.
+        """
+        if not (self.parsed_input_is_query and self.treat_table_as_query):
+            raise ValueError(
+                "Footprint selection tools require an observation table with s_region data."
+            )
+
+        if not self.is_wcs_linked:
+            raise ValueError(
+                "Images must be linked by WCS before enabling footprint selection tools."
+            )
+
+        if not self.custom_toolbar_enabled:
+            self.toggle_custom_toolbar()
+
+    def disable_footprint_selection_tools(self):
+        """
+        Disable footprint selection tools in the viewer toolbar.
+        """
+        if self.custom_toolbar_enabled:
+            self.toggle_custom_toolbar()
 
     @property
     def user_api(self):
@@ -999,7 +1049,77 @@ class BaseConeSearchResolver(BaseResolver):
         return True
 
 
-def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):
+def _format_resolver_error(resolver_dict, formats=None, no_align=False):
+    """
+    Format a resolver results dictionary into a readable table string.
+
+    Formats the dictionary of resolver outcomes (failed or valid) into a
+    human-readable, dot-aligned table. When ``formats`` is provided,
+    only entries whose key contains one of the requested format strings are shown.
+
+    Parameters
+    ----------
+    resolver_dict : dict
+        Dictionary of resolver names to either a status string or a nested
+        dictionary mapping format/importer names to status strings.
+    formats : list or None, optional
+        When not None (and contains at least one non-None element), only
+        nested entries whose key contains a requested format string are
+        included. Top-level (non-nested) entries are always shown.
+    no_align : bool, optional
+        If True, do not attempt to align resolver/format names with dots.
+
+    Returns
+    -------
+    table : str
+        Formatted text table of resolver names and their statuses.
+    """
+    # Width of the dot-aligned resolver/format name column
+    resolver_alignment_width = 40
+    if no_align:
+        resolver_alignment_width = 2
+    # Maximum length for a (possibly trimmed) status string
+    truncation_len = 57
+    full_table_width = resolver_alignment_width + truncation_len
+
+    def _matches_format(key):
+        """
+        Return True if *key* matches the requested formats filter.
+        """
+        if formats is None or not any(formats):
+            return True
+        return any(fmt in key for fmt in formats if fmt is not None)
+
+    lines = []
+
+    for resolver_name, resolver_info in resolver_dict.items():
+        status_str = str(resolver_info)
+        if isinstance(resolver_info, dict):
+            filtered = {k: v for k, v in resolver_info.items()
+                        if _matches_format(k)}
+            if not filtered:
+                continue
+
+            lines.append(f'\n{resolver_name}:')
+            lines.append('-' * full_table_width)
+            for fmt_name, status in filtered.items():
+                status_str = str(status)
+                lines.append(f'  {fmt_name:.<{resolver_alignment_width - 2}}'
+                             f' {status_str}')
+            lines.append('')
+        else:
+            lines.append(f'{resolver_name:.<{resolver_alignment_width}}'
+                         f' {status_str}')
+
+    return '\n'.join(lines)
+
+
+def find_matching_resolver(app,
+                           inp=None,
+                           resolver=None,
+                           format=None,
+                           target=None,
+                           **kwargs):
     formats = format if isinstance(format, (list, tuple)) else [format]
     invalid_resolvers = {}
     valid_resolvers = []
@@ -1049,9 +1169,21 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
             valid_resolvers.append((this_resolver, resolver_name, fmt_item['label']))
 
     if len(valid_resolvers) == 0:
-        raise ValueError("no valid loaders found for input, tried", invalid_resolvers)
+        msg = (f'No valid loaders found for input. Tried:\n'
+               f'{_format_resolver_error(invalid_resolvers, formats=formats)}\n')  # noqa
+        raise ValueError(msg)
     elif len(valid_resolvers) > 1:
-        vrs = [f"resolver={vr[1]} > format={vr[2]}" for vr in valid_resolvers]
-        raise ValueError(f"multiple valid loaders found for input: {vrs}")
+        # Convert valid_resolvers to a dict structure for formatting
+        valid_resolvers_dict = {}
+        for resolver, resolver_name, fmt_label in valid_resolvers:
+            if resolver_name not in valid_resolvers_dict:
+                valid_resolvers_dict[resolver_name] = {}
+            fmt_label = f"{fmt_label}: jd.load(obj_to_load, format='{fmt_label})'"
+            valid_resolvers_dict[resolver_name][fmt_label] = 'valid'
+
+        msg = (f'Multiple valid loaders found for input. '
+               f'Please specify a format from the following as:\n'
+               f'{_format_resolver_error(valid_resolvers_dict, formats=formats, no_align=True)}\n')
+        raise ValueError(msg)
     else:
         return valid_resolvers[0][0].user_api

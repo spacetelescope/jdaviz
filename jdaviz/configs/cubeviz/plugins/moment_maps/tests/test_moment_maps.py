@@ -255,6 +255,41 @@ def test_moment_frequency_unit_conversion(cubeviz_helper, spectrum1d_cube_larger
     assert_quantity_allclose(moment_0_data, -2.9607526e+09*u.Unit("Hz Jy / pix2"))
 
 
+def test_moment_create_new_image_viewer_deconfigged(deconfigged_helper, image_cube_hdu_obj):
+    """
+    Make sure you can create a new Image viewer (not just 3D Spectrum viewer)
+    from the moment map plugin and add the moment map to that viewer.
+    """
+    deconfigged_helper.load(image_cube_hdu_obj, format='3D Spectrum', data_label='test')
+
+    mm = deconfigged_helper.plugins['Moment Maps']._obj
+    mm.dataset.selected = mm.dataset.labels[0]
+    mm.n_moment = 0
+
+    assert 'Image' in mm.add_results.viewer.create_new.choices
+    mm.add_results.viewer.create_new.selected = 'Image'
+
+    mm.calculate_moment()
+
+    # make sure that the new 'Image' viewer exists and that the moment map is in it
+    all_viewers = deconfigged_helper.viewers.keys()
+    assert 'Image' in all_viewers
+    image_viewer = deconfigged_helper.viewers['Image']
+    assert 'moment 0' in image_viewer.data_menu.data_labels_visible
+
+    # currently blocked by issue with units in JDAT-5951, uncomment this
+    # portion of the test once that ticket is resolved
+
+    # # now calculate another moment map and add it to the existing Image viewer
+    # # and make sure it is added
+    # mm.add_results.label = 'moment 00'
+    # mm.add_results.viewer.selected = 'Image'
+    # mm.calculate_moment()
+
+    # image_viewer = deconfigged_helper.app.get_viewer('Image')
+    # assert 'moment 00' in image_viewer.data_menu.layer.choices
+
+
 def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
     ''' Test writing a moment map out to a FITS file on disk '''
 
