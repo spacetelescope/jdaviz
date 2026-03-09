@@ -1,4 +1,4 @@
-.. _deconfigged-info-markers:
+.. _info-markers:
 .. rst-class:: section-icon-mdi-information-outline
 
 *******
