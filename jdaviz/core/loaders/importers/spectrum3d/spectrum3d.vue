@@ -183,7 +183,7 @@
 
     <loader-import-button
       :spinner="import_spinner"
-      :disabled="import_disabled || extension_selected.length === 0"
+      :disabled_msg="import_disabled_msg"
       :api_hints_enabled="api_hints_enabled"
       api_hint="ldr.load()"
       :data_label_overwrite="data_label_overwrite"
