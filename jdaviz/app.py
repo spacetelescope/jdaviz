@@ -1732,18 +1732,13 @@ class Application(VuetifyTemplate, HubListener):
 
         Notes
         -----
-        Returns True if any of the following conditions are met:
-
-        - ``_component_type`` is explicitly 'pixel'
-        - ``_component_type`` contains 'pixel' (e.g., 'x:pixel', 'spectral_axis:pixel')
-        - label contains 'Pixel Axis' (fallback for components without ``_component_type``)
+        Returns True if ``_component_type`` contains 'pixel'
+        (e.g., 'pixel', 'x:pixel', 'spectral_axis:pixel').
+        All data loaded through the importer infrastructure has ``_component_type``
+        explicitly set for pixel-axis components, so no label-based fallback is needed.
         """
         comp_type = getattr(comp, '_component_type', None)
-        return (
-            comp_type == 'pixel' or
-            (comp_type and 'pixel' in comp_type) or
-            'Pixel Axis' in str(comp.label)
-        )
+        return bool(comp_type and 'pixel' in comp_type)
 
     def add_data(self, data, data_label=None, notify_done=True, parent=None):
         """
