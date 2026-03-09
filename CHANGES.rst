@@ -130,7 +130,7 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
-4.5.1 (unreleased)
+4.5.1 (2026-03-06)
 ==================
 
 Bug Fixes
