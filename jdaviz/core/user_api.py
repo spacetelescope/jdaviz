@@ -380,11 +380,21 @@ class LoaderUserApi(UserApiWrapper):
                                           'observation_table', 'file_table',
                                           'file_cache',
                                           'file_timeout',
-                                          'file_local_path']))
+                                          'file_local_path',
+                                          'enable_footprint_selection_tools',
+                                          'disable_footprint_selection_tools']))
         super().__init__(loader, expose, readonly, excl_from_dict, deprecated)
 
     def __repr__(self):
         return f'<{self._obj._registry_label} API>'
+
+    def __setattr__(self, attr, value):
+        result = super().__setattr__(attr, value)
+        if attr not in _internal_attrs:
+            resolver_err = getattr(self._obj, 'parsed_input_is_resolvable', '')
+            if resolver_err:
+                raise ValueError(resolver_err)
+        return result
 
 
 class ImporterUserApi(UserApiWrapper):

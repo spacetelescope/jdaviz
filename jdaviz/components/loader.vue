@@ -43,6 +43,9 @@
             v-if="footprint_select_icon && treat_table_as_query && is_wcs_linked && observation_table_populated"
             :enabled="custom_toolbar_enabled"
             text="footprint selection tools"
+            :api_hints_enabled="api_hints_enabled"
+            api_hint_enable="ldr.enable_footprint_selection_tools()"
+            api_hint_disable="ldr.disable_footprint_selection_tools()"
             @toggle-custom-toolbar="$emit('toggle-custom-toolbar')"
             style="margin-bottom: 16px"
           >
@@ -126,6 +129,11 @@
                 Input is empty.
             </v-alert>
           </v-row>
+          <v-row v-if="parsed_input_is_resolvable">
+            <v-alert type="warning" style="margin-right: -12px; width: 100%">
+                Input cannot be resolved.
+            </v-alert>
+          </v-row>
           <v-row v-else-if="format_items.length == 0 && valid_import_formats">
               <v-alert type="warning" style="margin-right: -12px; width: 100%">
                   No compatible importer found. Supported input types include: {{ valid_import_formats }}.
@@ -158,7 +166,8 @@
 <script>
 module.exports = {
   props: ['title', 'popout_button', 'spinner',
-          'parsed_input_is_empty', 'parsed_input_is_query', 'treat_table_as_query',
+          'parsed_input_is_empty', 'parsed_input_is_resolvable',
+          'parsed_input_is_query', 'treat_table_as_query',
           'observation_table', 'observation_table_populated',
           'file_table', 'file_table_populated',
           'file_cache', 'file_timeout',

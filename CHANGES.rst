@@ -27,6 +27,9 @@ New Features
 
 - Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
 
+- Added ``enable_footprint_selection_tools()`` and ``disable_footprint_selection_tools()`` APIs
+  to programmatically control footprint selection toolbar. [#4048]
+
 - Improve default marker styling options (size and color cycler) for scatter layers. [#4044]
 
 - Top level access to datasets API dictionary, deprecating top-level access to data_labels list. [#4024]
@@ -40,6 +43,12 @@ New Features
 
 - Allow ingesting tables in plugins back into the app. [#4021]
 
+- Allow creating new image viewers from moment map plugin. Remove option to select 'align by' in image
+  importer unless orientation plugin exists, or new viewer creation selection is Image. [#4054]
+
+- Provide better error reporting when attempting to load data via `load`
+  and loaders infrastructure. [#4058]
+
 Cubeviz
 ^^^^^^^
 
@@ -51,6 +60,10 @@ Mosviz
 
 Specviz
 ^^^^^^^
+
+- Fixed an inconsistency with 1/2D Spectra when loading duplicate user-supplied labels. With those data types,
+  user-supplied labels would auto-increment whereas with others, they would not.
+  Now all user-supplied labels do not auto-increment. [#4055]
 
 Specviz2d
 ^^^^^^^^^
@@ -96,7 +109,28 @@ Other Changes and Additions
 
 - Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
 
-4.5.1 (unreleased)
+4.5.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+4.5.1 (2026-03-06)
 ==================
 
 Bug Fixes
@@ -129,6 +163,8 @@ Bug Fixes
 
 - Fix layer filtering logic for plot options to properly show/hide layers based on coordinate and link type. [#4046]
 
+- Fixed WCS layer being pushed to incorrect viewer types in deconfigged when changing between pixel and WCS linking. [#4049]
+
 - Avoid crashing Jdaviz if the PyVO vocabularies can't be downloaded. [#4059]
 
 Cubeviz
@@ -146,6 +182,7 @@ Mosviz
 
 Specviz
 ^^^^^^^
+
 
 Specviz2d
 ^^^^^^^^^

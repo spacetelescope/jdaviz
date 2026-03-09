@@ -55,7 +55,7 @@
         hint="If GWCS exists, try to convert into FITS SIP for better performance aligning images (typical precision <0.1 pixels)."
       />
     </v-row>
-    <v-row>
+    <v-row v-if="expose_align_by_options">
       <v-radio-group
         :label="api_hints_enabled ? 'ldr.importer.align_by = ' : 'Align by'"
         :class="api_hints_enabled ? 'api-hint' : null"

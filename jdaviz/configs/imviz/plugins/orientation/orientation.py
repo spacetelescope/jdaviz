@@ -453,19 +453,16 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         wcs_only_layers = get_wcs_only_layer_labels(self.app)
 
-        # TODO: update to only image viewers
-        viewers_to_update = kwargs.get(
-            'viewers_to_update', self.app._viewer_store.keys()
-        )
-        for viewer_ref in viewers_to_update:
-            viewer_dm = self.app._jdaviz_helper.viewers.get(viewer_ref).data_menu
+        viewers_to_update = self.app.get_viewers_of_cls(ImvizImageView)
+        for viewer in viewers_to_update:
+            viewer_dm = viewer.data_menu
 
             # Get list of data labels currently loaded in the viewer
             viewer_data_labels = viewer_dm.data_labels_loaded
 
             for wcs_layer in wcs_only_layers:
                 if wcs_layer not in viewer_data_labels:
-                    self.app.add_data_to_viewer(viewer_ref, wcs_layer)
+                    self.app.add_data_to_viewer(viewer.reference_id, wcs_layer)
             if (
                 self.orientation.selected not in
                     wcs_only_layers and

@@ -348,3 +348,29 @@ def test_footprint_loaders(imviz_helper, image_2d_wcs):
     ldr.load()
 
     assert 'imported from STCS' in plg.overlay.choices
+
+
+def test_footprint_enable_disable_api(imviz_helper, image_2d_wcs):
+    """Test enable/disable footprint selection tools API on Footprints plugin."""
+    arr = np.ones((10, 10))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd)
+    imviz_helper.load_data(ndd)
+
+    plugin = imviz_helper.plugins['Footprints']
+    plugin._obj.vue_link_by_wcs()
+
+    with plugin.as_active():
+        # Add a second overlay to make toolbar button available
+        plugin.add_overlay('second')
+
+        # Initially disabled
+        assert not plugin._obj.custom_toolbar_enabled
+
+        # Enable using API
+        plugin.enable_footprint_selection_tools()
+        assert plugin._obj.custom_toolbar_enabled
+
+        # Disable using API
+        plugin.disable_footprint_selection_tools()
+        assert not plugin._obj.custom_toolbar_enabled
