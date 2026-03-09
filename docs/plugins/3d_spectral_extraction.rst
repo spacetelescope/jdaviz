@@ -268,4 +268,4 @@ See Also
 ========
 
 * :ref:`plugins-collapse` - Create 2D images from cubes
-* :ref:`plugins-moment-maps` - Alternative spectral integration method
+* :ref:`plugins-moment_maps` - Alternative spectral integration method

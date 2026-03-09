@@ -244,4 +244,4 @@ See Also
 ========
 
 * :ref:`plugins-collapse` - Alternative collapse method
-* :ref:`plugins-spectral-extraction_3d` - Extract 1D spectra from cubes
+* :ref:`plugins-spectral_extraction_3d` - Extract 1D spectra from cubes
