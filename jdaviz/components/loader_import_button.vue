@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-row v-if="disabled_msg && disabled_msg.length > 0" style="margin-bottom: 8px;">
+    <v-row v-if="disabled_msg && disabled_msg.length > 0" style="margin-bottom: 8px; margin-top: 12px">
       <v-alert type="warning" style="width: 100%; margin-left: 12px; margin-right: 12px;">
         {{ disabled_msg }}
       </v-alert>
