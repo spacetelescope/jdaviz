@@ -153,8 +153,8 @@ Specviz
 ^^^^^^^
 
 - Fixed an inconsistency with 1/2D Spectra when loading duplicate user-supplied labels. With those data types,
-user-supplied labels would auto-increment whereas with others, they would not.
-Now all user-supplied labels do not auto-increment. [#4055]
+  user-supplied labels would auto-increment whereas with others, they would not.
+  Now all user-supplied labels do not auto-increment. [#4055]
 
 Specviz2d
 ^^^^^^^^^
