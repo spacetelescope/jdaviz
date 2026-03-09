@@ -1054,7 +1054,7 @@ class BaseConeSearchResolver(BaseResolver):
         return True
 
 
-def _format_resolver_error(resolver_dict, formats=None, show_full_error=False, no_align=False):
+def _format_resolver_error(resolver_dict, formats=None, no_align=False):
     """
     Format a resolver results dictionary into a readable table string.
 
@@ -1071,10 +1071,6 @@ def _format_resolver_error(resolver_dict, formats=None, show_full_error=False, n
         When not None (and contains at least one non-None element), only
         nested entries whose key contains a requested format string are
         included. Top-level (non-nested) entries are always shown.
-    show_full_error : bool, optional
-        If False (default), strip the first 20 characters of each status
-        string (the dev-relevant prefix such as ``"resolver exception: "``)
-        and truncate long messages. If True, show the full status string.
     no_align : bool, optional
         If True, do not attempt to align resolver/format names with dots.
 
@@ -1099,25 +1095,10 @@ def _format_resolver_error(resolver_dict, formats=None, show_full_error=False, n
             return True
         return any(fmt in key for fmt in formats if fmt is not None)
 
-    def _trim_status(status_str):
-        """
-        Optionally strip the dev prefix and truncate a status string.
-        """
-        # This is to avoid showing the 're-attempted' message
-        # when using load since it's not relevant.
-        to_remove = '\tIf re-attempted, this message will not be raised again.'
-        status_str = status_str.replace(to_remove, '').rstrip()
-        if show_full_error:
-            return status_str
-        # Strip leading 20 chars (e.g. "resolver exception: ")
-        trimmed = status_str[20:]
-        if len(status_str) - 20 > truncation_len:
-            trimmed = trimmed[:truncation_len - 4] + '...'
-        return trimmed
-
     lines = []
 
     for resolver_name, resolver_info in resolver_dict.items():
+        status_str = str(resolver_info)
         if isinstance(resolver_info, dict):
             filtered = {k: v for k, v in resolver_info.items()
                         if _matches_format(k)}
@@ -1127,12 +1108,11 @@ def _format_resolver_error(resolver_dict, formats=None, show_full_error=False, n
             lines.append(f'\n{resolver_name}:')
             lines.append('-' * full_table_width)
             for fmt_name, status in filtered.items():
-                status_str = _trim_status(str(status))
+                status_str = str(status)
                 lines.append(f'  {fmt_name:.<{resolver_alignment_width - 2}}'
                              f' {status_str}')
             lines.append('')
         else:
-            status_str = _trim_status(str(resolver_info))
             lines.append(f'{resolver_name:.<{resolver_alignment_width}}'
                          f' {status_str}')
 
@@ -1144,7 +1124,6 @@ def find_matching_resolver(app,
                            resolver=None,
                            format=None,
                            target=None,
-                           show_full_error=False,
                            **kwargs):
     formats = format if isinstance(format, (list, tuple)) else [format]
     invalid_resolvers = {}
@@ -1196,10 +1175,7 @@ def find_matching_resolver(app,
 
     if len(valid_resolvers) == 0:
         msg = (f'No valid loaders found for input. Tried:\n'
-               f'{_format_resolver_error(invalid_resolvers, formats=formats, show_full_error=show_full_error)}\n')  # noqa
-        if not show_full_error:
-            msg += ("\nTo see non-truncated error details, "
-                    "pass 'show_full_error=True' to 'load'.")
+               f'{_format_resolver_error(invalid_resolvers, formats=formats)}\n')  # noqa
         raise ValueError(msg)
     elif len(valid_resolvers) > 1:
         # Convert valid_resolvers to a dict structure for formatting
