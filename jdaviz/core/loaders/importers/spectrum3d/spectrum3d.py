@@ -242,10 +242,13 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         # Check if the flux cube reference exists and is still in the data collection
         if loaded_flux_cube is not None and loaded_flux_cube in self.app.data_collection:
-            self.import_disabled_msg = (
-                "Only one 3D spectrum (flux cube) can be loaded at a time. "
-                "To load a different cube, first remove the existing cube from the data collection."
-            )
+            if self.config == 'cubeviz':
+                self.import_disabled_msg = "Only a 3D spectrum (flux cube) can be loaded into cubeviz."  # noqa
+            else:
+                self.import_disabled_msg = (
+                    "Only one 3D spectrum (flux cube) can be loaded at a time. "
+                    "To load a different cube, first remove the existing cube from the data collection."  # noqa
+                )
         else:
             # No flux cube loaded or it was removed, check extension selection instead
             self._check_extension_selected()
