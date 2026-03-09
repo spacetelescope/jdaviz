@@ -131,7 +131,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     def _get_supported_viewers(self):
         """Return viewer types that can display moment map 2D image."""
-        return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
+        return [
+            {'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'},
+            {'label': 'Image', 'reference': 'cubeviz-image-viewer'}
+        ]
 
     @property
     def _default_image_viewer_reference_name(self):

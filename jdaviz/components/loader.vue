@@ -13,14 +13,14 @@
     </div>
 
     <v-card flat>
-      <v-card-title class="headline" color="primary" primary-title style="display: block; width: 100%">
+      <v-card-title v-if="!hide_resolver" class="headline" color="primary" primary-title style="display: block; width: 100%">
         {{title}}
         <span style="float: right">
           <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
         </span>
       </v-card-title>
       <v-card-text>
-        <v-container style="padding: 4px">
+        <v-container v-if="!hide_resolver" style="padding: 4px">
           <slot/>
         </v-container>
 
@@ -43,6 +43,9 @@
             v-if="footprint_select_icon && treat_table_as_query && is_wcs_linked && observation_table_populated"
             :enabled="custom_toolbar_enabled"
             text="footprint selection tools"
+            :api_hints_enabled="api_hints_enabled"
+            api_hint_enable="ldr.enable_footprint_selection_tools()"
+            api_hint_disable="ldr.disable_footprint_selection_tools()"
             @toggle-custom-toolbar="$emit('toggle-custom-toolbar')"
             style="margin-bottom: 16px"
           >
@@ -50,7 +53,7 @@
           </j-custom-toolbar-toggle>
 
           <!-- observation/file table -->
-          <div v-if="parsed_input_is_query">
+          <div v-if="parsed_input_is_query && !hide_resolver">
             <j-plugin-section-header>Query Results</j-plugin-section-header>
             <plugin-switch
               label="Treat Table as Query"
@@ -126,6 +129,11 @@
                 Input is empty.
             </v-alert>
           </v-row>
+          <v-row v-if="parsed_input_is_resolvable">
+            <v-alert type="warning" style="margin-right: -12px; width: 100%">
+                Input cannot be resolved.
+            </v-alert>
+          </v-row>
           <v-row v-else-if="format_items.length == 0 && valid_import_formats">
               <v-alert type="warning" style="margin-right: -12px; width: 100%">
                   No compatible importer found. Supported input types include: {{ valid_import_formats }}.
@@ -158,13 +166,14 @@
 <script>
 module.exports = {
   props: ['title', 'popout_button', 'spinner',
-          'parsed_input_is_empty', 'parsed_input_is_query', 'treat_table_as_query',
+          'parsed_input_is_empty', 'parsed_input_is_resolvable',
+          'parsed_input_is_query', 'treat_table_as_query',
           'observation_table', 'observation_table_populated',
           'file_table', 'file_table_populated',
           'file_cache', 'file_timeout',
           'target_items', 'target_selected',
           'format_items', 'format_selected',
-          'importer_widget', 'server_is_remote',
+          'importer_widget', 'server_is_remote', 'hide_resolver',
           'api_hints_enabled', 'valid_import_formats',
           'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled','image_data_loaded'],
 

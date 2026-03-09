@@ -114,8 +114,8 @@ set various loader attributes. For example:
 
     # When selecting a file loader, you might see:
     ldr = jdaviz.loaders['file']
-    ldr.format = '1D Spectrum'  # Set the format
     ldr.filename = 'myfile.fits'  # Set the filename
+    ldr.format = '1D Spectrum'  # Set the format
 
 The hints update as you interact with the UI, showing you the exact Python code
 needed to reproduce your actions programmatically.

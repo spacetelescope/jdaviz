@@ -24,6 +24,9 @@
       v-if="overlay_items.length > 1"
       :enabled="custom_toolbar_enabled"
       text="footprint selection tools"
+      :api_hints_enabled="api_hints_enabled"
+      api_hint_enable="plg.enable_footprint_selection_tools()"
+      api_hint_disable="plg.disable_footprint_selection_tools()"
       @toggle-custom-toolbar="toggle_custom_toolbar"
     >
       <img class="invert-if-dark" :src="footprint_select_icon" width="20"/>

@@ -4,6 +4,7 @@ from jdaviz.core.marks import RegionOverlay
 from jdaviz.utils import find_polygon_mark_with_skewer
 
 import numpy as np
+import pytest
 from astropy.table import Table
 
 
@@ -448,3 +449,76 @@ def test_skewer_selection_with_empty_region(deconfigged_helper, image_nddata_wcs
     # Should still work with the single valid footprint
     indices = find_polygon_mark_with_skewer(center_x, center_y, viewer, footprints)
     assert indices == [0]
+
+
+def test_enable_footprint_selection_tools_api(deconfigged_helper, image_nddata_wcs):
+    """Test the enable_footprint_selection_tools API method."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+
+    # Should fail without WCS linking
+    with pytest.raises(ValueError, match="Images must be linked by WCS"):
+        ldr.enable_footprint_selection_tools()
+
+    # Link by WCS
+    ldr._obj.vue_link_by_wcs()
+
+    assert not ldr._obj.custom_toolbar_enabled
+    ldr.enable_footprint_selection_tools()
+    assert ldr._obj.custom_toolbar_enabled
+
+    # Verify footprints are displayed
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 1
+
+
+def test_disable_footprint_selection_tools_api(deconfigged_helper, image_nddata_wcs):
+    """Test the disable_footprint_selection_tools API method."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+
+    # Enable first
+    ldr.enable_footprint_selection_tools()
+    assert ldr._obj.custom_toolbar_enabled
+
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 1
+
+    # Now disable
+    ldr.disable_footprint_selection_tools()
+    assert not ldr._obj.custom_toolbar_enabled
+
+    # Verify footprints are removed
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 0
+
+
+def test_enable_without_observation_table(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    ldr = deconfigged_helper.loaders['object']
+
+    # Try to enable without loading any observation table
+    with pytest.raises(ValueError, match="observation table with s_region data"):
+        ldr.enable_footprint_selection_tools()

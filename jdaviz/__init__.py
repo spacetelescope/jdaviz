@@ -27,7 +27,7 @@ _expose = ['show', 'load', 'batch_load',
            'new_viewers',
            'datasets',
            'data_labels']
-_incl = ['enable_hot_reloading', '__version__', 'gca', 'get_all_apps', 'app']
+_incl = ['enable_hot_reloading', '__version__', 'gca', 'get_all_apps', 'new_app']
 _temporary_incl = ['open', 'Cubeviz', 'Imviz', 'Mosviz', 'Rampviz', 'Specviz', 'Specviz2d']
 __all__ = _expose + _incl + _temporary_incl
 
@@ -38,7 +38,7 @@ global _current_index
 _apps = []
 
 
-def app(replace=False, set_as_current=True):
+def new_app(replace=False, set_as_current=True):
     """
     Create a new jdaviz application instance and assign as the current instance.
 
@@ -107,7 +107,7 @@ def gca(index=None, set_as_current=True):
     if not len(_apps):
         # on first access (either to gca() directly or anything redirected through _expose),
         # create a first instance
-        app(set_as_current=True)
+        new_app(set_as_current=True)
     if index is None:
         index = _current_index
     _app = _apps[index]

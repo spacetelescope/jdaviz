@@ -1112,7 +1112,9 @@ def create_data_hash(input_data):
     # Hash the main array buffer in chunks via memoryview if possible
     try:
         mv = memoryview(arr).cast('B')
-    except TypeError:
+    except (TypeError, ValueError):
+        # TypeError: memoryview doesn't support this type
+        # ValueError: structured arrays with special chars in field names (e.g., ':')
         # Fallback - arr.tobytes() will create a copy but should work
         try:
             hasher.update(arr.tobytes())

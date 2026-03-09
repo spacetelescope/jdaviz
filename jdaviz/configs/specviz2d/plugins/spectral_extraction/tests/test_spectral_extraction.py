@@ -1,8 +1,9 @@
 import gwcs
 import pytest
+import specreduce
 
 from astropy.modeling import models
-from astropy.nddata import VarianceUncertainty
+from astropy.nddata import VarianceUncertainty, StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from astropy.utils.data import download_file
@@ -10,6 +11,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from packaging.version import Version
 from specreduce import tracing, background, extract
+from specreduce.tests.test_extract import add_gaussian_source
 from specutils import Spectrum, SpectralRegion
 from glue.core.link_helpers import LinkSameWithUnits
 from glue.core.roi import XRangeROI
@@ -18,6 +20,7 @@ from jdaviz.utils import cached_uri
 from jdaviz.core.marks import Lines
 
 GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
+SPECREDUCE_LT_1_8_0 = Version(specreduce.__version__) < Version('1.8.0')
 
 
 @pytest.mark.remote_data
@@ -299,33 +302,185 @@ def test_horne_extract_self_profile(specviz2d_helper):
         sp_ext = pext.export_extract_spectrum()
 
 
-def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectrum2d):
-    specviz2d_helper.load(mos_spectrum2d, format='2D Spectrum')
+@pytest.mark.filterwarnings('ignore')
+@pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
+def test_boxcar_uncertainty_propagation_via_plugin(specviz2d_helper):
+    """
+    This is an identical test to the test for uncertainty propogation in
+    boxcar extraction in specreduce, and is meant to make sure going through
+    the plugin returns the same result.
+    """
+    nrows, ncols = 10, 20
+    flux = np.full((nrows, ncols), 100.0)
+    variance = np.full((nrows, ncols), 4.0)
+    width = 3
 
-    uc = specviz2d_helper.plugins["Unit Conversion"]
-    pext = specviz2d_helper.plugins['2D Spectral Extraction']
+    img = Spectrum(
+        flux * u.DN,
+        uncertainty=VarianceUncertainty(variance),
+        spectral_axis=np.arange(ncols) * u.pix,
+    )
+
+    specviz2d_helper.load(img, format='2D Spectrum')
+    pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
+
+    pext.trace_type_selected = 'Flat'
+    pext.trace_pixel = nrows // 2
+    pext.ext_dataset_selected = pext.trace_dataset_selected
+    pext.ext_type_selected = 'Boxcar'
+    pext.ext_width = width
+
+    extracted = pext.export_extract_spectrum(add_data=False)
+
+    # jdaviz converts to a StDevUncertainty
+    assert extracted.uncertainty is not None
+    assert isinstance(extracted.uncertainty, StdDevUncertainty)
+
+    # but we want to compare to the specreduce test which retains the input
+    # type of VarianceUncertainty
+    var_uncert = extracted.uncertainty.represent_as(VarianceUncertainty)
+
+    expected_variance = width * 4.0
+    np.testing.assert_allclose(var_uncert.array, expected_variance, rtol=0.01)
+
+    # Check units are correct (flux_unit^2)
+    assert var_uncert.unit == u.DN**2
+
+
+@pytest.mark.filterwarnings('ignore')
+@pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
+def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper):
+    """
+    This is an identical test to the test for uncertainty propogation in
+    Horne extraction in specreduce, and is meant to make sure going through
+    the plugin returns the same result.
+    """
+
+    nrows, ncols = 20, 30
+    input_variance = 4.0
+    img = Spectrum(
+        np.zeros((nrows, ncols)) * u.DN,
+        uncertainty=VarianceUncertainty(np.full((nrows, ncols),
+                                                input_variance) * u.DN**2),
+        spectral_axis=np.arange(ncols) * u.pix
+    )
+    add_gaussian_source(img, amps=100.0, stddevs=2.0, means=10)
+
+    deconfigged_helper.load(img, format='2D Spectrum')
+    pext = deconfigged_helper.plugins['2D Spectral Extraction']._obj
+
+    pext.trace_type_selected = 'Flat'
+    pext.trace_pixel = 10
+    pext.ext_dataset_selected = pext.trace_dataset_selected
+    pext.ext_type_selected = 'Horne'
+
+    extracted = pext.export_extract_spectrum(add_data=False)
+
+    # jdaviz converts to a StDevUncertainty
+    assert extracted.uncertainty is not None
+    assert isinstance(extracted.uncertainty, StdDevUncertainty)
+
+    # but we want to compare to the specreduce test which retains the input
+    # type of VarianceUncertainty
+    var_uncert = extracted.uncertainty.represent_as(VarianceUncertainty)
+
+    # Verify uncertainty values are finite and positive
+    assert np.all(np.isfinite(var_uncert.array))
+    assert np.all(var_uncert.array > 0)
+
+    # Check units are correct (flux_unit^2)
+    assert var_uncert.unit == u.DN**2
+
+    # Calculate expected variance analytically.
+    # For optimal extraction: var_out = norms^2 / sum(kernel^2 / var_in)
+    # With uniform variance: var_out = var_in * norms^2 / sum(kernel^2)
+    # where kernel is the normalized spatial profile and norms = sum(kernel) = 1
+    gauss = models.Gaussian1D(amplitude=100.0, mean=10.0, stddev=2.0)
+    kernel = gauss(np.arange(nrows))
+    kernel_normalized = kernel / kernel.sum()
+    expected_variance = input_variance / np.sum(kernel_normalized**2)
+
+    # All columns should have the same uncertainty (uniform source and variance)
+    assert np.allclose(var_uncert.array, expected_variance, rtol=1e-5)
+
+
+@pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
+def test_background_uncertainty_propagation_via_plugin(deconfigged_helper):
+    """
+    This is an identical test to the test for uncertainty propogation in
+    background calculation in specreduce, and is meant to make sure going through
+    the plugin returns the same result.
+    """
+
+    nrows, ncols = 10, 20
+    var = 4.0
+    img = Spectrum(np.ones((nrows, ncols)) * u.DN,
+                   uncertainty=VarianceUncertainty(np.full((nrows, ncols), var) * u.DN**2),
+                   spectral_axis=np.arange(ncols) * u.pix)
+
+    deconfigged_helper.load(img, format='2D Spectrum')
+    pext = deconfigged_helper.plugins['2D Spectral Extraction']._obj
+
+    pext.trace_type_selected = 'Flat'
+    pext.trace_pixel = nrows // 2
+    pext.bg_width = 4
+    pext.bg_statistic_selected = 'Average'
+
+    bg = pext.export_bg()
+
+    # Check that _bkg_variance is computed
+    assert hasattr(bg, "_bkg_variance")
+    assert bg._bkg_variance is not None
+    assert len(bg._bkg_variance) == ncols
+
+    # Variance should be positive and less than input (averaging reduces variance)
+    assert np.all(bg._bkg_variance > 0)
+    assert np.all(bg._bkg_variance < var)
+
+    weights = bg.bkg_wimage
+    weights_sum = np.sum(weights, axis=0)
+    weights_sq_sum = np.sum(weights ** 2, axis=0)
+    expected_variance = (weights_sq_sum * var) / (weights_sum ** 2)
+    assert np.allclose(bg._bkg_variance, expected_variance)
+
+    # Check that bkg_spectrum has uncertainty
+    bkg_spec = bg.bkg_spectrum()
+    assert bkg_spec.uncertainty is not None
+
+    # uncertainty is converted to a StdDevUncertainty in jdaviz, but we want to
+    # compare to the specreduce test which retains the input type of VarianceUncertainty
+    assert isinstance(bkg_spec.uncertainty, StdDevUncertainty)
+    var_uncert = bkg_spec.uncertainty.represent_as(VarianceUncertainty)
+    assert np.allclose(var_uncert.array, bg._bkg_variance)
+
+
+def test_spectral_extraction_flux_unit_conversions(deconfigged_helper, mos_spectrum2d):
+    deconfigged_helper.load(mos_spectrum2d, format='2D Spectrum')
+
+    uc = deconfigged_helper.plugins["Unit Conversion"]
+    pext = deconfigged_helper.plugins['2D Spectral Extraction']
 
     # test a subset of unit options, testing all is slow
     for new_flux_unit in ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']:
 
-        # iterate through flux units verifying that selected object/spectrum is obtained using
-        # display units
+        # iterate through flux units verifying that selected object/spectrum is
+        # obtained using display units
         uc.flux_unit.selected = new_flux_unit
 
         exported_bg = pext.export_bg()
-        assert exported_bg.image._unit == specviz2d_helper.app._get_display_unit('flux')
+        assert exported_bg.image._unit == deconfigged_helper.app._get_display_unit('flux')
 
         exported_bg_img = pext.export_bg_img()
-        assert exported_bg_img._unit == specviz2d_helper.app._get_display_unit('flux')
+        assert exported_bg_img._unit == deconfigged_helper.app._get_display_unit('flux')
 
         exported_bg_sub = pext.export_bg_sub()
-        assert exported_bg_sub._unit == specviz2d_helper.app._get_display_unit('flux')
+        assert exported_bg_sub._unit == deconfigged_helper.app._get_display_unit('flux')
 
         exported_extract_spectrum = pext.export_extract_spectrum()
-        assert exported_extract_spectrum._unit == specviz2d_helper.app._get_display_unit('flux')
+        assert exported_extract_spectrum._unit == deconfigged_helper.app._get_display_unit('flux')
 
         exported_extract = pext.export_extract()
-        assert exported_extract.image._unit == specviz2d_helper.app._get_display_unit('flux')
+        assert exported_extract.image._unit == deconfigged_helper.app._get_display_unit('flux')
 
 
 @pytest.mark.filterwarnings('ignore')

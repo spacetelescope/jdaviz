@@ -165,6 +165,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         Additional V3 offset in telescope coordinates to apply to instrument center, as from a
         dither pattern.
     * :meth:`overlay_regions`
+    * :meth:`enable_footprint_selection_tools`
+        enable footprint selection tools in the viewer toolbar
+    * :meth:`disable_footprint_selection_tools`
+        disable footprint selection tools in the viewer toolbar
     """
     template_file = __file__, "footprints.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -313,6 +317,22 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         self.overlay_selected = closest_overlay_label
         self._highlight_overlay(closest_overlay_label, viewers=self.viewer.selected_obj)
 
+    def enable_footprint_selection_tools(self):
+        """
+        Enable footprint selection tools in the viewer toolbar.
+
+        This allows clicking on footprints to select them.
+        """
+        if not self.custom_toolbar_enabled:
+            self.toggle_custom_toolbar()
+
+    def disable_footprint_selection_tools(self):
+        """
+        Disable footprint selection tools in the viewer toolbar.
+        """
+        if self.custom_toolbar_enabled:
+            self.toggle_custom_toolbar()
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('overlay',
@@ -321,7 +341,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
                                            'preset_obs', 'preset', 'import_region',
                                            'center_on_viewer', 'ra', 'dec', 'pa',
                                            'v2_offset', 'v3_offset',
-                                           'overlay_regions'))
+                                           'overlay_regions',
+                                           'enable_footprint_selection_tools',
+                                           'disable_footprint_selection_tools'))
 
     def _get_marks(self, viewer, overlay=None):
         matches = [mark for mark in viewer.figure.marks
