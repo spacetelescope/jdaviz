@@ -187,7 +187,6 @@ class ConfigHelper(HubListener):
               loader=None,
               format=None,
               target=None,
-              show_full_error=False,
               **kwargs):
         """
         Load data into the app. A single valid loader/importer must be able to be
@@ -213,7 +212,6 @@ class ConfigHelper(HubListener):
                                           resolver=loader,
                                           format=format,
                                           target=target,
-                                          show_full_error=show_full_error,
                                           **kwargs)
 
         if 'show_in_viewer' in kwargs.keys():
