@@ -72,7 +72,7 @@ def test_prevent_multiple_flux_cubes(cubeviz_helper, spectrum1d_cube):
 
     # Try to load a second cube via API - should raise ValueError
     with pytest.raises(ValueError,
-                       match="Only one 3D spectrum.*flux cube.*can be loaded at a time"):
+                       match="Only a single 3D spectrum.*flux cube.*can be loaded into cubeviz"):
         cubeviz_helper.load(spectrum1d_cube, format='3D Spectrum', data_label='second_cube')
 
     # Verify data collection hasn't changed (still only 2 items)
