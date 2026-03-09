@@ -7,6 +7,8 @@ from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
                                            SpectrumInputExtensionsMixin,
                                            _spectrum_assign_component_type)
+from jdaviz.core.loaders.importers.image.image import _spatial_assign_component_type
+from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS
 from jdaviz.core.template_mixin import (AutoTextField,
                                         ViewerSelectCreateNew)
 from jdaviz.core.user_api import ImporterUserApi
@@ -131,6 +133,15 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             return False
         return True
 
+    @observe('extension_selected')
+    def _on_extension_selected_changed(self, change={}):
+        # Set import_disabled_msg if no extension is selected
+        # For non-multiselect, extension.selected is a string (not a list), so check if empty/falsy
+        if hasattr(self, 'extension') and not self.extension.selected:
+            self.import_disabled_msg = "Please select an extension to import."
+        else:
+            self.import_disabled_msg = ""
+
     @observe('data_label_value')
     def _data_label_changed(self, msg={}):
         self.ext_data_label_default = f"{self.data_label_value} (auto-ext)"
@@ -140,6 +151,10 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         return self.spectrum
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
+        # Handle spatial pixel axes (e.g., 'Pixel Axis 0 [y]') that fall outside
+        # SPECTRAL_AXIS_COMP_LABELS and would otherwise get comp_type=None.
+        if comp_id.startswith('Pixel Axis') and comp_id not in SPECTRAL_AXIS_COMP_LABELS:
+            return _spatial_assign_component_type(comp_id, comp, units, physical_type)
         return _spectrum_assign_component_type(comp_id, comp, units, physical_type)
 
     def __call__(self):

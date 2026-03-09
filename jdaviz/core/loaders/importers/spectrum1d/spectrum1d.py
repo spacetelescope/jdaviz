@@ -113,6 +113,12 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         # override SpectrumInputExtensionsMixin method to handle concatenate case
         self._clear_cache('spectra')
 
+        # Set import_disabled_msg if no extension is selected
+        if hasattr(self, 'extension') and len(self.extension.selected) == 0:
+            self.import_disabled_msg = "Please select at least one extension to import."
+        else:
+            self.import_disabled_msg = ""
+
         if not hasattr(self, 'extension') or not hasattr(self, 'data_label'):
             return
         self.data_label_is_prefix = (self.multiselect

@@ -25,7 +25,7 @@ class BaseImporter(PluginTemplateMixin):
     # the list, the first remaining match will be used.
     parser_preference = []
 
-    import_disabled = Bool(False).tag(sync=True)
+    import_disabled_msg = Unicode().tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
 
     existing_data_in_dc = List([]).tag(sync=True)
@@ -264,8 +264,14 @@ class BaseImporterToDataCollection(BaseImporter):
 
     @observe('data_label_invalid_msg', 'viewer_label_invalid_msg')
     def _set_import_disabled(self, change={}):
-        self.import_disabled = (len(self.data_label_invalid_msg) > 0
-                                or len(self.viewer_label_invalid_msg) > 0)
+        # Set import_disabled_msg based on validation errors
+        # Empty msg = enabled, non-empty = disabled
+        if len(self.data_label_invalid_msg) > 0:
+            self.import_disabled_msg = self.data_label_invalid_msg
+        elif len(self.viewer_label_invalid_msg) > 0:
+            self.import_disabled_msg = self.viewer_label_invalid_msg
+        else:
+            self.import_disabled_msg = ''
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return physical_type

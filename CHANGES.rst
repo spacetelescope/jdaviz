@@ -109,6 +109,8 @@ Other Changes and Additions
 
 - Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
 
+- Update example notebooks and add examples for deconfigged. [#4052]
+
 4.5.2 (unreleased)
 ==================
 
@@ -129,6 +131,8 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+- Fixed bug where loading two 2D spectra failed to display in the spectrum-2d viewer. [#3983]
 
 4.5.1 (2026-03-06)
 ==================
@@ -186,6 +190,7 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
 - Fixed an issue with GWCS 1.0.3 by updating the ``try/except`` to an if check against ``pixel_n_dim``. [#4032]
 
 4.5 (2025-12-15)
