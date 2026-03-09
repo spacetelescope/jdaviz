@@ -798,10 +798,15 @@ class Application(VuetifyTemplate, HubListener):
 
         new_links = []
         for new_comp in new_data.components:
-            if getattr(new_comp, '_component_type', None) in (None, 'unknown'):
+            comp_type = getattr(new_comp, '_component_type', None)
+            is_pixel_comp = self._is_pixel_component(new_comp)
+
+            has_linkable_type = comp_type not in (None, 'unknown')
+            if not has_linkable_type and not is_pixel_comp:
                 continue
+
             # Don't link flux to flux in cubes
-            elif new_comp.label.lower() in ('flux', 'uncertainty', 'mask') and new_data.ndim == 3:
+            if new_comp.label.lower() in ('flux', 'uncertainty', 'mask') and new_data.ndim == 3:
                 continue
 
             found_match = False
@@ -809,25 +814,33 @@ class Application(VuetifyTemplate, HubListener):
                 if existing_data.label == new_data_label:
                     continue
 
-                # Skip linking WCS coordinate components between 2D spectra
+                # Skip linking WCS angle components between 2D spectra
                 # (these can interfere with coordinate transformations)
-                # But allow flux/uncertainty and pixel_spectral_axis linking for subset propagation
+                # But allow pixel & spectral_axis linking for proper display & subset propagation
                 if new_data.ndim == existing_data.ndim == 2:
-                    has_spectral = any(
-                        (getattr(c, '_component_type', None) or '').startswith('spectral_axis')
-                        for c in new_data.components
-                    )
-                    if has_spectral and (new_comp._component_type in ('spectral_axis', 'angle') or
-                       (new_comp._component_type and ':angle' in new_comp._component_type)):
+                    if comp_type == 'angle' or (comp_type and ':angle' in comp_type):
                         continue
 
                 for existing_comp in existing_data.components:
-                    if getattr(existing_comp, '_component_type', None) in (None, 'unknown'):
+                    existing_comp_type = getattr(existing_comp, '_component_type', None)
+                    existing_is_pixel = self._is_pixel_component(existing_comp)
+
+                    existing_has_linkable_type = existing_comp_type not in (None, 'unknown')
+                    if not existing_has_linkable_type and not existing_is_pixel:
                         continue
 
-                    # Create link if component-types match
-                    if new_comp._component_type == existing_comp._component_type:
-                        msg_text = f"Creating link {new_data.label}:{new_comp.label}({new_comp._component_type}) > {existing_data.label}:{existing_comp.label}({existing_comp._component_type})"  # noqa
+                    # Create link if component-types match or
+                    # if both are pixel components with same label
+                    components_match = False
+                    if comp_type is not None and comp_type == existing_comp_type:
+                        components_match = True
+                    elif (is_pixel_comp and existing_is_pixel and
+                          new_comp.label == existing_comp.label):
+                        # Link pixel components by label for 2D spectra
+                        components_match = True
+
+                    if components_match:
+                        msg_text = f"Creating link {new_data.label}:{new_comp.label}({comp_type}) > {existing_data.label}:{existing_comp.label}({existing_comp_type})"  # noqa
                         msg = SnackbarMessage(text=msg_text,
                                               color='info', sender=self)
                         self.hub.broadcast(msg)
@@ -1702,6 +1715,31 @@ class Application(VuetifyTemplate, HubListener):
 
         return new_state
 
+    @staticmethod
+    def _is_pixel_component(comp):
+        """
+        Determine if a component represents pixel coordinates.
+
+        Parameters
+        ----------
+        comp : `~glue.core.component.Component`
+            The component to check.
+
+        Returns
+        -------
+        bool
+            True if the component represents pixel coordinates, False otherwise.
+
+        Notes
+        -----
+        Returns True if ``_component_type`` contains 'pixel'
+        (e.g., 'pixel', 'x:pixel', 'spectral_axis:pixel').
+        All data loaded through the importer infrastructure has ``_component_type``
+        explicitly set for pixel-axis components, so no label-based fallback is needed.
+        """
+        comp_type = getattr(comp, '_component_type', None)
+        return bool(comp_type and 'pixel' in comp_type)
+
     def add_data(self, data, data_label=None, notify_done=True, parent=None):
         """
         Add data to the Glue ``DataCollection``.
@@ -1731,6 +1769,33 @@ class Application(VuetifyTemplate, HubListener):
             data_label = "Unknown"
 
         self.data_collection[data_label] = data
+
+        # Set _component_type for all components if not already set.
+        # This ensures consistent component typing for data added directly via add_data()
+        # as well as data from importers (which may override with more specific types).
+        def _physical_type_from_component(comp_id, comp):
+            try:
+                comp_units = comp.units
+                if comp_units is None or comp_units == '':
+                    return comp_units, None
+                return comp_units, str(u.Unit(comp_units).physical_type)
+            except (ValueError, TypeError, AttributeError):
+                return comp_units, None
+
+        dc_entry = self.data_collection[data_label]
+        for comp_id in dc_entry.components:
+            # Only set _component_type if not already set (e.g., by an importer)
+            if not hasattr(comp_id, '_component_type') or comp_id._component_type is None:
+                comp_units, physical_type = _physical_type_from_component(
+                    str(comp_id), dc_entry.get_component(comp_id))
+
+                # Detect pixel components by label (they have no physical units)
+                # This ensures _component_type is set even when physical_type is None
+                if 'Pixel Axis' in str(comp_id):
+                    comp_id._component_type = 'pixel'
+                else:
+                    # Use physical_type as default (same as BaseImporter.assign_component_type)
+                    comp_id._component_type = physical_type
 
         # manage associated Data entries:
         self._add_assoc_data_as_parent(data_label)
