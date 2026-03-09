@@ -70,15 +70,30 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
         viz.datasets["non-existent label"]
 
 
-@pytest.mark.xfail(reason='Known issue with duplicate data labels when using API.')
 @pytest.mark.parametrize(('input_data', 'input_format'), [
-    ('image_hdu_wcs', 'Image'),
-    ('spectrum1d', '1D Spectrum'),
-    ('spectrum2d', '2D Spectrum'),
-    ('spectrum1d_cube', '3D Spectrum')
+    pytest.param('image_hdu_wcs', 'Image',
+                 marks=pytest.mark.xfail(
+                     reason='Known issue with duplicate data labels when using API.')),
+    pytest.param('spectrum1d', '1D Spectrum',
+                 marks=pytest.mark.xfail(
+                     reason='Known issue with duplicate data labels when using API.')),
+    pytest.param('spectrum2d', '2D Spectrum',
+                 marks=pytest.mark.xfail(
+                     reason='Known issue with duplicate data labels when using API.')),
+    ('spectrum1d_cube', '3D Spectrum'),
 ])
 def test_duplicate_data_labels(deconfigged_helper, input_data, input_format, request):
     input_data = request.getfixturevalue(input_data)
+
+    # Currently, 3D spectra can't have duplicates (only one flux cube allowed at a time)
+    # Remove this block when multiple cube support is added
+    if input_format == '3D Spectrum':
+        deconfigged_helper.load(input_data, format=input_format, data_label="test")
+        with pytest.raises(ValueError,
+                           match="Only one 3D spectrum.*flux cube.*can be loaded at a time"):
+            deconfigged_helper.load(input_data, format=input_format, data_label="test")
+        return
+
     deconfigged_helper.load(input_data, format=input_format, data_label="test")
     deconfigged_helper.load(input_data, format=input_format, data_label="test")
 
