@@ -99,7 +99,28 @@ Other Changes and Additions
 
 - Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
 
-4.5.1 (unreleased)
+4.5.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+4.5.1 (2026-03-06)
 ==================
 
 Bug Fixes
