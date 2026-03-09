@@ -179,14 +179,14 @@ def test_reject_2d_spectrum_as_image(deconfigged_helper, spectrum2d, mos_spectru
     Test that 2D spectra being read in as images are rejected.
     """
     # Attempt to load should raise a helpful error
-    with pytest.raises(ValueError, match="'object > Image': 'not valid'"):
+    with pytest.raises(ValueError, match="No valid loaders found for input."):
         deconfigged_helper.load(spectrum2d, format='Image')
 
     # Verify no data was loaded
     assert len(deconfigged_helper.app.data_collection) == 0
 
     # Try again with 2D Spectrum as HDU with spectral wcs
-    with pytest.raises(ValueError, match="'object > Image': 'not valid'"):
+    with pytest.raises(ValueError, match="No valid loaders found for input."):
         deconfigged_helper.load(mos_spectrum2d_as_hdulist[1], format='Image')
 
     # Verify no data was loaded

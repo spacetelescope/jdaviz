@@ -4,6 +4,7 @@
     :popout_button="popout_button"
     :spinner="spinner"
     :parsed_input_is_empty="parsed_input_is_empty"
+    :parsed_input_is_resolvable="parsed_input_is_resolvable"
     :parsed_input_is_query="parsed_input_is_query"
     :treat_table_as_query.sync="treat_table_as_query"
     :observation_table="observation_table"
@@ -58,6 +59,7 @@
             hint="Enter a source name or coordinates in degrees to center your query on"
             :disabled="viewer_selected !== 'Manual'"
             :rules="[() => !!source || 'This field is required']"
+            :error-messages="parsed_input_is_resolvable ? [parsed_input_is_resolvable] : []"
             persistent-hint>
           </v-text-field>
         </div>

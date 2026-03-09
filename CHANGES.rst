@@ -46,6 +46,9 @@ New Features
 - Allow creating new image viewers from moment map plugin. Remove option to select 'align by' in image
   importer unless orientation plugin exists, or new viewer creation selection is Image. [#4054]
 
+- Provide better error reporting when attempting to load data via `load`
+  and loaders infrastructure. [#4058]
+
 Cubeviz
 ^^^^^^^
 

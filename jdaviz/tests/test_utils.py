@@ -29,7 +29,7 @@ def test_alpha_index_exceptions():
 
 def test_uri_to_download_bad_scheme(imviz_helper):
     uri = "file://path/to/file.fits"
-    with pytest.raises(ValueError, match="no valid loaders found for input"):
+    with pytest.raises(ValueError, match="No valid loaders found for input."):
         imviz_helper.load_data(uri)
 
 
