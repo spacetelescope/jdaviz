@@ -290,7 +290,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
 
         super().__init__(*args, **kwargs)
-        self._raised_parser_exception = False
 
         self.observation_table.enable_clear = False
         self.observation_table.show_if_empty = False
@@ -522,7 +521,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         else:
             self._cleanup()
 
-        parsed_input = None
         try:
             # calls self.parse_input() on the subclass and caches
             parsed_input = self.parsed_input
@@ -549,9 +547,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self._update_format_items()
             self.parsed_input_is_resolvable = 'Parsed input is empty or None, cannot resolve.'
             return
-
-        # Reset the flag if the item is now parseable.
-        self._raised_parser_exception = False
 
         # first attempt to parse the input as a table
         parsed_input_table = self._parsed_input_to_table(parsed_input)
