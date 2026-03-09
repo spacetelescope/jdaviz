@@ -71,15 +71,9 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
 
 
 @pytest.mark.parametrize(('input_data', 'input_format'), [
-    pytest.param('image_hdu_wcs', 'Image',
-                 marks=pytest.mark.xfail(
-                     reason='Known issue with duplicate data labels when using API.')),
-    pytest.param('spectrum1d', '1D Spectrum',
-                 marks=pytest.mark.xfail(
-                     reason='Known issue with duplicate data labels when using API.')),
-    pytest.param('spectrum2d', '2D Spectrum',
-                 marks=pytest.mark.xfail(
-                     reason='Known issue with duplicate data labels when using API.')),
+    ('image_hdu_wcs', 'Image'),
+    ('spectrum1d', '1D Spectrum'),
+    ('spectrum2d', '2D Spectrum'),
     ('spectrum1d_cube', '3D Spectrum'),
 ])
 def test_duplicate_data_labels(deconfigged_helper, input_data, input_format, request):
