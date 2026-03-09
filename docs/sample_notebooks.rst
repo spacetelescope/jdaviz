@@ -8,7 +8,7 @@ Sample Notebooks
 
 These tools include three types of example Jupyter notebooks.
 
-1. :gh-tree:`Sample Jdaviz Notebooks <notebooks>` that illustrate how to use Jdaviz and various API calls. These notebooks are located in the ``notebooks`` sub-directory of the git repository.
+1. :gh-tree:`Sample Jdaviz Deprecated Notebooks <notebooks/deprecated_notebooks>` that illustrate how to use Jdaviz and various API calls. These notebooks are located in the ``deprecated_notebooks`` sub-directory of the ``notebooks`` directory in the git repository.
 
 2. `Sample JDAT notebooks <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis#JWSTPostPipelineDataAnalysis-JWSTdataanalysis(JDAT)notebooks>`_ that illustrate likely science workflows with data obtained from the various JWST instruments. These notebooks incorporate ``astropy`` and Jdaviz when possible.
 
