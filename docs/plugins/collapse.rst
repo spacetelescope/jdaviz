@@ -202,5 +202,5 @@ Example Notebooks
 See Also
 ========
 
-* :ref:`plugin-moment-maps` - Alternative method for creating integrated flux maps
-* :ref:`plugin-spectral-extraction_3d` - Extract 1D spectra from cubes
+* :ref:`plugins-moment-maps` - Alternative method for creating integrated flux maps
+* :ref:`plugins-spectral_extraction_3d` - Extract 1D spectra from cubes
