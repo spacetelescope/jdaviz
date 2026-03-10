@@ -20,35 +20,46 @@ class LineListMixin:
         plg = self.app._jdaviz_helper.plugins['Line Lists']
         plg._obj.import_line_list(line_table)
 
+    def _get_spectrum_viewer(self):
+        """Get the spectrum viewer, handling both configured and deconfigged cases."""
+        if hasattr(self, '_default_spectrum_viewer_reference_name'):
+            return self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        else:
+            # For deconfigged, dynamically find the first spectrum viewer
+            viewer_reference = self.app._get_first_viewer_reference_name(
+                require_spectrum_viewer=True
+            )
+            if viewer_reference is None:
+                return None
+            return self.app.get_viewer(viewer_reference)
+
     def erase_spectral_lines(self, name=None):
         """Convenience function to get to the viewer function"""
-        self.app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).erase_spectral_lines(name=name)
+        viewer = self._get_spectrum_viewer()
+        if viewer is not None:
+            viewer.erase_spectral_lines(name=name)
 
     def plot_spectral_line(self, line, global_redshift=None):
         """Convenience function to get to the viewer function"""
-        self.app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).plot_spectral_line(line, global_redshift)
+        viewer = self._get_spectrum_viewer()
+        if viewer is not None:
+            viewer.plot_spectral_line(line, global_redshift)
 
     def plot_spectral_lines(self, global_redshift=None):
         """Convenience function to get to the viewer function"""
-        self.app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).plot_spectral_lines(global_redshift)
+        viewer = self._get_spectrum_viewer()
+        if viewer is not None:
+            viewer.plot_spectral_lines(global_redshift)
 
     @property
     def spectral_lines(self):
-        return self.app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).spectral_lines
+        viewer = self._get_spectrum_viewer()
+        return viewer.spectral_lines if viewer is not None else None
 
     @property
     def available_linelists(self):
-        return self.app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).available_linelists()
+        viewer = self._get_spectrum_viewer()
+        return viewer.available_linelists() if viewer is not None else []
 
     def set_redshift_slider_bounds(self, range=None, step=None):
         '''

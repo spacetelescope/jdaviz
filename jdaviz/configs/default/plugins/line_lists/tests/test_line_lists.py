@@ -270,3 +270,35 @@ class TestLineLists:
             type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
         )
         assert is_valid
+
+    @pytest.mark.parametrize("helper_name", ['specviz_helper', 'deconfigged_helper'])
+    def test_import_line_list_generic_helper(self, helper_name, spectrum1d, request):
+        """Test importing line lists works with both specviz and deconfigged helpers"""
+        helper = request.getfixturevalue(helper_name)
+
+        if helper_name == 'specviz_helper':
+            helper.load_data(spectrum1d)
+        else:
+            # For deconfigged, load data and create a viewer
+            helper.load(spectrum1d, format='1D Spectrum', data_label='Test Spectrum')
+
+        # Create a line list table
+        lt = QTable()
+        lt['linename'] = ['O III', 'H-alpha', 'H-beta']
+        lt['rest'] = [5007, 6563, 4861] * u.AA
+        lt.meta['name'] = 'Test Lines'
+
+        # Test loading the line list
+        helper.load_line_list(lt)
+
+        # Verify lines were loaded
+        assert helper.spectral_lines is not None
+        assert len(helper.spectral_lines) == 3
+        assert 'Test Lines' in helper.spectral_lines['listname']
+
+        # Test plotting lines
+        helper.plot_spectral_line('O III 5007.0')
+
+        # Test erasing lines
+        helper.erase_spectral_lines()
+        assert np.all(helper.spectral_lines["show"] == False)  # noqa

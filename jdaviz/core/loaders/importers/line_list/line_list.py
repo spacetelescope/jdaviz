@@ -111,7 +111,7 @@ class LineListImporter(BaseImporterToPlugin):
 
         # Prepare the table with the user-specified listname
         table = self.input.copy()
-        
+
         # Set the listname in metadata so the plugin will use it
         if not hasattr(table, 'meta'):
             table.meta = {}
