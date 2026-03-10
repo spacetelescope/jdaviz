@@ -478,8 +478,8 @@ export default {
         return true
       }
       // simple exact text search match on the plugin title/description for now.
-      description = trayItem.tray_item_description || ''
-      label = trayItem.label || trayItem.name || ''
+      const description = trayItem.tray_item_description || ''
+      const label = trayItem.label || trayItem.name || ''
       return label.toLowerCase().includes(tray_items_filter.toLowerCase()) || description.toLowerCase().includes(tray_items_filter.toLowerCase()) || this.trayItemMethodMatch(trayItem, tray_items_filter).length > 0
     },
     trayItemMethodMatch(trayItem, tray_items_filter ) {
