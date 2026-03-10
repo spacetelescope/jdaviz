@@ -107,6 +107,10 @@ class TestParseImage:
             with imviz_helper.batch_load():
                 for i in range(n_slices):
                     imviz_helper.load_data(arr[i, :, :], data_label=f'{data_label}_{i}')
+                    # Check that data is not yet visible in the viewer
+                    # (i.e. pending visibility is working)
+                    assert imviz_helper.viewers.get('imviz-0').data_menu.data_labels_loaded == []
+                    assert len(imviz_helper.pending_set_data_visibility) > 0
 
         assert len(imviz_helper.app.data_collection) == n_slices
         assert len(imviz_helper.app.data_collection.links) == 8
