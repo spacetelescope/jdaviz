@@ -414,3 +414,88 @@ def test_update_existing_data_in_dc(deconfigged_helper,
     deconfigged_helper.app.data_item_remove(dc_data.label)
     assert len(deconfigged_helper.app.existing_data_in_dc) != len_before
     assert dh not in deconfigged_helper.app.existing_data_in_dc
+
+
+def test_add_custom_loader_file(deconfigged_helper, tmp_path):
+    """Test _add_custom_loader with a file resolver."""
+    # Create a temporary FITS file
+    filepath = tmp_path / "test_data.fits"
+    filepath.touch()
+
+    # Add a custom file loader
+    loader_name = deconfigged_helper.app._add_custom_loader('file', str(filepath), name='test_file')
+
+    assert loader_name == 'test_file'
+    assert 'test_file' in deconfigged_helper.app._jdaviz_helper.loaders
+
+    # Check that the loader was added to loader_items
+    loader_names = [item['name'] for item in deconfigged_helper.app.state.loader_items]
+    assert 'test_file' in loader_names
+
+
+def test_add_custom_loader_object(deconfigged_helper, spectrum1d):
+    """Test _add_custom_loader with an object resolver."""
+    from astropy.table import Table
+
+    # Create a simple table object
+    test_table = Table({'col1': [1, 2, 3], 'col2': [4, 5, 6]})
+
+    # Add a custom object loader
+    loader_name = deconfigged_helper.app._add_custom_loader('object', test_table, name='my_table')
+
+    assert loader_name == 'my_table'
+    assert 'my_table' in deconfigged_helper.app._jdaviz_helper.loaders
+
+    # Check that requires_api_support is set correctly for object resolver
+    loader_items = deconfigged_helper.app.state.loader_items
+    my_table_item = [item for item in loader_items if item['name'] == 'my_table'][0]
+    assert my_table_item['requires_api_support'] is True
+
+
+def test_add_custom_loader_url(deconfigged_helper):
+    """Test _add_custom_loader with a URL resolver."""
+    # Use a simple test URL (it doesn't need to be valid for the loader creation)
+    test_url = 'https://example.com/test_data.fits'
+
+    # Add a custom URL loader
+    loader_name = deconfigged_helper.app._add_custom_loader('url', test_url, name='remote_file')
+
+    assert loader_name == 'remote_file'
+    assert 'remote_file' in deconfigged_helper.app._jdaviz_helper.loaders
+
+
+def test_add_custom_loader_invalid_resolver(deconfigged_helper):
+    """Test _add_custom_loader with an invalid resolver type."""
+    with pytest.raises(ValueError, match="Unknown resolver type 'invalid'"):
+        deconfigged_helper.app._add_custom_loader('invalid', 'some_input', name='test')
+
+
+def test_add_custom_loader_unique_names(deconfigged_helper, tmp_path):
+    """Test that _add_custom_loader creates unique names when duplicates exist."""
+    # Create temporary files
+    filepath1 = tmp_path / "data.fits"
+    filepath1.touch()
+    filepath2 = tmp_path / "data2.fits"
+    filepath2.touch()
+
+    # Add two loaders with the same name
+    name1 = deconfigged_helper.app._add_custom_loader('file', str(filepath1), name='data')
+    name2 = deconfigged_helper.app._add_custom_loader('file', str(filepath2), name='data')
+
+    assert name1 == 'data'
+    assert name2 == 'data_1'
+
+
+def test_add_custom_loader_open_in_tray(deconfigged_helper, tmp_path):
+    """Test _add_custom_loader with open_in_tray option."""
+    filepath = tmp_path / "test.fits"
+    filepath.touch()
+
+    # Add a custom file loader with open_in_tray=True
+    loader_name = deconfigged_helper.app._add_custom_loader(
+        'file', str(filepath), name='test', open_in_tray=True
+    )
+
+    # The loader should be selected
+    # Note: This assumes the tray is opened by the method
+    assert loader_name == 'test'

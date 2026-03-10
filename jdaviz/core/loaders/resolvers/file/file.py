@@ -82,7 +82,8 @@ class PresetFileResolver(FileResolver):
     the file browser widget. Used for programmatically adding files.
 
     This resolver behaves like the file resolver but hides the file browser
-    UI, similar to when server_is_remote is True.
+    inputs by setting hide_resolver_inputs=True, while still showing
+    query results and importer selection.
     """
 
     def __init__(self, filepath, title=None, *args, **kwargs):
@@ -111,8 +112,8 @@ class PresetFileResolver(FileResolver):
         if _preset_title is not None:
             self.title = _preset_title
 
-        # Override to hide file browser in UI (similar to server_is_remote behavior)
-        self.server_is_remote = True
+        # Override to hide file browser inputs
+        self.hide_resolver_inputs = True
 
     def _on_file_chooser_path_changed(self, path):
         # Override to prevent errors when file_chooser doesn't exist

@@ -49,6 +49,8 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 ViewerRemovedMessage, ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage, LayersFinalizedMessage)
 from jdaviz.core.loaders.resolvers.file.file import PresetFileResolver
+from jdaviz.core.loaders.resolvers.object.object import PresetObjectResolver
+from jdaviz.core.loaders.resolvers.url.url import PresetURLResolver
 from jdaviz.core.registries import (tool_registry, tray_registry,
                                     viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
@@ -3531,49 +3533,57 @@ class Application(VuetifyTemplate, HubListener):
         for loader in self._jdaviz_helper.loaders.values():
             loader.format._update_items()
 
-    def _add_file_loader(self, filepath, name=None, open_in_tray=False, load=False):
+    def _add_custom_loader(self, resolver, input, name, open_in_tray=False, load=False):
         """
-        Private method to programmatically add a file loader with a preset path.
+        Private method to programmatically add a custom loader with preset input.
 
         This creates a loader entry that appears in the source dropdown but doesn't
-        show the file browser UI (similar to server_is_remote behavior).
+        show the input UI (similar to server_is_remote behavior).
 
         Parameters
         ----------
-        filepath : str
-            Absolute path to the file to load.
-        name : str, optional
-            Custom name for this loader. If None, uses the filename without extension.
+        resolver : str
+            Resolver type ('file', 'object', or 'url').
+        input : str or object
+            Input for the resolver. For 'file', an absolute path to the file.
+            For 'object', any Python object. For 'url', a URL string.
+        name : str
+            Name for this loader.
         open_in_tray : bool, optional
             Whether to set this as the selected loader in the tray.
         load : bool, optional
-            Whether to immediately load the file after adding the loader.
+            Whether to immediately load the data after adding the loader.
 
         Returns
         -------
-        str
-            The name of the added loader.
+        The new loader.
 
         Examples
         --------
-        >>> app._add_file_loader(filepath='/path/to/data.fits', name='my_special_file')
-        'my_special_file'
+        >>> app._add_custom_loader('file', '/path/to/data.fits', name='my_file')
+        'my_file'
+        >>> app._add_custom_loader('object', mytable, name='mytable')
+        'mytable'
+        >>> app._add_custom_loader('url', 'https://example.com/data.fits', name='remote_data')
+        'remote_data'
         """
-        # Validate filepath (PresetFileResolver will also validate, but check early)
-        if not os.path.exists(filepath) or not os.path.isfile(filepath):
-            raise ValueError(f"'{filepath}' is not a valid file path.")
+        # Map resolver names to preset classes
+        preset_resolver_map = {
+            'file': PresetFileResolver,
+            'object': PresetObjectResolver,
+            'url': PresetURLResolver
+        }
 
-        # Generate name if not provided
-        if name is None:
-            name = os.path.splitext(os.path.basename(filepath))[0]
+        if resolver not in preset_resolver_map:
+            raise ValueError(f"Unknown resolver type '{resolver}'. "
+                           f"Must be one of: {', '.join(preset_resolver_map.keys())}")
+
+        PresetResolverClass = preset_resolver_map[resolver]
 
         # Ensure unique name
         existing_names = [item['name'] for item in self.state.loader_items]
-        original_name = name
-        counter = 1
-        while name in existing_names:
-            name = f"{original_name}_{counter}"
-            counter += 1
+        if name in existing_names:
+            raise ValueError(f"Loader name must be unique. A loader with the name '{name}' already exists.")
 
         # Define callbacks (same as in initialization)
         def open():
@@ -3583,12 +3593,12 @@ class Application(VuetifyTemplate, HubListener):
         def close():
             self.state.loader_selected = ''
 
-        def set_active_loader(resolver):
-            self.state.loader_selected = resolver
+        def set_active_loader(res):
+            self.state.loader_selected = res
 
         # Create the preset resolver instance
-        loader = PresetFileResolver(
-            filepath=filepath,
+        loader = PresetResolverClass(
+            input,
             title=name,
             app=self,
             open_callback=open,
@@ -3603,17 +3613,18 @@ class Application(VuetifyTemplate, HubListener):
         self.state.loader_items.append({
             'name': name,
             'label': name,
-            'requires_api_support': False,
+            'requires_api_support': loader.requires_api_support,
             'widget': "IPY_MODEL_" + loader.model_id,
             'api_methods': loader.api_methods,
         })
 
+        ldr = self._jdaviz_helper.loaders[name]
         if open_in_tray:
-            self._jdaviz_helper.loaders[name].open_in_tray()
+            ldr.open_in_tray()
         if load:
-            self._jdaviz_helper.loaders[name].load()
+            ldr.load()
 
-        return name
+        return ldr
 
     def update_tray_items_from_registry(self):
         if self.config != 'deconfigged':

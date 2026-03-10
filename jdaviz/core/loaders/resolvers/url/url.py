@@ -10,7 +10,7 @@ from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.utils import download_uri_to_path, get_cloud_fits
 
 
-__all__ = ['URLResolver']
+__all__ = ['URLResolver', 'PresetURLResolver']
 
 
 @loader_resolver_registry('url')
@@ -112,3 +112,32 @@ class URLResolver(BaseResolver):
 
     def parse_input(self):
         return self._uri_output_file
+
+
+class PresetURLResolver(URLResolver):
+    """
+    A URLResolver variant with a pre-set URL that doesn't show
+    input widgets. Used for programmatically adding URLs.
+
+    This resolver behaves like the URL resolver but hides the input fields
+    by setting hide_resolver_inputs=True, while still showing query results
+    and importer selection.
+    """
+
+    def __init__(self, url, title=None, *args, **kwargs):
+        # Store url and title before calling parent's init
+        _preset_url = url
+        _preset_title = title
+
+        # Call parent (URLResolver) init
+        super().__init__(*args, **kwargs)
+
+        # Set the url after initialization
+        self.url = _preset_url
+
+        # Set custom title if provided
+        if _preset_title is not None:
+            self.title = _preset_title
+
+        # Override to hide input fields
+        self.hide_resolver_inputs = True

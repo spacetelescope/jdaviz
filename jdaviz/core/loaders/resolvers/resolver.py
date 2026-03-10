@@ -270,6 +270,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     server_is_remote = Bool(False).tag(sync=True)
     # Hide the resolver UI (title, input fields, query results) and show only importer selection
     hide_resolver = Bool(False).tag(sync=True)
+    # Hide only the resolver input fields (for preset loaders), but still show query results
+    hide_resolver_inputs = Bool(False).tag(sync=True)
 
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)

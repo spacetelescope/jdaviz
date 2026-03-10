@@ -21,12 +21,14 @@
     :api_hints_enabled="api_hints_enabled"
     :valid_import_formats="valid_import_formats"
     :server_is_remote="server_is_remote"
+    :hide_resolver="hide_resolver"
+    :hide_resolver_inputs="hide_resolver_inputs"
     :is_wcs_linked="is_wcs_linked"
     :image_data_loaded="image_data_loaded"
     :footprint_select_icon="footprint_select_icon"
     :custom_toolbar_enabled="custom_toolbar_enabled"
   >
-    <v-row v-if="!server_is_remote" style="padding-left: 12px; margin-bottom: 16px">
+    <v-row v-if="!server_is_remote && !hide_resolver_inputs" style="padding-left: 12px; margin-bottom: 16px">
       Select a file with data you want to load into this instance of Jdaviz.
     </v-row>
     <v-row v-if="api_hints_enabled">
@@ -34,6 +36,6 @@
         ldr.filepath = '{{ filepath }}'
       </span>
     </v-row>
-    <jupyter-widget v-if="file_chooser_widget && !server_is_remote" :widget="file_chooser_widget"></jupyter-widget>
+    <jupyter-widget v-if="file_chooser_widget && !server_is_remote && !hide_resolver_inputs" :widget="file_chooser_widget"></jupyter-widget>
   </j-loader>
 </template>
