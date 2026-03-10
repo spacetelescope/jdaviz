@@ -374,6 +374,7 @@
   export default {
     methods: {
       lineItemVisible(lineItem, lines_filter, filter_range) {
+        let text_filter
         if (lines_filter === null || lines_filter.length == 0) {
           text_filter = true
         }
@@ -382,6 +383,7 @@
           text_filter = lineItem.linename.toLowerCase().indexOf(lines_filter.toLowerCase()) !== -1
         }
 
+        let in_range
         if (filter_range) {
           in_range = (lineItem.obs > this.spectrum_viewer_min) && (lineItem.obs < this.spectrum_viewer_max)
         }
