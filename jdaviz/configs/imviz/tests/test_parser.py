@@ -98,6 +98,7 @@ class TestParseImage:
         slice_shape = (2, 3)
         arr = np.stack([np.zeros(slice_shape) + i for i in range(n_slices)])
         data_label = 'my_slices'
+        viewer = imviz_helper.viewers.get('imviz-0')
 
         if not manual_loop:
             # We use higher level load_data() here to make sure linking does not crash.
@@ -107,15 +108,14 @@ class TestParseImage:
             with imviz_helper.batch_load():
                 for i in range(n_slices):
                     imviz_helper.load_data(arr[i, :, :], data_label=f'{data_label}_{i}')
-                # all set_data_visibility calls must be deferred,
+                # all set_data_visibility calls must be deferred —
                 # no layers should be loaded into the viewer yet.
-                assert imviz_helper.viewers.get('imviz-0').data_menu.data_labels_loaded == []
+                assert viewer.data_menu.data_labels_loaded == []
                 assert len(imviz_helper.pending_set_data_visibility) == n_slices
 
-            # After batch_load exits, the link manager has run,
-            # all layers should now be loaded.
-            viewer = imviz_helper.viewers.get('imviz-0')._obj
-            assert len(viewer.layers) == n_slices
+            # After batch_load exits: link manager has run, all layers should now be loaded.
+            assert len(viewer.data_menu.data_labels_loaded) == n_slices
+            assert len(imviz_helper.pending_set_data_visibility) == 0
 
         assert len(imviz_helper.app.data_collection) == n_slices
         assert len(imviz_helper.app.data_collection.links) == 8
