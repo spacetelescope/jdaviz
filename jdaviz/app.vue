@@ -12,7 +12,7 @@
             <img :src="state.icons['plus-box']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
-        <j-tooltip tipid="app-toolbar-save">
+        <j-tooltip v-if="!state.settings.server_is_remote" tipid="app-toolbar-save">
           <v-btn icon @click="() => {if (state.drawer_content === 'save') {state.drawer_content = ''} else {state.drawer_content = 'save'}}" :class="{active : state.drawer_content === 'save'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Export')].is_relevant">
             <img :src="state.icons['content-save']" width="24" class="color-to-white"/>
           </v-btn>
@@ -239,7 +239,7 @@
                 </v-tab-item>
               </v-tabs-items>
             </v-card>
-            <v-card v-if="state.drawer_content === 'save'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+            <v-card v-if="state.drawer_content === 'save' && !state.settings.server_is_remote" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Export']</span>
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Export')].widget"></jupyter-widget>
             </v-card>
