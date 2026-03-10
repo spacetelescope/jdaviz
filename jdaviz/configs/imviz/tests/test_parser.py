@@ -108,12 +108,12 @@ class TestParseImage:
             with imviz_helper.batch_load():
                 for i in range(n_slices):
                     imviz_helper.load_data(arr[i, :, :], data_label=f'{data_label}_{i}')
-                # all set_data_visibility calls must be deferred —
+                # all set_data_visibility calls must be deferred
                 # no layers should be loaded into the viewer yet.
                 assert viewer.data_menu.data_labels_loaded == []
                 assert len(imviz_helper.pending_set_data_visibility) == n_slices
 
-            # After batch_load exits: link manager has run, all layers should now be loaded.
+            # After batch_load exits, link manager has run, all layers should now be loaded.
             assert len(viewer.data_menu.data_labels_loaded) == n_slices
             assert len(imviz_helper.pending_set_data_visibility) == 0
 
