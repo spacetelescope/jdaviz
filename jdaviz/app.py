@@ -2808,7 +2808,7 @@ class Application(VuetifyTemplate, HubListener):
         viewer_reference : str
             Reference (or ID) of the viewer
         data_label : str
-            Label of the data to set the visibility.  If not already loaded in the viewer, the
+            Label of the data to set the visibility. If not already loaded in the viewer, the
             data will automatically be loaded before setting the visibility
         visible : bool
             Whether to set the layer(s) to visible.
@@ -2819,9 +2819,7 @@ class Application(VuetifyTemplate, HubListener):
         # issues with multiple layers being added in quick succession
         if getattr(self._jdaviz_helper, '_in_batch_load', 0) > 0:
             # Store for processing after batch_load exits
-            if not hasattr(self._jdaviz_helper, '_pending_set_data_visibility'):
-                self._jdaviz_helper._pending_set_data_visibility = []
-            self._jdaviz_helper._pending_set_data_visibility.append({
+            self._jdaviz_helper.pending_set_data_visibility.append({
                 'viewer_reference': viewer_reference,
                 'data_label': data_label,
                 'visible': visible,
