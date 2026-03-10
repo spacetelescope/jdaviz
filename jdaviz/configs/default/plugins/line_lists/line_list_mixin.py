@@ -13,28 +13,12 @@ class LineListMixin:
 
     def load_line_list(self, line_table, replace=False):
         """
-        Convenience function to get to the viewer function. Also
-        broadcasts a message so the line list plugin UI can display lines
-        loaded via the notebook.
+        Convenience function to load a line list and update the plugin UI.
+        Delegates to the Line Lists plugin to avoid code duplication.
         """
-
-        lt = self.app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).load_line_list(
-            line_table, replace=replace, return_table=True
-        )
-
-        # TODO: why is the rest of this logic here and not in viewer.load_line_list?
-
-        # Preset lists were returning None table despite loading correctly
-        if lt is None:
-            if replace:
-                lt = self.spectral_lines.loc["listname", line_table]
-            else:
-                lt = self.spectral_lines
-
-        add_line_list_message = AddLineListMessage(table=lt, sender=self)
-        self.app.hub.broadcast(add_line_list_message)
+        # Delegate to the Line Lists plugin's import method
+        plg = self.app._jdaviz_helper.plugins['Line Lists']
+        plg._obj.import_line_list(line_table)
 
     def erase_spectral_lines(self, name=None):
         """Convenience function to get to the viewer function"""

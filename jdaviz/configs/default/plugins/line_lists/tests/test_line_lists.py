@@ -191,3 +191,82 @@ class TestLineLists:
             if isinstance(mark, SpectralLine)]
 
         assert np.allclose([line.redshift for line in viewer_lines], 0.01)
+
+    def test_import_line_list_from_table(self, specviz_helper, spectrum1d):
+        """Test importing a line list from a QTable object"""
+        specviz_helper.load_data(spectrum1d)
+
+        # Create a line list table with required columns
+        lt = QTable()
+        lt['linename'] = ['Ca II K', 'Ca II H', 'H-gamma']
+        lt['rest'] = [3933.66, 3968.47, 4340.46] * u.AA
+        lt['listname'] = 'My Custom List'
+        lt.meta['medium'] = 'Vacuum'
+
+        # Get the line lists plugin
+        ll_plugin = specviz_helper.plugins['Line Lists']._obj
+        ll_plugin.plugin_opened = True
+
+        # Import the line list using the plugin method
+        ll_plugin.import_line_list(lt)
+
+        # Verify the line list was loaded
+        assert 'My Custom List' in ll_plugin.loaded_lists
+        assert len(ll_plugin.list_contents['My Custom List']['lines']) == 3
+        assert ll_plugin.list_contents['My Custom List']['medium'] == 'Vacuum'
+
+        # Verify the lines are in the main spectral_lines table
+        assert specviz_helper.spectral_lines.loc["linename", "Ca II K"]["listname"] == "My Custom List"
+        assert specviz_helper.spectral_lines.loc["linename", "Ca II H"]["listname"] == "My Custom List"
+        assert specviz_helper.spectral_lines.loc["linename", "H-gamma"]["listname"] == "My Custom List"
+
+    def test_import_line_list_validation(self, specviz_helper, spectrum1d):
+        """Test that import validation catches invalid tables"""
+        from jdaviz.core.loaders.importers.line_list import LineListImporter
+
+        specviz_helper.load_data(spectrum1d)
+        ll_plugin = specviz_helper.plugins['Line Lists']._obj
+
+        # Test missing linename column
+        lt = QTable()
+        lt['rest'] = [5007, 6563] * u.AA
+        # Create a mock importer to test validation
+        is_valid = LineListImporter.is_valid.__get__(
+            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
+        )
+        assert not is_valid
+
+        # Test missing rest column
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        is_valid = LineListImporter.is_valid.__get__(
+            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
+        )
+        assert not is_valid
+
+        # Test rest column without units
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        lt['rest'] = [5007, 6563]  # No units
+        is_valid = LineListImporter.is_valid.__get__(
+            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
+        )
+        assert not is_valid
+
+        # Test negative rest values
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        lt['rest'] = [-5007, 6563] * u.AA
+        is_valid = LineListImporter.is_valid.__get__(
+            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
+        )
+        assert not is_valid
+
+        # Test valid table
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        lt['rest'] = [5007, 6563] * u.AA
+        is_valid = LineListImporter.is_valid.__get__(
+            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
+        )
+        assert is_valid
