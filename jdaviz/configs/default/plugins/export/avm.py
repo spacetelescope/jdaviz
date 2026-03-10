@@ -3,8 +3,7 @@ import os
 import numpy as np
 from PIL import Image
 
-from astropy.wcs import WCS
-from astropy.wcs.utils import fit_wcs_from_points, pixel_to_pixel
+from astropy.wcs.utils import fit_wcs_from_points
 from pyavm import AVM
 
 

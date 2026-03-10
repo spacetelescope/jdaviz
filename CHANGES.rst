@@ -49,6 +49,8 @@ New Features
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
 
+- Export image viewer screenshots to JPG with Astronomy Visualization Metadata (AVM). [#4065]
+
 Cubeviz
 ^^^^^^^
 

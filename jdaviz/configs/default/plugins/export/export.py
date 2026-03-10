@@ -1,6 +1,5 @@
 import os
 import time
-from functools import partial
 from pathlib import Path
 import threading
 
@@ -8,8 +7,6 @@ from astropy import units as u
 from astropy.nddata import CCDData
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue_jupyter.bqplot.image import BqplotImageView
-from PIL import Image
-from pyavm import AVM
 from regions import CircleSkyRegion, EllipseSkyRegion
 from specutils import Spectrum
 from traitlets import Bool, List, Unicode, observe
@@ -523,9 +520,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 try:
                     # export PNG
                     tmp_filename = Path(str(Path(filename)).replace('.jpg', '.png'))
-                    self.save_figure(viewer, tmp_filename, 'png', show_dialog=show_dialog,
-                                    width=f"{self.image_width}px" if self.image_custom_size else None,
-                                    height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa
+                    self.save_figure(
+                        viewer, tmp_filename, 'png', show_dialog=show_dialog,
+                        width=f"{self.image_width}px" if self.image_custom_size else None,
+                        height=f"{self.image_height}px" if self.image_custom_size else None
+                    )
 
                     # wait for PNG to be available before continuing
                     while viewer.figure._upload_png_callback is not None:
