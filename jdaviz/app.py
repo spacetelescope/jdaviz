@@ -3576,14 +3576,14 @@ class Application(VuetifyTemplate, HubListener):
 
         if resolver not in preset_resolver_map:
             raise ValueError(f"Unknown resolver type '{resolver}'. "
-                           f"Must be one of: {', '.join(preset_resolver_map.keys())}")
+                             f"Must be one of: {', '.join(preset_resolver_map.keys())}")
 
         PresetResolverClass = preset_resolver_map[resolver]
 
         # Ensure unique name
         existing_names = [item['name'] for item in self.state.loader_items]
         if name in existing_names:
-            raise ValueError(f"Loader name must be unique. A loader with the name '{name}' already exists.")
+            raise ValueError(f"Loader name must be unique. A loader with the name '{name}' already exists.")  # noqa
 
         # Define callbacks (same as in initialization)
         def open():
