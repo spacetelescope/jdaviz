@@ -1,4 +1,5 @@
 import os
+import re
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
@@ -1085,10 +1086,34 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
     def _matches_format(key):
         """
         Return True if *key* matches the requested formats filter.
+
+        Matches if any substring from the requested formats appears in the key,
+        or any substring from the key appears in a requested format, e.g.
+        if the requested format is '1D Spectrum' then it would match to
+        '1D/2D/3D Spectrum', 'Specutils.Spectrum', 'Specutils.Spectrum(array)', etc.
+        Splits both key and format by spaces, dots, and parentheses to extract substrings.
         """
         if formats is None or not any(formats):
             return True
-        return any(fmt in key for fmt in formats if fmt is not None)
+
+        # Extract substrings from key by splitting on spaces and dots
+        key_substrings = set(re.split(r'[\s.()]+', key.lower()))
+        key_substrings.discard('')  # Remove empty strings
+
+        for fmt in formats:
+            if fmt is None:
+                continue
+            fmt_lower = fmt.lower()
+            # Check if fmt substring is in key (direct substring match)
+            if fmt_lower in key.lower():
+                return True
+            # Extract substrings from format and check for intersection
+            fmt_substrings = set(re.split(r'[\s.()]+', fmt_lower))
+            fmt_substrings.discard('')  # Remove empty strings
+            # Check if any substring from format matches any substring from key
+            if fmt_substrings & key_substrings:
+                return True
+        return False
 
     lines = []
 
