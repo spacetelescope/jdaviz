@@ -18,6 +18,7 @@ class URLResolver(BaseResolver):
     template_file = __file__, "url.vue"
     default_input = 'url'
 
+    title = Unicode("Download from URL").tag(sync=True)
     url = Unicode("").tag(sync=True)
     url_scheme = Unicode("").tag(sync=True)
     url_not_whitelisted = Bool(False).tag(sync=True)

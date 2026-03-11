@@ -1,6 +1,6 @@
 <template>
   <j-loader
-    title="Download from URL"
+    :title="title"
     :popout_button="popout_button"
     :spinner="spinner"
     :parsed_input_is_resolvable="parsed_input_is_resolvable"

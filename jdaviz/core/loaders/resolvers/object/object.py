@@ -16,6 +16,7 @@ class ObjectResolver(BaseResolver):
     default_input = 'object'
     requires_api_support = True
 
+    title = Unicode("Python Object (from API)").tag(sync=True)
     object_repr = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):

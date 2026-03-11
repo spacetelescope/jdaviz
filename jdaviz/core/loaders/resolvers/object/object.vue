@@ -1,6 +1,6 @@
 <template>
   <j-loader
-    title="Python Object (from API)"
+    :title="title"
     :popout_button="popout_button"
     :spinner="spinner"
     :parsed_input_is_empty="parsed_input_is_empty"
