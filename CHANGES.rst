@@ -170,6 +170,8 @@ Bug Fixes
 
 - Fixed using `viewer.show()` with height argument not using the full height inline in the notebook. [#4134]
 
+- Fixed bug where file drop resolver failed to process messages correctly when ipykernel>=7. [#4080]
+
 Cubeviz
 ^^^^^^^
 
