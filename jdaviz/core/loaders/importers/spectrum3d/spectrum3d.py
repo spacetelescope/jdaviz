@@ -233,6 +233,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             supported_viewers = [{'label': '3D Spectrum',
                                   'reference': 'cubeviz-image-viewer'}]
             self.dq_viewer.add_filter(viewer_in_registry_names(supported_viewers))
+            # put DQ layer in the same viewer as flux by default
+            # fine to hard code flux-viewer for cubeviz, but this will need to
+            # be generalized once DQ is supported in deconfigged
             self.dq_viewer.selected = ['flux-viewer']
 
         # AUTO-EXTRACTION
