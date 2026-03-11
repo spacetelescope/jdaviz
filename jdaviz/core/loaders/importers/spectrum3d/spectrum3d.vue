@@ -133,7 +133,7 @@
       </div>
     </div>
 
-    <div v-if="dq_extension_items.length >= 1">
+    <div v-if="config == 'cubeviz' && dq_extension_items.length >= 1">
       <j-plugin-section-header>DQ (Data Quality) Cube</j-plugin-section-header>
       <plugin-select
         :items="dq_extension_items"

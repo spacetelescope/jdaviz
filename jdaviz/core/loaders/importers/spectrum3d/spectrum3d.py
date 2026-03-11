@@ -211,34 +211,29 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             self.mask_viewer.selected = []
 
         # DQ (DATA QUALITY) CUBE
-        self.has_dq = len(self.dq_extension_items) > 0
+        self.has_dq = self.config == 'cubeviz' and len(self.dq_extension_items) > 0
         self.dq_data_label = AutoTextField(self,
                                            'dq_data_label_value',
                                            'dq_data_label_default',
                                            'dq_data_label_auto',
                                            'dq_data_label_invalid_msg')
 
-        self.dq_viewer = ViewerSelectCreateNew(self,
-                                               'dq_viewer_items',
-                                               'dq_viewer_selected',
-                                               'dq_viewer_create_new_items',
-                                               'dq_viewer_create_new_selected',
-                                               'dq_viewer_label_value',
-                                               'dq_viewer_label_default',
-                                               'dq_viewer_label_auto',
-                                               'dq_viewer_label_invalid_msg',
-                                               multiselect='dq_viewer_multiselect',
-                                               default_mode='empty')
-        supported_viewers = [{'label': '3D Spectrum',
-                              'reference': 'cubeviz-image-viewer'}]
-        if self.app.config == 'deconfigged':
-            self.dq_viewer_create_new_items = supported_viewers
-
-        self.dq_viewer.add_filter(viewer_in_registry_names(supported_viewers))
         if self.config == 'cubeviz':
+            self.dq_viewer = ViewerSelectCreateNew(self,
+                                                   'dq_viewer_items',
+                                                   'dq_viewer_selected',
+                                                   'dq_viewer_create_new_items',
+                                                   'dq_viewer_create_new_selected',
+                                                   'dq_viewer_label_value',
+                                                   'dq_viewer_label_default',
+                                                   'dq_viewer_label_auto',
+                                                   'dq_viewer_label_invalid_msg',
+                                                   multiselect='dq_viewer_multiselect',
+                                                   default_mode='empty')
+            supported_viewers = [{'label': '3D Spectrum',
+                                  'reference': 'cubeviz-image-viewer'}]
+            self.dq_viewer.add_filter(viewer_in_registry_names(supported_viewers))
             self.dq_viewer.selected = ['flux-viewer']
-        else:
-            self.dq_viewer.select_default()
 
         # AUTO-EXTRACTION
         self.function = SelectPluginComponent(
@@ -475,27 +470,27 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             if self.has_dq and not self.flux_only:
                 dq_hdu = self.dq_extension.selected_obj
 
-            # for DQ components, map zeros to nans
-            # so that they are not displayed in the DQ colormap
-            dq_data = np.float32(dq_hdu.data)
-            dq_data[dq_data == 0] = np.nan
+                # for DQ components, map zeros to nans
+                # so that they are not displayed in the DQ colormap
+                dq_data = np.float32(dq_hdu.data)
+                dq_data[dq_data == 0] = np.nan
 
-            # Set _extname so the DQ plugin can identify this as a DQ layer
-            dq_meta = dict(self.output.meta)
-            dq_meta['_extname'] = 'DQ'
+                # Set _extname so the DQ plugin can identify this as a DQ layer
+                dq_meta = dict(self.output.meta)
+                dq_meta['_extname'] = 'DQ'
 
-            dq_cube = Spectrum(spectral_axis=self.output.spectral_axis,
-                               flux=dq_data * u.dimensionless_unscaled,
-                               wcs=self.output.wcs,
-                               meta=dq_meta,
-                               spectral_axis_index=self.output.spectral_axis_index)
+                dq_cube = Spectrum(spectral_axis=self.output.spectral_axis,
+                                   flux=dq_data * u.dimensionless_unscaled,
+                                   wcs=self.output.wcs,
+                                   meta=dq_meta,
+                                   spectral_axis_index=self.output.spectral_axis_index)
 
-            self.add_to_data_collection(dq_cube,
-                                        dq_data_label,
-                                        parent=data_label,
-                                        viewer_select=self.dq_viewer)
+                self.add_to_data_collection(dq_cube,
+                                            dq_data_label,
+                                            parent=data_label,
+                                            viewer_select=self.dq_viewer)
 
-            self.app._jdaviz_helper._loaded_dq_cube = self.app.data_collection[dq_data_label]
+                self.app._jdaviz_helper._loaded_dq_cube = self.app.data_collection[dq_data_label]
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         comp_type = _spatial_assign_component_type(comp_id, comp, units, physical_type)

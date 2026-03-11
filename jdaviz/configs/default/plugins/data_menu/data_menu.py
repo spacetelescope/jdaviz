@@ -453,7 +453,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                                for child in self.app._get_assoc_data_children(data.label)}
 
             for layer in self._viewer.layers:
-                print(f"layer {layer.layer.label} with zorder {layer.zorder}")  # noqa
                 # Skip reordering scatter layers in image viewers.
                 if isinstance(self._viewer, BqplotImageView) and isinstance(layer.state, ScatterLayerState):  # noqa
                     continue
@@ -461,14 +460,15 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
                     if layer.layer.label not in data_and_children:
                         for x in children_blocks:
+
                             # skip empty blocks (still need to figure out why
                             # this is happening - without this, when you have a DQ
                             # layer in cubeviz, adding data to the spectrum 1D viewer
                             # results in an error because it is encountering an empty
                             # block here, but skipping seems to do the trick)
                             if not x:
-                                print(f"skipping empty block for layer {layer.layer.label}")  # noqa
                                 continue
+
                             # If the projected new_zorder falls within a block of
                             # data+children, adjust to be just above or below the block
                             # depending on if the layer came from below or above, respectively
