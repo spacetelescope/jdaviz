@@ -117,6 +117,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fixed bug where file drop resolver failed to process messages correctly when ipykernel>=7. [#4080]
+
 Cubeviz
 ^^^^^^^
 
