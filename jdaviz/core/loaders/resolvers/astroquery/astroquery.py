@@ -43,6 +43,9 @@ class AstroqueryResolver(BaseConeSearchResolver):
         """
         Update telescope options when settings change.
         """
+        # Call parent's method to handle server_is_remote and other settings
+        super()._on_app_settings_changed(new_settings_dict)
+
         # Recalculate available telescopes based on new settings
         all_telescopes = ['JWST', 'HST', 'SDSS', 'Gaia']
         disabled_telescopes = new_settings_dict.get('disabled_astroquery_telescopes', [])
