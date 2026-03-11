@@ -48,6 +48,21 @@ module.exports = {
       });
     },
   },
+  watch: {
+    loader_items_filtered: {
+      handler(newFiltered) {
+        // If the currently selected loader is not in the filtered list,
+        // select the first available item
+        if (newFiltered.length > 0) {
+          const isCurrentInFiltered = newFiltered.some(item => item.name === this.loader_selected);
+          if (!isCurrentInFiltered) {
+            this.$emit('update:loader_selected', newFiltered[0].name);
+          }
+        }
+      },
+      immediate: true
+    }
+  },
   methods: {
     checkNotebookContext() {
       this.notebook_context = document.getElementById("ipython-main-app")
