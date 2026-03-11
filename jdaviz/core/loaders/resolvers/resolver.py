@@ -1076,7 +1076,7 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
         Formatted text table of resolver names and their statuses.
     """
     # Width of the dot-aligned resolver/format name column
-    resolver_alignment_width = 40
+    resolver_alignment_width = 42
     if no_align:
         resolver_alignment_width = 2
 
