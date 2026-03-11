@@ -2815,10 +2815,12 @@ class Application(VuetifyTemplate, HubListener):
         replace : bool
             Whether to disable the visibility of all other layers in the viewer
         """
-        # During batch_load, defer the entire set_data_visibility call to prevent rendering
-        # issues with multiple layers being added in quick succession
-        if getattr(self._jdaviz_helper, '_in_batch_load', 0) > 0:
-            # Store for processing after batch_load exits
+        # During batch_load, defer viewer assignment until after linking completes.
+        # Only defer at the outermost batch_load level (== 1). Nested batch_loads
+        # (level > 1, e.g. a plugin live-update triggered inside import_region) are
+        # already handled by _delayed_show_in_viewer_labels in template_mixin, so
+        # intercepting them here as well would cause double-deferral and wrong layer ordering.
+        if getattr(self._jdaviz_helper, '_in_batch_load', 0) == 1:
             self._jdaviz_helper.pending_set_data_visibility.append({
                 'viewer_reference': viewer_reference,
                 'data_label': data_label,
