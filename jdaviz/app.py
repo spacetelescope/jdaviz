@@ -3533,7 +3533,8 @@ class Application(VuetifyTemplate, HubListener):
         for loader in self._jdaviz_helper.loaders.values():
             loader.format._update_items()
 
-    def _add_custom_loader(self, resolver, input, name, open_in_tray=False, load=False):
+    def _add_custom_loader(self, resolver, input, name, open_in_tray=False, load=False,
+                           format=None):
         """
         Private method to programmatically add a custom loader with preset input.
 
@@ -3553,6 +3554,9 @@ class Application(VuetifyTemplate, HubListener):
             Whether to set this as the selected loader in the tray.
         load : bool, optional
             Whether to immediately load the data after adding the loader.
+        format : str or list of str, optional
+            If provided, restrict the format dropdown to only include the specified
+            format(s). Other formats will not be attempted or shown.
 
         Returns
         -------
@@ -3595,7 +3599,8 @@ class Application(VuetifyTemplate, HubListener):
             app=self,
             open_callback=open,
             close_callback=close,
-            set_active_loader_callback=set_active_loader
+            set_active_loader_callback=set_active_loader,
+            format=format
         )
 
         # Set the registry label to match the name for open_in_tray to work
