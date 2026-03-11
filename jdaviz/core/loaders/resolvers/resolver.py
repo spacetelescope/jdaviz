@@ -1087,30 +1087,56 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
         Matches if any substring from the requested formats appears in the key,
         or any substring from the key appears in a requested format, e.g.
         if the requested format is '1D Spectrum' then it would match to
-        '1D/2D/3D Spectrum', 'Specutils.Spectrum', 'Specutils.Spectrum(array)', etc.
+        '1D Spectrum', 'Specutils.Spectrum', 'Specutils.Spectrum(array)', etc.
+        When key contains '>' (e.g., 'resolver > format'), only the part after
+        '>' is checked, and only direct/exact matches are performed (case-insensitive).
         Splits both key and format by spaces, dots, and parentheses to extract substrings.
         """
+        def _extract_substrings(text):
+            """
+            Extract substrings by splitting on spaces, dots, and parentheses.
+            """
+            substrings = set(re.split(r'[\s.()]+', text.lower()))
+            substrings.discard('')
+            return substrings
+
+        def _check_direct_match(_check_key, _formats):
+            """
+            Check if _check_key directly matches any format (case-insensitive).
+            """
+            check_key_lower = _check_key.lower()
+            for fmt in _formats:
+                if fmt is not None and fmt.lower() == check_key_lower:
+                    return True
+            return False
+
+        def _check_substring_match(_check_key, _formats):
+            """
+            Check if any substring from formats matches any substring from check_key.
+            """
+            key_substrings = _extract_substrings(_check_key)
+            for fmt in _formats:
+                if fmt is None:
+                    continue
+                # Direct substring match
+                if fmt.lower() in _check_key.lower():
+                    return True
+                # Substring intersection
+                fmt_substrings = _extract_substrings(fmt)
+                if fmt_substrings & key_substrings:
+                    return True
+            return False
+
         if formats is None or not any(formats):
             return True
 
-        # Extract substrings from key by splitting on spaces and dots
-        key_substrings = set(re.split(r'[\s.()]+', key.lower()))
-        key_substrings.discard('')  # Remove empty strings
+        # Check if there's an arrow separator
+        if '>' in key:
+            check_key = key.split('>')[-1].strip()
+            return _check_direct_match(check_key, formats)
 
-        for fmt in formats:
-            if fmt is None:
-                continue
-            fmt_lower = fmt.lower()
-            # Check if fmt substring is in key (direct substring match)
-            if fmt_lower in key.lower():
-                return True
-            # Extract substrings from format and check for intersection
-            fmt_substrings = set(re.split(r'[\s.()]+', fmt_lower))
-            fmt_substrings.discard('')  # Remove empty strings
-            # Check if any substring from format matches any substring from key
-            if fmt_substrings & key_substrings:
-                return True
-        return False
+        # No arrow: use substring matching logic
+        return _check_substring_match(key, formats)
 
     lines = []
 
