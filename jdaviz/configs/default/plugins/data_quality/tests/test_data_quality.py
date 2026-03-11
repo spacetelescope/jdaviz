@@ -220,6 +220,13 @@ def test_data_quality_plugin_hst_acs(imviz_helper):
 
 @pytest.mark.remote_data
 def test_cubeviz_layer_visibility_bug(cubeviz_helper):
+    """
+    This test covers two things (combined to reduce the number of remote data
+    tests). First, it has coverage for a (now fixed) bug in the Data Quality
+    plugin that attempted to apply array compositing logic to spatial subsets.
+    Second, it tests basic functionality of the data quality plugin in Cubeviz.
+    """
+
     # regression test for bug:
     uri = "mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_s3d.fits"
     with warnings.catch_warnings():
@@ -245,3 +252,9 @@ def test_cubeviz_layer_visibility_bug(cubeviz_helper):
     # toggle layer visibility, this used to trigger an AttributeError:
     cubeviz_helper.app.set_data_visibility('flux-viewer', dc[-1].label)
     cubeviz_helper.app.set_data_visibility('flux-viewer', dc[0].label)
+
+    # now test DQ specific things
+    assert len(cubeviz_helper.app.data_collection) == 2
+
+    # this assumption is made in the DQ plugin (for now)
+    assert cubeviz_helper.app.data_collection[-1].label.endswith('[DQ]')

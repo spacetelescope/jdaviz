@@ -158,6 +158,24 @@
           :api_hints_enabled="api_hints_enabled"
           hint="Label to assign to the new DQ cube data entry."
         ></plugin-auto-label>
+
+        <plugin-viewer-create-new
+          :items="dq_viewer_items"
+          :selected.sync="dq_viewer_selected"
+          :create_new_items="dq_viewer_create_new_items"
+          :create_new_selected.sync="dq_viewer_create_new_selected"
+          :new_label_value.sync="dq_viewer_label_value"
+          :new_label_default="dq_viewer_label_default"
+          :new_label_auto.sync="dq_viewer_label_auto"
+          :new_label_invalid_msg="dq_viewer_label_invalid_msg"
+          :multiselect="dq_viewer_multiselect"
+          :show_multiselect_toggle="false"
+          label="Viewer for DQ Cube"
+          api_hint="ldr.importer.dq_viewer ="
+          :api_hints_enabled="api_hints_enabled"
+          :show_if_single_entry="true"
+          hint="Select the viewer to use for the imported DQ cube."
+        ></plugin-viewer-create-new>
       </div>
     </div>
 

@@ -76,6 +76,19 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     dq_data_label_auto = Bool(True).tag(sync=True)
     dq_data_label_invalid_msg = Unicode().tag(sync=True)
 
+    # DQ Viewer
+    dq_viewer_create_new_items = List([]).tag(sync=True)
+    dq_viewer_create_new_selected = Unicode().tag(sync=True)
+
+    dq_viewer_items = List([]).tag(sync=True)
+    dq_viewer_selected = Any([]).tag(sync=True)
+    dq_viewer_multiselect = Bool(True).tag(sync=True)
+
+    dq_viewer_label_value = Unicode().tag(sync=True)
+    dq_viewer_label_default = Unicode().tag(sync=True)
+    dq_viewer_label_auto = Bool(True).tag(sync=True)
+    dq_viewer_label_invalid_msg = Unicode().tag(sync=True)
+
     # Extraction Options
     auto_extract = Bool(True).tag(sync=True)
     function_items = List().tag(sync=True)
@@ -205,6 +218,28 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                            'dq_data_label_auto',
                                            'dq_data_label_invalid_msg')
 
+        self.dq_viewer = ViewerSelectCreateNew(self,
+                                               'dq_viewer_items',
+                                               'dq_viewer_selected',
+                                               'dq_viewer_create_new_items',
+                                               'dq_viewer_create_new_selected',
+                                               'dq_viewer_label_value',
+                                               'dq_viewer_label_default',
+                                               'dq_viewer_label_auto',
+                                               'dq_viewer_label_invalid_msg',
+                                               multiselect='dq_viewer_multiselect',
+                                               default_mode='empty')
+        supported_viewers = [{'label': '3D Spectrum',
+                              'reference': 'cubeviz-image-viewer'}]
+        if self.app.config == 'deconfigged':
+            self.dq_viewer_create_new_items = supported_viewers
+
+        self.dq_viewer.add_filter(viewer_in_registry_names(supported_viewers))
+        if self.config == 'cubeviz':
+            self.dq_viewer.selected = ['flux-viewer']
+        else:
+            self.dq_viewer.select_default()
+
         # AUTO-EXTRACTION
         self.function = SelectPluginComponent(
             self,
@@ -298,7 +333,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         if self.has_mask:
             expose += ['mask_data_label', 'mask_viewer']
         if self.has_dq:
-            expose += ['dq_data_label']
+            expose += ['dq_data_label', 'dq_viewer']
         expose += ['extension']
         if self.has_unc:
             expose += ['unc_extension']
@@ -458,7 +493,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             self.add_to_data_collection(dq_cube,
                                         dq_data_label,
                                         parent=data_label,
-                                        viewer_select=self.viewer)
+                                        viewer_select=self.dq_viewer)
 
             self.app._jdaviz_helper._loaded_dq_cube = self.app.data_collection[dq_data_label]
 
