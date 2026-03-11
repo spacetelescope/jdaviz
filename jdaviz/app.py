@@ -3556,16 +3556,8 @@ class Application(VuetifyTemplate, HubListener):
 
         Returns
         -------
-        The new loader.
-
-        Examples
-        --------
-        >>> app._add_custom_loader('file', '/path/to/data.fits', name='my_file')
-        'my_file'
-        >>> app._add_custom_loader('object', mytable, name='mytable')
-        'mytable'
-        >>> app._add_custom_loader('url', 'https://example.com/data.fits', name='remote_data')
-        'remote_data'
+        loader
+            The new loader user API object.
         """
         # Map resolver names to preset classes
         preset_resolver_map = {

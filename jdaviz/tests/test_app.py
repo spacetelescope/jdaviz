@@ -360,7 +360,10 @@ def test_remote_server_settings_deconfigged(deconfigged_helper, server_is_remote
     # Defaults
     assert settings['server_is_remote'] is False
     assert settings['remote_enable_importers'] is True
-    settings['server_is_remote'] = server_is_remote
+    # Create a new dict and reassign to trigger callbacks
+    new_settings = settings.copy()
+    new_settings['server_is_remote'] = server_is_remote
+    deconfigged_helper.app.state.settings = new_settings
 
     # Get the loader items and check their widget properties
     loader_items = deconfigged_helper.app.state.loader_items
@@ -423,9 +426,9 @@ def test_add_custom_loader_file(deconfigged_helper, tmp_path):
     filepath.touch()
 
     # Add a custom file loader
-    loader_name = deconfigged_helper.app._add_custom_loader('file', str(filepath), name='test_file')
+    loader = deconfigged_helper.app._add_custom_loader('file', str(filepath), name='test_file')
 
-    assert loader_name == 'test_file'
+    assert repr(loader) == '<test_file API>'
     assert 'test_file' in deconfigged_helper.app._jdaviz_helper.loaders
 
     # Check that the loader was added to loader_items
@@ -441,9 +444,9 @@ def test_add_custom_loader_object(deconfigged_helper, spectrum1d):
     test_table = Table({'col1': [1, 2, 3], 'col2': [4, 5, 6]})
 
     # Add a custom object loader
-    loader_name = deconfigged_helper.app._add_custom_loader('object', test_table, name='my_table')
+    loader = deconfigged_helper.app._add_custom_loader('object', test_table, name='my_table')
 
-    assert loader_name == 'my_table'
+    assert repr(loader) == '<my_table API>'
     assert 'my_table' in deconfigged_helper.app._jdaviz_helper.loaders
 
     # Check that requires_api_support is set correctly for object resolver
@@ -458,9 +461,9 @@ def test_add_custom_loader_url(deconfigged_helper):
     test_url = 'https://example.com/test_data.fits'
 
     # Add a custom URL loader
-    loader_name = deconfigged_helper.app._add_custom_loader('url', test_url, name='remote_file')
+    loader = deconfigged_helper.app._add_custom_loader('url', test_url, name='remote_file')
 
-    assert loader_name == 'remote_file'
+    assert repr(loader) == '<remote_file API>'
     assert 'remote_file' in deconfigged_helper.app._jdaviz_helper.loaders
 
 
@@ -471,19 +474,20 @@ def test_add_custom_loader_invalid_resolver(deconfigged_helper):
 
 
 def test_add_custom_loader_unique_names(deconfigged_helper, tmp_path):
-    """Test that _add_custom_loader creates unique names when duplicates exist."""
+    """Test that _add_custom_loader raises an error when duplicate names exist."""
     # Create temporary files
     filepath1 = tmp_path / "data.fits"
     filepath1.touch()
     filepath2 = tmp_path / "data2.fits"
     filepath2.touch()
 
-    # Add two loaders with the same name
-    name1 = deconfigged_helper.app._add_custom_loader('file', str(filepath1), name='data')
-    name2 = deconfigged_helper.app._add_custom_loader('file', str(filepath2), name='data')
+    # Add first loader with name 'data'
+    loader1 = deconfigged_helper.app._add_custom_loader('file', str(filepath1), name='data')
+    assert repr(loader1) == '<data API>'
 
-    assert name1 == 'data'
-    assert name2 == 'data_1'
+    # Try to add second loader with the same name - should raise error
+    with pytest.raises(ValueError, match="Loader name must be unique. A loader with the name 'data' already exists."):  # noqa
+        deconfigged_helper.app._add_custom_loader('file', str(filepath2), name='data')
 
 
 def test_add_custom_loader_open_in_tray(deconfigged_helper, tmp_path):
@@ -492,10 +496,9 @@ def test_add_custom_loader_open_in_tray(deconfigged_helper, tmp_path):
     filepath.touch()
 
     # Add a custom file loader with open_in_tray=True
-    loader_name = deconfigged_helper.app._add_custom_loader(
+    loader = deconfigged_helper.app._add_custom_loader(
         'file', str(filepath), name='test', open_in_tray=True
     )
 
-    # The loader should be selected
-    # Note: This assumes the tray is opened by the method
-    assert loader_name == 'test'
+    # The loader should be returned and the name should match
+    assert repr(loader) == '<test API>'
