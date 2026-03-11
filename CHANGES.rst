@@ -51,6 +51,8 @@ New Features
 
 Cubeviz
 ^^^^^^^
+- Added ability to load DQ extension in the cubeviz loader, which activates the
+  DQ plugin in cubeviz. [#4077]
 
 Imviz
 ^^^^^
