@@ -1,4 +1,4 @@
-from jdaviz.core.events import AddLineListMessage, RedshiftMessage
+from jdaviz.core.events import RedshiftMessage
 
 __all__ = ['LineListMixin']
 

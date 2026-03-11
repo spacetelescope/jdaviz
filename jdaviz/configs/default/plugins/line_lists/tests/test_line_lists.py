@@ -216,16 +216,18 @@ class TestLineLists:
         assert ll_plugin.list_contents['My Custom List']['medium'] == 'Vacuum'
 
         # Verify the lines are in the main spectral_lines table
-        assert specviz_helper.spectral_lines.loc["linename", "Ca II K"]["listname"] == "My Custom List"
-        assert specviz_helper.spectral_lines.loc["linename", "Ca II H"]["listname"] == "My Custom List"
-        assert specviz_helper.spectral_lines.loc["linename", "H-gamma"]["listname"] == "My Custom List"
+        line_k = specviz_helper.spectral_lines.loc["linename", "Ca II K"]
+        assert line_k["listname"] == "My Custom List"
+        line_h = specviz_helper.spectral_lines.loc["linename", "Ca II H"]
+        assert line_h["listname"] == "My Custom List"
+        line_gamma = specviz_helper.spectral_lines.loc["linename", "H-gamma"]
+        assert line_gamma["listname"] == "My Custom List"
 
     def test_import_line_list_validation(self, specviz_helper, spectrum1d):
         """Test that import validation catches invalid tables"""
         from jdaviz.core.loaders.importers.line_list import LineListImporter
 
         specviz_helper.load_data(spectrum1d)
-        ll_plugin = specviz_helper.plugins['Line Lists']._obj
 
         # Test missing linename column
         lt = QTable()

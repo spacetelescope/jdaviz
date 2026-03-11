@@ -70,14 +70,12 @@ class LineListImporter(BaseImporterToPlugin):
 
         # Check if the label already exists in loaded lists
         if hasattr(self.app, '_jdaviz_helper'):
-            try:
-                plg = self.app._jdaviz_helper.plugins.get('Line Lists', None)
-                if plg is not None and self.line_list_label_value in plg._obj.loaded_lists:
-                    self.line_list_label_invalid_msg = f'line list "{self.line_list_label_value}" already exists'
-                    return
-            except Exception:
-                # Plugin may not be available yet
-                pass
+            plg = self.app._jdaviz_helper.plugins.get('Line Lists', None)
+            if plg is not None and self.line_list_label_value in plg._obj.loaded_lists:
+                self.line_list_label_invalid_msg = (
+                    f'line list "{self.line_list_label_value}" already exists'
+                )
+                return
 
         self.line_list_label_invalid_msg = ''
 
