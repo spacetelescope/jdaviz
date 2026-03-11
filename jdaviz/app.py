@@ -288,6 +288,10 @@ class ApplicationState(State):
         # If set to a list, only URLs starting with one of the prefixes will be accepted.
         # Example: ['https://data.example.com/', 'https://archive.science.org/']
         'url_prefix_whitelist': None,
+        # Hide the 'url' column in file tables from resolver queries.
+        # When True, the url column is kept in the table data (for downloading)
+        # but is not shown in the UI and cannot be made visible by the user.
+        'hide_file_table_url_column': False,
         'context': {
             'notebook': {
                 'max_height': '600px'

@@ -361,11 +361,47 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                      name='observation_table',
                      title='Observations')
 
+    def _file_table_col_visible(self, colname):
+        """
+        Determine if a column should be visible in the file table.
+
+        Parameters
+        ----------
+        colname : str
+            The name of the column to check.
+
+        Returns
+        -------
+        bool
+            True if the column should be visible, False otherwise.
+        """
+        hide_url = self.app.state.settings.get('hide_file_table_url_column', False)
+        if colname == 'url' and hide_url:
+            return False
+        return True
+
     @default('file_table')
     def _default_file_table(self):
-        return Table(self,
-                     name='file_table',
-                     title='Files')
+        file_table = Table(self,
+                           name='file_table',
+                           title='Files')
+
+        # Override _new_col_visible to hide 'url' column if setting is enabled
+        file_table._new_col_visible = self._file_table_col_visible
+
+        return file_table
+
+    @observe('file_table_populated')
+    def _on_file_table_populated(self, change={}):
+        """Remove url from headers_avail if hiding is enabled."""
+        if not change.get('new', False):
+            return
+        hide_url = self.app.state.settings.get('hide_file_table_url_column', False)
+        if hide_url and 'url' in self.file_table.headers_avail:
+            # Remove url from headers_avail (dropdown) but keep in data
+            self.file_table.headers_avail = [
+                h for h in self.file_table.headers_avail if h != 'url'
+            ]
 
     def _on_app_settings_changed(self, new_settings_dict):
         """
@@ -377,6 +413,36 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             The new settings dictionary from the app state.
         """
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
+
+        # Update file table URL column visibility if the setting changed
+        hide_url = new_settings_dict.get('hide_file_table_url_column', False)
+
+        # Update the _new_col_visible function with current settings
+        self.file_table._new_col_visible = self._file_table_col_visible
+
+        # Check if url column exists in the actual data
+        url_in_data = (self.file_table._qtable is not None and
+                       'url' in self.file_table._qtable.colnames)
+
+        if url_in_data:
+            if hide_url:
+                # Remove url from both available and visible headers
+                self.file_table.headers_avail = [
+                    h for h in self.file_table.headers_avail if h != 'url'
+                ]
+                self.file_table.headers_visible = [
+                    h for h in self.file_table.headers_visible if h != 'url'
+                ]
+            else:
+                # URL should be available - add it back if missing
+                if 'url' not in self.file_table.headers_avail:
+                    self.file_table.headers_avail = (
+                        self.file_table.headers_avail + ['url']
+                    )
+                if 'url' not in self.file_table.headers_visible:
+                    self.file_table.headers_visible = (
+                        self.file_table.headers_visible + ['url']
+                    )
 
     def _on_collection_data_added(self, msg):
         self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)

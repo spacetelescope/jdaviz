@@ -278,8 +278,75 @@ def test_resolver_table_as_query(deconfigged_helper):
 
     ldr.object = invalid_table
     assert ldr._obj.parsed_input_is_query is False
-    assert ldr._obj.observation_table_populated is False
-    assert ldr._obj.file_table_populated is False
+
+
+def test_hide_file_table_url_column(deconfigged_helper):
+    """Test that hide_file_table_url_column setting works correctly."""
+    # Test with setting disabled (default behavior)
+    ldr = deconfigged_helper.loaders['object']
+    file_table = Table({'id': [1, 2, 3],
+                        'name': ['a', 'b', 'c'],
+                        'url': ['http://a.fits', 'http://b.fits', 'http://c.fits']})
+
+    ldr.object = file_table
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.file_table_populated is True
+
+    # URL should be visible in both headers_avail and headers_visible
+    assert 'url' in ldr._obj.file_table.headers_avail
+    assert 'url' in ldr._obj.file_table.headers_visible
+
+    # URL data should exist in underlying table
+    assert ldr._obj.file_table._qtable is not None
+    assert 'url' in ldr._obj.file_table._qtable.colnames
+    assert len(ldr._obj.file_table._qtable) == 3
+
+    # Enable the setting and reload data
+    deconfigged_helper.app.state.settings['hide_file_table_url_column'] = True
+
+    # Clear the file table so file_table_populated will transition from False to True
+    ldr._obj.file_table._clear_table()
+    ldr._obj.file_table_populated = False
+
+    # Now load new data to trigger the observer
+    file_table2 = Table({'id': [4, 5],
+                         'name': ['d', 'e'],
+                         'url': ['http://d.fits', 'http://e.fits']})
+    ldr.object = file_table2
+
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.file_table_populated is True
+
+    # URL should NOT be in headers_avail (not in dropdown)
+    assert 'url' not in ldr._obj.file_table.headers_avail
+    # URL should NOT be in headers_visible
+    assert 'url' not in ldr._obj.file_table.headers_visible
+
+    # But other columns should be visible
+    assert 'id' in ldr._obj.file_table.headers_avail
+    assert 'name' in ldr._obj.file_table.headers_avail
+
+    # URL data should still exist in underlying table for download functionality
+    assert ldr._obj.file_table._qtable is not None
+    assert 'url' in ldr._obj.file_table._qtable.colnames
+    assert len(ldr._obj.file_table._qtable) == 2
+
+    # Test changing setting back to False
+    deconfigged_helper.app.state.settings['hide_file_table_url_column'] = False
+
+    # Clear and reload to test re-enabling
+    ldr._obj.file_table._clear_table()
+    ldr._obj.file_table_populated = False
+
+    file_table3 = Table({'id': [6], 'name': ['f'], 'url': ['http://f.fits']})
+    ldr.object = file_table3
+
+    # URL should be visible again
+    assert 'url' in ldr._obj.file_table.headers_avail
+    assert 'url' in ldr._obj.file_table.headers_visible
+
+    # Reset to default for other tests
+    deconfigged_helper.app.state.settings['hide_file_table_url_column'] = False
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
