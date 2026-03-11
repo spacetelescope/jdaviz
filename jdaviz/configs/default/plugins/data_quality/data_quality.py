@@ -214,37 +214,22 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         dq_layers = self.get_dq_layers(viewers=viewers)
 
         for dq_layer in dq_layers:
-            dq_layer.composite._allow_bad_alpha = True
-
-            # for cubeviz, also change uncert-viewer defaults to
-            # map the out-of-bounds regions to the cmap's `bad` color:
-            if self.app.config in ('cubeviz', 'rampviz'):
-                viewer = self.app.get_viewer(
-                    getattr(
-                        self.app._jdaviz_helper,
-                        '_default_uncert_viewer_reference_name', 'level-2'
-                    )
-                )
-
-                for layer in viewer.layers:
-                    # allow bad alpha for image layers, not subsets:
-                    if not hasattr(layer, 'subset_array'):
-                        layer.composite._allow_bad_alpha = True
-                        layer.force_update()
-
             flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
 
             dq_layer.state.stretch = 'lookup'
             stretch_object = dq_layer.state.stretch_object
             stretch_object.flags = flag_bits
 
-            with delay_callback(dq_layer.state, 'alpha', 'cmap', 'v_min', 'v_max'):
+            with delay_callback(dq_layer.state, 'alpha', 'cmap', 'v_min', 'v_max', 'cmap_bad'):
                 if len(flag_bits):
                     dq_layer.state.v_min = min(flag_bits)
                     dq_layer.state.v_max = max(flag_bits)
 
                 dq_layer.state.alpha = self.dq_layer_opacity
                 dq_layer.state.cmap = cmap
+
+                # make un-flagged pixels in DQ array transparent:
+                dq_layer.state.cmap_bad = (0, 0, 0, 0)
 
     def get_dq_layers(self, viewers=None):
         if self.dq_layer_selected == '':
