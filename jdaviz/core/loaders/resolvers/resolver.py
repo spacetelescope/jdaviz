@@ -303,7 +303,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.file_table.enable_clear = False
         self.file_table.show_if_empty = False
         self.file_table.show_rowselect = True
-        self.file_table.item_key = "url"
+        self.file_table.item_key = "location"
         self.file_table.multiselect = False
         self.file_table._selected_rows_changed_callback = self.on_file_select_changed
 
@@ -375,8 +375,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         bool
             True if the column should be visible, False otherwise.
         """
-        hide_url = self.app.state.settings.get('hide_file_table_url_column', False)
-        if colname == 'url' and hide_url:
+        hide_location = self.app.state.settings.get('hide_file_table_location_column', False)
+        if colname == 'location' and hide_location:
             return False
         return True
 
@@ -393,14 +393,14 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
     @observe('file_table_populated')
     def _on_file_table_populated(self, change={}):
-        """Remove url from headers_avail if hiding is enabled."""
+        """Remove location from headers_avail if hiding is enabled."""
         if not change.get('new', False):
             return
-        hide_url = self.app.state.settings.get('hide_file_table_url_column', False)
-        if hide_url and 'url' in self.file_table.headers_avail:
-            # Remove url from headers_avail (dropdown) but keep in data
+        hide_location = self.app.state.settings.get('hide_file_table_location_column', False)
+        if hide_location and 'location' in self.file_table.headers_avail:
+            # Remove location from headers_avail (dropdown) but keep in data
             self.file_table.headers_avail = [
-                h for h in self.file_table.headers_avail if h != 'url'
+                h for h in self.file_table.headers_avail if h != 'location'
             ]
 
     def _on_app_settings_changed(self, new_settings_dict):
@@ -414,34 +414,34 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         """
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
-        # Update file table URL column visibility if the setting changed
-        hide_url = new_settings_dict.get('hide_file_table_url_column', False)
+        # Update file table location column visibility if the setting changed
+        hide_location = new_settings_dict.get('hide_file_table_location_column', False)
 
         # Update the _new_col_visible function with current settings
         self.file_table._new_col_visible = self._file_table_col_visible
 
-        # Check if url column exists in the actual data
-        url_in_data = (self.file_table._qtable is not None and
-                       'url' in self.file_table._qtable.colnames)
+        # Check if location column exists in the actual data
+        location_in_data = (self.file_table._qtable is not None and
+                            'location' in self.file_table._qtable.colnames)
 
-        if url_in_data:
-            if hide_url:
-                # Remove url from both available and visible headers
+        if location_in_data:
+            if hide_location:
+                # Remove location from both available and visible headers
                 self.file_table.headers_avail = [
-                    h for h in self.file_table.headers_avail if h != 'url'
+                    h for h in self.file_table.headers_avail if h != 'location'
                 ]
                 self.file_table.headers_visible = [
-                    h for h in self.file_table.headers_visible if h != 'url'
+                    h for h in self.file_table.headers_visible if h != 'location'
                 ]
             else:
-                # URL should be available - add it back if missing
-                if 'url' not in self.file_table.headers_avail:
+                # location should be available - add it back if missing
+                if 'location' not in self.file_table.headers_avail:
                     self.file_table.headers_avail = (
-                        self.file_table.headers_avail + ['url']
+                        self.file_table.headers_avail + ['location']
                     )
-                if 'url' not in self.file_table.headers_visible:
+                if 'location' not in self.file_table.headers_visible:
                     self.file_table.headers_visible = (
-                        self.file_table.headers_visible + ['url']
+                        self.file_table.headers_visible + ['location']
                     )
 
     def _on_collection_data_added(self, msg):
@@ -559,11 +559,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         return None
 
     def _parsed_input_to_file_table(self, parsed_input_table):
-        if 'url' in parsed_input_table.colnames:
+        if 'location' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_url in ('URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
-            if map_to_url in parsed_input_table.colnames:
-                parsed_input_table.rename_column(map_to_url, 'url')
+        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
+            if map_to_location in parsed_input_table.colnames:
+                parsed_input_table.rename_column(map_to_location, 'location')
                 return parsed_input_table
         return None
 
@@ -809,10 +809,21 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def get_selected_url(self):
         if len(self.file_table.selected_rows) != 1:
             return None
-        url = self.file_table.selected_rows[0]['url']
-        if not url.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')):
-            return f'https://mast.stsci.edu/search/{self.guess_mission(url)}/api/v0.1/retrieve_product?product_name={url}'  # noqa
-        return url
+        location = self.file_table.selected_rows[0]['location']
+
+        # Check if it's a local file path (absolute, relative, or home directory)
+        # or if it starts with a recognized URL scheme
+        if (location.startswith(('/', './', '../', '~')) or  # Unix-style paths
+                # URL schemes
+                location.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')) or
+                (len(location) > 2 and location[1] == ':' and location[2] in ('\\', '/'))):
+            # Windows-style absolute path (e.g., C:\... or C:/...)
+            return location
+
+        # Otherwise, assume it's a MAST product name and construct the URL
+        mission = self.guess_mission(location)
+        return (f'https://mast.stsci.edu/search/{mission}/api/v0.1/'
+                f'retrieve_product?product_name={location}')
 
     @with_spinner('spinner', 'downloading file...')
     def _download_from_file_table(self):

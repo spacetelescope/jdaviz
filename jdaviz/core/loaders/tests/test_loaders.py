@@ -261,7 +261,7 @@ def test_resolver_table_as_query(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
 
     obs_table = Table({'id': [1, 2, 3], 'fileSetName': ['a', 'b', 'c']})
-    file_table = Table({'id': [1, 2, 3], 'url': ['a', 'b', 'c']})
+    file_table = Table({'id': [1, 2, 3], 'location': ['a', 'b', 'c']})
     invalid_table = Table({'id': [1, 2, 3], 'name': ['a', 'b', 'c']})
 
     assert ldr._obj.parsed_input_is_query is False
@@ -280,29 +280,29 @@ def test_resolver_table_as_query(deconfigged_helper):
     assert ldr._obj.parsed_input_is_query is False
 
 
-def test_hide_file_table_url_column(deconfigged_helper):
-    """Test that hide_file_table_url_column setting works correctly."""
+def test_hide_file_table_location_column(deconfigged_helper):
+    """Test that hide_file_table_location_column setting works correctly."""
     # Test with setting disabled (default behavior)
     ldr = deconfigged_helper.loaders['object']
     file_table = Table({'id': [1, 2, 3],
                         'name': ['a', 'b', 'c'],
-                        'url': ['http://a.fits', 'http://b.fits', 'http://c.fits']})
+                        'location': ['http://a.fits', 'http://b.fits', 'http://c.fits']})
 
     ldr.object = file_table
     assert ldr._obj.parsed_input_is_query is True
     assert ldr._obj.file_table_populated is True
 
-    # URL should be visible in both headers_avail and headers_visible
-    assert 'url' in ldr._obj.file_table.headers_avail
-    assert 'url' in ldr._obj.file_table.headers_visible
+    # location should be visible in both headers_avail and headers_visible
+    assert 'location' in ldr._obj.file_table.headers_avail
+    assert 'location' in ldr._obj.file_table.headers_visible
 
-    # URL data should exist in underlying table
+    # location data should exist in underlying table
     assert ldr._obj.file_table._qtable is not None
-    assert 'url' in ldr._obj.file_table._qtable.colnames
+    assert 'location' in ldr._obj.file_table._qtable.colnames
     assert len(ldr._obj.file_table._qtable) == 3
 
     # Enable the setting and reload data
-    deconfigged_helper.app.state.settings['hide_file_table_url_column'] = True
+    deconfigged_helper.app.state.settings['hide_file_table_location_column'] = True
 
     # Clear the file table so file_table_populated will transition from False to True
     ldr._obj.file_table._clear_table()
@@ -311,42 +311,92 @@ def test_hide_file_table_url_column(deconfigged_helper):
     # Now load new data to trigger the observer
     file_table2 = Table({'id': [4, 5],
                          'name': ['d', 'e'],
-                         'url': ['http://d.fits', 'http://e.fits']})
+                         'location': ['http://d.fits', 'http://e.fits']})
     ldr.object = file_table2
 
     assert ldr._obj.parsed_input_is_query is True
     assert ldr._obj.file_table_populated is True
 
-    # URL should NOT be in headers_avail (not in dropdown)
-    assert 'url' not in ldr._obj.file_table.headers_avail
-    # URL should NOT be in headers_visible
-    assert 'url' not in ldr._obj.file_table.headers_visible
+    # location should NOT be in headers_avail (not in dropdown)
+    assert 'location' not in ldr._obj.file_table.headers_avail
+    # location should NOT be in headers_visible
+    assert 'location' not in ldr._obj.file_table.headers_visible
 
     # But other columns should be visible
     assert 'id' in ldr._obj.file_table.headers_avail
     assert 'name' in ldr._obj.file_table.headers_avail
 
-    # URL data should still exist in underlying table for download functionality
+    # location data should still exist in underlying table for download functionality
     assert ldr._obj.file_table._qtable is not None
-    assert 'url' in ldr._obj.file_table._qtable.colnames
+    assert 'location' in ldr._obj.file_table._qtable.colnames
     assert len(ldr._obj.file_table._qtable) == 2
 
     # Test changing setting back to False
-    deconfigged_helper.app.state.settings['hide_file_table_url_column'] = False
+    deconfigged_helper.app.state.settings['hide_file_table_location_column'] = False
 
     # Clear and reload to test re-enabling
     ldr._obj.file_table._clear_table()
     ldr._obj.file_table_populated = False
 
-    file_table3 = Table({'id': [6], 'name': ['f'], 'url': ['http://f.fits']})
+    file_table3 = Table({'id': [6], 'name': ['f'], 'location': ['http://f.fits']})
     ldr.object = file_table3
 
-    # URL should be visible again
-    assert 'url' in ldr._obj.file_table.headers_avail
-    assert 'url' in ldr._obj.file_table.headers_visible
+    # location should be visible again
+    assert 'location' in ldr._obj.file_table.headers_avail
+    assert 'location' in ldr._obj.file_table.headers_visible
 
     # Reset to default for other tests
-    deconfigged_helper.app.state.settings['hide_file_table_url_column'] = False
+    deconfigged_helper.app.state.settings['hide_file_table_location_column'] = False
+
+
+def test_file_table_local_paths(deconfigged_helper):
+    """Test that local file paths don't get MAST URL prefix."""
+    ldr = deconfigged_helper.loaders['object']
+
+    # Test various local path formats
+    file_table = Table({
+        'id': [1, 2, 3, 4, 5, 6, 7, 8],
+        'location': [
+            '/absolute/unix/path.fits',      # Unix absolute path
+            './relative/path.fits',           # Unix relative path
+            '../parent/path.fits',            # Unix parent relative path
+            '~/home/path.fits',               # Home directory path
+            'C:/windows/path.fits',           # Windows absolute path
+            'C:\\windows\\backslash.fits',   # Windows absolute path with backslashes
+            'http://example.com/file.fits',   # HTTP URL
+            'jwst-product-name'               # MAST product name (no path indicators)
+        ]
+    })
+
+    ldr.object = file_table
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.file_table_populated is True
+
+    # Test each path type
+    test_cases = [
+        (0, '/absolute/unix/path.fits', 'Unix absolute path'),
+        (1, './relative/path.fits', 'Unix relative path'),
+        (2, '../parent/path.fits', 'Unix parent relative path'),
+        (3, '~/home/path.fits', 'Home directory path'),
+        (4, 'C:/windows/path.fits', 'Windows absolute path with forward slashes'),
+        (5, 'C:\\windows\\backslash.fits', 'Windows absolute path with backslashes'),
+        (6, 'http://example.com/file.fits', 'HTTP URL'),
+    ]
+
+    for row_idx, expected_path, description in test_cases:
+        ldr.file_table.select_rows(row_idx)
+        result = ldr._obj.get_selected_url()
+        assert result == expected_path, (
+            f"Failed for {description}: expected {expected_path}, got {result}"
+        )
+
+    # Test MAST product name gets the prefix
+    ldr.file_table.select_rows(7)
+    result = ldr._obj.get_selected_url()
+    assert result.startswith('https://mast.stsci.edu/search/jwst/api/'), \
+        f"MAST product name should get URL prefix, got: {result}"
+    assert 'jwst-product-name' in result, \
+        f"MAST URL should contain the product name, got: {result}"
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
