@@ -219,7 +219,7 @@ def test_data_quality_plugin_hst_acs(imviz_helper):
 
 
 @pytest.mark.remote_data
-def test_cubeviz_layer_visibility_bug(cubeviz_helper):
+def test_cubeviz_dq_plugin_and_layer_visibility_bug(cubeviz_helper):
     """
     This test covers two things (combined to reduce the number of remote data
     tests). First, it has coverage for a (now fixed) bug in the Data Quality
@@ -254,7 +254,26 @@ def test_cubeviz_layer_visibility_bug(cubeviz_helper):
     cubeviz_helper.app.set_data_visibility('flux-viewer', dc[0].label)
 
     # now test DQ specific things
-    assert len(cubeviz_helper.app.data_collection) == 2
+
+    dq_plugin = cubeviz_helper.plugins['Data Quality']._obj
+
+    # in the data collection there should be flux, unc, extracted spectrum,
+    # moment map, a subset, and the DQ cube so a total of 6 items
+    assert len(cubeviz_helper.app.data_collection) == 6
 
     # this assumption is made in the DQ plugin (for now)
-    assert cubeviz_helper.app.data_collection[-1].label.endswith('[DQ]')
+    assert cubeviz_helper.app.data_collection[3].label.endswith('[DQ]')
+
+    # sci+dq layers are correctly identified
+    expected_science_data = cubeviz_helper.app.data_collection[0]
+    expected_dq_data = cubeviz_helper.app.data_collection[3]
+    assert dq_plugin.science_layer_selected == expected_science_data.label
+    assert dq_plugin.dq_layer_selected == expected_dq_data.label
+
+    # JWST data product identified as such:
+    assert dq_plugin.flag_map_selected == 'JWST'
+
+    # check flag 0 is a bad pixel in the JWST flag map:
+    flag_map_selected = dq_plugin.flag_map_definitions_selected
+    assert flag_map_selected[0]['name'] == 'DO_NOT_USE'
+    assert flag_map_selected[0]['description'] == 'Bad pixel. Do not use.'
