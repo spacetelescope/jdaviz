@@ -189,6 +189,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                                       selected='combination_mode_selected',
                                                       manual_options=COMBO_OPTIONS)
 
+        # combination_mode defaults to 'new'. Reset to
+        # ReplaceMode so that moving/resizing a subset modifies it
+        # instead of creating a new one.
+        self.session.edit_subset_mode.mode = ReplaceMode
+
     @property
     def user_api(self):
         expose = ['subset', 'combination_mode',
