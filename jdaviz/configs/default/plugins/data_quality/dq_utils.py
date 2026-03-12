@@ -207,7 +207,6 @@ def generate_listed_colormap(n_flags=None, rgba_colors=None, seed=3):
     cmap = ListedColormap(rgba_colors)
 
     # setting `bad` alpha=0 will make NaNs transparent:
-    # cmap.with_extremes(bad='k', alpha=0)
     cmap = cmap.with_extremes(bad=to_rgba("k", alpha=0))
     return cmap, rgba_colors
 
