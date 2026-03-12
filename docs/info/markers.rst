@@ -23,7 +23,7 @@ UI Access
 Details
 =======
 
-With the Markers tool open in the Information tab , mouse over any viewer and press the "m" key to log the information
+With the Markers tool open in the Information tab, mouse over any viewer and press the "m" key to log the information
 displayed in the app toolbar into the table.  The markers remain at that fixed pixel-position in
 the viewer they were created (regardless of changes to the underlying data or linking,
 see :ref:`dev_glue_linking`) and are only visible when the plugin is opened.
