@@ -314,6 +314,33 @@ def create_equivalent_spectral_axis_units_list(spectral_axis_unit,
     # Concatenate both lists with the local units coming first.
     return sorted(units_to_strings(local_units)) + spectral_axis_unit_equivalencies_titles
 
+def _check_if_unit_is_from_moment_map(unit):
+    """
+    Check if a unit is likely from a moment map by multiplying it by a unit of
+    length and seperately a unit of frequency and checking if either resulting
+    unit is a flux or surface brightness unit. This is a heuristic to catch cases
+    where the moment 0 units are in units of flux * spectral_axis_unit, which
+    can cause issues with the general flux conversion function.
+
+    Parameters
+    ----------
+    unit : str or u.Unit
+        Unit object or string representation of unit.
+
+    Returns
+    -------
+    bool
+        True if the unit is likely from a moment map, False otherwise.
+    """
+
+    if isinstance(unit, str):
+        unit = u.Unit(unit)
+
+    test_unit_1 = unit * u.um
+    test_unit_2 = unit * u.Hz
+
+    return (test_unit_1.physical_type in ['flux', 'surface brightness'] or
+            test_unit_2.physical_type in ['flux', 'surface brightness'])
 
 def flux_conversion_general(values, original_unit, target_unit,
                             equivalencies=None, with_unit=True):
@@ -376,6 +403,13 @@ def flux_conversion_general(values, original_unit, target_unit,
                                                            return_unit=True)
     solid_angle_in_targ = check_if_unit_is_per_solid_angle(target_unit,
                                                            return_unit=True)
+    
+    # if the units being converted are likely from a moment map, skip conversion
+    # without error.
+    if _check_if_unit_is_from_moment_map(original_unit):
+        if with_unit:
+            return values * original_unit
+        return values
 
     with u.set_enabled_equivalencies(equivalencies):
 

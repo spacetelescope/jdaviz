@@ -277,17 +277,14 @@ def test_moment_create_new_image_viewer_deconfigged(deconfigged_helper, image_cu
     image_viewer = deconfigged_helper.viewers['Image']
     assert 'moment 0' in image_viewer.data_menu.data_labels_visible
 
-    # currently blocked by issue with units in JDAT-5951, uncomment this
-    # portion of the test once that ticket is resolved
+    # now calculate another moment map and add it to the existing Image viewer
+    # and make sure it is added
+    mm.add_results.label = 'moment 00'
+    mm.add_results.viewer.selected = 'Image'
+    mm.calculate_moment()
 
-    # # now calculate another moment map and add it to the existing Image viewer
-    # # and make sure it is added
-    # mm.add_results.label = 'moment 00'
-    # mm.add_results.viewer.selected = 'Image'
-    # mm.calculate_moment()
-
-    # image_viewer = deconfigged_helper.app.get_viewer('Image')
-    # assert 'moment 00' in image_viewer.data_menu.layer.choices
+    image_viewer = deconfigged_helper.app.get_viewer('Image')
+    assert 'moment 00' in image_viewer.data_menu.layer.choices
 
 
 def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
