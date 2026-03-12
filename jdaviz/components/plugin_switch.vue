@@ -20,8 +20,8 @@
     :label="api_hints_enabled && api_hint ? api_hint+' '+boolToString(value) : label"
     :class="api_hints_enabled && api_hint ? 'api-hint' : null"
     :hint="hint"
-    v-model="value"
-    @change="$emit('update:value', $event); $emit('click', $event)"
+    :model-value="value"
+    @update:modelValue="$emit('update:value', $event); $emit('click', $event)"
     persistent-hint>
   </v-switch>
 </template>
