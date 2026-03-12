@@ -34,23 +34,27 @@ export default {
       }
     },
     clicked() {
+      let selected
+
       if (this.multiselect) {
         if (this.isSelected()) {
-          this.selected.pop(this.item.label)
+          selected = this.selected.filter(item => item !== this.item.label)
         } else {
-          this.selected.push(this.item.label)
+          selected = this.selected.concat(this.item.label)
         }
       } else {
         if (this.isSelected()) {
           // TODO: setting to allow vs forbid blank
           if (this.single_select_allow_blank) {
-            this.selected = ''
+            selected = ''
+          } else {
+            selected = this.selected
           }
         } else {
-          this.selected = this.item.label
+          selected = this.item.label
         }
       }
-      this.$emit('update:selected', this.selected)
+      this.$emit('update:selected', selected)
     }
   },
 };
