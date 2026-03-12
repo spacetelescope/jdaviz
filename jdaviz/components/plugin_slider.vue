@@ -10,7 +10,7 @@
       :min="min !== undefined ? min : 0"
       :max="max !== undefined ? max : 1"
       :step="step !== undefined ? step : 0.01"
-      v-model:value="value"
+      :value="value"
       @update:value="$emit('update:value', $event)"
       hide-details
       class="no-hint"
