@@ -62,8 +62,9 @@
     </v-alert>
     <v-text-field
       v-else-if="['rename', 'add'].indexOf(mode) !== -1"
-      v-model="edit_value"
-      @keyup="if ($event.key == 'Enter') {changeAccept()} else if ($event.key == 'Escape') {changeCancel()} else {$emit('update:edit_value', $event.target.value)}"
+      :model-value="edit_value"
+      @update:modelValue="$emit('update:edit_value', $event)"
+      @keyup="if ($event.key == 'Enter') {changeAccept()} else if ($event.key == 'Escape') {changeCancel()}"
       :label="textFieldLabel"
       :class="textFieldClass"
       :hint="mode == 'rename' ? 'Rename '+label.toLowerCase() : 'Add '+label.toLowerCase()"

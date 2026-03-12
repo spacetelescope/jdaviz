@@ -4,8 +4,8 @@
       :menu-props="{ left: true }"
       attach
       :items="new_viewer_items_filtered"
-      v-model="new_viewer_selected"
-      @change="$emit('update:new_viewer_selected', $event)"
+      :model-value="new_viewer_selected"
+      @update:modelValue="$emit('update:new_viewer_selected', $event)"
       label="Viewer Type"
       hint="Select new viewer type"
       item-title="label"
