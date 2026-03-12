@@ -5,8 +5,8 @@
       :menu-props="{ left: true }"
       attach
       :items="loader_items_filtered"
-      v-model="loader_selected"
-      @change="$emit('update:loader_selected', $event)"
+      :model-value="loader_selected"
+      @update:modelValue="$emit('update:loader_selected', $event)"
       label="Source"
       hint="Select source to get data"
       item-title="name"
