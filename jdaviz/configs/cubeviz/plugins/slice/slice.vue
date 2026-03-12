@@ -1,13 +1,13 @@
 <template>
   <j-tray-plugin
-    :config="config"
-    :plugin_key="plugin_key || 'Slice'"
-    v-model:api_hints_enabled="api_hints_enabled"
-    :description="docs_description"
-    :irrelevant_msg="irrelevant_msg"
-    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slice'"
-    :popout_button="popout_button"
-    v-model:scroll_to="scroll_to">
+      :config="config"
+      :plugin_key="plugin_key || 'Slice'"
+      v-model:api_hints_enabled="api_hints_enabled"
+      :description="docs_description"
+      :irrelevant_msg="irrelevant_msg"
+      :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slice'"
+      :popout_button="popout_button"
+      v-model:scroll_to="scroll_to">
 
     <v-row>
       <v-expansion-panels popout>
@@ -18,29 +18,29 @@
           <v-expansion-panel-text class="plugin-expansion-panel-content">
             <v-row v-if="allow_disable_snapping">
               <plugin-switch
-                v-model:value="snap_to_slice"
-                label="Snap to Slice"
-                api_hint="plg.snap_to_slice = "
-                :api_hints_enabled="api_hints_enabled"
-                hint="Snap indicator (and value) to the nearest slice in the cube."
+                  v-model:value="snap_to_slice"
+                  label="Snap to Slice"
+                  api_hint="plg.snap_to_slice = "
+                  :api_hints_enabled="api_hints_enabled"
+                  hint="Snap indicator (and value) to the nearest slice in the cube."
               />
             </v-row>
             <v-row>
               <plugin-switch
-                v-model:value="show_indicator"
-                label="Show Indicator"
-                api_hint="plg.show_indicator = "
-                :api_hints_enabled="api_hints_enabled"
-                hint="Show slice indicator even when slice tool is inactive."
+                  v-model:value="show_indicator"
+                  label="Show Indicator"
+                  api_hint="plg.show_indicator = "
+                  :api_hints_enabled="api_hints_enabled"
+                  hint="Show slice indicator even when slice tool is inactive."
               />
             </v-row>
             <v-row>
               <plugin-switch
-                v-model:value="show_value"
-                label="Show Value"
-                api_hint="plg.show_value = "
-                :api_hints_enabled="api_hints_enabled"
-                :hint="'Show slice '+value_label.toLowerCase()+' in label to right of indicator.'"
+                  v-model:value="show_value"
+                  label="Show Value"
+                  api_hint="plg.show_value = "
+                  :api_hints_enabled="api_hints_enabled"
+                  :hint="'Show slice '+value_label.toLowerCase()+' in label to right of indicator.'"
               />
             </v-row>
           </v-expansion-panel-text>
@@ -56,14 +56,14 @@
 
     <v-row>
       <v-text-field
-        type="number"
-        v-model.number="value"
-        @focus="(e) => value_editing = true"
-        @blur="(e) => value_editing = false"
-        :label="api_hints_enabled ? 'plg.value =' : value_label"
-        :class="api_hints_enabled ? 'api-hint' : null"
-        :hint="value_label+' corresponding to slice.'+(snap_to_slice && value_editing ? '  Indicator will snap to slice when clicking or tabbing away from input.' : '')"
-        :suffix="value_unit"
+          type="number"
+          v-model.number="value"
+          @focus="(e) => value_editing = true"
+          @blur="(e) => value_editing = false"
+          :label="api_hints_enabled ? 'plg.value =' : value_label"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          :hint="value_label+' corresponding to slice.'+(snap_to_slice && value_editing ? '  Indicator will snap to slice when clicking or tabbing away from input.' : '')"
+          :suffix="value_unit"
       ></v-text-field>
     </v-row>
 
@@ -71,23 +71,23 @@
       <v-col>
         <v-tooltip location="top">
           <template v-slot:activator="{ props }">
-            <v-btn color="primary" icon @click="goto_first" v-bind="props" :disabled="is_playing">
-              <v-icon>skip_previous</v-icon>
+            <v-btn variant="text" icon @click="goto_first" v-bind="props" :disabled="is_playing">
+              <v-icon>mdi-skip-previous</v-icon>
             </v-btn>
           </template>
           <span>Jump to first</span>
         </v-tooltip>
         <v-tooltip location="top">
           <template v-slot:activator="{ props }">
-            <v-btn color="primary" icon @click="play_prev" v-bind="props" :disabled="is_playing">
-              <v-icon>exposure_minus_1</v-icon>
+            <v-btn variant="text" icon @click="play_prev" v-bind="props" :disabled="is_playing">
+              <span class="slice-step-button-label">-1</span>
             </v-btn>
           </template>
           <span>Previous</span>
         </v-tooltip>
         <v-tooltip location="top">
           <template v-slot:activator="{ props }">
-            <v-btn color="primary" icon @click="play_start_stop" v-bind="props">
+            <v-btn variant="text" icon @click="play_start_stop" v-bind="props">
               <v-icon>mdi-play-pause</v-icon>
             </v-btn>
           </template>
@@ -95,16 +95,16 @@
         </v-tooltip>
         <v-tooltip location="top">
           <template v-slot:activator="{ props }">
-            <v-btn color="primary" icon @click="play_next" v-bind="props" :disabled="is_playing">
-              <v-icon>exposure_plus_1</v-icon>
+            <v-btn variant="text" icon @click="play_next" v-bind="props" :disabled="is_playing">
+              <span class="slice-step-button-label">+1</span>
             </v-btn>
           </template>
           <span>Next</span>
         </v-tooltip>
         <v-tooltip location="top">
           <template v-slot:activator="{ props }">
-            <v-btn color="primary" icon @click="goto_last" v-bind="props" :disabled="is_playing">
-              <v-icon>skip_next</v-icon>
+            <v-btn variant="text" icon @click="goto_last" v-bind="props" :disabled="is_playing">
+              <v-icon>mdi-skip-next</v-icon>
             </v-btn>
           </template>
           <span>Jump to last</span>
@@ -128,4 +128,8 @@
   .v-slider {
     margin: 0px !important;
   }
+
+.slice-step-button-label {
+  font-weight: 600;
+}
 </style>
