@@ -109,25 +109,25 @@
                   :hide-details="true"
                   style="padding-top: 8px !important; padding-bottom: 4px !important; display: inline-block; width: 212px"
                 >
-                  <template v-slot:selection="data">
+                  <template v-slot:selection="{ item }">
                     <div class="single-line" style="width: 100%">
                       <span :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : null">
-                        <j-layer-viewer-icon v-if="data.item.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+                        <j-layer-viewer-icon v-if="item.raw.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="item.raw.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
                         {{ api_hints_enabled ?
-                          '\'' + data.item.label + '\''
+                          '\'' + item.raw.label + '\''
                           :
-                          data.item.label
+                          item.raw.label
                         }}
                       </span>
                     </div>
                   </template>
-                  <template v-slot:item="data">
-                    <div class="single-line">
+                  <template v-slot:item="{ props, item }">
+                    <v-list-item v-bind="props" :title="undefined" class="single-line">
                       <span>
-                        <j-layer-viewer-icon span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
-                        {{ data.item.label }}
+                        <j-layer-viewer-icon span_style="margin-right: 4px" :icon="item.raw.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+                        {{ item.raw.label }}
                       </span>
-                    </div>
+                    </v-list-item>
                   </template>
                 </v-select>
               </div>
