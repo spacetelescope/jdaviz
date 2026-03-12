@@ -109,7 +109,7 @@ class FormatSelect(SelectPluginComponent):
                     if this_parser.is_valid:
                         importer_input = this_parser.output
                     else:
-                        self._invalid_importers[parser_name] = 'Invalid'
+                        self._invalid_importers[parser_name] = 'Input considered invalid by parser'
                         importer_input = None
                 except Exception as e:
                     self._invalid_importers[parser_name] = f'Parser exception: {e}'
@@ -175,7 +175,7 @@ class FormatSelect(SelectPluginComponent):
                             # target filters
                             self._importers[importer_name] = this_importer
                     else:
-                        self._invalid_importers[label] = 'Invalid'
+                        self._invalid_importers[label] = 'Input considered invalid by importer'
 
         self.items = all_formats
         self._apply_default_selection()
@@ -1198,7 +1198,7 @@ def find_matching_resolver(app,
             invalid_resolvers[resolver_name] = f'is_valid exception: {e}'
             is_valid = False
         if not is_valid:
-            invalid_resolvers.setdefault(resolver_name, 'Invalid')
+            invalid_resolvers.setdefault(resolver_name, 'Input considered invalid by resolver.')
             continue
 
         if target is not None:
