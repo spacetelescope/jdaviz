@@ -674,17 +674,6 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
             The 'rest' column must have proper astropy units.
         show : bool, optional
             Whether to show the lines by default. Defaults to True for API usage.
-
-        Examples
-        --------
-        >>> # Import from a QTable
-        >>> from astropy.table import QTable
-        >>> import astropy.units as u
-        >>> table = QTable()
-        >>> table['linename'] = ['H-alpha', 'H-beta']
-        >>> table['rest'] = [6562.8, 4861.3] * u.Angstrom
-        >>> plugin = viz.plugins['Line Lists']
-        >>> plugin.import_line_list(table)
         """
         if not isinstance(line_table, QTable):
             raise ValueError("line_table must be a QTable object")
