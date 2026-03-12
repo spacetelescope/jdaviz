@@ -6,8 +6,8 @@
       attach
       :menu-props="{ left: true }"
       :items="items"
-      v-model="selected"
-      @change="$emit('update:selected', $event)"
+      :model-value="selected"
+      @update:modelValue="$emit('update:selected', $event)"
       :label="api_hints_enabled && api_hint ? api_hint : label"
       :class="api_hints_enabled && api_hint ? 'api-hint' : null"
       :hint="hint"
@@ -16,13 +16,13 @@
       item-value="label"
       persistent-hint
     >
-      <template v-slot:selection="data">
+      <template #selection="{ item }">
         <div class="single-line" style="width: 100%">
           <span :class="api_hints_enabled ? 'api-hint' : null">
             {{ api_hints_enabled ?
-              '\'' + data.item.label + '\''
+              '\'' + item.raw.label + '\''
               :
-              data.item.label
+              item.raw.label
             }}
           </span>
         </div>

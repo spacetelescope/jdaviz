@@ -4,8 +4,8 @@
       :menu-props="{ left: true }"
       attach
       :items="filtered_items"
-      v-model="selected"
-      @change="$emit('update:selected', $event)"
+      :model-value="selected"
+      @update:modelValue="$emit('update:selected', $event)"
       :label="api_hints_enabled && api_hint ? api_hint : label"
       :class="api_hints_enabled && api_hint ? 'api-hint' : null"
       :hint="hint"
@@ -85,32 +85,32 @@
             {{ multiselect ? selected : `'${selected}'` }}
           </span>
           <v-chip v-else-if="multiselect" style="width: calc(100% - 10px); flex: 1; display: flex; align-items: center;">
-            <j-tooltip v-if="exists_in_dc !== null && exists_in_dc !== undefined" :tipid="getExistsTooltipId(item)">
-              <v-icon small :color="getExistsIconColor(item)" style="margin-right: 8px; min-width: 16px;">
-                {{ getExistsIcon(item) }}
+            <j-tooltip v-if="exists_in_dc !== null && exists_in_dc !== undefined" :tipid="getExistsTooltipId(item.raw)">
+              <v-icon small :color="getExistsIconColor(item.raw)" style="margin-right: 8px; min-width: 16px;">
+                {{ getExistsIcon(item.raw) }}
               </v-icon>
             </j-tooltip>
-            <span>{{ itemLabel(item) }}</span>
+            <span>{{ itemLabel(item.raw) }}</span>
           </v-chip>
           <span v-else style="flex: 1; display: flex; align-items: center;">
-            <j-tooltip v-if="exists_in_dc !== null && exists_in_dc !== undefined && !api_hints_enabled" :tipid="getExistsTooltipId(item)">
-              <v-icon small :color="getExistsIconColor(item)" style="margin-right: 8px; min-width: 16px;">
-                {{ getExistsIcon(item) }}
+            <j-tooltip v-if="exists_in_dc !== null && exists_in_dc !== undefined && !api_hints_enabled" :tipid="getExistsTooltipId(item.raw)">
+              <v-icon small :color="getExistsIconColor(item.raw)" style="margin-right: 8px; min-width: 16px;">
+                {{ getExistsIcon(item.raw) }}
               </v-icon>
             </j-tooltip>
-            {{ itemLabel(item) }}
+            {{ itemLabel(item.raw) }}
           </span>
         </div>
       </template>
       <template #item="{ props, item }">
-        <v-list-item v-bind="props" style="margin-top: 4px; margin-bottom: 4px; align-items: center;">
+        <v-list-item v-bind="props" :title="undefined" style="margin-top: 4px; margin-bottom: 4px; align-items: center;">
           <v-list-item-action v-if="exists_in_dc !== null && exists_in_dc !== undefined" style="min-width: 16px; margin-right: 8px; margin-top: 0px; margin-bottom: 0px;">
-            <j-tooltip :tipid="getExistsTooltipId(item)">
-              <v-icon small :color="getExistsIconColor(item)">{{ getExistsIcon(item) }}</v-icon>
+            <j-tooltip :tipid="getExistsTooltipId(item.raw)">
+              <v-icon small :color="getExistsIconColor(item.raw)">{{ getExistsIcon(item.raw) }}</v-icon>
             </j-tooltip>
           </v-list-item-action>
             <v-list-item-title style="margin-top: 0px; margin-bottom: 0px">
-              {{ itemLabel(item) }}
+              {{ itemLabel(item.raw) }}
               </v-list-item-title>
         </v-list-item>
       </template>
@@ -171,36 +171,28 @@ export default {
     },
   },
   methods: {
-    normalizeItem(item) {
-      if (item && typeof item === 'object' && Object.prototype.hasOwnProperty.call(item, 'raw')) {
-        return item.raw;
+    itemLabel(item) {
+      if (typeof item === 'string') {
+        return item;
+      }
+      if (item && typeof item === 'object') {
+        return item.label || item.title || item.text || item.value || '';
       }
       return item;
     },
-    itemLabel(item) {
-      const normalized = this.normalizeItem(item);
-      if (typeof normalized === 'string') {
-        return normalized;
-      }
-      if (normalized && typeof normalized === 'object') {
-        return normalized.label || normalized.title || normalized.text || normalized.value || '';
-      }
-      return normalized;
-    },
     existsFor(item) {
-      const normalized_item = this.normalizeItem(item);
       // Check if this item's data_hash exists in the exists_in_dc list
       if (!this.exists_in_dc || !Array.isArray(this.exists_in_dc)) {
         return false;
       }
 
       // If item is an object with data_hash, check directly
-      if (typeof normalized_item === 'object' && normalized_item !== null && normalized_item.data_hash) {
-        return this.exists_in_dc.includes(normalized_item.data_hash);
+      if (typeof item === 'object' && item !== null && item.data_hash) {
+        return this.exists_in_dc.includes(item.data_hash);
       }
 
       // If item is a string (label), find the corresponding object in items
-      const key = this.itemLabel(normalized_item);
+      const key = this.itemLabel(item);
       const item_obj = this.items.find(i => {
         const i_key = this.itemLabel(i);
         return i_key === key;
