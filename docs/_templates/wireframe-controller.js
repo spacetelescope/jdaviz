@@ -1057,6 +1057,29 @@ function initializeWireframeController(container) {
         }
     };
 
+    // Merge customContentMap into sidebarContent_map to override default content
+    // This allows conf.py to dynamically generate sidebar content with populated dropdowns
+    if (customContentMap) {
+        Object.keys(customContentMap).forEach(function(sidebarType) {
+            if (sidebarContent_map[sidebarType]) {
+                const customData = customContentMap[sidebarType];
+                
+                // Handle tabbed sidebars (like loaders with Data/Viewer tabs)
+                if (sidebarContent_map[sidebarType].tabs && typeof customData === 'object' && !Array.isArray(customData)) {
+                    // Custom content has tab-specific content
+                    sidebarContent_map[sidebarType].tabs.forEach(function(tabName, index) {
+                        if (customData[tabName]) {
+                            sidebarContent_map[sidebarType].content[index] = customData[tabName];
+                        }
+                    });
+                } else if (customData.main) {
+                    // Custom content has a 'main' property (for single-content sidebars)
+                    sidebarContent_map[sidebarType].content = customData.main;
+                }
+            }
+        });
+    }
+
     let currentSidebar = null;
     let apiModeActive = false;
 
@@ -1305,41 +1328,47 @@ function initializeWireframeController(container) {
                 updateJupyterApiSnippet(data);
             }
 
-            // Populate dropdowns for loaders sidebar
+            // Populate dropdowns for loaders sidebar (only if not already populated from customContentMap)
             if (sidebarType === 'loaders') {
                 setTimeout(function() {
                     const sourceSelect = container.querySelector('#source-select');
                     const formatSelect = container.querySelector('#format-select');
                     const viewerTypeSelect = container.querySelector('#viewer-type-select');
 
-                    // Populate source dropdown
-                    if (sourceSelect && dropdownOptions.sources.length > 0) {
-                        sourceSelect.innerHTML = dropdownOptions.sources.map(function(source) {
-                            return '<option>' + source + '</option>';
-                        }).join('');
-                    } else if (sourceSelect) {
-                        // Fallback options
-                        sourceSelect.innerHTML = '<option>file</option><option>file drop</option><option>url</option><option>object</option><option>astroquery</option><option>virtual observatory</option>';
+                    // Populate source dropdown (only if empty - not already populated from customContentMap)
+                    if (sourceSelect && sourceSelect.options.length === 0) {
+                        if (dropdownOptions.sources.length > 0) {
+                            sourceSelect.innerHTML = dropdownOptions.sources.map(function(source) {
+                                return '<option>' + source + '</option>';
+                            }).join('');
+                        } else {
+                            // Fallback options
+                            sourceSelect.innerHTML = '<option>file</option><option>file drop</option><option>url</option><option>object</option><option>astroquery</option><option>virtual observatory</option>';
+                        }
                     }
 
-                    // Populate format dropdown
-                    if (formatSelect && dropdownOptions.formats.length > 0) {
-                        formatSelect.innerHTML = dropdownOptions.formats.map(function(format) {
-                            return '<option>' + format + '</option>';
-                        }).join('');
-                    } else if (formatSelect) {
-                        // Fallback options
-                        formatSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option>';
+                    // Populate format dropdown (only if empty - not already populated from customContentMap)
+                    if (formatSelect && formatSelect.options.length === 0) {
+                        if (dropdownOptions.formats.length > 0) {
+                            formatSelect.innerHTML = dropdownOptions.formats.map(function(format) {
+                                return '<option>' + format + '</option>';
+                            }).join('');
+                        } else {
+                            // Fallback options
+                            formatSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option>';
+                        }
                     }
 
-                    // Populate viewer type dropdown
-                    if (viewerTypeSelect && dropdownOptions.viewerTypes.length > 0) {
-                        viewerTypeSelect.innerHTML = dropdownOptions.viewerTypes.map(function(type) {
-                            return '<option>' + type + '</option>';
-                        }).join('');
-                    } else if (viewerTypeSelect) {
-                        // Fallback options
-                        viewerTypeSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option><option>Histogram</option><option>Scatter</option>';
+                    // Populate viewer type dropdown (only if empty - not already populated from customContentMap)
+                    if (viewerTypeSelect && viewerTypeSelect.options.length === 0) {
+                        if (dropdownOptions.viewerTypes.length > 0) {
+                            viewerTypeSelect.innerHTML = dropdownOptions.viewerTypes.map(function(type) {
+                                return '<option>' + type + '</option>';
+                            }).join('');
+                        } else {
+                            // Fallback options
+                            viewerTypeSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option><option>Histogram</option><option>Scatter</option>';
+                        }
                     }
                 }, 50);
             }
