@@ -26,7 +26,7 @@
       :hint="viewer_multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
-    <v-row v-if="viewer_selected.length > 0">
+    <div v-if="viewer_selected.length > 0">
       <v-expansion-panels accordion>
         <v-expansion-panel>
           <v-expansion-panel-title v-slot="{ open }">
@@ -202,7 +202,7 @@
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </div>
 
     <div v-if="image_color_mode_sync.in_subscribed_states">
       <glue-state-sync-wrapper :sync="image_color_mode_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('image_color_mode')">
@@ -220,19 +220,21 @@
           <template v-slot:selection="{ item }">
             <span :class="api_hints_enabled ? 'api-hint' : null">
               {{ api_hints_enabled ?
-                '\'' + item.text + '\''
+                '\'' + item.raw.text + '\''
                 :
-                item.text
+                item.raw.text
               }}
             </span>
           </template>
-          <template v-slot:item="{ item }">
-            <span style="margin-top: 8px; margin-bottom: 0px">
-                {{ item.text }}
-              <v-row v-if="item.description" style="line-height: 1.0; margin: 0px; opacity: 0.85; font-size: 8pt">
-                {{ item.description }}
-              </v-row>
-            </span>
+          <template v-slot:item="{ props, item }">
+            <v-list-item v-bind="props" :title="undefined">
+              <span style="margin-top: 8px; margin-bottom: 0px">
+                {{ item.raw.text }}
+                <v-row v-if="item.raw.description" style="line-height: 1.0; margin: 0px; opacity: 0.85; font-size: 8pt">
+                  {{ item.raw.description }}
+                </v-row>
+              </span>
+            </v-list-item>
           </template>
         </v-select>
       </glue-state-sync-wrapper>
@@ -674,16 +676,18 @@
             <template v-slot:selection="{ item, index }">
               <span :class="api_hints_enabled ? 'api-hint' : null">
                 {{ api_hints_enabled ?
-                  '\'' + item.text + '\''
+                  '\'' + item.raw.text + '\''
                   :
-                  item.text
+                  item.raw.text
                 }}
               </span>
             </template>
-            <template v-slot:item="{ item }">
-              <v-card :style="'background: '+ colorStyle(item, cmap_samples)" width="100%" class="d-flex justify-center align-center text-center">
-                <span style="color: white; font-weight: bold; text-shadow: 0px 0px 3px black">{{ item.text }}</span>
-              </v-card>
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :title="undefined">
+                <v-card :style="'background: '+ colorStyle(item.raw, cmap_samples)" width="100%" class="d-flex justify-center align-center text-center">
+                  <span style="color: white; font-weight: bold; text-shadow: 0px 0px 3px black">{{ item.raw.text }}</span>
+                </v-card>
+              </v-list-item>
             </template>
           </v-select>
           <v-alert v-if="image_colormap_value == 'Random' && (
