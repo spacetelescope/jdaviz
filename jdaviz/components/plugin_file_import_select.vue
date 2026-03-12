@@ -7,8 +7,8 @@
         :items="items"
         item-title="label"
         item-value="label"
-        v-model="selected"
-        @change="$emit('update:selected', $event)"
+        :model-value="selected"
+        @update:modelValue="$emit('update:selected', $event)"
         :label="api_hints_enabled && api_hint ? api_hint : label"
         :class="api_hints_enabled && api_hint ? 'api-hint' : null"
         :hint="hint"
@@ -20,18 +20,20 @@
               {{'\'' + selected + '\''}}
             </span>
             <span v-else>
-              <v-icon v-if="item.icon && item.icon.length < 50" small>{{ item.icon }}</v-icon>
-              <img v-else-if="item.icon" :src="item.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
+              <v-icon v-if="item.raw.icon && item.raw.icon.length < 50" small>{{ item.raw.icon }}</v-icon>
+              <img v-else-if="item.raw.icon" :src="item.raw.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
               {{ selected }}
             </span>
           </div>
         </template>
-        <template v-slot:item="{ item }">
-          <span style="margin-top: 8px; margin-bottom: 0px">
-            <v-icon v-if="item.icon && item.icon.length < 50" small>{{ item.icon }}</v-icon>
-            <img v-else-if="item.icon" :src="item.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
-            {{ item.label }}
-          </span>
+        <template #item="{ props, item }">
+          <v-list-item v-bind="props" :title="undefined">
+            <span style="margin-top: 8px; margin-bottom: 0px">
+              <v-icon v-if="item.raw.icon && item.raw.icon.length < 50" small>{{ item.raw.icon }}</v-icon>
+              <img v-else-if="item.raw.icon" :src="item.raw.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
+              {{ item.raw.label }}
+            </span>
+          </v-list-item>
         </template>
 
       </v-select>
