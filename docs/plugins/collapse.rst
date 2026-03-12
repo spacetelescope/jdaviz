@@ -120,9 +120,8 @@ Accessing the Plugin
 
 .. code-block:: python
 
-    import Jdaviz
+    import jdaviz as jd
 
-    jd = Jdaviz()
     jd.show()
     jd.load('cube.fits', format='3D Spectrum')
 
