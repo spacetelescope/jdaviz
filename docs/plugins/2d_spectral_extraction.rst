@@ -38,7 +38,7 @@ A preview of the trace will update in real time in the 2D spectrum viewer.
 
 To export the trace as a data object into the 2D spectrum viewer (to access via the API or to
 adjust plotting options), open the "Export Trace" panel, choose a label for the new data entry,
-and click "Create".  Note that this step is not required to create an extraction with simplex
+and click "Create".  Note that this step is not required to create an extraction with simple
 workflows.
 
 Suppose you have 2D spectra of an extended source, and you have already created a trace that follows the
