@@ -8,6 +8,8 @@
     :label="api_hints_enabled && api_hint ? api_hint : label"
     :class="api_hints_enabled && api_hint ? 'api-hint no-hint' : 'no-hint'"
     density="compact"
+    item-title="text"
+    item-value="value"
   >
     <template v-slot:selection="{ item, index }">
       <span :class="api_hints_enabled ? 'api-hint' : null">
