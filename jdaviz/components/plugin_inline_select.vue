@@ -8,7 +8,7 @@
     <v-row v-for="item in items" class="row-min-bottom-padding">
       <plugin-inline-select-item
         :item="item"
-        v-model:selected="selected"
+        :selected="selected"
         @update:selected="$emit('update:selected', $event)"
         :multiselect="multiselect"
         :single_select_allow_blank="single_select_allow_blank"

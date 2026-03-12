@@ -19,7 +19,7 @@
       <v-row v-if="uses_active_status && keep_active !== undefined" style="padding-bottom: 24px">
         <!-- TODO: update:keep_active is not working!!! -->
         <plugin-switch
-          v-model:value="keep_active"
+          :value="keep_active"
           @update:value="$emit('update:keep_active', $event)"
           label="Keep active"
           api_hint="plg.keep_active = "

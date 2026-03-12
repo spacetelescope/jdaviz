@@ -57,7 +57,7 @@
             <j-plugin-section-header>Query Results</j-plugin-section-header>
             <plugin-switch
               label="Treat Table as Query"
-              v-model:value="treat_table_as_query"
+              :value="treat_table_as_query"
               @update:value="$emit('update:treat_table_as_query', $event)"
               api_hint="ldr.treat_table_as_query ="
               :api_hints_enabled="api_hints_enabled"
@@ -82,7 +82,8 @@
                       <v-main>
                         <v-row>
                           <v-text-field
-                            v-model.number='file_timeout'
+                            :model-value="file_timeout"
+                            @update:modelValue="$emit('update:file_timeout', Number($event))"
                             type="number"
                             style="padding: 0px 8px"
                             suffix="s"
@@ -92,7 +93,8 @@
                         </v-row>
 
                         <plugin-switch
-                          v-model:value="file_cache"
+                          :value="file_cache"
+                          @update:value="$emit('update:file_cache', $event)"
                           label="Cache File"
                           api_hint="ldr.file_cache = "
                           :api_hints_enabled="api_hints_enabled"
@@ -116,7 +118,7 @@
           <v-row v-if="target_items.length >= 2" style="padding-right: 16px">
             <plugin-select-filter
               :items="target_items"
-              v-model:selected="target_selected"
+              :selected="target_selected"
               @update:selected="$emit('update:target_selected', $event)"
               tooltip_suffix="compatible formats"
               api_hint="ldr.target ="
@@ -147,7 +149,7 @@
               v-if="format_items.length >= 2"
               :show_if_single_entry="false"
               :items="format_items.map(i => i.label)"
-              v-model:selected="format_selected"
+              :selected="format_selected"
               @update:selected="$emit('update:format_selected', $event)"
               label="Format"
               api_hint="ldr.format ="

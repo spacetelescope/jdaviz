@@ -11,7 +11,7 @@
 
           <plugin-dataset-select
             :items="dataset_items"
-            v-model:selected="dataset_selected"
+            :selected="dataset_selected"
             @update:selected="$emit('update:dataset_selected', $event)"
             :multiselect="dataset_multiselect"
             :show_if_single_entry="true"
@@ -24,10 +24,10 @@
           <slot></slot>
 
           <plugin-auto-label
-            v-model:value="viewer_label_value"
+            :value="viewer_label_value"
             @update:value="$emit('update:viewer_label_value', $event)"
             :default="viewer_label_default"
-            v-model:auto="viewer_label_auto"
+            :auto="viewer_label_auto"
             @update:auto="$emit('update:viewer_label_auto', $event)"
             :invalid_msg="viewer_label_invalid_msg"
             label="Viewer Label"
