@@ -47,7 +47,7 @@
     <v-row style="margin: 0px 0px 8px 0px !important">
       <v-data-table
         density="compact"
-        :headers="headers_visible_sorted.map(item => {return {'text': item, 'value': item}})"
+        :headers="headers_visible_sorted.map(item => {return {'title': item, 'key': item}})"
         :items="items"
         :item-key="item_key"
         :show-select="show_rowselect"
