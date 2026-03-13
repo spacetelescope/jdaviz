@@ -109,7 +109,7 @@ Opening the Plugin
 Workflow
 --------
 
-1. **Load cube** into Cubeviz
+1. **Load cube** into Jdaviz
 2. **(Optional) Draw spatial region** for aperture
 3. **Select dataset** from :guilabel:`Data` dropdown
 4. **Select function** from :guilabel:`Function` dropdown
@@ -156,14 +156,13 @@ Accessing the Plugin
 
 .. code-block:: python
 
-    from jdaviz import Cubeviz
+    import jdaviz as jd
 
-    cubeviz = Cubeviz()
-    cubeviz.show()
-    cubeviz.load('cube.fits', format='3D Spectrum')
+    jd.show()
+    jd.load('cube.fits', format='3D Spectrum')
 
     # Access plugin
-    plg = cubeviz.plugins['3D Spectral Extraction']
+    plg = jd.plugins['3D Spectral Extraction']
 
 Basic Extraction
 ----------------
@@ -267,6 +266,5 @@ Example Notebooks
 See Also
 ========
 
-* :ref:`spectral-extraction` - Detailed Cubeviz extraction documentation
-* :ref:`collapse` - Create 2D images from cubes
-* :ref:`moment-maps` - Alternative spectral integration method
+* :ref:`plugins-collapse` - Create 2D images from cubes
+* :ref:`plugins-moment_maps` - Alternative spectral integration method

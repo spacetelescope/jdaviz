@@ -159,7 +159,7 @@ Some shortcuts require a specific plugin to be open.
      - 2+ images loaded
    * - ``l``
      - Plot line profiles at cursor position
-     - :ref:`Line Profile (XY) <plugins-line-profiles>` plugin open
+     - :ref:`Line Profile (XY) <plugins-image-profiles>` plugin open
    * - ``m``
      - Add marker at cursor position
      - :ref:`Markers <info-markers>` plugin open

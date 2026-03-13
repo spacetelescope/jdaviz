@@ -90,16 +90,10 @@ UI Access
    :plugin-panel-opened: false
    :demo-repeat: false
 
-Opening the Plugin
-------------------
-
-**Cubeviz:**
-  Click the :guilabel:`Moment Maps` icon in the plugin toolbar.
-
 Workflow
 --------
 
-1. **Load cube** into Cubeviz
+1. **Load cube** into Jdaviz
 2. **Select dataset** from :guilabel:`Data` dropdown
 3. **Set spectral region**:
 
@@ -140,14 +134,13 @@ Accessing the Plugin
 
 .. code-block:: python
 
-    from jdaviz import Cubeviz
+    import jdaviz as jd
 
-    cubeviz = Cubeviz()
-    cubeviz.show()
-    cubeviz.load('cube.fits', format='3D Spectrum')
+    jd.show()
+    jd.load('cube.fits', format='3D Spectrum')
 
     # Access plugin
-    plg = cubeviz.plugins['Moment Maps']
+    plg = jd.plugins['Moment Maps']
 
 Moment 0 Map (Line Flux)
 ------------------------
@@ -249,6 +242,5 @@ Example Notebooks
 See Also
 ========
 
-* :ref:`moment-maps` - Detailed Cubeviz moment maps documentation
-* :ref:`collapse` - Alternative collapse method
-* :ref:`spectral-extraction` - Extract 1D spectra
+* :ref:`plugins-collapse` - Alternative collapse method
+* :ref:`plugins-spectral_extraction_3d` - Extract 1D spectra from cubes
