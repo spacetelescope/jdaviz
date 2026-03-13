@@ -35,6 +35,7 @@ else:
     HAS_ROMAN_DATAMODELS = True
 
 MAX_N_SLICE = 16
+roman_extensions = ['data', 'err', 'dq', 'var_poisson']
 
 __all__ = ['ImageImporter', '_spatial_assign_component_type']
 
@@ -137,9 +138,9 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'ver': None,
                                 'name_ver': key,
                                 'index': index,
-                                'data_hash': create_data_hash(value),
-                                'obj': value}
-                               for index, (key, value) in enumerate(input.items())]
+                                'data_hash': create_data_hash(input[key]),
+                                'obj': np.array(input[key])}
+                               for index, key in enumerate(roman_extensions)]
             elif input_is_3d_array:
                 # Handle 3D numpy arrays as multiple 2D slices
                 n_slices = min(input.shape[0], MAX_N_SLICE)
@@ -330,7 +331,8 @@ class ImageImporter(BaseImporterToDataCollection):
                 raise ValueError(f'Cannot load as image with ndim={input.ndim}')
         # asdf
         elif (isinstance(input, asdf.AsdfFile)):
-            data = [_roman_asdf_2d_to_glue_data(input, ext='data')]
+            data = [_roman_asdf_2d_to_glue_data(input, ext=ext)
+                    for ext in self.extension.selected_name]
         # roman data models
         elif HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)):
             data = [_roman_asdf_2d_to_glue_data(input, ext=ext)
@@ -441,7 +443,7 @@ def _validate_fits_image2d(item):
 
 def _validate_roman_ext(item):
     name = item.get('name')
-    return name in ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
+    return name in roman_extensions
 
 
 def _hdu2data(hdu, hdulist, include_wcs=True):

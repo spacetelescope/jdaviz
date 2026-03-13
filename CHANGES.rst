@@ -206,6 +206,8 @@ Bug Fixes
 
 - Fixed bug where file drop resolver failed to process messages correctly when ipykernel>=7. [#4080]
 
+- Fix Data Quality plugin support for Roman ASDF images. [#4089]
+
 Cubeviz
 ^^^^^^^
 
