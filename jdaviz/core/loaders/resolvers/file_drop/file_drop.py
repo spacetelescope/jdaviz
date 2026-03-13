@@ -1,14 +1,69 @@
-from astropy.table import Table as astropyTable
-from traitlets import Any, Int
-from solara import FileDropMultiple
-from ipywidgets import widget_serialization
 import io
 import os
-import reacton
+import sys
 
-from jdaviz.core.registries import loader_resolver_registry
+import IPython
+import ipyvuetify.extra.file_input as _ipyvuetify_file_input
+import reacton
+from astropy.table import Table as astropyTable
+from ipywidgets import widget_serialization
+from solara import FileDropMultiple
+from traitlets import Any, Int
+
 from jdaviz.core.loaders.resolvers import BaseResolver
+from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.user_api import LoaderUserApi
+
+
+def _patch_process_messages():
+    """Replace ipyvuetify's ``process_messages`` with a kernel-version-safe variant.
+
+    ipykernel >= 7 removed ``msg_queue`` and ``do_one_iteration``, and made
+    ``_parent_header`` a read-only property.  The upstream implementation in
+    ipyvuetify references all three, causing file drop to fail silently (the
+    resolver never receives file data) and raise ``AttributeError`` on any
+    subsequent drop.
+
+    The replacement uses feature detection: on ipykernel >= 7 it returns
+    immediately because comm messages are handled on dedicated shell-channel
+    threads; on older kernels it preserves the original drain-the-queue
+    behaviour.
+    """
+    async def _process_messages():
+        ipython = IPython.get_ipython()
+        if ipython is None or not hasattr(ipython, 'kernel'):
+            return
+
+        kernel = ipython.kernel
+
+        # ipykernel >= 7: comm messages are processed on dedicated shell-channel
+        # threads, so manual message pumping is not needed
+        if not hasattr(kernel, 'msg_queue'):
+            return
+
+        # ipykernel < 7: manually drain the pending message queue
+        original_parent_ident = kernel._parent_ident
+        original_parent_header = kernel._parent_header
+        original_set_parent = ipython.set_parent
+
+        def _set_parent_sink(*args):
+            pass
+
+        try:
+            ipython.set_parent = _set_parent_sink
+            while not kernel.msg_queue.empty():
+                await kernel.do_one_iteration()
+        finally:
+            kernel.set_parent(original_parent_ident, original_parent_header)
+            sys.stdout.parent_header = original_parent_header
+            sys.stderr.parent_header = original_parent_header
+            ipython.display_pub.parent_header = original_parent_header
+            ipython.set_parent = original_set_parent
+
+    _ipyvuetify_file_input.process_messages = _process_messages
+
+
+_patch_process_messages()
 
 
 @loader_resolver_registry('file drop')
