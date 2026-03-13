@@ -17,6 +17,10 @@ will be parsed and which tools can visualize it:
    image
    catalog
    ramp
+   subset
+   footprint
+   trace
+   ramp_integration
 
 Each format has specific requirements for the data structure. The format determines
 which viewers and analysis tools are available for that data.
