@@ -53,15 +53,6 @@ The rest wavelengths must:
 - Have units (e.g., Angstroms, nanometers, GHz)
 - Be in the rest frame (observed wavelength accounting will be handled by the tool)
 
-Optional Columns
-----------------
-
-Additional columns may be included but will be ignored by the importer:
-
-- **show**: Boolean flag to control initial visibility
-- **colors**: Custom color specifications
-- **listname**: Group name for organizing lines
-
 Supported File Formats
 ======================
 

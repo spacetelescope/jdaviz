@@ -192,42 +192,11 @@ class TestLineLists:
 
         assert np.allclose([line.redshift for line in viewer_lines], 0.01)
 
-    def test_import_line_list_from_table(self, specviz_helper, spectrum1d):
-        """Test importing a line list from a QTable object"""
-        specviz_helper.load_data(spectrum1d)
-
-        # Create a line list table with required columns
-        lt = QTable()
-        lt['linename'] = ['Ca II K', 'Ca II H', 'H-gamma']
-        lt['rest'] = [3933.66, 3968.47, 4340.46] * u.AA
-        lt['listname'] = 'My Custom List'
-        lt.meta['medium'] = 'Vacuum'
-
-        # Get the line lists plugin
-        ll_plugin = specviz_helper.plugins['Line Lists']._obj
-        ll_plugin.plugin_opened = True
-
-        # Import the line list using the plugin method
-        ll_plugin.import_line_list(lt)
-
-        # Verify the line list was loaded
-        assert 'My Custom List' in ll_plugin.loaded_lists
-        assert len(ll_plugin.list_contents['My Custom List']['lines']) == 3
-        assert ll_plugin.list_contents['My Custom List']['medium'] == 'Vacuum'
-
-        # Verify the lines are in the main spectral_lines table
-        line_k = specviz_helper.spectral_lines.loc["linename", "Ca II K"]
-        assert line_k["listname"] == "My Custom List"
-        line_h = specviz_helper.spectral_lines.loc["linename", "Ca II H"]
-        assert line_h["listname"] == "My Custom List"
-        line_gamma = specviz_helper.spectral_lines.loc["linename", "H-gamma"]
-        assert line_gamma["listname"] == "My Custom List"
-
-    def test_import_line_list_validation(self, specviz_helper, spectrum1d):
+    def test_import_line_list_validation(self, deconfigged_helper, spectrum1d):
         """Test that import validation catches invalid tables"""
         from jdaviz.core.loaders.importers.line_list import LineListImporter
 
-        specviz_helper.load_data(spectrum1d)
+        deconfigged_helper.load_data(spectrum1d)
 
         # Test missing linename column
         lt = QTable()
@@ -284,19 +253,34 @@ class TestLineLists:
             # For deconfigged, load data and create a viewer
             helper.load(spectrum1d, format='1D Spectrum', data_label='Test Spectrum')
 
-        # Create a line list table
+        # Create a line list table with metadata
         lt = QTable()
         lt['linename'] = ['O III', 'H-alpha', 'H-beta']
         lt['rest'] = [5007, 6563, 4861] * u.AA
-        lt.meta['name'] = 'Test Lines'
+        lt['listname'] = 'Test Lines'
+        lt.meta['medium'] = 'Vacuum'
 
         # Test loading the line list
-        helper.load_line_list(lt)
+        helper.load(lt, format='Line List')
 
         # Verify lines were loaded
         assert helper.spectral_lines is not None
         assert len(helper.spectral_lines) == 3
         assert 'Test Lines' in helper.spectral_lines['listname']
+
+        # Verify plugin internals
+        ll_plugin = helper.plugins['Line Lists']._obj
+        assert 'Test Lines' in ll_plugin.loaded_lists
+        assert len(ll_plugin.list_contents['Test Lines']['lines']) == 3
+        assert ll_plugin.list_contents['Test Lines']['medium'] == 'Vacuum'
+
+        # Verify individual line lookups in spectral_lines table
+        line_oiii = helper.spectral_lines.loc["linename", "O III"]
+        assert line_oiii["listname"] == "Test Lines"
+        line_halpha = helper.spectral_lines.loc["linename", "H-alpha"]
+        assert line_halpha["listname"] == "Test Lines"
+        line_hbeta = helper.spectral_lines.loc["linename", "H-beta"]
+        assert line_hbeta["listname"] == "Test Lines"
 
         # Test plotting lines
         helper.plot_spectral_line('O III 5007.0')
