@@ -17,6 +17,7 @@ will be parsed and which tools can visualize it:
    image
    catalog
    ramp
+   line_list
 
 Each format has specific requirements for the data structure. The format determines
 which viewers and analysis tools are available for that data.
