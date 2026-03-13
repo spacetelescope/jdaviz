@@ -196,7 +196,7 @@ class TestLineLists:
         """Test that import validation catches invalid tables"""
         from jdaviz.core.loaders.importers.line_list import LineListImporter
 
-        deconfigged_helper.load_data(spectrum1d)
+        deconfigged_helper.load(spectrum1d)
 
         # Test missing linename column
         lt = QTable()

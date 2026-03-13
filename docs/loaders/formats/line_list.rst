@@ -26,11 +26,9 @@ Usage
 
 .. code-block:: python
 
-    import jdaviz
+    import jdaviz as jd
     from astropy.table import QTable
     from astropy import units as u
-
-    jd = jdaviz.show()
 
     # Create a line list table
     line_table = QTable({
