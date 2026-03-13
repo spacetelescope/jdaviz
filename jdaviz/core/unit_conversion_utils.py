@@ -316,16 +316,19 @@ def create_equivalent_spectral_axis_units_list(spectral_axis_unit,
 
 def _check_if_unit_is_from_moment_map(unit):
     """
-    Check if a unit is likely from a moment map by multiplying it by a unit of
-    length and seperately a unit of frequency and checking if either resulting
-    unit is a flux or surface brightness unit. This is a heuristic to catch cases
-    where the moment 0 units are in units of flux * spectral_axis_unit, which
-    can cause issues with the general flux conversion function.
+    Check if a unit is likely from a moment map to avoid attempting unit
+    conversion on this data. Check for moment 0 by multiplying by length/freq unit
+    and checking if the result is a flux or surface brightness unit.
+    Check for higher order moments (N) by checking if the unit is a length/frequency
+    or velocity unit (km/s)^N. This is by no means a perfect check, but data with
+    these units is likely a result from the moment map plugin and we can avoid
+    conversions in this case, and raise an error in other failed unit conversion
+    cases.
 
     Parameters
     ----------
-    unit : str or u.Unit
-        Unit object or string representation of unit.
+    unit : u.Unit
+        Unit object to check if it is likely from a moment map.
 
     Returns
     -------
@@ -333,14 +336,31 @@ def _check_if_unit_is_from_moment_map(unit):
         True if the unit is likely from a moment map, False otherwise.
     """
 
-    if isinstance(unit, str):
-        unit = u.Unit(unit)
+    # first check if unit is a moment 0 unit. moment 0 units will be
+    # flux * spectral_axis_unit or surface brightness * spectral_axis_unit,
+    # so we can catch those cases by multiplying the unit by length/freq unit
+    # and checking the phyical type of the result.
 
-    test_unit_1 = unit * u.um
-    test_unit_2 = unit * u.Hz
+    # test with a length unit and a frequency unit (doesn't matter specifically
+    # which units, we just care about the physical type)
+    u1 = unit * u.um
+    u2 = unit * u.Hz
 
-    return (test_unit_1.physical_type in ['flux', 'surface brightness'] or
-            test_unit_2.physical_type in ['flux', 'surface brightness'])
+    types = ['flux', 'surface brightness']
+    if u1.physical_type in types or u2.physical_type in types:
+        return True
+    
+    # check for higher order moments. these will either have units of length/freq
+    # or (km/s) ^ N
+    elif unit.physical_type == 'length' or unit.physical_type == 'frequency':
+        return True
+    
+    # velocity ^ N, will always be in km / s so we can check this directly
+    elif unit.bases == [u.Unit("km"), u.Unit("s")]:
+        return True
+    
+    else:
+        return False
 
 def flux_conversion_general(values, original_unit, target_unit,
                             equivalencies=None, with_unit=True):
@@ -394,25 +414,25 @@ def flux_conversion_general(values, original_unit, target_unit,
             return values
         return values * u.Unit(original_unit)
 
-    if isinstance(original_unit, str):
-        original_unit = u.Unit(original_unit)
-    if isinstance(target_unit, str):
-        target_unit = u.Unit(target_unit)
+    # convert to Unit object (if not already, which is handled in when casting)
+    original_unit = u.Unit(original_unit)
+    target_unit = u.Unit(target_unit)
 
+    # get solid angle component of input and target (e.g sr in Jy/sr) if present
     solid_angle_in_orig = check_if_unit_is_per_solid_angle(original_unit,
                                                            return_unit=True)
     solid_angle_in_targ = check_if_unit_is_per_solid_angle(target_unit,
                                                            return_unit=True)
     
     # if the units being converted are likely from a moment map, skip conversion
-    # without error.
+    # (which will fail anyway) without erroring and just return input (with or
+    # without units attached, as requested)
     if _check_if_unit_is_from_moment_map(original_unit):
         if with_unit:
             return values * original_unit
         return values
 
     with u.set_enabled_equivalencies(equivalencies):
-
         # first possible case we want to catch before trying to translate: both
         # the original and target unit are per-pixel-squared SB units
         # and also require an additional equivalency, so we need to multiply out
@@ -421,6 +441,7 @@ def flux_conversion_general(values, original_unit, target_unit,
         if solid_angle_in_orig == solid_angle_in_targ == PIX2:
             converted_values = (values * (original_unit * PIX2)).to(target_unit * PIX2)
             converted_values = converted_values / PIX2  # re-apply pix2 unit
+
         else:
             try:
                 # if units can be converted straight away with provided
@@ -431,11 +452,16 @@ def flux_conversion_general(values, original_unit, target_unit,
                 # convert directly is if one unit is a flux and one is a sb and
                 # they also require an additional equivalency
                 if not bool(solid_angle_in_targ) == bool(solid_angle_in_orig):
-                    converted_values = (values * original_unit * (solid_angle_in_orig or 1)).to(target_unit * (solid_angle_in_targ or 1))  # noqa
-                    converted_values = (converted_values / (solid_angle_in_orig or 1)).to(target_unit)  # noqa
+                    cv = (values * original_unit * (solid_angle_in_orig or 1))
+                    cv = cv.to(target_unit * (solid_angle_in_targ or 1))
+                    converted_values = (cv / (solid_angle_in_orig or 1)).to(target_unit)
                 else:
+                    # for all other cases (not including moment map units, which
+                    # were excluded above before attempting to convert), raise
+                    # an error if units can't be converted.
                     raise u.UnitConversionError(f'Could not convert {original_unit} to {target_unit} with provided equivalencies.')  # noqa
 
+        # return converted values with or without units, based on with_unit kwarg
         if not with_unit:
             return converted_values.value
 
@@ -451,7 +477,7 @@ def handle_squared_flux_unit_conversions(value, original_unit=None,
     This function is specifically designed to address cases where squared
     units, such as (MJy/sr)**2 to (Jy/sr)**2, appear in contexts like
     variance columns of aperture photometry output tables. When additional
-    equivalencies are required, direct conversion may fail, so this workaround.
+    equivalencies are required, direct conversion may fail, so this workaround
     is required.
 
     Parameters
@@ -561,7 +587,7 @@ def units_to_strings(unit_list):
 def convert_integrated_sb_unit(u1, spectral_axis_unit, desired_freq_unit, desired_length_unit):
     """
     Converts an integrated surface brightness unit (moment 0 unit) to a surface
-    brighntess unit that is compatible with the spectral axis unit that the surface
+    brightness unit that is compatible with the spectral axis unit that the surface
     brightness was integrated over.
 
     This function adjusts an integrated flux unit to ensure compatibility with a given
@@ -584,7 +610,6 @@ def convert_integrated_sb_unit(u1, spectral_axis_unit, desired_freq_unit, desire
         The converted flux unit compatible with the given spectral axis unit. If the
         units are already compatible, the input unit ``u1`` is returned unchanged.
     """
-
     uu = u1 / spectral_axis_unit
 
     # multiply solid angle unit out of surface brightness to compare just flux components
@@ -593,6 +618,7 @@ def convert_integrated_sb_unit(u1, spectral_axis_unit, desired_freq_unit, desire
     # then check if flux unit is a per-frequency or per-wavelength flux unit
     wav_units = _spectral_and_photon_flux_density_units(wav_only=True, as_units=True)
     freq_units = _spectral_and_photon_flux_density_units(freq_only=True, as_units=True)
+
     if np.any([flux.unit.is_equivalent(x) for x in wav_units]):
         flux_unit_type = 'length'
     elif np.any([flux.unit.is_equivalent(x) for x in freq_units]):
@@ -679,6 +705,37 @@ def to_flux_density_unit(input_unit, pixar_sr=1.0):
 
 
 def spectrum_ensure_flux_density_unit(spectrum):
+    """
+    Ensure a Spectrum has flux in spectral flux density units.
+
+    If the input spectrum already has flux in a spectral flux density unit,
+    it is returned unchanged. If the flux is in a supported flux or surface
+    brightness unit, a new Spectrum is returned with flux converted to a
+    spectral flux density unit using :func:`to_flux_density_unit`.
+
+    When converting, uncertainty is preserved when possible:
+
+    - If ``spectrum.uncertainty`` has a ``quantity`` attribute (e.g.
+      ``StdDevUncertainty``), the same uncertainty class is retained and
+      rebuilt with the converted flux unit.
+    - Otherwise, a unit-scaled array-like uncertainty is created.
+
+    Parameters
+    ----------
+    spectrum : `specutils.Spectrum`
+        Input spectrum to check and convert.
+
+    Returns
+    -------
+    `specutils.Spectrum`
+        The original spectrum (if already in spectral flux density) or a new
+        converted spectrum.
+
+    Raises
+    ------
+    NotImplementedError
+        Returned if the flux unit physical type is unsupported by this helper.
+    """
     if (spectrum.flux.unit.physical_type == 'spectral flux density'
             or spectrum.flux.unit.is_equivalent(u.Jy, u.spectral_density(1*u.m))):
         return spectrum

@@ -390,9 +390,9 @@ def test_correct_output_spectral_y_units(cubeviz_helper, spectrum1d_cube_custom_
     assert mm.moment.unit == moment_unit.replace('m', 'um')
 
 
-@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS][1:2])
+@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS][1:2])
+@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
 def test_moment_zero_unit_flux_conversions(cubeviz_helper,
                                            spectrum1d_cube_custom_fluxunit,
                                            flux_unit, angle_unit, new_flux_unit):
@@ -406,7 +406,6 @@ def test_moment_zero_unit_flux_conversions(cubeviz_helper,
     flux dropdown menu in the unit conversion plugin should be supported
     by moment maps.
     """
-
     if new_flux_unit == flux_unit:  # skip 'converting' to same unit
         return
     new_flux_unit_str = new_flux_unit.to_string()
@@ -431,6 +430,8 @@ def test_moment_zero_unit_flux_conversions(cubeviz_helper,
     # convert to new flux unit
     uc.flux_unit.selected = new_flux_unit_str
 
+    # make sure moment map plugin labels (which say what units the output will be
+    # in) are updated with the new flux unit
     new_mm_unit = (new_flux_unit * u.m / u.Unit(angle_unit)).to_string()
     assert mm.output_unit_items[0]['label'] == 'Surface Brightness'
     assert mm.output_unit_items[0]['unit_str'] == new_mm_unit
