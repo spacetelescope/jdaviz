@@ -49,6 +49,10 @@ New Features
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
 
+- Avoid attempting to convert units in image viewers that are likely moment map data. This
+  fix allows the user to load moment map data into an existing image viewer, and use
+  unit converison functionality when there is moment map data in a viewer. [#4085]
+
 Cubeviz
 ^^^^^^^
 

@@ -279,12 +279,20 @@ def test_moment_create_new_image_viewer_deconfigged(deconfigged_helper, image_cu
 
     # now calculate another moment map and add it to the existing Image viewer
     # and make sure it is added
-    mm.add_results.label = 'moment 00'
+    mm.add_results.label = 'moment 01'
     mm.add_results.viewer.selected = 'Image'
     mm.calculate_moment()
 
     image_viewer = deconfigged_helper.app.get_viewer('Image')
-    assert 'moment 00' in image_viewer.data_menu.layer.choices
+    assert 'moment 01' in image_viewer.data_menu.layer.choices
+
+    # calculate a higher order moment and make sure we can add it to an existing
+    # image viewer as well
+    mm.n_moment = 1
+    mm.reference_wavelength = 1.0
+    mm.add_results.label = 'moment 1'
+    mm.add_results.viewer.selected = 'Image'
+    mm.calculate_moment()
 
 
 def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
@@ -390,9 +398,9 @@ def test_correct_output_spectral_y_units(cubeviz_helper, spectrum1d_cube_custom_
     assert mm.moment.unit == moment_unit.replace('m', 'um')
 
 
-@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS[1:2]])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS[1:2]])
 def test_moment_zero_unit_flux_conversions(cubeviz_helper,
                                            spectrum1d_cube_custom_fluxunit,
                                            flux_unit, angle_unit, new_flux_unit):

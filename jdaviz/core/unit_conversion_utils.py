@@ -314,6 +314,7 @@ def create_equivalent_spectral_axis_units_list(spectral_axis_unit,
     # Concatenate both lists with the local units coming first.
     return sorted(units_to_strings(local_units)) + spectral_axis_unit_equivalencies_titles
 
+
 def _check_if_unit_is_from_moment_map(unit):
     """
     Check if a unit is likely from a moment map to avoid attempting unit
@@ -349,18 +350,19 @@ def _check_if_unit_is_from_moment_map(unit):
     types = ['flux', 'surface brightness']
     if u1.physical_type in types or u2.physical_type in types:
         return True
-    
+
     # check for higher order moments. these will either have units of length/freq
     # or (km/s) ^ N
     elif unit.physical_type == 'length' or unit.physical_type == 'frequency':
         return True
-    
+
     # velocity ^ N, will always be in km / s so we can check this directly
     elif unit.bases == [u.Unit("km"), u.Unit("s")]:
         return True
-    
+
     else:
         return False
+
 
 def flux_conversion_general(values, original_unit, target_unit,
                             equivalencies=None, with_unit=True):
@@ -423,7 +425,7 @@ def flux_conversion_general(values, original_unit, target_unit,
                                                            return_unit=True)
     solid_angle_in_targ = check_if_unit_is_per_solid_angle(target_unit,
                                                            return_unit=True)
-    
+
     # if the units being converted are likely from a moment map, skip conversion
     # (which will fail anyway) without erroring and just return input (with or
     # without units attached, as requested)
