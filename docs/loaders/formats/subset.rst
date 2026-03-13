@@ -38,9 +38,9 @@ Data Requirements
 
 The data should be either:
 
-- **Spatial regions**: For 2D image data (Imviz, Cubeviz), using the
+- **Spatial regions**: For 2D image data, using the
   `~regions.Regions` format with sky coordinates
-- **Spectral regions**: For 1D or 2D spectral data (Specviz, Specviz2D),
+- **Spectral regions**: For 1D or 2D spectral data,
   using `~specutils.SpectralRegion` format
 
 For spatial regions, the regions must have sky coordinates (not pixel coordinates)

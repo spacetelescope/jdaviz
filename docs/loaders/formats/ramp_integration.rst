@@ -22,11 +22,11 @@ Usage
 
 .. code-block:: python
 
-    import jdaviz
+    import jdaviz as jd
     import numpy as np
     from astropy.nddata import NDDataArray
 
-    jd = jdaviz.show('rampviz')
+    jd.show()
 
     # Load an integration profile
     integration_data = np.array([100, 205, 310, 415])  # counts per group
@@ -59,7 +59,7 @@ Supported File Formats
 
 Ramp Integration data is typically not loaded from files but generated from:
 
-- The Ramp Extraction plugin in Rampviz
+- The Ramp Extraction plugin
 - Programmatic extraction from ramp cubes
 - Python numpy arrays or NDDataArray objects
 
@@ -72,8 +72,7 @@ Ramp integration profiles are usually created by spatially collapsing ramp data:
 
 .. code-block:: python
 
-    # In Rampviz, use the Ramp Extraction plugin
-    ramp_ext = rampviz.plugins['Ramp Extraction']
+    ramp_ext = jd.plugins['Ramp Extraction']
     ramp_ext.function = 'median'  # or 'mean', 'sum', etc.
 
     # Extract and export the integration profile
