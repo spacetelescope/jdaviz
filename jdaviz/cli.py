@@ -105,7 +105,7 @@ def _main(config=None):
     filepaths_nargs = '*'
     if config is None:
         parser.add_argument('--layout', default='', choices=ALL_JDAVIZ_CONFIGS,
-                            help='Configuration to use.')
+                            help='Configuration to use.', deprecated=True)
     if (config == "mosviz") or ("mosviz" in sys.argv):
         filepaths_nargs = 1
     parser.add_argument('filepaths', type=str, nargs=filepaths_nargs, default=None,
