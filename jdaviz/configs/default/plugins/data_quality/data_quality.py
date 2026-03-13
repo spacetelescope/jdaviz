@@ -339,6 +339,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
                     dq_layer.state.v_max = max(flag_bits)
 
                 dq_layer.state.alpha = self.dq_layer_opacity
+                dq_layer.state.cmap_bad = (0, 0, 0, 0)
 
     def update_visibility(self, index):
         self.decoded_flags[index]['show'] = not self.decoded_flags[index]['show']
