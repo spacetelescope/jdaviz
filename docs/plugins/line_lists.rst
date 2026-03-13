@@ -15,6 +15,12 @@ The Line Lists plugin loads and displays spectral line identifications from
 catalogs. Lines are overlaid on spectrum viewers to aid in feature identification
 and analysis.
 
+.. warning::
+
+   The Line Lists plugin is still under active development. The API is not
+   yet fully exposed, and spectral lines can currently
+   only be displayed in a single spectrum viewer at a time.
+
 **Key Features:**
 
 * Load predefined line lists (atomic, molecular)

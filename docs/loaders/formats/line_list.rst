@@ -16,6 +16,11 @@ The Line List format is used for importing custom lists of spectral lines that c
 be overlaid on spectroscopic data for line identification and analysis. Line lists
 specify the rest wavelengths of emission or absorption features and their labels.
 
+.. warning::
+
+   The Line Lists functionality is still under active development. For more information see
+   :ref:`line-lists` in the plugins documentation.
+
 Usage
 =====
 
