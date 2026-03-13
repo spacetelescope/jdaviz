@@ -429,7 +429,6 @@ class FootprintOverlayClickMessage(Message):
         self.y = data["domain"]["y"]
         self.mode = mode
         self.ctrl_key = data.get("ctrlKey", False) or data.get("metaKey", False)
-        self.shift_key = data.get("shiftKey", False)
 
 class RedshiftMessage(Message):
     '''Messages related to Specviz redshift slider'''
