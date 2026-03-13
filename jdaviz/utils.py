@@ -799,12 +799,12 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
             # pass along the error message from astroquery if the
             # data were not successfully downloaded:
             raise ValueError(
-                f"Failed query for URI '{possible_uri}' at '{url}':\n\n{msg}"
+                f"Failed query for URI '{possible_uri}' at '{url}';\n{msg}"
             )
 
         if local_path is None:
             # if not specified, this is the default location:
-            # os.path.sep does not work because on Windows that is a back slash
+            # os.path.sep does not work because on Windows that is a backslash
             # and this web path needs to be split with a forward slash
             local_path = os.path.join(os.getcwd(), parsed_uri.path.split('/')[-1])
         return local_path
