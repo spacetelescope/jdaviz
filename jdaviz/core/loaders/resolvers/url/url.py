@@ -129,19 +129,9 @@ class PresetURLResolver(URLResolver):
     """
 
     def __init__(self, url, title=None, *args, **kwargs):
-        # Store url and title before calling parent's init
-        _preset_url = url
-        _preset_title = title
-
-        # Call parent (URLResolver) init
         super().__init__(*args, **kwargs)
 
-        # Set the url after initialization
-        self.url = _preset_url
-
-        # Set custom title if provided
-        if _preset_title is not None:
-            self.title = _preset_title
-
-        # Override to hide input fields
+        self.url = url
+        if title is not None:
+            self.title = title
         self.hide_resolver_inputs = True

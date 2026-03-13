@@ -98,19 +98,14 @@ class PresetFileResolver(FileResolver):
         self.file_chooser_dir = None
         self.filepath_reactive = None
 
-        # Store filepath and title before calling BaseResolver's __init__
-        _preset_filepath = filepath
-        _preset_title = title
-
         # Call grandparent (BaseResolver) init directly to skip FileResolver's init
         BaseResolver.__init__(self, *args, **kwargs)
 
-        # Set the filepath after initialization
-        self.filepath = _preset_filepath
+        self.filepath = filepath
 
         # Set custom title if provided
-        if _preset_title is not None:
-            self.title = _preset_title
+        if title is not None:
+            self.title = title
 
         # Override to hide file browser inputs
         self.hide_resolver_inputs = True

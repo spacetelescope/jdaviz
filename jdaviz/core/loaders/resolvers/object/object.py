@@ -64,19 +64,9 @@ class PresetObjectResolver(ObjectResolver):
     """
 
     def __init__(self, object, title=None, *args, **kwargs):
-        # Store object and title before calling parent's init
-        _preset_object = object
-        _preset_title = title
-
-        # Call parent (ObjectResolver) init
         super().__init__(*args, **kwargs)
 
-        # Set the object after initialization
-        self.object = _preset_object
-
-        # Set custom title if provided
-        if _preset_title is not None:
-            self.title = _preset_title
-
-        # Override to hide input fields
+        self.object = object
+        if title is not None:
+            self.title = title
         self.hide_resolver_inputs = True
