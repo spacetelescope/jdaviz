@@ -115,6 +115,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
         input_is_roman = (HAS_ROMAN_DATAMODELS and
                           isinstance(input, (rdd.ImageModel, rdd.DataModel)))
+
         input_is_3d_array = isinstance(input, np.ndarray) and input.ndim == 3
         self.input_has_extensions = (isinstance(input, fits.HDUList) or
                                      input_is_roman or
@@ -348,7 +349,8 @@ class ImageImporter(BaseImporterToDataCollection):
                 continue
             d.meta['_extname'] = ext_name
             for component_id in d.main_components:
-                if component_id.label.lower().startswith("dq"):
+                if component_id.label.lower().startswith("dq") or component_id.label.lower().endswith("dq"):
+                    d.meta['_extname'] = 'DQ'  # DQ plugin looks for this specifically
                     # for DQ components, map zeros to nans
                     # so that they are not displayed in the DQ colormap
                     cid = d.get_component(component_id)
