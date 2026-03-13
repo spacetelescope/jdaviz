@@ -15,7 +15,32 @@
     </span>
 
     <h1 class="mt-8 mb-6" style="color: white">Welcome to Jdaviz!</h1>
-    
+
+    <v-row align-center>
+      <v-col>
+        <span class="white--text">
+            As of version 5.0, Jdaviz has been generalized to work with mixed data types, rather than needing to select a specific
+            configuration. Click the button to the right to launch Jdaviz. Alternately, the deprecated "config" versions of Jdaviz
+            are available below, but will be removed in a future release.
+        </span>
+      </v-col>
+      <v-col>
+        <v-btn
+          class="mx-3"
+          style="height: 120px; width: 180px"
+          @click="launch_jdaviz()">
+            <div class="item" align="center">
+                <v-img
+                    height="100"
+                    width="160"
+                    :alt="Jdaviz"
+                    :title="Jdaviz"
+                    :src="config_icons['jdaviz']"></v-img>
+            </div>
+        </v-btn>
+      </v-col>
+    </v-row>
+
     <v-row>
         <v-text-field
             v-model="filepath"
@@ -26,7 +51,7 @@
             label="File Path"
             :hint="hint"
             persistent-hint
-            :loading="hint === 'Identifying which tool is best to visualize your file...' ? '#C75109' : 'false' " 
+            :loading="hint === 'Identifying which tool is best to visualize your file...' ? '#C75109' : 'false' "
         >
         </v-text-field>
 
@@ -85,7 +110,7 @@
                     :title="config.charAt(0).toUpperCase() + config.slice(1)"
                     :style="!compatible_configs.includes(config) ? 'filter: opacity(25%) saturate(0)' : ''"
                     :src="config_icons[config]"></v-img>
-                
+
                 <span class="bold" :style="compatible_configs.includes(config) ? 'font-size: 1.3em; color: #013B4D'
                                                                             : 'font-size: 1.3em; color: #013B4D75'">
                     <br>
