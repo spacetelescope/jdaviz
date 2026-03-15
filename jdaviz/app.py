@@ -48,6 +48,9 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 RemoveDataFromViewerMessage, ViewerAddedMessage,
                                 ViewerRemovedMessage, ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage, LayersFinalizedMessage)
+from jdaviz.core.loaders.resolvers.file.file import PresetFileResolver
+from jdaviz.core.loaders.resolvers.object.object import PresetObjectResolver
+from jdaviz.core.loaders.resolvers.url.url import PresetURLResolver
 from jdaviz.core.registries import (tool_registry, tray_registry,
                                     viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
@@ -265,15 +268,30 @@ class ApplicationState(State):
             'tab_headers': True,
         },
         'dense_toolbar': True,
-        # In the context of a remote server, allow/disallow showing the loader
-        # server_is_remote == False -> Usual behavior, show loader, etc.
-        # server_is_remote + remote_enable_importers==False -> hide loader panel completely,
-        #   prepopulate the data
-        # server_is_remote + remote_enable_importers==True -> hide the loader,
-        #   but allow selecting and loading items from the file. This is used for
-        #   Spectrum Lists or multi-extension images.
+        # In the context of a remote server, set default values for loader visibility
+        # server_is_remote == False -> Usual behavior, show all loaders
+        # server_is_remote == True -> Sets default disabled_loaders to exclude loaders
+        #   that require local file access or external APIs
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
-        'remote_enable_importers': True,  # Depends on server_is_remote, see above
+        'remote_enable_importers': True,  # Legacy setting, kept for backward compatibility
+        # List of loader names to exclude from the loaders panel source dropdown.
+        # If not provided (None), defaults to excluding loaders that typically require
+        # local file access or API support when server_is_remote is True.
+        # Set to [] to enable all loaders regardless of server_is_remote.
+        'disabled_loaders': None,
+        # List of telescope names to exclude from the astroquery loader telescope dropdown.
+        # Available telescopes: 'JWST', 'HST', 'SDSS', 'Gaia'
+        # Set to [] (default) to enable all telescopes.
+        'disabled_astroquery_telescopes': [],
+        # List of URL prefixes to allow in the URL loader.
+        # If None (default), any valid URL is allowed.
+        # If set to a list, only URLs starting with one of the prefixes will be accepted.
+        # Example: ['https://data.example.com/', 'https://archive.science.org/']
+        'url_prefix_whitelist': None,
+        # Hide the 'url' column in file tables from resolver queries.
+        # When True, the url column is kept in the table data (for downloading)
+        # but is not shown in the UI and cannot be made visible by the user.
+        'hide_file_table_url_column': False,
         'context': {
             'notebook': {
                 'max_height': '600px'
@@ -3475,7 +3493,18 @@ class Application(VuetifyTemplate, HubListener):
         # registry will be populated at import
         if self.config in CONFIGS_WITH_LOADERS:
             import jdaviz.core.loaders  # noqa
+            # Determine which loaders to disable
+            disabled_loaders = self.state.settings.get('disabled_loaders')
+            if disabled_loaders is None:
+                # Default: disable loaders based on server_is_remote setting
+                if self.state.settings.get('server_is_remote', False):
+                    disabled_loaders = ['file', 'file drop', 'url', 'object',
+                                        'astroquery', 'virtual observatory']
+                else:
+                    disabled_loaders = []
             for name, Resolver in loader_resolver_registry.members.items():
+                if name in disabled_loaders:
+                    continue
                 loader = Resolver(app=self,
                                   open_callback=open,
                                   close_callback=close,
@@ -3507,6 +3536,96 @@ class Application(VuetifyTemplate, HubListener):
                                       "implemented for the deconfigged app")
         for loader in self._jdaviz_helper.loaders.values():
             loader.format._update_items()
+
+    def _add_custom_loader(self, resolver, input, name, open_in_tray=False, load=False,
+                           format=None):
+        """
+        Private method to programmatically add a custom loader with preset input.
+
+        This creates a loader entry that appears in the source dropdown but doesn't
+        show the input UI (similar to server_is_remote behavior).
+
+        Parameters
+        ----------
+        resolver : str
+            Resolver type ('file', 'object', or 'url').
+        input : str or object
+            Input for the resolver. For 'file', an absolute path to the file.
+            For 'object', any Python object. For 'url', a URL string.
+        name : str
+            Name for this loader.
+        open_in_tray : bool, optional
+            Whether to set this as the selected loader in the tray.
+        load : bool, optional
+            Whether to immediately load the data after adding the loader.
+        format : str or list of str, optional
+            If provided, restrict the format dropdown to only include the specified
+            format(s). Other formats will not be attempted or shown.
+
+        Returns
+        -------
+        loader
+            The new loader user API object.
+        """
+        # Map resolver names to preset classes
+        preset_resolver_map = {
+            'file': PresetFileResolver,
+            'object': PresetObjectResolver,
+            'url': PresetURLResolver
+        }
+
+        if resolver not in preset_resolver_map:
+            raise ValueError(f"Unknown resolver type '{resolver}'. "
+                             f"Must be one of: {', '.join(preset_resolver_map.keys())}")
+
+        PresetResolverClass = preset_resolver_map[resolver]
+
+        # Ensure unique name
+        existing_names = [item['name'] for item in self.state.loader_items]
+        if name in existing_names:
+            raise ValueError(f"Loader name must be unique. A loader with the name '{name}' already exists.")  # noqa
+
+        # Define callbacks (same as in initialization)
+        def open():
+            self.state.drawer_content = 'loaders'
+            self.state.add_subtab = 0
+
+        def close():
+            self.state.loader_selected = ''
+
+        def set_active_loader(res):
+            self.state.loader_selected = res
+
+        # Create the preset resolver instance
+        loader = PresetResolverClass(
+            input,
+            title=name,
+            app=self,
+            open_callback=open,
+            close_callback=close,
+            set_active_loader_callback=set_active_loader,
+            format=format
+        )
+
+        # Set the registry label to match the name for open_in_tray to work
+        loader._registry_label = name
+
+        # Add to loader_items
+        self.state.loader_items.append({
+            'name': name,
+            'label': name,
+            'requires_api_support': loader.requires_api_support,
+            'widget': "IPY_MODEL_" + loader.model_id,
+            'api_methods': loader.api_methods,
+        })
+
+        ldr = self._jdaviz_helper.loaders[name]
+        if open_in_tray:
+            ldr.open_in_tray()
+        if load:
+            ldr.load()
+
+        return ldr
 
     def update_tray_items_from_registry(self):
         if self.config != 'deconfigged':

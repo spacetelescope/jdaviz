@@ -10,7 +10,7 @@ from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
 
 
-__all__ = ['FileResolver']
+__all__ = ['FileResolver', 'PresetFileResolver']
 
 
 @loader_resolver_registry('file')
@@ -19,6 +19,7 @@ class FileResolver(BaseResolver):
     default_input = 'filepath'
     default_input_cast = str
 
+    title = Unicode("Load Local File").tag(sync=True)
     file_chooser_widget = Any().tag(sync=True, **widget_serialization)
     filepath = Unicode().tag(sync=True)
 
@@ -73,3 +74,51 @@ class FileResolver(BaseResolver):
 
     def parse_input(self):
         return self.filepath
+
+
+class PresetFileResolver(FileResolver):
+    """
+    A FileResolver variant with a pre-set filepath that doesn't show
+    the file browser widget. Used for programmatically adding files.
+
+    This resolver behaves like the file resolver but hides the file browser
+    inputs by setting hide_resolver_inputs=True, while still showing
+    query results and importer selection.
+    """
+
+    def __init__(self, filepath, title=None, *args, **kwargs):
+        # Validate filepath before initialization
+        if not os.path.exists(filepath) or not os.path.isfile(filepath):
+            raise ValueError(f"'{filepath}' is not a valid file path.")
+
+        # Skip the FileBrowser widget initialization
+        # Set these to None to avoid parent's __init__ trying to create them
+        self.file_chooser_widget = None
+        self.file_chooser_widget_el = None
+        self.file_chooser_dir = None
+        self.filepath_reactive = None
+
+        # Call grandparent (BaseResolver) init directly to skip FileResolver's init
+        BaseResolver.__init__(self, *args, **kwargs)
+
+        self.filepath = filepath
+
+        # Set custom title if provided
+        if title is not None:
+            self.title = title
+
+        # Override to hide file browser inputs
+        self.hide_resolver_inputs = True
+
+    def _on_file_chooser_path_changed(self, path):
+        # Override to prevent errors when file_chooser doesn't exist
+        pass
+
+    @observe('filepath')
+    def _on_filepath_changed(self, change):
+        # Simplified version that doesn't update UI widgets
+        if self.filepath == '':
+            return
+        self._resolver_input_updated()
+        if not os.path.exists(self.filepath) or not os.path.isfile(self.filepath):
+            self.parsed_input_is_empty = True

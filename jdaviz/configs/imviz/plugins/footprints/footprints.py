@@ -201,6 +201,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
     v3_offset = FloatHandleEmpty().tag(sync=True)
     # TODO: dithering/mosaic options?
 
+    server_is_remote = Bool(False).tag(sync=True)
+
     footprint_select_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'footprint_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, *args, **kwargs):
@@ -208,6 +210,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         self._overlays = {}
 
         super().__init__(*args, **kwargs)
+
+        # Initialize server_is_remote from settings
+        self.server_is_remote = self.app.state.settings.get('server_is_remote', False)
+
+        # Listen for changes to app.state.settings
+        self.app.state.add_callback('settings', self._on_app_settings_changed)
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Show instrument footprints as overlays on image viewers.'
@@ -275,6 +283,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         self._on_link_type_updated()
 
         self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
+
+    def _on_app_settings_changed(self, new_settings_dict):
+        """
+        Update server_is_remote when settings change.
+        """
+        self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
     def _highlight_overlay(self, overlay_label, viewers=None):
         """
