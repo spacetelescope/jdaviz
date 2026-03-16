@@ -35,6 +35,12 @@ class Specviz(ConfigHelper, LineListMixin):
     _default_spectrum_viewer_reference_name = "spectrum-viewer"
 
     def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "Specviz is deprecated and will be removed in version 5.2. "
+            "Please use the top-level App instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__(*args, **kwargs)
 
         # Listen for new redshifts from the redshift slider

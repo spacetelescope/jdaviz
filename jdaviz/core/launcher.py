@@ -87,6 +87,17 @@ def _launch_config_with_data(config, data=None, show=True, filepath=None, **kwar
     Jdaviz ConfigHelper : jdaviz.core.helpers.ConfigHelper
         The loaded ConfigHelper with data loaded
     '''
+    # Deprecate non-mosviz configs
+    deprecated_configs = ['cubeviz', 'imviz', 'rampviz', 'specviz', 'specviz2d']
+    if config.lower() in deprecated_configs:
+        import warnings
+        warnings.warn(
+            f"{config.capitalize()} is deprecated and will be removed in version 5.2. "
+            "Please use the top-level App instead.",
+            DeprecationWarning,
+            stacklevel=3
+        )
+
     viz_class = getattr(jdaviz_configs, config.capitalize())
 
     # Create config instance

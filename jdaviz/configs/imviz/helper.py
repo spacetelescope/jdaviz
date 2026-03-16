@@ -1,5 +1,6 @@
 import os
 import re
+import warnings
 from copy import deepcopy
 
 import numpy as np
@@ -35,6 +36,12 @@ class Imviz(ImageConfigHelper):
     _default_viewer_reference_name = "image-viewer"
 
     def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "Imviz is deprecated and will be removed in version 5.2. "
+            "Please use the top-level App instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__(*args, **kwargs)
 
         global _current_app

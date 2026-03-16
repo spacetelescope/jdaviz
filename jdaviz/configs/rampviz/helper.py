@@ -1,3 +1,4 @@
+import warnings
 from astropy.utils.decorators import deprecated
 from numbers import Number
 
@@ -22,6 +23,12 @@ class Rampviz(CubeConfigHelper):
     _cube_viewer_cls = RampvizImageView
 
     def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "Rampviz is deprecated and will be removed in version 5.2. "
+            "Please use the top-level App instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__(*args, **kwargs)
 
         self.cube_cache = {}

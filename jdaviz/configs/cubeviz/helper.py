@@ -1,3 +1,4 @@
+import warnings
 from astropy.utils.decorators import deprecated
 
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
@@ -28,6 +29,12 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
     _cube_viewer_cls = CubevizImageView
 
     def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "Cubeviz is deprecated and will be removed in version 5.2. "
+            "Please use the top-level App instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__(*args, **kwargs)
 
         self.load = self._load
