@@ -60,7 +60,7 @@ class BaseImviz_WCS_NoWCS:
         # Data without WCS
         hdu_nowcs = _image_hdu_nowcs(arr=np.arange(100).reshape((10, 10)))
         imviz_helper.load_data(hdu_nowcs, data_label='no_wcs')
-        imviz_helper.app.data_collection[1].coords = None
+        imviz_helper._app.data_collection[1].coords = None
 
         self.wcs = WCS(hdu_wcs.header)
         self.imviz = imviz_helper

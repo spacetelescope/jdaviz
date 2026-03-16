@@ -50,7 +50,7 @@ class ConfigHelper(HubListener):
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application` or `None`
+    app : `~jdaviz.app.PrivateApplication` or `None`
         The application object, or if `None`, creates a new one based on the
         default configuration for this helper.
     verbosity : {'debug', 'info', 'warning', 'error'}

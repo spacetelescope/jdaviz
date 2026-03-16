@@ -89,15 +89,15 @@ def test_data_quality_plugin(imviz_helper):
             cached_uri(uri), cache=True, ext=('SCI', 'DQ')
         )
 
-    assert len(imviz_helper.app.data_collection) == 2
+    assert len(imviz_helper._app.data_collection) == 2
 
     # this assumption is made in the DQ plugin (for now)
-    assert imviz_helper.app.data_collection[-1].label.endswith('[DQ,1]')
+    assert imviz_helper._app.data_collection[-1].label.endswith('[DQ,1]')
 
     dq_plugin = imviz_helper.plugins['Data Quality']._obj
 
     # sci+dq layers are correctly identified
-    expected_science_data, expected_dq_data = imviz_helper.app.data_collection
+    expected_science_data, expected_dq_data = imviz_helper._app.data_collection
     assert dq_plugin.science_layer_selected == expected_science_data.label
     assert dq_plugin.dq_layer_selected == expected_dq_data.label
 
@@ -184,7 +184,7 @@ def test_data_quality_plugin_hst_wfc3(imviz_helper):
         warnings.simplefilter("ignore")
         imviz_helper.load_data(cached_uri(uri), cache=True, ext=('SCI', 'DQ'))
 
-    assert len(imviz_helper.app.data_collection) == 2
+    assert len(imviz_helper._app.data_collection) == 2
 
     dq_plugin = imviz_helper.plugins['Data Quality']._obj
 
@@ -203,7 +203,7 @@ def test_data_quality_plugin_hst_acs(imviz_helper):
         warnings.simplefilter("ignore")
         imviz_helper.load_data(cached_uri(uri), cache=True, ext=('SCI', 'DQ'))
 
-    assert len(imviz_helper.app.data_collection) == 2
+    assert len(imviz_helper._app.data_collection) == 2
 
     dq_plugin = imviz_helper.plugins['Data Quality']._obj
 
@@ -235,14 +235,14 @@ def test_cubeviz_dq_plugin_and_layer_visibility_bug(cubeviz_helper):
 
     # in the data collection there should be flux, unc, extracted spectrum,
     # and the DQ cube for a total of 4 items
-    assert len(cubeviz_helper.app.data_collection) == 4
+    assert len(cubeviz_helper._app.data_collection) == 4
 
     # this assumption is made in the DQ plugin (for now)
-    assert cubeviz_helper.app.data_collection[-1].label.endswith('[DQ]')
+    assert cubeviz_helper._app.data_collection[-1].label.endswith('[DQ]')
 
     # sci+dq layers are correctly identified
-    expected_science_data = cubeviz_helper.app.data_collection[0]
-    expected_dq_data = cubeviz_helper.app.data_collection[-1]
+    expected_science_data = cubeviz_helper._app.data_collection[0]
+    expected_dq_data = cubeviz_helper._app.data_collection[-1]
     assert dq_plugin.science_layer_selected == expected_science_data.label
     assert dq_plugin.dq_layer_selected == expected_dq_data.label
 
@@ -294,8 +294,8 @@ def test_cubeviz_dq_plugin_and_layer_visibility_bug(cubeviz_helper):
     mm.calculate_moment()
 
     # add the moment map to the flux viewer
-    dc = cubeviz_helper.app.data_collection
-    viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    dc = cubeviz_helper._app.data_collection
+    viewer = cubeviz_helper._app.get_viewer('flux-viewer')
     viewer.add_data(dc[-1])
 
     # create a spatial subset in the flux-viewer
@@ -303,5 +303,5 @@ def test_cubeviz_dq_plugin_and_layer_visibility_bug(cubeviz_helper):
     cubeviz_helper.plugins['Subset Tools'].import_region(roi)
 
     # toggle layer visibility, this used to trigger an AttributeError:
-    cubeviz_helper.app.set_data_visibility('flux-viewer', dc[-1].label)
-    cubeviz_helper.app.set_data_visibility('flux-viewer', dc[0].label)
+    cubeviz_helper._app.set_data_visibility('flux-viewer', dc[-1].label)
+    cubeviz_helper._app.set_data_visibility('flux-viewer', dc[0].label)

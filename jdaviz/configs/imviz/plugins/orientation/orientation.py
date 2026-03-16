@@ -656,7 +656,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         Application associated with Imviz, e.g., ``imviz.app``.
 
     align_by : {'pixels', 'wcs'}

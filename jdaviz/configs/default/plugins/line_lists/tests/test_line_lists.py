@@ -135,7 +135,7 @@ class TestLineLists:
         lt['listname'] = 'Test List'
         specviz_helper.load_line_list(lt)
 
-        ll_plugin = specviz_helper.app.get_tray_item_from_name('g-line-list')
+        ll_plugin = specviz_helper._app.get_tray_item_from_name('g-line-list')
         line = ll_plugin.list_contents['Test List']['lines'][0]
         assert line.get('identify', False) is False
         ll_plugin.vue_set_identify(('Test List', line, 0))
@@ -162,7 +162,7 @@ class TestLineLists:
         # Load second line, redshift should also be applied to it
         specviz_helper.plot_spectral_line("O III")
 
-        viewer_lines = [mark for mark in specviz_helper.app.get_viewer(
+        viewer_lines = [mark for mark in specviz_helper._app.get_viewer(
             specviz_helper._default_spectrum_viewer_reference_name).figure.marks
             if isinstance(mark, SpectralLine)]
 
@@ -186,7 +186,7 @@ class TestLineLists:
         # Load remaining lines
         specviz_helper.plot_spectral_lines(global_redshift)
 
-        viewer_lines = [mark for mark in specviz_helper.app.get_viewer(
+        viewer_lines = [mark for mark in specviz_helper._app.get_viewer(
             specviz_helper._default_spectrum_viewer_reference_name).figure.marks
             if isinstance(mark, SpectralLine)]
 

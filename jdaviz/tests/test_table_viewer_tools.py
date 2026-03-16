@@ -233,7 +233,7 @@ class TestTableViewerTools:
         tool.activate()
 
         # Get initial subset count
-        initial_subset_count = len(self.app.app.data_collection.subset_groups)
+        initial_subset_count = len(self.app._app.data_collection.subset_groups)
 
         # Check some rows
         self.table_viewer.widget_table.checked = [0, 1, 2]
@@ -243,7 +243,7 @@ class TestTableViewerTools:
         apply_tool.activate()
 
         # A new subset should have been created
-        new_subset_count = len(self.app.app.data_collection.subset_groups)
+        new_subset_count = len(self.app._app.data_collection.subset_groups)
         assert new_subset_count == initial_subset_count + 1
 
     def test_select_table_row_tool_in_image_viewer(self):
@@ -582,7 +582,7 @@ class TestTableViewerToolsPixelLinked:
     def test_pixel_linked_zoom_applies_correct_limits(self):
         """Test that zoom-to-selected works with pixel-linked catalogs."""
         # Verify we're pixel-linked
-        assert self.app.app._align_by == 'pixels'
+        assert self.app._app._align_by == 'pixels'
 
         toolbar = self.table_viewer.toolbar
         tool = toolbar.tools['jdaviz:table_zoom_to_selected']
@@ -625,7 +625,7 @@ class TestTableViewerToolsPixelLinked:
     def test_pixel_linked_highlight_marks_appear(self):
         """Test that highlight marks appear with pixel-linked catalogs."""
         # Verify we're pixel-linked
-        assert self.app.app._align_by == 'pixels'
+        assert self.app._app._align_by == 'pixels'
 
         toolbar = self.table_viewer.toolbar
         tool = toolbar.tools['jdaviz:table_highlight_selected']

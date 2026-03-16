@@ -344,7 +344,7 @@ class TestLauncherClass:
         Test vue_launch_config method.
         """
         mock_helper = Mock()
-        dcf_app = deconfigged_helper.app
+        dcf_app = deconfigged_helper._app
         mock_helper.app = dcf_app
         default_height = '800px'
         dcf_app.state.settings = {'context': {'notebook': {'max_height': default_height}}}

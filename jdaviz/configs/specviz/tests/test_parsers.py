@@ -53,10 +53,10 @@ class TestSpecvizSpectrum1DParser:
         """
         Test that 2D flux spectra are split automatically.
         """
-        specviz_spectrum1d_parser(specviz_helper.app, spectrum2d, data_label='spec2d_label')
+        specviz_spectrum1d_parser(specviz_helper._app, spectrum2d, data_label='spec2d_label')
 
-        assert len(specviz_helper.app.data_collection) == np.shape(spectrum2d)[0]
-        for i, data in enumerate(specviz_helper.app.data_collection):
+        assert len(specviz_helper._app.data_collection) == np.shape(spectrum2d)[0]
+        for i, data in enumerate(specviz_helper._app.data_collection):
             assert data.label == f"spec2d_label [{i}]"
 
     def test_parse_spectrum_collection(self, specviz_helper, spectrum_collection):
@@ -65,7 +65,7 @@ class TestSpecvizSpectrum1DParser:
         """
         msg = 'SpectrumCollection detected. Please provide a Spectrum or SpectrumList'
         with pytest.raises(TypeError, match=msg):
-            specviz_spectrum1d_parser(specviz_helper.app, spectrum_collection)
+            specviz_spectrum1d_parser(specviz_helper._app, spectrum_collection)
 
     def test_parse_mismatched_label_length(self, specviz_helper, premade_spectrum_list):
         """
@@ -73,7 +73,7 @@ class TestSpecvizSpectrum1DParser:
         """
         msg = "Length of data labels list (1) is different than length of list of data (5)"
         with pytest.raises(ValueError, match=re.escape(msg)):
-            specviz_spectrum1d_parser(specviz_helper.app,
+            specviz_spectrum1d_parser(specviz_helper._app,
                                       premade_spectrum_list,
                                       data_label=['oops'])
 
@@ -93,15 +93,15 @@ class TestSpecvizSpectrum1DParser:
         )
         spec_list = SpectrumList([spec1, spec2])
 
-        specviz_spectrum1d_parser(specviz_helper.app,
+        specviz_spectrum1d_parser(specviz_helper._app,
                                   spec_list,
                                   data_label='test_concat',
                                   concat_by_file=True)
 
         # Should have 2 individual spectra + 1 combined
-        assert len(specviz_helper.app.data_collection) == 3
+        assert len(specviz_helper._app.data_collection) == 3
         labels = [
-            d.label for d in specviz_helper.app.data_collection
+            d.label for d in specviz_helper._app.data_collection
         ]
         assert any('Combined' in label for label in labels)
 
@@ -120,11 +120,11 @@ class TestSpecvizSpectrum1DParser:
         filepath = tmp_path / 'test_spectrum.fits'
         spec.write(str(filepath), overwrite=True)
 
-        specviz_spectrum1d_parser(specviz_helper.app,
+        specviz_spectrum1d_parser(specviz_helper._app,
                                   str(filepath),
                                   data_label='test_filepath')
 
-        assert len(specviz_helper.app.data_collection) == 1
+        assert len(specviz_helper._app.data_collection) == 1
 
     def test_parse_metadata_standardization(self, specviz_helper):
         """
@@ -136,7 +136,7 @@ class TestSpecvizSpectrum1DParser:
             meta={'TELESCOPE': 'TEST', 'INSTRUMENT': 'FAKE'}
         )
 
-        specviz_spectrum1d_parser(specviz_helper.app, spec, data_label='test_meta')
+        specviz_spectrum1d_parser(specviz_helper._app, spec, data_label='test_meta')
 
         loaded_spec = specviz_helper.datasets['test_meta'].get_data()
         assert 'TELESCOPE' in loaded_spec.meta
@@ -145,14 +145,14 @@ class TestSpecvizSpectrum1DParser:
         """
         Test that show_in_viewer=False doesn't add to viewer.
         """
-        specviz_spectrum1d_parser(specviz_helper.app,
+        specviz_spectrum1d_parser(specviz_helper._app,
                                   spectrum1d,
                                   data_label='hidden_spec',
                                   show_in_viewer=False)
 
-        assert len(specviz_helper.app.data_collection) == 1
+        assert len(specviz_helper._app.data_collection) == 1
 
-        viewer = specviz_helper.app.get_viewer(
+        viewer = specviz_helper._app.get_viewer(
             specviz_helper._default_spectrum_viewer_reference_name
         )
         # Check that no data is shown in viewer

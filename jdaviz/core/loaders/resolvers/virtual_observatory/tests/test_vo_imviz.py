@@ -38,7 +38,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         """
         # Create a second viewer and remove second dataset from first viewer to avoid ambiguity
         self.imviz.create_image_viewer()
-        self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_2[SCI,1]")
+        self.imviz._app.remove_data_from_viewer("imviz-0", "has_wcs_2[SCI,1]")
 
         # Check default viewer is "Manual"
         vo_ldr = self.imviz.loaders["virtual observatory"]._obj
@@ -60,7 +60,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         assert vo_ldr.source == ""
 
         # Now load second data into second viewer and verify coordinates
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_2[SCI,1]")
+        self.imviz._app.add_data_to_viewer("imviz-1", "has_wcs_2[SCI,1]")
         ra_str, dec_str = vo_ldr.source.split()
         np.testing.assert_allclose(
             float(ra_str), self._data_center_coords["has_wcs_2[SCI,1]"]["ra"]

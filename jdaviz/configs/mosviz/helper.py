@@ -36,10 +36,10 @@ class Mosviz(ConfigHelper, LineListMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        spec1d = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        spec2d = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
+        spec1d = self._app.get_viewer(self._default_spectrum_viewer_reference_name)
+        spec2d = self._app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
 
-        image_viewer = self.app.get_viewer(self._default_image_viewer_reference_name)
+        image_viewer = self._app.get_viewer(self._default_image_viewer_reference_name)
 
         # Choose which viewers will have state frozen during a row change.
         # This should be a list of tuples, where each entry has the state as the
@@ -56,20 +56,20 @@ class Mosviz(ConfigHelper, LineListMixin):
         self._freeze_states_on_row_change = False
 
         # Add callbacks to table-viewer to enable/disable the state freeze
-        table = self.app.get_viewer(self._default_table_viewer_reference_name)
+        table = self._app.get_viewer(self._default_table_viewer_reference_name)
         table._on_row_selected_begin = self._on_row_selected_begin
         table._on_row_selected_end = self._on_row_selected_end
 
         # Listen for clicks on the table in case we need to zoom the image
-        self.app.hub.subscribe(self, TableClickMessage,
-                               handler=self._row_click_message_handler)
+        self._app.hub.subscribe(self, TableClickMessage,
+                                handler=self._row_click_message_handler)
 
-        self.app.hub.subscribe(self, RowLockMessage,
-                               handler=self._row_lock_changed)
+        self._app.hub.subscribe(self, RowLockMessage,
+                                handler=self._row_lock_changed)
 
         # Listen for new redshifts from the redshift slider (NOT YET IMPLEMENTED)
-        self.app.hub.subscribe(self, RedshiftMessage,
-                               handler=self._redshift_listener)
+        self._app.hub.subscribe(self, RedshiftMessage,
+                                handler=self._redshift_listener)
 
         self._shared_image = False
 
@@ -90,10 +90,10 @@ class Mosviz(ConfigHelper, LineListMixin):
             The reference name of the table viewer to add this data to
         '''
         table_data = Data(label=label)
-        self.app.add_data(table_data, notify_done=False)
+        self._app.add_data(table_data, notify_done=False)
 
         # Add the table to the table viewer
-        self.app.get_viewer(table_viewer_reference_name).add_data(table_data)
+        self._app.get_viewer(table_viewer_reference_name).add_data(table_data)
 
     def _row_lock_changed(self, msg):
         self._freeze_states_on_row_change = msg.is_locked
@@ -137,7 +137,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             return
 
         if msg.param == "redshift":
-            row = self.app.get_viewer(self._default_table_viewer_reference_name).current_row
+            row = self._app.get_viewer(self._default_table_viewer_reference_name).current_row
             # NOTE: this updates the value in the table for the current row.  This
             # in turn will feedback to call _apply_redshift_from_table and set
             # the internal value.
@@ -159,19 +159,19 @@ class Mosviz(ConfigHelper, LineListMixin):
     def _row_click_message_handler(self, msg):
         self._handle_image_zoom(msg)
         # expose the row to vue for each of the viewers
-        self.app.state.settings = {**self.app.state.settings, 'mosviz_row': msg.selected_index}
+        self._app.state.settings = {**self._app.state.settings, 'mosviz_row': msg.selected_index}
         # update data filters in each viewer's data_menu
         for viewer in self.viewers.values():
             if data_menu := getattr(viewer._obj, '_data_menu', None):
                 data_menu.dataset._update_items()
 
     def _handle_image_zoom(self, msg):
-        mos_data = self.app.data_collection['MOS Table']
+        mos_data = self._app.data_collection['MOS Table']
 
         if mos_data.find_component_id("Images") is None:
             return
 
-        imview = self.app.get_viewer(self._default_image_viewer_reference_name)
+        imview = self._app.get_viewer(self._default_image_viewer_reference_name)
 
         # trigger zooming the image, if there is an image
         if msg.shared_image:
@@ -195,8 +195,8 @@ class Mosviz(ConfigHelper, LineListMixin):
 
     def _zoom_to_object_params(self, msg):
 
-        table_data = self.app.data_collection['MOS Table']
-        specview = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
+        table_data = self._app.data_collection['MOS Table']
+        specview = self._app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
 
         if ("R.A." not in table_data.component_ids() or
                 "Dec." not in table_data.component_ids()):
@@ -220,8 +220,8 @@ class Mosviz(ConfigHelper, LineListMixin):
         return sky, pixel_height
 
     def _zoom_to_slit_params(self, msg):
-        imview = self.app.get_viewer(self._default_image_viewer_reference_name)
-        specview = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
+        imview = self._app.get_viewer(self._default_image_viewer_reference_name)
+        specview = self._app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
 
         try:
             sky_region = jwst_header_to_skyregion(specview.layers[0].layer.meta)
@@ -245,7 +245,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             except IncompatibleAttribute:
                 sp1_val = None
             else:
-                sp1 = self.app.data_collection[sp1_name].get_object()
+                sp1 = self._app.data_collection[sp1_name].get_object()
                 sp1_val = getattr(sp1, attr, None)
 
             try:
@@ -253,21 +253,21 @@ class Mosviz(ConfigHelper, LineListMixin):
             except IncompatibleAttribute:
                 sp2_val = None
             else:
-                sp2 = self.app.data_collection[sp2_name].get_object()
+                sp2 = self._app.data_collection[sp2_name].get_object()
                 sp2_val = getattr(sp2, attr, sp1_val)
 
             if sp1_val is not None and sp1_val != sp2_val:
                 # then there was a conflict
                 msg = f"Warning: value for {attr} in row {row} in disagreement between Spectrum and Spectrum2D" # noqa
                 msg = SnackbarMessage(msg, color='warning', sender=self)
-                self.app.hub.broadcast(msg)
+                self._app.hub.broadcast(msg)
 
             if sp2_val is None:
                 return fill
 
             return sp2_val
 
-        table_data = self.app.data_collection['MOS Table']
+        table_data = self._app.data_collection['MOS Table']
         redshifts = np.asarray([_get_sp_attribute(table_data, row, 'redshift', 0)
                                 for row in range(int(table_data.size))])
         self._add_or_update_column(column_name='Redshift', data=redshifts,
@@ -320,7 +320,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             Required and only used if ``directory`` is specified. Value is not case sensitive.
         """
         # Link data after everything is loaded
-        self.app.auto_link = False
+        self._app.auto_link = False
         allow_link_table = True
 
         if isinstance(instrument, str):
@@ -356,7 +356,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             # If we have a single image for multiple spectra, tell the table viewer.
             if single_image:
                 self._shared_image = True
-                self.app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
+                self._app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
                 if n_specs > 1:
                     self.load_images(images, images_label, share_image=n_specs)
                 else:
@@ -377,7 +377,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             # If we have a single image for multiple spectra, tell the table viewer.
             if single_image:
                 self._shared_image = True
-                self.app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
+                self._app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
                 if n_specs > 1:
                     self.load_images(images, images_label, share_image=n_specs)
                 else:
@@ -393,7 +393,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             # If we have a single image for multiple spectra, tell the table viewer.
             if single_image:
                 self._shared_image = True
-                self.app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
+                self._app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
                 if n_specs > 1:
                     self.load_images(images, images_label, share_image=n_specs)
                 else:
@@ -418,41 +418,41 @@ class Mosviz(ConfigHelper, LineListMixin):
             try:
                 self.link_table_data(None)
             except KeyError as e:
-                self.app.hub.broadcast(SnackbarMessage(
+                self._app.hub.broadcast(SnackbarMessage(
                     "The table data was not linked", color="warning", sender=self,
                     traceback=e))
 
         try:
             self._add_redshift_column()
         except ValueError as e:
-            self.app.hub.broadcast(SnackbarMessage(
+            self._app.hub.broadcast(SnackbarMessage(
                 "No data found with label 'MOS Table'", color="warning", sender=self,
                 traceback=e))
 
         # Any subsequently added data will automatically be linked
         # with data already loaded in the app
-        self.app.auto_link = True
+        self._app.auto_link = True
 
         # Manually set viewer options
-        self.app.get_viewer(
+        self._app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).figure.axes[1].tick_format = '0.1e'
-        self.app.get_viewer(
+        self._app.get_viewer(
             self._default_image_viewer_reference_name
         ).figure.axes[1].label_offset = "-50"
 
         # Load the first object into the viewers automatically
         try:
-            self.app.get_viewer(
+            self._app.get_viewer(
                 self._default_table_viewer_reference_name
             ).figure_widget.highlighted = 0
         except ValueError as e:
-            self.app.hub.broadcast(SnackbarMessage(
+            self._app.hub.broadcast(SnackbarMessage(
                 "No data found with label 'MOS Table'", color="warning", sender=self,
                 traceback=e))
 
         # Notify the user that this all loaded successfully
-        self.app.hub.broadcast(SnackbarMessage(
+        self._app.hub.broadcast(SnackbarMessage(
             "MOS data loaded successfully", color="success", sender=self))
 
         self._default_visible_columns = self.get_column_names(True)
@@ -506,7 +506,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         """
         Parse the internal meta for our expected information
         """
-        self.app.load_data(file_obj=None, parser_reference="mosviz-metadata-parser")
+        self._app.load_data(file_obj=None, parser_reference="mosviz-metadata-parser")
 
     def load_1d_spectra(self, data_obj, data_labels=None, add_redshift_column=False):
         """
@@ -531,7 +531,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             Number of data objects loaded.
 
         """
-        n_specs = mos_spec1d_parser(self.app, data_obj, data_labels=data_labels)
+        n_specs = mos_spec1d_parser(self._app, data_obj, data_labels=data_labels)
         if add_redshift_column:
             self._add_redshift_column()
         return n_specs
@@ -559,7 +559,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             Number of data objects loaded.
 
         """
-        n_specs = mos_spec2d_parser(self.app, data_obj, data_labels=data_labels)
+        n_specs = mos_spec2d_parser(self._app, data_obj, data_labels=data_labels)
         if add_redshift_column:
             self._add_redshift_column()
         return n_specs
@@ -567,7 +567,7 @@ class Mosviz(ConfigHelper, LineListMixin):
     def load_jwst_directory(self, data_obj, data_labels=None, instrument=None,
                             add_redshift_column=False):
         """Load NIRISS or NIRCam data from a directory."""
-        self.app.auto_link = False
+        self._app.auto_link = False
         super().load_data(data_obj, parser_reference="mosviz-niriss-parser",
                           instrument=instrument)
 
@@ -575,7 +575,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         if add_redshift_column:
             self._add_redshift_column()
 
-        self.app.auto_link = True
+        self._app.auto_link = True
 
     def load_images(self, data_obj, data_labels=None, share_image=0, add_redshift_column=False):
         """
@@ -618,9 +618,9 @@ class Mosviz(ConfigHelper, LineListMixin):
             If False: will only show column names currently not shown in the table.
         """
         if visible is None:
-            return [c.label for c in self.app.data_collection['MOS Table'].components]
+            return [c.label for c in self._app.data_collection['MOS Table'].components]
         elif visible is True:
-            return [h['value'] for h in self.app.get_viewer(
+            return [h['value'] for h in self._app.get_viewer(
                 self._default_table_viewer_reference_name
             ).widget_table.headers]
         elif visible is False:
@@ -647,7 +647,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             raise ValueError("not all entries of column_names are valid")
         is_sortable = ['Redshift']
         headers = [{'text': cn, 'value': cn, 'sortable': cn in is_sortable} for cn in column_names]
-        wt = self.app.get_viewer(self._default_table_viewer_reference_name).widget_table
+        wt = self._app.get_viewer(self._default_table_viewer_reference_name).widget_table
         wt.set_state({'headers': headers})
         wt.send_state()
 
@@ -704,13 +704,13 @@ class Mosviz(ConfigHelper, LineListMixin):
         array
             copy of the data array.
         """
-        return np.asarray(deepcopy(self.app.data_collection['MOS Table'].get_component(column_name).data)) # noqa
+        return np.asarray(deepcopy(self._app.data_collection['MOS Table'].get_component(column_name).data)) # noqa
 
     def _add_or_update_column(self, column_name, data=None, show=True):
         if not isinstance(column_name, str):
             raise TypeError("column_name must be of type str")
 
-        table_data = self.app.data_collection['MOS Table']
+        table_data = self._app.data_collection['MOS Table']
 
         if data is None:
             data = [None]*table_data.size
@@ -738,7 +738,7 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         if column_name == 'Redshift':
             # apply the value in the current row to the specviz object
-            row = self.app.get_viewer(self._default_table_viewer_reference_name).current_row
+            row = self._app.get_viewer(self._default_table_viewer_reference_name).current_row
             if row is not None:
                 self._apply_redshift_from_table(value=data[row], row=row)
 
@@ -820,7 +820,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         `~astropy.table.QTable`
             An astropy table constructed from the loaded mos data.
         """
-        table_data = self.app.data_collection['MOS Table']
+        table_data = self._app.data_collection['MOS Table']
 
         data_dict = {}
 
@@ -861,14 +861,14 @@ class Mosviz(ConfigHelper, LineListMixin):
                 raise FileExistsError(f"File {filename} exists, choose another"
                                       " file name or set overwrite=True")
 
-        table_df = self.app.data_collection['MOS Table'].to_dataframe()
+        table_df = self._app.data_collection['MOS Table'].to_dataframe()
 
         if filename[-4:] != ".csv":
             filename += ".csv"
 
         # Restrict to only checked rows if desired
         if selected:
-            checked_rows = self.app.get_viewer(
+            checked_rows = self._app.get_viewer(
                 self._default_table_viewer_reference_name
             ).widget_table.checked
             table_df = table_df.iloc[checked_rows]
@@ -885,7 +885,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         application that is wrapped by Mosviz.
         """
         if not hasattr(self, '_specviz'):
-            self._specviz = Specviz(app=self.app)
+            self._specviz = Specviz(app=self._app)
         return self._specviz
 
     @property
@@ -895,12 +895,12 @@ class Mosviz(ConfigHelper, LineListMixin):
         application that is wrapped by Mosviz.
         """
         if not hasattr(self, '_specviz2d'):
-            self._specviz2d = Specviz2d(app=self.app)
+            self._specviz2d = Specviz2d(app=self._app)
         return self._specviz2d
 
     def _get_spectrum(self, column, row=None, apply_slider_redshift="Warn"):
         if row is None:
-            row = self.app.get_viewer(self._default_table_viewer_reference_name).current_row
+            row = self._app.get_viewer(self._default_table_viewer_reference_name).current_row
         if not isinstance(row, (int, np.int64)):
             raise TypeError("row not of type int")
 
@@ -909,7 +909,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             raise ValueError(f"row must be between 0 and {len(data_labels)-1}")
 
         data_label = data_labels[row]
-        spectra = self.app.data_collection[data_label].get_object()
+        spectra = self._app.data_collection[data_label].get_object()
         if not apply_slider_redshift:
             return spectra
         else:

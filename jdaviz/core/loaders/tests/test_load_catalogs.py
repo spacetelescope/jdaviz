@@ -412,7 +412,7 @@ def test_astroquery_jwst_hst(deconfigged_helper, telescope):
     ldr.treat_table_as_query = False
     assert 'Catalog' in ldr.format.choices
     ldr.load()
-    assert len(deconfigged_helper.app.data_collection) == 1
+    assert len(deconfigged_helper._app.data_collection) == 1
 
 
 def test_invalid(imviz_helper, tmp_path):
@@ -571,7 +571,7 @@ def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
     ldr.load()
 
     # verify catalog is in the data collection
-    dc = deconfigged_helper.app.data_collection
+    dc = deconfigged_helper._app.data_collection
     assert len(dc) == 1
     assert 'Catalog' in dc.labels
 
@@ -769,7 +769,7 @@ def test_load_catalog_from_fits_multiselect(deconfigged_helper):
 
     # verify that the table in the data collection contains the combined data
     # from both tables, and that the correct number of rows are present
-    dc = deconfigged_helper.app.data_collection
+    dc = deconfigged_helper._app.data_collection
     assert len(dc) == 1
     qtab = dc[0].get_object(QTable)
     assert len(qtab) == len(table1) + len(table2)

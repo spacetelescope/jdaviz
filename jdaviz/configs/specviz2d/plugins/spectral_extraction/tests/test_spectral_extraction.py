@@ -33,10 +33,10 @@ def test_plugin(specviz2d_helper):
 
     specviz2d_helper.load_data(spectrum_2d=fn)
 
-    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction-2d')
+    pext = specviz2d_helper._app.get_tray_item_from_name('spectral-extraction-2d')
 
     # test trace marks - won't be created until after opening the plugin
-    sp2dv = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
+    sp2dv = specviz2d_helper._app.get_viewer('spectrum-2d-viewer')
     assert len(sp2dv.figure.marks) == 3
 
     pext.keep_active = True
@@ -160,7 +160,7 @@ def test_plugin(specviz2d_helper):
     assert len(pext.ext_specreduce_err) > 0
     pext.bg_results_label = 'should not be created'
     pext.vue_create_bg_img()
-    assert 'should not be created' not in [d.label for d in specviz2d_helper.app.data_collection]
+    assert 'should not be created' not in [d.label for d in specviz2d_helper._app.data_collection]
 
     with pytest.raises(ValueError):
         pext.export_extract(invalid_kwarg=5)
@@ -212,7 +212,7 @@ def test_user_api(specviz2d_helper):
 def test_background_extraction_and_display(specviz2d_helper):
     uri = 'mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
     specviz2d_helper.load_data(spectrum_2d=cached_uri(uri), cache=True)
-    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction-2d')
+    pext = specviz2d_helper._app.get_tray_item_from_name('spectral-extraction-2d')
 
     # check that the background extraction method and parameters are as expected
     assert pext.bg_type_selected == 'TwoSided'
@@ -221,10 +221,10 @@ def test_background_extraction_and_display(specviz2d_helper):
     # test extracting background and background subtracted images and adding
     # them to the viewer
     pext.export_bg_sub(add_data=True)
-    assert specviz2d_helper.app.data_collection[2].label == 'background-subtracted'
+    assert specviz2d_helper._app.data_collection[2].label == 'background-subtracted'
 
     pext.export_bg_img(add_data=True)
-    assert specviz2d_helper.app.data_collection[3].label == 'background'
+    assert specviz2d_helper._app.data_collection[3].label == 'background'
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -468,19 +468,19 @@ def test_spectral_extraction_flux_unit_conversions(deconfigged_helper, mos_spect
         uc.flux_unit.selected = new_flux_unit
 
         exported_bg = pext.export_bg()
-        assert exported_bg.image._unit == deconfigged_helper.app._get_display_unit('flux')
+        assert exported_bg.image._unit == deconfigged_helper._app._get_display_unit('flux')
 
         exported_bg_img = pext.export_bg_img()
-        assert exported_bg_img._unit == deconfigged_helper.app._get_display_unit('flux')
+        assert exported_bg_img._unit == deconfigged_helper._app._get_display_unit('flux')
 
         exported_bg_sub = pext.export_bg_sub()
-        assert exported_bg_sub._unit == deconfigged_helper.app._get_display_unit('flux')
+        assert exported_bg_sub._unit == deconfigged_helper._app._get_display_unit('flux')
 
         exported_extract_spectrum = pext.export_extract_spectrum()
-        assert exported_extract_spectrum._unit == deconfigged_helper.app._get_display_unit('flux')
+        assert exported_extract_spectrum._unit == deconfigged_helper._app._get_display_unit('flux')
 
         exported_extract = pext.export_extract()
-        assert exported_extract.image._unit == deconfigged_helper.app._get_display_unit('flux')
+        assert exported_extract.image._unit == deconfigged_helper._app._get_display_unit('flux')
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -489,7 +489,7 @@ def test_spectral_extraction_preview(deconfigged_helper, spectrum2d):
     # that helper throughout.
     deconfigged_helper.load(spectrum2d, format='2D Spectrum')
     # Assume auto extract is on
-    default_extraction_label = deconfigged_helper.app.data_collection.labels[1]
+    default_extraction_label = deconfigged_helper._app.data_collection.labels[1]
     custom_extraction_label = 'custom-extraction'
 
     # Create a custom extraction and add to a existing viewer
@@ -559,7 +559,7 @@ class TestTwo2dSpectra:
     def load_2d_spectrum(self, helper, spec2d, spec2d_label_idx=0, spec2d_ext_label_idx=1):
         # Allow this to use the default label
         helper.load(spec2d, format='2D Spectrum')
-        dc_labels = helper.app.data_collection.labels
+        dc_labels = helper._app.data_collection.labels
         self.spec2d_label = dc_labels[spec2d_label_idx]
         self.spec2d_ext_label = dc_labels[spec2d_ext_label_idx]
 
@@ -606,7 +606,7 @@ class TestTwo2dSpectra:
             ldr.format = '2D Spectrum'
             ldr.importer.auto_extract = True
             ldr.load()
-            self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[:2]
+            self.spec2d_label, self.spec2d_ext_label = helper._app.data_collection.labels[:2]
 
             self.setup_another_2d_spectrum(spectrum2d)
             ldr.object = self.another_spec2d
@@ -633,7 +633,7 @@ class TestTwo2dSpectra:
             ldr.format = '2D Spectrum'
             ldr.importer.auto_extract = True
             ldr.load()
-            self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[-2:]
+            self.spec2d_label, self.spec2d_ext_label = helper._app.data_collection.labels[-2:]
 
         else:
             raise NotImplementedError(f"Method {method} not implemented.")
@@ -641,7 +641,7 @@ class TestTwo2dSpectra:
         expected_labels = [self.spec2d_label, self.spec2d_ext_label,
                            self.another_spec2d_label, self.another_spec2d_ext_label]
 
-        dc = helper.app.data_collection
+        dc = helper._app.data_collection
 
         assert self.spec2d_label in dc.labels
         assert self.spec2d_ext_label in dc.labels
@@ -697,8 +697,8 @@ class TestTwo2dSpectra:
         self.load_another_2d_spectrum(deconfigged_helper, spectrum2d)
 
         # Test marks/subsets between the two layers
-        viewer_2d = deconfigged_helper.app.get_viewer('2D Spectrum')
-        viewer_1d = deconfigged_helper.app.get_viewer('1D Spectrum')
+        viewer_2d = deconfigged_helper._app.get_viewer('2D Spectrum')
+        viewer_1d = deconfigged_helper._app.get_viewer('1D Spectrum')
 
         # We'll be panning along x so keep x_min, x_max generic but specify y_min_1d, y_max_1d
         x_min_2d, x_max_2d = viewer_2d.get_limits()[:2]

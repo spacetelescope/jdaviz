@@ -33,8 +33,8 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
 
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
 
-    spectral_cube = cubeviz_helper.app.data_collection[0].get_object(NDDataArray)
-    uncert_cube = cubeviz_helper.app.data_collection[1].get_object(StdDevUncertainty)
+    spectral_cube = cubeviz_helper._app.data_collection[0].get_object(NDDataArray)
+    uncert_cube = cubeviz_helper._app.data_collection[1].get_object(StdDevUncertainty)
     spectral_cube.uncertainty = uncert_cube
 
     # Collapse the spectral cube using the astropy.nddata machinery.
@@ -70,7 +70,7 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
     gs_plugin = cubeviz_helper.plugins['Gaussian Smooth']._obj
 
-    gs_plugin.dataset_selected = f'{cubeviz_helper.app.data_collection[0].label}'
+    gs_plugin.dataset_selected = f'{cubeviz_helper._app.data_collection[0].label}'
     gs_plugin.mode_selected = 'Spatial'
     gs_plugin.stddev = 3
 
@@ -79,8 +79,8 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
             match='The following attributes were set on the data object, but will be ignored'):
         gs_plugin.vue_apply()
 
-    gs_data_label = cubeviz_helper.app.data_collection[3].label
-    cubeviz_helper.app.add_data_to_viewer('flux-viewer', gs_data_label)
+    gs_data_label = cubeviz_helper._app.data_collection[3].label
+    cubeviz_helper._app.add_data_to_viewer('flux-viewer', gs_data_label)
 
     # create a subset with a single pixel:
     regions = [
@@ -336,8 +336,9 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
     assert np.allclose(spec.flux, spec_no_bg.flux - bg_spec.flux)
 
     # number of pixels in the aperture, background subsets:
-    n_aperture_pixels = cubeviz_helper.app.get_subsets('Subset 1')[0]['region'].to_mask().data.sum()
-    n_bg_pixels = cubeviz_helper.app.get_subsets('Subset 2')[0]['region'].to_mask().data.sum()
+    aperture_mask = cubeviz_helper._app.get_subsets('Subset 1')[0]['region'].to_mask()
+    n_aperture_pixels = aperture_mask.data.sum()
+    n_bg_pixels = cubeviz_helper._app.get_subsets('Subset 2')[0]['region'].to_mask().data.sum()
 
     # the background subtracted from each slice in wavelength from the aperture should be equal
     # to the background -- which is the minimum per spectral slice in this example cube -- divided
@@ -433,8 +434,8 @@ def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
 
     # update should take place automatically, but since its async, we'll call manually to ensure
     # the update is complete before comparing results
-    for subset in cubeviz_helper.app.data_collection.subset_groups[0].subsets:
-        cubeviz_helper.app._update_live_plugin_results(trigger_subset=subset)
+    for subset in cubeviz_helper._app.data_collection.subset_groups[0].subsets:
+        cubeviz_helper._app._update_live_plugin_results(trigger_subset=subset)
     # TODO: this is randomly failing in CI (not always) so will disable the assert for now and just
     # cover to make sure the logic does not crash
 #    new_med_flux = np.median(cubeviz_helper.get_data('extracted').flux)
@@ -552,7 +553,7 @@ def test_spectral_extraction_unit_conv_one_spec(
     cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
 ):
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
-    spectrum_viewer = cubeviz_helper.app.get_viewer(
+    spectrum_viewer = cubeviz_helper._app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
     uc = cubeviz_helper.plugins["Unit Conversion"]
     assert uc.flux_unit == "Jy"
@@ -672,7 +673,7 @@ def test_spectral_extraction_flux_unit_conversions(cubeviz_helper,
                                               with_uncerts=True)
     cubeviz_helper.load_data(sb_cube)
 
-    spectrum_viewer = cubeviz_helper.app.get_viewer(
+    spectrum_viewer = cubeviz_helper._app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
 
     uc = cubeviz_helper.plugins["Unit Conversion"]

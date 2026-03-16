@@ -11,8 +11,8 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_GW
 class TestDeleteData(BaseImviz_WCS_WCS):
 
     def test_reparent_str(self):
-        for subset in self.imviz.app.data_collection.subset_groups:
-            self.imviz.app._reparent_subsets(
+        for subset in self.imviz._app.data_collection.subset_groups:
+            self.imviz._app._reparent_subsets(
                 subset.subset_state.xatt.parent.label,
                 "has_wcs_1[SCI,1]"
             )
@@ -35,20 +35,20 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         reg = RectanglePixelRegion(PixCoord(1, 1), 2, 2).to_sky(self.wcs_1)
         self.imviz.plugins['Subset Tools'].import_region(reg)
 
-        assert len(self.imviz.app.data_collection.subset_groups) == 2
+        assert len(self.imviz._app.data_collection.subset_groups) == 2
 
         # by default the parent will be the reference data layer, which
         # is the "Default Orientation" WCS-only layer since Imviz is
         # WCS-linked here. Let's reparent to a layer that we can
         # delete to test the machinery:
-        for subset in self.imviz.app.data_collection.subset_groups:
-            self.imviz.app._reparent_subsets(
+        for subset in self.imviz._app.data_collection.subset_groups:
+            self.imviz._app._reparent_subsets(
                 subset.subset_state.xatt.parent.label,
                 "has_wcs_1[SCI,1]"
             )
 
-        subset1 = self.imviz.app.data_collection.subset_groups[0]
-        subset2 = self.imviz.app.data_collection.subset_groups[1]
+        subset1 = self.imviz._app.data_collection.subset_groups[0]
+        subset2 = self.imviz._app.data_collection.subset_groups[1]
         assert subset1.subset_state.xatt.parent.label == "has_wcs_1[SCI,1]"
         assert_allclose(subset1.subset_state.center(), (2, 2))
 
@@ -59,11 +59,11 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         assert_allclose(subset2.subset_state.roi.ymax, 2)
 
         # We have to remove the data from the viewer before deleting the data from the app.
-        self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_1[SCI,1]")
-        self.imviz.app.data_item_remove("has_wcs_1[SCI,1]")
+        self.imviz._app.remove_data_from_viewer("imviz-0", "has_wcs_1[SCI,1]")
+        self.imviz._app.data_item_remove("has_wcs_1[SCI,1]")
 
         # Make sure we re-linked images 2 and 3 (plus WCS-only reference data layer)
-        assert len(self.imviz.app.data_collection.external_links) == 2
+        assert len(self.imviz._app.data_collection.external_links) == 2
 
         # FIXME: 0.25 offset introduced by fake WCS layer, see
         # https://jira.stsci.edu/browse/JDAT-4256
@@ -95,13 +95,14 @@ class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
         self.imviz.plugins['Subset Tools'].import_region(reg)
 
         # Switch back to Default Orientation.
-        self.imviz.app._change_reference_data("Default orientation")
+        self.imviz._app._change_reference_data("Default orientation")
 
         # Delete N-up E-left reference data from GUI.
-        self.imviz.app.data_item_remove("North-up, East-left")
+        self.imviz._app.data_item_remove("North-up, East-left")
 
         # Make sure rotated ellipse is still the same as before.
-        out_reg_d = self.imviz.app.get_subsets(include_sky_region=True)['Subset 1'][0]['sky_region']
+        subset_dict = self.imviz._app.get_subsets(include_sky_region=True)
+        out_reg_d = subset_dict['Subset 1'][0]['sky_region']
         assert_allclose(reg.center.ra.deg, out_reg_d.center.ra.deg)
         assert_allclose(reg.center.dec.deg, out_reg_d.center.dec.deg)
         assert_quantity_allclose(reg.height, out_reg_d.height)

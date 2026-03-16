@@ -64,7 +64,7 @@ class Rampviz(CubeConfigHelper):
         self._set_x_axis()
 
     def _set_x_axis(self, msg={}):
-        group_viewer = self.app.get_viewer(self._default_group_viewer_reference_name)
+        group_viewer = self._app.get_viewer(self._default_group_viewer_reference_name)
         ref_data = group_viewer.state.reference_data
         if ref_data:
             group_viewer.state.x_att = ref_data.id["Pixel Axis 0 [z]"]
@@ -88,7 +88,7 @@ class Rampviz(CubeConfigHelper):
             raise ValueError("group_index must be positive")
 
         msg = SliceSelectSliceMessage(value=int(group_index), sender=self)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)
 
     def get_data(self, data_label=None, spatial_subset=None,
                  temporal_subset=None, cls=None, use_display_units=False):
@@ -137,6 +137,6 @@ class Rampviz(CubeConfigHelper):
         # Cannot assign data to real Data because it loads but it will
         # not update checkbox in Data menu.
 
-        return self.app._on_new_viewer(
-            NewViewerMessage(RampvizImageView, data=None, sender=self.app),
+        return self._app._on_new_viewer(
+            NewViewerMessage(RampvizImageView, data=None, sender=self._app),
             vid=viewer_name, name=viewer_name)

@@ -139,7 +139,7 @@ def test_delete_create_viewer_preserves_wcs_linking():
     assert orientation.align_by.selected == 'WCS'
 
     # delete the existing viewer
-    jd.gca().app.vue_destroy_viewer_item('Image')
+    jd.gca()._app.vue_destroy_viewer_item('Image')
     assert not jd.viewers
 
     # add a new viewer with the same data
@@ -163,7 +163,7 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
 
         # This would set a different reference to second viewer.
         viewer_2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
+        self.imviz._app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
         lc_plugin.viewer = "imviz-1"
 
         lc_plugin.set_north_up_east_right()
@@ -173,7 +173,7 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
 
         # Change orientation in imviz-1 from UI and ensure plugin selection is the same
         lc_plugin.viewer.selected = "imviz-0"
-        self.imviz.app._change_reference_data("Default orientation", "imviz-1")
+        self.imviz._app._change_reference_data("Default orientation", "imviz-1")
         assert lc_plugin.orientation.selected == "North-up, East-left"
 
         # Both viewers should revert back to same reference when pixel-linked.
@@ -207,11 +207,11 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
 
         # This would set a different reference to second viewer.
         viewer_2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
+        self.imviz._app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
         lc_plugin.viewer = "imviz-1"
         lc_plugin.orientation = "North-up, East-left"
 
-        self.imviz.app.data_item_remove("North-up, East-left")
+        self.imviz._app.data_item_remove("North-up, East-left")
 
         assert self.viewer.state.reference_data.label == "Default orientation"
         assert viewer_2.state.reference_data.label == "Default orientation"
@@ -236,20 +236,21 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
         # Switch to N-up E-right
         lc_plugin.set_north_up_east_right()
 
-        self.imviz.app.data_item_remove("North-up, East-left")
+        self.imviz._app.data_item_remove("North-up, East-left")
 
         # Check that E-right still linked to default
-        assert len(self.imviz.app.data_collection.external_links) == 3
-        assert self.imviz.app.data_collection.external_links[2].data1.label == "Default orientation"
-        assert self.imviz.app.data_collection.external_links[2].data2.label == "North-up, East-right"  # noqa: E501
+        assert len(self.imviz._app.data_collection.external_links) == 3
+        link2 = self.imviz._app.data_collection.external_links[2]
+        assert link2.data1.label == "Default orientation"
+        assert link2.data2.label == "North-up, East-right"
 
         # Check that the subset got reparented and the angle is correct in the display
-        subset_group = self.imviz.app.data_collection.subset_groups[0]
-        nuer_data = self.imviz.app.data_collection['North-up, East-right']
+        subset_group = self.imviz._app.data_collection.subset_groups[0]
+        nuer_data = self.imviz._app.data_collection['North-up, East-right']
         assert subset_group.subset_state.xatt in nuer_data.components
         assert_allclose(subset_group.subset_state.roi.theta, sbst_theta, rtol=1e-5)
 
-        out_reg = self.imviz.app.get_subsets(include_sky_region=True)["Subset 1"][0]["sky_region"]
+        out_reg = self.imviz._app.get_subsets(include_sky_region=True)["Subset 1"][0]["sky_region"]
         assert_allclose(out_reg.center.ra.deg, reg.center.ra.deg)
         assert_allclose(out_reg.center.dec.deg, reg.center.dec.deg)
         assert_quantity_allclose(out_reg.width, reg.width)
@@ -280,4 +281,4 @@ class TestOrientationNoData(BaseImviz_WCS_WCS):
         lc_plugin.viewer = "imviz-1"
         # This would error prior to bugfix
         lc_plugin.orientation = "North-up, East-left"
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
+        self.imviz._app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")

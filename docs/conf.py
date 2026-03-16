@@ -36,6 +36,8 @@ from sphinx.util.docutils import SphinxDirective
 
 # Suppress deprecation warning for data_labels during documentation build
 warnings.filterwarnings('ignore', message='.*data_labels function is deprecated.*')
+# Suppress deprecation warning for .app property during documentation build
+warnings.filterwarnings('ignore', message='.*app function is deprecated.*')
 
 from jdaviz import __version__
 

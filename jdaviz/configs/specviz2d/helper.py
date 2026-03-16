@@ -30,7 +30,7 @@ class Specviz2d(Specviz):
         application that is wrapped by Specviz2d.
         """
         if not hasattr(self, '_specviz'):
-            self._specviz = Specviz(app=self.app)
+            self._specviz = Specviz(app=self._app)
         return self._specviz
 
     def load(self, inp=None, loader=None, format=None, target=None, **kwargs):

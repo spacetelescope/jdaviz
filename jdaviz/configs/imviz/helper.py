@@ -48,7 +48,7 @@ class Imviz(ImageConfigHelper):
         _current_app = self
 
         # Temporary during deconfig process
-        self.app.state.dev_loaders = True
+        self._app.state.dev_loaders = True
 
     def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.
@@ -56,7 +56,7 @@ class Imviz(ImageConfigHelper):
         To display data in this new viewer programmatically,
         first get the new viewer ID from the small tab on the top
         left of viewer display. Then, use
-        :meth:`~jdaviz.app.Application.add_data_to_viewer` from ``imviz.app``
+        :meth:`~jdaviz.app.PrivateApplication.add_data_to_viewer` from ``imviz._app``
         by passing in the new viewer ID and the desired data label,
         once per dataset you wish to display.
 
@@ -79,10 +79,10 @@ class Imviz(ImageConfigHelper):
         # not update checkbox in Data menu.
 
         # add WCS-only layers from all viewers into the new viewer
-        add_layers_to_viewer = get_wcs_only_layer_labels(self.app)
+        add_layers_to_viewer = get_wcs_only_layer_labels(self._app)
 
-        return self.app._on_new_viewer(
-            NewViewerMessage(ImvizImageView, data=None, sender=self.app),
+        return self._app._on_new_viewer(
+            NewViewerMessage(ImvizImageView, data=None, sender=self._app),
             vid=viewer_name, name=viewer_name,
             add_layers_to_viewer=add_layers_to_viewer)
 
@@ -95,11 +95,11 @@ class Imviz(ImageConfigHelper):
             Default viewer cannot be destroyed.
 
         """
-        if viewer_id not in self.app._viewer_store:  # Silent no-op
+        if viewer_id not in self._app._viewer_store:  # Silent no-op
             return
-        if viewer_id == f'{self.app.config}-0':
+        if viewer_id == f'{self._app.config}-0':
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
-        self.app.vue_destroy_viewer_item(viewer_id)
+        self._app.vue_destroy_viewer_item(viewer_id)
 
     def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
         """
@@ -321,7 +321,7 @@ class Imviz(ImageConfigHelper):
             return "self"
 
         align_by = None
-        for elink in self.app.data_collection.external_links:
+        for elink in self._app.data_collection.external_links:
             elink_labels = (elink.data1.label, elink.data2.label)
             if data_label_1 in elink_labels and data_label_2 in elink_labels:
                 if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
@@ -332,7 +332,7 @@ class Imviz(ImageConfigHelper):
 
         if align_by is None:
             avail_links = [f"({elink.data1.label}, {elink.data2.label})"
-                           for elink in self.app.data_collection.external_links]
+                           for elink in self._app.data_collection.external_links]
             raise ValueError(f'{data_label_1} and {data_label_2} combo not found '
                              f'in data collection external links: {avail_links}')
 
@@ -362,7 +362,7 @@ class Imviz(ImageConfigHelper):
             Table of sources if available or `None` otherwise.
 
         """
-        return getattr(self.app, '_catalog_source_table', None)
+        return getattr(self._app, '_catalog_source_table', None)
 
     def get_data(self, data_label=None, spatial_subset=None, cls=None):
         """
@@ -387,7 +387,7 @@ class Imviz(ImageConfigHelper):
         return self._get_data(data_label=data_label, spatial_subset=spatial_subset, cls=cls)
 
     def get_ref_data(self):
-        return get_reference_image_data(self.app)
+        return get_reference_image_data(self._app)
 
 
 def split_filename_with_fits_ext(filename):

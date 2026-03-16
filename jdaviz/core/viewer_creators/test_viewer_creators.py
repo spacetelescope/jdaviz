@@ -62,9 +62,9 @@ class TestViewerCreatorObject:
         # Should not raise an error even if callback is None
 
         # Test with closing sidebar
-        self.dcf_helper.app.state.drawer_content = 'test_content'
+        self.dcf_helper._app.state.drawer_content = 'test_content'
         self.creator.close_in_tray(close_sidebar=True)
-        assert self.dcf_helper.app.state.drawer_content == ''
+        assert self.dcf_helper._app.state.drawer_content == ''
 
     def test_viewer_creator_open_in_tray_callbacks(self):
         """
@@ -102,10 +102,10 @@ class TestViewerCreatorObject:
         assert self.creator.is_relevant is True
 
         # Check that it appears in new_viewer_items
-        labels = [ti['label'] for ti in self.dcf_helper.app.state.new_viewer_items]
+        labels = [ti['label'] for ti in self.dcf_helper._app.state.new_viewer_items]
         assert '1D Spectrum' in labels
         idx = labels.index('1D Spectrum')
-        assert self.dcf_helper.app.state.new_viewer_items[idx]['is_relevant'] is True
+        assert self.dcf_helper._app.state.new_viewer_items[idx]['is_relevant'] is True
 
     def test_viewer_label_validation_duplicate(self):
         """

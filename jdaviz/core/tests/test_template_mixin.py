@@ -18,14 +18,14 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     spectrum1d.mask = mask
 
     specviz_helper.load_data(spectrum1d)
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper._app.get_viewer('spectrum-viewer')
     # create a "Subset 1" entry
     subset_plugin = specviz_helper.plugins['Subset Tools']
     subset_plugin.import_region(SpectralRegion(6500 * spectrum1d.spectral_axis.unit,
                                                7400 * spectrum1d.spectral_axis.unit))
 
     # model fitting uses the mixin
-    p = specviz_helper.app.get_tray_item_from_name('g-model-fitting')
+    p = specviz_helper._app.get_tray_item_from_name('g-model-fitting')
     assert len(p.spectral_subset.labels) == 2  # Entire Spectrum, Subset 1
     assert len(p.spectral_subset_items) == 2
     assert p.spectral_subset_selected == 'Entire Spectrum'
@@ -53,7 +53,7 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     assert p.spectral_subset.spectrum_viewer == sv
 
     # line analysis uses custom components, one of which is still named spectral_subset
-    p = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    p = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
     assert len(p.spectral_subset.labels) == 2  # Entire Spectrum, Subset 1
     assert len(p.spectral_subset_items) == 2
     assert p.spectral_subset_selected == 'Entire Spectrum'
@@ -380,7 +380,7 @@ def test_export_table_special_cases():
 def test_export_table(deconfigged_helper, sky_coord_only_source_catalog,
                       tmp_path, valid_format):
 
-    table_obj = FakeTable(deconfigged_helper.app.session,
+    table_obj = FakeTable(deconfigged_helper._app.session,
                           sky_coord_only_source_catalog)
 
     tmp_filename = tmp_path / 'temp_table'

@@ -126,7 +126,7 @@ def test_multiselect(deconfigged_helper, image_nddata_wcs):
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 3
 
@@ -367,7 +367,7 @@ def test_skewer_selection_smallest_footprint(deconfigged_helper, image_nddata_wc
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 2
 
@@ -399,7 +399,7 @@ def test_skewer_selection_vs_nearest_edge(deconfigged_helper, image_nddata_wcs):
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 2
 
@@ -437,7 +437,7 @@ def test_skewer_selection_with_empty_region(deconfigged_helper, image_nddata_wcs
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     # Only one footprint should be created (second one is empty)
     assert len(footprints) == 1

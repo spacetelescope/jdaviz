@@ -63,7 +63,7 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
         _default_spectrum_viewer_reference_name = 'h'
 
     viz = Customviz()
-    assert viz.app.get_viewer_reference_names() == ['h', 'k']
+    assert viz._app.get_viewer_reference_names() == ['h', 'k']
 
     viz.load_data(spectrum1d, data_label='example label')
     with pytest.raises(KeyError):

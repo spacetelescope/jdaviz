@@ -281,7 +281,7 @@ class TestAdvancedAperPhot:
 
         # Link them by WCS
         imviz_helper.link_data(align_by='wcs')
-        w = imviz_helper.app.data_collection[0].coords
+        w = imviz_helper._app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
         imviz_helper.plugins['Subset Tools'].import_region([

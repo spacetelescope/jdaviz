@@ -37,7 +37,7 @@ def _add_to_table(app, data, comp_label, table_viewer_reference_name='table-view
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         The Jdaviz application instance.
     data : array-list
         The set of data to added as a table (i.g. column) component.
@@ -114,7 +114,7 @@ def link_data_in_table(app, data_obj=None):
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         The application-level object used to reference the viewers.
     data_obj : None
         Passed in in order to use the data_parser_registry, otherwise
@@ -205,7 +205,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         The application-level object used to reference the viewers.
     data_obj : str or list or spectrum-like
         File path, list, or spectrum-like object to be read as a new row in
@@ -271,7 +271,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         The application-level object used to reference the viewers.
     data_obj : str or list or spectrum-like
         File path, list, or spectrum-like object to be read as a new row in
@@ -418,7 +418,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0,
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         The application-level object used to reference the viewers.
     data_obj : str or list or image-like
         File path, list, or image-like object to be read as a new row in
@@ -494,7 +494,7 @@ def mos_meta_parser(app, data_obj=None, ids=None):
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         The application-level object used to reference the viewers.
     data_obj : str or list or HDUList
         Optional fallback arg for Identifier column
@@ -555,7 +555,7 @@ def query_metadata_by_component(app, keys, data_type, fallback=FALLBACK_NAME):
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         The application-level object used to reference the viewers.
     keys : str or list
         Metadata keywords to search for
@@ -603,7 +603,7 @@ def _get_source_identifiers(app, data_type, hdus=None, filepaths=None,
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         The application-level object used to reference the viewers.
     data_type : str
         The type of data to search for the Source ID keywords in. Can be one of:
@@ -790,7 +790,7 @@ def mos_niriss_parser(app, data_dir, instrument=None,
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         The application-level object used to reference the viewers.
     data_dir : str
         The path to a directory containing NIRISS data products.
