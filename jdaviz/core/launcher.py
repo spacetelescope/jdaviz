@@ -242,6 +242,7 @@ class Launcher(v.VuetifyTemplate):
     def vue_launch_jdaviz(self, _):
         # Launch the deconfigged version of Jdaviz
         jdaviz_app = jd.gca().app
+        jd.loaders['file'].open_in_tray()
         if self.height not in ['100%', '100vh']:
             # We're in jupyter mode. Set to default height
             default_height = jdaviz_app.state.settings['context']['notebook']['max_height']

@@ -13,8 +13,28 @@ As a Standalone Application
 ===========================
 
 .. note::
-    This feature is currently in development for the new generalized version of jdaviz. Stay tuned for updates!
+    This feature is currently in development for the new generalized version of jdaviz, so the following may change in an upcoming release.
 
+``jdaviz`` provides a command-line tool to start the standalone desktop application in a browser. To see the syntax and usage, from a terminal, type::
+
+    jdaviz --help
+
+.. jdavizclihelp::
+
+Jdaviz is now intended to be used in a flexible, generalized layout rather than the older "configs", but
+these deprecated configurations are still available from the command line. To load a file into a configuration::
+
+    jdaviz --layout=[imviz|specviz|cubeviz|mosviz|specviz2d] /path/to/data/file
+
+This will warn that the ``--layout`` argument is deprecated.
+
+The command ``jdaviz`` without any additional input will run a launcher. To launch the
+modern generalized ``jdaviz`` from here, click the Jdaviz logo in the top right.
+Alternatively, you can still use the deprecated legacy functionality to select a file from the
+file picker, which will identify the best configuration according to the file type. You can also
+select the desired deprecated configuration by clicking one of the bottom buttons without specifying
+a file. A blank configuration will open and the IMPORT button will be available to select
+a file from the file picker.
 
 In a Jupyter Notebook
 =====================
