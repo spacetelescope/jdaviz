@@ -893,8 +893,8 @@ class SelectTableRow(CheckableTool, HubListener):
 class SelectFootprintOverlay(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'footprint_select.svg')
     tool_id = 'jdaviz:selectfootprint'
-    action_text = 'Nearest edge selection: selects the footprint nearest to your click'
-    tool_tip = 'Nearest edge selection: selects the footprint nearest to your click'
+    action_text = 'Select nearest footprint'
+    tool_tip = 'Select nearest footprint. Ctrl/Cmd+click to toggle.'
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
@@ -918,8 +918,8 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
 class SkewerSelectRegion(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'skewer_select.svg')
     tool_id = 'jdaviz:skewerregion'
-    action_text = 'Skewer Selection: selects all footprints intersecting the clicked point'
-    tool_tip = 'Skewer Selection: selects all footprints intersecting the clicked point, adding to current selection with Ctrl/Cmd+click'
+    action_text = 'Select all overlapping footprints'
+    tool_tip = 'Select all overlapping footprints at point. Ctrl/Cmd+click to toggle.'
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
@@ -941,8 +941,8 @@ class SkewerSelectRegion(CheckableTool, HubListener):
 class SelectRegionOverlay(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'footprint_select.svg')
     tool_id = 'jdaviz:selectregion'
-    action_text = 'Select nearest region overlay'
-    tool_tip = 'Click to select nearest region (replaces selection). Ctrl/Cmd+click to toggle.'
+    action_text = 'Select nearest footprint'
+    tool_tip = 'Select nearest footprint. Ctrl/Cmd+click to toggle.'
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
