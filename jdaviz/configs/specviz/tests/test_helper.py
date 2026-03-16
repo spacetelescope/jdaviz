@@ -8,7 +8,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from specutils import Spectrum, SpectrumList, SpectrumCollection, SpectralRegion
 from astropy.utils.data import download_file
 
-from jdaviz.app import Application
+from jdaviz.app import PrivateApplication
 from jdaviz.core.marks import LineUncertainties
 from jdaviz import Specviz
 
@@ -407,7 +407,7 @@ def test_subset_default_thickness(specviz_helper, spectrum1d):
 def test_app_links(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
-    assert isinstance(sv.jdaviz_app, Application)
+    assert isinstance(sv.jdaviz_app, PrivateApplication)
     assert isinstance(sv.jdaviz_helper, Specviz)
 
 

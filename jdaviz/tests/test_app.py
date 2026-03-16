@@ -9,7 +9,7 @@ from ipywidgets.widgets import widget_serialization
 
 from jdaviz import Specviz, Specviz2d
 from jdaviz.core.config import get_configuration
-from jdaviz.app import Application
+from jdaviz.app import PrivateApplication
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
 from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
                                                viewer_flux_conversion_equivalencies)
@@ -18,11 +18,11 @@ from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
 # This applies to all viz but testing with Imviz should be enough.
 def test_viewer_calling_app(imviz_helper):
     viewer = imviz_helper.default_viewer._obj.glue_viewer
-    assert viewer.session.jdaviz_app is imviz_helper.app
+    assert viewer.session.jdaviz_app is imviz_helper._app
 
 
 def test_get_tray_item_from_name():
-    app = Application(configuration='default')
+    app = PrivateApplication(configuration='default')
     plg = app.get_tray_item_from_name('g-gaussian-smooth')
     assert isinstance(plg, GaussianSmooth)
 
@@ -91,7 +91,7 @@ def test_duplicate_data_labels(deconfigged_helper, input_data, input_format, req
     # Test duplicate auto-generated labels
     deconfigged_helper.load(input_data, format=input_format)
     deconfigged_helper.load(input_data, format=input_format)
-    dc = deconfigged_helper.app.data_collection
+    dc = deconfigged_helper._app.data_collection
 
     expected_label_base = input_format
     if input_format == 'Image':
@@ -119,44 +119,44 @@ def test_duplicate_data_labels(deconfigged_helper, input_data, input_format, req
 
 
 def test_return_data_label_is_none(specviz_helper):
-    data_label = specviz_helper.app.return_data_label(None)
+    data_label = specviz_helper._app.return_data_label(None)
     assert data_label == "Unknown"
 
 
 def test_return_data_label_is_image(specviz_helper):
-    data_label = specviz_helper.app.return_data_label("data/path/test.jpg")
+    data_label = specviz_helper._app.return_data_label("data/path/test.jpg")
     assert data_label == "test[jpg]"
 
 
 def test_hdulist_with_filename(cubeviz_helper, image_cube_hdu_obj):
     image_cube_hdu_obj.file_name = "test"
-    data_label = cubeviz_helper.app.return_data_label(image_cube_hdu_obj)
+    data_label = cubeviz_helper._app.return_data_label(image_cube_hdu_obj)
     assert data_label == "test[HDU object]"
 
 
 def test_file_path_not_image(imviz_helper, tmp_path):
     path = tmp_path / "myimage.fits"
     path.touch()
-    data_label = imviz_helper.app.return_data_label(str(path))
+    data_label = imviz_helper._app.return_data_label(str(path))
     assert data_label == "myimage"
 
 
 def test_unique_name_variations(specviz_helper, spectrum1d):
-    data_label = specviz_helper.app.return_unique_name(None)
+    data_label = specviz_helper._app.return_unique_name(None)
     assert data_label == "Unknown"
 
     specviz_helper.load_data(spectrum1d, data_label="test[flux]")
-    data_label = specviz_helper.app.return_data_label("test[flux]", ext="flux")
+    data_label = specviz_helper._app.return_data_label("test[flux]", ext="flux")
     assert data_label == "test[flux][flux]"
 
-    data_label = specviz_helper.app.return_data_label("test", ext="flux")
+    data_label = specviz_helper._app.return_data_label("test", ext="flux")
     assert data_label == "test[flux] (1)"
 
 
 def test_substring_in_label(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label="M31")
     specviz_helper.load_data(spectrum1d, data_label="M32")
-    data_label = specviz_helper.app.return_data_label("M")
+    data_label = specviz_helper._app.return_data_label("M")
     assert data_label == "M"
 
 
@@ -167,7 +167,7 @@ def test_edge_cases(deconfigged_helper, spectrum1d):
                    'two  spaces  repeating',
                    'word42word42word  two  spaces']
 
-    dc = deconfigged_helper.app.data_collection
+    dc = deconfigged_helper._app.data_collection
 
     for dl in data_labels:
         deconfigged_helper.load(spectrum1d, data_label=dl)
@@ -182,22 +182,22 @@ def test_viewer_renaming_specviz(specviz_helper):
     ]
 
     for i in range(len(viewer_names) - 1):
-        specviz_helper.app._update_viewer_reference_name(
+        specviz_helper._app._update_viewer_reference_name(
             old_reference=viewer_names[i],
             new_reference=viewer_names[i + 1]
         )
-        assert specviz_helper.app.get_viewer(viewer_names[i+1]) is not None
+        assert specviz_helper._app.get_viewer(viewer_names[i+1]) is not None
 
 
 def test_viewer_renaming_imviz(imviz_helper):
     with pytest.raises(ValueError, match="'imviz-0' cannot be changed"):
-        imviz_helper.app._update_viewer_reference_name(
+        imviz_helper._app._update_viewer_reference_name(
             old_reference='imviz-0',
             new_reference='this-is-forbidden'
         )
 
     with pytest.raises(ValueError, match="does not exist"):
-        imviz_helper.app._update_viewer_reference_name(
+        imviz_helper._app._update_viewer_reference_name(
             old_reference='non-existent',
             new_reference='this-is-forbidden'
         )
@@ -212,8 +212,8 @@ def test_data_associations(imviz_helper):
     imviz_helper.load_data(data_parent, data_label='parent_data')
     imviz_helper.load_data(data_child, data_label='child_data', parent='parent_data')
 
-    assert imviz_helper.app._get_assoc_data_children('parent_data') == ['child_data']
-    assert imviz_helper.app._get_assoc_data_parent('child_data') == 'parent_data'
+    assert imviz_helper._app._get_assoc_data_children('parent_data') == ['child_data']
+    assert imviz_helper._app._get_assoc_data_parent('child_data') == 'parent_data'
 
     with pytest.raises(ValueError):
         # we don't (yet) allow children of children:
@@ -248,7 +248,7 @@ def test_to_unit(cubeviz_helper):
 
     extract_plg.extract()
 
-    data = cubeviz_helper.app.data_collection[-1].data
+    data = cubeviz_helper._app.data_collection[-1].data
     values = [1]
     original_units = u.MJy / u.sr
     target_units = u.MJy
@@ -328,9 +328,9 @@ def test_remote_server_settings_config(server_is_remote, remote_enable_importers
         config['settings']['server_is_remote'] = server_is_remote
         config['settings']['remote_enable_importers'] = remote_enable_importers
 
-    specviz2d_app = Application(config)
+    specviz2d_app = PrivateApplication(config)
     specviz2d_helper = Specviz2d(specviz2d_app)
-    settings = specviz2d_helper.app.state.settings
+    settings = specviz2d_helper._app.state.settings
 
     if server_is_remote is None:
         # Defaults
@@ -343,7 +343,7 @@ def test_remote_server_settings_config(server_is_remote, remote_enable_importers
         assert settings['remote_enable_importers'] == remote_enable_importers
 
     # Get the loader items and check their widget properties
-    loader_items = specviz2d_helper.app.state.loader_items
+    loader_items = specviz2d_helper._app.state.loader_items
 
     for loader_item in loader_items:
         widget_model_id = loader_item['widget']
@@ -356,14 +356,14 @@ def test_remote_server_settings_config(server_is_remote, remote_enable_importers
 
 @pytest.mark.parametrize('server_is_remote', [False, True])
 def test_remote_server_settings_deconfigged(deconfigged_helper, server_is_remote):
-    settings = deconfigged_helper.app.state.settings
+    settings = deconfigged_helper._app.state.settings
     # Defaults
     assert settings['server_is_remote'] is False
     assert settings['remote_enable_importers'] is True
     settings['server_is_remote'] = server_is_remote
 
     # Get the loader items and check their widget properties
-    loader_items = deconfigged_helper.app.state.loader_items
+    loader_items = deconfigged_helper._app.state.loader_items
 
     for loader_item in loader_items:
         widget_model_id = loader_item['widget']
@@ -383,34 +383,34 @@ def test_remote_server_settings_deconfigged(deconfigged_helper, server_is_remote
 def test_update_existing_data_in_dc(deconfigged_helper,
                                     fixture_to_load, fixture_format, request):
     # Check that existing_data_in_dc is empty to start
-    assert len(deconfigged_helper.app.existing_data_in_dc) == 0
+    assert len(deconfigged_helper._app.existing_data_in_dc) == 0
 
     deconfigged_helper.load(request.getfixturevalue(fixture_to_load), format=fixture_format)
     # Check that existing_data_in_dc was updated upon adding data
-    assert len(deconfigged_helper.app.existing_data_in_dc) > 0
+    assert len(deconfigged_helper._app.existing_data_in_dc) > 0
 
     # Use this data for testing
-    dc_data = deconfigged_helper.app.data_collection[0]
+    dc_data = deconfigged_helper._app.data_collection[0]
 
     # Check that the update goes through
-    test_data_in_dc = deepcopy(deconfigged_helper.app.existing_data_in_dc)
+    test_data_in_dc = deepcopy(deconfigged_helper._app.existing_data_in_dc)
     # Remove some data
-    deconfigged_helper.app._update_existing_data_in_dc(dc_data, data_added=False)
-    assert test_data_in_dc != deconfigged_helper.app.existing_data_in_dc
+    deconfigged_helper._app._update_existing_data_in_dc(dc_data, data_added=False)
+    assert test_data_in_dc != deconfigged_helper._app.existing_data_in_dc
 
     # Add it back
-    deconfigged_helper.app._update_existing_data_in_dc(dc_data, data_added=True)
+    deconfigged_helper._app._update_existing_data_in_dc(dc_data, data_added=True)
 
-    test_data_in_dc = deepcopy(deconfigged_helper.app.existing_data_in_dc)
+    test_data_in_dc = deepcopy(deconfigged_helper._app.existing_data_in_dc)
     # If this key is present, an update will occur so check that
     # nothing happens when it is not present.
     dh = dc_data.data.meta.pop('_data_hash')
-    deconfigged_helper.app._update_existing_data_in_dc(dc_data, data_added=True)
-    assert test_data_in_dc == deconfigged_helper.app.existing_data_in_dc
+    deconfigged_helper._app._update_existing_data_in_dc(dc_data, data_added=True)
+    assert test_data_in_dc == deconfigged_helper._app.existing_data_in_dc
 
     # Check that removing the data via data collection updates existing_data_in_dc
-    len_before = len(deconfigged_helper.app.existing_data_in_dc)
-    deconfigged_helper.app.data_collection[0].meta['_data_hash'] = dh
-    deconfigged_helper.app.data_item_remove(dc_data.label)
-    assert len(deconfigged_helper.app.existing_data_in_dc) != len_before
-    assert dh not in deconfigged_helper.app.existing_data_in_dc
+    len_before = len(deconfigged_helper._app.existing_data_in_dc)
+    deconfigged_helper._app.data_collection[0].meta['_data_hash'] = dh
+    deconfigged_helper._app.data_item_remove(dc_data.label)
+    assert len(deconfigged_helper._app.existing_data_in_dc) != len_before
+    assert dh not in deconfigged_helper._app.existing_data_in_dc

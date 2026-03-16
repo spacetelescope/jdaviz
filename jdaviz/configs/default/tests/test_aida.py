@@ -23,12 +23,12 @@ def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
     imviz_helper.load_data(image_hdu_wcs)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
-    viewer = imviz_helper.app.get_viewer('imviz-0')
+    viewer = imviz_helper._app.get_viewer('imviz-0')
     viewport = viewer.aid.get_viewport('sky')
 
     expected_center = SkyCoord(ra=337.51894337, dec=-20.83208305, unit='deg')
     expected_fov = 0.00277778 * u.deg
-    expected_image_label = imviz_helper.app.data_collection[0].label
+    expected_image_label = imviz_helper._app.data_collection[0].label
 
     # by default, the viewer y-axis is the narrower axis, which is used to
     # define the FOV parameter. Use the WCS to find what the actual

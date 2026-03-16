@@ -3,7 +3,7 @@ from regions import EllipsePixelRegion, PixCoord
 from specutils import SpectralRegion
 
 from jdaviz import Cubeviz
-from jdaviz.app import Application
+from jdaviz.app import PrivateApplication
 from jdaviz.core.config import get_configuration
 
 
@@ -32,7 +32,7 @@ def test_remote_server_disable_save_serverside():
     config = get_configuration('cubeviz')
     config['settings']['server_is_remote'] = True
 
-    cubeviz_app = Application(config)
+    cubeviz_app = PrivateApplication(config)
     cubeviz_helper = Cubeviz(cubeviz_app)
     exp = cubeviz_helper.plugins['Export']
     assert 'mp4' not in exp.viewer_format.choices

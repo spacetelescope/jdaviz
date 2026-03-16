@@ -1,4 +1,4 @@
-from jdaviz.app import Application
+from jdaviz.app import PrivateApplication
 from jdaviz.core.loaders.resolvers.resolver import BaseResolver, find_closest_polygon_mark
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.utils import find_polygon_mark_with_skewer
@@ -19,7 +19,7 @@ class TestBaseResolver(BaseResolver):
 
 def test_server_is_remote_callback():
     # Create app instance
-    app = Application()
+    app = PrivateApplication()
 
     # Test the sync
     test_obj = TestBaseResolver(app=app)
@@ -64,7 +64,7 @@ def test_footprint_workflow(deconfigged_helper, image_nddata_wcs):
     assert ldr._obj.custom_toolbar_enabled is True
 
     # Check footprints in viewer
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 3
     assert sorted([m.label for m in footprints]) == [0, 1, 2]
@@ -97,7 +97,7 @@ def test_remove_footprints(deconfigged_helper, image_nddata_wcs):
 
     # Display footprints
     ldr._obj.toggle_custom_toolbar()
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 1
 
@@ -154,7 +154,7 @@ def test_display_valid_footprints(deconfigged_helper, image_nddata_wcs):
     ldr._obj.toggle_custom_toolbar()
 
     # Assert marks were added
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 2
 
@@ -177,14 +177,14 @@ def test_no_image_data_disables_toolbar(deconfigged_helper):
 
     # Although we have footprint data, toolbar should not be enabled
     # because there's no image data to link
-    assert len(deconfigged_helper.app.data_collection) == 0
+    assert len(deconfigged_helper._app.data_collection) == 0
     assert ldr._obj.observation_table_populated is True
     assert ldr._obj.image_data_loaded is False
 
 
 def test_footprint_with_image_deconfigged(deconfigged_helper, image_nddata_wcs):
     deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Test Image')
-    assert len(deconfigged_helper.app.data_collection) == 1
+    assert len(deconfigged_helper._app.data_collection) == 1
 
     table = Table()
     table['Dataset'] = ['obs1']
@@ -205,7 +205,7 @@ def test_footprint_with_image_deconfigged(deconfigged_helper, image_nddata_wcs):
 
     ldr._obj.toggle_custom_toolbar()
     assert ldr._obj.custom_toolbar_enabled is True
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 1
     assert footprints[0].label == 0
@@ -213,7 +213,7 @@ def test_footprint_with_image_deconfigged(deconfigged_helper, image_nddata_wcs):
 
 def test_multiviewer_footprints(deconfigged_helper, image_nddata_wcs):
     deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Image 1')
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
 
     table = Table()
     table['Dataset'] = ['obs1', 'obs2']
@@ -237,7 +237,7 @@ def test_multiviewer_footprints(deconfigged_helper, image_nddata_wcs):
 
 def test_multiviewer_selection_sync(deconfigged_helper, image_nddata_wcs):
     deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Image 1')
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
 
     table = Table()
     table['Dataset'] = ['obs1', 'obs2', 'obs3']
@@ -277,7 +277,7 @@ def test_add_footprints_to_viewer_method(deconfigged_helper, image_nddata_wcs):
     ldr._obj.vue_link_by_wcs()
 
     # Manually call _add_footprints_to_viewer
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     ldr._obj.custom_toolbar_enabled = True
     ldr._obj._add_footprints_to_viewer(viewer)
 
@@ -289,7 +289,7 @@ def test_add_footprints_to_viewer_method(deconfigged_helper, image_nddata_wcs):
 
 def test_remove_footprints_from_viewer(deconfigged_helper, image_nddata_wcs):
     deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Image 1')
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
 
     table = Table()
     table['Dataset'] = ['obs1']
@@ -327,7 +327,7 @@ def test_skewer_selection_inside_footprint(deconfigged_helper, image_nddata_wcs)
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 1
 
@@ -464,6 +464,7 @@ def test_enable_footprint_selection_tools_api(deconfigged_helper, image_nddata_w
     ldr = deconfigged_helper.loaders['object']
     ldr.object = table
     ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
 
     # Should fail without WCS linking
     with pytest.raises(ValueError, match="Images must be linked by WCS"):
@@ -477,7 +478,7 @@ def test_enable_footprint_selection_tools_api(deconfigged_helper, image_nddata_w
     assert ldr._obj.custom_toolbar_enabled
 
     # Verify footprints are displayed
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 1
 
@@ -501,7 +502,7 @@ def test_disable_footprint_selection_tools_api(deconfigged_helper, image_nddata_
     ldr.enable_footprint_selection_tools()
     assert ldr._obj.custom_toolbar_enabled
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper._app._viewer_store.values())[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 1
 

@@ -28,25 +28,25 @@ class TestSpecvizSpectrum1DParser:
         """
         Test parsing a single Spectrum1D object.
         """
-        specviz_spectrum1d_parser(specviz_helper.app, spectrum1d, data_label=label)
+        specviz_spectrum1d_parser(specviz_helper._app, spectrum1d, data_label=label)
 
-        assert len(specviz_helper.app.data_collection) == 1
+        assert len(specviz_helper._app.data_collection) == 1
         if label:
-            assert specviz_helper.app.data_collection[0].label == label
+            assert specviz_helper._app.data_collection[0].label == label
         else:
-            assert specviz_helper.app.data_collection[0].label == 'Spectrum'
+            assert specviz_helper._app.data_collection[0].label == 'Spectrum'
 
     def test_parse_spectrum_list(self, specviz_helper, premade_spectrum_list):
         """
         Test parsing a SpectrumList.
         """
-        specviz_spectrum1d_parser(specviz_helper.app,
+        specviz_spectrum1d_parser(specviz_helper._app,
                                   premade_spectrum_list,
                                   data_label=[f"spec{i}_label"
                                               for i in range(len(premade_spectrum_list))])
 
-        assert len(specviz_helper.app.data_collection) == len(premade_spectrum_list)
-        for i, data in enumerate(specviz_helper.app.data_collection):
+        assert len(specviz_helper._app.data_collection) == len(premade_spectrum_list)
+        for i, data in enumerate(specviz_helper._app.data_collection):
             assert data.label == f"spec{i}_label"
 
     def test_parse_2d_flux_spectrum(self, specviz_helper, spectrum2d):

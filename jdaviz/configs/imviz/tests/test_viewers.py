@@ -5,7 +5,7 @@ from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 from regions import CirclePixelRegion, PixCoord, PolygonSkyRegion
 
-from jdaviz.app import Application
+from jdaviz.app import PrivateApplication
 from jdaviz.core.config import get_configuration
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.configs.imviz.helper import Imviz
@@ -129,7 +129,7 @@ def test_mastviz_config():
     cc['toolbar'].remove('g-viewer-creator') if cc['toolbar'].count('g-viewer-creator') else None
     cc['toolbar'].remove('g-image-viewer-creator') if cc['toolbar'].count('g-image-viewer-creator') else None  # noqa
 
-    app = Application(cc)
+    app = PrivateApplication(cc)
     im = Imviz(app)
     im.load_data(np.ones((2, 2)), data_label='my_array')
 

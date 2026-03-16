@@ -35,7 +35,7 @@ class TestTableViewerTools:
         self.wcs = image_2d_wcs
 
         # Get the image viewer
-        image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
+        image_viewers = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
         assert len(image_viewers) == 1
         self.viewer = image_viewers[0]
 
@@ -349,7 +349,7 @@ class TestTableViewerToolsMultipleViewers:
         vc()
 
         # Get viewers
-        image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
+        image_viewers = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
         self.viewer1 = image_viewers[0]
         self.viewer2 = image_viewers[1] if len(image_viewers) > 1 else image_viewers[0]
 
@@ -437,7 +437,7 @@ class TestTableViewerToolsWcsLinkedMixedCoords:
         self.wcs = image_2d_wcs
 
         # Get the image viewer
-        image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
+        image_viewers = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
         assert len(image_viewers) == 1
         self.viewer = image_viewers[0]
 
@@ -568,7 +568,7 @@ class TestTableViewerToolsPixelLinked:
         self.app = deconfigged_helper
 
         # Get the image viewer
-        image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
+        image_viewers = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
         assert len(image_viewers) == 1
         self.viewer = image_viewers[0]
 
