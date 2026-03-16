@@ -2,6 +2,7 @@ from jdaviz.app import Application
 from jdaviz.core.loaders.resolvers.resolver import BaseResolver, find_closest_polygon_mark
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.utils import find_polygon_mark_with_skewer
+from jdaviz.core.events import FootprintOverlayClickMessage
 
 import numpy as np
 import pytest
@@ -522,3 +523,147 @@ def test_enable_without_observation_table(deconfigged_helper, image_nddata_wcs):
     # Try to enable without loading any observation table
     with pytest.raises(ValueError, match="observation table with s_region data"):
         ldr.enable_footprint_selection_tools()
+
+
+def test_footprint_selection_ctrl_modifier(deconfigged_helper, image_nddata_wcs):
+    """Test Ctrl/Cmd+click multi-selection behavior."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2', 'obs3']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829',
+        'POLYGON 337.505 -20.831 337.507 -20.831 337.507 -20.829 337.505 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 3
+
+    class MockTool:
+        def __init__(self, viewer):
+            self.viewer = viewer
+
+    mock_tool = MockTool(viewer)
+
+    # Get marks by label
+    marks_by_label = {m.label: m for m in footprints}
+
+    # Regular click - selects first footprint
+    # Use the centroid of the polygon for a reliable click point
+    m0_x, m0_y = np.mean(marks_by_label[0].x), np.mean(marks_by_label[0].y)
+    msg = FootprintOverlayClickMessage(
+        {'domain': {'x': m0_x, 'y': m0_y}},
+        mode='nearest',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg)
+    assert len(ldr._obj.observation_table.selected_rows) == 1
+    assert ldr._obj.observation_table.selected_rows[0]['Dataset'] == 'obs1'
+
+    # Ctrl+click on second - adds to selection
+    m1_x, m1_y = np.mean(marks_by_label[1].x), np.mean(marks_by_label[1].y)
+    msg_ctrl = FootprintOverlayClickMessage(
+        {'domain': {'x': m1_x, 'y': m1_y}, 'ctrlKey': True},
+        mode='nearest',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl)
+    assert len(ldr._obj.observation_table.selected_rows) == 2
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2'}
+
+    # Ctrl+click on first again - removes from selection
+    msg_ctrl_deselect = FootprintOverlayClickMessage(
+        {'domain': {'x': m0_x, 'y': m0_y}, 'ctrlKey': True},
+        mode='nearest',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl_deselect)
+    assert len(ldr._obj.observation_table.selected_rows) == 1
+    assert ldr._obj.observation_table.selected_rows[0]['Dataset'] == 'obs2'
+
+
+def test_footprint_selection_skewer_ctrl_modifier(deconfigged_helper, image_nddata_wcs):
+    """Test skewer mode with Ctrl/Cmd+click multi-selection behavior."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2', 'obs3']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829',
+        'POLYGON 337.505 -20.831 337.507 -20.831 337.507 -20.829 337.505 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 3
+
+    class MockTool:
+        def __init__(self, viewer):
+            self.viewer = viewer
+
+    mock_tool = MockTool(viewer)
+
+    # Get marks by label
+    marks_by_label = {m.label: m for m in footprints}
+
+    # Click inside first footprint (should select only obs1)
+    m0_x, m0_y = np.mean(marks_by_label[0].x), np.mean(marks_by_label[0].y)
+    msg_skewer = FootprintOverlayClickMessage(
+        {'domain': {'x': m0_x, 'y': m0_y}},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_skewer)
+    assert len(ldr._obj.observation_table.selected_rows) == 1
+    assert ldr._obj.observation_table.selected_rows[0]['Dataset'] == 'obs1'
+
+    # Ctrl+click inside second footprint - adds to selection
+    m1_x, m1_y = np.mean(marks_by_label[1].x), np.mean(marks_by_label[1].y)
+    msg_ctrl = FootprintOverlayClickMessage(
+        {'domain': {'x': m1_x, 'y': m1_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl)
+    assert len(ldr._obj.observation_table.selected_rows) == 2
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2'}
+
+    # Ctrl+click inside third footprint - adds to selection
+    m2_x, m2_y = np.mean(marks_by_label[2].x), np.mean(marks_by_label[2].y)
+    msg_ctrl2 = FootprintOverlayClickMessage(
+        {'domain': {'x': m2_x, 'y': m2_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl2)
+    assert len(ldr._obj.observation_table.selected_rows) == 3
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2', 'obs3'}
+
+    # Ctrl+click inside first footprint again - removes it from selection
+    msg_ctrl_deselect = FootprintOverlayClickMessage(
+        {'domain': {'x': m0_x, 'y': m0_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl_deselect)
+    assert len(ldr._obj.observation_table.selected_rows) == 2
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs2', 'obs3'}
