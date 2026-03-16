@@ -49,6 +49,9 @@ New Features
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
 
+- Footprint selection tools now support Ctrl/Cmd+click to toggle selections (add/remove individual 
+  footprints without replacing the current selection). [#4034]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
