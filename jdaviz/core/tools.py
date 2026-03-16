@@ -893,8 +893,8 @@ class SelectTableRow(CheckableTool, HubListener):
 class SelectFootprintOverlay(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'footprint_select.svg')
     tool_id = 'jdaviz:selectfootprint'
-    action_text = 'Select nearest footprint'
-    tool_tip = 'Select nearest footprint. Ctrl/Cmd+click to toggle.'
+    action_text = 'Select/identify overlay'
+    tool_tip = 'Select/identify overlay'
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
