@@ -130,8 +130,7 @@ class Launcher(v.VuetifyTemplate):
     mosviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'mosviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
     imviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'imviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
     # General Jdaviz logo for deconfigged button
-    LOGO_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', 'docs', 'logos'))
-    jdaviz_icon = Unicode(read_icon(os.path.join(LOGO_DIR, 'jdaviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    jdaviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'jdaviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, main=None, configs=ALL_JDAVIZ_CONFIGS, filepath='',
                  height=None, *args, **kwargs):
@@ -250,7 +249,6 @@ class Launcher(v.VuetifyTemplate):
             self.main.height = default_height
         self.main.color = 'transparent'
         self.main.children = [jdaviz_app]
-
 
     @property
     def main_with_launcher(self):
