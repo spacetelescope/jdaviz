@@ -33,8 +33,8 @@
                 <v-img
                     height="100"
                     width="160"
-                    :alt="Jdaviz"
-                    :title="Jdaviz"
+                    alt="Launch Jdaviz"
+                    title="Launch Jdaviz"
                     :src="config_icons['jdaviz']"></v-img>
             </div>
         </v-btn>
