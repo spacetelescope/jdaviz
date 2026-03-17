@@ -136,6 +136,9 @@ Specviz2d
 
 - Fixed bug where loading two 2D spectra failed to display in the spectrum-2d viewer. [#3983]
 
+- Fixed bug where mouseover fails to display in 2D Spectra viewer when no wavelength mapping
+  is provided. [#4093]
+
 4.5.1 (2026-03-06)
 ==================
 
