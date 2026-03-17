@@ -151,12 +151,19 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
 
 @pytest.mark.filterwarnings('ignore')
 def test_fits_image_hdu_parse_with_inverse_var(image_cube_hdu_obj, deconfigged_helper):
-    hdul = image_cube_hdu_obj.copy()
+    """
+    Test loading a cube that contains an IVAR (inverse variance) extension for
+    its uncertainty. the IVAR extension will be converted to a standard deviation
+    type internally for consistency.
+    """
 
-    # change ERR to IVAR, and make the values 4.0 (which, when converted to
-    # StdDevUncertainty, should be 0.5 which we'll check later)
+    # use existing test fixture, but change ERR ext to IVAR
+    hdul = image_cube_hdu_obj.copy()
     hdul[2].name = 'IVAR'
     hdul[2].header['EXTNAME'] = 'IVAR'
+
+    # make the values 4.0 (which, when converted to StdDevUncertainty, should be
+    # 0.5 which we'll check later)
     hdul[2].data = np.full_like(hdul[2].data, 4.0)
 
     deconfigged_helper.load(hdul, format='3D Spectrum')
@@ -167,6 +174,7 @@ def test_fits_image_hdu_parse_with_inverse_var(image_cube_hdu_obj, deconfigged_h
     # now check the actual values of the uncertainty, since they were 4.0 in inverse
     # variance they should be 0.5 in standard deviation
     unc_data = deconfigged_helper.datasets['3D Spectrum [UNC]'].get_data()
+
     # the BUNIT keyword in the header is applying a factor of
     # '1E-17 erg*s^-1*cm^-2*Angstrom^-1' so account for that in the expected value here
     bunit = 1E-17
