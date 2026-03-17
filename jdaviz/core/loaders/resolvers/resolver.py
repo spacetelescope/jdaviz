@@ -28,7 +28,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         UnitSelectPluginComponent,
                                         ViewerSelect,
                                         with_spinner,
-                                        _is_image_viewer)
+                                        _is_image_viewer,
+                                        ValidatorMixin)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
@@ -36,7 +37,7 @@ from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
                           find_polygon_mark_with_skewer,
-                          layer_is_image_data, IsValidWrapper)
+                          layer_is_image_data)
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
 
@@ -76,7 +77,7 @@ class FormatSelect(SelectPluginComponent):
 
     @observe('filters', 'debug')
     def _update_items(self, msg={}):
-        if not IsValidWrapper(self.plugin.is_valid):
+        if not self.plugin.is_valid:
             self.items = []
             self._apply_default_selection()
             return
@@ -105,19 +106,11 @@ class FormatSelect(SelectPluginComponent):
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
-                try:
-                    parser_is_valid = IsValidWrapper(this_parser.is_valid)
-                    if parser_is_valid:
-                        importer_input = this_parser.output
-                    else:
-                        self._invalid_importers[parser_name] = str(parser_is_valid)
-                        importer_input = None
-                except Exception as e:
-                    self._invalid_importers[parser_name] = f'Parser exception: {e}'
-                    importer_input = None
-
-                if importer_input is None:
-                    self._invalid_importers.setdefault(parser_name, 'importer_input is None')
+                if this_parser.is_valid:
+                    importer_input = this_parser.output
+                else:
+                    self._invalid_importers[parser_name] = str(this_parser.is_valid)
+                    self._invalid_importers.setdefault(parser_name, str(this_parser.is_valid))
                     this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
@@ -141,8 +134,7 @@ class FormatSelect(SelectPluginComponent):
                         # skip importers that do not match the target
                         self._invalid_importers[label] = 'Not matching target'
                         continue
-                    importer_is_valid = IsValidWrapper(this_importer.is_valid)
-                    if importer_is_valid:
+                    if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
                             item = {'label': importer_name,
                                     'parser': parser_name,
@@ -177,7 +169,7 @@ class FormatSelect(SelectPluginComponent):
                             # target filters
                             self._importers[importer_name] = this_importer
                     else:
-                        self._invalid_importers[label] = str(importer_is_valid)
+                        self._invalid_importers[label] = str(this_importer.is_valid)
 
         # Sort to move Catalog to the end of the list
         catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
@@ -222,7 +214,7 @@ class TargetSelect(SelectPluginComponent):
 
     @observe('filters')
     def _update_items(self, msg={}):
-        if not IsValidWrapper(self.plugin.is_valid):
+        if not self.plugin.is_valid:
             self.items = []
             self._apply_default_selection()
             return
@@ -241,7 +233,8 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin):
+class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin,
+                   ValidatorMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
@@ -525,8 +518,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     setattr(user_api, k, v)
         return self
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         # override by subclass
         return False  # pragma: nocover
 
@@ -603,9 +595,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         try:
             # calls self.parse_input() on the subclass and caches
             parsed_input = self.parsed_input
-            is_valid = IsValidWrapper(self.is_valid)
-            if not is_valid:
-                raise ValueError(str(is_valid))
+            if not self.is_valid:
+                raise ValueError(str(self.is_valid))
         except Exception as e:  # nosec
             self.parsed_input_is_empty = False
             self.parsed_input_is_query = False
@@ -1162,8 +1153,7 @@ class BaseConeSearchResolver(BaseResolver):
 
         self.viewer_centered = True
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         # these resolvers do not accept any direct, (default_input = None), so can
         # always be considered valid
         return True
@@ -1309,13 +1299,10 @@ def find_matching_resolver(app,
             if resolver_name == 'url' and 'timeout' in str(e):
                 raise e
             continue
-        try:
-            resolver_is_valid = IsValidWrapper(this_resolver.is_valid)
-        except Exception as e:  # nosec
-            resolver_is_valid = IsValidWrapper((False, f'is_valid exception: {e}'))
-            invalid_resolvers[resolver_name] = str(resolver_is_valid)
-        if not resolver_is_valid:
-            invalid_resolvers.setdefault(resolver_name, str(resolver_is_valid))
+
+        if not this_resolver.is_valid:
+            invalid_resolvers[resolver_name] = str(this_resolver.is_valid)
+            invalid_resolvers.setdefault(resolver_name, str(this_resolver.is_valid))
             continue
 
         if target is not None:
