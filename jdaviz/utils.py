@@ -49,7 +49,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'wildcard_match', 'cmap_samples', 'glue_colormaps',
            'att_to_componentid', 'create_data_hash',
            'in_ra_comps', 'in_dec_comps', 'RA_COMPS', 'DEC_COMPS',
-           'SPECTRAL_AXIS_COMP_LABELS']
+           'SPECTRAL_AXIS_COMP_LABELS', 'IsValidWrapper']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -1438,3 +1438,27 @@ def find_polygon_mark_with_skewer(px, py, viewer, marks):
         return containing_labels
 
     return None
+
+
+class IsValidWrapper:
+    """
+    A wrapper class for the result of is_valid to provide context dependent behavior for is_valid.
+    This class provides a boolean where necessary (most cases) and a message when failure due to
+    invalid input is necessary to explain the failure.
+    """
+
+    def __init__(self, is_valid_result):
+        if isinstance(is_valid_result, bool):
+            self.message = "" if is_valid_result else "invalid"
+            self.is_valid = is_valid_result
+        elif isinstance(is_valid_result, (tuple, list)) and len(is_valid_result) == 2:
+            self.message, self.is_valid = is_valid_result
+        else:
+            raise ValueError("is_valid_result must be a boolean "
+                             "or a tuple/list of (message, boolean)")
+
+    def __bool__(self):
+        return self.is_valid or not self.message
+
+    def __str__(self):
+        return self.message if not self.is_valid else "valid"
