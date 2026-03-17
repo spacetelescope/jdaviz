@@ -4,7 +4,7 @@ import numpy as np
 from asdf import AsdfFile
 from astropy import units as u
 from astropy.io import fits
-from astropy.nddata import StdDevUncertainty
+from astropy.nddata import InverseVariance, StdDevUncertainty
 from astropy.wcs import WCS
 from functools import cached_property
 from glue.core import HubListener
@@ -293,7 +293,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid light curve HDU, False otherwise.
+            True if the HDU is a valid flux HDU, False otherwise.
         """
         if item.get('label') == 'None':
             # require selection for flux
@@ -340,7 +340,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid uncertainty extension. False otherwise.
+            True if the HDU is a valid uncertainty HDU. False otherwise.
         """
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
@@ -376,7 +376,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid light curve HDU, False otherwise.
+            True if the HDU is a valid mask HDU, False otherwise.
         """
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
@@ -491,7 +491,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                 unc = InverseVariance(unc_data).represent_as(StdDevUncertainty)
                 unc.unit = data_unit
             else:
-            unc = StdDevUncertainty(unc_data * data_unit)
+                unc = StdDevUncertainty(unc_data * data_unit)
         else:
             unc = None
 
