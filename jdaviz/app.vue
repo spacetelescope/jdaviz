@@ -52,7 +52,7 @@
         <!-- this logic assumes the first entry is g-data-tools, if that changes, this may need to be modified -->
         <v-divider v-if="config !== 'deconfigged' && index > 1" vertical style="margin: 0px 10px"></v-divider>
         <j-tooltip v-if="item.name === 'g-data-tools' && config!=='mosviz'" tooltipcontent="Open data menu in sidebar (this button will be removed in a future release)">
-          <v-btn tile depressed color="turquoise" @click="state.drawer_content = 'loaders'">
+          <v-btn rounded="0" variant="flat" color="turquoise" @click="state.drawer_content = 'loaders'">
             Import Data
           </v-btn>
         </j-tooltip>

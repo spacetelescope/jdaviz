@@ -8,7 +8,7 @@
         <div v-for="item in items">
             <j-tooltip v-if="item.label !== 'Any'" :tooltipcontent="'Show only '+item.label+' '+tooltip_suffix">
                 <v-btn
-                tile
+                rounded="0"
                 :elevation=0
                 x-small
                 density="compact" 

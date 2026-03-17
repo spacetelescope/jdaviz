@@ -2,7 +2,7 @@
   <v-toolbar-items>
     <v-dialog v-model="dialog" height="400" width="600">
       <template v-slot:activator="{ props }">
-        <v-btn tile depressed v-bind="props" color="turquoise">
+        <v-btn rounded="0" variant="flat" v-bind="props" color="turquoise">
           Import Data
         </v-btn>
       </template>
