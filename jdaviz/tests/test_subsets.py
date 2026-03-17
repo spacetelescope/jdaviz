@@ -2,10 +2,12 @@ import warnings
 
 import numpy as np
 import pytest
+import regions
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
+from packaging.version import Version
 
 from glue.core.subset_group import GroupedSubset
 from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, RectanglePixelRegion,
@@ -16,6 +18,12 @@ from astropy.nddata import NDData
 from astropy.utils.data import download_file
 
 from jdaviz.utils import get_subset_type, MultiMaskSubsetState
+
+
+# due to improvements in calcuations in the regions package, we have a version
+# check on this that will be removed once we have a minimum version of regions
+# of 0.12
+IS_REGIONS_0_11_OR_OLDER = Version(regions.__version__) <= Version('0.11')
 
 
 def test_region_from_subset_2d(cubeviz_helper):
@@ -954,7 +962,10 @@ class TestRegionsFromSubsets:
         assert isinstance(sky_region, CircleSkyRegion)
         assert_allclose(sky_region.center.ra.deg, 24.40786313)
         assert_allclose(sky_region.center.dec.deg, 22.45185308)
-        assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
+        if IS_REGIONS_0_11_OR_OLDER:
+            assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
+        else:
+            assert_allclose(sky_region.radius.arcsec, 27843.243375)
 
         # and that it is None when not specified
         subsets = cubeviz_helper.app.get_subsets()
@@ -970,10 +981,16 @@ class TestRegionsFromSubsets:
         sky_region_1 = subsets['Subset 1'][1]['sky_region']
         assert_allclose(sky_region_0.center.ra.deg, 24.40786313)
         assert_allclose(sky_region_0.center.dec.deg, 22.45185308)
-        assert_allclose(sky_region_0.radius.arcsec, 28001.08106569353)
+        if IS_REGIONS_0_11_OR_OLDER:
+            assert_allclose(sky_region_0.radius.arcsec, 28001.08106569353)
+        else:
+            assert_allclose(sky_region_0.radius.arcsec, 27843.243375)
         assert_allclose(sky_region_1.center.ra.deg, 28.41569583)
         assert_allclose(sky_region_1.center.dec.deg, 25.44814949)
-        assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
+        if IS_REGIONS_0_11_OR_OLDER:
+            assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
+        else:
+            assert_allclose(sky_region_1.radius.arcsec, 25662.37978)
 
         # and that they are both None when not specified
         subsets = cubeviz_helper.app.get_subsets()
@@ -999,7 +1016,10 @@ class TestRegionsFromSubsets:
         assert isinstance(sky_region, CircleSkyRegion)
         assert_allclose(sky_region.center.ra.deg, 24.40786313)
         assert_allclose(sky_region.center.dec.deg, 22.45185308)
-        assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
+        if IS_REGIONS_0_11_OR_OLDER:
+            assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
+        else:
+            assert_allclose(sky_region.radius.arcsec, 27843.243375)
 
         # now test a composite subset, each component should have a sky region
         subset_plugin.import_region(CircularROI(30, 30, 10),
@@ -1011,10 +1031,16 @@ class TestRegionsFromSubsets:
         sky_region_1 = subsets['Subset 1'][1]['sky_region']
         assert_allclose(sky_region_0.center.ra.deg, 24.40786313)
         assert_allclose(sky_region_0.center.dec.deg, 22.45185308)
-        assert_allclose(sky_region_0.radius.arcsec, 28001.08106569353)
+        if IS_REGIONS_0_11_OR_OLDER:
+            assert_allclose(sky_region_0.radius.arcsec, 28001.08106569353)
+        else:
+            assert_allclose(sky_region_0.radius.arcsec, 27843.243375)
         assert_allclose(sky_region_1.center.ra.deg, 28.41569583)
         assert_allclose(sky_region_1.center.dec.deg, 25.44814949)
-        assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
+        if IS_REGIONS_0_11_OR_OLDER:
+            assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
+        else:
+            assert_allclose(sky_region_1.radius.arcsec, 25662.37978)
 
     def test_no_wcs_sky_regions(self, imviz_helper):
         """ Make sure that if sky regions are requested and there is no WCS,

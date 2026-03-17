@@ -104,6 +104,6 @@ class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
         out_reg_d = self.imviz.app.get_subsets(include_sky_region=True)['Subset 1'][0]['sky_region']
         assert_allclose(reg.center.ra.deg, out_reg_d.center.ra.deg)
         assert_allclose(reg.center.dec.deg, out_reg_d.center.dec.deg)
-        assert_quantity_allclose(reg.height, out_reg_d.height)
-        assert_quantity_allclose(reg.width, out_reg_d.width)
-        assert_quantity_allclose(reg.angle, out_reg_d.angle)
+        assert_quantity_allclose(reg.height, out_reg_d.height, rtol=1e-5)
+        assert_quantity_allclose(reg.width, out_reg_d.width, rtol=1e-5)
+        assert_quantity_allclose(reg.angle, out_reg_d.angle, rtol=1e-5)
