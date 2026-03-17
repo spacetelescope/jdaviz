@@ -149,6 +149,30 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     assert label_mouseover.as_text() == ('', '', '')
 
 
+@pytest.mark.filterwarnings('ignore')
+def test_fits_image_hdu_parse_with_inverse_var(image_cube_hdu_obj, deconfigged_helper):
+    hdul = image_cube_hdu_obj.copy()
+
+    # change ERR to IVAR, and make the values 4.0 (which, when converted to
+    # StdDevUncertainty, should be 0.5 which we'll check later)
+    hdul[2].name = 'IVAR'
+    hdul[2].header['EXTNAME'] = 'IVAR'
+    hdul[2].data = np.full_like(hdul[2].data, 4.0)
+
+    deconfigged_helper.load(hdul, format='3D Spectrum')
+
+    # data collection should contain flux, mask, uncert, and extracted spectrum
+    assert len(deconfigged_helper.app.data_collection) == 4
+
+    # now check the actual values of the uncertainty, since they were 4.0 in inverse
+    # variance they should be 0.5 in standard deviation
+    unc_data = deconfigged_helper.datasets['3D Spectrum [UNC]'].get_data()
+    # the BUNIT keyword in the header is applying a factor of
+    # '1E-17 erg*s^-1*cm^-2*Angstrom^-1' so account for that in the expected value here
+    bunit = 1E-17
+    assert_allclose(unc_data.flux, 0.5 * bunit * unc_data.unit)
+
+
 @pytest.mark.parametrize("flux_unit", [u.nJy, u.DN, u.DN / u.s])
 def test_spectrum3d_no_wcs_parse(cubeviz_helper, flux_unit):
     sc = Spectrum(flux=np.ones(24).reshape((2, 3, 4)) * flux_unit, spectral_axis_index=2)  # x, y, z

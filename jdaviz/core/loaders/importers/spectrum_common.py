@@ -340,11 +340,11 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid light curve HDU, False otherwise.
+            True if the HDU is a valid uncertainty extension. False otherwise.
         """
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
-                and hdu.header.get('EXTNAME', '') == 'ERR')
+                and (hdu.header.get('EXTNAME', '') in ['ERR', 'IVAR']))
 
     def asdf_roman_is_valid_unc(self, item):
         # TODO: should this instead have options just to include or not
@@ -486,6 +486,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             mask_data = None
 
         if unc_data is not None:
+            if self.unc_extension.selected_obj.header.get('EXTNAME', '') == 'IVAR':
+                # if it's an IVAR, convert to standard deviation
+                unc_data = 1 / np.sqrt(unc_data)
             unc = StdDevUncertainty(unc_data * data_unit)
         else:
             unc = None
