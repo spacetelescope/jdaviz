@@ -11,6 +11,7 @@ from regions import CircleSkyRegion, EllipseSkyRegion
 from specutils import Spectrum
 from traitlets import Bool, List, Unicode, observe
 
+from jdaviz.configs.default.plugins.export.avm import png_to_jpg_avm
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.marks import ShadowMixin
 from jdaviz.core.registries import tray_registry
@@ -137,7 +138,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         self.viewer.add_filter('is_not_empty')
 
-        viewer_format_options = ['png', 'svg']
+        viewer_format_options = ['png', 'svg', 'jpg']
         if self.config == 'cubeviz':
             if not self.app.state.settings.get('server_is_remote'):
                 viewer_format_options += ['mp4']
@@ -443,7 +444,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     @with_spinner()
     def export(self, filename=None, show_dialog=None, overwrite=False,
-               raise_error_for_overwrite=True):
+               raise_error_for_overwrite=True, embed_avm=False):
         """
         Export selected item(s)
 
@@ -462,6 +463,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             If `True`, raise exception when ``overwrite=False`` but
             output file already exists. Otherwise, a message will be sent
             to application snackbar instead.
+
+        embed_avm : bool
+            If `True` and the file type is PNG, embed
+            Astronomy Visualization Metadata (including WCS) using ``pyAVM``.
         """
         if self.multiselect:
             raise NotImplementedError("batch export not yet supported")
@@ -505,6 +510,33 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 self.save_movie(viewer, filename, filetype,
                                 width=f"{self.image_width}px" if self.image_custom_size else None,
                                 height=f"{self.image_height}px" if self.image_custom_size else None)
+
+            elif filetype == "jpg":
+                # export screenshot to JPG with AVM by:
+                #   (1) export a temporary PNG
+                #   (2) convert temporary PNG to a temporary JPG with PIL
+                #   (3) use pyAVM to embed AVM into a final copy of the temporary JPG
+
+                try:
+                    # export PNG
+                    tmp_filename = Path(str(Path(filename)).replace('.jpg', '.png'))
+                    self.save_figure(
+                        viewer, tmp_filename, 'png', show_dialog=show_dialog,
+                        width=f"{self.image_width}px" if self.image_custom_size else None,
+                        height=f"{self.image_height}px" if self.image_custom_size else None
+                    )
+
+                    # wait for PNG to be available before continuing
+                    while viewer.figure._upload_png_callback is not None:
+                        time.sleep(0.1)
+
+                    # now convert to JPG with AVM
+                    png_to_jpg_avm(self.app._jdaviz_helper, viewer, tmp_filename)
+
+                finally:
+                    # remove temporary png file, even if there are exceptions
+                    os.remove(tmp_filename)
+
             else:
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
                                  width=f"{self.image_width}px" if self.image_custom_size else None,
@@ -630,10 +662,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         else:
             app = viewer.app
 
-        def on_img_received(data):
+        def on_img_received(data, filename=filename):
             try:
                 with filename.open(mode='bw') as f:
                     f.write(data)
+
             except Exception as e:
                 self.hub.broadcast(SnackbarMessage(
                     f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
@@ -643,7 +676,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"{self.viewer.selected} exported to {str(filename)}",
                     sender=self, color="success"))
 
-        def get_png(figure):
+        def get_png(figure, on_img_received=on_img_received):
             if figure._upload_png_callback is not None:
                 raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
 
@@ -701,6 +734,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         elif filetype == 'png':
             # NOTE: get_png already check if _upload_png_callback is not None
             get_png(viewer.figure)
+
         elif filetype == 'svg':
             if viewer.figure._upload_svg_callback is not None:
                 raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure") # noqa
