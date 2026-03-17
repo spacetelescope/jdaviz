@@ -28,8 +28,8 @@
     <v-form v-model="all_fields_filled">
 
       <plugin-select
-        :items="servicetype_choices.map(i => i.label)"
-        :selected.sync="servicetype_selected"
+        :items="producttype_choices"
+        :selected.sync="producttype_selected"
         label="Data Product"
         hint="Type of Data Products to Query"
         :disabled="false"
