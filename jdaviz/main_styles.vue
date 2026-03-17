@@ -4,7 +4,7 @@
 export default {
   created() {
     const theme = this.$vuetify?.theme;
-    const vuetifyThemes = theme?.themes?.value;
+    const vuetifyThemes = theme?.themes;
     if (!vuetifyThemes) {
       return;
     }
