@@ -13,6 +13,7 @@ import multiprocessing as mp
 from joblib import Parallel, delayed
 
 import asdf
+import fsspec
 import numpy as np
 from astropy.io import fits
 from astropy.utils import minversion
@@ -685,6 +686,40 @@ def get_cloud_fits(possible_uri, ext=None):
 
         file_obj = fits.HDUList(downloaded_hdus)
         return file_obj
+
+
+def get_cloud_asdf(possible_uri):
+    """
+    Open an ASDF file stream from an S3 URI using fsspec. Return the input
+    unchanged if it is not an S3 URI.
+
+    Anonymous access is assumed for S3. If the URI is not S3-based, the input
+    is returned as-is.
+
+    Parameters
+    ----------
+    possible_uri : str
+        A path or URI to the ASDF file. If the URI uses the ``s3://`` scheme,
+        the file is accessed via fsspec and returned as a
+        `roman_datamodels.datamodels.DataModel`. Otherwise, the string is returned unchanged.
+
+    Returns
+    -------
+    file_obj : `~roman_datamodels.datamodels.DataModel` or str
+        If the URI is an S3 FITS file, returns an `HDUList` containing the requested
+        extensions. Otherwise, returns the original input string.
+    """
+    import roman_datamodels.datamodels as rdd
+
+    parsed_uri = urlparse(possible_uri)
+
+    if not parsed_uri.scheme.lower() == 's3':
+        raise ValueError("Not an S3 URI: {}".format(possible_uri))
+
+    fs = fsspec.filesystem(protocol='s3', anon=True)
+    file_stream = fs.open(possible_uri, anon=True)
+    data_model = rdd.open(file_stream)
+    return data_model
 
 
 def cached_uri(uri):

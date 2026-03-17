@@ -2,12 +2,13 @@ from traitlets import Bool, Unicode, List, observe
 from urllib.parse import urlparse
 import os
 from functools import cached_property
+from pathlib import Path
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
-from jdaviz.utils import download_uri_to_path, get_cloud_fits
+from jdaviz.utils import download_uri_to_path, get_cloud_fits, get_cloud_asdf
 
 
 __all__ = ['URLResolver', 'PresetURLResolver']
@@ -109,13 +110,15 @@ class URLResolver(BaseResolver):
 
     @cached_property
     def _uri_output_file(self):
-        fits_extensions = ['fits', 'fit']
-        is_prefix_to_fits = any(
-            self.url.strip().lower().endswith(ext)
-            for ext in fits_extensions
-        )
-        if self.url_scheme == 's3' and is_prefix_to_fits:
-            return get_cloud_fits(self.url.strip())
+        url_file_extension = Path(self.url.strip()).suffix.lower()  # like '.fits'
+        if self.url_scheme == 's3':
+
+            if url_file_extension in ['.fits', '.fit']:
+                return get_cloud_fits(self.url.strip())
+
+            elif url_file_extension == '.asdf':
+                return get_cloud_asdf(self.url.strip())
+
         return download_uri_to_path(self.url.strip(), cache=self.cache,
                                     local_path=self.local_path, timeout=self.timeout)
 
