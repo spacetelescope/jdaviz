@@ -46,10 +46,10 @@ class TestSubsetImporter:
     def _setup(self, deconfigged_helper, spectrum1d):
         deconfigged_helper.load(spectrum1d, format='1D Spectrum')
         self.dcf_helper = deconfigged_helper
-        self.app = deconfigged_helper.app
+        self._app = deconfigged_helper._app
 
     def generate_importer(self, input_data):
-        return SubsetImporter(app=self.app,
+        return SubsetImporter(app=self._app,
                               resolver=None,
                               parser=None,
                               input=input_data)
@@ -145,8 +145,8 @@ class TestSubsetImporter:
         importer.subset_label_invalid_msg = ''
 
         # Call should not raise
-        initial_subset_count = len(self.app.data_collection.subset_groups)
+        initial_subset_count = len(self._app.data_collection.subset_groups)
         importer()
 
         # Should have created a new subset
-        assert len(self.app.data_collection.subset_groups) >= initial_subset_count
+        assert len(self._app.data_collection.subset_groups) >= initial_subset_count

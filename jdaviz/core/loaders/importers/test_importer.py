@@ -28,22 +28,22 @@ class TestBaseImporter(BaseImporter):
 
 def test_update_existing_data_in_dc_traitlet(deconfigged_helper, premade_spectrum_list):
     # Test the sync
-    test_obj = TestBaseImporter(app=deconfigged_helper.app,
+    test_obj = TestBaseImporter(app=deconfigged_helper._app,
                                 resolver=deconfigged_helper.loaders['object']._obj,
                                 parser=None,
                                 input=premade_spectrum_list)
 
     assert len(test_obj.existing_data_in_dc) == 0
-    assert len(test_obj.app.existing_data_in_dc) == 0
+    assert len(test_obj._app.existing_data_in_dc) == 0
 
-    test_obj.app.existing_data_in_dc.append('test_value')
+    test_obj._app.existing_data_in_dc.append('test_value')
     # Check that the observer ran and updated the importer traitlet
-    assert test_obj.existing_data_in_dc == test_obj.app.existing_data_in_dc
+    assert test_obj.existing_data_in_dc == test_obj._app.existing_data_in_dc
 
     test_obj.existing_data_in_dc.append('test_value2')
     # The update works on both because of mutability, but it's safer
     # to set the app value directly
-    assert test_obj.existing_data_in_dc == test_obj.app.existing_data_in_dc
+    assert test_obj.existing_data_in_dc == test_obj._app.existing_data_in_dc
 
 
 class TestResetAndCheckExistingDataInDC:
@@ -53,7 +53,7 @@ class TestResetAndCheckExistingDataInDC:
         spectrum_list = SpectrumList([_create_spectrum1d_with_spectral_unit(seed=i)
                                       for i in range(5)])
 
-        test_obj = TestBaseImporter(app=deconfigged_helper.app,
+        test_obj = TestBaseImporter(app=deconfigged_helper._app,
                                     resolver=deconfigged_helper.loaders['object']._obj,
                                     parser=None,
                                     input=spectrum_list)
@@ -87,7 +87,7 @@ class TestResetAndCheckExistingDataInDC:
         test_obj.hash_map_to_label = dict(zip(dh_list, labels_list))
 
         # These *should* be the same thanks to the observer on the app traitlet
-        assert len(test_obj.existing_data_in_dc) == len(test_obj.app.existing_data_in_dc) == 1
+        assert len(test_obj.existing_data_in_dc) == len(test_obj._app.existing_data_in_dc) == 1
         assert dh_list[0] in test_obj.existing_data_in_dc
 
         # Now reset again, should be the same result
@@ -123,10 +123,10 @@ class TestResetAndCheckExistingDataInDC:
 
         # Although two SpectrumList objects are loaded into the data collection,
         # they share no data in common so only one value should be in existing_data_in_dc
-        assert len(test_obj.existing_data_in_dc) == len(test_obj.app.existing_data_in_dc) == 1
+        assert len(test_obj.existing_data_in_dc) == len(test_obj._app.existing_data_in_dc) == 1
         assert dh_list[-1] in test_obj.existing_data_in_dc
 
-        deconfigged_helper._app.data_item_remove(test_obj.app.data_collection[1].data.label)
+        deconfigged_helper._app.data_item_remove(test_obj._app.data_collection[1].data.label)
         # Again, existing_data_in_dc is updated from _update_existing_data_in_dc
         # in app.py, however we want to doublecheck that
         # reset_and_check_existing_data_in_dc works as expected

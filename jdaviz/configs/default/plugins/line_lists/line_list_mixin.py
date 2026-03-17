@@ -18,7 +18,7 @@ class LineListMixin:
         loaded via the notebook.
         """
 
-        lt = self.app.get_viewer(
+        lt = self._app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).load_line_list(
             line_table, replace=replace, return_table=True
@@ -34,35 +34,35 @@ class LineListMixin:
                 lt = self.spectral_lines
 
         add_line_list_message = AddLineListMessage(table=lt, sender=self)
-        self.app.hub.broadcast(add_line_list_message)
+        self._app.hub.broadcast(add_line_list_message)
 
     def erase_spectral_lines(self, name=None):
         """Convenience function to get to the viewer function"""
-        self.app.get_viewer(
+        self._app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).erase_spectral_lines(name=name)
 
     def plot_spectral_line(self, line, global_redshift=None):
         """Convenience function to get to the viewer function"""
-        self.app.get_viewer(
+        self._app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).plot_spectral_line(line, global_redshift)
 
     def plot_spectral_lines(self, global_redshift=None):
         """Convenience function to get to the viewer function"""
-        self.app.get_viewer(
+        self._app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).plot_spectral_lines(global_redshift)
 
     @property
     def spectral_lines(self):
-        return self.app.get_viewer(
+        return self._app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).spectral_lines
 
     @property
     def available_linelists(self):
-        return self.app.get_viewer(
+        return self._app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).available_linelists()
 
@@ -88,10 +88,10 @@ class LineListMixin:
         '''
         if range is not None:
             msg = RedshiftMessage("rs_slider_range", range, sender=self)
-            self.app.hub.broadcast(msg)
+            self._app.hub.broadcast(msg)
         if step is not None:
             msg = RedshiftMessage("rs_slider_step", step, sender=self)
-            self.app.hub.broadcast(msg)
+            self._app.hub.broadcast(msg)
 
     def set_redshift(self, new_redshift):
         '''
@@ -102,7 +102,7 @@ class LineListMixin:
             # avoid sending messages that can result in race conditions
             return
         msg = RedshiftMessage("redshift", new_redshift, sender=self)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)
 
     def _redshift_listener(self, msg):
         '''Save new redshifts (including from the helper itself)'''

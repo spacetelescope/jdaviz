@@ -17,7 +17,7 @@ class AstropyTableParser(BaseParser):
     @property
     def is_valid(self):
 
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
+        if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
             return False
 

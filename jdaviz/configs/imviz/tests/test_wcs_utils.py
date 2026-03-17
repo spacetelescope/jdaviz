@@ -124,11 +124,11 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         assert len(self.imviz._app.state.layer_icons) == 3
 
         # Confirm the WCS-only layer is created by WCS-linking .
-        assert len(get_wcs_only_layer_labels(self.imviz.app)) == 1
+        assert len(get_wcs_only_layer_labels(self.imviz._app)) == 1
 
         # Load a WCS-only layer, bypassing normal labeling scheme.
         ndd = wcs_utils._get_rotated_nddata_from_label(
-            app=self.imviz.app,
+            app=self.imviz._app,
             data_label="fits_wcs[DATA]",
             rotation_angle=5 * u.deg
         )
@@ -141,11 +141,11 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         assert len(self.imviz._app.state.layer_icons) == 3  # 4
 
         # Confirm the new WCS-only layer is logged.
-        assert len(get_wcs_only_layer_labels(self.imviz.app)) == 2
+        assert len(get_wcs_only_layer_labels(self.imviz._app)) == 2
 
         # Load a second WCS-only layer.
         ndd2 = wcs_utils._get_rotated_nddata_from_label(
-            app=self.imviz.app,
+            app=self.imviz._app,
             data_label="fits_wcs[DATA]",
             rotation_angle=45 * u.deg
         )
@@ -158,7 +158,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         assert len(self.imviz._app.state.layer_icons) == 3  # 5
 
         # Confirm the second WCS-only layer is logged
-        assert len(get_wcs_only_layer_labels(self.imviz.app)) == 3
+        assert len(get_wcs_only_layer_labels(self.imviz._app)) == 3
 
         # First entry is image data and the default reference data.
         assert self.imviz._app.state.layer_icons["fits_wcs[DATA]"] == "a"

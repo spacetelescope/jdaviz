@@ -500,7 +500,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     mask_data = mask_data.T
                 if getattr(wcs, 'naxis', 0) == 2:
                     wcs = wcs.swapaxes(0, 1)
-                self.app.hub.broadcast(SnackbarMessage(
+                self._app.hub.broadcast(SnackbarMessage(
                     f"Transposed input data to {data.shape}",
                     sender=self, color="warning"))
 

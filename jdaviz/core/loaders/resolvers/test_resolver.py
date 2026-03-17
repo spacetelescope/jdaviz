@@ -464,7 +464,6 @@ def test_enable_footprint_selection_tools_api(deconfigged_helper, image_nddata_w
     ldr = deconfigged_helper.loaders['object']
     ldr.object = table
     ldr.treat_table_as_query = True
-    ldr._obj.vue_link_by_wcs()
 
     # Should fail without WCS linking
     with pytest.raises(ValueError, match="Images must be linked by WCS"):

@@ -158,7 +158,7 @@ class UnitConversion(PluginTemplateMixin):
                                                      items='spectral_y_type_items',
                                                      selected='spectral_y_type_selected')
 
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.observe_traitlets_for_relevancy(
                 traitlets_to_observe=['spectral_unit_selected',
                                       'flux_unit_selected',
@@ -216,8 +216,8 @@ class UnitConversion(PluginTemplateMixin):
         if self.config == 'cubeviz':
             # NOTE: this assumes data_collection[0] is the science (flux/sb) cube
             if (
-                len(self.app.data_collection) > 0
-                and not self.app.data_collection[0].meta.get('PIXAR_SR')
+                len(self._app.data_collection) > 0
+                and not self._app.data_collection[0].meta.get('PIXAR_SR')
             ):
                 self.pixar_sr_exists = False
 
@@ -252,7 +252,7 @@ class UnitConversion(PluginTemplateMixin):
                 or (self.config in ('cubeviz', 'deconfigged')
                     and not len(self.spectral_y_type_selected))):
 
-            data_obj = self.app._jdaviz_helper.get_data(msg.data.label)
+            data_obj = self._app._jdaviz_helper.get_data(msg.data.label)
 
             # if the viewer is spectral and the data is Spectrum, get flux/sb/spectral
             # axis units from the Spectrum object

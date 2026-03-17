@@ -183,7 +183,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
+        if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
             return False
         if isinstance(self.input, (Table, QTable)) and len(self.input):

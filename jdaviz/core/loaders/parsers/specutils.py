@@ -21,7 +21,7 @@ class SpecutilsSpectrumParser(BaseParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
+        if self._app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
         try:
@@ -53,7 +53,7 @@ class SpecutilsSpectrumArrayParser(SpecutilsSpectrumParser):
         meta = standardize_metadata({})
         # Default to last axis in array for the spectral axis
         msg = "Spectral axis index not specified, assuming last axis."
-        self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color="warning"))
+        self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color="warning"))
         spectral_axis_index = arr.ndim - 1
         return Spectrum(flux=arr, meta=meta, spectral_axis_index=spectral_axis_index)
 
@@ -64,7 +64,7 @@ class SpecutilsSpectrumListParser(SpecutilsSpectrumParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz'):
+        if self._app.config not in ('deconfigged', 'specviz'):
             # NOTE: temporary during deconfig process
             return False
         return super().is_valid and len(self.output) > 1

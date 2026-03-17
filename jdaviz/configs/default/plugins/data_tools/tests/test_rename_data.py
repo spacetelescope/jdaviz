@@ -201,7 +201,7 @@ def test_rename_data_preserves_dataset_selected(deconfigged_helper, spectrum1d):
     deconfigged_helper.load(spectrum1d, data_label='spectrum_a')
     deconfigged_helper.load(spectrum1d, data_label='spectrum_b')
 
-    dcf_app = deconfigged_helper.app
+    dcf_app = deconfigged_helper._app
 
     # Test a few plugins that use dataset_selected for posterity
     for plugin in ['Model Fitting', 'Line Analysis', 'Gaussian Smooth']:

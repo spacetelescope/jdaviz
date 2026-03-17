@@ -42,7 +42,7 @@ class DataTools(TemplateMixin):
         elif os.path.exists(self._file_upload.file_path):
             try:
                 # NOTE: Helper loader does more stuff than native Application loader.
-                self.app._jdaviz_helper.load_data(self._file_upload.file_path)
+                self._app._jdaviz_helper.load_data(self._file_upload.file_path)
             except Exception as err:
                 self.error_message = f"An error occurred when loading the file: {repr(err)}"
             else:

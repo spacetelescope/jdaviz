@@ -49,7 +49,7 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
         expected_mask_with_spectral_subset == p.spectral_subset.selected_subset_mask
     )
 
-    assert p.spectral_subset.app == p.app
+    assert p.spectral_subset._app == p._app
     assert p.spectral_subset.spectrum_viewer == sv
 
     # line analysis uses custom components, one of which is still named spectral_subset
@@ -64,7 +64,7 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_viewer_select(cubeviz_helper, spectrum1d_cube):
-    app = cubeviz_helper.app
+    app = cubeviz_helper._app
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     fv = app.get_viewer("flux-viewer")
     sv = app.get_viewer('spectrum-viewer')
@@ -322,7 +322,7 @@ class FakeTable(TableMixin):
 
     def __init__(self, session, catalog, *args, **kwargs):
         self.session = session
-        self.app = session.jdaviz_app
+        self._app = session.jdaviz_app
         self._plugin_name = 'test-fake-table'
         # Don't call TableMixin.__init__ directly to avoid enable_load_into_app
         VuetifyTemplate.__init__(self, *args, **kwargs)

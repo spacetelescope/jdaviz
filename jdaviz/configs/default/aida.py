@@ -22,7 +22,7 @@ class AID:
 
     def __init__(self, viewer):
         self.viewer = viewer
-        self.app = viewer.jdaviz_app
+        self._app = viewer.jdaviz_app
 
     def _get_image_glue_data(self, image_label):
         if image_label is None:
@@ -43,7 +43,7 @@ class AID:
         if center is None:
             return
 
-        imviz_aligned_by_wcs = self.app._align_by == 'wcs'
+        imviz_aligned_by_wcs = self._app._align_by == 'wcs'
         if isinstance(center, SkyCoord):
             if imviz_aligned_by_wcs:
                 center = center.ra.degree, center.dec.degree
@@ -89,7 +89,7 @@ class AID:
         if rotation is None:
             return
 
-        orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        orientation = self._app._jdaviz_helper.plugins.get('Orientation', None)
 
         if orientation.align_by != 'WCS':
             raise ValueError("The viewer must be aligned by WCS to use `set_rotation`.")
@@ -198,7 +198,7 @@ class AID:
         center_x = self.viewer.state.zoom_center_x
         center_y = self.viewer.state.zoom_center_y
 
-        if self.app._align_by == 'wcs':
+        if self._app._align_by == 'wcs':
             reference_data = self.viewer.state.reference_data
         else:
             reference_data, image_label = self._get_image_glue_data(image_label)
@@ -207,7 +207,7 @@ class AID:
 
         # # if the image data have WCS, get the center sky coordinate:
         if sky_or_pixel in ('sky', None):
-            if self.app._align_by == 'wcs':
+            if self._app._align_by == 'wcs':
                 center = self.viewer._get_center_skycoord()
             else:
                 center = reference_wcs.pixel_to_world(center_x, center_y)

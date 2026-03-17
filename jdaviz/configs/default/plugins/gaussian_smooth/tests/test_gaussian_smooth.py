@@ -5,7 +5,7 @@ from specutils import Spectrum
 
 
 def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
-    app = cubeviz_helper.app
+    app = cubeviz_helper._app
     dc = app.data_collection
     data_label = 'test'
     cubeviz_helper.load_data(spectrum1d_cube, data_label=data_label)

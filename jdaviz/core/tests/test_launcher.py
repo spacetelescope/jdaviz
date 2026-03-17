@@ -345,7 +345,8 @@ class TestLauncherClass:
         """
         mock_helper = Mock()
         dcf_app = deconfigged_helper._app
-        mock_helper.app = dcf_app
+        mock_helper._app = dcf_app
+        mock_helper.app = dcf_app  # Keep .app for backwards compatibility in the test
         default_height = '800px'
         dcf_app.state.settings = {'context': {'notebook': {'max_height': default_height}}}
         dcf_app.layout = widgets.Layout(height=height, width="100%")

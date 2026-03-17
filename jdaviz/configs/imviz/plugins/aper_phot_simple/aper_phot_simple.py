@@ -357,7 +357,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # all cubes are in sb so we can get display unit for plugin from SB display unit
         # this can be changed to listen specifically to changes in surface brightness
         # from UC plugin GlobalDisplayUnitChange message, but will require some refactoring
-        disp_unit = self.app._get_display_unit('sb')
+        disp_unit = self._app._get_display_unit('sb')
 
         # this check needs to be here because 'get_display_unit' will sometimes
         # return non surface brightness units or even None when the app is starting
@@ -381,7 +381,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # flux scaling will be applied when the solid angle component is
         # multiplied out, so use 'flux' display unit
-        fs_unit = self.app._get_display_unit('flux')
+        fs_unit = self._app._get_display_unit('flux')
         self.flux_scaling_display_unit = fs_unit
 
         # if cube loaded is per-pixel-squared sb (i.e flux cube loaded)
@@ -526,7 +526,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def _cube_slice_ind(self):
         # TODO: performance improvements, change to listen to slice change event
-        slice_plugin = self.app._jdaviz_helper.plugins.get('Spectral Slice', None)
+        slice_plugin = self._app._jdaviz_helper.plugins.get('Spectral Slice', None)
         if slice_plugin is None:
             return None
 
@@ -540,7 +540,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             spectral_axis = selected_obj.spectral_axis
 
-        sp_disp_unit = self.app._get_display_unit('spectral')
+        sp_disp_unit = self._app._get_display_unit('spectral')
 
         # Use the spectral axis directly, convert to spectral axis display unit, and compare
         # to the value reported by the slice plugin.
@@ -614,10 +614,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
 
         try:
-            type = 'sky_region' if self.app._align_by == 'wcs' else 'region'
-            reg = self.app.get_subsets(subset_name=self.background_selected,
-                                       include_sky_region=type == 'sky_region',
-                                       spatial_only=True)[0][type]
+            type = 'sky_region' if self._app._align_by == 'wcs' else 'region'
+            reg = self._app.get_subsets(subset_name=self.background_selected,
+                                        include_sky_region=type == 'sky_region',
+                                        spatial_only=True)[0][type]
             self.background_value = self._calc_background_median(reg)
         except Exception as e:
             self.background_value = 0
