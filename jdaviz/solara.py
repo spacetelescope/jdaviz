@@ -63,7 +63,6 @@ def Page():
                                  "flexible mode at runtime")
             elif len(data_list):
                 jdaviz.loaders['file'].filepath = data_list[0]
-            #jdaviz.show()
         else:
             from jdaviz.core.launcher import Launcher
             launcher = Launcher(height='100vh',
