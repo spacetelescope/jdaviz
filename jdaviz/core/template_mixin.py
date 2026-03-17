@@ -277,6 +277,69 @@ class WithCache:
                 del self.__dict__[attr]
 
 
+class IsValidWrapper:
+    """
+    A wrapper class for the result of is_valid to provide context dependent behavior.
+
+    This class provides a boolean where necessary (most cases) and a message when failure due to
+    invalid input is necessary to explain the failure.
+
+    Parameters
+    ----------
+    is_valid_result : bool or tuple or list
+        Either True/False or a tuple/list of (boolean, message).
+    """
+    def __init__(self, is_valid_result):
+        if isinstance(is_valid_result, bool):
+            self.is_valid = is_valid_result
+            self.message = ''
+        elif isinstance(is_valid_result, (tuple, list)) and len(is_valid_result) == 2:
+            self.is_valid, self.message = is_valid_result
+        else:
+            raise ValueError('is_valid_result must be a '
+                             'boolean or a tuple/list of (boolean, message)')
+
+    def __bool__(self):
+        return self.is_valid or not self.message
+
+    def __str__(self):
+        return self.message if not self.is_valid else 'valid'
+
+
+class ValidatorMixin:
+    """
+    Mixin that provides automatic wrapping of is_valid results in IsValidWrapper.
+
+    Subclasses should implement `_check_is_valid()` instead of `is_valid` property.
+    The `is_valid` property is provided automatically and wraps the result.
+    """
+
+    @property
+    def is_valid(self):
+        """
+        Returns wrapped is_valid result.
+
+        Subclasses should override _check_is_valid() to provide validation logic.
+        """
+        try:
+            is_valid = IsValidWrapper(self._check_is_valid())
+        except Exception as e:
+            is_valid = IsValidWrapper((False, str(e)))
+
+        return is_valid
+
+    def _check_is_valid(self):
+        """
+        Override this in subclasses to return validation result.
+
+        Returns
+        -------
+        bool or tuple
+            Either True/False or a tuple of (boolean, message).
+        """
+        raise NotImplementedError("Subclasses must implement _check_is_valid()")  # pragma: nocover
+
+
 class CustomToolbarToggle(HubListener):
     def __init__(self, plugin, enabled_traitlet, callable, name):
         super().__init__()
