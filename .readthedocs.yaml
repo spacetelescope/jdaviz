@@ -5,7 +5,7 @@ build:
   apt_packages:
     - graphviz
   tools:
-    python: "3.11"
+    python: "3.13"
   jobs:
     post_checkout:
       # Use `git log` to check if the latest commit contains "skip rtd" or "rtd skip",
