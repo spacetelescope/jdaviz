@@ -41,6 +41,12 @@
       </v-col>
     </v-row>
 
+    <div class="d-flex align-center my-4">
+        <v-divider style="border-color: white !important; border-width: 3px 0 0 0; opacity: 1"></v-divider>
+        <span class="mx-4 white--text font-weight-bold">The functionality below is deprecated as of version 5.0.</span>
+        <v-divider style="border-color: white !important; border-width: 3px 0 0 0; opacity: 1"></v-divider>
+    </div>
+
     <v-row>
         <v-text-field
             v-model="filepath"
