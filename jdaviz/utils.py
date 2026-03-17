@@ -5,7 +5,6 @@ import threading
 import warnings
 from collections import deque
 from urllib.parse import urlparse
-import fsspec
 import fnmatch
 import re
 import hashlib
@@ -692,6 +691,10 @@ def get_cloud_asdf(possible_uri):
     """
     Open an ASDF file stream from an S3 URI using fsspec. Return the input
     unchanged if it is not an S3 URI.
+
+    If an open filestream is returned, the file data will not be transferred
+    from S3 to local memory until a specific attribute on the data model
+    is called that returns a numpy array, like ``data_model.data``.
 
     Anonymous access is assumed for S3. If the URI is not S3-based, the input
     is returned as-is.
