@@ -3,7 +3,7 @@
     <template v-slot:activator="{ props }">
       <!-- <v-tooltip> -->
         <!-- <template v-slot:activator="{ props }"> -->
-          <v-btn icon tile v-bind="props">
+          <v-btn icon rounded="0" v-bind="props">
             <v-icon>mdi-chart-histogram</v-icon>
           </v-btn>
         <!-- </template> -->

@@ -211,7 +211,7 @@
                 <v-col cols=6 style="padding: 0">
                   <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
                     <v-btn
-                      tile
+                      rounded="0"
                       :elevation=0
                       x-small
                       density="compact"
@@ -227,7 +227,7 @@
                 <v-col cols=6 style="text-align: right; padding: 0">
                   <j-tooltip tipid='plugin-line-lists-erase-all-in-list'>
                     <v-btn
-                      tile
+                      rounded="0"
                       :elevation=0
                       x-small
                       density="compact"
@@ -335,7 +335,7 @@
       <v-col cols=6>
         <j-tooltip tipid='plugin-line-lists-erase-all'>
           <v-btn
-            tile
+            rounded="0"
             :elevation=0
             x-small
             density="compact"
@@ -351,7 +351,7 @@
       <v-col cols=6 style="text-align: right">
         <j-tooltip tipid='plugin-line-lists-plot-all'>
           <v-btn
-            tile
+            rounded="0"
             :elevation=0
             x-small
             density="compact"

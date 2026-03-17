@@ -113,7 +113,7 @@
       <v-row justify="end">
         <j-tooltip tipid='plugin-model-fitting-reestimate-all'>
           <v-btn
-            tile
+            rounded="0"
             :elevation=0
             x-small
             density="compact"
@@ -161,7 +161,7 @@
                   >
                     <j-tooltip tipid='plugin-model-fitting-reestimate'>
                       <v-btn
-                        tile
+                        rounded="0"
                         :elevation=0
                         x-small
                         density="compact"
@@ -187,7 +187,7 @@
               >
                 <j-tooltip tipid='plugin-model-fitting-reestimate'>
                   <v-btn
-                    tile
+                    rounded="0"
                     :elevation=0
                     x-small
                     density="compact"
