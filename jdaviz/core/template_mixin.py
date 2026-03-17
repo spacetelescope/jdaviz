@@ -292,7 +292,7 @@ class IsValidWrapper:
     def __init__(self, is_valid_result):
         if isinstance(is_valid_result, bool):
             self.is_valid = is_valid_result
-            self.message = ''
+            self.message = 'valid' if is_valid_result else 'invalid'
         elif isinstance(is_valid_result, (tuple, list)) and len(is_valid_result) == 2:
             self.is_valid, self.message = is_valid_result
         else:
@@ -303,7 +303,7 @@ class IsValidWrapper:
         return self.is_valid or not self.message
 
     def __str__(self):
-        return self.message if not self.is_valid else 'valid'
+        return self.message
 
 
 class ValidatorMixin:
