@@ -488,7 +488,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if unc_data is not None:
             if self.unc_extension.selected_obj.header.get('EXTNAME', '') == 'IVAR':
                 # if it's an IVAR, convert to standard deviation
-                unc_data = 1 / np.sqrt(unc_data)
+                unc = InverseVariance(unc_data).represent_as(StdDevUncertainty)
+                unc.unit = data_unit
+            else:
             unc = StdDevUncertainty(unc_data * data_unit)
         else:
             unc = None
