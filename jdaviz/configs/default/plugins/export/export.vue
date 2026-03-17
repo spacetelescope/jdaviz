@@ -351,8 +351,8 @@
 
         <v-card-actions>
           <v-row justify="end">
-            <v-btn tile small color="primary" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
-            <v-btn tile small color="accent" class="mr-4" @click="overwrite_from_ui">Overwrite</v-btn>
+            <v-btn rounded="0" small color="primary" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
+            <v-btn rounded="0" small color="accent" class="mr-4" @click="overwrite_from_ui">Overwrite</v-btn>
           </v-row>
         </v-card-actions>
       </v-card>

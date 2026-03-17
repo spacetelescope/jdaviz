@@ -58,7 +58,7 @@
       <v-col cols=6>
         <j-tooltip tipid='plugin-dq-show-all'>
           <v-btn
-            tile
+            rounded="0"
             :elevation=0
             x-small
             density="compact"
@@ -74,7 +74,7 @@
       <v-col cols=6 style="text-align: right">
         <j-tooltip tipid='plugin-dq-hide-all'>
           <v-btn
-            tile
+            rounded="0"
             :elevation=0
             x-small
             density="compact"

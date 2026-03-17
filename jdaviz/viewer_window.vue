@@ -14,7 +14,7 @@
             variant="outlined"
             elevation="3"
             color="white"
-            tile
+            rounded="0"
             icon
             style="height: 42px; width: 42px"
             @click="$emit('call-viewer-method', {'id': id, 'method': '_deprecated_data_menu'})"
