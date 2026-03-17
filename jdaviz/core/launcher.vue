@@ -20,7 +20,7 @@
       <v-col>
         <span class="white--text">
             As of version 5.0, Jdaviz has been generalized to work with mixed data types, rather than needing to select a specific
-            configuration. Click the button to the right to launch Jdaviz. Alternately, the deprecated "config" versions of Jdaviz
+            configuration. Click the Jdaviz logo to the right to launch Jdaviz. Alternately, the deprecated "config" versions of Jdaviz
             are available below, but will be removed in a future release.
         </span>
       </v-col>
