@@ -302,7 +302,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
         # Check for Binary Table HDU with spectral columns (for 1D spectra only)
         if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
-            if hasattr(hdu, 'columns') and hdu.columns is not None and self.supported_flux_ndim == 1:
+            if (hasattr(hdu, 'columns') and hdu.columns is not None and
+                    self.supported_flux_ndim == 1):
                 col_names = [name.upper() for name in hdu.columns.names]
                 # Check for wavelength column
                 has_wave = any(name in col_names for name in ['WAVE', 'WAVELENGTH', 'LAMBDA'])
@@ -508,7 +509,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             flux_data = flux_data[0]
 
         # Get units from column metadata
-        wave_unit = u.Unit(hdu.columns[wave_col].unit) if hdu.columns[wave_col].unit else u.dimensionless_unscaled
+        wave_unit = (u.Unit(hdu.columns[wave_col].unit) if hdu.columns[wave_col].unit
+                     else u.dimensionless_unscaled)
         flux_unit = u.Unit(hdu.columns[flux_col].unit) if hdu.columns[flux_col].unit else u.count
 
         # Handle uncertainty if present
@@ -524,7 +526,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         # Also check for column names containing these strings
         if unc is None:
             for orig_name in hdu.columns.names:
-                if any(err_name in orig_name.upper() for err_name in ['ERR', 'SIGMA', 'UNCERTAINTY']):
+                if any(err_name in orig_name.upper()
+                       for err_name in ['ERR', 'SIGMA', 'UNCERTAINTY']):
                     unc_data = hdu.data[orig_name]
                     if unc_data.ndim == 2 and unc_data.shape[0] == 1:
                         unc_data = unc_data[0]

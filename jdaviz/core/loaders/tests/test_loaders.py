@@ -515,8 +515,10 @@ def table_spectrum_hdulist_single_row():
     # Create a Binary Table HDU with array-valued columns
     # Format: '100E' means 100 float32 values
     col_wave = fits.Column(name='WAVE', format=f'{n_points}E', unit='Angstrom', array=[wave])
-    col_flux = fits.Column(name='FLUX', format=f'{n_points}E', unit='erg/s/cm2/Angstrom', array=[flux])
-    col_sigma = fits.Column(name='SIGMA', format=f'{n_points}E', unit='erg/s/cm2/Angstrom', array=[sigma])
+    col_flux = fits.Column(name='FLUX', format=f'{n_points}E',
+                           unit='erg/s/cm2/Angstrom', array=[flux])
+    col_sigma = fits.Column(name='SIGMA', format=f'{n_points}E',
+                            unit='erg/s/cm2/Angstrom', array=[sigma])
 
     hdu = fits.BinTableHDU.from_columns([col_wave, col_flux, col_sigma])
     hdu.name = 'SPECTRUM'
@@ -539,8 +541,10 @@ def table_spectrum_hdulist_with_flux_reduced():
     snr = flux / err
 
     col_wave = fits.Column(name='WAVE', format=f'{n_points}D', unit='nm', array=[wave])
-    col_flux = fits.Column(name='FLUX_REDUCED', format=f'{n_points}D', unit='erg/s/cm2/nm', array=[flux])
-    col_err = fits.Column(name='ERR_REDUCED', format=f'{n_points}D', unit='erg/s/cm2/nm', array=[err])
+    col_flux = fits.Column(name='FLUX_REDUCED', format=f'{n_points}D',
+                           unit='erg/s/cm2/nm', array=[flux])
+    col_err = fits.Column(name='ERR_REDUCED', format=f'{n_points}D',
+                          unit='erg/s/cm2/nm', array=[err])
     col_snr = fits.Column(name='SNR', format=f'{n_points}D', array=[snr])
 
     hdu = fits.BinTableHDU.from_columns([col_wave, col_flux, col_err, col_snr])
