@@ -128,6 +128,8 @@ Imviz
 - Fixed bug where calling `jd.show()` before `batch_load` context caused data not to load correctly
   into the viewer(s) due to absence of linking necessary for glue's rendering backend. [#4079]
 
+- Fixed a bug when trying to change link type multiple times with subsets defined. [#4096]
+
 Mosviz
 ^^^^^^
 
@@ -185,8 +187,6 @@ Imviz
 ^^^^^
 
 - Optimization to orientation plugin to reduce overhead when multiple custom orientations are created. [#3896]
-
-- Fixed a bug when trying to change link type multiple times with subsets defined. [#4096]
 
 Mosviz
 ^^^^^^
