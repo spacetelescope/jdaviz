@@ -1233,8 +1233,8 @@ def find_matching_resolver(app,
         for resolver, resolver_name, fmt_label in valid_resolvers:
             if resolver_name not in valid_resolvers_dict:
                 valid_resolvers_dict[resolver_name] = {}
-            fmt_label = f"{fmt_label}: jd.load(obj_to_load, format='{fmt_label})'"
-            valid_resolvers_dict[resolver_name][fmt_label] = 'valid'
+            fmt_label = f"{fmt_label}: jd.load(obj_to_load, format='{fmt_label}')"
+            valid_resolvers_dict[resolver_name][fmt_label] = ''
 
         msg = (f'Multiple valid loaders found for input. '
                f'Please specify a format from the following as:\n'
