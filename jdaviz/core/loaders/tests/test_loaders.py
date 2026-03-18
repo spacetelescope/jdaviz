@@ -497,3 +497,127 @@ class TestRomanLoaders:
         ldr.load()
         # 2D spectrum and auto-extracted 1D spectrum
         assert len(helper.app.data_collection) == 2
+
+
+@pytest.fixture
+def table_spectrum_hdulist_single_row():
+    """
+    Create a minimal Binary Table HDU with spectral data in array-valued columns.
+    This mimics the structure of VO-compliant spectra like BEFS and FUSE.
+    Single row with array values (shape: 1 x N_wavelengths).
+    """
+    # Create wavelength and flux arrays
+    n_points = 100
+    wave = np.linspace(1000, 2000, n_points)
+    flux = np.random.random(n_points) * 1e-13
+    sigma = np.random.random(n_points) * 1e-14
+
+    # Create a Binary Table HDU with array-valued columns
+    # Format: '100E' means 100 float32 values
+    col_wave = fits.Column(name='WAVE', format=f'{n_points}E', unit='Angstrom', array=[wave])
+    col_flux = fits.Column(name='FLUX', format=f'{n_points}E', unit='erg/s/cm2/Angstrom', array=[flux])
+    col_sigma = fits.Column(name='SIGMA', format=f'{n_points}E', unit='erg/s/cm2/Angstrom', array=[sigma])
+
+    hdu = fits.BinTableHDU.from_columns([col_wave, col_flux, col_sigma])
+    hdu.name = 'SPECTRUM'
+
+    primary = fits.PrimaryHDU()
+    return fits.HDUList([primary, hdu])
+
+
+@pytest.fixture
+def table_spectrum_hdulist_with_flux_reduced():
+    """
+    Create a Binary Table HDU with FLUX_REDUCED and ERR_REDUCED columns.
+    This mimics the structure of ESO archive spectra.
+    Single row with array values.
+    """
+    n_points = 150
+    wave = np.linspace(500, 1500, n_points)
+    flux = np.random.random(n_points) * 1e-12
+    err = np.random.random(n_points) * 1e-13
+    snr = flux / err
+
+    col_wave = fits.Column(name='WAVE', format=f'{n_points}D', unit='nm', array=[wave])
+    col_flux = fits.Column(name='FLUX_REDUCED', format=f'{n_points}D', unit='erg/s/cm2/nm', array=[flux])
+    col_err = fits.Column(name='ERR_REDUCED', format=f'{n_points}D', unit='erg/s/cm2/nm', array=[err])
+    col_snr = fits.Column(name='SNR', format=f'{n_points}D', array=[snr])
+
+    hdu = fits.BinTableHDU.from_columns([col_wave, col_flux, col_err, col_snr])
+    hdu.name = 'SPECTRUM'
+
+    primary = fits.PrimaryHDU()
+    return fits.HDUList([primary, hdu])
+
+
+def test_table_spectrum_single_row(deconfigged_helper, table_spectrum_hdulist_single_row):
+    """Test loading Binary Table HDU with single row array-valued columns (WAVE, FLUX, SIGMA)."""
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table_spectrum_hdulist_single_row
+
+    # Should detect as 1D Spectrum
+    assert '1D Spectrum' in ldr.format.choices
+    ldr.format = '1D Spectrum'
+
+    # Should have flux extension available
+    assert len(ldr.importer.extension.choices) > 0
+
+    # Load the data
+    ldr.load()
+
+    # Verify spectrum was loaded
+    assert len(deconfigged_helper.app.data_collection) == 1
+    spec = deconfigged_helper.datasets['1D Spectrum'].get_data()
+
+    # Verify it's a proper Spectrum object
+    assert isinstance(spec, Spectrum)
+    assert spec.flux.shape == (100,)
+    assert spec.spectral_axis.shape == (100,)
+
+    # Verify units were preserved
+    assert str(spec.spectral_axis.unit) == 'Angstrom'
+    # Unit ordering may vary, so check components
+    flux_unit_str = str(spec.flux.unit)
+    assert 'erg' in flux_unit_str
+    assert 'Angstrom' in flux_unit_str
+    assert 'cm2' in flux_unit_str or 'cm**2' in flux_unit_str
+    assert 's' in flux_unit_str
+
+    # Verify uncertainty was loaded
+    assert spec.uncertainty is not None
+    assert spec.uncertainty.array.shape == (100,)
+
+
+def test_table_spectrum_flux_reduced(deconfigged_helper, table_spectrum_hdulist_with_flux_reduced):
+    """Test loading Binary Table HDU with FLUX_REDUCED and ERR_REDUCED columns."""
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table_spectrum_hdulist_with_flux_reduced
+
+    # Should detect as 1D Spectrum
+    assert '1D Spectrum' in ldr.format.choices
+    ldr.format = '1D Spectrum'
+
+    # Load the data
+    ldr.load()
+
+    # Verify spectrum was loaded
+    assert len(deconfigged_helper.app.data_collection) == 1
+    spec = deconfigged_helper.datasets['1D Spectrum'].get_data()
+
+    # Verify it's a proper Spectrum object
+    assert isinstance(spec, Spectrum)
+    assert spec.flux.shape == (150,)
+    assert spec.spectral_axis.shape == (150,)
+
+    # Verify units were preserved
+    assert str(spec.spectral_axis.unit) == 'nm'
+    # Unit ordering may vary, so check components
+    flux_unit_str = str(spec.flux.unit)
+    assert 'erg' in flux_unit_str
+    assert 'nm' in flux_unit_str
+    assert 'cm2' in flux_unit_str or 'cm**2' in flux_unit_str
+    assert 's' in flux_unit_str
+
+    # Verify uncertainty was loaded from ERR_REDUCED column
+    assert spec.uncertainty is not None
+    assert spec.uncertainty.array.shape == (150,)

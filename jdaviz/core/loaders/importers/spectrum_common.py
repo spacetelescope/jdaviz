@@ -293,12 +293,25 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid light curve HDU, False otherwise.
+            True if the HDU is a valid spectrum HDU, False otherwise.
         """
         if item.get('label') == 'None':
             # require selection for flux
             return False
         hdu = item.get('obj')
+
+        # Check for Binary Table HDU with spectral columns (for 1D spectra only)
+        if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
+            if hasattr(hdu, 'columns') and hdu.columns is not None and self.supported_flux_ndim == 1:
+                col_names = [name.upper() for name in hdu.columns.names]
+                # Check for wavelength column
+                has_wave = any(name in col_names for name in ['WAVE', 'WAVELENGTH', 'LAMBDA'])
+                # Check for flux column (or variations)
+                has_flux = any('FLUX' in name for name in col_names)
+                if has_wave and has_flux:
+                    return True
+
+        # Check for Image HDU (existing logic)
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
                 and ('DISPAXIS' in hdu.header
                      or hdu.header.get('CTYPE1', '') == 'WAVE'
@@ -458,7 +471,79 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         else:
             raise NotImplementedError(f"{inp} is not supported")
 
+    def _spectrum_from_table_hdu(self, hdulist, hdu):
+        """Extract spectrum from Binary Table HDU with array-valued columns."""
+        header = hdu.header
+        metadata = standardize_metadata(header)
+        if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+            metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
+
+        col_names = [name.upper() for name in hdu.columns.names]
+        col_map = {name.upper(): name for name in hdu.columns.names}
+
+        # Find wavelength column
+        wave_col = None
+        for name in ['WAVE', 'WAVELENGTH', 'LAMBDA']:
+            if name in col_names:
+                wave_col = col_map[name]
+                break
+
+        # Find flux column
+        flux_col = None
+        for orig_name in hdu.columns.names:
+            if 'FLUX' in orig_name.upper():
+                flux_col = orig_name
+                break
+
+        if wave_col is None or flux_col is None:
+            raise ValueError("Could not find wavelength and flux columns in table HDU")
+
+        # Extract data (handle both single-row array format and multi-row format)
+        wave_data = hdu.data[wave_col]
+        flux_data = hdu.data[flux_col]
+
+        # If single row with array values, flatten
+        if wave_data.ndim == 2 and wave_data.shape[0] == 1:
+            wave_data = wave_data[0]
+            flux_data = flux_data[0]
+
+        # Get units from column metadata
+        wave_unit = u.Unit(hdu.columns[wave_col].unit) if hdu.columns[wave_col].unit else u.dimensionless_unscaled
+        flux_unit = u.Unit(hdu.columns[flux_col].unit) if hdu.columns[flux_col].unit else u.count
+
+        # Handle uncertainty if present
+        unc = None
+        for unc_name in ['SIGMA', 'ERR', 'ERROR', 'UNCERTAINTY']:
+            if unc_name in col_names:
+                unc_col = col_map[unc_name]
+                unc_data = hdu.data[unc_col]
+                if unc_data.ndim == 2 and unc_data.shape[0] == 1:
+                    unc_data = unc_data[0]
+                unc = StdDevUncertainty(unc_data * flux_unit)
+                break
+        # Also check for column names containing these strings
+        if unc is None:
+            for orig_name in hdu.columns.names:
+                if any(err_name in orig_name.upper() for err_name in ['ERR', 'SIGMA', 'UNCERTAINTY']):
+                    unc_data = hdu.data[orig_name]
+                    if unc_data.ndim == 2 and unc_data.shape[0] == 1:
+                        unc_data = unc_data[0]
+                    unc = StdDevUncertainty(unc_data * flux_unit)
+                    break
+
+        # Create spectrum
+        return Spectrum(
+            spectral_axis=wave_data * wave_unit,
+            flux=flux_data * flux_unit,
+            uncertainty=unc,
+            meta=metadata
+        )
+
     def _spectrum_from_hdu(self, hdulist, hdu):
+        # Handle Binary Table HDU with spectral columns
+        if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
+            return self._spectrum_from_table_hdu(hdulist, hdu)
+
         data = hdu.data
         header = hdu.header
         metadata = standardize_metadata(header)
