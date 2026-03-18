@@ -17,7 +17,9 @@ New Features
 
 - Support in plot options to set which columns are visible for table viewers. [#4033]
 
-- Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
+- Added `skewer` mode to footprint selection that only selects when clicking inside a footprint.
+  Footprint selection tools now support Ctrl/Cmd+click to toggle selections and clicking outside
+  all footprints in skewer mode deselects all. [#3962, #4034]
 
 - Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
 
@@ -48,9 +50,6 @@ New Features
 
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
-
-- Footprint selection tools now support Ctrl/Cmd+click to toggle selections (add/remove individual 
-  footprints without replacing the current selection). [#4034]
 
 Cubeviz
 ^^^^^^^
