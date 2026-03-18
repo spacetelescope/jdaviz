@@ -707,6 +707,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             else:
                 # Clear selection
                 self.observation_table.selected_rows = []
+        else:
+            # Clicked outside - deselect all
+            if msg.mode == 'skewer':
+                self.observation_table.selected_rows = []
 
     def _on_viewer_added(self, msg):
         """When a new viewer is created, add footprints if toolbar is enabled."""
