@@ -49,6 +49,8 @@ New Features
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
 
+- Add support for loading Spectra from BinaryHDU and TableHDU extensions. [#4097]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
