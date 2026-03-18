@@ -186,6 +186,8 @@ Imviz
 
 - Optimization to orientation plugin to reduce overhead when multiple custom orientations are created. [#3896]
 
+- Fixed a bug when trying to change link type multiple times with subsets defined. [#4096]
+
 Mosviz
 ^^^^^^
 
