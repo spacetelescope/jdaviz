@@ -19,7 +19,9 @@ from jdaviz.core.user_api import LoaderUserApi
 
 __all__ = ["VOResolver"]
 
-VO_PROTOCOL = {"Images": "sia", "Spectra" : "ssa"}
+VO_PROTOCOL = {"Images": {'protocol': 'sia', 'size_arg': 'size'},
+               "Spectra": {'protocol': 'ssa', 'size_arg': 'diameter'},
+               "Catalogs": {'protocol': 'scs', 'size_arg': 'radius'}}
 
 
 @loader_resolver_registry("virtual observatory")
@@ -27,9 +29,7 @@ class VOResolver(BaseConeSearchResolver):
     template_file = __file__, "vo.vue"
 
     producttype_selected = Unicode("Images").tag(sync=True)
-    producttype_choices = List(
-        [{"label": "Images"}, {"label": "Spectra"},]
-    ).tag(sync=True)
+    producttype_choices = List(list({"label": type} for type in VO_PROTOCOL.keys())).tag(sync=True)
 
     waveband_items = List().tag(sync=True)
     waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
@@ -117,7 +117,7 @@ class VOResolver(BaseConeSearchResolver):
 
         try:
             registry_args = [
-                registry.Servicetype(VO_PROTOCOL[self.producttype_selected]),
+                registry.Servicetype(VO_PROTOCOL[self.producttype_selected]['protocol']),
                 registry.Waveband(self.waveband_selected),
             ]
             # If coverage filtering is enabled, lookup current
@@ -195,7 +195,7 @@ class VOResolver(BaseConeSearchResolver):
             # consider indexing on the full IVOID, which is guaranteed unique.
             vo_service = self._full_registry_results[
                 self.resource_selected
-            ].get_service(service_type=VO_PROTOCOL[self.producttype_selected])
+            ].get_service(service_type=VO_PROTOCOL[self.producttype_selected]['protocol'])
             try:
                 # First parse user-provided source as direct coordinates
                 coord = SkyCoord(
@@ -221,13 +221,13 @@ class VOResolver(BaseConeSearchResolver):
                 vo_results = vo_service.search(
                     coord,
                     **{
-                        "diameter" if self.producttype_selected == "Spectra" else "size": (
+                        VO_PROTOCOL[self.producttype_selected]['size_arg']: (
                             (self.radius * u.Unit(self.radius_unit.selected))
                             if self.radius > 0.0
                             else None
                         )
                     },
-                    format="fits",
+                    format=("" if self.producttype_selected == "Catalogs" else "fits"),
                 )
             except DALQueryError as e:
                 # We've run into issues where the service assumes a FORMAT and injects it for us.
