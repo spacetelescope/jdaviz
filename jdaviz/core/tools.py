@@ -919,7 +919,7 @@ class SkewerSelectRegion(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'skewer_select.svg')
     tool_id = 'jdaviz:skewerregion'
     action_text = 'Select all overlapping footprints'
-    tool_tip = 'Select all overlapping footprints at point. Ctrl/Cmd+click to toggle.'
+    tool_tip = 'Skewer selection: selects all footprints intersecting the clicked point'
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
@@ -942,7 +942,7 @@ class SelectRegionOverlay(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'footprint_select.svg')
     tool_id = 'jdaviz:selectregion'
     action_text = 'Select nearest footprint'
-    tool_tip = 'Select nearest footprint. Ctrl/Cmd+click to toggle.'
+    tool_tip = 'Nearest edge selection: selects the footprint nearest to your click'
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
