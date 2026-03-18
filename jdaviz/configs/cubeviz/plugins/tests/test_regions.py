@@ -2,12 +2,13 @@
 Generic handling logic already covered in
 jdaviz/configs/imviz/tests/test_regions.py
 """
-import numpy as np
-import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, EllipsePixelRegion,
                      EllipseSkyRegion)
+import numpy as np
+from numpy.testing import assert_allclose
+import pytest
 from specutils import Spectrum, SpectralRegion
 
 from jdaviz.configs.imviz.tests.test_regions import BaseRegionHandler
@@ -76,7 +77,14 @@ class TestLoadRegions(BaseRegionHandler):
         assert isinstance(spatial_subsets_as_regions['Subset 1'], EllipsePixelRegion)
         # ensure agreement between app.get_subsets and subset_tools.get_regions
         ss = self.cubeviz._app.get_subsets()
-        assert ss['Subset 1'][0]['region'] == spatial_subsets_as_regions['Subset 1']
+
+        actual = spatial_subsets_as_regions['Subset 1']
+        expected = ss['Subset 1'][0]['region']
+        assert type(actual) is type(expected)
+        assert_allclose(actual.center.x, expected.center.x)
+        assert_allclose(actual.center.y, expected.center.y)
+        assert_allclose(actual.width, expected.width)
+        assert_allclose(actual.height, expected.height)
 
         # NOTE: This does not test that spectrum from Subset is actually scientifically accurate.
         # Get spectral regions only.

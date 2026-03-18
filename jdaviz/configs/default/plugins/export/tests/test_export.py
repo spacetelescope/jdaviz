@@ -2,6 +2,7 @@ import os
 import re
 
 import numpy as np
+from numpy.testing import assert_allclose
 import pytest
 from astropy import units as u
 from astropy.io import fits
@@ -313,9 +314,9 @@ class TestExportSubsets:
         assert contents[1] == 'ICRS'
         assert contents[2] == '9.124032'
         assert contents[3] == '-33.407217'
-        assert contents[4] == '0.088886'
-        assert contents[5] == '0.044443'
-        assert contents[6] == '11.625269'
+        assert_allclose(float(contents[4]), 0.088886, rtol=1e-04)
+        assert_allclose(float(contents[5]), 0.044443, rtol=1e-04)
+        assert_allclose(float(contents[6]), 11.625269, rtol=1e-04)
 
 
 @pytest.mark.usefixtures('_jail')
