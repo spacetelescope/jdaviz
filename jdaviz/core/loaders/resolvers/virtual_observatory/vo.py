@@ -227,7 +227,7 @@ class VOResolver(BaseConeSearchResolver):
                             else None
                         )
                     },
-                    format="image/fits",
+                    format="fits",
                 )
             except DALQueryError as e:
                 # We've run into issues where the service assumes a FORMAT and injects it for us.
