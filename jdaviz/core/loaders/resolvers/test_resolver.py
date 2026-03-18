@@ -667,3 +667,14 @@ def test_footprint_selection_skewer_ctrl_modifier(deconfigged_helper, image_ndda
     assert len(ldr._obj.observation_table.selected_rows) == 2
     selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
     assert selected_datasets == {'obs2', 'obs3'}
+
+    # Click outside all footprints - deselects all
+    outside_x = 337.495
+    outside_y = -20.835
+    msg_outside = FootprintOverlayClickMessage(
+        {'domain': {'x': outside_x, 'y': outside_y}},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_outside)
+    assert len(ldr._obj.observation_table.selected_rows) == 0
