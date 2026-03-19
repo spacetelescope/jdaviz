@@ -663,12 +663,7 @@ def get_cloud_fits(possible_uri, ext=None):
         If the URI is an S3 FITS file, returns an `HDUList` containing the requested
         extensions. Otherwise, returns the original input string.
     """
-
     parsed_uri = urlparse(possible_uri)
-
-    # TODO: Add caching logic
-    if not parsed_uri.scheme.lower() == 's3':
-        raise ValueError("Not an S3 URI: {}".format(possible_uri))
 
     downloaded_hdus = []
     # this loads the requested extensions into local memory:
@@ -687,24 +682,31 @@ def get_cloud_fits(possible_uri, ext=None):
         return file_obj
 
 
-def get_cloud_asdf(possible_uri):
+def get_cloud_asdf(possible_uri, fsspec_filesystem=None):
     """
     Open an ASDF file stream from an S3 URI using fsspec. Return the input
     unchanged if it is not an S3 URI.
 
     If an open filestream is returned, the file data will not be transferred
     from S3 to local memory until a specific attribute on the data model
-    is called that returns a numpy array, like ``data_model.data``.
+    is called which returns a numpy array, like ``data_model.data``.
 
-    Anonymous access is assumed for S3. If the URI is not S3-based, the input
-    is returned as-is.
+    Anonymous access is assumed by default, and credentials are supported by
+    providing an `fsspec_filesystem` instance.
 
     Parameters
     ----------
     possible_uri : str
         A path or URI to the ASDF file. If the URI uses the ``s3://`` scheme,
         the file is accessed via fsspec and returned as a
-        `roman_datamodels.datamodels.DataModel`. Otherwise, the string is returned unchanged.
+        `roman_datamodels.datamodels.DataModel`. Otherwise, the string is
+        returned unchanged.
+    fsspec_filesystem : `~fsspec.spec.AbstractFileSystem` or None, optional
+        If credentialed access is required for this S3 resource, pass in
+        an instance of `fsspec.filesystem('s3', ...)` or `s3fs.S3FileSystem`
+        initialized with an AWS `profile`, or `key` and `secret`. See the
+        `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
+        for more details.
 
     Returns
     -------
@@ -716,11 +718,11 @@ def get_cloud_asdf(possible_uri):
 
     parsed_uri = urlparse(possible_uri)
 
-    if not parsed_uri.scheme.lower() == 's3':
-        raise ValueError("Not an S3 URI: {}".format(possible_uri))
+    if fsspec_filesystem is None:
+        # by default, use anonymous access
+        fsspec_filesystem = fsspec.filesystem(protocol='s3', anon=True)
 
-    fs = fsspec.filesystem(protocol='s3', anon=True)
-    file_stream = fs.open(possible_uri, anon=True)
+    file_stream = fsspec_filesystem.open(possible_uri)
     data_model = rdd.open(file_stream)
     return data_model
 
@@ -738,7 +740,7 @@ def cached_uri(uri):
 def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None,
                          dryrun=False):
     """
-    Retrieve data from a URI (or a URL). Return the input if it
+    Download a local copy of remote data from a URI (or a URL). Return the input if it
     cannot be parsed as a URI.
 
     If ``possible_uri`` is a MAST URI, the file will be retrieved via
