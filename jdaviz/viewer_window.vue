@@ -38,7 +38,7 @@
         <j-play-pause-widget v-if="reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': id, 'method': 'next_row'})"></j-play-pause-widget>
         <v-spacer></v-spacer>
         <jupyter-widget v-if="toolbar_widget" class='jdaviz-nested-toolbar' :widget="toolbar_widget" :key="toolbar_widget"></jupyter-widget>
-        <span v-if="tool_override_mode.length === 0" class='toolbar-popout-span' style="float: right; margin-top: 4px;">
+        <span v-if="tool_override_mode.length === 0" class='toolbar-popout-span' style="float: right; margin-top: 4px; color: white;">
           <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
         </span>
       </v-row>
