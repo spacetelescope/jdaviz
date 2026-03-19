@@ -4,7 +4,7 @@ import numpy as np
 from asdf import AsdfFile
 from astropy import units as u
 from astropy.io import fits
-from astropy.nddata import InverseVariance, StdDevUncertainty
+from astropy.nddata import InverseVariance, StdDevUncertainty, VarianceUncertainty
 from astropy.wcs import WCS
 from functools import cached_property
 from glue.core import HubListener
@@ -344,7 +344,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         """
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
-                and (hdu.header.get('EXTNAME', '') in ['ERR', 'IVAR']))
+                and (hdu.header.get('EXTNAME', '') in ['ERR', 'IVAR', 'VAR']))
 
     def asdf_roman_is_valid_unc(self, item):
         # TODO: should this instead have options just to include or not
@@ -489,6 +489,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             if self.unc_extension.selected_obj.header.get('EXTNAME', '') == 'IVAR':
                 # if it's an IVAR, convert to standard deviation
                 unc = InverseVariance(unc_data).represent_as(StdDevUncertainty)
+                unc.unit = data_unit
+            elif self.unc_extension.selected_obj.header.get('EXTNAME', '') == 'VAR':
+                unc = VarianceUncertainty(unc_data).represent_as(StdDevUncertainty)
                 unc.unit = data_unit
             else:
                 unc = StdDevUncertainty(unc_data * data_unit)

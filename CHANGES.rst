@@ -49,7 +49,7 @@ New Features
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
 
-- Added ability to load spectra with 'IVAR' uncertainty extensions. [#4091]
+- Added ability to load spectra with 'IVAR' and 'VAR' uncertainty extensions. [#4091]
 
 Cubeviz
 ^^^^^^^
