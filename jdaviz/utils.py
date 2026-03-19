@@ -738,7 +738,7 @@ def cached_uri(uri):
 
 
 def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None,
-                         dryrun=False):
+                         fsspec_filesystem=None, dryrun=False):
     """
     Download a local copy of remote data from a URI (or a URL). Return the input if it
     cannot be parsed as a URI.
@@ -772,6 +772,12 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         remote requests in seconds (passed to
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
+    fsspec_filesystem : `~fsspec.spec.AbstractFileSystem` or None, optional
+        If credentialed access is required for an S3 resource, pass in
+        an instance of `fsspec.filesystem('s3', ...)` or `s3fs.S3FileSystem`
+        initialized with an AWS `profile`, or `key` and `secret`. See the
+        `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
+        for more details.
     dryrun : bool
         Set to `True` to skip downloading data from MAST.
         This is only used for debugging.
@@ -862,10 +868,12 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
 
         # download the S3 object to local path, if needed:
         if not os.path.exists(local_cache_name):
-            fs = fsspec.filesystem('s3', anon=True)
-            s3_download_dir = './s3_downloads/'
+            if fsspec_filesystem is None:
+                # assume anonymous access:
+                fsspec_filesystem = fsspec.filesystem('s3', anon=True)
+
             os.makedirs(s3_download_dir, exist_ok=True)
-            fs.get(possible_uri, local_cache_name)
+            fsspec_filesystem.get(possible_uri, local_cache_name)
 
         return local_cache_name
 
