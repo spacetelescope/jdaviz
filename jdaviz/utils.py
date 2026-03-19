@@ -654,10 +654,10 @@ def get_cloud_fits(possible_uri, ext=None, fsspec_filesystem=None):
         Extension(s) to load from the FITS file. Can be an integer index (e.g., 0),
         a string name (e.g., "SCI"), or a list of such values. If `None`, all extensions
         are loaded.
-    fsspec_filesystem : `~fsspec.spec.AbstractFileSystem` or None, optional
-        If credentialed access is required for this S3 resource, pass in
-        an instance of `fsspec.filesystem('s3', ...)` or `s3fs.S3FileSystem`
-        initialized with an AWS `profile`, or `key` and `secret`. See the
+    fsspec_filesystem : `fsspec.spec.AbstractFileSystem` or None, optional
+        If credentialed access is required for an S3 resource, pass in
+        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.S3FileSystem`
+        initialized with an AWS ``profile``, or ``key`` and ``secret``. See the
         `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
         for more details.
 
@@ -709,10 +709,10 @@ def get_cloud_asdf(possible_uri, fsspec_filesystem=None):
         the file is accessed via fsspec and returned as a
         `roman_datamodels.datamodels.DataModel`. Otherwise, the string is
         returned unchanged.
-    fsspec_filesystem : `~fsspec.spec.AbstractFileSystem` or None, optional
-        If credentialed access is required for this S3 resource, pass in
-        an instance of `fsspec.filesystem('s3', ...)` or `s3fs.S3FileSystem`
-        initialized with an AWS `profile`, or `key` and `secret`. See the
+    fsspec_filesystem : `fsspec.spec.AbstractFileSystem` or None, optional
+        If credentialed access is required for an S3 resource, pass in
+        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.S3FileSystem`
+        initialized with an AWS ``profile``, or ``key`` and ``secret``. See the
         `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
         for more details.
 
@@ -778,10 +778,10 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         remote requests in seconds (passed to
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
-    fsspec_filesystem : `~fsspec.spec.AbstractFileSystem` or None, optional
+    fsspec_filesystem : `fsspec.spec.AbstractFileSystem` or None, optional
         If credentialed access is required for an S3 resource, pass in
-        an instance of `fsspec.filesystem('s3', ...)` or `s3fs.S3FileSystem`
-        initialized with an AWS `profile`, or `key` and `secret`. See the
+        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.S3FileSystem`
+        initialized with an AWS ``profile``, or ``key`` and ``secret``. See the
         `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
         for more details.
     dryrun : bool
