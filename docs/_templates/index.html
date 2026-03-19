@@ -1529,6 +1529,7 @@
         </div>
         <div class="platform-description" data-platform-description="commandline">
             Run Jdaviz from a command line terminal as a browser application. Note that with this start method, you will not have access to running API commands.
+        </div>
         <div class="platform-description" data-platform-description="mast">
             Preview data directly from the MAST archive in Jdaviz, without having to install Jdaviz or download any data.  If you want to move the analysis to your local machine or benefit from API access, install Jdaviz and download a notebook from MAST to get started with the same data on your own machine.
         </div>
@@ -1561,6 +1562,10 @@
         <div class="platform-content-section">
             <!-- Desktop UI Content -->
             <div class="platform-tab-content" data-platform-content="desktop">
+            </div>
+
+            <!-- Command Line Content -->
+            <div class="platform-tab-content" data-platform-content="commandline">
             </div>
 
             <!-- Jdaviz@MAST Content -->
@@ -1708,6 +1713,7 @@ jd.show()</div>
             const installButtonConfig = {
                 'desktop': { text: 'Download Desktop App', href: 'setup/desktop.html' },
                 'mast': { text: 'Open Jdaviz@MAST', href: 'https://mast.stsci.edu/viz/ui/', target: '_blank' },
+                'commandline': { text: 'Install Jdaviz', href: 'setup/local.html' },
                 'jupyter': { text: 'Install Jdaviz', href: 'setup/local.html' },
                 'platform': { text: 'Access Science Platforms', href: 'setup/platforms.html' }
             };
