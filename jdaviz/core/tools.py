@@ -942,7 +942,7 @@ class SelectRegionOverlay(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'footprint_select.svg')
     tool_id = 'jdaviz:selectregion'
     action_text = 'Select the footprint with the nearest edge'
-    tool_tip = 'Nearest edge selection: select the footprint with the nearest edge to the click coordinate'
+    tool_tip = 'Nearest edge selection: select the footprint with the nearest edge to the click coordinate'  # noqa: E501
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
