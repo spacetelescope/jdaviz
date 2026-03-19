@@ -55,15 +55,12 @@ Supported File Formats
 Footprint Label
 ===============
 
-Each footprint overlay requires a label for identification in the viewer:
-
+When importing a footprint, you can specify a custom label:
 .. code-block:: python
 
     jd.load('fov.reg', format='Footprint', footprint_label='Instrument FOV')
 
-If no label is provided, the default label 'default' will be used. The footprint
-label determines which overlay layer the region will be added to in the Footprints
-plugin.
+If no label is provided, the default label 'default' will be used. This label specifies the name of the overlay layer that represents the Footprint region which can be modified in the Footprints plugin. 
 
 UI Access
 =========
