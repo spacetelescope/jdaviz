@@ -656,7 +656,7 @@ def get_cloud_fits(possible_uri, ext=None, fsspec_filesystem=None):
         are loaded.
     fsspec_filesystem : `fsspec.spec.AbstractFileSystem` or None, optional
         If credentialed access is required for an S3 resource, pass in
-        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.S3FileSystem`
+        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.core.S3FileSystem`
         initialized with an AWS ``profile``, or ``key`` and ``secret``. See the
         `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
         for more details.
@@ -711,7 +711,7 @@ def get_cloud_asdf(possible_uri, fsspec_filesystem=None):
         returned unchanged.
     fsspec_filesystem : `fsspec.spec.AbstractFileSystem` or None, optional
         If credentialed access is required for an S3 resource, pass in
-        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.S3FileSystem`
+        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.core.S3FileSystem`
         initialized with an AWS ``profile``, or ``key`` and ``secret``. See the
         `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
         for more details.
@@ -780,7 +780,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         `~astroquery.mast.Conf.timeout`).
     fsspec_filesystem : `fsspec.spec.AbstractFileSystem` or None, optional
         If credentialed access is required for an S3 resource, pass in
-        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.S3FileSystem`
+        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.core.S3FileSystem`
         initialized with an AWS ``profile``, or ``key`` and ``secret``. See the
         `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
         for more details.
