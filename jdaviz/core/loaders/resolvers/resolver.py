@@ -684,16 +684,16 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 currently_selected.add(idx)
 
             selected_indices_set = set(selected_indices)
-            ctrl_key = msg.ctrl_key
-
-            if ctrl_key:
+            if msg.ctrl_key:
                 # If Ctrl key is pressed, toggle selection
                 if selected_indices_set.issubset(currently_selected):
-                    # All found footprints are already selected - deselect them all
-                    currently_selected -= selected_indices_set
+                    # All footprints selected by click were already selected,
+                    # so we remove them from the selected set to deselect:
+                    currently_selected.difference_update(selected_indices_set)
                 else:
-                    # At least one is not selected - select them all
-                    currently_selected |= selected_indices_set
+                    # At least one footprint selected by click was not already
+                    # selected, so we add them to the selected set:
+                    currently_selected.update(selected_indices_set)
             else:
                 # Default Click: Replace selection unless already selected
                 if not selected_indices_set.issubset(currently_selected):
