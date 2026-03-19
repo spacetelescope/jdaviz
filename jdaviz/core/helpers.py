@@ -83,6 +83,7 @@ class ConfigHelper(HubListener):
 
         self._in_batch_load = 0
         self._delayed_show_in_viewer_labels = {}  # label: viewer_reference pairs
+        self.pending_set_data_visibility = []  # list of kwarg dicts for set_data_visibility
 
     def _propagate_callback_to_viewers(self, method, msg):
         # viewers don't have access to the app/hub to subscribe to messages, so we'll
@@ -108,6 +109,11 @@ class ConfigHelper(HubListener):
         self._in_batch_load -= 1
         if not self._in_batch_load:
             self.app.hub.broadcast(ExitBatchLoadMessage(sender=self.app))
+
+            # Process any deferred set_data_visibility calls
+            for call_kwargs in self.pending_set_data_visibility:
+                self.app.set_data_visibility(**call_kwargs)
+            self.pending_set_data_visibility = []
 
             # add any data to viewers that were requested but deferred
             for data_label, viewer_ref in self._delayed_show_in_viewer_labels.items():
