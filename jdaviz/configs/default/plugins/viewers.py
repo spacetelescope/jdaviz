@@ -1,6 +1,7 @@
 from echo import delay_callback, CallbackProperty
 
 import numpy as np
+from numpy.linalg import norm
 
 from glue.config import data_translator
 from glue.core import BaseData
@@ -96,156 +97,181 @@ class JdavizViewerMixin(WithCache):
         self._data_menu = DataMenu(viewer=self, app=self.jdaviz_app)
 
     @staticmethod
-    def _roi_centers_close(old_roi, new_roi):
+    def _is_circular_edit(old_roi, new_roi, rtol=1e-6):
         """
-        Check whether *old_roi* and *new_roi* have nearby centers.
+        Detect resize or move for circular ROIs.
 
-        Used to detect resize operations where the center stays
-        roughly fixed while the size changes. Uses a center-to-
-        center distance check so that annulus-style ROIs are
-        handled correctly.
+        Move is detected when the radius is unchanged. Resize is
+        detected when the centers are within one radius of each
+        other.
         """
-        def _get_roi_center(roi):
-            """
-            Extract the center coordinates from an ROI.
+        # Move: same radius
+        if abs(old_roi.radius - new_roi.radius) < rtol * max(old_roi.radius, 1):
+            return True
 
-            Parameters
-            ----------
-            roi : ROI object
-                An ROI with either (xc, yc) or (xmin, xmax, ymin, ymax) attributes.
-
-            Returns
-            -------
-            center : tuple or None
-                (cx, cy) center coordinates, or None if ROI type is not supported.
-            """
-            if hasattr(roi, 'xc'):
-                return roi.xc, roi.yc
-            elif hasattr(roi, 'xmin') and hasattr(roi, 'ymin'):
-                cx = (roi.xmin + roi.xmax) / 2
-                cy = (roi.ymin + roi.ymax) / 2
-                return cx, cy
-            return None
-
-        # Extract centers from both ROIs
-        new_center = _get_roi_center(new_roi)
-        old_center = _get_roi_center(old_roi)
-
-        if new_center is None or old_center is None:
+        # Resize: centers close
+        if old_roi.radius <= 0:
             return False
 
-        ncx, ncy = new_center
-        ocx, ocy = old_center
-
-        # annulus
-        if hasattr(old_roi, 'outer_radius'):
-            size_of_roi = old_roi.outer_radius
-        # circle
-        elif hasattr(old_roi, 'radius'):
-            size_of_roi = old_roi.radius
-        # ellipse
-        elif hasattr(old_roi, 'radius_x'):
-            size_of_roi = max(old_roi.radius_x, old_roi.radius_y)
-        # rectangle
-        elif hasattr(old_roi, 'xmin'):
-            size_of_roi = max(old_roi.xmax - old_roi.xmin,
-                              old_roi.ymax - old_roi.ymin) / 2
-        else:
-            return False
-
-        if size_of_roi <= 0:
-            return False
-
-        dist = ((ncx - ocx) ** 2 + (ncy - ocy) ** 2) ** 0.5
-        return dist < size_of_roi
+        dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
+        return dist < old_roi.radius
 
     @staticmethod
-    def _rois_same_size(old_roi, new_roi):
+    def _is_annulus_edit(old_roi, new_roi, rtol=1e-6):
         """
-        Check whether two ROIs have the same dimensions.
+        Detect resize or move for annulus ROIs.
 
-        Used to detect move operations where the position changes
-        but the size is preserved exactly by the bqplot brush.
+        Move is detected when inner and outer radii are unchanged.
+        Resize is detected when the centers are within the outer
+        radius of each other.
         """
-        def _dimensions_within_tolerance(old_val, new_val, rtol=1e-6):
-            return abs(old_val - new_val) < rtol * max(old_val, 1)
+        # Move: same inner and outer radius
+        if (abs(old_roi.inner_radius - new_roi.inner_radius)
+                < rtol * max(old_roi.inner_radius, 1)
+                and abs(old_roi.outer_radius - new_roi.outer_radius)
+                < rtol * max(old_roi.outer_radius, 1)):
+            return True
 
-        if type(old_roi) is not type(new_roi):
+        # Resize: centers close
+        if old_roi.outer_radius <= 0:
             return False
 
-        # Annulus (check before circular — annulus has no 'radius')
-        if hasattr(old_roi, 'inner_radius') and hasattr(new_roi, 'inner_radius'):
-            return (_dimensions_within_tolerance(old_roi.inner_radius, new_roi.inner_radius)
-                    and
-                    _dimensions_within_tolerance(old_roi.outer_radius, new_roi.outer_radius))
+        dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
+        return dist < old_roi.outer_radius
 
-        # Circular
-        if hasattr(old_roi, 'radius') and hasattr(new_roi, 'radius'):
-            return _dimensions_within_tolerance(old_roi.radius, new_roi.radius)
+    @staticmethod
+    def _is_elliptical_edit(old_roi, new_roi, rtol=1e-6):
+        """
+        Detect resize or move for elliptical ROIs.
 
-        # Elliptical
-        if hasattr(old_roi, 'radius_x') and hasattr(new_roi, 'radius_x'):
-            return (_dimensions_within_tolerance(old_roi.radius_x, new_roi.radius_x)
-                    and
-                    _dimensions_within_tolerance(old_roi.radius_y, new_roi.radius_y))
+        Move is detected when both radii are unchanged. Resize is
+        detected when the centers are within the larger radius of
+        each other.
+        """
+        # Move: same radii
+        if (abs(old_roi.radius_x - new_roi.radius_x)
+                < rtol * max(old_roi.radius_x, 1)
+                and abs(old_roi.radius_y - new_roi.radius_y)
+                < rtol * max(old_roi.radius_y, 1)):
+            return True
 
-        # Rectangular
-        if hasattr(old_roi, 'xmin') and hasattr(new_roi, 'xmin'):
-            old_w = old_roi.xmax - old_roi.xmin
-            old_h = old_roi.ymax - old_roi.ymin
-            new_w = new_roi.xmax - new_roi.xmin
-            new_h = new_roi.ymax - new_roi.ymin
-            return (_dimensions_within_tolerance(old_w, new_w)
-                    and
-                    _dimensions_within_tolerance(old_h, new_h))
+        # Resize: centers close
+        size = max(old_roi.radius_x, old_roi.radius_y)
+        if size <= 0:
+            return False
+
+        dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
+        return dist < size
+
+    @staticmethod
+    def _is_rectangular_edit(old_roi, new_roi, rtol=1e-6):
+        """
+        Detect resize or move for rectangular ROIs.
+
+        Move is detected when width and height are unchanged.
+        Resize is detected when the centers are within half the
+        larger dimension of each other.
+        """
+        old_w = old_roi.xmax - old_roi.xmin
+        old_h = old_roi.ymax - old_roi.ymin
+        new_w = new_roi.xmax - new_roi.xmin
+        new_h = new_roi.ymax - new_roi.ymin
+        # Move: same width and height
+        if (abs(old_w - new_w) < rtol * max(abs(old_w), 1)
+                and abs(old_h - new_h) < rtol * max(abs(old_h), 1)):
+            return True
+
+        # Resize: centers close
+        size = max(old_w, old_h) / 2
+        if size <= 0:
+            return False
+
+        old_cx = (old_roi.xmin + old_roi.xmax) / 2
+        old_cy = (old_roi.ymin + old_roi.ymax) / 2
+        new_cx = (new_roi.xmin + new_roi.xmax) / 2
+        new_cy = (new_roi.ymin + new_roi.ymax) / 2
+        dist = norm([new_cx - old_cx, new_cy - old_cy])
+        return dist < size
+
+    def _is_roi_edit(self, old_roi, new_roi):
+        """
+        Determine whether *new_roi* is a resize or move of *old_roi*.
+        Dispatches to a type-specific handler based on the ROI class.
+
+        Parameters
+        ----------
+        old_roi : ROI
+            The existing subset's ROI.
+        new_roi : ROI
+            The newly drawn ROI.
+
+        Returns
+        -------
+        is_edit : bool
+            True if *new_roi* represents a resize or move.
+        """
+        from glue.core.roi import (CircularAnnulusROI, CircularROI,
+                                   EllipticalROI, RectangularROI)
+
+        if not (isinstance(new_roi, type(old_roi))
+                or isinstance(old_roi, type(new_roi))):
+            return False
+
+        # Use isinstance so subclasses (e.g. TrueCircularROI)
+        # are matched to their parent handler.
+        dispatch = ((CircularAnnulusROI, self._is_annulus_edit),
+                    (CircularROI, self._is_circular_edit),
+                    (EllipticalROI, self._is_elliptical_edit),
+                    (RectangularROI, self._is_rectangular_edit))
+
+        for roi_type, handler in dispatch:
+            if isinstance(old_roi, roi_type):
+                return handler(old_roi, new_roi)
 
         return False
 
     @staticmethod
-    def _check_range_subset_state_change(roi, existing_state, rtol=1e-6):
+    def _is_range_edit(roi, existing_state, rtol=1e-6):
         """
-        Check if an ROI change should trigger ReplaceMode for RangeSubsetState.
+        Detect resize or move for 1-D range subsets.
 
-        Detects whether the user is resizing (midpoint inside old range)
-        or moving (same width) the existing subset.
+        Move is detected when the range width is unchanged.
+        Resize is detected when the new midpoint falls inside the
+        old range.
 
         Parameters
         ----------
-        roi : ROI object
-            The new ROI with 'min' and 'max' attributes.
+        roi : ROI
+            The new ROI with ``min`` and ``max`` attributes.
         existing_state : RangeSubsetState
-            The existing subset state.
+            The existing 1-D subset state.
 
         Returns
         -------
-        should_replace : bool
+        is_edit : bool
             True if the change is a resize or move operation.
         """
         if not (hasattr(roi, 'min') and hasattr(roi, 'max')):
             return False
-
         new_w = roi.max - roi.min
         old_w = existing_state.hi - existing_state.lo
         new_mid = (roi.min + roi.max) / 2
 
         # Resize: midpoint inside old range
-        # Move: same width
         if existing_state.lo <= new_mid <= existing_state.hi:
             return True
-        elif abs(new_w - old_w) < rtol * max(abs(old_w), 1):
-            return True
 
-        return False
+        # Move: same width
+        return abs(new_w - old_w) < rtol * max(abs(old_w), 1)
 
     def apply_roi(self, roi, use_current=False):
         """
         Apply an ROI to the viewer.
 
-        Detects whether the user is resizing (center stays within
-        the old ROI) or moving (dimensions stay the same) an
-        existing subset.  When either is detected and mode is
-        NewMode, temporarily switches to ReplaceMode so the subset
-        is modified in-place rather than duplicated.
+        Detects whether the user is resizing or moving an existing
+        subset. When detected and mode is NewMode, temporarily
+        switches to ReplaceMode so the subset is modified in-place
+        rather than duplicated.
         """
         from glue.core.subset import RoiSubsetState, RangeSubsetState
 
@@ -256,17 +282,11 @@ class JdavizViewerMixin(WithCache):
             existing_state = edit_subset_mode.edit_subset[0].subset_state
             try:
                 if isinstance(existing_state, RoiSubsetState):
-                    old_roi = existing_state.roi
-                    # Resize: center of new ROI inside old ROI
-                    # Move: dimensions unchanged (bqplot preserves
-                    #        exact size during drag-move)
-                    if self._roi_centers_close(old_roi, roi) or self._rois_same_size(old_roi, roi):
-                        needs_override = True
+                    needs_override = self._is_roi_edit(existing_state.roi, roi)
                 elif isinstance(existing_state, RangeSubsetState):
-                    if self._check_range_subset_state_change(roi, existing_state):
-                        needs_override = True
-            except Exception:  # noqa
-                pass
+                    needs_override = self._is_range_edit(roi, existing_state)
+            except Exception as e:  # noqa
+                raise e
 
         if needs_override:
             original_mode = edit_subset_mode._mode
