@@ -636,15 +636,13 @@ class MultiMaskSubsetState(SubsetState):
         return cls(masks=masks)
 
 
-def get_cloud_fits(possible_uri, ext=None):
+def get_cloud_fits(possible_uri, ext=None, fsspec_filesystem=None):
     """
-    Retrieve and open a FITS file from an S3 URI using fsspec. Return the input
-    unchanged if it is not an S3 URI.
+    Load one or more extensions from a remote FITS file by its S3 URI.
 
     If ``possible_uri`` is an S3 URI, the specified extensions from the FITS
     file will be opened remotely using `astropy.io.fits` with `fsspec`.
-    Anonymous access is assumed for S3. If the URI is not S3-based, the input
-    is returned as-is.
+    Anonymous access is assumed for S3 unless ``fsspec_filesystem`` is provided.
 
     Parameters
     ----------
@@ -656,6 +654,12 @@ def get_cloud_fits(possible_uri, ext=None):
         Extension(s) to load from the FITS file. Can be an integer index (e.g., 0),
         a string name (e.g., "SCI"), or a list of such values. If `None`, all extensions
         are loaded.
+    fsspec_filesystem : `~fsspec.spec.AbstractFileSystem` or None, optional
+        If credentialed access is required for this S3 resource, pass in
+        an instance of `fsspec.filesystem('s3', ...)` or `s3fs.S3FileSystem`
+        initialized with an AWS `profile`, or `key` and `secret`. See the
+        `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
+        for more details.
 
     Returns
     -------
@@ -663,23 +667,27 @@ def get_cloud_fits(possible_uri, ext=None):
         If the URI is an S3 FITS file, returns an `HDUList` containing the requested
         extensions. Otherwise, returns the original input string.
     """
-    parsed_uri = urlparse(possible_uri)
-
     downloaded_hdus = []
-    # this loads the requested extensions into local memory:
-    with fits.open(possible_uri, fsspec_kwargs={"anon": True}) as hdul:
-        if ext is None:
-            ext_list = list(range(len(hdul)))
-        elif not isinstance(ext, list):
-            ext_list = [ext]
-        else:
-            ext_list = ext
-        for extension in ext_list:
-            hdu_obj = hdul[extension]
-            downloaded_hdus.append(hdu_obj.copy())
+    # load the requested extensions into local memory:
+    if fsspec_filesystem is None:
+        fsspec_filesystem = fsspec.filesystem("s3", anon=True)
 
-        file_obj = fits.HDUList(downloaded_hdus)
-        return file_obj
+    # this double-context can be reduced to one after this PR
+    # is merged: https://github.com/astropy/astropy/pull/19294
+    with fsspec_filesystem.open(possible_uri) as file_stream:
+        with fits.open(file_stream) as hdul:
+            if ext is None:
+                ext_list = list(range(len(hdul)))
+            elif not isinstance(ext, list):
+                ext_list = ['PRIMARY', ext]
+            else:
+                ext_list = ['PRIMARY'] + ext
+            for extension in ext_list:
+                hdu_obj = hdul[extension]
+                downloaded_hdus.append(hdu_obj.copy())
+
+            file_obj = fits.HDUList(downloaded_hdus)
+            return file_obj
 
 
 def get_cloud_asdf(possible_uri, fsspec_filesystem=None):
@@ -715,8 +723,6 @@ def get_cloud_asdf(possible_uri, fsspec_filesystem=None):
         extensions. Otherwise, returns the original input string.
     """
     import roman_datamodels.datamodels as rdd
-
-    parsed_uri = urlparse(possible_uri)
 
     if fsspec_filesystem is None:
         # by default, use anonymous access

@@ -170,7 +170,8 @@ Bug Fixes
 
 - Fixed using `viewer.show()` with height argument not using the full height inline in the notebook. [#4134]
 
-- Fixed bug when loading a non-FITS file by S3 URI. [#3980]
+- Fixed bug when loading remote ASDF files by S3 URI, and retrieve remote 
+  FITS PrimaryHDU by default. [#3980]
 
 Cubeviz
 ^^^^^^^
