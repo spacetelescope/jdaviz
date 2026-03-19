@@ -678,3 +678,90 @@ def test_footprint_selection_skewer_ctrl_modifier(deconfigged_helper, image_ndda
     )
     ldr._obj._on_region_select(msg_outside)
     assert len(ldr._obj.observation_table.selected_rows) == 0
+
+
+def test_footprint_selection_skewer_overlapping(deconfigged_helper, image_nddata_wcs):
+    """Test skewer mode with overlapping footprints and modifier key interactions."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2', 'obs3']
+    # overlapping footprints
+    table['s_region'] = [
+        'POLYGON 337.499 -20.8310 337.505 -20.8310 337.505 -20.829 337.499 -20.829',
+        'POLYGON 337.500 -20.8302 337.504 -20.8302 337.504 -20.832 337.500 -20.832',
+        'POLYGON 337.501 -20.8303 337.507 -20.8303 337.507 -20.835 337.501 -20.835'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 3
+
+    class MockTool:
+        def __init__(self, viewer):
+            self.viewer = viewer
+
+    mock_tool = MockTool(viewer)
+
+    overlap_x = 337.502
+    overlap_y = -20.8305
+
+    # Click in overlapping region - should select all 3
+    msg_overlap = FootprintOverlayClickMessage(
+        {'domain': {'x': overlap_x, 'y': overlap_y}},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_overlap)
+    assert len(ldr._obj.observation_table.selected_rows) == 3
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2', 'obs3'}
+
+    # Ctrl+click in the same overlapping region - should deselect all 3
+    msg_ctrl_deselect_all = FootprintOverlayClickMessage(
+        {'domain': {'x': overlap_x, 'y': overlap_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl_deselect_all)
+    assert len(ldr._obj.observation_table.selected_rows) == 0
+
+    # Click in region with only obs1 and obs2 overlap (not obs3)
+    partial_overlap_x = 337.502
+    partial_overlap_y = -20.8308
+    msg_partial = FootprintOverlayClickMessage(
+        {'domain': {'x': partial_overlap_x, 'y': partial_overlap_y}},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_partial)
+    assert len(ldr._obj.observation_table.selected_rows) == 2
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2'}
+
+    # Ctrl+click in full overlap region - should add obs3 (all 3 now selected)
+    msg_ctrl_add = FootprintOverlayClickMessage(
+        {'domain': {'x': overlap_x, 'y': overlap_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl_add)
+    assert len(ldr._obj.observation_table.selected_rows) == 3
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2', 'obs3'}
+
+    # Ctrl+click in partial overlap (obs1, obs2) - should remove those, leaving only obs3
+    msg_ctrl_remove_partial = FootprintOverlayClickMessage(
+        {'domain': {'x': partial_overlap_x, 'y': partial_overlap_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl_remove_partial)
+    assert len(ldr._obj.observation_table.selected_rows) == 1
+    assert ldr._obj.observation_table.selected_rows[0]['Dataset'] == 'obs3'
