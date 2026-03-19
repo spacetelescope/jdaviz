@@ -486,12 +486,12 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             mask_data = None
 
         if unc_data is not None:
+            # if extension is IVAR/VAR, convert to standard deviation for
+            # consistency internally
             if self.unc_extension.selected_obj.header.get('EXTNAME', '') == 'IVAR':
-                # if extension is IVAR, convert to standard deviation
                 unc = InverseVariance(unc_data).represent_as(StdDevUncertainty)
                 unc.unit = data_unit
             elif self.unc_extension.selected_obj.header.get('EXTNAME', '') == 'VAR':
-                # if extension is VAR, convert to standard deviation
                 unc = VarianceUncertainty(unc_data).represent_as(StdDevUncertainty)
                 unc.unit = data_unit
             else:
