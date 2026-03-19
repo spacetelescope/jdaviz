@@ -139,7 +139,7 @@
   }
 </script>
 
-<style scoped>
+<style>
 .suboptions-carrot {
   transform: rotate(-45deg);
   bottom: 0px;
