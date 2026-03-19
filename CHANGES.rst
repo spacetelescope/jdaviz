@@ -125,6 +125,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed bug where calling `jd.show()` before `batch_load` context caused data not to load correctly
+  into the viewer(s) due to absence of linking necessary for glue's rendering backend. [#4079]
+
 Mosviz
 ^^^^^^
 
