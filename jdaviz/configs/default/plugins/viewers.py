@@ -4,6 +4,7 @@ import numpy as np
 
 from glue.config import data_translator
 from glue.core import BaseData
+from glue.core.edit_subset_mode import NewMode, ReplaceMode
 from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
@@ -93,6 +94,188 @@ class JdavizViewerMixin(WithCache):
         ]
 
         self._data_menu = DataMenu(viewer=self, app=self.jdaviz_app)
+
+    @staticmethod
+    def _roi_centers_close(old_roi, new_roi):
+        """
+        Check whether *old_roi* and *new_roi* have nearby centers.
+
+        Used to detect resize operations where the center stays
+        roughly fixed while the size changes. Uses a center-to-
+        center distance check so that annulus-style ROIs are
+        handled correctly.
+        """
+        def _get_roi_center(roi):
+            """
+            Extract the center coordinates from an ROI.
+
+            Parameters
+            ----------
+            roi : ROI object
+                An ROI with either (xc, yc) or (xmin, xmax, ymin, ymax) attributes.
+
+            Returns
+            -------
+            center : tuple or None
+                (cx, cy) center coordinates, or None if ROI type is not supported.
+            """
+            if hasattr(roi, 'xc'):
+                return roi.xc, roi.yc
+            elif hasattr(roi, 'xmin') and hasattr(roi, 'ymin'):
+                cx = (roi.xmin + roi.xmax) / 2
+                cy = (roi.ymin + roi.ymax) / 2
+                return cx, cy
+            return None
+
+        # Extract centers from both ROIs
+        new_center = _get_roi_center(new_roi)
+        old_center = _get_roi_center(old_roi)
+
+        if new_center is None or old_center is None:
+            return False
+
+        ncx, ncy = new_center
+        ocx, ocy = old_center
+
+        # annulus
+        if hasattr(old_roi, 'outer_radius'):
+            size_of_roi = old_roi.outer_radius
+        # circle
+        elif hasattr(old_roi, 'radius'):
+            size_of_roi = old_roi.radius
+        # ellipse
+        elif hasattr(old_roi, 'radius_x'):
+            size_of_roi = max(old_roi.radius_x, old_roi.radius_y)
+        # rectangle
+        elif hasattr(old_roi, 'xmin'):
+            size_of_roi = max(old_roi.xmax - old_roi.xmin,
+                              old_roi.ymax - old_roi.ymin) / 2
+        else:
+            return False
+
+        if size_of_roi <= 0:
+            return False
+
+        dist = ((ncx - ocx) ** 2 + (ncy - ocy) ** 2) ** 0.5
+        return dist < size_of_roi
+
+    @staticmethod
+    def _rois_same_size(old_roi, new_roi):
+        """
+        Check whether two ROIs have the same dimensions.
+
+        Used to detect move operations where the position changes
+        but the size is preserved exactly by the bqplot brush.
+        """
+        def _dimensions_within_tolerance(old_val, new_val, rtol=1e-6):
+            return abs(old_val - new_val) < rtol * max(old_val, 1)
+
+        if type(old_roi) is not type(new_roi):
+            return False
+
+        # Annulus (check before circular — annulus has no 'radius')
+        if hasattr(old_roi, 'inner_radius') and hasattr(new_roi, 'inner_radius'):
+            return (_dimensions_within_tolerance(old_roi.inner_radius, new_roi.inner_radius)
+                    and
+                    _dimensions_within_tolerance(old_roi.outer_radius, new_roi.outer_radius))
+
+        # Circular
+        if hasattr(old_roi, 'radius') and hasattr(new_roi, 'radius'):
+            return _dimensions_within_tolerance(old_roi.radius, new_roi.radius)
+
+        # Elliptical
+        if hasattr(old_roi, 'radius_x') and hasattr(new_roi, 'radius_x'):
+            return (_dimensions_within_tolerance(old_roi.radius_x, new_roi.radius_x)
+                    and
+                    _dimensions_within_tolerance(old_roi.radius_y, new_roi.radius_y))
+
+        # Rectangular
+        if hasattr(old_roi, 'xmin') and hasattr(new_roi, 'xmin'):
+            old_w = old_roi.xmax - old_roi.xmin
+            old_h = old_roi.ymax - old_roi.ymin
+            new_w = new_roi.xmax - new_roi.xmin
+            new_h = new_roi.ymax - new_roi.ymin
+            return (_dimensions_within_tolerance(old_w, new_w)
+                    and
+                    _dimensions_within_tolerance(old_h, new_h))
+
+        return False
+
+    @staticmethod
+    def _check_range_subset_state_change(roi, existing_state, rtol=1e-6):
+        """
+        Check if an ROI change should trigger ReplaceMode for RangeSubsetState.
+
+        Detects whether the user is resizing (midpoint inside old range)
+        or moving (same width) the existing subset.
+
+        Parameters
+        ----------
+        roi : ROI object
+            The new ROI with 'min' and 'max' attributes.
+        existing_state : RangeSubsetState
+            The existing subset state.
+
+        Returns
+        -------
+        should_replace : bool
+            True if the change is a resize or move operation.
+        """
+        if not (hasattr(roi, 'min') and hasattr(roi, 'max')):
+            return False
+
+        new_w = roi.max - roi.min
+        old_w = existing_state.hi - existing_state.lo
+        new_mid = (roi.min + roi.max) / 2
+
+        # Resize: midpoint inside old range
+        # Move: same width
+        if existing_state.lo <= new_mid <= existing_state.hi:
+            return True
+        elif abs(new_w - old_w) < rtol * max(abs(old_w), 1):
+            return True
+
+        return False
+
+    def apply_roi(self, roi, use_current=False):
+        """
+        Apply an ROI to the viewer.
+
+        Detects whether the user is resizing (center stays within
+        the old ROI) or moving (dimensions stay the same) an
+        existing subset.  When either is detected and mode is
+        NewMode, temporarily switches to ReplaceMode so the subset
+        is modified in-place rather than duplicated.
+        """
+        from glue.core.subset import RoiSubsetState, RangeSubsetState
+
+        edit_subset_mode = self.session.edit_subset_mode
+        needs_override = False
+
+        if len(edit_subset_mode.edit_subset) > 0 and edit_subset_mode.mode is NewMode:
+            existing_state = edit_subset_mode.edit_subset[0].subset_state
+            try:
+                if isinstance(existing_state, RoiSubsetState):
+                    old_roi = existing_state.roi
+                    # Resize: center of new ROI inside old ROI
+                    # Move: dimensions unchanged (bqplot preserves
+                    #        exact size during drag-move)
+                    if self._roi_centers_close(old_roi, roi) or self._rois_same_size(old_roi, roi):
+                        needs_override = True
+                elif isinstance(existing_state, RangeSubsetState):
+                    if self._check_range_subset_state_change(roi, existing_state):
+                        needs_override = True
+            except Exception:  # noqa
+                pass
+
+        if needs_override:
+            original_mode = edit_subset_mode._mode
+            edit_subset_mode._mode = ReplaceMode
+        try:
+            super().apply_roi(roi, use_current=use_current)
+        finally:
+            if needs_override:
+                edit_subset_mode._mode = original_mode
 
     @property
     def user_api(self):
