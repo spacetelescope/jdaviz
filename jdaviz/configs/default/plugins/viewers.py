@@ -289,7 +289,7 @@ class JdavizViewerMixin(WithCache):
                 if isinstance(existing_state, RoiSubsetState):
                     needs_override = self._is_roi_edit(existing_state.roi, roi)
                 elif isinstance(existing_state, RangeSubsetState):
-                    needs_override = self._is_range_edit(roi, existing_state)
+                    needs_override = self._is_range_edit(existing_state, roi)
             except Exception as e:  # noqa
                 raise e
 
