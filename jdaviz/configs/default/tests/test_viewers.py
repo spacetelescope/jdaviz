@@ -171,6 +171,7 @@ class TestROIEdits:
 # Programmatic test: apply_roi in deconfigged
 # ---------------------------------------------------------------------------
 
+
 class TestDeconfiggedSubsetEditInPlace:
     """
     End-to-end test verifying that resize and move operations in
