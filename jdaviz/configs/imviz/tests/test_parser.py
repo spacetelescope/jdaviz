@@ -123,13 +123,7 @@ class TestParseImage:
         for i in range(n_slices):
             data = imviz_helper.app.data_collection[i]
             comp = data.get_component('DATA')
-            if not manual_loop:
-                # 3D array uses extension naming with slice-N suffix
-                data_label = f'my_slices[slice-{i}]' if i > 0 else 'my_slices'
-                assert data.label == data_label
-            else:
-                # Manual loop with explicit unique labels
-                assert data.label == f'my_slices_{i}'
+            assert data.label == (f'my_slices ({i})' if i > 0 else 'my_slices')
             assert data.shape == slice_shape
             assert_array_equal(comp.data, i)
 
