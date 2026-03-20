@@ -106,18 +106,6 @@ class TestROIEdits:
         assert JdavizViewerMixin._is_annulus_edit(old, new) == validity
         assert JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new) == validity
 
-        # Test in app behavior: resize, move, and new draw.
-        # Draw initial roi and verify count
-        # self.image_viewer.apply_roi(old)
-        # assert self._subset_count() == 1
-        #
-        # self.image_viewer.apply_roi(new)
-        # assert self._subset_count() == (1 if validity else 2)
-        #
-        # different_roi = CircularAnnulusROI(xc=100, yc=100, inner_radius=2, outer_radius=4)
-        # self.image_viewer.apply_roi(different_roi)
-        # assert self._subset_count() == (2 if validity else 3)
-
         # ---------------------------------------------------------------------------
         # _is_elliptical_edit
         # ---------------------------------------------------------------------------
@@ -138,19 +126,6 @@ class TestROIEdits:
                             radius_y=old.radius_y + delta_oyr)
         assert JdavizViewerMixin._is_elliptical_edit(old, new) == validity
         assert JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new) == validity
-
-        # Test in app behavior: resize, move, and new draw.
-        # Draw initial roi and verify count
-        # annulus_count = self._subset_count()
-        # self.image_viewer.apply_roi(old)
-        # assert self._subset_count() == annulus_count + 1
-        #
-        # self.image_viewer.apply_roi(new)
-        # assert self._subset_count() == (annulus_count + (1 if validity else 2))
-        #
-        # different_roi = EllipticalROI(xc=100, yc=100, radius_x=2, radius_y=4)
-        # self.image_viewer.apply_roi(different_roi)
-        # assert self._subset_count() == (annulus_count + (2 if validity else 3))
 
     # ---------------------------------------------------------------------------
     # _is_rectangular_edit
@@ -180,18 +155,6 @@ class TestROIEdits:
                              ymax=old.ymax + delta_ymax)
         assert JdavizViewerMixin._is_rectangular_edit(old, new) == validity
         assert JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new) == validity
-
-        # Test in app behavior: resize, move, and new draw.
-        # Draw initial roi and verify count
-        # self.image_viewer.apply_roi(old)
-        # assert self._subset_count() == 1
-        #
-        # self.image_viewer.apply_roi(new)
-        # assert self._subset_count() == (1 if validity else 2)
-        #
-        # different_roi = RectangularROI(xmin=100, xmax=150, ymin=100, ymax=150)
-        # self.image_viewer.apply_roi(different_roi)
-        # assert self._subset_count() == (2 if validity else 3)
 
     # ---------------------------------------------------------------------------
     # _is_roi_edit  (dispatcher)
