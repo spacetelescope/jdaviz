@@ -125,7 +125,8 @@ class TestParseImage:
             comp = data.get_component('DATA')
             if not manual_loop:
                 # 3D array uses extension naming with slice-N suffix
-                assert data.label == f'my_slices[slice-{i}]' if i > 0 else 'my_slices'
+                data_label = f'my_slices[slice-{i}]' if i > 0 else 'my_slices'
+                assert data.label == data_label
             else:
                 # Manual loop with explicit unique labels
                 assert data.label == f'my_slices_{i}'
@@ -530,7 +531,7 @@ def test_load_valid_not_valid(imviz_helper):
     imviz_helper.load_data(arr, data_label='valid', show_in_viewer=False)
 
     # Load something invalid.
-    with pytest.raises(ValueError, match='No valid loaders found for input.'):
+    with pytest.raises(ValueError, match='no valid loaders found for input.'):
         imviz_helper.load_data(np.zeros(2), show_in_viewer=False)
 
     # Make sure valid data is still there.
