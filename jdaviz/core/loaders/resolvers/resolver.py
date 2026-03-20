@@ -1130,7 +1130,7 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
                     return True
             return False
 
-        if formats is None or not any(formats) or 'object' in formats:
+        if formats is None or not any(formats):
             return True
 
         # Check if there's an arrow separator
