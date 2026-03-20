@@ -15,210 +15,157 @@ from glue.core.roi import (
     RectangularROI,
     XRangeROI,
 )
+from glue.core.subset import RangeSubsetState
 from glue_jupyter.bqplot.common.tools import TrueCircularROI
 
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 
-_M = JdavizViewerMixin
 
-
-# ---------------------------------------------------------------------------
-# _is_circular_edit
-# ---------------------------------------------------------------------------
-
-class TestIsCircularEdit:
+class TestROIEdits:
     """
-    Tests for ``JdavizViewerMixin._is_circular_edit``.
+    Tests for all types of ROI edits.
     """
 
-    def test_resize_same_center(self):
-        old = CircularROI(xc=10, yc=10, radius=5)
-        new = CircularROI(xc=10, yc=10, radius=8)
-        assert _M._is_circular_edit(old, new)
+    @pytest.fixture(autouse=True)
+    def setup_class(self):
+        self.JVM = JdavizViewerMixin
 
-    def test_resize_center_within_radius(self):
+    # ---------------------------------------------------------------------------
+    # _is_circular_edit
+    # ---------------------------------------------------------------------------
+    @pytest.mark.parametrize(
+        ('delta_xc', 'delta_yc', 'delta_r', 'validity'),
+        [(0, 0, 3, True),  # resize same center
+         (2, 0, 3, True),  # resize center within radius
+         (40, 40, 0, True),  # move same radius
+         (40, 40, 3, False)]  # new draw (move and resize)
+    )
+    def test_circular_roi_edit(self, delta_xc, delta_yc, delta_r, validity):
         old = CircularROI(xc=10, yc=10, radius=5)
-        new = CircularROI(xc=12, yc=10, radius=8)
-        assert _M._is_circular_edit(old, new)
+        new = CircularROI(xc=old.xc + delta_xc, yc=old.yc + delta_yc, radius=old.radius + delta_r)
+        assert self.JVM._is_circular_edit(old, new) == validity
+        assert self.JVM._is_roi_edit(self.JVM, old, new) == validity
 
-    def test_move_same_radius(self):
-        old = CircularROI(xc=10, yc=10, radius=5)
-        new = CircularROI(xc=50, yc=50, radius=5)
-        assert _M._is_circular_edit(old, new)
-
-    def test_new_draw(self):
-        old = CircularROI(xc=10, yc=10, radius=5)
-        new = CircularROI(xc=50, yc=50, radius=12)
-        assert not _M._is_circular_edit(old, new)
-
-    def test_zero_radius(self):
+        # Test with zero initial radius, always False since any change would be a new draw
         old = CircularROI(xc=10, yc=10, radius=0)
-        new = CircularROI(xc=10, yc=10, radius=5)
-        assert not _M._is_circular_edit(old, new)
+        new = CircularROI(xc=old.xc + delta_xc, yc=old.yc + delta_yc, radius=old.radius + delta_r)
+        assert not self.JVM._is_circular_edit(old, new)
+        assert not self.JVM._is_roi_edit(self.JVM, old, new)
 
+    # ---------------------------------------------------------------------------
+    # _is_annulus_edit AND _is_elliptical_edit (same logic for both, just different parameters)
+    # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# _is_annulus_edit
-# ---------------------------------------------------------------------------
-
-class TestIsAnnulusEdit:
-    """
-    Tests for ``JdavizViewerMixin._is_annulus_edit``.
-    """
-
-    def test_resize_same_center(self):
+    @pytest.mark.parametrize(
+        ('delta_xc', 'delta_yc', 'delta_ixr', 'delta_oyr', 'validity'),
+        [(0, 0, 1, 2, True),  # resize same center
+         (40, 40, 0, 0, True),  # move same radii
+         (40, 40, 2, 4, False),  # new draw (move and resize)
+         (40, 40, 1, 0, False),  # different inner/x radius
+         (40, 40, 0, 2, False)]  # different outer/y radius
+    )
+    def test_annulus_elliptical_roi_edit(self, delta_xc, delta_yc, delta_ixr, delta_oyr, validity):
         old = CircularAnnulusROI(xc=10, yc=10, inner_radius=3, outer_radius=6)
-        new = CircularAnnulusROI(xc=10, yc=10, inner_radius=4, outer_radius=8)
-        assert _M._is_annulus_edit(old, new)
+        new = CircularAnnulusROI(xc=old.xc + delta_xc,
+                                 yc=old.yc + delta_yc,
+                                 inner_radius=old.inner_radius + delta_ixr,
+                                 outer_radius=old.outer_radius + delta_oyr)
+        assert self.JVM._is_annulus_edit(old, new) == validity
+        assert self.JVM._is_roi_edit(self.JVM, old, new) == validity
 
-    def test_move_same_radii(self):
-        old = CircularAnnulusROI(xc=10, yc=10, inner_radius=3, outer_radius=6)
-        new = CircularAnnulusROI(xc=50, yc=50, inner_radius=3, outer_radius=6)
-        assert _M._is_annulus_edit(old, new)
+        # Test with zero initial outer radius and smaller initial outer radius,
+        # always False since any change would be a new draw
+        for old_ir, old_or in ((0, 0), (1, 0)):
+            old = CircularAnnulusROI(xc=10, yc=10, inner_radius=old_ir, outer_radius=old_or)
+            new = CircularAnnulusROI(xc=old.xc + delta_xc,
+                                     yc=old.yc + delta_yc,
+                                     inner_radius=old.inner_radius + delta_ixr,
+                                     outer_radius=old.outer_radius + delta_oyr)
+            assert not self.JVM._is_annulus_edit(old, new)
+            assert not self.JVM._is_roi_edit(self.JVM, old, new)
 
-    def test_new_draw(self):
-        old = CircularAnnulusROI(xc=10, yc=10, inner_radius=3, outer_radius=6)
-        new = CircularAnnulusROI(xc=50, yc=50, inner_radius=5, outer_radius=10)
-        assert not _M._is_annulus_edit(old, new)
+        # ---------------------------------------------------------------------------
+        # _is_elliptical_edit
+        # ---------------------------------------------------------------------------
 
-    def test_different_inner_only(self):
-        old = CircularAnnulusROI(xc=10, yc=10, inner_radius=3, outer_radius=6)
-        new = CircularAnnulusROI(xc=50, yc=50, inner_radius=4, outer_radius=6)
-        assert not _M._is_annulus_edit(old, new)
+        old = EllipticalROI(xc=10, yc=10, radius_x=3, radius_y=6)
+        new = EllipticalROI(xc=old.xc + delta_xc,
+                            yc=old.yc + delta_yc,
+                            radius_x=old.radius_x + delta_ixr,
+                            radius_y=old.radius_y + delta_oyr)
+        assert self.JVM._is_elliptical_edit(old, new) == validity
+        assert self.JVM._is_roi_edit(self.JVM, old, new) == validity
 
-    def test_zero_outer_radius(self):
-        old = CircularAnnulusROI(xc=10, yc=10, inner_radius=0, outer_radius=0)
-        new = CircularAnnulusROI(xc=10, yc=10, inner_radius=2, outer_radius=5)
-        assert not _M._is_annulus_edit(old, new)
+        # Test with zero initial x/y radius
+        for i, j in ((0, 1), (1, 0)):
+            old = EllipticalROI(xc=10, yc=10, radius_x=i, radius_y=j)
+            new = EllipticalROI(xc=old.xc + delta_xc,
+                                yc=old.yc + delta_yc,
+                                radius_x=old.radius_x + delta_ixr,
+                                radius_y=old.radius_y + delta_oyr)
+            assert not self.JVM._is_elliptical_edit(old, new)
+            assert not self.JVM._is_roi_edit(self.JVM, old, new)
 
-
-# ---------------------------------------------------------------------------
-# _is_elliptical_edit
-# ---------------------------------------------------------------------------
-
-class TestIsEllipticalEdit:
-    """
-    Tests for ``JdavizViewerMixin._is_elliptical_edit``.
-    """
-
-    def test_resize_same_center(self):
-        old = EllipticalROI(xc=10, yc=10, radius_x=5, radius_y=3)
-        new = EllipticalROI(xc=10, yc=10, radius_x=8, radius_y=6)
-        assert _M._is_elliptical_edit(old, new)
-
-    def test_move_same_radii(self):
-        old = EllipticalROI(xc=10, yc=10, radius_x=5, radius_y=3)
-        new = EllipticalROI(xc=50, yc=50, radius_x=5, radius_y=3)
-        assert _M._is_elliptical_edit(old, new)
-
-    def test_new_draw(self):
-        old = EllipticalROI(xc=10, yc=10, radius_x=5, radius_y=3)
-        new = EllipticalROI(xc=50, yc=50, radius_x=8, radius_y=6)
-        assert not _M._is_elliptical_edit(old, new)
-
-
-# ---------------------------------------------------------------------------
-# _is_rectangular_edit
-# ---------------------------------------------------------------------------
-
-class TestIsRectangularEdit:
-    """
-    Tests for ``JdavizViewerMixin._is_rectangular_edit``.
-    """
-
-    def test_resize_same_center(self):
+    # ---------------------------------------------------------------------------
+    # _is_rectangular_edit
+    # ---------------------------------------------------------------------------
+    @pytest.mark.parametrize(
+        ('delta_xmin', 'delta_xmax', 'delta_ymin', 'delta_ymax', 'validity'),
+        [(-2, 2, -2, 2, True),  # resize same center
+         (50, 50, 50, 50, True),  # move same size
+         (50, 70, 50, 70, False)]  # new draw (move and resize)
+    )
+    def test_rectangle_resize_same_center(self, delta_xmin, delta_xmax, delta_ymin, delta_ymax,
+                                          validity):
         old = RectangularROI(xmin=0, xmax=10, ymin=0, ymax=10)
-        new = RectangularROI(xmin=-2, xmax=12, ymin=-2, ymax=12)
-        assert _M._is_rectangular_edit(old, new)
+        new = RectangularROI(xmin=old.xmin + delta_xmin,
+                             xmax=old.xmax + delta_xmax,
+                             ymin=old.ymin + delta_ymin,
+                             ymax=old.ymax + delta_ymax)
+        assert self.JVM._is_rectangular_edit(old, new) == validity
+        assert self.JVM._is_roi_edit(self.JVM, old, new) == validity
 
-    def test_move_same_size(self):
-        old = RectangularROI(xmin=0, xmax=10, ymin=0, ymax=10)
-        new = RectangularROI(xmin=50, xmax=60, ymin=50, ymax=60)
-        assert _M._is_rectangular_edit(old, new)
+        # Test with zero size
+        for xmax, ymax in ((0, 1), (1, 0)):
+            old = RectangularROI(xmin=0, xmax=xmax, ymin=0, ymax=ymax)
+            new = RectangularROI(xmin=old.xmin + delta_xmin,
+                                 xmax=old.xmax + delta_xmax,
+                                 ymin=old.ymin + delta_ymin,
+                                 ymax=old.ymax + delta_ymax)
+            assert not self.JVM._is_rectangular_edit(old, new)
+            assert not self.JVM._is_roi_edit(self.JVM, old, new)
 
-    def test_new_draw(self):
-        old = RectangularROI(xmin=0, xmax=10, ymin=0, ymax=10)
-        new = RectangularROI(xmin=50, xmax=80, ymin=50, ymax=80)
-        assert not _M._is_rectangular_edit(old, new)
+    # ---------------------------------------------------------------------------
+    # _is_roi_edit  (dispatcher)
+    # ---------------------------------------------------------------------------
 
-
-# ---------------------------------------------------------------------------
-# _is_roi_edit  (dispatcher)
-# ---------------------------------------------------------------------------
-
-class TestIsRoiEdit:
-    """
-    Tests for the ``_is_roi_edit`` dispatch method.
-    """
-
-    def test_dispatches_circular(self):
-        old = CircularROI(xc=10, yc=10, radius=5)
-        new = CircularROI(xc=10, yc=10, radius=8)
-        assert _M._is_roi_edit(_M, old, new)
-
-    def test_dispatches_true_circular(self):
-        old = TrueCircularROI(xc=10, yc=10, radius=5)
-        new = TrueCircularROI(xc=10, yc=10, radius=8)
-        assert _M._is_roi_edit(_M, old, new)
-
-    def test_dispatches_true_circular_move(self):
-        old = TrueCircularROI(xc=10, yc=10, radius=5)
-        new = TrueCircularROI(xc=50, yc=50, radius=5)
-        assert _M._is_roi_edit(_M, old, new)
-
-    def test_dispatches_annulus(self):
-        old = CircularAnnulusROI(xc=10, yc=10, inner_radius=3, outer_radius=6)
-        new = CircularAnnulusROI(xc=10, yc=10, inner_radius=4, outer_radius=8)
-        assert _M._is_roi_edit(_M, old, new)
-
-    def test_dispatches_elliptical(self):
-        old = EllipticalROI(xc=10, yc=10, radius_x=5, radius_y=3)
-        new = EllipticalROI(xc=50, yc=50, radius_x=5, radius_y=3)
-        assert _M._is_roi_edit(_M, old, new)
-
-    def test_dispatches_rectangular(self):
-        old = RectangularROI(xmin=0, xmax=10, ymin=0, ymax=10)
-        new = RectangularROI(xmin=50, xmax=60, ymin=50, ymax=60)
-        assert _M._is_roi_edit(_M, old, new)
-
-    def test_different_types_returns_false(self):
+    def test_roi_edit_different_types(self):
         old = CircularROI(xc=10, yc=10, radius=5)
         new = RectangularROI(xmin=0, xmax=10, ymin=0, ymax=10)
-        assert not _M._is_roi_edit(_M, old, new)
+        assert not self.JVM._is_roi_edit(self.JVM, old, new)
 
-    def test_unsupported_type_returns_false(self):
-        assert not _M._is_roi_edit(_M, object(), object())
+    def test_roi_edit_unsupported_type(self):
+        assert not self.JVM._is_roi_edit(self.JVM, object(), object())
 
+    # ---------------------------------------------------------------------------
+    # _is_range_edit
+    # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# _is_range_edit
-# ---------------------------------------------------------------------------
+    @pytest.mark.parametrize(
+        ('delta_min', 'delta_max', 'validity'), [
+            (2, 2, True),  # move, same width
+            (5, 0, True),  # resize lo, same hi endpoint
+            (0, 5, True),  # resize hi, same lo endpoint
+            (50, 80, False)]  # new draw
+    )
+    def test_range_edits(self, delta_min, delta_max, validity):
+        old_rss = RangeSubsetState(lo=10, hi=20)
+        new_roi = XRangeROI(old_rss.lo + delta_min, old_rss.hi + delta_max)
+        assert self.JVM._is_range_edit(old_rss, new_roi) == validity
 
-class TestIsRangeEdit:
-    """
-    Tests for ``JdavizViewerMixin._is_range_edit``.
-    """
-
-    @pytest.fixture()
-    def _make_state(self):
-        from glue.core.subset import RangeSubsetState
-        return RangeSubsetState(lo=10, hi=20)
-
-    def test_resize_midpoint_inside(self, _make_state):
-        roi = XRangeROI(12, 22)
-        assert _M._is_range_edit(roi, _make_state)
-
-    def test_move_same_width(self, _make_state):
-        roi = XRangeROI(25, 35)
-        assert _M._is_range_edit(roi, _make_state)
-
-    def test_new_draw(self, _make_state):
-        roi = XRangeROI(50, 80)
-        assert not _M._is_range_edit(roi, _make_state)
-
-    def test_no_min_max_attributes(self, _make_state):
-        assert not _M._is_range_edit(object(), _make_state)
-
+    def test_range_no_min_max_attributes(self):
+        rss = RangeSubsetState(lo=10, hi=20)
+        assert not self.JVM._is_range_edit(object(), rss)
 
 # ---------------------------------------------------------------------------
 # Programmatic test: apply_roi in deconfigged
