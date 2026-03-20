@@ -123,21 +123,14 @@ class TestParseImage:
         for i in range(n_slices):
             data = imviz_helper.app.data_collection[i]
             comp = data.get_component('DATA')
-            if not manual_loop:
-                # 3D array uses extension naming with slice-N suffix
-                assert data.label == f'my_slices[slice-{i}]'
-            else:
-                # Manual loop with explicit unique labels
-                assert data.label == f'my_slices_{i}'
+            assert data.label == (f'my_slices ({i})' if i > 0 else 'my_slices')
             assert data.shape == slice_shape
             assert_array_equal(comp.data, i)
 
     @pytest.mark.filterwarnings('ignore:.*path should be string, bytes, os.PathLike or integer, not ndarray.*:DeprecationWarning')  # noqa
     def test_parse_numpy_array_3d_too_many(self, imviz_helper):
-        # When more than 16 slices are provided, only the first 16 are loaded
-        # Note: warning about 16+ slices is emitted during importer creation but is
-        # suppressed during the resolver's format probing phase (by design)
-        imviz_helper.load_data(np.ones((17, 5, 5)))
+        with pytest.warns(UserWarning, match='16 or more 3D slices found'):
+            imviz_helper.load_data(np.ones((17, 5, 5)))
 
         # Verify that only 16 slices are loaded (the limit)
         assert len(imviz_helper.app.data_collection) == 16
@@ -532,7 +525,7 @@ def test_load_valid_not_valid(imviz_helper):
     imviz_helper.load_data(arr, data_label='valid', show_in_viewer=False)
 
     # Load something invalid.
-    with pytest.raises(ValueError, match='No valid loaders found for input.'):
+    with pytest.raises(ValueError, match='no valid loaders found for input'):
         imviz_helper.load_data(np.zeros(2), show_in_viewer=False)
 
     # Make sure valid data is still there.
