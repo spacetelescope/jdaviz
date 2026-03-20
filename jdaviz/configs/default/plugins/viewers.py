@@ -110,12 +110,16 @@ class JdavizViewerMixin(WithCache):
             return False
 
         # Move: same radius
+        move = False
         if abs(old_roi.radius - new_roi.radius) < rtol * max(old_roi.radius, 1):
-            return True
+            move = True
 
         # Resize: centers close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        return dist < old_roi.radius
+        resize = dist < old_roi.radius
+
+        # xor
+        return move != resize
 
     @staticmethod
     def _is_annulus_edit(old_roi, new_roi, rtol=1e-6):
@@ -126,18 +130,22 @@ class JdavizViewerMixin(WithCache):
         Resize is detected when the centers are within the outer
         radius of each other.
         """
-        # Zero or negative outer radius not allowed
-        if old_roi.outer_radius <= 0:
+        # Outer radius must be larger than inner radius and non-zero
+        if old_roi.outer_radius == 0 or old_roi.outer_radius <= old_roi.inner_radius:
             return False
 
         # Move: same inner and outer radius
+        move = False
         if (abs(old_roi.inner_radius - new_roi.inner_radius) < rtol * max(old_roi.inner_radius, 1)
                 and abs(old_roi.outer_radius - new_roi.outer_radius) < rtol * max(old_roi.outer_radius, 1)):  # noqa
-            return True
+            move = True
 
         # Resize: centers close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        return dist < old_roi.outer_radius
+        resize = dist < old_roi.outer_radius
+
+        # xor
+        return move != resize
 
     @staticmethod
     def _is_elliptical_edit(old_roi, new_roi, rtol=1e-6):
@@ -148,19 +156,23 @@ class JdavizViewerMixin(WithCache):
         detected when the centers are within the larger radius of
         each other.
         """
-        # Zero or negative max radius not allowed
+        # Zero or negative radii not allowed
         size = max(old_roi.radius_x, old_roi.radius_y)
-        if size <= 0:
+        if size <= 0 or min(old_roi.radius_x, old_roi.radius_y) <= 0:
             return False
 
         # Move: same radii
+        move = False
         if (abs(old_roi.radius_x - new_roi.radius_x) < rtol * max(old_roi.radius_x, 1)
                 and abs(old_roi.radius_y - new_roi.radius_y) < rtol * max(old_roi.radius_y, 1)):
-            return True
+            move = True
 
         # Resize: centers close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        return dist < size
+        resize = dist < size
+
+        # xor
+        return move != resize
 
     @staticmethod
     def _is_rectangular_edit(old_roi, new_roi, rtol=1e-6):
@@ -178,13 +190,14 @@ class JdavizViewerMixin(WithCache):
 
         # Zero or negative width/height not allowed
         size = max(old_w, old_h) / 2
-        if size <= 0:
+        if size <= 0 or old_w <= 0 or old_h <= 0:
             return False
 
         # Move: same width and height
+        move = False
         if (abs(old_w - new_w) < rtol * max(abs(old_w), 1)
                 and abs(old_h - new_h) < rtol * max(abs(old_h), 1)):
-            return True
+            move = True
 
         # Resize: centers close
         old_cx = (old_roi.xmin + old_roi.xmax) / 2
@@ -192,7 +205,10 @@ class JdavizViewerMixin(WithCache):
         new_cx = (new_roi.xmin + new_roi.xmax) / 2
         new_cy = (new_roi.ymin + new_roi.ymax) / 2
         dist = norm([new_cx - old_cx, new_cy - old_cy])
-        return dist < size
+        resize = dist < size
+
+        # xor
+        return move != resize
 
     def _is_roi_edit(self, old_roi, new_roi):
         """
@@ -230,7 +246,7 @@ class JdavizViewerMixin(WithCache):
         return False
 
     @staticmethod
-    def _is_range_edit(roi, existing_state, rtol=1e-6):
+    def _is_range_edit(old_range, new_range, rtol=1e-6):
         """
         Detect resize or move for 1-D range subsets.
 
@@ -250,18 +266,23 @@ class JdavizViewerMixin(WithCache):
         is_edit : bool
             True if the change is a resize or move operation.
         """
-        if not (hasattr(roi, 'min') and hasattr(roi, 'max')):
+        if not (hasattr(new_range, 'min') and hasattr(new_range, 'max')):
             return False
-        new_w = roi.max - roi.min
-        old_w = existing_state.hi - existing_state.lo
-        new_mid = (roi.min + roi.max) / 2
 
-        # Resize: midpoint inside old range
-        if existing_state.lo <= new_mid <= existing_state.hi:
-            return True
+        old_w = old_range.hi - old_range.lo
+        new_w = new_range.max - new_range.min
+        # Zero or negative width not allowed
+        if old_w <= 0 or new_w <= 0:
+            return False
 
+        # Resize: one endpoint fixed, xor
+        resize = True if ((old_range.lo == new_range.min) !=
+                          (old_range.hi == new_range.max)) else False
         # Move: same width
-        return abs(new_w - old_w) < rtol * max(abs(old_w), 1)
+        move = True if abs(new_w - old_w) < (rtol * max(abs(old_w), 1)) else False
+
+        # xor
+        return move != resize
 
     def apply_roi(self, roi, use_current=False):
         """
