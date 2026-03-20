@@ -209,7 +209,7 @@ class JdavizViewerMixin(WithCache):
         from glue.core.roi import (CircularAnnulusROI, CircularROI,
                                    EllipticalROI, RectangularROI)
 
-        if not isinstance(new_roi, type(old_roi)) or isinstance(old_roi, type(new_roi)):
+        if not isinstance(new_roi, type(old_roi)) or not isinstance(old_roi, type(new_roi)):
             return False
 
         # match ROI classes to handler
