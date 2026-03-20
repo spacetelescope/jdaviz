@@ -126,10 +126,8 @@ class JdavizViewerMixin(WithCache):
         radius of each other.
         """
         # Move: same inner and outer radius
-        if (abs(old_roi.inner_radius - new_roi.inner_radius)
-                < rtol * max(old_roi.inner_radius, 1)
-                and abs(old_roi.outer_radius - new_roi.outer_radius)
-                < rtol * max(old_roi.outer_radius, 1)):
+        if (abs(old_roi.inner_radius - new_roi.inner_radius) < rtol * max(old_roi.inner_radius, 1)
+                and abs(old_roi.outer_radius - new_roi.outer_radius) < rtol * max(old_roi.outer_radius, 1)):  # noqa
             return True
 
         # Resize: centers close
@@ -149,10 +147,8 @@ class JdavizViewerMixin(WithCache):
         each other.
         """
         # Move: same radii
-        if (abs(old_roi.radius_x - new_roi.radius_x)
-                < rtol * max(old_roi.radius_x, 1)
-                and abs(old_roi.radius_y - new_roi.radius_y)
-                < rtol * max(old_roi.radius_y, 1)):
+        if (abs(old_roi.radius_x - new_roi.radius_x) < rtol * max(old_roi.radius_x, 1)
+                and abs(old_roi.radius_y - new_roi.radius_y) < rtol * max(old_roi.radius_y, 1)):
             return True
 
         # Resize: centers close
@@ -213,16 +209,14 @@ class JdavizViewerMixin(WithCache):
         from glue.core.roi import (CircularAnnulusROI, CircularROI,
                                    EllipticalROI, RectangularROI)
 
-        if not (isinstance(new_roi, type(old_roi))
-                or isinstance(old_roi, type(new_roi))):
+        if not isinstance(new_roi, type(old_roi)) or isinstance(old_roi, type(new_roi)):
             return False
 
-        # Use isinstance so subclasses (e.g. TrueCircularROI)
-        # are matched to their parent handler.
-        dispatch = ((CircularAnnulusROI, self._is_annulus_edit),
+        # match ROI classes to handler
+        dispatch = [(CircularAnnulusROI, self._is_annulus_edit),
                     (CircularROI, self._is_circular_edit),
                     (EllipticalROI, self._is_elliptical_edit),
-                    (RectangularROI, self._is_rectangular_edit))
+                    (RectangularROI, self._is_rectangular_edit)]
 
         for roi_type, handler in dispatch:
             if isinstance(old_roi, roi_type):
