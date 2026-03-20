@@ -21,6 +21,7 @@ class TestROIEdits:
     Unit tests for all types of ROI edits as well as
     app testing.
     """
+
     @staticmethod
     def _subset_count(app):
         return len(app.plugins['Subset Tools'].get_regions())
@@ -52,6 +53,7 @@ class TestROIEdits:
         assert JdavizViewerMixin._is_circular_edit(old, new) == validity
         assert JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new) == validity
 
+        # Check parent class and use for the app testing
         old = CircularROI(xc=10, yc=10, radius=5)
         new = CircularROI(xc=old.xc + delta_xc, yc=old.yc + delta_yc, radius=old.radius + delta_r)
         assert JdavizViewerMixin._is_circular_edit(old, new) == validity
@@ -96,6 +98,7 @@ class TestROIEdits:
             assert not JdavizViewerMixin._is_annulus_edit(old, new)
             assert not JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new)
 
+        # Check with 'valid' initial parameters
         old = CircularAnnulusROI(xc=10, yc=10, inner_radius=3, outer_radius=6)
         new = CircularAnnulusROI(xc=old.xc + delta_xc,
                                  yc=old.yc + delta_yc,
@@ -117,6 +120,7 @@ class TestROIEdits:
             assert not JdavizViewerMixin._is_elliptical_edit(old, new)
             assert not JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new)
 
+        # Check with 'valid' initial parameters
         old = EllipticalROI(xc=10, yc=10, radius_x=3, radius_y=6)
         new = EllipticalROI(xc=old.xc + delta_xc,
                             yc=old.yc + delta_yc,
@@ -146,6 +150,7 @@ class TestROIEdits:
             assert not JdavizViewerMixin._is_rectangular_edit(old, new)
             assert not JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new)
 
+        # Check with 'valid' initial parameters
         old = RectangularROI(xmin=0, xmax=10, ymin=0, ymax=10)
         new = RectangularROI(xmin=old.xmin + delta_xmin,
                              xmax=old.xmax + delta_xmax,
@@ -155,7 +160,7 @@ class TestROIEdits:
         assert JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new) == validity
 
     # ---------------------------------------------------------------------------
-    # _is_roi_edit  (dispatcher)
+    # _is_roi_edit False cases
     # ---------------------------------------------------------------------------
 
     def test_roi_edit_different_types(self):
