@@ -112,6 +112,7 @@ class JdavizViewerMixin(WithCache):
             return False, False
 
         # Move: same radius
+        move = False
         if abs(old_roi.radius - new_roi.radius) < rtol * max(old_roi.radius, 1):
             move = True
 
@@ -135,6 +136,7 @@ class JdavizViewerMixin(WithCache):
             return False, False
 
         # Move: same inner and outer radius
+        move = False
         if (abs(old_roi.inner_radius - new_roi.inner_radius) < rtol * max(old_roi.inner_radius, 1)
                 and abs(old_roi.outer_radius - new_roi.outer_radius) < rtol * max(old_roi.outer_radius, 1)):  # noqa
             move = True
@@ -157,9 +159,10 @@ class JdavizViewerMixin(WithCache):
         # Zero or negative radii not allowed
         size = max(old_roi.radius_x, old_roi.radius_y)
         if size <= 0 or min(old_roi.radius_x, old_roi.radius_y) <= 0:
-            return False
+            return False, False
 
         # Move: same radii
+        move = False
         if (abs(old_roi.radius_x - new_roi.radius_x) < rtol * max(old_roi.radius_x, 1)
                 and abs(old_roi.radius_y - new_roi.radius_y) < rtol * max(old_roi.radius_y, 1)):
             move = True
@@ -190,6 +193,7 @@ class JdavizViewerMixin(WithCache):
             return False, False
 
         # Move: same width and height
+        move = False
         if (abs(old_w - new_w) < rtol * max(abs(old_w), 1)
                 and abs(old_h - new_h) < rtol * max(abs(old_h), 1)):
             move = True
