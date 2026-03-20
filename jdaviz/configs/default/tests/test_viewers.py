@@ -4,10 +4,7 @@ Tests for JdavizViewerMixin ROI edit-detection helpers and the
 in the deconfigged configuration.
 """
 
-import numpy as np
 import pytest
-from astropy.nddata import NDData
-from glue.core.edit_subset_mode import NewMode
 from glue.core.roi import (
     CircularAnnulusROI,
     CircularROI,
