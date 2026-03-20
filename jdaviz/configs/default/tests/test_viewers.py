@@ -5,13 +5,11 @@ in the deconfigged configuration.
 """
 
 import pytest
-from glue.core.roi import (
-    CircularAnnulusROI,
-    CircularROI,
-    EllipticalROI,
-    RectangularROI,
-    XRangeROI,
-)
+from glue.core.roi import (CircularAnnulusROI,
+                           CircularROI,
+                           EllipticalROI,
+                           RectangularROI,
+                           XRangeROI)
 from glue.core.subset import RangeSubsetState
 from glue_jupyter.bqplot.common.tools import TrueCircularROI
 
