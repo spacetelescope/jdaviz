@@ -1346,7 +1346,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                             CircleSkyRegion, EllipseSkyRegion,
                                             RectangleSkyRegion, CircleAnnulusSkyRegion))
                             and not has_wcs):
-                        bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
+                        bad_regions.append(
+                            (region, 'Sky region provided but data has no valid WCS'))
                         continue
 
                     if (isinstance(region, (CircularAperture, EllipticalAperture,
@@ -1354,7 +1355,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                             CirclePixelRegion, EllipsePixelRegion,
                                             RectanglePixelRegion, CircleAnnulusPixelRegion))
                             and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
-                        bad_regions.append((region, 'Pixel region provided but data is aligned by WCS'))
+                        bad_regions.append(
+                            (region, 'Pixel region provided but data is aligned by WCS'))
                         continue
 
                     # photutils: Convert to region shape first
