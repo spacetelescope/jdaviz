@@ -110,16 +110,12 @@ class JdavizViewerMixin(WithCache):
             return False
 
         # Move: same radius
-        move = False
         if abs(old_roi.radius - new_roi.radius) < rtol * max(old_roi.radius, 1):
-            move = True
+            return True
 
         # Resize: centers close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        resize = dist < old_roi.radius
-
-        # xor
-        return move != resize
+        return dist < old_roi.radius
 
     @staticmethod
     def _is_annulus_edit(old_roi, new_roi, rtol=1e-6):
@@ -135,17 +131,13 @@ class JdavizViewerMixin(WithCache):
             return False
 
         # Move: same inner and outer radius
-        move = False
         if (abs(old_roi.inner_radius - new_roi.inner_radius) < rtol * max(old_roi.inner_radius, 1)
                 and abs(old_roi.outer_radius - new_roi.outer_radius) < rtol * max(old_roi.outer_radius, 1)):  # noqa
-            move = True
+            return True
 
         # Resize: centers close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        resize = dist < old_roi.outer_radius
-
-        # xor
-        return move != resize
+        return dist < old_roi.outer_radius
 
     @staticmethod
     def _is_elliptical_edit(old_roi, new_roi, rtol=1e-6):
@@ -162,17 +154,13 @@ class JdavizViewerMixin(WithCache):
             return False
 
         # Move: same radii
-        move = False
         if (abs(old_roi.radius_x - new_roi.radius_x) < rtol * max(old_roi.radius_x, 1)
                 and abs(old_roi.radius_y - new_roi.radius_y) < rtol * max(old_roi.radius_y, 1)):
-            move = True
+            return True
 
         # Resize: centers close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        resize = dist < size
-
-        # xor
-        return move != resize
+        return dist < size
 
     @staticmethod
     def _is_rectangular_edit(old_roi, new_roi, rtol=1e-6):
@@ -194,10 +182,9 @@ class JdavizViewerMixin(WithCache):
             return False
 
         # Move: same width and height
-        move = False
         if (abs(old_w - new_w) < rtol * max(abs(old_w), 1)
                 and abs(old_h - new_h) < rtol * max(abs(old_h), 1)):
-            move = True
+            return True
 
         # Resize: centers close
         old_cx = (old_roi.xmin + old_roi.xmax) / 2
@@ -205,10 +192,7 @@ class JdavizViewerMixin(WithCache):
         new_cx = (new_roi.xmin + new_roi.xmax) / 2
         new_cy = (new_roi.ymin + new_roi.ymax) / 2
         dist = norm([new_cx - old_cx, new_cy - old_cy])
-        resize = dist < size
-
-        # xor
-        return move != resize
+        return dist < size
 
     def _is_roi_edit(self, old_roi, new_roi):
         """
@@ -251,15 +235,16 @@ class JdavizViewerMixin(WithCache):
         Detect resize or move for 1-D range subsets.
 
         Move is detected when the range width is unchanged.
-        Resize is detected when the new midpoint falls inside the
-        old range.
+        Resize is detected when the one endpoint is fixed.
 
         Parameters
         ----------
-        roi : ROI
-            The new ROI with ``min`` and ``max`` attributes.
-        existing_state : RangeSubsetState
+        old_range : RangeSubsetState
             The existing 1-D subset state.
+        new_range : ROI
+            The new ROI with ``min`` and ``max`` attributes.
+            Named 'range' for consistency with the RangeSubsetState,
+            but can be any ROI with these attributes.
 
         Returns
         -------
@@ -275,8 +260,8 @@ class JdavizViewerMixin(WithCache):
         if old_w <= 0 or new_w <= 0:
             return False
 
-        # Resize: one endpoint fixed, xor
-        resize = True if ((old_range.lo == new_range.min) !=
+        # Resize: one endpoint fixed
+        resize = True if ((old_range.lo == new_range.min) or
                           (old_range.hi == new_range.max)) else False
         # Move: same width
         move = True if abs(new_w - old_w) < (rtol * max(abs(old_w), 1)) else False
