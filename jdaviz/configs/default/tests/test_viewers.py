@@ -23,25 +23,9 @@ class TestROIEdits:
     Unit tests for all types of ROI edits as well as
     app testing.
     """
-    @pytest.fixture(autouse=True)
-    def setup_class(self, deconfigged_helper, image_hdu_wcs, spectrum1d):
-        self.JVM = JdavizViewerMixin
-        deconfigged_helper.load(image_hdu_wcs, format='Image')
-        deconfigged_helper.load(spectrum1d, format='1D Spectrum')
-
-        self.app = deconfigged_helper
-        self.image_viewer = deconfigged_helper.app.get_viewer('Image')
-        self.spectrum_viewer = deconfigged_helper.app.get_viewer('1D Spectrum')
-        print(dir(self.spectrum_viewer))
-
-    def _subset_count(self):
-        return len(self.app.plugins['Subset Tools'].get_regions())
-
-    # def _active_subset_state(self):
-    #     esm = self.viewer.session.edit_subset_mode
-    #     if esm.edit_subset:
-    #         return esm.edit_subset[0].subset_state
-    #     return None
+    @staticmethod
+    def _subset_count(app):
+        return len(app.plugins['Subset Tools'].get_regions())
 
     # ---------------------------------------------------------------------------
     # _is_circular_edit
@@ -53,38 +37,42 @@ class TestROIEdits:
          (40, 40, 0, True),  # move same radius
          (40, 40, 3, False)]  # new draw (move and resize)
     )
-    def test_circular_roi_edit(self, delta_xc, delta_yc, delta_r, validity):
+    def test_circular_roi_edit(self, delta_xc, delta_yc, delta_r, validity,
+                               deconfigged_helper, image_hdu_wcs):
 
         # Test with zero initial radius, always False since any change would be a new draw
         old = CircularROI(xc=10, yc=10, radius=0)
         new = CircularROI(xc=old.xc + delta_xc, yc=old.yc + delta_yc, radius=old.radius + delta_r)
-        assert not self.JVM._is_circular_edit(old, new)
-        assert not self.JVM._is_roi_edit(self.JVM, old, new)
+        assert not JdavizViewerMixin._is_circular_edit(old, new)
+        assert not JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new)
 
         # Check subclass
         old = TrueCircularROI(xc=10, yc=10, radius=5)
         new = TrueCircularROI(xc=old.xc + delta_xc,
                               yc=old.yc + delta_yc,
                               radius=old.radius + delta_r)
-        assert self.JVM._is_circular_edit(old, new) == validity
-        assert self.JVM._is_roi_edit(self.JVM, old, new) == validity
+        assert JdavizViewerMixin._is_circular_edit(old, new) == validity
+        assert JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new) == validity
 
         old = CircularROI(xc=10, yc=10, radius=5)
         new = CircularROI(xc=old.xc + delta_xc, yc=old.yc + delta_yc, radius=old.radius + delta_r)
-        assert self.JVM._is_circular_edit(old, new) == validity
-        assert self.JVM._is_roi_edit(self.JVM, old, new) == validity
+        assert JdavizViewerMixin._is_circular_edit(old, new) == validity
+        assert JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new) == validity
 
         # Test in app behavior: resize, move, and new draw.
-        # Draw initial roi and verify count
-        self.image_viewer.apply_roi(old)
-        assert self._subset_count() == 1
+        deconfigged_helper.load(image_hdu_wcs, format='Image')
+        image_viewer = deconfigged_helper.app.get_viewer('Image')
 
-        self.image_viewer.apply_roi(new)
-        assert self._subset_count() == (1 if validity else 2)
+        # Draw initial roi and verify count
+        image_viewer.apply_roi(old)
+        assert self._subset_count(deconfigged_helper) == 1
+
+        image_viewer.apply_roi(new)
+        assert self._subset_count(deconfigged_helper) == (1 if validity else 2)
 
         different_roi = CircularROI(xc=100, yc=100, radius=2)
-        self.image_viewer.apply_roi(different_roi)
-        assert self._subset_count() == (2 if validity else 3)
+        image_viewer.apply_roi(different_roi)
+        assert self._subset_count(deconfigged_helper) == (2 if validity else 3)
 
     # ---------------------------------------------------------------------------
     # _is_annulus_edit AND _is_elliptical_edit (same logic for both, just different parameters)
@@ -107,16 +95,16 @@ class TestROIEdits:
                                      yc=old.yc + delta_yc,
                                      inner_radius=old.inner_radius + delta_ixr,
                                      outer_radius=old.outer_radius + delta_oyr)
-            assert not self.JVM._is_annulus_edit(old, new)
-            assert not self.JVM._is_roi_edit(self.JVM, old, new)
+            assert not JdavizViewerMixin._is_annulus_edit(old, new)
+            assert not JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new)
 
         old = CircularAnnulusROI(xc=10, yc=10, inner_radius=3, outer_radius=6)
         new = CircularAnnulusROI(xc=old.xc + delta_xc,
                                  yc=old.yc + delta_yc,
                                  inner_radius=old.inner_radius + delta_ixr,
                                  outer_radius=old.outer_radius + delta_oyr)
-        assert self.JVM._is_annulus_edit(old, new) == validity
-        assert self.JVM._is_roi_edit(self.JVM, old, new) == validity
+        assert JdavizViewerMixin._is_annulus_edit(old, new) == validity
+        assert JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new) == validity
 
         # Test in app behavior: resize, move, and new draw.
         # Draw initial roi and verify count
@@ -140,16 +128,16 @@ class TestROIEdits:
                                 yc=old.yc + delta_yc,
                                 radius_x=old.radius_x + delta_ixr,
                                 radius_y=old.radius_y + delta_oyr)
-            assert not self.JVM._is_elliptical_edit(old, new)
-            assert not self.JVM._is_roi_edit(self.JVM, old, new)
+            assert not JdavizViewerMixin._is_elliptical_edit(old, new)
+            assert not JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new)
 
         old = EllipticalROI(xc=10, yc=10, radius_x=3, radius_y=6)
         new = EllipticalROI(xc=old.xc + delta_xc,
                             yc=old.yc + delta_yc,
                             radius_x=old.radius_x + delta_ixr,
                             radius_y=old.radius_y + delta_oyr)
-        assert self.JVM._is_elliptical_edit(old, new) == validity
-        assert self.JVM._is_roi_edit(self.JVM, old, new) == validity
+        assert JdavizViewerMixin._is_elliptical_edit(old, new) == validity
+        assert JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new) == validity
 
         # Test in app behavior: resize, move, and new draw.
         # Draw initial roi and verify count
@@ -182,16 +170,16 @@ class TestROIEdits:
                                  xmax=old.xmax + delta_xmax,
                                  ymin=old.ymin + delta_ymin,
                                  ymax=old.ymax + delta_ymax)
-            assert not self.JVM._is_rectangular_edit(old, new)
-            assert not self.JVM._is_roi_edit(self.JVM, old, new)
+            assert not JdavizViewerMixin._is_rectangular_edit(old, new)
+            assert not JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new)
 
         old = RectangularROI(xmin=0, xmax=10, ymin=0, ymax=10)
         new = RectangularROI(xmin=old.xmin + delta_xmin,
                              xmax=old.xmax + delta_xmax,
                              ymin=old.ymin + delta_ymin,
                              ymax=old.ymax + delta_ymax)
-        assert self.JVM._is_rectangular_edit(old, new) == validity
-        assert self.JVM._is_roi_edit(self.JVM, old, new) == validity
+        assert JdavizViewerMixin._is_rectangular_edit(old, new) == validity
+        assert JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new) == validity
 
         # Test in app behavior: resize, move, and new draw.
         # Draw initial roi and verify count
@@ -212,10 +200,10 @@ class TestROIEdits:
     def test_roi_edit_different_types(self):
         old = CircularROI(xc=10, yc=10, radius=5)
         new = RectangularROI(xmin=0, xmax=10, ymin=0, ymax=10)
-        assert not self.JVM._is_roi_edit(self.JVM, old, new)
+        assert not JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, old, new)
 
     def test_roi_edit_unsupported_type(self):
-        assert not self.JVM._is_roi_edit(self.JVM, object(), object())
+        assert not JdavizViewerMixin._is_roi_edit(JdavizViewerMixin, object(), object())
 
     # ---------------------------------------------------------------------------
     # _is_range_edit
@@ -228,23 +216,28 @@ class TestROIEdits:
             (0, 5, True),  # resize hi, same lo endpoint
             (50, 80, False)]  # new draw
     )
-    def test_range_edits(self, delta_min, delta_max, validity):
+    def test_range_edits(self, delta_min, delta_max, validity,
+                         deconfigged_helper, spectrum1d):
         old_rss = RangeSubsetState(lo=10, hi=20)
         new_roi = XRangeROI(min=old_rss.lo + delta_min, max=old_rss.hi + delta_max)
-        assert self.JVM._is_range_edit(old_rss, new_roi) == validity
+        assert JdavizViewerMixin._is_range_edit(old_rss, new_roi) == validity
 
         # Test in app behavior: resize, move, and new draw.
+        deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+        spectrum_viewer = deconfigged_helper.app.get_viewer('1D Spectrum')
+
         # Draw initial roi and verify count
-        # self.spectrum_viewer.apply_roi(old_rss)
-        # assert self._subset_count() == 1
-        #
-        # self.spectrum_viewer.apply_roi(new_roi)
-        # assert self._subset_count() == (1 if validity else 2)
-        #
-        # different_roi = XRangeROI(min=100, max=150)
-        # self.spectrum_viewer.apply_roi(different_roi)
-        # assert self._subset_count() == (2 if validity else 3)
+        initial_roi = XRangeROI(min=old_rss.lo, max=old_rss.hi)
+        spectrum_viewer.apply_roi(initial_roi)
+        assert self._subset_count(deconfigged_helper) == 1
+
+        spectrum_viewer.apply_roi(new_roi)
+        assert self._subset_count(deconfigged_helper) == (1 if validity else 2)
+
+        different_roi = XRangeROI(min=100, max=150)
+        spectrum_viewer.apply_roi(different_roi)
+        assert self._subset_count(deconfigged_helper) == (2 if validity else 3)
 
     def test_range_no_min_max_attributes(self):
         rss = RangeSubsetState(lo=10, hi=20)
-        assert not self.JVM._is_range_edit(object(), rss)
+        assert not JdavizViewerMixin._is_range_edit(rss, object())
