@@ -105,14 +105,15 @@ class JdavizViewerMixin(WithCache):
         detected when the centers are within one radius of each
         other.
         """
+        # Zero or negative radius not allowed
+        if old_roi.radius <= 0:
+            return False
+
         # Move: same radius
         if abs(old_roi.radius - new_roi.radius) < rtol * max(old_roi.radius, 1):
             return True
 
         # Resize: centers close
-        if old_roi.radius <= 0:
-            return False
-
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
         return dist < old_roi.radius
 
@@ -125,15 +126,16 @@ class JdavizViewerMixin(WithCache):
         Resize is detected when the centers are within the outer
         radius of each other.
         """
+        # Zero or negative outer radius not allowed
+        if old_roi.outer_radius <= 0:
+            return False
+
         # Move: same inner and outer radius
         if (abs(old_roi.inner_radius - new_roi.inner_radius) < rtol * max(old_roi.inner_radius, 1)
                 and abs(old_roi.outer_radius - new_roi.outer_radius) < rtol * max(old_roi.outer_radius, 1)):  # noqa
             return True
 
         # Resize: centers close
-        if old_roi.outer_radius <= 0:
-            return False
-
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
         return dist < old_roi.outer_radius
 
@@ -146,16 +148,17 @@ class JdavizViewerMixin(WithCache):
         detected when the centers are within the larger radius of
         each other.
         """
+        # Zero or negative max radius not allowed
+        size = max(old_roi.radius_x, old_roi.radius_y)
+        if size <= 0:
+            return False
+
         # Move: same radii
         if (abs(old_roi.radius_x - new_roi.radius_x) < rtol * max(old_roi.radius_x, 1)
                 and abs(old_roi.radius_y - new_roi.radius_y) < rtol * max(old_roi.radius_y, 1)):
             return True
 
         # Resize: centers close
-        size = max(old_roi.radius_x, old_roi.radius_y)
-        if size <= 0:
-            return False
-
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
         return dist < size
 
@@ -172,16 +175,18 @@ class JdavizViewerMixin(WithCache):
         old_h = old_roi.ymax - old_roi.ymin
         new_w = new_roi.xmax - new_roi.xmin
         new_h = new_roi.ymax - new_roi.ymin
+
+        # Zero or negative width/height not allowed
+        size = max(old_w, old_h) / 2
+        if size <= 0:
+            return False
+
         # Move: same width and height
         if (abs(old_w - new_w) < rtol * max(abs(old_w), 1)
                 and abs(old_h - new_h) < rtol * max(abs(old_h), 1)):
             return True
 
         # Resize: centers close
-        size = max(old_w, old_h) / 2
-        if size <= 0:
-            return False
-
         old_cx = (old_roi.xmin + old_roi.xmax) / 2
         old_cy = (old_roi.ymin + old_roi.ymax) / 2
         new_cx = (new_roi.xmin + new_roi.xmax) / 2
