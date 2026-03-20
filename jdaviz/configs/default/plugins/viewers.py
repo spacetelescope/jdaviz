@@ -1,5 +1,7 @@
 from echo import delay_callback, CallbackProperty
 
+import warnings
+
 import numpy as np
 from numpy.linalg import norm
 
@@ -107,15 +109,17 @@ class JdavizViewerMixin(WithCache):
         """
         # Zero or negative radius not allowed
         if old_roi.radius <= 0:
-            return False
+            return False, False
 
         # Move: same radius
         if abs(old_roi.radius - new_roi.radius) < rtol * max(old_roi.radius, 1):
-            return True
+            move = True
 
         # Resize: centers close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        return dist < old_roi.radius
+        resize = dist < old_roi.radius
+
+        return move, resize
 
     @staticmethod
     def _is_annulus_edit(old_roi, new_roi, rtol=1e-6):
@@ -128,16 +132,18 @@ class JdavizViewerMixin(WithCache):
         """
         # Outer radius must be larger than inner radius and non-zero
         if old_roi.outer_radius == 0 or old_roi.outer_radius <= old_roi.inner_radius:
-            return False
+            return False, False
 
         # Move: same inner and outer radius
         if (abs(old_roi.inner_radius - new_roi.inner_radius) < rtol * max(old_roi.inner_radius, 1)
                 and abs(old_roi.outer_radius - new_roi.outer_radius) < rtol * max(old_roi.outer_radius, 1)):  # noqa
-            return True
+            move = True
 
         # Resize: centers close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        return dist < old_roi.outer_radius
+        resize = dist < old_roi.outer_radius
+
+        return move, resize
 
     @staticmethod
     def _is_elliptical_edit(old_roi, new_roi, rtol=1e-6):
@@ -156,11 +162,13 @@ class JdavizViewerMixin(WithCache):
         # Move: same radii
         if (abs(old_roi.radius_x - new_roi.radius_x) < rtol * max(old_roi.radius_x, 1)
                 and abs(old_roi.radius_y - new_roi.radius_y) < rtol * max(old_roi.radius_y, 1)):
-            return True
+            move = True
 
         # Resize: centers close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        return dist < size
+        resize = dist < size
+
+        return move, resize
 
     @staticmethod
     def _is_rectangular_edit(old_roi, new_roi, rtol=1e-6):
@@ -179,12 +187,12 @@ class JdavizViewerMixin(WithCache):
         # Zero or negative width/height not allowed
         size = max(old_w, old_h) / 2
         if size <= 0 or old_w <= 0 or old_h <= 0:
-            return False
+            return False, False
 
         # Move: same width and height
         if (abs(old_w - new_w) < rtol * max(abs(old_w), 1)
                 and abs(old_h - new_h) < rtol * max(abs(old_h), 1)):
-            return True
+            move = True
 
         # Resize: centers close
         old_cx = (old_roi.xmin + old_roi.xmax) / 2
@@ -192,7 +200,9 @@ class JdavizViewerMixin(WithCache):
         new_cx = (new_roi.xmin + new_roi.xmax) / 2
         new_cy = (new_roi.ymin + new_roi.ymax) / 2
         dist = norm([new_cx - old_cx, new_cy - old_cy])
-        return dist < size
+        resize = dist < size
+
+        return move, resize
 
     def _is_roi_edit(self, old_roi, new_roi):
         """
@@ -208,14 +218,16 @@ class JdavizViewerMixin(WithCache):
 
         Returns
         -------
-        is_edit : bool
-            True if *new_roi* represents a resize or move.
+        is_move : bool
+            True if *new_roi* represents move.
+        is_resize : bool
+            True if *new_roi* represents a resize.
         """
         from glue.core.roi import (CircularAnnulusROI, CircularROI,
                                    EllipticalROI, RectangularROI)
 
         if not isinstance(new_roi, type(old_roi)) or not isinstance(old_roi, type(new_roi)):
-            return False
+            return False, False
 
         # match ROI classes to handler
         dispatch = [(CircularAnnulusROI, self._is_annulus_edit),
@@ -227,7 +239,7 @@ class JdavizViewerMixin(WithCache):
             if isinstance(old_roi, roi_type):
                 return handler(old_roi, new_roi)
 
-        return False
+        return False, False
 
     @staticmethod
     def _is_range_edit(old_range, new_range, rtol=1e-6):
@@ -252,13 +264,13 @@ class JdavizViewerMixin(WithCache):
             True if the change is a resize or move operation.
         """
         if not (hasattr(new_range, 'min') and hasattr(new_range, 'max')):
-            return False
+            return False, False
 
         old_w = old_range.hi - old_range.lo
         new_w = new_range.max - new_range.min
         # Zero or negative width not allowed
         if old_w <= 0 or new_w <= 0:
-            return False
+            return False, False
 
         # Resize: one endpoint fixed
         resize = True if ((old_range.lo == new_range.min) or
@@ -266,8 +278,7 @@ class JdavizViewerMixin(WithCache):
         # Move: same width
         move = True if abs(new_w - old_w) < (rtol * max(abs(old_w), 1)) else False
 
-        # xor
-        return move != resize
+        return move, resize
 
     def apply_roi(self, roi, use_current=False):
         """
@@ -282,16 +293,35 @@ class JdavizViewerMixin(WithCache):
 
         edit_subset_mode = self.session.edit_subset_mode
         needs_override = False
+        is_move = False
 
-        if len(edit_subset_mode.edit_subset) > 0 and edit_subset_mode.mode is NewMode:
+        if (not getattr(self.jdaviz_app, '_importing_regions', False)
+                and len(edit_subset_mode.edit_subset) > 0
+                and edit_subset_mode.mode is NewMode):
+
             existing_state = edit_subset_mode.edit_subset[0].subset_state
             try:
                 if isinstance(existing_state, RoiSubsetState):
-                    needs_override = self._is_roi_edit(existing_state.roi, roi)
+                    old_roi = existing_state.roi
+                    is_move, is_resize = self._is_roi_edit(old_roi, roi)
+                    # xor
+                    needs_override = is_move != is_resize
                 elif isinstance(existing_state, RangeSubsetState):
-                    needs_override = self._is_range_edit(existing_state, roi)
+                    is_move, is_resize = self._is_range_edit(existing_state, roi)
+                    # xor
+                    needs_override = is_move != is_resize
+
             except Exception as e:  # noqa
                 raise e
+
+        if needs_override and is_move:
+            # Warn the user via API if a duplicate-sized subset is created.
+            warnings.warn(
+                'The new subset has the same dimensions as the '
+                'existing subset and will be treated as a move '
+                'operation. To create a new subset with the same '
+                'dimensions, use import_region instead.',
+                stacklevel=2)
 
         if needs_override:
             original_mode = edit_subset_mode._mode

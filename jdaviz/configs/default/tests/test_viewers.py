@@ -4,6 +4,8 @@ Tests for JdavizViewerMixin ROI edit-detection helpers and the
 in the deconfigged configuration.
 """
 
+import warnings
+
 import pytest
 from glue.core.roi import (CircularAnnulusROI,
                            CircularROI,
@@ -67,7 +69,9 @@ class TestROIEdits:
         image_viewer.apply_roi(old)
         assert self._subset_count(deconfigged_helper) == 1
 
-        image_viewer.apply_roi(new)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            image_viewer.apply_roi(new)
         assert self._subset_count(deconfigged_helper) == (1 if validity else 2)
 
         different_roi = CircularROI(xc=100, yc=100, radius=2)
@@ -197,7 +201,9 @@ class TestROIEdits:
         spectrum_viewer.apply_roi(initial_roi)
         assert self._subset_count(deconfigged_helper) == 1
 
-        spectrum_viewer.apply_roi(new_roi)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            spectrum_viewer.apply_roi(new_roi)
         assert self._subset_count(deconfigged_helper) == (1 if validity else 2)
 
         different_roi = XRangeROI(min=100, max=150)
