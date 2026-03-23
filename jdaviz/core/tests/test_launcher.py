@@ -12,6 +12,7 @@ from astropy.wcs import WCS
 import numpy as np
 from pathlib import Path
 
+import jdaviz as jd
 from jdaviz import Imviz
 from jdaviz.cli import (DEFAULT_VERBOSITY,
                         DEFAULT_HISTORY_VERBOSITY,
@@ -373,6 +374,28 @@ class TestLauncherClass:
                 if height not in ['100%', '100vh']:
                     assert dcf_app.layout.height == default_height
                     assert launcher.main.height == default_height
+
+    def test_vue_launch_deconfigged(self, deconfigged_helper):
+        """
+        Test vue_launch_config method.
+        """
+        mock_helper = Mock()
+        dcf_app = deconfigged_helper.app
+        mock_helper.app = dcf_app
+        default_height = '800px'
+        dcf_app.state.settings = {'context': {'notebook': {'max_height': default_height}}}
+        dcf_app.layout = widgets.Layout(height="100%", width="100%")
+
+        with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
+            mock_identify.return_value = (['imviz'], self.ccd)
+
+            launcher = Launcher(height="100%")
+            launcher.filepath = self.test_file
+
+            launcher.vue_launch_jdaviz("")
+
+            assert launcher.main.color == 'transparent'
+            assert launcher.main.children == [jd.gca().app]
 
 
 class TestShowLauncher:
