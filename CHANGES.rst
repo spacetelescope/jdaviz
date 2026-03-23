@@ -53,6 +53,8 @@ New Features
 
 - Added ability to load spectra with 'IVAR' and 'VAR' uncertainty extensions. [#4091]
 
+- Line list loader to allow loading custom line lists from a table or file. [#4082]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the

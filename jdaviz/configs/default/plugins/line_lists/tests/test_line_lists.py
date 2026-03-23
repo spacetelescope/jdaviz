@@ -191,3 +191,100 @@ class TestLineLists:
             if isinstance(mark, SpectralLine)]
 
         assert np.allclose([line.redshift for line in viewer_lines], 0.01)
+
+    def test_import_line_list_validation(self, deconfigged_helper, spectrum1d):
+        """Test that import validation catches invalid tables"""
+        from jdaviz.core.loaders.importers.line_list import LineListImporter
+
+        deconfigged_helper.load(spectrum1d)
+
+        # Test missing linename column
+        lt = QTable()
+        lt['rest'] = [5007, 6563] * u.AA
+        # Create a mock importer to test validation
+        is_valid = LineListImporter.is_valid.__get__(
+            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
+        )
+        assert not is_valid
+
+        # Test missing rest column
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        is_valid = LineListImporter.is_valid.__get__(
+            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
+        )
+        assert not is_valid
+
+        # Test rest column without units
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        lt['rest'] = [5007, 6563]  # No units
+        is_valid = LineListImporter.is_valid.__get__(
+            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
+        )
+        assert not is_valid
+
+        # Test negative rest values
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        lt['rest'] = [-5007, 6563] * u.AA
+        is_valid = LineListImporter.is_valid.__get__(
+            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
+        )
+        assert not is_valid
+
+        # Test valid table
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        lt['rest'] = [5007, 6563] * u.AA
+        is_valid = LineListImporter.is_valid.__get__(
+            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
+        )
+        assert is_valid
+
+    @pytest.mark.parametrize("helper_name", ['specviz_helper', 'deconfigged_helper'])
+    def test_import_line_list_generic_helper(self, helper_name, spectrum1d, request):
+        """Test importing line lists works with both specviz and deconfigged helpers"""
+        helper = request.getfixturevalue(helper_name)
+
+        if helper_name == 'specviz_helper':
+            helper.load_data(spectrum1d)
+        else:
+            # For deconfigged, load data and create a viewer
+            helper.load(spectrum1d, format='1D Spectrum', data_label='Test Spectrum')
+
+        # Create a line list table with metadata
+        lt = QTable()
+        lt['linename'] = ['O III', 'H-alpha', 'H-beta']
+        lt['rest'] = [5007, 6563, 4861] * u.AA
+        lt['listname'] = 'Test Lines'
+        lt.meta['medium'] = 'Vacuum'
+
+        # Test loading the line list
+        helper.load(lt, format='Line List')
+
+        # Verify lines were loaded
+        assert helper.spectral_lines is not None
+        assert len(helper.spectral_lines) == 3
+        assert 'Test Lines' in helper.spectral_lines['listname']
+
+        # Verify plugin internals
+        ll_plugin = helper.plugins['Line Lists']._obj
+        assert 'Test Lines' in ll_plugin.loaded_lists
+        assert len(ll_plugin.list_contents['Test Lines']['lines']) == 3
+        assert ll_plugin.list_contents['Test Lines']['medium'] == 'Vacuum'
+
+        # Verify individual line lookups in spectral_lines table
+        line_oiii = helper.spectral_lines.loc["linename", "O III"]
+        assert line_oiii["listname"] == "Test Lines"
+        line_halpha = helper.spectral_lines.loc["linename", "H-alpha"]
+        assert line_halpha["listname"] == "Test Lines"
+        line_hbeta = helper.spectral_lines.loc["linename", "H-beta"]
+        assert line_hbeta["listname"] == "Test Lines"
+
+        # Test plotting lines
+        helper.plot_spectral_line('O III 5007.0')
+
+        # Test erasing lines
+        helper.erase_spectral_lines()
+        assert np.all(helper.spectral_lines["show"] == False)  # noqa
