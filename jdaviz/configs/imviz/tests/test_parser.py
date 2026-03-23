@@ -125,7 +125,7 @@ class TestParseImage:
             comp = data.get_component('DATA')
             if not manual_loop:
                 # 3D array uses extension naming with slice-N suffix
-                assert data.label == f'my_slices[slice-{i}]'
+                assert data.label == (f'my_slices ({i})' if i else 'my_slices')
             else:
                 # Manual loop with explicit unique labels
                 assert data.label == f'my_slices_{i}'
