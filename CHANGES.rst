@@ -15,7 +15,6 @@ Imviz
 
 - Fixed a bug when trying to change link type multiple times with subsets defined. [#4096]
 
-
 Mosviz
 ^^^^^^
 
