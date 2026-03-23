@@ -1217,7 +1217,7 @@ def extract_loader_options(option_type):
                         # Check if surrounded by asterisks (RST title)
                         if (prev_line and all(c == '*' for c in prev_line) and
                             next_line and all(c == '*' for c in next_line) and
-                            curr_line):
+                                curr_line):
                             title = curr_line
 
                             # Process based on type
@@ -1226,7 +1226,8 @@ def extract_loader_options(option_type):
                                 if title.endswith(' Format'):
                                     title = title[:-7]
                             elif option_type == 'sources':
-                                # Extract name from "Loading from X" or "Loading via X" or "Loading X"
+                                # Extract name from "Loading from X" or "Loading via X"
+                                # or "Loading X"
                                 if title.startswith('Loading from '):
                                     title = title[13:].lower()
                                 elif title.startswith('Loading via '):
