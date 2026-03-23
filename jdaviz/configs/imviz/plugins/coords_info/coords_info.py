@@ -693,7 +693,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     self.marks[matched_marker_id].update_xy([wave_matched, wave_matched], [0, 1])
                     self.marks[matched_marker_id].visible = True
                 else:
-                    self.marks[matched_marker_id].visible = False
+                    # No WCS/wavelength mapping - use pixel coordinate directly
+                    self.marks[matched_marker_id].update_xy([x, x], [0, 1])
+                    self.marks[matched_marker_id].visible = True
 
     def _spectrum_viewer_update(self, viewer, x, y, mouseevent=True):
         def _cursor_fallback():

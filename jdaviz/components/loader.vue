@@ -49,7 +49,7 @@
             @toggle-custom-toolbar="$emit('toggle-custom-toolbar')"
             style="margin-bottom: 16px"
           >
-            <img class="invert-if-dark" :src="footprint_select_icon" width="20"/>
+            <img :class="custom_toolbar_enabled ? 'color-to-white' : 'invert-if-dark'" :src="footprint_select_icon" width="20"/>
           </j-custom-toolbar-toggle>
 
           <!-- observation/file table -->

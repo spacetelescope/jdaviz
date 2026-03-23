@@ -4,7 +4,7 @@ import numpy as np
 from asdf import AsdfFile
 from astropy import units as u
 from astropy.io import fits
-from astropy.nddata import StdDevUncertainty
+from astropy.nddata import InverseVariance, StdDevUncertainty, VarianceUncertainty
 from astropy.wcs import WCS
 from functools import cached_property
 from glue.core import HubListener
@@ -293,7 +293,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid light curve HDU, False otherwise.
+            True if the HDU is a valid flux HDU, False otherwise.
         """
         if item.get('label') == 'None':
             # require selection for flux
@@ -340,11 +340,11 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid light curve HDU, False otherwise.
+            True if the HDU is a valid uncertainty HDU. False otherwise.
         """
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
-                and hdu.header.get('EXTNAME', '') == 'ERR')
+                and (hdu.header.get('EXTNAME', '') in ['ERR', 'IVAR', 'VAR']))
 
     def asdf_roman_is_valid_unc(self, item):
         # TODO: should this instead have options just to include or not
@@ -376,7 +376,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid light curve HDU, False otherwise.
+            True if the HDU is a valid mask HDU, False otherwise.
         """
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
@@ -486,7 +486,16 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             mask_data = None
 
         if unc_data is not None:
-            unc = StdDevUncertainty(unc_data * data_unit)
+            # if extension is IVAR/VAR, convert to standard deviation for
+            # consistency internally
+            if self.unc_extension.selected_obj.header.get('EXTNAME', '') == 'IVAR':
+                unc = InverseVariance(unc_data).represent_as(StdDevUncertainty)
+                unc.unit = data_unit
+            elif self.unc_extension.selected_obj.header.get('EXTNAME', '') == 'VAR':
+                unc = VarianceUncertainty(unc_data).represent_as(StdDevUncertainty)
+                unc.unit = data_unit
+            else:
+                unc = StdDevUncertainty(unc_data * data_unit)
         else:
             unc = None
 
