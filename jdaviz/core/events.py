@@ -428,6 +428,7 @@ class FootprintOverlayClickMessage(Message):
         self.x = data["domain"]["x"]
         self.y = data["domain"]["y"]
         self.mode = mode
+        self.ctrl_key = data.get("ctrlKey", False) or data.get("metaKey", False)
 
 
 class RedshiftMessage(Message):

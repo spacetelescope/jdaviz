@@ -1,4 +1,5 @@
 import os
+import re
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
@@ -95,7 +96,7 @@ class FormatSelect(SelectPluginComponent):
             parser_input = self.plugin.output
         except Exception as e:
             self.items = []
-            self._invalid_importers = f'resolver exception: {e}'
+            self._invalid_importers = f'Resolver exception: {e}'
             self._apply_default_selection()
             return
 
@@ -108,10 +109,10 @@ class FormatSelect(SelectPluginComponent):
                     if this_parser.is_valid:
                         importer_input = this_parser.output
                     else:
-                        self._invalid_importers[parser_name] = 'not valid'
+                        self._invalid_importers[parser_name] = 'Input considered invalid by parser'
                         importer_input = None
                 except Exception as e:
-                    self._invalid_importers[parser_name] = f'parser exception: {e}'
+                    self._invalid_importers[parser_name] = f'Parser exception: {e}'
                     importer_input = None
 
                 if importer_input is None:
@@ -122,7 +123,7 @@ class FormatSelect(SelectPluginComponent):
                     label = f"{parser_name} > {importer_name}"
                     if getattr(self.plugin, '_restrict_to_formats', None) is not None and \
                             importer_name not in self.plugin._restrict_to_formats:
-                        self._invalid_importers[label] = 'not matching format restriction'  # noqa
+                        self._invalid_importers[label] = 'Not matching format restriction'  # noqa
                         continue
                     try:
                         this_importer = Importer(app=self.plugin.app,
@@ -130,14 +131,14 @@ class FormatSelect(SelectPluginComponent):
                                                  parser=this_parser,
                                                  input=importer_input)
                     except Exception as e:  # nosec
-                        self._invalid_importers[label] = f'importer exception: {e}'
+                        self._invalid_importers[label] = f'Importer exception: {e}'
                         continue
                     if self.debug:
                         self._dbg_importers[label] = this_importer
                     if (self.plugin._restrict_to_target is not None and
                             this_importer.target.get('label') != self.plugin._restrict_to_target):
                         # skip importers that do not match the target
-                        self._invalid_importers[label] = 'not matching target'
+                        self._invalid_importers[label] = 'Not matching target'
                         continue
                     if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
@@ -174,7 +175,7 @@ class FormatSelect(SelectPluginComponent):
                             # target filters
                             self._importers[importer_name] = this_importer
                     else:
-                        self._invalid_importers[label] = 'not valid'
+                        self._invalid_importers[label] = 'Input considered invalid by importer'
 
         self.items = all_formats
         self._apply_default_selection()
@@ -525,7 +526,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # calls self.parse_input() on the subclass and caches
             parsed_input = self.parsed_input
             if not self.is_valid:
-                raise ValueError("input is not valid for the selected resolver.")
+                raise ValueError("Input is invalid for the selected resolver.")
         except Exception as e:  # nosec
             self.parsed_input_is_empty = False
             self.parsed_input_is_query = False
@@ -682,21 +683,33 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 idx = self.observation_table.items.index(row)
                 currently_selected.add(idx)
 
-            # Toggle all found footprints as a group
-            # If ALL are selected, deselect ALL; otherwise select ALL
             selected_indices_set = set(selected_indices)
-            if selected_indices_set.issubset(currently_selected):
-                # All found footprints are already selected - deselect them all
-                currently_selected -= selected_indices_set
+            if msg.ctrl_key:
+                # If Ctrl key is pressed, toggle selection
+                if selected_indices_set.issubset(currently_selected):
+                    # All footprints selected by click were already selected,
+                    # so we remove them from the selected set to deselect:
+                    currently_selected.difference_update(selected_indices_set)
+                else:
+                    # At least one footprint selected by click was not already
+                    # selected, so we add them to the selected set:
+                    currently_selected.update(selected_indices_set)
             else:
-                # At least one is not selected - select them all
-                currently_selected |= selected_indices_set
+                # Default Click: Replace selection unless already selected
+                if not selected_indices_set.issubset(currently_selected):
+                    # Not selected - replace selection with just this footprint
+                    currently_selected = selected_indices_set
+                # If already selected, keep current selection (no change)
 
             # Update the table selection
             if currently_selected:
                 self.observation_table.select_rows(sorted(list(currently_selected)))
             else:
                 # Clear selection
+                self.observation_table.selected_rows = []
+        else:
+            # Clicked outside - deselect all
+            if msg.mode == 'skewer':
                 self.observation_table.selected_rows = []
 
     def _on_viewer_added(self, msg):
@@ -1078,25 +1091,75 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
         Formatted text table of resolver names and their statuses.
     """
     # Width of the dot-aligned resolver/format name column
-    resolver_alignment_width = 40
+    resolver_alignment_width = 42
     if no_align:
         resolver_alignment_width = 2
-    # Maximum length for a (possibly trimmed) status string
-    truncation_len = 57
-    full_table_width = resolver_alignment_width + truncation_len
 
     def _matches_format(key):
         """
         Return True if *key* matches the requested formats filter.
+
+        Matches if any substring from the requested formats appears in the key,
+        or any substring from the key appears in a requested format, e.g.
+        if the requested format is '1D Spectrum' then it would match to
+        '1D Spectrum', 'Specutils.Spectrum', 'Specutils.Spectrum(array)', etc.
+        When key contains '>' (e.g., 'resolver > format'), only the part after
+        '>' is checked, and only direct/exact matches are performed (case-insensitive).
+        Splits both key and format by spaces, dots, and parentheses to extract substrings.
         """
+        def _extract_substrings(text):
+            """
+            Extract substrings by splitting on spaces, dots, and parentheses.
+            """
+            substrings = set(re.split(r'[\s.()]+', text.lower()))
+            substrings.discard('')
+            return substrings
+
+        def _check_direct_match(_check_key, _formats):
+            """
+            Check if _check_key directly matches any format (case-insensitive).
+            """
+            check_key_lower = _check_key.lower()
+            for fmt in _formats:
+                if fmt is not None and fmt.lower() == check_key_lower:
+                    return True
+            return False
+
+        def _check_substring_match(_check_key, _formats):
+            """
+            Check if any substring from formats matches any substring from check_key.
+            """
+            key_substrings = _extract_substrings(_check_key)
+            for fmt in _formats:
+                if fmt is None:
+                    continue
+                # Direct substring match
+                if fmt.lower() in _check_key.lower():
+                    return True
+                # Substring intersection
+                fmt_substrings = _extract_substrings(fmt)
+                if fmt_substrings & key_substrings:
+                    return True
+            return False
+
         if formats is None or not any(formats):
             return True
-        return any(fmt in key for fmt in formats if fmt is not None)
+
+        # Check if there's an arrow separator
+        if '>' in key:
+            check_key = key.split('>')[-1].strip()
+            return _check_direct_match(check_key, formats)
+
+        # No arrow: use substring matching logic
+        return _check_substring_match(key, formats)
 
     lines = []
 
+    # ensure 'object' is always last in the output since it has sub-entries
+    object_results = resolver_dict.pop('object')
+    resolver_dict['object'] = object_results
     for resolver_name, resolver_info in resolver_dict.items():
-        status_str = str(resolver_info)
+        status_str = str(resolver_info).replace('\n', ' ')
         if isinstance(resolver_info, dict):
             filtered = {k: v for k, v in resolver_info.items()
                         if _matches_format(k)}
@@ -1104,9 +1167,9 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
                 continue
 
             lines.append(f'\n{resolver_name}:')
-            lines.append('-' * full_table_width)
+            lines.append('-' * resolver_alignment_width)
             for fmt_name, status in filtered.items():
-                status_str = str(status)
+                status_str = str(status).replace('\n', ' ')
                 lines.append(f'  {fmt_name:.<{resolver_alignment_width - 2}}'
                              f' {status_str}')
             lines.append('')
@@ -1137,7 +1200,7 @@ def find_matching_resolver(app,
         try:
             this_resolver = Resolver.from_input(app, inp, format=format, **kwargs)
         except Exception as e:  # nosec
-            invalid_resolvers[resolver_name] = f'resolver exception: {e}'
+            invalid_resolvers[resolver_name] = f'Resolver exception: {e}'
             if resolver_name == 'url' and 'timeout' in str(e):
                 raise e
             continue
@@ -1147,7 +1210,7 @@ def find_matching_resolver(app,
             invalid_resolvers[resolver_name] = f'is_valid exception: {e}'
             is_valid = False
         if not is_valid:
-            invalid_resolvers.setdefault(resolver_name, 'not valid')
+            invalid_resolvers.setdefault(resolver_name, 'Input considered invalid by resolver.')
             continue
 
         if target is not None:
@@ -1172,7 +1235,7 @@ def find_matching_resolver(app,
             valid_resolvers.append((this_resolver, resolver_name, fmt_item['label']))
 
     if len(valid_resolvers) == 0:
-        msg = (f'No valid loaders found for input. Tried:\n'
+        msg = (f'No valid loaders found for input. Tried:\n\n'
                f'{_format_resolver_error(invalid_resolvers, formats=formats)}\n')  # noqa
         raise ValueError(msg)
     elif len(valid_resolvers) > 1:
