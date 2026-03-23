@@ -2,6 +2,7 @@ from jdaviz.app import Application
 from jdaviz.core.loaders.resolvers.resolver import BaseResolver, find_closest_polygon_mark
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.utils import find_polygon_mark_with_skewer
+from jdaviz.core.events import FootprintOverlayClickMessage
 
 import numpy as np
 import pytest
@@ -10,7 +11,7 @@ from astropy.table import Table
 
 # Create a minimal test class that mimics the resolver behavior
 # without this we get an error when attempting to use BaseResolver directly
-class TestBaseResolver(BaseResolver):
+class ABC(BaseResolver):
     template = ''
 
     def __init__(self, *args, **kwargs):
@@ -22,7 +23,7 @@ def test_server_is_remote_callback():
     app = Application()
 
     # Test the sync
-    test_obj = TestBaseResolver(app=app)
+    test_obj = ABC(app=app)
     settings = app.state.settings
 
     # Check default
@@ -64,7 +65,7 @@ def test_footprint_workflow(deconfigged_helper, image_nddata_wcs):
     assert ldr._obj.custom_toolbar_enabled is True
 
     # Check footprints in viewer
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 3
     assert sorted([m.label for m in footprints]) == [0, 1, 2]
@@ -97,7 +98,7 @@ def test_remove_footprints(deconfigged_helper, image_nddata_wcs):
 
     # Display footprints
     ldr._obj.toggle_custom_toolbar()
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 1
 
@@ -126,7 +127,7 @@ def test_multiselect(deconfigged_helper, image_nddata_wcs):
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 3
 
@@ -154,7 +155,7 @@ def test_display_valid_footprints(deconfigged_helper, image_nddata_wcs):
     ldr._obj.toggle_custom_toolbar()
 
     # Assert marks were added
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 2
 
@@ -205,7 +206,7 @@ def test_footprint_with_image_deconfigged(deconfigged_helper, image_nddata_wcs):
 
     ldr._obj.toggle_custom_toolbar()
     assert ldr._obj.custom_toolbar_enabled is True
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 1
     assert footprints[0].label == 0
@@ -213,7 +214,7 @@ def test_footprint_with_image_deconfigged(deconfigged_helper, image_nddata_wcs):
 
 def test_multiviewer_footprints(deconfigged_helper, image_nddata_wcs):
     deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Image 1')
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
 
     table = Table()
     table['Dataset'] = ['obs1', 'obs2']
@@ -237,7 +238,7 @@ def test_multiviewer_footprints(deconfigged_helper, image_nddata_wcs):
 
 def test_multiviewer_selection_sync(deconfigged_helper, image_nddata_wcs):
     deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Image 1')
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
 
     table = Table()
     table['Dataset'] = ['obs1', 'obs2', 'obs3']
@@ -277,7 +278,7 @@ def test_add_footprints_to_viewer_method(deconfigged_helper, image_nddata_wcs):
     ldr._obj.vue_link_by_wcs()
 
     # Manually call _add_footprints_to_viewer
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     ldr._obj.custom_toolbar_enabled = True
     ldr._obj._add_footprints_to_viewer(viewer)
 
@@ -289,7 +290,7 @@ def test_add_footprints_to_viewer_method(deconfigged_helper, image_nddata_wcs):
 
 def test_remove_footprints_from_viewer(deconfigged_helper, image_nddata_wcs):
     deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Image 1')
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
 
     table = Table()
     table['Dataset'] = ['obs1']
@@ -327,7 +328,7 @@ def test_skewer_selection_inside_footprint(deconfigged_helper, image_nddata_wcs)
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 1
 
@@ -367,7 +368,7 @@ def test_skewer_selection_smallest_footprint(deconfigged_helper, image_nddata_wc
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 2
 
@@ -399,7 +400,7 @@ def test_skewer_selection_vs_nearest_edge(deconfigged_helper, image_nddata_wcs):
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 2
 
@@ -437,7 +438,7 @@ def test_skewer_selection_with_empty_region(deconfigged_helper, image_nddata_wcs
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     # Only one footprint should be created (second one is empty)
     assert len(footprints) == 1
@@ -477,7 +478,7 @@ def test_enable_footprint_selection_tools_api(deconfigged_helper, image_nddata_w
     assert ldr._obj.custom_toolbar_enabled
 
     # Verify footprints are displayed
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 1
 
@@ -501,7 +502,7 @@ def test_disable_footprint_selection_tools_api(deconfigged_helper, image_nddata_
     ldr.enable_footprint_selection_tools()
     assert ldr._obj.custom_toolbar_enabled
 
-    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 1
 
@@ -522,3 +523,248 @@ def test_enable_without_observation_table(deconfigged_helper, image_nddata_wcs):
     # Try to enable without loading any observation table
     with pytest.raises(ValueError, match="observation table with s_region data"):
         ldr.enable_footprint_selection_tools()
+
+
+def test_footprint_selection_ctrl_modifier(deconfigged_helper, image_nddata_wcs):
+    """Test Ctrl/Cmd+click multi-selection behavior."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2', 'obs3']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829',
+        'POLYGON 337.505 -20.831 337.507 -20.831 337.507 -20.829 337.505 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 3
+
+    class MockTool:
+        def __init__(self, viewer):
+            self.viewer = viewer
+
+    mock_tool = MockTool(viewer)
+
+    # Get marks by label
+    marks_by_label = {m.label: m for m in footprints}
+
+    # Regular click - selects first footprint
+    # Use the centroid of the polygon for a reliable click point
+    m0_x, m0_y = np.mean(marks_by_label[0].x), np.mean(marks_by_label[0].y)
+    msg = FootprintOverlayClickMessage(
+        {'domain': {'x': m0_x, 'y': m0_y}},
+        mode='nearest',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg)
+    assert len(ldr._obj.observation_table.selected_rows) == 1
+    assert ldr._obj.observation_table.selected_rows[0]['Dataset'] == 'obs1'
+
+    # Ctrl+click on second - adds to selection
+    m1_x, m1_y = np.mean(marks_by_label[1].x), np.mean(marks_by_label[1].y)
+    msg_ctrl = FootprintOverlayClickMessage(
+        {'domain': {'x': m1_x, 'y': m1_y}, 'ctrlKey': True},
+        mode='nearest',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl)
+    assert len(ldr._obj.observation_table.selected_rows) == 2
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2'}
+
+    # Ctrl+click on first again - removes from selection
+    msg_ctrl_deselect = FootprintOverlayClickMessage(
+        {'domain': {'x': m0_x, 'y': m0_y}, 'ctrlKey': True},
+        mode='nearest',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl_deselect)
+    assert len(ldr._obj.observation_table.selected_rows) == 1
+    assert ldr._obj.observation_table.selected_rows[0]['Dataset'] == 'obs2'
+
+
+def test_footprint_selection_skewer_ctrl_modifier(deconfigged_helper, image_nddata_wcs):
+    """Test skewer mode with Ctrl/Cmd+click multi-selection behavior."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2', 'obs3']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829',
+        'POLYGON 337.505 -20.831 337.507 -20.831 337.507 -20.829 337.505 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 3
+
+    class MockTool:
+        def __init__(self, viewer):
+            self.viewer = viewer
+
+    mock_tool = MockTool(viewer)
+
+    # Get marks by label
+    marks_by_label = {m.label: m for m in footprints}
+
+    # Click inside first footprint (should select only obs1)
+    m0_x, m0_y = np.mean(marks_by_label[0].x), np.mean(marks_by_label[0].y)
+    msg_skewer = FootprintOverlayClickMessage(
+        {'domain': {'x': m0_x, 'y': m0_y}},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_skewer)
+    assert len(ldr._obj.observation_table.selected_rows) == 1
+    assert ldr._obj.observation_table.selected_rows[0]['Dataset'] == 'obs1'
+
+    # Ctrl+click inside second footprint - adds to selection
+    m1_x, m1_y = np.mean(marks_by_label[1].x), np.mean(marks_by_label[1].y)
+    msg_ctrl = FootprintOverlayClickMessage(
+        {'domain': {'x': m1_x, 'y': m1_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl)
+    assert len(ldr._obj.observation_table.selected_rows) == 2
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2'}
+
+    # Ctrl+click inside third footprint - adds to selection
+    m2_x, m2_y = np.mean(marks_by_label[2].x), np.mean(marks_by_label[2].y)
+    msg_ctrl2 = FootprintOverlayClickMessage(
+        {'domain': {'x': m2_x, 'y': m2_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl2)
+    assert len(ldr._obj.observation_table.selected_rows) == 3
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2', 'obs3'}
+
+    # Ctrl+click inside first footprint again - removes it from selection
+    msg_ctrl_deselect = FootprintOverlayClickMessage(
+        {'domain': {'x': m0_x, 'y': m0_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl_deselect)
+    assert len(ldr._obj.observation_table.selected_rows) == 2
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs2', 'obs3'}
+
+    # Click outside all footprints - deselects all
+    outside_x = 337.495
+    outside_y = -20.835
+    msg_outside = FootprintOverlayClickMessage(
+        {'domain': {'x': outside_x, 'y': outside_y}},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_outside)
+    assert len(ldr._obj.observation_table.selected_rows) == 0
+
+
+def test_footprint_selection_skewer_overlapping(deconfigged_helper, image_nddata_wcs):
+    """Test skewer mode with overlapping footprints and modifier key interactions."""
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2', 'obs3']
+    # Create simple overlapping footprints - all three overlap in center
+    table['s_region'] = [
+        'POLYGON 337.498 -20.832 337.506 -20.832 337.506 -20.828 337.498 -20.828',
+        'POLYGON 337.499 -20.831 337.505 -20.831 337.505 -20.829 337.499 -20.829',
+        'POLYGON 337.500 -20.8305 337.504 -20.8305 337.504 -20.8295 337.500 -20.8295'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 3
+
+    class MockTool:
+        def __init__(self, viewer):
+            self.viewer = viewer
+
+    mock_tool = MockTool(viewer)
+
+    marks_by_label = {m.label: m for m in footprints}
+
+    # Use center of smallest footprint (obs3) which should be inside all 3
+    m2_x, m2_y = np.mean(marks_by_label[2].x), np.mean(marks_by_label[2].y)
+
+    msg_overlap = FootprintOverlayClickMessage(
+        {'domain': {'x': m2_x, 'y': m2_y}},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_overlap)
+    assert len(ldr._obj.observation_table.selected_rows) == 3
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2', 'obs3'}
+
+    # Ctrl+click in the same overlapping region - should deselect all 3
+    msg_ctrl_deselect_all = FootprintOverlayClickMessage(
+        {'domain': {'x': m2_x, 'y': m2_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl_deselect_all)
+    assert len(ldr._obj.observation_table.selected_rows) == 0
+
+    # Click in a point inside obs1 and obs2 but outside obs3
+    m1_x, m1_y = np.mean(marks_by_label[1].x), np.mean(marks_by_label[1].y)
+    # Offset slightly towards edge to be outside obs3
+    partial_x = m1_x + (marks_by_label[1].x[0] - m1_x) * 0.5
+    partial_y = m1_y + (marks_by_label[1].y[0] - m1_y) * 0.5
+
+    msg_partial = FootprintOverlayClickMessage(
+        {'domain': {'x': partial_x, 'y': partial_y}},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_partial)
+    # Should select obs1 and obs2
+    assert len(ldr._obj.observation_table.selected_rows) >= 1  # At least obs2
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+
+    # Ctrl+click in center (full overlap) - should add missing observations
+    msg_ctrl_add = FootprintOverlayClickMessage(
+        {'domain': {'x': m2_x, 'y': m2_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl_add)
+    assert len(ldr._obj.observation_table.selected_rows) == 3
+    selected_datasets = {row['Dataset'] for row in ldr._obj.observation_table.selected_rows}
+    assert selected_datasets == {'obs1', 'obs2', 'obs3'}
+
+    # Ctrl+click in center again - should deselect all 3
+    msg_ctrl_remove = FootprintOverlayClickMessage(
+        {'domain': {'x': m2_x, 'y': m2_y}, 'ctrlKey': True},
+        mode='skewer',
+        sender=mock_tool
+    )
+    ldr._obj._on_region_select(msg_ctrl_remove)
+    assert len(ldr._obj.observation_table.selected_rows) == 0

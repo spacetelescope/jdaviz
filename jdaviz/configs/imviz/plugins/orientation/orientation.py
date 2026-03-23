@@ -238,6 +238,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.linking_in_progress = True  # Prevent recursion
 
         if self.need_clear_subsets:
+            setattr(self, msg.get('name'), msg.get('old'))
             self.linking_in_progress = False
             raise ValueError("Link type can only be changed after existing subsets "
                              f"are deleted, but {len(self.app.data_collection.subset_groups)} "

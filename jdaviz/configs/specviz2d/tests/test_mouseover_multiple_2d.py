@@ -27,34 +27,13 @@ class TestMouseoverMultiple2DSpectra:
                 break
         return line_visible
 
-    @pytest.mark.parametrize('spec', ['mos_spectrum2d', 'spectrum2d'])  # 'spectrum_no_wavelength'])
+    @pytest.mark.parametrize('spec', ['mos_spectrum2d', 'spectrum2d', 'spectrum_no_wavelength'])
     def test_single_2d_spectrum(self, deconfigged_helper, spec, request):
         """
         Test mouseover handling for a single 2D spectrum with WCS, no WCS,
         and no wavelength mapping.
         """
         deconfigged_helper.load(request.getfixturevalue(spec), format='2D Spectrum')
-
-        viewer_1d = deconfigged_helper.viewers['1D Spectrum']._obj.glue_viewer
-        viewer_2d = deconfigged_helper.viewers['2D Spectrum']._obj.glue_viewer
-
-        # Get the coordinates info object for mouseover
-        label_mouseover = deconfigged_helper._coords_info
-
-        # Test mouseover on 2D spectrum with WCS
-        assert self._mouseover_and_check_line_visible(viewer_2d, label_mouseover, 5, 5)
-        # Test mouseover on 1d spectrum linked to the 2D spectrum
-        assert self._mouseover_and_check_line_visible(viewer_1d, label_mouseover, 5, 5)
-
-    # TODO: Move this into parametrized test above once mouseover handling for 2D spectra
-    #  with no wavelength mapping is resolved.
-    @pytest.mark.xfail(reason="Mouseover handling for 2D spectra with no wavelength mapping is being investigated.")  # noqa
-    def test_single_2d_spectrum_no_wavelength(self, deconfigged_helper, spectrum_no_wavelength):
-        """
-        Test mouseover handling for a single 2D spectrum with WCS, no WCS,
-        and no wavelength mapping.
-        """
-        deconfigged_helper.load(spectrum_no_wavelength, format='2D Spectrum')
 
         viewer_1d = deconfigged_helper.viewers['1D Spectrum']._obj.glue_viewer
         viewer_2d = deconfigged_helper.viewers['2D Spectrum']._obj.glue_viewer
