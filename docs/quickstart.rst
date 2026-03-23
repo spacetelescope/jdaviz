@@ -31,7 +31,7 @@ generalized Jdaviz from the command line. To load a file into a configuration::
 This will warn that the ``--layout`` argument is deprecated. In the future, running the ``jdaviz``
 command will simply launch the generalized Jdaviz application without going through a launcher page.
 
-Currently, the command ``jdaviz`` without any additional input will still run a launcher. To launch the
+Currently, running the command ``jdaviz`` without any additional input will still run a launcher. To launch the
 modern generalized ``jdaviz`` from here, click the Jdaviz logo in the top right.
 Alternatively, you can still use the deprecated legacy functionality to select a file from the
 file picker, which will identify the best configuration according to the file type. You can also
