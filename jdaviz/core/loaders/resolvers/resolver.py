@@ -1155,9 +1155,10 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
 
     lines = []
 
-    # ensure 'object' is always last in the output since it has sub-entries
-    object_results = resolver_dict.pop('object')
-    resolver_dict['object'] = object_results
+    if 'object' in resolver_dict:
+        # ensure 'object' is always last in the output since it always has sub-entries
+        resolver_dict['object'] = resolver_dict.pop('object')
+
     for resolver_name, resolver_info in resolver_dict.items():
         status_str = str(resolver_info).replace('\n', ' ')
         if isinstance(resolver_info, dict):
@@ -1244,8 +1245,8 @@ def find_matching_resolver(app,
         for resolver, resolver_name, fmt_label in valid_resolvers:
             if resolver_name not in valid_resolvers_dict:
                 valid_resolvers_dict[resolver_name] = {}
-            fmt_label = f"{fmt_label}: jd.load(obj_to_load, format='{fmt_label})'"
-            valid_resolvers_dict[resolver_name][fmt_label] = 'valid'
+            fmt_label = f"{fmt_label}: jd.load(obj_to_load, format='{fmt_label}')"
+            valid_resolvers_dict[resolver_name][fmt_label] = ''
 
         msg = (f'Multiple valid loaders found for input. '
                f'Please specify a format from the following as:\n'
