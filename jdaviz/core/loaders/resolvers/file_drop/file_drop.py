@@ -16,18 +16,23 @@ from jdaviz.core.user_api import LoaderUserApi
 
 
 def _patch_process_messages():
-    """Replace ipyvuetify's ``process_messages`` with a kernel-version-safe variant.
+    """Patch ipyvuetify's ``process_messages`` for compatibility with ipykernel >= 7.
 
-    ipykernel >= 7 removed ``msg_queue`` and ``do_one_iteration``, and made
-    ``_parent_header`` a read-only property.  The upstream implementation in
-    ipyvuetify references all three, causing file drop to fail silently (the
-    resolver never receives file data) and raise ``AttributeError`` on any
+    When a file is dropped, ipyvuetify reads file data by sending chunk requests
+    to the browser and waiting for the replies to arrive as comm messages.
+    ``process_messages`` is called in that wait loop to manually pump pending
+    kernel messages so the chunk replies are delivered.
+
+    ipykernel >= 7 removed ``msg_queue`` and ``do_one_iteration`` (the APIs used
+    to pump messages), and made ``_parent_header`` a read-only property.  The
+    upstream implementation in ipyvuetify references all three, causing file drop
+    to fail silently on the first drop and raise ``AttributeError`` on any
     subsequent drop.
 
-    The replacement uses feature detection: on ipykernel >= 7 it returns
-    immediately because comm messages are handled on dedicated shell-channel
-    threads; on older kernels it preserves the original drain-the-queue
-    behaviour.
+    In ipykernel >= 7, comm messages are delivered automatically on a dedicated
+    shell-channel thread, so manual pumping is unnecessary.  The replacement
+    detects which kernel generation is present and either returns immediately
+    (>= 7) or preserves the original drain-the-queue behaviour (< 7).
     """
     async def _process_messages():
         ipython = IPython.get_ipython()
@@ -36,12 +41,14 @@ def _patch_process_messages():
 
         kernel = ipython.kernel
 
-        # ipykernel >= 7: comm messages are processed on dedicated shell-channel
-        # threads, so manual message pumping is not needed
+        # ipykernel >= 7: comm messages arrive on a dedicated shell-channel
+        # thread, so no manual pumping is needed.
         if not hasattr(kernel, 'msg_queue'):
             return
 
-        # ipykernel < 7: manually drain the pending message queue
+        # ipykernel < 7: manually drain pending messages, restoring the kernel's
+        # execution context afterwards so that output (print, display, execution
+        # count) is attributed to the correct cell.
         original_parent_ident = kernel._parent_ident
         original_parent_header = kernel._parent_header
         original_set_parent = ipython.set_parent
