@@ -1,4 +1,11 @@
+import numpy as np
 import pytest
+from astropy import units as u
+from astropy.table import Table
+from specutils import Spectrum
+
+from jdaviz.conftest import (_create_spectrum1d_cube_with_fluxunit,
+                             _image_nddata_wcs)
 from jdaviz.core.user_api import ViewerCreatorUserApi
 
 
@@ -181,19 +188,36 @@ class TestViewerCreatorObject:
 
     def test_multiple_viewer_types(self):
         """
-        Test that multiple viewer types can coexist.
+        Test that all viewer types can coexist and be destroyed.
         """
         self.dcf_helper.load(self.spectrum2d, format='2D Spectrum')
+        self.dcf_helper.load(_create_spectrum1d_cube_with_fluxunit(),
+                             format='3D Spectrum')
+        self.dcf_helper.load(_image_nddata_wcs(), format='Image')
+        catalog = Table()
+        catalog['ra'] = [337.503, 337.528] * u.deg
+        catalog['dec'] = [-20.815, -20.804] * u.deg
+        self.dcf_helper.load(catalog, format='Catalog')
 
-        # Should have multiple viewer types available
-        assert '1D Spectrum' in self.dcf_helper.new_viewers
-        assert '2D Spectrum' in self.dcf_helper.new_viewers
+        new_viewers_set = set(self.dcf_helper.new_viewers.keys())
+        assert new_viewers_set == {'1D Spectrum', '2D Spectrum', '3D Spectrum',
+                                   'Image', 'Histogram', 'Scatter', 'Table'}
 
-        # Create viewers of different types
-        viewer1d = self.dcf_helper.new_viewers['1D Spectrum']()
-        viewer2d = self.dcf_helper.new_viewers['2D Spectrum']()
+        existing_viewers = set(self.dcf_helper.viewers)
+        created = {}
+        # Create one viewer per available type, with data loaded
+        # exclude viewers previously created by loading dataset
+        for vtype in new_viewers_set.difference(existing_viewers):
+            viewer_creator = self.dcf_helper.new_viewers[vtype]._obj
+            viewer_creator.dataset.selected = [item['label']
+                                               for item in viewer_creator.dataset.items][0]
+            created[vtype] = viewer_creator()
 
-        assert viewer1d._obj.id != viewer2d._obj.id
+        # Destroy all viewers
+        for vtype, viewer in self.dcf_helper.viewers.items():
+            self.dcf_helper.app.vue_destroy_viewer_item(viewer._obj.id)
+
+        assert len(self.dcf_helper.viewers) == 0
 
     def test_vue_create_clicked(self):
         """
