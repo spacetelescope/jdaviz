@@ -560,10 +560,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
             is_query = file_table is not None or observation_table is not None
             if is_query and not self.treat_table_as_query:
-                # Input is a query table but user opted out of treating
-                # it as one.  Keep parsed_input_is_query True so the
-                # toggle switch stays visible.
-                self.parsed_input_is_resolvable = ""
+                # Keep parsed_input_is_query True so the toggle switch stays visible.
+                # Set everything else in the meantime.
+                self.parsed_input_is_resolvable = ''
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = False

@@ -784,12 +784,12 @@ def test_treat_table_as_query_toggle_keeps_switch_visible(deconfigged_helper):
     ldr.object = table
     ldr.treat_table_as_query = True
 
-    # Verify initial state: treat_table_as_query=True
+    # Verify initial state
     assert ldr._obj.treat_table_as_query is True
     assert ldr._obj.parsed_input_is_query is True
     assert ldr._obj.file_table_populated is True
 
-    # Toggle treat_table_as_query OFF
+    # Toggle treat_table_as_query off
     ldr.treat_table_as_query = False
 
     # Verify that parsed_input_is_query remains True so the switch stays visible
@@ -799,7 +799,7 @@ def test_treat_table_as_query_toggle_keeps_switch_visible(deconfigged_helper):
     assert ldr._obj.file_table_populated is False
     assert ldr._obj.observation_table_populated is False
 
-    # Toggle treat_table_as_query back ON
+    # Toggle treat_table_as_query back on
     ldr.treat_table_as_query = True
 
     # Verify that tables are shown again
