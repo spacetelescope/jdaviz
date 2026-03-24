@@ -1,8 +1,6 @@
-import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import Table
-from specutils import Spectrum
 
 from jdaviz.conftest import (_create_spectrum1d_cube_with_fluxunit,
                              _image_nddata_wcs)
