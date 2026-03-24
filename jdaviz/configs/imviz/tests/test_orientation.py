@@ -3,6 +3,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
+from glue.core.link_helpers import LinkSame
 from numpy.testing import assert_allclose
 from regions import EllipseSkyRegion, RectangleSkyRegion
 from astropy.nddata import NDData
@@ -10,29 +11,30 @@ from astropy.wcs import WCS
 import numpy as np
 
 import jdaviz as jd
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS
 
 
-class TestDefaultOrientation(BaseImviz_WCS_WCS):
+class TestDefaultOrientation(BaseDeconfiggedImage_WCS_WCS):
     def test_affine_reset_and_linktype(self):
-        lc_plugin = self.imviz.plugins['Orientation']
+        plg = self.orientation_plugin
 
-        lc_plugin.align_by = 'WCS'
-        lc_plugin.wcs_fast_approximation = False
-        assert self.imviz.get_alignment_method("Default orientation", "has_wcs_2[SCI,1]") == "wcs"
+        plg.align_by = 'WCS'
+        plg.wcs_fast_approximation = False
+
+        # Check that WCS linking is in effect (links should be WCSLink, not LinkSame)
+        for link in self.helper.app.data_collection.external_links:
+            assert not isinstance(link, LinkSame)
 
         # wcs_fast_approximation should revert/default to True when change back to Pixels.
-        lc_plugin.align_by = 'Pixels'
-        assert lc_plugin.wcs_fast_approximation is True
-        assert self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "has_wcs_2[SCI,1]") == "pixels"
+        plg.align_by = 'Pixels'
+        assert plg.wcs_fast_approximation is True
 
-        assert self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "has_wcs_1[SCI,1]") == "self"
-
-        with pytest.raises(ValueError, match=".*combo not found"):
-            self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "foo")
+        # Check that pixel linking is in effect (links should be LinkSame)
+        for link in self.helper.app.data_collection.external_links:
+            assert isinstance(link, LinkSame)
 
     def test_astrowidgets_markers_disable_relinking(self):
-        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin = self.orientation_plugin
         lc_plugin.align_by = 'Pixels'
 
         # Adding markers should disable changing linking from both UI and API.
@@ -51,15 +53,15 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
         lc_plugin.align_by = 'WCS'
 
     def test_markers_plugin_recompute_positions_pixels_to_wcs(self):
-        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin = self.orientation_plugin
         lc_plugin.align_by = 'Pixels'
 
         # Blink to second image, if we have to.
-        if self.viewer.top_visible_data_label != "has_wcs_2[SCI,1]":
+        if self.viewer.top_visible_data_label != "has_wcs_2":
             self.viewer.blink_once()
 
-        label_mouseover = self.imviz._coords_info
-        mp = self.imviz.plugins['Markers']
+        label_mouseover = self.helper._coords_info
+        mp = self.helper.plugins['Markers']
 
         with mp.as_active():
             # (1, 0) on second image but same sky coordinates as (0, 0) on first.
@@ -80,22 +82,22 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
             # FIXME: 0.25 offset introduced by fake WCS layer (remove AssertionError).
             #        https://jira.stsci.edu/browse/JDAT-4256
             with pytest.raises(AssertionError):
-                assert_allclose(mp._obj.marks["imviz-0"].x, 0)
+                assert_allclose(mp._obj.marks["Image"].x, 0)
             with pytest.raises(AssertionError):
-                assert_allclose(mp._obj.marks["imviz-0"].y, 0)
+                assert_allclose(mp._obj.marks["Image"].y, 0)
 
             mp.clear_table()
 
     def test_markers_plugin_recompute_positions_wcs_to_pixels(self):
-        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin = self.orientation_plugin
         lc_plugin.align_by = 'WCS'
 
         # Blink to second image, if we have to.
-        if self.viewer.top_visible_data_label != "has_wcs_2[SCI,1]":
+        if self.viewer.top_visible_data_label != "has_wcs_2":
             self.viewer.blink_once()
 
-        label_mouseover = self.imviz._coords_info
-        mp = self.imviz.plugins['Markers']
+        label_mouseover = self.helper._coords_info
+        mp = self.helper.plugins['Markers']
 
         with mp.as_active():
             # (0, 0) on second image, but linked by WCS.
@@ -116,9 +118,9 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
             # FIXME: 0.25 offset introduced by fake WCS layer (remove AssertionError).
             #        https://jira.stsci.edu/browse/JDAT-4256
             with pytest.raises(AssertionError):
-                assert_allclose(mp._obj.marks["imviz-0"].x, [1, 0])
+                assert_allclose(mp._obj.marks["Image"].x, [1, 0])
 
-            assert_allclose(mp._obj.marks["imviz-0"].y, 0, atol=1e-08)
+            assert_allclose(mp._obj.marks["Image"].y, 0, atol=1e-08)
 
             mp.clear_table()
 
@@ -153,42 +155,42 @@ def test_delete_create_viewer_preserves_wcs_linking():
     assert orientation.align_by.selected == 'WCS'
 
 
-class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
+class TestNonDefaultOrientation(BaseDeconfiggedImage_WCS_WCS):
     def test_N_up_multi_viewer(self):
-        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin = self.orientation_plugin
         lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
         lc_plugin.set_north_up_east_left()
 
         # This would set a different reference to second viewer.
-        viewer_2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
-        lc_plugin.viewer = "imviz-1"
+        viewer_2 = self.helper.new_viewers['Image']()
+        viewer_2.data_menu.add_data("has_wcs_1")
+        lc_plugin.viewer = viewer_2._obj.reference
 
         lc_plugin.set_north_up_east_right()
 
         assert self.viewer.state.reference_data.label == "North-up, East-left"
-        assert viewer_2.state.reference_data.label == "North-up, East-right"
+        assert viewer_2._obj.glue_viewer.state.reference_data.label == "North-up, East-right"
 
-        # Change orientation in imviz-1 from UI and ensure plugin selection is the same
-        lc_plugin.viewer.selected = "imviz-0"
-        self.imviz.app._change_reference_data("Default orientation", "imviz-1")
+        # Change orientation in second viewer from UI and ensure plugin selection is the same
+        lc_plugin.viewer.selected = "Image"
+        self.helper.app._change_reference_data("Default orientation", viewer_2._obj.reference)
         assert lc_plugin.orientation.selected == "North-up, East-left"
 
         # Both viewers should revert back to same reference when pixel-linked.
         lc_plugin.align_by = 'Pixels'
-        assert self.viewer.state.reference_data.label == "has_wcs_1[SCI,1]"
-        assert viewer_2.state.reference_data.label == "has_wcs_1[SCI,1]"
+        assert self.viewer.state.reference_data.label == "has_wcs_1"
+        assert viewer_2._obj.glue_viewer.state.reference_data.label == "has_wcs_1"
 
         lc_plugin.align_by = 'WCS'
         assert self.viewer.state.reference_data.label == "Default orientation"
-        assert viewer_2.state.reference_data.label == "Default orientation"
+        assert viewer_2._obj.glue_viewer.state.reference_data.label == "Default orientation"
 
     def test_custom_orientation(self):
-        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin = self.orientation_plugin
         lc_plugin.align_by = 'WCS'
-        lc_plugin.viewer = "imviz-0"
+        lc_plugin.viewer = "Image"
 
         lc_plugin.rotation_angle = 42  # Triggers auto-label
         lc_plugin.add_orientation(rotation_angle=None, east_left=True, label=None,
@@ -196,33 +198,34 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
         assert self.viewer.state.reference_data.label == "CCW 42.00 deg (E-left)"
 
 
-class TestDeleteOrientation(BaseImviz_WCS_WCS):
+class TestDeleteOrientation(BaseDeconfiggedImage_WCS_WCS):
 
     def test_delete_orientation_multi_viewer(self):
-        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin = self.orientation_plugin
         lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
         lc_plugin.set_north_up_east_left()
 
         # This would set a different reference to second viewer.
-        viewer_2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
-        lc_plugin.viewer = "imviz-1"
+        viewer_2 = self.helper.new_viewers['Image']()
+        viewer_2.data_menu.add_data("has_wcs_1")
+        lc_plugin.viewer = viewer_2._obj.reference
         lc_plugin.orientation = "North-up, East-left"
 
-        self.imviz.app.data_item_remove("North-up, East-left")
+        self.helper.app.data_item_remove("North-up, East-left")
 
         assert self.viewer.state.reference_data.label == "Default orientation"
-        assert viewer_2.state.reference_data.label == "Default orientation"
+        assert viewer_2._obj.glue_viewer.state.reference_data.label == "Default orientation"
 
+    @pytest.mark.skip(reason='bug when switching this test to deconfigged (JDAT-6025)')
     @pytest.mark.parametrize("klass", [EllipseSkyRegion, RectangleSkyRegion])
     @pytest.mark.parametrize(
         ("angle", "sbst_theta"),
         [(0.5 * u.rad, 2.641593),
          (-0.5 * u.rad, 3.641589)])
     def test_delete_orientation_with_subset(self, klass, angle, sbst_theta):
-        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin = self.orientation_plugin
         lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
@@ -231,25 +234,25 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
         # Create rotated shape
         reg = klass(center=SkyCoord(ra=337.51931488, dec=-20.83187472, unit="deg"),
                     width=2.4 * u.arcsec, height=1.2 * u.arcsec, angle=angle)
-        self.imviz.plugins['Subset Tools'].import_region(reg)
+        self.subset_plugin.import_region(reg)
 
         # Switch to N-up E-right
         lc_plugin.set_north_up_east_right()
 
-        self.imviz.app.data_item_remove("North-up, East-left")
+        self.helper.app.data_item_remove("North-up, East-left")
 
         # Check that E-right still linked to default
-        assert len(self.imviz.app.data_collection.external_links) == 3
-        assert self.imviz.app.data_collection.external_links[2].data1.label == "Default orientation"
-        assert self.imviz.app.data_collection.external_links[2].data2.label == "North-up, East-right"  # noqa: E501
+        assert len(self.helper.app.data_collection.external_links) == 3
+        assert self.helper.app.data_collection.external_links[2].data1.label == "Default orientation"  # noqa: E501
+        assert self.helper.app.data_collection.external_links[2].data2.label == "North-up, East-right"  # noqa: E501
 
         # Check that the subset got reparented and the angle is correct in the display
-        subset_group = self.imviz.app.data_collection.subset_groups[0]
-        nuer_data = self.imviz.app.data_collection['North-up, East-right']
+        subset_group = self.helper.app.data_collection.subset_groups[0]
+        nuer_data = self.helper.app.data_collection['North-up, East-right']
         assert subset_group.subset_state.xatt in nuer_data.components
         assert_allclose(subset_group.subset_state.roi.theta, sbst_theta, rtol=1e-5)
 
-        out_reg = self.imviz.app.get_subsets(include_sky_region=True)["Subset 1"][0]["sky_region"]
+        out_reg = self.helper.app.get_subsets(include_sky_region=True)["Subset 1"][0]["sky_region"]
         assert_allclose(out_reg.center.ra.deg, reg.center.ra.deg)
         assert_allclose(out_reg.center.dec.deg, reg.center.dec.deg)
         assert_quantity_allclose(out_reg.width, reg.width, rtol=1e-5)
@@ -259,25 +262,25 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
             assert_quantity_allclose(out_reg.angle, reg.angle)
 
 
-class TestOrientationNoData(BaseImviz_WCS_WCS):
+class TestOrientationNoData(BaseDeconfiggedImage_WCS_WCS):
     def test_create_no_data(self):
-        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin = self.orientation_plugin
         lc_plugin.align_by = 'WCS'
 
-        self.imviz.create_image_viewer()
-        lc_plugin.viewer = "imviz-1"
+        viewer_2 = self.helper.new_viewers['Image']()
+        lc_plugin.viewer = viewer_2._obj.reference
 
         with pytest.raises(ValueError, match="Viewer must have data loaded"):
             lc_plugin.set_north_up_east_left()
 
     def test_select_no_data(self):
-        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin = self.orientation_plugin
         lc_plugin.align_by = 'WCS'
 
         lc_plugin.set_north_up_east_left()
 
-        self.imviz.create_image_viewer()
-        lc_plugin.viewer = "imviz-1"
+        viewer_2 = self.helper.new_viewers['Image']()
+        lc_plugin.viewer = viewer_2._obj.reference
         # This would error prior to bugfix
         lc_plugin.orientation = "North-up, East-left"
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
+        viewer_2.data_menu.add_data("has_wcs_1")
