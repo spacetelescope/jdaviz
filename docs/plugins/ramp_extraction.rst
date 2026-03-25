@@ -11,6 +11,10 @@ Extract ramp profiles from detector data.
 Description
 ===========
 
+.. warning::
+
+   Ramp functionality is still under active development. Stay tuned for updates!
+
 The Ramp Extraction plugin collapses spatial dimensions of ramp data to produce
 integration-level time series for pixels or regions.
 

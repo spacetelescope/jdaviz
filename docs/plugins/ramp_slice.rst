@@ -12,6 +12,10 @@ Navigate through detector ramp integrations and groups.
 Description
 ===========
 
+.. warning::
+
+   Ramp functionality is still under active development. Stay tuned for updates!
+
 The Ramp Slice plugin provides controls for navigating through integration
 and group dimensions in JWST detector ramp data.
 
