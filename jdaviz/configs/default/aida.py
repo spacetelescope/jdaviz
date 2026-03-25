@@ -243,7 +243,7 @@ class AID:
         if not self.app._align_by == 'wcs':
             return None
 
-        return self.app.data_collection["Default orientation"].coords.wcs.ctype[0][5:8]
+        return self.viewer.state.reference_data.coords.wcs.ctype[0][5:8]
 
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """
