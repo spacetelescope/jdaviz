@@ -67,7 +67,6 @@ API Access
 .. plugin-api-refs::
    :module: jdaviz.configs.default.plugins.data_quality.data_quality
    :class: DataQuality
-    # Access DQ functionality
 
 See Also
 ========
