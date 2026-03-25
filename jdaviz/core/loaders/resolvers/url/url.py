@@ -27,10 +27,13 @@ class URLResolver(BaseResolver):
     cache = Bool(True).tag(sync=True)
     local_path = Unicode("").tag(sync=True)
     timeout = FloatHandleEmpty(10).tag(sync=True)
+    fsspec_filesystem = None
 
     def __init__(self, *args, **kwargs):
         self.local_path = os.curdir
         super().__init__(*args, **kwargs)
+
+        self.fsspec_filesystem = kwargs.get('fsspec_filesystem', None)
 
         # Initialize whitelist from settings
         whitelist = self.app.state.settings.get('url_prefix_whitelist')
@@ -114,10 +117,10 @@ class URLResolver(BaseResolver):
         if self.url_scheme == 's3':
 
             if url_file_extension in ['.fits', '.fit']:
-                return get_cloud_fits(self.url.strip())
+                return get_cloud_fits(self.url.strip(), fsspec_filesystem=self.fsspec_filesystem)
 
             elif url_file_extension == '.asdf':
-                return get_cloud_asdf(self.url.strip())
+                return get_cloud_asdf(self.url.strip(), fsspec_filesystem=self.fsspec_filesystem)
 
         return download_uri_to_path(self.url.strip(), cache=self.cache,
                                     local_path=self.local_path, timeout=self.timeout)
