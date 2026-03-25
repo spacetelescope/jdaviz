@@ -29,7 +29,7 @@ Details
 Moment Orders
 -------------
 
-Mathematically, moment N is: $M_N = \int I(\lambda) \lambda^N d\lambda$
+Mathematically, moment N is: :math:`M_N = \int I(\lambda) \lambda^N d\lambda`
 
 * **Moment 0**: Integrated flux (line strength)
 * **Moment 1**: Flux-weighted centroid (line center, velocity)
