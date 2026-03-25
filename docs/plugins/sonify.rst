@@ -18,7 +18,7 @@ an alternative way to explore data patterns through sound.
 The plugin requires the `Strauss <https://strauss.readthedocs.io/en/latest/>`_ package to
 turn data cubes into audio grids. The audio produced by this sonification
 (via the :guilabel:`Sonify Data` button) can be played by hovering the mouse over the
-:ref:`3d_spectrum` viewer. A range of the cube can be sonified by applying a spectral
+:ref:`viewers-spectrum_3d` viewer. A range of the cube can be sonified by applying a spectral
 subset to the data before sonifying. The output device for sound can be changed by using
 the :guilabel:`Sound device` dropdown.
 
