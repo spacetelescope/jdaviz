@@ -465,7 +465,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             to application snackbar instead.
 
         embed_avm : bool
-            If `True` and the file type is PNG, embed
+            If `True` and the file type is 'jpg', embed
             Astronomy Visualization Metadata (including WCS) using ``pyAVM``.
         """
         if self.multiselect:
