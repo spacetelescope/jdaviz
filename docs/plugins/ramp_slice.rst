@@ -26,7 +26,7 @@ and group dimensions in JWST detector ramp data.
 * Difference/group display modes
 * Synchronize slice display
 
-**Available in:** * :ref:`rampviz`
+**Available in:** :ref:`rampviz`
 
 UI Access
 =========
