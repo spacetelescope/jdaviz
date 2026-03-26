@@ -1,5 +1,6 @@
 import os
 import re
+import warnings
 from copy import deepcopy
 
 import numpy as np
@@ -198,8 +199,16 @@ class Imviz(ImageConfigHelper):
             return
 
         if isinstance(show_in_viewer, str):
+            warnings.warn(
+                'The "show_in_viewer" argument is deprecated and will be removed in a '
+                'future version. Use "viewer" instead.',
+                DeprecationWarning, stacklevel=2)
             viewer = [show_in_viewer]
         elif isinstance(show_in_viewer, bool):
+            warnings.warn(
+                'The "show_in_viewer" argument is deprecated and will be removed in a '
+                'future version. Use "viewer" instead.',
+                DeprecationWarning, stacklevel=2)
             viewer = '*' if show_in_viewer else []
         else:
             raise TypeError('show_in_viewer must be a bool or str')
