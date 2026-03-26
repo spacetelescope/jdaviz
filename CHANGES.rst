@@ -127,6 +127,9 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Fixed an issue that occurred when destroying a 2D Spectrum viewer due to a units check that
+  attempted to read from a file that was no longer in memory due to cleanup procedures. [#4105]
+
 - Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
 
 - Update example notebooks and add examples for deconfigged. [#4052]
