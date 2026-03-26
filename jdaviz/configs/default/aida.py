@@ -244,7 +244,7 @@ class AID:
             return None
 
         ref_data = self.viewer.state.reference_data
-        if ref_data.coords is None:
+        if ref_data.coords is None or not hasattr(ref_data.coords, 'wcs'):
             return None
 
         return ref_data.coords.wcs.ctype[0][5:8]
