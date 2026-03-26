@@ -133,7 +133,7 @@
       </div>
     </div>
 
-    <div v-if="config == 'cubeviz' && dq_extension_items.length >= 1">
+    <div v-if="dq_extension_items.length >= 1">
       <j-plugin-section-header>DQ (Data Quality) Cube</j-plugin-section-header>
       <plugin-select
         :items="dq_extension_items"
@@ -159,7 +159,15 @@
           hint="Label to assign to the new DQ cube data entry."
         ></plugin-auto-label>
 
-        <plugin-viewer-create-new
+        <plugin-switch v-if="config == 'deconfigged'"
+          :value.sync="dq_add_to_flux_viewer"
+          label="Add to Flux Viewer"
+          api_hint="ldr.importer.dq_add_to_flux_viewer ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Add the DQ cube to the same viewer as the flux cube."
+        ></plugin-switch>
+
+        <plugin-viewer-create-new v-if="config === 'cubeviz'"
           :items="dq_viewer_items"
           :selected.sync="dq_viewer_selected"
           :create_new_items="dq_viewer_create_new_items"
