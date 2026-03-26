@@ -31,7 +31,7 @@ from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
-from glue_jupyter.state_traitlets_helpers import GlueState
+from echo.vue import autoconnect_callbacks_to_vue
 from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import widget_serialization
@@ -364,8 +364,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
     """
     _metadata = Dict({"mount_id": "content"}).tag(sync=True)
 
-    state = GlueState().tag(sync=True)
-
     template_file = __file__, "app.vue"
 
     existing_data_in_dc = List([]).tag(sync=True)
@@ -425,6 +423,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
+
+        # Connect ApplicationState callback properties to Vue traitlets
+        self._autoconnect_state()
 
         # If true, link data on load. If false, do not link data to speed up
         # data loading
@@ -3754,9 +3755,46 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         return self._get_state_item_from_name(self.state.new_viewer_items,
                                               name, return_widget)
 
+    _STATE_PROPERTY_TYPES = {
+        'drawer_content': 'text',
+        'add_subtab': 'int',
+        'settings_subtab': 'int',
+        'info_subtab': 'int',
+        'jdaviz_version': 'text',
+        'global_search': 'text',
+        'global_search_menu': 'bool',
+        'show_toolbar_buttons': 'bool',
+        'show_api_hints': 'bool',
+        'subset_mode_create': 'bool',
+        'snackbar': 'dict',
+        'settings': 'dict',
+        'icons': 'dict',
+        'viewer_icons': 'dict',
+        'layer_icons': 'dict',
+        'dev_loaders': 'bool',
+        'loader_items': 'list',
+        'loader_selected': 'text',
+        'new_viewer_items': 'list',
+        'new_viewer_selected': 'text',
+        'data_items': 'list',
+        'tool_items': 'list',
+        'tray_items': 'list',
+        'tray_items_open': 'list',
+        'tray_items_filter': 'text',
+        'stack_items': 'list',
+        'viewer_items': 'list',
+        'style_widget': 'text',
+    }
+
+    def _autoconnect_state(self):
+        """Connect ApplicationState properties to Vue traitlets."""
+        autoconnect_callbacks_to_vue(self.state, self,
+                                     only=self._STATE_PROPERTY_TYPES)
+
     def _reset_state(self):
         """ Resets the application state """
         self.state = ApplicationState()
+        self._autoconnect_state()
         self._application_handler._tools = {}
 
     def get_configuration(self, path=None, section=None):
