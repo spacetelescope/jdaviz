@@ -3755,41 +3755,16 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         return self._get_state_item_from_name(self.state.new_viewer_items,
                                               name, return_widget)
 
-    _STATE_PROPERTY_TYPES = {
-        'drawer_content': 'text',
-        'add_subtab': 'int',
-        'settings_subtab': 'int',
-        'info_subtab': 'int',
-        'jdaviz_version': 'text',
-        'global_search': 'text',
-        'global_search_menu': 'bool',
-        'show_toolbar_buttons': 'bool',
-        'show_api_hints': 'bool',
-        'subset_mode_create': 'bool',
-        'snackbar': 'dict',
-        'settings': 'dict',
-        'icons': 'dict',
-        'viewer_icons': 'dict',
-        'layer_icons': 'dict',
-        'dev_loaders': 'bool',
-        'loader_items': 'list',
-        'loader_selected': 'text',
-        'new_viewer_items': 'list',
-        'new_viewer_selected': 'text',
-        'data_items': 'list',
-        'tool_items': 'list',
-        'tray_items': 'list',
-        'tray_items_open': 'list',
-        'tray_items_filter': 'text',
-        'stack_items': 'list',
-        'viewer_items': 'list',
-        'style_widget': 'text',
-    }
-
     def _autoconnect_state(self):
-        """Connect ApplicationState properties to Vue traitlets."""
+        # Create bidirectional connections between all CallbackProperty
+        # attributes on self.state (the ApplicationState) and traitlets on
+        # this widget, so that changes to e.g. self.state.drawer_content
+        # automatically sync to Vue and vice versa. Property types are
+        # inferred from the descriptors (ListCallbackProperty -> list,
+        # DictCallbackProperty -> dict, etc.). Non-CallbackProperty
+        # attributes like snackbar_queue are ignored automatically.
         autoconnect_callbacks_to_vue(self.state, self,
-                                     only=self._STATE_PROPERTY_TYPES)
+                                     infer_properties_from='python')
 
     def _reset_state(self):
         """ Resets the application state """
