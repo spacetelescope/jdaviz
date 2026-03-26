@@ -240,7 +240,7 @@ class AID:
         at https://docs.astropy.org/en/stable/wcs/supported_projections.html
         """
 
-        if not self.app._align_by == 'wcs':
+        if not self.app._jdaviz_helper.plugins['Orientation'].align_by == 'WCS':
             return None
 
         ref_data = self.viewer.state.reference_data
