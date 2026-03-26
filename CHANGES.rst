@@ -67,6 +67,8 @@ New Features
   viewer, and use unit converison functionality when there is moment map data in
   an Image or 3D Spectrum viewer. [#4085]
 
+- Generalize Data Quality plugin to work for images in deconfigged. [#4110]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the

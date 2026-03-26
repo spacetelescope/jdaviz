@@ -80,24 +80,26 @@ def test_roman_against_rdm():
 
 
 @pytest.mark.remote_data
-def test_data_quality_plugin(imviz_helper):
+@pytest.mark.parametrize('helper_name', ['imviz_helper', 'deconfigged_helper'])
+def test_data_quality_plugin(helper_name, request):
+    helper = request.getfixturevalue(helper_name)
     uri = "mast:JWST/product/jw01895001004_07101_00001_nrca3_cal.fits"
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        imviz_helper.load_data(
-            cached_uri(uri), cache=True, ext=('SCI', 'DQ')
-        )
 
-    assert len(imviz_helper.app.data_collection) == 2
+        helper.load(cached_uri(uri), extension=('SCI', 'DQ'), format='Image',
+                    cache=True)
+
+    assert len(helper.app.data_collection) == 2
 
     # this assumption is made in the DQ plugin (for now)
-    assert imviz_helper.app.data_collection[-1].label.endswith('[DQ,1]')
+    assert helper.app.data_collection[-1].label.endswith('[DQ,1]')
 
-    dq_plugin = imviz_helper.plugins['Data Quality']._obj
+    dq_plugin = helper.plugins['Data Quality']._obj
 
     # sci+dq layers are correctly identified
-    expected_science_data, expected_dq_data = imviz_helper.app.data_collection
+    expected_science_data, expected_dq_data = helper.app.data_collection
     assert dq_plugin.science_layer_selected == expected_science_data.label
     assert dq_plugin.dq_layer_selected == expected_dq_data.label
 
@@ -109,12 +111,16 @@ def test_data_quality_plugin(imviz_helper):
     assert flag_map_selected[0]['name'] == 'DO_NOT_USE'
     assert flag_map_selected[0]['description'] == 'Bad pixel. Do not use.'
 
+    # get the image viewer (name depends on config)
+    viewer_name = 'Image' if helper_name == 'deconfigged_helper' else 'imviz-0'
+    viewer = helper.app.get_viewer(viewer_name)
+
     # check default dq opacity is a fraction of sci data:
-    sci_alpha = imviz_helper.default_viewer._obj.glue_viewer.layers[0].state.alpha
-    dq_alpha = imviz_helper.default_viewer._obj.glue_viewer.layers[1].state.alpha
+    sci_alpha = viewer.layers[0].state.alpha
+    dq_alpha = viewer.layers[1].state.alpha
     assert dq_alpha == sci_alpha * dq_plugin.dq_layer_opacity
 
-    plot_opts = imviz_helper.plugins['Plot Options']._obj
+    plot_opts = helper.plugins['Plot Options']._obj
 
     # only the sci data appears in Plot Options:
     assert len(plot_opts.layer_items) == 1
@@ -122,12 +128,11 @@ def test_data_quality_plugin(imviz_helper):
     # check changes to sci opacity affect dq opacity
     new_sci_opacity = 0.5
     plot_opts.image_opacity_value = new_sci_opacity
-    dq_alpha = imviz_helper.default_viewer._obj.glue_viewer.layers[1].state.alpha
+    dq_alpha = viewer.layers[1].state.alpha
     assert dq_alpha == new_sci_opacity * dq_plugin.dq_layer_opacity
 
     # check that mouseover shows dq values on bad pixels (flag == 0):
-    viewer = imviz_helper.default_viewer._obj.glue_viewer
-    label_mouseover = imviz_helper._coords_info
+    label_mouseover = helper._coords_info
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1366, 'y': 708}})
 
