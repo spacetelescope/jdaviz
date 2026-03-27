@@ -355,7 +355,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                                                                    spectral_axis_unit,
                                                                    desired_freq_unit,
                                                                    desired_length_unit)
-
                 moment = moment_temp.to(moment_zero_unit_temp.unit, u.spectral())
 
                 # if flux and spectral axis units were incompatible in terms of freq/wav

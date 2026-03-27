@@ -17,6 +17,7 @@ will be parsed and which tools can visualize it:
    image
    catalog
    ramp
+   line_list
    subset
    footprint
    trace

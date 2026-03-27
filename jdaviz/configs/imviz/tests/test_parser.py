@@ -98,15 +98,24 @@ class TestParseImage:
         slice_shape = (2, 3)
         arr = np.stack([np.zeros(slice_shape) + i for i in range(n_slices)])
         data_label = 'my_slices'
+        viewer = imviz_helper.viewers.get('imviz-0')
 
         if not manual_loop:
             # We use higher level load_data() here to make sure linking does not crash.
             imviz_helper.load_data(arr, data_label=data_label)
         else:
-            # Manual loop with unique labels for each slice
+            # Manual loop with unique labels for each slice.
             with imviz_helper.batch_load():
                 for i in range(n_slices):
                     imviz_helper.load_data(arr[i, :, :], data_label=f'{data_label}_{i}')
+                # all set_data_visibility calls must be deferred
+                # no layers should be loaded into the viewer yet.
+                assert viewer.data_menu.data_labels_loaded == []
+                assert len(imviz_helper.pending_set_data_visibility) == n_slices
+
+            # After batch_load exits, link manager has run, all layers should now be loaded.
+            assert len(viewer.data_menu.data_labels_loaded) == n_slices
+            assert len(imviz_helper.pending_set_data_visibility) == 0
 
         assert len(imviz_helper.app.data_collection) == n_slices
         assert len(imviz_helper.app.data_collection.links) == 8
@@ -517,19 +526,18 @@ class TestParseImage:
         assert isinstance(data.coords, expected_cls)
 
 
-def test_load_valid_not_valid(imviz_helper):
-    # Load something valid.
-    arr = np.ones((5, 5))
-    imviz_helper.load_data(arr, data_label='valid', show_in_viewer=False)
+def test_load_image_imviz_without_format(imviz_helper, tmp_path):
+    """Test loading an image into Imviz without explicitly specifying format."""
 
-    # Load something invalid.
-    with pytest.raises(ValueError, match='No valid loaders found for input.'):
-        imviz_helper.load_data(np.zeros(2), show_in_viewer=False)
+    hdu = fits.PrimaryHDU(np.zeros((10, 10)) + 42)
+    fpath = tmp_path / 'test_image.fits'
+    hdu.writeto(fpath, overwrite=True)
 
-    # Make sure valid data is still there.
-    assert (len(imviz_helper.app.data_collection) == 1
-            and imviz_helper.app.data_collection.labels == ['valid'])
-    assert_allclose(imviz_helper.app.data_collection[0].get_component('DATA').data, 1)
+    imviz_helper.load(str(fpath))
+
+    data = imviz_helper.app.data_collection[0]
+    assert data.label == 'test_image[PRIMARY,1]'
+    assert data.shape == (10, 10)
 
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")

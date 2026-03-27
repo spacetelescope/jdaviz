@@ -1504,7 +1504,7 @@
             <h2 class="announcement-header">Introducing the new generalized Jdaviz</h2>
             <p class="announcement-text">
                 Version 5.0 of Jdaviz introduces a new generalized Jdaviz capable of advanced mixed workflows.
-                No longer do you need to choose between the different configurations - just load the data
+                You no longer need to choose between the different configurations - just load the data
                 you want to analyze into jdaviz and the interface and tools will adjust accordingly.
             </p>
             <a href="{{ pathto('configs_deprecated') }}" class="announcement-button">View Deprecated Configuration-Specific Documentation</a>
@@ -1516,6 +1516,7 @@
             <div class="platform-tabs-section">
             <div class="platform-tabs-header">
                 <button class="platform-tab" data-platform="desktop">Desktop UI</button>
+                <button class="platform-tab" data-platform="commandline">Command Line</button>
                 <button class="platform-tab" data-platform="mast">Jdaviz@MAST</button>
                 <button class="platform-tab active" data-platform="jupyter">Local Jupyter Notebook/Lab</button>
                 <button class="platform-tab" data-platform="platform">Platform (TIKE, Roman Nexus)</button>
@@ -1525,6 +1526,9 @@
         <!-- Platform Descriptions (above wireframe) -->
         <div class="platform-description" data-platform-description="desktop">
             Run Jdaviz as a native desktop application, without the need to run jupyter or use any python.  Note that with this installation, you will not have access to running API commands.
+        </div>
+        <div class="platform-description" data-platform-description="commandline">
+            Run Jdaviz from a command line terminal as a browser application. Note that with this start method, you will not have access to running API commands.
         </div>
         <div class="platform-description" data-platform-description="mast">
             Preview data directly from the MAST archive in Jdaviz, without having to install Jdaviz or download any data.  If you want to move the analysis to your local machine or benefit from API access, install Jdaviz and download a notebook from MAST to get started with the same data on your own machine.
@@ -1558,6 +1562,10 @@
         <div class="platform-content-section">
             <!-- Desktop UI Content -->
             <div class="platform-tab-content" data-platform-content="desktop">
+            </div>
+
+            <!-- Command Line Content -->
+            <div class="platform-tab-content" data-platform-content="commandline">
             </div>
 
             <!-- Jdaviz@MAST Content -->
@@ -1705,6 +1713,7 @@ jd.show()</div>
             const installButtonConfig = {
                 'desktop': { text: 'Download Desktop App', href: 'setup/desktop.html' },
                 'mast': { text: 'Open Jdaviz@MAST', href: 'https://mast.stsci.edu/viz/ui/', target: '_blank' },
+                'commandline': { text: 'Install Jdaviz', href: 'setup/local.html' },
                 'jupyter': { text: 'Install Jdaviz', href: 'setup/local.html' },
                 'platform': { text: 'Access Science Platforms', href: 'setup/platforms.html' }
             };

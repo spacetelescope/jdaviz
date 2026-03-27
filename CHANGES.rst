@@ -17,7 +17,9 @@ New Features
 
 - Support in plot options to set which columns are visible for table viewers. [#4033]
 
-- Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
+- Added `skewer` mode to footprint selection that only selects when clicking inside a footprint.
+  Footprint selection tools now support control+click or command+click to toggle 
+  selections (add/remove individual footprints without replacing the current selection). [#3962, #4034]
 
 - Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
 
@@ -49,8 +51,28 @@ New Features
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
 
+- Allow launching generalized Jdaviz from the command line and deprecate configs from that interface. [#4087]
+
+- Added ability to load spectra with 'IVAR' and 'VAR' uncertainty extensions. [#4091]
+
+- Line list loader to allow loading custom line lists from a table or file. [#4082]
+
+- Avoid attempting to convert units in image viewers that are likely moment map data. This
+  fix allows the user to load moment map data into an existing image viewer, and use
+  unit converison functionality when there is moment map data in a viewer. [#4085]
+
+- Add ability to toggle between flux and surface brightness in deconfigged.
+  Avoid attempting to convert units in image viewers that are likely moment map
+  data. This fix allows the user to load moment map data into an existing image
+  viewer, and use unit converison functionality when there is moment map data in
+  an Image or 3D Spectrum viewer. [#4085]
+
+- Fixed batch aperture photometry mode in deconfigged. [#4106]
+
 Cubeviz
 ^^^^^^^
+- Added ability to load DQ extension in the cubeviz loader, which activates the
+  DQ plugin in cubeviz. [#4077]
 
 Imviz
 ^^^^^
@@ -107,6 +129,9 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Fixed an issue that occurred when destroying a 2D Spectrum viewer due to a units check that
+  attempted to read from a file that was no longer in memory due to cleanup procedures. [#4105]
+
 - Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
 
 - Update example notebooks and add examples for deconfigged. [#4052]
@@ -123,6 +148,11 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed bug where calling `jd.show()` before `batch_load` context caused data not to load correctly
+  into the viewer(s) due to absence of linking necessary for glue's rendering backend. [#4079]
+
+- Fixed a bug when trying to change link type multiple times with subsets defined. [#4096]
+
 Mosviz
 ^^^^^^
 
@@ -133,6 +163,9 @@ Specviz2d
 ^^^^^^^^^
 
 - Fixed bug where loading two 2D spectra failed to display in the spectrum-2d viewer. [#3983]
+
+- Fixed bug where mouseover fails to display in 2D Spectra viewer when no wavelength mapping
+  is provided. [#4093]
 
 4.5.1 (2026-03-06)
 ==================

@@ -142,7 +142,9 @@ def link_data_in_table(app, data_obj=None):
 
             wc_spec_ids.append(LinkSameWithUnits(wc_spec_1d[0], wc_spec_2d[1]))
 
-    app.session.data_collection.add_link(wc_spec_ids)
+    # Use delay_link_manager_update() to prevent widget trait modification during iteration
+    with app.session.data_collection.delay_link_manager_update():
+        app.session.data_collection.add_link(wc_spec_ids)
 
 
 @data_parser_registry("mosviz-nirspec-directory-parser")

@@ -15,6 +15,12 @@ The Line Lists plugin loads and displays spectral line identifications from
 catalogs. Lines are overlaid on spectrum viewers to aid in feature identification
 and analysis.
 
+.. warning::
+
+   The Line Lists plugin is still under active development. The API is not
+   yet fully exposed, and spectral lines can currently
+   only be displayed in a single spectrum viewer at a time.
+
 **Key Features:**
 
 * Load predefined line lists (atomic, molecular)
@@ -44,15 +50,7 @@ Click the :guilabel:`Line Lists` icon in the plugin toolbar to:
 API Access
 ==========
 
-.. code-block:: python
-
-    plg = app.plugins['Line Lists']
-
-    # Load a line list
-    plg.load_line_list('SDSS')
-
-    # Set redshift
-    plg.set_redshift(0.05)
+The public API for the this plugin is in development
 
 .. plugin-api-refs::
    :module: jdaviz.configs.default.plugins.line_lists.line_lists
@@ -61,4 +59,5 @@ API Access
 See Also
 ========
 
+* :ref:`loaders-format-line-list` - Importing custom line lists
 * :ref:`line-lists` - Detailed line lists documentation

@@ -255,7 +255,8 @@ class Imviz(ImageConfigHelper):
                       viewer=viewer,
                       gwcs_to_fits_sip=gwcs_to_fits_sip)
 
-    def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):
+    def link_data(self, align_by='pixels', wcs_fallback_scheme='pixels',
+                  wcs_fast_approximation=True):
         """(Re)link loaded data in Imviz with the desired link type.
         All existing links will be replaced.
 

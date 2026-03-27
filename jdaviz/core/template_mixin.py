@@ -3087,6 +3087,12 @@ class SubsetSelect(SelectPluginComponent):
         return self._get_subset_mask()
 
     def _get_spatial_region(self, dataset, subset=None):
+        """
+        Retrieve the spatial region object for a subset.
+
+        Returns a SkyRegion if in Imviz with WCS alignment, otherwise a PixelRegion.
+        The subset label is stored in the returned region's metadata.
+        """
         if subset is None:
             subset = self.selected
             subset_state = self.selected_subset_state
@@ -3413,10 +3419,38 @@ class ApertureSubsetSelect(SubsetSelect):
         return all_aperture_marks
 
     def _get_mark_coords_and_validate(self, viewer=None, selected=None):
+        """
+        Convert the aperture subset ``selected`` into polygon coordinates
+        (in pixel coordinates)for drawing as an overlay in the viewer, and also
+        validate that ``selected`` is a valid aperture that can be drawn.
+
+        If the subset(s) ``selected`` are converted from sky to pixel coordinates
+        using the WCS of ``viewer``. If ``viewer`` is not provided, then the app
+        default viewer is used.
+
+        Parameters
+        ----------
+        viewer : `~glue_jupyter.bqplot.image.BqplotImageView`, optional
+            (Only relevant when ``selected`` is a SkyRegion). The viewer from
+            which the WCS of the reference layer is obtained and used to convert
+            sky regions to pixel coordinates. If not provided, the app default
+            viewer is used.
+        selected : str or list of str, optional
+            Subset label(s) to validate and convert. If not provided, uses the
+            current selection in this component.
+
+        Returns
+        -------
+        x_coords, y_coords : `~numpy.ndarray` or list
+            Polygon coordinates for ``selected``, or an empty list if selection
+            is invalid.
+        validity : dict
+            A dictionary with keys 'is_aperture' (bool), which indicates whether
+            the current selection is a valid aperture that can be drawn, and if
+            not valid, 'aperture_message' (str) to indicate the reason.
+        """
         multiselect = getattr(self, 'multiselect', False)
 
-        if viewer is None:
-            viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
         if selected is None:
             selected = self.selected
             objs = self.selected_obj if multiselect else [self.selected_obj]
@@ -3439,8 +3473,7 @@ class ApertureSubsetSelect(SubsetSelect):
         # (or selected_spatial_region) will fail.
         if np.any([len(obj) > 1 for obj in objs]):
             validity = {'is_aperture': False,
-                        'aperture_message': 'composite subsets are not supported',
-                        'is_composite': True}
+                        'aperture_message': 'composite subsets are not supported'}
             return [], [], validity
 
         if multiselect or selected != self.selected:
@@ -3460,6 +3493,12 @@ class ApertureSubsetSelect(SubsetSelect):
             if isinstance(spatial_region, PixelRegion):
                 pixel_region = spatial_region
             else:
+                if viewer is None:
+                    # TODO: deconfigged jdaviz does not have a 'default' viewer,
+                    # viewer should be passed explicitly in this case. retaining this
+                    # fallback for now to avoid errors for config-specific calls
+                    # to this method.
+                    viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
                 wcs = getattr(viewer.state.reference_data, 'coords', None)
                 if wcs is None:
                     validity = {'is_aperture': False,
@@ -4722,7 +4761,7 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 3
 
         def is_image_or_flux_cube(data):
-            return is_image(data) or is_flux_cube(data)
+            return (is_image(data) or is_flux_cube(data)) and not is_2d_spectrum_or_trace(data)
 
         def is_spectrum(data):
             return (len(data.shape) == 1
