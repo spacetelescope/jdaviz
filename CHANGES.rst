@@ -111,6 +111,8 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Fix issue with treat_table_as_query switch where it disappeared entirely when switched 'off' [#4102]
+
 Cubeviz
 ^^^^^^^
 
