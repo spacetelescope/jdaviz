@@ -5,13 +5,13 @@ from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
 
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_GWCS
+from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, BaseImviz_WCS_GWCS
 
 
-class TestDeleteData(BaseImviz_WCS_WCS):
+class TestDeleteData(BaseDeconfiggedImage_WCS_WCS):
 
     def test_reparent_str(self):
-        for subset in self.imviz.app.data_collection.subset_groups:
+        for subset in self.helper.app.data_collection.subset_groups:
             self.imviz.app._reparent_subsets(
                 subset.subset_state.xatt.parent.label,
                 "has_wcs_1[SCI,1]"
@@ -23,47 +23,48 @@ class TestDeleteData(BaseImviz_WCS_WCS):
 
         # First data with WCS, same as the one in BaseImviz_WCS_NoWCS.
         hdu3 = NDData(arr, wcs=self.wcs_1)
-        self.imviz.load_data(hdu3, data_label='has_wcs_3')
+        self.helper.load(hdu3, format='Image', data_label='has_wcs_3')
 
-        self.imviz.link_data(align_by='wcs', wcs_fallback_scheme=None)
+        # align by WCS
+        self.orientation_plugin.align_by = 'WCS'
 
         # Add a subset
         reg = CirclePixelRegion(PixCoord(2, 2), 3).to_sky(self.wcs_1)
-        self.imviz.plugins['Subset Tools'].import_region(reg)
+        self.subset_plugin.import_region(reg)
 
-        self.imviz.plugins['Subset Tools'].combination_mode = 'new'
+        self.subset_plugin.combination_mode = 'new'
         reg = RectanglePixelRegion(PixCoord(1, 1), 2, 2).to_sky(self.wcs_1)
-        self.imviz.plugins['Subset Tools'].import_region(reg)
+        self.subset_plugin.import_region(reg)
 
-        assert len(self.imviz.app.data_collection.subset_groups) == 2
+        assert len(self.helper.app.data_collection.subset_groups) == 2
 
         # by default the parent will be the reference data layer, which
         # is the "Default Orientation" WCS-only layer since Imviz is
         # WCS-linked here. Let's reparent to a layer that we can
         # delete to test the machinery:
-        for subset in self.imviz.app.data_collection.subset_groups:
-            self.imviz.app._reparent_subsets(
+        for subset in self.helper.app.data_collection.subset_groups:
+            self.helper.app._reparent_subsets(
                 subset.subset_state.xatt.parent.label,
-                "has_wcs_1[SCI,1]"
+                "has_wcs_1"
             )
 
-        subset1 = self.imviz.app.data_collection.subset_groups[0]
-        subset2 = self.imviz.app.data_collection.subset_groups[1]
-        assert subset1.subset_state.xatt.parent.label == "has_wcs_1[SCI,1]"
+        subset1 = self.helper.app.data_collection.subset_groups[0]
+        subset2 = self.helper.app.data_collection.subset_groups[1]
+        assert subset1.subset_state.xatt.parent.label == "has_wcs_1"
         assert_allclose(subset1.subset_state.center(), (2, 2))
 
-        assert subset2.subset_state.xatt.parent.label == "has_wcs_1[SCI,1]"
+        assert subset2.subset_state.xatt.parent.label == "has_wcs_1"
         assert_allclose(subset2.subset_state.roi.xmin, 0, atol=1e-6)
         assert_allclose(subset2.subset_state.roi.ymin, 0, atol=1e-6)
         assert_allclose(subset2.subset_state.roi.xmax, 2)
         assert_allclose(subset2.subset_state.roi.ymax, 2)
 
         # We have to remove the data from the viewer before deleting the data from the app.
-        self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_1[SCI,1]")
-        self.imviz.app.data_item_remove("has_wcs_1[SCI,1]")
+        self.helper.app.remove_data_from_viewer("Image", "has_wcs_1")
+        self.helper.app.data_item_remove("has_wcs_1")
 
         # Make sure we re-linked images 2 and 3 (plus WCS-only reference data layer)
-        assert len(self.imviz.app.data_collection.external_links) == 2
+        assert len(self.helper.app.data_collection.external_links) == 2
 
         # FIXME: 0.25 offset introduced by fake WCS layer, see
         # https://jira.stsci.edu/browse/JDAT-4256

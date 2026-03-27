@@ -67,6 +67,8 @@ New Features
   viewer, and use unit converison functionality when there is moment map data in
   an Image or 3D Spectrum viewer. [#4085]
 
+- Fixed batch aperture photometry mode in deconfigged. [#4106]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
