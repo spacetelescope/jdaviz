@@ -10,14 +10,12 @@ DataQuality
 
    .. autosummary::
 
-      ~DataQuality.dq_layer_items
-      ~DataQuality.dq_layer_selected
+      ~DataQuality.dq_layer
       ~DataQuality.dq_layer_opacity
       ~DataQuality.decoded_flags
       ~DataQuality.flags_filter
       ~DataQuality.flag_map_definitions_selected
-      ~DataQuality.science_layer_items
-      ~DataQuality.science_layer_selected
+      ~DataQuality.science_layer
       ~DataQuality.template_file
       ~DataQuality.user_api
 
@@ -31,9 +29,7 @@ DataQuality
 
    .. rubric:: Attributes Details
 
-   .. autoattribute:: dq_layer_items
-
-   .. autoattribute:: dq_layer_selected
+   .. autoattribute:: dq_layer
 
    .. autoattribute:: dq_layer_opacity
 
@@ -43,9 +39,7 @@ DataQuality
 
    .. autoattribute:: flag_map_definitions_selected
 
-   .. autoattribute:: science_layer_items
-
-   .. autoattribute:: science_layer_selected
+   .. autoattribute:: science_layer
 
    .. autoattribute:: template_file
 
