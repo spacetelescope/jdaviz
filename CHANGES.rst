@@ -57,6 +57,18 @@ New Features
 
 - Line list loader to allow loading custom line lists from a table or file. [#4082]
 
+- Avoid attempting to convert units in image viewers that are likely moment map data. This
+  fix allows the user to load moment map data into an existing image viewer, and use
+  unit converison functionality when there is moment map data in a viewer. [#4085]
+
+- Add ability to toggle between flux and surface brightness in deconfigged.
+  Avoid attempting to convert units in image viewers that are likely moment map
+  data. This fix allows the user to load moment map data into an existing image
+  viewer, and use unit converison functionality when there is moment map data in
+  an Image or 3D Spectrum viewer. [#4085]
+
+- Fixed batch aperture photometry mode in deconfigged. [#4106]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
@@ -116,6 +128,9 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+
+- Fixed an issue that occurred when destroying a 2D Spectrum viewer due to a units check that
+  attempted to read from a file that was no longer in memory due to cleanup procedures. [#4105]
 
 - Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
 

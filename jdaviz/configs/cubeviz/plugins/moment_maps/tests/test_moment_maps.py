@@ -277,17 +277,22 @@ def test_moment_create_new_image_viewer_deconfigged(deconfigged_helper, image_cu
     image_viewer = deconfigged_helper.viewers['Image']
     assert 'moment 0' in image_viewer.data_menu.data_labels_visible
 
-    # currently blocked by issue with units in JDAT-5951, uncomment this
-    # portion of the test once that ticket is resolved
+    # now calculate another moment map and add it to the existing Image viewer
+    # and make sure it is added
+    mm.add_results.label = 'moment 01'
+    mm.add_results.viewer.selected = 'Image'
+    mm.calculate_moment()
 
-    # # now calculate another moment map and add it to the existing Image viewer
-    # # and make sure it is added
-    # mm.add_results.label = 'moment 00'
-    # mm.add_results.viewer.selected = 'Image'
-    # mm.calculate_moment()
+    image_viewer = deconfigged_helper.app.get_viewer('Image')
+    assert 'moment 01' in image_viewer.data_menu.layer.choices
 
-    # image_viewer = deconfigged_helper.app.get_viewer('Image')
-    # assert 'moment 00' in image_viewer.data_menu.layer.choices
+    # calculate a higher order moment and make sure we can add it to an existing
+    # image viewer as well
+    mm.n_moment = 1
+    mm.reference_wavelength = 1.0
+    mm.add_results.label = 'moment 1'
+    mm.add_results.viewer.selected = 'Image'
+    mm.calculate_moment()
 
 
 def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
@@ -393,9 +398,9 @@ def test_correct_output_spectral_y_units(cubeviz_helper, spectrum1d_cube_custom_
     assert mm.moment.unit == moment_unit.replace('m', 'um')
 
 
-@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS][1:2])
+@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in [SPEC_PHOTON_FLUX_DENSITY_UNITS[1]]])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS][1:2])
+@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in [SPEC_PHOTON_FLUX_DENSITY_UNITS[1]]])
 def test_moment_zero_unit_flux_conversions(cubeviz_helper,
                                            spectrum1d_cube_custom_fluxunit,
                                            flux_unit, angle_unit, new_flux_unit):
@@ -409,7 +414,6 @@ def test_moment_zero_unit_flux_conversions(cubeviz_helper,
     flux dropdown menu in the unit conversion plugin should be supported
     by moment maps.
     """
-
     if new_flux_unit == flux_unit:  # skip 'converting' to same unit
         return
     new_flux_unit_str = new_flux_unit.to_string()
@@ -434,6 +438,8 @@ def test_moment_zero_unit_flux_conversions(cubeviz_helper,
     # convert to new flux unit
     uc.flux_unit.selected = new_flux_unit_str
 
+    # make sure moment map plugin labels (which say what units the output will be
+    # in) are updated with the new flux unit
     new_mm_unit = (new_flux_unit * u.m / u.Unit(angle_unit)).to_string()
     assert mm.output_unit_items[0]['label'] == 'Surface Brightness'
     assert mm.output_unit_items[0]['unit_str'] == new_mm_unit

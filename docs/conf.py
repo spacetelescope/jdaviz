@@ -1217,7 +1217,7 @@ def extract_loader_options(option_type):
                         # Check if surrounded by asterisks (RST title)
                         if (prev_line and all(c == '*' for c in prev_line) and
                             next_line and all(c == '*' for c in next_line) and
-                            curr_line):
+                                curr_line):
                             title = curr_line
 
                             # Process based on type
@@ -1226,7 +1226,8 @@ def extract_loader_options(option_type):
                                 if title.endswith(' Format'):
                                     title = title[:-7]
                             elif option_type == 'sources':
-                                # Extract name from "Loading from X" or "Loading via X" or "Loading X"
+                                # Extract name from "Loading from X"
+                                # or "Loading via X" or "Loading X"
                                 if title.startswith('Loading from '):
                                     title = title[13:].lower()
                                 elif title.startswith('Loading via '):
@@ -1245,6 +1246,19 @@ def extract_loader_options(option_type):
 
     # Return extracted list, or fallback to hardcoded list if extraction fails
     if option_names:
+        # Validate that extracted list contains all fallback items
+        expected = fallbacks.get(option_type, [])
+        # Convert to lowercase for case-insensitive comparison
+        extracted_lower = [item.lower() for item in option_names]
+
+        missing_items = [item for item in expected if item.lower() not in extracted_lower]
+
+        if missing_items:
+            raise ValueError(
+                f"Extracted {option_type} options are missing expected items: {missing_items}. "
+                f"Extracted: {option_names}, Expected to contain: {expected}"
+            )
+
         return option_names
     else:
         return fallbacks.get(option_type, [])
