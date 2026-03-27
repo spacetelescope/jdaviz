@@ -4,14 +4,19 @@ from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 from numpy.testing import assert_allclose
 
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, create_example_gwcs
+from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, create_example_gwcs
 
 
-class TestPanZoomTools(BaseImviz_WCS_WCS):
+class TestPanZoomTools(BaseDeconfiggedImage_WCS_WCS):
     def test_panzoom_tools(self):
-        v = self.imviz.default_viewer._obj.glue_viewer
-        v2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs_1[SCI,1]')
+        v = self.viewer
+        v2 = self.helper.new_viewers['Image']()
+
+        # get glue viewer from second image viewer
+        v2 = self.helper.viewers['Image (1)']._obj.glue_viewer
+
+        self.helper.app.add_data_to_viewer('Image', 'has_wcs_1')
+        self.helper.app.add_data_to_viewer('Image (1)', 'has_wcs_2')
 
         t = v.toolbar.tools['jdaviz:boxzoommatch']
         # original limits (x_min, x_max, y_min, y_max): -0.5 9.5 -0.5 9.5

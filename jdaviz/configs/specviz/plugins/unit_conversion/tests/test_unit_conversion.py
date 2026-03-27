@@ -349,3 +349,23 @@ def test_data_unload_reload(specviz2d_helper):
     uc = specviz2d_helper.plugins['Unit Conversion']
     assert uc.flux_unit.selected == viewer.state.y_display_unit == 'MJy'
     assert uc.spectral_unit == viewer.state.x_display_unit == 'um'
+
+
+def test_toggle_spectral_y_type_deconfigged(deconfigged_helper, spectrum1d):
+    """
+    Test toggling between flux and surface brightness by setting
+    'spectral_y_type' in the unit conversion plugin.
+    """
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+    plg = deconfigged_helper.plugins["Unit Conversion"]
+
+    # the initial selection should be "Flux" since the input spectrum is in flux units
+    assert plg.spectral_y_type == "Flux"
+
+    # toggle to surface brightness, then back to flux, and check that
+    # spectral_y_type updates accordingly
+    plg.spectral_y_type = "Surface Brightness"
+    assert plg.spectral_y_type == "Surface Brightness"
+
+    plg.spectral_y_type = "Flux"
+    assert plg.spectral_y_type == "Flux"

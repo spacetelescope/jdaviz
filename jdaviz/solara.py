@@ -55,17 +55,28 @@ def Page():
     solara.Style(Path(__file__).parent / "solara.css")
 
     if config is None or not hasattr(jdaviz.configs, config):
-        from jdaviz.core.launcher import Launcher
-        launcher = Launcher(height='100vh', filepath=(data_list[0] if len(data_list) == 1 else ''))
-        solara.display(launcher.main_with_launcher)
-        return
-
-    viz = getattr(jdaviz.configs, config)(verbosity=jdaviz_verbosity,
-                                          history_verbosity=jdaviz_history_verbosity)
-    for data in data_list:
-        if config == 'mosviz':
-            viz.load_data(directory=data, **load_data_kwargs)
+        if config == 'Flexible':
+            viz = jdaviz.gca()
+            jdaviz.loaders['file'].open_in_tray()
+            if len(data_list) > 1:
+                raise ValueError("Currently only one filepath can be provided for"
+                                 "flexible mode at runtime")
+            elif len(data_list):
+                jdaviz.loaders['file'].filepath = data_list[0]
         else:
-            viz.load_data(data, **load_data_kwargs)
+            from jdaviz.core.launcher import Launcher
+            launcher = Launcher(height='100vh',
+                                filepath=(data_list[0] if len(data_list) == 1 else ''))
+            solara.display(launcher.main_with_launcher)
+            return
+
+    else:
+        viz = getattr(jdaviz.configs, config)(verbosity=jdaviz_verbosity,
+                                              history_verbosity=jdaviz_history_verbosity)
+        for data in data_list:
+            if config == 'Mosviz':
+                viz.load(directory=data, **load_data_kwargs)
+            else:
+                viz.load(data, **load_data_kwargs)
 
     solara.display(viz.app)

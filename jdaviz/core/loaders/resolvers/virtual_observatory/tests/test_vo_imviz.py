@@ -7,7 +7,7 @@ import warnings
 from pyvo.io.vosi.endpoint import parse_capabilities
 from pyvo.utils.xml.exceptions import UnknownElementWarning
 
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS
 
 
 class fake_siaresult:
@@ -22,7 +22,7 @@ class fake_siaresult:
 
 
 # TODO: Update all _obj calls to formal API calls once Plugin API is available
-class TestVOImvizLocal(BaseImviz_WCS_WCS):
+class TestVODeconfiggedImageLocal(BaseDeconfiggedImage_WCS_WCS):
     _data_center_coords = {
         "has_wcs_1[SCI,1]": {"ra": 337.51894336761296, "dec": -20.832083054811765},
         "has_wcs_2[SCI,1]": {"ra": 337.51924057481, "dec": -20.83208305686149},
@@ -37,16 +37,16 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         field.
         """
         # Create a second viewer and remove second dataset from first viewer to avoid ambiguity
-        self.imviz.create_image_viewer()
-        self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_2[SCI,1]")
+        self.helper.new_viewers['Image']()
+        self.helper.app.remove_data_from_viewer("Image", "has_wcs_2")
 
         # Check default viewer is "Manual"
-        vo_ldr = self.imviz.loaders["virtual observatory"]._obj
+        vo_ldr = self.helper.loaders["virtual observatory"]._obj
         assert vo_ldr.viewer.selected == "Manual"
         assert vo_ldr.source == ""
 
         # Switch to first viewer and verify coordinates have switched
-        vo_ldr.viewer.selected = "imviz-0"
+        vo_ldr.viewer.selected = "Image"
         ra_str, dec_str = vo_ldr.source.split()
         np.testing.assert_allclose(
             float(ra_str), self._data_center_coords["has_wcs_1[SCI,1]"]["ra"]
@@ -56,11 +56,11 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         )
 
         # Switch to second viewer without data and verify autocoord gracefully clears source field
-        vo_ldr.viewer.selected = "imviz-1"
+        vo_ldr.viewer.selected = "Image (1)"
         assert vo_ldr.source == ""
 
         # Now load second data into second viewer and verify coordinates
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_2[SCI,1]")
+        self.helper.app.add_data_to_viewer("Image (1)", "has_wcs_2")
         ra_str, dec_str = vo_ldr.source.split()
         np.testing.assert_allclose(
             float(ra_str), self._data_center_coords["has_wcs_2[SCI,1]"]["ra"]

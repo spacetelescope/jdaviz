@@ -429,7 +429,9 @@ class BaseImporterToDataCollection(BaseImporter):
             else:
                 msg = f"{data_label} loaded but no viewers were created.  Create viewers manually and add data from data-menu"  # noqa
             # Don't warn for WCS-only layers (orientation reference layers)
-            if not new_dc_entry.meta.get(_wcs_only_label, False):
+            # or for data added via a plugin (e.g moment maps)
+            from_plugin = new_dc_entry.meta.get('plugin', False)
+            if not new_dc_entry.meta.get(_wcs_only_label, False) and not from_plugin:
                 self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
 
         # otherwise, add data to all selected viewers.
