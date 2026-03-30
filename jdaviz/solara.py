@@ -13,6 +13,7 @@ from jdaviz.app import custom_components
 
 config = None
 data_list = []
+format_list = []
 load_data_kwargs = {}
 jdaviz_verbosity = 'error'
 jdaviz_history_verbosity = 'info'
@@ -57,12 +58,12 @@ def Page():
     if config is None or not hasattr(jdaviz.configs, config):
         if config == 'Flexible':
             viz = jdaviz.gca()
-            jdaviz.loaders['file'].open_in_tray()
-            if len(data_list) > 1:
-                raise ValueError("Currently only one filepath can be provided for"
-                                 "flexible mode at runtime")
-            elif len(data_list):
-                jdaviz.loaders['file'].filepath = data_list[0]
+            if not len(data_list):
+                jdaviz.loaders['file'].open_in_tray()
+            else:
+                with jdaviz.batch_load():
+                    for filename, format in zip(data_list, format_list):
+                        jdaviz.load(filename, format=format)
         else:
             from jdaviz.core.launcher import Launcher
             launcher = Launcher(height='100vh',

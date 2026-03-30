@@ -19,7 +19,7 @@ DEFAULT_HISTORY_VERBOSITY = 'info'
 
 def main(filepaths=None, layout='default', instrument=None, browser='default',
          theme='auto', verbosity=DEFAULT_VERBOSITY, history_verbosity=DEFAULT_HISTORY_VERBOSITY,
-         host='localhost', port=0, hotreload=False):
+         host='localhost', port=0, hotreload=False, file_formats=None):
     """
     Start a Jdaviz application instance with data loaded from FILENAME.
 
@@ -27,6 +27,8 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     ----------
     filepaths : list of str, optional
         List of paths to the file(s) to be loaded into the Jdaviz application.
+    file_formats : list of str, optional
+        List of file formats for loading, one for each filepath
     layout : str, optional
         Optional specification for which configuration to use on startup.
     instrument : str, optional
@@ -56,6 +58,10 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     else:
         file_list = []
 
+
+    if layout == 'flexible' and filepaths and not file_formats:
+        raise ValueError("'file_formats' argument is required for flexible Jdaviz layout when loading files")
+
     if layout == '' and len(file_list) > 1:
         raise ValueError("'layout' argument is required when specifying multiple files")
 
@@ -64,8 +70,11 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     os.environ['JDAVIZ_START_DIR'] = os.path.abspath('.')
 
     from jdaviz import solara
+    print([f[0] for f in file_formats])
     solara.config = layout.capitalize()
     solara.data_list = file_list
+    solara.format_list = [f[0] for f in file_formats]  # We get a list of lists from argparse
+
     if layout == 'mosviz':
         solara.load_data_kwargs = {'instrument': instrument}
     solara.theme = theme
@@ -110,6 +119,9 @@ def _main(config=None):
         filepaths_nargs = 1
     parser.add_argument('filepaths', type=str, nargs=filepaths_nargs, default=None,
                         help='The paths to the files to be loaded into the Jdaviz application.')
+    parser.add_argument('--file_formats', type=str, nargs=filepaths_nargs, default=None,
+                        action='append',
+                        help='The formats of the files to be loaded into the Jdaviz application.')
     parser.add_argument('--instrument', type=str, default='nirspec',
                         help='Manually specifies which instrument parser to use, for Mosviz')
     parser.add_argument('--browser', type=str, default='default',
@@ -137,7 +149,7 @@ def _main(config=None):
 
     main(filepaths=args.filepaths, layout=layout, instrument=args.instrument, browser=args.browser,
          theme=args.theme, verbosity=args.verbosity, history_verbosity=args.history_verbosity,
-         host=args.host, port=args.port, hotreload=args.hotreload)
+         host=args.host, port=args.port, hotreload=args.hotreload, file_formats=args.file_formats)
 
 
 def _specviz():
