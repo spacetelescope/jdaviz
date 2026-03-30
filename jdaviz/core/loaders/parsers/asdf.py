@@ -41,7 +41,7 @@ class ASDFParser(BaseParser):
             except (ImportError, TypeError) as e:  # noqa: F841
                 warnings.warn(
                     f"{self.input} could not be opened with the `roman_datamodels` package, "
-                    "as it gave the following error: {e}. This file will be loaded with the `asdf` directly",  # noqa: E501
+                    f"as it gave the following error: {e}. This file will be loaded with the `asdf` package directly",  # noqa: E501
                     UserWarning
                 )
         else:

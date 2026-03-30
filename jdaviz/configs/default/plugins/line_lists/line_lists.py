@@ -663,6 +663,84 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
                                                color="success", timeout=15000)
         self.hub.broadcast(lines_loaded_message)
 
+    def import_line_list(self, line_table, show=True):
+        """
+        Import a line list from a QTable object.
+
+        Parameters
+        ----------
+        line_table : `~astropy.table.QTable`
+            Table with line list data. The table must have at least 'linename' and 'rest' columns.
+            The 'rest' column must have proper astropy units.
+        show : bool, optional
+            Whether to show the lines by default. Defaults to True for API usage.
+        """
+        if not isinstance(line_table, QTable):
+            raise ValueError("line_table must be a QTable object")
+
+        # Determine the list name from the table, or let viewer default to "Custom"
+        if "listname" in line_table.colnames and len(line_table) > 0:
+            list_name = line_table["listname"][0]
+        elif hasattr(line_table, 'meta') and 'name' in line_table.meta:
+            list_name = line_table.meta['name']
+            # Add listname column if specified via metadata
+            line_table["listname"] = list_name
+        else:
+            # No listname specified - viewer will default to "Custom"
+            list_name = None
+
+        # Load the table into the spectrum viewer (validation happens here)
+        temp_table = self.spectrum_viewer.load_line_list(line_table,
+                                                         return_table=True,
+                                                         show=show)
+
+        # Get the actual list name from the returned table
+        if list_name is None and len(temp_table) > 0:
+            list_name = temp_table["listname"][0]
+
+        # Get the medium from the table metadata if available
+        list_medium = "Unknown (Imported)"
+        if hasattr(line_table, 'meta') and 'medium' in line_table.meta:
+            list_medium = line_table.meta['medium']
+        elif list_name == "Custom":
+            list_medium = "Unknown (Custom)"
+
+        # Store the list contents in a vuetify-friendly format
+        line_list_dict = {"lines": [], "color": "#FF000080", "medium": list_medium}
+
+        for row in temp_table:
+            temp_dict = {
+                "linename": row["linename"],
+                "rest": row["rest"].value,
+                "obs": self._rest_to_obs(row["rest"].value),
+                "unit": str(row["rest"].unit),
+                "colors": row["colors"],
+                "show": bool(row["show"]),
+                "name_rest": str(row["name_rest"])
+            }
+            line_list_dict["lines"].append(temp_dict)
+
+        # Update the list contents and loaded lists
+        list_contents = self.list_contents
+        list_contents[list_name] = line_list_dict
+        self.list_contents = {}
+        self.list_contents = list_contents
+
+        loaded_lists = self.loaded_lists + [list_name]
+        self.loaded_lists = []
+        self.loaded_lists = loaded_lists
+
+        # Plot the lines with the current redshift
+        self.spectrum_viewer.plot_spectral_lines(global_redshift=self._global_redshift)
+        self.update_line_mark_dict()
+
+        # Show success message
+        msg_text = (f"Line list '{list_name}' imported successfully. "
+                    f"Lines can be shown/hidden in the {list_name} dropdown "
+                    "in the Line Lists plugin.")
+        self.hub.broadcast(SnackbarMessage(msg_text, sender=self,
+                                           color="success", timeout=15000))
+
     def vue_add_custom_line(self, event):
         """
         Add a line to the "Custom" line list from UI input

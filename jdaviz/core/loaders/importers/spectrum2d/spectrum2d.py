@@ -84,13 +84,14 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # get display unit from viewer state if it exists
             viewer_x_unit = getattr(viewer.state, 'x_display_unit', None)
 
-            # if the viewer unit is None, its an empty viewer and anything
+            # if the viewer unit is None, it's an empty viewer and anything
             # can be loaded into it
             if viewer_x_unit is None:
                 return True
 
-            # compare viewer display unit to the spectral axis unit of the spectrum
-            spectrum_unit = getattr(self.output.spectral_axis, 'unit', None)
+            # Use the cached spectrum unit instead of accessing it from the
+            # spectrum object, which may reference a closed file in some situations
+            spectrum_unit = self._spectrum_unit
 
             if not isinstance(spectrum_unit, u.Unit):
                 spectrum_unit = u.Unit(spectrum_unit)
@@ -148,7 +149,11 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def output(self):
-        return self.spectrum
+        spectrum = self.spectrum
+        # Cache the spectral axis unit on load to avoid accessing a potentially
+        # closed file reference later when the filter is called
+        self._spectrum_unit = getattr(spectrum.spectral_axis, 'unit', None)
+        return spectrum
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         # Handle spatial pixel axes (e.g., 'Pixel Axis 0 [y]') that fall outside

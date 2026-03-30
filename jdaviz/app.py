@@ -856,7 +856,11 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         # Add all new links to the data collection
         if new_links:
-            self.data_collection.add_link(new_links)
+            # Use delay_link_manager_update() to batch link updates and prevent
+            # widget trait modifications during iteration (which causes RuntimeError
+            # in ipywidgets on Python 3.12+)
+            with self.data_collection.delay_link_manager_update():
+                self.data_collection.add_link(new_links)
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
@@ -919,7 +923,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                 isinstance(linked_data.coords, SpectralGWCS) and linked_data.ndim == 1):
             wc_old = ref_data.world_component_ids[ref_data.meta['spectral_axis_index']]
             wc_new = linked_data.world_component_ids[linked_data.meta['spectral_axis_index']]
-            self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
+            # Use delay_link_manager_update() to prevent widget trait modification during iteration
+            with self.data_collection.delay_link_manager_update():
+                self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
             return
 
         # NOTE: if Cubeviz ever supports multiple cubes, we might want to reintroduce WCS-linking

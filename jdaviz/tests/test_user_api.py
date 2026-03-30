@@ -1,14 +1,14 @@
 from specutils import Spectrum
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS
 from jdaviz.core.user_api import DataApi, SpectralDataApi, SpatialDataApi, SpectralSpatialDataApi
 import pytest
 import re
 
 
 # This applies to all viz but testing with Imviz should be enough.
-class TestImviz_WCS_WCS(BaseImviz_WCS_WCS):
-    def test_imviz_zoom_level(self):
-        v = self.imviz.viewers['imviz-0']
+class TestDeconfiggedImage_WCS_WCS(BaseDeconfiggedImage_WCS_WCS):
+    def test_image_zoom_level(self):
+        v = self.helper.viewers['Image']
         assert v._obj.glue_viewer.state.x_min == -0.5
         assert v._obj.glue_viewer.state.x_max == 9.5
 
@@ -17,12 +17,12 @@ class TestImviz_WCS_WCS(BaseImviz_WCS_WCS):
         assert v._obj.glue_viewer.state.x_min == 1.5
         assert v._obj.glue_viewer.state.x_max == 6.5
 
-    def test_imviz_viewers(self):
-        self.imviz.create_image_viewer()
-        self.imviz.create_image_viewer()
+    def test_image_viewers(self):
+        self.helper.new_viewers['Image']()
+        self.helper.new_viewers['Image']()
 
         # regression test for https://github.com/spacetelescope/jdaviz/pull/2624
-        assert len(self.imviz.viewers) == 3
+        assert len(self.helper.viewers) == 3
 
 
 def test_specviz_zoom_level(specviz_helper):

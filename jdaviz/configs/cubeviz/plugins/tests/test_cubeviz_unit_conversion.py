@@ -146,47 +146,55 @@ def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
     assert uc_plg.flux_unit.choices == expected_choices
 
 
+@pytest.mark.parametrize("helper_name", ["deconfigged_helper", "cubeviz_helper"])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-def test_unit_translation(cubeviz_helper, angle_unit):
+def test_unit_translation(helper_name, angle_unit, request):
+    helper = request.getfixturevalue(helper_name)
+
     # custom cube so PIXAR_SR is in metadata, and Flux units, and in MJy
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum(flux=flux * u.MJy / angle_unit, wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+
+    helper.load(cube, data_label="test")
 
     center = PixCoord(5, 10)
-    cubeviz_helper.plugins['Subset Tools'].import_region(CirclePixelRegion(center, radius=2.5))
+    helper.plugins['Subset Tools'].import_region(CirclePixelRegion(center, radius=2.5))
 
-    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    uc_plg = helper.plugins['Unit Conversion']
+
+    sum_dataset = 'test (sum)'
 
     # test that the scale factor was set
-    assert np.all(cubeviz_helper._app.data_collection['Spectrum (sum)'].meta['_pixel_scale_factor'] != 1)  # noqa
+    assert np.all(helper._app.data_collection[sum_dataset].meta['_pixel_scale_factor'] != 1)  # noqa
 
     # When the dropdown is displayed, this ensures the loaded
     # data collection item units will be used for translations.
     assert uc_plg._obj.spectral_y_type_selected == 'Flux'
 
     # accessing from get_data(use_display_units=True) should return flux-like units
-    assert cubeviz_helper._app._get_display_unit('spectral_y') == u.MJy
-    assert cubeviz_helper.datasets['Spectrum (sum)'].get_data(use_display_units=True).unit == u.MJy
+    assert helper._app._get_display_unit('spectral_y') == u.MJy
+    assert helper.datasets[sum_dataset].get_data(use_display_units=True).unit == u.MJy
 
     # to have access to display units
-    viewer_1d = cubeviz_helper._app.get_viewer(
-        cubeviz_helper._default_spectrum_viewer_reference_name)
+    if helper_name == "cubeviz_helper":
+        viewer_1d = helper._app.get_viewer(helper._default_spectrum_viewer_reference_name)
+    elif helper_name == "deconfigged_helper":
+        viewer_1d = helper._app.get_viewer('1D Spectrum')
 
     # change global y-units from Flux -> Surface Brightness
     uc_plg._obj.spectral_y_type_selected = 'Surface Brightness'
 
     assert uc_plg._obj.spectral_y_type_selected == 'Surface Brightness'
-    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
     # check if units translated
+    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     assert y_display_unit == u.MJy / angle_unit
 
     # get_data(use_display_units=True) should return surface brightness-like units
-    assert cubeviz_helper._app._get_display_unit('spectral_y') == u.MJy / angle_unit
-    assert cubeviz_helper.datasets['Spectrum (sum)'].get_data(use_display_units=True).unit == u.MJy / angle_unit  # noqa
+    assert helper._app._get_display_unit('spectral_y') == u.MJy / angle_unit
+    assert helper.datasets[sum_dataset].get_data(use_display_units=True).unit == u.MJy / angle_unit  # noqa
 
 
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])

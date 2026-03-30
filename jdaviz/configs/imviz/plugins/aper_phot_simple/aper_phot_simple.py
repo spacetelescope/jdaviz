@@ -688,7 +688,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if aperture is not None or dataset is not None:
             reg = self.aperture._get_spatial_region(subset=aperture if aperture is not None else self.aperture.selected,  # noqa
                                                     dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
+
             # determine if a valid aperture (since selected_validity only applies to selected entry)
+            # we don't need to pass in 'viewer' here (which is used to obtain a WCS
+            # to translate Sky Regions to Pixel Regions). If we are in deconfigged,
+            # then _get_spatial_region always returns a PixelRegion. If we are in Imviz or
+            # Cubeviz, _get_mark_coords_and_validate will use the app's default viewer.
             _, _, validity = self.aperture._get_mark_coords_and_validate(selected=aperture)
             if not validity.get('is_aperture'):
                 raise ValueError(f"Selected aperture {aperture} is not valid: {validity.get('aperture_message')}")  # noqa

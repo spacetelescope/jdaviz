@@ -180,7 +180,7 @@ class UnitConversion(PluginTemplateMixin):
             readonly = ['sb_unit']
         if self.has_time:
             expose += ['time_unit']
-        if self.config == 'cubeviz':
+        if self.config in ['cubeviz', 'deconfigged']:
             expose += ['spectral_y_type', 'spectral_y_unit']
         return PluginUserApi(self, expose=expose, readonly=readonly)
 

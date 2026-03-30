@@ -9,6 +9,7 @@ from ipywidgets import widget_serialization
 from solara import FileBrowser, reactive
 import reacton
 
+import jdaviz as jd
 from jdaviz import configs as jdaviz_configs
 from jdaviz import __version__
 from jdaviz.cli import DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY, ALL_JDAVIZ_CONFIGS
@@ -139,6 +140,8 @@ class Launcher(v.VuetifyTemplate):
     specviz2d_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'specviz2d_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
     mosviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'mosviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
     imviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'imviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    # General Jdaviz logo for deconfigged button
+    jdaviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'jdaviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, main=None, configs=ALL_JDAVIZ_CONFIGS, filepath='',
                  height=None, *args, **kwargs):
@@ -161,7 +164,8 @@ class Launcher(v.VuetifyTemplate):
             'specviz': self.specviz_icon,
             'specviz2d': self.specviz2d_icon,
             'mosviz': self.mosviz_icon,
-            'imviz': self.imviz_icon
+            'imviz': self.imviz_icon,
+            'jdaviz': self.jdaviz_icon
         }
 
         self.file_browser_widget = None
@@ -244,6 +248,18 @@ class Launcher(v.VuetifyTemplate):
             self.main.height = default_height
         self.main.color = 'transparent'
         self.main.children = [helper.app]
+
+    def vue_launch_jdaviz(self, _):
+        # Launch the deconfigged version of Jdaviz
+        jdaviz_app = jd.gca().app
+        jd.loaders['file'].open_in_tray()
+        if self.height not in ['100%', '100vh']:
+            # We're in jupyter mode. Set to default height
+            default_height = jdaviz_app.state.settings['context']['notebook']['max_height']
+            jdaviz_app.layout.height = default_height
+            self.main.height = default_height
+        self.main.color = 'transparent'
+        self.main.children = [jdaviz_app]
 
     @property
     def main_with_launcher(self):

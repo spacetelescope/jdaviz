@@ -1,4 +1,4 @@
-from jdaviz.core.events import AddLineListMessage, RedshiftMessage
+from jdaviz.core.events import RedshiftMessage
 
 __all__ = ['LineListMixin']
 
@@ -13,58 +13,53 @@ class LineListMixin:
 
     def load_line_list(self, line_table, replace=False):
         """
-        Convenience function to get to the viewer function. Also
-        broadcasts a message so the line list plugin UI can display lines
-        loaded via the notebook.
+        Convenience function to load a line list and update the plugin UI.
+        Delegates to the Line Lists plugin to avoid code duplication.
         """
+        # Delegate to the Line Lists plugin's import method
+        plg = self.app._jdaviz_helper.plugins['Line Lists']
+        plg._obj.import_line_list(line_table)
 
-        lt = self._app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).load_line_list(
-            line_table, replace=replace, return_table=True
-        )
-
-        # TODO: why is the rest of this logic here and not in viewer.load_line_list?
-
-        # Preset lists were returning None table despite loading correctly
-        if lt is None:
-            if replace:
-                lt = self.spectral_lines.loc["listname", line_table]
-            else:
-                lt = self.spectral_lines
-
-        add_line_list_message = AddLineListMessage(table=lt, sender=self)
-        self._app.hub.broadcast(add_line_list_message)
+    def _get_spectrum_viewer(self):
+        """Get the spectrum viewer, handling both configured and deconfigged cases."""
+        if hasattr(self, '_default_spectrum_viewer_reference_name'):
+            return self._app.get_viewer(self._default_spectrum_viewer_reference_name)
+        else:
+            # For deconfigged, dynamically find the first spectrum viewer
+            viewer_reference = self._app._get_first_viewer_reference_name(
+                require_spectrum_viewer=True
+            )
+            if viewer_reference is None:
+                return None
+            return self._app.get_viewer(viewer_reference)
 
     def erase_spectral_lines(self, name=None):
         """Convenience function to get to the viewer function"""
-        self._app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).erase_spectral_lines(name=name)
+        viewer = self._get_spectrum_viewer()
+        if viewer is not None:
+            viewer.erase_spectral_lines(name=name)
 
     def plot_spectral_line(self, line, global_redshift=None):
         """Convenience function to get to the viewer function"""
-        self._app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).plot_spectral_line(line, global_redshift)
+        viewer = self._get_spectrum_viewer()
+        if viewer is not None:
+            viewer.plot_spectral_line(line, global_redshift)
 
     def plot_spectral_lines(self, global_redshift=None):
         """Convenience function to get to the viewer function"""
-        self._app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).plot_spectral_lines(global_redshift)
+        viewer = self._get_spectrum_viewer()
+        if viewer is not None:
+            viewer.plot_spectral_lines(global_redshift)
 
     @property
     def spectral_lines(self):
-        return self._app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).spectral_lines
+        viewer = self._get_spectrum_viewer()
+        return viewer.spectral_lines if viewer is not None else None
 
     @property
     def available_linelists(self):
-        return self._app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).available_linelists()
+        viewer = self._get_spectrum_viewer()
+        return viewer.available_linelists() if viewer is not None else []
 
     def set_redshift_slider_bounds(self, range=None, step=None):
         '''
