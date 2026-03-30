@@ -17,7 +17,7 @@ class LineListMixin:
         Delegates to the Line Lists plugin to avoid code duplication.
         """
         # Delegate to the Line Lists plugin's import method
-        plg = self.app._jdaviz_helper.plugins['Line Lists']
+        plg = self._app._jdaviz_helper.plugins['Line Lists']
         plg._obj.import_line_list(line_table)
 
     def _get_spectrum_viewer(self):
