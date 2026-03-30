@@ -9,6 +9,7 @@ from glue.config import data_translator
 from glue.core import BaseData
 from glue.core.edit_subset_mode import NewMode, ReplaceMode
 from glue.core.exceptions import IncompatibleAttribute
+from glue.core.roi import CircularAnnulusROI, CircularROI, EllipticalROI, RectangularROI
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 from glue.viewers.histogram.state import HistogramViewerState
@@ -99,131 +100,175 @@ class JdavizViewerMixin(WithCache):
         self._data_menu = DataMenu(viewer=self, app=self.jdaviz_app)
 
     @staticmethod
-    def _is_circular_edit(old_roi, new_roi, rtol=1e-6):
+    def _is_circular_edit(old_roi, new_roi, rtol_move=1e-3, rtol_resize=0.25):
         """
-        Detect resize or move for circular ROIs.
+        Classify the change from *old_roi* to *new_roi* for circular ROIs.
 
-        Move is detected when the radius is unchanged. Resize is
-        detected when the centers are within one radius of each
-        other.
+        Checks for moves, i.e. the radius is unchanged within a specified tolerance, and
+        resizes, i.e. the radius is changed within a specified tolerance relative to
+        the old radius.
+
+        Parameters
+        ----------
+        old_roi : CircularROI
+            The existing circular ROI.
+        new_roi : CircularROI
+            The newly proposed circular ROI.
+        rtol_move : float, optional
+            Relative tolerance for move-related comparisons.
+        rtol_resize : float, optional
+            Relative tolerance for resize-related comparisons.
+
+        Returns
+        -------
+        edit_type : 'move', 'resize', or None
         """
-        # Zero or negative radius not allowed
         if old_roi.radius <= 0:
-            return False, False
+            return None
 
-        tol = rtol * max(old_roi.radius, 1)
+        # Move: radius unchanged.
+        if abs(old_roi.radius - new_roi.radius) < rtol_move * max(old_roi.radius, 1):
+            return 'move'
 
-        # Move: same radius
-        move = False
-        if abs(old_roi.radius - new_roi.radius) < tol:
-            move = True
-
-        # Resize: centers close
+        # Resize: radius changed but center stayed very close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        resize = abs(dist - old_roi.radius) < tol
-        print("circular edit, move, resize", move, resize)
+        if dist < (rtol_resize * max(old_roi.radius, 1)):
+            return 'resize'
 
-        return move, resize
+        return None
 
     @staticmethod
-    def _is_annulus_edit(old_roi, new_roi, rtol=1e-6):
+    def _is_annulus_edit(old_roi, new_roi, rtol_move=1e-3, rtol_resize=0.25):
         """
-        Detect resize or move for annulus ROIs.
+        Classify the change from *old_roi* to *new_roi* for annular ROIs.
 
-        Move is detected when inner and outer radii are unchanged.
-        Resize is detected when the centers are within the outer
-        radius of each other.
+        Checks for moves, i.e. the radii are unchanged within a specified tolerance, and
+        resizes, i.e. the radii change but the new center stays within an area defined
+        by the old radius and a specified tolerance.
+
+        Parameters
+        ----------
+        old_roi : CircularAnnulusROI
+            The existing annular ROI.
+        new_roi : CircularAnnulusROI
+            The newly proposed annular ROI.
+        rtol_move : float, optional
+            Relative tolerance for move-related comparisons.
+        rtol_resize : float, optional
+            Relative tolerance for resize-related comparisons.
+
+        Returns
+        -------
+        edit_type : 'move', 'resize', or None
         """
-        # Outer radius must be larger than inner radius and non-zero
         if old_roi.outer_radius == 0 or old_roi.outer_radius <= old_roi.inner_radius:
-            return False, False
+            return None
 
-        inner_tol = rtol * max(old_roi.inner_radius, 1)
-        outer_tol = rtol * max(old_roi.outer_radius, 1)
+        # Move: both radii unchanged.
+        if (abs(old_roi.inner_radius - new_roi.inner_radius) < rtol_move * max(old_roi.inner_radius, 1)  # noqa
+                and abs(old_roi.outer_radius - new_roi.outer_radius) < rtol_resize * max(old_roi.outer_radius, 1)):  # noqa
+            return 'move'
 
-        # Move: same inner and outer radius
-        move = False
-        if (abs(old_roi.inner_radius - new_roi.inner_radius) < inner_tol
-                and abs(old_roi.outer_radius - new_roi.outer_radius) < outer_tol):
-            move = True
-
-        # Resize: centers close
+        # Resize: radii changed but center stayed very close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        resize = abs(dist - old_roi.outer_radius) < outer_tol
+        if dist < (rtol_resize * max(old_roi.outer_radius, 1)):
+            return 'resize'
 
-        return move, resize
+        return None
 
     @staticmethod
-    def _is_elliptical_edit(old_roi, new_roi, rtol=1e-6):
+    def _is_elliptical_edit(old_roi, new_roi, rtol_move=1e-3, rtol_resize=0.25):
         """
-        Detect resize or move for elliptical ROIs.
+        Classify the change from *old_roi* to *new_roi* for elliptical ROIs.
 
-        Move is detected when both radii are unchanged. Resize is
-        detected when the centers are within the larger radius of
-        each other.
+        Checks for moves, i.e. the radii are unchanged within a specified tolerance, and
+        resizes, i.e. either radius changes but the new center stays within an area defined
+        by the old radius and a specified tolerance.
+
+        Parameters
+        ----------
+        old_roi : EllipticalROI
+            The existing elliptical ROI.
+        new_roi : EllipticalROI
+            The newly proposed elliptical ROI.
+        rtol_move : float, optional
+            Relative tolerance for move-related comparisons.
+        rtol_resize : float, optional
+            Relative tolerance for resize-related comparisons.
+
+        Returns
+        -------
+        edit_type : 'move', 'resize', or None
         """
-        # Zero or negative radii not allowed
         size = max(old_roi.radius_x, old_roi.radius_y)
         if size <= 0 or min(old_roi.radius_x, old_roi.radius_y) <= 0:
-            return False, False
+            return None
 
-        x_tol = rtol * max(old_roi.radius_x, 1)
-        y_tol = rtol * max(old_roi.radius_y, 1)
+        # Move: both radii unchanged.
+        if (abs(old_roi.radius_x - new_roi.radius_x) < rtol_move * max(old_roi.radius_x, 1)
+                and abs(old_roi.radius_y - new_roi.radius_y) < rtol_move * max(old_roi.radius_y, 1)):  # noqa
+            return 'move'
 
-        # Move: same radii
-        move = False
-        if (abs(old_roi.radius_x - new_roi.radius_x) < x_tol
-                and abs(old_roi.radius_y - new_roi.radius_y) < y_tol):
-            move = True
-
-        # Resize: centers close
+        # Resize: radii changed but center stayed very close
         dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
-        resize = abs(dist - size) < max(x_tol, y_tol)
+        if dist < rtol_resize * max(size, 1):
+            return 'resize'
 
-        return move, resize
+        return None
 
     @staticmethod
-    def _is_rectangular_edit(old_roi, new_roi, rtol=1e-6):
+    def _is_rectangular_edit(old_roi, new_roi, rtol_move=1e-3, rtol_resize=0.25):
         """
-        Detect resize or move for rectangular ROIs.
+        Classify the change from *old_roi* to *new_roi* for rectangular ROIs.
 
-        Move is detected when width and height are unchanged.
-        Resize is detected when the centers are within half the
-        larger dimension of each other.
+        Checks for moves, i.e. the width and height are unchanged within
+        a specified tolerance, and resizes, i.e. when dimensions change
+        but the new center stays within an area defined by the old dimensions
+        and a specified tolerance.
+
+        Parameters
+        ----------
+        old_roi : RectangularROI
+            The existing rectangular ROI.
+        new_roi : RectangularROI
+            The newly proposed rectangular ROI.
+        rtol_move : float, optional
+            Relative tolerance for move-related comparisons.
+        rtol_resize : float, optional
+            Relative tolerance for resize-related comparisons.
+
+        Returns
+        -------
+        edit_type : 'move', 'resize', or None
         """
         old_w = old_roi.xmax - old_roi.xmin
         old_h = old_roi.ymax - old_roi.ymin
         new_w = new_roi.xmax - new_roi.xmin
         new_h = new_roi.ymax - new_roi.ymin
 
-        # Zero or negative width/height not allowed
         size = max(old_w, old_h) / 2
         if size <= 0 or old_w <= 0 or old_h <= 0:
-            return False, False
+            return None
 
-        tol_w = rtol * max(old_w, 1)
-        tol_h = rtol * max(old_h, 1)
+        # Move: same width and height.
+        if (abs(old_w - new_w) < rtol_move * max(old_w, 1) and
+                abs(old_h - new_h) < rtol_move * max(old_h, 1)):
+            return 'move'
 
-        # Move: same width and height
-        move = False
-        if (abs(old_w - new_w) < tol_w
-                and abs(old_h - new_h) < tol_h):
-            move = True
-
-        # Resize: centers close
+        # Resize: dimensions changed but center stayed very close
         old_cx = (old_roi.xmin + old_roi.xmax) / 2
         old_cy = (old_roi.ymin + old_roi.ymax) / 2
         new_cx = (new_roi.xmin + new_roi.xmax) / 2
         new_cy = (new_roi.ymin + new_roi.ymax) / 2
         dist = norm([new_cx - old_cx, new_cy - old_cy])
-        resize = abs(dist - size) < max(tol_w, tol_h)
+        if dist < rtol_resize * max(size, 1):
+            return 'resize'
 
-        return move, resize
+        return None
 
     def _is_roi_edit(self, old_roi, new_roi):
         """
-        Determine whether *new_roi* is a resize or move of *old_roi*.
-        Dispatches to a type-specific handler based on the ROI class.
+        Classify the change from *old_roi* to *new_roi*.
 
         Parameters
         ----------
@@ -234,36 +279,29 @@ class JdavizViewerMixin(WithCache):
 
         Returns
         -------
-        is_move : bool
-            True if *new_roi* represents move.
-        is_resize : bool
-            True if *new_roi* represents a resize.
+        edit_type : 'move', 'resize', or None
         """
-        from glue.core.roi import (CircularAnnulusROI, CircularROI,
-                                   EllipticalROI, RectangularROI)
-
         if not isinstance(new_roi, type(old_roi)) or not isinstance(old_roi, type(new_roi)):
-            return False, False
+            return None
 
-        # match ROI classes to handler
-        dispatch = [(CircularAnnulusROI, self._is_annulus_edit),
+        handlers = [(CircularAnnulusROI, self._is_annulus_edit),
                     (CircularROI, self._is_circular_edit),
                     (EllipticalROI, self._is_elliptical_edit),
                     (RectangularROI, self._is_rectangular_edit)]
 
-        for roi_type, handler in dispatch:
+        for roi_type, handler in handlers:
             if isinstance(old_roi, roi_type):
                 return handler(old_roi, new_roi)
 
-        return False, False
+        return None
 
     @staticmethod
     def _is_range_edit(old_range, new_range, rtol=1e-6):
         """
-        Detect resize or move for 1-D range subsets.
+        Classify the change from *old_range* to *new_range* for 1-D ranges.
 
-        Move is detected when the range width is unchanged.
-        Resize is detected when the one endpoint is fixed.
+        Checks for moves, i.e. the width is unchanged within a specified tolerance, and
+        resizes, i.e. when the width changes but one endpoint is fixed.
 
         Parameters
         ----------
@@ -271,30 +309,30 @@ class JdavizViewerMixin(WithCache):
             The existing 1-D subset state.
         new_range : ROI
             The new ROI with ``min`` and ``max`` attributes.
-            Named 'range' for consistency with the RangeSubsetState,
-            but can be any ROI with these attributes.
+        rtol : float, optional
+            Relative tolerance for the width comparison.
 
         Returns
         -------
-        is_edit : bool
-            True if the change is a resize or move operation.
+        edit_type : 'move', 'resize', or None
         """
         if not (hasattr(new_range, 'min') and hasattr(new_range, 'max')):
-            return False, False
+            return None
 
         old_w = old_range.hi - old_range.lo
         new_w = new_range.max - new_range.min
-        # Zero or negative width not allowed
         if old_w <= 0 or new_w <= 0:
-            return False, False
+            return None
 
-        # Resize: one endpoint fixed
-        resize = True if ((old_range.lo == new_range.min) or
-                          (old_range.hi == new_range.max)) else False
-        # Move: same width
-        move = True if abs(new_w - old_w) < (rtol * max(abs(old_w), 1)) else False
+        # Move: same width.
+        if abs(new_w - old_w) < (rtol * max(abs(old_w), 1)):
+            return 'move'
 
-        return move, resize
+        # Resize: width changed, one endpoint fixed.
+        if old_range.lo == new_range.min or old_range.hi == new_range.max:
+            return 'resize'
+
+        return None
 
     def apply_roi(self, roi, use_current=False):
         """
@@ -309,29 +347,26 @@ class JdavizViewerMixin(WithCache):
 
         edit_subset_mode = self.session.edit_subset_mode
         needs_override = False
-        is_move = False
+        edit_type = None
 
         if (not getattr(self.jdaviz_app, '_importing_regions', False)
                 and len(edit_subset_mode.edit_subset) > 0
                 and edit_subset_mode.mode is NewMode):
 
             existing_state = edit_subset_mode.edit_subset[0].subset_state
-            try:
-                if isinstance(existing_state, RoiSubsetState):
-                    old_roi = existing_state.roi
-                    is_move, is_resize = self._is_roi_edit(old_roi, roi)
-                    # xor
-                    needs_override = is_move != is_resize
-                elif isinstance(existing_state, RangeSubsetState):
-                    is_move, is_resize = self._is_range_edit(existing_state, roi)
-                    # xor
-                    needs_override = is_move != is_resize
 
-            except Exception as e:  # noqa
-                raise e
+            if isinstance(existing_state, RoiSubsetState):
+                old_roi = existing_state.roi
+                edit_type = self._is_roi_edit(old_roi, roi)
+            elif isinstance(existing_state, RangeSubsetState):
+                edit_type = self._is_range_edit(existing_state, roi)
 
-        if needs_override and is_move:
-            # Warn the user via API if a duplicate-sized subset is created.
+            needs_override = edit_type is not None
+
+        if needs_override and edit_type == 'move':
+            # Warn when the new subset has identical dimensions to the
+            # existing one, it will be treated as a move in-place rather
+            # than a new subset.
             warnings.warn(
                 'The new subset has the same dimensions as the '
                 'existing subset and will be treated as a move '
@@ -339,10 +374,10 @@ class JdavizViewerMixin(WithCache):
                 'dimensions, use import_region instead.',
                 stacklevel=2)
 
+        original_mode = edit_subset_mode.mode
         if needs_override:
-            original_mode = edit_subset_mode._mode
             edit_subset_mode._mode = ReplaceMode
-            
+
         try:
             super().apply_roi(roi, use_current=use_current)
         finally:
