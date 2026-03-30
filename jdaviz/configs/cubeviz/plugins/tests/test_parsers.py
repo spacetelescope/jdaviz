@@ -253,7 +253,7 @@ def test_loading_with_mask(cubeviz_helper):
                            spectral_axis=[1, 2]*u.AA,
                            mask=[[[1, 0], [0, 0]], [[0, 0], [0, 0]]],
                            spectral_axis_index=2)
-    cubeviz_helper.load_data(custom_spec)
+    cubeviz_helper.load(custom_spec)
 
     uc = cubeviz_helper.plugins['Unit Conversion']
     uc.spectral_y_type = "Surface Brightness"
@@ -272,7 +272,7 @@ def test_manga_with_mask(cubeviz_helper):
     # This also tests that spaxel is converted to pix**2
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        cubeviz_helper.load_data("https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz", cache=True)  # noqa
+        cubeviz_helper.load("https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz", format='3D Spectrum', cache=True)  # noqa
 
     uc = cubeviz_helper.plugins['Unit Conversion']
     uc.spectral_y_type = "Surface Brightness"

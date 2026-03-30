@@ -70,20 +70,20 @@ def test_uri_to_download_specviz_local_path_check():
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper):
     uri = cached_uri("mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits")
-    specviz_helper.load_data(uri, cache=True)
+    specviz_helper.load(uri, cache=True)
 
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz2d(specviz2d_helper):
     uri = cached_uri("mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits")  # noqa: E501
-    specviz2d_helper.load_data(uri, cache=True)
+    specviz2d_helper.load(uri, cache=True)
 
 
 @pytest.mark.remote_data
 def test_load_s3_fits(imviz_helper):
     """Test loading a JWST FITS file from an S3 URI into Imviz."""
     s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
-    imviz_helper.load_data(s3_uri)
+    imviz_helper.load(s3_uri)
     assert len(imviz_helper._app.data_collection) > 0
 
 
