@@ -381,8 +381,8 @@ class TestLauncherClass:
         Test vue_launch_config method.
         """
         mock_helper = Mock()
-        dcf_app = deconfigged_helper.app
-        mock_helper.app = dcf_app
+        dcf_app = deconfigged_helper._app
+        mock_helper._app = dcf_app
         default_height = '800px'
         dcf_app.state.settings = {'context': {'notebook': {'max_height': default_height}}}
         dcf_app.layout = widgets.Layout(height="100%", width="100%")
@@ -396,7 +396,7 @@ class TestLauncherClass:
             launcher.vue_launch_jdaviz("")
 
             assert launcher.main.color == 'transparent'
-            assert launcher.main.children == [jd.gca().app]
+            assert launcher.main.children == [jd.gca()._app]
 
 
 class TestShowLauncher:

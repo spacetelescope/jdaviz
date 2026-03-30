@@ -103,7 +103,7 @@ class FormatSelect(SelectPluginComponent):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
-                this_parser = Parser(self.plugin.app, parser_input)
+                this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
                 try:
                     if this_parser.is_valid:
@@ -126,7 +126,7 @@ class FormatSelect(SelectPluginComponent):
                         self._invalid_importers[label] = 'Not matching format restriction'  # noqa
                         continue
                     try:
-                        this_importer = Importer(app=self.plugin.app,
+                        this_importer = Importer(app=self.plugin._app,
                                                  resolver=self.plugin,
                                                  parser=this_parser,
                                                  input=importer_input)

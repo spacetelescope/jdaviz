@@ -213,7 +213,7 @@ class TestViewerCreatorObject:
 
         # Destroy all viewers
         for vtype, viewer in self.dcf_helper.viewers.items():
-            self.dcf_helper.app.vue_destroy_viewer_item(viewer._obj.id)
+            self.dcf_helper._app.vue_destroy_viewer_item(viewer._obj.id)
 
         assert len(self.dcf_helper.viewers) == 0
 

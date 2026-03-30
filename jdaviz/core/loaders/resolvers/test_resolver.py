@@ -543,7 +543,7 @@ def test_footprint_selection_ctrl_modifier(deconfigged_helper, image_nddata_wcs)
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
+    viewer = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 3
 
@@ -609,7 +609,7 @@ def test_footprint_selection_skewer_ctrl_modifier(deconfigged_helper, image_ndda
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
+    viewer = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 3
 
@@ -699,7 +699,7 @@ def test_footprint_selection_skewer_overlapping(deconfigged_helper, image_nddata
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    viewer = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))[0]
+    viewer = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))[0]
     footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
     assert len(footprints) == 3
 

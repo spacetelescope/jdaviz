@@ -2581,7 +2581,7 @@ class LayerSelect(SelectPluginComponent):
             parent_to_children = {}
             child_to_parent = {}
 
-            if hasattr(self._plugin.app, '_get_assoc_data_children'):
+            if hasattr(self._plugin._app, '_get_assoc_data_children'):
                 for item in layer_items:
                     label = item['label']
                     children = self._plugin._app._get_assoc_data_children(label)
@@ -6123,7 +6123,7 @@ class Table(PluginSubcomponent):
             return
 
         self._object_loader = ObjectResolver(
-            app=self._plugin.app,
+            app=self._plugin._app,
             close_callback=close_accordion
         )
         # Hide the resolver UI since we're using a fixed object (the table itself)

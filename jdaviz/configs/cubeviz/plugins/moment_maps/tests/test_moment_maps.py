@@ -283,7 +283,7 @@ def test_moment_create_new_image_viewer_deconfigged(deconfigged_helper, image_cu
     mm.add_results.viewer.selected = 'Image'
     mm.calculate_moment()
 
-    image_viewer = deconfigged_helper.app.get_viewer('Image')
+    image_viewer = deconfigged_helper._app.get_viewer('Image')
     assert 'moment 01' in image_viewer.data_menu.layer.choices
 
     # calculate a higher order moment and make sure we can add it to an existing

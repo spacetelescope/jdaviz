@@ -120,7 +120,7 @@ class ConfigHelper(HubListener):
 
             # Process any deferred set_data_visibility calls
             for call_kwargs in self.pending_set_data_visibility:
-                self.app.set_data_visibility(**call_kwargs)
+                self._app.set_data_visibility(**call_kwargs)
             self.pending_set_data_visibility = []
 
             # add any data to viewers that were requested but deferred
@@ -481,7 +481,7 @@ class ConfigHelper(HubListener):
 
             "inline": Display the Jdaviz application inline in a notebook.
             Note this is functionally equivalent to displaying the cell
-            ``viz.app`` in the notebook.
+            ``viz._app`` in the notebook.
 
             "sidecar": Display the Jdaviz application in a separate JupyterLab window from the
             notebook, the location of which is decided by the 'anchor.' right is the default

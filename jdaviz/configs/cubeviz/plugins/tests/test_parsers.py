@@ -176,7 +176,7 @@ def test_fits_image_hdu_parse_with_inverse_var(image_cube_hdu_obj, deconfigged_h
     deconfigged_helper.load(hdul, format='3D Spectrum')
 
     # data collection should contain flux, mask, uncert, and extracted spectrum
-    assert len(deconfigged_helper.app.data_collection) == 4
+    assert len(deconfigged_helper._app.data_collection) == 4
 
     # now check the actual values of the uncertainty after conversion to stddev
     unc_data = deconfigged_helper.datasets['3D Spectrum [UNC]'].get_data()

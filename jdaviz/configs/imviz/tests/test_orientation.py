@@ -22,7 +22,7 @@ class TestDefaultOrientation(BaseDeconfiggedImage_WCS_WCS):
         plg.wcs_fast_approximation = False
 
         # Check that WCS linking is in effect (links should be WCSLink, not LinkSame)
-        for link in self.helper.app.data_collection.external_links:
+        for link in self.helper._app.data_collection.external_links:
             assert not isinstance(link, LinkSame)
 
         # wcs_fast_approximation should revert/default to True when change back to Pixels.
@@ -30,7 +30,7 @@ class TestDefaultOrientation(BaseDeconfiggedImage_WCS_WCS):
         assert plg.wcs_fast_approximation is True
 
         # Check that pixel linking is in effect (links should be LinkSame)
-        for link in self.helper.app.data_collection.external_links:
+        for link in self.helper._app.data_collection.external_links:
             assert isinstance(link, LinkSame)
 
     def test_astrowidgets_markers_disable_relinking(self):

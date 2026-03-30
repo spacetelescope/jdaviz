@@ -15,8 +15,8 @@ class TestPanZoomTools(BaseDeconfiggedImage_WCS_WCS):
         # get glue viewer from second image viewer
         v2 = self.helper.viewers['Image (1)']._obj.glue_viewer
 
-        self.helper.app.add_data_to_viewer('Image', 'has_wcs_1')
-        self.helper.app.add_data_to_viewer('Image (1)', 'has_wcs_2')
+        self.helper._app.add_data_to_viewer('Image', 'has_wcs_1')
+        self.helper._app.add_data_to_viewer('Image (1)', 'has_wcs_2')
 
         t = v.toolbar.tools['jdaviz:boxzoommatch']
         # original limits (x_min, x_max, y_min, y_max): -0.5 9.5 -0.5 9.5

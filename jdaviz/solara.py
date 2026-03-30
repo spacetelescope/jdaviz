@@ -79,4 +79,4 @@ def Page():
             else:
                 viz.load(data, **load_data_kwargs)
 
-    solara.display(viz.app)
+    solara.display(viz._app)
