@@ -542,20 +542,18 @@ class TestParseImage:
         assert isinstance(data.coords, expected_cls)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
-def test_load_valid_not_valid(imviz_helper):
-    # Load something valid.
-    arr = np.ones((5, 5))
-    imviz_helper.load_data(arr, data_label='valid', show_in_viewer=False)
+def test_load_image_imviz_without_format(imviz_helper, tmp_path):
+    """Test loading an image into Imviz without explicitly specifying format."""
 
-    # Load something invalid.
-    with pytest.raises(ValueError, match='No valid loaders found for input.'):
-        imviz_helper.load_data(np.zeros(2), show_in_viewer=False)
+    hdu = fits.PrimaryHDU(np.zeros((10, 10)) + 42)
+    fpath = tmp_path / 'test_image.fits'
+    hdu.writeto(fpath, overwrite=True)
 
-    # Make sure valid data is still there.
-    assert (len(imviz_helper.app.data_collection) == 1
-            and imviz_helper.app.data_collection.labels == ['valid'])
-    assert_allclose(imviz_helper.app.data_collection[0].get_component('DATA').data, 1)
+    imviz_helper.load(str(fpath))
+
+    data = imviz_helper.app.data_collection[0]
+    assert data.label == 'test_image[PRIMARY,1]'
+    assert data.shape == (10, 10)
 
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")

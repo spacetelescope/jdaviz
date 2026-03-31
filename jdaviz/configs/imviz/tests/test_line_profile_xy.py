@@ -5,7 +5,7 @@ from astropy.nddata import NDData
 from astropy.wcs.utils import pixel_to_pixel
 from numpy.testing import assert_allclose, assert_array_equal
 
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseImviz_WCS_WCS
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseDeconfiggedImage_WCS_WCS
 from jdaviz.utils import get_top_layer_index
 
 
@@ -81,15 +81,15 @@ class TestLineProfileXYPixelLinked(BaseImviz_WCS_NoWCS):
         # assert lp_plugin.selected_y == 9
 
 
-class TestLineProfileXYWCSLinked(BaseImviz_WCS_WCS):
+class TestLineProfileXYWCSLinked(BaseDeconfiggedImage_WCS_WCS):
     @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_plugin(self):
 
-        lp_plugin = self.imviz.plugins['Image Profiles (XY)']._obj
+        lp_plugin = self.helper.plugins['Image Profiles (XY)']._obj
         lp_plugin.plugin_opened = True
 
         # link by WCS
-        self.imviz.link_data(align_by='wcs')
+        self.orientation_plugin.align_by = 'WCS'
 
         # the API input is pixels in the orientation layer, which will then
         # be translated in the plugin to pixels in the selected layer image.
@@ -114,17 +114,17 @@ class TestLineProfileXYWCSLinked(BaseImviz_WCS_WCS):
 
         # Add data with unit
         ndd = NDData(np.ones((10, 10)), unit=u.nJy)
-        self.imviz.load_data(ndd, data_label='ndd', show_in_viewer=False)
+        self.helper.load(ndd, data_label='ndd', format='Image', viewer=None)
 
-        viewer_2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer(viewer_2.reference_id, 'has_wcs_1[SCI,1]')
-        self.imviz.app.add_data_to_viewer(viewer_2.reference_id, 'ndd[DATA]')
+        viewer_2 = self.helper.new_viewers['Image']()
+        viewer_2.data_menu.add_data('has_wcs_1')
+        viewer_2.data_menu.add_data('ndd[DATA]')
 
         # Blink also triggers viewer takeover and line profile redraw,
         # similar to the "l" key but without touching X and Y.
         viewer_2.blink_once()
-        assert lp_plugin.viewer.labels == ['imviz-0', 'imviz-1']
-        assert lp_plugin.viewer_selected == 'imviz-1'
+        assert lp_plugin.viewer.labels == ['Image', 'Image (1)']
+        assert lp_plugin.viewer_selected == 'Image (1)'
         assert_allclose(lp_plugin.selected_x, x_conv)
         assert_allclose(lp_plugin.selected_y, y_conv)
         assert lp_plugin.plot_across_x.layers['line'].visible

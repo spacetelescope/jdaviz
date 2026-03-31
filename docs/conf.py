@@ -1246,6 +1246,19 @@ def extract_loader_options(option_type):
 
     # Return extracted list, or fallback to hardcoded list if extraction fails
     if option_names:
+        # Validate that extracted list contains all fallback items
+        expected = fallbacks.get(option_type, [])
+        # Convert to lowercase for case-insensitive comparison
+        extracted_lower = [item.lower() for item in option_names]
+
+        missing_items = [item for item in expected if item.lower() not in extracted_lower]
+
+        if missing_items:
+            raise ValueError(
+                f"Extracted {option_type} options are missing expected items: {missing_items}. "
+                f"Extracted: {option_names}, Expected to contain: {expected}"
+            )
+
         return option_names
     else:
         return fallbacks.get(option_type, [])
