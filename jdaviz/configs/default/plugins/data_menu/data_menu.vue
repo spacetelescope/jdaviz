@@ -173,11 +173,12 @@
             >
               <div>
                 <draggable v-model="layer_items" item-key="label">
-                  <template #item="{ element: item }">
+                  <template #item="{ element: item, index }">
                     <v-list-item
                       :key="item.label"
-                      class="layer-select"
+                      :class="layer_selected && layer_selected.includes(item.label) ? 'layer-select active-list-item' : 'layer-select'"
                       :style="/\d/.test(item.icon) ? 'padding-left: 32px' : ''"
+                      @click="onLayerClick(index, $event)"
                       @dragstart="onDragStart($event)"
                       @dragend="onDragEnd"
                     >
@@ -506,6 +507,23 @@
         } else {
           return 'False'
         }
+      },
+      onLayerClick(index, event) {
+        if (event?.defaultPrevented) {
+          return;
+        }
+        if (this.layer_multiselect) {
+          const selected = Array.isArray(this.dm_layer_selected) ? [...this.dm_layer_selected] : [];
+          const selectedIndex = selected.indexOf(index);
+          if (selectedIndex === -1) {
+            selected.push(index);
+          } else {
+            selected.splice(selectedIndex, 1);
+          }
+          this.dm_layer_selected = selected;
+        } else {
+          this.dm_layer_selected = [index];
+        }
       }
     },
   }
@@ -591,8 +609,12 @@
     background-color: #0d0d0d;
   }
   .active-list-item {
-    background-color: #d1f4ff75 !important;
+    background-color: #dddddd !important;
     font-weight: 500;
+  }
+  .theme--dark .active-list-item,
+  .v-theme--dark .active-list-item {
+    background-color: #242424 !important;
   }
   .dm-header, .dm-footer {
     background-color: #003B4D !important;
