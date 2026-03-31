@@ -4,7 +4,7 @@
       <div>
         <v-menu
           location="start"
-          :offset="[-8, 0]"
+          :offset="[8, 0]"
           transition="slide-x-reverse-transition"
           :close-on-content-click="false"
           v-model="data_menu_open">
