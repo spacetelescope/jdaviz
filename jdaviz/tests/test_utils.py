@@ -83,7 +83,7 @@ def test_uri_to_download_specviz2d(specviz2d_helper):
 def test_load_s3_fits(imviz_helper):
     """Test loading a JWST FITS file from an S3 URI into Imviz."""
     s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
-    imviz_helper.load(s3_uri)
+    imviz_helper.load(s3_uri, format='Image')
     assert len(imviz_helper._app.data_collection) > 0
 
 
