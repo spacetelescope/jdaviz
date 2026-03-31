@@ -64,6 +64,7 @@ def get_app_or_launcher():
 
     return viz.app
 
+
 @solara.component
 def Page():
     solara.Title("Jdaviz")

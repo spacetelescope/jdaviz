@@ -58,9 +58,9 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     else:
         file_list = []
 
-
     if layout == 'flexible' and filepaths and not file_formats:
-        raise ValueError("'file_formats' argument is required for flexible Jdaviz layout when loading files")
+        raise ValueError("'file_formats' argument is required for flexible Jdaviz "
+                         "layout when loading files")
 
     if layout == '' and len(file_list) > 1:
         raise ValueError("'layout' argument is required when specifying multiple files")
