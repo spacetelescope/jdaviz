@@ -18,7 +18,7 @@ New Features
 - Support in plot options to set which columns are visible for table viewers. [#4033]
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint.
-  Footprint selection tools now support control+click or command+click to toggle 
+  Footprint selection tools now support control+click or command+click to toggle
   selections (add/remove individual footprints without replacing the current selection). [#3962, #4034]
 
 - Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
@@ -51,7 +51,7 @@ New Features
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
 
-- Allow launching generalized Jdaviz from the command line and deprecate configs from that interface. [#4087]
+- Allow launching generalized Jdaviz from the command line and deprecate configs from that interface. [#4087, #4115]
 
 - Added ability to load spectra with 'IVAR' and 'VAR' uncertainty extensions. [#4091]
 
