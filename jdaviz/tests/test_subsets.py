@@ -384,6 +384,7 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
             assert get_subset_type(layer.layer.subset_state) == 'spatial'
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     arr = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
     subset_plugin = imviz_helper.plugins['Subset Tools']._obj

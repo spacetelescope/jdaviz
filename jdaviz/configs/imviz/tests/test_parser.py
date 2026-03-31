@@ -79,6 +79,7 @@ class TestParseImage:
         with pytest.raises(NotImplementedError, match='Imviz does not support'):
             parse_data(imviz_helper.app, some_obj)
 
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_numpy_array_1d_2d(self, imviz_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this array with ndim=1'):
             parse_data(imviz_helper.app, np.zeros(2))
@@ -154,6 +155,7 @@ class TestParseImage:
         with pytest.raises(ValueError, match='cannot load this array with ndim'):
             imviz_helper.load_data(np.ones((2, 2, 5, 5)))
 
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_nddata_simple(self, imviz_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this NDData with ndim=1'):
             parse_data(imviz_helper.app, NDData([1, 2, 3, 4]))
@@ -173,6 +175,7 @@ class TestParseImage:
           ['DATA', 'MASK']),
          (NDData([[1, 2], [3, 4]], uncertainty=StdDevUncertainty([[0.1, 0.2], [0.3, 0.4]])),
           ['DATA', 'UNCERTAINTY'])])
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_nddata_with_one_only(self, imviz_helper, ndd, attributes):
         imviz_helper.load_data(ndd, data_label='some_data', show_in_viewer=False)
         for i, attrib in enumerate(attributes):
@@ -183,6 +186,7 @@ class TestParseImage:
             assert comp.data.shape == (2, 2)
         assert len(imviz_helper.app.data_collection) == 2
 
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_nddata_with_everything(self, imviz_helper):
         ndd = NDData([[1, 2], [3, 4]], mask=[[True, False], [False, False]],
                      uncertainty=StdDevUncertainty([[0.1, 0.2], [0.3, 0.4]]),
@@ -203,6 +207,7 @@ class TestParseImage:
         assert len(imviz_helper.app.data_collection) == 3
 
     @pytest.mark.filterwarnings('ignore:.* is a low contrast image')
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     @pytest.mark.parametrize('format', ('jpg', 'png'))
     def test_parse_rgba(self, imviz_helper, tmp_path, format):
         if format == 'png':  # Cross-test PNG with RGBA
@@ -218,6 +223,7 @@ class TestParseImage:
         assert data.label == 'myimage'
         assert data.shape == (10, 10)
 
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_filelist(self, imviz_helper, tmp_path):
         flist = []
 
@@ -339,9 +345,10 @@ class TestParseImage:
         # --- Back to parser testing below. ---
 
         # Request specific extension (name + ver, but ver is not used), use given label
-        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, ext='DQ',
-                               data_label='jw01072001001_01101_00001_nrcb1_cal',
-                               show_in_viewer=False)
+        with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+            imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, ext='DQ',
+                                   data_label='jw01072001001_01101_00001_nrcb1_cal',
+                                   show_in_viewer=False)
         data = imviz_helper.app.data_collection[1]
         comp = data.get_component('dq')
         assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DQ,1]'
@@ -351,9 +358,10 @@ class TestParseImage:
         # Pass in HDUList directly + ext (name only), use given label
         filename = download_file(self.jwst_asdf_url_1, cache=True)
         with fits.open(filename) as pf:
-            imviz_helper.load_data(pf, ext='SCI',
-                                   data_label='jw01072001001_01101_00001_nrcb1_cal',
-                                   show_in_viewer=False)
+            with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+                imviz_helper.load_data(pf, ext='SCI',
+                                       data_label='jw01072001001_01101_00001_nrcb1_cal',
+                                       show_in_viewer=False)
             data = imviz_helper.app.data_collection[2]
             comp = data.get_component('data')  # SCI = DATA
             assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[SCI,1]'
@@ -362,7 +370,8 @@ class TestParseImage:
 
             # Load all extensions
             imviz_helper.app.data_collection.clear()
-            imviz_helper.load_data(pf, ext='*', show_in_viewer=False)
+            with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+                imviz_helper.load_data(pf, ext='*', show_in_viewer=False)
             data = imviz_helper.app.data_collection
             assert len(data.labels) == 7
             assert data.labels[0].endswith('[SCI,1]')
@@ -378,6 +387,7 @@ class TestParseImage:
             parse_data(imviz_helper.app, filename, ext='DOES_NOT_EXIST', data_label='foo')
 
     @pytest.mark.remote_data
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_jwst_niriss_grism(self, imviz_helper):
         imviz_helper.load_data(self.jwst_asdf_url_2, cache=True, show_in_viewer=False)
         data = imviz_helper.app.data_collection[0]
@@ -452,8 +462,9 @@ class TestParseImage:
             assert_quantity_allclose(tbl[0]['mean'], 0.049325 * data_unit, rtol=1e-3)
 
         # Request specific extension (name only), use given label
-        imviz_helper.load_data(filename, ext='CTX', data_label='jclj01010_drz',
-                               show_in_viewer=False)
+        with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+            imviz_helper.load_data(filename, ext='CTX', data_label='jclj01010_drz',
+                                   show_in_viewer=False)
         data = imviz_helper.app.data_collection[1]
         comp = data.get_component('CTX,1')
         assert data.label == 'jclj01010_drz[CTX,1]'
@@ -461,8 +472,9 @@ class TestParseImage:
         assert comp.units == ''  # BUNIT is not set
 
         # Request specific extension and use given label
-        imviz_helper.load_data(filename, ext='WHT', data_label='jclj01010_drz',
-                               show_in_viewer=False)
+        with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+            imviz_helper.load_data(filename, ext='WHT', data_label='jclj01010_drz',
+                                   show_in_viewer=False)
         data = imviz_helper.app.data_collection[2]
         comp = data.get_component('WHT,1')
         assert data.label == 'jclj01010_drz[WHT,1]'
@@ -472,21 +484,24 @@ class TestParseImage:
         # Pass in file obj directly
         with fits.open(filename) as pf:
             # Default behavior: Load first image
-            imviz_helper.load_data(pf, show_in_viewer=False)
+            with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+                imviz_helper.load_data(pf, show_in_viewer=False)
             data = imviz_helper.app.data_collection[3]
             assert data.label.startswith('Image') and data.label.endswith('[SCI,1]')
             assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
             assert 'SCI,1' in data.components
 
             # Request specific extension (name only), use given label
-            imviz_helper.load_data(pf, ext='CTX', show_in_viewer=False)
+            with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+                imviz_helper.load_data(pf, ext='CTX', show_in_viewer=False)
             data = imviz_helper.app.data_collection[4]
             assert data.label.startswith('Image') and data.label.endswith('[CTX,1]')
             assert data.meta['EXTNAME'] == 'CTX'
             assert 'CTX,1' in data.components
 
             # Pass in HDU directly, use given label
-            imviz_helper.load_data(pf[2], data_label='foo', show_in_viewer=False)
+            with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+                imviz_helper.load_data(pf[2], data_label='foo', show_in_viewer=False)
             data = imviz_helper.app.data_collection[5]
             assert data.label == 'foo[WHT,1]'
             assert data.meta['EXTNAME'] == 'WHT'
@@ -494,7 +509,8 @@ class TestParseImage:
 
             # Load all extensions
             imviz_helper.app.data_collection.clear()
-            imviz_helper.load_data(filename, ext='*', show_in_viewer=False)
+            with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+                imviz_helper.load_data(filename, ext='*', show_in_viewer=False)
             data = imviz_helper.app.data_collection
             assert len(data.labels) == 3
             assert data.labels[0].endswith('[SCI,1]')
@@ -526,6 +542,7 @@ class TestParseImage:
         assert isinstance(data.coords, expected_cls)
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_load_valid_not_valid(imviz_helper):
     # Load something valid.
     arr = np.ones((5, 5))

@@ -145,10 +145,11 @@ class TestSpecvizSpectrum1DParser:
         """
         Test that show_in_viewer=False doesn't add to viewer.
         """
-        specviz_spectrum1d_parser(specviz_helper.app,
-                                  spectrum1d,
-                                  data_label='hidden_spec',
-                                  show_in_viewer=False)
+        with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+            specviz_spectrum1d_parser(specviz_helper.app,
+                                      spectrum1d,
+                                      data_label='hidden_spec',
+                                      show_in_viewer=False)
 
         assert len(specviz_helper.app.data_collection) == 1
 

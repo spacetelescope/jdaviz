@@ -77,6 +77,7 @@ def test_data_menu_selection(specviz_helper, spectrum1d):
     assert dm.layer.selected == ['test']
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_data_menu_add_remove_data(imviz_helper):
     for i in range(3):
         imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}', show_in_viewer=False)
@@ -133,6 +134,7 @@ def test_remove_all_data_cubeviz(cubeviz_helper, image_cube_hdu_obj_microns):
         assert "unavailable" in cubeviz_helper.plugins[plg]._obj.disabled_msg
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_data_menu_create_subset(imviz_helper):
     imviz_helper.load_data(np.zeros((2, 2)), data_label='image', show_in_viewer=True)
 
@@ -178,6 +180,7 @@ def test_data_menu_remove_subset(specviz_helper, spectrum1d):
     # assert dm.layer.choices == ['test', 'test2', 'Subset 2']
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_data_menu_dq_layers(imviz_helper):
     hdu_data = fits.ImageHDU(np.zeros(shape=(2, 2)))
     hdu_data.name = 'SCI'
@@ -263,7 +266,8 @@ class TestResizeSubset:
         Autouse fixture to attach the shared helper to the test instance.
         """
         self.imviz_helper = imviz_helper
-        self.imviz_helper.load_data(np.zeros((10, 10)), data_label='image', show_in_viewer=True)
+        with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+            self.imviz_helper.load_data(np.zeros((10, 10)), data_label='image', show_in_viewer=True)
         self.imviz_viewer = self.imviz_helper.default_viewer._obj.glue_viewer
         self.imviz_dm = self.imviz_viewer.data_menu
         self.imviz_subset_tools = self.imviz_helper.plugins['Subset Tools']

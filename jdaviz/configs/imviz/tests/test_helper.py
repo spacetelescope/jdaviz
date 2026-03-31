@@ -11,6 +11,7 @@ def test_plugin_user_apis(imviz_helper):
             assert hasattr(plugin, attr)
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_create_new_viewer(imviz_helper, image_2d_wcs):
     # starts with one (default) viewer
     assert len(imviz_helper.app.get_viewer_ids()) == 1
