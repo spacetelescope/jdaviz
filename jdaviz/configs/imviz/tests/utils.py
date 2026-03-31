@@ -51,6 +51,7 @@ def _image_nddata_wcs(arr=np.ones((10, 10)), unit=u.Jy, name='SCI'):
     return NDData(hdu.data, wcs=WCS(hdu.header), unit=unit)
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 class BaseImviz_WCS_NoWCS:
     @pytest.fixture(autouse=True)
     def setup_class(self, imviz_helper):
@@ -116,6 +117,7 @@ class BaseDeconfiggedImage_WCS_WCS:
         self.viewer.state._set_axes_aspect_ratio(1)
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 class BaseImviz_WCS_GWCS:
     @pytest.fixture(autouse=True)
     def setup_class(self, imviz_helper):
@@ -174,6 +176,7 @@ class BaseImviz_WCS_GWCS:
         self.viewer.state._set_axes_aspect_ratio(1)
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 class BaseImviz_GWCS_GWCS:
     @pytest.fixture(autouse=True)
     def setup_class(self, imviz_helper):

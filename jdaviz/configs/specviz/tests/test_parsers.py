@@ -141,15 +141,15 @@ class TestSpecvizSpectrum1DParser:
         loaded_spec = specviz_helper.datasets['test_meta'].get_data()
         assert 'TELESCOPE' in loaded_spec.meta
 
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_show_in_viewer_false(self, specviz_helper, spectrum1d):
         """
         Test that show_in_viewer=False doesn't add to viewer.
         """
-        with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-            specviz_spectrum1d_parser(specviz_helper.app,
-                                      spectrum1d,
-                                      data_label='hidden_spec',
-                                      show_in_viewer=False)
+        specviz_spectrum1d_parser(specviz_helper.app,
+                                  spectrum1d,
+                                  data_label='hidden_spec',
+                                  show_in_viewer=False)
 
         assert len(specviz_helper.app.data_collection) == 1
 

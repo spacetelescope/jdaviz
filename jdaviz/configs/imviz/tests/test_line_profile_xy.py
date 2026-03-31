@@ -148,6 +148,7 @@ class TestLineProfileXYWCSLinked(BaseDeconfiggedImage_WCS_WCS):
         # assert lp_plugin.selected_y == 9
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_line_profile_with_nan(imviz_helper):
     arr = np.ones((10, 10))
     arr[5, 5] = np.nan

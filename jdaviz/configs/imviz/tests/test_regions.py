@@ -200,6 +200,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         assert len(self.imviz.plugins['Subset Tools'].get_regions()) == 1
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 class TestLoadRegionsFromFile(BaseRegionHandler):
 
     def setup_class(self):

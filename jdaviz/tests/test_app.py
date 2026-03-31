@@ -203,6 +203,7 @@ def test_viewer_renaming_imviz(imviz_helper):
         )
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_data_associations(imviz_helper):
     shape = (10, 10)
 

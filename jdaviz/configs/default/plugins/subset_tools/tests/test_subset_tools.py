@@ -93,6 +93,7 @@ rectangular_subset_info = {'xmin': {'pixel_name': 'Xmin (pixels)', 'wcs_name':
                                     'final_value': 6.}}
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 @pytest.mark.parametrize("roi_class, subset_info", [(CircularROI, circle_subset_info),
                                                     (EllipticalROI, elliptical_subset_info),
                                                     (CircularAnnulusROI, circ_annulus_subset_info),
@@ -343,6 +344,7 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
         plg.get_regions(region_type='spectral', wrt_data='3D Spectrum [FLUX]')
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_get_regions_composite(imviz_helper):
     """
     Test the behavior of retrieving composite subsets as regions
@@ -405,6 +407,7 @@ def test_get_regions_composite(imviz_helper):
         assert isinstance(regions[f'Subset {sub}'], CompoundPixelRegion)
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
     imviz_helper.load_data(data)
@@ -436,6 +439,7 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
     assert cr2.region2.center == PixCoord(x=34.59642971526391, y=83.99791791929273)
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
     imviz_helper.load_data(data, 'test 1')
@@ -486,6 +490,7 @@ def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
         st.get_regions(wrt_data='fake')
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
     """
     Test to ensure bug is fixed, where get_subsets
@@ -523,6 +528,7 @@ def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
         assert_quantity_allclose(actual[0].radius, expected_region.radius)
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_check_valid_subset_label(imviz_helper):
 
     # imviz instance with some data

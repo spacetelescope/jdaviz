@@ -93,6 +93,7 @@ class TestParseImage:
         assert comp.data.shape == (2, 2)
 
     @pytest.mark.parametrize('manual_loop', [False, True])
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_numpy_array_3d(self, imviz_helper, manual_loop):
         # This data has values in axis=0 that correspond to axis num.
         n_slices = 5
@@ -134,6 +135,7 @@ class TestParseImage:
             assert_array_equal(comp.data, i)
 
     @pytest.mark.filterwarnings('ignore:.*path should be string, bytes, os.PathLike or integer, not ndarray.*:DeprecationWarning')  # noqa
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_numpy_array_3d_too_many(self, imviz_helper):
         # When more than 16 slices are provided, only the first 16 are loaded
         # Note: warning about 16+ slices is emitted during importer creation but is
@@ -145,6 +147,7 @@ class TestParseImage:
         assert imviz_helper.app.data_collection[0].shape == (5, 5)
         assert imviz_helper.app.data_collection[15].shape == (5, 5)
 
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_numpy_array_4d(self, imviz_helper):
         # Check logic is in higher level method.
         imviz_helper.load_data(np.ones((1, 2, 5, 5)))
@@ -261,6 +264,7 @@ class TestParseImage:
             parse_data(imviz_helper.app, filename)
 
     @pytest.mark.remote_data
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_jwst_nircam_level2(self, imviz_helper):
 
         # Default behavior: Science image
@@ -403,6 +407,7 @@ class TestParseImage:
         assert comp.data.shape == (2048, 2048)
 
     @pytest.mark.remote_data
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_parse_hst_drz(self, imviz_helper):
         url = 'https://mast.stsci.edu/api/v0.1/Download/file?bundle_name=MAST_2021-04-21T1828.sh&uri=mast:HST/product/jclj01010_drz.fits'  # noqa: E501
         filename = download_file(url, cache=True)
@@ -527,6 +532,7 @@ class TestParseImage:
 
     @pytest.mark.remote_data
     @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
+    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     @pytest.mark.parametrize(
         ('gwcs_to_fits_sip', 'expected_cls'),
         ((True, WCS), (False, GWCS),), ids=('True-WCS', 'False-GWCS'))

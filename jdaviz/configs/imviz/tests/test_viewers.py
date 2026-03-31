@@ -46,6 +46,7 @@ def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
     assert po.viewer.labels == ['imviz-0']
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_create_viewer_align_by_wcs(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
     imviz_helper.load_data(data, data_label='my_data')
@@ -62,6 +63,7 @@ def test_create_viewer_align_by_wcs(imviz_helper, image_2d_wcs):
     assert dm.orientation.selected == 'Default orientation'
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_align_by_wcs_create_viewer(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
     imviz_helper.load_data(data, data_label='my_data')
@@ -94,6 +96,7 @@ def test_destroy_viewer_invalid(imviz_helper):
     assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_destroy_viewer_with_subset(imviz_helper):
     """Regression test for https://github.com/spacetelescope/jdaviz/issues/1614"""
     arr = np.ones((10, 10))
@@ -116,6 +119,7 @@ def test_destroy_viewer_with_subset(imviz_helper):
     imviz_helper.app.delete_subsets('Subset 1')
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_mastviz_config():
     """Use case from https://github.com/spacetelescope/jdaviz/issues/1037"""
 
@@ -137,6 +141,7 @@ def test_mastviz_config():
     assert im.app.data_collection[0].shape == (2, 2)
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_zoom_center_radius_init(imviz_helper):
     """Regression test for https://github.com/spacetelescope/jdaviz/issues/3217"""
     arr = np.ones((10, 10))
@@ -146,6 +151,7 @@ def test_zoom_center_radius_init(imviz_helper):
     assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_radius > 0
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
                                  sky_coord_only_source_catalog):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)

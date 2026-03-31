@@ -563,6 +563,7 @@ def test_distance_tool_reset_on_orientation_change(cubeviz_helper, spectrum1d_cu
     assert mp._obj.distance_display == "N/A"
 
 
+@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_distance_tool_imviz_pixel_only(imviz_helper):
     """Tests the distance tool in a pixel-only context in Imviz."""
     # Use the imviz_helper fixture and load a simple array with no WCS
