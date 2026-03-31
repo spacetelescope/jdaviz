@@ -43,7 +43,6 @@ class TestCatalogs:
         assert not catalogs_plugin.results_available
 
     # testing that variables update correctly when the image/data provided does not have results
-    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_plugin_image_no_result(self, imviz_helper, image_2d_wcs):
         arr = np.ones((10, 10))
         ndd = NDData(arr, wcs=image_2d_wcs)
@@ -240,7 +239,6 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 @pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_catalog_reingestion(imviz_helper, tmp_path):
     # load data that we know has Gaia sources
     arr = np.ones((1489, 2048))
@@ -292,7 +290,6 @@ def test_catalog_reingestion(imviz_helper, tmp_path):
 
 
 @pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # Since we are not really displaying, need this to test zoom.
     viewer = imviz_helper.default_viewer._obj.glue_viewer
@@ -377,7 +374,6 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
                     1.020008, rtol=1e-4)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     # Since we are not really displaying, need this to test zoom.
     viewer = imviz_helper.default_viewer._obj.glue_viewer
@@ -448,7 +444,6 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
         catalogs_plugin.zoom_to_selected(padding=5)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_select_tool(imviz_helper, image_2d_wcs):
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
@@ -511,7 +506,6 @@ def test_select_tool(imviz_helper, image_2d_wcs):
     assert 'jdaviz:selectcatalog' not in toolbar.tools
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
     # Create a table with additional columns
     sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],
@@ -546,7 +540,6 @@ def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
         assert float(item['sharpness']) == tbl['sharpness'][idx]
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_select_catalog_table_rows(imviz_helper, image_2d_wcs):
     """Test the ``select_rows`` functionality on table in plugin."""
 

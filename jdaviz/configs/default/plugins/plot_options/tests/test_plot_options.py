@@ -204,7 +204,6 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
     assert po._obj.contour_spinner is False
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_stretch_spline(imviz_helper):
     image_1 = NDData(make_4gaussians_image(), unit=u.nJy)
     # Load the test data into imviz
@@ -266,7 +265,6 @@ def test_update_knots_mismatched_length():
         stretch.update_knots(x=[0, 0.1, 0.2], y=[0, 0.05])
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_apply_presets(imviz_helper):
     arr = np.arange(36).reshape(6, 6)
     po = imviz_helper.plugins['Plot Options']
@@ -325,7 +323,6 @@ def test_apply_presets(imviz_helper):
         color_ind += 1
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_track_mixed_states(imviz_helper):
     # Initialize two viewer with 3 data each.
     # Each layer of the data will be RGB
@@ -411,7 +408,6 @@ def test_track_mixed_states(imviz_helper):
     assert not po.stretch_params_sync['mixed']
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_segmentation_image(imviz_helper):
     # Make one circular segment for a hypothetical
     # image with one source:
@@ -439,7 +435,6 @@ def test_segmentation_image(imviz_helper):
     assert plot_opts.image_contrast.value == 1.0
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_imviz_select_all_layers(imviz_helper):
     """
     Test to catch a (fixed) bug that was revealed when trying to select

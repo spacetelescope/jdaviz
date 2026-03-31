@@ -27,7 +27,6 @@ def test_alpha_index_exceptions():
         alpha_index(-1)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_uri_to_download_bad_scheme(imviz_helper):
     uri = "file://path/to/file.fits"
     with pytest.raises(ValueError, match="No valid loaders found for input."):
@@ -35,7 +34,6 @@ def test_uri_to_download_bad_scheme(imviz_helper):
 
 
 @pytest.mark.remote_data
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_uri_to_download_nonexistent_mast_file(imviz_helper):
     # this validates as a mast uri but doesn't actually exist on mast:
     uri = "mast:JWST/product/jw00000-no-file-here.fits"
@@ -82,7 +80,6 @@ def test_uri_to_download_specviz2d(specviz2d_helper):
 
 
 @pytest.mark.remote_data
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_load_s3_fits(imviz_helper):
     """Test loading a JWST FITS file from an S3 URI into Imviz."""
     s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501

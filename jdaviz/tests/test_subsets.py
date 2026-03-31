@@ -384,7 +384,6 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
             assert get_subset_type(layer.layer.subset_state) == 'spatial'
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     arr = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
     subset_plugin = imviz_helper.plugins['Subset Tools']._obj
@@ -447,7 +446,6 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'AndNotState', 'OrState']
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_recenter_linked_by_wcs(imviz_helper):
     """Similar test case as TestAdvancedAperPhot.
     Images are only aligned if linked by WCS.
@@ -999,7 +997,6 @@ class TestRegionsFromSubsets:
         assert subsets['Subset 1'][0]['sky_region'] is None
         assert subsets['Subset 1'][1]['sky_region'] is None
 
-    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_get_regions_from_subsets_imviz(self, imviz_helper, spectral_cube_wcs):
         """ Basic tests for retrieving Sky Regions from subsets in Imviz.
         """
@@ -1045,7 +1042,6 @@ class TestRegionsFromSubsets:
         else:
             assert_allclose(sky_region_1.radius.arcsec, 25662.37978)
 
-    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_no_wcs_sky_regions(self, imviz_helper):
         """ Make sure that if sky regions are requested and there is no WCS,
             that it returns None with no error.

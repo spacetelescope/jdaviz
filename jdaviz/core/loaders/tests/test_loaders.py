@@ -362,7 +362,6 @@ def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper.app.data_collection.external_links) == 4
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_load_image_mult_sci_extension(imviz_helper):
     # test loading an image with multiple SCI extensions and
     # ensure that automatic parenting logic is handled correctly

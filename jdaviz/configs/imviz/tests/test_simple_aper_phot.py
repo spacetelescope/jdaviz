@@ -271,7 +271,6 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         assert_array_equal(tbl['sky_center'], None)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 class TestAdvancedAperPhot:
     @pytest.fixture(autouse=True)
     def setup_class(self, imviz_helper):
@@ -341,7 +340,6 @@ class TestAdvancedAperPhot:
         assert_allclose(float(self.phot_plugin.background_value), expected_bg * fac, rtol=0.1)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_annulus_background(imviz_helper):
     gauss4 = make_4gaussians_image()  # The background has a mean of 5 with noise
     ones = np.ones(gauss4.shape)
@@ -422,7 +420,6 @@ def test_annulus_background(imviz_helper):
     assert_allclose(phot_plugin.background_value, bg_4gauss_4)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_fit_radial_profile_with_nan(imviz_helper):
     gauss4 = make_4gaussians_image()  # The background has a mean of 5 with noise
     # Insert NaN
@@ -572,7 +569,6 @@ def test_aper_phot_basic(helper_name, image_2d_wcs, request):
     assert len(tbl) == 1
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_aper_phot_load_table_into_data_collection(imviz_helper, image_2d_wcs):
     """
     Test that aperture photometry table can be loaded back into the data collection

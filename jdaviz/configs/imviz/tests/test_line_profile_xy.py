@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from astropy import units as u
 from astropy.nddata import NDData
 from astropy.wcs.utils import pixel_to_pixel
@@ -10,7 +9,6 @@ from jdaviz.utils import get_top_layer_index
 
 
 class TestLineProfileXYPixelLinked(BaseImviz_WCS_NoWCS):
-    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_plugin(self):
         """Go through plugin logic but does not check plot contents."""
         lp_plugin = self.imviz.plugins['Image Profiles (XY)']._obj
@@ -82,7 +80,6 @@ class TestLineProfileXYPixelLinked(BaseImviz_WCS_NoWCS):
 
 
 class TestLineProfileXYWCSLinked(BaseDeconfiggedImage_WCS_WCS):
-    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     def test_plugin(self):
 
         lp_plugin = self.helper.plugins['Image Profiles (XY)']._obj
@@ -148,7 +145,6 @@ class TestLineProfileXYWCSLinked(BaseDeconfiggedImage_WCS_WCS):
         # assert lp_plugin.selected_y == 9
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_line_profile_with_nan(imviz_helper):
     arr = np.ones((10, 10))
     arr[5, 5] = np.nan

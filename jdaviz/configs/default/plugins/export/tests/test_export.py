@@ -15,7 +15,6 @@ from astropy.wcs import WCS
 
 
 @pytest.mark.usefixtures('_jail')
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 class TestExportSubsets:
     """
     Tests for exporting subsets. Currently limited to non-composite spatial
@@ -375,7 +374,6 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
     assert ep.data_invalid_msg == "Export Disabled: The unit DN / s could not be saved in native FITS format."  # noqa
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 class TestExportPluginPlots:
 
     def test_basic_export_plugin_plots(self, imviz_helper):

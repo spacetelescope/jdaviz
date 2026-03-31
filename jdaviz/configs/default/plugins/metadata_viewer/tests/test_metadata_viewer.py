@@ -6,7 +6,6 @@ from astropy.nddata import NDData
 from jdaviz.configs.default.plugins.metadata_viewer.metadata_viewer import MetadataViewer
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_view_dict(imviz_helper):
     mv = MetadataViewer(app=imviz_helper.app)
     arr = np.zeros((2, 2), dtype=np.float32)

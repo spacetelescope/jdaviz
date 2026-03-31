@@ -70,7 +70,6 @@ class TestVODeconfiggedImageLocal(BaseDeconfiggedImage_WCS_WCS):
         )
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_link_type_autocoord(imviz_helper):
     """
     Tests switching linking types forces recalculation of viewer center coordinates

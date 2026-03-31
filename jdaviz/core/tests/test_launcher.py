@@ -73,7 +73,6 @@ class TestOpenFunction:
     Test the open() function for automatic config detection and
     launching.
     """
-    @pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
     @pytest.mark.parametrize('local_path', ['/some/path', None])
     def test_open_with_local_path_kwarg(self, local_path):
         """

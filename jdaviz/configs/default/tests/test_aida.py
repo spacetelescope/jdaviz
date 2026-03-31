@@ -19,7 +19,6 @@ def assert_angle_close(angle1, angle2, atol=1 * u.arcsec):
     assert_quantity_allclose(difference, desired=0*u.arcsec, atol=atol)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
     imviz_helper.load_data(image_hdu_wcs)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
@@ -49,7 +48,6 @@ def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
     assert viewport['image_label'] == expected_image_label
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_set_viewport_sky(imviz_helper, image_hdu_wcs):
     imviz_helper.load_data(image_hdu_wcs)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
@@ -72,7 +70,6 @@ def test_set_viewport_sky(imviz_helper, image_hdu_wcs):
         viewer.aid.set_viewport(center=u.Quantity([0, 1]))
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_set_viewport_sky_rotation(imviz_helper, image_hdu_wcs):
     imviz_helper.load_data(image_hdu_wcs)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
@@ -92,7 +89,6 @@ def test_set_viewport_sky_rotation(imviz_helper, image_hdu_wcs):
     )
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
     # arrange
     imviz_helper.load_data(image_hdu_wcs)
@@ -117,7 +113,6 @@ def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
     )
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
     imviz_helper.load_data(image_hdu_wcs)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
@@ -138,7 +133,6 @@ def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
     np.testing.assert_allclose(new_viewport['fov'], new_viewport_settings['fov'], atol=1e-4)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_set_rotation_not_aligned(imviz_helper, image_hdu_wcs):
     imviz_helper.load_data(image_hdu_wcs)
     viewer = imviz_helper.app.get_viewer('imviz-0')
@@ -151,7 +145,6 @@ def test_set_rotation_not_aligned(imviz_helper, image_hdu_wcs):
         viewer.aid.set_viewport(**new_viewport_settings)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_get_fov_no_wcs(imviz_helper, image_hdu_nowcs):
     imviz_helper.load_data(image_hdu_nowcs)
     viewer = imviz_helper.app.get_viewer('imviz-0')

@@ -1,12 +1,10 @@
 import asdf
-import pytest
 import numpy as np
 import astropy.units as u
 
 from jdaviz.configs.imviz.tests.utils import create_example_gwcs
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_asdf_not_rdm(imviz_helper):
     # test support for ASDF files that look like Roman files
     # for users with or without roman_datamodels:

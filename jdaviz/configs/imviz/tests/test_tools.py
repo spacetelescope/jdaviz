@@ -78,7 +78,6 @@ class TestPanZoomTools(BaseDeconfiggedImage_WCS_WCS):
         t_linkedpan.deactivate()
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 @pytest.mark.parametrize("align_by", ["Pixels", "WCS"])
 def test_panzoom_click_center_linking(imviz_helper, align_by):
     """https://github.com/spacetelescope/jdaviz/issues/2749"""
@@ -119,7 +118,6 @@ def test_panzoom_click_center_linking(imviz_helper, align_by):
     assert_allclose(cur_cen.dec.deg, real_cen.dec.deg)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_blink(imviz_helper):
     viewer = imviz_helper.default_viewer._obj.glue_viewer
 
@@ -149,7 +147,6 @@ def test_blink(imviz_helper):
     assert viewer.top_visible_data_label == 'image_2'
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_compass_open_while_load(imviz_helper):
     plg = imviz_helper.plugins['Compass']
     plg._obj.plugin_opened = True
@@ -159,7 +156,6 @@ def test_compass_open_while_load(imviz_helper):
     assert len(imviz_helper.app.data_collection) == 1
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_tool_visibility(imviz_helper):
     imviz_helper.load_data(np.ones((2, 2)))
     tb = imviz_helper.default_viewer._obj.glue_viewer.toolbar

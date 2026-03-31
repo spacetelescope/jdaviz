@@ -50,7 +50,6 @@ def test_rangezoom(specviz_helper, spectrum1d):
     assert_allclose(_get_lims(sv), [6500, 7000, 14, 15])
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_stretch_bounds(imviz_helper):
     imviz_helper.load_data(np.ones((2, 2)))
 
@@ -76,7 +75,6 @@ def test_stretch_bounds(imviz_helper):
     plot_options.stretch_histogram.toolbar.active_tool = None
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_stretch_bounds_and_spline(imviz_helper):
 
     # As the histogram randomly samples the array, we should make sure the
@@ -111,7 +109,6 @@ def test_stretch_bounds_and_spline(imviz_helper):
         assert np.allclose(po._obj.stretch_params_value["knots"], knots_after_drag_move)
 
 
-@pytest.mark.filterwarnings("ignore:.*show_in_viewer.*:DeprecationWarning")
 def test_stretch_bounds_click_outside_threshold(imviz_helper):
     image_1 = NDData(make_4gaussians_image(), unit=u.nJy)
     imviz_helper.load_data(image_1)
