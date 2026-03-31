@@ -10,6 +10,9 @@
       >
         <v-btn
             icon
+            variant="text"
+            size="small"
+            density="default"
             v-bind="props"
 
             :disabled="!delete_enabled"

@@ -11,6 +11,9 @@
       >
         <v-btn
           icon
+          variant="text"
+          size="small"
+          density="default"
           :class="loaded_n_data > 0 ? 'invert-if-dark' : 'invert-if-dark pulse'"
           v-bind="props"
 

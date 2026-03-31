@@ -91,7 +91,7 @@
               </v-list-item-action>
               <div class="v-list-item-content"
                 v-if="loaded_n_data > 0"
-                style="display: inline-block"
+                style="min-width: 0; flex: 1 1 auto;"
               >
                 <j-tooltip
                   v-if="orientation_enabled"
@@ -194,8 +194,8 @@
                             disabled="true"
                           />
                       </v-list-item-action>
-                      <div class="v-list-item-content">
-                        <div style="display: flex; align-items: flex-start; line-height: 28px; min-width: 0;">
+                      <div class="v-list-item-content" style="min-width: 0; flex: 1 1 auto;">
+                        <div style="display: flex; align-items: center; line-height: 22px; min-width: 0;">
                           <span style="display: inline-flex; align-items: center; flex-shrink: 0; margin-right: 4px;">
                             <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
                             <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
@@ -204,6 +204,7 @@
                           <j-rename-text
                             :value="item.label"
                             :show-pencil="true"
+                            font-size="14px"
                             :rename-error-message="rename_error_messages[item.label] || ''"
                             :api-hint-rename="api_hints_enabled ? 'dm.rename(\'' + item.label + '\', \'<new_name>\')' : ''"
                             :show-api-hint="api_hints_enabled"
@@ -248,7 +249,22 @@
               :icons="icons"
             />
             <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
-              <div class="v-list-item-content" style="display: inline-block">
+              <div class="v-list-item-content" style="display: flex; justify-content: flex-end; align-items: center; gap: 4px; width: 100%; min-width: 0;">
+                <j-tooltip
+                  :span_style="'display: inline-block; float: right; ' + (info_enabled ? '' : 'cursor: default;')"
+                  :tooltipcontent="info_tooltip"
+                >
+                  <v-btn
+                    icon
+                    variant="text"
+                    size="small"
+                    density="default"
+                    @click="view_info"
+                    :disabled="!info_enabled"
+                  >
+                    <v-icon class="invert-if-dark">mdi-label</v-icon>
+                  </v-btn>
+                </j-tooltip>
                 <data-menu-remove
                   :delete_enabled="delete_enabled"
                   :delete_tooltip="delete_tooltip"
@@ -259,18 +275,6 @@
                   @remove-from-viewer="remove_from_viewer"
                   @remove-from-app="remove_from_app"
                 />
-                <j-tooltip
-                  :span_style="'display: inline-block; float: right; ' + (info_enabled ? '' : 'cursor: default;')"
-                  :tooltipcontent="info_tooltip"
-                >
-                  <v-btn
-                    icon
-                    @click="view_info"
-                    :disabled="!info_enabled"
-                  >
-                    <v-icon class="invert-if-dark">mdi-label</v-icon>
-                  </v-btn>
-                </j-tooltip>
                 <data-menu-subset-edit
                   :subset_edit_enabled="subset_edit_enabled"
                   :subset_resize_in_viewer_enabled="subset_resize_in_viewer_enabled"
@@ -507,7 +511,7 @@
   }
 </script>
 
-<style scoped>
+<style>
   .viewer-label-container {
     position: absolute;
     right: 0;
@@ -536,31 +540,41 @@
     padding-top: 0px !important;
     padding-bottom: 0px !important;
   }
-  .v-list-item__icon, .v-list-item__content, .v-list-item__action {
-    /* even denser than dense */
+  .dm-header,
+  .dm-footer,
+  .layer-select {
+    min-height: 40px !important;
+    padding-inline: 6px !important;
+  }
+  .dm-header > .v-list-item__content,
+  .layer-select > .v-list-item__content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
     padding-top: 4px !important;
     padding-bottom: 4px !important;
-    margin-top: 2px !important;
-    margin-bottom: 2px !important;
   }
-  .v-list-item__icon {
-    margin-top: 6px !important;
+  .dm-header > .v-list-item__content > .v-list-item-action,
+  .layer-select > .v-list-item__content > .v-list-item-action {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    align-self: center;
+    flex: 0 0 auto;
+  }
+  .dm-header > .v-list-item__content > .v-list-item-action:last-child,
+  .layer-select > .v-list-item__content > .v-list-item-action:last-child {
+    margin-left: auto !important;
+  }
+  .layer-select > .v-list-item__content > .v-list-item-action:first-child {
+    margin-right: 6px !important;
   }
   .layer-select {
     /* spacing between entries so selections are more apparent */
     margin-top: 1px !important;
     margin-bottom: 1px !important;
-  }
-  /* Reduce padding between icon, content, and action in layer items */
-  .layer-select > .v-list-item__icon {
-    margin-right: 12px !important;
-  }
-  .layer-select > .v-list-item__content {
-    margin-right: 0 !important;
-    padding-right: 0 !important;
-  }
-  .layer-select > .v-list-item__action {
-    margin-left: 2px !important;
   }
   .layer-select:nth-child(even) {
     /* alternating row colors */

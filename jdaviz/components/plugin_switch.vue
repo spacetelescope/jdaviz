@@ -2,6 +2,9 @@
   <span v-if="use_icon">
     <v-btn
       icon
+      variant="text"
+      size="small"
+      density="default"
       @mouseover="$emit('mouseover')"
       @mouseleave="$emit('mouseleave')"
       @click.stop="$emit('update:value', !value); $emit('click', !value)"
