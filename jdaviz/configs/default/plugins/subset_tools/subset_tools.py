@@ -200,7 +200,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         """
         Update server_is_remote when settings change.
         """
-        self.server_is_remote = new_settings_dict.get('server_is_remote', False)
+        if 'server_is_remote' in new_settings_dict:
+            self.server_is_remote = new_settings_dict.get('server_is_remote')
 
     @property
     def user_api(self):
