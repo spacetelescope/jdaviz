@@ -37,6 +37,33 @@ def on_kernel_start():
     return on_kernel_close
 
 
+def get_app_or_launcher():
+    if config is None or not hasattr(jdaviz.configs, config):
+        if config == 'Flexible':
+            viz = jdaviz.gca()
+            if not len(data_list):
+                jdaviz.loaders['file'].open_in_tray()
+            else:
+                with jdaviz.batch_load():
+                    for filename, format in zip(data_list, format_list):
+                        jdaviz.load(filename, format=format)
+        else:
+            from jdaviz.core.launcher import Launcher
+            launcher = Launcher(height='100vh',
+                                filepath=(data_list[0] if len(data_list) == 1 else ''))
+            return launcher.main_with_launcher
+
+    else:
+        viz = getattr(jdaviz.configs, config)(verbosity=jdaviz_verbosity,
+                                              history_verbosity=jdaviz_history_verbosity)
+        for data in data_list:
+            if config == 'Mosviz':
+                viz.load(directory=data, **load_data_kwargs)
+            else:
+                viz.load(data, **load_data_kwargs)
+
+    return viz.app
+
 @solara.component
 def Page():
     solara.Title("Jdaviz")
@@ -55,29 +82,6 @@ def Page():
 
     solara.Style(Path(__file__).parent / "solara.css")
 
-    if config is None or not hasattr(jdaviz.configs, config):
-        if config == 'Flexible':
-            viz = jdaviz.gca()
-            if not len(data_list):
-                jdaviz.loaders['file'].open_in_tray()
-            else:
-                with jdaviz.batch_load():
-                    for filename, format in zip(data_list, format_list):
-                        jdaviz.load(filename, format=format)
-        else:
-            from jdaviz.core.launcher import Launcher
-            launcher = Launcher(height='100vh',
-                                filepath=(data_list[0] if len(data_list) == 1 else ''))
-            solara.display(launcher.main_with_launcher)
-            return
+    app_or_launcher = solara.use_memo(get_app_or_launcher, [data_list, format_list])
 
-    else:
-        viz = getattr(jdaviz.configs, config)(verbosity=jdaviz_verbosity,
-                                              history_verbosity=jdaviz_history_verbosity)
-        for data in data_list:
-            if config == 'Mosviz':
-                viz.load(directory=data, **load_data_kwargs)
-            else:
-                viz.load(data, **load_data_kwargs)
-
-    solara.display(viz.app)
+    solara.display(app_or_launcher)

@@ -70,10 +70,10 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     os.environ['JDAVIZ_START_DIR'] = os.path.abspath('.')
 
     from jdaviz import solara
-    print([f[0] for f in file_formats])
     solara.config = layout.capitalize()
     solara.data_list = file_list
-    solara.format_list = [f[0] for f in file_formats]  # We get a list of lists from argparse
+    if file_formats is not None:
+        solara.format_list = [f[0] for f in file_formats]  # We get a list of lists from argparse
 
     if layout == 'mosviz':
         solara.load_data_kwargs = {'instrument': instrument}
