@@ -48,7 +48,6 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     * ``dq_layer_opacity``: Opacity of the data quality layer.
     * ``decoded_flags``: List of decoded flags from the selected flag map.
     * ``flags_filter``: List of flags to display.
-    * ``flag_map``: Name of the selected flag map.
     * ``flag_map_definitions_selected``: Dictionary of the selected flag map.
     """
     template_file = __file__, "data_quality.vue"

@@ -9,6 +9,9 @@ Plugins API
 .. automodapi:: jdaviz.configs.default.plugins.collapse.collapse
    :no-inheritance-diagram:
 
+.. automodapi:: jdaviz.configs.default.plugins.data_quality.data_quality
+   :no-inheritance-diagram:
+
 .. automodapi:: jdaviz.configs.default.plugins.data_tools.data_tools
    :no-inheritance-diagram:
 

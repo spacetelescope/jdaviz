@@ -73,7 +73,7 @@ original units and counts.
 
 **Magnitude Conversion**:
 If a flux scaling factor is provided, magnitude is calculated as:
-$-2.5 * \text{log}(\text{flux} / \text{flux\_scaling})$
+:math:`-2.5 * \text{log}(\text{flux} / \text{flux\_scaling})`
 
 **Pixel Area**:
 For surface brightness data (units like MJy/sr), pixel area in arcsec² must be
