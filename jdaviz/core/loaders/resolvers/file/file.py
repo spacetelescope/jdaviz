@@ -41,6 +41,8 @@ class FileResolver(BaseResolver):
     @classmethod
     def from_input(cls, app, inp, **kwargs):
         # prevent errors from solara being raised if input is not valid
+        if not isinstance(inp, (str, bytes, os.PathLike)):
+            raise ValueError(f"'{inp}' is not a valid file path.")
         if not os.path.exists(inp) or not os.path.isfile(inp):
             raise ValueError(f"'{inp}' is not a valid file path.")
         return super().from_input(app, inp, **kwargs)
