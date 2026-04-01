@@ -96,8 +96,8 @@ The columns are as follow:
   :attr:`~photutils.aperture.ApertureStats.biweight_midvariance`: Basic statistics
   from the aperture.
 * :attr:`~photutils.aperture.ApertureStats.fwhm`,
-  :attr:`~photutils.aperture.ApertureStats.semimajor_axis`,
-  :attr:`~photutils.aperture.ApertureStats.semiminor_axis`,
+  ``semimajor_axis`` (or ``semimajor_sigma`` for Photutils <3),
+  ``semiminor_axis`` (or ``semiminor_sigma`` for Photutils <3),
   :attr:`~photutils.aperture.ApertureStats.orientation`,
   :attr:`~photutils.aperture.ApertureStats.eccentricity`: Properties of a 2D
   Gaussian function that has the same second-order central moments as the source.
