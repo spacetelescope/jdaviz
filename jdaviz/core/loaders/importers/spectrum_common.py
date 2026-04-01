@@ -492,7 +492,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         # Find flux column
         flux_col = None
         for orig_name in hdu.columns.names:
-            if 'FLUX' in orig_name.upper():
+            if 'FLUX' in orig_name.upper() and 'ERR' not in orig_name.upper():
                 flux_col = orig_name
                 break
 
@@ -509,9 +509,12 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             flux_data = flux_data[0]
 
         # Get units from column metadata
-        wave_unit = (u.Unit(hdu.columns[wave_col].unit) if hdu.columns[wave_col].unit
+        wave_unit = (u.Unit(hdu.columns[wave_col].unit)
+                     if getattr(hdu.columns[wave_col], 'unit', None) is not None
                      else u.dimensionless_unscaled)
-        flux_unit = u.Unit(hdu.columns[flux_col].unit) if hdu.columns[flux_col].unit else u.count
+        flux_unit = (u.Unit(hdu.columns[flux_col].unit)
+                     if getattr(hdu.columns[flux_col], 'unit', None) is not None
+                     else u.count)
 
         # Handle uncertainty if present
         unc = None
@@ -527,7 +530,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if unc is None:
             for orig_name in hdu.columns.names:
                 if any(err_name in orig_name.upper()
-                       for err_name in ['ERR', 'SIGMA', 'UNCERTAINTY']):
+                       for err_name in ['ERR', 'ERROR', 'SIGMA', 'UNCERTAINTY']):
                     unc_data = hdu.data[orig_name]
                     if unc_data.ndim == 2 and unc_data.shape[0] == 1:
                         unc_data = unc_data[0]
