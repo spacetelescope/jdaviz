@@ -83,6 +83,8 @@ def Page():
 
     solara.Style(Path(__file__).parent / "solara.css")
 
-    app_or_launcher = solara.use_memo(get_app_or_launcher, [data_list, format_list])
+    app_or_launcher = solara.use_memo(get_app_or_launcher, [config, data_list, format_list])
 
-    solara.display(app_or_launcher)
+    children = [app_or_launcher]
+    solara.Column(children=children, gap="0px")
+    #solara.display(app_or_launcher)
