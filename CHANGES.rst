@@ -67,6 +67,8 @@ New Features
   viewer, and use unit converison functionality when there is moment map data in
   an Image or 3D Spectrum viewer. [#4085]
 
+- Fixed batch aperture photometry mode in deconfigged. [#4106]
+
 - Generalize Data Quality plugin to work for images in deconfigged. [#4110]
 
 Cubeviz
@@ -110,6 +112,8 @@ Specviz2d
 
 Bug Fixes
 ---------
+
+- Fix issue with treat_table_as_query switch where it disappeared entirely when switched 'off' [#4102]
 
 Cubeviz
 ^^^^^^^
