@@ -78,11 +78,8 @@ def test_plugin(specviz2d_helper):
     trace = pext.export_trace(add_data=True)  # overwrite
     assert isinstance(trace, tracing.ArrayTrace)
 
-    # TODO: Investigate extra hidden mark from glue-jupyter, see
-    # https://github.com/spacetelescope/jdaviz/pull/2478#issuecomment-1731864411
     # 3 new trace objects should have been loaded and plotted in the spectrum-2d-viewer
-    # and there are 2 invisible marks from the cross-dispersion profile plugin
-    assert len(sp2dv.figure.marks) in [18, 20]
+    assert len(sp2dv.figure.marks) == 16
 
     # interact with background section, check marks
     pext.trace_trace.selected = 'New Trace'

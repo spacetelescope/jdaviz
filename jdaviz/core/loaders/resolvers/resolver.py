@@ -177,7 +177,10 @@ class FormatSelect(SelectPluginComponent):
                     else:
                         self._invalid_importers[label] = 'Input considered invalid by importer'
 
-        self.items = all_formats
+        # Sort to move Catalog to the end of the list
+        catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
+        other_formats = [f for f in all_formats if f['label'] != 'Catalog']
+        self.items = other_formats + catalog_formats
         self._apply_default_selection()
 
 
@@ -554,10 +557,25 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # if the input could be parsed as a table, try to interpret it as
         # either an observation table or file table. parsed_input_table
         # will be None if it could not be parsed as a table.
-        if self.treat_table_as_query and parsed_input_table is not None:
+        if parsed_input_table is not None:
             file_table = self._parsed_input_to_file_table(parsed_input_table)
             observation_table = self._parsed_input_to_observation_table(parsed_input_table)
-            if file_table is not None:
+
+            is_query = file_table is not None or observation_table is not None
+            if is_query and not self.treat_table_as_query:
+                # Keep parsed_input_is_query True so the toggle switch stays visible.
+                # Set everything else in the meantime.
+                self.parsed_input_is_resolvable = ''
+                self.parsed_input_is_empty = False
+                self.parsed_input_is_query = True
+                self.observation_table_populated = False
+                self.file_table_populated = False
+                self.observation_table._clear_table()
+                self.file_table._clear_table()
+                self._update_format_items()
+                return
+
+            if self.treat_table_as_query and file_table is not None:
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
 
@@ -572,8 +590,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.file_table_populated = True
                 return
 
-            observation_table = self._parsed_input_to_observation_table(parsed_input_table)
-            if observation_table is not None:
+            if self.treat_table_as_query and observation_table is not None:
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
 

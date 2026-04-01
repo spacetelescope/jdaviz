@@ -76,6 +76,10 @@ class VOResolver(BaseConeSearchResolver):
         that serve data in that waveband around the source.
         Then update the dropdown accordingly.
         """
+        # Reset output and parsed input disabled messages
+        # since we're changing the query parameters
+        self.parsed_input_is_resolvable = ''
+
         # If waveband was changed to nothing, immediately quit
         # Don't throw an error due to trigger by plugin init
         if not self.waveband_selected:

@@ -768,3 +768,41 @@ def test_footprint_selection_skewer_overlapping(deconfigged_helper, image_nddata
     )
     ldr._obj._on_region_select(msg_ctrl_remove)
     assert len(ldr._obj.observation_table.selected_rows) == 0
+
+
+def test_treat_table_as_query_toggle_keeps_switch_visible(deconfigged_helper):
+    """
+    Test that toggling treat_table_as_query off keeps parsed_input_is_query=True.
+    This ensures the treat_table_as_query switch remains visible in the UI.
+    """
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2']
+    table['url'] = ['https://example.com/obs1.fits',
+                    'https://example.com/obs2.fits']
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+
+    # Verify initial state
+    assert ldr._obj.treat_table_as_query is True
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.file_table_populated is True
+
+    # Toggle treat_table_as_query off
+    ldr.treat_table_as_query = False
+
+    # Verify that parsed_input_is_query remains True so the switch stays visible
+    assert ldr._obj.treat_table_as_query is False
+    assert ldr._obj.parsed_input_is_query is True
+    # Tables should be hidden
+    assert ldr._obj.file_table_populated is False
+    assert ldr._obj.observation_table_populated is False
+
+    # Toggle treat_table_as_query back on
+    ldr.treat_table_as_query = True
+
+    # Verify that tables are shown again
+    assert ldr._obj.treat_table_as_query is True
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.file_table_populated is True
