@@ -7,6 +7,7 @@ import solara.lab
 import ipygoldenlayout
 import ipysplitpanes
 import ipyvue
+import ipyvuetify
 
 import jdaviz
 from jdaviz.app import custom_components
@@ -37,7 +38,25 @@ def on_kernel_start():
     return on_kernel_close
 
 
+def create_shared_widgets():
+    ipysplitpanes.SplitPanes()
+    ipygoldenlayout.GoldenLayout()
+    for name, path in custom_components.items():
+        ipyvue.register_component_from_file(None, name,
+                                            os.path.join(os.path.dirname(jdaviz.__file__), path))
+
+    ipyvue.register_component_from_file('g-viewer-tab', "container.vue", jdaviz.__file__)
+
+
 def get_app_or_launcher():
+    '''
+    Return either the app instance or the launcher page as appropriate
+    '''
+    main = ipyvuetify.Sheet(class_="mx-25",
+                 attributes={"id": "popout-widget-container"},
+                 color="#00212C",
+                 height='100vh')
+
     if config is None or not hasattr(jdaviz.configs, config):
         if config == 'Flexible':
             viz = jdaviz.gca()
@@ -49,7 +68,7 @@ def get_app_or_launcher():
                         jdaviz.load(filename, format=format)
         else:
             from jdaviz.core.launcher import Launcher
-            launcher = Launcher(height='100vh',
+            launcher = Launcher(main=main, height='100vh',
                                 filepath=(data_list[0] if len(data_list) == 1 else ''))
             return launcher.main_with_launcher
 
@@ -62,29 +81,27 @@ def get_app_or_launcher():
             else:
                 viz.load(data, **load_data_kwargs)
 
-    return viz.app
+    main.color = 'transparent'
+    main.children = [viz.app]
+    return main
 
+def Jdaviz():
+    # Create the shared widgets, using use_memo to ensure we only do it once
+    solara.use_memo(create_shared_widgets, [])
+
+    app_or_launcher = solara.use_memo(get_app_or_launcher, [config, data_list, format_list])
+
+    #return app_or_launcher
+    return solara.Column(children=[app_or_launcher])
 
 @solara.component
 def Page():
-    solara.Title("Jdaviz")
-
     if config is None:
         solara.Text("No config defined")
         return
 
-    ipysplitpanes.SplitPanes()
-    ipygoldenlayout.GoldenLayout()
-    for name, path in custom_components.items():
-        ipyvue.register_component_from_file(None, name,
-                                            os.path.join(os.path.dirname(jdaviz.__file__), path))
-
-    ipyvue.register_component_from_file('g-viewer-tab', "container.vue", jdaviz.__file__)
-
     solara.Style(Path(__file__).parent / "solara.css")
 
-    app_or_launcher = solara.use_memo(get_app_or_launcher, [config, data_list, format_list])
-
-    children = [app_or_launcher]
-    solara.Column(children=children, gap="0px")
-    #solara.display(app_or_launcher)
+    solara.Title("Jdaviz")
+    # solara.display(Jdaviz())
+    return Jdaviz()
