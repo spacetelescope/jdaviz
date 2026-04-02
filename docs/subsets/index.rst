@@ -97,7 +97,8 @@ performed. Click Recenter to change its parameters and move it to the calculated
     manually edit the subset (see below) or load your own aperture object
     (:ref:`imviz-import-regions-api`).
 
-Note that angle is reported in degrees as a counter-clockwise rotation about the center.
+Note that angle is reported in degrees as a counter-clockwise rotation about the center. Recentering and rotating subsets
+are only applicable to spatial subsets and are unavailable for spectral subsets.
 
 From the API
 ------------
@@ -150,9 +151,3 @@ If you set a value for ``edit_subset`` but not ``combination_mode``, the assumpt
 that the new region is replacing the existing subset named in ``edit_subset``.
 This API method acts independently of the UI so all settings from before ``import_region``
 was called will be restored afterward.
-
-See Also
-========
-
-- :doc:`../specviz/plugins` - For spectral subset creation
-- Individual subset type pages for detailed information
