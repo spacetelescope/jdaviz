@@ -625,3 +625,34 @@ def test_table_spectrum_flux_reduced(deconfigged_helper, table_spectrum_hdulist_
     # Verify uncertainty was loaded from ERR_REDUCED column
     assert spec.uncertainty is not None
     assert spec.uncertainty.array.shape == (150,)
+
+
+@pytest.fixture
+def table_spectrum_no_flux_column():
+    """
+    Create a Binary Table HDU with WAVE column but NO recognized flux column.
+    This tests the case where a binary HDU doesn't match prescribed flux column names.
+    """
+    n_points = 100
+    wave = np.linspace(1000, 2000, n_points)
+    data = np.random.random(n_points) * 1e-13  # Some data with non-flux column name
+
+    col_wave = fits.Column(name='WAVE', format=f'{n_points}E', unit='Angstrom', array=[wave])
+    # Use a column name that does NOT match any flux pattern
+    col_data = fits.Column(name='INTENSITY', format=f'{n_points}E',
+                           unit='counts', array=[data])
+
+    hdu = fits.BinTableHDU.from_columns([col_wave, col_data])
+    hdu.name = 'SPECTRUM'
+
+    primary = fits.PrimaryHDU()
+    return fits.HDUList([primary, hdu])
+
+
+def test_table_spectrum_no_flux_column(deconfigged_helper, table_spectrum_no_flux_column):
+    """Test that Binary Table HDU without recognized flux column names is not loaded as spectrum."""
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table_spectrum_no_flux_column
+
+    # Should NOT detect as 1D Spectrum since there's no recognized flux column
+    assert '1D Spectrum' not in ldr.format.choices
