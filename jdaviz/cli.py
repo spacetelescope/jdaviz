@@ -117,9 +117,10 @@ def _main(config=None):
                             help='Configuration to use.', deprecated=True)
     if (config == "mosviz") or ("mosviz" in sys.argv):
         filepaths_nargs = 1
-    parser.add_argument('filepaths', type=str, nargs=filepaths_nargs, default=None,
+    parser.add_argument('-fp', '--filepath', type=str, nargs=filepaths_nargs, default=None,
+                        action='append',
                         help='The paths to the files to be loaded into the Jdaviz application.')
-    parser.add_argument('--file_formats', type=str, nargs=filepaths_nargs, default=None,
+    parser.add_argument('-ff', '--file_format', type=str, nargs=filepaths_nargs, default=None,
                         action='append',
                         help='The formats of the files to be loaded into the Jdaviz application.')
     parser.add_argument('--instrument', type=str, default='nirspec',
