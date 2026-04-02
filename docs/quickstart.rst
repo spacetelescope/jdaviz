@@ -26,10 +26,25 @@ these deprecated configurations are still available from the command line. For c
 configurations during their deprecation period, you can specify ``--layout=flexible`` to launch the new
 generalized Jdaviz from the command line. To load a file into a configuration::
 
-    jdaviz --layout=[imviz|specviz|cubeviz|mosviz|specviz2d|flexible] /path/to/data/file
+    jdaviz --layout=[imviz|specviz|cubeviz|mosviz|specviz2d|flexible] --filepath=/path/to/data/file --file_format=FileFormat
 
 This will warn that the ``--layout`` argument is deprecated. In the future, running the ``jdaviz``
 command will simply launch the generalized Jdaviz application without going through a launcher page.
+You can also specify filepath and file format using the shorter ``-fp`` and ``-ff``, respectively, which
+may be useful if loading multiple files. Note that the file format is generally required because many files can be read,
+for example, using either the image loader or the catalog loader. The current list of supported file formats is:
+
+    * Image
+    * Catalog
+    * 1D Spectrum
+    * 2D Spectrum
+    * 3D Spectrum
+    * Ramp
+    * Ramp Integration
+    * Subset
+    * Trace
+    * Line List
+    * Footprint
 
 Currently, running the command ``jdaviz`` without any additional input will still run a launcher. To launch the
 modern generalized ``jdaviz`` from here, click the Jdaviz logo in the top right.
