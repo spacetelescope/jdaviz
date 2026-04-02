@@ -88,6 +88,9 @@ def Jdaviz():
     def load_app():
         set_app_or_launcher(get_app_or_launcher())
 
+    # We need to use use_effect so that the initial Solara render happens before the app
+    # instantiates internal Solara components (file_drop, file_browser), which would otherwise
+    # be detected and rendered at the top level outside the app.
     solara.use_effect(load_app, [config, data_list, format_list])
 
     return solara.Column(children=[app_or_launcher] if app_or_launcher is not None else [])
@@ -102,5 +105,4 @@ def Page():
     solara.Style(Path(__file__).parent / "solara.css")
 
     solara.Title("Jdaviz")
-    # solara.display(Jdaviz())
     Jdaviz()
