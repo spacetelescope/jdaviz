@@ -53,9 +53,9 @@ def get_app_or_launcher():
     Return either the app instance or the launcher page as appropriate
     '''
     main = ipyvuetify.Sheet(class_="mx-25",
-                 attributes={"id": "popout-widget-container"},
-                 color="#00212C",
-                 height='100vh')
+                            attributes={"id": "popout-widget-container"},
+                            color="#00212C",
+                            height='100vh')
 
     if config is None or not hasattr(jdaviz.configs, config):
         if config == 'Flexible':
@@ -85,14 +85,16 @@ def get_app_or_launcher():
     main.children = [viz.app]
     return main
 
+
 def Jdaviz():
     # Create the shared widgets, using use_memo to ensure we only do it once
     solara.use_memo(create_shared_widgets, [])
 
     app_or_launcher = solara.use_memo(get_app_or_launcher, [config, data_list, format_list])
 
-    #return app_or_launcher
+    # return app_or_launcher
     return solara.Column(children=[app_or_launcher])
+
 
 @solara.component
 def Page():
