@@ -371,6 +371,8 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
         'url': 'URL',
     }
 
+    links.append({'text': 'Overview', 'href': os.path.join(directory, 'index')})
+
     for filename in sorted(os.listdir(dir_path)):
         if filename.endswith('.rst') and filename != 'index.rst' and filename != 'extensions.rst':
             # Convert filename to title (e.g., 'file_drop.rst' -> 'File Drop')
