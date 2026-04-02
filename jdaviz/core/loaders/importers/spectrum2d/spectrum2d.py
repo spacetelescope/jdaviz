@@ -160,6 +160,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # Cache the spectral axis unit on load to avoid accessing a potentially
         # closed file reference later when the filter is called
         self._spectrum_unit = getattr(spectrum.spectral_axis, 'unit', None)
+        # Re-select default viewer for extracted spectrum now that we know the unit
+        self.ext_viewer.select_default()
         return spectrum
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
@@ -198,4 +200,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         self.app.hub.broadcast(msg)
 
         if ext is not None:
+            # Re-select default viewer in case viewer choices have changed
+            # (e.g., existing viewer is now incompatible due to unit mismatch)
+            self.ext_viewer.select_default()
             self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
