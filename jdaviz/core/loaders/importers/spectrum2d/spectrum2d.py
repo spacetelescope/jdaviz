@@ -47,6 +47,9 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Initialize _spectrum_unit before filters are added (set in output property)
+        self._spectrum_unit = None
+
         if self.default_data_label_from_resolver:
             self.data_label.default = self.default_data_label_from_resolver
         elif self.app.config == 'specviz2d':
@@ -92,6 +95,10 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # Use the cached spectrum unit instead of accessing it from the
             # spectrum object, which may reference a closed file in some situations
             spectrum_unit = self._spectrum_unit
+
+            # If spectrum_unit hasn't been cached yet, allow loading
+            if spectrum_unit is None:
+                return True
 
             if not isinstance(spectrum_unit, u.Unit):
                 spectrum_unit = u.Unit(spectrum_unit)
