@@ -1,6 +1,6 @@
 <template>
   <v-tooltip v-if="getTooltipHtml()" bottom :open-delay="getOpenDelay()"
-      :nudge-bottom="getNudgeBottom()" z-index="10000">
+      :nudge-bottom="getNudgeBottom()">
     <template v-slot:activator="{ on, attrs }">
       <span v-bind="attrs" v-on="on" :style="getSpanStyle()">
         <slot></slot>
