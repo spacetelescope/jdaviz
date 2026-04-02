@@ -351,8 +351,17 @@ def is_not_wcs_only(layer):
     return not is_wcs_only(layer)
 
 
-def layer_is_not_dq(data):
-    return '[DQ' not in data.label
+def layer_is_dq(lyr):
+    data = getattr(lyr, 'data', None)
+    metadata = getattr(data, 'meta', {})
+    extension = metadata.get('_extname', '')
+    if extension is None:
+        return False
+    return extension.upper() == 'DQ'
+
+
+def layer_is_not_dq(lyr):
+    return not layer_is_dq(lyr)
 
 
 def standardize_metadata(metadata):

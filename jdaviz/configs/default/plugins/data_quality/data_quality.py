@@ -233,13 +233,16 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             stretch_object = dq_layer.state.stretch_object
             stretch_object.flags = flag_bits
 
-            with delay_callback(dq_layer.state, 'alpha', 'cmap', 'v_min', 'v_max'):
+            with delay_callback(dq_layer.state, 'alpha', 'cmap', 'v_min', 'v_max', 'cmap_bad'):
                 if len(flag_bits):
                     dq_layer.state.v_min = min(flag_bits)
                     dq_layer.state.v_max = max(flag_bits)
 
                 dq_layer.state.alpha = self.dq_layer_opacity
                 dq_layer.state.cmap = cmap
+
+                # make un-flagged pixels in DQ array transparent:
+                dq_layer.state.cmap_bad = (0, 0, 0, 0)
 
     def get_dq_layers(self, viewers=None):
         if self.dq_layer_selected == '':
@@ -311,7 +314,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         for dq_layer in dq_layers:
             with delay_callback(
-                    dq_layer.state, 'v_min', 'v_max', 'alpha', 'stretch', 'cmap'
+                    dq_layer.state, 'v_min', 'v_max', 'alpha', 'stretch', 'cmap', 'cmap_bad'
             ):
                 # set correct stretch and limits:
                 # dq_layer.state.stretch = 'lookup'
@@ -334,6 +337,9 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
                     dq_layer.state.v_max = max(flag_bits)
 
                 dq_layer.state.alpha = self.dq_layer_opacity
+
+                # make un-flagged pixels in DQ array transparent:
+                dq_layer.state.cmap_bad = (0, 0, 0, 0)
 
     def update_visibility(self, index):
         self.decoded_flags[index]['show'] = not self.decoded_flags[index]['show']

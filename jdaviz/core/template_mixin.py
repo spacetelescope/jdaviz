@@ -69,8 +69,8 @@ from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
-    _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global,
-    wildcard_match, CONFIGS_WITH_LOADERS
+    _wcs_only_label, layer_is_not_dq as utils_layer_is_not_dq,
+    wildcard_match, CONFIGS_WITH_LOADERS, layer_is_dq as utils_layer_is_dq
 )
 
 
@@ -2281,7 +2281,7 @@ class LayerSelect(SelectPluginComponent):
             return not is_trace(lyr)
 
         def is_dq_layer(lyr):
-            return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
+            return utils_layer_is_dq(lyr)
 
         def catalog_has_correct_coords_based_on_link_type(lyr):
             """
@@ -4823,7 +4823,7 @@ class DatasetSelect(SelectPluginComponent):
                 return True
             return data_row == app_row
 
-        layer_is_not_dq = layer_is_not_dq_global
+        layer_is_not_dq = utils_layer_is_not_dq
 
         return super()._is_valid_item(data, locals())
 

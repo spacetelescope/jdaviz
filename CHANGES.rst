@@ -146,6 +146,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fix Data Quality plugin support for Roman ASDF images. [#4089]
+
 Cubeviz
 ^^^^^^^
 
