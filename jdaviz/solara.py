@@ -86,14 +86,19 @@ def get_app_or_launcher():
     return main
 
 
+@solara.component
 def Jdaviz():
     # Create the shared widgets, using use_memo to ensure we only do it once
     solara.use_memo(create_shared_widgets, [])
 
-    app_or_launcher = solara.use_memo(get_app_or_launcher, [config, data_list, format_list])
+    app_or_launcher, set_app_or_launcher = solara.use_state(None)
 
-    # return app_or_launcher
-    return solara.Column(children=[app_or_launcher])
+    def load_app():
+        set_app_or_launcher(get_app_or_launcher())
+
+    solara.use_effect(load_app, [config, data_list, format_list])
+
+    return solara.Column(children=[app_or_launcher] if app_or_launcher is not None else [])
 
 
 @solara.component
@@ -106,4 +111,4 @@ def Page():
 
     solara.Title("Jdaviz")
     # solara.display(Jdaviz())
-    return Jdaviz()
+    Jdaviz()
