@@ -37,7 +37,20 @@ def on_kernel_start():
     return on_kernel_close
 
 
+def create_shared_widgets():
+    ipysplitpanes.SplitPanes()
+    ipygoldenlayout.GoldenLayout()
+    for name, path in custom_components.items():
+        ipyvue.register_component_from_file(None, name,
+                                            os.path.join(os.path.dirname(jdaviz.__file__), path))
+
+    ipyvue.register_component_from_file('g-viewer-tab', "container.vue", jdaviz.__file__)
+
+
 def get_app_or_launcher():
+    '''
+    Return either the app instance or the launcher page as appropriate
+    '''
     if config is None or not hasattr(jdaviz.configs, config):
         if config == 'Flexible':
             viz = jdaviz.gca()
@@ -66,23 +79,30 @@ def get_app_or_launcher():
 
 
 @solara.component
-def Page():
-    solara.Title("Jdaviz")
+def Jdaviz():
+    # Create the shared widgets, using use_memo to ensure we only do it once
+    solara.use_memo(create_shared_widgets, [])
 
+    app_or_launcher, set_app_or_launcher = solara.use_state(None)
+
+    def load_app():
+        set_app_or_launcher(get_app_or_launcher())
+
+    # We need to use use_effect so that the initial Solara render happens before the app
+    # instantiates internal Solara components (file_drop, file_browser), which would otherwise
+    # be detected and rendered at the top level outside the app.
+    solara.use_effect(load_app, [config, data_list, format_list])
+
+    return solara.Column(children=[app_or_launcher] if app_or_launcher is not None else [])
+
+
+@solara.component
+def Page():
     if config is None:
         solara.Text("No config defined")
         return
 
-    ipysplitpanes.SplitPanes()
-    ipygoldenlayout.GoldenLayout()
-    for name, path in custom_components.items():
-        ipyvue.register_component_from_file(None, name,
-                                            os.path.join(os.path.dirname(jdaviz.__file__), path))
-
-    ipyvue.register_component_from_file('g-viewer-tab', "container.vue", jdaviz.__file__)
-
     solara.Style(Path(__file__).parent / "solara.css")
 
-    app_or_launcher = solara.use_memo(get_app_or_launcher, [data_list, format_list])
-
-    solara.display(app_or_launcher)
+    solara.Title("Jdaviz")
+    Jdaviz()
