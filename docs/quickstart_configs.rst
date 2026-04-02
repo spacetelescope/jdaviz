@@ -40,7 +40,7 @@ To see the syntax and usage, from a terminal, type::
 
 Typical usage to load a file into a desired configuration::
 
-    jdaviz --layout=[imviz|specviz|cubeviz|mosviz|specviz2d] --filepath /path/to/data/file
+    jdaviz --layout=[imviz|specviz|cubeviz|mosviz|specviz2d] --filepath=/path/to/data/file
 
 For example, to load a FITS image into Imviz::
 
