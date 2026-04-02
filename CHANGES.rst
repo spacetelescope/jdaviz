@@ -69,6 +69,8 @@ New Features
 
 - Fixed batch aperture photometry mode in deconfigged. [#4106]
 
+- Generalize Data Quality plugin to work for images in deconfigged. [#4110]
+
 - Add support for loading Spectra from BinaryHDU and TableHDU extensions. [#4097]
 
 Cubeviz
@@ -112,6 +114,8 @@ Specviz2d
 
 Bug Fixes
 ---------
+
+- Fix issue with treat_table_as_query switch where it disappeared entirely when switched 'off' [#4102]
 
 Cubeviz
 ^^^^^^^

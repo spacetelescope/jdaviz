@@ -664,6 +664,13 @@ def test_hdulist_multiple_table_extensions(deconfigged_helper):
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = hdulist
+
+    # This HDUList contains both table and image extensions, so both Catalog and Image
+    # formats should be valid. Verify Catalog is listed last when multiple formats exist.
+    assert 'Catalog' in ldr.format.choices
+    assert len(ldr.format.choices) > 1
+    assert ldr.format.choices[-1] == 'Catalog'
+
     ldr.format = 'Catalog'
 
     # check that both table extensions are available. Checking this indirectly

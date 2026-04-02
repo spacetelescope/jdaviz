@@ -56,9 +56,9 @@ Wavelength-Dependent Apertures
 For circular subsets with spatial axes in angular units, you can enable
 **wavelength-dependent apertures** to create a cone that scales with wavelength:
 
-$\text{radius}(\lambda) = \text{radius}_0 \times (\lambda / \lambda_0)$
+:math:`\text{radius}(\lambda) = \text{radius}_0 \times (\lambda / \lambda_0)`
 
-where $\lambda_0$ is the reference wavelength (current slice by default).
+where :math:`\lambda_0` is the reference wavelength (current slice by default).
 This is useful for matching PSF size variations with wavelength.
 
 Aperture Masking Methods
