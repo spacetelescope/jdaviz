@@ -82,10 +82,9 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 
 class TestCenter(BaseDeconfiggedImage_WCS_WCS):
 
-    @pytest.mark.skip(reason='bug when switching this test to deconfigged (JDAT-6023)')
     def test_center_on_pix(self):
 
-        self.orientation_plugin = 'WCS'
+        self.orientation_plugin.align_by = 'WCS'
 
         # This is the second loaded data that is dithered by 1-pix in x
         limits_first_data = np.array([-5.5, 5.5, -5.5, 5.5])
