@@ -8,8 +8,10 @@ from astropy.modeling.fitting import TRFLSQFitter
 from astropy.modeling import Parameter
 from astropy.modeling.models import Gaussian1D
 from astropy.time import Time
+from astropy.utils import minversion
 from glue.core.message import SubsetUpdateMessage
 from ipywidgets import widget_serialization
+import photutils
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture)
 from photutils.profiles import CurveOfGrowth, RadialProfile
@@ -32,6 +34,14 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
+
+photutils.future_column_names = True
+if minversion(photutils, '2.3.1.dev'):
+    SEMIMAJOR_AXIS = 'semimajor_axis'
+    SEMIMINOR_AXIS = 'semiminor_axis'
+else:
+    SEMIMAJOR_AXIS = 'semimajor_sigma'
+    SEMIMINOR_AXIS = 'semiminor_sigma'
 
 
 @tray_registry('imviz-aper-phot-simple', label="Aperture Photometry",
@@ -140,7 +150,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                    'aperture_sum_mag',
                    'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',
                    'biweight_location', 'biweight_midvariance', 'fwhm',
-                   'semimajor_sigma', 'semiminor_sigma', 'orientation', 'eccentricity',
+                   SEMIMAJOR_AXIS, SEMIMINOR_AXIS, 'orientation', 'eccentricity',
                    'data_label', 'subset_label']
         self.table.headers_avail = headers
         self.table.headers_visible = headers
@@ -857,11 +867,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             img_unit = None
 
         phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords, local_bkg=bg)
-        phot_table = phot_aperstats.to_table(columns=(
-            'id', 'sum', 'sum_aper_area',
-            'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',
-            'biweight_location', 'biweight_midvariance', 'fwhm', 'semimajor_sigma',
-            'semiminor_sigma', 'orientation', 'eccentricity'))  # Some cols excluded, add back as needed.  # noqa
+
+        # Some cols excluded, add back as needed
+        columns = ('id', 'sum', 'sum_aper_area', 'min', 'max', 'mean',
+                   'median', 'mode', 'std', 'mad_std', 'var',
+                   'biweight_location', 'biweight_midvariance', 'fwhm',
+                   SEMIMAJOR_AXIS, SEMIMINOR_AXIS, 'orientation',
+                   'eccentricity')
+        phot_table = phot_aperstats.to_table(columns=columns)
         rawsum = phot_table['sum'][0]
 
         if include_pixarea_fac:
@@ -1057,8 +1070,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     fitter = TRFLSQFitter()
                     y_max = np.nanmax(y_data)
                     x_mean = np.nanmean(x_data[np.where(y_data == y_max)])
-                    std = 0.5 * (phot_table['semimajor_sigma'][0] +
-                                 phot_table['semiminor_sigma'][0])
+                    std = 0.5 * (phot_table[SEMIMAJOR_AXIS][0] +
+                                 phot_table[SEMIMINOR_AXIS][0])
                     if isinstance(std, u.Quantity):
                         std = std.value
                     gs = Gaussian1D(amplitude=y_max, mean=x_mean, stddev=std,

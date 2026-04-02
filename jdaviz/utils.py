@@ -23,6 +23,7 @@ from gwcs import WCS as gwcs
 from gwcs.coordinate_frames import CompositeFrame, SpectralFrame
 from matplotlib import colors as mpl_colors
 import matplotlib.cm as cm
+import photutils
 from photutils.utils import make_random_cmap
 from regions import CirclePixelRegion, CircleAnnulusPixelRegion
 from specutils.utils.wcs_utils import SpectralGWCS
@@ -49,6 +50,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
+PHOTUTILS_GE_3 = minversion(photutils, '2.3.1.dev')
 
 # For Metadata Viewer plugin internal use only.
 PRIHDR_KEY = '_primary_header'
@@ -1155,7 +1157,10 @@ def _register_random_cmap(
     contains more than 10,000 labels, adjust the `ncolors`
     kwarg to ensure uniqueness.
     """
-    cmap = make_random_cmap(ncolors=ncolors, seed=seed)
+    if PHOTUTILS_GE_3:
+        cmap = make_random_cmap(n_colors=ncolors, seed=seed)
+    else:
+        cmap = make_random_cmap(ncolors=ncolors, seed=seed)
     cmap.colors[0] = bkg_color + [bkg_alpha]
     cmap.name = cmap_name
     glue_colormaps.add(cmap_name, cmap)
