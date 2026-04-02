@@ -69,11 +69,12 @@ def get_app_or_launcher():
     else:
         viz = getattr(jdaviz.configs, config)(verbosity=jdaviz_verbosity,
                                               history_verbosity=jdaviz_history_verbosity)
-        for data in data_list:
-            if config == 'Mosviz':
-                viz.load(directory=data, **load_data_kwargs)
-            else:
-                viz.load(data, **load_data_kwargs)
+        with jdaviz.batch_load():
+            for filename, format in zip(data_list, format_list):
+                if config == 'Mosviz':
+                    viz.load(directory=filename, format=format, **load_data_kwargs)
+                else:
+                    viz.load(filename, format=format, **load_data_kwargs)
 
     return viz.app
 

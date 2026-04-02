@@ -48,13 +48,10 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     hotreload : bool
         Whether to enable hot-reloading of the UI (for development)
     """
+
     if filepaths:
         # Convert paths to posix string; windows paths are not JSON compliant
-        file_list = [pathlib.Path(f).absolute().as_posix() for f in filepaths]
-        if layout == "imviz":
-            # Imviz multiloading should be done all at once for batch processing.
-            # Imviz convention is a single string of consecutive, comma-separated file paths
-            file_list = [','.join(file_list)]
+        file_list = [pathlib.Path(f[0]).absolute().as_posix() for f in filepaths]
     else:
         file_list = []
 
@@ -73,7 +70,7 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     solara.config = layout.capitalize()
     solara.data_list = file_list
     if file_formats is not None:
-        solara.format_list = [f[0] for f in file_formats]  # We get a list of lists from argparse
+        solara.format_list = [f[0] for f in file_formats]
 
     if layout == 'mosviz':
         solara.load_data_kwargs = {'instrument': instrument}
@@ -114,7 +111,7 @@ def _main(config=None):
     filepaths_nargs = '*'
     if config is None:
         parser.add_argument('--layout', default='', choices=ALL_JDAVIZ_CONFIGS + ['flexible',],
-                            help='Configuration to use.', deprecated=True)
+                            help='Configuration to use.')
     if (config == "mosviz") or ("mosviz" in sys.argv):
         filepaths_nargs = 1
     parser.add_argument('-fp', '--filepath', type=str, nargs=filepaths_nargs, default=None,
@@ -143,14 +140,17 @@ def _main(config=None):
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     args = parser.parse_args()
 
+    if args.layout != '':
+        print("\033[31mWarning: option '--layout' is deprecated as of Jdaviz 5.0\033[0m")
+
     if config is None:
         layout = args.layout
     else:
         layout = config
 
-    main(filepaths=args.filepaths, layout=layout, instrument=args.instrument, browser=args.browser,
+    main(filepaths=args.filepath, layout=layout, instrument=args.instrument, browser=args.browser,
          theme=args.theme, verbosity=args.verbosity, history_verbosity=args.history_verbosity,
-         host=args.host, port=args.port, hotreload=args.hotreload, file_formats=args.file_formats)
+         host=args.host, port=args.port, hotreload=args.hotreload, file_formats=args.file_format)
 
 
 def _specviz():
