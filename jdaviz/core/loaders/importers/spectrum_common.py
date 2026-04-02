@@ -68,6 +68,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         if isinstance(self.input, fits.HDUList):
             self.input_type = 'fits:hdulist'
             ext_options = [{'label': f"{index}: {hdu.name}",
@@ -133,6 +134,25 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                            for ind, attr in enumerate(('flux', 'uncertainty', 'mask'))
                            if getattr(self.input, attr, None) is not None
                            ]
+            # Add 'Spectrum' and 'None' options for 3D spectra to support data_type parameter
+            # For 1D spectra, these options don't make sense
+            if self.supported_flux_ndim == 3:
+                ext_options.append({
+                    'label': 'Spectrum',
+                    'name': 'Spectrum',
+                    'name_ver': None,
+                    'index': 0,
+                    'data_hash': create_data_hash(self.input.flux),
+                    'obj': self.input.flux.value if hasattr(self.input.flux, 'value') else self.input.flux  # noqa
+                })
+                ext_options.append({
+                    'label': 'None',
+                    'name': 'None',
+                    'name_ver': None,
+                    'index': None,
+                    'data_hash': None,
+                    'obj': None
+                })
         elif isinstance(self.input, Spectrum) and self.input.flux.ndim > self.supported_flux_ndim:
             if self.supported_flux_ndim != 1 or self.input.flux.ndim != 2:
                 # currently only support 2D Spectrum > list of 1D Spectra
@@ -271,12 +291,19 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         return 1
 
     def is_valid_flux(self, item):
+        # 'None' is valid for flux when specutils:spectrum or numpy:array
+        # (allows loading only uncert/mask)
+        if item.get('label') == 'None':
+            return self.input_type in ('specutils:spectrum', 'numpy:array')
+        if item.get('label') == 'Spectrum':
+            # 'Spectrum' is valid for flux for Spectrum inputs
+            return True
         if self.input_type == 'fits:hdulist':
             return self.hdu_is_valid_flux(item)
         if self.input_type == 'asdf:roman':
             return self.asdf_roman_is_valid_flux(item)
         if self.input_type == 'specutils:spectrum':
-            return item.get('name') == 'flux'
+            return item.get('name') in ('flux', 'Spectrum')
         if self.input_type == 'specutils:spectrumlist':
             return True  # TODO: replace this
         raise NotImplementedError("Unknown input type")
@@ -318,12 +345,15 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
     def is_valid_unc(self, item):
         if item.get('label') == 'None':
             return True
+        if item.get('label') == 'Spectrum':
+            # 'Spectrum' is valid for uncertainty
+            return True
         if self.input_type == 'fits:hdulist':
             return self.hdu_is_valid_unc(item)
         if self.input_type == 'asdf:roman':
             return self.asdf_roman_is_valid_unc(item)
         if self.input_type == 'specutils:spectrum':
-            return item.get('name') == 'uncertainty'
+            return item.get('name') in ('uncertainty', 'Spectrum')
         if self.input_type == 'specutils:spectrumlist':
             return False  # TODO: replace this
         raise NotImplementedError("Unknown input type")
@@ -354,12 +384,15 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
     def is_valid_mask(self, item):
         if item.get('label') == 'None':
             return True
+        if item.get('label') == 'Spectrum':
+            # 'Spectrum' is valid for mask
+            return True
         if self.input_type == 'fits:hdulist':
             return self.hdu_is_valid_mask(item)
         if self.input_type == 'asdf:roman':
             return self.asdf_roman_is_valid_mask(item)
         if self.input_type == 'specutils:spectrum':
-            return item.get('name') == 'mask'
+            return item.get('name') in ('mask', 'Spectrum')
         if self.input_type == 'specutils:spectrumlist':
             return False  # TODO: replace this
         raise NotImplementedError("Unknown input type")

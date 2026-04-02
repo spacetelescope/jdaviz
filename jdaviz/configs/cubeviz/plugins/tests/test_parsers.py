@@ -200,6 +200,7 @@ def test_spectrum3d_no_wcs_parse(cubeviz_helper, flux_unit):
     assert flux.units == f'{flux_unit / PIX2}'
 
 
+@pytest.mark.filterwarnings('ignore:The default extension selection')
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     cubeviz_helper.load_data(spectrum1d)
 
@@ -212,7 +213,6 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     assert label_mouseover.as_text() == ('', '', '')
 
 
-@pytest.mark.skip(reason="Need to refactor extension handling first")
 def test_numpy_cube(cubeviz_helper):
     arr = np.ones(24).reshape((4, 3, 2))  # x, y, z
 
@@ -231,7 +231,7 @@ def test_numpy_cube(cubeviz_helper):
     # Check context of first cube.
     data = cubeviz_helper.app.data_collection[0]
     flux = data.get_component('flux')
-    assert data.label == 'Array'
+    assert data.label == '3D Spectrum [FLUX]'
     assert data.shape == (4, 3, 2)  # x, y, z
     assert isinstance(data.coords, GWCS)
     assert flux.units == 'ct / pix2'
@@ -239,7 +239,7 @@ def test_numpy_cube(cubeviz_helper):
     # Check context of second cube.
     data = cubeviz_helper.app.data_collection[1]
     flux = data.get_component('flux')
-    assert data.label == 'uncert_array'
+    assert data.label == 'uncert_array[FLUX]'
     assert data.shape == (4, 3, 2)  # x, y, z
     assert isinstance(data.coords, GWCS)
     assert flux.units == 'ct / pix2'

@@ -1667,6 +1667,9 @@ class SelectFileExtensionComponent(SelectPluginComponent):
         return self.selected_item.get('name', None)
 
     def _get_selected_obj(self, index):
+        if index is None:
+            # Handle the 'None' option (e.g., for skipping uncertainty/mask in array loading)
+            return None
         return self.manual_options[index].get('obj', None)
 
     @property

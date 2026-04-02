@@ -82,10 +82,33 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
             you are doing.
         **kwargs : dict
             Extra keywords accepted by Jdaviz application-level parser.
+            Includes ``data_type`` which can be 'flux', 'uncert', or 'mask'
+            to specify how a numpy array should be loaded.
 
         """
         if not override_cube_limit and len(self.app.state.data_items) != 0:
             raise RuntimeError('Only one cube may be loaded per Cubeviz instance')
+
+        # Handle data_type parameter for numpy arrays and Spectrum objects
+        # Maps data_type to extension selections for the importer
+        data_type = kwargs.pop('data_type', None)
+        if data_type is not None:
+            if data_type == 'uncert':
+                # Load array as uncertainty, not flux
+                kwargs.setdefault('extension', 'None')
+                kwargs.setdefault('unc_extension', 'Spectrum')
+            elif data_type == 'mask':
+                # Load array as mask, not flux
+                kwargs.setdefault('extension', 'None')
+                kwargs.setdefault('mask_extension', 'Spectrum')
+            elif data_type == 'flux':
+                # Load array as flux (default)
+                kwargs.setdefault('extension', 'Spectrum')
+                kwargs.setdefault('unc_extension', 'None')
+                kwargs.setdefault('mask_extension', 'None')
+            else:
+                raise TypeError(f"Data type must be one of 'flux', 'uncert', or 'mask', "
+                                f"got '{data_type}'")
 
         format = kwargs.pop('format', ['1D Spectrum', '3D Spectrum'])
         if data_label is not None:
