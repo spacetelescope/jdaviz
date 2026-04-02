@@ -5,6 +5,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.utils import minversion
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
 
@@ -13,11 +14,20 @@ from numpy.testing import assert_allclose, assert_array_equal
 from regions import CirclePixelRegion, EllipsePixelRegion, PixCoord, RectanglePixelRegion
 from skimage.io import imsave
 from stdatamodels import asdf_in_fits
+import photutils
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
     parse_data, _validate_fits_image2d, _validate_bunit, _parse_image, HAS_ROMAN_DATAMODELS)
 from jdaviz.core.custom_units_and_equivs import PIX2
+
+photutils.future_column_names = True
+if minversion(photutils, '2.3.1.dev'):
+    SEMIMAJOR_AXIS = 'semimajor_axis'
+    SEMIMINOR_AXIS = 'semiminor_axis'
+else:
+    SEMIMAJOR_AXIS = 'semimajor_sigma'
+    SEMIMINOR_AXIS = 'semiminor_sigma'
 
 
 @pytest.mark.parametrize(
@@ -329,8 +339,8 @@ class TestParseImage:
         assert_quantity_allclose(tbl[0]['biweight_location'], 0.40664572 * data_unit)
         assert_quantity_allclose(tbl[0]['biweight_midvariance'], 0.27319583 * (data_unit * data_unit))  # noqa
         assert_quantity_allclose(tbl[0]['fwhm'], 2.8691718 * u.pix)
-        assert_quantity_allclose(tbl[0]['semimajor_sigma'], 1.22308648 * u.pix)
-        assert_quantity_allclose(tbl[0]['semiminor_sigma'], 1.21374578 * u.pix)
+        assert_quantity_allclose(tbl[0][SEMIMAJOR_AXIS], 1.22308648 * u.pix)
+        assert_quantity_allclose(tbl[0][SEMIMINOR_AXIS], 1.21374578 * u.pix)
         assert_quantity_allclose(tbl[0]['orientation'], -27.220559 * u.deg)
         assert_quantity_allclose(tbl[0]['eccentricity'], 0.12335181)
 

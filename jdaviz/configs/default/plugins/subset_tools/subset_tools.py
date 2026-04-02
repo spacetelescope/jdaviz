@@ -5,6 +5,7 @@ import numpy as np
 
 from astropy.time import Time
 import astropy.units as u
+from astropy.utils import minversion
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
@@ -17,6 +18,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Any, List, Unicode, Bool, observe
 
 from specutils import SpectralRegion
+import photutils
 from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                 EllipticalAperture, SkyEllipticalAperture,
                                 RectangularAperture, SkyRectangularAperture,
@@ -64,6 +66,8 @@ SUBSET_MODES_PRETTY = {
 }
 SUBSET_TO_PRETTY = {v: k for k, v in SUBSET_MODES_PRETTY.items()}
 COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
+
+PHOTUTILS_GE_3 = minversion(photutils, '2.3.1.dev')
 
 
 @tray_registry('g-subset-tools', label="Subset Tools",
@@ -863,6 +867,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords)
 
                 # Sky region from WCS linking, need to convert centroid back to pixels.
+                if PHOTUTILS_GE_3:
+                    x_centroid = phot_aperstats.x_centroid
+                    y_centroid = phot_aperstats.y_centroid
+                else:
+                    x_centroid = phot_aperstats.xcentroid
+                    y_centroid = phot_aperstats.ycentroid
+
                 if hasattr(reg, "to_pixel"):
                     # Centroid was calculated in selected data.
                     # However, Subset is always defined w.r.t. its parent,
@@ -870,11 +881,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     x, y = pixel_to_pixel(
                         data.coords,
                         subset_state.xatt.parent.coords,
-                        phot_aperstats.xcentroid,
-                        phot_aperstats.ycentroid)
+                        x_centroid,
+                        y_centroid)
                 else:
-                    x = phot_aperstats.xcentroid
-                    y = phot_aperstats.ycentroid
+                    x = x_centroid
+                    y = y_centroid
                 if not np.all(np.isfinite((x, y))):
                     raise ValueError(f'Invalid centroid ({x}, {y})')
             except Exception as e:
