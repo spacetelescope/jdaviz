@@ -7,7 +7,6 @@ import solara.lab
 import ipygoldenlayout
 import ipysplitpanes
 import ipyvue
-import ipyvuetify
 
 import jdaviz
 from jdaviz.app import custom_components
@@ -52,11 +51,6 @@ def get_app_or_launcher():
     '''
     Return either the app instance or the launcher page as appropriate
     '''
-    main = ipyvuetify.Sheet(class_="mx-25",
-                            attributes={"id": "popout-widget-container"},
-                            color="#00212C",
-                            height='100vh')
-
     if config is None or not hasattr(jdaviz.configs, config):
         if config == 'Flexible':
             viz = jdaviz.gca()
@@ -68,7 +62,7 @@ def get_app_or_launcher():
                         jdaviz.load(filename, format=format)
         else:
             from jdaviz.core.launcher import Launcher
-            launcher = Launcher(main=main, height='100vh',
+            launcher = Launcher(height='100vh',
                                 filepath=(data_list[0] if len(data_list) == 1 else ''))
             return launcher.main_with_launcher
 
@@ -81,9 +75,7 @@ def get_app_or_launcher():
             else:
                 viz.load(data, **load_data_kwargs)
 
-    main.color = 'transparent'
-    main.children = [viz.app]
-    return main
+    return viz.app
 
 
 @solara.component
