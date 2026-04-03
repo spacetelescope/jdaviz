@@ -111,15 +111,18 @@ def _main(config=None):
     filepaths_nargs = '*'
     if config is None:
         parser.add_argument('--layout', default='', choices=ALL_JDAVIZ_CONFIGS + ['flexible',],
-                            help='Configuration to use.')
+                            help='Configuration to use. Deprecated as of 5.0.')
     if (config == "mosviz") or ("mosviz" in sys.argv):
         filepaths_nargs = 1
     parser.add_argument('-fp', '--filepath', type=str, nargs=filepaths_nargs, default=None,
                         action='append',
-                        help='The paths to the files to be loaded into the Jdaviz application.')
+                        help=('The path to a file to be loaded into the Jdaviz application.'
+                              ' May be repeated to load multiple files.'))
     parser.add_argument('-ff', '--file_format', type=str, nargs=filepaths_nargs, default=None,
                         action='append',
-                        help='The formats of the files to be loaded into the Jdaviz application.')
+                        help=('The format of a file to be loaded into the Jdaviz application.'
+                              'The same number of filepath and file_format arguments must '
+                              'be specified, and will be associated based on input order.'))
     parser.add_argument('--instrument', type=str, default='nirspec',
                         help='Manually specifies which instrument parser to use, for Mosviz')
     parser.add_argument('--browser', type=str, default='default',
