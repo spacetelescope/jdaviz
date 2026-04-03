@@ -64,7 +64,7 @@ class TestROIEdits:
 
         # Test in app behavior: resize, move, and new draw.
         deconfigged_helper.load(image_hdu_wcs, format='Image')
-        image_viewer = deconfigged_helper.app.get_viewer('Image')
+        image_viewer = deconfigged_helper._app.get_viewer('Image')
 
         # Draw initial roi and verify count.
         image_viewer.apply_roi(old)
@@ -226,7 +226,7 @@ class TestROIEdits:
 
         # Test in app behavior: resize, move, and new draw.
         deconfigged_helper.load(spectrum1d, format='1D Spectrum')
-        spectrum_viewer = deconfigged_helper.app.get_viewer('1D Spectrum')
+        spectrum_viewer = deconfigged_helper._app.get_viewer('1D Spectrum')
 
         # Draw initial roi and verify count.
         initial_roi = XRangeROI(min=old_rss.lo, max=old_rss.hi)

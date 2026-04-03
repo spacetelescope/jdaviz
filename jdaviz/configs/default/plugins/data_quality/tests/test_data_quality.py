@@ -113,7 +113,7 @@ def test_data_quality_plugin(helper_name, request):
 
     # get the image viewer (name depends on config)
     viewer_name = 'Image' if helper_name == 'deconfigged_helper' else 'imviz-0'
-    viewer = helper.app.get_viewer(viewer_name)
+    viewer = helper._app.get_viewer(viewer_name)
 
     # check default dq opacity is a fraction of sci data:
     sci_alpha = viewer.layers[0].state.alpha

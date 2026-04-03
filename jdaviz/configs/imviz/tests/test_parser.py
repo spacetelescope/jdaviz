@@ -511,7 +511,7 @@ class TestParseImage:
             assert 'WHT,1' in data.components
 
             # Load all extensions
-            imviz_helper.app.data_collection.clear()
+            imviz_helper._app.data_collection.clear()
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
                 imviz_helper.load_data(filename, ext='*', show_in_viewer=False)
             data = imviz_helper._app.data_collection
