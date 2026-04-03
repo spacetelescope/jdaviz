@@ -160,8 +160,25 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # Cache the spectral axis unit on load to avoid accessing a potentially
         # closed file reference later when the filter is called
         self._spectrum_unit = getattr(spectrum.spectral_axis, 'unit', None)
-        # Re-select default viewer for extracted spectrum now that we know the unit
-        self.ext_viewer.select_default()
+        # Update viewer choices based on the new unit, applying filters.
+        manual_items = [{'label': label} for label in self.ext_viewer.manual_options]
+        self.ext_viewer.items = manual_items + [
+            {k: v for k, v in vd.items() if k != 'viewer'}
+            for vd in self.ext_viewer.viewer_dicts
+            if self.ext_viewer._is_valid_item(vd['viewer'])
+        ]
+        # Check if current selection is still valid after filtering
+        # For multiselect: check if all selections are in choices
+        # For single-select with create_new: check if selected is in choices or create_new is set
+        if self.ext_viewer.is_multiselect:
+            # If any selected viewer was filtered out, reapply default selection
+            if any(s not in self.ext_viewer.choices for s in self.ext_viewer.selected):
+                self.ext_viewer.select_default()
+        else:
+            # If selected viewer was filtered out and no create_new is set, reapply default
+            if (self.ext_viewer.selected not in self.ext_viewer.choices and
+                    not self.ext_viewer.create_new.selected):
+                self.ext_viewer.select_default()
         return spectrum
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
@@ -200,7 +217,4 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         self.app.hub.broadcast(msg)
 
         if ext is not None:
-            # Re-select default viewer in case viewer choices have changed
-            # (e.g., existing viewer is now incompatible due to unit mismatch)
-            self.ext_viewer.select_default()
             self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
