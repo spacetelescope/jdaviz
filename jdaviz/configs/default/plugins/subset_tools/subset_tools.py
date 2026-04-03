@@ -1283,136 +1283,143 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         previous_mode = self.app.session.edit_subset_mode.mode
         previous_subset = self.app.session.edit_subset_mode.edit_subset
 
-        with self.app._jdaviz_helper.batch_load():
-            # This method can edit a particular subset or create a new subset
-            # and apply the combination modes depending on this argument
-            if edit_subset and combination_mode is not None:
-                self.subset.selected = edit_subset
-            elif edit_subset and combination_mode is None:
-                # If combination_mode is not set, assume the user
-                # wants to update the subset in edit_subset
-                self.subset.selected = edit_subset
-                combination_mode = 'replace'
-            else:
-                # self.app.session.edit_subset_mode.edit_subset = None
-                self.subset.selected = self.subset.default_text
-
-            label_index = 0
-            for index, region in enumerate(regions):
-                # Set combination mode for how region will be applied to current subset
-                # or created as a new subset
-                if combo_mode_is_list:
-                    combo_mode = combination_mode[index]
+        self.app._importing_regions = True
+        try:
+            with self.app._jdaviz_helper.batch_load():
+                # This method can edit a particular subset or create a new subset
+                # and apply the combination modes depending on this argument
+                if edit_subset and combination_mode is not None:
+                    self.subset.selected = edit_subset
+                elif edit_subset and combination_mode is None:
+                    # If combination_mode is not set, assume the user
+                    # wants to update the subset in edit_subset
+                    self.subset.selected = edit_subset
+                    combination_mode = 'replace'
                 else:
-                    combo_mode = combination_mode
+                    # self.app.session.edit_subset_mode.edit_subset = None
+                    self.subset.selected = self.subset.default_text
 
-                # Combination_mode should be 'new' if combo_mode is not set or explicitly 'new'
-                if combo_mode == 'new' or combo_mode is None:
-                    self.combination_mode.selected = 'new'
-                elif combo_mode:
-                    self.combination_mode.selected = combo_mode
+                label_index = 0
+                for index, region in enumerate(regions):
+                    # Set combination mode for how region will be applied to current subset
+                    # or created as a new subset
+                    if combo_mode_is_list:
+                        combo_mode = combination_mode[index]
+                    else:
+                        combo_mode = combination_mode
 
-                if (isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
-                                        SkyRectangularAperture, SkyCircularAnnulus,
-                                        CircleSkyRegion, EllipseSkyRegion,
-                                        RectangleSkyRegion, CircleAnnulusSkyRegion))
-                        and not has_wcs):
-                    bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
-                    continue
+                    # Combination_mode should be 'new' if combo_mode is not set or explicitly 'new'
+                    if combo_mode == 'new' or combo_mode is None:
+                        self.combination_mode.selected = 'new'
+                    elif combo_mode:
+                        self.combination_mode.selected = combo_mode
 
-                if (isinstance(region, (CircularAperture, EllipticalAperture,
-                                        RectangularAperture, CircularAnnulus,
-                                        CirclePixelRegion, EllipsePixelRegion,
-                                        RectanglePixelRegion, CircleAnnulusPixelRegion))
-                        and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
-                    bad_regions.append((region, 'Pixel region provided but data is aligned by WCS'))
-                    continue
+                    if (isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
+                                            SkyRectangularAperture, SkyCircularAnnulus,
+                                            CircleSkyRegion, EllipseSkyRegion,
+                                            RectangleSkyRegion, CircleAnnulusSkyRegion))
+                            and not has_wcs):
+                        bad_regions.append(
+                            (region, 'Sky region provided but data has no valid WCS'))
+                        continue
 
-                # photutils: Convert to region shape first
-                if isinstance(region, (CircularAperture, SkyCircularAperture,
-                                       EllipticalAperture, SkyEllipticalAperture,
-                                       RectangularAperture, SkyRectangularAperture,
-                                       CircularAnnulus, SkyCircularAnnulus)):
-                    region = aperture2regions(region)
+                    if (isinstance(region, (CircularAperture, EllipticalAperture,
+                                            RectangularAperture, CircularAnnulus,
+                                            CirclePixelRegion, EllipsePixelRegion,
+                                            RectanglePixelRegion, CircleAnnulusPixelRegion))
+                            and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
+                        bad_regions.append(
+                            (region, 'Pixel region provided but data is aligned by WCS'))
+                        continue
 
-                # region: Convert to ROI.
-                # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
-                if (isinstance(region, (CirclePixelRegion, CircleSkyRegion,
-                                        EllipsePixelRegion, EllipseSkyRegion,
-                                        RectanglePixelRegion, RectangleSkyRegion,
-                                        CircleAnnulusPixelRegion, CircleAnnulusSkyRegion))):
-                    try:
-                        if getattr(data.coords, 'world_n_dim', None) == 3:
-                            data_wcs = _get_celestial_wcs(data.coords)
-                            state = regions2roi(region, wcs=data_wcs)
-                        else:
-                            state = regions2roi(region, wcs=data.coords)
-                    except ValueError:
-                        if '_orig_spatial_wcs' not in data.meta:
-                            bad_regions.append((region,
-                                                f'Failed to load: _orig_spatial_wcs'
-                                                f' meta tag not in {data.label}'))
-                            continue
-                        state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'])
-                    viewer.apply_roi(state)
+                    # photutils: Convert to region shape first
+                    if isinstance(region, (CircularAperture, SkyCircularAperture,
+                                           EllipticalAperture, SkyEllipticalAperture,
+                                           RectangularAperture, SkyRectangularAperture,
+                                           CircularAnnulus, SkyCircularAnnulus)):
+                        region = aperture2regions(region)
 
-                elif isinstance(region, (CircularROI, CircularAnnulusROI,
-                                         EllipticalROI, RectangularROI)):
-                    viewer.apply_roi(region)
-
-                elif isinstance(region, SpectralRegion):
-                    # Use viewer_name if provided in kwarg, otherwise use
-                    # default spectrum viewer name
-                    range_viewer = self.app.get_viewer(viewer_parameter) if viewer_parameter else self.spectrum_viewer  # noqa
-                    s = RangeSubsetState(lo=region.lower.value, hi=region.upper.value,
-                                         att=range_viewer.state.x_att)
-                    range_viewer.apply_subset_state(s)
-
-                # Last resort: Masked Subset that is static (if data is not a cube)
-                elif data.ndim == 2:
-                    im = None
-                    if hasattr(region, 'to_pixel'):  # Sky region: Convert to pixel region
-                        if not has_wcs:
-                            bad_regions.append((region, 'Sky region provided but data has no valid WCS'))  # noqa
-                            continue
-                        region = region.to_pixel(data.coords)
-
-                    if hasattr(region, 'to_mask'):
+                    # region: Convert to ROI.
+                    # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
+                    if (isinstance(region, (CirclePixelRegion, CircleSkyRegion,
+                                            EllipsePixelRegion, EllipseSkyRegion,
+                                            RectanglePixelRegion, RectangleSkyRegion,
+                                            CircleAnnulusPixelRegion, CircleAnnulusSkyRegion))):
                         try:
-                            mask = region.to_mask(**kwargs)
-                            im = mask.to_image(data.shape)  # Can be None
+                            if getattr(data.coords, 'world_n_dim', None) == 3:
+                                data_wcs = _get_celestial_wcs(data.coords)
+                                state = regions2roi(region, wcs=data_wcs)
+                            else:
+                                state = regions2roi(region, wcs=data.coords)
+                        except ValueError:
+                            if '_orig_spatial_wcs' not in data.meta:
+                                bad_regions.append((region,
+                                                    f'Failed to load: _orig_spatial_wcs'
+                                                    f' meta tag not in {data.label}'))
+                                continue
+                            state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'])
+                        viewer.apply_roi(state)
+
+                    elif isinstance(region, (CircularROI, CircularAnnulusROI,
+                                             EllipticalROI, RectangularROI)):
+                        viewer.apply_roi(region)
+
+                    elif isinstance(region, SpectralRegion):
+                        # Use viewer_name if provided in kwarg, otherwise use
+                        # default spectrum viewer name
+                        range_viewer = self.app.get_viewer(viewer_parameter) if viewer_parameter else self.spectrum_viewer  # noqa
+                        s = RangeSubsetState(lo=region.lower.value, hi=region.upper.value,
+                                             att=range_viewer.state.x_att)
+                        range_viewer.apply_subset_state(s)
+
+                    # Last resort: Masked Subset that is static (if data is not a cube)
+                    elif data.ndim == 2:
+                        im = None
+                        if hasattr(region, 'to_pixel'):  # Sky region: Convert to pixel region
+                            if not has_wcs:
+                                bad_regions.append((region, 'Sky region provided but data has no valid WCS'))  # noqa
+                                continue
+                            region = region.to_pixel(data.coords)
+
+                        if hasattr(region, 'to_mask'):
+                            try:
+                                mask = region.to_mask(**kwargs)
+                                im = mask.to_image(data.shape)  # Can be None
+                            except Exception as e:  # pragma: no cover
+                                bad_regions.append((region, f'Failed to load: {repr(e)}'))
+                                continue
+
+                        # Boolean mask as input is supported but not advertised.
+                        elif (isinstance(region, np.ndarray) and region.shape == data.shape
+                              and region.dtype == np.bool_):
+                            im = region
+
+                        if im is None:
+                            bad_regions.append((region, 'Mask creation failed'))
+                            continue
+
+                        # NOTE: Region creation info is thus lost.
+                        try:
+                            mask_label = f'{msg_prefix} {msg_count}'
+                            state = MaskSubsetState(im, data.pixel_component_ids)
+                            self.app.data_collection.new_subset_group(mask_label, state)
+                            msg_count += 1
                         except Exception as e:  # pragma: no cover
                             bad_regions.append((region, f'Failed to load: {repr(e)}'))
                             continue
-
-                    # Boolean mask as input is supported but not advertised.
-                    elif (isinstance(region, np.ndarray) and region.shape == data.shape
-                          and region.dtype == np.bool_):
-                        im = region
-
-                    if im is None:
+                    else:
                         bad_regions.append((region, 'Mask creation failed'))
                         continue
+                    n_loaded += 1
+                    if max_num_regions is not None and n_loaded >= max_num_regions:
+                        break
 
-                    # NOTE: Region creation info is thus lost.
-                    try:
-                        mask_label = f'{msg_prefix} {msg_count}'
-                        state = MaskSubsetState(im, data.pixel_component_ids)
-                        self.app.data_collection.new_subset_group(mask_label, state)
-                        msg_count += 1
-                    except Exception as e:  # pragma: no cover
-                        bad_regions.append((region, f'Failed to load: {repr(e)}'))
-                        continue
-                else:
-                    bad_regions.append((region, 'Mask creation failed'))
-                    continue
-                n_loaded += 1
-                if max_num_regions is not None and n_loaded >= max_num_regions:
-                    break
+                    if self.combination_mode.selected in ('new', 'replace') and subset_label is not None:  # noqa
+                        self.rename_selected(subset_label[label_index])
+                        label_index += 1
 
-                if self.combination_mode.selected in ('new', 'replace') and subset_label is not None:  # noqa
-                    self.rename_selected(subset_label[label_index])
-                    label_index += 1
+        finally:
+            self.app._importing_regions = False
 
         # Revert edit mode and subset to before the import_region call
         self.app.session.edit_subset_mode.edit_subset = previous_subset

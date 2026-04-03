@@ -367,7 +367,7 @@ class TestResizeSubset:
         # Create two subsets
         self.imviz_viewer.apply_roi(CircularROI(xc=3, yc=3, radius=2))
         self.imviz_subset_tools.combination_mode = 'new'
-        self.imviz_viewer.apply_roi(CircularROI(xc=7, yc=7, radius=2))
+        self.imviz_viewer.apply_roi(CircularROI(xc=7, yc=7, radius=3))
 
         # Select both subsets
         self.imviz_dm.layer.selected = ['Subset 1', 'Subset 2']
