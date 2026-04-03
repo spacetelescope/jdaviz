@@ -625,11 +625,12 @@ class TestLoadData:
         """
         Test load_data with show_in_viewer=False.
         """
-        specviz_helper.load_data(
-            spectrum1d,
-            data_label='hidden_spec',
-            show_in_viewer=False
-        )
+        with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+            specviz_helper.load_data(
+                spectrum1d,
+                data_label='hidden_spec',
+                show_in_viewer=False
+            )
         assert 'hidden_spec' in specviz_helper._app.data_collection.labels
 
     def test_load_data_concat_by_file(self, specviz_helper, premade_spectrum_list):

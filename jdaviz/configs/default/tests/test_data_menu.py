@@ -263,7 +263,8 @@ class TestResizeSubset:
         Autouse fixture to attach the shared helper to the test instance.
         """
         self.imviz_helper = imviz_helper
-        self.imviz_helper.load_data(np.zeros((10, 10)), data_label='image', show_in_viewer=True)
+        with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+            self.imviz_helper.load_data(np.zeros((10, 10)), data_label='image', show_in_viewer=True)
         self.imviz_viewer = self.imviz_helper.default_viewer._obj.glue_viewer
         self.imviz_dm = self.imviz_viewer.data_menu
         self.imviz_subset_tools = self.imviz_helper.plugins['Subset Tools']

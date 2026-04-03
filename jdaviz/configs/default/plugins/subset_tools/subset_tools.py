@@ -884,7 +884,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         in the selected data layer.
         """
         # Composite region cannot be centered. This only works for Imviz.
-        if not self.is_centerable or self.config != 'imviz':  # no-op
+        if not self.is_centerable or self.config not in ('imviz', 'deconfigged'):  # no-op
             raise NotImplementedError(
                 f'Cannot recenter: is_centerable={self.is_centerable}, config={self.config}')
 

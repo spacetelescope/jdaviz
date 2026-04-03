@@ -134,6 +134,12 @@ class Specviz(ConfigHelper, LineListMixin):
                                **load_kwargs)
             return
 
+        if show_in_viewer is not True:
+            warnings.warn(
+                'The "show_in_viewer" argument is deprecated and will be removed in a '
+                'future version. Use "viewer" instead.',
+                DeprecationWarning, stacklevel=2)
+
         if load_as_list:
             load_kwargs['concatenate'] = False
             load_kwargs.setdefault('extension', '*')
