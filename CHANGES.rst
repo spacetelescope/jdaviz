@@ -146,6 +146,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fixed bug where creating new subsets in a fresh app instance and adjusting them creates a copy
+  instead of adjusting the original subset. [#4083]
+
 Cubeviz
 ^^^^^^^
 
