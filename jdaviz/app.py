@@ -1076,7 +1076,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         name : str
             The label to show in the viewer toolbar for the custom tool set.
         """
-        for viewer in self._viewer_store.values():
+        for viewer in list(self._viewer_store.values()):
             tools_nested, selected_tool = callable(viewer)
             if tools_nested is None:
                 tools_nested = viewer.toolbar._original_tools_nested[:3]
@@ -2016,7 +2016,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             self._update_layer_icons(old_label, new_label)
 
             # Update viewer layer states and reference data
-            for viewer_id, viewer in self._viewer_store.items():
+            for viewer_id, viewer in list(self._viewer_store.items()):
                 # Update reference data if it matches old label
                 if (hasattr(viewer.state, 'reference_data')
                         and viewer.state.reference_data is not None
@@ -2292,7 +2292,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
     def get_viewer_reference_names(self):
         """Return a list of available viewer reference names."""
         # Cannot sort because of None
-        return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
+        return [self._viewer_item_by_id(vid).get('reference') for vid in list(self._viewer_store)]
 
     def get_viewers_of_cls(self, cls):
         """Return a list of viewers of a specific class."""
@@ -2300,7 +2300,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             cls_name = cls
         else:
             cls_name = cls.__name__
-        return [viewer for viewer in self._viewer_store.values()
+        return [viewer for viewer in list(self._viewer_store.values())
                 if viewer.__class__.__name__ == cls_name]
 
     def _update_viewer_reference_name(
@@ -2957,7 +2957,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             self._reparent_subsets(data)
 
         # Make sure the data isn't loaded in any viewers and isn't the selected orientation
-        for viewer_id, viewer in self._viewer_store.items():
+        for viewer_id, viewer in list(self._viewer_store.items()):
             if orientation_plugin is not None and self._align_by == 'wcs':
                 if viewer.state.reference_data.label == data_label:
                     self._change_reference_data(base_wcs_layer_label, viewer_id)

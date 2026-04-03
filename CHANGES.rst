@@ -69,6 +69,8 @@ New Features
 
 - Fixed batch aperture photometry mode in deconfigged. [#4106]
 
+- Generalize Data Quality plugin to work for images in deconfigged. [#4110]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the

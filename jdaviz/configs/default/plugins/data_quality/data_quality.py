@@ -9,7 +9,7 @@ from matplotlib.colors import hex2color
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
-    PluginTemplateMixin, LayerSelect, ViewerSelectMixin
+    PluginTemplateMixin, LayerSelect, ViewerSelectMixin, _is_image_viewer as is_image_viewer
 )
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
@@ -31,7 +31,7 @@ telescope_names = {
 }
 
 
-@tray_registry('g-data-quality', label="Data Quality")
+@tray_registry('g-data-quality', label="Data Quality", category="data:analysis")
 class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Data Quality Plugin Documentation <imviz-data-quality>` for more details.
@@ -48,7 +48,6 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     * ``dq_layer_opacity``: Opacity of the data quality layer.
     * ``decoded_flags``: List of decoded flags from the selected flag map.
     * ``flags_filter``: List of flags to display.
-    * ``flag_map``: Name of the selected flag map.
     * ``flag_map_definitions_selected``: Dictionary of the selected flag map.
     """
     template_file = __file__, "data_quality.vue"
@@ -102,16 +101,12 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         self._set_irrelevant()
         self._update_available_viewers()
 
+        if self.config == 'deconfigged':
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dq_layer_items'])
+
     def _update_available_viewers(self):
         if not hasattr(self, 'viewer'):
             return
-
-        def is_image_viewer(viewer):
-            from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-            from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
-            from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
-
-            return isinstance(viewer, (ImvizImageView, CubevizImageView, RampvizImageView))
 
         viewer_filter_names = [filt.__name__ for filt in self.viewer.filters]
         if 'is_image_viewer' not in viewer_filter_names:

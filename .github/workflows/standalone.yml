@@ -102,7 +102,7 @@ jobs:
     steps:
     # osx signing based on https://melatonin.dev/blog/how-to-code-sign-and-notarize-macos-audio-plugins-in-ci/
     - name: Import Certificates (macOS)
-      uses: apple-actions/import-codesign-certs@b610f78488812c1e56b20e6df63ec42d833f2d14  # v6.0.0
+      uses: apple-actions/import-codesign-certs@fe74d46e82474f87e1ba79832ad28a4013d0e33a  # v6.1.0
       if: ${{ matrix.os == 'macos-14' }}
       with:
         p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}

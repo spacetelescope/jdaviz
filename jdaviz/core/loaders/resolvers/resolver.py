@@ -177,7 +177,10 @@ class FormatSelect(SelectPluginComponent):
                     else:
                         self._invalid_importers[label] = 'Input considered invalid by importer'
 
-        self.items = all_formats
+        # Sort to move Catalog to the end of the list
+        catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
+        other_formats = [f for f in all_formats if f['label'] != 'Catalog']
+        self.items = other_formats + catalog_formats
         self._apply_default_selection()
 
 
