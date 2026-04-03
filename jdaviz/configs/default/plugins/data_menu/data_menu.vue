@@ -14,8 +14,6 @@
               <div
                 v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0 || data_menu_open"
                 :class="loaded_n_data === 0 && !data_menu_open ? 'viewer-label pulse' : 'viewer-label'"
-                @mouseenter="showFloatingLabel($event, viewer_reference || viewer_id)"
-                @mouseleave="hideFloatingLabel()"
               >
                 <span style="float: right">
                   <j-layer-viewer-icon-stylized
@@ -34,10 +32,7 @@
                 <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">{{viewer_reference || viewer_id}}</span>
               </div>
 
-              <div v-for="item in layer_items" class="viewer-label"
-                @mouseenter="showFloatingLabel($event, item.label)"
-                @mouseleave="hideFloatingLabel()"
-              >
+              <div v-for="item in layer_items" class="viewer-label">
                 <div v-if="item.visible">
                   <span style="float: right">
                     <j-layer-viewer-icon-stylized
@@ -333,7 +328,6 @@
       this.jupyterLabCell = this.$el.closest(".jp-Notebook-cell");
     },
     beforeDestroy() {
-      this.hideFloatingLabel();
       let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
       if (element === null) {
         return
@@ -420,57 +414,6 @@
         } else {
           return 'False'
         }
-      },
-      showFloatingLabel(event, label) {
-        this.hideFloatingLabel();
-        const el = event.currentTarget;
-        const rect = el.getBoundingClientRect();
-
-        // Read font properties from the actual text span
-        const textSpan = el.querySelector('.invert-if-dark');
-        const computed = textSpan
-          ? window.getComputedStyle(textSpan)
-          : null;
-
-        const floater = document.createElement('div');
-        floater.textContent = label;
-        Object.assign(floater.style, {
-          position: 'fixed',
-          top: rect.top + 'px',
-          right: (window.innerWidth - rect.right) + 'px',
-          height: rect.height + 'px',
-          backgroundColor: '#e5e5e5',
-          // Text is always dark on the light background (the
-          // original uses filter:invert in dark mode to achieve
-          // the same result).
-          color: 'rgba(0, 0, 0, 0.87)',
-          whiteSpace: 'nowrap',
-          lineHeight: rect.height + 'px',
-          paddingLeft: '30px',
-          paddingRight: '36px',
-          borderTopLeftRadius: '4px',
-          borderBottomLeftRadius: '4px',
-          zIndex: '10001',
-          pointerEvents: 'none',
-          fontFamily: computed
-            ? computed.fontFamily
-            : 'Roboto, sans-serif',
-          fontSize: computed
-            ? computed.fontSize
-            : '14px',
-        });
-
-        const target = document.querySelector('[data-app]');
-        if (target) {
-          target.appendChild(floater);
-        }
-        this._floatingLabel = floater;
-      },
-      hideFloatingLabel() {
-        if (this._floatingLabel && this._floatingLabel.parentNode) {
-          this._floatingLabel.parentNode.removeChild(this._floatingLabel);
-        }
-        this._floatingLabel = null;
       }
     },
   }
