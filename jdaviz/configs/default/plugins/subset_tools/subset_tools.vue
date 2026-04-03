@@ -68,7 +68,7 @@
     </v-row>
 
     <!-- Sub-plugin for recentering of spatial subset (Imviz only) -->
-    <v-row v-if="config=='imviz' && is_centerable">
+    <v-row v-if="(config=='imviz' || config=='deconfigged') && is_centerable">
       <v-expansion-panels accordion v-model="subplugins_opened">
         <v-expansion-panel>
           <v-expansion-panel-header >
