@@ -18,7 +18,7 @@ New Features
 - Support in plot options to set which columns are visible for table viewers. [#4033]
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint.
-  Footprint selection tools now support control+click or command+click to toggle 
+  Footprint selection tools now support control+click or command+click to toggle
   selections (add/remove individual footprints without replacing the current selection). [#3962, #4034]
 
 - Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
@@ -94,6 +94,9 @@ Specviz2d
 
 API Changes
 -----------
+
+- Deprecate ``show_in_viewer`` argument in ``load`` in favor of using the ``viewer`` argument to specify
+  which viewer(s) to show the data in, or whether to create a new viewer. [#4116]
 
 Cubeviz
 ^^^^^^^

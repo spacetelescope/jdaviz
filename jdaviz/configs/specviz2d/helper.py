@@ -1,3 +1,5 @@
+import warnings
+
 from astropy.utils.decorators import deprecated
 from specutils import Spectrum
 
@@ -118,6 +120,12 @@ class Specviz2d(Specviz):
             load_kwargs['timeout'] = timeout
         if local_path is not None:
             load_kwargs['local_path'] = local_path
+
+        if show_in_viewer is not True:
+            warnings.warn(
+                'The "show_in_viewer" argument is deprecated and will be removed in a '
+                'future version. Use "viewer" instead.',
+                DeprecationWarning, stacklevel=2)
 
         if spectrum_2d is not None:
             if isinstance(spectrum_2d, Spectrum):
