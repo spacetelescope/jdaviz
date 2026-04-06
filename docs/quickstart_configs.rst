@@ -44,11 +44,10 @@ Typical usage to load a file into a desired configuration::
 
 For example, to load a FITS image into Imviz::
 
-    jdaviz --layout=imviz --filepath=my_image.fits --file_format=Image
+    jdaviz --layout=imviz --filepath="my_image.fits" --file_format="Image"
 
 You can also specify filepath and file format using the shorter ``-fp`` and ``-ff``, respectively. Note that
-the file format is generally required because many files can be read as, for example, using either the image
-loader or the catalog loader.
+the file format is generally required because many files can be read by multiple loaders.
 
 To learn more about the various ``jdaviz`` application configurations and loading data,
 see the :ref:`imviz`, :ref:`specviz`, :ref:`cubeviz`, :ref:`mosviz`, or :ref:`specviz2d` tools.
