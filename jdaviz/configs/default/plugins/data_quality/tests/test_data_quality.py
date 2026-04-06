@@ -242,14 +242,14 @@ def test_cubeviz_dq_plugin_and_layer_visibility_bug(helper_name, request):
 
     # in the data collection there should be flux, unc, extracted spectrum,
     # and the DQ cube for a total of 4 items
-    assert len(helper.app.data_collection) == 4
+    assert len(helper._app.data_collection) == 4
 
     # this assumption is made in the DQ plugin (for now)
-    assert helper.app.data_collection[-1].label.endswith('[DQ]')
+    assert helper._app.data_collection[-1].label.endswith('[DQ]')
 
     # sci+dq layers are correctly identified
-    expected_science_data = helper.app.data_collection[0]
-    expected_dq_data = helper.app.data_collection[-1]
+    expected_science_data = helper._app.data_collection[0]
+    expected_dq_data = helper._app.data_collection[-1]
     assert dq_plugin.science_layer_selected == expected_science_data.label
     assert dq_plugin.dq_layer_selected == expected_dq_data.label
 
@@ -305,8 +305,8 @@ def test_cubeviz_dq_plugin_and_layer_visibility_bug(helper_name, request):
         mm.calculate_moment()
 
         # add the moment map to the flux viewer
-        dc = helper.app.data_collection
-        viewer = helper.app.get_viewer('flux-viewer')
+        dc = helper._app.data_collection
+        viewer = helper._app.get_viewer('flux-viewer')
         viewer.add_data(dc[-1])
 
         # create a spatial subset in the flux-viewer
@@ -314,5 +314,5 @@ def test_cubeviz_dq_plugin_and_layer_visibility_bug(helper_name, request):
         helper.plugins['Subset Tools'].import_region(roi)
 
         # toggle layer visibility, this used to trigger an AttributeError:
-        helper.app.set_data_visibility('flux-viewer', dc[-1].label)
-        helper.app.set_data_visibility('flux-viewer', dc[0].label)
+        helper._app.set_data_visibility('flux-viewer', dc[-1].label)
+        helper._app.set_data_visibility('flux-viewer', dc[0].label)
