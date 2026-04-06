@@ -70,7 +70,7 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     solara.config = layout.capitalize()
     solara.data_list = file_list
     if file_formats is not None:
-        solara.format_list = [f[0] for f in file_formats]
+        solara.format_list = [f[0].title() for f in file_formats]
 
     if layout == 'mosviz':
         solara.load_data_kwargs = {'instrument': instrument}
