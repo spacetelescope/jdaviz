@@ -51,7 +51,7 @@ New Features
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
 
-- Allow launching generalized Jdaviz from the command line and deprecate configs from that interface. [#4087]
+- Allow launching generalized Jdaviz from the command line and deprecate configs from that interface. [#4087, #4115]
 
 - Added ability to load spectra with 'IVAR' and 'VAR' uncertainty extensions. [#4091]
 
