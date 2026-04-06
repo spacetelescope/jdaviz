@@ -69,7 +69,7 @@ New Features
 
 - Fixed batch aperture photometry mode in deconfigged. [#4106]
 
-- Generalize Data Quality plugin to work for images in deconfigged. [#4110]
+- Generalize Data Quality plugin. [#4110, #4111]
 
 Cubeviz
 ^^^^^^^
