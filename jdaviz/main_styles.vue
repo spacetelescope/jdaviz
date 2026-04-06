@@ -166,6 +166,7 @@ div.output_wrapper {
   border-radius: 2px !important;
   border: 1px #003B4D solid !important;
   color: black !important;
+  z-index: 10000 !important;
 }
 
 .v-expansion-panel-content__wrap {
