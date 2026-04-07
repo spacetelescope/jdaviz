@@ -218,7 +218,6 @@ class TestDeleteOrientation(BaseDeconfiggedImage_WCS_WCS):
         assert self.viewer.state.reference_data.label == "Default orientation"
         assert viewer_2._obj.glue_viewer.state.reference_data.label == "Default orientation"
 
-    @pytest.mark.skip(reason='bug when switching this test to deconfigged (JDAT-6025)')
     @pytest.mark.parametrize("klass", [EllipseSkyRegion, RectangleSkyRegion])
     @pytest.mark.parametrize(
         ("angle", "sbst_theta"),
