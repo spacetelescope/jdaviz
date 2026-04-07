@@ -116,7 +116,7 @@ class TestLink_WCS_WCS(BaseDeconfiggedImage_WCS_WCS, BaseLinkHandler):
 
         # Add subsets
         self.subset_plugin.import_region([
-            CirclePixelRegion(center=PixCoord(x=2.55, y=3.55), radius=1.05),
+            CirclePixelRegion(center=PixCoord(x=2.55, y=3.55), radius=1.05).to_sky(self.wcs_1),
             CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5).to_sky(self.wcs_1),
             PolygonPixelRegion(vertices=PixCoord(x=[1, 2, 2], y=[1, 1, 2])).to_sky(self.wcs_1),
             PolygonPixelRegion(vertices=PixCoord(x=[2, 3, 3], y=[2, 2, 3])).to_sky(self.wcs_1)

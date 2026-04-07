@@ -224,9 +224,8 @@ class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
     def test_batch_phot(self):
 
         self.orientation_plugin.align_by = 'WCS'
-        self.subset_plugin.import_region(
-            CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5)
-        )  # Draw a circle
+        reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5).to_sky(self.wcs_1)
+        self.subset_plugin.import_region(reg)  # Draw a circle
 
         phot_plugin = self.helper.plugins['Aperture Photometry']
         assert phot_plugin.dataset.choices == ['has_wcs_1', 'has_wcs_2']
