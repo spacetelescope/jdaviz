@@ -908,10 +908,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         def _do_recentering(subset, subset_state):
             try:
-                type = 'sky_region' if self._app.config == 'imviz' and self._app._align_by == 'wcs' else 'region'  # noqa: E501
+                if self._app.config in ('imviz', 'deconfigged') and self._app._align_by == 'wcs':
+                    region_type = 'sky_region'
+                else:
+                    region_type = 'region'
                 reg = self._app.get_subsets(subset_name=subset,
-                                            include_sky_region=type == 'sky_region',
-                                            spatial_only=True)[0][type]
+                                            include_sky_region=region_type == 'sky_region',
+                                            spatial_only=True)[0][region_type]
                 aperture = regions2aperture(reg)
                 data = self.recenter_dataset.selected_dc_item
                 comp = data.get_component(data.main_components[0])
@@ -1379,7 +1382,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                             RectangularAperture, CircularAnnulus,
                                             CirclePixelRegion, EllipsePixelRegion,
                                             RectanglePixelRegion, CircleAnnulusPixelRegion))
-                            and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
+                            and self._app._align_by == 'wcs'):
                         bad_regions.append(
                             (region, 'Pixel region provided but data is aligned by WCS'))
                         continue
