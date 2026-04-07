@@ -595,7 +595,7 @@ class JdavizViewerMixin(WithCache):
                 return layer
 
     def _apply_layer_defaults(self, layer_state):
-        # Hide subset layers on orientation layers to avoid rendering artifacts.
+        # Hide subsets on orientation layers to avoid rendering artifacts.
         if (layer_state.layer.label != layer_state.layer.data.label
                 and layer_state.layer.data.meta.get(_wcs_only_label, False)):
             layer_state.visible = False
