@@ -1383,9 +1383,16 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                             CirclePixelRegion, EllipsePixelRegion,
                                             RectanglePixelRegion, CircleAnnulusPixelRegion))
                             and self._app._align_by == 'wcs'):
-                        bad_regions.append(
-                            (region, 'Pixel region provided but data is aligned by WCS'))
-                        continue
+                        if has_wcs:
+                            wcs = data.coords
+                            if getattr(wcs, 'world_n_dim', None) == 3:
+                                wcs = _get_celestial_wcs(wcs)
+                            region = region.to_sky(wcs)
+                        else:
+                            bad_regions.append((region, 'Pixel region provided but data '
+                                                        'is aligned by WCS with no valid '
+                                                        'WCS for conversion'))
+                            continue
 
                     # photutils: Convert to region shape first
                     if isinstance(region, (CircularAperture, SkyCircularAperture,
