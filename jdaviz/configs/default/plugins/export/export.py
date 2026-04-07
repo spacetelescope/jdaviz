@@ -139,7 +139,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         viewer_format_options = ['png', 'svg']
         if self.config == 'cubeviz':
-            if not self.app.state.settings.get('server_is_remote'):
+            if not self._app.state.settings.get('server_is_remote'):
                 viewer_format_options += ['mp4']
                 # still list mp4 as an option, but display a message (and raise an error) if
                 # opencv is not available
@@ -207,7 +207,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.session.hub.subscribe(self, SubsetDeleteMessage,
                                    handler=self._set_subset_not_supported_msg)
 
-        if self.app.state.settings.get('server_is_remote', False):
+        if self._app.state.settings.get('server_is_remote', False):
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.serverside_enabled = False
@@ -238,14 +238,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if self.subset.selected == '' or self.subset.selected is None:
             return
 
-        subset = self.app.get_subsets(self.subset.selected)
+        subset = self._app.get_subsets(self.subset.selected)
         selected = self.subset_format.selected
 
         self.subset_format_invalid_msg = ''
         is_supported = True
 
         try:
-            is_spectral = self.app._is_subset_spectral(subset[0])
+            is_spectral = self._app._is_subset_spectral(subset[0])
         except KeyError:
             is_spectral = False
 
@@ -376,14 +376,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         if self.subset.selected not in [None, '']:
             try:
-                subset = self.app.get_subsets(self.subset.selected)
+                subset = self._app.get_subsets(self.subset.selected)
             except Exception as e:
                 self.subset_invalid_msg = f"Export for subset not supported: {e}"
             else:
                 if self.subset.selected == '':
                     self.subset_invalid_msg = ''
                     self.subset_format_invalid_msg = ''
-                elif self.app._is_subset_spectral(subset[0]):
+                elif self._app._is_subset_spectral(subset[0]):
                     self.subset_invalid_msg = ''
                 elif len(subset) > 1:
                     self.subset_invalid_msg = 'Export for composite subsets not yet supported.'
@@ -718,7 +718,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 raise ImportError("Please install opencv-python")
             raise ValueError("movie support disabled")
 
-        slice_plg = self.app._jdaviz_helper.plugins["Spectral Slice"]._obj
+        slice_plg = self._app._jdaviz_helper.plugins["Spectral Slice"]._obj
         orig_slice = viewer.slice
         temp_png_files = []
         i = i_start
@@ -842,7 +842,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             i_end = int(self.i_end)
 
         # No wrapping. Forward only.
-        slice_plg = self.app._jdaviz_helper.plugins["Spectral Slice"]._obj
+        slice_plg = self._app._jdaviz_helper.plugins["Spectral Slice"]._obj
         if i_start < 0:  # pragma: no cover
             i_start = 0
         max_slice = len(slice_plg.valid_values_sorted) - 1
@@ -878,8 +878,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if align_by != 'wcs':
             raise RuntimeError("Please link datasets by WCS first using the Orientation plugin.")
 
-        region = self.app.get_subsets(subset_name=self.subset.selected,
-                                      include_sky_region=True)[0]['sky_region']
+        region = self._app.get_subsets(subset_name=self.subset.selected,
+                                       include_sky_region=True)[0]['sky_region']
 
         stcs_str = region2stcs_string(region)
 
@@ -899,15 +899,15 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # type of region saved depends on link type
         align_by = getattr(self.app, '_align_by', None)
 
-        region = self.app.get_subsets(subset_name=selected_subset_label,
-                                      include_sky_region=align_by == 'wcs')
+        region = self._app.get_subsets(subset_name=selected_subset_label,
+                                       include_sky_region=align_by == 'wcs')
 
         region = region[0][f'{"sky_" if align_by == "wcs" else ""}region']
 
         region.write(str(filename), overwrite=True)
 
     def save_subset_as_table(self, filename):
-        region = self.app.get_subsets(subset_name=self.subset.selected)
+        region = self._app.get_subsets(subset_name=self.subset.selected)
         region.write(str(filename))
 
     def vue_interrupt_recording(self, *args):  # pragma: no cover

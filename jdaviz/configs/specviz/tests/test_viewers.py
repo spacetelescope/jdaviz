@@ -34,13 +34,13 @@ def test_spectrum_viewer_keep_unit_when_removed(specviz_helper, spectrum1d):
     uc = specviz_helper.plugins["Unit Conversion"]
     assert uc.flux_unit == "Jy"
     uc.flux_unit = "MJy"
-    specviz_helper.app.remove_data_from_viewer('spectrum-viewer', "Test")
-    specviz_helper.app.add_data_to_viewer('spectrum-viewer', "Test")
+    specviz_helper._app.remove_data_from_viewer('spectrum-viewer', "Test")
+    specviz_helper._app.add_data_to_viewer('spectrum-viewer', "Test")
     # Actual values not in display unit but should not affect display unit.
     spec = specviz_helper.get_spectra(data_label="Test", apply_slider_redshift=False)
     assert spec.flux.unit == u.Jy
     assert uc.flux_unit.selected == "MJy"
-    assert specviz_helper.app._get_display_unit('spectral_y') == "MJy"
+    assert specviz_helper._app._get_display_unit('spectral_y') == "MJy"
 
 
 def test_limits_on_unit_change(specviz_helper, spectrum1d):
@@ -73,7 +73,7 @@ class TestResetLimitsTwoTests:
     def test_reset_limits_01(self, specviz_helper, spectrum1d):
         """This should run first."""
         specviz_helper.load_data(spectrum1d)
-        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        sv = specviz_helper._app.get_viewer('spectrum-viewer')
 
         orig_xlims = (sv.state.x_min, sv.state.x_max)
         orig_ylims = (sv.state.y_min, sv.state.y_max)
@@ -93,7 +93,7 @@ class TestResetLimitsTwoTests:
     def test_reset_limits_02(self, specviz_helper, spectrum1d_nm):
         """This should run second and see if first polutes it."""
         specviz_helper.load_data(spectrum1d_nm)
-        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        sv = specviz_helper._app.get_viewer('spectrum-viewer')
 
         orig_xlims = (sv.state.x_min, sv.state.x_max)
         orig_ylims = (sv.state.y_min, sv.state.y_max)

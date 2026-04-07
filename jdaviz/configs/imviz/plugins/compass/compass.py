@@ -65,7 +65,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
             return
 
         # There can be only one!
-        for vid, viewer in self.app._viewer_store.items():
+        for vid, viewer in self._app._viewer_store.items():
             if vid == self.viewer.selected_id:
                 viewer.compass = self
                 viewer.on_limits_change()  # Force redraw
@@ -83,7 +83,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         Input is rendered buffer from Matplotlib.
 
         """
-        if self.app.loading or (icn := self.app.state.layer_icons.get(data_label)) is None:
+        if self._app.loading or (icn := self._app.state.layer_icons.get(data_label)) is None:
             return
 
         self.icon = icn

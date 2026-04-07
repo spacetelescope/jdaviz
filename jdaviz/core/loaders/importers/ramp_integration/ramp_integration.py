@@ -27,7 +27,7 @@ class RampIntegrationImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'rampviz'):
+        if self._app.config not in ('deconfigged', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
 

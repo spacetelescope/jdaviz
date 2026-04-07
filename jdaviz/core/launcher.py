@@ -88,6 +88,17 @@ def _launch_config_with_data(config, data=None, show=True, filepath=None, **kwar
     Jdaviz ConfigHelper : jdaviz.core.helpers.ConfigHelper
         The loaded ConfigHelper with data loaded
     '''
+    # Deprecate non-mosviz configs
+    deprecated_configs = ['cubeviz', 'imviz', 'rampviz', 'specviz', 'specviz2d']
+    if config.lower() in deprecated_configs:
+        import warnings
+        warnings.warn(
+            f"{config.capitalize()} is deprecated and will be removed in version 5.2. "
+            "Please use the top-level App instead.",
+            DeprecationWarning,
+            stacklevel=3
+        )
+
     viz_class = getattr(jdaviz_configs, config.capitalize())
 
     # Create config instance
@@ -232,15 +243,15 @@ class Launcher(v.VuetifyTemplate):
                                           filepath=self.filepath, show=False)
         if self.height not in ['100%', '100vh']:
             # We're in jupyter mode. Set to default height
-            default_height = helper.app.state.settings['context']['notebook']['max_height']
-            helper.app.layout.height = default_height
+            default_height = helper._app.state.settings['context']['notebook']['max_height']
+            helper._app.layout.height = default_height
             self.main.height = default_height
         self.main.color = 'transparent'
-        self.main.children = [helper.app]
+        self.main.children = [helper._app]
 
     def vue_launch_jdaviz(self, _):
         # Launch the deconfigged version of Jdaviz
-        jdaviz_app = jd.gca().app
+        jdaviz_app = jd.gca()._app
         jd.loaders['file'].open_in_tray()
         if self.height not in ['100%', '100vh']:
             # We're in jupyter mode. Set to default height

@@ -22,7 +22,7 @@ class TestDefaultOrientation(BaseDeconfiggedImage_WCS_WCS):
         plg.wcs_fast_approximation = False
 
         # Check that WCS linking is in effect (links should be WCSLink, not LinkSame)
-        for link in self.helper.app.data_collection.external_links:
+        for link in self.helper._app.data_collection.external_links:
             assert not isinstance(link, LinkSame)
 
         # wcs_fast_approximation should revert/default to True when change back to Pixels.
@@ -30,7 +30,7 @@ class TestDefaultOrientation(BaseDeconfiggedImage_WCS_WCS):
         assert plg.wcs_fast_approximation is True
 
         # Check that pixel linking is in effect (links should be LinkSame)
-        for link in self.helper.app.data_collection.external_links:
+        for link in self.helper._app.data_collection.external_links:
             assert isinstance(link, LinkSame)
 
     def test_astrowidgets_markers_disable_relinking(self):
@@ -141,7 +141,7 @@ def test_delete_create_viewer_preserves_wcs_linking():
     assert orientation.align_by.selected == 'WCS'
 
     # delete the existing viewer
-    jd.gca().app.vue_destroy_viewer_item('Image')
+    jd.gca()._app.vue_destroy_viewer_item('Image')
     assert not jd.viewers
 
     # add a new viewer with the same data
@@ -175,7 +175,7 @@ class TestNonDefaultOrientation(BaseDeconfiggedImage_WCS_WCS):
 
         # Change orientation in second viewer from UI and ensure plugin selection is the same
         lc_plugin.viewer.selected = "Image"
-        self.helper.app._change_reference_data("Default orientation", viewer_2._obj.reference)
+        self.helper._app._change_reference_data("Default orientation", viewer_2._obj.reference)
         assert lc_plugin.orientation.selected == "North-up, East-left"
 
         # Both viewers should revert back to same reference when pixel-linked.
@@ -213,7 +213,7 @@ class TestDeleteOrientation(BaseDeconfiggedImage_WCS_WCS):
         lc_plugin.viewer = viewer_2._obj.reference
         lc_plugin.orientation = "North-up, East-left"
 
-        self.helper.app.data_item_remove("North-up, East-left")
+        self.helper._app.data_item_remove("North-up, East-left")
 
         assert self.viewer.state.reference_data.label == "Default orientation"
         assert viewer_2._obj.glue_viewer.state.reference_data.label == "Default orientation"
@@ -239,20 +239,20 @@ class TestDeleteOrientation(BaseDeconfiggedImage_WCS_WCS):
         # Switch to N-up E-right
         lc_plugin.set_north_up_east_right()
 
-        self.helper.app.data_item_remove("North-up, East-left")
+        self.helper._app.data_item_remove("North-up, East-left")
 
         # Check that E-right still linked to default
-        assert len(self.helper.app.data_collection.external_links) == 3
-        assert self.helper.app.data_collection.external_links[2].data1.label == "Default orientation"  # noqa: E501
-        assert self.helper.app.data_collection.external_links[2].data2.label == "North-up, East-right"  # noqa: E501
+        assert len(self.helper._app.data_collection.external_links) == 3
+        assert self.helper._app.data_collection.external_links[2].data1.label == "Default orientation"  # noqa: E501
+        assert self.helper._app.data_collection.external_links[2].data2.label == "North-up, East-right"  # noqa: E501
 
         # Check that the subset got reparented and the angle is correct in the display
-        subset_group = self.helper.app.data_collection.subset_groups[0]
-        nuer_data = self.helper.app.data_collection['North-up, East-right']
+        subset_group = self.helper._app.data_collection.subset_groups[0]
+        nuer_data = self.helper._app.data_collection['North-up, East-right']
         assert subset_group.subset_state.xatt in nuer_data.components
         assert_allclose(subset_group.subset_state.roi.theta, sbst_theta, rtol=1e-5)
 
-        out_reg = self.helper.app.get_subsets(include_sky_region=True)["Subset 1"][0]["sky_region"]
+        out_reg = self.helper._app.get_subsets(include_sky_region=True)["Subset 1"][0]["sky_region"]
         assert_allclose(out_reg.center.ra.deg, reg.center.ra.deg)
         assert_allclose(out_reg.center.dec.deg, reg.center.dec.deg)
         assert_quantity_allclose(out_reg.width, reg.width, rtol=1e-5)

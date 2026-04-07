@@ -17,21 +17,21 @@ class LineListMixin:
         Delegates to the Line Lists plugin to avoid code duplication.
         """
         # Delegate to the Line Lists plugin's import method
-        plg = self.app._jdaviz_helper.plugins['Line Lists']
+        plg = self._app._jdaviz_helper.plugins['Line Lists']
         plg._obj.import_line_list(line_table)
 
     def _get_spectrum_viewer(self):
         """Get the spectrum viewer, handling both configured and deconfigged cases."""
         if hasattr(self, '_default_spectrum_viewer_reference_name'):
-            return self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+            return self._app.get_viewer(self._default_spectrum_viewer_reference_name)
         else:
             # For deconfigged, dynamically find the first spectrum viewer
-            viewer_reference = self.app._get_first_viewer_reference_name(
+            viewer_reference = self._app._get_first_viewer_reference_name(
                 require_spectrum_viewer=True
             )
             if viewer_reference is None:
                 return None
-            return self.app.get_viewer(viewer_reference)
+            return self._app.get_viewer(viewer_reference)
 
     def erase_spectral_lines(self, name=None):
         """Convenience function to get to the viewer function"""
@@ -83,10 +83,10 @@ class LineListMixin:
         '''
         if range is not None:
             msg = RedshiftMessage("rs_slider_range", range, sender=self)
-            self.app.hub.broadcast(msg)
+            self._app.hub.broadcast(msg)
         if step is not None:
             msg = RedshiftMessage("rs_slider_step", step, sender=self)
-            self.app.hub.broadcast(msg)
+            self._app.hub.broadcast(msg)
 
     def set_redshift(self, new_redshift):
         '''
@@ -97,7 +97,7 @@ class LineListMixin:
             # avoid sending messages that can result in race conditions
             return
         msg = RedshiftMessage("redshift", new_redshift, sender=self)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)
 
     def _redshift_listener(self, msg):
         '''Save new redshifts (including from the helper itself)'''

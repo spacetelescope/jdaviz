@@ -101,8 +101,13 @@ API Changes
 Cubeviz
 ^^^^^^^
 
+- Deprecates Cubeviz in favor of the generalized top-level Jdaviz application. [#4090]
+
 Imviz
 ^^^^^
+
+- Deprecates Imviz in favor of the generalized top-level Jdaviz application. [#4090]
+
 
 Mosviz
 ^^^^^^
@@ -110,8 +115,14 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Deprecates Specviz in favor of the generalized top-level Jdaviz application. [#4090]
+
+
 Specviz2d
 ^^^^^^^^^
+
+- Deprecates Specviz2d in favor of the generalized top-level Jdaviz application. [#4090]
+
 
 Bug Fixes
 ---------

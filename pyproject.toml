@@ -162,6 +162,12 @@ filterwarnings = [
     "ignore:Importing display from IPython.core.display is deprecated since IPython 7.14, please import from IPython.display",
     # This is needed until https://github.com/astropy/astropy/issues/19216 is resolved
     "ignore:The chararray class is deprecated and will be removed in a future release:DeprecationWarning",
+    # Ignore config deprecation warnings in tests
+    "ignore:Cubeviz is deprecated and will be removed in version 5.2.*:DeprecationWarning",
+    "ignore:Imviz is deprecated and will be removed in version 5.2.*:DeprecationWarning",
+    "ignore:Rampviz is deprecated and will be removed in version 5.2.*:DeprecationWarning",
+    "ignore:Specviz is deprecated and will be removed in version 5.2.*:DeprecationWarning",
+    "ignore:Specviz2d is deprecated and will be removed in version 5.2.*:DeprecationWarning",
 ]
 
 

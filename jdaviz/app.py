@@ -64,7 +64,7 @@ from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                supported_sq_angle_units,
                                                viewer_flux_conversion_equivalencies)
 
-__all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
+__all__ = ['PrivateApplication', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
 
 SplitPanes()
 GoldenLayout()
@@ -339,7 +339,7 @@ class ApplicationState(State):
     )
 
 
-class Application(VuetifyTemplate, HubListener):
+class PrivateApplication(VuetifyTemplate, HubListener):
     """
     The main application object containing implementing the ipyvue/vuetify
     template instructions for composing the interface.

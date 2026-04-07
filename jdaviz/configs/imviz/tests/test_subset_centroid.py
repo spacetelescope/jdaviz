@@ -61,7 +61,7 @@ class TestImvizSpatialSubsetCentroidWCSLinked(BaseImviz_WCS_GWCS):
         plg.recenter_dataset = 'gwcs[DATA]'
         plg.set_center((2.6836, 1.6332), update=True)  # Move the Subset back first.
         plg.recenter()
-        subsets = self.imviz.app.get_subsets(include_sky_region=True)
+        subsets = self.imviz._app.get_subsets(include_sky_region=True)
         subsets_sky = subsets['Subset 1'][0]['sky_region']
         subsets_pix = subsets['Subset 1'][0]['region']
         assert_allclose((subsets_pix.center.x, subsets_pix.center.y), (2.6836, 1.6332))

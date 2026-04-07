@@ -142,7 +142,7 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
         if not len(self.viewer_items) or self.viewer.selected_obj is None:
             irrelevant_msg = 'Line Lists unavailable without spectrum viewer'
         elif not len(self.viewer.selected_obj.layers):
-            if self.app.config == 'deconfigged':
+            if self._app.config == 'deconfigged':
                 irrelevant_msg = 'No data in spectrum viewer'
             else:
                 irrelevant_msg = ''
@@ -165,7 +165,7 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
         # NOTE: this is a temporary multiple-viewer solution
         # until the line lists redesign which might include support
         # for different line-lists per-viewer
-        old_viewer = self.app.get_viewer(event['old'])
+        old_viewer = self._app.get_viewer(event['old'])
         if old_viewer is None:
             return
         new_viewer = self.viewer.selected_obj
@@ -215,7 +215,7 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
 
         label = msg.data.label
         try:
-            viewer_data = self.app._jdaviz_helper.get_data(data_label=label)
+            viewer_data = self._app._jdaviz_helper.get_data(data_label=label)
         except TypeError:
             warn_message = SnackbarMessage("Line list plugin could not retrieve data from viewer",
                                            sender=self, color="error")
@@ -374,7 +374,7 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
             # Send the redshift back to the Specviz helper (and also trigger
             # self._update_global_redshift)
             msg = RedshiftMessage("redshift", value, sender=self)
-            self.app.hub.broadcast(msg)
+            self._app.hub.broadcast(msg)
 
     def _update_line_list_obs(self, *args):
         for list_name, line_list in self.list_contents.items():

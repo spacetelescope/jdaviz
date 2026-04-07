@@ -89,10 +89,10 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     imviz_helper.load(catalog_obj, col_other=['col1', 'col2', 'col3'])
 
     # check for the table in the data collection
-    dc = imviz_helper.app.data_collection
+    dc = imviz_helper._app.data_collection
     assert len(dc) == 2
-    assert 'Catalog' in imviz_helper.app.data_collection.labels
-    tab = imviz_helper.app.data_collection[1].get_object(Table)
+    assert 'Catalog' in imviz_helper._app.data_collection.labels
+    tab = imviz_helper._app.data_collection[1].get_object(Table)
     assert 'col1' in tab.colnames
 
     # make sure linking doesn't produce any errors when alignment changes.
@@ -113,9 +113,9 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     # load catalog
     imviz_helper.load(catalog_obj)
 
-    dc = imviz_helper.app.data_collection
+    dc = imviz_helper._app.data_collection
     assert len(dc) == 1
-    assert 'Catalog' in imviz_helper.app.data_collection.labels
+    assert 'Catalog' in imviz_helper._app.data_collection.labels
 
     # make coordinate columns were renamed to Right Ascension and Declination,
     # X and Y in the data collection for consistency, and that RA / Dec always
@@ -157,14 +157,14 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
     # load catalog
     imviz_helper.load(catalog)
 
-    dc = imviz_helper.app.data_collection
+    dc = imviz_helper._app.data_collection
     assert len(dc) == 1
-    assert 'Catalog' in imviz_helper.app.data_collection.labels
+    assert 'Catalog' in imviz_helper._app.data_collection.labels
 
     # make sure 'RA' column was renamed to Right Ascension and 'Dec' to 'Declination'
     # in the data collection for consistency, and that the table in the data
     # collection always has units
-    qtab = imviz_helper.app.data_collection[0].get_object(QTable)
+    qtab = imviz_helper._app.data_collection[0].get_object(QTable)
     assert 'RA' in qtab.colnames
     assert 'Dec' in qtab.colnames
     assert 'X' in qtab.colnames
@@ -249,14 +249,14 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     imviz_helper.load(catalog)
 
     # ensure that it is in the data collection with the correct label "Catalog"
-    dc = imviz_helper.app.data_collection
+    dc = imviz_helper._app.data_collection
     assert len(dc) == 3  # image, orientation layer, and catalog
-    assert 'Catalog' in imviz_helper.app.data_collection.labels
+    assert 'Catalog' in imviz_helper._app.data_collection.labels
 
     # make sure 'RA' column was renamed to Right Ascension and 'Dec' to 'Declination'
     # in the data collection for consistency, and that the table in the data
     # collection always has units
-    qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
+    qtab = imviz_helper._app.data_collection[-1].get_object(QTable)
     assert 'RA' in qtab.colnames
     assert 'Dec' in qtab.colnames
     # there should also be an ID column
@@ -287,12 +287,12 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     # load it again, make sure label incremented by 1
     imviz_helper.load(catalog)
     assert len(dc) == 4  # image, orientation layer, and 2 catalogs
-    assert 'Catalog (1)' in imviz_helper.app.data_collection.labels
+    assert 'Catalog (1)' in imviz_helper._app.data_collection.labels
 
     # load with custom label and check label
     imviz_helper.load(catalog, data_label='my_catalog')
     assert len(dc) == 5  # image, orientation layer, and 3 catalogs
-    assert 'my_catalog' in imviz_helper.app.data_collection.labels
+    assert 'my_catalog' in imviz_helper._app.data_collection.labels
 
     # test other loader API options. switch RA and Dec col just to test
     # non-default column selection
@@ -300,7 +300,7 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
                       col_ra='Dec', col_dec='RA')
     assert len(dc) == 6  # image, orientation layer, and 4 catalogs
     assert 'flux' in dc['with_flux'].get_object(QTable).colnames
-    qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
+    qtab = imviz_helper._app.data_collection[-1].get_object(QTable)
     assert_quantity_allclose(qtab['RA'], catalog_obj['RA'] * un)
     assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'] * un)
 
@@ -328,11 +328,11 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     # load catalog
     imviz_helper.load(catalog)
 
-    dc = imviz_helper.app.data_collection
+    dc = imviz_helper._app.data_collection
     assert len(dc) == 1
-    assert 'Catalog' in imviz_helper.app.data_collection.labels
+    assert 'Catalog' in imviz_helper._app.data_collection.labels
 
-    qtab = imviz_helper.app.data_collection[0].get_object(QTable)
+    qtab = imviz_helper._app.data_collection[0].get_object(QTable)
     assert 'SkyCoord_RA' in qtab.colnames
     assert 'SkyCoord_Dec' in qtab.colnames
     # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
@@ -412,7 +412,7 @@ def test_astroquery_jwst_hst(deconfigged_helper, telescope):
     ldr.treat_table_as_query = False
     assert 'Catalog' in ldr.format.choices
     ldr.load()
-    assert len(deconfigged_helper.app.data_collection) == 1
+    assert len(deconfigged_helper._app.data_collection) == 1
 
 
 def test_invalid(imviz_helper, tmp_path):
@@ -571,7 +571,7 @@ def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
     ldr.load()
 
     # verify catalog is in the data collection
-    dc = deconfigged_helper.app.data_collection
+    dc = deconfigged_helper._app.data_collection
     assert len(dc) == 1
     assert 'Catalog' in dc.labels
 
@@ -776,7 +776,7 @@ def test_load_catalog_from_fits_multiselect(deconfigged_helper):
 
     # verify that the table in the data collection contains the combined data
     # from both tables, and that the correct number of rows are present
-    dc = deconfigged_helper.app.data_collection
+    dc = deconfigged_helper._app.data_collection
     assert len(dc) == 1
     qtab = dc[0].get_object(QTable)
     assert len(qtab) == len(table1) + len(table2)

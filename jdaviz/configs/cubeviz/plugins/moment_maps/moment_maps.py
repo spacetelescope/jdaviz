@@ -121,7 +121,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._set_data_units)
 
-        if self.app.state.settings.get('server_is_remote', False):
+        if self._app.state.settings.get('server_is_remote', False):
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
@@ -139,13 +139,13 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     @property
     def _default_image_viewer_reference_name(self):
         return getattr(
-            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'flux-viewer'
+            self._app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'flux-viewer'
         )
 
     @property
     def _default_spectrum_viewer_reference_name(self):
         return getattr(
-            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+            self._app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
         )
 
     @property
@@ -198,11 +198,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         if self.dataset_selected != "":
             # Spectral axis is first in this list
-            data = self.app.data_collection[self.dataset_selected]
+            data = self._app.data_collection[self.dataset_selected]
             if (self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'x_display_unit')
                     and self.spectrum_viewer.state.x_display_unit is not None):
                 sunit = self.spectrum_viewer.state.x_display_unit
-            elif self.app.data_collection[self.dataset_selected].coords is not None:
+            elif self._app.data_collection[self.dataset_selected].coords is not None:
                 sunit = data.coords.world_axis_units[0]
             else:
                 sunit = ""
@@ -230,7 +230,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
              "continuum_subset_selected", "continuum_dataset_selected", "continuum_width")
     @skip_if_no_updates_since_last_active()
     def _calculate_continuum(self, msg=None):
-        if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None:  # noqa
+        if not hasattr(self, 'dataset') or self._app._jdaviz_helper is None:  # noqa
             # during initial init, this can trigger before the component is initialized
             return
         if self.continuum_dataset_selected == '':
@@ -287,9 +287,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if self.spectral_subset.selected == "Entire Spectrum":
             spec_reg = None
         else:
-            spec_reg = self.app.get_subsets(self.spectral_subset.selected,
-                                            simplify_spectral=True,
-                                            use_display_units=True)
+            spec_reg = self._app.get_subsets(self.spectral_subset.selected,
+                                             simplify_spectral=True,
+                                             use_display_units=True)
         # We need to convert the spectral region to the display units
 
         if spec_reg is None:
@@ -324,7 +324,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # Otherwise convert spectral axis to display units, have to do frequency <-> wavelength
         # before calculating
         else:
-            slab_sa = slab.spectral_axis.to(self.app._get_display_unit('spectral'))
+            slab_sa = slab.spectral_axis.to(self._app._get_display_unit('spectral'))
             slab = Spectrum(slab.flux, slab_sa, uncertainty=slab.uncertainty,
                             spectral_axis_index=cube.spectral_axis_index)
 
@@ -404,14 +404,14 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             return u.dimensionless_unscaled
         if self.spectrum_1d_viewers[0].state.x_display_unit is not None:
             return (
-                u.Unit(self.app._get_display_unit('sb')) *
+                u.Unit(self._app._get_display_unit('sb')) *
                 u.Unit(self.spectrum_1d_viewers[0].state.x_display_unit)
             )
         return u.dimensionless_unscaled
 
     @property
     def spectral_unit_selected(self):
-        return self.app._get_display_unit('spectral')
+        return self._app._get_display_unit('spectral')
 
     def vue_calculate_moment(self, *args):
         self.calculate_moment(add_data=True)

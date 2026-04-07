@@ -1,5 +1,4 @@
 import warnings
-
 from astropy.utils.decorators import deprecated
 from specutils import Spectrum
 
@@ -16,6 +15,12 @@ class Specviz2d(Specviz):
     _default_spectrum_2d_viewer_reference_name = "spectrum-2d-viewer"
 
     def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "Specviz2d is deprecated and will be removed in version 5.2. "
+            "Please use the top-level App instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__(*args, **kwargs)
 
     @property
@@ -25,7 +30,7 @@ class Specviz2d(Specviz):
         application that is wrapped by Specviz2d.
         """
         if not hasattr(self, '_specviz'):
-            self._specviz = Specviz(app=self.app)
+            self._specviz = Specviz(app=self._app)
         return self._specviz
 
     def load(self, inp=None, loader=None, format=None, target=None, **kwargs):

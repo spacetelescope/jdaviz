@@ -24,7 +24,7 @@ from astropy.utils.decorators import deprecated
 from regions.core.core import Region
 from specutils import Spectrum, SpectralRegion
 
-from jdaviz.app import Application
+from jdaviz.app import PrivateApplication
 from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
 from jdaviz.core.loaders.resolvers import find_matching_resolver
@@ -50,7 +50,7 @@ class ConfigHelper(HubListener):
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application` or `None`
+    app : `~jdaviz.app.PrivateApplication` or `None`
         The application object, or if `None`, creates a new one based on the
         default configuration for this helper.
     verbosity : {'debug', 'info', 'warning', 'error'}
@@ -63,9 +63,9 @@ class ConfigHelper(HubListener):
 
     def __init__(self, app=None, verbosity=None, history_verbosity=None):
         if app is None:
-            self.app = Application(configuration=self._default_configuration)
+            self._app = PrivateApplication(configuration=self._default_configuration)
         else:
-            self.app = app
+            self._app = app
         if (logger_plg := self.plugins.get('Logger')) is not None:
             if verbosity is not None:
                 logger_plg.popup_verbosity = verbosity
@@ -75,23 +75,29 @@ class ConfigHelper(HubListener):
         # give a reference from the app back to this config helper.  These can be accessed from a
         # viewer via viewer.jdaviz_app and viewer.jdaviz_helper
         # if the helper has already been set, this is probably a nested viz tool. Don't overwrite
-        if self.app._jdaviz_helper is None:
-            self.app._jdaviz_helper = self
+        if self._app._jdaviz_helper is None:
+            self._app._jdaviz_helper = self
 
-        self.app.hub.subscribe(self, SubsetCreateMessage,
+        self._app.hub.subscribe(self, SubsetCreateMessage,
                                handler=lambda msg: self._propagate_callback_to_viewers('_on_subset_create', msg)) # noqa
-        self.app.hub.subscribe(self, SubsetDeleteMessage,
+        self._app.hub.subscribe(self, SubsetDeleteMessage,
                                handler=lambda msg: self._propagate_callback_to_viewers('_on_subset_delete', msg)) # noqa
 
         self._in_batch_load = 0
         self._delayed_show_in_viewer_labels = {}  # label: viewer_reference pairs
         self.pending_set_data_visibility = []  # list of kwarg dicts for set_data_visibility
 
+    @property
+    @deprecated(since="5.2", alternative="._app")
+    def app(self):
+        """Access to the underlying application instance."""
+        return self._app
+
     def _propagate_callback_to_viewers(self, method, msg):
         # viewers don't have access to the app/hub to subscribe to messages, so we'll
         # catch all messages here and pass them on to each of the viewers that
         # have the applicable method implemented.
-        for viewer in self.app._viewer_store.values():
+        for viewer in self._app._viewer_store.values():
             if hasattr(viewer, method):
                 getattr(viewer, method)(msg)
 
@@ -104,33 +110,33 @@ class ConfigHelper(HubListener):
         # context managers.  Once they're all exited, then the linking/showing will
         # take place.
         self._in_batch_load += 1
-        with self.app.data_collection.delay_link_manager_update():
+        with self._app.data_collection.delay_link_manager_update():
             # user entrypoint (anything within the with-statement will get called here)
             yield
 
         self._in_batch_load -= 1
         if not self._in_batch_load:
-            self.app.hub.broadcast(ExitBatchLoadMessage(sender=self.app))
+            self._app.hub.broadcast(ExitBatchLoadMessage(sender=self._app))
 
             # Process any deferred set_data_visibility calls
             for call_kwargs in self.pending_set_data_visibility:
-                self.app.set_data_visibility(**call_kwargs)
+                self._app.set_data_visibility(**call_kwargs)
             self.pending_set_data_visibility = []
 
             # add any data to viewers that were requested but deferred
             for data_label, viewer_ref in self._delayed_show_in_viewer_labels.items():
-                self.app.set_data_visibility(viewer_ref, data_label,
-                                             visible=True, replace=False)
+                self._app.set_data_visibility(viewer_ref, data_label,
+                                              visible=True, replace=False)
             self._delayed_show_in_viewer_labels = {}
 
     def load_data(self, data, data_label=None, parser_reference=None, **kwargs):
         if data_label:
             kwargs['data_label'] = data_label
-        self.app.load_data(data, parser_reference=parser_reference, **kwargs)
+        self._app.load_data(data, parser_reference=parser_reference, **kwargs)
 
     @property
     def _coords_info(self):
-        return self.app.session.application._tools.get('g-coords-info')
+        return self._app.session.application._tools.get('g-coords-info')
 
     @property
     def loaders(self):
@@ -142,10 +148,10 @@ class ConfigHelper(HubListener):
         loaders : dict
             dict of loader objects
         """
-        if not (self.app.state.dev_loaders or self.app.config in CONFIGS_WITH_LOADERS):  # noqa
+        if not (self._app.state.dev_loaders or self._app.config in CONFIGS_WITH_LOADERS):  # noqa
             raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
-                   for item in self.app.state.loader_items}
+                   for item in self._app.state.loader_items}
         return loaders
 
     def _get_loader(self, resolver_name, parser_name=None, importer_name=None):
@@ -170,7 +176,7 @@ class ConfigHelper(HubListener):
 
         from jdaviz.core.registries import loader_importer_registry
         ImporterCls = loader_importer_registry.members.get(importer_name)
-        return ImporterCls(app=self.app, resolver=resolver, parser=parser, input=input)
+        return ImporterCls(app=self._app, resolver=resolver, parser=parser, input=input)
 
     @property
     def new_viewers(self):
@@ -182,10 +188,10 @@ class ConfigHelper(HubListener):
         new_viewers : dict
             dict of viewer-creator objects
         """
-        if not self.app.config == 'deconfigged':
+        if not self._app.config == 'deconfigged':
             raise NotImplementedError("new_viewers is only enabled in the deconfigged app")  # noqa
         new_viewers = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api  # noqa
-                       for item in self.app.state.new_viewer_items if item['is_relevant']}
+                       for item in self._app.state.new_viewer_items if item['is_relevant']}
         return new_viewers
 
     def _load(self,
@@ -214,7 +220,7 @@ class ConfigHelper(HubListener):
             Additional kwargs are passed on to both the loader and importer, as applicable.
             Any kwargs that do not match valid inputs are silently ignored.
         """
-        resolver = find_matching_resolver(self.app, inp,
+        resolver = find_matching_resolver(self._app, inp,
                                           resolver=loader,
                                           format=format,
                                           target=target,
@@ -257,7 +263,7 @@ class ConfigHelper(HubListener):
             cls : type
                 The appropriate DataApi subclass.
             """
-            config = self.app.config
+            config = self._app.config
             ndim = data.ndim
             is_spectral = 'spectral_axis_index' in data.meta
 
@@ -280,8 +286,8 @@ class ConfigHelper(HubListener):
             else:
                 # Fallback to base class
                 return DataApi
-        return {data.label: _get_data_api_class(data)(self.app, data.label)
-                for data in self.app.data_collection}
+        return {data.label: _get_data_api_class(data)(self._app, data.label)
+                for data in self._app.data_collection}
 
     @property
     @deprecated(since="5.0", alternative="datasets")
@@ -294,7 +300,7 @@ class ConfigHelper(HubListener):
         data_labels : list
             list of strings
         """
-        return [data.label for data in self.app.data_collection]
+        return [data.label for data in self._app.data_collection]
 
     @property
     def plugins(self):
@@ -307,7 +313,7 @@ class ConfigHelper(HubListener):
             dict of plugin objects
         """
         plugins = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
-                   for item in self.app.state.tray_items if item['is_relevant']}
+                   for item in self._app.state.tray_items if item['is_relevant']}
 
         msg_temp = "in the future, the formerly named \"{}\" plugin will only be available by its new name: \"{}\""  # noqa
 
@@ -315,9 +321,9 @@ class ConfigHelper(HubListener):
                    ('Spectral Extraction', '2D Spectral Extraction'),  # renamed in 4.3
                    ('Spectral Extraction', '3D Spectral Extraction')]  # renamed in 4.3
 
-        if self.app.config == 'cubeviz':
+        if self._app.config == 'cubeviz':
             old_new.append(('Slice', 'Spectral Slice'))  # renamed in 4.5
-        elif self.app.config == 'rampviz':
+        elif self._app.config == 'rampviz':
             old_new.append(('Slice', 'Ramp Slice'))  # renamed in 4.5
 
         # handle renamed plugins during deprecation
@@ -334,11 +340,11 @@ class ConfigHelper(HubListener):
 
     @property
     def plugin_tables(self):
-        return self.app._plugin_tables
+        return self._app._plugin_tables
 
     @property
     def plugin_plots(self):
-        return self.app._plugin_plots
+        return self._app._plugin_plots
 
     @property
     def viewers(self):
@@ -350,8 +356,8 @@ class ConfigHelper(HubListener):
         viewers : dict
             dict of viewer objects
         """
-        return {viewer._ref_or_id: JdavizViewerWindow(viewer, app=self.app).user_api
-                for viewer in list(self.app._viewer_store.values())}
+        return {viewer._ref_or_id: JdavizViewerWindow(viewer, app=self._app).user_api
+                for viewer in list(self._app._viewer_store.values())}
 
     def _get_clone_viewer_reference(self, reference):
         base_name = reference.split("[")[0]
@@ -475,7 +481,7 @@ class ConfigHelper(HubListener):
 
             "inline": Display the Jdaviz application inline in a notebook.
             Note this is functionally equivalent to displaying the cell
-            ``viz.app`` in the notebook.
+            ``viz._app`` in the notebook.
 
             "sidecar": Display the Jdaviz application in a separate JupyterLab window from the
             notebook, the location of which is decided by the 'anchor.' right is the default
@@ -516,22 +522,22 @@ class ConfigHelper(HubListener):
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
         as only JupyterLab has a mechanism to have multiple tabs.
         """
-        title = self.app.config if title is None else title
+        title = self._app.config if title is None else title
         if height is not None:
             if isinstance(height, int):
                 height = f"{height}px"
-            self.app.layout.height = height
-            self.app.state.settings['context']['notebook']['max_height'] = height
+            self._app.layout.height = height
+            self._app.state.settings['context']['notebook']['max_height'] = height
 
-        if self.app.config in CONFIGS_WITH_LOADERS or self.app.state.dev_loaders:  # noqa
-            if not len(self.viewers) and not len(self.app.state.drawer_content):
-                self.app.state.drawer_content = 'loaders'
+        if self._app.config in CONFIGS_WITH_LOADERS or self._app.state.dev_loaders:  # noqa
+            if not len(self.viewers) and not len(self._app.state.drawer_content):
+                self._app.state.drawer_content = 'loaders'
             else:
-                self.app.state.drawer_content = 'plugins'
+                self._app.state.drawer_content = 'plugins'
         else:
-            self.app.state.drawer_content = 'plugins'
+            self._app.state.drawer_content = 'plugins'
 
-        show_widget(self.app, loc=loc, title=title)
+        show_widget(self._app, loc=loc, title=title)
 
     def show_in_sidecar(self, anchor=None, title=None):  # pragma: no cover
         """
@@ -563,8 +569,8 @@ class ConfigHelper(HubListener):
             If `None`, toggle the current state.
         """
         if enabled is None:
-            enabled = not self.app.state.show_api_hints
-        self.app.state.show_api_hints = enabled
+            enabled = not self._app.state.show_api_hints
+        self._app.state.show_api_hints = enabled
 
     def _handle_display_units(self, data, use_display_units=True):
         """
@@ -600,13 +606,13 @@ class ConfigHelper(HubListener):
         """
         if use_display_units:
             if isinstance(data, Spectrum):
-                spectral_unit = self.app._get_display_unit('spectral')
+                spectral_unit = self._app._get_display_unit('spectral')
                 if not spectral_unit:
                     return data
-                if self.app.config == 'specviz' and self.app._get_display_unit('sb'):
-                    y_unit = self.app._get_display_unit('sb')
+                if self._app.config == 'specviz' and self._app._get_display_unit('sb'):
+                    y_unit = self._app._get_display_unit('sb')
                 else:
-                    y_unit = self.app._get_display_unit('spectral_y')
+                    y_unit = self._app._get_display_unit('spectral_y')
 
                 # if there is no pixel scale factor, and the requested conversion
                 # is between flux/sb, then skip. this case is encountered when
@@ -680,19 +686,19 @@ class ConfigHelper(HubListener):
 
     def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
                   temporal_subset=None, mask_subset=None, cls=None, use_display_units=False):
-        list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
+        list_of_valid_subset_names = [x.label for x in self._app.data_collection.subset_groups]
         for subset in (spatial_subset, spectral_subset, mask_subset):
             if subset and subset not in list_of_valid_subset_names:
                 raise ValueError(f"Subset {subset} not in list of valid"
                                  f" subset names {list_of_valid_subset_names}")
 
-        if data_label and data_label not in self.app.data_collection.labels:
-            raise ValueError(f'{data_label} not in {self.app.data_collection.labels}.')
-        elif not data_label and len(self.app.data_collection) > 1:
+        if data_label and data_label not in self._app.data_collection.labels:
+            raise ValueError(f'{data_label} not in {self._app.data_collection.labels}.')
+        elif not data_label and len(self._app.data_collection) > 1:
             raise ValueError('data_label must be set if more than'
                              ' one data exists in data_collection.')
-        elif not data_label and len(self.app.data_collection) == 1:
-            data_label = self.app.data_collection[0].label
+        elif not data_label and len(self._app.data_collection) == 1:
+            data_label = self._app.data_collection[0].label
 
         if cls is not None and not isclass(cls):
             raise TypeError(
@@ -712,7 +718,7 @@ class ConfigHelper(HubListener):
             mask_subset = temporal_subset
 
         # End validity checks and start data retrieval
-        data = self.app.data_collection[data_label]
+        data = self._app.data_collection[data_label]
 
         if not cls:
             if data.meta.get('_native_data_cls', None) is not None:
@@ -720,12 +726,12 @@ class ConfigHelper(HubListener):
             # TODO: once everything goes through loaders, can we remove everything below?
             elif 'Trace' in data.meta:
                 cls = None
-            elif data.ndim == 2 and self.app.config == "specviz2d":
+            elif data.ndim == 2 and self._app.config == "specviz2d":
                 cls = Spectrum
             elif data.ndim == 2:
                 cls = CCDData
             elif data.ndim in [1, 3]:
-                if self.app.config == 'rampviz':
+                if self._app.config == 'rampviz':
                     cls = NDDataArray
                 else:
                     # for cubeviz, specviz, mosviz, this must be a spectrum:
@@ -756,14 +762,14 @@ class ConfigHelper(HubListener):
                                  f"Instead, {cls} was given.")
 
         # Now we work on applying subsets to the data
-        all_subsets = self.app.get_subsets(object_only=True)
+        all_subsets = self._app.get_subsets(object_only=True)
 
         # Handle spatial subset
         if spatial_subset and not isinstance(all_subsets[spatial_subset][0],
                                              Region):
             raise ValueError(f"{spatial_subset} is not a spatial subset.")
         elif spatial_subset:
-            real_spatial = [sub for subsets in self.app.data_collection.subset_groups
+            real_spatial = [sub for subsets in self._app.data_collection.subset_groups
                             for sub in subsets.subsets
                             if sub.data.label == data_label and subsets.label == spatial_subset][0]
             handler, _ = data_translator.get_handler_for(cls)
@@ -780,7 +786,7 @@ class ConfigHelper(HubListener):
             raise ValueError(f"{spectral_subset} is not a spectral subset.")
 
         if mask_subset:
-            real_spectral = [sub for subsets in self.app.data_collection.subset_groups
+            real_spectral = [sub for subsets in self._app.data_collection.subset_groups
                              for sub in subsets.subsets
                              if sub.data.label == data_label and subsets.label == mask_subset][0] # noqa
 
@@ -831,13 +837,13 @@ class ImageConfigHelper(ConfigHelper):
         super().__init__(*args, **kwargs)
 
         # NOTE: The first viewer must always be there and is an image viewer.
-        self._default_viewer = self.app.get_viewer_by_id(f'{self.app.config}-0')
+        self._default_viewer = self._app.get_viewer_by_id(f'{self._app.config}-0')
 
     @property
     def default_viewer(self):
         """Default viewer instance. This is typically the first viewer
         (e.g., "imviz-0" or "cubeviz-0")."""
-        return JdavizViewerWindow(self._default_viewer, app=self.app).user_api
+        return JdavizViewerWindow(self._default_viewer, app=self._app).user_api
 
     @deprecated(since="4.2", alternative="subset_tools.import_region")
     def load_regions_from_file(self, region_file, region_format='ds9', max_num_regions=20,
@@ -929,7 +935,7 @@ class ImageConfigHelper(ConfigHelper):
             If not requested, return `None`.
 
         """
-        if len(self.app.data_collection) == 0:
+        if len(self._app.data_collection) == 0:
             raise ValueError('Cannot load regions without data.')
 
         from photutils.aperture import (CircularAperture, SkyCircularAperture,
@@ -951,13 +957,13 @@ class ImageConfigHelper(ConfigHelper):
 
         # To keep track of masked subsets.
         msg_prefix = 'MaskedSubset'
-        msg_count = _next_subset_num(msg_prefix, self.app.data_collection.subset_groups)
+        msg_count = _next_subset_num(msg_prefix, self._app.data_collection.subset_groups)
 
         # Subset is global but reference data is viewer-dependent.
         if refdata_label is None:
             data = self.default_viewer._obj.glue_viewer.state.reference_data
         else:
-            data = self.app.data_collection[refdata_label]
+            data = self._app.data_collection[refdata_label]
 
         # TODO: Make this work for data cube.
         # https://github.com/glue-viz/glue-astronomy/issues/75
@@ -976,7 +982,7 @@ class ImageConfigHelper(ConfigHelper):
                                     RectangularAperture, CircularAnnulus,
                                     CirclePixelRegion, EllipsePixelRegion,
                                     RectanglePixelRegion, CircleAnnulusPixelRegion))
-                    and self.app._align_by == "wcs"):
+                    and self._app._align_by == "wcs"):
                 bad_regions.append((region, 'Pixel region provided by data is aligned by WCS'))
                 continue
 
@@ -996,9 +1002,9 @@ class ImageConfigHelper(ConfigHelper):
                 state = regions2roi(region, wcs=data.coords)
 
                 # TODO: Do we want user to specify viewer? Does it matter?
-                self.app.session.edit_subset_mode._mode = NewMode
+                self._app.session.edit_subset_mode._mode = NewMode
                 self.default_viewer._obj.glue_viewer.apply_roi(state)
-                self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
+                self._app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
 
             # Last resort: Masked Subset that is static (if data is not a cube)
             elif data.ndim == 2:
@@ -1030,7 +1036,7 @@ class ImageConfigHelper(ConfigHelper):
                 try:
                     subset_label = f'{msg_prefix} {msg_count}'
                     state = MaskSubsetState(im, data.pixel_component_ids)
-                    self.app.data_collection.new_subset_group(subset_label, state)
+                    self._app.data_collection.new_subset_group(subset_label, state)
                     msg_count += 1
                 except Exception as e:  # pragma: no cover
                     bad_regions.append((region, f'Failed to load: {repr(e)}'))
@@ -1052,9 +1058,9 @@ class ImageConfigHelper(ConfigHelper):
             snack_color = "warning"
         else:
             snack_color = "success"
-        self.app.hub.broadcast(SnackbarMessage(
+        self._app.hub.broadcast(SnackbarMessage(
             f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
-            f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
+            f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self._app))
 
         if return_bad_regions:
             return bad_regions
@@ -1079,7 +1085,7 @@ class ImageConfigHelper(ConfigHelper):
 
         regions = {}
         failed_regs = set()
-        to_sky = self.app._align_by == 'wcs'
+        to_sky = self._app._align_by == 'wcs'
 
         # Subset is global, so we just use default viewer.
         for lyr in self.default_viewer._obj.glue_viewer.layers:
@@ -1091,7 +1097,7 @@ class ImageConfigHelper(ConfigHelper):
             subset_label = subset_data.label
 
             try:
-                if self.app.config == "imviz" and to_sky:
+                if self._app.config == "imviz" and to_sky:
                     region = roi_subset_state_to_region(subset_data.subset_state, to_sky=to_sky)
                 else:
                     region = subset_data.data.get_selection_definition(
@@ -1102,21 +1108,21 @@ class ImageConfigHelper(ConfigHelper):
                 regions[subset_label] = region
 
         if len(failed_regs) > 0:
-            self.app.hub.broadcast(SnackbarMessage(
+            self._app.hub.broadcast(SnackbarMessage(
                 f"Regions skipped: {', '.join(sorted(failed_regs))}",
-                color="warning", timeout=8000, sender=self.app))
+                color="warning", timeout=8000, sender=self._app))
 
         return regions
 
     # TODO: Make this public API?
     def _delete_region(self, subset_label):
         """Delete region given the Subset label."""
-        all_subset_labels = [s.label for s in self.app.data_collection.subset_groups]
+        all_subset_labels = [s.label for s in self._app.data_collection.subset_groups]
         if subset_label not in all_subset_labels:
             return
         i = all_subset_labels.index(subset_label)
-        subset_grp = self.app.data_collection.subset_groups[i]
-        self.app.data_collection.remove_subset_group(subset_grp)
+        subset_grp = self._app.data_collection.subset_groups[i]
+        self._app.data_collection.remove_subset_group(subset_grp)
 
 
 def _next_subset_num(label_prefix, subset_groups):
@@ -1163,4 +1169,4 @@ class CubeConfigHelper(ImageConfigHelper):
             the slice plugin.
         """
         msg = SliceSelectSliceMessage(value=value, sender=self)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)

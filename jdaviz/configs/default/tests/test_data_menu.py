@@ -70,8 +70,8 @@ def test_data_menu_selection(specviz_helper, spectrum1d):
     # test that sync remains during layer deletion
     dm._obj.dm_layer_selected = [1]
     assert dm.layer.selected == ['test']
-    specviz_helper.app.remove_data_from_viewer('spectrum-viewer', "test2")
-    specviz_helper.app.data_item_remove("test2")
+    specviz_helper._app.remove_data_from_viewer('spectrum-viewer', "test2")
+    specviz_helper._app.data_item_remove("test2")
     assert len(dm._obj.layer_items) == 1
     assert dm._obj.dm_layer_selected == [0]
     assert dm.layer.selected == ['test']
@@ -137,10 +137,10 @@ def test_data_menu_create_subset(imviz_helper):
     imviz_helper.load_data(np.zeros((2, 2)), data_label='image', show_in_viewer=True)
 
     dm = imviz_helper.viewers['imviz-0']._obj.glue_viewer.data_menu
-    assert imviz_helper.app.session.edit_subset_mode.edit_subset == []
+    assert imviz_helper._app.session.edit_subset_mode.edit_subset == []
 
     dm.create_subset('circle')
-    assert imviz_helper.app.session.edit_subset_mode.edit_subset == []
+    assert imviz_helper._app.session.edit_subset_mode.edit_subset == []
     assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.toolbar.active_tool_id == 'bqplot:truecircle'  # noqa
 
 
@@ -271,7 +271,7 @@ class TestResizeSubset:
 
         self.specviz_helper = specviz_helper
         self.specviz_helper.load(spectrum1d, data_label="Spectrum 1D")
-        self.specviz_viewer = self.specviz_helper.app.get_viewer('spectrum-viewer')
+        self.specviz_viewer = self.specviz_helper._app.get_viewer('spectrum-viewer')
         self.specviz_dm = self.specviz_viewer.data_menu
         self.specviz_subset_tools = self.specviz_helper.plugins['Subset Tools']
 
@@ -333,12 +333,12 @@ class TestResizeSubset:
         assert self.imviz_viewer.toolbar.active_tool_id == tool_id
 
         # Verify that we're in replace mode
-        assert self.imviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
+        assert self.imviz_helper._app.session.edit_subset_mode.mode == ReplaceMode
 
         # Verify that the correct subset is being edited
-        subset_grp = [sg for sg in self.imviz_helper.app.data_collection.subset_groups
+        subset_grp = [sg for sg in self.imviz_helper._app.data_collection.subset_groups
                       if sg.label == 'Subset 1']
-        assert self.imviz_helper.app.session.edit_subset_mode.edit_subset == subset_grp
+        assert self.imviz_helper._app.session.edit_subset_mode.edit_subset == subset_grp
 
     @pytest.mark.parametrize('roi', [XRangeROI(min=6000, max=6500),
                                      SpectralRegion(6000 * u.Angstrom, 6500 * u.Angstrom)])
@@ -359,7 +359,7 @@ class TestResizeSubset:
 
         # Verify that the correct tool is activated
         assert self.specviz_viewer.toolbar.active_tool_id == 'bqplot:xrange'
-        assert self.specviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
+        assert self.specviz_helper._app.session.edit_subset_mode.mode == ReplaceMode
 
     def test_resize_subset_in_viewer_errors(self):
         """
@@ -392,7 +392,7 @@ class TestResizeSubset:
         # Retrieve the subset group and replace its subset_state with a
         # mock object that is not a RoiSubsetState/RangeSubsetState to
         # simulate an unsupported ROI.
-        subset_grp = [sg for sg in self.imviz_helper.app.data_collection.subset_groups
+        subset_grp = [sg for sg in self.imviz_helper._app.data_collection.subset_groups
                       if sg.label == 'Subset 1']
 
         # Replace the subset_state with a plain object (unsupported)

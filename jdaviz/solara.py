@@ -76,7 +76,7 @@ def get_app_or_launcher():
                 else:
                     viz.load(filename, format=format, **load_data_kwargs)
 
-    return viz.app
+    return viz._app
 
 
 @solara.component
