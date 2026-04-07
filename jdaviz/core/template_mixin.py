@@ -3507,11 +3507,14 @@ class ApertureSubsetSelect(SubsetSelect):
                 pixel_region = spatial_region
             else:
                 if viewer is None:
-                    # TODO: deconfigged jdaviz does not have a 'default' viewer,
-                    # viewer should be passed explicitly in this case. retaining this
-                    # fallback for now to avoid errors for config-specific calls
-                    # to this method.
-                    viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
+                    if hasattr(self.app._jdaviz_helper, 'default_viewer'):
+                        viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
+                    elif len(self.image_viewers):
+                        viewer = self.image_viewers[0]
+                    else:
+                        validity = {'is_aperture': False,
+                                    'aperture_message': 'no viewer available'}
+                        return [], [], validity
                 wcs = getattr(viewer.state.reference_data, 'coords', None)
                 if wcs is None:
                     validity = {'is_aperture': False,
