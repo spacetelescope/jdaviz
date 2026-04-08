@@ -491,8 +491,17 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         import jdaviz.core.loaders  # noqa
         from jdaviz.core.registries import loader_resolver_registry
         loader_items = []
+        # Determine which loaders to disable
+        disabled_loaders = self.app.state.settings.get('disabled_loaders')
+        if disabled_loaders is None:
+            # Default: disable loaders based on server_is_remote setting
+            if self._app.state.settings.get('server_is_remote', False):
+                disabled_loaders = ['file', 'file drop', 'url', 'object',
+                                    'astroquery', 'virtual observatory']
+            else:
+                disabled_loaders = []
         for name, Resolver in loader_resolver_registry.members.items():
-            if self._app.state.settings.get("server_is_remote") and name in ('file', 'file drop'):
+            if name in disabled_loaders:
                 continue
             loader = Resolver(app=self._app,
                               open_callback=open_accordion,

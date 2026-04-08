@@ -124,6 +124,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     is_centerable = Bool(False).tag(sync=True)
     can_simplify = Bool(False).tag(sync=True)
     can_freeze = Bool(False).tag(sync=True)
+    server_is_remote = Bool(False).tag(sync=True)
 
     icon_replace = Unicode(read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
     icon_or = Unicode(read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
@@ -139,6 +140,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Initialize server_is_remote from settings
+        self.server_is_remote = self.app.state.settings.get('server_is_remote', False)
+
+        # Listen for changes to app.state.settings
+        self.app.state.add_callback('settings', self._on_app_settings_changed)
 
         # description displayed under plugin title in tray
         config = self._app.config
@@ -192,6 +199,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                                       items='combination_mode_items',
                                                       selected='combination_mode_selected',
                                                       manual_options=COMBO_OPTIONS)
+
+    def _on_app_settings_changed(self, new_settings_dict):
+        """
+        Update server_is_remote when settings change.
+        """
+        if 'server_is_remote' in new_settings_dict:
+            self.server_is_remote = new_settings_dict.get('server_is_remote')
 
     @property
     def user_api(self):

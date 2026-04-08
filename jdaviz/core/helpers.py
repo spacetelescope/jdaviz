@@ -470,7 +470,8 @@ class ConfigHelper(HubListener):
                                              model_label=model_label,
                                              x=x, y=y)
 
-    def show(self, loc="inline", title=None, height=None):  # pragma: no cover
+    def show(self, loc="inline", title=None, height=None,
+             tray=None):  # pragma: no cover
         """Display the Jdaviz application.
 
         Parameters
@@ -517,6 +518,10 @@ class ConfigHelper(HubListener):
             The height of the top-level application widget, in pixels. Applies to all
             instances of the same application in the notebook.
 
+        tray: str, optional
+            Override the default open sidebar in the tray.  If not provided, will default to
+            loaders if no data is loaded, or plugins if data is loaded.
+
         Notes
         -----
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
@@ -529,7 +534,9 @@ class ConfigHelper(HubListener):
             self._app.layout.height = height
             self._app.state.settings['context']['notebook']['max_height'] = height
 
-        if self._app.config in CONFIGS_WITH_LOADERS or self._app.state.dev_loaders:  # noqa
+        if tray is not None:
+            self._app.state.drawer_content = tray
+        elif self._app.config in CONFIGS_WITH_LOADERS or self._app.state.dev_loaders:  # noqa
             if not len(self.viewers) and not len(self._app.state.drawer_content):
                 self._app.state.drawer_content = 'loaders'
             else:
