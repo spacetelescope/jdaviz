@@ -5,11 +5,13 @@ from asdf import AsdfFile
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import InverseVariance, StdDevUncertainty, VarianceUncertainty
+from astropy.table import Table, Column
 from astropy.wcs import WCS
 from functools import cached_property
 from glue.core import HubListener
 from ipyvuetify import VuetifyTemplate
 from specutils import Spectrum, SpectrumList, SpectrumCollection
+from specutils.io.parsing_utils import generic_spectrum_from_table
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
@@ -474,76 +476,42 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
     def _spectrum_from_table_hdu(self, hdulist, hdu):
         """Extract spectrum from Binary Table HDU with array-valued columns."""
+        # Read the HDU as an astropy Table
+        table = Table.read(hdu)
+
+        # if columns are shape (1, N), flatten them before passing to generic_spectrum_from_table
+        needs_flattening = any(
+            col.ndim == 2 and col.shape[0] == 1 for col in table.itercols()
+        )
+
+        if needs_flattening:
+            # Create new columns with flattened data, preserving units
+            new_cols = []
+            for col in table.itercols():
+                if col.ndim == 2 and col.shape[0] == 1:
+                    # Extract first row and preserve unit
+                    new_cols.append(Column(name=col.name, data=col[0], unit=col.unit))
+                else:
+                    new_cols.append(col)
+            # Create a new table with flattened columns
+            table = Table(new_cols, meta=table.meta)
+
+        # Use specutils' generic_spectrum_from_table to parse the data
+        spectrum = generic_spectrum_from_table(table)
+
+        # Update metadata with standardized headers
         header = hdu.header
         metadata = standardize_metadata(header)
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
 
-        col_names = [name.upper() for name in hdu.columns.names]
-        col_map = {name.upper(): name for name in hdu.columns.names}
+        # Preserve any metadata from the table parsing and update with our standardized metadata
+        if spectrum.meta is None:
+            spectrum.meta = metadata
+        else:
+            spectrum.meta.update(metadata)
 
-        # Find wavelength column
-        wave_col = None
-        for name in ['WAVE', 'WAVELENGTH', 'LAMBDA']:
-            if name in col_names:
-                wave_col = col_map[name]
-                break
-
-        # Find flux column
-        flux_col = None
-        for orig_name in hdu.columns.names:
-            if 'FLUX' in orig_name.upper() and 'ERR' not in orig_name.upper():
-                flux_col = orig_name
-                break
-
-        if wave_col is None or flux_col is None:
-            raise ValueError("Could not find wavelength and flux columns in table HDU")
-
-        # Extract data (handle both single-row array format and multi-row format)
-        wave_data = hdu.data[wave_col]
-        flux_data = hdu.data[flux_col]
-
-        # If single row with array values, flatten
-        if wave_data.ndim == 2 and wave_data.shape[0] == 1:
-            wave_data = wave_data[0]
-            flux_data = flux_data[0]
-
-        # Get units from column metadata
-        wave_unit = (u.Unit(hdu.columns[wave_col].unit)
-                     if getattr(hdu.columns[wave_col], 'unit', None) is not None
-                     else u.dimensionless_unscaled)
-        flux_unit = (u.Unit(hdu.columns[flux_col].unit)
-                     if getattr(hdu.columns[flux_col], 'unit', None) is not None
-                     else u.count)
-
-        # Handle uncertainty if present
-        unc = None
-        for unc_name in ['SIGMA', 'ERR', 'ERROR', 'UNCERTAINTY']:
-            if unc_name in col_names:
-                unc_col = col_map[unc_name]
-                unc_data = hdu.data[unc_col]
-                if unc_data.ndim == 2 and unc_data.shape[0] == 1:
-                    unc_data = unc_data[0]
-                unc = StdDevUncertainty(unc_data * flux_unit)
-                break
-        # Also check for column names containing these strings
-        if unc is None:
-            for orig_name in hdu.columns.names:
-                if any(err_name in orig_name.upper()
-                       for err_name in ['ERR', 'ERROR', 'SIGMA', 'UNCERTAINTY']):
-                    unc_data = hdu.data[orig_name]
-                    if unc_data.ndim == 2 and unc_data.shape[0] == 1:
-                        unc_data = unc_data[0]
-                    unc = StdDevUncertainty(unc_data * flux_unit)
-                    break
-
-        # Create spectrum
-        return Spectrum(
-            spectral_axis=wave_data * wave_unit,
-            flux=flux_data * flux_unit,
-            uncertainty=unc,
-            meta=metadata
-        )
+        return spectrum
 
     def _spectrum_from_hdu(self, hdulist, hdu):
         # Handle Binary Table HDU with spectral columns
