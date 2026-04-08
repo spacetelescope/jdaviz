@@ -240,32 +240,8 @@ class CatalogImporter(BaseImporterToDataCollection):
             # Set new format in parser
             self._parser.read_format = self.file_format_selected
 
-            # Recompute with new format
-            _ = self._parser.output
-
-    def __call__(self):
-        """
-        Override to ensure parser output is used when importing with a specific format.
-        """
-        if self.data_label_invalid_msg:
-            raise ValueError(self.data_label_invalid_msg)
-        if self.viewer.create_new.selected != '' and self.viewer_label_invalid_msg:
-            raise ValueError(self.viewer_label_invalid_msg)
-        if self.import_disabled_msg:
-            # Would this cause an issue if there's a UI message
-            # that isn't relevant when using the API?
-            raise ValueError(self.import_disabled_msg)
-
-        # Use parser output if format was explicitly set,
-        # otherwise use the normal output property
-        if isinstance(self._parser, AstropyTableParser) and self._parser.read_format:
-            # User selected a specific format - use parser's output
-            data = self._parser.output
-        else:
-            # Use the importer's normal output property
-            data = self.output
-
-        self.add_to_data_collection(data)
+            # Recompute with new format and reset input
+            self._input = self._parser.output
 
     def _update_col_items_and_selected(self, base_attr, options, select_first=True):
         """update column items and selected value."""
