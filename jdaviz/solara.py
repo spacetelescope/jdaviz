@@ -13,6 +13,7 @@ from jdaviz.app import custom_components
 
 config = None
 data_list = []
+format_list = []
 load_data_kwargs = {}
 jdaviz_verbosity = 'error'
 jdaviz_history_verbosity = 'info'
@@ -36,14 +37,7 @@ def on_kernel_start():
     return on_kernel_close
 
 
-@solara.component
-def Page():
-    solara.Title("Jdaviz")
-
-    if config is None:
-        solara.Text("No config defined")
-        return
-
+def create_shared_widgets():
     ipysplitpanes.SplitPanes()
     ipygoldenlayout.GoldenLayout()
     for name, path in custom_components.items():
@@ -52,31 +46,64 @@ def Page():
 
     ipyvue.register_component_from_file('g-viewer-tab', "container.vue", jdaviz.__file__)
 
-    solara.Style(Path(__file__).parent / "solara.css")
 
+def get_app_or_launcher():
+    '''
+    Return either the app instance or the launcher page as appropriate
+    '''
     if config is None or not hasattr(jdaviz.configs, config):
         if config == 'Flexible':
             viz = jdaviz.gca()
-            jdaviz.loaders['file'].open_in_tray()
-            if len(data_list) > 1:
-                raise ValueError("Currently only one filepath can be provided for"
-                                 "flexible mode at runtime")
-            elif len(data_list):
-                jdaviz.loaders['file'].filepath = data_list[0]
+            if not len(data_list):
+                jdaviz.loaders['file'].open_in_tray()
+            else:
+                with jdaviz.batch_load():
+                    for filename, format in zip(data_list, format_list):
+                        jdaviz.load(filename, format=format)
         else:
             from jdaviz.core.launcher import Launcher
             launcher = Launcher(height='100vh',
                                 filepath=(data_list[0] if len(data_list) == 1 else ''))
-            solara.display(launcher.main_with_launcher)
-            return
+            return launcher.main_with_launcher
 
     else:
         viz = getattr(jdaviz.configs, config)(verbosity=jdaviz_verbosity,
                                               history_verbosity=jdaviz_history_verbosity)
-        for data in data_list:
-            if config == 'Mosviz':
-                viz.load(directory=data, **load_data_kwargs)
-            else:
-                viz.load(data, **load_data_kwargs)
+        with jdaviz.batch_load():
+            for filename, format in zip(data_list, format_list):
+                if config == 'Mosviz':
+                    viz.load(directory=filename, format=format, **load_data_kwargs)
+                else:
+                    viz.load(filename, format=format, **load_data_kwargs)
 
-    solara.display(viz.app)
+    return viz._app
+
+
+@solara.component
+def Jdaviz():
+    # Create the shared widgets, using use_memo to ensure we only do it once
+    solara.use_memo(create_shared_widgets, [])
+
+    app_or_launcher, set_app_or_launcher = solara.use_state(None)
+
+    def load_app():
+        set_app_or_launcher(get_app_or_launcher())
+
+    # We need to use use_effect so that the initial Solara render happens before the app
+    # instantiates internal Solara components (file_drop, file_browser), which would otherwise
+    # be detected and rendered at the top level outside the app.
+    solara.use_effect(load_app, [config, data_list, format_list])
+
+    return solara.Column(children=[app_or_launcher] if app_or_launcher is not None else [])
+
+
+@solara.component
+def Page():
+    if config is None:
+        solara.Text("No config defined")
+        return
+
+    solara.Style(Path(__file__).parent / "solara.css")
+
+    solara.Title("Jdaviz")
+    Jdaviz()

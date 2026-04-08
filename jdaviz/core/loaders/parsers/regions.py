@@ -18,9 +18,9 @@ class RegionsParser(BaseParser):
             if is_stcs_string(self.input):
                 return True
             ext = self.input.split('.')[-1]
-            if self.app.config == 'imviz':
+            if self._app.config == 'imviz':
                 return ext in ('reg', 'fits')
-            elif self.app.config in ('specviz', 'specviz2d'):
+            elif self._app.config in ('specviz', 'specviz2d'):
                 return ext == 'ecsv'
             return ext in ('reg', 'fits', 'ecsv')
 

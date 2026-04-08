@@ -18,7 +18,7 @@ New Features
 - Support in plot options to set which columns are visible for table viewers. [#4033]
 
 - Added `skewer` mode to footprint selection that only selects when clicking inside a footprint.
-  Footprint selection tools now support control+click or command+click to toggle 
+  Footprint selection tools now support control+click or command+click to toggle
   selections (add/remove individual footprints without replacing the current selection). [#3962, #4034]
 
 - Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
@@ -51,7 +51,7 @@ New Features
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
 
-- Allow launching generalized Jdaviz from the command line and deprecate configs from that interface. [#4087]
+- Allow launching generalized Jdaviz from the command line and deprecate configs from that interface. [#4087, #4115]
 
 - Added ability to load spectra with 'IVAR' and 'VAR' uncertainty extensions. [#4091]
 
@@ -69,7 +69,7 @@ New Features
 
 - Fixed batch aperture photometry mode in deconfigged. [#4106]
 
-- Generalize Data Quality plugin to work for images in deconfigged. [#4110]
+- Generalize Data Quality plugin. [#4110, #4111]
 
 Cubeviz
 ^^^^^^^
@@ -95,11 +95,19 @@ Specviz2d
 API Changes
 -----------
 
+- Deprecate ``show_in_viewer`` argument in ``load`` in favor of using the ``viewer`` argument to specify
+  which viewer(s) to show the data in, or whether to create a new viewer. [#4116]
+
 Cubeviz
 ^^^^^^^
 
+- Deprecates Cubeviz in favor of the generalized top-level Jdaviz application. [#4090]
+
 Imviz
 ^^^^^
+
+- Deprecates Imviz in favor of the generalized top-level Jdaviz application. [#4090]
+
 
 Mosviz
 ^^^^^^
@@ -107,8 +115,14 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Deprecates Specviz in favor of the generalized top-level Jdaviz application. [#4090]
+
+
 Specviz2d
 ^^^^^^^^^
+
+- Deprecates Specviz2d in favor of the generalized top-level Jdaviz application. [#4090]
+
 
 Bug Fixes
 ---------
@@ -145,6 +159,9 @@ Other Changes and Additions
 
 Bug Fixes
 ---------
+
+- Fixed bug where creating new subsets in a fresh app instance and adjusting them creates a copy
+  instead of adjusting the original subset. [#4083]
 
 Cubeviz
 ^^^^^^^

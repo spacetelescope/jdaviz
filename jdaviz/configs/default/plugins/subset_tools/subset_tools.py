@@ -5,6 +5,7 @@ import numpy as np
 
 from astropy.time import Time
 import astropy.units as u
+from astropy.utils import minversion
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
@@ -17,6 +18,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Any, List, Unicode, Bool, observe
 
 from specutils import SpectralRegion
+import photutils
 from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                 EllipticalAperture, SkyEllipticalAperture,
                                 RectangularAperture, SkyRectangularAperture,
@@ -64,6 +66,8 @@ SUBSET_MODES_PRETTY = {
 }
 SUBSET_TO_PRETTY = {v: k for k, v in SUBSET_MODES_PRETTY.items()}
 COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
+
+PHOTUTILS_GE_3 = minversion(photutils, '2.3.1.dev')
 
 
 @tray_registry('g-subset-tools', label="Subset Tools",
@@ -120,6 +124,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     is_centerable = Bool(False).tag(sync=True)
     can_simplify = Bool(False).tag(sync=True)
     can_freeze = Bool(False).tag(sync=True)
+    server_is_remote = Bool(False).tag(sync=True)
 
     icon_replace = Unicode(read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
     icon_or = Unicode(read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
@@ -136,8 +141,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Initialize server_is_remote from settings
+        self.server_is_remote = self.app.state.settings.get('server_is_remote', False)
+
+        # Listen for changes to app.state.settings
+        self.app.state.add_callback('settings', self._on_app_settings_changed)
+
         # description displayed under plugin title in tray
-        config = self.app.config
+        config = self._app.config
         if config in ['cubeviz', 'specviz2d', 'mosviz', 'rampviz']:
             self._plugin_description = 'Select and interact with spectral/spatial subsets.'
         elif config == 'imviz':
@@ -188,6 +199,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                                       items='combination_mode_items',
                                                       selected='combination_mode_selected',
                                                       manual_options=COMBO_OPTIONS)
+
+    def _on_app_settings_changed(self, new_settings_dict):
+        """
+        Update server_is_remote when settings change.
+        """
+        if 'server_is_remote' in new_settings_dict:
+            self.server_is_remote = new_settings_dict.get('server_is_remote')
 
     @property
     def user_api(self):
@@ -261,7 +279,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         <class 'regions.shapes.circle.CirclePixelRegion'>
         >>> type(plg.get_regions(wrt_data='NDData[DATA]')['Subset 1'])
         <class 'regions.shapes.circle.CircleSkyRegion'>
-        >>> imviz.app.delete_subsets()
+        >>> imviz._app.delete_subsets()
         >>> imviz.link_data(align_by='wcs')
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
         >>> type(plg.get_regions()['Subset 2'])
@@ -297,8 +315,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if isinstance(wrt_data, str) and wrt_data not in self.data_collection:
             raise ValueError(f'{wrt_data} is not data in {self.data_collection}')
 
-        if ((self.app._align_by == 'wcs' and wrt_data is None) or
-                ((self.app._align_by == 'pixels' and self.config != 'cubeviz') and wrt_data) or
+        if ((self._app._align_by == 'wcs' and wrt_data is None) or
+                ((self._app._align_by == 'pixels' and self.config != 'cubeviz') and wrt_data) or
                 self.config == 'cubeviz' and wrt_data is None):
             reg_type = 'sky_region'
         else:
@@ -310,17 +328,17 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if return_sky_region is not None and wrt_data:
             raise ValueError('return_sky_region no longer used, use wrt_data instead')
         elif return_sky_region is not None:
-            wrt_data = self.app.data_collection[0].label
+            wrt_data = self._app.data_collection[0].label
             warnings.warn(f'return_sky_region no longer used, use wrt_data instead. '
                           f'Defaulting to {wrt_data} for the wrt_data kwarg')
             reg_type = 'sky_region' if return_sky_region else 'region'
 
         # first get ALL subsets of specified spatial/spectral type(s)
-        subsets = self.app.get_subsets(spectral_only=region_type == ['spectral'],
-                                       spatial_only=region_type == ['spatial'],
-                                       include_sky_region=reg_type == 'sky_region',
-                                       use_display_units=use_display_units,
-                                       wrt_data=wrt_data)
+        subsets = self._app.get_subsets(spectral_only=region_type == ['spectral'],
+                                        spatial_only=region_type == ['spatial'],
+                                        include_sky_region=reg_type == 'sky_region',
+                                        use_display_units=use_display_units,
+                                        wrt_data=wrt_data)
 
         labels = list_of_subset_labels or list(subsets.keys())
         if isinstance(labels, str):
@@ -344,9 +362,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         if len(failed_regs) > 0:
             warn_msg = f"Regions skipped: {', '.join(sorted(failed_regs))}"
-            self.app.hub.broadcast(SnackbarMessage(warn_msg,
-                                   color="warning", timeout=8000,
-                                   sender=self.app))
+            self._app.hub.broadcast(SnackbarMessage(warn_msg,
+                                    color="warning", timeout=8000,
+                                    sender=self.app))
             warnings.warn(warn_msg, UserWarning)
 
         return regions
@@ -369,12 +387,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             # during initial init, this can trigger before the component is initialized
             return
         if self.session.edit_subset_mode.edit_subset == []:
-            self.app.state.subset_mode_create = True
+            self._app.state.subset_mode_create = True
             if self.subset_selected != self.subset.default_text:
                 self.subset_selected = self.subset.default_text
                 self.show_region_info = False
         else:
-            self.app.state.subset_mode_create = False
+            self._app.state.subset_mode_create = False
             new_label = self.session.edit_subset_mode.edit_subset[0].label
             if new_label != self.subset_selected:
                 if new_label not in [s['label'] for s in self.subset_items]:
@@ -387,7 +405,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self._sync_selected_from_state()
         if 'Create New' in self.subset_selected:
             return
-        subsets_avail = [sg.label for sg in self.app.data_collection.subset_groups]
+        subsets_avail = [sg.label for sg in self._app.data_collection.subset_groups]
         if self.subset_selected not in subsets_avail:
             # subset selection should re-default after processing the deleted subset,
             # for now we can safely ignore
@@ -427,7 +445,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             return
 
         try:
-            self.app.check_rename_availability(old_label, new_label, is_subset=True)
+            self._app.check_rename_availability(old_label, new_label, is_subset=True)
         except ValueError as e:
             self.rename_error_message = str(e)
         else:
@@ -452,7 +470,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if change['new'] != self.subset.default_text:
             self._get_subset_definition(change['new'])
         self.show_region_info = change['new'] != self.subset.default_text
-        m = [s for s in self.app.data_collection.subset_groups if s.label == change['new']]
+        m = [s for s in self._app.data_collection.subset_groups if s.label == change['new']]
         if m != self.session.edit_subset_mode.edit_subset:
             self.session.edit_subset_mode.edit_subset = m
 
@@ -466,10 +484,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             return
 
         include_sky_region = bool(self.display_sky_coordinates)
-        subset_information = self.app.get_subsets(self.subset_selected,
-                                                  simplify_spectral=False,
-                                                  use_display_units=True,
-                                                  include_sky_region=include_sky_region)
+        subset_information = self._app.get_subsets(self.subset_selected,
+                                                   simplify_spectral=False,
+                                                   use_display_units=True,
+                                                   include_sky_region=include_sky_region)
 
         _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
         if not subset_information:
@@ -604,7 +622,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             self.can_simplify = False
         elif ((len(self.subset_states) > 1) and isinstance(self.subset_states[0], RangeSubsetState)
               and ((len(simplifiable_states - set(self.glue_state_types)) < 3)
-                   or self.app.is_there_overlap_spectral_subset(self.subset_selected))):
+                   or self._app.is_there_overlap_spectral_subset(self.subset_selected))):
             self.can_simplify = True
         else:
             self.can_simplify = False
@@ -622,11 +640,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self._unpack_get_subsets_for_ui()
 
     def vue_freeze_subset(self, *args):
-        sgs = {sg.label: sg for sg in self.app.data_collection.subset_groups}
+        sgs = {sg.label: sg for sg in self._app.data_collection.subset_groups}
         sg = sgs.get(self.subset_selected)
 
         masks = {}
-        for data in self.app.data_collection:
+        for data in self._app.data_collection:
             masks[data.uuid] = sg.subset_state.to_mask(data)
 
         sg.subset_state = MultiMaskSubsetState(masks)
@@ -649,8 +667,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                                    sender=self))
                 return
         att = self.subset_states[0].att
-        self.app.simplify_spectral_subset(subset_name=self.subset_selected, att=att,
-                                          overwrite=True)
+        self._app.simplify_spectral_subset(subset_name=self.subset_selected, att=att,
+                                           overwrite=True)
 
     def simplify_subset(self):
         """
@@ -686,7 +704,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             wcs = None
 
             if self.display_sky_coordinates:
-                wcs = self.app._get_wcs_from_subset(sub_states)
+                wcs = self._app._get_wcs_from_subset(sub_states)
 
                 if wcs is not None:
                     # convert newly entered sky coords to pixel
@@ -880,7 +898,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         in the selected data layer.
         """
         # Composite region cannot be centered. This only works for Imviz.
-        if not self.is_centerable or self.config != 'imviz':  # no-op
+        if not self.is_centerable or self.config not in ('imviz', 'deconfigged'):  # no-op
             raise NotImplementedError(
                 f'Cannot recenter: is_centerable={self.is_centerable}, config={self.config}')
 
@@ -890,10 +908,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         def _do_recentering(subset, subset_state):
             try:
-                type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
-                reg = self.app.get_subsets(subset_name=subset,
-                                           include_sky_region=type == 'sky_region',
-                                           spatial_only=True)[0][type]
+                type = 'sky_region' if self._app.config == 'imviz' and self._app._align_by == 'wcs' else 'region'  # noqa: E501
+                reg = self._app.get_subsets(subset_name=subset,
+                                            include_sky_region=type == 'sky_region',
+                                            spatial_only=True)[0][type]
                 aperture = regions2aperture(reg)
                 data = self.recenter_dataset.selected_dc_item
                 comp = data.get_component(data.main_components[0])
@@ -901,6 +919,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords)
 
                 # Sky region from WCS linking, need to convert centroid back to pixels.
+                if PHOTUTILS_GE_3:
+                    x_centroid = phot_aperstats.x_centroid
+                    y_centroid = phot_aperstats.y_centroid
+                else:
+                    x_centroid = phot_aperstats.xcentroid
+                    y_centroid = phot_aperstats.ycentroid
+
                 if hasattr(reg, "to_pixel"):
                     # Centroid was calculated in selected data.
                     # However, Subset is always defined w.r.t. its parent,
@@ -908,11 +933,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     x, y = pixel_to_pixel(
                         data.coords,
                         subset_state.xatt.parent.coords,
-                        phot_aperstats.xcentroid,
-                        phot_aperstats.ycentroid)
+                        x_centroid,
+                        y_centroid)
                 else:
-                    x = phot_aperstats.xcentroid
-                    y = phot_aperstats.ycentroid
+                    x = x_centroid
+                    y = y_centroid
                 if not np.all(np.isfinite((x, y))):
                     raise ValueError(f'Invalid centroid ({x}, {y})')
             except Exception as e:
@@ -1049,7 +1074,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
     @observe('subset_selected')
     def set_selected_subset_group(self, _):
-        for subset_group in self.app.data_collection.subset_groups:
+        for subset_group in self._app.data_collection.subset_groups:
             if subset_group.label == self.subset.selected:
                 self.selected_subset_group = subset_group
                 break
@@ -1066,7 +1091,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             The new label to apply to the selected subset.
         """
         # will emit a SubsetRenameMessage and call _sync_available_from_state()
-        self.app._rename_subset(old_label, new_label)
+        self._app._rename_subset(old_label, new_label)
 
     def vue_rename_subset(self, msg):
         try:
@@ -1091,7 +1116,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if subset_group is None:
             raise TypeError("current selection is not a subset")
 
-        self.app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
+        self._app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
         self._sync_available_from_state()
 
     def delete_subset(self, subset_label):
@@ -1103,7 +1128,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         subset_label : str
             The label of the subset to be deleted
         '''
-        self.app.delete_subsets(subset_labels=subset_label)
+        self._app.delete_subsets(subset_labels=subset_label)
 
     def vue_delete_subset(self, msg):
         self.delete_subset(msg['subset_label'])
@@ -1257,7 +1282,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             If not requested, return `None`.
 
         """
-        if len(self.app.data_collection) == 0:
+        if len(self._app.data_collection) == 0:
             raise ValueError('Cannot load regions without data.')
 
         if not isinstance(regions, (list, tuple, Regions, SpectralRegion)):
@@ -1272,7 +1297,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         bad_labels = []
         if subset_label is not None:
             for label in subset_label:
-                if not self.app._check_valid_subset_label(label, raise_if_invalid=False):
+                if not self._app._check_valid_subset_label(label, raise_if_invalid=False):
                     bad_labels.append(label)
         if len(bad_labels) > 0:
             raise ValueError(f"subset_label contained invalid labels: {bad_labels}")
@@ -1282,16 +1307,16 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         # To keep track of masked subsets.
         msg_prefix = 'MaskedSubset'
-        msg_count = _next_subset_num(msg_prefix, self.app.data_collection.subset_groups)
+        msg_count = _next_subset_num(msg_prefix, self._app.data_collection.subset_groups)
 
         viewer_parameter = kwargs.pop('viewer', None)
-        viewer_name = viewer_parameter or list(self.app._jdaviz_helper.viewers.keys())[0]
-        viewer = self.app.get_viewer(viewer_name)
+        viewer_name = viewer_parameter or list(self._app._jdaviz_helper.viewers.keys())[0]
+        viewer = self._app.get_viewer(viewer_name)
         # Subset is global but reference data is viewer-dependent.
         if refdata_label is None and hasattr(viewer.state, 'reference_data'):
             data = viewer.state.reference_data
         elif refdata_label is not None:
-            data = self.app.data_collection[refdata_label]
+            data = self._app.data_collection[refdata_label]
         elif len(viewer.layers):
             data = viewer.layers[0].layer
         else:
@@ -1307,143 +1332,150 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             if len(unknown_options) > 0:
                 raise ValueError(f"{unknown_options} not one of {COMBO_OPTIONS}")
 
-        previous_mode = self.app.session.edit_subset_mode.mode
-        previous_subset = self.app.session.edit_subset_mode.edit_subset
+        previous_mode = self._app.session.edit_subset_mode.mode
+        previous_subset = self._app.session.edit_subset_mode.edit_subset
 
-        with self.app._jdaviz_helper.batch_load():
-            # This method can edit a particular subset or create a new subset
-            # and apply the combination modes depending on this argument
-            if edit_subset and combination_mode is not None:
-                self.subset.selected = edit_subset
-            elif edit_subset and combination_mode is None:
-                # If combination_mode is not set, assume the user
-                # wants to update the subset in edit_subset
-                self.subset.selected = edit_subset
-                combination_mode = 'replace'
-            else:
-                # self.app.session.edit_subset_mode.edit_subset = None
-                self.subset.selected = self.subset.default_text
-
-            label_index = 0
-            for index, region in enumerate(regions):
-                # Set combination mode for how region will be applied to current subset
-                # or created as a new subset
-                if combo_mode_is_list:
-                    combo_mode = combination_mode[index]
+        self._app._importing_regions = True
+        try:
+            with self._app._jdaviz_helper.batch_load():
+                # This method can edit a particular subset or create a new subset
+                # and apply the combination modes depending on this argument
+                if edit_subset and combination_mode is not None:
+                    self.subset.selected = edit_subset
+                elif edit_subset and combination_mode is None:
+                    # If combination_mode is not set, assume the user
+                    # wants to update the subset in edit_subset
+                    self.subset.selected = edit_subset
+                    combination_mode = 'replace'
                 else:
-                    combo_mode = combination_mode
+                    # self.app.session.edit_subset_mode.edit_subset = None
+                    self.subset.selected = self.subset.default_text
 
-                # Combination_mode should be 'new' if combo_mode is not set or explicitly 'new'
-                if combo_mode == 'new' or combo_mode is None:
-                    self.combination_mode.selected = 'new'
-                elif combo_mode:
-                    self.combination_mode.selected = combo_mode
+                label_index = 0
+                for index, region in enumerate(regions):
+                    # Set combination mode for how region will be applied to current subset
+                    # or created as a new subset
+                    if combo_mode_is_list:
+                        combo_mode = combination_mode[index]
+                    else:
+                        combo_mode = combination_mode
 
-                if (isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
-                                        SkyRectangularAperture, SkyCircularAnnulus,
-                                        CircleSkyRegion, EllipseSkyRegion,
-                                        RectangleSkyRegion, CircleAnnulusSkyRegion))
-                        and not has_wcs):
-                    bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
-                    continue
+                    # Combination_mode should be 'new' if combo_mode is not set or explicitly 'new'
+                    if combo_mode == 'new' or combo_mode is None:
+                        self.combination_mode.selected = 'new'
+                    elif combo_mode:
+                        self.combination_mode.selected = combo_mode
 
-                if (isinstance(region, (CircularAperture, EllipticalAperture,
-                                        RectangularAperture, CircularAnnulus,
-                                        CirclePixelRegion, EllipsePixelRegion,
-                                        RectanglePixelRegion, CircleAnnulusPixelRegion))
-                        and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
-                    bad_regions.append((region, 'Pixel region provided but data is aligned by WCS'))
-                    continue
+                    if (isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
+                                            SkyRectangularAperture, SkyCircularAnnulus,
+                                            CircleSkyRegion, EllipseSkyRegion,
+                                            RectangleSkyRegion, CircleAnnulusSkyRegion))
+                            and not has_wcs):
+                        bad_regions.append(
+                            (region, 'Sky region provided but data has no valid WCS'))
+                        continue
 
-                # photutils: Convert to region shape first
-                if isinstance(region, (CircularAperture, SkyCircularAperture,
-                                       EllipticalAperture, SkyEllipticalAperture,
-                                       RectangularAperture, SkyRectangularAperture,
-                                       CircularAnnulus, SkyCircularAnnulus)):
-                    region = aperture2regions(region)
+                    if (isinstance(region, (CircularAperture, EllipticalAperture,
+                                            RectangularAperture, CircularAnnulus,
+                                            CirclePixelRegion, EllipsePixelRegion,
+                                            RectanglePixelRegion, CircleAnnulusPixelRegion))
+                            and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
+                        bad_regions.append(
+                            (region, 'Pixel region provided but data is aligned by WCS'))
+                        continue
 
-                # region: Convert to ROI.
-                # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
-                if (isinstance(region, (CirclePixelRegion, CircleSkyRegion,
-                                        EllipsePixelRegion, EllipseSkyRegion,
-                                        RectanglePixelRegion, RectangleSkyRegion,
-                                        CircleAnnulusPixelRegion, CircleAnnulusSkyRegion))):
-                    try:
-                        if getattr(data.coords, 'world_n_dim', None) == 3:
-                            data_wcs = _get_celestial_wcs(data.coords)
-                            state = regions2roi(region, wcs=data_wcs)
-                        else:
-                            state = regions2roi(region, wcs=data.coords)
-                    except ValueError:
-                        if '_orig_spatial_wcs' not in data.meta:
-                            bad_regions.append((region,
-                                                f'Failed to load: _orig_spatial_wcs'
-                                                f' meta tag not in {data.label}'))
-                            continue
-                        state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'])
-                    viewer.apply_roi(state)
+                    # photutils: Convert to region shape first
+                    if isinstance(region, (CircularAperture, SkyCircularAperture,
+                                           EllipticalAperture, SkyEllipticalAperture,
+                                           RectangularAperture, SkyRectangularAperture,
+                                           CircularAnnulus, SkyCircularAnnulus)):
+                        region = aperture2regions(region)
 
-                elif isinstance(region, (CircularROI, CircularAnnulusROI,
-                                         EllipticalROI, RectangularROI)):
-                    viewer.apply_roi(region)
-
-                elif isinstance(region, SpectralRegion):
-                    # Use viewer_name if provided in kwarg, otherwise use
-                    # default spectrum viewer name
-                    range_viewer = self.app.get_viewer(viewer_parameter) if viewer_parameter else self.spectrum_viewer  # noqa
-                    s = RangeSubsetState(lo=region.lower.value, hi=region.upper.value,
-                                         att=range_viewer.state.x_att)
-                    range_viewer.apply_subset_state(s)
-
-                # Last resort: Masked Subset that is static (if data is not a cube)
-                elif data.ndim == 2:
-                    im = None
-                    if hasattr(region, 'to_pixel'):  # Sky region: Convert to pixel region
-                        if not has_wcs:
-                            bad_regions.append((region, 'Sky region provided but data has no valid WCS'))  # noqa
-                            continue
-                        region = region.to_pixel(data.coords)
-
-                    if hasattr(region, 'to_mask'):
+                    # region: Convert to ROI.
+                    # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
+                    if (isinstance(region, (CirclePixelRegion, CircleSkyRegion,
+                                            EllipsePixelRegion, EllipseSkyRegion,
+                                            RectanglePixelRegion, RectangleSkyRegion,
+                                            CircleAnnulusPixelRegion, CircleAnnulusSkyRegion))):
                         try:
-                            mask = region.to_mask(**kwargs)
-                            im = mask.to_image(data.shape)  # Can be None
+                            if getattr(data.coords, 'world_n_dim', None) == 3:
+                                data_wcs = _get_celestial_wcs(data.coords)
+                                state = regions2roi(region, wcs=data_wcs)
+                            else:
+                                state = regions2roi(region, wcs=data.coords)
+                        except ValueError:
+                            if '_orig_spatial_wcs' not in data.meta:
+                                bad_regions.append((region,
+                                                    f'Failed to load: _orig_spatial_wcs'
+                                                    f' meta tag not in {data.label}'))
+                                continue
+                            state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'])
+                        viewer.apply_roi(state)
+
+                    elif isinstance(region, (CircularROI, CircularAnnulusROI,
+                                             EllipticalROI, RectangularROI)):
+                        viewer.apply_roi(region)
+
+                    elif isinstance(region, SpectralRegion):
+                        # Use viewer_name if provided in kwarg, otherwise use
+                        # default spectrum viewer name
+                        range_viewer = self.app.get_viewer(viewer_parameter) if viewer_parameter else self.spectrum_viewer  # noqa
+                        s = RangeSubsetState(lo=region.lower.value, hi=region.upper.value,
+                                             att=range_viewer.state.x_att)
+                        range_viewer.apply_subset_state(s)
+
+                    # Last resort: Masked Subset that is static (if data is not a cube)
+                    elif data.ndim == 2:
+                        im = None
+                        if hasattr(region, 'to_pixel'):  # Sky region: Convert to pixel region
+                            if not has_wcs:
+                                bad_regions.append((region, 'Sky region provided but data has no valid WCS'))  # noqa
+                                continue
+                            region = region.to_pixel(data.coords)
+
+                        if hasattr(region, 'to_mask'):
+                            try:
+                                mask = region.to_mask(**kwargs)
+                                im = mask.to_image(data.shape)  # Can be None
+                            except Exception as e:  # pragma: no cover
+                                bad_regions.append((region, f'Failed to load: {repr(e)}'))
+                                continue
+
+                        # Boolean mask as input is supported but not advertised.
+                        elif (isinstance(region, np.ndarray) and region.shape == data.shape
+                              and region.dtype == np.bool_):
+                            im = region
+
+                        if im is None:
+                            bad_regions.append((region, 'Mask creation failed'))
+                            continue
+
+                        # NOTE: Region creation info is thus lost.
+                        try:
+                            mask_label = f'{msg_prefix} {msg_count}'
+                            state = MaskSubsetState(im, data.pixel_component_ids)
+                            self.app.data_collection.new_subset_group(mask_label, state)
+                            msg_count += 1
                         except Exception as e:  # pragma: no cover
                             bad_regions.append((region, f'Failed to load: {repr(e)}'))
                             continue
-
-                    # Boolean mask as input is supported but not advertised.
-                    elif (isinstance(region, np.ndarray) and region.shape == data.shape
-                          and region.dtype == np.bool_):
-                        im = region
-
-                    if im is None:
+                    else:
                         bad_regions.append((region, 'Mask creation failed'))
                         continue
+                    n_loaded += 1
+                    if max_num_regions is not None and n_loaded >= max_num_regions:
+                        break
 
-                    # NOTE: Region creation info is thus lost.
-                    try:
-                        mask_label = f'{msg_prefix} {msg_count}'
-                        state = MaskSubsetState(im, data.pixel_component_ids)
-                        self.app.data_collection.new_subset_group(mask_label, state)
-                        msg_count += 1
-                    except Exception as e:  # pragma: no cover
-                        bad_regions.append((region, f'Failed to load: {repr(e)}'))
-                        continue
-                else:
-                    bad_regions.append((region, 'Mask creation failed'))
-                    continue
-                n_loaded += 1
-                if max_num_regions is not None and n_loaded >= max_num_regions:
-                    break
+                    if self.combination_mode.selected in ('new', 'replace') and subset_label is not None:  # noqa
+                        self.rename_selected(subset_label[label_index])
+                        label_index += 1
 
-                if self.combination_mode.selected in ('new', 'replace') and subset_label is not None:  # noqa
-                    self.rename_selected(subset_label[label_index])
-                    label_index += 1
+        finally:
+            self.app._importing_regions = False
 
         # Revert edit mode and subset to before the import_region call
-        self.app.session.edit_subset_mode.edit_subset = previous_subset
-        self.app.session.edit_subset_mode.mode = previous_mode
+        self._app.session.edit_subset_mode.edit_subset = previous_subset
+        self._app.session.edit_subset_mode.mode = previous_mode
 
         n_reg_in = len(regions)
         n_reg_bad = len(bad_regions)
@@ -1453,7 +1485,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             snack_color = "warning"
         else:
             snack_color = "success"
-        self.app.hub.broadcast(SnackbarMessage(
+        self._app.hub.broadcast(SnackbarMessage(
             f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
             f"bad={n_reg_bad}", color=snack_color,
             traceback=[(str(bad_region[0]), bad_region[1]) for bad_region in bad_regions],
@@ -1464,9 +1496,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
     @observe('combination_mode_selected')
     def _combination_mode_selected_updated(self, change):
-        self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[change['new']]
+        self._app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[change['new']]
 
     def _update_combination_mode(self):
-        if self.app.session.edit_subset_mode.mode in SUBSET_TO_PRETTY.keys():
+        if self._app.session.edit_subset_mode.mode in SUBSET_TO_PRETTY.keys():
             self.combination_mode_selected = SUBSET_TO_PRETTY[
-                self.app.session.edit_subset_mode.mode]
+                self._app.session.edit_subset_mode.mode]

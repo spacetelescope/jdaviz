@@ -787,7 +787,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                           state_filter=is_table_viewer)
 
         # Add layer callback to image viewers to track active layer
-        for viewer in self.app._viewer_store.values():
+        for viewer in self._app._viewer_store.values():
             viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
@@ -913,7 +913,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.send_state('display_units')
 
     def _on_refdata_change(self, *args):
-        if self.app._align_by.lower() == 'wcs':
+        if self._app._align_by.lower() == 'wcs':
             self.display_units['image'] = 'deg'
         else:
             self.display_units['image'] = 'pix'
@@ -921,7 +921,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self._update_viewer_zoom_steps()
 
     def _on_viewer_added(self, msg):
-        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        viewer = self._app.get_viewer_by_id(msg.viewer_id)
         viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
 
     @observe('viewer_selected')
@@ -1135,8 +1135,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             if isinstance(viewer_label_old, list):
                 viewer_label_old = viewer_label_old[0]
             # If the previously selected viewer was deleted, we don't need to do this.
-            if viewer_label_old in self.app._viewer_store:
-                vs_old = self.app.get_viewer(viewer_label_old).state
+            if viewer_label_old in self._app._viewer_store:
+                vs_old = self._app.get_viewer(viewer_label_old).state
                 for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
                     vs_old.remove_callback(attr, self._zoom_limits_update_stretch_histogram)
 
@@ -1202,7 +1202,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             # a random subset of the data to compute the histogram.
             # The 2.5 and 97.5 hardcoded here is equivalent to
             # PercentileInterval(95).get_limits(sub_data)
-            glue_data = self.stretch_histogram.app.data_collection['histogram']
+            glue_data = self.stretch_histogram._app.data_collection['histogram']
             hist_lims = (
                 glue_data.compute_statistic('percentile', glue_data.id['x'],
                                             percentile=2.5, random_subset=RANDOM_SUBSET_SIZE),

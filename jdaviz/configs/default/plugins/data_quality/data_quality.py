@@ -81,7 +81,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Data Quality layer visualization options.'
 
-        self.icons = {k: v for k, v in self.app.state.icons.items()}
+        self.icons = {k: v for k, v in self._app.state.icons.items()}
 
         self.science_layer = LayerSelect(
             self, 'science_layer_items', 'science_layer_selected',
@@ -123,7 +123,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         children_available = any([
             len(assoc['children']) > 0
-            for label, assoc in getattr(self.app, '_data_associations', {}).items()
+            for label, assoc in getattr(self._app, '_data_associations', {}).items()
         ])
         self.irrelevant_msg = (
             '' if children_available else
@@ -140,7 +140,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         # listen for changes on the image opacity, and update the
         # data quality layer opacity on changes to the science layer opacity
-        plot_options = self.app.get_tray_item_from_name('g-plot-options')
+        plot_options = self._app.get_tray_item_from_name('g-plot-options')
         plot_options.observe(self.update_opacity, 'image_opacity_value')
 
     def load_default_flag_maps(self):
@@ -213,10 +213,10 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
             # for cubeviz, also change uncert-viewer defaults to
             # map the out-of-bounds regions to the cmap's `bad` color:
-            if self.app.config in ('cubeviz', 'rampviz'):
-                viewer = self.app.get_viewer(
+            if self._app.config in ('cubeviz', 'rampviz'):
+                viewer = self._app.get_viewer(
                     getattr(
-                        self.app._jdaviz_helper,
+                        self._app._jdaviz_helper,
                         '_default_uncert_viewer_reference_name', 'level-2'
                     )
                 )

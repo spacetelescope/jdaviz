@@ -103,7 +103,7 @@ class FormatSelect(SelectPluginComponent):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
-                this_parser = Parser(self.plugin.app, parser_input)
+                this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
                 try:
                     if this_parser.is_valid:
@@ -126,7 +126,7 @@ class FormatSelect(SelectPluginComponent):
                         self._invalid_importers[label] = 'Not matching format restriction'  # noqa
                         continue
                     try:
-                        this_importer = Importer(app=self.plugin.app,
+                        this_importer = Importer(app=self.plugin._app,
                                                  resolver=self.plugin,
                                                  parser=this_parser,
                                                  input=importer_input)
@@ -274,6 +274,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     server_is_remote = Bool(False).tag(sync=True)
     # Hide the resolver UI (title, input fields, query results) and show only importer selection
     hide_resolver = Bool(False).tag(sync=True)
+    # Hide only the resolver input fields (for preset loaders), but still show query results
+    hide_resolver_inputs = Bool(False).tag(sync=True)
 
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
@@ -305,27 +307,27 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.file_table.enable_clear = False
         self.file_table.show_if_empty = False
         self.file_table.show_rowselect = True
-        self.file_table.item_key = "url"
+        self.file_table.item_key = "location"
         self.file_table.multiselect = False
         self.file_table._selected_rows_changed_callback = self.on_file_select_changed
 
         # Setup footprint selection
         if self.app is not None:
             self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
-            self.app.hub.subscribe(self, FootprintOverlayClickMessage,
-                                   handler=self._on_region_select)
+            self._app.hub.subscribe(self, FootprintOverlayClickMessage,
+                                    handler=self._on_region_select)
             self.image_data_loaded = any(layer_is_image_data(data)
-                                         for data in self.app.data_collection)
-            self.app.hub.subscribe(self, DataCollectionAddMessage,
-                                   handler=self._on_collection_data_added)
-            self.app.hub.subscribe(self, DataCollectionDeleteMessage,
-                                   handler=self._on_data_removed)
-            self.app.hub.subscribe(self, LinkUpdatedMessage,
-                                   handler=self._on_link_type_updated)
-            self.app.hub.subscribe(self, ViewerAddedMessage,
-                                   handler=self._on_viewer_added)
-            self.app.hub.subscribe(self, AddDataMessage,
-                                   handler=self._on_viewer_data_added)
+                                         for data in self._app.data_collection)
+            self._app.hub.subscribe(self, DataCollectionAddMessage,
+                                    handler=self._on_collection_data_added)
+            self._app.hub.subscribe(self, DataCollectionDeleteMessage,
+                                    handler=self._on_data_removed)
+            self._app.hub.subscribe(self, LinkUpdatedMessage,
+                                    handler=self._on_link_type_updated)
+            self._app.hub.subscribe(self, ViewerAddedMessage,
+                                    handler=self._on_viewer_added)
+            self._app.hub.subscribe(self, AddDataMessage,
+                                    handler=self._on_viewer_data_added)
 
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
@@ -350,12 +352,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                                    selected='target_selected')
 
         # Ensure traitlet and app state are in sync at init
-        self.server_is_remote = self.app.state.settings.get('server_is_remote',
-                                                            self.server_is_remote)
+        self.server_is_remote = self._app.state.settings.get('server_is_remote',
+                                                             self.server_is_remote)
 
         # Set up bidirectional synchronization
         # Listen for changes to app.state.settings and update traitlet
-        self.app.state.add_callback('settings', self._on_app_settings_changed)
+        self._app.state.add_callback('settings', self._on_app_settings_changed)
 
     @default('observation_table')
     def _default_observation_table(self):
@@ -363,11 +365,47 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                      name='observation_table',
                      title='Observations')
 
+    def _file_table_col_visible(self, colname):
+        """
+        Determine if a column should be visible in the file table.
+
+        Parameters
+        ----------
+        colname : str
+            The name of the column to check.
+
+        Returns
+        -------
+        bool
+            True if the column should be visible, False otherwise.
+        """
+        hide_location = self.app.state.settings.get('hide_file_table_location_column', False)
+        if colname == 'location' and hide_location:
+            return False
+        return True
+
     @default('file_table')
     def _default_file_table(self):
-        return Table(self,
-                     name='file_table',
-                     title='Files')
+        file_table = Table(self,
+                           name='file_table',
+                           title='Files')
+
+        # Override _new_col_visible to hide 'url' column if setting is enabled
+        file_table._new_col_visible = self._file_table_col_visible
+
+        return file_table
+
+    @observe('file_table_populated')
+    def _on_file_table_populated(self, change={}):
+        """Remove location from headers_avail if hiding is enabled."""
+        if not change.get('new', False):
+            return
+        hide_location = self.app.state.settings.get('hide_file_table_location_column', False)
+        if hide_location and 'location' in self.file_table.headers_avail:
+            # Remove location from headers_avail (dropdown) but keep in data
+            self.file_table.headers_avail = [
+                h for h in self.file_table.headers_avail if h != 'location'
+            ]
 
     def _on_app_settings_changed(self, new_settings_dict):
         """
@@ -380,8 +418,39 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         """
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
+        # Update file table location column visibility if the setting changed
+        hide_location = new_settings_dict.get('hide_file_table_location_column', False)
+
+        # Update the _new_col_visible function with current settings
+        self.file_table._new_col_visible = self._file_table_col_visible
+
+        # Check if location column exists in the actual data
+        location_in_data = (self.file_table._qtable is not None and
+                            'location' in self.file_table._qtable.colnames)
+
+        if location_in_data:
+            if hide_location:
+                # Remove location from both available and visible headers
+                self.file_table.headers_avail = [
+                    h for h in self.file_table.headers_avail if h != 'location'
+                ]
+                self.file_table.headers_visible = [
+                    h for h in self.file_table.headers_visible if h != 'location'
+                ]
+            else:
+                # location should be available - add it back if missing
+                if 'location' not in self.file_table.headers_avail:
+                    self.file_table.headers_avail = (
+                        self.file_table.headers_avail + ['location']
+                    )
+                if 'location' not in self.file_table.headers_visible:
+                    self.file_table.headers_visible = (
+                        self.file_table.headers_visible + ['location']
+                    )
+
     def _on_collection_data_added(self, msg):
-        self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
+        self.image_data_loaded = any(layer_is_image_data(data)
+                                     for data in self._app.data_collection)
 
     def _on_viewer_data_added(self, msg):
         """
@@ -399,7 +468,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if not hasattr(msg, 'viewer_id') or msg.viewer_id is None:
             return
 
-        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        viewer = self._app.get_viewer_by_id(msg.viewer_id)
         if viewer is None:
             return
         # Check if it's an image viewer
@@ -422,7 +491,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self._add_footprints_to_viewer(viewer)
 
     def _on_data_removed(self, msg):
-        self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
+        self.image_data_loaded = any(layer_is_image_data(data)
+                                     for data in self._app.data_collection)
 
     def _on_link_type_updated(self, msg=None):
         self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
@@ -495,11 +565,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         return None
 
     def _parsed_input_to_file_table(self, parsed_input_table):
-        if 'url' in parsed_input_table.colnames:
+        if 'location' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_url in ('URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
-            if map_to_url in parsed_input_table.colnames:
-                parsed_input_table.rename_column(map_to_url, 'url')
+        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
+            if map_to_location in parsed_input_table.colnames:
+                parsed_input_table.rename_column(map_to_location, 'location')
                 return parsed_input_table
         return None
 
@@ -637,8 +707,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self._sync_footprint_selection_to_viewers()
         # Fetch products if rows are selected
         if len(self.observation_table.selected_rows) == 0:
-            self.app.hub.broadcast(SnackbarMessage("No observation currently selected",
-                                                   sender=self, color="warning"))
+            self._app.hub.broadcast(SnackbarMessage("No observation currently selected",
+                                                    sender=self, color="warning"))
         else:
             datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
             results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
@@ -649,8 +719,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     self.file_table.add_item(row)
                 self.file_table_populated = True
             else:
-                self.app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
-                                                       sender=self, color="error"))
+                self._app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
+                                                        sender=self, color="error"))
                 self.file_table_populated = False
 
     def toggle_custom_toolbar(self):
@@ -736,7 +806,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if not (self.parsed_input_is_query and self.treat_table_as_query):
             return
 
-        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        viewer = self._app.get_viewer_by_id(msg.viewer_id)
         if viewer is None:
             return
         # Check if it's an image viewer
@@ -771,10 +841,21 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def get_selected_url(self):
         if len(self.file_table.selected_rows) != 1:
             return None
-        url = self.file_table.selected_rows[0]['url']
-        if not url.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')):
-            return f'https://mast.stsci.edu/search/{self.guess_mission(url)}/api/v0.1/retrieve_product?product_name={url}'  # noqa
-        return url
+        location = self.file_table.selected_rows[0]['location']
+
+        # Check if it's a local file path (absolute, relative, or home directory)
+        # or if it starts with a recognized URL scheme
+        if (location.startswith(('/', './', '../', '~')) or  # Unix-style paths
+                # URL schemes
+                location.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')) or
+                (len(location) > 2 and location[1] == ':' and location[2] in ('\\', '/'))):
+            # Windows-style absolute path (e.g., C:\... or C:/...)
+            return location
+
+        # Otherwise, assume it's a MAST product name and construct the URL
+        mission = self.guess_mission(location)
+        return (f'https://mast.stsci.edu/search/{mission}/api/v0.1/'
+                f'retrieve_product?product_name={location}')
 
     @with_spinner('spinner', 'downloading file...')
     def _download_from_file_table(self):
@@ -908,7 +989,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if self.close_callback is not None:
             self.close_callback()
         if close_sidebar:
-            self.app.state.drawer_content = ''
+            self._app.state.drawer_content = ''
 
     def open_in_tray(self):
         """
@@ -1047,7 +1128,7 @@ class BaseConeSearchResolver(BaseResolver):
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
         if (
-            len(self.app._jdaviz_helper.datasets) < 1
+            len(self._app._jdaviz_helper.datasets) < 1
             or viewer.state.reference_data is None
             or viewer.state.reference_data.coords is None
         ):
@@ -1055,7 +1136,7 @@ class BaseConeSearchResolver(BaseResolver):
             return
 
         # Obtain center point of the current image and convert into sky coordinates
-        if self.app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
+        if self._app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
             skycoord_center = SkyCoord(
                 viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
             )

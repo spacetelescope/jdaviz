@@ -39,7 +39,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
 
     # Make sure MASK is not an option even when shown in viewer.
     with pytest.raises(ValueError, match=match_str):
-        helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
+        helper._app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
 
     plg = helper.plugins["Aperture Photometry"]
     assert plg.dataset.labels == [flux_label]
@@ -89,7 +89,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
     collapse_plg.vue_collapse()
 
     # Need this to make it available for photometry data drop-down.
-    helper.app.add_data_to_viewer(unc_viewer, f"{flux_label} collapsed")
+    helper._app.add_data_to_viewer(unc_viewer, f"{flux_label} collapsed")
 
     plg = helper.plugins["Aperture Photometry"]
     plg.dataset.selected = f"{flux_label} collapsed"
@@ -128,7 +128,7 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
         _ = gauss_plg.smooth()
 
     # Need this to make it available for photometry data drop-down.
-    cubeviz_helper.app.add_data_to_viewer("uncert-viewer", "test[FLUX] spatial-smooth stddev-1.0")
+    cubeviz_helper._app.add_data_to_viewer("uncert-viewer", "test[FLUX] spatial-smooth stddev-1.0")
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
     cubeviz_helper.plugins['Subset Tools'].import_region(aper)

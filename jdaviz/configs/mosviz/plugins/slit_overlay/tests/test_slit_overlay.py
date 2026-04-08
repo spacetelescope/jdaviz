@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from glue.core import Data
-from jdaviz.app import Application
+from jdaviz.app import PrivateApplication
 from jdaviz.configs.mosviz.plugins.slit_overlay.slit_overlay import jwst_header_to_skyregion
 
 from regions import RectangleSkyRegion
@@ -23,7 +23,7 @@ sky_region = RectangleSkyRegion(center=skycoord, width=Angle(0.00031430899999992
 
 @pytest.mark.skip("Test needs to be fixed")
 def test_slit_overlay(spectral_cube_wcs):
-    app = Application()
+    app = PrivateApplication()
     dc = app.data_collection
     dc.append(Data(x=np.ones((3, 4, 5)), label='test', coords=spectral_cube_wcs))
 

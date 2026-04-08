@@ -167,8 +167,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._remove_subset_from_layers(msg.subset))  # noqa
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
-        self.viewer_icons = dict(self.app.state.viewer_icons)
-        self.layer_icons = dict(self.app.state.layer_icons)
+        self.viewer_icons = dict(self._app.state.viewer_icons)
+        self.layer_icons = dict(self._app.state.layer_icons)
 
         self.subset_edit_modes = [{'glue_name': 'replace', 'icon': read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')},  # noqa
                                   {'glue_name': 'or', 'icon': read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')},  # noqa
@@ -182,7 +182,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                              for k, v in self._viewer.toolbar.tools_data.items()
                              if k in SUBSET_TOOL_IDS.values()]
 
-        self.icons = {k: v for k, v in self.app.state.icons.items()}
+        self.icons = {k: v for k, v in self._app.state.icons.items()}
         self.prevent_layer_items_recursion = False
 
     @property
@@ -195,7 +195,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                       if e not in ('set_layer_visibility', 'toggle_layer_visibility',
                                    'create_subset', 'modify_subset')]
         readonly = ['data_labels_loaded', 'data_labels_visible', 'data_labels_unloaded']
-        if self.app.config in ('imviz', 'deconfigged'):
+        if self._app.config in ('imviz', 'deconfigged'):
             expose += ['orientation']
         return UserApiWrapper(self, expose=expose, readonly=readonly)
 
@@ -207,7 +207,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     @property
     def existing_subset_labels(self):
-        return [sg.label for sg in self.app.data_collection.subset_groups]
+        return [sg.label for sg in self._app.data_collection.subset_groups]
 
     @property
     def existing_sonified_labels(self):
@@ -432,25 +432,25 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             def _return_zorder_of_layers(layers):
                 return [x.zorder for x in self._viewer.state.layers
                         if x.layer.label in layers]
-            for data in self.app.data_collection:
-                if self.app._get_assoc_data_children(data.label):
+            for data in self._app.data_collection:
+                if self._app._get_assoc_data_children(data.label):
                     # If data has children, find their zorder blocks
                     # and return that as a list within a list of all
                     # data+children blocks
                     data_and_children.append(data.label)
                     data_and_children += (
-                        self.app._get_assoc_data_children(data.label))
+                        self._app._get_assoc_data_children(data.label))
                     children_blocks.append(
                         _return_zorder_of_layers(
                             [data.label] +
-                            self.app._get_assoc_data_children(data.label)))
+                            self._app._get_assoc_data_children(data.label)))
 
             # Find old zorder of all layers previous to change
             old_layers = {item['label']: item['zorder'] for item in event['old']}
 
             # Build a map of child to parent for zorder adjustments
-            child_to_parent = {child: data.label for data in self.app.data_collection
-                               for child in self.app._get_assoc_data_children(data.label)}
+            child_to_parent = {child: data.label for data in self._app.data_collection
+                               for child in self._app._get_assoc_data_children(data.label)}
 
             for layer in self._viewer.layers:
                 # Skip reordering scatter layers in image viewers.
@@ -582,7 +582,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self.delete_viewer_tooltip = f"Hide selected {subset_str} in this viewer"
 
         delete_app_tooltip = "Remove from all viewers and application (permanent, might affect existing subsets)"  # noqa
-        if self.app.config == 'cubeviz':
+        if self._app.config == 'cubeviz':
             # forbid deleting non-plugin generated data
             selected_items = self.layer.selected_item
             for i, layer in enumerate(self.layer.selected):
@@ -596,7 +596,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 elif (layer not in self.existing_subset_labels
                       and selected_items['from_plugin'][i] is None):
                     self.delete_app_enabled = False
-                    self.delete_app_tooltip = f"Cannot delete imported data from {self.app.config}"
+                    self.delete_app_tooltip = f"Cannot delete imported data from {self._app.config}"
                     break
             else:
                 self.delete_app_enabled = True
@@ -644,7 +644,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     layer.visible = visible
             elif hasattr(layer.layer, 'data') and layer.layer.data.label == layer_label:
                 layer.visible = layer.layer.label in self.visible_layers
-            if not visible and self.app._get_assoc_data_parent(layer.layer.label) == layer_label:
+            if not visible and self._app._get_assoc_data_parent(layer.layer.label) == layer_label:
                 # then this is a child-layer of a parent-layer that is being hidden
                 # so also hide the child-layer
                 layer.visible = False
@@ -655,7 +655,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # Update items once after all visibility changes are made
         self.layer._update_items()
 
-        if visible and (parent_label := self.app._get_assoc_data_parent(layer_label)):
+        if visible and (parent_label := self._app._get_assoc_data_parent(layer_label)):
             # ensure the parent layer is also visible
             self.set_layer_visibility(parent_label, visible=True)
 
@@ -696,7 +696,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if len(unavailable):
             raise ValueError(f"Data labels {unavailable} not able to be loaded into '{self.viewer_id}'.  Must be one of: {self.dataset.choices}")  # noqa
         for data_label in data_labels:
-            self.app.add_data_to_viewer(self.viewer_id, data_label)
+            self._app.add_data_to_viewer(self.viewer_id, data_label)
 
     def vue_add_data_to_viewer(self, info, *args):
         self.add_data(info.get('data_label'))  # pragma: no cover
@@ -714,12 +714,12 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         -----------
         """
         # Check if this is a subset by looking in subset_groups
-        is_subset = any(sg.label == old_label for sg in self.app.data_collection.subset_groups)
+        is_subset = any(sg.label == old_label for sg in self._app.data_collection.subset_groups)
 
         if is_subset:
-            self.app._rename_subset(old_label, new_label)
+            self._app._rename_subset(old_label, new_label)
         else:
-            self.app.rename_data(old_label, new_label)
+            self._app.rename_data(old_label, new_label)
 
     def _reset_rename_error_messages(self, old_label):
         """
@@ -747,7 +747,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         """
         for old_label, info in list(self._pending_renames.items()):
             try:
-                self.app.check_rename_availability(
+                self._app.check_rename_availability(
                     old_label, info['new_label'], is_subset=info.get('is_subset', False)
                 )
             except ValueError as e:
@@ -771,7 +771,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self._pending_renames[old_label] = {'new_label': new_label, 'is_subset': is_subset}
 
         try:
-            self.app.check_rename_availability(old_label, new_label, is_subset=is_subset)
+            self._app.check_rename_availability(old_label, new_label, is_subset=is_subset)
         except ValueError as e:
             self.rename_error_messages = {**self.rename_error_messages, old_label: str(e)}
         else:
@@ -841,7 +841,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # set tool first since that might default to "Create New"
         self._viewer.toolbar.select_tool(SUBSET_TOOL_IDS.get(subset_type, subset_type))
         # set subset selection to the subset to modify
-        subset_grp = [sg for sg in self.app.data_collection.subset_groups if sg.label == subset]
+        subset_grp = [sg for sg in self._app.data_collection.subset_groups if sg.label == subset]
         self.session.edit_subset_mode.edit_subset = subset_grp
         # set combination mode
         self.session.edit_subset_mode.mode = SUBSET_MODES.get(combination_mode)
@@ -858,7 +858,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if not len(self.layer.selected):
             return
 
-        subset_grp = [sg for sg in self.app.data_collection.subset_groups
+        subset_grp = [sg for sg in self._app.data_collection.subset_groups
                       if sg.label == self.layer.selected[0]]
         if len(subset_grp):
             subset = subset_grp[0]
@@ -888,7 +888,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.layer.selected = subset_str
 
         # get the subset group and extract the ROI
-        subset_grp = [sg for sg in self.app.data_collection.subset_groups
+        subset_grp = [sg for sg in self._app.data_collection.subset_groups
                       if sg.label == subset_str]
 
         # Determine which tool to use based on the ROI type
@@ -974,7 +974,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             if layer in self.existing_subset_labels:
                 self.set_layer_visibility(layer, visible=False)
             else:
-                self.app.remove_data_from_viewer(self.viewer_id, layer)
+                self._app.remove_data_from_viewer(self.viewer_id, layer)
 
     def vue_remove_from_viewer(self, *args):
         self.remove_from_viewer()  # pragma: no cover
@@ -987,13 +987,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         for layer in (self.layer.selected if isinstance(self.layer.selected,
                                                         (list, tuple)) else [self.layer.selected]):
             if layer in self.existing_subset_labels:
-                for sg in self.app.data_collection.subset_groups:
+                for sg in self._app.data_collection.subset_groups:
                     if sg.label == layer:
-                        self.app.data_collection.remove_subset_group(sg)
+                        self._app.data_collection.remove_subset_group(sg)
                         self.layer._update_items()
                         break
             else:
-                self.app.data_item_remove(layer)
+                self._app.data_item_remove(layer)
 
     def vue_remove_from_app(self, *args):
         self.remove_from_app()  # pragma: no cover

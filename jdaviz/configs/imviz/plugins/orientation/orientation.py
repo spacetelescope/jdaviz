@@ -111,7 +111,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.viewer._allow_multiselect = False
         self.viewer.add_filter('is_imviz_image_viewer', 'reference_has_wcs')
 
-        self.icons = {k: v for k, v in self.app.state.icons.items()}
+        self.icons = {k: v for k, v in self._app.state.icons.items()}
 
         self.align_by = SelectPluginComponent(self,
                                               items='align_by_items',
@@ -154,7 +154,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         self._update_layer_label_default()
 
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
 
     @property
@@ -185,21 +185,21 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             raise
         else:
             # Only broadcast after success.
-            self.app.hub.broadcast(LinkUpdatedMessage(
+            self._app.hub.broadcast(LinkUpdatedMessage(
                 align_by, self.wcs_use_fallback, self.wcs_fast_approximation, sender=self.app))
             self.orientation._update_items()
         finally:
             self.linking_in_progress = False
 
     def _check_if_data_with_wcs_exists(self):
-        for data in self.app.data_collection:
+        for data in self._app.data_collection:
             if hasattr(data.coords, 'pixel_to_world'):
                 self.wcs_linking_available = True
                 return
         self.wcs_linking_available = False
 
     def _on_new_app_data(self, msg):
-        if self.app._jdaviz_helper._in_batch_load > 0:
+        if self._app._jdaviz_helper._in_batch_load > 0:
             return
         if isinstance(msg, DataCollectionAddMessage):
             if msg.data.meta.get('_importer') != 'CatalogImporter':
@@ -241,7 +241,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             setattr(self, msg.get('name'), msg.get('old'))
             self.linking_in_progress = False
             raise ValueError("Link type can only be changed after existing subsets "
-                             f"are deleted, but {len(self.app.data_collection.subset_groups)} "
+                             f"are deleted, but {len(self._app.data_collection.subset_groups)} "
                              f"subset(s) still exist. To delete them, you can use "
                              f"`delete_subsets()` from the plugin API.")
 
@@ -261,19 +261,19 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # new link type, remove data from the viewer that are now
         # incompatible:
         wcs_linked = self.align_by.selected == 'WCS'
-        viewer_selected = self.app.get_viewer(self.viewer.selected)
+        viewer_selected = self._app.get_viewer(self.viewer.selected)
         if viewer_selected is None:
             self.linking_in_progress = False
             return
-        data_in_viewer = self.app.get_viewer(viewer_selected.reference).data()
+        data_in_viewer = self._app.get_viewer(viewer_selected.reference).data()
 
-        for data in self.app.data_collection:
+        for data in self._app.data_collection:
             is_wcs_only = data.meta.get(_wcs_only_label, False)
             has_wcs = hasattr(data.coords, 'pixel_to_world')
             if not is_wcs_only:
                 if data in data_in_viewer and wcs_linked and not has_wcs:
                     # data is in viewer but must be removed:
-                    self.app.remove_data_from_viewer(viewer_selected.reference, data.label)
+                    self._app.remove_data_from_viewer(viewer_selected.reference, data.label)
                     self.hub.broadcast(SnackbarMessage(
                         f"Data '{data.label}' does not have a valid WCS - removing from viewer.",
                         sender=self, color="warning"))
@@ -284,24 +284,24 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self._update_layer_label_default()
 
         # Clear previous zoom limits because they no longer mean anything.
-        for v in self.app._viewer_store.values():
+        for v in self._app._viewer_store.values():
             v._prev_limits = None
 
     def _on_subset_change(self, msg):
-        self.need_clear_subsets = len(self.app.data_collection.subset_groups) > 0
+        self.need_clear_subsets = len(self._app.data_collection.subset_groups) > 0
 
     def delete_subsets(self):
         """
         Delete all subsets app-wide.  Required before changing ``align_by``.
         """
         # subsets will be deleted on changing link type:
-        self.app.delete_subsets()
+        self._app.delete_subsets()
 
     def vue_delete_subsets(self, *args):
         self.delete_subsets()
 
     def vue_reset_astrowidget_markers(self, *args):
-        for viewer in self.app._viewer_store.values():
+        for viewer in self._app._viewer_store.values():
             viewer.reset_markers()
 
     def _get_wcs_angles(self, first_loaded_image=None):
@@ -418,7 +418,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.orientation._update_items()
 
         # add orientation layer to all viewers:
-        for viewer_ref in self.app._viewer_store:
+        for viewer_ref in self._app._viewer_store:
             self._add_data_to_viewer(label, viewer_ref)
 
         if set_on_create:
@@ -426,23 +426,24 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             self.orientation.selected = label
 
     def _ensure_layer_icon_exists(self, data_label):
-        if data_label in self.app.data_collection and data_label not in self.app.state.layer_icons:
+        if (data_label in self._app.data_collection and
+                data_label not in self._app.state.layer_icons):
             # ensure layer icon is created for the orientation layer since we bypassed
             # the viewer data menu
-            self.app._on_layers_changed(AddDataMessage(self.app.data_collection[data_label],
-                                                       viewer=None, sender=self))
+            self._app._on_layers_changed(AddDataMessage(self._app.data_collection[data_label],
+                                                        viewer=None, sender=self))
 
     def _add_data_to_viewer(self, data_label, viewer_id):
-        viewer = self.app.get_viewer_by_id(viewer_id)
+        viewer = self._app.get_viewer_by_id(viewer_id)
         if not isinstance(viewer, ImvizImageView):
             return
 
         if data_label not in viewer.data_menu.orientation.choices:
-            self.app.add_data_to_viewer(viewer_id, data_label)
+            self._app.add_data_to_viewer(viewer_id, data_label)
         self._ensure_layer_icon_exists(data_label)
 
     def _on_viewer_added(self, msg):
-        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        viewer = self._app.get_viewer_by_id(msg.viewer_id)
         if not isinstance(viewer, ImvizImageView):
             return
         self._send_wcs_layers_to_all_viewers(viewers_to_update=[msg.viewer_id])
@@ -454,7 +455,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         wcs_only_layers = get_wcs_only_layer_labels(self.app)
 
-        viewers_to_update = self.app.get_viewers_of_cls(ImvizImageView)
+        viewers_to_update = self._app.get_viewers_of_cls(ImvizImageView)
         for viewer in viewers_to_update:
             viewer_dm = viewer.data_menu
 
@@ -463,7 +464,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
             for wcs_layer in wcs_only_layers:
                 if wcs_layer not in viewer_data_labels:
-                    self.app.add_data_to_viewer(viewer.reference_id, wcs_layer)
+                    self._app.add_data_to_viewer(viewer.reference_id, wcs_layer)
             if (
                 self.orientation.selected not in
                     wcs_only_layers and
@@ -490,10 +491,10 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def set_orientation_for_viewer(self, orientation, viewer_id):
         if self._refdata_change_available:
-            self.app._change_reference_data(
+            self._app._change_reference_data(
                 orientation, viewer_id=viewer_id
             )
-            viewer_item = self.app._viewer_item_by_id(viewer_id)
+            viewer_item = self._app._viewer_item_by_id(viewer_id)
             if viewer_item is not None and viewer_item['reference_data_label'] != orientation:
                 viewer_item['reference_data_label'] = orientation
 
@@ -538,14 +539,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     def ref_data(self):
         if not hasattr(self, 'viewer'):
             return None
-        viewer = self.app.get_viewer(self.viewer.selected)
+        viewer = self._app.get_viewer(self.viewer.selected)
         if viewer is None or not hasattr(viewer, 'state'):
             return None
         return viewer.state.reference_data
 
     @property
     def _refdata_change_available(self):
-        viewer = self.app.get_viewer(self.viewer.selected)
+        viewer = self._app.get_viewer(self.viewer.selected)
         if viewer is None:
             return False
         selected_layer = [lyr.layer for lyr in viewer.layers
@@ -657,8 +658,8 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
-        Application associated with Imviz, e.g., ``imviz.app``.
+    app : `~jdaviz.app.PrivateApplication`
+        Application associated with Imviz, e.g., ``imviz._app``.
 
     align_by : {'pixels', 'wcs'}
         Choose to link by pixels or WCS.

@@ -38,7 +38,7 @@ class TestVODeconfiggedImageLocal(BaseDeconfiggedImage_WCS_WCS):
         """
         # Create a second viewer and remove second dataset from first viewer to avoid ambiguity
         self.helper.new_viewers['Image']()
-        self.helper.app.remove_data_from_viewer("Image", "has_wcs_2")
+        self.helper._app.remove_data_from_viewer("Image", "has_wcs_2")
 
         # Check default viewer is "Manual"
         vo_ldr = self.helper.loaders["virtual observatory"]._obj
@@ -60,7 +60,7 @@ class TestVODeconfiggedImageLocal(BaseDeconfiggedImage_WCS_WCS):
         assert vo_ldr.source == ""
 
         # Now load second data into second viewer and verify coordinates
-        self.helper.app.add_data_to_viewer("Image (1)", "has_wcs_2")
+        self.helper._app.add_data_to_viewer("Image (1)", "has_wcs_2")
         ra_str, dec_str = vo_ldr.source.split()
         np.testing.assert_allclose(
             float(ra_str), self._data_center_coords["has_wcs_2[SCI,1]"]["ra"]
