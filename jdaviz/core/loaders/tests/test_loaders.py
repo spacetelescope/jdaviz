@@ -302,7 +302,7 @@ def test_hide_file_table_location_column(deconfigged_helper):
     assert len(ldr._obj.file_table._qtable) == 3
 
     # Enable the setting and reload data
-    deconfigged_helper.app.state.settings['hide_file_table_location_column'] = True
+    deconfigged_helper._app.state.settings['hide_file_table_location_column'] = True
 
     # Clear the file table so file_table_populated will transition from False to True
     ldr._obj.file_table._clear_table()
@@ -332,7 +332,7 @@ def test_hide_file_table_location_column(deconfigged_helper):
     assert len(ldr._obj.file_table._qtable) == 2
 
     # Test changing setting back to False
-    deconfigged_helper.app.state.settings['hide_file_table_location_column'] = False
+    deconfigged_helper._app.state.settings['hide_file_table_location_column'] = False
 
     # Clear and reload to test re-enabling
     ldr._obj.file_table._clear_table()
@@ -346,7 +346,7 @@ def test_hide_file_table_location_column(deconfigged_helper):
     assert 'location' in ldr._obj.file_table.headers_visible
 
     # Reset to default for other tests
-    deconfigged_helper.app.state.settings['hide_file_table_location_column'] = False
+    deconfigged_helper._app.state.settings['hide_file_table_location_column'] = False
 
 
 def test_file_table_local_paths(deconfigged_helper):

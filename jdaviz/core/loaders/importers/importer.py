@@ -62,7 +62,7 @@ class BaseImporter(PluginTemplateMixin):
         self._input = input
         self._parser = parser
         self._resolver = resolver
-        super().__init__(app, **kwargs)
+        super().__init__(app=app, **kwargs)
 
         # Doing this in app instead of here avoids a lot of unnecessary overhead
         # from all the importers in memory

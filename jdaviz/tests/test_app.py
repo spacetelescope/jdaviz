@@ -363,7 +363,7 @@ def test_remote_server_settings_deconfigged(deconfigged_helper, server_is_remote
     # Create a new dict and reassign to trigger callbacks
     new_settings = settings.copy()
     new_settings['server_is_remote'] = server_is_remote
-    deconfigged_helper.app.state.settings = new_settings
+    deconfigged_helper._app.state.settings = new_settings
 
     # Get the loader items and check their widget properties
     loader_items = deconfigged_helper._app.state.loader_items
@@ -426,13 +426,13 @@ def test_add_custom_loader_file(deconfigged_helper, tmp_path):
     filepath.touch()
 
     # Add a custom file loader
-    loader = deconfigged_helper.app._add_custom_loader('file', str(filepath), name='test_file')
+    loader = deconfigged_helper._app._add_custom_loader('file', str(filepath), name='test_file')
 
     assert repr(loader) == '<test_file API>'
-    assert 'test_file' in deconfigged_helper.app._jdaviz_helper.loaders
+    assert 'test_file' in deconfigged_helper._app._jdaviz_helper.loaders
 
     # Check that the loader was added to loader_items
-    loader_names = [item['name'] for item in deconfigged_helper.app.state.loader_items]
+    loader_names = [item['name'] for item in deconfigged_helper._app.state.loader_items]
     assert 'test_file' in loader_names
 
 
@@ -444,13 +444,13 @@ def test_add_custom_loader_object(deconfigged_helper, spectrum1d):
     test_table = Table({'col1': [1, 2, 3], 'col2': [4, 5, 6]})
 
     # Add a custom object loader
-    loader = deconfigged_helper.app._add_custom_loader('object', test_table, name='my_table')
+    loader = deconfigged_helper._app._add_custom_loader('object', test_table, name='my_table')
 
     assert repr(loader) == '<my_table API>'
-    assert 'my_table' in deconfigged_helper.app._jdaviz_helper.loaders
+    assert 'my_table' in deconfigged_helper._app._jdaviz_helper.loaders
 
     # Check that requires_api_support is set correctly for object resolver
-    loader_items = deconfigged_helper.app.state.loader_items
+    loader_items = deconfigged_helper._app.state.loader_items
     my_table_item = [item for item in loader_items if item['name'] == 'my_table'][0]
     assert my_table_item['requires_api_support'] is True
 
@@ -461,16 +461,16 @@ def test_add_custom_loader_url(deconfigged_helper):
     test_url = 'https://example.com/test_data.fits'
 
     # Add a custom URL loader
-    loader = deconfigged_helper.app._add_custom_loader('url', test_url, name='remote_file')
+    loader = deconfigged_helper._app._add_custom_loader('url', test_url, name='remote_file')
 
     assert repr(loader) == '<remote_file API>'
-    assert 'remote_file' in deconfigged_helper.app._jdaviz_helper.loaders
+    assert 'remote_file' in deconfigged_helper._app._jdaviz_helper.loaders
 
 
 def test_add_custom_loader_invalid_resolver(deconfigged_helper):
     """Test _add_custom_loader with an invalid resolver type."""
     with pytest.raises(ValueError, match="Unknown resolver type 'invalid'"):
-        deconfigged_helper.app._add_custom_loader('invalid', 'some_input', name='test')
+        deconfigged_helper._app._add_custom_loader('invalid', 'some_input', name='test')
 
 
 def test_add_custom_loader_unique_names(deconfigged_helper, tmp_path):
@@ -482,12 +482,12 @@ def test_add_custom_loader_unique_names(deconfigged_helper, tmp_path):
     filepath2.touch()
 
     # Add first loader with name 'data'
-    loader1 = deconfigged_helper.app._add_custom_loader('file', str(filepath1), name='data')
+    loader1 = deconfigged_helper._app._add_custom_loader('file', str(filepath1), name='data')
     assert repr(loader1) == '<data API>'
 
     # Try to add second loader with the same name - should raise error
     with pytest.raises(ValueError, match="Loader name must be unique. A loader with the name 'data' already exists."):  # noqa
-        deconfigged_helper.app._add_custom_loader('file', str(filepath2), name='data')
+        deconfigged_helper._app._add_custom_loader('file', str(filepath2), name='data')
 
 
 def test_add_custom_loader_open_in_tray(deconfigged_helper, tmp_path):
@@ -496,7 +496,7 @@ def test_add_custom_loader_open_in_tray(deconfigged_helper, tmp_path):
     filepath.touch()
 
     # Add a custom file loader with open_in_tray=True
-    loader = deconfigged_helper.app._add_custom_loader(
+    loader = deconfigged_helper._app._add_custom_loader(
         'file', str(filepath), name='test', open_in_tray=True
     )
 

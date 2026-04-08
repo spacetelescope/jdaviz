@@ -123,7 +123,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         children_available = any([
             len(assoc['children']) > 0
-            for label, assoc in getattr(self.app, '_data_associations', {}).items()
+            for label, assoc in getattr(self._app, '_data_associations', {}).items()
         ])
         self.irrelevant_msg = (
             '' if children_available else
