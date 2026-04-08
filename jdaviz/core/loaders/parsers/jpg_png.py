@@ -13,7 +13,7 @@ class JPGPNGParser(BaseParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz2d', 'lcviz', 'imviz'):
+        if self._app.config not in ('deconfigged', 'specviz2d', 'lcviz', 'imviz'):
             # NOTE: temporary during deconfig process
             return False
         return isinstance(self.input, str) and self.input.endswith(('.jpg', '.jpeg', '.png'))

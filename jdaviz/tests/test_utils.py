@@ -70,21 +70,22 @@ def test_uri_to_download_specviz_local_path_check():
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper):
     uri = cached_uri("mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits")
-    specviz_helper.load_data(uri, cache=True)
+    specviz_helper.load(uri, cache=True)
 
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz2d(specviz2d_helper):
     uri = cached_uri("mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits")  # noqa: E501
     specviz2d_helper.load_data(uri, cache=True)
+    # NOTE: if changing to load, will need to pass format='2D Spectrum'
 
 
 @pytest.mark.remote_data
 def test_load_s3_fits(imviz_helper):
     """Test loading a JWST FITS file from an S3 URI into Imviz."""
     s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
-    imviz_helper.load_data(s3_uri)
-    assert len(imviz_helper.app.data_collection) > 0
+    imviz_helper.load(s3_uri, format='Image')
+    assert len(imviz_helper._app.data_collection) > 0
 
 
 @pytest.mark.remote_data
@@ -196,7 +197,7 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
 
     # Making sure a stand-in for a SelectPluginComponent object with an attribute
     # that has `choices` works as expected
-    test_importer = SpectrumImporter(app=deconfigged_helper.app,
+    test_importer = SpectrumImporter(app=deconfigged_helper._app,
                                      resolver=deconfigged_helper.loaders['object']._obj,
                                      parser=None,
                                      input=premade_spectrum_list)

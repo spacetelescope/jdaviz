@@ -225,7 +225,7 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
 
     @property
     def marks_viewers1d(self):
-        return self.app.get_viewers_of_cls(Spectrum1DViewer)
+        return self._app.get_viewers_of_cls(Spectrum1DViewer)
 
     @property
     def marks(self):

@@ -5,7 +5,7 @@ from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 from regions import CirclePixelRegion, PixCoord, PolygonSkyRegion
 
-from jdaviz.app import Application
+from jdaviz.app import PrivateApplication
 from jdaviz.core.config import get_configuration
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.configs.imviz.helper import Imviz
@@ -23,14 +23,14 @@ from numpy.testing import assert_allclose
     [(None, 'imviz-1'),
      ('babylon-5', 'babylon-5')])
 def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
-    assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
+    assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
 
     viewer = imviz_helper.create_image_viewer(viewer_name=desired_name)
     viewer_names = sorted(['imviz-0', actual_name])
     assert viewer.top_visible_data_label == ''
     assert isinstance(viewer, ImvizImageView)
-    assert viewer is imviz_helper.app._viewer_store.get(actual_name), list(imviz_helper.app._viewer_store.keys())  # noqa
-    assert imviz_helper.app.get_viewer_ids() == viewer_names
+    assert viewer is imviz_helper._app._viewer_store.get(actual_name), list(imviz_helper._app._viewer_store.keys())  # noqa
+    assert imviz_helper._app.get_viewer_ids() == viewer_names
 
     # Make sure plugins that store viewer_items are updated.
     assert sorted(imviz_helper.plugins['Compass'].viewer.labels) == viewer_names
@@ -41,7 +41,7 @@ def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
     po.viewer = viewer_names
 
     imviz_helper.destroy_viewer(actual_name)
-    assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
+    assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
     assert po.viewer.selected == ['imviz-0']
     assert po.viewer.labels == ['imviz-0']
 
@@ -79,19 +79,19 @@ def test_align_by_wcs_create_viewer(imviz_helper, image_2d_wcs):
 def test_get_viewer_created(imviz_helper):
     # This viewer has no reference but has ID.
     viewer1 = imviz_helper.create_image_viewer()
-    viewer2 = imviz_helper.app.get_viewer('imviz-1')
+    viewer2 = imviz_helper._app.get_viewer('imviz-1')
     assert viewer1 is viewer2
 
 
 def test_destroy_viewer_invalid(imviz_helper):
-    assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
+    assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
 
     imviz_helper.destroy_viewer('foo')
-    assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
+    assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
 
     with pytest.raises(ValueError, match='cannot be destroyed'):
         imviz_helper.destroy_viewer('imviz-0')
-    assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
+    assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
 
 
 def test_destroy_viewer_with_subset(imviz_helper):
@@ -103,7 +103,7 @@ def test_destroy_viewer_with_subset(imviz_helper):
     imviz_helper.create_image_viewer(viewer_name='second')
 
     # Add existing data to second viewer.
-    imviz_helper.app.add_data_to_viewer('second', 'my_array')
+    imviz_helper._app.add_data_to_viewer('second', 'my_array')
 
     # Create a Subset.
     reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=2)
@@ -113,7 +113,7 @@ def test_destroy_viewer_with_subset(imviz_helper):
     imviz_helper.destroy_viewer('second')
 
     # Delete the Subset: Should have no traceback.
-    imviz_helper.app.delete_subsets('Subset 1')
+    imviz_helper._app.delete_subsets('Subset 1')
 
 
 def test_mastviz_config():
@@ -129,12 +129,12 @@ def test_mastviz_config():
     cc['toolbar'].remove('g-viewer-creator') if cc['toolbar'].count('g-viewer-creator') else None
     cc['toolbar'].remove('g-image-viewer-creator') if cc['toolbar'].count('g-image-viewer-creator') else None  # noqa
 
-    app = Application(cc)
+    app = PrivateApplication(cc)
     im = Imviz(app)
     im.load_data(np.ones((2, 2)), data_label='my_array')
 
-    assert im.app.get_viewer_ids() == ['mastviz-0']
-    assert im.app.data_collection[0].shape == (2, 2)
+    assert im._app.get_viewer_ids() == ['mastviz-0']
+    assert im._app.data_collection[0].shape == (2, 2)
 
 
 def test_zoom_center_radius_init(imviz_helper):
@@ -166,8 +166,8 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
     # loaded/removed from the image viewer
     assert dm.data_labels_visible == ['my_catalog', 'my_data[DATA]']
 
-    assert imviz_helper.app.data_collection[2].label == 'my_catalog'
-    assert imviz_helper.app.data_collection[2].meta.get('_importer') == 'CatalogImporter'
+    assert imviz_helper._app.data_collection[2].label == 'my_catalog'
+    assert imviz_helper._app.data_collection[2].meta.get('_importer') == 'CatalogImporter'
 
     # since catalog is already loaded, it should not be in the "available"
     # choices, but should be in the visible list
@@ -209,7 +209,7 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
     # test sucessfully removing the catalog
     dm.layer.selected = ['my_catalog']
     dm.remove_from_app()
-    assert 'my_catalog' not in imviz_helper.app.data_collection.labels
+    assert 'my_catalog' not in imviz_helper._app.data_collection.labels
 
 
 def test_get_viewport_sky_region_wcs(imviz_helper, image_hdu_wcs):
@@ -270,7 +270,7 @@ def test_get_viewport_pixel_region(imviz_helper):
     imviz_helper.load(ndd)
     viewer = imviz_helper.viewers['imviz-0']
 
-    data_label = imviz_helper.app.data_collection[0].label
+    data_label = imviz_helper._app.data_collection[0].label
     region = viewer.get_viewport_region('pixel', data_label)
     assert_allclose(
         region.vertices.x, [-0.5, -0.5, 9.5, 9.5]
@@ -307,7 +307,7 @@ class TestDeleteData(BaseImviz_WCS_NoWCS):
 
     def test_plot_options_after_destroy(self):
         self.imviz.create_image_viewer(viewer_name="imviz-1")
-        self.imviz.app.add_data_to_viewer('imviz-1', 'no_wcs[SCI,1]')
+        self.imviz._app.add_data_to_viewer('imviz-1', 'no_wcs[SCI,1]')
 
         po = self.imviz.plugins['Plot Options']
         po.open_in_tray()

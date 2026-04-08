@@ -21,6 +21,6 @@ def test_asdf_not_rdm(imviz_helper):
 
     af = asdf.AsdfFile(tree=tree)
     imviz_helper.load_data(af)
-    out_component = imviz_helper.app.data_collection[0].get_component('DATA')
+    out_component = imviz_helper._app.data_collection[0].get_component('DATA')
     np.testing.assert_array_equal(in_data.value, out_component.data)
     assert str(in_unit) == out_component.units

@@ -67,12 +67,12 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         viewer.add_event_callback(callback, events=['keydown'])
 
     def _on_viewer_added(self, msg):
-        self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
+        self._create_viewer_callbacks(self._app.get_viewer_by_id(msg.viewer_id))
 
     @observe('is_active')
     def _is_active_changed(self, msg):
         # subscribe/unsubscribe to keypress events across all viewers
-        for viewer in self.app._viewer_store.values():
+        for viewer in self._app._viewer_store.values():
             if not hasattr(viewer, 'figure'):
                 # table viewer, etc
                 continue

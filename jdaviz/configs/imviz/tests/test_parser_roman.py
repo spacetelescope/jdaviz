@@ -13,7 +13,7 @@ from gwcs import WCS as GWCS
      (['data', 'var_poisson'], 2)])
 def test_roman_wfi_ext_options(imviz_helper, roman_imagemodel, ext_list, n_dc):
     imviz_helper.load_data(roman_imagemodel, data_label='roman_wfi_image_model', ext=ext_list)
-    dc = imviz_helper.app.data_collection
+    dc = imviz_helper._app.data_collection
     assert len(dc) == n_dc
 
     if ext_list == '*':

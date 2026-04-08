@@ -462,6 +462,6 @@ From the API within the Jupyter notebook:
 
     viewer_2_name = 'Window 2'
     viewer_2 = imviz.create_image_viewer(viewer_name=viewer_2_name)
-    imviz.app.add_data_to_viewer(viewer_2_name, 'MyImportedData')
+    imviz._app.add_data_to_viewer(viewer_2_name, 'MyImportedData')
 
 where ``'MyImportedData'`` is a data set that has already been imported into Imviz.

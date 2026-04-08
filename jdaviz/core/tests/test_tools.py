@@ -11,7 +11,7 @@ from specutils import Spectrum
 def test_boxzoom(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="Test Flux")
 
-    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    flux_viewer = cubeviz_helper._app.get_viewer('flux-viewer')
 
     assert flux_viewer.state.y_min == -0.5
     assert flux_viewer.state.y_max == 8.5
@@ -34,7 +34,7 @@ def _get_lims(viewer):
 def test_rangezoom(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label='test')
 
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper._app.get_viewer('spectrum-viewer')
     assert_allclose(_get_lims(sv), [6000, 8000, 12.30618014327326, 16.542560043585965])
 
     t = sv.toolbar.tools['jdaviz:xrangezoom']
@@ -140,10 +140,10 @@ def test_unit_conversion_limits_update(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(mos_spectrum2d)
     uc = specviz2d_helper.plugins['Unit Conversion']
 
-    spec_viewer = specviz2d_helper.app.get_viewer(
-                  specviz2d_helper.app._jdaviz_helper._default_spectrum_viewer_reference_name)
-    spec2d_viewer = specviz2d_helper.app.get_viewer(
-                    specviz2d_helper.app._jdaviz_helper._default_spectrum_2d_viewer_reference_name)
+    spec_viewer = specviz2d_helper._app.get_viewer(
+                  specviz2d_helper._app._jdaviz_helper._default_spectrum_viewer_reference_name)
+    spec2d_viewer = specviz2d_helper._app.get_viewer(
+                    specviz2d_helper._app._jdaviz_helper._default_spectrum_2d_viewer_reference_name)
 
     # ensure spectrum and spectrum2d viewer limits matching updates when spectral_unit
     # conversion occurs
@@ -176,10 +176,10 @@ def test_match_limits_without_wave_component(specviz2d_helper):
     spec2d = Spectrum(flux=data*u.MJy, spectral_axis_index=1)
     specviz2d_helper.load_data(spec2d)
 
-    spec_viewer = specviz2d_helper.app.get_viewer(
-                  specviz2d_helper.app._jdaviz_helper._default_spectrum_viewer_reference_name)
-    spec2d_viewer = specviz2d_helper.app.get_viewer(
-                    specviz2d_helper.app._jdaviz_helper._default_spectrum_2d_viewer_reference_name)
+    spec_viewer = specviz2d_helper._app.get_viewer(
+                  specviz2d_helper._app._jdaviz_helper._default_spectrum_viewer_reference_name)
+    spec2d_viewer = specviz2d_helper._app.get_viewer(
+                    specviz2d_helper._app._jdaviz_helper._default_spectrum_2d_viewer_reference_name)
 
     spec_viewer_lims_before = spec_viewer.get_limits()
     spec2d_viewer_lims_before = spec2d_viewer.get_limits()

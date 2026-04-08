@@ -22,21 +22,21 @@ def test_loaders_registry(specviz_helper):
 
 
 def test_open_close(specviz_helper):
-    specviz_helper.app.state.dev_loaders = True
+    specviz_helper._app.state.dev_loaders = True
 
-    assert specviz_helper.app.state.drawer_content == ''
+    assert specviz_helper._app.state.drawer_content == ''
 
     loader = specviz_helper.loaders['file']
     loader.open_in_tray()
-    assert specviz_helper.app.state.drawer_content == 'loaders'
+    assert specviz_helper._app.state.drawer_content == 'loaders'
     loader.close_in_tray()
-    assert specviz_helper.app.state.drawer_content == 'loaders'
+    assert specviz_helper._app.state.drawer_content == 'loaders'
     loader.close_in_tray(close_sidebar=True)
-    assert specviz_helper.app.state.drawer_content == ''
+    assert specviz_helper._app.state.drawer_content == ''
 
     subset_plg = specviz_helper.plugins['Subset Tools']
     subset_plg.open_in_tray()
-    assert specviz_helper.app.state.drawer_content == 'plugins'
+    assert specviz_helper._app.state.drawer_content == 'plugins'
 
     assert subset_plg._obj.loader_panel_ind is None  # loader panel not open
     subset_plg._obj.loaders['url'].open_in_tray()
@@ -44,19 +44,19 @@ def test_open_close(specviz_helper):
     subset_plg._obj.loaders['url'].close_in_tray()
     assert subset_plg._obj.loader_panel_ind is None  # loader panel not open
     subset_plg._obj.loaders['url'].close_in_tray(close_sidebar=True)
-    assert specviz_helper.app.state.drawer_content == ''
+    assert specviz_helper._app.state.drawer_content == ''
 
 
 def test_resolver_matching(specviz_helper):
     sp = Spectrum(spectral_axis=np.array([1, 2, 3])*u.nm,
                   flux=np.array([1, 2, 3])*u.Jy)
 
-    res_sp = find_matching_resolver(specviz_helper.app, sp)
+    res_sp = find_matching_resolver(specviz_helper._app, sp)
     assert res_sp._obj._registry_label == 'object'
     assert '1D Spectrum' in res_sp.format.choices
 
     specviz_helper.load(sp)
-    assert len(specviz_helper.app.data_collection) == 1
+    assert len(specviz_helper._app.data_collection) == 1
 
 
 def test_dbg_access(deconfigged_helper):
@@ -74,7 +74,7 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
 
     trace = specviz2d_helper.plugins['2D Spectral Extraction'].export_trace()
 
-    res_sp = find_matching_resolver(specviz2d_helper.app, trace)
+    res_sp = find_matching_resolver(specviz2d_helper._app, trace)
     assert res_sp._obj._registry_label == 'object'
     assert res_sp.format == 'Trace'
 
@@ -84,11 +84,11 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
     assert ldr.format == 'Trace'
     ldr.importer.data_label = 'Trace 1'
     ldr.load()
-    assert specviz2d_helper.app.data_collection[-1].label == 'Trace 1'
+    assert specviz2d_helper._app.data_collection[-1].label == 'Trace 1'
 
     # import through load method
     specviz2d_helper._load(trace, data_label='Trace 2')
-    assert specviz2d_helper.app.data_collection[-1].label == 'Trace 2'
+    assert specviz2d_helper._app.data_collection[-1].label == 'Trace 2'
 
 
 def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
@@ -110,7 +110,7 @@ def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
     # created 2D Spectrum viewer, did auto-extract,
     # but did not create 1D Spectrum viewer
     assert len(deconfigged_helper.viewers) == 1
-    assert len(deconfigged_helper.app.data_collection) == 2
+    assert len(deconfigged_helper._app.data_collection) == 2
 
 
 def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
@@ -189,7 +189,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
     ldr.load()
 
     assert len(deconfigged_helper.datasets) == len(sources_obj.selected)
-    dc = deconfigged_helper.app.data_collection
+    dc = deconfigged_helper._app.data_collection
     assert len(dc) == len(sources_obj.selected)
     assert len(deconfigged_helper.viewers) == 1
 
@@ -242,13 +242,13 @@ def test_resolver_url(deconfigged_helper):
     loader.format = '2D Spectrum'
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
-    assert len(deconfigged_helper.app.data_collection) == 0
+    assert len(deconfigged_helper._app.data_collection) == 0
     assert len(deconfigged_helper.viewers) == 0
 
     loader.load()
 
     # 2D spectrum and auto-extracted 1D spectrum
-    assert len(deconfigged_helper.app.data_collection) == 2
+    assert len(deconfigged_helper._app.data_collection) == 2
     assert len(deconfigged_helper.viewers) == 2
 
     with pytest.raises(ValueError, match="Failed query for URI"):
@@ -302,7 +302,7 @@ def test_hide_file_table_location_column(deconfigged_helper):
     assert len(ldr._obj.file_table._qtable) == 3
 
     # Enable the setting and reload data
-    deconfigged_helper.app.state.settings['hide_file_table_location_column'] = True
+    deconfigged_helper._app.state.settings['hide_file_table_location_column'] = True
 
     # Clear the file table so file_table_populated will transition from False to True
     ldr._obj.file_table._clear_table()
@@ -332,7 +332,7 @@ def test_hide_file_table_location_column(deconfigged_helper):
     assert len(ldr._obj.file_table._qtable) == 2
 
     # Test changing setting back to False
-    deconfigged_helper.app.state.settings['hide_file_table_location_column'] = False
+    deconfigged_helper._app.state.settings['hide_file_table_location_column'] = False
 
     # Clear and reload to test re-enabling
     ldr._obj.file_table._clear_table()
@@ -346,7 +346,7 @@ def test_hide_file_table_location_column(deconfigged_helper):
     assert 'location' in ldr._obj.file_table.headers_visible
 
     # Reset to default for other tests
-    deconfigged_helper.app.state.settings['hide_file_table_location_column'] = False
+    deconfigged_helper._app.state.settings['hide_file_table_location_column'] = False
 
 
 def test_file_table_local_paths(deconfigged_helper):
@@ -462,7 +462,7 @@ def test_mult_data_types(deconfigged_helper, image_nddata_wcs, spectrum2d, spect
         deconfigged_helper.load(datas[i], **load_kwargs[i])
 
     # NOTE: 2D Spectrum will also result in auto-extracted 1D Spectrum
-    assert len(deconfigged_helper.app.data_collection) == 4
+    assert len(deconfigged_helper._app.data_collection) == 4
     assert len(deconfigged_helper.viewers) == 3
 
 
@@ -476,7 +476,7 @@ def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
     deconfigged_helper.load(sp1d_freq, format='1D Spectrum', data_label='sp_frequency')
 
     # flux <> flux, uncertainty <> uncertainty, wavelength <> freq, Pixel 0[x] <> Pixel 1[x]
-    assert len(deconfigged_helper.app.data_collection.external_links) == 4
+    assert len(deconfigged_helper._app.data_collection.external_links) == 4
 
 
 def test_load_image_mult_sci_extension(imviz_helper):
@@ -493,12 +493,12 @@ def test_load_image_mult_sci_extension(imviz_helper):
     # imviz_helper._load(hdul, extension=('SCI,1', 'SCI,2', 'ERR,2'))
     imviz_helper.load_data(hdul, ext=('SCI,1', 'SCI,2', 'ERR,2'))
 
-    assert len(imviz_helper.app.data_collection) == 3
-    assert [d.label for d in imviz_helper.app.data_collection] == ['Image[SCI,1]', 'Image[SCI,2]', 'Image[ERR,2]']  # noqa
+    assert len(imviz_helper._app.data_collection) == 3
+    assert [d.label for d in imviz_helper._app.data_collection] == ['Image[SCI,1]', 'Image[SCI,2]', 'Image[ERR,2]']  # noqa
 
-    assert imviz_helper.app._get_assoc_data_children('Image[SCI,1]') == []
-    assert imviz_helper.app._get_assoc_data_children('Image[SCI,2]') == ['Image[ERR,2]']
-    assert imviz_helper.app._get_assoc_data_parent('Image[ERR,2]') == 'Image[SCI,2]'
+    assert imviz_helper._app._get_assoc_data_children('Image[SCI,1]') == []
+    assert imviz_helper._app._get_assoc_data_children('Image[SCI,2]') == ['Image[ERR,2]']
+    assert imviz_helper._app._get_assoc_data_parent('Image[ERR,2]') == 'Image[SCI,2]'
 
 
 def test_loaders_extension_select(imviz_helper):
@@ -561,7 +561,7 @@ def test_gwcs_to_fits_sip(gwcs_to_fits_sip, expected_cls, deconfigged_helper):
 
     ldr.load()
 
-    data = deconfigged_helper.app.data_collection[0]
+    data = deconfigged_helper._app.data_collection[0]
     assert isinstance(data.coords, expected_cls)
 
 
@@ -600,7 +600,7 @@ class TestRomanLoaders:
         assert len(ldr.importer.extension.choices) > 1
 
         ldr.load()
-        assert len(helper.app.data_collection) == 1
+        assert len(helper._app.data_collection) == 1
 
     @pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz2d_helper'])
     def test_roman_2d_spectrum(self, helper, request):
@@ -613,4 +613,4 @@ class TestRomanLoaders:
 
         ldr.load()
         # 2D spectrum and auto-extracted 1D spectrum
-        assert len(helper.app.data_collection) == 2
+        assert len(helper._app.data_collection) == 2

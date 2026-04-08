@@ -1,3 +1,4 @@
+import warnings
 from astropy.utils.decorators import deprecated
 
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
@@ -28,22 +29,28 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
     _cube_viewer_cls = CubevizImageView
 
     def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "Cubeviz is deprecated and will be removed in version 5.2. "
+            "Please use the top-level App instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__(*args, **kwargs)
 
         self.load = self._load
 
-        self.app.hub.subscribe(self, AddDataMessage,
-                               handler=self._set_spectrum_x_axis)
+        self._app.hub.subscribe(self, AddDataMessage,
+                                handler=self._set_spectrum_x_axis)
 
     @property
     def _spectrum_viewer(self):
-        viewer_reference = self.app._get_first_viewer_reference_name(
+        viewer_reference = self._app._get_first_viewer_reference_name(
             require_spectrum_viewer=True
         )
         if viewer_reference is None:
             return None
 
-        return self.app.get_viewer(viewer_reference)
+        return self._app.get_viewer(viewer_reference)
 
     def _set_spectrum_x_axis(self, msg):
         viewer = self._spectrum_viewer
@@ -84,7 +91,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
             Extra keywords accepted by Jdaviz application-level parser.
 
         """
-        if not override_cube_limit and len(self.app.state.data_items) != 0:
+        if not override_cube_limit and len(self._app.state.data_items) != 0:
             raise RuntimeError('Only one cube may be loaded per Cubeviz instance')
 
         format = kwargs.pop('format', ['1D Spectrum', '3D Spectrum'])
@@ -121,7 +128,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
         application that is wrapped by Cubeviz.
         """
         if not hasattr(self, '_specviz'):
-            self._specviz = Specviz(app=self.app)
+            self._specviz = Specviz(app=self._app)
         return self._specviz
 
     def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,

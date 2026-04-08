@@ -171,7 +171,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # TODO: default label separate from viewer label (so we can call it unc-viewer, etc)
         supported_viewers = [{'label': '3D Spectrum',
                               'reference': 'cubeviz-image-viewer'}]
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.unc_viewer_create_new_items = supported_viewers
 
         self.unc_viewer.add_filter(viewer_in_registry_names(supported_viewers))
@@ -202,7 +202,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # TODO: default label separate from viewer label (so we can call it mask-viewer, etc)
         supported_viewers = [{'label': '3D Spectrum',
                               'reference': 'cubeviz-image-viewer'}]
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.mask_viewer_create_new_items = supported_viewers
 
         self.mask_viewer.add_filter(viewer_in_registry_names(supported_viewers))
@@ -273,7 +273,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                                 default_mode='empty')
         supported_viewers = [{'label': '1D Spectrum',
                               'reference': 'spectrum-1d-viewer'}]
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.ext_viewer_create_new_items = supported_viewers
 
         self.ext_viewer.add_filter(viewer_in_registry_names(supported_viewers))
@@ -297,10 +297,10 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             self._check_extension_selected()
             return
 
-        loaded_flux_cube = getattr(self.app._jdaviz_helper, '_loaded_flux_cube', None)
+        loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
 
         # Check if the flux cube reference exists and is still in the data collection
-        if loaded_flux_cube is not None and loaded_flux_cube in self.app.data_collection:
+        if loaded_flux_cube is not None and loaded_flux_cube in self._app.data_collection:
             if self.config == 'cubeviz':
                 self.import_disabled_msg = "Only a single 3D spectrum (flux cube) can be loaded into cubeviz."  # noqa
             else:
@@ -318,8 +318,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         Check if an extension is selected. If not, disable import with a message.
         This is only checked if no flux cube is already loaded.
         """
-        loaded_flux_cube = getattr(self.app._jdaviz_helper, '_loaded_flux_cube', None)
-        if loaded_flux_cube is not None and loaded_flux_cube in self.app.data_collection:
+        loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
+        if loaded_flux_cube is not None and loaded_flux_cube in self._app.data_collection:
             # Flux cube message takes precedence
             return
 
@@ -370,7 +370,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'cubeviz'):
+        if self._app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
         try:
@@ -440,8 +440,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         super().__call__()
         # TODO: this will need to be removed when removing restriction of a single flux cube
-        if not getattr(self.app._jdaviz_helper, '_loaded_flux_cube', None):
-            self.app._jdaviz_helper._loaded_flux_cube = self.app.data_collection[data_label]
+        if not getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None):
+            self._app._jdaviz_helper._loaded_flux_cube = self._app.data_collection[data_label]
 
         if self.has_unc and not self.flux_only:
             # TODO: detect if uncertainty exists and hide section from UI
@@ -454,7 +454,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                         unc_data_label,
                                         viewer_select=self.unc_viewer)
             # TODO: this will need to be removed when removing restriction of a single flux cube
-            self.app._jdaviz_helper._loaded_uncert_cube = self.app.data_collection[unc_data_label]
+            self._app._jdaviz_helper._loaded_uncert_cube = self._app.data_collection[unc_data_label]
 
         if self.has_mask and not self.flux_only:
             mask = Spectrum(spectral_axis=self.output.spectral_axis,
@@ -466,13 +466,13 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                         mask_data_label,
                                         viewer_select=self.mask_viewer)
             # TODO: this will need to be removed when removing restriction of a single flux cube
-            self.app._jdaviz_helper._loaded_mask_cube = self.app.data_collection[mask_data_label]
+            self._app._jdaviz_helper._loaded_mask_cube = self._app.data_collection[mask_data_label]
 
         if not self.auto_extract:
             return
 
         try:
-            spext = self.app.get_tray_item_from_name('spectral-extraction-3d')
+            spext = self._app.get_tray_item_from_name('spectral-extraction-3d')
             ext = spext._extract_in_new_instance(dataset=data_label,
                                                  function=self.function.selected,
                                                  auto_update=False,
@@ -492,7 +492,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                 " See the 3D spectral extraction plugin for details or to"
                 " perform a custom extraction.",
                 color='warning', sender=self, timeout=10000)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)
 
         if ext is not None:
             self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
@@ -528,7 +528,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                             parent=data_label,
                                             viewer_select=viewer_for_dq)
 
-                self.app._jdaviz_helper._loaded_dq_cube = self.app.data_collection[dq_data_label]
+                self._app._jdaviz_helper._loaded_dq_cube = self._app.data_collection[dq_data_label]
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         comp_type = _spatial_assign_component_type(comp_id, comp, units, physical_type)

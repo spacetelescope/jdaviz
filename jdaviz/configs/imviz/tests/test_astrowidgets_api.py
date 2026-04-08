@@ -270,7 +270,7 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         tbl = Table({'x': x_pix, 'y': y_pix, 'coord': sky})
 
         self.viewer.add_markers(tbl)
-        data = self.imviz.app.data_collection[2]
+        data = self.imviz._app.data_collection[2]
         assert data.label == 'default-marker-name'
         assert data.style.color in ('red', '#ff0000')
         assert data.style.marker == 'o'
@@ -292,7 +292,7 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         self.viewer.marker = {'color': (0, 1, 0), 'alpha': 0.8, 'fill': False}
 
         self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
-        data = self.imviz.app.data_collection[3]
+        data = self.imviz._app.data_collection[3]
         assert data.label == 'my_sky'
         assert data.style.color in ((0, 1, 0), '#00ff00')
         assert data.style.marker == 'o'
@@ -304,11 +304,11 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         assert self.viewer.layers[3].state.fill is False
 
         # Make sure the other marker is not changed.
-        assert self.imviz.app.data_collection[2].style.color in ('red', '#ff0000')
+        assert self.imviz._app.data_collection[2].style.color in ('red', '#ff0000')
         assert self.viewer.layers[2].state.fill is True
 
-        # TODO: How to check imviz.app.data_collection.links is correct?
-        assert len(self.imviz.app.data_collection.links) == 14
+        # TODO: How to check imviz._app.data_collection.links is correct?
+        assert len(self.imviz._app.data_collection.links) == 14
 
         # Just want to make sure nothing crashes. Zooming already testing elsewhere.
         # https://github.com/spacetelescope/jdaviz/pull/1971
@@ -316,23 +316,23 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
 
         # Remove markers with default name.
         self.viewer.remove_markers()
-        assert self.imviz.app.data_collection.labels == [
+        assert self.imviz._app.data_collection.labels == [
             'has_wcs[SCI,1]', 'no_wcs[SCI,1]', 'my_sky']
 
         # Reset markers (runs remove_markers with marker_name set)
         self.viewer.reset_markers()
-        assert self.imviz.app.data_collection.labels == [
+        assert self.imviz._app.data_collection.labels == [
             'has_wcs[SCI,1]', 'no_wcs[SCI,1]']
 
-        assert len(self.imviz.app.data_collection.links) == 10
+        assert len(self.imviz._app.data_collection.links) == 10
 
         # NOTE: This changes the state of self.imviz for this test class!
 
-        self.imviz.app.data_collection.remove(self.imviz.app.data_collection[0])
+        self.imviz._app.data_collection.remove(self.imviz._app.data_collection[0])
         with pytest.raises(AttributeError, match='does not have a valid WCS'):
             self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
 
-        self.imviz.app.data_collection.clear()
+        self.imviz._app.data_collection.clear()
         with pytest.raises(AttributeError, match='does not have a valid WCS'):
             self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
 
@@ -347,16 +347,16 @@ def test_markers_gwcs_lonlat(imviz_helper):
         gw = af.tree['wcs']
     ndd = NDData(np.ones((10, 10), dtype=np.float32), wcs=gw, unit='MJy/sr')
     imviz_helper.load_data(ndd, data_label='MIRI_i2d')
-    assert imviz_helper.app.data_collection[0].label == 'MIRI_i2d[DATA]'
-    assert imviz_helper.app.data_collection[0].components == [
+    assert imviz_helper._app.data_collection[0].label == 'MIRI_i2d[DATA]'
+    assert imviz_helper._app.data_collection[0].components == [
         'Pixel Axis 0 [y]', 'Pixel Axis 1 [x]', 'Lat', 'Lon', 'DATA']
 
     # If you run this interactively, should appear slightly off-center.
     calib_cat = Table({'coord': [SkyCoord(80.6609, -69.4524, unit='deg')]})
     imviz_helper.default_viewer.add_markers(calib_cat, use_skycoord=True, marker_name='my_sky')
-    assert imviz_helper.app.data_collection[1].label == 'my_sky'
+    assert imviz_helper._app.data_collection[1].label == 'my_sky'
 
-    viewer = imviz_helper.app.get_viewer('imviz-0')
+    viewer = imviz_helper._app.get_viewer('imviz-0')
     viewer.reset_markers()
 
     # change orientation and ensure catalogs can be plotted using new orientation

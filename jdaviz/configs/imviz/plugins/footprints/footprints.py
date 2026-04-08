@@ -268,7 +268,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
                                                       selected='preset_selected',
                                                       manual_options=preset_options,
                                                       apply_filters_to_manual_options=True,
-                                                      server_is_remote=self.app.state.settings.get('server_is_remote', False))  # noqa
+                                                      server_is_remote=self._app.state.settings.get('server_is_remote', False))  # noqa
 
         # set the custom file parser for importing catalogs
         self.preset._file_parser = self._file_parser
@@ -355,7 +355,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
     def marks(self):
         # {overlay: {viewer: [list_of_marks]}}
         return {overlay: {viewer_id: self._get_marks(viewer, overlay)
-                          for viewer_id, viewer in self.app._viewer_store.items()
+                          for viewer_id, viewer in self._app._viewer_store.items()
                           if hasattr(viewer, 'figure')}
                 for overlay in self.overlay.choices}
 
@@ -382,7 +382,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
 
     def _on_link_type_updated(self, msg=None):
         self.is_pixel_linked = (getattr(self.app, '_align_by', None) == 'pixels' and
-                                len(self.app.data_collection) > 1)
+                                len(self._app.data_collection) > 1)
         # toggle visibility as necessary
         self._on_is_active_changed()
 
@@ -397,7 +397,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         # call other plugin so that other options (wcs_fast_approximation, wcs_use_fallback)
         # are retained.  Remove this method if support for plotting footprints
         # when pixel-linked is reintroduced.
-        op = self.app._jdaviz_helper.plugins['Orientation']
+        op = self._app._jdaviz_helper.plugins['Orientation']
         if op._obj.need_clear_astrowidget_markers or op._obj.need_clear_subsets:
             op.open_in_tray()
         else:
@@ -456,7 +456,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         self._overlays[new_lbl] = self._overlays.pop(old_lbl, {})
 
         # change the reference on any marks entries for this overlay (in any viewer)
-        for viewer_id, viewer in self.app._viewer_store.items():
+        for viewer_id, viewer in self._app._viewer_store.items():
             if not hasattr(viewer, 'figure'):  # pragma: nocover
                 # should only be table viewers in mosviz, but will leave this in case we
                 # ever enable the plugin for the image-viewer in mosviz
@@ -468,7 +468,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         _ = self._overlays.pop(lbl, {})
 
         # remove any marks objects (corresponding to this overlay) from all figures
-        for viewer_id, viewer in self.app._viewer_store.items():
+        for viewer_id, viewer in self._app._viewer_store.items():
             if not hasattr(viewer, 'figure'):  # pragma: nocover
                 # should only be table viewers in mosviz, but will leave this in case we
                 # ever enable the plugin for the image-viewer in mosviz
@@ -519,7 +519,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
             if not len(self.viewer.selected):  # pragma: nocover
                 raise ValueError("no viewers selected, provide viewer reference")
             viewer_ref = self.viewer.selected[0]
-        viewer = self.app.get_viewer(viewer_ref)
+        viewer = self._app.get_viewer(viewer_ref)
         center_coord = viewer._get_center_skycoord()
         self._ignore_traitlet_change = True
         self.ra = center_coord.ra.to_value('deg')
@@ -628,7 +628,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
             return
 
         # update existing mark (or add/remove from viewers)
-        for viewer_id, viewer in self.app._viewer_store.items():
+        for viewer_id, viewer in self._app._viewer_store.items():
             visible = self._mark_visible(viewer_id)
             existing_marks = self._get_marks(viewer, self.overlay_selected)
 
@@ -740,7 +740,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
             del self._overlays[overlay_selected]['regions']
 
         regs = self.overlay_regions
-        for viewer_id, viewer in self.app._viewer_store.items():
+        for viewer_id, viewer in self._app._viewer_store.items():
             visible = self._mark_visible(viewer_id)
             # TODO: need to re-call this logic when the reference_data is changed... which might
             # warrant some refactoring so we don't have to loop over all viewers if it has only

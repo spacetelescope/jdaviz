@@ -59,7 +59,7 @@ class TestConfigHelperSpec:
         self.config_helper.plugins['Subset Tools'].import_region(
             SpectralRegion(8200*spectral_axis_unit, 8800*spectral_axis_unit))
 
-        self.data = self.config_helper.app.data_collection[self.label]
+        self.data = self.config_helper._app.data_collection[self.label]
 
     @pytest.mark.parametrize(
         ('label', 'subset_name', 'answer'),
@@ -89,8 +89,8 @@ class TestConfigHelperSpec:
             self.config_helper._get_data(data_label="Blah")
 
         # invalid cls type
-        self.config_helper.app.data_collection.remove(
-            self.config_helper.app.data_collection[self.label2])
+        self.config_helper._app.data_collection.remove(
+            self.config_helper._app.data_collection[self.label2])
         with pytest.raises(TypeError, match="cls in get_data must be a class or None."):
             self.config_helper._get_data('Test 1D Spectrum', cls=42)
 
@@ -99,8 +99,8 @@ class TestConfigHelperSpec:
             self.config_helper._get_data('Test 1D Spectrum', spectral_subset="Fail")
 
     def test_get_data_no_label_one_in_dc(self):
-        self.config_helper.app.data_collection.remove(
-            self.config_helper.app.data_collection[self.label2])
+        self.config_helper._app.data_collection.remove(
+            self.config_helper._app.data_collection[self.label2])
         results = self.config_helper._get_data()
         assert_quantity_allclose(results.flux,
                                  self.spec.flux, atol=1e-5 * u.Unit(self.spec.flux.unit))
@@ -194,7 +194,7 @@ class TestConfigHelperSubsets:
         self.config_helper = cubeviz_helper
         # self.config_helper.load(image_cube_hdu_obj, format='Spectral Cube')
         self.config_helper.load_data(image_cube_hdu_obj)
-        self.data = self.config_helper.app.data_collection[0]
+        self.data = self.config_helper._app.data_collection[0]
         self.label = self.data.label
 
         subset_plugin = self.config_helper.plugins['Subset Tools']
@@ -296,8 +296,8 @@ def test_get_data_cls(deconfigged_helper, request, data_tuple):
     deconfigged_helper.load(input_data, data_label=data_label, format=data_label)
 
     # Get actual label from data collection after loading
-    label = deconfigged_helper.app.data_collection[0].label
-    data = deconfigged_helper.app.data_collection[label]
+    label = deconfigged_helper._app.data_collection[0].label
+    data = deconfigged_helper._app.data_collection[label]
 
     # Clear _native_data_cls to force cls inference path
     if '_native_data_cls' in data.meta:
@@ -313,7 +313,7 @@ def test_get_data_cls_spectrum_for_specviz2d(specviz2d_helper, spectrum2d):
     """
     specviz2d_helper.load_data(spectrum2d)
     # Get the actual label from data collection
-    label = specviz2d_helper.app.data_collection[0].label
+    label = specviz2d_helper._app.data_collection[0].label
 
     # Spectrum should infer Spectrum2d for multi-dimensional data
     result = specviz2d_helper.datasets[label].get_data()
@@ -326,7 +326,7 @@ def test_get_data_cls_nddataarray_for_rampviz(rampviz_helper, jwst_level_1b_ramp
     """
     rampviz_helper.load_data(jwst_level_1b_ramp)
     # Get the actual label from data collection
-    label = rampviz_helper.app.data_collection[0].label
+    label = rampviz_helper._app.data_collection[0].label
 
     # Test both the old and new API
     result = rampviz_helper.datasets[label].get_data()
@@ -349,14 +349,14 @@ def test_delete_region_with_valid_subset(cubeviz_helper, image_cube_hdu_obj):
     subset_plugin.import_region(CircularROI(5, 5, 3))
 
     # Verify subset was created
-    subset_labels = [s.label for s in cubeviz_helper.app.data_collection.subset_groups]
+    subset_labels = [s.label for s in cubeviz_helper._app.data_collection.subset_groups]
     assert 'Subset 1' in subset_labels
 
     # Delete the region
     cubeviz_helper._delete_region('Subset 1')
 
     # Verify it was deleted
-    subset_labels_after = [s.label for s in cubeviz_helper.app.data_collection.subset_groups]
+    subset_labels_after = [s.label for s in cubeviz_helper._app.data_collection.subset_groups]
     assert 'Subset 1' not in subset_labels_after
 
 
@@ -469,4 +469,4 @@ def test_load_mixed_spectral_axis_units(deconfigged_helper, unitless_data, load_
 
     # check that there are 2 spectra in the data collection, the one loaded and
     # the one auto-extracted
-    assert len(deconfigged_helper.app.data_collection) == 3  # 2 spectra + 1 extracted
+    assert len(deconfigged_helper._app.data_collection) == 3  # 2 spectra + 1 extracted

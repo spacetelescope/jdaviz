@@ -16,7 +16,7 @@ from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, new_flux,
                                expected_spectral_axis, expected_flux):
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
 
     try:
@@ -30,7 +30,7 @@ def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, ne
         if "reverting selection to" not in repr(e):
             raise
 
-    assert len(specviz_helper.app.data_collection) == 1
+    assert len(specviz_helper._app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit(expected_spectral_axis)
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(expected_flux)
 
@@ -50,12 +50,12 @@ def test_conv_wave_only(specviz_helper, spectrum1d, uncert):
         spectrum1d.uncertainty = None
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
     new_spectral_axis = "micron"
     plg.spectral_unit = new_spectral_axis
 
-    assert len(specviz_helper.app.data_collection) == 1
+    assert len(specviz_helper._app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit(new_spectral_axis)
     assert u.Unit(viewer.state.y_display_unit) == u.Unit('Jy')
 
@@ -66,12 +66,12 @@ def test_conv_flux_only(specviz_helper, spectrum1d, uncert):
         spectrum1d.uncertainty = None
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
     new_flux = "erg / (s cm2 Angstrom)"
     plg._obj.flux_unit_selected = new_flux
 
-    assert len(specviz_helper.app.data_collection) == 1
+    assert len(specviz_helper._app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit('Angstrom')
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
 
@@ -82,14 +82,14 @@ def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
         spectrum1d.uncertainty = None
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
     new_spectral_axis = "micron"
     new_flux = "erg / (s cm2 Angstrom)"
     plg.spectral_unit = new_spectral_axis
     plg._obj.flux_unit_selected = new_flux
 
-    assert len(specviz_helper.app.data_collection) == 1
+    assert len(specviz_helper._app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit(new_spectral_axis)
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
 
@@ -102,7 +102,7 @@ def test_conv_no_data(specviz_helper, spectrum1d):
     plg = specviz_helper.plugins["Unit Conversion"]
     with pytest.raises(ValueError, match="could not find match in valid x display units"):
         plg.spectral_unit = "micron"
-    assert len(specviz_helper.app.data_collection) == 0
+    assert len(specviz_helper._app.data_collection) == 0
 
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
@@ -130,7 +130,7 @@ def test_non_stddev_uncertainty(specviz_helper):
     po.uncertainty_visible = True
 
     # check that the stddev uncertainties are drawn:
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
     np.testing.assert_allclose(
         np.abs(viewer.figure.marks[-1].y - viewer.figure.marks[-1].y.mean(0)),
         stddev
@@ -162,7 +162,7 @@ def test_mosviz_viewer_mouseover_flux(specviz2d_helper):
     spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.um)
 
     specviz2d_helper.load_data(spectrum2d)
-    viewer = specviz2d_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz2d_helper._app.get_viewer('spectrum-viewer')
     plg = specviz2d_helper.plugins["Unit Conversion"]
 
     # make sure we don't expose angle, sb, nor spectral-y units when native
@@ -210,8 +210,8 @@ def test_mosviz_viewer_mouseover_sb(specviz2d_helper):
     spectrum2d = Spectrum(flux=data*u.MJy/u.sr, spectral_axis=data[3]*u.um)
 
     specviz2d_helper.load_data(spectrum2d)
-    spectrum_viewer = specviz2d_helper.app.get_viewer("spectrum-viewer")
-    spectrum2d_viewer = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
+    spectrum_viewer = specviz2d_helper._app.get_viewer("spectrum-viewer")
+    spectrum2d_viewer = specviz2d_helper._app.get_viewer('spectrum-2d-viewer')
     plg = specviz2d_helper.plugins["Unit Conversion"]
 
     # make sure we don't expose angle, sb, nor spectral-y units when native
@@ -221,7 +221,7 @@ def test_mosviz_viewer_mouseover_sb(specviz2d_helper):
     assert hasattr(plg, 'sb_unit')
     assert not hasattr(plg, 'spectral_y_type')
 
-    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz2d_helper._app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(spectrum_viewer,
                                         {'event': 'mousemove',
                                          'domain': {'x': 5, 'y': 3}})
@@ -289,7 +289,7 @@ def test_image_deconfigged(deconfigged_helper, image_nddata_wcs):
     plg = deconfigged_helper.plugins["Unit Conversion"]
 
     viewer = deconfigged_helper.viewers['Image']
-    label_mouseover = deconfigged_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = deconfigged_helper._app.session.application._tools['g-coords-info']
 
     assert plg.flux_unit == "Jy"
 
@@ -329,7 +329,7 @@ def test_data_unload_reload(specviz2d_helper):
     specviz2d_helper.load_data(spectrum2d)
 
     # remove data from viewer
-    viewer = specviz2d_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz2d_helper._app.get_viewer('spectrum-viewer')
     dm = viewer.data_menu
     dm.remove_from_viewer()
 

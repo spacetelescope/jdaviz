@@ -148,7 +148,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self.app.state.add_callback('settings', self._on_app_settings_changed)
 
         # description displayed under plugin title in tray
-        config = self.app.config
+        config = self._app.config
         if config in ['cubeviz', 'specviz2d', 'mosviz', 'rampviz']:
             self._plugin_description = 'Select and interact with spectral/spatial subsets.'
         elif config == 'imviz':
@@ -279,7 +279,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         <class 'regions.shapes.circle.CirclePixelRegion'>
         >>> type(plg.get_regions(wrt_data='NDData[DATA]')['Subset 1'])
         <class 'regions.shapes.circle.CircleSkyRegion'>
-        >>> imviz.app.delete_subsets()
+        >>> imviz._app.delete_subsets()
         >>> imviz.link_data(align_by='wcs')
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
         >>> type(plg.get_regions()['Subset 2'])
@@ -315,8 +315,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if isinstance(wrt_data, str) and wrt_data not in self.data_collection:
             raise ValueError(f'{wrt_data} is not data in {self.data_collection}')
 
-        if ((self.app._align_by == 'wcs' and wrt_data is None) or
-                ((self.app._align_by == 'pixels' and self.config != 'cubeviz') and wrt_data) or
+        if ((self._app._align_by == 'wcs' and wrt_data is None) or
+                ((self._app._align_by == 'pixels' and self.config != 'cubeviz') and wrt_data) or
                 self.config == 'cubeviz' and wrt_data is None):
             reg_type = 'sky_region'
         else:
@@ -328,17 +328,17 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if return_sky_region is not None and wrt_data:
             raise ValueError('return_sky_region no longer used, use wrt_data instead')
         elif return_sky_region is not None:
-            wrt_data = self.app.data_collection[0].label
+            wrt_data = self._app.data_collection[0].label
             warnings.warn(f'return_sky_region no longer used, use wrt_data instead. '
                           f'Defaulting to {wrt_data} for the wrt_data kwarg')
             reg_type = 'sky_region' if return_sky_region else 'region'
 
         # first get ALL subsets of specified spatial/spectral type(s)
-        subsets = self.app.get_subsets(spectral_only=region_type == ['spectral'],
-                                       spatial_only=region_type == ['spatial'],
-                                       include_sky_region=reg_type == 'sky_region',
-                                       use_display_units=use_display_units,
-                                       wrt_data=wrt_data)
+        subsets = self._app.get_subsets(spectral_only=region_type == ['spectral'],
+                                        spatial_only=region_type == ['spatial'],
+                                        include_sky_region=reg_type == 'sky_region',
+                                        use_display_units=use_display_units,
+                                        wrt_data=wrt_data)
 
         labels = list_of_subset_labels or list(subsets.keys())
         if isinstance(labels, str):
@@ -362,9 +362,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         if len(failed_regs) > 0:
             warn_msg = f"Regions skipped: {', '.join(sorted(failed_regs))}"
-            self.app.hub.broadcast(SnackbarMessage(warn_msg,
-                                   color="warning", timeout=8000,
-                                   sender=self.app))
+            self._app.hub.broadcast(SnackbarMessage(warn_msg,
+                                    color="warning", timeout=8000,
+                                    sender=self.app))
             warnings.warn(warn_msg, UserWarning)
 
         return regions
@@ -387,12 +387,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             # during initial init, this can trigger before the component is initialized
             return
         if self.session.edit_subset_mode.edit_subset == []:
-            self.app.state.subset_mode_create = True
+            self._app.state.subset_mode_create = True
             if self.subset_selected != self.subset.default_text:
                 self.subset_selected = self.subset.default_text
                 self.show_region_info = False
         else:
-            self.app.state.subset_mode_create = False
+            self._app.state.subset_mode_create = False
             new_label = self.session.edit_subset_mode.edit_subset[0].label
             if new_label != self.subset_selected:
                 if new_label not in [s['label'] for s in self.subset_items]:
@@ -405,7 +405,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self._sync_selected_from_state()
         if 'Create New' in self.subset_selected:
             return
-        subsets_avail = [sg.label for sg in self.app.data_collection.subset_groups]
+        subsets_avail = [sg.label for sg in self._app.data_collection.subset_groups]
         if self.subset_selected not in subsets_avail:
             # subset selection should re-default after processing the deleted subset,
             # for now we can safely ignore
@@ -445,7 +445,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             return
 
         try:
-            self.app.check_rename_availability(old_label, new_label, is_subset=True)
+            self._app.check_rename_availability(old_label, new_label, is_subset=True)
         except ValueError as e:
             self.rename_error_message = str(e)
         else:
@@ -470,7 +470,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if change['new'] != self.subset.default_text:
             self._get_subset_definition(change['new'])
         self.show_region_info = change['new'] != self.subset.default_text
-        m = [s for s in self.app.data_collection.subset_groups if s.label == change['new']]
+        m = [s for s in self._app.data_collection.subset_groups if s.label == change['new']]
         if m != self.session.edit_subset_mode.edit_subset:
             self.session.edit_subset_mode.edit_subset = m
 
@@ -484,10 +484,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             return
 
         include_sky_region = bool(self.display_sky_coordinates)
-        subset_information = self.app.get_subsets(self.subset_selected,
-                                                  simplify_spectral=False,
-                                                  use_display_units=True,
-                                                  include_sky_region=include_sky_region)
+        subset_information = self._app.get_subsets(self.subset_selected,
+                                                   simplify_spectral=False,
+                                                   use_display_units=True,
+                                                   include_sky_region=include_sky_region)
 
         _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
         if not subset_information:
@@ -622,7 +622,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             self.can_simplify = False
         elif ((len(self.subset_states) > 1) and isinstance(self.subset_states[0], RangeSubsetState)
               and ((len(simplifiable_states - set(self.glue_state_types)) < 3)
-                   or self.app.is_there_overlap_spectral_subset(self.subset_selected))):
+                   or self._app.is_there_overlap_spectral_subset(self.subset_selected))):
             self.can_simplify = True
         else:
             self.can_simplify = False
@@ -640,11 +640,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self._unpack_get_subsets_for_ui()
 
     def vue_freeze_subset(self, *args):
-        sgs = {sg.label: sg for sg in self.app.data_collection.subset_groups}
+        sgs = {sg.label: sg for sg in self._app.data_collection.subset_groups}
         sg = sgs.get(self.subset_selected)
 
         masks = {}
-        for data in self.app.data_collection:
+        for data in self._app.data_collection:
             masks[data.uuid] = sg.subset_state.to_mask(data)
 
         sg.subset_state = MultiMaskSubsetState(masks)
@@ -667,8 +667,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                                    sender=self))
                 return
         att = self.subset_states[0].att
-        self.app.simplify_spectral_subset(subset_name=self.subset_selected, att=att,
-                                          overwrite=True)
+        self._app.simplify_spectral_subset(subset_name=self.subset_selected, att=att,
+                                           overwrite=True)
 
     def simplify_subset(self):
         """
@@ -704,7 +704,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             wcs = None
 
             if self.display_sky_coordinates:
-                wcs = self.app._get_wcs_from_subset(sub_states)
+                wcs = self._app._get_wcs_from_subset(sub_states)
 
                 if wcs is not None:
                     # convert newly entered sky coords to pixel
@@ -908,10 +908,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         def _do_recentering(subset, subset_state):
             try:
-                type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
-                reg = self.app.get_subsets(subset_name=subset,
-                                           include_sky_region=type == 'sky_region',
-                                           spatial_only=True)[0][type]
+                type = 'sky_region' if self._app.config == 'imviz' and self._app._align_by == 'wcs' else 'region'  # noqa: E501
+                reg = self._app.get_subsets(subset_name=subset,
+                                            include_sky_region=type == 'sky_region',
+                                            spatial_only=True)[0][type]
                 aperture = regions2aperture(reg)
                 data = self.recenter_dataset.selected_dc_item
                 comp = data.get_component(data.main_components[0])
@@ -1074,7 +1074,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
     @observe('subset_selected')
     def set_selected_subset_group(self, _):
-        for subset_group in self.app.data_collection.subset_groups:
+        for subset_group in self._app.data_collection.subset_groups:
             if subset_group.label == self.subset.selected:
                 self.selected_subset_group = subset_group
                 break
@@ -1091,7 +1091,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             The new label to apply to the selected subset.
         """
         # will emit a SubsetRenameMessage and call _sync_available_from_state()
-        self.app._rename_subset(old_label, new_label)
+        self._app._rename_subset(old_label, new_label)
 
     def vue_rename_subset(self, msg):
         try:
@@ -1116,7 +1116,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if subset_group is None:
             raise TypeError("current selection is not a subset")
 
-        self.app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
+        self._app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
         self._sync_available_from_state()
 
     def delete_subset(self, subset_label):
@@ -1128,7 +1128,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         subset_label : str
             The label of the subset to be deleted
         '''
-        self.app.delete_subsets(subset_labels=subset_label)
+        self._app.delete_subsets(subset_labels=subset_label)
 
     def vue_delete_subset(self, msg):
         self.delete_subset(msg['subset_label'])
@@ -1282,7 +1282,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             If not requested, return `None`.
 
         """
-        if len(self.app.data_collection) == 0:
+        if len(self._app.data_collection) == 0:
             raise ValueError('Cannot load regions without data.')
 
         if not isinstance(regions, (list, tuple, Regions, SpectralRegion)):
@@ -1297,7 +1297,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         bad_labels = []
         if subset_label is not None:
             for label in subset_label:
-                if not self.app._check_valid_subset_label(label, raise_if_invalid=False):
+                if not self._app._check_valid_subset_label(label, raise_if_invalid=False):
                     bad_labels.append(label)
         if len(bad_labels) > 0:
             raise ValueError(f"subset_label contained invalid labels: {bad_labels}")
@@ -1307,16 +1307,16 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         # To keep track of masked subsets.
         msg_prefix = 'MaskedSubset'
-        msg_count = _next_subset_num(msg_prefix, self.app.data_collection.subset_groups)
+        msg_count = _next_subset_num(msg_prefix, self._app.data_collection.subset_groups)
 
         viewer_parameter = kwargs.pop('viewer', None)
-        viewer_name = viewer_parameter or list(self.app._jdaviz_helper.viewers.keys())[0]
-        viewer = self.app.get_viewer(viewer_name)
+        viewer_name = viewer_parameter or list(self._app._jdaviz_helper.viewers.keys())[0]
+        viewer = self._app.get_viewer(viewer_name)
         # Subset is global but reference data is viewer-dependent.
         if refdata_label is None and hasattr(viewer.state, 'reference_data'):
             data = viewer.state.reference_data
         elif refdata_label is not None:
-            data = self.app.data_collection[refdata_label]
+            data = self._app.data_collection[refdata_label]
         elif len(viewer.layers):
             data = viewer.layers[0].layer
         else:
@@ -1332,12 +1332,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             if len(unknown_options) > 0:
                 raise ValueError(f"{unknown_options} not one of {COMBO_OPTIONS}")
 
-        previous_mode = self.app.session.edit_subset_mode.mode
-        previous_subset = self.app.session.edit_subset_mode.edit_subset
+        previous_mode = self._app.session.edit_subset_mode.mode
+        previous_subset = self._app.session.edit_subset_mode.edit_subset
 
-        self.app._importing_regions = True
+        self._app._importing_regions = True
         try:
-            with self.app._jdaviz_helper.batch_load():
+            with self._app._jdaviz_helper.batch_load():
                 # This method can edit a particular subset or create a new subset
                 # and apply the combination modes depending on this argument
                 if edit_subset and combination_mode is not None:
@@ -1474,8 +1474,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             self.app._importing_regions = False
 
         # Revert edit mode and subset to before the import_region call
-        self.app.session.edit_subset_mode.edit_subset = previous_subset
-        self.app.session.edit_subset_mode.mode = previous_mode
+        self._app.session.edit_subset_mode.edit_subset = previous_subset
+        self._app.session.edit_subset_mode.mode = previous_mode
 
         n_reg_in = len(regions)
         n_reg_bad = len(bad_regions)
@@ -1485,7 +1485,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             snack_color = "warning"
         else:
             snack_color = "success"
-        self.app.hub.broadcast(SnackbarMessage(
+        self._app.hub.broadcast(SnackbarMessage(
             f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
             f"bad={n_reg_bad}", color=snack_color,
             traceback=[(str(bad_region[0]), bad_region[1]) for bad_region in bad_regions],
@@ -1496,9 +1496,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
     @observe('combination_mode_selected')
     def _combination_mode_selected_updated(self, change):
-        self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[change['new']]
+        self._app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[change['new']]
 
     def _update_combination_mode(self):
-        if self.app.session.edit_subset_mode.mode in SUBSET_TO_PRETTY.keys():
+        if self._app.session.edit_subset_mode.mode in SUBSET_TO_PRETTY.keys():
             self.combination_mode_selected = SUBSET_TO_PRETTY[
-                self.app.session.edit_subset_mode.mode]
+                self._app.session.edit_subset_mode.mode]
