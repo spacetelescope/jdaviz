@@ -97,7 +97,7 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
                            handler=lambda _: self._clear_cache())
 
         # connect any pre-existing viewers
-        for viewer in self.app._viewer_store.values():
+        for viewer in self._app._viewer_store.values():
             self._connect_viewer(viewer)
 
         # initialize if cube viewer exists
@@ -116,14 +116,14 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def _cube_viewer_default_label(self):
-        if hasattr(self.app, '_jdaviz_helper') and self.app._jdaviz_helper is not None:
-            return getattr(self.app._jdaviz_helper, '_cube_viewer_default_label')
+        if hasattr(self.app, '_jdaviz_helper') and self._app._jdaviz_helper is not None:
+            return getattr(self._app._jdaviz_helper, '_cube_viewer_default_label')
         return tuple()
 
     @property
     def _cube_viewer_cls(self):
-        if hasattr(self.app, '_jdaviz_helper') and self.app._jdaviz_helper is not None:
-            return getattr(self.app._jdaviz_helper, '_cube_viewer_cls')
+        if hasattr(self.app, '_jdaviz_helper') and self._app._jdaviz_helper is not None:
+            return getattr(self._app._jdaviz_helper, '_cube_viewer_cls')
         return tuple()
 
     def _initialize_location(self, *args):
@@ -151,7 +151,7 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
                     str(viewer.state.x_att_pixel) not in self.valid_slice_att_names):
                 # avoid setting value to degs, before x_att is changed to wavelength, for example
                 continue
-            if (self.app._get_display_unit(viewer.slice_display_unit_name) == ''
+            if (self._app._get_display_unit(viewer.slice_display_unit_name) == ''
                     and not isinstance(viewer, RampvizProfileView)):
                 # viewer is not ready to retrieve slice_values in display units
                 continue
@@ -171,11 +171,11 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def slice_selection_viewers(self):
-        return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceSelection)]
+        return [v for v in self._app._viewer_store.values() if isinstance(v, WithSliceSelection)]
 
     @property
     def slice_indicator_viewers(self):
-        return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
+        return [v for v in self._app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
 
     @property
     def user_api(self):
@@ -198,16 +198,16 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
         self.cube_viewer_exists = False
 
     def vue_create_cube_viewer(self, *args):
-        cls = RampvizImageView if self.app.config == 'rampviz' else CubevizImageView
-        self.app._on_new_viewer(NewViewerMessage(cls, data=None, sender=self.app),
-                                vid=self._cube_viewer_default_label,
-                                name=self._cube_viewer_default_label)
+        cls = RampvizImageView if self._app.config == 'rampviz' else CubevizImageView
+        self._app._on_new_viewer(NewViewerMessage(cls, data=None, sender=self.app),
+                                 vid=self._cube_viewer_default_label,
+                                 name=self._cube_viewer_default_label)
 
-        dc = self.app.data_collection
+        dc = self._app.data_collection
         for data in dc:
             if data.ndim == 3:
                 # only load the first cube-like data
-                self.app.set_data_visibility(self._cube_viewer_default_label, data.label, True)
+                self._app.set_data_visibility(self._cube_viewer_default_label, data.label, True)
                 break
 
     def _connect_viewer(self, viewer):
@@ -220,7 +220,7 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
             viewer.state.add_callback('x_att', self._initialize_location)
 
     def _on_viewer_added(self, msg):
-        viewer = self.app.get_viewer(msg.viewer_id)
+        viewer = self._app.get_viewer(msg.viewer_id)
         self._connect_viewer(viewer)
         self._check_if_cube_viewer_exists()
 
@@ -445,7 +445,7 @@ class SpectralSlice(BaseSlicePlugin):
     @property
     def valid_slice_att_names(self):
         att_names = []
-        for dc in self.app.data_collection:
+        for dc in self._app.data_collection:
             if dc.ndim == 3 and 'spectral_axis_index' in dc.meta:
                 spectral_axis = dc.meta['spectral_axis_index']
                 att_names += [f'Pixel Axis {spectral_axis} [x]']

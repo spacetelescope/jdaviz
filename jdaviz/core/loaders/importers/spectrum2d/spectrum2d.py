@@ -49,7 +49,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         if self.default_data_label_from_resolver:
             self.data_label.default = self.default_data_label_from_resolver
-        elif self.app.config == 'specviz2d':
+        elif self._app.config == 'specviz2d':
             self.data_label.default = '2D Spectrum'
 
         self.ext_data_label = AutoTextField(self,
@@ -71,7 +71,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                                 default_mode='empty')
         supported_viewers = [{'label': '1D Spectrum',
                               'reference': 'spectrum-1d-viewer'}]
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.ext_viewer_create_new_items = supported_viewers
 
         def viewer_in_registry_names(viewer):
@@ -120,7 +120,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz2d'):
+        if self._app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
             return False
         try:
@@ -173,7 +173,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             return
 
         try:
-            spext = self.app.get_tray_item_from_name('spectral-extraction-2d')
+            spext = self._app.get_tray_item_from_name('spectral-extraction-2d')
             ext = spext._extract_in_new_instance(dataset=data_label,
                                                  add_data=False)
         except Exception as e:
@@ -188,7 +188,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                 " See the 2D spectral extraction plugin for details or to"
                 " perform a custom extraction.",
                 color='warning', sender=self, timeout=10000)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)
 
         if ext is not None:
             self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)

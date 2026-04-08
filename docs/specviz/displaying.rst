@@ -176,7 +176,7 @@ and specifying the bounds of the spectral region (xmin, xmax).
 .. code-block:: python
 
     from glue.core.roi import XRangeROI
-    sv = specviz.app.get_viewer('spectrum-viewer')
+    sv = specviz._app.get_viewer('spectrum-viewer')
     sv.toolbar_active_subset.selected = []
     sv.apply_roi(XRangeROI(xmin, xmax))
 

@@ -1,4 +1,4 @@
-from traitlets import Bool, Unicode, observe
+from traitlets import Bool, Unicode, List, observe
 from urllib.parse import urlparse
 import os
 from functools import cached_property
@@ -10,7 +10,7 @@ from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.utils import download_uri_to_path, get_cloud_fits
 
 
-__all__ = ['URLResolver']
+__all__ = ['URLResolver', 'PresetURLResolver']
 
 
 @loader_resolver_registry('url')
@@ -18,8 +18,11 @@ class URLResolver(BaseResolver):
     template_file = __file__, "url.vue"
     default_input = 'url'
 
+    title = Unicode("Download from URL").tag(sync=True)
     url = Unicode("").tag(sync=True)
     url_scheme = Unicode("").tag(sync=True)
+    url_not_whitelisted = Bool(False).tag(sync=True)
+    url_prefix_whitelist = List([]).tag(sync=True)
     cache = Bool(True).tag(sync=True)
     local_path = Unicode("").tag(sync=True)
     timeout = FloatHandleEmpty(10).tag(sync=True)
@@ -28,6 +31,36 @@ class URLResolver(BaseResolver):
         self.local_path = os.curdir
         super().__init__(*args, **kwargs)
 
+        # Initialize whitelist from settings
+        whitelist = self.app.state.settings.get('url_prefix_whitelist')
+        if whitelist is not None:
+            self.url_prefix_whitelist = whitelist
+
+        # Listen for changes to app.state.settings
+        self.app.state.add_callback('settings', self._on_app_settings_changed)
+
+    def _on_app_settings_changed(self, new_settings_dict):
+        """
+        Re-validate URL when settings change.
+        """
+        # Call parent's method to handle server_is_remote and other settings
+        super()._on_app_settings_changed(new_settings_dict)
+
+        # Update whitelist and re-validate the current URL
+        whitelist = new_settings_dict.get('url_prefix_whitelist')
+        if whitelist is not None:
+            self.url_prefix_whitelist = whitelist
+        else:
+            self.url_prefix_whitelist = []
+
+        if whitelist is not None and len(whitelist) > 0:
+            url_stripped = self.url.strip()
+            self.url_not_whitelisted = not any(
+                url_stripped.startswith(prefix) for prefix in whitelist
+            )
+        else:
+            self.url_not_whitelisted = False
+
     @property
     def user_api(self):
         return LoaderUserApi(self, expose=['url', 'cache', 'local_path', 'timeout'])
@@ -35,7 +68,15 @@ class URLResolver(BaseResolver):
     @property
     def is_valid(self):
         # NOTE: if changing this, also update the object resolver to reject the same
-        return self.url_scheme in ['http', 'https', 'mast', 'ftp', 's3']
+        valid_scheme = self.url_scheme in ['http', 'https', 'mast', 'ftp', 's3']
+        if not valid_scheme:
+            return False
+
+        # Check whitelist if configured
+        if self.url_not_whitelisted:
+            return False
+
+        return True
 
     @property
     def default_label(self):
@@ -48,6 +89,16 @@ class URLResolver(BaseResolver):
     @observe('url', 'cache', 'timeout')
     def _on_url_changed(self, change):
         self.url_scheme = urlparse(self.url.strip()).scheme
+
+        # Check if URL matches whitelist
+        whitelist = self.app.state.settings.get('url_prefix_whitelist')
+        if whitelist is not None and len(whitelist) > 0:
+            url_stripped = self.url.strip()
+            self.url_not_whitelisted = not any(
+                url_stripped.startswith(prefix) for prefix in whitelist
+            )
+        else:
+            self.url_not_whitelisted = False
 
         # Clear the cached property to force re-download
         # or otherwise read from local file cache.
@@ -65,3 +116,22 @@ class URLResolver(BaseResolver):
 
     def parse_input(self):
         return self._uri_output_file
+
+
+class PresetURLResolver(URLResolver):
+    """
+    A URLResolver variant with a pre-set URL that doesn't show
+    input widgets. Used for programmatically adding URLs.
+
+    This resolver behaves like the URL resolver but hides the input fields
+    by setting hide_resolver_inputs=True, while still showing query results
+    and importer selection.
+    """
+
+    def __init__(self, url, title=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.url = url
+        if title is not None:
+            self.title = title
+        self.hide_resolver_inputs = True

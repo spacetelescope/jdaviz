@@ -98,7 +98,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                               selected='align_by_selected',
                                               manual_options=['Pixels', 'WCS'])
 
-        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        align_plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
         if align_plg is not None:
             self.expose_align_by_options = True
             self.align_by.selected = align_plg.align_by.selected
@@ -187,7 +187,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
+        if self._app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
         # flat image, not a cube
@@ -235,7 +235,7 @@ class ImageImporter(BaseImporterToDataCollection):
         Orientation plugin relevancy to change.
         """
 
-        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        align_plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
         if align_plg is None:
             self.expose_align_by_options = (msg['new'] == 'Image')
 
@@ -425,7 +425,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
 
-        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        align_plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
         if align_plg is not None:
             align_plg.align_by.selected = self.align_by.selected
 

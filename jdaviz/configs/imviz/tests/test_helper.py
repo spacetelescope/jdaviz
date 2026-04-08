@@ -13,7 +13,7 @@ def test_plugin_user_apis(imviz_helper):
 
 def test_create_new_viewer(imviz_helper, image_2d_wcs):
     # starts with one (default) viewer
-    assert len(imviz_helper.app.get_viewer_ids()) == 1
+    assert len(imviz_helper._app.get_viewer_ids()) == 1
     arr = np.ones((10, 10))
 
     data_label = 'image-data'
@@ -31,18 +31,18 @@ def test_create_new_viewer(imviz_helper, image_2d_wcs):
     assert np.array_equal(returned_data, returned_data_old_api)
 
     # new image viewer created
-    assert len(imviz_helper.app.get_viewer_ids()) == 2
+    assert len(imviz_helper._app.get_viewer_ids()) == 2
 
     # there should be no data in the new viewer
-    assert len(imviz_helper.app.get_viewer(viewer_name).data()) == 0
+    assert len(imviz_helper._app.get_viewer(viewer_name).data()) == 0
 
     # then add data, and check that data were added to the new viewer
-    imviz_helper.app.add_data_to_viewer(viewer_name, data_label)
-    assert len(imviz_helper.app.get_viewer(viewer_name).data()) == 1
+    imviz_helper._app.add_data_to_viewer(viewer_name, data_label)
+    assert len(imviz_helper._app.get_viewer(viewer_name).data()) == 1
 
     # remove data from the new viewer, check that it was removed
-    imviz_helper.app.remove_data_from_viewer(viewer_name, data_label)
-    assert len(imviz_helper.app.get_viewer(viewer_name).data()) == 0
+    imviz_helper._app.remove_data_from_viewer(viewer_name, data_label)
+    assert len(imviz_helper._app.get_viewer(viewer_name).data()) == 0
 
 
 def test_temporary_imviz_current_app(imviz_helper):

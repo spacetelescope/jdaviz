@@ -29,7 +29,7 @@ class _MatchedXZoomMixin(_MatchedZoomMixin):
         else:
             # no matches found
             native_unit = ''
-        current_display_unit = u.Unit(self.viewer.jdaviz_helper.app._get_display_unit('spectral'))
+        current_display_unit = u.Unit(self.viewer.jdaviz_helper._app._get_display_unit('spectral'))
 
         if isinstance(from_viewer, Spectrum1DViewer) and isinstance(to_viewer, Spectrum2DViewer):  # noqa
             if native_unit != current_display_unit and native_unit != '':

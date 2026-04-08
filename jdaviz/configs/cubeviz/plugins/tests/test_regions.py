@@ -21,13 +21,13 @@ class TestLoadRegions(BaseRegionHandler):
         cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label='has_microns')
         # This is used in BaseRegionHandler
         self.viewer = cubeviz_helper.default_viewer._obj.glue_viewer
-        self.spectrum_viewer = cubeviz_helper.app.get_viewer(
+        self.spectrum_viewer = cubeviz_helper._app.get_viewer(
             cubeviz_helper._default_spectrum_viewer_reference_name
         )
 
     def teardown_method(self, method):
         """Clear all the subsets for the next test method."""
-        self.cubeviz.app.delete_subsets()
+        self.cubeviz._app.delete_subsets()
 
     def test_regions_mask(self):
         mask = np.zeros((9, 10), dtype=np.bool_)
@@ -76,7 +76,7 @@ class TestLoadRegions(BaseRegionHandler):
         assert list(spatial_subsets_as_regions.keys()) == ['Subset 1'], spatial_subsets_as_regions
         assert isinstance(spatial_subsets_as_regions['Subset 1'], EllipsePixelRegion)
         # ensure agreement between app.get_subsets and subset_tools.get_regions
-        ss = self.cubeviz.app.get_subsets()
+        ss = self.cubeviz._app.get_subsets()
 
         actual = spatial_subsets_as_regions['Subset 1']
         expected = ss['Subset 1'][0]['region']

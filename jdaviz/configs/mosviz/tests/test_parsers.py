@@ -35,29 +35,29 @@ def test_nirspec_parser(mosviz_helper, tmp_path, instrument_arg):
 
         return
 
-    assert len(mosviz_helper.app.data_collection) == 16
+    assert len(mosviz_helper._app.data_collection) == 16
 
     # MOS Table meta should be empty:
-    assert len(mosviz_helper.app.data_collection["MOS Table"].meta) == 0
+    assert len(mosviz_helper._app.data_collection["MOS Table"].meta) == 0
 
     # Check that the data was loaded in the same order we expect.
     # MOS table always loads first, followed by 5 sets of 1D Spectra, 2D Spectra, then Images
     #   which results in 1D beginning at index 1, 2D at index 6, and Images at index 11
-    assert mosviz_helper.app.data_collection[5].meta['SOURCEID'] == 2315
+    assert mosviz_helper._app.data_collection[5].meta['SOURCEID'] == 2315
     for i in range(0, 5):
         # Check 1D spectra
-        spec1d = mosviz_helper.app.data_collection[i+1]
+        spec1d = mosviz_helper._app.data_collection[i+1]
         assert spec1d.label == f"1D Spectrum {i}"
         # Check 2D spectra
-        spec2d = mosviz_helper.app.data_collection[i+6]
+        spec2d = mosviz_helper._app.data_collection[i+6]
         assert spec2d.label == f"2D Spectrum {i}"
         assert int(spec1d.meta['SOURCEID']) == int(spec2d.meta['SOURCEID'])
         assert int(spec1d.meta['mosviz_row']) == int(spec2d.meta['mosviz_row'])
         # Check images
-        assert mosviz_helper.app.data_collection[i+11].label == f"Image {i}"
+        assert mosviz_helper._app.data_collection[i+11].label == f"Image {i}"
 
     # Check for expected metadata values
-    for data in mosviz_helper.app.data_collection:
+    for data in mosviz_helper._app.data_collection:
         assert PRIHDR_KEY not in data.meta
         assert 'header' not in data.meta
 
@@ -72,14 +72,14 @@ def test_nirspec_parser(mosviz_helper, tmp_path, instrument_arg):
     # the current spectrum viewer should result in an error
 
     # Check to make sure our test case isn't from the same row to avoid false positive
-    table = mosviz_helper.app.get_viewer('table-viewer')
+    table = mosviz_helper._app.get_viewer('table-viewer')
     table.select_row(0)
     data_label = "1D Spectrum 4"
-    assert mosviz_helper.app.data_collection[data_label].meta['mosviz_row'] != table.current_row
+    assert mosviz_helper._app.data_collection[data_label].meta['mosviz_row'] != table.current_row
 
     with pytest.raises(NotImplementedError, match='Intra-row plotting not supported'):
-        mosviz_helper.app.add_data_to_viewer(viewer_reference='spectrum-viewer',
-                                             data_label=data_label)
+        mosviz_helper._app.add_data_to_viewer(viewer_reference='spectrum-viewer',
+                                              data_label=data_label)
 
 
 @pytest.mark.remote_data
@@ -100,7 +100,7 @@ def test_nirspec_level2_parser(mosviz_helper, tmp_path):
     data_dir = level3_path
     mosviz_helper.load_data(directory=data_dir, instrument='nirspec')
 
-    assert len(mosviz_helper.app.data_collection) == 75
+    assert len(mosviz_helper._app.data_collection) == 75
 
 
 @pytest.mark.remote_data
@@ -127,22 +127,22 @@ def test_niriss_parser(mosviz_helper, tmp_path):
         sample_data_zip.extractall(tmp_path)
 
     mosviz_helper.load_data(directory=tmp_path, instrument="niriss")
-    assert len(mosviz_helper.app.data_collection) == 10
+    assert len(mosviz_helper._app.data_collection) == 10
 
     # The MOS Table should be first in the data collection
-    dc_tab = mosviz_helper.app.data_collection[0]
+    dc_tab = mosviz_helper._app.data_collection[0]
     assert dc_tab.label == "MOS Table"
     assert len(dc_tab.meta) == 0
 
     # The image should be the first "real data" in the data collection
-    dc_1 = mosviz_helper.app.data_collection[1]
+    dc_1 = mosviz_helper._app.data_collection[1]
     assert dc_1.label == "Image jw01324-o001 F200W"
     assert PRIHDR_KEY not in dc_1.meta
     assert COMMENTCARD_KEY not in dc_1.meta
     assert dc_1.meta['bunit_data'] == 'MJy/sr'  # ASDF metadata
 
     # We should be centered on the coordinates of the first data point
-    imview = mosviz_helper.app.get_viewer(mosviz_helper._default_image_viewer_reference_name)
+    imview = mosviz_helper._app.get_viewer(mosviz_helper._default_image_viewer_reference_name)
     x_pixcenter = (imview.state.x_max + imview.state.x_min)/2.0
     y_pixcenter = (imview.state.y_max + imview.state.y_min)/2.0
     viewer_center_coord = imview.layers[0].layer.coords.pixel_to_world(x_pixcenter, y_pixcenter)
@@ -152,9 +152,9 @@ def test_niriss_parser(mosviz_helper, tmp_path):
     # Test all the spectra exist
     for dispersion in ('R', 'C'):
         for sourceid in (243, 249):
-            spec2d = mosviz_helper.app.data_collection[
+            spec2d = mosviz_helper._app.data_collection[
                 f"F200W Source {sourceid} spec2d {dispersion}"]
-            spec1d = mosviz_helper.app.data_collection[
+            spec1d = mosviz_helper._app.data_collection[
                 f"F200W Source {sourceid} spec1d {dispersion}"]
 
             # Header should be imported from the spec2d files
@@ -191,15 +191,15 @@ def test_nircam_parser(mosviz_helper, tmp_path):
     mosviz_helper.load_data(directory=tmp_path / "trimmed_nircam_data", instrument="nircam")
 
     # The MOS Table should be first in the data collection
-    dc_tab = mosviz_helper.app.data_collection[0]
+    dc_tab = mosviz_helper._app.data_collection[0]
     assert dc_tab.label == "MOS Table"
     assert len(dc_tab.meta) == 0
 
     # Check that the correct amount of spectra got loaded in the correct order
-    assert len(mosviz_helper.app.data_collection) == 31
-    assert mosviz_helper.app.data_collection['MOS Table']['Identifier'][0] == 1112
-    assert mosviz_helper.app.data_collection[1].label == 'F322W2 Source 1112 spec2d R'
-    assert mosviz_helper.app.data_collection[16].label == 'F322W2 Source 1112 spec1d R'
+    assert len(mosviz_helper._app.data_collection) == 31
+    assert mosviz_helper._app.data_collection['MOS Table']['Identifier'][0] == 1112
+    assert mosviz_helper._app.data_collection[1].label == 'F322W2 Source 1112 spec2d R'
+    assert mosviz_helper._app.data_collection[16].label == 'F322W2 Source 1112 spec1d R'
 
 
 @pytest.mark.remote_data

@@ -43,7 +43,7 @@ class About(PluginTemplateMixin):
                 self.not_is_latest = False
 
     def show_popup(self):
-        self.app.force_open_about = True
+        self._app.force_open_about = True
 
     @property
     def user_api(self):

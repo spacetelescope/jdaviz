@@ -23,7 +23,7 @@ class ProfileFromCube(SinglePixelRegion):
         self.viewer.add_event_callback(self.on_mouse_move, events=['mousemove', 'mouseleave'])
         if self._profile_viewer is None:
             # Get first profile viewer
-            for _, viewer in self.viewer.jdaviz_helper.app._viewer_store.items():
+            for _, viewer in self.viewer.jdaviz_helper._app._viewer_store.items():
                 if isinstance(viewer, BqplotProfileView):
                     self._profile_viewer = viewer
                     break

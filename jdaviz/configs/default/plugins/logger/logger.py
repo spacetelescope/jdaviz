@@ -62,7 +62,7 @@ class Logger(PluginTemplateMixin):
         history_level = _verbosity_levels.index(self.history_verbosity_selected)
         popup_level = _verbosity_levels.index(self.popup_verbosity_selected)
 
-        self.app.state.snackbar_queue.put(self.app.state, self,
-                                          msg,
-                                          history=msg_level >= history_level,
-                                          popup=msg_level >= popup_level)
+        self._app.state.snackbar_queue.put(self._app.state, self,
+                                           msg,
+                                           history=msg_level >= history_level,
+                                           popup=msg_level >= popup_level)

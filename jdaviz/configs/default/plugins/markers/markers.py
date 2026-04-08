@@ -188,7 +188,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 all_dist_marks.update(dm.marks)
 
         # Iterate through all viewers in the app and remove any distance marks found.
-        for viewer in self.app._viewer_store.values():
+        for viewer in self._app._viewer_store.values():
             if not hasattr(viewer, 'figure'):
                 continue
             viewer.figure.marks = [m for m in viewer.figure.marks if m not in all_dist_marks]
@@ -202,7 +202,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         Observer callback that redraws all marks when the markers table changes
         (e.g., a row is deleted) to ensure the plot and table are synchronized.
         """
-        for viewer in self.app._viewer_store.values():
+        for viewer in self._app._viewer_store.values():
             if hasattr(viewer, 'figure'):
                 self._recompute_mark_positions(viewer)
 
@@ -213,7 +213,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         viewer.add_event_callback(callback, events=['keydown'])
 
     def _on_viewer_added(self, msg):
-        self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
+        self._create_viewer_callbacks(self._app.get_viewer_by_id(msg.viewer_id))
 
     def _recompute_mark_positions(self, viewer):
         if self.table is None or self.table._qtable is None:
@@ -233,7 +233,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             viewer_mark.x, viewer_mark.y = [], []
             return
 
-        if self.app._align_by.lower() == 'wcs':
+        if self._app._align_by.lower() == 'wcs':
             # convert from the sky coordinates in the table to pixels via the WCS of the current
             # reference data
             orig_world_x = np.asarray(self.table._qtable['world_ra'][in_viewer])
@@ -249,14 +249,14 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 # fail gracefully
                 new_x, new_y = [], []
 
-        elif self.app._align_by.lower() == 'pixels':
+        elif self._app._align_by.lower() == 'pixels':
             # When aligning by pixels, we can just use the pixel coordinates
             # that were stored in the table when the marks were created.
             new_x = np.asarray(self.table._qtable['pixel_x'][in_viewer])
             new_y = np.asarray(self.table._qtable['pixel_y'][in_viewer])
 
         else:
-            raise NotImplementedError(f"align_by {self.app._align_by} not implemented")
+            raise NotImplementedError(f"align_by {self._app._align_by} not implemented")
 
         # check for entries that do not correspond to a layer or only have pixel coordinates
         pixel_only_inds = data_labels == ''
@@ -349,7 +349,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                            p1.get('world_ra') is not None and p2.get('world_ra') is not None and
                            np.all(np.isfinite([p1['world_ra'], p1['world_dec'],
                                                p2['world_ra'], p2['world_dec']])))
-            if self.config == 'imviz' and self.app._align_by.lower() == 'pixels':
+            if self.config == 'imviz' and self._app._align_by.lower() == 'pixels':
                 dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
                                    (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
                 text_plot = f"{dist_pix:.2f} pix"
@@ -467,12 +467,12 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     @property
     def marks(self):
         return {viewer_id: self._get_mark(viewer)
-                for viewer_id, viewer in self.app._viewer_store.items()
+                for viewer_id, viewer in self._app._viewer_store.items()
                 if hasattr(viewer, 'figure')}
 
     @property
     def coords_info(self):
-        return self.app.session.application._tools['g-coords-info']
+        return self._app.session.application._tools['g-coords-info']
 
     @observe('is_active')
     def _on_is_active_changed(self, *args):
@@ -488,7 +488,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             for mark in viewer_marks:
                 mark.visible = self.is_active
 
-        for viewer in self.app._viewer_store.values():
+        for viewer in self._app._viewer_store.values():
             if not hasattr(viewer, 'figure'):
                 # table viewer, etc
                 continue

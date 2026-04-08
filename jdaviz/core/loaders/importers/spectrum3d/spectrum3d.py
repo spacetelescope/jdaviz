@@ -88,6 +88,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     dq_viewer_label_default = Unicode().tag(sync=True)
     dq_viewer_label_auto = Bool(True).tag(sync=True)
     dq_viewer_label_invalid_msg = Unicode().tag(sync=True)
+    dq_add_to_flux_viewer = Bool(True).tag(sync=True)
 
     # Extraction Options
     auto_extract = Bool(True).tag(sync=True)
@@ -170,7 +171,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # TODO: default label separate from viewer label (so we can call it unc-viewer, etc)
         supported_viewers = [{'label': '3D Spectrum',
                               'reference': 'cubeviz-image-viewer'}]
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.unc_viewer_create_new_items = supported_viewers
 
         self.unc_viewer.add_filter(viewer_in_registry_names(supported_viewers))
@@ -201,7 +202,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # TODO: default label separate from viewer label (so we can call it mask-viewer, etc)
         supported_viewers = [{'label': '3D Spectrum',
                               'reference': 'cubeviz-image-viewer'}]
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.mask_viewer_create_new_items = supported_viewers
 
         self.mask_viewer.add_filter(viewer_in_registry_names(supported_viewers))
@@ -211,13 +212,18 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             self.mask_viewer.selected = []
 
         # DQ (DATA QUALITY) CUBE
-        self.has_dq = self.config == 'cubeviz' and len(self.dq_extension_items) > 0
+        self.has_dq = len(self.dq_extension_items) > 0
         self.dq_data_label = AutoTextField(self,
                                            'dq_data_label_value',
                                            'dq_data_label_default',
                                            'dq_data_label_auto',
                                            'dq_data_label_invalid_msg')
 
+        # for now, only expose the viewer select in cubeviz. in deconfigged,
+        # we need to fix the issue of being able to access viewer names before
+        # they are created to be able to reference the to-be-created flux/unc
+        # viewers. for now, the option is to load the DQ cube into the data
+        # collection and manually add it to the flux viewer.
         if self.config == 'cubeviz':
             self.dq_viewer = ViewerSelectCreateNew(self,
                                                    'dq_viewer_items',
@@ -233,10 +239,12 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             supported_viewers = [{'label': '3D Spectrum',
                                   'reference': 'cubeviz-image-viewer'}]
             self.dq_viewer.add_filter(viewer_in_registry_names(supported_viewers))
-            # put DQ layer in the same viewer as flux by default
-            # fine to hard code flux-viewer for cubeviz, but this will need to
-            # be generalized once DQ is supported in deconfigged
             self.dq_viewer.selected = ['flux-viewer']
+        else:
+            self.dq_viewer = []
+            # add to flux viewer by default. this can be toggled off, and will
+            # be automatically toggled off if no flux viewer is selected
+            self.dq_add_to_flux_viewer = True
 
         # AUTO-EXTRACTION
         self.function = SelectPluginComponent(
@@ -265,11 +273,14 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                                 default_mode='empty')
         supported_viewers = [{'label': '1D Spectrum',
                               'reference': 'spectrum-1d-viewer'}]
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.ext_viewer_create_new_items = supported_viewers
 
         self.ext_viewer.add_filter(viewer_in_registry_names(supported_viewers))
         self.ext_viewer.select_default()
+
+        # Initialize dq_add_to_flux_viewer based on whether a flux viewer is selected
+        self._update_dq_add_to_flux_viewer()
 
     def _check_flux_cube_loaded(self):
         """
@@ -286,10 +297,10 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             self._check_extension_selected()
             return
 
-        loaded_flux_cube = getattr(self.app._jdaviz_helper, '_loaded_flux_cube', None)
+        loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
 
         # Check if the flux cube reference exists and is still in the data collection
-        if loaded_flux_cube is not None and loaded_flux_cube in self.app.data_collection:
+        if loaded_flux_cube is not None and loaded_flux_cube in self._app.data_collection:
             if self.config == 'cubeviz':
                 self.import_disabled_msg = "Only a single 3D spectrum (flux cube) can be loaded into cubeviz."  # noqa
             else:
@@ -307,8 +318,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         Check if an extension is selected. If not, disable import with a message.
         This is only checked if no flux cube is already loaded.
         """
-        loaded_flux_cube = getattr(self.app._jdaviz_helper, '_loaded_flux_cube', None)
-        if loaded_flux_cube is not None and loaded_flux_cube in self.app.data_collection:
+        loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
+        if loaded_flux_cube is not None and loaded_flux_cube in self._app.data_collection:
             # Flux cube message takes precedence
             return
 
@@ -317,6 +328,22 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             self.import_disabled_msg = "Please select an extension to import."
         else:
             self.import_disabled_msg = ""
+
+    @observe('viewer_selected')
+    def _update_dq_add_to_flux_viewer(self, change={}):
+        """
+        Update dq_add_to_flux_viewer based on whether a flux viewer
+        (or create new) is selected. If no flux viewer is selected / going to be
+        created, disable the option to add DQ to flux viewer and only allow adding
+        to the data collection.
+        """
+        if self.config == 'deconfigged':
+            # Check if viewer.selected is empty (could be list or string depending on multiselect)
+            v = self.viewer.selected
+            has_viewer = bool(v) if isinstance(v, str) else len(v) > 0
+            has_create_new = bool(self.viewer_create_new_selected)
+            if not has_viewer and not has_create_new:
+                self.dq_add_to_flux_viewer = False
 
     @staticmethod
     def _get_supported_viewers():
@@ -343,7 +370,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'cubeviz'):
+        if self._app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
         try:
@@ -413,8 +440,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         super().__call__()
         # TODO: this will need to be removed when removing restriction of a single flux cube
-        if not getattr(self.app._jdaviz_helper, '_loaded_flux_cube', None):
-            self.app._jdaviz_helper._loaded_flux_cube = self.app.data_collection[data_label]
+        if not getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None):
+            self._app._jdaviz_helper._loaded_flux_cube = self._app.data_collection[data_label]
 
         if self.has_unc and not self.flux_only:
             # TODO: detect if uncertainty exists and hide section from UI
@@ -427,7 +454,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                         unc_data_label,
                                         viewer_select=self.unc_viewer)
             # TODO: this will need to be removed when removing restriction of a single flux cube
-            self.app._jdaviz_helper._loaded_uncert_cube = self.app.data_collection[unc_data_label]
+            self._app._jdaviz_helper._loaded_uncert_cube = self._app.data_collection[unc_data_label]
 
         if self.has_mask and not self.flux_only:
             mask = Spectrum(spectral_axis=self.output.spectral_axis,
@@ -439,13 +466,13 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                         mask_data_label,
                                         viewer_select=self.mask_viewer)
             # TODO: this will need to be removed when removing restriction of a single flux cube
-            self.app._jdaviz_helper._loaded_mask_cube = self.app.data_collection[mask_data_label]
+            self._app._jdaviz_helper._loaded_mask_cube = self._app.data_collection[mask_data_label]
 
         if not self.auto_extract:
             return
 
         try:
-            spext = self.app.get_tray_item_from_name('spectral-extraction-3d')
+            spext = self._app.get_tray_item_from_name('spectral-extraction-3d')
             ext = spext._extract_in_new_instance(dataset=data_label,
                                                  function=self.function.selected,
                                                  auto_update=False,
@@ -465,7 +492,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                 " See the 3D spectral extraction plugin for details or to"
                 " perform a custom extraction.",
                 color='warning', sender=self, timeout=10000)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)
 
         if ext is not None:
             self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
@@ -488,12 +515,20 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                    meta=dq_meta,
                                    spectral_axis_index=self.output.spectral_axis_index)
 
+                # in cubeviz, use the dq_viewer selection. in deconfigged, optionally
+                # add to flux viewer based on checkbox, or don't add to any viewer
+                if self.config == 'cubeviz':
+                    viewer_for_dq = self.dq_viewer
+                elif self.dq_add_to_flux_viewer:
+                    viewer_for_dq = self.viewer
+                else:
+                    viewer_for_dq = None
                 self.add_to_data_collection(dq_cube,
                                             dq_data_label,
                                             parent=data_label,
-                                            viewer_select=self.dq_viewer)
+                                            viewer_select=viewer_for_dq)
 
-                self.app._jdaviz_helper._loaded_dq_cube = self.app.data_collection[dq_data_label]
+                self._app._jdaviz_helper._loaded_dq_cube = self._app.data_collection[dq_data_label]
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         comp_type = _spatial_assign_component_type(comp_id, comp, units, physical_type)

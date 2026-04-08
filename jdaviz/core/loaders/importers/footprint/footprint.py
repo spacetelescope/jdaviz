@@ -77,7 +77,7 @@ class FootprintImporter(BaseImporterToPlugin):
         if self.footprint_label_invalid_msg:
             raise ValueError(self.footprint_label_invalid_msg)
 
-        plg = self.app._jdaviz_helper.plugins['Footprints']
+        plg = self._app._jdaviz_helper.plugins['Footprints']
         if self.footprint_label_value not in plg.overlay.choices:
             # TODO: show warning in UI when entry already exists
             plg.add_overlay(self.footprint_label_value)

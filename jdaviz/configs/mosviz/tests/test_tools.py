@@ -8,11 +8,11 @@ def test_viewer_axis_link(mosviz_helper, mos_spectrum1d, mos_spectrum2d):
     label2d = "Test 2D Spectrum"
     mosviz_helper.load_2d_spectra(mos_spectrum2d, data_labels=label2d, add_redshift_column=True)
 
-    table = mosviz_helper.app.get_viewer('table-viewer')
+    table = mosviz_helper._app.get_viewer('table-viewer')
     table.select_row(0)
 
-    s2dv = mosviz_helper.app.get_viewer('spectrum-2d-viewer')
-    sv = mosviz_helper.app.get_viewer('spectrum-viewer')
+    s2dv = mosviz_helper._app.get_viewer('spectrum-2d-viewer')
+    sv = mosviz_helper._app.get_viewer('spectrum-viewer')
 
     t = sv.toolbar.tools['mosviz:boxzoom']
     s2dv_orig_limits = s2dv.get_limits()

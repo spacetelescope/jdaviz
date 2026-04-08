@@ -72,7 +72,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Smooth data with a Gaussian kernel.'
 
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     def _get_supported_viewers(self):
@@ -94,13 +94,13 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     @property
     def _default_spectrum_viewer_reference_name(self):
         return getattr(
-            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+            self._app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
         )
 
     @property
     def _default_flux_viewer_reference_name(self):
         return getattr(
-            self.app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
+            self._app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
         )
 
     @property
@@ -113,7 +113,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     @observe("dataset_selected", "stddev", "mode_selected")
     def _set_default_results_label(self, event={}):
         '''Generate a label and set the results field to that value'''
-        if (hasattr(self, 'dataset') and (len(self.dataset.labels) >= 1) or self.app.config == 'mosviz'):  # noqa
+        if (hasattr(self, 'dataset') and (len(self.dataset.labels) >= 1) or self._app.config == 'mosviz'):  # noqa
             dataset = f'{self.dataset_selected} '
         else:
             # This should only happen at initialization. Will be overwritten with above
@@ -126,7 +126,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         # Overriding is allowed, so do not check for uniqueness
         self.results_label_default = (
-            self.app.return_data_label(f"{dataset}{smooth_type} {stddev}", check_unique=False))
+            self._app.return_data_label(f"{dataset}{smooth_type} {stddev}", check_unique=False))
 
     @observe("dataset_selected")
     def _update_viewer_filters(self, event={}):

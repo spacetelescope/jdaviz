@@ -62,7 +62,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
+        if self._app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
         if not len(self.extension.choices):
@@ -85,7 +85,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
                        f"To load additional sources, please specify them via dropdown or "
                        f"as follows:\n'{self.config}.load(filename, extension=[...]).")
             msg = SnackbarMessage(msg_str, color='warning', sender=self, timeout=10000)
-            self.app.hub.broadcast(msg)
+            self._app.hub.broadcast(msg)
             warnings.warn(msg_str)
         return applied_kwargs
 
@@ -154,9 +154,9 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
 
                     # alert user that we have changed their all-nan uncertainty array to None
                     msg = 'All uncertainties are nonfinite, replacing with uncertainty=None.'
-                    self.app.hub.broadcast(SnackbarMessage(msg,
-                                                           color="warning",
-                                                           sender=self.app))
+                    self._app.hub.broadcast(SnackbarMessage(msg,
+                                                            color="warning",
+                                                            sender=self.app))
             output.append(data)
 
         if self.concatenate and len(output) > 1:
@@ -200,7 +200,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         if not self.extension.selected:
             raise ValueError("No extension selected.")
 
-        with self.app._jdaviz_helper.batch_load():
+        with self._app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.extension.selected_item_list):
                 if self.data_label_is_prefix:
                     data_label = f"{self.data_label_value}_{item_dict['suffix']}"

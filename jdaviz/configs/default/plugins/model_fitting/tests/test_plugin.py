@@ -79,19 +79,19 @@ def test_register_model_with_uncertainty_weighting(specviz_helper, spectrum1d):
     modelfit_plugin._obj.vue_add_model({})
     with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
         modelfit_plugin.calculate_fit()
-    assert len(specviz_helper.app.data_collection) == 2
+    assert len(specviz_helper._app.data_collection) == 2
 
     # Test fitting again overwrites original fit
     with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
         modelfit_plugin.calculate_fit()
-    assert len(specviz_helper.app.data_collection) == 2
+    assert len(specviz_helper._app.data_collection) == 2
 
     # Test custom model label
     test_label = 'my_Linear1D'
     modelfit_plugin._obj.results_label = test_label
     with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
         modelfit_plugin.calculate_fit()
-    assert test_label in specviz_helper.app.data_collection
+    assert test_label in specviz_helper._app.data_collection
 
     # Test that the parameter uncertainties were updated
     expected_uncertainties = {'slope': 0.0007063584243707317, 'intercept': 4.885421320000062}
@@ -113,19 +113,19 @@ def test_register_model_uncertainty_is_none(specviz_helper, spectrum1d):
     modelfit_plugin._obj.vue_add_model({})
     with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
         modelfit_plugin.calculate_fit()
-    assert len(specviz_helper.app.data_collection) == 2
+    assert len(specviz_helper._app.data_collection) == 2
 
     # Test fitting again overwrites original fit
     with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
         modelfit_plugin.calculate_fit()
-    assert len(specviz_helper.app.data_collection) == 2
+    assert len(specviz_helper._app.data_collection) == 2
 
     # Test custom model label
     test_label = 'my_Linear1D'
     modelfit_plugin._obj.results_label = test_label
     with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
         modelfit_plugin.calculate_fit()
-    assert test_label in specviz_helper.app.data_collection
+    assert test_label in specviz_helper._app.data_collection
 
     # Test that the parameter uncertainties were updated
     expected_uncertainties = {'slope': 0.00038, 'intercept': 2.67}
@@ -155,7 +155,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='.*Model is linear in parameters.*')
         modelfit_plugin.calculate_fit()
-    assert test_label in cubeviz_helper.app.data_collection
+    assert test_label in cubeviz_helper._app.data_collection
 
 
 def test_initialize_gaussian_with_cube(cubeviz_helper, spectrum1d_cube_larger):
@@ -188,9 +188,9 @@ def test_fit_cube_no_wcs(cubeviz_helper):
         fitted_model, output_cube = mf.calculate_fit(add_data=True)
     assert len(fitted_model) == 56  # ny * nx
     # Make sure shapes are all self-consistent within Cubeviz instance.
-    fitted_data = cubeviz_helper.app.data_collection["model"]
+    fitted_data = cubeviz_helper._app.data_collection["model"]
     assert fitted_data.shape == (7, 8, 9)  # nx, ny, nz
-    assert fitted_data.shape == cubeviz_helper.app.data_collection[0].shape
+    assert fitted_data.shape == cubeviz_helper._app.data_collection[0].shape
     assert fitted_data.shape == output_cube.shape
 
 
@@ -218,7 +218,7 @@ def test_refit_plot_options(specviz_helper, spectrum1d):
     with pytest.warns(AstropyUserWarning):
         modelfit_plugin.calculate_fit(add_data=True)
 
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper._app.get_viewer('spectrum-viewer')
     atts = {"color": "red", "linewidth": 2, "alpha": 0.8}
     layer_state = [layer.state for layer in sv.layers if layer.layer.label == "model"][0]
     for att in atts:
@@ -352,9 +352,9 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     cubeviz_helper.plugins['Subset Tools'].import_region(CircularROI(0.5, 0.5, 1))
 
     # check that when no subset is selected, the spectral cube has no mask:
-    p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
+    p = cubeviz_helper._app.get_tray_item_from_name('g-model-fitting')
 
-    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    sv = cubeviz_helper._app.get_viewer('spectrum-viewer')
     # create a "Subset 2" entry in spectral dimension, selected "interactively"
     min_wavelength = 4625 * u.AA
     max_wavelength = spectrum1d_cube_larger.wavelength.max()
@@ -372,8 +372,8 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     p.spectral_subset_selected = "Subset 2"
 
     # Get the data object again (ensures mask == None)
-    data = cubeviz_helper.app.data_collection[-1].get_object()
-    subset = cubeviz_helper.app.data_collection[-1].get_subset_object(
+    data = cubeviz_helper._app.data_collection[-1].get_object()
+    subset = cubeviz_helper._app.data_collection[-1].get_subset_object(
         p.spectral_subset_selected, cls=Spectrum, statistic=None
     )
     masked_data = p._apply_subset_masks(data, p.spectral_subset)
@@ -470,7 +470,7 @@ def test_fitting_partial_overlap_subset(specviz_helper, fill_val):
     plugin.create_model_component()
 
     # apply a spectral subset that partially overalps the data range
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper._app.get_viewer('spectrum-viewer')
     sv.apply_roi(XRangeROI(7, 12))
 
     # check initial component value guesses

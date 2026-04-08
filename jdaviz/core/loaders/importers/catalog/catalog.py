@@ -183,7 +183,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
+        if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
             return False
         if isinstance(self.input, (Table, QTable)) and len(self.input):
@@ -291,13 +291,15 @@ class CatalogImporter(BaseImporterToDataCollection):
                 col_possibilities = ["x", "xpos", "xcentroid", "xcenter",
                                      "xpixel", "pixelx", "xpix", "ximage", "ximg",
                                      "xcoord", "xcoordinate", "sourcex", "xsource",
-                                     "x1", "x2"]
+                                     "x1", "x2", "x_centroid", "x_center",
+                                     "x_peak"]
                 idx = get_idx(all_column_names, col_possibilities, None)
             elif col == 'y':
                 col_possibilities = ["y", "ypos", "ycentroid", "ycenter",
                                      "ypixel", "pixely", "ypix", "yimage", "yimg",
                                      "ycoord", "ycoordinate", "sourcey", "ysource",
-                                     "y1", "y2"]
+                                     "y1", "y2", "y_centroid", "y_center",
+                                     "y_peak"]
                 idx = get_idx(all_column_names, col_possibilities, None)
 
         # if no good candidate found, default to '---' (no selection) for

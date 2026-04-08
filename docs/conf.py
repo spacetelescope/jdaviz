@@ -36,6 +36,8 @@ from sphinx.util.docutils import SphinxDirective
 
 # Suppress deprecation warning for data_labels during documentation build
 warnings.filterwarnings('ignore', message='.*data_labels function is deprecated.*')
+# Suppress deprecation warning for .app property during documentation build
+warnings.filterwarnings('ignore', message='.*app function is deprecated.*')
 
 from jdaviz import __version__
 
@@ -370,6 +372,8 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
         'api': 'API',
         'url': 'URL',
     }
+
+    links.append({'text': 'Overview', 'href': os.path.join(directory, 'index')})
 
     for filename in sorted(os.listdir(dir_path)):
         if filename.endswith('.rst') and filename != 'index.rst' and filename != 'extensions.rst':

@@ -6,8 +6,10 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.utils import minversion
 from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose, assert_array_equal
+import photutils
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
 from photutils.datasets import make_4gaussians_image
@@ -18,6 +20,14 @@ from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, BaseImviz_WCS_NoWCS
 from jdaviz.core.custom_units_and_equivs import PIX2
+
+photutils.future_column_names = True
+if minversion(photutils, '2.3.1.dev'):
+    SEMIMAJOR_AXIS = 'semimajor_axis'
+    SEMIMINOR_AXIS = 'semiminor_axis'
+else:
+    SEMIMAJOR_AXIS = 'semimajor_sigma'
+    SEMIMINOR_AXIS = 'semiminor_sigma'
 
 
 class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
@@ -81,7 +91,7 @@ class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
             'sum_aper_area', 'pixarea_tot', 'aperture_sum_counts', 'aperture_sum_counts_err',
             'counts_fac', 'aperture_sum_mag', 'flux_scaling', 'min', 'max', 'mean', 'median',
             'mode', 'std', 'mad_std', 'var', 'biweight_location', 'biweight_midvariance',
-            'fwhm', 'semimajor_sigma', 'semiminor_sigma', 'orientation', 'eccentricity',
+            'fwhm', SEMIMAJOR_AXIS, SEMIMINOR_AXIS, 'orientation', 'eccentricity',
             'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
@@ -103,8 +113,8 @@ class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
         assert_allclose(tbl['biweight_location'], 1)
         assert_allclose(tbl['biweight_midvariance'], 0)
         assert_quantity_allclose(tbl['fwhm'], 5.15018758 * u.pix)
-        assert_quantity_allclose(tbl['semimajor_sigma'], 2.18708329 * u.pix)
-        assert_quantity_allclose(tbl['semiminor_sigma'], 2.18708329 * u.pix)
+        assert_quantity_allclose(tbl[SEMIMAJOR_AXIS], 2.18708329 * u.pix)
+        assert_quantity_allclose(tbl[SEMIMINOR_AXIS], 2.18708329 * u.pix)
         assert_quantity_allclose(tbl['orientation'], 0 * u.deg)
         assert_quantity_allclose(tbl['eccentricity'], 0)
         assert_array_equal(tbl['data_label'], ['has_wcs_1', 'has_wcs_2'])
@@ -284,7 +294,7 @@ class TestAdvancedAperPhot:
 
         # Link them by WCS
         imviz_helper.link_data(align_by='wcs')
-        w = imviz_helper.app.data_collection[0].coords
+        w = imviz_helper._app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
         imviz_helper.plugins['Subset Tools'].import_region([
