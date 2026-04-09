@@ -4394,14 +4394,15 @@ class ViewerSelect(SelectPluginComponent):
         return super()._is_valid_item(viewer, locals())
 
     @observe('filters')
-    def _update_items(self, msg=None):
+    def _update_items(self, msg=None, auto_select=True):
         # NOTE: _update_items is passed without a msg object during init
         # list of dictionaries with id, ref, ref_or_id
         was_empty = len(self.items) == 0
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
                                      for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])]  # noqa
-        self._apply_default_selection(skip_if_current_valid=not was_empty)
+        if auto_select:
+            self._apply_default_selection(skip_if_current_valid=not was_empty)
 
 
 class ViewerSelectMixin(VuetifyTemplate, HubListener):

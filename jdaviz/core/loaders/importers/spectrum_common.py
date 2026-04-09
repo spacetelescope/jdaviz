@@ -283,10 +283,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         return 1
 
     def is_valid_flux(self, item):
-        # 'None' is valid for flux when specutils:spectrum or numpy:array
-        # (allows loading only uncert/mask)
-        if item.get('label') == 'None':
-            return self.input_type in ('specutils:spectrum', 'numpy:array')
         if item.get('label') == 'Spectrum':
             # 'Spectrum' is valid for flux for Spectrum inputs
             return True
@@ -314,9 +310,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         bool
             True if the HDU is a valid flux HDU, False otherwise.
         """
-        if item.get('label') == 'None':
-            # require selection for flux
-            return False
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
                 and ('DISPAXIS' in hdu.header
@@ -324,9 +317,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                      or hdu.header.get('EXTNAME', '') == 'FLUX'))
 
     def asdf_roman_is_valid_flux(self, item):
-        if item.get('label') == 'None':
-            # require selection for flux
-            return False
         if self.supported_flux_ndim == 1:
             return all(k in item.get('obj').keys() for k in ["wl", "flux"])
         elif self.supported_flux_ndim == 2:
@@ -335,8 +325,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             raise NotImplementedError("Only 1D and 2D spectra are supported for ASDF Roman data")
 
     def is_valid_unc(self, item):
-        if item.get('label') == 'None':
-            return True
         if item.get('label') == 'Spectrum':
             # 'Spectrum' is valid for uncertainty
             return True
@@ -374,8 +362,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         return all(k in item.get('obj').keys() for k in ["flux", "flux_err"])
 
     def is_valid_mask(self, item):
-        if item.get('label') == 'None':
-            return True
         if item.get('label') == 'Spectrum':
             # 'Spectrum' is valid for mask
             return True
@@ -413,8 +399,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         return False
 
     def is_valid_dq(self, item):
-        if item.get('label') == 'None':
-            return True
         if self.input_type == 'fits:hdulist':
             return self.hdu_is_valid_dq(item)
         if self.input_type == 'asdf:roman':

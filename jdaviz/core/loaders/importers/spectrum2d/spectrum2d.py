@@ -161,7 +161,17 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # closed file reference later when the filter is called
         self._spectrum_unit = getattr(spectrum.spectral_axis, 'unit', None)
         # Re-apply filters now that we have the actual spectral axis unit
-        self.ext_viewer._update_items()
+        self.ext_viewer._update_items(auto_select=False)
+        # Check if current selection is still valid after filtering and update if needed
+        if self.ext_viewer.is_multiselect:
+            # If any selected viewer was filtered out, reapply default selection
+            if any(s not in self.ext_viewer.choices for s in self.ext_viewer.selected):
+                self.ext_viewer.select_default()
+        else:
+            # If selected viewer was filtered out and no create_new is set, reapply default
+            if (self.ext_viewer.selected not in self.ext_viewer.choices and
+                    not self.ext_viewer.create_new.selected):
+                self.ext_viewer.select_default()
         return spectrum
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
