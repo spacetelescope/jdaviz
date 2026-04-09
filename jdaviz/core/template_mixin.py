@@ -6176,10 +6176,8 @@ class Table(PluginSubcomponent):
         """
         from astropy.table import QTable
         
-        # Clear existing data
-        self._clear_table()
-        
         if len(table) == 0:
+            self._clear_table()
             return
         
         # Cache the QTable
