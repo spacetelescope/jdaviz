@@ -108,9 +108,8 @@ class AstropyTableParser(BaseParser):
                     # will fail on None otherwise.
                     input_ext = 'ascii'
                 else:
-                    msg = ('Input does not have a file extension '
-                           'and its format cannot be determined.')
-                    raise ValueError(msg)
+                    raise ValueError('Input does not have a file extension '
+                                     'and its format cannot be determined.')
 
             # suffixes are returned as '.format'
             input_ext = input_ext.lstrip('.')
