@@ -1,5 +1,5 @@
 import warnings
-from functools import cached_property
+from functools import cached_property, partial
 from pathlib import Path
 
 from astropy.io import fits
@@ -13,6 +13,11 @@ from jdaviz.core.registries import loader_parser_registry
 
 
 __all__ = ['AstropyTableParser']
+PREFERRED_ASCII_FORMATS = ['ascii',
+                           'ascii.csv',
+                           'ascii.ecsv',
+                           'ascii.tab',
+                           'ascii.no_header']
 
 
 @loader_parser_registry('astropy.Table')
@@ -68,9 +73,63 @@ class AstropyTableParser(BaseParser):
         else:
             return len(table) > 0
 
+    @cached_property
+    def is_text_file(self, blocksize=4096):
+        """
+        Check if the file is a text file. This is used to determine
+        if the input is compatible with Astropy's ascii reader.
+        """
+        try:
+            with open(self.input, "rb") as f:
+                chunk = f.read(blocksize)
+            chunk.decode("utf-8")
+            return True
+        except UnicodeDecodeError:
+            return False
+
+    def _try_qtable_read(self, fmt=None):
+        """
+        Read a table using QTable.read.
+
+        Parameters
+        ----------
+        fmt : str, optional
+            Format to pass to QTable.read.
+
+        Returns
+        -------
+        dict
+            Dictionary mapping format to table.
+        """
+        try:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                table = QTable.read(self.input, format=fmt)
+                exception_text = None
+
+                if len(w) > 0:
+                    # suspicious parse
+                    exception_text = 'Table parsed with warnings'
+
+                if len(table) <= 1:
+                    exception_text = 'Table is empty'
+
+                if len(table.colnames) <= 1:
+                    exception_text = 'Table has no columns'
+
+                table.meta['exception'] = Exception(exception_text)
+
+        except Exception as e:
+            table = QTable(meta={'exception': e})
+
+        return {fmt: table}
+
     @property
-    def input_format(self):
-        """Parse input to determine the format to be given to Qtable.read."""
+    def input_ext_format(self):
+        """
+        Parse self.input to determine the format based on its
+        file extension to be given to Qtable.read.
+        """
 
         if isinstance(self.input, str):
             input_as_path = Path(self.input)
@@ -82,49 +141,32 @@ class AstropyTableParser(BaseParser):
 
             # suffixes are returned as '.format'
             input_ext = input_ext.lstrip('.')
-            available_formats = registry.get_formats(data_class=QTable, readwrite='Read')['Format']
+            all_formats = registry.get_formats(data_class=QTable, readwrite='Read')['Format']
 
             # Try ascii first because several format types
             # are deprecated in favor of ascii.format
-            if f'ascii.{input_ext}' in available_formats:
+            if f'ascii.{input_ext}' in all_formats:
                 return f'ascii.{input_ext}'
 
-            elif input_ext in available_formats:
-                return input_ext
+            return input_ext
 
         # passing None will allow 'auto-identifying' formats before failing
         return None
 
-    @cached_property
-    def all_possible_format_results(self):
-        all_format_results = {}
+    @property
+    def lazy_format_read_results(self):
+        """
+        Lazy-evaluate attempts to use QTable.read for all valid formats for self.input.
 
+        Stores a bound method for each available format that will execute
+        the full try/except logic of _try_qtable_read when invoked.
+        """
         all_formats = registry.get_formats(data_class=QTable, readwrite='Read')['Format']
-        for fmt in all_formats:
-            try:
-                with warnings.catch_warnings(record=True) as w:
-                    warnings.simplefilter("always")
-                    table = QTable.read(self.input, format=fmt)
-                    table.meta['exception'] = ''
-
-                    if len(w) > 0:
-                        # suspicious parse
-                        table.meta['exception'] = 'Table did not parse without warnings'
-
-                    if len(table) == 0:
-                        table.meta['exception'] = 'Table is empty'
-
-                    if len(table.colnames) == 0:
-                        table.meta['exception'] = 'Table has no columns'
-
-            except Exception as e:
-                table = QTable(meta={'exception': str(e)})
-
-            all_format_results[fmt] = table
-
-        return all_format_results
+        return {fmt: partial(self._try_qtable_read, fmt) for fmt in all_formats}
 
     @cached_property
     def output(self):
-        read_format = self.input_format if self.read_format == '' else self.read_format
-        return self.all_possible_format_results[read_format]
+        read_format = self.input_ext_format if self.read_format == '' else self.read_format
+
+        # Invoke the lazy-evaluated method to get the table for the desired format
+        return self.lazy_format_read_results[read_format]()

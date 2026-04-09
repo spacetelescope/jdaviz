@@ -4,7 +4,7 @@
     <plugin-select v-if="available_file_formats.length"
       :items="available_file_formats.map(i => i.label)"
       :selected.sync="file_format_selected"
-      :show_if_single_entry="true"
+      :show_if_single_entry="false"
       :multiselect="false"
       :search="true"
       label="File Format"
@@ -32,6 +32,7 @@
     <div v-if="!input_has_extensions || (extension_selected && extension_selected.length > 0 && no_common_col_msg === '')">
       <j-plugin-section-header>Select coordinate columns</j-plugin-section-header>
 
+      TODO: invert for dark!
       <div style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
         Select RA/Dec and/or X/Y pair to enable import. Pixel positions
         are w.r.t the image viewer reference data.

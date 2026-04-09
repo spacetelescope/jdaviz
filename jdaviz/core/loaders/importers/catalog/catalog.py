@@ -13,6 +13,11 @@ from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import RA_COMPS, DEC_COMPS, create_data_hash
 
 __all__ = ['CatalogImporter']
+PREFERRED_ASCII_FORMATS = ['ascii',
+                           'ascii.csv',
+                           'ascii.ecsv',
+                           'ascii.tab',
+                           'ascii.no_header']
 
 
 @loader_importer_registry("Catalog")
@@ -67,16 +72,18 @@ class CatalogImporter(BaseImporterToDataCollection):
             return
 
         if isinstance(self._parser, AstropyTableParser):
-            self.available_file_formats = [
-                {'label': fmt} for fmt, table in self._parser.all_possible_format_results.items()
-                if table.meta['exception'] == ''
-            ]
+            # Set available file formats
+            if self._parser.is_text_file:
+                self.available_file_formats = [{'label': fmt} for fmt in PREFERRED_ASCII_FORMATS]
+            elif self._parser.input_ext_format is not None:
+                self.available_file_formats = [{'label': self._parser.input_ext_format}]
+
             if len(self.available_file_formats) == 0:
                 self.import_disabled_msg = 'No supported file formats found for this input.'
 
             # Set the initial format before creating the component to avoid
             # auto-selection triggering the observer
-            self.file_format_selected = self._parser.input_format
+            self.file_format_selected = self._parser.input_ext_format
             self.file_format = SelectPluginComponent(self,
                                                      items='available_file_formats',
                                                      selected='file_format_selected')
@@ -220,9 +227,8 @@ class CatalogImporter(BaseImporterToDataCollection):
         if event['new'] == event['old']:
             return
 
-        _import_disabled_msg = (f"'{self.file_format_selected}' is not "
-                                f"a valid file format option for this input.")
-        if self.import_disabled_msg and _import_disabled_msg in self.import_disabled_msg:
+        _import_disabled_msg_suffix = 'is not a valid file format option for this input.'
+        if self.import_disabled_msg and _import_disabled_msg_suffix in self.import_disabled_msg:
             # Reset messages on new selection
             self.import_disabled_msg = ''
 
@@ -231,17 +237,16 @@ class CatalogImporter(BaseImporterToDataCollection):
             if 'output' in self._parser.__dict__:
                 del self._parser.__dict__['output']
 
-            if self.file_format_selected not in [i['label'] for i in self.available_file_formats]:
-                self.import_disabled_msg = _import_disabled_msg
-                # This should only happen when using the API since we limit
-                # the UI from showing invalid formats
-                raise Exception(self._parser.all_possible_format_results[self.file_format_selected])
-
             # Set new format in parser
             self._parser.read_format = self.file_format_selected
 
             # Recompute with new format and reset input
             self._input = self._parser.output
+            if self._input.meta.get('exception', None) is not None:
+                self.import_disabled_msg = (f'{self.file_format_selected} '
+                                            f'{_import_disabled_msg_suffix}')
+
+                raise self._input.meta['exception']
 
     def _update_col_items_and_selected(self, base_attr, options, select_first=True):
         """update column items and selected value."""
