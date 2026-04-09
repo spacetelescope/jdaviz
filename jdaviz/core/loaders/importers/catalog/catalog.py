@@ -242,11 +242,11 @@ class CatalogImporter(BaseImporterToDataCollection):
 
             # Recompute with new format and reset input
             self._input = self._parser.output
-            if self._input.meta.get('exception', None) is not None:
+            if self._input.meta.get('exception', ''):
                 self.import_disabled_msg = (f'{self.file_format_selected} '
                                             f'{_import_disabled_msg_suffix}')
 
-                raise self._input.meta['exception']
+                # raise Exception(self._input.meta['exception'])
 
     def _update_col_items_and_selected(self, base_attr, options, select_first=True):
         """update column items and selected value."""

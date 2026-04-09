@@ -98,14 +98,14 @@ class AstropyTableParser(BaseParser):
 
         Returns
         -------
-        dict
-            Dictionary mapping format to table.
+        Astropy.QTable
+            Astropy.QTable object extracted from input (file).
         """
         try:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 table = QTable.read(self.input, format=fmt)
-                exception_text = None
+                exception_text = ''
 
                 if len(w) > 0:
                     # suspicious parse
@@ -117,12 +117,12 @@ class AstropyTableParser(BaseParser):
                 if len(table.colnames) <= 1:
                     exception_text = 'Table has no columns'
 
-                table.meta['exception'] = Exception(exception_text)
+                table.meta['exception'] = exception_text
 
         except Exception as e:
-            table = QTable(meta={'exception': e})
+            table = QTable(meta={'exception': str(e)})
 
-        return {fmt: table}
+        return table
 
     @property
     def input_ext_format(self):
@@ -161,12 +161,15 @@ class AstropyTableParser(BaseParser):
         Stores a bound method for each available format that will execute
         the full try/except logic of _try_qtable_read when invoked.
         """
-        all_formats = registry.get_formats(data_class=QTable, readwrite='Read')['Format']
+
+        all_formats = list(
+            registry.get_formats(data_class=QTable, readwrite='Read')['Format']
+        ) + [None]  # include None for auto-identification
+
         return {fmt: partial(self._try_qtable_read, fmt) for fmt in all_formats}
 
     @cached_property
     def output(self):
         read_format = self.input_ext_format if self.read_format == '' else self.read_format
-
         # Invoke the lazy-evaluated method to get the table for the desired format
         return self.lazy_format_read_results[read_format]()
