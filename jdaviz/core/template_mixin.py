@@ -6174,22 +6174,19 @@ class Table(PluginSubcomponent):
         Populate the table from an astropy QTable/Table using server-side pagination.
         Handles QTable caching, header updates, JSON conversion, and pagination.
         """
-        from astropy.table import QTable
-        
         if len(table) == 0:
             self._clear_table()
             return
-        
         # Cache the QTable
         self._qtable = QTable(table)
-        
         # Update headers
         all_headers = list(table.colnames)
         missing_headers = [h for h in all_headers if h not in self.headers_avail]
         if missing_headers:
             self.headers_avail = self.headers_avail + missing_headers
-            self.headers_visible = self.headers_visible + [m for m in missing_headers if self._new_col_visible(m)]
-        
+            self.headers_visible = self.headers_visible + \
+                [m for m in missing_headers if self._new_col_visible(m)]
+
         # Build all items with JSON conversion
         all_items = []
         for row in table:
@@ -6197,7 +6194,7 @@ class Table(PluginSubcomponent):
             for col in table.colnames:
                 row_dict[col] = self._json_safe(col, row[col])
             all_items.append(row_dict)
-        
+
         # Set all items (triggers server pagination)
         self.set_all_items(all_items)
 
@@ -6302,7 +6299,7 @@ class Table(PluginSubcomponent):
         elif isinstance(item, (np.float32, np.float64)):
             return float(item)
         elif isinstance(item, u.Quantity):
-            return {"value": item.value.tolist() if item.size > 1 else item.value, "unit": str(item.unit)}
+            return {"value": item.value.tolist() if item.size > 1 else item.value, "unit": str(item.unit)}  # noqa: E501
         elif isinstance(item, np.bool_):
             return bool(item)
         elif isinstance(item, np.ndarray):
