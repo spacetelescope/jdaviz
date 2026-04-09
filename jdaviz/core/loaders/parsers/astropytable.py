@@ -1,3 +1,4 @@
+import warnings
 from functools import cached_property
 from pathlib import Path
 
@@ -101,8 +102,21 @@ class AstropyTableParser(BaseParser):
         all_formats = registry.get_formats(data_class=QTable, readwrite='Read')['Format']
         for fmt in all_formats:
             try:
-                table = QTable.read(self.input, format=fmt)
-                table.meta['exception'] = ''
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always")
+                    table = QTable.read(self.input, format=fmt)
+                    table.meta['exception'] = ''
+
+                    if len(w) > 0:
+                        # suspicious parse
+                        table.meta['exception'] = 'Table did not parse without warnings'
+
+                    if len(table) == 0:
+                        table.meta['exception'] = 'Table is empty'
+
+                    if len(table.colnames) == 0:
+                        table.meta['exception'] = 'Table has no columns'
+
             except Exception as e:
                 table = QTable(meta={'exception': str(e)})
 
