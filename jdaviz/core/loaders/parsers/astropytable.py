@@ -148,9 +148,17 @@ class AstropyTableParser(BaseParser):
             if f'ascii.{input_ext}' in all_formats:
                 return f'ascii.{input_ext}'
 
-            return input_ext
+            # Next check the exact file extension
+            if input_ext in all_formats:
+                return input_ext
 
-        # passing None will allow 'auto-identifying' formats before failing
+            # Next fallback to ascii for text files
+            if self.is_text_file:
+                return 'ascii'
+
+            # finally fallback to None to allow 'auto-identifying' formats before failing
+            return None
+
         return None
 
     @property
