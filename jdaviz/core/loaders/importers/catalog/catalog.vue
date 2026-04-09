@@ -6,6 +6,7 @@
       :selected.sync="file_format_selected"
       :show_if_single_entry="true"
       :multiselect="false"
+      :search="true"
       label="File Format"
       api_hint="ldr.importer.file_format_selected ="
       :api_hints_enabled="api_hints_enabled"
