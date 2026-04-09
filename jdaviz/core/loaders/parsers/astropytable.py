@@ -1,5 +1,4 @@
-import warnings
-from functools import cached_property, partial
+from functools import cached_property
 from pathlib import Path
 
 from astropy.io import fits
@@ -13,11 +12,6 @@ from jdaviz.core.registries import loader_parser_registry
 
 
 __all__ = ['AstropyTableParser']
-PREFERRED_ASCII_FORMATS = ['ascii',
-                           'ascii.csv',
-                           'ascii.ecsv',
-                           'ascii.tab',
-                           'ascii.no_header']
 
 
 @loader_parser_registry('astropy.Table')
@@ -25,8 +19,6 @@ class AstropyTableParser(BaseParser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # This will function as a user input format
-        self.read_format = ''
 
     @property
     def is_valid(self):
@@ -73,19 +65,70 @@ class AstropyTableParser(BaseParser):
         else:
             return len(table) > 0
 
-    @cached_property
+    @property
     def is_text_file(self, blocksize=4096):
         """
         Check if the file is a text file. This is used to determine
         if the input is compatible with Astropy's ascii reader.
         """
-        try:
-            with open(self.input, "rb") as f:
-                chunk = f.read(blocksize)
-            chunk.decode("utf-8")
-            return True
-        except UnicodeDecodeError:
+        if not isinstance(self.input, str):
             return False
+        try:
+            with open(self.input, 'rb') as f:
+                chunk = f.read(blocksize)
+            chunk.decode('utf-8')
+            return True
+        except (UnicodeDecodeError, OSError):
+            return False
+
+    @property
+    def input_ext_format(self):
+        """
+        Parse self.input to determine the format based on its
+        file extension to be given to Qtable.read.
+
+        The flow of formats to check for a file, 'file.ext', is:
+          'ascii.ext' -> 'ext' -> None (auto-identify) -> 'ascii'
+
+        ascii.ext - many 'ext' formats are deprecated in favor of 'ascii.ext'
+        ext - safe fallback for other formats
+        None - Astropy's auto-identify is fairly robust. 'ascii' was previously
+               the catch-all but given the limits of our ability to check text files,
+               'ascii' may fail where the auto-identify would succeed
+               (e.g. shortened extensions such as '.vot' for votable)
+        ascii - fallback for text files only, may also be used for files with no extension
+                since QTable.read would otherwise fail without a format being specified.
+        """
+
+        if isinstance(self.input, str):
+            input_ext = Path(self.input).suffix
+            if input_ext == '':
+                if self.is_text_file:
+                    # Force ascii for text files with no extension since QTable.read
+                    # will fail on None otherwise.
+                    input_ext = 'ascii'
+                else:
+                    msg = ('Input does not have a file extension '
+                           'and its format cannot be determined.')
+                    raise ValueError(msg)
+
+            # suffixes are returned as '.format'
+            input_ext = input_ext.lstrip('.')
+            all_formats = registry.get_formats(data_class=QTable, readwrite='Read')['Format']
+
+            # Try ascii first because several format types
+            # are deprecated in favor of ascii.format
+            if f'ascii.{input_ext}' in all_formats:
+                return f'ascii.{input_ext}'
+
+            # Next check the exact file extension
+            elif input_ext in all_formats:
+                return input_ext
+
+            # No extension match, return None so that output attempts auto-detect
+            return None
+
+        return None
 
     def _try_qtable_read(self, fmt=None):
         """
@@ -101,83 +144,37 @@ class AstropyTableParser(BaseParser):
         Astropy.QTable
             Astropy.QTable object extracted from input (file).
         """
+
         try:
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                table = QTable.read(self.input, format=fmt)
-                exception_text = ''
+            table = QTable.read(self.input, format=fmt)
+            # exception_text is for the devs.
+            # If some format fails on import but Astropy doesn't raise an exception,
+            # it's likely a logic issue with selecting a format in input_ext_format.
+            exception_text = ''
 
-                if len(w) > 0:
-                    # suspicious parse
-                    exception_text = 'Table parsed with warnings'
+            if len(table) <= 1:
+                exception_text = f'Format {fmt}: Table is empty'
 
-                if len(table) <= 1:
-                    exception_text = 'Table is empty'
-
-                if len(table.colnames) <= 1:
-                    exception_text = 'Table has no columns'
-
-                table.meta['exception'] = exception_text
+            elif len(table.colnames) <= 1:
+                exception_text = f'Format {fmt}: Table has no columns'
 
         except Exception as e:
-            table = QTable(meta={'exception': str(e)})
+            table = QTable()
+            exception_text = f'Format {fmt}: {e}'
 
+            if fmt is None and self.is_text_file:
+                # If auto-detect (None) failed, try 'ascii' for text files since
+                # some text formats are not marked to be auto-identified, e.g.
+                # .dat/.txt/.tsv
+                try:
+                    table = QTable.read(self.input, format='ascii')
+                    exception_text = ''
+                except Exception as ee:
+                    exception_text += f';\nAlso tried format {fmt}: {ee}'
+
+        table.meta['exception'] = exception_text
         return table
-
-    @property
-    def input_ext_format(self):
-        """
-        Parse self.input to determine the format based on its
-        file extension to be given to Qtable.read.
-        """
-
-        if isinstance(self.input, str):
-            input_as_path = Path(self.input)
-            suffixes = input_as_path.suffixes
-            if len(suffixes) > 1:
-                input_ext = ''.join(suffixes)
-            else:
-                input_ext = suffixes[0]
-
-            # suffixes are returned as '.format'
-            input_ext = input_ext.lstrip('.')
-            all_formats = registry.get_formats(data_class=QTable, readwrite='Read')['Format']
-
-            # Try ascii first because several format types
-            # are deprecated in favor of ascii.format
-            if f'ascii.{input_ext}' in all_formats:
-                return f'ascii.{input_ext}'
-
-            # Next check the exact file extension
-            if input_ext in all_formats:
-                return input_ext
-
-            # Next fallback to ascii for text files
-            if self.is_text_file:
-                return 'ascii'
-
-            # finally fallback to None to allow 'auto-identifying' formats before failing
-            return None
-
-        return None
-
-    @property
-    def lazy_format_read_results(self):
-        """
-        Lazy-evaluate attempts to use QTable.read for all valid formats for self.input.
-
-        Stores a bound method for each available format that will execute
-        the full try/except logic of _try_qtable_read when invoked.
-        """
-
-        all_formats = list(
-            registry.get_formats(data_class=QTable, readwrite='Read')['Format']
-        ) + [None]  # include None for auto-identification
-
-        return {fmt: partial(self._try_qtable_read, fmt) for fmt in all_formats}
 
     @cached_property
     def output(self):
-        read_format = self.input_ext_format if self.read_format == '' else self.read_format
-        # Invoke the lazy-evaluated method to get the table for the desired format
-        return self.lazy_format_read_results[read_format]()
+        return self._try_qtable_read(self.input_ext_format)

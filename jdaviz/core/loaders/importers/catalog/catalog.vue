@@ -1,18 +1,6 @@
 <template>
   <v-container>
 
-    <plugin-select v-if="available_file_formats.length"
-      :items="available_file_formats.map(i => i.label)"
-      :selected.sync="file_format_selected"
-      :show_if_single_entry="false"
-      :multiselect="false"
-      :search="true"
-      label="File Format"
-      api_hint="ldr.importer.file_format_selected ="
-      :api_hints_enabled="api_hints_enabled"
-      hint="File format specifier. Used to specify to the parser which file reader to use. Limited to compatible file formats."
-    ></plugin-select>
-
     <plugin-select v-if="extension_items.length"
       :items="extension_items"
       :exists_in_dc="existing_data_in_dc"

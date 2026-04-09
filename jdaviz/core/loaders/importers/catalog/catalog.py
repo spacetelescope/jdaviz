@@ -5,7 +5,6 @@ import astropy.units as u
 import numpy as np
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.core.loaders import AstropyTableParser
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
@@ -13,21 +12,12 @@ from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import RA_COMPS, DEC_COMPS, create_data_hash
 
 __all__ = ['CatalogImporter']
-PREFERRED_ASCII_FORMATS = ['ascii',
-                           'ascii.csv',
-                           'ascii.ecsv',
-                           'ascii.tab',
-                           'ascii.no_header']
 
 
 @loader_importer_registry("Catalog")
 class CatalogImporter(BaseImporterToDataCollection):
 
     template_file = __file__, "./catalog.vue"
-
-    # File options
-    file_format_selected = Unicode().tag(sync=True)
-    available_file_formats = List().tag(sync=True)
 
     # for catalogs with source positions in sky coordinates
     col_ra_items = List().tag(sync=True)
@@ -70,23 +60,6 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         if not self.is_valid:
             return
-
-        if isinstance(self._parser, AstropyTableParser):
-            # Set available file formats
-            if self._parser.is_text_file:
-                self.available_file_formats = [{'label': fmt} for fmt in PREFERRED_ASCII_FORMATS]
-            elif self._parser.input_ext_format is not None:
-                self.available_file_formats = [{'label': self._parser.input_ext_format}]
-
-            if len(self.available_file_formats) == 0:
-                self.import_disabled_msg = 'No supported file formats found for this input.'
-
-            # Set the initial format before creating the component to avoid
-            # auto-selection triggering the observer
-            self.file_format_selected = self._parser.input_ext_format
-            self.file_format = SelectPluginComponent(self,
-                                                     items='available_file_formats',
-                                                     selected='file_format_selected')
 
         if isinstance(self.input, HDUList):
             self.input_has_extensions = True
@@ -221,32 +194,6 @@ class CatalogImporter(BaseImporterToDataCollection):
                 if isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0:
                     return True
         return False
-
-    @observe('file_format_selected')
-    def import_as_format(self, event):
-        if event['new'] == event['old']:
-            return
-
-        _import_disabled_msg_suffix = 'is not a valid file format option for this input.'
-        if self.import_disabled_msg and _import_disabled_msg_suffix in self.import_disabled_msg:
-            # Reset messages on new selection
-            self.import_disabled_msg = ''
-
-        if isinstance(self._parser, AstropyTableParser):
-            # Invalidate cached output
-            if 'output' in self._parser.__dict__:
-                del self._parser.__dict__['output']
-
-            # Set new format in parser
-            self._parser.read_format = self.file_format_selected
-
-            # Recompute with new format and reset input
-            self._input = self._parser.output
-            if self._input.meta.get('exception', ''):
-                self.import_disabled_msg = (f'{self.file_format_selected} '
-                                            f'{_import_disabled_msg_suffix}')
-
-                # raise Exception(self._input.meta['exception'])
 
     def _update_col_items_and_selected(self, base_attr, options, select_first=True):
         """update column items and selected value."""
