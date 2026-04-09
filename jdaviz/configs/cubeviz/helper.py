@@ -102,17 +102,17 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
         if data_type is not None:
             if data_type == 'uncert':
                 # Load array as uncertainty, not flux
-                kwargs.setdefault('extension', 'None')
+                kwargs.setdefault('extension', '')
                 kwargs.setdefault('unc_extension', 'Spectrum')
             elif data_type == 'mask':
                 # Load array as mask, not flux
-                kwargs.setdefault('extension', 'None')
+                kwargs.setdefault('extension', '')
                 kwargs.setdefault('mask_extension', 'Spectrum')
             elif data_type == 'flux':
                 # Load array as flux (default)
                 kwargs.setdefault('extension', 'Spectrum')
-                kwargs.setdefault('unc_extension', 'None')
-                kwargs.setdefault('mask_extension', 'None')
+                kwargs.setdefault('unc_extension', '')
+                kwargs.setdefault('mask_extension', '')
             else:
                 raise TypeError(f"Data type must be one of 'flux', 'uncert', or 'mask', "
                                 f"got '{data_type}'")

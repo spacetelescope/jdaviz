@@ -297,9 +297,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             self._check_extension_selected()
             return
 
-        # If extension is 'None', we're only loading uncertainty/mask, not flux
+        # If extension is cleared/empty, we're only loading uncertainty/mask, not flux
         # So skip the flux cube limit check
-        if hasattr(self, 'extension') and self.extension.selected == 'None':
+        if hasattr(self, 'extension') and not self.extension.selected:
             self._check_extension_selected()
             return
 
@@ -324,15 +324,15 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         Check if an extension is selected. If not, disable import with a message.
         This is only checked if no flux cube is already loaded.
         """
-        # If extension is 'None', we're only loading uncertainty/mask, not flux
+        # If extension is cleared/empty, we're only loading uncertainty/mask, not flux
         # So clear any flux cube limit message
-        if hasattr(self, 'extension') and self.extension.selected == 'None':
+        if hasattr(self, 'extension') and not self.extension.selected:
             self.import_disabled_msg = ""
             return
 
         loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
         if loaded_flux_cube is not None and loaded_flux_cube in self._app.data_collection:
-            # Flux cube message takes precedence (unless extension='None')
+            # Flux cube message takes precedence (unless extension selection is cleared)
             return
 
         # For non-multiselect, extension.selected is a string (not a list), so check if empty/falsy
@@ -512,7 +512,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             if self.has_dq and not self.flux_only:
                 dq_hdu = self.dq_extension.selected_obj
 
-                # Skip DQ loading if 'None' was selected
+                # Skip DQ loading if no DQ extension was selected
                 if dq_hdu is None:
                     return
 

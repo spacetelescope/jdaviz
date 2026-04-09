@@ -134,8 +134,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                            for ind, attr in enumerate(('flux', 'uncertainty', 'mask'))
                            if getattr(self.input, attr, None) is not None
                            ]
-            # Add 'Spectrum' and 'None' options for 3D spectra to support data_type parameter
-            # For 1D spectra, these options don't make sense
+            # Add 'Spectrum' option for 3D spectra to support data_type parameter
+            # For 1D spectra, this option doesn't make sense
             if self.supported_flux_ndim == 3:
                 ext_options.append({
                     'label': 'Spectrum',
@@ -144,14 +144,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     'index': 0,
                     'data_hash': create_data_hash(self.input.flux),
                     'obj': self.input.flux.value if hasattr(self.input.flux, 'value') else self.input.flux  # noqa
-                })
-                ext_options.append({
-                    'label': 'None',
-                    'name': 'None',
-                    'name_ver': None,
-                    'index': None,
-                    'data_hash': None,
-                    'obj': None
                 })
         elif isinstance(self.input, Spectrum) and self.input.flux.ndim > self.supported_flux_ndim:
             if self.supported_flux_ndim != 1 or self.input.flux.ndim != 2:
@@ -673,7 +665,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             flux_unit = _to_unit(meta["unit_flux"])
 
             # TODO: expose option in unc_extension that defaults to pulling
-            # from flux extension, but also allowing user to set to "None"
+            # from flux extension, but also allowing user to clear the selection
             # to skip loading uncertainty
             flux_error = extension.get("flux_error", None)
             variance = extension.get("var", None)
