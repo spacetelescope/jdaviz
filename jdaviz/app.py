@@ -3764,7 +3764,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # DictCallbackProperty -> dict, etc.). Non-CallbackProperty
         # attributes like snackbar_queue are ignored automatically.
         autoconnect_callbacks_to_vue(self.state, self,
-                                     infer_properties_from='python')
+                                     infer_properties_from='python',
+                                     prefix='state_')
 
     def _reset_state(self):
         """ Resets the application state """
