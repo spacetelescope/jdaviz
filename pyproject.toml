@@ -47,7 +47,7 @@ dependencies = [
     "spherical-geometry",
     # This pin can be removed once Solara releases a compatibility fix
     # See https://github.com/widgetti/solara/pull/1151
-    "starlette<1.0"
+    "starlette<1.0",
     "jupyter_ui_poll>=1.1.0",
 ]
 license-files = ["LICENSE.rst", "licenses/IPYFILECHOOSER_LICENSE.rst", "licenses/IMEXAM_LICENSE.txt", "licenses/GINGA_LICENSE.txt", "licenses/TEMPLATE_LICENCE.rst"]
