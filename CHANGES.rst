@@ -76,7 +76,7 @@ New Features
 - Fix discrepancies between deconfigged and imviz when loading subsets/regions
   when using the WCS/orientation layer [#4130]
 
-- Add support for more generic table file formats in the astropytable parser. [#4133]
+- Add additional logic to support table file formats beyond text in the astropytable parser. [#4133]
 
 Cubeviz
 ^^^^^^^
