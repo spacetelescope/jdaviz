@@ -432,7 +432,19 @@ class SpectralSlice(BaseSlicePlugin):
         self.allow_disable_snapping = False
 
         self.viewer.add_filter(lambda viewer: isinstance(viewer, (CubevizImageView, CubevizProfileView)))  # noqa
+        if self.config == 'deconfigged':
+            self.hub.subscribe(self, AddDataMessage, handler=self._set_relevant)
+            self.hub.subscribe(self, RemoveDataMessage, handler=self._set_relevant)
         self._set_relevant()
+
+    @observe('viewer_items')
+    def _set_relevant(self, *args):
+        if (self.config == 'deconfigged' and
+                not any(d.meta.get('_importer') == 'Spectrum3DImporter'
+                        for d in self._app.data_collection)):
+            self.irrelevant_msg = 'No spectral cube data loaded'
+            return
+        super()._set_relevant(*args)
 
     @observe('vdocs')
     def _update_docs_link(self, *args):

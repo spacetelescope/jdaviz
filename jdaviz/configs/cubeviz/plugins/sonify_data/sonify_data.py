@@ -101,6 +101,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                            handler=self._data_added_to_viewer)
 
         if self.config == "deconfigged":
+            self.dataset.add_filter('is_flux_cube')
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     def _set_default_viewer_selected(self):
