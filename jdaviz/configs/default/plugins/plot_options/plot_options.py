@@ -484,6 +484,32 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     table_columns_visible_value = List().tag(sync=True)
     table_columns_visible_sync = Dict().tag(sync=True)
 
+    # Downstream configs may register extra layer filter functions and user_api
+    # modifications at import time via the classmethods below, rather than subclassing.
+    _layer_filter_hooks = []
+    _user_api_expose_extra = []
+    _user_api_remove = []
+
+    @classmethod
+    def register_layer_filter(cls, filter_factory):
+        """Register a layer filter factory.
+
+        The factory is called once per plugin instance during ``__init__`` with
+        the plugin instance as its only argument, and must return a filter
+        callable ``(layer_state) -> bool``.  Using a factory (rather than a bare
+        filter function) lets the filter close over plugin attributes such as
+        ``self.layer`` that are not available until instantiation.
+        """
+        cls._layer_filter_hooks = list(cls._layer_filter_hooks) + [filter_factory]
+
+    @classmethod
+    def register_user_api(cls, expose=None, remove=None):
+        """Register extra user_api attributes to expose or remove."""
+        if expose:
+            cls._user_api_expose_extra = list(cls._user_api_expose_extra) + list(expose)
+        if remove:
+            cls._user_api_remove = list(cls._user_api_remove) + list(remove)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -496,6 +522,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.layer.filters += [is_not_wcs_only,
                                'catalog_has_correct_coords_based_on_link_type',
                                'not_in_table_viewer']
+
+        # Apply any layer filter factories registered by downstream configs
+        for filter_factory in self._layer_filter_hooks:
+            self.layer.add_filter(filter_factory(self))
 
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
@@ -829,6 +859,12 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                        'marker_color_mode', 'marker_color',
                        'marker_color_col', 'marker_colormap',
                        'marker_colormap_vmin', 'marker_colormap_vmax']
+
+        # Apply any user_api modifications registered by downstream configs
+        if self._user_api_expose_extra:
+            expose += [e for e in self._user_api_expose_extra if e not in expose]
+        if self._user_api_remove:
+            expose = [e for e in expose if e not in self._user_api_remove]
 
         return PluginUserApi(self, expose)
 

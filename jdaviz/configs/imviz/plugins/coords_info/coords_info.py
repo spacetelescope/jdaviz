@@ -14,7 +14,7 @@ from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView,
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
 from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer, Spectrum2DViewer
 from jdaviz.core.custom_units_and_equivs import PIX2
-from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
+from jdaviz.core.events import ViewerAddedMessage, ViewerRenamedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
@@ -42,6 +42,37 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     _viewer_classes_with_marker = (Spectrum1DViewer, Spectrum2DViewer,
                                    RampvizProfileView, MosvizProfile2DView,
                                    ImvizImageView)
+
+    # Downstream configs may register custom viewer update handlers at import time.
+    # Keys are viewer classes; values are callables with signature
+    # (coords_info_instance, viewer, x, y, mouseevent=True).
+    _viewer_update_handlers = {}
+
+    @classmethod
+    def register_viewer_class(cls, viewer_cls, with_marker=False):
+        """Register a new viewer class to receive mouseover callbacks.
+
+        Parameters
+        ----------
+        viewer_cls : type
+            The viewer class to register.
+        with_marker : bool
+            If True, a scatter marker will be created for this viewer type
+            so the cursor snapping indicator is displayed.
+        """
+        if viewer_cls not in cls._supported_viewer_classes:
+            cls._supported_viewer_classes = cls._supported_viewer_classes + (viewer_cls,)
+        if with_marker and viewer_cls not in cls._viewer_classes_with_marker:
+            cls._viewer_classes_with_marker = cls._viewer_classes_with_marker + (viewer_cls,)
+
+    @classmethod
+    def register_viewer_update_handler(cls, viewer_cls, handler):
+        """Register a handler called from ``update_display`` for a custom viewer type.
+
+        The handler must have the signature
+        ``handler(coords_info, viewer, x, y, mouseevent=True)``.
+        """
+        cls._viewer_update_handlers = {**cls._viewer_update_handlers, viewer_cls: handler}
 
     dataset_icon = Unicode("").tag(
         sync=True
@@ -81,6 +112,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
+        # keep marks dict in sync when a viewer is renamed
+        self.hub.subscribe(self, ViewerRenamedMessage, handler=self._viewer_renamed)
         if self.config in ("cubeviz", 'deconfigged'):
             self.hub.subscribe(
                 self, GlobalDisplayUnitChanged, handler=self._on_global_display_unit_changed
@@ -123,6 +156,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self._app.get_viewer_by_id(msg.viewer_id))
+
+    def _viewer_renamed(self, msg):
+        if msg.old_viewer_ref in self._marks:
+            self._marks[msg.new_viewer_ref] = self._marks.pop(msg.old_viewer_ref)
 
     def _on_global_display_unit_changed(self, msg):
 
@@ -266,6 +303,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                          RampvizImageView)
                         ):
             self._image_viewer_update(viewer, x, y, mouseevent=mouseevent)
+        else:
+            # Dispatch to any handler registered by a downstream config
+            for vcls, handler in self._viewer_update_handlers.items():
+                if isinstance(viewer, vcls):
+                    handler(self, viewer, x, y, mouseevent=mouseevent)
+                    return
 
     def _image_shape_inds(self, image):
         # return the indices in image.shape for the x and y dimension, respectively

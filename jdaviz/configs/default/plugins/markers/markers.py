@@ -50,6 +50,20 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                              'value:unreliable': None,
                              'index': np.nan}
 
+    # Downstream configs may extend the markers table by setting these at import time.
+    # _extra_headers: list of additional column names appended to the config-specific headers.
+    # _extra_default_values: dict of {column_name: default_value} for extra columns.
+    _extra_headers = []
+    _extra_default_values = {}
+
+    # When True, headers_visible and export_table() will omit fully-unpopulated columns.
+    _table_skip_empty_columns = True
+
+    @property
+    def coords_info(self):
+        """Convenience accessor for the CoordsInfo toolbar tool."""
+        return self._app.session.application._tools.get('g-coords-info')
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('table', 'measurements_table',
@@ -92,10 +106,13 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             # allow downstream configs to override headers
             headers = kwargs.get('headers', [])
 
+        headers += list(self._extra_headers)
         headers += ['data_label']
         self.table.headers_avail = headers
         self.table.headers_visible = headers
-        self.table._default_values_by_colname = self._default_table_values
+        default_values = {**self._default_table_values, **self._extra_default_values}
+        self.table._default_values_by_colname = default_values
+        self.table._skip_empty_columns = self._table_skip_empty_columns
 
         self._distance_marks = {}
         self._distance_first_point = None
