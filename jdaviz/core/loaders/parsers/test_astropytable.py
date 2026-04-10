@@ -29,7 +29,7 @@ def test_valid_table_files(deconfigged_helper, tmp_path,
     filepath = str(tmp_path / f'catalog{file_ext}')
     t.write(filepath, format=write_format, overwrite=True)
 
-    parser = AstropyTableParser(deconfigged_helper.app, filepath)
+    parser = AstropyTableParser(deconfigged_helper._app, filepath)
 
     assert parser.input_ext_format == expected_format
 
@@ -48,14 +48,14 @@ def test_format_edge_cases(deconfigged_helper, tmp_path):
     """
     # input is QTable object, not a file
     t = QTable({'a': [1, 2]})
-    parser = AstropyTableParser(deconfigged_helper.app, t)
+    parser = AstropyTableParser(deconfigged_helper._app, t)
     assert parser.is_text_file is False
     assert parser.input_ext_format is None
 
     # input is non-text file with no file extension
     binfile = tmp_path / 'data.bin'
     binfile.write_bytes(b'\x00\x01\x80\xff' * 256)
-    parser = AstropyTableParser(deconfigged_helper.app, str(binfile))
+    parser = AstropyTableParser(deconfigged_helper._app, str(binfile))
     assert parser.is_text_file is False
     assert parser.input_ext_format is None
 
@@ -73,6 +73,6 @@ def test_try_qtable_read_failures(deconfigged_helper, tmp_path, content, fmt,
     """
     f = tmp_path / 'bad.csv'
     f.write_text(content)
-    parser = AstropyTableParser(deconfigged_helper.app, str(f))
+    parser = AstropyTableParser(deconfigged_helper._app, str(f))
     result = parser._try_qtable_read(fmt)
     assert expected_substr in result.meta['exception']
