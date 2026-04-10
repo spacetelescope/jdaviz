@@ -71,6 +71,8 @@ New Features
 
 - Generalize Data Quality plugin. [#4110, #4111]
 
+- Add support for loading Spectra from BinaryHDU and TableHDU extensions. [#4097]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
