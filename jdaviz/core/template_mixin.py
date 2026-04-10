@@ -189,7 +189,7 @@ def _is_image_viewer(viewer):
 
 
 class ViewerPropertiesMixin:
-    # assumes that self.app is defined by the class
+    # assumes that self._app is defined by the class
     def get_matching_viewers(self, filter_or_cls, raise_if_none=False):
         """
         Get all viewers matching a filter
@@ -207,8 +207,8 @@ class ViewerPropertiesMixin:
             A list of viewer instances of the specified class type.
         """
         # mixin can be used on the Application object itself or on anything
-        # that defines self.app to point to the Application object
-        app = getattr(self, 'app', self)
+        # that defines self._app to point to the Application object
+        app = getattr(self, '_app', self)
 
         def is_match(viewer):
             if inspect.isclass(filter_or_cls):
@@ -3507,8 +3507,8 @@ class ApertureSubsetSelect(SubsetSelect):
                 pixel_region = spatial_region
             else:
                 if viewer is None:
-                    if hasattr(self.app._jdaviz_helper, 'default_viewer'):
-                        viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
+                    if hasattr(self._app._jdaviz_helper, 'default_viewer'):
+                        viewer = self._app._jdaviz_helper.default_viewer._obj.glue_viewer
                     elif len(self.image_viewers):
                         viewer = self.image_viewers[0]
                     else:
