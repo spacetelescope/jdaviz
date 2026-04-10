@@ -2,6 +2,8 @@
 UI/UX Style Guide
 *****************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 Tray Plugins
 ------------
 

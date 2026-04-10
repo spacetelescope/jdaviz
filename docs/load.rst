@@ -109,7 +109,7 @@ parameters for loaders. You can enable API hints:
 
     jdaviz.toggle_api_hints()
 
-Or in the GUI, click the :guilabel:`API Hints` button in the top right.
+Or in the UI, click the :guilabel:`API Hints` button in the top right.
 
 When API hints are enabled, you'll see Python code snippets showing how to access and
 set various loader attributes. For example:
@@ -121,7 +121,7 @@ set various loader attributes. For example:
     ldr.format = '1D Spectrum'  # Set the format
     ldr.filename = 'myfile.fits'  # Set the filename
 
-The hints update as you interact with the GUI, showing you the exact Python code
+The hints update as you interact with the UI, showing you the exact Python code
 needed to reproduce your actions programmatically.
 
 Differences from load_data()

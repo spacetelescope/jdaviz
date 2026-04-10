@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframe Component Test</title>
+    <link rel="stylesheet" href="wireframe-demo.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #00617E 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wireframe Component Test</h1>
+    
+    <!-- Wireframe will be loaded here -->
+    <div id="wireframe-placeholder"></div>
+    
+    <script>
+        // Load wireframe HTML
+        fetch("wireframe-base.html")
+            .then(response => response.text())
+            .then(html => {
+                // Replace Jinja2 variable with test value
+                const version = "5.0.0";
+                html = html.replace("{{ jdaviz_version }}", version);
+                document.getElementById("wireframe-placeholder").innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error loading wireframe:', error);
+                document.getElementById("wireframe-placeholder").innerHTML = 
+                    '<p style="color: red;">Error loading wireframe. Make sure wireframe-base.html is in the same directory.</p>';
+            });
+    </script>
+    
+    <!-- Load wireframe controller -->
+    <script src="wireframe-controller.js"></script>
+</body>
+</html>

@@ -158,7 +158,7 @@ class UnitConversion(PluginTemplateMixin):
                                                      items='spectral_y_type_items',
                                                      selected='spectral_y_type_selected')
 
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.observe_traitlets_for_relevancy(
                 traitlets_to_observe=['spectral_unit_selected',
                                       'flux_unit_selected',
@@ -180,7 +180,7 @@ class UnitConversion(PluginTemplateMixin):
             readonly = ['sb_unit']
         if self.has_time:
             expose += ['time_unit']
-        if self.config == 'cubeviz':
+        if self.config in ['cubeviz', 'deconfigged']:
             expose += ['spectral_y_type', 'spectral_y_unit']
         return PluginUserApi(self, expose=expose, readonly=readonly)
 
@@ -216,8 +216,8 @@ class UnitConversion(PluginTemplateMixin):
         if self.config == 'cubeviz':
             # NOTE: this assumes data_collection[0] is the science (flux/sb) cube
             if (
-                len(self.app.data_collection) > 0
-                and not self.app.data_collection[0].meta.get('PIXAR_SR')
+                len(self._app.data_collection) > 0
+                and not self._app.data_collection[0].meta.get('PIXAR_SR')
             ):
                 self.pixar_sr_exists = False
 
@@ -230,12 +230,18 @@ class UnitConversion(PluginTemplateMixin):
 
         # sync viewer and UC plugin units when new data is loaded. this is necessary, for
         # example, when all data is unloaded but unit selections are set in the UC plugin,
-        # and new data is loaded which should use those units
+        # and new data is loaded which should use those units.
         if len(self.spectral_unit_selected) and hasattr(viewer.state, 'x_display_unit'):
             if viewer.state.x_display_unit != self.spectral_unit_selected:
-                xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
-                viewer.state.x_display_unit = xunit
-                viewer.set_plot_axes()
+                # if the unit conversion plugin is set to 'pixels', but the new loaded data
+                # has a spectral axis with physical units, do not sync units
+                orig_unit = u.Unit(viewer.state.x_display_unit)
+                display_unit = u.Unit(self.spectral_unit_selected)
+                unit_types = [str(x) for x in [orig_unit.physical_type, display_unit.physical_type]]
+                if unit_types.count('unknown') + unit_types.count('dimensionless') != 1:
+                    xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
+                    viewer.state.x_display_unit = xunit
+                    viewer.set_plot_axes()
         if len(self.spectral_y_unit) and hasattr(viewer.state, 'y_display_unit'):
             if viewer.state.y_display_unit != self.spectral_y_unit:
                 self._handle_spectral_y_unit()
@@ -246,7 +252,7 @@ class UnitConversion(PluginTemplateMixin):
                 or (self.config in ('cubeviz', 'deconfigged')
                     and not len(self.spectral_y_type_selected))):
 
-            data_obj = self.app._jdaviz_helper.get_data(msg.data.label)
+            data_obj = self._app._jdaviz_helper.get_data(msg.data.label)
 
             # if the viewer is spectral and the data is Spectrum, get flux/sb/spectral
             # axis units from the Spectrum object
@@ -305,6 +311,15 @@ class UnitConversion(PluginTemplateMixin):
             if (viewer.state.x_display_unit == self.spectral_unit_selected
                     and viewer.state.y_display_unit == self.spectral_y_unit):
                 # data already existed in this viewer and display units were already set
+                return
+
+            orig_unit = u.Unit(viewer.state.x_display_unit)
+            display_unit = u.Unit(self.spectral_unit_selected)
+            unit_types = [str(x) for x in [orig_unit.physical_type, display_unit.physical_type]]
+            if unit_types.count('unknown') + unit_types.count('dimensionless') == 1:
+                # if the unit conversion plugin is set to 'pixels', but the new loaded data
+                # has a spectral axis with physical units, do not sync units between
+                # plugin and viewer
                 return
 
             # this spectral viewer was empty (did not have display units set yet),˜

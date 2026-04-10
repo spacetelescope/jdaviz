@@ -36,10 +36,16 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.clear_table`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
     * :meth:`import_catalog`
     * :meth:`zoom_to_selected`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.select_rows`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.select_all`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.select_none`
     * :meth:`search`
-    * :attr:`max_sources`
+    * ``max_sources``
+      Maximum number of catalog sources to retrieve.
     * ``catalog`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``table`` (:class:`~jdaviz.core.template_mixin.Table`):
       Table containing all search results.
@@ -88,7 +94,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
         self.custom_toolbar.name = "Catalog Source ID"
 
         cat_options = ['SDSS', 'Gaia']
-        if not self.app.state.settings.get('server_is_remote', False):
+        if not self._app.state.settings.get('server_is_remote', False):
             cat_options.append('From File...')
         self.catalog = FileImportSelectPluginComponent(self,
                                                        items='catalog_items',
@@ -118,7 +124,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
             self.number_of_results = 0
             self.row_selected_count = 0
 
-            if self._marker_name in self.app.data_collection.labels:
+            if self._marker_name in self._app.data_collection.labels:
                 # all markers are removed from the viewer
                 viewer.remove_markers(marker_name=self._marker_name)
 
@@ -279,13 +285,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
             if query_region_result is None:
                 self.results_available = True
                 self.number_of_results = 0
-                self.app._catalog_source_table = None
+                self._app._catalog_source_table = None
                 viewer.remove_markers(marker_name=self._marker_name)
                 return
 
             # TODO: Filter this table the same way as the actual displayed markers.
             # attach the table to the app for Python extraction
-            self.app._catalog_source_table = query_region_result
+            self._app._catalog_source_table = query_region_result
 
         elif self.catalog_selected == 'Gaia':
             from astroquery.gaia import Gaia
@@ -300,7 +306,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
                 src_id_colname = "source_id"
             if len(sources) == self.max_sources:
                 max_sources_used = True
-            self.app._catalog_source_table = sources
+            self._app._catalog_source_table = sources
 
         elif self.catalog_selected == 'From File...':
             # all exceptions when going through the UI should have prevented setting this path
@@ -311,20 +317,20 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
                 col for col in column_names if col not in self.headers]
             self.table.headers_visible = self.headers
             if len(table) > self.max_sources:
-                self.app._catalog_source_table = table[:self.max_sources]
+                self._app._catalog_source_table = table[:self.max_sources]
                 max_sources_used = True
             else:
-                self.app._catalog_source_table = table
+                self._app._catalog_source_table = table
         else:
             self.results_available = False
             self.number_of_results = 0
-            self.app._catalog_source_table = None
+            self._app._catalog_source_table = None
             raise NotImplementedError(f"{self.catalog_selected} not a supported catalog")
 
         self.results_available = True
-        if not len(self.app._catalog_source_table):
+        if not len(self._app._catalog_source_table):
             self.number_of_results = 0
-            self.app._catalog_source_table = None
+            self._app._catalog_source_table = None
             return
 
         if max_sources_used:
@@ -336,11 +342,11 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
 
         # Convert to pixel coordinates and filter results to be within viewer bounds
         if self.catalog_selected in ["SDSS", "Gaia"]:
-            skycoords = SkyCoord(self.app._catalog_source_table['ra'],
-                                 self.app._catalog_source_table['dec'],
+            skycoords = SkyCoord(self._app._catalog_source_table['ra'],
+                                 self._app._catalog_source_table['dec'],
                                  unit='deg')
         elif self.catalog_selected in ["From File..."]:
-            tbl = self.app._catalog_source_table
+            tbl = self._app._catalog_source_table
             if "sky_centroid" in tbl.colnames:
                 skycoords = tbl["sky_centroid"]
             else:
@@ -361,20 +367,20 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
                 )
 
         pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoords)
-        self.app._catalog_source_table['x_coord'] = pixel_table[0]
-        self.app._catalog_source_table['y_coord'] = pixel_table[1]
+        self._app._catalog_source_table['x_coord'] = pixel_table[0]
+        self._app._catalog_source_table['y_coord'] = pixel_table[1]
         x_coordinates = []
         y_coordinates = []
-        source_table = self.app._catalog_source_table
+        source_table = self._app._catalog_source_table
         mask = ((source_table['x_coord'] < zoom_x_min) |
                 (source_table['x_coord'] > zoom_x_max) |
                 (source_table['y_coord'] < zoom_y_min) |
                 (source_table['y_coord'] > zoom_y_max))
-        self.app._catalog_source_table = self.app._catalog_source_table[~mask]
+        self._app._catalog_source_table = self._app._catalog_source_table[~mask]
         skycoords = skycoords[~mask]
 
         if self.catalog_selected in ["SDSS", "Gaia"]:
-            for row in self.app._catalog_source_table:
+            for row in self._app._catalog_source_table:
                 x_coordinates.append(row['x_coord'])
                 y_coordinates.append(row['y_coord'])
                 row_id = row[src_id_colname]
@@ -391,8 +397,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
         # NOTE: If performance becomes a problem, see
         # https://docs.astropy.org/en/stable/table/index.html#performance-tips
         elif self.catalog_selected in ["From File..."]:
-            for row in self.app._catalog_source_table:  # noqa:E501
-                tbl = self.app._catalog_source_table
+            for row in self._app._catalog_source_table:  # noqa:E501
+                tbl = self._app._catalog_source_table
                 if 'sky_centroid' in tbl.colnames:
                     ra = row['sky_centroid'].ra.deg
                     dec = row['sky_centroid'].dec.deg
@@ -456,7 +462,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
     @property
     def marks(self):
         return {viewer_id: self._get_mark(viewer)
-                for viewer_id, viewer in self.app._viewer_store.items()
+                for viewer_id, viewer in self._app._viewer_store.items()
                 if hasattr(viewer, 'figure')}
 
     @observe('is_active')

@@ -47,6 +47,7 @@ def test_model_params():
                         "Lorentz1D": ["amplitude", "x_0", "fwhm"],
                         "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
                         "BlackBody": ["temperature", "scale"],
+                        "Spline1D": [],
                         }
 
     for model_name in initializers.MODELS.keys():
@@ -56,7 +57,12 @@ def test_model_params():
             # test needs to be updated rather than the code breaking
             raise ValueError(f"{model_name} not in test dictionary of expected parameters")
         expected_params = model_parameters.get(model_name, [])
-        params = initializers.get_model_parameters(model_name)
+
+        params = []
+        # SplineSmoothingFitter does not have knot points, so no scalar parameters
+        # Will need to account for if SplineExactKnotsFitter is implemented
+        if model_name != "Spline1D":
+            params = initializers.get_model_parameters(model_name)
         assert len(params) == len(expected_params)
         assert np.all([p in expected_params for p in params])
 
@@ -190,9 +196,9 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
     # even though the spectral y axis is in 'flux' by default
     plugin.cube_fit = True
 
-    assert cubeviz_helper.app._get_display_unit('spectral') == wav_unit
-    assert cubeviz_helper.app._get_display_unit('spectral_y') == flux_unit
-    assert cubeviz_helper.app._get_display_unit('sb') == sb_unit
+    assert cubeviz_helper._app._get_display_unit('spectral') == wav_unit
+    assert cubeviz_helper._app._get_display_unit('spectral_y') == flux_unit
+    assert cubeviz_helper._app._get_display_unit('sb') == sb_unit
 
     plugin.create_model_component("Linear1D", "L")
     # NOTE: Hardcoding n_cpu=1 to run in serial, it's slower to spool up
@@ -395,8 +401,8 @@ def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
 
     # Check Cubeviz roundtrip. This should automatically go through wcs1d-fits reader.
     cubeviz_helper.load_data(out_fn)
-    assert len(cubeviz_helper.app.data_collection) == 3
-    data_sci = cubeviz_helper.app.data_collection["fitted_cube"]
+    assert len(cubeviz_helper._app.data_collection) == 3
+    data_sci = cubeviz_helper._app.data_collection["fitted_cube"]
     flux_sci = data_sci.get_component("flux")
     assert_allclose(flux_sci.data, fitted_spectrum.flux.value)
     # now that the flux cube was loaded into cubeviz, there will be a factor
@@ -406,7 +412,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
     assert_allclose(coo[0].value, coo_expected[0].value)  # SpectralCoord
     assert_allclose([coo[1].ra.deg, coo[1].dec.deg],
                     [coo_expected[1].ra.deg, coo_expected[1].dec.deg])
-    data_mask = cubeviz_helper.app.data_collection["fitted_cube [MASK]"]
+    data_mask = cubeviz_helper._app.data_collection["fitted_cube [MASK]"]
     flux_mask = data_mask.get_component("flux")
     assert_array_equal(flux_mask.data, mask)
 
@@ -543,7 +549,7 @@ def test_cube_fit_with_nans(cubeviz_helper):
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
-    result = cubeviz_helper.app.data_collection['model']
+    result = cubeviz_helper._app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
 
     # Switch back to non-cube fit, check that units are marked incompatible
@@ -559,7 +565,7 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     spec.flux[5, 5, 7] = 10 * u.nJy
     cubeviz_helper.load_data(spec, data_label="test")
 
-    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    sv = cubeviz_helper._app.get_viewer('spectrum-viewer')
     sv.apply_roi(XRangeROI(0, 5))
 
     mf = cubeviz_helper.plugins["Model Fitting"]
@@ -571,7 +577,7 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
-    result = cubeviz_helper.app.data_collection['model']
+    result = cubeviz_helper._app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
 
 
@@ -595,7 +601,7 @@ def test_fit_with_count_units(cubeviz_helper):
 
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'ct / pix2'
 
-    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    model_flux = cubeviz_helper._app.data_collection[-1].get_component('flux')
     assert model_flux.units == 'ct / pix2'
 
 
@@ -629,7 +635,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
                                       [9.30e-05, 9.80e-05, 1.03e-04, 1.08e-04],
                                       [9.40e-05, 9.90e-05, 1.04e-04, 1.09e-04]]).T
 
-    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    model_flux = cubeviz_helper._app.data_collection[-1].get_component('flux')
     assert model_flux.units == f'MJy / {solid_angle_string}'
     assert np.allclose(model_flux.data[1, :, :], expected_result_slice)
 
@@ -640,7 +646,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
-    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    model_flux = cubeviz_helper._app.data_collection[-1].get_component('flux')
     assert model_flux.units == f'Jy / {solid_angle_string}'
     assert np.allclose(model_flux.data[1, :, :], expected_result_slice * 1e6)
 
@@ -665,7 +671,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
-    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    model_flux = cubeviz_helper._app.data_collection[-1].get_component('flux')
     assert model_flux.units == expected_unit_string
 
 
@@ -727,7 +733,7 @@ def test_different_fitters(specviz_helper, spectrum1d, fitter):
     else:
         mf.create_model_component('Linear1D')
 
-    mf.fitter_component.selected = fitter
+    mf.fitter.selected = fitter
     # change maxiter to 50
     if fitter != 'LinearLSQFitter':
         mf.fitter_parameters['parameters'][0]['value'] = 50
@@ -736,7 +742,7 @@ def test_different_fitters(specviz_helper, spectrum1d, fitter):
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
 
-    result = specviz_helper.app.data_collection['model']
+    result = specviz_helper._app.data_collection['model']
     expected_result = [6000., 6222.22222222, 6444.44444444, 6666.66666667, 6888.88888889,
                        7111.11111111, 7333.33333333, 7555.55555556, 7777.77777778, 8000.] * u.AA
     assert_allclose(result.get_object().spectral_axis, expected_result)
@@ -761,7 +767,7 @@ def test_specviz2d_linking(specviz2d_helper):
     spectrum_data = Spectrum(data, wcs=wcs, meta=header)
     specviz2d_helper.load_data(spectrum_2d=spectrum_data)
 
-    viewer_1d = specviz2d_helper.app.get_viewer(
+    viewer_1d = specviz2d_helper._app.get_viewer(
         specviz2d_helper._default_spectrum_viewer_reference_name)
 
     mf = specviz2d_helper.plugins['Model Fitting']
@@ -807,7 +813,7 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     mf = specviz_helper.plugins['Model Fitting']
     uc = specviz_helper.plugins['Unit Conversion']
 
-    mf._obj.fitter_component.selected = 'LevMarLSQFitter'
+    mf._obj.fitter.selected = 'LevMarLSQFitter'
 
     # Create first model component with flux unit MJy
     uc.flux_unit = 'MJy'
@@ -868,6 +874,251 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     # Make sure the slope units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'W / (Angstrom Hz m2)'
 
-    model = specviz_helper.app.data_collection['model'].get_object(Spectrum)
+    model = specviz_helper._app.data_collection['model'].get_object(Spectrum)
     assert model.flux.unit == 'W / (Hz m2)'
     assert_allclose(model.flux, spec.flux.to('W / (Hz m2)'), rtol=1e-2)
+
+
+def test_get_fitter_parameter_all_fitters(specviz_helper, spectrum1d):
+    """Test the get_fitter_parameter method for all non-spline fitters."""
+    fitter_configs = [
+        ('TRFLSQFitter', {'maxiter': 100, 'filter_non_finite': True,
+                          'calc_uncertainties': True}),
+        ('DogBoxLSQFitter', {'maxiter': 100, 'filter_non_finite': True,
+                             'calc_uncertainties': True}),
+        ('LMLSQFitter', {'maxiter': 100, 'filter_non_finite': True,
+                         'calc_uncertainties': True}),
+        ('LevMarLSQFitter', {'maxiter': 100, 'filter_non_finite': True,
+                             'calc_uncertainties': True}),
+        ('LinearLSQFitter', {'calc_uncertainties': True}),
+        ('SLSQPLSQFitter', {'maxiter': 100}),
+        ('SimplexLSQFitter', {'maxiter': 100}),
+    ]
+
+    specviz_helper.load_data(spectrum1d)
+    plugin = specviz_helper.plugins["Model Fitting"]
+
+    for fitter_name, expected_params in fitter_configs:
+        # Set the fitter
+        plugin.fitter = fitter_name
+
+        # Test getting each expected parameter and verify default value
+        for param_name, expected_value in expected_params.items():
+            actual_value = plugin.get_fitter_parameter(param_name)
+            assert actual_value == expected_value, (
+                f"Fitter {fitter_name}: expected {param_name}={expected_value}, "
+                f"got {actual_value}"
+            )
+
+        # Test getting non-existent parameter returns None
+        non_existent = plugin.get_fitter_parameter('non_existent_param')
+        assert non_existent is None
+
+        # Test that parameters not in this fitter return None
+        if 'maxiter' not in expected_params:
+            assert plugin.get_fitter_parameter('maxiter') is None
+        if 'filter_non_finite' not in expected_params:
+            assert plugin.get_fitter_parameter('filter_non_finite') is None
+
+
+def test_set_fitter_parameter_all_fitters(specviz_helper, spectrum1d):
+    """Test the set_fitter_parameter method for all non-spline fitters."""
+    fitter_configs = [
+        ('TRFLSQFitter', {'maxiter': 50, 'filter_non_finite': False,
+                          'calc_uncertainties': False}),
+        ('DogBoxLSQFitter', {'maxiter': 75, 'filter_non_finite': False,
+                             'calc_uncertainties': False}),
+        ('LMLSQFitter', {'maxiter': 125, 'filter_non_finite': False,
+                         'calc_uncertainties': False}),
+        ('LevMarLSQFitter', {'maxiter': 150, 'filter_non_finite': False,
+                             'calc_uncertainties': False}),
+        ('LinearLSQFitter', {'calc_uncertainties': False}),
+        ('SLSQPLSQFitter', {'maxiter': 200}),
+        ('SimplexLSQFitter', {'maxiter': 250}),
+    ]
+
+    specviz_helper.load_data(spectrum1d)
+    plugin = specviz_helper.plugins["Model Fitting"]
+
+    for fitter_name, test_values in fitter_configs:
+        # Set the fitter
+        plugin.fitter = fitter_name
+
+        # Test setting each parameter and verify it was set correctly
+        for param_name, test_value in test_values.items():
+            plugin.set_fitter_parameter(param_name, test_value)
+            actual_value = plugin.get_fitter_parameter(param_name)
+            assert actual_value == test_value, (
+                f"Fitter {fitter_name}: failed to set {param_name}={test_value}, "
+                f"got {actual_value}"
+            )
+
+        # Test that setting non-existent parameter doesn't raise error
+        plugin.set_fitter_parameter('non_existent_param', 999)
+        assert plugin.get_fitter_parameter('non_existent_param') is None
+
+
+def test_spline_fitter_get_set_parameters(specviz_helper, spectrum1d):
+    """Test get/set fitter parameters for SplineSmoothingFitter."""
+    specviz_helper.load_data(spectrum1d)
+    plugin = specviz_helper.plugins["Model Fitting"]
+
+    # Create Spline1D model to enable SplineSmoothingFitter
+    plugin.create_model_component('Spline1D')
+    plugin.fitter = 'SplineSmoothingFitter'
+
+    # Test getting default parameters
+    assert plugin.get_fitter_parameter('maxiter') == 100
+    assert plugin.get_fitter_parameter('smoothing_factor') == 20.0
+    assert plugin.get_fitter_parameter('degree') == 3.0
+
+    # Test setting parameters
+    plugin.set_fitter_parameter('maxiter', 50)
+    assert plugin.get_fitter_parameter('maxiter') == 50
+
+    plugin.set_fitter_parameter('smoothing_factor', 0.5)
+    assert plugin.get_fitter_parameter('smoothing_factor') == 0.5
+
+    plugin.set_fitter_parameter('degree', 4.0)
+    assert plugin.get_fitter_parameter('degree') == 4.0
+
+    # Test non-existent parameter
+    assert plugin.get_fitter_parameter('non_existent') is None
+    plugin.set_fitter_parameter('non_existent', 123)
+    assert plugin.get_fitter_parameter('non_existent') is None
+
+
+def test_fitter_parameter_persistence(specviz_helper, spectrum1d):
+    """Test that fitter parameters persist when switching between fitters."""
+    specviz_helper.load_data(spectrum1d)
+    plugin = specviz_helper.plugins["Model Fitting"]
+
+    # Set custom values for multiple fitters
+    fitter_configs = {
+        'LevMarLSQFitter': {'maxiter': 75},
+        'SimplexLSQFitter': {'maxiter': 150},
+        'TRFLSQFitter': {'maxiter': 225, 'filter_non_finite': False},
+        'LinearLSQFitter': {'calc_uncertainties': False},
+    }
+
+    # Set all configurations
+    for fitter_name, params in fitter_configs.items():
+        plugin.fitter = fitter_name
+        for param_name, param_value in params.items():
+            plugin.set_fitter_parameter(param_name, param_value)
+
+    # Verify all configurations persisted
+    for fitter_name, params in fitter_configs.items():
+        plugin.fitter = fitter_name
+        for param_name, expected_value in params.items():
+            actual_value = plugin.get_fitter_parameter(param_name)
+            assert actual_value == expected_value, (
+                f"Fitter {fitter_name}: parameter {param_name} did not persist, "
+                f"expected {expected_value}, got {actual_value}"
+            )
+
+
+def test_spline(specviz_helper, spectrum1d):
+    data_label = 'test'
+    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    mf = specviz_helper.plugins['Model Fitting']._obj
+    mf.create_model_component('Spline1D')
+
+    mf.fitter.selected = 'SplineSmoothingFitter'
+
+    # check that smoothing_factor parameter exists and has a value (initialized as 0
+    # by unitl the fitter component is selected)
+    assert mf.fitter_parameters['parameters'][1]['name'] == 'smoothing_factor'
+    assert mf.fitter_parameters['parameters'][1]['value'] is not None
+
+    deg_param = next(p for p in mf.fitter_parameters['parameters']
+                     if p['name'] == 'degree')
+
+    # degree must be between 1 and 5
+    deg_param['value'] = 0
+    with pytest.raises(ValueError, match=r"k should be 1 <= k <= 5"):
+        mf.calculate_fit(add_data=False)
+    deg_param['value'] = 6
+    with pytest.raises(ValueError, match=r"k should be 1 <= k <= 5"):
+        mf.calculate_fit(add_data=False)
+
+    deg_param['value'] = 3
+
+    mf.calculate_fit(add_data=True)
+
+    # ensure that Spline1D is not combined with any other model components
+    mf.create_model_component('Const1D')
+    assert mf.model_equation_invalid_msg == (
+                    "Spline1D cannot be combined with other model components."
+                )
+    mf.remove_model_component('C')
+
+    # ensure that only SplineSmoothingFitter fitter component can be used
+    # with the Spline1D model parameter
+    assert mf.fitter.choices == ['SplineSmoothingFitter']
+
+    mf.remove_model_component('S')
+    mf.create_model_component('Const1D')
+
+    # make sure fitter components update when Spline1D model component is removed
+    assert mf.fitter.choices == ['TRFLSQFitter',
+                                 'DogBoxLSQFitter',
+                                 'LMLSQFitter',
+                                 'LevMarLSQFitter',
+                                 'LinearLSQFitter',
+                                 'SLSQPLSQFitter',
+                                 'SimplexLSQFitter',
+                                 'SplineSmoothingFitter']
+
+
+def test_model_fitting_load_table_into_data_collection(specviz_helper, spectrum1d):
+    """
+    Test that model fitting table can be loaded back into the data collection
+    using the 'Load into App' functionality.
+    """
+    # Load data
+    specviz_helper.load_data(spectrum1d, data_label='test_spectrum')
+
+    # Get Model Fitting plugin
+    mf = specviz_helper.plugins['Model Fitting']
+
+    # Create and fit a linear model
+    mf.create_model_component('Linear1D')
+    mf.add_results.label = 'linear_fit_1'
+    mf._obj.parallel_n_cpu = 1
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
+        mf.calculate_fit(add_data=True)
+
+    # Create and fit a Gaussian model
+    mf.create_model_component('Gaussian1D', model_component_label='G')
+    mf.add_results.label = 'composite_fit'
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
+        warnings.filterwarnings('ignore', message='The fit may be unsuccessful*')
+        mf.calculate_fit(add_data=True)
+
+    # Verify the table has results
+    mf_table = mf.export_table()
+    assert len(mf_table) == 2
+
+    # Now test loading the table back into the data collection
+    # Open the loader panel
+    mf.table._obj.loader_panel_ind = 0
+
+    # Access the object loader via the loaders property
+    loaders = mf.table.loaders
+    object_loader = loaders['object']
+
+    # The object should be set to the table
+    assert object_loader.object is not None
+    assert len(object_loader.object) == 2
+
+    # Verify the loaded table has the expected columns
+    loaded_table = object_loader.object
+    assert 'model' in loaded_table.colnames
+    assert 'data_label' in loaded_table.colnames
+    assert 'equation' in loaded_table.colnames
+
+    # Verify the table can be accessed and has correct data
+    assert len(loaded_table) == 2

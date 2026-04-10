@@ -65,6 +65,13 @@ class FileDropResolver(BaseResolver):
         self._update_format_items()
         self.progress = 100
 
+    @property
+    def output(self):
+        result = self.parsed_input
+        if hasattr(result, 'seek'):
+            result.seek(0)
+        return result
+
     def parse_input(self):
         # this will return a bytes object of the file contents
         return io.BytesIO(self._file_info.get('data'))

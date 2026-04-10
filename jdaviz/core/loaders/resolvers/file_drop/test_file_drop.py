@@ -32,7 +32,7 @@ def file_drop_resolver(deconfigged_helper):
         with patch('jdaviz.core.loaders.resolvers.file_drop.file_drop.reacton') as mock_reacton:
             mock_reacton.render.return_value = (Mock(), Mock())
             # We could also mock the app if needed
-            resolver = FileDropResolver(app=deconfigged_helper.app)
+            resolver = FileDropResolver(app=deconfigged_helper._app)
             return resolver
 
 
@@ -73,7 +73,7 @@ class TestFileDropResolverBasic:
                   as mock_reacton):
                 mock_reacton.render.return_value = (Mock(), Mock())
 
-                _ = FileDropResolver(app=deconfigged_helper.app)
+                _ = FileDropResolver(app=deconfigged_helper._app)
 
                 # Check that widget was created with correct parameters
                 mock_widget.assert_called_once()
@@ -290,7 +290,6 @@ class TestFileDropResolverEdgeCases:
         file_drop_resolver._file_info = {'name': 'large_file.dat',
                                          'data': large_data}
         result = file_drop_resolver.parse_input()
-
         assert isinstance(result, io.BytesIO)
         # Read in chunks to avoid memory issues in test
         chunk = result.read(1024)
@@ -331,7 +330,6 @@ class TestFileDropResolverEdgeCases:
         # parse_input uses .get() which returns None
         # io.BytesIO(None) creates empty BytesIO, doesn't raise
         result = file_drop_resolver.parse_input()
-
         assert isinstance(result, io.BytesIO)
         # Should be empty since data was None
         assert result.read() == b''
@@ -391,6 +389,7 @@ class TestFileDropResolverIntegration:
 
                 # Parsing - astropy is lenient, may parse as table
                 parsed = file_drop_resolver.parse_input()
+
                 table = file_drop_resolver._parsed_input_to_table(parsed)
                 # Either returns None or a table (astropy is very lenient)
                 assert table is None or isinstance(table, Table)

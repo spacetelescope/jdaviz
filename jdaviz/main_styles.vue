@@ -166,6 +166,7 @@ div.output_wrapper {
   border-radius: 2px !important;
   border: 1px #003B4D solid !important;
   color: black !important;
+  z-index: 10000 !important;
 }
 
 .v-expansion-panel-content__wrap {
@@ -203,6 +204,15 @@ a:active {
 .jdaviz-nested-toolbar .v-icon, .jdaviz-nested-toolbar img {
   /* icons from dark to (consistently) light */
   filter: invert(1) saturate(1) brightness(100);
+}
+
+.theme--dark .jdaviz-nested-toolbar .v-icon:not(.suboptions-carrot),
+.theme--dark .plugin-nested-toolbar .v-icon:not(.suboptions-carrot) {
+  /* in dark mode, Vuetify icons are already white; cancel the inversion above
+     so they remain white on the dark toolbar background.
+     .suboptions-carrot is excluded because it has color: black forced, so it
+     still needs the inversion to appear white. */
+  filter: none;
 }
 
 .jdaviz-nested-toolbar .v-btn, .plugin-nested-toolbar .v-btn {

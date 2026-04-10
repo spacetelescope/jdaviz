@@ -1,13 +1,159 @@
 import warnings
 
 import astropy.units as u
+from astropy.utils.exceptions import AstropyDeprecationWarning
+
 
 __all__ = ['UserApiWrapper', 'PluginUserApi',
            'LoaderUserApi', 'ImporterUserApi',
-           'ViewerUserApi', 'ViewerWindowUserApi']
+           'ViewerUserApi', 'ViewerWindowUserApi',
+           'DataApi', 'SpectralDataApi', 'SpatialDataApi',
+           'TemporalSpatialDataApi', 'SpectralSpatialDataApi']
 
 _internal_attrs = ('_obj', '_expose', '_expose_nested', '_items', '_readonly', '_exclude_from_dict',
                    '__doc__', '_deprecation_msg', '_deprecated', '_repr_callable')
+
+
+class DataApi:
+    def __init__(self, app, data_label):
+        self._app = app
+        self._data_label = data_label
+
+    def __repr__(self):
+        return f'<Data API for {self._data_label}>'
+
+    def get_data(self, cls=None, use_display_units=False):
+        return self._app._jdaviz_helper._get_data(self._data_label,
+                                                  cls=cls,
+                                                  use_display_units=use_display_units)
+
+    def add_to_viewer(self, viewer_label):
+        viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
+        if viewer is None:
+            raise ValueError(f"{viewer_label} is not a valid viewer.  Valid viewers are: {list(self._app._jdaviz_helper.viewers.keys())}")  # noqa
+        dm = viewer.data_menu
+        unloaded_data = dm._obj.dataset.choices
+        if self._data_label in dm.layer.choices:
+            raise ValueError(f"{self._data_label} is already loaded into {viewer_label}.  Valid data to be loaded are: {unloaded_data}")  # noqa
+        if self._data_label not in unloaded_data:
+            raise ValueError(f"{self._data_label} is not one of the valid data to be loaded into {viewer_label}.  Valid data are: {unloaded_data}")  # noqa
+        dm.add_data(self._data_label)
+
+
+class SpectralDataApi(DataApi):
+    """DataApi for spectral data that supports spectral subsets."""
+
+    def get_data(self, spectral_subset=None, cls=None, use_display_units=False):
+        """
+        Get the data as an object with optional spectral subset applied.
+
+        Parameters
+        ----------
+        spectral_subset : str, optional
+            Spectral subset to apply to the data.
+        cls : class, optional
+            The type to return the data as.
+        use_display_units : bool, optional
+            Whether to convert to display units.
+
+        Returns
+        -------
+        data : object
+            The data object with subset applied.
+        """
+        return self._app._jdaviz_helper._get_data(self._data_label,
+                                                  spectral_subset=spectral_subset,
+                                                  cls=cls,
+                                                  use_display_units=use_display_units)
+
+
+class SpatialDataApi(DataApi):
+    """DataApi for spatial/image data that supports spatial subsets."""
+
+    def get_data(self, spatial_subset=None, cls=None, use_display_units=False):
+        """
+        Get the data as an object with optional spatial subset applied.
+
+        Parameters
+        ----------
+        spatial_subset : str, optional
+            Spatial subset to apply to the data.
+        cls : class, optional
+            The type to return the data as.
+        use_display_units : bool, optional
+            Whether to convert to display units.
+
+        Returns
+        -------
+        data : object
+            The data object with subset applied.
+        """
+        return self._app._jdaviz_helper._get_data(self._data_label,
+                                                  spatial_subset=spatial_subset,
+                                                  cls=cls,
+                                                  use_display_units=use_display_units)
+
+
+class TemporalSpatialDataApi(DataApi):
+    """DataApi for ramp data that supports spatial and temporal subsets."""
+
+    def get_data(self, spatial_subset=None, temporal_subset=None,
+                 cls=None, use_display_units=False):
+        """
+        Get the data as an object with optional spatial and temporal subsets applied.
+
+        Parameters
+        ----------
+        spatial_subset : str, optional
+            Spatial subset to apply to the data.
+        temporal_subset : str, optional
+            Temporal subset to apply to the data.
+        cls : class, optional
+            The type to return the data as.
+        use_display_units : bool, optional
+            Whether to convert to display units.
+
+        Returns
+        -------
+        data : object
+            The data object with subsets applied.
+        """
+        return self._app._jdaviz_helper._get_data(self._data_label,
+                                                  spatial_subset=spatial_subset,
+                                                  temporal_subset=temporal_subset,
+                                                  cls=cls,
+                                                  use_display_units=use_display_units)
+
+
+class SpectralSpatialDataApi(DataApi):
+    """DataApi for cube data that supports both spectral and spatial subsets."""
+
+    def get_data(self, spatial_subset=None, spectral_subset=None,
+                 cls=None, use_display_units=False):
+        """
+        Get the data as an object with optional spatial and spectral subsets applied.
+
+        Parameters
+        ----------
+        spatial_subset : str, optional
+            Spatial subset to apply to the data.
+        spectral_subset : str, optional
+            Spectral subset to apply to the data.
+        cls : class, optional
+            The type to return the data as.
+        use_display_units : bool, optional
+            Whether to convert to display units.
+
+        Returns
+        -------
+        data : object
+            The data object with subsets applied.
+        """
+        return self._app._jdaviz_helper._get_data(self._data_label,
+                                                  spatial_subset=spatial_subset,
+                                                  spectral_subset=spectral_subset,
+                                                  cls=cls,
+                                                  use_display_units=use_display_units)
 
 
 class UserApiWrapper:
@@ -153,6 +299,10 @@ class UserApiWrapper:
                 return _value(item.to_dict())
             if hasattr(item, 'selected'):
                 return item.selected
+            # Handle AutoTextField objects by returning their value
+            from jdaviz.core.template_mixin import AutoTextField
+            if isinstance(item, AutoTextField):
+                return item.value
             return item
 
         return {k: _value(getattr(self, k)) for k in self._expose
@@ -164,6 +314,9 @@ class UserApiWrapper:
         # loop through expose so that plugins can dictate the order that items should be populated
         for k in self._expose:
             if k not in d:
+                continue
+            # Skip readonly attributes - they shouldn't be set from dict
+            if k in self._readonly:
                 continue
             v = d.get(k)
             if hasattr(getattr(self, k), '__call__'):
@@ -199,9 +352,15 @@ class PluginUserApi(UserApiWrapper):
 
     def __repr__(self):
         if self._deprecation_msg:
-            warnings.warn(self._deprecation_msg, DeprecationWarning)
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return f'<{self._obj._registry_label} API>'
+
+    def __setattr__(self, *args, **kwargs):
+        if hasattr(self, '_deprecation_msg') and self._deprecation_msg:
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
+            super().__setattr__('_deprecation_msg', None)
+        return super().__setattr__(*args, **kwargs)
 
 
 class LoaderUserApi(UserApiWrapper):
@@ -221,11 +380,21 @@ class LoaderUserApi(UserApiWrapper):
                                           'observation_table', 'file_table',
                                           'file_cache',
                                           'file_timeout',
-                                          'file_local_path']))
+                                          'file_local_path',
+                                          'enable_footprint_selection_tools',
+                                          'disable_footprint_selection_tools']))
         super().__init__(loader, expose, readonly, excl_from_dict, deprecated)
 
     def __repr__(self):
         return f'<{self._obj._registry_label} API>'
+
+    def __setattr__(self, attr, value):
+        result = super().__setattr__(attr, value)
+        if attr not in _internal_attrs:
+            resolver_err = getattr(self._obj, 'parsed_input_is_resolvable', '')
+            if resolver_err:
+                raise ValueError(resolver_err)
+        return result
 
 
 class ImporterUserApi(UserApiWrapper):
@@ -292,13 +461,13 @@ class ViewerUserApi(UserApiWrapper):
 
     def __getattr__(self, *args, **kwargs):
         if super().__getattr__('_deprecation_msg'):
-            warnings.warn(self._deprecation_msg, DeprecationWarning)
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return super().__getattr__(*args, **kwargs)
 
     def __setattr__(self, *args, **kwargs):
         if hasattr(self, '_deprecation_msg') and self._deprecation_msg:
-            warnings.warn(self._deprecation_msg, DeprecationWarning)
+            warnings.warn(self._deprecation_msg, AstropyDeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return super().__setattr__(*args, **kwargs)
 

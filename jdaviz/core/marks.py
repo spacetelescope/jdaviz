@@ -22,8 +22,8 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
            'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark',
-           'CatalogMark', 'FootprintOverlay', 'ApertureMark', 'DistanceMeasurement',
-           'DistanceLabel']
+           'CatalogMark', 'TableSelectionMark', 'FootprintOverlay', 'ApertureMark',
+           'DistanceMeasurement', 'DistanceLabel']
 
 accent_color = "#c75d2c"
 
@@ -536,12 +536,12 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
 
     def _update_label(self):
         def _formatted_value(value):
-            power = abs(np.log10(value))
-            if power >= 3:
-                # use scientific notation
-                return f'{value:0.4e}'
-            else:
-                return f'{value:0.4f}'
+            if value > 0:
+                power = abs(np.log10(value))
+                if power >= 3:
+                    # use scientific notation
+                    return f'{value:0.4e}'
+            return f'{value:0.4f}'
 
         valuestr = _formatted_value(self.value)
         xunit = str(self.xunit) if self.xunit is not None else ''
@@ -693,7 +693,9 @@ class PluginLine(Lines, PluginMark, HubListener):
         # color is same blue as import button
         kwargs.setdefault('colors', [accent_color])
         self.label = kwargs.get('label')
-        super().__init__(x=x, y=y, scales=kwargs.pop('scales', viewer.scales), **kwargs)
+        # default to viewer scales, overriding any keys sent through scales kwarg
+        scales = {**viewer.scales, **kwargs.pop('scales', {})}
+        super().__init__(x=x, y=y, scales=scales, **kwargs)
 
 
 class PluginScatter(Scatter, PluginMark, HubListener):
@@ -701,7 +703,9 @@ class PluginScatter(Scatter, PluginMark, HubListener):
         self.viewer = viewer
         # default color is same blue as import button
         kwargs.setdefault('colors', [accent_color])
-        super().__init__(x=x, y=y, scales=kwargs.pop('scales', viewer.scales), **kwargs)
+        # default to viewer scales, overriding any keys sent through scales kwarg
+        scales = {**viewer.scales, **kwargs.pop('scales', {})}
+        super().__init__(x=x, y=y, scales=scales, **kwargs)
 
 
 class LineAnalysisContinuum(PluginLine):
@@ -752,6 +756,17 @@ class MarkersMark(PluginScatter):
 class CatalogMark(PluginScatter):
     def __init__(self, viewer, **kwargs):
         kwargs.setdefault('marker', 'circle')
+        super().__init__(viewer, **kwargs)
+
+
+class TableSelectionMark(PluginScatter):
+    """Mark to highlight table row selections in image viewers."""
+    def __init__(self, viewer, **kwargs):
+        kwargs.setdefault('marker', 'circle')
+        kwargs.setdefault('colors', ['#c75d2c'])  # accent/active orange color
+        kwargs.setdefault('default_size', 100)
+        kwargs.setdefault('fill', False)
+        kwargs.setdefault('stroke_width', 3)
         super().__init__(viewer, **kwargs)
 
 

@@ -4,12 +4,15 @@ from pathlib import Path
 from astropy.io.registry.base import IORegistryError
 from glue_jupyter.common.toolbar_vuetify import read_icon
 import ipyvuetify as v
-from traitlets import List, Unicode, Dict, Bool, observe
+from traitlets import List, Unicode, Dict, Bool, observe, Any
+from ipywidgets import widget_serialization
+from solara import FileBrowser, reactive
+import reacton
 
+import jdaviz as jd
 from jdaviz import configs as jdaviz_configs
 from jdaviz import __version__
 from jdaviz.cli import DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY, ALL_JDAVIZ_CONFIGS
-from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.data_formats import identify_helper
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.template_mixin import show_widget
@@ -85,6 +88,17 @@ def _launch_config_with_data(config, data=None, show=True, filepath=None, **kwar
     Jdaviz ConfigHelper : jdaviz.core.helpers.ConfigHelper
         The loaded ConfigHelper with data loaded
     '''
+    # Deprecate non-mosviz configs
+    deprecated_configs = ['cubeviz', 'imviz', 'rampviz', 'specviz', 'specviz2d']
+    if config.lower() in deprecated_configs:
+        import warnings
+        warnings.warn(
+            f"{config.capitalize()} is deprecated and will be removed in version 5.2. "
+            "Please use the top-level App instead.",
+            DeprecationWarning,
+            stacklevel=3
+        )
+
     viz_class = getattr(jdaviz_configs, config.capitalize())
 
     # Create config instance
@@ -117,9 +131,8 @@ class Launcher(v.VuetifyTemplate):
     hint = Unicode().tag(sync=True)
     vdocs = Unicode("").tag(sync=True)  # App not available yet, so we need to recompute it here
     # File picker Traitlets
-    error_message = Unicode().tag(sync=True)
-    valid_path = Bool(True).tag(sync=True)
-    file_chooser_visible = Bool(False).tag(sync=True)
+    file_browser_widget = Any(None).tag(sync=True, **widget_serialization)
+    file_browser_visible = Bool(False).tag(sync=True)
 
     # Define Icons
     cubeviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'cubeviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -127,6 +140,8 @@ class Launcher(v.VuetifyTemplate):
     specviz2d_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'specviz2d_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
     mosviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'mosviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
     imviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'imviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    # General Jdaviz logo for deconfigged button
+    jdaviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'jdaviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, main=None, configs=ALL_JDAVIZ_CONFIGS, filepath='',
                  height=None, *args, **kwargs):
@@ -149,12 +164,14 @@ class Launcher(v.VuetifyTemplate):
             'specviz': self.specviz_icon,
             'specviz2d': self.specviz2d_icon,
             'mosviz': self.mosviz_icon,
-            'imviz': self.imviz_icon
+            'imviz': self.imviz_icon,
+            'jdaviz': self.jdaviz_icon
         }
 
-        start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
-        self._file_chooser = FileChooser(start_path)
-        self.components = {'g-file-import': self._file_chooser}
+        self.file_browser_widget = None
+        self.file_browser_dir = None
+        self.selected_file = None
+        self.components = {}
         self.loaded_data = None
         self.hint = STATUS_HINTS['idle']
 
@@ -189,12 +206,36 @@ class Launcher(v.VuetifyTemplate):
         # Clear hint if it's still stuck on "Identifying". We're in an ambiguous state
         self.hint = ('' if self.hint == STATUS_HINTS['identifying'] else self.hint)
 
+    def _create_file_browser(self):
+        if self.file_browser_widget is None:
+            # Ensure JDAVIZ_START_DIR is set to absolute path of current working directory
+            if 'JDAVIZ_START_DIR' not in os.environ:
+                os.environ['JDAVIZ_START_DIR'] = os.path.abspath(os.getcwd())
+
+            start_path = Path(os.path.abspath(os.environ['JDAVIZ_START_DIR']))
+            self.file_browser_dir = reactive(start_path)
+            self.selected_file = reactive('')
+            self.file_browser_widget_el = FileBrowser(
+                directory=self.file_browser_dir,
+                selected=self.selected_file,
+                on_path_select=self._on_file_select,
+                can_select=True
+            )
+            self.file_browser_widget, rc = reacton.render(self.file_browser_widget_el)
+
+    def _on_file_select(self, path):
+        # don't set filepath here, only set it when user clicks Import button
+        pass
+
+    def vue_open_file_dialog(self, *args, **kwargs):
+        self._create_file_browser()
+        self.file_browser_visible = True
+
     def vue_choose_file(self, *args, **kwargs):
-        if self._file_chooser.file_path is None:
-            self.error_message = "No file selected"
-        elif Path(self._file_chooser.file_path).is_file():
-            self.file_chooser_visible = False
-            self.filepath = self._file_chooser.file_path
+        if self.selected_file is not None and self.selected_file.value:
+            full_path = os.path.join(self.file_browser_dir.value, self.selected_file.value)
+            self.filepath = full_path
+        self.file_browser_visible = False
 
     def vue_launch_config(self, event):
         config = event.get('config')
@@ -202,11 +243,23 @@ class Launcher(v.VuetifyTemplate):
                                           filepath=self.filepath, show=False)
         if self.height not in ['100%', '100vh']:
             # We're in jupyter mode. Set to default height
-            default_height = helper.app.state.settings['context']['notebook']['max_height']
-            helper.app.layout.height = default_height
+            default_height = helper._app.state.settings['context']['notebook']['max_height']
+            helper._app.layout.height = default_height
             self.main.height = default_height
         self.main.color = 'transparent'
-        self.main.children = [helper.app]
+        self.main.children = [helper._app]
+
+    def vue_launch_jdaviz(self, _):
+        # Launch the deconfigged version of Jdaviz
+        jdaviz_app = jd.gca()._app
+        jd.loaders['file'].open_in_tray()
+        if self.height not in ['100%', '100vh']:
+            # We're in jupyter mode. Set to default height
+            default_height = jdaviz_app.state.settings['context']['notebook']['max_height']
+            jdaviz_app.layout.height = default_height
+            self.main.height = default_height
+        self.main.color = 'transparent'
+        self.main.children = [jdaviz_app]
 
     @property
     def main_with_launcher(self):

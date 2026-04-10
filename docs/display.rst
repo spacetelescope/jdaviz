@@ -9,26 +9,24 @@ that is the tool will show underneath the notebook cell it was called from:
 
 .. code-block:: python
 
-    from jdaviz import Imviz
+    import jdaviz as jd
 
-    imviz = Imviz()
-    imviz.show()
-    #  Because Imviz only accepts images (for now), it is not required to specify format here.
-    imviz.load('filename.fits', format='Image')
+    jd.show()
+    jd.load('filename.fits', format='Image')
 
 The height of the application in the notebook can be changed by passing an integer
 specifying the height in pixels to the ``height`` argument of ``show``, for example:
 
 .. code-block:: python
 
-    imviz.show(height=800)
+    jd.show(height=800)
 
 You can additionally specify the location with the ``loc`` argument.
 For example, ``inline`` can be specified manually with:
 
 .. code-block:: python
 
-    imviz.show(loc='inline')
+    jd.show(loc='inline')
 
 Detached Popout
 ---------------
@@ -40,19 +38,19 @@ The following shows ``jdaviz`` in a new popout window:
 
 .. code-block:: python
 
-    imviz.show(loc='popout')
+    jd.show(loc='popout')
 
 To manually specify the anchor location, append the anchor to popout, separated by a colon:
 
 .. code-block:: python
-    
-    imviz.show(loc='popout:window')
+
+    jd.show(loc='popout:window')
 
 You can also popout to a new browser tab by specifying a ``tab`` anchor:
 
 .. code-block:: python
 
-    imviz.show(loc='popout:tab')
+    jd.show(loc='popout:tab')
 
 
 Sidecar (Jupyter Lab)
@@ -64,13 +62,13 @@ to the right of the notebook:
 
 .. code-block:: python
 
-    imviz.show(loc='sidecar')
+    jd.show(loc='sidecar')
 
 To manually specify the anchor location, append the anchor to sidecar, separated by a colon:
 
 .. code-block:: python
 
-    imviz.show(loc='sidecar:right')
+    jd.show(loc='sidecar:right')
 
 Other anchors include: ``split-right``, ``split-left``, ``split-top``, ``split-bottom``,
 ``tab-before``, ``tab-after``, ``right``. An up-to-date list can be found at

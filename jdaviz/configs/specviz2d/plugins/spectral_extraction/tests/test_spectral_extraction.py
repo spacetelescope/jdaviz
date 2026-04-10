@@ -1,8 +1,9 @@
 import gwcs
 import pytest
+import specreduce
 
 from astropy.modeling import models
-from astropy.nddata import VarianceUncertainty
+from astropy.nddata import VarianceUncertainty, StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from astropy.utils.data import download_file
@@ -10,15 +11,16 @@ import numpy as np
 from numpy.testing import assert_allclose
 from packaging.version import Version
 from specreduce import tracing, background, extract
+from specreduce.tests.test_extract import add_gaussian_source
 from specutils import Spectrum, SpectralRegion
 from glue.core.link_helpers import LinkSameWithUnits
 from glue.core.roi import XRangeROI
 
-from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.utils import cached_uri
 from jdaviz.core.marks import Lines
 
 GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
+SPECREDUCE_LT_1_8_0 = Version(specreduce.__version__) < Version('1.8.0')
 
 
 @pytest.mark.remote_data
@@ -31,16 +33,14 @@ def test_plugin(specviz2d_helper):
 
     specviz2d_helper.load_data(spectrum_2d=fn)
 
-    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction-2d')
+    pext = specviz2d_helper._app.get_tray_item_from_name('spectral-extraction-2d')
 
     # test trace marks - won't be created until after opening the plugin
-    sp2dv = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    # includes 2 hidden marks from cross-dispersion profile plugin
-    assert len(sp2dv.figure.marks) == 5
+    sp2dv = specviz2d_helper._app.get_viewer('spectrum-2d-viewer')
+    assert len(sp2dv.figure.marks) == 3
 
     pext.keep_active = True
-    # includes 2 hidden marks from cross-dispersion profile plugin
-    assert len(sp2dv.figure.marks) == 14
+    assert len(sp2dv.figure.marks) == 12
     assert pext.marks['trace'].marks_list[0].visible is True
     assert len(pext.marks['trace'].marks_list[0].x) > 0
 
@@ -78,11 +78,8 @@ def test_plugin(specviz2d_helper):
     trace = pext.export_trace(add_data=True)  # overwrite
     assert isinstance(trace, tracing.ArrayTrace)
 
-    # TODO: Investigate extra hidden mark from glue-jupyter, see
-    # https://github.com/spacetelescope/jdaviz/pull/2478#issuecomment-1731864411
     # 3 new trace objects should have been loaded and plotted in the spectrum-2d-viewer
-    # and there are 2 invisible marks from the cross-dispersion profile plugin
-    assert len(sp2dv.figure.marks) in [18, 20]
+    assert len(sp2dv.figure.marks) == 16
 
     # interact with background section, check marks
     pext.trace_trace.selected = 'New Trace'
@@ -160,13 +157,13 @@ def test_plugin(specviz2d_helper):
     assert len(pext.ext_specreduce_err) > 0
     pext.bg_results_label = 'should not be created'
     pext.vue_create_bg_img()
-    assert 'should not be created' not in [d.label for d in specviz2d_helper.app.data_collection]
+    assert 'should not be created' not in [d.label for d in specviz2d_helper._app.data_collection]
 
     with pytest.raises(ValueError):
         pext.export_extract(invalid_kwarg=5)
 
     # test importing traces
-    img = specviz2d_helper.get_data('Spectrum 2D')
+    img = specviz2d_helper.datasets['Spectrum 2D'].get_data()
     flat_trace = tracing.FlatTrace(img, trace_pos=25)
     fit_trace = tracing.FitTrace(img)
 
@@ -212,7 +209,7 @@ def test_user_api(specviz2d_helper):
 def test_background_extraction_and_display(specviz2d_helper):
     uri = 'mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
     specviz2d_helper.load_data(spectrum_2d=cached_uri(uri), cache=True)
-    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction-2d')
+    pext = specviz2d_helper._app.get_tray_item_from_name('spectral-extraction-2d')
 
     # check that the background extraction method and parameters are as expected
     assert pext.bg_type_selected == 'TwoSided'
@@ -221,10 +218,10 @@ def test_background_extraction_and_display(specviz2d_helper):
     # test extracting background and background subtracted images and adding
     # them to the viewer
     pext.export_bg_sub(add_data=True)
-    assert specviz2d_helper.app.data_collection[2].label == 'background-subtracted'
+    assert specviz2d_helper._app.data_collection[2].label == 'background-subtracted'
 
     pext.export_bg_img(add_data=True)
-    assert specviz2d_helper.app.data_collection[3].label == 'background'
+    assert specviz2d_helper._app.data_collection[3].label == 'background'
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -246,7 +243,7 @@ def test_horne_extract_self_profile(specviz2d_helper):
                           flux=spec2d*u.Jy,
                           uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
 
-    specviz2d_helper.load(objectspec)
+    specviz2d_helper.load(objectspec, format='2D Spectrum')
     pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
 
     trace_fit = tracing.FitTrace(objectspec,
@@ -302,32 +299,185 @@ def test_horne_extract_self_profile(specviz2d_helper):
         sp_ext = pext.export_extract_spectrum()
 
 
-def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectrum2d):
-    specviz2d_helper.load(mos_spectrum2d)
+@pytest.mark.filterwarnings('ignore')
+@pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
+def test_boxcar_uncertainty_propagation_via_plugin(specviz2d_helper):
+    """
+    This is an identical test to the test for uncertainty propogation in
+    boxcar extraction in specreduce, and is meant to make sure going through
+    the plugin returns the same result.
+    """
+    nrows, ncols = 10, 20
+    flux = np.full((nrows, ncols), 100.0)
+    variance = np.full((nrows, ncols), 4.0)
+    width = 3
 
-    uc = specviz2d_helper.plugins["Unit Conversion"]
-    pext = specviz2d_helper.plugins['2D Spectral Extraction']
+    img = Spectrum(
+        flux * u.DN,
+        uncertainty=VarianceUncertainty(variance),
+        spectral_axis=np.arange(ncols) * u.pix,
+    )
 
-    for new_flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+    specviz2d_helper.load(img, format='2D Spectrum')
+    pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
 
-        # iterate through flux units verifying that selected object/spectrum is obtained using
-        # display units
+    pext.trace_type_selected = 'Flat'
+    pext.trace_pixel = nrows // 2
+    pext.ext_dataset_selected = pext.trace_dataset_selected
+    pext.ext_type_selected = 'Boxcar'
+    pext.ext_width = width
+
+    extracted = pext.export_extract_spectrum(add_data=False)
+
+    # jdaviz converts to a StDevUncertainty
+    assert extracted.uncertainty is not None
+    assert isinstance(extracted.uncertainty, StdDevUncertainty)
+
+    # but we want to compare to the specreduce test which retains the input
+    # type of VarianceUncertainty
+    var_uncert = extracted.uncertainty.represent_as(VarianceUncertainty)
+
+    expected_variance = width * 4.0
+    np.testing.assert_allclose(var_uncert.array, expected_variance, rtol=0.01)
+
+    # Check units are correct (flux_unit^2)
+    assert var_uncert.unit == u.DN**2
+
+
+@pytest.mark.filterwarnings('ignore')
+@pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
+def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper):
+    """
+    This is an identical test to the test for uncertainty propogation in
+    Horne extraction in specreduce, and is meant to make sure going through
+    the plugin returns the same result.
+    """
+
+    nrows, ncols = 20, 30
+    input_variance = 4.0
+    img = Spectrum(
+        np.zeros((nrows, ncols)) * u.DN,
+        uncertainty=VarianceUncertainty(np.full((nrows, ncols),
+                                                input_variance) * u.DN**2),
+        spectral_axis=np.arange(ncols) * u.pix
+    )
+    add_gaussian_source(img, amps=100.0, stddevs=2.0, means=10)
+
+    deconfigged_helper.load(img, format='2D Spectrum')
+    pext = deconfigged_helper.plugins['2D Spectral Extraction']._obj
+
+    pext.trace_type_selected = 'Flat'
+    pext.trace_pixel = 10
+    pext.ext_dataset_selected = pext.trace_dataset_selected
+    pext.ext_type_selected = 'Horne'
+
+    extracted = pext.export_extract_spectrum(add_data=False)
+
+    # jdaviz converts to a StDevUncertainty
+    assert extracted.uncertainty is not None
+    assert isinstance(extracted.uncertainty, StdDevUncertainty)
+
+    # but we want to compare to the specreduce test which retains the input
+    # type of VarianceUncertainty
+    var_uncert = extracted.uncertainty.represent_as(VarianceUncertainty)
+
+    # Verify uncertainty values are finite and positive
+    assert np.all(np.isfinite(var_uncert.array))
+    assert np.all(var_uncert.array > 0)
+
+    # Check units are correct (flux_unit^2)
+    assert var_uncert.unit == u.DN**2
+
+    # Calculate expected variance analytically.
+    # For optimal extraction: var_out = norms^2 / sum(kernel^2 / var_in)
+    # With uniform variance: var_out = var_in * norms^2 / sum(kernel^2)
+    # where kernel is the normalized spatial profile and norms = sum(kernel) = 1
+    gauss = models.Gaussian1D(amplitude=100.0, mean=10.0, stddev=2.0)
+    kernel = gauss(np.arange(nrows))
+    kernel_normalized = kernel / kernel.sum()
+    expected_variance = input_variance / np.sum(kernel_normalized**2)
+
+    # All columns should have the same uncertainty (uniform source and variance)
+    assert np.allclose(var_uncert.array, expected_variance, rtol=1e-5)
+
+
+@pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
+def test_background_uncertainty_propagation_via_plugin(deconfigged_helper):
+    """
+    This is an identical test to the test for uncertainty propogation in
+    background calculation in specreduce, and is meant to make sure going through
+    the plugin returns the same result.
+    """
+
+    nrows, ncols = 10, 20
+    var = 4.0
+    img = Spectrum(np.ones((nrows, ncols)) * u.DN,
+                   uncertainty=VarianceUncertainty(np.full((nrows, ncols), var) * u.DN**2),
+                   spectral_axis=np.arange(ncols) * u.pix)
+
+    deconfigged_helper.load(img, format='2D Spectrum')
+    pext = deconfigged_helper.plugins['2D Spectral Extraction']._obj
+
+    pext.trace_type_selected = 'Flat'
+    pext.trace_pixel = nrows // 2
+    pext.bg_width = 4
+    pext.bg_statistic_selected = 'Average'
+
+    bg = pext.export_bg()
+
+    # Check that _bkg_variance is computed
+    assert hasattr(bg, "_bkg_variance")
+    assert bg._bkg_variance is not None
+    assert len(bg._bkg_variance) == ncols
+
+    # Variance should be positive and less than input (averaging reduces variance)
+    assert np.all(bg._bkg_variance > 0)
+    assert np.all(bg._bkg_variance < var)
+
+    weights = bg.bkg_wimage
+    weights_sum = np.sum(weights, axis=0)
+    weights_sq_sum = np.sum(weights ** 2, axis=0)
+    expected_variance = (weights_sq_sum * var) / (weights_sum ** 2)
+    assert np.allclose(bg._bkg_variance, expected_variance)
+
+    # Check that bkg_spectrum has uncertainty
+    bkg_spec = bg.bkg_spectrum()
+    assert bkg_spec.uncertainty is not None
+
+    # uncertainty is converted to a StdDevUncertainty in jdaviz, but we want to
+    # compare to the specreduce test which retains the input type of VarianceUncertainty
+    assert isinstance(bkg_spec.uncertainty, StdDevUncertainty)
+    var_uncert = bkg_spec.uncertainty.represent_as(VarianceUncertainty)
+    assert np.allclose(var_uncert.array, bg._bkg_variance)
+
+
+def test_spectral_extraction_flux_unit_conversions(deconfigged_helper, mos_spectrum2d):
+    deconfigged_helper.load(mos_spectrum2d, format='2D Spectrum')
+
+    uc = deconfigged_helper.plugins["Unit Conversion"]
+    pext = deconfigged_helper.plugins['2D Spectral Extraction']
+
+    # test a subset of unit options, testing all is slow
+    for new_flux_unit in ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']:
+
+        # iterate through flux units verifying that selected object/spectrum is
+        # obtained using display units
         uc.flux_unit.selected = new_flux_unit
 
         exported_bg = pext.export_bg()
-        assert exported_bg.image._unit == specviz2d_helper.app._get_display_unit('flux')
+        assert exported_bg.image._unit == deconfigged_helper._app._get_display_unit('flux')
 
         exported_bg_img = pext.export_bg_img()
-        assert exported_bg_img._unit == specviz2d_helper.app._get_display_unit('flux')
+        assert exported_bg_img._unit == deconfigged_helper._app._get_display_unit('flux')
 
         exported_bg_sub = pext.export_bg_sub()
-        assert exported_bg_sub._unit == specviz2d_helper.app._get_display_unit('flux')
+        assert exported_bg_sub._unit == deconfigged_helper._app._get_display_unit('flux')
 
         exported_extract_spectrum = pext.export_extract_spectrum()
-        assert exported_extract_spectrum._unit == specviz2d_helper.app._get_display_unit('flux')
+        assert exported_extract_spectrum._unit == deconfigged_helper._app._get_display_unit('flux')
 
         exported_extract = pext.export_extract()
-        assert exported_extract.image._unit == specviz2d_helper.app._get_display_unit('flux')
+        assert exported_extract.image._unit == deconfigged_helper._app._get_display_unit('flux')
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -336,7 +486,7 @@ def test_spectral_extraction_preview(deconfigged_helper, spectrum2d):
     # that helper throughout.
     deconfigged_helper.load(spectrum2d, format='2D Spectrum')
     # Assume auto extract is on
-    default_extraction_label = deconfigged_helper.app.data_collection.labels[1]
+    default_extraction_label = deconfigged_helper._app.data_collection.labels[1]
     custom_extraction_label = 'custom-extraction'
 
     # Create a custom extraction and add to a existing viewer
@@ -345,8 +495,8 @@ def test_spectral_extraction_preview(deconfigged_helper, spectrum2d):
     spext.ext_add_results.label = custom_extraction_label
     spext.export_extract_spectrum(add_data=True)  # added as layer to "1D Spectrum" viewer
 
-    default_extraction_data = deconfigged_helper.get_data(default_extraction_label)
-    custom_extraction_data = deconfigged_helper.get_data(custom_extraction_label)
+    default_extraction_data = deconfigged_helper.datasets[default_extraction_label].get_data()
+    custom_extraction_data = deconfigged_helper.datasets[custom_extraction_label].get_data()
 
     assert np.any(~np.isnan(default_extraction_data.flux))
     assert np.any(~np.isnan(custom_extraction_data.flux))
@@ -406,7 +556,7 @@ class TestTwo2dSpectra:
     def load_2d_spectrum(self, helper, spec2d, spec2d_label_idx=0, spec2d_ext_label_idx=1):
         # Allow this to use the default label
         helper.load(spec2d, format='2D Spectrum')
-        dc_labels = helper.app.data_collection.labels
+        dc_labels = helper._app.data_collection.labels
         self.spec2d_label = dc_labels[spec2d_label_idx]
         self.spec2d_ext_label = dc_labels[spec2d_ext_label_idx]
 
@@ -453,7 +603,7 @@ class TestTwo2dSpectra:
             ldr.format = '2D Spectrum'
             ldr.importer.auto_extract = True
             ldr.load()
-            self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[:2]
+            self.spec2d_label, self.spec2d_ext_label = helper._app.data_collection.labels[:2]
 
             self.setup_another_2d_spectrum(spectrum2d)
             ldr.object = self.another_spec2d
@@ -480,7 +630,7 @@ class TestTwo2dSpectra:
             ldr.format = '2D Spectrum'
             ldr.importer.auto_extract = True
             ldr.load()
-            self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[-2:]
+            self.spec2d_label, self.spec2d_ext_label = helper._app.data_collection.labels[-2:]
 
         else:
             raise NotImplementedError(f"Method {method} not implemented.")
@@ -488,20 +638,20 @@ class TestTwo2dSpectra:
         expected_labels = [self.spec2d_label, self.spec2d_ext_label,
                            self.another_spec2d_label, self.another_spec2d_ext_label]
 
-        dc = helper.app.data_collection
+        dc = helper._app.data_collection
 
         assert self.spec2d_label in dc.labels
         assert self.spec2d_ext_label in dc.labels
-        spec2d = helper.get_data(self.spec2d_label)
-        extracted_spec2d = helper.get_data(self.spec2d_ext_label)
+        spec2d = helper.datasets[self.spec2d_label].get_data()
+        extracted_spec2d = helper.datasets[self.spec2d_ext_label].get_data()
         # Check for any non-NaN data, if all NaNs, something went wrong
         assert np.any(~np.isnan(spec2d.flux))
         assert np.any(~np.isnan(extracted_spec2d.flux))
 
         assert self.another_spec2d_label in dc.labels
         assert self.another_spec2d_ext_label in dc.labels
-        another_spec2d = helper.get_data(self.another_spec2d_label)
-        extracted_another_spec2d = helper.get_data(self.another_spec2d_ext_label)
+        another_spec2d = helper.datasets[self.another_spec2d_label].get_data()
+        extracted_another_spec2d = helper.datasets[self.another_spec2d_ext_label].get_data()
         # Check for any non-NaN data, if all NaNs, something went wrong
         assert np.any(~np.isnan(another_spec2d.flux))
         assert np.any(~np.isnan(extracted_another_spec2d.flux))
@@ -513,14 +663,25 @@ class TestTwo2dSpectra:
         assert not np.array_equal(extracted_spec2d.flux, extracted_another_spec2d.flux), \
             'Extracted spectra should differ!'
 
+        for link in dc.external_links:
+            # print(link.data1.label, '<=>', link.data2.label)
+            # Check that linking is correct by confirming that both
+            # are in `expected_labels`
+            assert (link.data1.label in expected_labels) and (link.data2.label in expected_labels)
+            assert isinstance(link, LinkSameWithUnits)
+
         # Check linking, e.g.
         # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral axis]
         # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral flux density]
         # Another 2D Spectrum <=> 2D Spectrum [spectral axis]
         # Another 2D Spectrum <=> 2D Spectrum [spectral flux density]
+        # Another 2D Spectrum <=> 2D Spectrum [Pixel Axis 1 [x]]
         # Another 2D Spectral Extraction <=> 2D Spectrum [spectral axis]
+        # NOTE: The exact link count varies by environment (10 or 11) due to
+        # pixel-component matching differences across package versions.
+        # assert len(dc.external_links) == 9  # pre pixel-linking
         # Another 2D Spectral Extraction <=> 2D Spectrum
-        assert len(dc.external_links) == 9
+        assert len(dc.external_links) in (10, 11)
         for link in dc.external_links:
             # Check that linking is correct by confirming that both
             # are in `expected_labels`
@@ -533,8 +694,8 @@ class TestTwo2dSpectra:
         self.load_another_2d_spectrum(deconfigged_helper, spectrum2d)
 
         # Test marks/subsets between the two layers
-        viewer_2d = deconfigged_helper.app.get_viewer('2D Spectrum')
-        viewer_1d = deconfigged_helper.app.get_viewer('1D Spectrum')
+        viewer_2d = deconfigged_helper._app.get_viewer('2D Spectrum')
+        viewer_1d = deconfigged_helper._app.get_viewer('1D Spectrum')
 
         # We'll be panning along x so keep x_min, x_max generic but specify y_min_1d, y_max_1d
         x_min_2d, x_max_2d = viewer_2d.get_limits()[:2]

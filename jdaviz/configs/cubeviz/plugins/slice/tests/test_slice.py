@@ -2,12 +2,12 @@ import warnings
 
 import pytest
 
-from jdaviz.configs.cubeviz.plugins.slice.slice import Slice
+from jdaviz.configs.cubeviz.plugins.slice.slice import SpectralSlice
 
 
 def test_slice(cubeviz_helper, spectrum1d_cube):
-    app = cubeviz_helper.app
-    sl = Slice(app=app)
+    app = cubeviz_helper._app
+    sl = SpectralSlice(app=app)
 
     # No data yet
     assert len(sl.slice_selection_viewers) == 2  # flux-viewer, uncert-viewer
@@ -33,11 +33,11 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     assert len(slice_values) == 2
 
     assert sl.value == slice_values[1]
-    assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 1
-    assert cubeviz_helper.app.get_viewer("flux-viewer").state.slices[0] == 1
-    assert cubeviz_helper.app.get_viewer("uncert-viewer").state.slices[0] == 1
+    assert cubeviz_helper._app.get_viewer("flux-viewer").slice == 1
+    assert cubeviz_helper._app.get_viewer("flux-viewer").state.slices[0] == 1
+    assert cubeviz_helper._app.get_viewer("uncert-viewer").state.slices[0] == 1
     sl.value = slice_values[0]
-    assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 0
+    assert cubeviz_helper._app.get_viewer("flux-viewer").slice == 0
     assert sl.value == slice_values[0]
 
     sl.value = slice_values[1]
@@ -95,10 +95,10 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
 
 def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
-    app = cubeviz_helper.app
+    app = cubeviz_helper._app
     app.add_data_to_viewer("flux-viewer", "test[FLUX]")
     app.add_data_to_viewer("spectrum-viewer", "Spectrum (sum)")
-    sl = cubeviz_helper.plugins['Slice']._obj
+    sl = cubeviz_helper.plugins['Spectral Slice']._obj
     sv = app.get_viewer('spectrum-viewer')
     indicator = sv.slice_indicator
 
@@ -118,8 +118,8 @@ def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
 def test_init_slice(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
 
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
-    sl = cubeviz_helper.plugins['Slice']
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
+    sl = cubeviz_helper.plugins['Spectral Slice']
     slice_values = sl._obj.valid_selection_values_sorted
 
     assert sl.value == slice_values[1]

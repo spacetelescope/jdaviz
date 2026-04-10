@@ -4,10 +4,12 @@
 Setting Redshift/RV
 *******************
 
-The :ref:`Line Lists Plugin <mosviz-line-lists>` contains a redshift slider as well as the ability to 
+.. include:: ../_templates/deprecated_config_banner.rst
+
+The :ref:`Line Lists Plugin <mosviz-line-lists>` contains a redshift slider as well as the ability to
 view and set the redshift and/or radial velocity.
 
-Additionally, the :ref:`Line Analysis Plugin <line-analysis>` includes the capability to 
+Additionally, the :ref:`Line Analysis Plugin <line-analysis>` includes the capability to
 compute and assign the redshift based on the measured centroid of a line.
 
 From the notebook
@@ -20,6 +22,6 @@ The 1D and 2D spectrum objects can be retrieved (with redshift optionally applie
 :py:meth:`~jdaviz.configs.mosviz.helper.Mosviz.get_spectrum_1d` and :py:meth:`~jdaviz.configs.mosviz.helper.Mosviz.get_spectrum_2d`,
 respectively.
 
-See the ``notebooks/MosvizNIRISSExample.ipynb`` notebook in the 
-`repository <https://github.com/spacetelescope/jdaviz/tree/main/notebooks>`_ to see examples of 
+See the ``notebooks/MosvizNIRISSExample.ipynb`` notebook in the
+`repository <https://github.com/spacetelescope/jdaviz/tree/main/notebooks>`_ to see examples of
 manipulating MOS Table data, including the redshift.

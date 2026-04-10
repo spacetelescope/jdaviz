@@ -22,6 +22,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
+from jdaviz.configs.rampviz.plugins.viewers import RampvizProfileView
 
 
 __all__ = ['RampExtraction']
@@ -44,6 +45,10 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      Dataset to use for ramp extraction.
+    * ``function`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      Function to use for the extraction (Mean, Median, Min, Max, Sum).
     * ``aperture`` (:class:`~jdaviz.core.template_mixin.ApertureSubsetSelect`):
       Subset to use for the ramp extraction, or ``Entire Cube``.
     * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
@@ -126,7 +131,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         self._update_disabled_msg()
 
-        if self.app.state.settings.get('server_is_remote', False):
+        if self._app.state.settings.get('server_is_remote', False):
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
@@ -134,21 +139,25 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
+    def _get_supported_viewers(self):
+        """Return viewer types that can display extracted ramp integration."""
+        return [{'label': 'Ramp Profile', 'reference': 'rampviz-profile-viewer'}]
+
     @property
     def integration_viewer(self):
-        viewer = self.app.get_viewer(
-            self.app._jdaviz_helper._default_integration_viewer_reference_name
-        )
-        return viewer
+        viewers = self._app.get_viewers_of_cls(RampvizProfileView)
+        if viewers:
+            return viewers[0]
+        return None
 
     def _on_subset_update(self, msg={}):
-        if not hasattr(self.app._jdaviz_helper, 'cube_cache'):
+        if not hasattr(self._app._jdaviz_helper, 'cube_cache'):
             # if called before fully initialized
             return
 
         subset_lbl = msg.subset.label
         color = msg.subset.style.color
-        subset = self.app.get_subsets(subset_lbl)[0]
+        subset = self._app.get_subsets(subset_lbl)[0]
         region = subset['region']
 
         if region is None:
@@ -188,18 +197,17 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.integration_viewer.reset_limits()
 
     def _on_subset_delete(self, msg={}):
+
+        viewer = self.integration_viewer
         subset_lbl = msg.subset.label
-        self.integration_viewer.figure.marks = [
-            mark for mark in self.integration_viewer.figure.marks
+        viewer.figure.marks = [
+            mark for mark in viewer.figure.marks
             if getattr(mark, 'label', None) != subset_lbl
         ]
 
     @observe('is_active', 'show_subset_preview', 'aperture_selected')
     def _update_subset_previews(self, msg={}):
         # remove preview marks for non-selected subsets
-
-        if not hasattr(self.app._jdaviz_helper, '_default_integration_viewer_reference_name'):
-            return
 
         for mark in self.integration_viewer.figure.marks:
             if isinstance(mark, PluginLine) and mark.label is not None:
@@ -226,7 +234,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @observe('dataset_items')
     def _update_disabled_msg(self, msg={}):
-        for data in self.app.data_collection:
+        for data in self._app.data_collection:
             if data.data.ndim == 3:
                 self.disabled_msg = ''
                 break
@@ -256,7 +264,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_indicator_viewers(self):
-        return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
+        return [v for v in self._app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
 
     @observe('active_step', 'is_active')
     def _active_step_changed(self, *args):
@@ -264,7 +272,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_plugin(self):
-        return self.app._jdaviz_helper.plugins['Slice']
+        return self._app._jdaviz_helper.plugins['Ramp Slice']
 
     def _extract_in_new_instance(self, dataset=None, function='Mean', subset_lbl=None,
                                  auto_update=False, add_data=False):
@@ -292,11 +300,11 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def cube(self):
-        return self.app._jdaviz_helper.cube_cache.get(self.dataset.selected)
+        return self._app._jdaviz_helper.cube_cache.get(self.dataset.selected)
 
     @property
     def slice_display_unit(self):
-        x_display_unit = self.app._get_display_unit(self.slice_display_unit_name)
+        x_display_unit = self._app._get_display_unit(self.slice_display_unit_name)
         if x_display_unit not in ['None', None]:
             return u.Unit(x_display_unit)
         return u.dimensionless_unscaled
@@ -307,7 +315,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.aperture.selected != self.aperture.default_text:
 
             # note: glue subset mask is transposed relative to cube
-            region_mask = self.app.get_subsets(
+            region_mask = self._app.get_subsets(
                 subset_name=self.aperture.selected
             )[0]['region'].to_mask().to_image(
                 cube_shape[:-1]

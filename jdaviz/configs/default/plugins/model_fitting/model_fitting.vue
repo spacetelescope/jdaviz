@@ -200,6 +200,10 @@
                   </v-btn>
                 </j-tooltip>
               </v-row>
+              <v-row v-if="item.model_type === 'Spline1D'">
+                <v-alert type="info">
+                  To view Spline1D parameters, please open the fitter parameters section below.               </v-alert>
+              </v-row>
               <v-div
                 v-for="param in item.parameters"
                 :style="componentInEquation(item.id) ? '': 'opacity: 0.3'"
@@ -269,7 +273,7 @@
           attach
           :items="fitter_items.map(i => i.label)"
           v-model="fitter_selected"
-          :label="api_hints_enabled ? 'plg.fitter_component.selected =' : 'Fitter Component'"
+          :label="api_hints_enabled ? 'plg.fitter =' : 'Fitter Component'"
           :class="api_hints_enabled ? 'api-hint' : null"
           hint="Select a fitter for the model."
           persistent-hint
@@ -292,16 +296,21 @@
                   :hint="parameter_hints[item.name]"
                   persistent-hint>
                     <template v-slot:label>
-                        <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 12pt">
-                          {{ item.name }}
+                        <span :style="api_hints_enabled ? 'overflow-wrap: anywhere; font-size: 8pt' : 'overflow-wrap: anywhere; font-size: 12pt'"
+                              :class="api_hints_enabled ? 'api-hint' : 'font-weight-bold'">
+                          {{ api_hints_enabled ? `plg.set_fitter_parameter('${item.name}', ${item.value.toString()[0].toUpperCase() + item.value.toString().slice(1)})` : item.name }}
                         </span>
                      </template>
                 </v-switch>
                 <v-text-field v-else
-                    :label="item.name"
                     v-model.number="item.value"
                     type="number"
+                    :min="item.name === 'degree' ? 1 : undefined"
+                    :max="item.name === 'degree' ? 5 : undefined"
+                    :rules="item.name === 'degree' ? [v => (v >= 1 && v <= 5) || 'Degree must be between 1 and 5.'] : []"
                     style="padding-top: 0px; margin-top: 14px; margin-bottom: 10px;"
+                    :label="api_hints_enabled ? `plg.set_fitter_parameter('${item.name}', ${item.value})` : item.name"
+                    :class="api_hints_enabled ? 'api-hint' : null"
                   ></v-text-field>
               </div>
               </v-expansion-panel-content>
@@ -316,6 +325,12 @@
         label_hint="Label for the model"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
+        :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
+        :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
+        :add_to_viewer_label_value.sync="add_to_viewer_label_value"
+        :add_to_viewer_label_default="add_to_viewer_label_default"
+        :add_to_viewer_label_auto.sync="add_to_viewer_label_auto"
+        :add_to_viewer_label_invalid_msg="add_to_viewer_label_invalid_msg"
         action_label="Fit Model"
         action_tooltip="Fit the model to the data"
         :action_disabled="model_equation_invalid_msg.length > 0 || !spectral_subset_valid"

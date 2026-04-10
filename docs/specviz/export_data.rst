@@ -4,6 +4,8 @@
 Exporting Data From Specviz
 ***************************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 1D Spectra
 ==========
 

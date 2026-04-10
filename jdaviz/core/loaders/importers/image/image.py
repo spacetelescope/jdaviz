@@ -9,10 +9,10 @@ from astropy.utils.exceptions import AstropyWarning
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from gwcs import WCS as GWCS
+from specutils import Spectrum
 from stdatamodels import asdf_in_fits
 from traitlets import Bool, List, Any, Unicode, observe
 
-from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.template_mixin import (SelectFileExtensionComponent,
                                         DatasetSelect,
                                         SelectPluginComponent)
@@ -20,10 +20,11 @@ from jdaviz.core.template_mixin import (SelectFileExtensionComponent,
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
+from jdaviz.utils import wcs_is_spectral
 
 from jdaviz.utils import (
-    PRIHDR_KEY, standardize_metadata, standardize_roman_metadata,
-    _try_gwcs_to_fits_sip, create_data_hash, RA_COMPS, DEC_COMPS
+    PRIHDR_KEY, in_dec_comps, in_ra_comps, standardize_metadata, standardize_roman_metadata,
+    _try_gwcs_to_fits_sip, create_data_hash
 )
 
 try:
@@ -33,6 +34,7 @@ except ImportError:
 else:
     HAS_ROMAN_DATAMODELS = True
 
+MAX_N_SLICE = 16
 
 __all__ = ['ImageImporter', '_spatial_assign_component_type']
 
@@ -42,9 +44,9 @@ def _spatial_assign_component_type(comp_id, comp, units, physical_type):
         physical_type = 'pixel'
         return f'{comp_id[-2]}:pixel'
 
-    if comp_id.lower() in RA_COMPS and physical_type == 'angle':
+    if in_ra_comps(comp_id) and physical_type == 'angle':
         return f'RA:{physical_type}'
-    elif comp_id.lower() in DEC_COMPS and physical_type == 'angle':
+    elif in_dec_comps(comp_id) and physical_type == 'angle':
         return f'DEC:{physical_type}'
 
     return physical_type
@@ -76,6 +78,12 @@ class ImageImporter(BaseImporterToDataCollection):
     # whether the current data_label should be treated as a prefix
     # either based on user-setting above or current extension selection
     data_label_is_prefix = Bool(False).tag(sync=True)
+    # suffices that will be applied to the prefix (read-only)
+    data_label_suffices = List().tag(sync=True)
+
+    # if orientation plugin exists or create new viewer selection is an Image
+    # viewer, expose options to align by pixels or WCS.
+    expose_align_by_options = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -89,11 +97,17 @@ class ImageImporter(BaseImporterToDataCollection):
                                               items='align_by_items',
                                               selected='align_by_selected',
                                               manual_options=['Pixels', 'WCS'])
-        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+
+        align_plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
         if align_plg is not None:
+            self.expose_align_by_options = True
             self.align_by.selected = align_plg.align_by.selected
         else:
-            self.align_by.selected = 'Pixels'
+            if self.viewer_create_new_selected == 'Image':
+                self.expose_align_by_options = True
+            else:
+                self.expose_align_by_options = False
+                self.align_by.selected = 'Pixels'
 
         input = self.input
         if isinstance(input, fits.hdu.image.ImageHDU):
@@ -101,8 +115,10 @@ class ImageImporter(BaseImporterToDataCollection):
 
         input_is_roman = (HAS_ROMAN_DATAMODELS and
                           isinstance(input, (rdd.ImageModel, rdd.DataModel)))
+        input_is_3d_array = isinstance(input, np.ndarray) and input.ndim == 3
         self.input_has_extensions = (isinstance(input, fits.HDUList) or
-                                     input_is_roman)
+                                     input_is_roman or
+                                     input_is_3d_array)
         if self.input_has_extensions:
             if isinstance(input, fits.HDUList):
                 filters = [_validate_fits_image2d]
@@ -124,6 +140,22 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'data_hash': create_data_hash(value),
                                 'obj': value}
                                for index, (key, value) in enumerate(input.items())]
+            elif input_is_3d_array:
+                # Handle 3D numpy arrays as multiple 2D slices
+                n_slices = min(input.shape[0], MAX_N_SLICE)
+                if input.shape[0] > MAX_N_SLICE:
+                    warnings.warn(f'Only the first {MAX_N_SLICE} will be loaded.'
+                                  'If applicable, use \'3D Spectrum\' instead.',
+                                  UserWarning)
+                filters = []  # No filtering needed for array slices
+                ext_options = [{'label': f"slice {i}",
+                                'name': f"slice-{i}",
+                                'ver': None,
+                                'name_ver': f"slice-{i}",
+                                'index': i,
+                                'data_hash': create_data_hash(input[i, :, :]),
+                                'obj': input[i, :, :]}
+                               for i in range(n_slices)]
             else:
                 raise NotImplementedError()
 
@@ -155,7 +187,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
+        if self._app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
         # flat image, not a cube
@@ -163,8 +195,11 @@ class ImageImporter(BaseImporterToDataCollection):
         if self.input_has_extensions and not len(self.extension.choices):
             return False
 
-        if isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                   NDData, np.ndarray, Data)):
+        if isinstance(self.input, Spectrum):
+            # Spectrum objects subclass NDData so they must be rejected explicitly
+            supported_input_type = False
+        elif isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
+                                     NDData, np.ndarray, Data)):
             supported_input_type = True
         elif isinstance(self.input, (asdf.AsdfFile)) or \
                 (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))):
@@ -175,12 +210,34 @@ class ImageImporter(BaseImporterToDataCollection):
         if not supported_input_type:
             return False
 
+        # 3D numpy arrays are valid if they have extension choices set up
+        if isinstance(self.input, np.ndarray) and self.input.ndim == 3:
+            return len(self.extension.choices) > 0
+
         try:
-            _ = self.output
+            output = self.output
         except Exception:  # noqa
             return False
         else:
+            is_spectral = all([wcs_is_spectral(getattr(data, 'coords', None)) for data in output])
+            if is_spectral:
+                # Reject 2D spectra with spectral WCS coordinates
+                # that pass the FITS/NDData condition
+                return False
             return True
+
+    @observe('viewer_create_new_selected')
+    def _on_create_new_viewer_selected(self, msg):
+        """
+        If the orientation plugin does not exist but the new selected viewer to
+        create is an image viewer, expose the option to align by pixels or WCS
+        because the creation of the app's first image viewer will cause the
+        Orientation plugin relevancy to change.
+        """
+
+        align_plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
+        if align_plg is None:
+            self.expose_align_by_options = (msg['new'] == 'Image')
 
     def _glue_data_wcs_to_fits(self, glue_data):
         """
@@ -199,6 +256,9 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @observe('extension_selected', 'data_label_as_prefix')
     def _set_default_data_label(self, *args):
+        if not hasattr(self, 'data_label'):
+            return
+
         if self.default_data_label_from_resolver:
             prefix = self.default_data_label_from_resolver
         else:
@@ -211,25 +271,33 @@ class ImageImporter(BaseImporterToDataCollection):
                 # selected_obj may be an ndarray object if input is a roman data model
                 ver = getattr(self.extension.selected_obj[0], 'ver', None)
                 # only a single extension selected
-                self.data_label_default = self._get_label_with_extension(prefix,
-                                                                         ext=self.extension.selected_name[0],  # noqa
-                                                                         ver=ver)  # noqa
+                self.data_label.default = self._get_label_with_extension(
+                    prefix,
+                    ext=self.extension.selected_name[0],
+                    ver=ver)
                 self.data_label_is_prefix = False
             else:
                 # multiple extensions selected,
                 # only show the prefix and append the extension later during import
-                self.data_label_default = prefix
+                self.data_label.default = prefix
                 self.data_label_is_prefix = True
         elif (self.data_label_as_prefix or
               (isinstance(self.input, NDData) and
                getattr(self.input, 'meta', {}).get('plugin', None) is None)):
             # will append with [DATA]/[UNCERTAINTY]/[MASK] later
             # TODO: allow user to select extensions and include in same logic as HDUList
-            self.data_label_default = prefix
+            self.data_label.default = prefix
             self.data_label_is_prefix = True
         else:
-            self.data_label_default = prefix
+            self.data_label.default = prefix
             self.data_label_is_prefix = False
+
+        if self.data_label_is_prefix:
+            self.data_label_suffices = [self._get_label_with_extension("",
+                                                                       ext_item.get('name'),
+                                                                       ver=ext_item.get('ver', None)
+                                                                       )
+                                        for ext_item in self.ext_items]
 
     @property
     def output(self):
@@ -247,7 +315,19 @@ class ImageImporter(BaseImporterToDataCollection):
         elif isinstance(input, NDData):
             data = _nddata_to_glue_data(input)  # list of Data
         elif isinstance(input, np.ndarray):
-            data = [_ndarray_to_glue_data(input)]
+            if input.ndim == 3 and len(getattr(self.extension, 'choices', [])) > 0:
+                # 3D array with slices as extensions - use selected slices
+                # selected_obj retrieves from manual_options which preserves the 'obj' key
+                data = [_ndarray_to_glue_data(slice_arr)
+                        for slice_arr in self.extension.selected_obj]
+            elif input.ndim == 2:
+                # 2D array
+                data = [_ndarray_to_glue_data(input)]
+            elif input.ndim == 3:
+                n_slices = min(input.shape[0], MAX_N_SLICE)
+                data = [_ndarray_to_glue_data(input[i, :, :]) for i in range(n_slices)]
+            else:
+                raise ValueError(f'Cannot load as image with ndim={input.ndim}')
         # asdf
         elif (isinstance(input, asdf.AsdfFile)):
             data = [_roman_asdf_2d_to_glue_data(input, ext='data')]
@@ -262,7 +342,7 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             data = [_hdu2data(hdu, input) for hdu in self.extension.selected_obj]
 
-        ext_names = self.extension.selected_name if self.input_has_extensions else [None] * len(data)  # noqa
+        ext_names = self.extension.selected_name if self.input_has_extensions and len(getattr(self.extension, 'choices', [])) > 0 else [None] * len(data)  # noqa
         for d, ext_name in zip(data, ext_names):
             if d is None:
                 continue
@@ -278,18 +358,21 @@ class ImageImporter(BaseImporterToDataCollection):
 
         return data
 
+    @property
+    def ext_items(self):
+        if self.input_has_extensions:
+            return self.extension.selected_item_list
+        elif isinstance(self.input, NDData):
+            return [{'name': name} for name in ('DATA', 'MASK', 'UNCERTAINTY')]  # noqa must match order in _nddata_to_glue_data
+        else:
+            return [{}] * len(self.output)
+
     def __call__(self):
 
         base_data_label = self.data_label_value
         # self.output is always a list of Data objects
         outputs = self.output
-
-        if self.input_has_extensions:
-            ext_items = self.extension.selected_item_list
-        elif isinstance(self.input, NDData):
-            ext_items = [{'name': name} for name in ('DATA', 'MASK', 'UNCERTAINTY')]  # noqa must match order in _nddata_to_glue_data
-        else:
-            ext_items = [{}] * len(outputs)
+        ext_items = self.ext_items
 
         parent_selected = self.parent.selected
         for output, ext_item in zip(outputs, ext_items):
@@ -342,12 +425,9 @@ class ImageImporter(BaseImporterToDataCollection):
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
 
-        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        align_plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
         if align_plg is not None:
             align_plg.align_by.selected = self.align_by.selected
-        else:
-            msg = f"could not change align_by to {self.align_by.selected}"
-            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return _spatial_assign_component_type(comp_id, comp, units, physical_type)
@@ -355,7 +435,8 @@ class ImageImporter(BaseImporterToDataCollection):
 
 def _validate_fits_image2d(item):
     hdu = item.get('obj')
-    return hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
+    return (hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
+            and not wcs_is_spectral(getattr(hdu, 'coords', None)))
 
 
 def _validate_roman_ext(item):

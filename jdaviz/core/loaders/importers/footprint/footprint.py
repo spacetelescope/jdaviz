@@ -69,13 +69,15 @@ class FootprintImporter(BaseImporterToPlugin):
 
     @observe('footprint_label_invalid_msg')
     def _set_import_disabled(self, change={}):
-        self.import_disabled = len(self.footprint_label_invalid_msg) > 0
+        # Set import_disabled_msg based on validation errors
+        # Empty msg = enabled, non-empty = disabled
+        self.import_disabled_msg = self.footprint_label_invalid_msg
 
     def __call__(self):
         if self.footprint_label_invalid_msg:
             raise ValueError(self.footprint_label_invalid_msg)
 
-        plg = self.app._jdaviz_helper.plugins['Footprints']
+        plg = self._app._jdaviz_helper.plugins['Footprints']
         if self.footprint_label_value not in plg.overlay.choices:
             # TODO: show warning in UI when entry already exists
             plg.add_overlay(self.footprint_label_value)

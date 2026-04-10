@@ -1,4 +1,6 @@
 import os
+
+from astropy import units as u
 from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
@@ -18,6 +20,32 @@ from jdaviz.utils import (standardize_metadata,
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
 
 
+def _physical_type_from_component(comp_id, comp):
+    """
+    Extract physical type (e.g., 'length', 'angle') from a component's units.
+
+    Parameters
+    ----------
+    comp_id : str
+        The component identifier.
+    comp : `~glue.core.component.Component`
+        The glue component to extract units from.
+
+    Returns
+    -------
+    tuple
+        (units, physical_type) where physical_type is a string like 'angle'
+        or None if units are empty/invalid.
+    """
+    try:
+        comp_units = comp.units
+        if comp_units is None or comp_units == '':
+            return comp_units, None
+        return comp_units, str(u.Unit(comp_units).physical_type)
+    except (ValueError, TypeError, AttributeError):
+        return comp_units, None
+
+
 class BaseImporter(PluginTemplateMixin):
     # preference order of parsers, by registry name.  If empty, the first found match will
     # be used by default.  If not empty, the first match in the list will be used (including
@@ -25,7 +53,7 @@ class BaseImporter(PluginTemplateMixin):
     # the list, the first remaining match will be used.
     parser_preference = []
 
-    import_disabled = Bool(False).tag(sync=True)
+    import_disabled_msg = Unicode().tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
 
     existing_data_in_dc = List([]).tag(sync=True)
@@ -34,11 +62,11 @@ class BaseImporter(PluginTemplateMixin):
         self._input = input
         self._parser = parser
         self._resolver = resolver
-        super().__init__(app, **kwargs)
+        super().__init__(app=app, **kwargs)
 
         # Doing this in app instead of here avoids a lot of unnecessary overhead
         # from all the importers in memory
-        self.app.observe(self._update_existing_data_in_dc_traitlet, 'existing_data_in_dc')
+        self._app.observe(self._update_existing_data_in_dc_traitlet, 'existing_data_in_dc')
         self._update_existing_data_in_dc_traitlet()
 
     def __repr__(self):
@@ -73,7 +101,7 @@ class BaseImporter(PluginTemplateMixin):
         return self.input
 
     def _update_existing_data_in_dc_traitlet(self, change={}):
-        self.existing_data_in_dc = self.app.existing_data_in_dc
+        self.existing_data_in_dc = self._app.existing_data_in_dc
 
     def reset_and_check_existing_data_in_dc(self, change={}):
         """
@@ -94,12 +122,12 @@ class BaseImporter(PluginTemplateMixin):
         existing_data_in_dc = [(data.meta.get('_data_hash'),
                                 data.label,
                                 self.hash_map_to_label[data.meta.get('_data_hash')])
-                               for data in self.app.data_collection
+                               for data in self._app.data_collection
                                if data.meta.get('_data_hash') in self.data_hashes]
 
         if len(existing_data_in_dc) > 0:
             existing_data_in_dc, dc_labels, loader_labels = zip(*existing_data_in_dc)
-        self.app.existing_data_in_dc = list(existing_data_in_dc)
+        self._app.existing_data_in_dc = list(existing_data_in_dc)
 
         # Only need to display the message once
         if len(dc_labels) > 0:
@@ -111,7 +139,7 @@ class BaseImporter(PluginTemplateMixin):
                 msg = (f"Selected data appears to be identical "
                        f"to existing data ({', '.join(dc_labels)}).")
 
-            self.app.hub.broadcast(SnackbarMessage(msg.rstrip('\n'), sender=self, color='warning'))
+            self._app.hub.broadcast(SnackbarMessage(msg.rstrip('\n'), sender=self, color='warning'))
             # TODO: Allow for now but implement a disabled message near the import button
             #  or indicate that the import will be a re-import And if allowing re-import,
             #  there's a bug that needs to be squashed... (second import doesn't show in viewer)
@@ -139,6 +167,12 @@ class BaseImporterToDataCollection(BaseImporter):
     data_label_default = Unicode().tag(sync=True)
     data_label_auto = Bool(True).tag(sync=True)
     data_label_invalid_msg = Unicode().tag(sync=True)
+    data_label_overwrite = Bool(False).tag(sync=True)
+    # for prefix mode with multiple extensions
+    data_label_is_prefix = Bool(False).tag(sync=True)
+    data_label_suffices = List([]).tag(sync=True)
+    # for prefix mode: list of bools (parallel to data_label_suffices) indicating overwrite status
+    data_label_overwrite_by_index = List([]).tag(sync=True)
 
     viewer_create_new_items = List([]).tag(sync=True)
     viewer_create_new_selected = Unicode().tag(sync=True)
@@ -157,9 +191,10 @@ class BaseImporterToDataCollection(BaseImporter):
         self.data_label = AutoTextField(self, 'data_label_value',
                                         'data_label_default',
                                         'data_label_auto',
-                                        'data_label_invalid_msg')
+                                        'data_label_invalid_msg',
+                                        unique_in_data_collection=True)
 
-        self.data_label_default = self.app.return_unique_name(self._registry_label)
+        self.data_label.default = self._registry_label
 
         self.viewer = ViewerSelectCreateNew(self, 'viewer_items',
                                             'viewer_selected',
@@ -179,8 +214,8 @@ class BaseImporterToDataCollection(BaseImporter):
         self._on_label_changed()
 
         supported_viewers = self._get_supported_viewers()
-        if self.app.config in ('deconfigged', 'imviz', 'lcviz', 'rampviz'):
-            if self.app.config == 'imviz':
+        if self._app.config in ('deconfigged', 'imviz', 'lcviz', 'rampviz'):
+            if self._app.config == 'imviz':
                 # only allow image viewers
                 supported_viewers = [item for item in supported_viewers
                                      if item.get('reference') == 'imviz-image-viewer']
@@ -227,27 +262,44 @@ class BaseImporterToDataCollection(BaseImporter):
         else:
             return {}
 
-    @observe('data_label_value')
+    @observe('data_label_value', 'data_label_is_prefix', 'data_label_suffices')
     def _on_label_changed(self, msg={}):
         if not len(self.data_label_value.strip()):
             # strip will raise the same error for a label of all spaces
             self.data_label_invalid_msg = 'data_label must be provided'
+            self.data_label_overwrite = False
+            self.data_label_overwrite_by_index = []
             return
 
-        # ensure the default label is unique for the data-collection
-        self.data_label_default = self.app.return_unique_name(self.data_label_default)
+        dc_labels = [data.label for data in self._app.data_collection]
 
-        for data in self.app.data_collection:
-            if self.data_label_value == data.label:
-                self.data_label_invalid_msg = f"data_label='{self.data_label_value}' already in use"
-                return
-
-        self.data_label_invalid_msg = ''
+        if self.data_label_is_prefix and len(self.data_label_suffices):
+            # prefix/multiselect mode: check each suffix
+            overwrite_by_index = [f"{self.data_label_value}{suffix}" in dc_labels
+                                  for suffix in self.data_label_suffices]
+            self.data_label_overwrite_by_index = overwrite_by_index
+            self.data_label_overwrite = any(overwrite_by_index)
+            self.data_label_invalid_msg = ''
+        else:
+            # single mode
+            self.data_label_overwrite_by_index = []
+            if self.data_label_value in dc_labels:
+                self.data_label_overwrite = True
+                self.data_label_invalid_msg = ''
+            else:
+                self.data_label_overwrite = False
+                self.data_label_invalid_msg = ''
 
     @observe('data_label_invalid_msg', 'viewer_label_invalid_msg')
     def _set_import_disabled(self, change={}):
-        self.import_disabled = (len(self.data_label_invalid_msg) > 0
-                                or len(self.viewer_label_invalid_msg) > 0)
+        # Set import_disabled_msg based on validation errors
+        # Empty msg = enabled, non-empty = disabled
+        if len(self.data_label_invalid_msg) > 0:
+            self.import_disabled_msg = self.data_label_invalid_msg
+        elif len(self.viewer_label_invalid_msg) > 0:
+            self.import_disabled_msg = self.viewer_label_invalid_msg
+        else:
+            self.import_disabled_msg = ''
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return physical_type
@@ -256,12 +308,55 @@ class BaseImporterToDataCollection(BaseImporter):
                                parent=None,
                                viewer_select=None,
                                cls=None):
+        """
+        Add data to the data collection (and optionally to viewers).
 
+        This method handles adding a Glue Data object (or an object with a glue
+        data translator, e.g Spectrum or Astropy Table) to the data collection,
+        setting up parent-child relationships for associated data, standardizing
+        metadata, assigning component types, and adding the data to viewers.
+
+        Parameters
+        ----------
+        data
+            The object to add to the data collection.
+        data_label : str, optional
+            Label for the data in the collection. If not provided, uses
+            ``self.data_label_value``. If a data entry with this label already
+            exists, it will be overwritten.
+        data_hash : str, optional
+            Pre-computed hash for the data. If not provided, a hash will be
+            generated from the data.
+        parent : str, optional
+            Label of the parent data entry. If provided, establishes this data
+            as a child of the parent (e.g., DQ layer as child of SCI layer).
+            Used by the Data Quality plugin to associate layers.
+        viewer_select : `~jdaviz.core.template_mixin.ViewerSelect`, optional
+            Viewer selection component to determine which viewers to add the
+            data to. If not provided, uses ``self.viewer``.
+        cls : class, optional
+            The native data class to store in metadata for later export via
+            ``get_data``. If not provided, uses the class of the input data.
+        """
         if data_label is None:
             data_label = self.data_label_value.strip()
         else:
             data_label = data_label.strip()
 
+        # Handle overwriting existing data when label matches.
+        # Since data_label.default always applies return_unique_name,
+        # overwrite only triggers when:
+        # 1. User explicitly passed a data_label that matches existing, OR
+        # 2. User manually set the label in UI to match an existing entry
+        if data_label in self._app.data_collection:
+            # Remove from all viewers first, then from data collection
+            for viewer in self._app._viewer_store.values():
+                if hasattr(viewer, '_data_menu'):
+                    if data_label in viewer._data_menu.data_labels_loaded:
+                        self._app.remove_data_from_viewer(viewer.reference_id, data_label)
+            self._app.data_collection.remove(self._app.data_collection[data_label])
+
+        # Standardize metadata if possible
         if hasattr(data, 'meta'):
             try:
                 data.meta = standardize_metadata(data.meta)
@@ -278,25 +373,20 @@ class BaseImporterToDataCollection(BaseImporter):
             data.meta = dict(data.meta)
         data.meta['_native_data_cls'] = cls
         data.meta['_importer'] = self.__class__.__name__
-
         # Create a hashed representation of the data if not already present
         data.meta['_data_hash'] = data_hash if data_hash is not None else create_data_hash(data)
 
-        self.app.add_data(data, data_label=data_label)
+        # Add the data to data collection.
+        self._app.add_data(data, data_label=data_label)
+
+        # Set up parent-child relationship if specified
         if parent is not None:
-            self.app._set_assoc_data_as_child(data_label, parent)
+            self._app._set_assoc_data_as_child(data_label, parent)
 
-        def _physical_type_from_component(comp_id, comp):
-            import astropy.units as u
-            try:
-                comp_units = comp.units
-                if comp_units is None or comp_units == '':
-                    return comp_units, None
-                return comp_units, str(u.Unit(comp_units).physical_type)
-            except (ValueError, TypeError, AttributeError):
-                return comp_units, None
-
-        new_dc_entry = self.app.data_collection[data_label]
+        # Assign component types (e.g., 'RA:angle', 'DEC:angle', 'pixel') to each
+        # component in the data. These types are used for automatic data linking
+        # and determining which components can be plotted together.
+        new_dc_entry = self._app.data_collection[data_label]
         for comp_id in new_dc_entry.components:
             comp_units, physical_type = _physical_type_from_component(str(comp_id),
                                                                       new_dc_entry.get_component(comp_id))  # noqa
@@ -304,49 +394,62 @@ class BaseImporterToDataCollection(BaseImporter):
                                                                  new_dc_entry.get_component(comp_id),  # noqa
                                                                  comp_units, physical_type)
 
-        if self.app.config in CONFIGS_WITH_LOADERS:
-            self.app._link_new_data_by_component_type(data_label)
+        # link the new data to existing data in the collection based on matching
+        # component types
+        if self._app.config in CONFIGS_WITH_LOADERS:
+            self._app._link_new_data_by_component_type(data_label)
 
+        # Determine which viewer(s) to add the data to.
         viewer_select = viewer_select if viewer_select is not None else self.viewer
+
+        # user requested creating a new viewer for this data.
         if viewer_select.create_new.selected:
             viewer_reference = viewer_select.create_new.selected_item.get('reference')
             viewer_label = viewer_select.new_label.value.strip()
 
+            # Create the new viewer instance
             viewer_dict = viewer_registry.members.get(viewer_reference)
             viewer_cls = viewer_dict.get('cls')
-            self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
-                                    vid=viewer_label,
-                                    name=viewer_label,
-                                    open_data_menu_if_empty=False)
-            viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
+            self._app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
+                                     vid=viewer_label,
+                                     name=viewer_label,
+                                     open_data_menu_if_empty=False)
+            viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
             viewer.data_menu.add_data(data_label)
 
             # default to selecting this new viewer for next import
             viewer_select.create_new.selected = ''
             viewer_select.selected = [viewer_label]
 
+        # if no viewers selected, just notify user that data was loaded
+        # but not displayed anywhere.
         elif len(viewer_select.selected) == 0:
-            # just send a snackbar as feedback
-            if len(self.app._jdaviz_helper.viewers):
+            if len(self._app._jdaviz_helper.viewers):
                 msg = f"{data_label} loaded without any viewers selected - add manually from viewer data-menu"  # noqa
             else:
                 msg = f"{data_label} loaded but no viewers were created.  Create viewers manually and add data from data-menu"  # noqa
-            if not new_dc_entry.meta.get(_wcs_only_label, False):
-                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+            # Don't warn for WCS-only layers (orientation reference layers)
+            # or for data added via a plugin (e.g moment maps)
+            from_plugin = new_dc_entry.meta.get('plugin', False)
+            if not new_dc_entry.meta.get(_wcs_only_label, False) and not from_plugin:
+                self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+
+        # otherwise, add data to all selected viewers.
         else:
             failed_viewers = []
             exceptions = []
             for viewer_label in viewer_select.selected:
-                viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
+                viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
                 try:
                     viewer.data_menu.add_data(data_label)
                 except Exception as e:
                     failed_viewers.append(viewer_label)
                     exceptions.append(str(e))
+            # Report any failures (e.g., incompatible data types for the viewer)
             if len(failed_viewers) > 0:
                 msg = f"Failed to add {data_label} to viewers: {', '.join(failed_viewers)}"
-                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error',
-                                                       traceback=exceptions))
+                self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error',
+                                                        traceback=exceptions))
 
     @with_spinner('import_spinner')
     def __call__(self):
@@ -373,4 +476,4 @@ class BaseImporterToPlugin(BaseImporter):
 
     @property
     def has_default_plugin(self):
-        return self.default_plugin in self.app._jdaviz_helper.plugins
+        return self.default_plugin in self._app._jdaviz_helper.plugins

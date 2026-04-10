@@ -1,4 +1,9 @@
 import pytest
+from astropy import units as u
+from astropy.table import Table
+
+from jdaviz.conftest import (_create_spectrum1d_cube_with_fluxunit,
+                             _image_nddata_wcs)
 from jdaviz.core.user_api import ViewerCreatorUserApi
 
 
@@ -62,9 +67,9 @@ class TestViewerCreatorObject:
         # Should not raise an error even if callback is None
 
         # Test with closing sidebar
-        self.dcf_helper.app.state.drawer_content = 'test_content'
+        self.dcf_helper._app.state.drawer_content = 'test_content'
         self.creator.close_in_tray(close_sidebar=True)
-        assert self.dcf_helper.app.state.drawer_content == ''
+        assert self.dcf_helper._app.state.drawer_content == ''
 
     def test_viewer_creator_open_in_tray_callbacks(self):
         """
@@ -102,10 +107,10 @@ class TestViewerCreatorObject:
         assert self.creator.is_relevant is True
 
         # Check that it appears in new_viewer_items
-        labels = [ti['label'] for ti in self.dcf_helper.app.state.new_viewer_items]
+        labels = [ti['label'] for ti in self.dcf_helper._app.state.new_viewer_items]
         assert '1D Spectrum' in labels
         idx = labels.index('1D Spectrum')
-        assert self.dcf_helper.app.state.new_viewer_items[idx]['is_relevant'] is True
+        assert self.dcf_helper._app.state.new_viewer_items[idx]['is_relevant'] is True
 
     def test_viewer_label_validation_duplicate(self):
         """
@@ -144,8 +149,9 @@ class TestViewerCreatorObject:
         # Load in a second spectrum but first check that the observer works
         assert self.creator.is_relevant is True
         initial_item_count = len(self.creator.dataset.items)
-        # Load another one in
-        self.dcf_helper.load(self.spectrum1d_nm, format='1D Spectrum')
+        # Load another one in with a different label
+        self.dcf_helper.load(self.spectrum1d_nm, format='1D Spectrum',
+                             data_label='1D Spectrum (nm)')
 
         # Should still be relevant with more items per the observer
         assert self.creator.is_relevant is True
@@ -180,19 +186,36 @@ class TestViewerCreatorObject:
 
     def test_multiple_viewer_types(self):
         """
-        Test that multiple viewer types can coexist.
+        Test that all viewer types can coexist and be destroyed.
         """
         self.dcf_helper.load(self.spectrum2d, format='2D Spectrum')
+        self.dcf_helper.load(_create_spectrum1d_cube_with_fluxunit(),
+                             format='3D Spectrum')
+        self.dcf_helper.load(_image_nddata_wcs(), format='Image')
+        catalog = Table()
+        catalog['ra'] = [337.503, 337.528] * u.deg
+        catalog['dec'] = [-20.815, -20.804] * u.deg
+        self.dcf_helper.load(catalog, format='Catalog')
 
-        # Should have multiple viewer types available
-        assert '1D Spectrum' in self.dcf_helper.new_viewers
-        assert '2D Spectrum' in self.dcf_helper.new_viewers
+        new_viewers_set = set(self.dcf_helper.new_viewers.keys())
+        assert new_viewers_set == {'1D Spectrum', '2D Spectrum', '3D Spectrum',
+                                   'Image', 'Histogram', 'Scatter', 'Table'}
 
-        # Create viewers of different types
-        viewer1d = self.dcf_helper.new_viewers['1D Spectrum']()
-        viewer2d = self.dcf_helper.new_viewers['2D Spectrum']()
+        existing_viewers = set(self.dcf_helper.viewers)
+        created = {}
+        # Create one viewer per available type, with data loaded
+        # exclude viewers previously created by loading dataset
+        for vtype in new_viewers_set.difference(existing_viewers):
+            viewer_creator = self.dcf_helper.new_viewers[vtype]._obj
+            viewer_creator.dataset.selected = [item['label']
+                                               for item in viewer_creator.dataset.items][0]
+            created[vtype] = viewer_creator()
 
-        assert viewer1d._obj.id != viewer2d._obj.id
+        # Destroy all viewers
+        for vtype, viewer in self.dcf_helper.viewers.items():
+            self.dcf_helper._app.vue_destroy_viewer_item(viewer._obj.id)
+
+        assert len(self.dcf_helper.viewers) == 0
 
     def test_vue_create_clicked(self):
         """

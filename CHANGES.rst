@@ -1,4 +1,253 @@
-4.5 (unreleased)
+4.6 (unreleased)
+================
+
+New Features
+------------
+
+- Datasets can now be renamed via API and UI through the viewer data-menu. [#3960, #3968, #4010]
+
+- Allow creating new viewers (in deconfigged) when adding results from plugins. [#3966]
+
+- Astroquery loader supports cone-search for JWST or HST data products, where applicable. [#3907]
+
+- "Spectrum List" and "Spectrum List Concatenated" loaders have now been absorbed into the "1D Spectrum" loader
+  via the ``extension`` and ``concatenate`` options. [#3953]
+
+- Catalog public API exposed [#3761, #3777, #3778, #3799, #3814, #3835, #3854, #3856, #3863, #3867, #3930, #3906, #3912, #3899, #3907, #3990, #4039]
+
+- Support in plot options to set which columns are visible for table viewers. [#4033]
+
+- Added `skewer` mode to footprint selection that only selects when clicking inside a footprint.
+  Footprint selection tools now support control+click or command+click to toggle
+  selections (add/remove individual footprints without replacing the current selection). [#3962, #4034]
+
+- Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
+
+- Add support for viewers with mixed pixel and wavelength/frequency spectral axis units. [#4001]
+
+- Add handles to subset to allow interactive resizing. [#3919]
+
+- Indicate in loaders whether the loaded entry/entries will overwrite existing data in the app. [#3997]
+
+- Added ``enable_footprint_selection_tools()`` and ``disable_footprint_selection_tools()`` APIs
+  to programmatically control footprint selection toolbar. [#4048]
+
+- Improve default marker styling options (size and color cycler) for scatter layers. [#4044]
+
+- Top level access to datasets API dictionary, deprecating top-level access to data_labels list. [#4024]
+
+- Renaming data will now propagate the new label to derived data in the same way as renaming subsets. For example,
+  renaming 'Cube' to 'CubeFlux' will rename 'Cube (Subset 1, sum)' to 'CubeFlux (Subset 1, sum)'. [#4025]
+
+- Enable multiselect mode for selecting multiple table extensions in the Catalog loader. [#4051]
+
+- Table viewer tools to highlight selected, zoom-to-selected, and create subset from selected. [#3994]
+
+- Allow ingesting tables in plugins back into the app. [#4021]
+
+- Allow creating new image viewers from moment map plugin. Remove option to select 'align by' in image
+  importer unless orientation plugin exists, or new viewer creation selection is Image. [#4054]
+
+- Provide better error reporting when attempting to load data via `load`
+  and loaders infrastructure. [#4058]
+
+- Allow launching generalized Jdaviz from the command line and deprecate configs from that interface. [#4087, #4115]
+
+- Added ability to load spectra with 'IVAR' and 'VAR' uncertainty extensions. [#4091]
+
+- Line list loader to allow loading custom line lists from a table or file. [#4082]
+
+- Avoid attempting to convert units in image viewers that are likely moment map data. This
+  fix allows the user to load moment map data into an existing image viewer, and use
+  unit converison functionality when there is moment map data in a viewer. [#4085]
+
+- Add ability to toggle between flux and surface brightness in deconfigged.
+  Avoid attempting to convert units in image viewers that are likely moment map
+  data. This fix allows the user to load moment map data into an existing image
+  viewer, and use unit converison functionality when there is moment map data in
+  an Image or 3D Spectrum viewer. [#4085]
+
+- Fixed batch aperture photometry mode in deconfigged. [#4106]
+
+- Generalize Data Quality plugin. [#4110, #4111]
+
+Cubeviz
+^^^^^^^
+- Added ability to load DQ extension in the cubeviz loader, which activates the
+  DQ plugin in cubeviz. [#4077]
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+- Fixed an inconsistency with 1/2D Spectra when loading duplicate user-supplied labels. With those data types,
+  user-supplied labels would auto-increment whereas with others, they would not.
+  Now all user-supplied labels do not auto-increment. [#4055]
+
+Specviz2d
+^^^^^^^^^
+
+API Changes
+-----------
+
+- Deprecate ``show_in_viewer`` argument in ``load`` in favor of using the ``viewer`` argument to specify
+  which viewer(s) to show the data in, or whether to create a new viewer. [#4116]
+
+Cubeviz
+^^^^^^^
+
+- Deprecates Cubeviz in favor of the generalized top-level Jdaviz application. [#4090]
+
+Imviz
+^^^^^
+
+- Deprecates Imviz in favor of the generalized top-level Jdaviz application. [#4090]
+
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+- Deprecates Specviz in favor of the generalized top-level Jdaviz application. [#4090]
+
+
+Specviz2d
+^^^^^^^^^
+
+- Deprecates Specviz2d in favor of the generalized top-level Jdaviz application. [#4090]
+
+
+Bug Fixes
+---------
+
+- Fix issue with treat_table_as_query switch where it disappeared entirely when switched 'off' [#4102]
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+- Fixed an issue that occurred when destroying a 2D Spectrum viewer due to a units check that
+  attempted to read from a file that was no longer in memory due to cleanup procedures. [#4105]
+
+- Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
+
+- Update example notebooks and add examples for deconfigged. [#4052]
+
+4.5.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- Fixed bug where creating new subsets in a fresh app instance and adjusting them creates a copy
+  instead of adjusting the original subset. [#4083]
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+- Fixed bug where calling `jd.show()` before `batch_load` context caused data not to load correctly
+  into the viewer(s) due to absence of linking necessary for glue's rendering backend. [#4079]
+
+- Fixed a bug when trying to change link type multiple times with subsets defined. [#4096]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+- Fixed bug where loading two 2D spectra failed to display in the spectrum-2d viewer. [#3983]
+
+- Fixed bug where mouseover fails to display in 2D Spectra viewer when no wavelength mapping
+  is provided. [#4093]
+
+4.5.1 (2026-03-06)
+==================
+
+Bug Fixes
+---------
+- Fixed bug when deleting subsets in deconfigged. [#3951]
+
+- Fixed bugs in aperture photometry plugin for images in deconfigged, where the _cube_wave attribute,
+  which is not applicable to images, was being accessed. [#3950]
+
+- Fixes traceback when loading two 2D spectra into the deconfigged app. [#3957]
+
+- Fixed bug when deleting a viewer with WCS-linked data in deconfigged, and readding the same data
+  into a new viewer. [#3976]
+
+- Fixed a traceback when zooming 2D spectra in deconfigged. [#3981]
+
+- Fixed filedrop bug where parsers were unable to detect file formats. [#3986]
+
+- Fixed bug when initializing relevant 2D Spectrum plugins when there are viewers
+  with mixed pixel / wavelength spectral axis units. [#3982]
+
+- Fixed API hint styling for viewer labels. [#4003]
+
+- Fixed bug when opening plot options or export from shortcut button when jdaviz
+  and lcviz are simultaneously imported. [#4027]
+
+- Fixed astroquery and virtual observatory loaders not responding properly to link type changes. [#4038]
+
+- Avoid incorrectly showing "no viewer selected" warning when adding data from some plugins. [#4037]
+
+- Fix layer filtering logic for plot options to properly show/hide layers based on coordinate and link type. [#4046]
+
+- Fixed WCS layer being pushed to incorrect viewer types in deconfigged when changing between pixel and WCS linking. [#4049]
+
+- Avoid crashing Jdaviz if the PyVO vocabularies can't be downloaded. [#4059]
+
+Cubeviz
+^^^^^^^
+
+- Fixed a traceback when mousing over a 2D viewer with only 2D (non-cube) data loaded into it. [#3959]
+
+Imviz
+^^^^^
+
+- Optimization to orientation plugin to reduce overhead when multiple custom orientations are created. [#3896]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+
+Specviz2d
+^^^^^^^^^
+
+- Fixed an issue with GWCS 1.0.3 by updating the ``try/except`` to an if check against ``pixel_n_dim``. [#4032]
+
+4.5 (2025-12-15)
 ================
 
 New Features
@@ -7,7 +256,7 @@ New Features
 - Loaders now all support "observation" and "file" tables, allowing choosing which file to download
   and import from an astroquery or MAST search. Interactive footprint selection enables displaying
   observation footprints from ``s_region`` data as overlays on the image viewer and clicking on
-  footprints to select/deselect observations. [#3769, #3894]
+  footprints to select/deselect observations. [#3769, #3894, #3935]
 
 - Change parallelization framework for better performance and flexibility. [#3806]
 
@@ -36,6 +285,13 @@ New Features
 
 - Add 'Resize in Viewer' to the 'Edit Subset' menu [#3905]
 
+- The Model Fitting plugin now supports fitting with ``astropy.modeling.models.Spline1D`` using
+  the ``astropy.modeling.fitting.SplineSmoothingFitter``. [#3882]
+
+- Update the standalone application launcher to use the solara file browser. [#3941]
+
+- Update data menu to group children with parents using visual indentation and ordering children below parents. [#3926]
+
 Cubeviz
 ^^^^^^^
 
@@ -47,6 +303,8 @@ Cubeviz
 - Aperture photometry and collapse data selection no longer includes uncertainty cubes. [#3910]
 
 - The default label for collapsed cubes now always includes the input data-label. [#3910]
+
+- The `Slice` plugin is renamed to `Spectral Slice`. [#3925]
 
 Imviz
 ^^^^^
@@ -61,16 +319,12 @@ Imviz
 
 - ``align_by`` can be set directly from the Image loader. [#3904]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
 Specviz2d
 ^^^^^^^^^
 
 - Allow loading intermediate ``_bsub`` pipeline step files for JWST WFSS. [#3786]
+
+- Generalized cross-dispersion profile plugin to be compatible with the deconfigged jdaviz instance. [#3928]
 
 Rampviz
 ^^^^^^^
@@ -79,26 +333,15 @@ Rampviz
   This changes the default auto-extraction function to always be "median" as well as
   changes to the default label of the auto-extracted ramp integration. [#3878, #3910]
 
+- The `Slice` plugin is renamed to `Ramp Slice`. [#3925]
+
 API Changes
 -----------
 
 - Adds `ldr.load()` method to the loaders API and suggests using this in API hints over `ldr.importer()`
   (which will continue to exist). [#3832]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
+- Renames model fitting's `fitter_component` to `fitter`, with deprecation. [#3944]
 
 Bug Fixes
 ---------
@@ -107,20 +350,11 @@ Bug Fixes
 
 - Fixes in model fitting plugin to correctly update parameter units and values upon unit conversion. [#3858]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
+- In the Catalog Search plugin, `Zoom to Selected` button is now moved to below the selection table.
+  The button is now hidden when no selection is made. [#3888]
 
 Other Changes and Additions
 ---------------------------
@@ -130,29 +364,6 @@ Other Changes and Additions
 - Scatter and histogram viewer support in the deconfigged app instance. [#3778, #3833]
 
 - Fix missing user API and API hint entries in plugins. [#3900, #3918]
-
-4.4.3 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-- In the Catalog Search plugin, `Zoom to Selected` button is now moved to below the selection table.
-  The button is now hidden when no selection is made. [#3888]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 4.4.2 (2025-11-14)
 ==================

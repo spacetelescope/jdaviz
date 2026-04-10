@@ -128,20 +128,8 @@ You can do a release from your fork directly without a clean code check-out.
      Bug Fixes
      ---------
 
-     Cubeviz
-     ^^^^^^^
-
-     Imviz
-     ^^^^^
-
      Mosviz
      ^^^^^^
-
-     Specviz
-     ^^^^^^^
-
-     Specviz2d
-     ^^^^^^^^^
 
 14. Checkout ``main`` and update ``CHANGES.rst`` and ``CITATIONS.cff`` directly
     in that branch using your admin power. If you do not have sufficient access to
@@ -157,56 +145,20 @@ You can do a release from your fork directly without a clean code check-out.
      New Features
      ------------
 
-     Cubeviz
-     ^^^^^^^
-
-     Imviz
-     ^^^^^
-
      Mosviz
      ^^^^^^
-
-     Specviz
-     ^^^^^^^
-
-     Specviz2d
-     ^^^^^^^^^
 
      API Changes
      -----------
 
-     Cubeviz
-     ^^^^^^^
-
-     Imviz
-     ^^^^^
-
      Mosviz
      ^^^^^^
-
-     Specviz
-     ^^^^^^^
-
-     Specviz2d
-     ^^^^^^^^^
 
      Bug Fixes
      ---------
 
-     Cubeviz
-     ^^^^^^^
-
-     Imviz
-     ^^^^^
-
      Mosviz
      ^^^^^^
-
-     Specviz
-     ^^^^^^^
-
-     Specviz2d
-     ^^^^^^^^^
 
      Other Changes and Additions
      ---------------------------
@@ -217,20 +169,8 @@ You can do a release from your fork directly without a clean code check-out.
      Bug Fixes
      ---------
 
-     Cubeviz
-     ^^^^^^^
-
-     Imviz
-     ^^^^^
-
      Mosviz
      ^^^^^^
-
-     Specviz
-     ^^^^^^^
-
-     Specviz2d
-     ^^^^^^^^^
 
 15. Commit your changes of the, uh, change log with a message, "Back to development: A.C.dev"
     and push directly to ``main``.
@@ -286,7 +226,7 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
 3. Checkout the upstream ``vX.Y.x`` branch corresponding to the last feature release.
    Alternatively you can create a new local branch from ``vX.Y.x`` and make sure
    it is up to date with the upstream ``vX.Y.x`` branch, in which case you will
-   eventually open a PR to ``vX.Y.x`` with changes for the release from your fork 
+   eventually open a PR to ``vX.Y.x`` with changes for the release from your fork
    instead of pushing directly to upstream.
 
 4. The ``CHANGES.rst`` file should have all of the bug fixes to be released. Delete the

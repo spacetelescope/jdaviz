@@ -2,13 +2,17 @@
 Developer Guide
 ###############
 
-Here is some documentation specific for developers.  
+.. include:: ../_templates/deprecated_config_banner.rst
+
+Here is some documentation specific for developers.
 
 .. toctree::
   :maxdepth: 2
 
   release
   infrastructure
+  new_plugin
+  wireframe
   ui_description
   ui_style_guide
   ui_plugin_components

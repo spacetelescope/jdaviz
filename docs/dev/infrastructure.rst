@@ -2,6 +2,8 @@
 Jdaviz Design and Infrastructure
 ********************************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 This section outlines the top-level structure of Jdaviz.
 
 .. note::

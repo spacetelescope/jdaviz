@@ -7,6 +7,8 @@
 |mosviz_logo| Mosviz
 ####################
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 .. image:: https://stsci.box.com/shared/static/sbstzr702zqghc40x49g6zxsik6ayg6u.gif
     :alt: Introductory video tour of the Mosviz configuration and its features
 

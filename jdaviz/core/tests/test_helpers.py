@@ -59,7 +59,7 @@ class TestConfigHelperSpec:
         self.config_helper.plugins['Subset Tools'].import_region(
             SpectralRegion(8200*spectral_axis_unit, 8800*spectral_axis_unit))
 
-        self.data = self.config_helper.app.data_collection[self.label]
+        self.data = self.config_helper._app.data_collection[self.label]
 
     @pytest.mark.parametrize(
         ('label', 'subset_name', 'answer'),
@@ -89,8 +89,8 @@ class TestConfigHelperSpec:
             self.config_helper._get_data(data_label="Blah")
 
         # invalid cls type
-        self.config_helper.app.data_collection.remove(
-            self.config_helper.app.data_collection[self.label2])
+        self.config_helper._app.data_collection.remove(
+            self.config_helper._app.data_collection[self.label2])
         with pytest.raises(TypeError, match="cls in get_data must be a class or None."):
             self.config_helper._get_data('Test 1D Spectrum', cls=42)
 
@@ -99,8 +99,8 @@ class TestConfigHelperSpec:
             self.config_helper._get_data('Test 1D Spectrum', spectral_subset="Fail")
 
     def test_get_data_no_label_one_in_dc(self):
-        self.config_helper.app.data_collection.remove(
-            self.config_helper.app.data_collection[self.label2])
+        self.config_helper._app.data_collection.remove(
+            self.config_helper._app.data_collection[self.label2])
         results = self.config_helper._get_data()
         assert_quantity_allclose(results.flux,
                                  self.spec.flux, atol=1e-5 * u.Unit(self.spec.flux.unit))
@@ -194,7 +194,7 @@ class TestConfigHelperSubsets:
         self.config_helper = cubeviz_helper
         # self.config_helper.load(image_cube_hdu_obj, format='Spectral Cube')
         self.config_helper.load_data(image_cube_hdu_obj)
-        self.data = self.config_helper.app.data_collection[0]
+        self.data = self.config_helper._app.data_collection[0]
         self.label = self.data.label
 
         subset_plugin = self.config_helper.plugins['Subset Tools']
@@ -296,8 +296,8 @@ def test_get_data_cls(deconfigged_helper, request, data_tuple):
     deconfigged_helper.load(input_data, data_label=data_label, format=data_label)
 
     # Get actual label from data collection after loading
-    label = deconfigged_helper.app.data_collection[0].label
-    data = deconfigged_helper.app.data_collection[label]
+    label = deconfigged_helper._app.data_collection[0].label
+    data = deconfigged_helper._app.data_collection[label]
 
     # Clear _native_data_cls to force cls inference path
     if '_native_data_cls' in data.meta:
@@ -313,10 +313,10 @@ def test_get_data_cls_spectrum_for_specviz2d(specviz2d_helper, spectrum2d):
     """
     specviz2d_helper.load_data(spectrum2d)
     # Get the actual label from data collection
-    label = specviz2d_helper.app.data_collection[0].label
+    label = specviz2d_helper._app.data_collection[0].label
 
     # Spectrum should infer Spectrum2d for multi-dimensional data
-    result = specviz2d_helper.get_data(data_label=label)
+    result = specviz2d_helper.datasets[label].get_data()
     assert isinstance(result, Spectrum)
 
 
@@ -326,11 +326,16 @@ def test_get_data_cls_nddataarray_for_rampviz(rampviz_helper, jwst_level_1b_ramp
     """
     rampviz_helper.load_data(jwst_level_1b_ramp)
     # Get the actual label from data collection
-    label = rampviz_helper.app.data_collection[0].label
+    label = rampviz_helper._app.data_collection[0].label
 
-    # Rampviz should infer NDDataArray for multi-dimensional data
-    result = rampviz_helper.get_data(data_label=label)
+    # Test both the old and new API
+    result = rampviz_helper.datasets[label].get_data()
+    result_old_api = rampviz_helper.get_data(data_label=label)
+
     assert isinstance(result, NDDataArray)
+    assert isinstance(result_old_api, NDDataArray)
+    # Verify both APIs return equivalent data
+    assert np.array_equal(result.data, result_old_api.data)
 
 
 def test_delete_region_with_valid_subset(cubeviz_helper, image_cube_hdu_obj):
@@ -344,14 +349,14 @@ def test_delete_region_with_valid_subset(cubeviz_helper, image_cube_hdu_obj):
     subset_plugin.import_region(CircularROI(5, 5, 3))
 
     # Verify subset was created
-    subset_labels = [s.label for s in cubeviz_helper.app.data_collection.subset_groups]
+    subset_labels = [s.label for s in cubeviz_helper._app.data_collection.subset_groups]
     assert 'Subset 1' in subset_labels
 
     # Delete the region
     cubeviz_helper._delete_region('Subset 1')
 
     # Verify it was deleted
-    subset_labels_after = [s.label for s in cubeviz_helper.app.data_collection.subset_groups]
+    subset_labels_after = [s.label for s in cubeviz_helper._app.data_collection.subset_groups]
     assert 'Subset 1' not in subset_labels_after
 
 
@@ -413,3 +418,55 @@ def test_get_loader_default_args(deconfigged_helper, spectrum1d):
 
     parser = deconfigged_helper._get_loader('object', parser_name='object')
     assert isinstance(parser, ObjectParser)
+
+
+@pytest.mark.parametrize('load_first', ['1D Spectrum', '2D Spectrum'])
+@pytest.mark.parametrize('unitless_data', ['1D Spectrum', '2D Spectrum'])
+def test_load_mixed_spectral_axis_units(deconfigged_helper, unitless_data, load_first):
+    """
+    Test that loading 1D and 2D spectra with mixed units (pixels and nm)
+    works as expected. Tests the case where either the 1D or 2D spectrum have no,
+    wavelength info, as well as loading the 2D spectrum first as well as second to
+    trigger the automatic spectral extraction when there is/is not already an existing
+    viewer with incompatible units.
+
+    Two viewers should be created, and the automatic spectral extraction should
+    be sucessful and create a new viewer for the extracted spectrum.
+    """
+
+    # for test parameterization, either the 1D or 2D spectrum will be unitless
+    sa_units = [u.pix, u.nm] if unitless_data == '2D Spectrum' else [u.nm, u.pix]
+
+    # create 1D spectrum with spectral axis in pixels
+    spec_1d = Spectrum(flux=(1, 2, 3) * u.Jy, spectral_axis=(1, 2, 3) * sa_units[0])
+
+    # create 2D spectrum with spectral axis in nm
+    data = np.zeros((5, 10))
+    data[3] = np.arange(10)
+    spec_2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3] * sa_units[1])
+
+    if load_first == '1D Spectrum':
+        # first load 1D spectrum
+        deconfigged_helper.load(spec_1d, data_label='spec1d', format='1D Spectrum')
+        assert len(deconfigged_helper.viewers) == 1
+
+        # then load 2D spectrum. This should create a new viewer, and trigger the
+        # automatic spectral extraction (which is added to the 1D viewer, already in
+        # pixels) without error.
+        deconfigged_helper.load(spec_2d, data_label='spec2d', format='2D Spectrum')
+        assert len(deconfigged_helper.viewers) == 3  # 2 1D viewers (pix, nm), 1 2D viewer
+
+    elif load_first == '2D Spectrum':
+        # first load 2D spectrum. this will create 2 new viewers: one 2D viewer and
+        # one 1D viewer for the automatic spectral extraction in nm
+        deconfigged_helper.load(spec_2d, data_label='spec2d', format='2D Spectrum')
+        assert len(deconfigged_helper.viewers) == 2
+
+        # then load 1D spectrum. This should create a new viewer for the 1D
+        # spectrum in pixels
+        deconfigged_helper.load(spec_1d, data_label='spec1d', format='1D Spectrum')
+        assert len(deconfigged_helper.viewers) == 3  # 2 1D viewers (pix, nm), 1 2D viewer
+
+    # check that there are 2 spectra in the data collection, the one loaded and
+    # the one auto-extracted
+    assert len(deconfigged_helper._app.data_collection) == 3  # 2 spectra + 1 extracted

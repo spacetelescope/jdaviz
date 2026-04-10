@@ -25,10 +25,44 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Get list of available telescopes, filtering out disabled ones
+        all_telescopes = ['JWST', 'HST', 'SDSS', 'Gaia']
+        disabled_telescopes = self.app.state.settings.get('disabled_astroquery_telescopes', [])
+        available_telescopes = [t for t in all_telescopes if t not in disabled_telescopes]
+
         self.telescope = SelectPluginComponent(
             self, items="telescope_items", selected="telescope_selected",
-            manual_options=['SDSS', 'Gaia']
+            manual_options=available_telescopes
         )
+
+        # Listen for changes to app.state.settings
+        self.app.state.add_callback('settings', self._on_app_settings_changed)
+
+    def _on_app_settings_changed(self, new_settings_dict):
+        """
+        Update telescope options when settings change.
+        """
+        # Call parent's method to handle server_is_remote and other settings
+        super()._on_app_settings_changed(new_settings_dict)
+
+        # Recalculate available telescopes based on new settings
+        all_telescopes = ['JWST', 'HST', 'SDSS', 'Gaia']
+        disabled_telescopes = new_settings_dict.get('disabled_astroquery_telescopes', [])
+        available_telescopes = [t for t in all_telescopes if t not in disabled_telescopes]
+
+        # Update the manual options and refresh items
+        if self.telescope._manual_options != available_telescopes:
+            self.telescope._manual_options = available_telescopes
+            # Directly update the items list to ensure sync
+            manual_options_dicts = [self.telescope._to_item(opt) for opt in available_telescopes]
+            self.telescope.items = manual_options_dicts
+            # Reset selection if current selection is no longer valid
+            if self.telescope_selected and self.telescope_selected not in available_telescopes:
+                if len(available_telescopes) > 0:
+                    self.telescope_selected = available_telescopes[0]
+                else:
+                    self.telescope_selected = ''
 
     @property
     def user_api(self):
@@ -48,7 +82,13 @@ class AstroqueryResolver(BaseConeSearchResolver):
         skycoord_center = SkyCoord.from_name(self.source, frame=self.coordframe.selected)
         radius = self.radius * u.Unit(self.radius_unit.selected)
 
-        if self.telescope.selected == 'SDSS':
+        if self.telescope.selected in ('JWST', 'HST'):
+            from astroquery.mast import MastMissions
+
+            mission = MastMissions(mission=self.telescope.selected)
+            output = mission.query_region(skycoord_center, radius=radius.value)
+
+        elif self.telescope.selected == 'SDSS':
             from astroquery.sdss import SDSS
 
             r_max = 3 * u.arcmin

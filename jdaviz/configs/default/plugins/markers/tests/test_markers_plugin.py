@@ -6,10 +6,13 @@ from numpy.testing import assert_allclose
 import pytest
 from specutils import Spectrum
 
-from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.marks import MarkersMark, DistanceLine
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 from bqplot.scales import LinearScale
+
+# subset of possible units to test various conversions, testing all is time intensive
+FLUX_UNITS = ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']
 
 
 def _get_markers_from_viewer(viewer):
@@ -29,8 +32,8 @@ def _assert_dict_allclose(dict1, dict2):
 
 def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, "test")
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
-    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
+    sv = cubeviz_helper._app.get_viewer('spectrum-viewer')
     sb_unit = 'Jy / pix2'  # cubes loaded in Jy have sb unit of Jy / pix2
     flux_unit = 'Jy'
 
@@ -128,7 +131,7 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     uc.flux_unit.selected = 'MJy'
 
     # find the index of the marker's x-coordinate in the spectral axis of the original input data
-    spec = cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True)
+    spec = cubeviz_helper.datasets['Spectrum (sum)'].get_data(use_display_units=True)
     marker_index = np.where(spec.spectral_axis.value == mp._obj.marks['cubeviz-2'].x)
     # use the index to find the associated flux value of the original input
     flux_value = spec.flux[marker_index].value
@@ -139,7 +142,7 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     # now check if marks update with a unit that requires spectral density equivalency
     uc.flux_unit.selected = 'erg / (Angstrom s cm2)'
 
-    spec = cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True)
+    spec = cubeviz_helper.datasets['Spectrum (sum)'].get_data(use_display_units=True)
     flux_value = spec.flux[marker_index].value
 
     assert_allclose(mp._obj.marks['cubeviz-2'].y[0], flux_value)
@@ -183,14 +186,14 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     assert len(_get_markers_from_viewer(sv).x) == 0
 
 
-@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in FLUX_UNITS])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in FLUX_UNITS])
 def test_markers_cubeviz_flux_unit_conversion(cubeviz_helper,
                                               spectrum1d_cube_custom_fluxunit,
                                               flux_unit, angle_unit, new_flux_unit):
     """
-    Test the markers plugin with all possible unit conversions for
+    Test the markers plugin with a subset of all possible unit conversions for
     cubes in spectral/photon surface brightness units (e.g. Jy/sr, Jy/pix2).
 
     The markers plugin should respect the choice of flux and angle
@@ -216,7 +219,7 @@ def test_markers_cubeviz_flux_unit_conversion(cubeviz_helper,
 
     mp.keep_active = True
 
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
     label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(fv,
                                         {'event': 'mousemove',
@@ -256,7 +259,7 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper):
     mp.keep_active = True
 
     label_mouseover = specviz2d_helper._coords_info
-    viewer2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
+    viewer2d = specviz2d_helper._app.get_viewer('spectrum-2d-viewer')
     label_mouseover._viewer_mouse_event(viewer2d, {"event": "mousemove",
                                                    "domain": {"x": 6, "y": 3}})
     assert label_mouseover.as_text() == ('Pixel x=06.0 y=03.0 Value +6.00000e+00 MJy',
@@ -391,7 +394,7 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
         mp._obj.plugin_opened = True
 
         nv = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs[SCI,1]')
+        self.imviz._app.add_data_to_viewer('imviz-1', 'has_wcs[SCI,1]')
 
         assert label_mouseover.dataset.choices == ['auto', 'none',
                                                    'has_wcs[SCI,1]',
@@ -431,7 +434,7 @@ def _get_distance_marks_from_viewer(viewer):
 def test_distance_tool_live_preview_image(cubeviz_helper, spectrum1d_cube):
     """Tests the rubber band line and live UI update in an image viewer."""
     cubeviz_helper.load_data(spectrum1d_cube, "test")
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
     label_mouseover = cubeviz_helper._coords_info
@@ -454,7 +457,7 @@ def test_distance_tool_live_preview_image(cubeviz_helper, spectrum1d_cube):
 def test_distance_tool_profile(cubeviz_helper, spectrum1d_cube):
     """Tests the rubber band line and live UI update in a profile viewer."""
     cubeviz_helper.load_data(spectrum1d_cube, "test")
-    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    sv = cubeviz_helper._app.get_viewer('spectrum-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
     label_mouseover = cubeviz_helper._coords_info
@@ -502,7 +505,7 @@ def test_distance_tool_profile(cubeviz_helper, spectrum1d_cube):
 def test_distance_tool_snapping(cubeviz_helper, spectrum1d_cube):
     """Tests that the distance tool can snap to existing markers."""
     cubeviz_helper.load_data(spectrum1d_cube, "test")
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
     label_mouseover = cubeviz_helper._coords_info
@@ -523,7 +526,7 @@ def test_distance_tool_snapping(cubeviz_helper, spectrum1d_cube):
 def test_distance_tool_clearing(cubeviz_helper, spectrum1d_cube):
     """Tests that clearing the measurements table removes marks from the viewer."""
     cubeviz_helper.load_data(spectrum1d_cube, "test")
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
     label_mouseover = cubeviz_helper._coords_info
@@ -546,7 +549,7 @@ def test_distance_tool_clearing(cubeviz_helper, spectrum1d_cube):
 def test_distance_tool_reset_on_orientation_change(cubeviz_helper, spectrum1d_cube):
     """Tests that an in-progress measurement is cancelled on orientation change."""
     cubeviz_helper.load_data(spectrum1d_cube, "test")
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
     label_mouseover = cubeviz_helper._coords_info
@@ -564,13 +567,13 @@ def test_distance_tool_imviz_pixel_only(imviz_helper):
     """Tests the distance tool in a pixel-only context in Imviz."""
     # Use the imviz_helper fixture and load a simple array with no WCS
     imviz_helper.load_data(np.zeros((20, 20)))
-    iv = imviz_helper.app.get_viewer('imviz-0')
+    iv = imviz_helper._app.get_viewer('imviz-0')
     mp = imviz_helper.plugins['Markers']
     mp.open_in_tray()
     label_mouseover = imviz_helper._coords_info
 
     # In Imviz, we can force pixel-based alignment
-    imviz_helper.app._align_by = 'pixels'
+    imviz_helper._app._align_by = 'pixels'
 
     # Start measurement
     label_mouseover._viewer_mouse_event(iv, {'event': 'mousemove', 'domain': {'x': 2, 'y': 3}})
@@ -593,7 +596,7 @@ def test_distance_tool_imviz_pixel_only(imviz_helper):
 def test_markers_specviz_config(specviz_helper, spectrum1d):
     """Tests the marker plugin's basic functionality in a Specviz context."""
     specviz_helper.load_data(spectrum1d)
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper._app.get_viewer('spectrum-viewer')
     mp = specviz_helper.plugins['Markers']
     mp.open_in_tray()
     label_mouseover = specviz_helper._coords_info
@@ -617,8 +620,8 @@ def test_distance_tool_snapping_by_pixel_scale(cubeviz_helper, spectrum1d_cube):
     covering both image and profile viewer cases to improve test coverage.
     """
     cubeviz_helper.load_data(spectrum1d_cube, "test")
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
-    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
+    sv = cubeviz_helper._app.get_viewer('spectrum-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
     label_mouseover = cubeviz_helper._coords_info
@@ -675,3 +678,73 @@ def test_distance_tool_snapping_by_pixel_scale(cubeviz_helper, spectrum1d_cube):
 
     assert mp._obj._distance_first_point is not None
     assert_allclose(mp._obj._distance_first_point['axes_x'], marker_coords['axes_x'])
+
+
+def test_markers_load_table_into_data_collection(deconfigged_helper, spectrum1d):
+    """
+    Test that markers table can be loaded back into the data collection
+    using the 'Load into App' functionality.
+    """
+    # Load data into deconfigged helper
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+
+    # Create a 1D viewer
+    vc = deconfigged_helper.new_viewers['1D Spectrum']
+    vc()
+
+    viewer_1d = deconfigged_helper.viewers['1D Spectrum']._obj.glue_viewer
+
+    # Get the markers plugin
+    mp = deconfigged_helper.plugins['Markers']
+    mp.keep_active = True
+
+    # Place a few markers
+    label_mouseover = deconfigged_helper._coords_info
+
+    # Add first marker
+    label_mouseover._viewer_mouse_event(viewer_1d,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 4623, 'y': 50}})
+    mp._obj._on_viewer_key_event(viewer_1d, {'event': 'keydown', 'key': 'm'})
+
+    # Add second marker
+    label_mouseover._viewer_mouse_event(viewer_1d,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 5000, 'y': 60}})
+    mp._obj._on_viewer_key_event(viewer_1d, {'event': 'keydown', 'key': 'm'})
+
+    # Add third marker
+    label_mouseover._viewer_mouse_event(viewer_1d,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 6000, 'y': 70}})
+    mp._obj._on_viewer_key_event(viewer_1d, {'event': 'keydown', 'key': 'm'})
+
+    # Verify table has 3 rows
+    markers_table = mp.export_table()
+    assert len(markers_table) == 3
+
+    # Now test loading the table back into the data collection
+    # Open the loader panel
+    mp._obj.table.loader_panel_ind = 0
+
+    # Access the object loader via the loaders property
+    loaders = mp._obj.table.user_api.loaders
+    object_loader = loaders['object']
+
+    # The object should be set to the table
+    assert object_loader.object is not None
+    assert len(object_loader.object) == 3
+
+    # Verify the loaded table has the expected columns
+    loaded_table = object_loader.object
+    assert 'spectral_axis' in loaded_table.colnames
+    assert 'value' in loaded_table.colnames
+    assert 'data_label' in loaded_table.colnames
+    assert 'viewer' in loaded_table.colnames
+
+    # Verify the table can be accessed and has correct data
+    assert len(loaded_table) == 3
+    # Verify marker values are preserved
+    assert loaded_table['spectral_axis'][0] == 4623
+    assert loaded_table['spectral_axis'][1] == 5000
+    assert loaded_table['spectral_axis'][2] == 6000

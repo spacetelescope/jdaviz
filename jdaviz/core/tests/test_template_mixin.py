@@ -4,10 +4,12 @@ import re
 import pytest
 import numpy as np
 import astropy.units as u
-from astropy.table import Table
+from astropy.table import Table as AstropyTable
 from specutils import SpectralRegion
 
-from jdaviz.core.template_mixin import TableMixin
+from ipyvuetify import VuetifyTemplate
+from glue.core import HubListener
+from jdaviz.core.template_mixin import TableMixin, Table
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -16,14 +18,14 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     spectrum1d.mask = mask
 
     specviz_helper.load_data(spectrum1d)
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper._app.get_viewer('spectrum-viewer')
     # create a "Subset 1" entry
     subset_plugin = specviz_helper.plugins['Subset Tools']
     subset_plugin.import_region(SpectralRegion(6500 * spectrum1d.spectral_axis.unit,
                                                7400 * spectrum1d.spectral_axis.unit))
 
     # model fitting uses the mixin
-    p = specviz_helper.app.get_tray_item_from_name('g-model-fitting')
+    p = specviz_helper._app.get_tray_item_from_name('g-model-fitting')
     assert len(p.spectral_subset.labels) == 2  # Entire Spectrum, Subset 1
     assert len(p.spectral_subset_items) == 2
     assert p.spectral_subset_selected == 'Entire Spectrum'
@@ -47,11 +49,11 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
         expected_mask_with_spectral_subset == p.spectral_subset.selected_subset_mask
     )
 
-    assert p.spectral_subset.app == p.app
+    assert p.spectral_subset._app == p._app
     assert p.spectral_subset.spectrum_viewer == sv
 
     # line analysis uses custom components, one of which is still named spectral_subset
-    p = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    p = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
     assert len(p.spectral_subset.labels) == 2  # Entire Spectrum, Subset 1
     assert len(p.spectral_subset_items) == 2
     assert p.spectral_subset_selected == 'Entire Spectrum'
@@ -62,7 +64,7 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_viewer_select(cubeviz_helper, spectrum1d_cube):
-    app = cubeviz_helper.app
+    app = cubeviz_helper._app
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     fv = app.get_viewer("flux-viewer")
     sv = app.get_viewer('spectrum-viewer')
@@ -98,7 +100,7 @@ class TestObserveTraitletsForRelevancy:
     def setup_plugin_obj_and_traitlets(self, config_helper):
         plugins = config_helper.plugins
 
-        plugin_obj = plugins['Test Fake Plugin']._obj
+        plugin_obj = plugins['Subset Tools']._obj
 
         self.if_all_truthy = plugin_obj.relevant_if_all_truthy
         self.if_any_truthy = plugin_obj.relevant_if_any_truthy
@@ -320,13 +322,19 @@ class FakeTable(TableMixin):
 
     def __init__(self, session, catalog, *args, **kwargs):
         self.session = session
+        self._app = session.jdaviz_app
         self._plugin_name = 'test-fake-table'
-        super().__init__(*args, **kwargs)
+        # Don't call TableMixin.__init__ directly to avoid enable_load_into_app
+        VuetifyTemplate.__init__(self, *args, **kwargs)
+        HubListener.__init__(self)
+        # Create table without loader support
+        self.table = Table(self, name='table', enable_load_into_app=False)
+        self.table_widget = 'IPY_MODEL_'+self.table.model_id
         self.table._qtable = catalog
 
 
 def astropy_table_write_formats():
-    table_obj = Table({'a': [1, 2], 'b': [3, 4]})
+    table_obj = AstropyTable({'a': [1, 2], 'b': [3, 4]})
     buf = io.StringIO()
     table_obj.write.list_formats(out=buf)
     output = buf.getvalue()
@@ -372,7 +380,7 @@ def test_export_table_special_cases():
 def test_export_table(deconfigged_helper, sky_coord_only_source_catalog,
                       tmp_path, valid_format):
 
-    table_obj = FakeTable(deconfigged_helper.app.session,
+    table_obj = FakeTable(deconfigged_helper._app.session,
                           sky_coord_only_source_catalog)
 
     tmp_filename = tmp_path / 'temp_table'

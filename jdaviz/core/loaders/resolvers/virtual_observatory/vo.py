@@ -1,9 +1,9 @@
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-from pyvo.utils import vocabularies  # noqa: F401
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError, DALQueryError
+from pyvo.utils.vocabularies import VocabularyError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Any, List, observe
 
@@ -15,6 +15,7 @@ from jdaviz.core.template_mixin import (
 )
 from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.user_api import LoaderUserApi
+
 
 __all__ = ["VOResolver"]
 
@@ -37,13 +38,11 @@ class VOResolver(BaseConeSearchResolver):
         self.waveband = SelectPluginComponent(
             self, items="waveband_items", selected="waveband_selected"
         )
-        '''
-        # Temporarily disabled while IVOA servers are apparently misconfigured
-        self.waveband.choices = (
-            w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
-        )
-        '''
-        self.waveband.choices = ["",]
+
+        # How often are we really discovering a new astronomical messenger?
+        # I think we can hard code this.
+        self.waveband.choices = ['photon', 'radio', 'millimeter', 'infrared', 'optical',
+                                 'uv', 'euv', 'x-ray', 'gamma-ray', 'neutrino']
 
         self.waveband_selected = ""
 
@@ -146,8 +145,10 @@ class VOResolver(BaseConeSearchResolver):
             self.resource.choices = list(
                 self._full_registry_results.getcolumn("short_name")
             )
-        except DALFormatError as e:
-            if type(e.cause) is RequestConnectionError:
+        except (DALFormatError, VocabularyError) as e:
+            # HTTP Error 403 is being issued as a string as part of the
+            # VocabularyError when the registry is having issues.
+            if type(e.cause) is RequestConnectionError or 'HTTP Error 403' in str(e):
                 self.hub.broadcast(
                     SnackbarMessage(
                         f"Can't connect to VO registry. Check your internet connection: {e}",

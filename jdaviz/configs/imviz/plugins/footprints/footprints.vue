@@ -13,6 +13,7 @@
     :scroll_to.sync="scroll_to">
 
     <plugin-loaders-panel
+      v-if="!server_is_remote"
       :loader_panel_ind.sync="loader_panel_ind"
       :loader_items="loader_items"
       :loader_selected.sync="loader_selected"
@@ -23,6 +24,9 @@
       v-if="overlay_items.length > 1"
       :enabled="custom_toolbar_enabled"
       text="footprint selection tools"
+      :api_hints_enabled="api_hints_enabled"
+      api_hint_enable="plg.enable_footprint_selection_tools()"
+      api_hint_disable="plg.disable_footprint_selection_tools()"
       @toggle-custom-toolbar="toggle_custom_toolbar"
     >
       <img class="invert-if-dark" :src="footprint_select_icon" width="20"/>

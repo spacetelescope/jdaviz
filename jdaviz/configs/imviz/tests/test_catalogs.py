@@ -111,7 +111,7 @@ class TestCatalogs:
         #   query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, ...)
 
         # Zoom in so we have to filter sources outside the viewer bounds
-        viewer = imviz_helper.app.get_viewer('imviz-0')
+        viewer = imviz_helper._app.get_viewer('imviz-0')
         viewer.state.x_min = 800
         viewer.state.x_max = 1200
         viewer.state.y_min = 800
@@ -129,7 +129,7 @@ class TestCatalogs:
         coords = viewer.state.reference_data.coords
         table_calc_ra = coords.pixel_to_world(float(last_row['x_coord']), float(last_row['y_coord'])).ra.value  # noqa
         assert_allclose(last_ra, table_calc_ra, rtol=0.00001)
-        assert_allclose(last_ra, imviz_helper.app._catalog_source_table[-1]['ra'], atol=0.0001)  # noqa
+        assert_allclose(last_ra, imviz_helper._app._catalog_source_table[-1]['ra'], atol=0.0001)  # noqa
 
         # testing that every variable updates accordingly when markers are cleared
         catalogs_plugin.clear_table()
@@ -143,7 +143,7 @@ class TestCatalogs:
         assert not catalogs_plugin._obj.results_available
 
         # test loading from file
-        table = imviz_helper.app._catalog_source_table
+        table = imviz_helper._app._catalog_source_table
         qtable = QTable({'sky_centroid': SkyCoord(table['ra'], table['dec'], unit='deg'),
                          'label': table['objid']})
         tmp_file = tmp_path / 'test.ecsv'
@@ -237,7 +237,9 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 
 
 @pytest.mark.remote_data
-def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_exceptions):
+@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
+@pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
+def test_catalog_reingestion(imviz_helper, tmp_path):
     # load data that we know has Gaia sources
     arr = np.ones((1489, 2048))
     viewer = imviz_helper.default_viewer._obj
@@ -265,19 +267,7 @@ def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_except
     # search Gaia to get exportable data
     catalog_plg.catalog = 'Gaia'
     catalog_plg.max_sources = 10
-
-    # TODO: remove catch_validate_known_exception
-    #  when GAIA completes system maintenance (December 10, 2025 9:00 CET,
-    #  this has so far proven to be a moving target...)
-    # Use exception context manager to handle occasional VOTable parsing
-    # errors via retrieval failures and HTTP 500 errors. Both currently due
-    # to scheduled maintenance. These errors are reported as (and caught):
-    # 'File does not appear to be a VOTABLE' / HTTPError: Error 500/503
-    from astropy.io.votable.exceptions import E19
-    from requests.exceptions import HTTPError
-    with catch_validate_known_exceptions((E19, HTTPError, TimeoutError),
-                                         stdout_text_to_check='maintenance'):
-        catalog_plg.search(error_on_fail=True)
+    catalog_plg.search(error_on_fail=True)
 
     export_plg.plugin_table = 'Catalog Search: table'
     export_plg.filename = 'test.ecsv'
@@ -299,6 +289,7 @@ def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_except
     assert len(catalog_plg.table._obj.selected_rows) == 10
 
 
+@pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
 def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # Since we are not really displaying, need this to test zoom.
     viewer = imviz_helper.default_viewer._obj.glue_viewer
@@ -312,7 +303,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
 
     ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
     imviz_helper.load_data(ndd, data_label='data_with_wcs')
-    assert len(imviz_helper.app.data_collection) == 1
+    assert len(imviz_helper._app.data_collection) == 1
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
     catalogs_plugin.import_catalog(tbl)
@@ -323,7 +314,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # Assert that Object ID is set to index + 1 when the label column is absent
     for idx, item in enumerate(catalogs_plugin.table._obj.items):
         assert item['Object ID'] == str(idx + 1)
-    assert len(imviz_helper.app.data_collection) == 2  # image + markers
+    assert len(imviz_helper._app.data_collection) == 2  # image + markers
 
     catalogs_plugin.table.select_rows(0)
     assert len(catalogs_plugin.table._obj.selected_rows) == 1
@@ -353,11 +344,11 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     out_tbl = catalogs_plugin.search()
     assert len([out_tbl]) == n_entries
     assert catalogs_plugin._obj.number_of_results == n_entries
-    assert len(imviz_helper.app.data_collection) == 2  # image + markers
+    assert len(imviz_helper._app.data_collection) == 2  # image + markers
 
     catalogs_plugin.clear_table()
     assert not catalogs_plugin._obj.results_available
-    assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
+    assert len(imviz_helper._app.data_collection) == 1  # markers gone for good
 
     assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max == 9.5
@@ -530,7 +521,7 @@ def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
 
     ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
     imviz_helper.load_data(ndd, data_label='data_with_wcs')
-    assert len(imviz_helper.app.data_collection) == 1
+    assert len(imviz_helper._app.data_collection) == 1
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
     catalogs_plugin.import_catalog(tbl)

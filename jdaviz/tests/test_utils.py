@@ -7,12 +7,11 @@ import pytest
 from astropy.io import fits
 from astropy.units.quantity import Quantity
 
+from jdaviz.core.loaders import SpectrumImporter
 from jdaviz.utils import (alpha_index, download_uri_to_path,
                           get_cloud_fits, cached_uri, escape_brackets,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
                           create_data_hash, parallelize_calculation)
-
-from jdaviz.conftest import FakeSpectrumListImporter
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -30,7 +29,7 @@ def test_alpha_index_exceptions():
 
 def test_uri_to_download_bad_scheme(imviz_helper):
     uri = "file://path/to/file.fits"
-    with pytest.raises(ValueError, match="no valid loaders found for input"):
+    with pytest.raises(ValueError, match="No valid loaders found for input."):
         imviz_helper.load_data(uri)
 
 
@@ -60,27 +59,33 @@ def test_uri_to_download_specviz_local_path_check():
 
     # Wrong: '.\\JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits'
     # Correct:  '.\\jw02732-c1001_t004_miri_ch1-short_x1d.fits'
-    assert local_path == os.path.join(os.curdir, "jw02732-c1001_t004_miri_ch1-short_x1d.fits")  # noqa: E501
+    # In one of the workflows, the environment variable JDAVIZ_START_DIR
+    # is set so we need to account for that.
+    assert local_path == os.path.join(
+        os.environ.get("JDAVIZ_START_DIR", ""),
+        os.curdir,
+        "jw02732-c1001_t004_miri_ch1-short_x1d.fits")
 
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper):
     uri = cached_uri("mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits")
-    specviz_helper.load_data(uri, cache=True)
+    specviz_helper.load(uri, cache=True)
 
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz2d(specviz2d_helper):
     uri = cached_uri("mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits")  # noqa: E501
     specviz2d_helper.load_data(uri, cache=True)
+    # NOTE: if changing to load, will need to pass format='2D Spectrum'
 
 
 @pytest.mark.remote_data
 def test_load_s3_fits(imviz_helper):
     """Test loading a JWST FITS file from an S3 URI into Imviz."""
     s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
-    imviz_helper.load_data(s3_uri)
-    assert len(imviz_helper.app.data_collection) > 0
+    imviz_helper.load(s3_uri, format='Image')
+    assert len(imviz_helper._app.data_collection) > 0
 
 
 @pytest.mark.remote_data
@@ -192,11 +197,11 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
 
     # Making sure a stand-in for a SelectPluginComponent object with an attribute
     # that has `choices` works as expected
-    fake_importer = FakeSpectrumListImporter(app=deconfigged_helper.app,
-                                             resolver=deconfigged_helper.loaders['object']._obj,
-                                             parser=None,
-                                             input=premade_spectrum_list)
-    test_obj = fake_importer.sources
+    test_importer = SpectrumImporter(app=deconfigged_helper._app,
+                                     resolver=deconfigged_helper.loaders['object']._obj,
+                                     parser=None,
+                                     input=premade_spectrum_list)
+    test_obj = test_importer.extension
 
     """
     Left here for reference, premade_spectrum_list has 5 spectra:

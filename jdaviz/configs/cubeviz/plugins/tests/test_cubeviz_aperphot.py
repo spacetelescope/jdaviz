@@ -7,9 +7,12 @@ from astropy.utils.exceptions import AstropyUserWarning
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 
-from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
                                                handle_squared_flux_unit_conversions)
+
+# subset of possible units to test various conversions, testing all is time intensive
+FLUX_UNITS = ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']
 
 
 @pytest.mark.parametrize('helper_str', ('cubeviz_helper', 'deconfigged_helper'))
@@ -22,7 +25,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
         match_str = r'No data item found with label.*'
 
     elif helper_str == 'deconfigged_helper':
-        helper.load(image_cube_hdu_obj_microns, data_label="test")
+        helper.load(image_cube_hdu_obj_microns, format='3D Spectrum', data_label="test")
         flux_label = 'test'
         unc_viewer = '3D Spectrum (1)'
         match_str = r'Could not identify viewer with reference.*'
@@ -36,7 +39,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
 
     # Make sure MASK is not an option even when shown in viewer.
     with pytest.raises(ValueError, match=match_str):
-        helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
+        helper._app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
 
     plg = helper.plugins["Aperture Photometry"]
     assert plg.dataset.labels == [flux_label]
@@ -61,7 +64,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
     assert_quantity_allclose(row["slice_wave"], 4.894499866699333 * u.um)
 
     # Move slider and make sure it recomputes for a new slice automatically.
-    cube_slice_plg = helper.plugins["Slice"]._obj
+    cube_slice_plg = helper.plugins["Spectral Slice"]._obj
     cube_slice_plg.vue_goto_first()
     plg._obj.vue_do_aper_phot()
     row = plg.export_table()[1]
@@ -86,7 +89,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
     collapse_plg.vue_collapse()
 
     # Need this to make it available for photometry data drop-down.
-    helper.app.add_data_to_viewer(unc_viewer, f"{flux_label} collapsed")
+    helper._app.add_data_to_viewer(unc_viewer, f"{flux_label} collapsed")
 
     plg = helper.plugins["Aperture Photometry"]
     plg.dataset.selected = f"{flux_label} collapsed"
@@ -125,7 +128,7 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
         _ = gauss_plg.smooth()
 
     # Need this to make it available for photometry data drop-down.
-    cubeviz_helper.app.add_data_to_viewer("uncert-viewer", "test[FLUX] spatial-smooth stddev-1.0")
+    cubeviz_helper._app.add_data_to_viewer("uncert-viewer", "test[FLUX] spatial-smooth stddev-1.0")
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
     cubeviz_helper.plugins['Subset Tools'].import_region(aper)
@@ -289,16 +292,15 @@ def _compare_table_units(orig_tab, new_tab, orig_flux_unit=None,
             assert_quantity_allclose(orig_converted, new, rtol=1e-03)
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in FLUX_UNITS])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in FLUX_UNITS])
 def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
                                            spectrum1d_cube_custom_fluxunit,
                                            flux_unit, angle_unit, new_flux_unit):
     """
-    Test cubeviz aperture photometry with all possible unit conversions for
-    cubes in spectral/photon surface brightness units (e.g. Jy/sr, Jy/pix2).
+    Test cubeviz aperture photometry with a subset of all possible unit conversions
+    for cubes in spectral/photon surface brightness units (e.g. Jy/sr, Jy/pix2).
 
     The aperture photometry plugin should respect the choice of flux and angle
     unit selected in the Unit Conversion plugin, and inputs and results should

@@ -1,4 +1,5 @@
 import os
+import re
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
@@ -16,22 +17,26 @@ from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 SnackbarMessage,
                                 FootprintOverlayClickMessage,
-                                LinkUpdatedMessage)
+                                LinkUpdatedMessage,
+                                ViewerAddedMessage)
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         Table,
                                         CustomToolbarToggleMixin,
+                                        FootprintDisplayMixin,
                                         UnitSelectPluginComponent,
                                         ViewerSelect,
-                                        with_spinner)
+                                        with_spinner,
+                                        _is_image_viewer)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core.region_translators import is_stcs_string, stcs_string2region
-from jdaviz.utils import download_uri_to_path, find_closest_polygon_mark, layer_is_image_data
+from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
+                          find_polygon_mark_with_skewer,
+                          layer_is_image_data)
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
 
@@ -91,23 +96,23 @@ class FormatSelect(SelectPluginComponent):
             parser_input = self.plugin.output
         except Exception as e:
             self.items = []
-            self._invalid_importers = f'resolver exception: {e}'
+            self._invalid_importers = f'Resolver exception: {e}'
             self._apply_default_selection()
             return
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
-                this_parser = Parser(self.plugin.app, parser_input)
+                this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
                 try:
                     if this_parser.is_valid:
                         importer_input = this_parser.output
                     else:
-                        self._invalid_importers[parser_name] = 'not valid'
+                        self._invalid_importers[parser_name] = 'Input considered invalid by parser'
                         importer_input = None
                 except Exception as e:
-                    self._invalid_importers[parser_name] = f'parser exception: {e}'
+                    self._invalid_importers[parser_name] = f'Parser exception: {e}'
                     importer_input = None
 
                 if importer_input is None:
@@ -116,24 +121,24 @@ class FormatSelect(SelectPluginComponent):
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     label = f"{parser_name} > {importer_name}"
-                    if self.plugin._restrict_to_formats is not None and \
+                    if getattr(self.plugin, '_restrict_to_formats', None) is not None and \
                             importer_name not in self.plugin._restrict_to_formats:
-                        self._invalid_importers[label] = 'not matching format restriction'  # noqa
+                        self._invalid_importers[label] = 'Not matching format restriction'  # noqa
                         continue
                     try:
-                        this_importer = Importer(app=self.plugin.app,
+                        this_importer = Importer(app=self.plugin._app,
                                                  resolver=self.plugin,
                                                  parser=this_parser,
                                                  input=importer_input)
                     except Exception as e:  # nosec
-                        self._invalid_importers[label] = f'importer exception: {e}'
+                        self._invalid_importers[label] = f'Importer exception: {e}'
                         continue
                     if self.debug:
                         self._dbg_importers[label] = this_importer
                     if (self.plugin._restrict_to_target is not None and
                             this_importer.target.get('label') != self.plugin._restrict_to_target):
                         # skip importers that do not match the target
-                        self._invalid_importers[label] = 'not matching target'
+                        self._invalid_importers[label] = 'Not matching target'
                         continue
                     if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
@@ -170,9 +175,12 @@ class FormatSelect(SelectPluginComponent):
                             # target filters
                             self._importers[importer_name] = this_importer
                     else:
-                        self._invalid_importers[label] = 'not valid'
+                        self._invalid_importers[label] = 'Input considered invalid by importer'
 
-        self.items = all_formats
+        # Sort to move Catalog to the end of the list
+        catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
+        other_formats = [f for f in all_formats if f['label'] != 'Catalog']
+        self.items = other_formats + catalog_formats
         self._apply_default_selection()
 
 
@@ -231,17 +239,19 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
+class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
     requires_api_support = False
+    _update_format_spinner_text = 'searching for valid formats...'
 
     spinner = Unicode("").tag(sync=True)
 
     parsed_input_is_empty = Bool(True).tag(sync=True)
+    parsed_input_is_resolvable = Unicode("").tag(sync=True)
 
-    # whether the current output could be interpretted as a list of data products
+    # whether the current output could be interpreted as a list of data products
     parsed_input_is_query = Bool(False).tag(sync=True)
     # if parsed_input_is_query is True, whether to treat it as such
     # or pass it on directly to the parsers/importers
@@ -262,6 +272,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
     # Set remote server options based on the app configuration
     # read-only: change via app.state.settings['server_is_remote']
     server_is_remote = Bool(False).tag(sync=True)
+    # Hide the resolver UI (title, input fields, query results) and show only importer selection
+    hide_resolver = Bool(False).tag(sync=True)
+    # Hide only the resolver input fields (for preset loaders), but still show query results
+    hide_resolver_inputs = Bool(False).tag(sync=True)
 
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
@@ -281,9 +295,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         self.close_callback = kwargs.pop('close_callback', None)
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
 
-        self._footprint_marks = []
-        self._footprint_groups = {}
-
         super().__init__(*args, **kwargs)
 
         self.observation_table.enable_clear = False
@@ -296,28 +307,32 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         self.file_table.enable_clear = False
         self.file_table.show_if_empty = False
         self.file_table.show_rowselect = True
-        self.file_table.item_key = "url"
+        self.file_table.item_key = "location"
         self.file_table.multiselect = False
         self.file_table._selected_rows_changed_callback = self.on_file_select_changed
 
         # Setup footprint selection
         if self.app is not None:
             self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
-            self.app.hub.subscribe(self, FootprintOverlayClickMessage,
-                                   handler=self._on_region_select)
+            self._app.hub.subscribe(self, FootprintOverlayClickMessage,
+                                    handler=self._on_region_select)
             self.image_data_loaded = any(layer_is_image_data(data)
-                                         for data in self.app.data_collection)
-            self.app.hub.subscribe(self, DataCollectionAddMessage,
-                                   handler=self._on_data_added)
-            self.app.hub.subscribe(self, DataCollectionDeleteMessage,
-                                   handler=self._on_data_removed)
-            self.app.hub.subscribe(self, LinkUpdatedMessage,
-                                   handler=self._on_link_type_updated)
+                                         for data in self._app.data_collection)
+            self._app.hub.subscribe(self, DataCollectionAddMessage,
+                                    handler=self._on_collection_data_added)
+            self._app.hub.subscribe(self, DataCollectionDeleteMessage,
+                                    handler=self._on_data_removed)
+            self._app.hub.subscribe(self, LinkUpdatedMessage,
+                                    handler=self._on_link_type_updated)
+            self._app.hub.subscribe(self, ViewerAddedMessage,
+                                    handler=self._on_viewer_added)
+            self._app.hub.subscribe(self, AddDataMessage,
+                                    handler=self._on_viewer_data_added)
 
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
-                    self.observation_table_populated and 's_region' in self.observation_table.headers_avail):  # noqa: E501
-                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion']], 'jdaviz:selectregion'  # noqa: E501
+                    's_region' in self.observation_table.headers_avail):
+                return viewer.toolbar._original_tools_nested[:3] + ['jdaviz:selectregion', 'jdaviz:skewerregion'], 'jdaviz:selectregion'  # noqa: E501
             return None, None
 
         self.custom_toolbar.callable = custom_toolbar
@@ -337,18 +352,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
                                    selected='target_selected')
 
         # Ensure traitlet and app state are in sync at init
-        self.server_is_remote = self.app.state.settings.get('server_is_remote',
-                                                            self.server_is_remote)
+        self.server_is_remote = self._app.state.settings.get('server_is_remote',
+                                                             self.server_is_remote)
 
         # Set up bidirectional synchronization
         # Listen for changes to app.state.settings and update traitlet
-        self.app.state.add_callback('settings', self._on_app_settings_changed)
-
-    def vue_link_by_wcs(self, *args):
-        plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
-        if plg is not None:
-            plg.align_by = 'WCS'
-        self.is_wcs_linked = True
+        self._app.state.add_callback('settings', self._on_app_settings_changed)
 
     @default('observation_table')
     def _default_observation_table(self):
@@ -356,11 +365,47 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
                      name='observation_table',
                      title='Observations')
 
+    def _file_table_col_visible(self, colname):
+        """
+        Determine if a column should be visible in the file table.
+
+        Parameters
+        ----------
+        colname : str
+            The name of the column to check.
+
+        Returns
+        -------
+        bool
+            True if the column should be visible, False otherwise.
+        """
+        hide_location = self.app.state.settings.get('hide_file_table_location_column', False)
+        if colname == 'location' and hide_location:
+            return False
+        return True
+
     @default('file_table')
     def _default_file_table(self):
-        return Table(self,
-                     name='file_table',
-                     title='Files')
+        file_table = Table(self,
+                           name='file_table',
+                           title='Files')
+
+        # Override _new_col_visible to hide 'url' column if setting is enabled
+        file_table._new_col_visible = self._file_table_col_visible
+
+        return file_table
+
+    @observe('file_table_populated')
+    def _on_file_table_populated(self, change={}):
+        """Remove location from headers_avail if hiding is enabled."""
+        if not change.get('new', False):
+            return
+        hide_location = self.app.state.settings.get('hide_file_table_location_column', False)
+        if hide_location and 'location' in self.file_table.headers_avail:
+            # Remove location from headers_avail (dropdown) but keep in data
+            self.file_table.headers_avail = [
+                h for h in self.file_table.headers_avail if h != 'location'
+            ]
 
     def _on_app_settings_changed(self, new_settings_dict):
         """
@@ -373,11 +418,81 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         """
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
-    def _on_data_added(self, msg):
-        self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
+        # Update file table location column visibility if the setting changed
+        hide_location = new_settings_dict.get('hide_file_table_location_column', False)
+
+        # Update the _new_col_visible function with current settings
+        self.file_table._new_col_visible = self._file_table_col_visible
+
+        # Check if location column exists in the actual data
+        location_in_data = (self.file_table._qtable is not None and
+                            'location' in self.file_table._qtable.colnames)
+
+        if location_in_data:
+            if hide_location:
+                # Remove location from both available and visible headers
+                self.file_table.headers_avail = [
+                    h for h in self.file_table.headers_avail if h != 'location'
+                ]
+                self.file_table.headers_visible = [
+                    h for h in self.file_table.headers_visible if h != 'location'
+                ]
+            else:
+                # location should be available - add it back if missing
+                if 'location' not in self.file_table.headers_avail:
+                    self.file_table.headers_avail = (
+                        self.file_table.headers_avail + ['location']
+                    )
+                if 'location' not in self.file_table.headers_visible:
+                    self.file_table.headers_visible = (
+                        self.file_table.headers_visible + ['location']
+                    )
+
+    def _on_collection_data_added(self, msg):
+        self.image_data_loaded = any(layer_is_image_data(data)
+                                     for data in self._app.data_collection)
+
+    def _on_viewer_data_added(self, msg):
+        """
+        If footprint selection is enabled and this is an image viewer
+        with valid WCS, add footprints to this viewer.
+        """
+
+        if not self.custom_toolbar_enabled:
+            return
+        if not (self.parsed_input_is_query and self.treat_table_as_query):
+            return
+        if 's_region' not in self.observation_table.headers_avail:
+            return
+        # Get the viewer from the message
+        if not hasattr(msg, 'viewer_id') or msg.viewer_id is None:
+            return
+
+        viewer = self._app.get_viewer_by_id(msg.viewer_id)
+        if viewer is None:
+            return
+        # Check if it's an image viewer
+        if not _is_image_viewer(viewer):
+            return
+        # Does this viewer already have footprints? If so, don't re-add.
+        existing_labels = [
+            mark.label for mark in viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+        if existing_labels:
+            return
+        # Check for valid WCS
+        if (not hasattr(viewer.state, "reference_data") or
+            viewer.state.reference_data is None or
+            not hasattr(viewer.state.reference_data, "coords") or
+                viewer.state.reference_data.coords is None):
+            # No WCS yet; nothing to do
+            return
+        self._add_footprints_to_viewer(viewer)
 
     def _on_data_removed(self, msg):
-        self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
+        self.image_data_loaded = any(layer_is_image_data(data)
+                                     for data in self._app.data_collection)
 
     def _on_link_type_updated(self, msg=None):
         self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
@@ -450,11 +565,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         return None
 
     def _parsed_input_to_file_table(self, parsed_input_table):
-        if 'url' in parsed_input_table.colnames:
+        if 'location' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_url in ('URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
-            if map_to_url in parsed_input_table.colnames:
-                parsed_input_table.rename_column(map_to_url, 'url')
+        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
+            if map_to_location in parsed_input_table.colnames:
+                parsed_input_table.rename_column(map_to_location, 'location')
                 return parsed_input_table
         return None
 
@@ -474,25 +589,29 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         if self._defer_resolver_input_updated:
             return
         if msg.get('name') == 'treat_table_as_query':
-            # the input itself has remain unchanged, but how that
+            # the input itself has remained unchanged, but how that
             # is mapped to output has
             self._clear_cache('output')
         else:
             self._cleanup()
 
         try:
-            parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
-        except Exception:  # nosec
-            self.parsed_input_is_empty = True
+            # calls self.parse_input() on the subclass and caches
+            parsed_input = self.parsed_input
+            if not self.is_valid:
+                raise ValueError("Input is invalid for the selected resolver.")
+        except Exception as e:  # nosec
+            self.parsed_input_is_empty = False
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
+            self.parsed_input_is_resolvable = str(e)
             return
 
-        if parsed_input is None or getattr(parsed_input, 'len', lambda: 1)() == 0:
+        if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
             self.parsed_input_is_empty = True
             self.parsed_input_is_query = False
             self.observation_table_populated = False
@@ -500,38 +619,64 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
+            self.parsed_input_is_resolvable = 'Parsed input is empty or None, cannot resolve.'
             return
 
         # first attempt to parse the input as a table
         parsed_input_table = self._parsed_input_to_table(parsed_input)
         # if the input could be parsed as a table, try to interpret it as
-        # either an observation table or file table.  parsed_input_table
+        # either an observation table or file table. parsed_input_table
         # will be None if it could not be parsed as a table.
         if parsed_input_table is not None:
             file_table = self._parsed_input_to_file_table(parsed_input_table)
-            if file_table is not None:
+            observation_table = self._parsed_input_to_observation_table(parsed_input_table)
+
+            is_query = file_table is not None or observation_table is not None
+            if is_query and not self.treat_table_as_query:
+                # Keep parsed_input_is_query True so the toggle switch stays visible.
+                # Set everything else in the meantime.
+                self.parsed_input_is_resolvable = ''
+                self.parsed_input_is_empty = False
+                self.parsed_input_is_query = True
+                self.observation_table_populated = False
+                self.file_table_populated = False
+                self.observation_table._clear_table()
+                self.file_table._clear_table()
+                self._update_format_items()
+                return
+
+            if self.treat_table_as_query and file_table is not None:
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
 
                 for row in file_table:
                     self.file_table.add_item(row)
+
+                # Technically input isn't complete yet but if we don't set this now
+                # the UI will appear bugged with the 'input is empty' message for astroquery
+                self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = False
                 self.file_table_populated = True
                 return
 
-            observation_table = self._parsed_input_to_observation_table(parsed_input_table)
-            if observation_table is not None:
+            if self.treat_table_as_query and observation_table is not None:
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
 
                 for row in observation_table:
                     self.observation_table.add_item(row)
+                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible # noqa
+                                                          if h not in ['s_region']]
+
+                # See 'input is empty' comment above
+                self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True
                 self.file_table_populated = False
                 return
 
+        self.parsed_input_is_resolvable = ""
         self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
         self.observation_table_populated = False
@@ -557,41 +702,26 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             return 'hst'
 
     def on_observation_select_changed(self, _=None):
+        # Sync footprint selection across all viewers (only if footprints are displayed)
+        if self.custom_toolbar_enabled and self.parsed_input_is_query and self.treat_table_as_query:
+            self._sync_footprint_selection_to_viewers()
+        # Fetch products if rows are selected
         if len(self.observation_table.selected_rows) == 0:
-            self.app.hub.broadcast(SnackbarMessage("No observation currently selected",
-                                                   sender=self, color="warning"))
-            # Update footprint selection if applicable
-            if self.parsed_input_is_query and self.treat_table_as_query and self._footprint_groups:
-                for idx, marks in self._footprint_groups.items():
-                    for mark in marks:
-                        mark.selected = False
-            return
-
-        datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
-        results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
-        file_table = self._parsed_input_to_file_table(results)
-        if file_table is not None:
-            self.file_table._clear_table()
-            for row in file_table:
-                self.file_table.add_item(row)
-            self.file_table_populated = True
+            self._app.hub.broadcast(SnackbarMessage("No observation currently selected",
+                                                    sender=self, color="warning"))
         else:
-            self.app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
-                                                   sender=self, color="error"))
-            self.file_table_populated = False
-
-        # Update footprint selection to match table selection
-        if self.parsed_input_is_query and self.treat_table_as_query and self._footprint_groups:
-            selected_indices = set()
-            for row in self.observation_table.selected_rows:
-                idx = self.observation_table.items.index(row)
-                selected_indices.add(idx)
-
-            # Update footprint marks based on selection
-            for idx, marks in self._footprint_groups.items():
-                selected = idx in selected_indices
-                for mark in marks:
-                    mark.selected = selected
+            datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
+            results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
+            file_table = self._parsed_input_to_file_table(results)
+            if file_table is not None:
+                self.file_table._clear_table()
+                for row in file_table:
+                    self.file_table.add_item(row)
+                self.file_table_populated = True
+            else:
+                self._app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
+                                                        sender=self, color="error"))
+                self.file_table_populated = False
 
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""
@@ -604,104 +734,103 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             if self.parsed_input_is_query and self.treat_table_as_query:
                 self._remove_observation_footprints()
 
+    @observe('custom_toolbar_enabled')
+    def _on_custom_toolbar_enabled_changed(self, change={}):
+        if not change.get('new', self.custom_toolbar_enabled):
+            # Toolbar was disabled - remove footprints from all viewers
+            if self.parsed_input_is_query and self.treat_table_as_query:
+                self._remove_observation_footprints()
+
     def _on_region_select(self, msg):
         """Handle footprint click events."""
-        if not self._footprint_marks:
+        if not (self.parsed_input_is_query and self.treat_table_as_query):
+            return
+
+        click_viewer = msg.sender.viewer if hasattr(msg.sender, 'viewer') else None
+        if click_viewer is None:
+            return
+        region_marks = [
+            mark for mark in click_viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+
+        click_x, click_y = msg.x, msg.y
+
+        # Determine selection mode
+        if msg.mode == 'skewer':
+            selected_indices = find_polygon_mark_with_skewer(
+                click_x, click_y, click_viewer, region_marks)
+        else:
+            selected_idx = find_closest_polygon_mark(click_x, click_y, region_marks)
+            selected_indices = [selected_idx] if selected_idx is not None else None
+
+        if selected_indices is not None:
+            currently_selected = set()
+            for row in self.observation_table.selected_rows:
+                idx = self.observation_table.items.index(row)
+                currently_selected.add(idx)
+
+            selected_indices_set = set(selected_indices)
+            if msg.ctrl_key:
+                # If Ctrl key is pressed, toggle selection
+                if selected_indices_set.issubset(currently_selected):
+                    # All footprints selected by click were already selected,
+                    # so we remove them from the selected set to deselect:
+                    currently_selected.difference_update(selected_indices_set)
+                else:
+                    # At least one footprint selected by click was not already
+                    # selected, so we add them to the selected set:
+                    currently_selected.update(selected_indices_set)
+            else:
+                # Default Click: Replace selection unless already selected
+                if not selected_indices_set.issubset(currently_selected):
+                    # Not selected - replace selection with just this footprint
+                    currently_selected = selected_indices_set
+                # If already selected, keep current selection (no change)
+
+            # Update the table selection
+            if currently_selected:
+                self.observation_table.select_rows(sorted(list(currently_selected)))
+            else:
+                # Clear selection
+                self.observation_table.selected_rows = []
+        else:
+            # Clicked outside - deselect all
+            if msg.mode == 'skewer':
+                self.observation_table.selected_rows = []
+
+    def _on_viewer_added(self, msg):
+        """When a new viewer is created, add footprints if toolbar is enabled."""
+        if not self.custom_toolbar_enabled:
             return
         if not (self.parsed_input_is_query and self.treat_table_as_query):
             return
 
-        click_x, click_y = msg.x, msg.y
-        selected_idx = find_closest_polygon_mark(click_x, click_y, self._footprint_marks)
-
-        if selected_idx is not None:
-            # Get viewer - deconfigged (TODO: factor this out for multiviewer support)
-            viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
-            if viewer_ref is None:
-                return
-            viewer = self.app.get_viewer(viewer_ref)
-            # Get selected rows from the table
-            currently_selected = set()
-            if hasattr(self, 'observation_table') and self.observation_table is not None:
-                for row in self.observation_table.selected_rows:
-                    idx = self.observation_table.items.index(row)
-                    currently_selected.add(idx)
-
-            if selected_idx in currently_selected:
-                currently_selected.discard(selected_idx)
-                viewer._deselect_region_overlay(region_label=selected_idx)
-            else:
-                currently_selected.add(selected_idx)
-                viewer._select_region_overlay(region_label=selected_idx)
-
-            # Update the table selection
-            if hasattr(self, 'observation_table') and self.observation_table is not None:
-                if currently_selected:
-                    self.observation_table.select_rows(sorted(list(currently_selected)))
-                else:
-                    # Clear selection
-                    self.observation_table.selected_rows = []
-
-    def _display_observation_footprints(self):
+        viewer = self._app.get_viewer_by_id(msg.viewer_id)
+        if viewer is None:
+            return
+        # Check if it's an image viewer
+        if not _is_image_viewer(viewer):
+            return
         if 's_region' not in self.observation_table.headers_avail:
             return
-
-        # Get viewer - works for both Imviz and deconfigged
-        viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
-        if viewer_ref is None:
+        # Check if viewer has valid WCS before attempting to add footprints
+        # New viewers may not have data/WCS yet, so we skip and wait for AddDataMessage
+        if (not hasattr(viewer.state, 'reference_data') or
+            viewer.state.reference_data is None or
+            not hasattr(viewer.state.reference_data, 'coords') or
+                viewer.state.reference_data.coords is None):
+            # No WCS yet - footprints will be added later when data is loaded
+            # via _on_viewer_data_added handler
             return
-        viewer = self.app.get_viewer(viewer_ref)
-        regions = []
-        region_labels = []
-
-        for idx, row in enumerate(self.observation_table.items):
-            s_region_str = row.get('s_region', '')
-
-            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
-                continue
-            if not is_stcs_string(s_region_str):
-                continue
-
-            region = stcs_string2region(s_region_str)
-            regions.append(region)
-            region_labels.append(idx)
-
-        if regions:
-            viewer._add_region_overlay(
-                region=regions,
-                region_label=region_labels,
-                selected=False,
-                fill_opacities=[0]
-            )
-            for mark in viewer.figure.marks:
-                if isinstance(mark, RegionOverlay) and mark.label in region_labels:
-                    self._footprint_marks.append(mark)
-                    self._footprint_groups[mark.label] = [mark]
-
-    def _remove_observation_footprints(self):
-        """Remove all observation footprints from the viewer."""
-        if not self._footprint_marks:
-            return
-
-        # Get viewer - for deconfigged (TODO: factor this out for multiviewer support)
-        viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
-        if viewer_ref is None:
-            return
-        viewer = self.app.get_viewer(viewer_ref)
-
-        region_labels = [mark.label for mark in self._footprint_marks]
-
-        if region_labels:
-            viewer._remove_region_overlay(region_label=region_labels)
-
-        self._footprint_marks = []
-        self._footprint_groups = {}
+        # Viewer has WCS, safe to add footprints
+        self._add_footprints_to_viewer(viewer)
 
     def on_file_select_changed(self, _=None):
         self._clear_cache('output')
         self._update_format_items()
 
-    @with_spinner('spinner', 'searching for valid formats...')
+    @with_spinner('spinner', '_update_format_spinner_text')
     def _update_format_items(self):
         # NOTE: this will call self.output
         self.format._update_items()
@@ -712,10 +841,21 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
     def get_selected_url(self):
         if len(self.file_table.selected_rows) != 1:
             return None
-        url = self.file_table.selected_rows[0]['url']
-        if not url.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')):
-            return f'https://mast.stsci.edu/search/{self.guess_mission(url)}/api/v0.1/retrieve_product?product_name={url}'  # noqa
-        return url
+        location = self.file_table.selected_rows[0]['location']
+
+        # Check if it's a local file path (absolute, relative, or home directory)
+        # or if it starts with a recognized URL scheme
+        if (location.startswith(('/', './', '../', '~')) or  # Unix-style paths
+                # URL schemes
+                location.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')) or
+                (len(location) > 2 and location[1] == ':' and location[2] in ('\\', '/'))):
+            # Windows-style absolute path (e.g., C:\... or C:/...)
+            return location
+
+        # Otherwise, assume it's a MAST product name and construct the URL
+        mission = self.guess_mission(location)
+        return (f'https://mast.stsci.edu/search/{mission}/api/v0.1/'
+                f'retrieve_product?product_name={location}')
 
     @with_spinner('spinner', 'downloading file...')
     def _download_from_file_table(self):
@@ -733,6 +873,40 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             return self._download_from_file_table()
         else:
             return self.parsed_input
+
+    def enable_footprint_selection_tools(self):
+        """
+        Enable footprint selection tools in the viewer toolbar.
+
+        This allows clicking on observation footprints to select them.
+        Only available when loading observation tables with s_region data
+        and images are linked by WCS.
+
+        Raises
+        ------
+        ValueError
+            If images are not linked by WCS or if no observation table with
+            s_region data has been loaded.
+        """
+        if not (self.parsed_input_is_query and self.treat_table_as_query):
+            raise ValueError(
+                "Footprint selection tools require an observation table with s_region data."
+            )
+
+        if not self.is_wcs_linked:
+            raise ValueError(
+                "Images must be linked by WCS before enabling footprint selection tools."
+            )
+
+        if not self.custom_toolbar_enabled:
+            self.toggle_custom_toolbar()
+
+    def disable_footprint_selection_tools(self):
+        """
+        Disable footprint selection tools in the viewer toolbar.
+        """
+        if self.custom_toolbar_enabled:
+            self.toggle_custom_toolbar()
 
     @property
     def user_api(self):
@@ -760,6 +934,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         """
         Import into jdaviz with all selected options.
         """
+        # Check if import is disabled before attempting to load
+        if len(self.importer.import_disabled_msg) > 0:
+            raise ValueError(self.importer.import_disabled_msg)
         return self.importer()
 
     @observe('target_selected')
@@ -812,7 +989,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         if self.close_callback is not None:
             self.close_callback()
         if close_sidebar:
-            self.app.state.drawer_content = ''
+            self._app.state.drawer_content = ''
 
     def open_in_tray(self):
         """
@@ -867,7 +1044,7 @@ class BaseConeSearchResolver(BaseResolver):
 
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
-        self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
+        self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
@@ -890,14 +1067,20 @@ class BaseConeSearchResolver(BaseResolver):
                 )
             else:
                 # If not subscribed anyways, remove_callback should produce a no-op
-                viewer.state.remove_callback(
-                    "zoom_center_x",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
-                viewer.state.remove_callback(
-                    "zoom_center_y",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
+                try:
+                    viewer.state.remove_callback(
+                        "zoom_center_x",
+                        lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                    )
+                except TypeError:
+                    pass
+                try:
+                    viewer.state.remove_callback(
+                        "zoom_center_y",
+                        lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                    )
+                except TypeError:
+                    pass
         self.vue_center_on_data()
 
     @observe("coord_follow_viewer_pan", type="change")
@@ -906,6 +1089,10 @@ class BaseConeSearchResolver(BaseResolver):
         # Center on data if we're enabling the toggle
         if self.coord_follow_viewer_pan:
             self.vue_center_on_data()
+
+    def _on_link_type_updated(self, _=None, user_zoom_trigger=False):
+        super()._on_link_type_updated()
+        self.vue_center_on_data(user_zoom_trigger=user_zoom_trigger)
 
     def vue_center_on_data(self, _=None, user_zoom_trigger=False):
         """
@@ -941,7 +1128,7 @@ class BaseConeSearchResolver(BaseResolver):
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
         if (
-            len(self.app._jdaviz_helper.data_labels) < 1
+            len(self._app._jdaviz_helper.datasets) < 1
             or viewer.state.reference_data is None
             or viewer.state.reference_data.coords is None
         ):
@@ -949,7 +1136,7 @@ class BaseConeSearchResolver(BaseResolver):
             return
 
         # Obtain center point of the current image and convert into sky coordinates
-        if self.app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
+        if self._app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
             skycoord_center = SkyCoord(
                 viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
             )
@@ -976,7 +1163,128 @@ class BaseConeSearchResolver(BaseResolver):
         return True
 
 
-def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):
+def _format_resolver_error(resolver_dict, formats=None, no_align=False):
+    """
+    Format a resolver results dictionary into a readable table string.
+
+    Formats the dictionary of resolver outcomes (failed or valid) into a
+    human-readable, dot-aligned table. When ``formats`` is provided,
+    only entries whose key contains one of the requested format strings are shown.
+
+    Parameters
+    ----------
+    resolver_dict : dict
+        Dictionary of resolver names to either a status string or a nested
+        dictionary mapping format/importer names to status strings.
+    formats : list or None, optional
+        When not None (and contains at least one non-None element), only
+        nested entries whose key contains a requested format string are
+        included. Top-level (non-nested) entries are always shown.
+    no_align : bool, optional
+        If True, do not attempt to align resolver/format names with dots.
+
+    Returns
+    -------
+    table : str
+        Formatted text table of resolver names and their statuses.
+    """
+    # Width of the dot-aligned resolver/format name column
+    resolver_alignment_width = 42
+    if no_align:
+        resolver_alignment_width = 2
+
+    def _matches_format(key):
+        """
+        Return True if *key* matches the requested formats filter.
+
+        Matches if any substring from the requested formats appears in the key,
+        or any substring from the key appears in a requested format, e.g.
+        if the requested format is '1D Spectrum' then it would match to
+        '1D Spectrum', 'Specutils.Spectrum', 'Specutils.Spectrum(array)', etc.
+        When key contains '>' (e.g., 'resolver > format'), only the part after
+        '>' is checked, and only direct/exact matches are performed (case-insensitive).
+        Splits both key and format by spaces, dots, and parentheses to extract substrings.
+        """
+        def _extract_substrings(text):
+            """
+            Extract substrings by splitting on spaces, dots, and parentheses.
+            """
+            substrings = set(re.split(r'[\s.()]+', text.lower()))
+            substrings.discard('')
+            return substrings
+
+        def _check_direct_match(_check_key, _formats):
+            """
+            Check if _check_key directly matches any format (case-insensitive).
+            """
+            check_key_lower = _check_key.lower()
+            for fmt in _formats:
+                if fmt is not None and fmt.lower() == check_key_lower:
+                    return True
+            return False
+
+        def _check_substring_match(_check_key, _formats):
+            """
+            Check if any substring from formats matches any substring from check_key.
+            """
+            key_substrings = _extract_substrings(_check_key)
+            for fmt in _formats:
+                if fmt is None:
+                    continue
+                # Direct substring match
+                if fmt.lower() in _check_key.lower():
+                    return True
+                # Substring intersection
+                fmt_substrings = _extract_substrings(fmt)
+                if fmt_substrings & key_substrings:
+                    return True
+            return False
+
+        if formats is None or not any(formats):
+            return True
+
+        # Check if there's an arrow separator
+        if '>' in key:
+            check_key = key.split('>')[-1].strip()
+            return _check_direct_match(check_key, formats)
+
+        # No arrow: use substring matching logic
+        return _check_substring_match(key, formats)
+
+    lines = []
+
+    if 'object' in resolver_dict:
+        # ensure 'object' is always last in the output since it always has sub-entries
+        resolver_dict['object'] = resolver_dict.pop('object')
+
+    for resolver_name, resolver_info in resolver_dict.items():
+        status_str = str(resolver_info).replace('\n', ' ')
+        if isinstance(resolver_info, dict):
+            filtered = {k: v for k, v in resolver_info.items()
+                        if _matches_format(k)}
+            if not filtered:
+                continue
+
+            lines.append(f'\n{resolver_name}:')
+            lines.append('-' * resolver_alignment_width)
+            for fmt_name, status in filtered.items():
+                status_str = str(status).replace('\n', ' ')
+                lines.append(f'  {fmt_name:.<{resolver_alignment_width - 2}}'
+                             f' {status_str}')
+            lines.append('')
+        else:
+            lines.append(f'{resolver_name:.<{resolver_alignment_width}}'
+                         f' {status_str}')
+
+    return '\n'.join(lines)
+
+
+def find_matching_resolver(app,
+                           inp=None,
+                           resolver=None,
+                           format=None,
+                           target=None,
+                           **kwargs):
     formats = format if isinstance(format, (list, tuple)) else [format]
     invalid_resolvers = {}
     valid_resolvers = []
@@ -991,7 +1299,7 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
         try:
             this_resolver = Resolver.from_input(app, inp, format=format, **kwargs)
         except Exception as e:  # nosec
-            invalid_resolvers[resolver_name] = f'resolver exception: {e}'
+            invalid_resolvers[resolver_name] = f'Resolver exception: {e}'
             if resolver_name == 'url' and 'timeout' in str(e):
                 raise e
             continue
@@ -1001,7 +1309,7 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
             invalid_resolvers[resolver_name] = f'is_valid exception: {e}'
             is_valid = False
         if not is_valid:
-            invalid_resolvers.setdefault(resolver_name, 'not valid')
+            invalid_resolvers.setdefault(resolver_name, 'Input considered invalid by resolver.')
             continue
 
         if target is not None:
@@ -1026,9 +1334,21 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
             valid_resolvers.append((this_resolver, resolver_name, fmt_item['label']))
 
     if len(valid_resolvers) == 0:
-        raise ValueError("no valid loaders found for input, tried", invalid_resolvers)
+        msg = (f'No valid loaders found for input. Tried:\n\n'
+               f'{_format_resolver_error(invalid_resolvers, formats=formats)}\n')  # noqa
+        raise ValueError(msg)
     elif len(valid_resolvers) > 1:
-        vrs = [f"resolver={vr[1]} > format={vr[2]}" for vr in valid_resolvers]
-        raise ValueError(f"multiple valid loaders found for input: {vrs}")
+        # Convert valid_resolvers to a dict structure for formatting
+        valid_resolvers_dict = {}
+        for resolver, resolver_name, fmt_label in valid_resolvers:
+            if resolver_name not in valid_resolvers_dict:
+                valid_resolvers_dict[resolver_name] = {}
+            fmt_label = f"{fmt_label}: jd.load(obj_to_load, format='{fmt_label}')"
+            valid_resolvers_dict[resolver_name][fmt_label] = ''
+
+        msg = (f'Multiple valid loaders found for input. '
+               f'Please specify a format from the following as:\n'
+               f'{_format_resolver_error(valid_resolvers_dict, formats=formats, no_align=True)}\n')
+        raise ValueError(msg)
     else:
         return valid_resolvers[0][0].user_api

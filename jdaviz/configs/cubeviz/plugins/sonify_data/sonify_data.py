@@ -46,6 +46,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * :meth:`sonify_cube`
     """
     template_file = __file__, "sonify_data.vue"
 
@@ -82,7 +83,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.sound_device_indexes = None
             self.refresh_device_list()
 
-        self.add_results.viewer.add_filter('is_image_viewer')
         self.add_to_viewer_selected = 'flux-viewer'
         self.sonified_cube = None
         self.sonified_viewers = []
@@ -102,6 +102,10 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
+    def _get_supported_viewers(self):
+        """Return viewer types that can display sonified data."""
+        return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
+
     @property
     def user_api(self):
         expose = ['sonify_cube']
@@ -113,7 +117,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         Update default label when a new sonification is added to the viewer.
         """
         # Modify default label to avoid vue error from re-using label
-        self.results_label_default = self.app.return_unique_name('Sonified data', typ='data')
+        self.results_label_default = self._app.return_unique_name('Sonified data', typ='data')
 
     def _data_added_to_viewer(self, msg):
         # Keep track of the volume attribute for each layer.
@@ -187,7 +191,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         msg = SnackbarMessage(f"'{previous_label}' sonified successfully in {t1-t0} seconds.",
                               color='success',
                               sender=self)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln, use_pccut, results_label):

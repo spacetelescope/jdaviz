@@ -29,8 +29,23 @@
       label="Data Label"
       api_hint="ldr.importer.data_label ="
       :api_hints_enabled="api_hints_enabled"
-      :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.' : 'Label to assign to the new data entry.'"
+      :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.  Will resolve to the following data labels:' : 'Label to assign to the new data entry.'"
     ></plugin-auto-label>
+    <v-row v-if="data_label_is_prefix">
+        <j-tooltip v-for="(suff, index) in data_label_suffices"
+          :key="suff"
+          :tooltipcontent="data_label_overwrite_by_index[index] ? 'Will overwrite existing entry' : 'New entry'">
+          <v-chip
+            outlined
+            label
+            style="margin: 4px"
+          >
+            <v-icon v-if="data_label_overwrite_by_index[index]" small left color="warning">mdi-file-replace</v-icon>
+            {{data_label_value}}{{suff}}
+          </v-chip>
+        </j-tooltip>
+    </v-row>
+
     <v-row>
       <plugin-switch
         :value.sync="gwcs_to_fits_sip"
@@ -40,7 +55,7 @@
         hint="If GWCS exists, try to convert into FITS SIP for better performance aligning images (typical precision <0.1 pixels)."
       />
     </v-row>
-    <v-row>
+    <v-row v-if="expose_align_by_options">
       <v-radio-group
         :label="api_hints_enabled ? 'ldr.importer.align_by = ' : 'Align by'"
         :class="api_hints_enabled ? 'api-hint' : null"
@@ -77,19 +92,16 @@
       hint="Select the viewer to use for the new data entry."
     ></plugin-viewer-create-new>
 
-    <v-row justify="end">
-      <plugin-action-button
-        :spinner="import_spinner"
-        :disabled="import_disabled"
-        :results_isolated_to_plugin="false"
-        :api_hints_enabled="api_hints_enabled"
-        @click="import_clicked">
-        {{ api_hints_enabled ?
-          'ldr.load()'
-          :
-          'Import'
-        }}
-      </plugin-action-button>
-    </v-row>
+    <loader-import-button
+      :spinner="import_spinner"
+      :disabled_msg="import_disabled_msg"
+      :api_hints_enabled="api_hints_enabled"
+      api_hint="ldr.load()"
+      :data_label_overwrite="data_label_overwrite"
+      :data_label_is_prefix="data_label_is_prefix"
+      :data_label_suffices="data_label_suffices"
+      :data_label_overwrite_by_index="data_label_overwrite_by_index"
+      @click="import_clicked">
+    </loader-import-button>
   </v-container>
 </template>

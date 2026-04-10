@@ -4,13 +4,15 @@
 Importing Data into Cubeviz
 ***************************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 By design, Cubeviz only supports data that can be parsed as
 :class:`~specutils.Spectrum` objects. :class:`~specutils.Spectrum` supports 3D cubes
 and allows the Python-level interface and parsing tools to
 be defined in ``specutils`` instead of being duplicated in Jdaviz.
 :class:`~specutils.Spectrum` objects are very flexible in their capabilities, however,
 and hence should address most astronomical spectrum use cases.
-If you are creating your own data products, please read the page :ref:`create_products`.
+If you are creating your own data products, please read the page :ref:`configs_create_products`.
 
 Cubeviz will automatically parse the data into the multiple viewers as described in
 :ref:`cubeviz-display-cubes`. For the best experience, data loaded into Cubeviz should contain valid WCS
@@ -54,8 +56,8 @@ a data product is optional:
 
 .. _cubeviz-import-gui:
 
-Importing data through the GUI
-==============================
+Importing data through the UI
+=============================
 
 Users may load data into the Cubeviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's

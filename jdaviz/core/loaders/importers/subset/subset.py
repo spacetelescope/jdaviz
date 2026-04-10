@@ -55,7 +55,7 @@ class SubsetImporter(BaseImporterToPlugin):
 
         # set the default label to be the same as glue would set if
         # not passing subset_label explicitly
-        self.subset_label_default = f"Subset {self.app.data_collection._sg_count + 1}"
+        self.subset_label_default = f"Subset {self._app.data_collection._sg_count + 1}"
 
         if self.subset_label_value == self.subset_label_default:
             # _check_valid_subset_label will say this is invalid,
@@ -64,7 +64,7 @@ class SubsetImporter(BaseImporterToPlugin):
             return
 
         try:
-            self.app._check_valid_subset_label(self.subset_label_value, raise_if_invalid=True)
+            self._app._check_valid_subset_label(self.subset_label_value, raise_if_invalid=True)
         except ValueError as e:
             self.subset_label_invalid_msg = f'invalid subset_label: {str(e)}'
             return
@@ -73,16 +73,16 @@ class SubsetImporter(BaseImporterToPlugin):
 
     @observe('subset_label_invalid_msg')
     def _set_import_disabled(self, change={}):
-        self.import_disabled = len(self.subset_label_invalid_msg) > 0
+        # Set import_disabled_msg based on validation errors
+        # Empty msg = enabled, non-empty = disabled
+        self.import_disabled_msg = self.subset_label_invalid_msg
 
     def __call__(self):
-        if self.subset_label_invalid_msg:
-            raise ValueError(self.subset_label_invalid_msg)
         if self.subset_label_value.strip() == self.subset_label_default:
             # no need to pass subset_label since it is Subset N,
             # and otherwise the backend will raise an error
             kwargs = {}
         else:
             kwargs = {'subset_label': self.subset_label_value.strip()}
-        self.app._jdaviz_helper.plugins['Subset Tools'].import_region(self.input,
+        self._app._jdaviz_helper.plugins['Subset Tools'].import_region(self.input,
                                                                       **kwargs)  # noqa

@@ -8,7 +8,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from specutils import Spectrum, SpectrumList, SpectrumCollection, SpectralRegion
 from astropy.utils.data import download_file
 
-from jdaviz.app import Application
+from jdaviz.app import PrivateApplication
 from jdaviz.core.marks import LineUncertainties
 from jdaviz import Specviz
 
@@ -26,14 +26,20 @@ class TestSpecvizHelper:
 
     def test_load_spectrum1d(self):
         # starts with a single loaded spectrum1d object:
-        assert len(self.spec_app.app.data_collection) == 1
-        dc_0 = self.spec_app.app.data_collection[0]
+        assert len(self.spec_app._app.data_collection) == 1
+        dc_0 = self.spec_app._app.data_collection[0]
         assert dc_0.label == self.label
         assert dc_0.meta['uncertainty_type'] == 'std'
 
-        data = self.spec_app.get_data()
+        # Test both the old and new API
+        data = self.spec_app.datasets[self.label].get_data()
+        data_old_api = self.spec_app.get_data(data_label=self.label)
 
         assert isinstance(data, Spectrum)
+        assert isinstance(data_old_api, Spectrum)
+        # Verify both APIs return equivalent data
+        assert np.array_equal(data.flux, data_old_api.flux)
+        assert np.array_equal(data.spectral_axis, data_old_api.spectral_axis)
 
     def test_load_hdulist(self):
         # Create a fake fits file with a 1D spectrum for testing.
@@ -51,7 +57,7 @@ class TestSpecvizHelper:
         fake_hdulist = fits.HDUList([primary_hdu, spectrum_table])
         self.label = "Test 1D Spectrum"
         self.spec_app.load_data(fake_hdulist)
-        data = self.spec_app.get_data(data_label=self.label)
+        data = self.spec_app.datasets[self.label].get_data()
         # HDUList should load as Spectrum
         assert isinstance(data, Spectrum)
 
@@ -64,16 +70,16 @@ class TestSpecvizHelper:
         # When loading via the ``data_label`` argument, the length of the
         # list must match the number of sources in the SpectrumList.
         self.spec_app.load_data(self.spec_list, **kwargs)
-        assert len(self.spec_app.app.data_collection) == 4
+        assert len(self.spec_app._app.data_collection) == 4
         if 'load' in list(kwargs.keys())[0]:
             for i in (1, 2, 3):
-                assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
+                assert "1D Spectrum" in self.spec_app._app.data_collection[i].label
 
     def test_load_multi_order_spectrum_list(self):
-        assert len(self.spec_app.app.data_collection) == 1
+        assert len(self.spec_app._app.data_collection) == 1
         # now load ten spectral orders from a SpectrumList:
         self.spec_app.load_data(self.multi_order_spectrum_list, sources='*')
-        assert len(self.spec_app.app.data_collection) == 11
+        assert len(self.spec_app._app.data_collection) == 11
 
     def test_mismatched_label_length(self):
         # NOTE: will be removed after load_data deprecation is removed
@@ -91,7 +97,7 @@ class TestSpecvizHelper:
         Test _spectrum_viewer and get_spectra with no reference viewer.
         """
         # Get spectra without a reference viewer
-        self.spec_app.app._viewer_store.pop('specviz-0')  # remove the default viewer
+        self.spec_app._app._viewer_store.pop('specviz-0')  # remove the default viewer
         assert self.spec_app._spectrum_viewer is None
         assert self.spec_app.get_spectra() == {}
 
@@ -325,7 +331,7 @@ def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
 
 
 def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
-    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    spec_viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     # Mouseover without data should not crash.
     label_mouseover = specviz_helper._coords_info
@@ -386,7 +392,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
 def test_subset_default_thickness(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
 
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper._app.get_viewer('spectrum-viewer')
     sv.toolbar.active_tool = sv.toolbar.tools['bqplot:xrange']
 
     spectral_axis_unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
@@ -400,8 +406,8 @@ def test_subset_default_thickness(specviz_helper, spectrum1d):
 
 def test_app_links(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
-    assert isinstance(sv.jdaviz_app, Application)
+    sv = specviz_helper._app.get_viewer('spectrum-viewer')
+    assert isinstance(sv.jdaviz_app, PrivateApplication)
     assert isinstance(sv.jdaviz_helper, Specviz)
 
 
@@ -422,12 +428,12 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
 
     # NOTE: the length was 3 before specutils 1.9 (https://github.com/astropy/specutils/pull/982)
     expected_len = 39
-    assert len(specviz_helper.app.data_collection) == expected_len
+    assert len(specviz_helper._app.data_collection) == expected_len
 
-    for data in specviz_helper.app.data_collection:
+    for data in specviz_helper._app.data_collection:
         assert data.main_components[:2] == ['flux', 'uncertainty']
 
-    dc_0 = specviz_helper.app.data_collection[0]
+    dc_0 = specviz_helper._app.data_collection[0]
     assert 'header' not in dc_0.meta
     assert dc_0.meta['SPORDER'] == 1
 
@@ -448,7 +454,7 @@ def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
     # Now the total is (19 EXTRACT 1D + 1 Combined) + (20 EXTRACT 1D + 1 Combined) = 41.
     with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
         specviz_helper.load_data(data_path, concat_by_file=True)
-    assert len(specviz_helper.app.data_collection) == 41
+    assert len(specviz_helper._app.data_collection) == 41
 
 
 def test_load_2d_flux(specviz_helper):
@@ -457,26 +463,28 @@ def test_load_2d_flux(specviz_helper):
     spec = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                     flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
+    # NOTE: this maps to specviz_helper.load(spec, data_label='test', extension='*')
     specviz_helper.load_data(spec, data_label="test", sources='*')
 
-    assert len(specviz_helper.app.data_collection) == 4
-    assert specviz_helper.app.data_collection[0].label == "test_index-0"
+    assert len(specviz_helper._app.data_collection) == 4
+    assert specviz_helper._app.data_collection[0].label == "test_index-0"
 
     spec2 = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                      flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
+    # NOTE: this maps to specviz_helper.load(spec_list, data_label='second test', extension='*')
     specviz_helper.load_data(spec_list, data_label="second test", sources='*')
 
-    assert len(specviz_helper.app.data_collection) == 6
-    assert specviz_helper.app.data_collection[-1].label == "second test_index-1"
+    assert len(specviz_helper._app.data_collection) == 6
+    assert specviz_helper._app.data_collection[-1].label == "second test_index-1"
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
 
-    specviz_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    specviz_viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
 
@@ -511,11 +519,11 @@ def test_plugin_user_apis(specviz_helper):
 def test_data_label_as_posarg(specviz_helper, spectrum1d):
     # Passing in data_label keyword as posarg.
     specviz_helper.load_data(spectrum1d, 'my_spec')
-    assert specviz_helper.app.data_collection[0].label == 'my_spec'
+    assert specviz_helper._app.data_collection[0].label == 'my_spec'
 
 
 def test_spectra_partial_overlap(specviz_helper):
-    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    spec_viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     wave_1 = np.linspace(6000, 7000, 10) * u.AA
     flux_1 = ([1200] * wave_1.size) * u.nJy
@@ -552,7 +560,7 @@ def test_spectra_incompatible_flux(specviz_helper):
     specviz_helper.load_data(sp3, data_label="3")  # OK
 
     # all 3 load into data-collection, but only two in the viewer (with snackbar error)
-    assert len(specviz_helper.app.data_collection.labels) == 3
+    assert len(specviz_helper._app.data_collection.labels) == 3
     assert len(specviz_helper.viewers['spectrum-viewer']._obj.glue_viewer.layers) == 2
 
 
@@ -566,13 +574,13 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
                             7000 * spectral_axis_unit)
     specviz_helper.plugins['Subset Tools'].import_region(subset)
 
-    assert len(specviz_helper.app.data_collection.subset_groups) == 1
-    subset1 = specviz_helper.app.data_collection.subset_groups[0]
+    assert len(specviz_helper._app.data_collection.subset_groups) == 1
+    subset1 = specviz_helper._app.data_collection.subset_groups[0]
     assert subset1.subset_state.att.parent.label == "my_spec_AA"
     assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (6200, 7000))
 
-    specviz_helper.app.remove_data_from_viewer('spectrum-viewer', "my_spec_AA")
-    specviz_helper.app.data_item_remove("my_spec_AA")
+    specviz_helper._app.remove_data_from_viewer('spectrum-viewer', "my_spec_AA")
+    specviz_helper._app.data_item_remove("my_spec_AA")
 
     # Check that the reparenting and coordinate recalculations happened
     assert subset1.subset_state.att.parent.label == "my_spec_nm"
@@ -603,51 +611,50 @@ class TestLoadData:
             timeout=30,
             local_path=tmpdir
         )
-        assert 'test_cache' in specviz_helper.app.data_collection.labels
-        assert len(specviz_helper.app.data_collection) == 1
+        assert 'test_cache' in specviz_helper._app.data_collection.labels
+        assert len(specviz_helper._app.data_collection) == 1
 
     def test_load_data_with_sources_and_exposures(self, specviz_helper, premade_spectrum_list):
         """
         Test load_data with sources and exposures kwargs.
         """
         specviz_helper.load_data(premade_spectrum_list, sources='*')
-        assert len(specviz_helper.app.data_collection) == 5
+        assert len(specviz_helper._app.data_collection) == 5
 
     def test_load_data_show_in_viewer_false(self, specviz_helper, spectrum1d):
         """
         Test load_data with show_in_viewer=False.
         """
-        specviz_helper.load_data(
-            spectrum1d,
-            data_label='hidden_spec',
-            show_in_viewer=False
-        )
-        assert 'hidden_spec' in specviz_helper.app.data_collection.labels
+        with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+            specviz_helper.load_data(
+                spectrum1d,
+                data_label='hidden_spec',
+                show_in_viewer=False
+            )
+        assert 'hidden_spec' in specviz_helper._app.data_collection.labels
 
     def test_load_data_concat_by_file(self, specviz_helper, premade_spectrum_list):
         """
         Test load_data with concat_by_file=True.
         """
-        initial_count = len(specviz_helper.app.data_collection)
-        with pytest.warns(UserWarning, match='default source selection'):
-            specviz_helper.load_data(
-                premade_spectrum_list,
-                data_label='concatenated',
-                concat_by_file=True
-            )
-        assert len(specviz_helper.app.data_collection) > initial_count
+        initial_count = len(specviz_helper._app.data_collection)
+        specviz_helper.load_data(
+            premade_spectrum_list,
+            data_label='concatenated',
+            concat_by_file=True
+        )
+        assert len(specviz_helper._app.data_collection) == initial_count + 1
 
     def test_load_data_with_load_as_list(self, specviz_helper, premade_spectrum_list):
         """
         Test load_data with load_as_list=True.
         """
-        with pytest.warns(UserWarning, match='default source selection'):
-            specviz_helper.load_data(
-                premade_spectrum_list,
-                data_label='as_list',
-                load_as_list=True
-            )
-        assert 'as_list_index-0' in specviz_helper.app.data_collection.labels
+        specviz_helper.load_data(
+            premade_spectrum_list,
+            data_label='as_list',
+            load_as_list=True
+        )
+        assert 'as_list_index-0' in specviz_helper._app.data_collection.labels
 
 
 # TODO: Delete on full deprecation of x_limits, y_limits, autoscale_x, autoscale_y
@@ -659,7 +666,7 @@ class TestDeprecatedLimits:
         Test deprecated x_limits.
         """
         specviz_helper.load_data(spectrum1d, data_label='test_spec')
-        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        sv = specviz_helper._app.get_viewer('spectrum-viewer')
 
         specviz_helper.x_limits()
         assert sv.scale_x.min == 6000
@@ -683,7 +690,7 @@ class TestDeprecatedLimits:
         Test deprecated y_limits.
         """
         specviz_helper.load_data(spectrum1d, data_label='test_spec')
-        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        sv = specviz_helper._app.get_viewer('spectrum-viewer')
 
         specviz_helper.y_limits()
         assert_allclose(sv.scale_y.min, 12, atol=1)
@@ -710,7 +717,7 @@ class TestDeprecatedLimits:
         specviz_helper.load_data(spectrum1d, data_label='test_spec')
         specviz_helper.autoscale_x()
 
-        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        sv = specviz_helper._app.get_viewer('spectrum-viewer')
         assert sv.scale_x.min == 6000
         assert sv.scale_x.max == 8000
 
@@ -721,7 +728,7 @@ class TestDeprecatedLimits:
         specviz_helper.load_data(spectrum1d, data_label='test_spec')
         specviz_helper.autoscale_y()
 
-        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        sv = specviz_helper._app.get_viewer('spectrum-viewer')
         assert_allclose(sv.scale_y.min, 12, atol=1)
         assert_allclose(sv.scale_y.max, 16.5, atol=1)
 
@@ -731,7 +738,7 @@ class TestDeprecatedLimits:
         """
         specviz_helper.load_data(spectrum1d, data_label='test_spec')
 
-        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        sv = specviz_helper._app.get_viewer('spectrum-viewer')
         original_min = sv.scale_x.min
         original_max = sv.scale_x.max
 
@@ -746,7 +753,7 @@ class TestDeprecatedLimits:
         """
         specviz_helper.load_data(spectrum1d, data_label='test_spec')
 
-        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        sv = specviz_helper._app.get_viewer('spectrum-viewer')
         original_min = sv.scale_y.min
         original_max = sv.scale_y.max
 

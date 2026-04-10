@@ -5,11 +5,11 @@ from specutils import Spectrum
 
 
 def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
-    app = cubeviz_helper.app
+    app = cubeviz_helper._app
     dc = app.data_collection
     data_label = 'test'
     cubeviz_helper.load_data(spectrum1d_cube, data_label=data_label)
-    spec_viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    spec_viewer = cubeviz_helper._app.get_viewer('spectrum-viewer')
 
     assert len(dc) == 2
 
@@ -105,7 +105,7 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
 
 def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
     data_label = 'test'
-    dc = cubeviz_helper.app.data_collection
+    dc = cubeviz_helper._app.data_collection
     cubeviz_helper.load_data(spectrum1d_cube, data_label=data_label)
 
     gs = cubeviz_helper.plugins['Gaussian Smooth']._obj
@@ -129,9 +129,9 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
 
 def test_specviz_smooth(specviz_helper, spectrum1d):
     data_label = 'test'
-    dc = specviz_helper.app.data_collection
+    dc = specviz_helper._app.data_collection
     specviz_helper.load_data(spectrum1d, data_label=data_label)
-    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    spec_viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     gs = specviz_helper.plugins['Gaussian Smooth']._obj
     gs.dataset_selected = data_label
@@ -169,7 +169,7 @@ def test_specviz_smooth(specviz_helper, spectrum1d):
 
 def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
     data_label = 'test'
-    dc = specviz2d_helper.app.data_collection
+    dc = specviz2d_helper._app.data_collection
     specviz2d_helper.load_data(spectrum_2d=spectrum2d, spectrum_2d_label=data_label)
 
     gs_plugin = specviz2d_helper.plugins['Gaussian Smooth']
@@ -195,3 +195,33 @@ def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
     gp_mark = marks[-1]
     np.testing.assert_allclose(gp_mark.x, smoothed_spectrum.spectral_axis.value)
     np.testing.assert_allclose(gp_mark.y, smoothed_spectrum.flux.value)
+
+
+def test_create_new_viewer(deconfigged_helper, spectrum1d):
+    """Test that the plugin can create a new viewer when add_results.viewer.create_new is set."""
+    data_label = 'test'
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label=data_label)
+    # Check initial state - should only have the default viewer
+    initial_viewers = list(deconfigged_helper.viewers.keys())
+    assert len(initial_viewers) == 1
+
+    # Get the plugin
+    gs = deconfigged_helper.plugins['Gaussian Smooth']
+    gs.dataset.selected = data_label
+    gs.stddev = 3
+
+    # Set create_new to create a new spectrum viewer
+    assert len(gs.add_results.viewer.create_new.choices) > 0
+    gs.add_results.viewer.create_new.selected = '1D Spectrum'
+
+    # Apply the smooth operation - should create new viewer and add data to it
+    gs.smooth(add_data=True)
+
+    # Check that a new viewer was created
+    final_viewers = list(deconfigged_helper.viewers.keys())
+    assert len(final_viewers) == 2
+    new_viewer_id = [v for v in final_viewers if v not in initial_viewers][0]
+
+    # Check that data was added to the new viewer
+    new_viewer = deconfigged_helper.viewers[new_viewer_id]
+    assert f'{data_label} smooth stddev-3.0' in new_viewer.data_menu.layer.choices

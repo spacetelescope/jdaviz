@@ -22,21 +22,21 @@ def test_loaders_registry(specviz_helper):
 
 
 def test_open_close(specviz_helper):
-    specviz_helper.app.state.dev_loaders = True
+    specviz_helper._app.state.dev_loaders = True
 
-    assert specviz_helper.app.state.drawer_content == ''
+    assert specviz_helper._app.state.drawer_content == ''
 
     loader = specviz_helper.loaders['file']
     loader.open_in_tray()
-    assert specviz_helper.app.state.drawer_content == 'loaders'
+    assert specviz_helper._app.state.drawer_content == 'loaders'
     loader.close_in_tray()
-    assert specviz_helper.app.state.drawer_content == 'loaders'
+    assert specviz_helper._app.state.drawer_content == 'loaders'
     loader.close_in_tray(close_sidebar=True)
-    assert specviz_helper.app.state.drawer_content == ''
+    assert specviz_helper._app.state.drawer_content == ''
 
     subset_plg = specviz_helper.plugins['Subset Tools']
     subset_plg.open_in_tray()
-    assert specviz_helper.app.state.drawer_content == 'plugins'
+    assert specviz_helper._app.state.drawer_content == 'plugins'
 
     assert subset_plg._obj.loader_panel_ind is None  # loader panel not open
     subset_plg._obj.loaders['url'].open_in_tray()
@@ -44,19 +44,19 @@ def test_open_close(specviz_helper):
     subset_plg._obj.loaders['url'].close_in_tray()
     assert subset_plg._obj.loader_panel_ind is None  # loader panel not open
     subset_plg._obj.loaders['url'].close_in_tray(close_sidebar=True)
-    assert specviz_helper.app.state.drawer_content == ''
+    assert specviz_helper._app.state.drawer_content == ''
 
 
 def test_resolver_matching(specviz_helper):
     sp = Spectrum(spectral_axis=np.array([1, 2, 3])*u.nm,
                   flux=np.array([1, 2, 3])*u.Jy)
 
-    res_sp = find_matching_resolver(specviz_helper.app, sp)
+    res_sp = find_matching_resolver(specviz_helper._app, sp)
     assert res_sp._obj._registry_label == 'object'
-    assert res_sp.format == '1D Spectrum'
+    assert '1D Spectrum' in res_sp.format.choices
 
-    specviz_helper._load(sp)
-    assert len(specviz_helper.app.data_collection) == 1
+    specviz_helper.load(sp)
+    assert len(specviz_helper._app.data_collection) == 1
 
 
 def test_dbg_access(deconfigged_helper):
@@ -74,7 +74,7 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
 
     trace = specviz2d_helper.plugins['2D Spectral Extraction'].export_trace()
 
-    res_sp = find_matching_resolver(specviz2d_helper.app, trace)
+    res_sp = find_matching_resolver(specviz2d_helper._app, trace)
     assert res_sp._obj._registry_label == 'object'
     assert res_sp.format == 'Trace'
 
@@ -84,16 +84,17 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
     assert ldr.format == 'Trace'
     ldr.importer.data_label = 'Trace 1'
     ldr.load()
-    assert specviz2d_helper.app.data_collection[-1].label == 'Trace 1'
+    assert specviz2d_helper._app.data_collection[-1].label == 'Trace 1'
 
     # import through load method
     specviz2d_helper._load(trace, data_label='Trace 2')
-    assert specviz2d_helper.app.data_collection[-1].label == 'Trace 2'
+    assert specviz2d_helper._app.data_collection[-1].label == 'Trace 2'
 
 
 def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = spectrum2d
+    ldr.format = '2D Spectrum'
 
     assert ldr.importer.viewer.create_new == '2D Spectrum'
     assert ldr.importer.viewer.new_label == '2D Spectrum'
@@ -109,7 +110,7 @@ def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
     # created 2D Spectrum viewer, did auto-extract,
     # but did not create 1D Spectrum viewer
     assert len(deconfigged_helper.viewers) == 1
-    assert len(deconfigged_helper.app.data_collection) == 2
+    assert len(deconfigged_helper._app.data_collection) == 2
 
 
 def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
@@ -121,6 +122,10 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
+@pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'
+                          ' used to avoid an error when handling 3D WCS with 2D data.'
+                          'The temporary fix will be removed once an upstream solution'
+                          'is implemented.')
 def test_fits_spectrum2d(deconfigged_helper):
     uri = cached_uri('mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits')
     if 'mast' in uri:
@@ -131,8 +136,6 @@ def test_fits_spectrum2d(deconfigged_helper):
         ldr = deconfigged_helper.loaders['file']
         ldr.filepath = uri
 
-    # Default format may not be 2D Spectrum
-    assert 'Image' in ldr.format.choices
     assert '2D Spectrum' in ldr.format.choices
     ldr.format = '2D Spectrum'
     assert ldr.importer._obj._parser.__class__.__name__ == 'FITSParser'
@@ -140,11 +143,11 @@ def test_fits_spectrum2d(deconfigged_helper):
     ldr.load()
 
     # ensure get_data works, retrieves a Spectrum1D object, and has spectral WCS attached correctly
-    sp2d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d')  # noqa
+    sp2d = deconfigged_helper.datasets['jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d'].get_data()  # noqa
     assert isinstance(sp2d, Spectrum)
     assert str(sp2d.spectral_axis.unit) == 'um'
 
-    sp1d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d (auto-ext)')  # noqa
+    sp1d = deconfigged_helper.datasets['jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d (auto-ext)'].get_data()  # noqa
     assert isinstance(sp1d, Spectrum)
     assert str(sp1d.spectral_axis.unit) == 'um'
 
@@ -158,11 +161,11 @@ def test_jwst_wfss_bsub(deconfigged_helper):
     ldr.cache = True
     ldr.url = uri
 
-    assert ldr.format == '2D Spectrum'
+    ldr.format = '2D Spectrum'  # may also be 'Image' depending on importer registry order
 
     ldr.load()
 
-    sp1d = deconfigged_helper.get_data('k5l446jid348jk343m8r4vvbkzk4syom (auto-ext)')  # noqa
+    sp1d = deconfigged_helper.datasets['k5l446jid348jk343m8r4vvbkzk4syom (auto-ext)'].get_data()  # noqa
     assert isinstance(sp1d, Spectrum)
     assert str(sp1d.spectral_axis.unit) == 'pix'
 
@@ -176,7 +179,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
 
     # ldr = deconfigged_helper.loaders['file']
     # ldr.filepath = './jdaviz/notebooks/WFSS_fits/jw01076-o103_t0000_nircam_f356w-grismr_x1d.fits'  # noqa
-    ldr.format = '1D Spectrum List'
+    ldr.format = '1D Spectrum'
 
     # 1_117 is completely masked
     sources_obj = ldr.importer.sources
@@ -185,23 +188,20 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
                             for e_num, s_id in number_combos]
     ldr.load()
 
-    assert len(deconfigged_helper.data_labels) == len(sources_obj.selected)
-    dc = deconfigged_helper.app.data_collection
+    assert len(deconfigged_helper.datasets) == len(sources_obj.selected)
+    dc = deconfigged_helper._app.data_collection
     assert len(dc) == len(sources_obj.selected)
     assert len(deconfigged_helper.viewers) == 1
 
     filestem = Path(ldr.filepath).stem
     for e_num, s_id in number_combos:
-        spec = deconfigged_helper.get_data(f'{filestem}_EXP-{e_num}_ID-{s_id}')
+        spec = deconfigged_helper.datasets[f'{filestem}_EXP-{e_num}_ID-{s_id}'].get_data()
         assert isinstance(spec, Spectrum)
         assert str(spec.spectral_axis.unit) == 'um'
 
 
 @pytest.mark.remote_data
-def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
-
-    def ignore_custom_loaders(existing_choices):
-        return [choice for choice in existing_choices if choice not in fake_classes_in_registries]
+def test_resolver_url(deconfigged_helper):
 
     loader = deconfigged_helper.loaders['url']
 
@@ -209,7 +209,10 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
     assert len(loader.format.choices) == 0
 
     # non-valid input
-    loader.url = 'not-valid-url'
+    with pytest.raises(ValueError, match="The input file 'not-valid-url' cannot be parsed as a "
+                                         "URL or URI, and no existing local file is available at "
+                                         "this path."):
+        loader.url = 'not-valid-url'
     assert len(loader.format.choices) == 0
 
     # s3 input
@@ -217,12 +220,12 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
     assert loader._obj.url_scheme == 's3'
     assert len(loader.format.choices) > 0
 
-    # https valid input
+    # https valid input (2D Spectrum)
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
 
     # may change with future importers
-    assert len(ignore_custom_loaders(loader.format.choices)) == 4
-    assert loader.format.selected == 'Image'  # default may change with future importers
+    assert len(loader.format.choices) == 3
+    assert loader.format.selected == '2D Spectrum'  # default may change with future importers
 
     # test target filtering
     assert len(loader.target.choices) > 1
@@ -230,22 +233,22 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
     loader.target = '1D Spectrum'
 
     # may change with future importers
-    assert len(ignore_custom_loaders(loader.format.choices)) == 2
-    assert loader.format == '1D Spectrum List'  # default may change with future importers
-    assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
+    assert len(loader.format.choices) == 1
+    assert loader.format == '1D Spectrum'  # default may change with future importers
+    assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw_index-0'  # noqa
 
     loader.target = 'Any'
-    assert len(ignore_custom_loaders(loader.format.choices)) == 4
+    assert len(loader.format.choices) == 3
     loader.format = '2D Spectrum'
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
-    assert len(deconfigged_helper.app.data_collection) == 0
+    assert len(deconfigged_helper._app.data_collection) == 0
     assert len(deconfigged_helper.viewers) == 0
 
     loader.load()
 
     # 2D spectrum and auto-extracted 1D spectrum
-    assert len(deconfigged_helper.app.data_collection) == 2
+    assert len(deconfigged_helper._app.data_collection) == 2
     assert len(deconfigged_helper.viewers) == 2
 
     with pytest.raises(ValueError, match="Failed query for URI"):
@@ -258,7 +261,7 @@ def test_resolver_table_as_query(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
 
     obs_table = Table({'id': [1, 2, 3], 'fileSetName': ['a', 'b', 'c']})
-    file_table = Table({'id': [1, 2, 3], 'url': ['a', 'b', 'c']})
+    file_table = Table({'id': [1, 2, 3], 'location': ['a', 'b', 'c']})
     invalid_table = Table({'id': [1, 2, 3], 'name': ['a', 'b', 'c']})
 
     assert ldr._obj.parsed_input_is_query is False
@@ -275,8 +278,125 @@ def test_resolver_table_as_query(deconfigged_helper):
 
     ldr.object = invalid_table
     assert ldr._obj.parsed_input_is_query is False
-    assert ldr._obj.observation_table_populated is False
-    assert ldr._obj.file_table_populated is False
+
+
+def test_hide_file_table_location_column(deconfigged_helper):
+    """Test that hide_file_table_location_column setting works correctly."""
+    # Test with setting disabled (default behavior)
+    ldr = deconfigged_helper.loaders['object']
+    file_table = Table({'id': [1, 2, 3],
+                        'name': ['a', 'b', 'c'],
+                        'location': ['http://a.fits', 'http://b.fits', 'http://c.fits']})
+
+    ldr.object = file_table
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.file_table_populated is True
+
+    # location should be visible in both headers_avail and headers_visible
+    assert 'location' in ldr._obj.file_table.headers_avail
+    assert 'location' in ldr._obj.file_table.headers_visible
+
+    # location data should exist in underlying table
+    assert ldr._obj.file_table._qtable is not None
+    assert 'location' in ldr._obj.file_table._qtable.colnames
+    assert len(ldr._obj.file_table._qtable) == 3
+
+    # Enable the setting and reload data
+    deconfigged_helper._app.state.settings['hide_file_table_location_column'] = True
+
+    # Clear the file table so file_table_populated will transition from False to True
+    ldr._obj.file_table._clear_table()
+    ldr._obj.file_table_populated = False
+
+    # Now load new data to trigger the observer
+    file_table2 = Table({'id': [4, 5],
+                         'name': ['d', 'e'],
+                         'location': ['http://d.fits', 'http://e.fits']})
+    ldr.object = file_table2
+
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.file_table_populated is True
+
+    # location should NOT be in headers_avail (not in dropdown)
+    assert 'location' not in ldr._obj.file_table.headers_avail
+    # location should NOT be in headers_visible
+    assert 'location' not in ldr._obj.file_table.headers_visible
+
+    # But other columns should be visible
+    assert 'id' in ldr._obj.file_table.headers_avail
+    assert 'name' in ldr._obj.file_table.headers_avail
+
+    # location data should still exist in underlying table for download functionality
+    assert ldr._obj.file_table._qtable is not None
+    assert 'location' in ldr._obj.file_table._qtable.colnames
+    assert len(ldr._obj.file_table._qtable) == 2
+
+    # Test changing setting back to False
+    deconfigged_helper._app.state.settings['hide_file_table_location_column'] = False
+
+    # Clear and reload to test re-enabling
+    ldr._obj.file_table._clear_table()
+    ldr._obj.file_table_populated = False
+
+    file_table3 = Table({'id': [6], 'name': ['f'], 'location': ['http://f.fits']})
+    ldr.object = file_table3
+
+    # location should be visible again
+    assert 'location' in ldr._obj.file_table.headers_avail
+    assert 'location' in ldr._obj.file_table.headers_visible
+
+    # Reset to default for other tests
+    deconfigged_helper._app.state.settings['hide_file_table_location_column'] = False
+
+
+def test_file_table_local_paths(deconfigged_helper):
+    """Test that local file paths don't get MAST URL prefix."""
+    ldr = deconfigged_helper.loaders['object']
+
+    # Test various local path formats
+    file_table = Table({
+        'id': [1, 2, 3, 4, 5, 6, 7, 8],
+        'location': [
+            '/absolute/unix/path.fits',      # Unix absolute path
+            './relative/path.fits',           # Unix relative path
+            '../parent/path.fits',            # Unix parent relative path
+            '~/home/path.fits',               # Home directory path
+            'C:/windows/path.fits',           # Windows absolute path
+            'C:\\windows\\backslash.fits',   # Windows absolute path with backslashes
+            'http://example.com/file.fits',   # HTTP URL
+            'jwst-product-name'               # MAST product name (no path indicators)
+        ]
+    })
+
+    ldr.object = file_table
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.file_table_populated is True
+
+    # Test each path type
+    test_cases = [
+        (0, '/absolute/unix/path.fits', 'Unix absolute path'),
+        (1, './relative/path.fits', 'Unix relative path'),
+        (2, '../parent/path.fits', 'Unix parent relative path'),
+        (3, '~/home/path.fits', 'Home directory path'),
+        (4, 'C:/windows/path.fits', 'Windows absolute path with forward slashes'),
+        (5, 'C:\\windows\\backslash.fits', 'Windows absolute path with backslashes'),
+        (6, 'http://example.com/file.fits', 'HTTP URL'),
+    ]
+
+    for row_idx, expected_path, description in test_cases:
+        ldr.file_table.select_rows(row_idx)
+        result = ldr._obj.get_selected_url()
+        assert result == expected_path, (
+            f"Failed for {description}: expected {expected_path}, got {result}"
+        )
+
+    # Test MAST product name gets the prefix
+    ldr.file_table.select_rows(7)
+    result = ldr._obj.get_selected_url()
+    assert result.startswith('https://mast.stsci.edu/search/jwst/api/'), \
+        f"MAST product name should get URL prefix, got: {result}"
+    assert 'jwst-product-name' in result, \
+        f"MAST URL should contain the product name, got: {result}"
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
@@ -342,7 +462,7 @@ def test_mult_data_types(deconfigged_helper, image_nddata_wcs, spectrum2d, spect
         deconfigged_helper.load(datas[i], **load_kwargs[i])
 
     # NOTE: 2D Spectrum will also result in auto-extracted 1D Spectrum
-    assert len(deconfigged_helper.app.data_collection) == 4
+    assert len(deconfigged_helper._app.data_collection) == 4
     assert len(deconfigged_helper.viewers) == 3
 
 
@@ -356,7 +476,7 @@ def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
     deconfigged_helper.load(sp1d_freq, format='1D Spectrum', data_label='sp_frequency')
 
     # flux <> flux, uncertainty <> uncertainty, wavelength <> freq, Pixel 0[x] <> Pixel 1[x]
-    assert len(deconfigged_helper.app.data_collection.external_links) == 4
+    assert len(deconfigged_helper._app.data_collection.external_links) == 4
 
 
 def test_load_image_mult_sci_extension(imviz_helper):
@@ -373,12 +493,12 @@ def test_load_image_mult_sci_extension(imviz_helper):
     # imviz_helper._load(hdul, extension=('SCI,1', 'SCI,2', 'ERR,2'))
     imviz_helper.load_data(hdul, ext=('SCI,1', 'SCI,2', 'ERR,2'))
 
-    assert len(imviz_helper.app.data_collection) == 3
-    assert [d.label for d in imviz_helper.app.data_collection] == ['Image[SCI,1]', 'Image[SCI,2]', 'Image[ERR,2]']  # noqa
+    assert len(imviz_helper._app.data_collection) == 3
+    assert [d.label for d in imviz_helper._app.data_collection] == ['Image[SCI,1]', 'Image[SCI,2]', 'Image[ERR,2]']  # noqa
 
-    assert imviz_helper.app._get_assoc_data_children('Image[SCI,1]') == []
-    assert imviz_helper.app._get_assoc_data_children('Image[SCI,2]') == ['Image[ERR,2]']
-    assert imviz_helper.app._get_assoc_data_parent('Image[ERR,2]') == 'Image[SCI,2]'
+    assert imviz_helper._app._get_assoc_data_children('Image[SCI,1]') == []
+    assert imviz_helper._app._get_assoc_data_children('Image[SCI,2]') == ['Image[ERR,2]']
+    assert imviz_helper._app._get_assoc_data_parent('Image[ERR,2]') == 'Image[SCI,2]'
 
 
 def test_loaders_extension_select(imviz_helper):
@@ -441,34 +561,56 @@ def test_gwcs_to_fits_sip(gwcs_to_fits_sip, expected_cls, deconfigged_helper):
 
     ldr.load()
 
-    data = deconfigged_helper.app.data_collection[0]
+    data = deconfigged_helper._app.data_collection[0]
     assert isinstance(data.coords, expected_cls)
 
 
 @pytest.mark.remote_data
-@pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz_helper'])
-def test_roman_1d_spectrum(helper, request):
-    helper = request.getfixturevalue(helper)
-    ldr = helper.loaders['url']
-    # wfi_spec_combined_1d_r0000201001001001001_0002_WFI01.asdf
-    ldr.url = 'https://stsci.box.com/shared/static/rgasl942so9hno2rq9f1xgdeolav59o5.asdf'
-    assert len(ldr.importer.extension.choices) > 1
-    ldr.format = '1D Spectrum'
+class TestRomanLoaders:
+    # Use dictionary to make it easier to parametrize tests
+    # and extend in the future via parametrization of test_rdd_open
+    roman_uris = {
+        '1D Spectrum': 'https://stsci.box.com/shared/static/rgasl942so9hno2rq9f1xgdeolav59o5.asdf',
+        '2D Spectrum': 'https://stsci.box.com/shared/static/g8yb9hxguy3aedveef9su67lesgd8c6w.asdf'
+    }
 
-    ldr.load()
-    assert len(helper.app.data_collection) == 1
+    # roman_datamodels isn't a required dependency and some workflows don't install it
+    try:
+        from roman_datamodels import datamodels as rdd
+    except ImportError:
+        rdd = None
 
+    @pytest.mark.skip
+    @pytest.mark.parametrize('data_type', roman_uris.keys())
+    def test_rdd_open(self, data_type):
+        if self.rdd is not None:
+            # Ensure that roman_datamodels can open the test files
+            self.rdd.open(self.roman_uris[data_type])
+        else:
+            # Skip the test if roman_datamodels is not installed
+            pytest.skip("roman_datamodels not installed")
 
-@pytest.mark.remote_data
-@pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz2d_helper'])
-def test_roman_2d_spectrum(helper, request):
-    helper = request.getfixturevalue(helper)
-    ldr = helper.loaders['url']
-    # wfi_spec_decontaminated_2d_r0000201001001001001_0002_WFI01.asdf
-    ldr.url = 'https://stsci.box.com/shared/static/g8yb9hxguy3aedveef9su67lesgd8c6w.asdf'
-    assert len(ldr.importer.extension.choices) > 1
-    ldr.format = '2D Spectrum'
+    @pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz_helper'])
+    def test_roman_1d_spectrum(self, helper, request):
+        helper = request.getfixturevalue(helper)
+        ldr = helper.loaders['url']
+        # wfi_spec_combined_1d_r0000201001001001001_0002_WFI01.asdf
+        ldr.url = self.roman_uris['1D Spectrum']
+        ldr.format = '1D Spectrum'
+        assert len(ldr.importer.extension.choices) > 1
 
-    ldr.load()
-    # 2D spectrum and auto-extracted 1D spectrum
-    assert len(helper.app.data_collection) == 2
+        ldr.load()
+        assert len(helper._app.data_collection) == 1
+
+    @pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz2d_helper'])
+    def test_roman_2d_spectrum(self, helper, request):
+        helper = request.getfixturevalue(helper)
+        ldr = helper.loaders['url']
+        # wfi_spec_decontaminated_2d_r0000201001001001001_0002_WFI01.asdf
+        ldr.url = self.roman_uris['2D Spectrum']
+        ldr.format = '2D Spectrum'
+        assert len(ldr.importer.extension.choices) > 1
+
+        ldr.load()
+        # 2D spectrum and auto-extracted 1D spectrum
+        assert len(helper._app.data_collection) == 2

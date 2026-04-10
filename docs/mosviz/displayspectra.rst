@@ -2,6 +2,8 @@
 Displaying Spectra
 ******************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 The spectra linked to the source selected in the table viewer will be automatically displayed
 in the viewers. Both spectra will populate the top right viewer with the 2D spectra
 appearing above its 1D counterpart.

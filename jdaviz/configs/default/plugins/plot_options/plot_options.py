@@ -240,6 +240,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
       only exposed for Imviz and deconfigged. Controls marker colormap minimum value.
     * ``marker_colormap_vmax`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       only exposed for Imviz and deconfigged. Controls marker colormap maximum value.
+    * ``table_columns_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      Controls which columns are visible in the table viewer. Only applicable when a
+      table viewer is selected.
     """
     template_file = __file__, "plot_options.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -477,6 +480,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     hist_update_bins_on_reset_limits_value = Bool().tag(sync=True)
     hist_update_bins_on_reset_limits_sync = Dict().tag(sync=True)
 
+    # Table viewer options
+    table_columns_visible_value = List().tag(sync=True)
+    table_columns_visible_sync = Dict().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -486,7 +493,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected',
                                  'viewer_selected', 'layer_multiselect')
 
-        self.layer.filters += [is_not_wcs_only, 'has_wcs_if_image_viewer_pixel_linked']
+        self.layer.filters += [is_not_wcs_only,
+                               'catalog_has_correct_coords_based_on_link_type',
+                               'not_in_table_viewer']
 
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
@@ -534,6 +543,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         def is_sonified(state):
             return isinstance(state, SonifiedLayerState)
+
+        def is_table_viewer(state):
+            return hasattr(state, 'hidden_components')
 
         def line_visible(state):
             # exclude for scatter layers where the marker is shown instead of the line
@@ -767,8 +779,15 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                                      'hist_update_bins_on_reset_limits_sync',  # noqa
                                                                      state_filter=is_histogram)
 
+        # Table viewer options:
+        self.table_columns_visible = PlotOptionsSyncState(self, self.viewer, self.layer,
+                                                          'hidden_components',
+                                                          'table_columns_visible_value',
+                                                          'table_columns_visible_sync',
+                                                          state_filter=is_table_viewer)
+
         # Add layer callback to image viewers to track active layer
-        for viewer in self.app._viewer_store.values():
+        for viewer in self._app._viewer_store.values():
             viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
@@ -782,7 +801,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def user_api(self):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
-                  'select_all', 'subset_visible', 'reset_viewer_bounds']
+                  'select_all', 'subset_visible', 'reset_viewer_bounds', 'table_columns_visible']
         if self.config == "cubeviz":
             expose += ['uncertainty_visible', 'volume_level', 'sonified_audible']
         if self.config != "imviz":
@@ -894,7 +913,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.send_state('display_units')
 
     def _on_refdata_change(self, *args):
-        if self.app._align_by.lower() == 'wcs':
+        if self._app._align_by.lower() == 'wcs':
             self.display_units['image'] = 'deg'
         else:
             self.display_units['image'] = 'pix'
@@ -902,7 +921,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self._update_viewer_zoom_steps()
 
     def _on_viewer_added(self, msg):
-        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        viewer = self._app.get_viewer_by_id(msg.viewer_id)
         viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
 
     @observe('viewer_selected')
@@ -1046,7 +1065,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         # This button is currently only exposed if only the spectrum viewer is selected
         viewers = [self.viewer.selected_obj] if not self.viewer_multiselect else self.viewer.selected_obj # noqa
         for viewer in viewers:
-            viewer.toolbar.tools['jdaviz:homezoom'].activate()
+            tool = viewer.toolbar.tools.get('jdaviz:homezoom', None)
+            if tool is not None:
+                tool.activate()
 
     @observe('stretch_function_sync', 'stretch_params_sync',
              'stretch_vmin_sync', 'stretch_vmax_sync',
@@ -1114,8 +1135,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             if isinstance(viewer_label_old, list):
                 viewer_label_old = viewer_label_old[0]
             # If the previously selected viewer was deleted, we don't need to do this.
-            if viewer_label_old in self.app._viewer_store:
-                vs_old = self.app.get_viewer(viewer_label_old).state
+            if viewer_label_old in self._app._viewer_store:
+                vs_old = self._app.get_viewer(viewer_label_old).state
                 for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
                     vs_old.remove_callback(attr, self._zoom_limits_update_stretch_histogram)
 
@@ -1181,7 +1202,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             # a random subset of the data to compute the histogram.
             # The 2.5 and 97.5 hardcoded here is equivalent to
             # PercentileInterval(95).get_limits(sub_data)
-            glue_data = self.stretch_histogram.app.data_collection['histogram']
+            glue_data = self.stretch_histogram._app.data_collection['histogram']
             hist_lims = (
                 glue_data.compute_statistic('percentile', glue_data.id['x'],
                                             percentile=2.5, random_subset=RANDOM_SUBSET_SIZE),

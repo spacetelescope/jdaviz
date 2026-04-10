@@ -36,7 +36,7 @@ def test_autoconfig(uris):
 
     viz_helper = jdaviz_open(cached_uri(uri), **kwargs)
     assert isinstance(viz_helper, helper_class)
-    assert len(viz_helper.app.data_collection) > 0
+    assert len(viz_helper._app.data_collection) > 0
 
 
 @pytest.mark.remote_data

@@ -1,10 +1,15 @@
 from echo import delay_callback, CallbackProperty
 
+import warnings
+
 import numpy as np
+from numpy.linalg import norm
 
 from glue.config import data_translator
 from glue.core import BaseData
+from glue.core.edit_subset_mode import NewMode, ReplaceMode
 from glue.core.exceptions import IncompatibleAttribute
+from glue.core.roi import CircularAnnulusROI, CircularROI, EllipticalROI, RectangularROI
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 from glue.viewers.histogram.state import HistogramViewerState
@@ -35,11 +40,15 @@ from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
 from jdaviz.core.events import (SnackbarMessage,
                                 NewViewerMessage,
                                 ViewerRemovedMessage,
-                                ViewerVisibleLayersChangedMessage)
+                                ViewerVisibleLayersChangedMessage,
+                                RestoreToolbarMessage,
+                                TableSelectRowClickMessage)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
-from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
+from jdaviz.core.marks import (LineUncertainties, ScatterMask,
+                               OffscreenLinesMarks, TableSelectionMark)
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import WithCache, TemplateMixin, show_widget
+from jdaviz.core.tools import _get_skycoords_from_table, _get_pixel_coords_from_table
 from jdaviz.core.user_api import ViewerUserApi
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
@@ -74,7 +83,306 @@ class JdavizViewerMixin(WithCache):
         # Allow each viewer to cycle through colors for each new addition to the viewer:
         self.color_cycler = ColorCycler()
 
+        # Separate color cycler for scatter layers (catalogs) that has brighter colors,
+        # starting with neon green
+        self.scatter_color_cycler = ColorCycler()
+        self.scatter_color_cycler.default_color_palette = [
+            '#00FF00',  # neon green
+            '#FF00FF',  # magenta
+            '#00FFFF',  # cyan
+            '#FF0000',  # red
+            '#FFFF00',  # yellow
+            '#FF8800',  # orange
+            '#8800FF',  # purple
+            '#0088FF',  # blue
+        ]
+
         self._data_menu = DataMenu(viewer=self, app=self.jdaviz_app)
+
+    @staticmethod
+    def _is_circular_edit(old_roi, new_roi, rtol_move=1e-3, rtol_resize=0.25):
+        """
+        Classify the change from *old_roi* to *new_roi* for circular ROIs.
+
+        Checks for moves, i.e. the radius is unchanged within a specified tolerance, and
+        resizes, i.e. the radius is changed within a specified tolerance relative to
+        the old radius.
+
+        Parameters
+        ----------
+        old_roi : CircularROI
+            The existing circular ROI.
+        new_roi : CircularROI
+            The newly proposed circular ROI.
+        rtol_move : float, optional
+            Relative tolerance for move-related comparisons.
+        rtol_resize : float, optional
+            Relative tolerance for resize-related comparisons.
+
+        Returns
+        -------
+        edit_type : 'move', 'resize', or None
+        """
+        if old_roi.radius <= 0:
+            return None
+
+        # Move: radius unchanged.
+        if abs(old_roi.radius - new_roi.radius) < rtol_move * max(old_roi.radius, 1):
+            return 'move'
+
+        # Resize: radius changed but center stayed very close
+        dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
+        if dist < (rtol_resize * max(old_roi.radius, 1)):
+            return 'resize'
+
+        return None
+
+    @staticmethod
+    def _is_annulus_edit(old_roi, new_roi, rtol_move=1e-3, rtol_resize=0.25):
+        """
+        Classify the change from *old_roi* to *new_roi* for annular ROIs.
+
+        Checks for moves, i.e. the radii are unchanged within a specified tolerance, and
+        resizes, i.e. the radii change but the new center stays within an area defined
+        by the old radius and a specified tolerance.
+
+        Parameters
+        ----------
+        old_roi : CircularAnnulusROI
+            The existing annular ROI.
+        new_roi : CircularAnnulusROI
+            The newly proposed annular ROI.
+        rtol_move : float, optional
+            Relative tolerance for move-related comparisons.
+        rtol_resize : float, optional
+            Relative tolerance for resize-related comparisons.
+
+        Returns
+        -------
+        edit_type : 'move', 'resize', or None
+        """
+        if old_roi.outer_radius == 0 or old_roi.outer_radius <= old_roi.inner_radius:
+            return None
+
+        # Move: both radii unchanged.
+        if (abs(old_roi.inner_radius - new_roi.inner_radius) < rtol_move * max(old_roi.inner_radius, 1)  # noqa
+                and abs(old_roi.outer_radius - new_roi.outer_radius) < rtol_resize * max(old_roi.outer_radius, 1)):  # noqa
+            return 'move'
+
+        # Resize: radii changed but center stayed very close
+        dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
+        if dist < (rtol_resize * max(old_roi.outer_radius, 1)):
+            return 'resize'
+
+        return None
+
+    @staticmethod
+    def _is_elliptical_edit(old_roi, new_roi, rtol_move=1e-3, rtol_resize=0.25):
+        """
+        Classify the change from *old_roi* to *new_roi* for elliptical ROIs.
+
+        Checks for moves, i.e. the radii are unchanged within a specified tolerance, and
+        resizes, i.e. either radius changes but the new center stays within an area defined
+        by the old radius and a specified tolerance.
+
+        Parameters
+        ----------
+        old_roi : EllipticalROI
+            The existing elliptical ROI.
+        new_roi : EllipticalROI
+            The newly proposed elliptical ROI.
+        rtol_move : float, optional
+            Relative tolerance for move-related comparisons.
+        rtol_resize : float, optional
+            Relative tolerance for resize-related comparisons.
+
+        Returns
+        -------
+        edit_type : 'move', 'resize', or None
+        """
+        size = max(old_roi.radius_x, old_roi.radius_y)
+        if size <= 0 or min(old_roi.radius_x, old_roi.radius_y) <= 0:
+            return None
+
+        # Move: both radii unchanged.
+        if (abs(old_roi.radius_x - new_roi.radius_x) < rtol_move * max(old_roi.radius_x, 1)
+                and abs(old_roi.radius_y - new_roi.radius_y) < rtol_move * max(old_roi.radius_y, 1)):  # noqa
+            return 'move'
+
+        # Resize: radii changed but center stayed very close
+        dist = norm([new_roi.xc - old_roi.xc, new_roi.yc - old_roi.yc])
+        if dist < rtol_resize * max(size, 1):
+            return 'resize'
+
+        return None
+
+    @staticmethod
+    def _is_rectangular_edit(old_roi, new_roi, rtol_move=1e-3, rtol_resize=0.25):
+        """
+        Classify the change from *old_roi* to *new_roi* for rectangular ROIs.
+
+        Checks for moves, i.e. the width and height are unchanged within
+        a specified tolerance, and resizes, i.e. when dimensions change
+        but the new center stays within an area defined by the old dimensions
+        and a specified tolerance.
+
+        Parameters
+        ----------
+        old_roi : RectangularROI
+            The existing rectangular ROI.
+        new_roi : RectangularROI
+            The newly proposed rectangular ROI.
+        rtol_move : float, optional
+            Relative tolerance for move-related comparisons.
+        rtol_resize : float, optional
+            Relative tolerance for resize-related comparisons.
+
+        Returns
+        -------
+        edit_type : 'move', 'resize', or None
+        """
+        old_w = old_roi.xmax - old_roi.xmin
+        old_h = old_roi.ymax - old_roi.ymin
+        new_w = new_roi.xmax - new_roi.xmin
+        new_h = new_roi.ymax - new_roi.ymin
+
+        size = max(old_w, old_h) / 2
+        if size <= 0 or old_w <= 0 or old_h <= 0:
+            return None
+
+        # Move: same width and height.
+        if (abs(old_w - new_w) < rtol_move * max(old_w, 1) and
+                abs(old_h - new_h) < rtol_move * max(old_h, 1)):
+            return 'move'
+
+        # Resize: dimensions changed but center stayed very close
+        old_cx = (old_roi.xmin + old_roi.xmax) / 2
+        old_cy = (old_roi.ymin + old_roi.ymax) / 2
+        new_cx = (new_roi.xmin + new_roi.xmax) / 2
+        new_cy = (new_roi.ymin + new_roi.ymax) / 2
+        dist = norm([new_cx - old_cx, new_cy - old_cy])
+        if dist < rtol_resize * max(size, 1):
+            return 'resize'
+
+        return None
+
+    def _is_roi_edit(self, old_roi, new_roi):
+        """
+        Classify the change from *old_roi* to *new_roi*.
+
+        Parameters
+        ----------
+        old_roi : ROI
+            The existing subset's ROI.
+        new_roi : ROI
+            The newly drawn ROI.
+
+        Returns
+        -------
+        edit_type : 'move', 'resize', or None
+        """
+        if not isinstance(new_roi, type(old_roi)) or not isinstance(old_roi, type(new_roi)):
+            return None
+
+        handlers = [(CircularAnnulusROI, self._is_annulus_edit),
+                    (CircularROI, self._is_circular_edit),
+                    (EllipticalROI, self._is_elliptical_edit),
+                    (RectangularROI, self._is_rectangular_edit)]
+
+        for roi_type, handler in handlers:
+            if isinstance(old_roi, roi_type):
+                return handler(old_roi, new_roi)
+
+        return None
+
+    @staticmethod
+    def _is_range_edit(old_range, new_range, rtol=1e-6):
+        """
+        Classify the change from *old_range* to *new_range* for 1-D ranges.
+
+        Checks for moves, i.e. the width is unchanged within a specified tolerance, and
+        resizes, i.e. when the width changes but one endpoint is fixed.
+
+        Parameters
+        ----------
+        old_range : RangeSubsetState
+            The existing 1-D subset state.
+        new_range : ROI
+            The new ROI with ``min`` and ``max`` attributes.
+        rtol : float, optional
+            Relative tolerance for the width comparison.
+
+        Returns
+        -------
+        edit_type : 'move', 'resize', or None
+        """
+        if not (hasattr(new_range, 'min') and hasattr(new_range, 'max')):
+            return None
+
+        old_w = old_range.hi - old_range.lo
+        new_w = new_range.max - new_range.min
+        if old_w <= 0 or new_w <= 0:
+            return None
+
+        # Move: same width.
+        if abs(new_w - old_w) < (rtol * max(abs(old_w), 1)):
+            return 'move'
+
+        # Resize: width changed, one endpoint fixed.
+        if old_range.lo == new_range.min or old_range.hi == new_range.max:
+            return 'resize'
+
+        return None
+
+    def apply_roi(self, roi, use_current=False):
+        """
+        Apply an ROI to the viewer.
+
+        Detects whether the user is resizing or moving an existing
+        subset. When detected and mode is NewMode, temporarily
+        switches to ReplaceMode so the subset is modified in-place
+        rather than duplicated.
+        """
+        from glue.core.subset import RoiSubsetState, RangeSubsetState
+
+        edit_subset_mode = self.session.edit_subset_mode
+        needs_override = False
+        edit_type = None
+
+        if (not getattr(self.jdaviz_app, '_importing_regions', False)
+                and len(edit_subset_mode.edit_subset) > 0
+                and edit_subset_mode.mode is NewMode):
+
+            existing_state = edit_subset_mode.edit_subset[0].subset_state
+
+            if isinstance(existing_state, RoiSubsetState):
+                old_roi = existing_state.roi
+                edit_type = self._is_roi_edit(old_roi, roi)
+            elif isinstance(existing_state, RangeSubsetState):
+                edit_type = self._is_range_edit(existing_state, roi)
+
+            needs_override = edit_type is not None
+
+        if needs_override and edit_type == 'move':
+            # Warn when the new subset has identical dimensions to the
+            # existing one, it will be treated as a move in-place rather
+            # than a new subset.
+            warnings.warn(
+                'The new subset has the same dimensions as the '
+                'existing subset and will be treated as a move '
+                'operation. To create a new subset with the same '
+                'dimensions, use import_region instead.',
+                stacklevel=2)
+
+        original_mode = edit_subset_mode.mode
+        if needs_override:
+            edit_subset_mode._mode = ReplaceMode
+
+        try:
+            super().apply_roi(roi, use_current=use_current)
+        finally:
+            if needs_override:
+                edit_subset_mode._mode = original_mode
 
     @property
     def user_api(self):
@@ -173,7 +481,8 @@ class JdavizViewerMixin(WithCache):
         for layer in self.data_menu.data_labels_loaded[::-1]:
             visible = layer in visible_layers
             new_viewer.data_menu.add_data(layer)
-            new_viewer.data_menu.set_layer_visibility(layer, visible)
+            if hasattr(new_viewer.data_menu, 'set_layer_visibility'):
+                new_viewer.data_menu.set_layer_visibility(layer, visible)
             # TODO: don't revert color when adding same data to a new viewer
 
         # allow viewers to set attributes (not in state) on cloned viewers
@@ -188,7 +497,7 @@ class JdavizViewerMixin(WithCache):
                     continue
                 setattr(new_layer_state, k, v)
 
-        return new_viewer.user_api
+        return JdavizViewerWindow(new_viewer, app=self.jdaviz_app).user_api
 
     def reset_limits(self):
         """
@@ -296,6 +605,30 @@ class JdavizViewerMixin(WithCache):
             # whenever as_steps changes, we need to redraw the uncertainties (if enabled)
             layer_state.add_callback('as_steps', self._show_uncertainty_changed)
 
+        # set default size for scatter layers (e.g., catalog markers)
+        # based on 1% of the average viewer dimension
+        if isinstance(layer_state, BqplotScatterLayerState):
+
+            # set the marker default size to 1% of the size of the viewer (average
+            # x and y dimensions to account for viewer not being square), and
+            # fall back on a 10 pt marker size if we can't get the viewer
+            # dimensions for some reason (e.g., no image layers)
+            marker_size = 10  # default fallback default for marker size in points d
+            for layer in self.state.layers:
+                if (hasattr(layer, 'layer') and
+                        hasattr(layer.layer, 'data') and
+                        hasattr(layer.layer.data, 'shape') and
+                        len(layer.layer.data.shape) >= 2):
+                    shape = layer.layer.data.shape
+                    avg_dimension = (shape[-2] + shape[-1]) / 2
+                    marker_size = avg_dimension * 0.01
+                    # set a lower limit on marker size, which is the glue default
+                    # of three pixels.
+                    marker_size = max(marker_size, 3)
+                    break
+
+            layer_state.size = marker_size
+
         # use echo-validator to ensure visible sets & updates properly in plot options & data menu
         if (hasattr(layer_state, 'visible') and get_subset_type(layer_state.layer) != 'spatial'):
             layer_state.layer.visible = CallbackProperty()
@@ -335,7 +668,7 @@ class JdavizViewerMixin(WithCache):
                         return layer.color
                 # then this is a data-layer in colormap mode, so we'll ignore the color
                 return ''
-            return layer.color
+            return getattr(layer, 'color', '')
 
         def _get_layer_linewidth(layer):
             linewidth = getattr(layer, 'linewidth', 0)
@@ -554,13 +887,14 @@ class JdavizViewerWindow(TemplateMixin):
     figure_widget = Unicode().tag(sync=True)
     toolbar_widget = Unicode().tag(sync=True)
     data_menu_widget = Unicode().tag(sync=True)
+    tool_override_mode = Unicode("").tag(sync=True)
 
     viewer_destroyed = Bool(False).tag(sync=True)
 
     def __init__(self, viewer, *args, reference="", name="", **kwargs):
         super().__init__(*args, **kwargs)
         self.glue_viewer = viewer
-        self.config = self.app.config
+        self.config = self._app.config
 
         vid = viewer._reference_id
         self.id = vid
@@ -570,7 +904,15 @@ class JdavizViewerWindow(TemplateMixin):
         self.toolbar_widget = "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else ''
         self.data_menu_widget = 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else ''  # noqa
 
+        # Link tool_override_mode from toolbar (only for NestedJupyterToolbar)
+        if viewer.toolbar and hasattr(viewer.toolbar, 'tool_override_mode'):
+            self.tool_override_mode = viewer.toolbar.tool_override_mode
+            viewer.toolbar.observe(self._on_toolbar_override_change, names=['tool_override_mode'])
+
         self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
+
+    def _on_toolbar_override_change(self, change):
+        self.tool_override_mode = change['new']
 
     @property
     def user_api(self):
@@ -1113,6 +1455,9 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
+                    ['jdaviz:table_highlight_selected'],
+                    ['jdaviz:table_zoom_to_selected'],
+                    ['jdaviz:table_subset'],
                     ['jdaviz:viewer_clone']
                    ]
 
@@ -1122,4 +1467,167 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True
 
+        # hide checkboxes by default (shown when TableSubset tool is activated)
+        self.widget_table.selection_enabled = False
+
         self.data_menu._obj.dataset.add_filter('is_catalog')
+
+        self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
+                                  names=['checked'])
+        # Also update selection highlight marks when checked rows change
+        self.widget_table.observe(self._on_checked_changed, names=['checked'])
+        self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
+
+        # Subscribe to RestoreToolbarMessage to clean up checkbox state
+        # when toolbar is restored (e.g., by clicking X on custom toolbar)
+        self.hub.subscribe(self, RestoreToolbarMessage,
+                           handler=self._on_restore_toolbar)
+
+        # Subscribe to TableSelectRowClickMessage to handle clicks from image viewers
+        self.hub.subscribe(self, TableSelectRowClickMessage,
+                           handler=self._on_table_select_row_click)
+
+        # Subscribe to ViewerRemovedMessage to clean up toolbar overrides
+        # if this table viewer is removed while tools are active
+        self.hub.subscribe(self, ViewerRemovedMessage,
+                           handler=self._on_viewer_removed)
+
+    def _on_table_select_row_click(self, msg):
+        """Handle click from image viewer to select/toggle closest table row."""
+        # Only respond if this message is for this table viewer
+        if msg.table_viewer_id != self.reference_id:
+            return
+
+        if not len(self.layers):
+            return
+
+        # Get pixel coordinates from the message (these are in reference data frame)
+        click_x, click_y = msg.x, msg.y
+
+        try:
+            layer = self.layers[0].layer
+
+            # Get sky coordinates for WCS-accurate comparison.
+            # Click coordinates are in the viewer's reference frame, so catalog
+            # coordinates must also be converted to that frame for proper matching.
+            xs, ys = None, None
+            skycoords = _get_skycoords_from_table(layer)
+
+            if skycoords is not None:
+                # Convert sky coordinates to pixels in the viewer's reference frame
+                for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+                    if viewer.state.reference_data is None:
+                        continue
+                    if viewer.state.reference_data.coords is None:
+                        continue
+                    pixel_result = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                    xs, ys = pixel_result[0], pixel_result[1]
+                    break
+            else:
+                # Fall back to pixel coordinates only if no sky coordinates available
+                pixel_coords = _get_pixel_coords_from_table(layer)
+                if pixel_coords is not None:
+                    xs, ys = pixel_coords
+
+            if xs is None or ys is None:
+                return
+
+            # Find nearest point and toggle its selection
+            distsq = (xs - click_x)**2 + (ys - click_y)**2
+            ind = int(np.argmin(distsq))
+
+            current_checked = list(self.widget_table.checked)
+            if ind in current_checked:
+                current_checked.remove(ind)
+            else:
+                current_checked.append(ind)
+            self.widget_table.checked = current_checked
+        except Exception:  # nosec # pragma: no cover
+            pass
+
+    def _on_checked_changed(self, change):
+        """Update highlight marks in image viewers when checked rows change."""
+        self._update_selection_marks()
+
+    def _on_selection_enabled_changed(self, change):
+        """Show/hide selection marks when selection is enabled/disabled."""
+        if not change['new']:
+            # Selection disabled, clear all marks
+            self._clear_selection_marks()
+        else:
+            # Selection enabled, update marks
+            self._update_selection_marks()
+
+    def _get_selection_mark(self, viewer):
+        """Get or create a selection highlight mark for the given viewer."""
+        matches = [mark for mark in viewer.figure.marks if isinstance(mark, TableSelectionMark)]
+        if len(matches):
+            return matches[0]
+        mark = TableSelectionMark(viewer)
+        viewer.figure.marks = viewer.figure.marks + [mark]
+        return mark
+
+    def _update_selection_marks(self):
+        """Update selection highlight marks in all image viewers."""
+        if not self.widget_table.selection_enabled:
+            return
+
+        checked_rows = self.widget_table.checked
+        if not len(checked_rows) or not len(self.layers):
+            self._clear_selection_marks()
+            return
+
+        layer = self.layers[0].layer
+
+        # Get sky coordinates for WCS-accurate placement across different images.
+        # Pixel coordinates from the catalog are in the catalog's original image frame,
+        # which may differ from the viewer's reference data frame.
+        skycoords = _get_skycoords_from_table(layer, checked_rows)
+        pixel_coords = None
+        if skycoords is None:
+            # Fall back to pixel coordinates only if no sky coordinates available
+            pixel_coords = _get_pixel_coords_from_table(layer, checked_rows)
+            if pixel_coords is None:
+                self._clear_selection_marks()
+                return
+
+        # Update marks in all image viewers
+        for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            try:
+                if skycoords is not None:
+                    # Convert sky coordinates to pixels for this viewer's reference frame
+                    coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                    xs, ys = coords[0], coords[1]
+                else:
+                    # Use pixel coordinates directly (last resort when no sky coords)
+                    xs, ys = pixel_coords[0], pixel_coords[1]
+
+                mark = self._get_selection_mark(viewer)
+                mark.update_xy(xs, ys)
+                mark.visible = True
+            except Exception:  # nosec # pragma: no cover
+                pass
+
+    def _clear_selection_marks(self):
+        """Clear selection highlight marks from all image viewers."""
+        for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            for mark in viewer.figure.marks:
+                if isinstance(mark, TableSelectionMark):
+                    mark.visible = False
+
+    def _on_restore_toolbar(self, msg={}):
+        """Clean up checkbox state when toolbar is restored."""
+        # Clear selection marks
+        self._clear_selection_marks()
+
+        # Hide checkboxes (they should always be hidden when default toolbar is shown)
+        self.widget_table.selection_enabled = False
+
+    def _on_viewer_removed(self, msg):
+        """Clean up selection marks if this table viewer is removed."""
+        if msg.viewer_id != self.reference_id:
+            return
+
+        # Clear selection marks in image viewers when this table viewer is removed
+        # (toolbar cleanup is handled generically by NestedJupyterToolbar)
+        self._clear_selection_marks()

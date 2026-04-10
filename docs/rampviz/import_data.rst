@@ -4,6 +4,8 @@
 Importing Data into Rampviz
 ***************************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 
 Level 1 ramp products can be loaded into Rampviz with
 :py:meth:`~jdaviz.configs.rampviz.helper.Rampviz.load_data`. Rampviz loads

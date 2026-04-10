@@ -9,12 +9,12 @@
       <v-toolbar-items v-if="config === 'deconfigged'">
         <j-tooltip v-if="(!state.settings.server_is_remote || state.settings.remote_enable_importers)" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
-            <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
+            <img :src="state.icons['plus-box']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
-        <j-tooltip tipid="app-toolbar-save">
+        <j-tooltip v-if="!state.settings.server_is_remote" tipid="app-toolbar-save">
           <v-btn icon @click="() => {if (state.drawer_content === 'save') {state.drawer_content = ''} else {state.drawer_content = 'save'}}" :class="{active : state.drawer_content === 'save'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Export')].is_relevant">
-            <v-icon medium style="padding-top: 2px">mdi-content-save</v-icon>
+            <img :src="state.icons['content-save']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
 
@@ -22,24 +22,22 @@
 
         <j-tooltip tipid="app-toolbar-settings">
           <v-btn icon @click="() => {if (state.drawer_content === 'settings') {state.drawer_content = ''} else {state.drawer_content = 'settings'}}" :class="{active : state.drawer_content === 'settings'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
-            <v-icon medium style="padding-top: 2px">mdi-cog</v-icon>
+            <img :src="state.icons['cog']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-info">
           <v-btn icon @click="() => {if (state.drawer_content === 'info') {state.drawer_content = ''} else {state.drawer_content = 'info'}}" :class="{active : state.drawer_content === 'info'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant">
-            <v-icon medium style="padding-top: 2px">mdi-information-outline</v-icon>
+            <img :src="state.icons['information-outline']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-plugins">
           <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}" :disabled="state.tray_items.filter(ti => {return (ti.is_relevant && ti.sidebar === 'plugins')}).length === 0">
-            <v-icon>mdi-tune-variant</v-icon>
+            <img :src="state.icons['tune']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-subsets">
           <v-btn icon @click="() => {if (state.drawer_content === 'subsets') {state.drawer_content = ''} else {state.drawer_content = 'subsets'}}" :class="{active : state.drawer_content === 'subsets'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
-            <v-icon>
-              {{ state.subset_mode_create ? 'mdi-selection-drag' : 'mdi-selection' }}
-            </v-icon>
+            <img :src="state.subset_mode_create ? state.icons['selection-drag'] : state.icons['selection']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
 
@@ -116,7 +114,7 @@
               </template>
               <v-card style="min-width: 350px; max-height: 500px; overflow-y: scroll">
                 <v-container>
-                  <div v-for="ldrItem in state.loader_items" :key="ldrItem.label">
+                  <div v-for="ldrItem in loader_items_filtered" :key="ldrItem.label">
                     <v-row v-if="trayItemVisible(ldrItem, state.global_search)">
                       <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'loaders', label: ldrItem.label})}">
                         <v-list-item-title>
@@ -228,6 +226,7 @@
                     :api_hints_enabled="state.show_api_hints"
                     :api_hints_obj="api_hints_obj || config"
                     :server_is_remote="state.settings.server_is_remote"
+                    :disabled_loaders="state.settings.disabled_loaders"
                   ></j-loader-panel>
                 </v-tab-item>
                 <v-tab-item style="padding-bottom: 40px">
@@ -240,7 +239,7 @@
                 </v-tab-item>
               </v-tabs-items>
             </v-card>
-            <v-card v-if="state.drawer_content === 'save'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+            <v-card v-if="state.drawer_content === 'save' && !state.settings.server_is_remote" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Export']</span>
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Export')].widget"></jupyter-widget>
             </v-card>
@@ -337,7 +336,7 @@
                 <g-viewer-tab
                   v-for="(stack, index) in state.stack_items"
                   :stack="stack"
-                  :key="stack.viewers.map(v => v.id).join('-') + stack.children.map(v => v.id).join('-')"
+                  :key="stack.id"
                   :data_items="state.data_items"
                   :app_settings="state.settings"
                   :config="config"
@@ -363,6 +362,7 @@
                 :api_hints_enabled="state.show_api_hints"
                 :api_hints_obj="api_hints_obj || config"
                 :server_is_remote="state.settings.server_is_remote"
+                :disabled_loaders="state.settings.disabled_loaders"
               ></j-loader-panel>
             </v-card>
 
@@ -452,6 +452,24 @@ export default {
       showGoldenLayout: true,
     };
   },
+  computed: {
+    loader_items_filtered() {
+      // Determine which loaders to disable
+      var disabled_loaders = this.state.settings.disabled_loaders;
+      if (disabled_loaders === null || disabled_loaders === undefined) {
+        // Default: disable loaders based on server_is_remote setting
+        if (this.state.settings.server_is_remote) {
+          disabled_loaders = ['file', 'file drop', 'url', 'object',
+                              'astroquery', 'virtual observatory'];
+        } else {
+          disabled_loaders = [];
+        }
+      }
+      return this.state.loader_items.filter(item => {
+        return !disabled_loaders.includes(item.name);
+      });
+    },
+  },
   methods: {
     checkNotebookContext() {
       this.notebook_context = document.getElementById("ipython-main-app")
@@ -499,7 +517,7 @@ export default {
     this.outputCellHasHeight = this.$refs.mainapp.$el.offsetHeight > 0
 
     /* Workaround for Lab 4.5: cells outside the viewport get the style "contentVisibility: auto" which causes wrong
-     * size calculations of golden layout from which it doesn't recover.    
+     * size calculations of golden layout from which it doesn't recover.
      */
     const jpCell = this.$el.closest('.jp-Cell.jp-CodeCell');
     if (jpCell) {

@@ -3,6 +3,17 @@
 Utilities API
 =============
 
+Top-Level API
+-------------
+
+.. automodapi:: jdaviz
+   :no-inheritance-diagram:
+   :no-inherited-members:
+   :skip: data_labels
+
+Application Module
+------------------
+
 .. automodapi:: jdaviz.app
    :no-inheritance-diagram:
    :no-inherited-members:
@@ -56,6 +67,10 @@ Utilities API
    :no-inherited-members:
 
 .. automodapi:: jdaviz.core.helpers
+   :no-inheritance-diagram:
+   :no-inherited-members:
+
+.. automodapi:: jdaviz.core.user_api
    :no-inheritance-diagram:
    :no-inherited-members:
 

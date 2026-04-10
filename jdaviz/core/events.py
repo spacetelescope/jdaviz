@@ -4,8 +4,8 @@ import astropy.units as u
 from glue.core.message import Message
 
 __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'LoadDataMessage',
-           'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage', 'SubsetRenameMessage',
-           'ViewerVisibleLayersChangedMessage', 'LayersFinalizedMessage',
+           'AddDataMessage', 'DataRenamedMessage', 'SnackbarMessage', 'RemoveDataMessage',
+           'SubsetRenameMessage', 'ViewerVisibleLayersChangedMessage', 'LayersFinalizedMessage',
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectSliceMessage', 'SliceValueUpdatedMessage',
            'SliceToolStateMessage',
@@ -16,7 +16,8 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'GlobalDisplayUnitChanged', 'ChangeRefDataMessage',
            'PluginTableAddedMessage', 'PluginTableModifiedMessage',
            'PluginPlotAddedMessage', 'PluginPlotModifiedMessage',
-           'IconsUpdatedMessage', 'RestoreToolbarMessage']
+           'IconsUpdatedMessage', 'RestoreToolbarMessage',
+           'TableSelectRowClickMessage']
 
 
 class NewViewerMessage(Message):
@@ -216,6 +217,30 @@ class SubsetRenameMessage(Message):
         return self._new_label
 
 
+class DataRenamedMessage(Message):
+    """
+    Message emitted when data in the data collection is renamed.
+    """
+    def __init__(self, data, old_label, new_label, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._data = data
+        self._old_label = old_label
+        self._new_label = new_label
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def old_label(self):
+        return self._old_label
+
+    @property
+    def new_label(self):
+        return self._new_label
+
+
 class SnackbarMessage(Message):
     def __init__(self, text, color=None, timeout=5000, loading=False,
                  traceback=None,
@@ -370,6 +395,18 @@ class CatalogSelectClickEventMessage(Message):
         super().__init__(*args, **kwargs)
 
 
+class TableSelectRowClickMessage(Message):
+    """
+    Message emitted when a user clicks on an image viewer to select/toggle
+    the closest row in a table viewer.
+    """
+    def __init__(self, x, y, table_viewer_id, *args, **kwargs):
+        self.x = x
+        self.y = y
+        self.table_viewer_id = table_viewer_id
+        super().__init__(*args, **kwargs)
+
+
 class FootprintSelectClickEventMessage(Message):
     """
     Message emitted when a user clicks on a viewer to select an overlay.
@@ -386,10 +423,12 @@ class FootprintOverlayClickMessage(Message):
     Message emitted when a user clicks on a viewer to select a footprint/region overlay.
     """
 
-    def __init__(self, data, *args, **kwargs):
+    def __init__(self, data, mode="nearest", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.x = data["domain"]["x"]
         self.y = data["domain"]["y"]
+        self.mode = mode
+        self.ctrl_key = data.get("ctrlKey", False) or data.get("metaKey", False)
 
 
 class RedshiftMessage(Message):

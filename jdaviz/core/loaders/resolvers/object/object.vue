@@ -1,9 +1,10 @@
 <template>
   <j-loader
-    title="Python Object (from API)"
+    :title="title"
     :popout_button="popout_button"
     :spinner="spinner"
     :parsed_input_is_empty="parsed_input_is_empty"
+    :parsed_input_is_resolvable="parsed_input_is_resolvable"
     :parsed_input_is_query="parsed_input_is_query"
     :treat_table_as_query.sync="treat_table_as_query"
     :observation_table="observation_table"
@@ -19,6 +20,8 @@
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
     :server_is_remote="server_is_remote"
+    :hide_resolver="hide_resolver"
+    :hide_resolver_inputs="hide_resolver_inputs"
     :is_wcs_linked="is_wcs_linked"
     :footprint_select_icon="footprint_select_icon"
     :custom_toolbar_enabled="custom_toolbar_enabled"
@@ -26,16 +29,19 @@
     @link-by-wcs="link_by_wcs"
     @toggle-custom-toolbar="toggle_custom_toolbar"
   >
-    <v-alert type="info">
-      Access the user API in a notebook cell to import a python object.
-    </v-alert>
-    <v-text-field
-      v-model='object_repr'
-      prepend-icon='mdi-language-python'
-      style="padding: 0px 8px"
-      :disabled="true"
-      label="ldr.object ="
-      class="api-hint"
-    ></v-text-field>
+    <div v-if="!hide_resolver_inputs">
+      <v-alert type="info">
+        Access the user API in a notebook cell to import a python object.
+      </v-alert>
+      <v-text-field
+        v-model='object_repr'
+        prepend-icon='mdi-language-python'
+        style="padding: 0px 8px"
+        :disabled="true"
+        label="ldr.object ="
+        class="api-hint"
+        :error-messages="parsed_input_is_resolvable ? [parsed_input_is_resolvable] : []"
+      ></v-text-field>
+    </div>
   </j-loader>
 </template>

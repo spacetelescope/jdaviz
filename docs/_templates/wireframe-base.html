@@ -1,0 +1,59 @@
+<!-- Wireframe Section -->
+<div class="wireframe-section">
+    <div class="wireframe-container">
+        <div class="wireframe-toolbar">
+            <div class="wireframe-toolbar-icon" data-sidebar="loaders" data-icon="database-import" title="Import Data"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="save" data-icon="download" title="Export"></div>
+            <div class="wireframe-toolbar-divider"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="settings" data-icon="tune" title="Plot Options"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
+            <div class="wireframe-toolbar-divider"></div>
+            <div class="wireframe-toolbar-icon mouseover-button" data-icon="auto-fix" title="Mouseover Info"></div>
+            <div class="wireframe-toolbar-spacer"></div>
+            <div class="wireframe-toolbar-right">
+                <div class="wireframe-toolbar-search-row">
+                    <input type="text" class="wireframe-toolbar-search" id="wireframe-search-input" placeholder="Search documentation..." readonly />
+                </div>
+                <div class="wireframe-toolbar-version-row">
+                    <span class="wireframe-toolbar-version">v{{ jdaviz_version }}</span>
+                    <div class="api-button" data-icon="api" title="Toggle API Snippets" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="wireframe-main">
+            <div class="wireframe-sidebar" id="wireframe-sidebar">
+                <div class="wireframe-sidebar-content">
+                    Click toolbar icons to toggle different sidebars
+                </div>
+            </div>
+            <div class="wireframe-viewer-area">
+                <!-- Viewers are added dynamically via viewer-add actions -->
+                <!-- Data Menu Popup (shared across all viewers) -->
+                <div class="data-menu-popup" id="data-menu-popup">
+                    <div class="data-menu-header">
+                        <div class="data-menu-title">Data Menu</div>
+                        <button class="data-menu-close" id="data-menu-close">×</button>
+                    </div>
+                    <div class="data-menu-content">
+                        <p class="data-menu-description">
+                            Control data and subset layer order and visibility for each viewer.
+                            Toggle layer visibility, reorder layers by dragging, and manage which data appears in the viewer.
+                        </p>
+                        <div class="data-menu-api-snippet">
+                            <pre class="api-snippet">dm = jd.viewers[viewer].data_menu</pre>
+                            <button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button>
+                        </div>
+                        <button class="data-menu-button wireframe-sidebar-link" data-scroll-target="grid-data-menu">Learn more about Data Menu →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Auto-cycle control button -->
+        <div class="wireframe-cycle-control" data-flyout-text="pause demo">
+            <div class="wireframe-cycle-control-icon cycle-icon-pause"></div>
+            <div class="wireframe-cycle-control-icon cycle-icon-restart hidden"></div>
+        </div>
+    </div>
+</div>

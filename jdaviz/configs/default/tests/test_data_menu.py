@@ -1,4 +1,5 @@
 from astropy.io import fits
+from astropy.nddata import NDData
 import astropy.units as u
 import pytest
 import numpy as np
@@ -69,8 +70,8 @@ def test_data_menu_selection(specviz_helper, spectrum1d):
     # test that sync remains during layer deletion
     dm._obj.dm_layer_selected = [1]
     assert dm.layer.selected == ['test']
-    specviz_helper.app.remove_data_from_viewer('spectrum-viewer', "test2")
-    specviz_helper.app.data_item_remove("test2")
+    specviz_helper._app.remove_data_from_viewer('spectrum-viewer', "test2")
+    specviz_helper._app.data_item_remove("test2")
     assert len(dm._obj.layer_items) == 1
     assert dm._obj.dm_layer_selected == [0]
     assert dm.layer.selected == ['test']
@@ -136,10 +137,10 @@ def test_data_menu_create_subset(imviz_helper):
     imviz_helper.load_data(np.zeros((2, 2)), data_label='image', show_in_viewer=True)
 
     dm = imviz_helper.viewers['imviz-0']._obj.glue_viewer.data_menu
-    assert imviz_helper.app.session.edit_subset_mode.edit_subset == []
+    assert imviz_helper._app.session.edit_subset_mode.edit_subset == []
 
     dm.create_subset('circle')
-    assert imviz_helper.app.session.edit_subset_mode.edit_subset == []
+    assert imviz_helper._app.session.edit_subset_mode.edit_subset == []
     assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.toolbar.active_tool_id == 'bqplot:truecircle'  # noqa
 
 
@@ -187,7 +188,7 @@ def test_data_menu_dq_layers(imviz_helper):
     imviz_helper.load_data(data, data_label="image", ext=('SCI', 'DQ'), show_in_viewer=True)
 
     dm = imviz_helper.viewers['imviz-0']._obj.glue_viewer.data_menu
-    assert dm.layer.choices == ['image[DQ,1]', 'image[SCI,1]']
+    assert dm.layer.choices == ['image[SCI,1]', 'image[DQ,1]']
     assert len(dm._obj.visible_layers) == 2
 
     # turning off image (parent) data-layer should also turn off DQ
@@ -262,14 +263,15 @@ class TestResizeSubset:
         Autouse fixture to attach the shared helper to the test instance.
         """
         self.imviz_helper = imviz_helper
-        self.imviz_helper.load_data(np.zeros((10, 10)), data_label='image', show_in_viewer=True)
+        with pytest.warns(DeprecationWarning, match='show_in_viewer'):
+            self.imviz_helper.load_data(np.zeros((10, 10)), data_label='image', show_in_viewer=True)
         self.imviz_viewer = self.imviz_helper.default_viewer._obj.glue_viewer
         self.imviz_dm = self.imviz_viewer.data_menu
         self.imviz_subset_tools = self.imviz_helper.plugins['Subset Tools']
 
         self.specviz_helper = specviz_helper
         self.specviz_helper.load(spectrum1d, data_label="Spectrum 1D")
-        self.specviz_viewer = self.specviz_helper.app.get_viewer('spectrum-viewer')
+        self.specviz_viewer = self.specviz_helper._app.get_viewer('spectrum-viewer')
         self.specviz_dm = self.specviz_viewer.data_menu
         self.specviz_subset_tools = self.specviz_helper.plugins['Subset Tools']
 
@@ -331,12 +333,12 @@ class TestResizeSubset:
         assert self.imviz_viewer.toolbar.active_tool_id == tool_id
 
         # Verify that we're in replace mode
-        assert self.imviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
+        assert self.imviz_helper._app.session.edit_subset_mode.mode == ReplaceMode
 
         # Verify that the correct subset is being edited
-        subset_grp = [sg for sg in self.imviz_helper.app.data_collection.subset_groups
+        subset_grp = [sg for sg in self.imviz_helper._app.data_collection.subset_groups
                       if sg.label == 'Subset 1']
-        assert self.imviz_helper.app.session.edit_subset_mode.edit_subset == subset_grp
+        assert self.imviz_helper._app.session.edit_subset_mode.edit_subset == subset_grp
 
     @pytest.mark.parametrize('roi', [XRangeROI(min=6000, max=6500),
                                      SpectralRegion(6000 * u.Angstrom, 6500 * u.Angstrom)])
@@ -357,7 +359,7 @@ class TestResizeSubset:
 
         # Verify that the correct tool is activated
         assert self.specviz_viewer.toolbar.active_tool_id == 'bqplot:xrange'
-        assert self.specviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
+        assert self.specviz_helper._app.session.edit_subset_mode.mode == ReplaceMode
 
     def test_resize_subset_in_viewer_errors(self):
         """
@@ -366,7 +368,7 @@ class TestResizeSubset:
         # Create two subsets
         self.imviz_viewer.apply_roi(CircularROI(xc=3, yc=3, radius=2))
         self.imviz_subset_tools.combination_mode = 'new'
-        self.imviz_viewer.apply_roi(CircularROI(xc=7, yc=7, radius=2))
+        self.imviz_viewer.apply_roi(CircularROI(xc=7, yc=7, radius=3))
 
         # Select both subsets
         self.imviz_dm.layer.selected = ['Subset 1', 'Subset 2']
@@ -390,7 +392,7 @@ class TestResizeSubset:
         # Retrieve the subset group and replace its subset_state with a
         # mock object that is not a RoiSubsetState/RangeSubsetState to
         # simulate an unsupported ROI.
-        subset_grp = [sg for sg in self.imviz_helper.app.data_collection.subset_groups
+        subset_grp = [sg for sg in self.imviz_helper._app.data_collection.subset_groups
                       if sg.label == 'Subset 1']
 
         # Replace the subset_state with a plain object (unsupported)
@@ -400,3 +402,35 @@ class TestResizeSubset:
         msg = 'Selected subset does not have a supported ROI.'
         with pytest.raises(ValueError, match=msg):
             self.imviz_dm.resize_subset_in_viewer()
+
+
+def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
+                                                sky_coord_only_source_catalog):
+    """
+    Test that catalog layers are excluded from zordermanagement in image viewers.
+
+    To do this, load an image, align by WCS, then load a catalog. The catalog
+    layer should always be at the top of the layer stack. Then, add a subset to
+    ensure the catalog layer remains on top. The addition of a 'Default Orientation'
+    and a subset layer will test the reordering functionality of the data menu, and
+    ensure that catalog layers are excluded from reordering and always remain on top.
+    """
+
+    data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
+    imviz_helper.load(data)
+
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+    # load catalog
+    imviz_helper.load(sky_coord_only_source_catalog, data_label='catalog')
+
+    # load catalog. with the presence of a 'Default Orientation' layer that is
+    # NOT listed in the data menu, loading a catalog will cause the layer
+    # reordering logic in data_menu to run, and scatter layers should remain unchanged
+    layers = imviz_helper.default_viewer.data_menu._obj._viewer.layers
+    assert layers[-1].layer.label == 'catalog'
+
+    # Now add a subset and ensure catalog layer remains on top
+    subset_tools = imviz_helper.plugins['Subset Tools']
+    subset_tools.import_region(CircularROI(xc=0, yc=0, radius=1))
+    assert layers[-1].layer.label == 'catalog'

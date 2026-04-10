@@ -46,10 +46,10 @@ class TestSubsetImporter:
     def _setup(self, deconfigged_helper, spectrum1d):
         deconfigged_helper.load(spectrum1d, format='1D Spectrum')
         self.dcf_helper = deconfigged_helper
-        self.app = deconfigged_helper.app
+        self._app = deconfigged_helper._app
 
     def generate_importer(self, input_data):
-        return SubsetImporter(app=self.app,
+        return SubsetImporter(app=self._app,
                               resolver=None,
                               parser=None,
                               input=input_data)
@@ -66,7 +66,7 @@ class TestSubsetImporter:
 
         # Default label should be valid
         assert importer.subset_label_invalid_msg == ''
-        assert importer.import_disabled is False
+        assert len(importer.import_disabled_msg) == 0
 
         # Label validation works correctly.
         for label_value in ('', '    '):
@@ -84,11 +84,13 @@ class TestSubsetImporter:
                      "is reserved for auto-generated labels")
         assert importer.subset_label_invalid_msg == error_msg
 
-        # check import_disabled updates correctly
-        assert importer.import_disabled is True
+        # check import_disabled_msg updates correctly
+        assert len(importer.import_disabled_msg) > 0
 
         # test that calling with invalid label raises ValueError
-        with pytest.raises(ValueError, match=error_msg):
+        # Note: The error message from import_region is different from the validation message
+        with pytest.raises(ValueError,
+                           match=r"subset_label contained invalid labels: \['Subset 2'\]"):  # noqa
             importer()
 
     def test_is_valid(self, regions_input, spectral_region):
@@ -143,8 +145,8 @@ class TestSubsetImporter:
         importer.subset_label_invalid_msg = ''
 
         # Call should not raise
-        initial_subset_count = len(self.app.data_collection.subset_groups)
+        initial_subset_count = len(self._app.data_collection.subset_groups)
         importer()
 
         # Should have created a new subset
-        assert len(self.app.data_collection.subset_groups) >= initial_subset_count
+        assert len(self._app.data_collection.subset_groups) >= initial_subset_count

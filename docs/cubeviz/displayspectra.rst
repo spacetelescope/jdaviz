@@ -2,6 +2,8 @@
 Displaying Spectra
 ******************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 A collapsed spectrum of the cube displayed in the upper-left viewer
 automatically appears in the 1D spectrum viewer, using the set collapse function.
 The collapse function can be changed in the :guilabel:`Line`

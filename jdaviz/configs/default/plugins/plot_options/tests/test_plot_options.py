@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.nddata import NDData
+from astropy.table import QTable
 import matplotlib
 from numpy.testing import assert_allclose
 from photutils.datasets import make_4gaussians_image
@@ -12,7 +13,7 @@ from jdaviz.configs.default.plugins.plot_options.plot_options import SplineStret
 @pytest.mark.filterwarnings('ignore')
 def test_multiselect(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube)
-    po = cubeviz_helper.app.get_tray_item_from_name('g-plot-options')
+    po = cubeviz_helper._app.get_tray_item_from_name('g-plot-options')
 
     # default selection for viewer should be flux-viewer (first in list) and nothing for layer
     assert po.viewer.multiselect is False
@@ -37,9 +38,9 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
     assert po.axes_visible.value is False
 
     for viewer_name in ['flux-viewer', 'uncert-viewer']:
-        assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is False
+        assert cubeviz_helper._app.get_viewer(viewer_name).state.show_axes is False
 
-    assert cubeviz_helper.app.get_viewer('spectrum-viewer').state.show_axes is True
+    assert cubeviz_helper._app.get_viewer('spectrum-viewer').state.show_axes is True
     assert po.axes_visible.sync['mixed'] is False
 
     # adding another viewer should show a mixed-state
@@ -55,10 +56,10 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
     assert po.axes_visible.value is False
 
     for viewer_name in ['flux-viewer', 'uncert-viewer']:
-        assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is False
+        assert cubeviz_helper._app.get_viewer(viewer_name).state.show_axes is False
 
     for viewer_name in ['spectrum-viewer']:
-        assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is True
+        assert cubeviz_helper._app.get_viewer(viewer_name).state.show_axes is True
 
     po.viewer_multiselect = False
     # should default back to the first selected entry
@@ -75,7 +76,7 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
 @pytest.mark.filterwarnings('ignore')
 def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
-    po = cubeviz_helper.app.get_tray_item_from_name('g-plot-options')
+    po = cubeviz_helper._app.get_tray_item_from_name('g-plot-options')
     po.plugin_opened = True
 
     assert po.stretch_histogram is not None
@@ -103,7 +104,7 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     assert_allclose(hist_lyr.layer.data['x'], flux_cube_sample)
 
     # change viewer limits
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
     fv.state.x_max = 0.5 * fv.state.x_max
     # viewer limits should not be affected by default
     # (re-retrieve layer - it should not have changed)
@@ -326,7 +327,7 @@ def test_track_mixed_states(imviz_helper):
     # Initialize two viewer with 3 data each.
     # Each layer of the data will be RGB
     arr = np.arange(36).reshape(6, 6)
-    po = imviz_helper.app.get_tray_item_from_name("g-plot-options")
+    po = imviz_helper._app.get_tray_item_from_name("g-plot-options")
     rgb_colors = ["#ff0000", "#00ff00", "#0000ff"]
 
     for i in range(3):
@@ -341,7 +342,7 @@ def test_track_mixed_states(imviz_helper):
     po.viewer_selected = "imviz-1"
     po.image_color_mode_value = 'One color per layer'
     for i in range(3):
-        imviz_helper.app.add_data_to_viewer("imviz-1", data_label=f"array_{i}")
+        imviz_helper._app.add_data_to_viewer("imviz-1", data_label=f"array_{i}")
         po.layer_selected = f"array_{i}"
         po.image_color.value = rgb_colors[i]
 
@@ -463,3 +464,63 @@ def test_imviz_select_all_layers(imviz_helper):
     # and make sure each layer picked up this change
     for layer in plot_options.image_colormap.linked_states:
         assert layer.as_dict()['stretch'] == 'log'
+
+
+def test_table_viewer_plot_options(deconfigged_helper):
+    """
+    Test that table viewers appear in plot options and that
+    table_columns_visible works to control hidden columns.
+    """
+    # Create a sample table with several columns
+    ra = [9.423, 9.421, 9.415] * u.deg
+    dec = [-33.711, -33.716, -33.717] * u.deg
+    obj_id = ['source1', 'source2', 'source3']
+    flux = [10, 20, 30] * u.Jy
+
+    catalog = QTable(data=[ra, dec, obj_id, flux],
+                     names=['RA', 'Dec', 'Obj_ID', 'flux'])
+
+    # Load catalog into a table viewer
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = catalog
+    ldr.format = 'Catalog'
+    ldr.importer.viewer.create_new = 'Table'
+    ldr.load()
+
+    assert len(deconfigged_helper.viewers) == 1
+    tv = deconfigged_helper.viewers['Table']
+    viewer = tv._obj.glue_viewer
+
+    # Get plot options plugin
+    po = deconfigged_helper.plugins['Plot Options']._obj
+
+    # Table viewer should appear in viewer choices
+    assert 'Table' in po.viewer.choices
+
+    # Select the table viewer
+    po.viewer.selected = 'Table'
+
+    # table_columns_visible should be available and have choices
+    assert po.table_columns_visible.sync['in_subscribed_states'] is True
+    assert len(po.table_columns_visible.sync['choices']) > 0
+
+    # By default all columns should be visible (hidden_components empty)
+    all_column_names = [c['value'] for c in po.table_columns_visible.sync['choices']]
+    assert po.table_columns_visible.value == all_column_names
+    assert viewer.state.hidden_components == []
+
+    # Hide some columns by setting visible columns to a subset
+    visible_cols = ['RA', 'Dec']
+    po.table_columns_visible.value = visible_cols
+
+    # Check that the hidden_components on the viewer state reflects this
+    hidden = [str(c) for c in viewer.state.hidden_components]
+    for col in all_column_names:
+        if col in visible_cols:
+            assert col not in hidden, f"{col} should be visible but is hidden"
+        else:
+            assert col in hidden, f"{col} should be hidden but is visible"
+
+    # Layer options should be empty/excluded when only table viewer is selected
+    # (layers are excluded via the not_in_table_viewer filter)
+    assert len(po.layer.choices) == 0

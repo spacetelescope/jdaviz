@@ -7,7 +7,7 @@ from jdaviz.configs.default.plugins.metadata_viewer.metadata_viewer import Metad
 
 
 def test_view_dict(imviz_helper):
-    mv = MetadataViewer(app=imviz_helper.app)
+    mv = MetadataViewer(app=imviz_helper._app)
     arr = np.zeros((2, 2), dtype=np.float32)
     ndd_1 = NDData(arr, meta={
         'EXTNAME': 'SCI', 'EXTVER': 1, 'BAR': 10.0, '_hidden': 'no show',
@@ -89,7 +89,7 @@ def test_view_dict(imviz_helper):
 
 
 def test_view_invalid(imviz_helper):
-    mv = MetadataViewer(app=imviz_helper.app)
+    mv = MetadataViewer(app=imviz_helper._app)
     assert mv.dataset.labels == []
 
     # Should not even happen but if it does, do not crash.

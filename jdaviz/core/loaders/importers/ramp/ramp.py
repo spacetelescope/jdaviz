@@ -110,12 +110,12 @@ class RampImporter(BaseImporterToDataCollection):
 
         # RAMP GROUP CUBE
         if self.default_data_label_from_resolver:
-            self.data_label_default = self.default_data_label_from_resolver + '[DATA]'
+            self.data_label.default = self.default_data_label_from_resolver + '[DATA]'
         elif self.config == 'rampviz':
             # TODO: backwards compaibility for other inputs
-            self.data_label_default = self.input.__class__.__name__ + '[DATA]'
+            self.data_label.default = self.input.__class__.__name__ + '[DATA]'
         else:
-            self.data_label_default = 'Ramp[DATA]'
+            self.data_label.default = 'Ramp[DATA]'
 
         if self.config == 'rampviz':
             self.viewer.selected = ['group-viewer']
@@ -140,7 +140,7 @@ class RampImporter(BaseImporterToDataCollection):
                                                  default_mode='empty')
         supported_viewers = [{'label': '3D Ramp Diff',
                               'reference': 'rampviz-image-viewer'}]
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.diff_viewer_create_new_items = supported_viewers
         self.diff_viewer.add_filter(viewer_in_registry_names(supported_viewers))
         if self.config == 'rampviz':
@@ -178,7 +178,7 @@ class RampImporter(BaseImporterToDataCollection):
                                                 default_mode='empty')
         supported_viewers = [{'label': 'Ramp Integration',
                               'reference': 'rampviz-profile-viewer'}]
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.ext_viewer_create_new_items = supported_viewers
         self.ext_viewer.add_filter(viewer_in_registry_names(supported_viewers))
         if self.config == 'rampviz':
@@ -200,7 +200,7 @@ class RampImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'rampviz'):
+        if self._app.config not in ('deconfigged', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
 
@@ -311,22 +311,22 @@ class RampImporter(BaseImporterToDataCollection):
                                     data_label,
                                     viewer_select=self.viewer)
         # TODO: this will need to be removed when removing restriction of a single flux cube
-        self.app._jdaviz_helper._loaded_flux_cube = self.app.data_collection[data_label]
-        if not hasattr(self.app._jdaviz_helper, 'cube_cache'):
-            self.app._jdaviz_helper.cube_cache = {}
-        self.app._jdaviz_helper.cube_cache[data_label] = ramp_cube
+        self._app._jdaviz_helper._loaded_flux_cube = self._app.data_collection[data_label]
+        if not hasattr(self._app._jdaviz_helper, 'cube_cache'):
+            self._app._jdaviz_helper.cube_cache = {}
+        self._app._jdaviz_helper.cube_cache[data_label] = ramp_cube
 
         diff_cube.meta['_ramp_type'] = 'diff'
         self.add_to_data_collection(diff_cube,
                                     diff_data_label,
                                     viewer_select=self.diff_viewer)
-        self.app._jdaviz_helper.cube_cache[diff_data_label] = diff_cube
+        self._app._jdaviz_helper.cube_cache[diff_data_label] = diff_cube
 
         if not self.auto_extract:
             return
 
         try:
-            rext = self.app.get_tray_item_from_name('ramp-extraction')
+            rext = self._app.get_tray_item_from_name('ramp-extraction')
             ext = rext._extract_in_new_instance(dataset=data_label,
                                                 function=self.function.selected,
                                                 auto_update=False,
@@ -346,10 +346,10 @@ class RampImporter(BaseImporterToDataCollection):
                 " See the ramp extraction plugin for details or to"
                 " perform a custom extraction.",
                 color='warning', sender=self, timeout=10000)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)
 
         if ext is not None:
             ext_viewer_selected = self.ext_viewer.create_new.selected if self.ext_viewer.create_new.selected != '' else self.ext_viewer.selected  # noqa
-            self.app._jdaviz_helper.load(ext, format='Ramp Integration',
-                                         data_label=ext_data_label,
-                                         viewer=ext_viewer_selected)
+            self._app._jdaviz_helper.load(ext, format='Ramp Integration',
+                                          data_label=ext_data_label,
+                                          viewer=ext_viewer_selected)

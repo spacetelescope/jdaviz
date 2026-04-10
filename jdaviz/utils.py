@@ -23,9 +23,11 @@ from gwcs import WCS as gwcs
 from gwcs.coordinate_frames import CompositeFrame, SpectralFrame
 from matplotlib import colors as mpl_colors
 import matplotlib.cm as cm
+import photutils
 from photutils.utils import make_random_cmap
 from regions import CirclePixelRegion, CircleAnnulusPixelRegion
 from specutils.utils.wcs_utils import SpectralGWCS
+from spherical_geometry.polygon import SphericalPolygon
 import stdatamodels
 
 from glue.config import settings
@@ -45,10 +47,12 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'get_reference_image_data', 'standardize_roman_metadata',
            'wildcard_match', 'cmap_samples', 'glue_colormaps',
            'att_to_componentid', 'create_data_hash',
-           'RA_COMPS', 'DEC_COMPS', 'SPECTRAL_AXIS_COMP_LABELS']
+           'in_ra_comps', 'in_dec_comps', 'RA_COMPS', 'DEC_COMPS',
+           'SPECTRAL_AXIS_COMP_LABELS']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
+PHOTUTILS_GE_3 = minversion(photutils, '2.3.1.dev')
 
 # For Metadata Viewer plugin internal use only.
 PRIHDR_KEY = '_primary_header'
@@ -62,14 +66,35 @@ SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
                              'Velocity', 'Wavenumber',
                              'World 0', 'World 1',
                              'Pixel Axis 0 [x]', 'Pixel Axis 1 [x]')
+# NOTE: RA_COMPS and DEC_COMPS are compared without any delimeters and in lowercase
 RA_COMPS = ['rightascension', 'ra', 'radeg', 'radeg',
             'radegrees', 'rightascensiondegrees', 'rightascensiondeg',
             'raobj', 'objra', 'sourcera', 'rasource', 'raj2000', 'ra2000',
-            'worldra']
+            'worldra', 'targra', 'scira']
 DEC_COMPS = ['declination', 'dec', 'decdeg', 'decdeg',
              'decdegrees', 'declinationdegrees', 'declinationdeg',
              'decobj', 'objdec', 'decsource', 'sourcedec', 'decj2000', 'dec2000',
-             'worlddec']
+             'worlddec', 'targdec', 'scidec']
+
+
+def in_ra_comps(comp):
+    return (str(comp).lower()
+            .replace(' ', '')
+            .replace('_', '')
+            .replace('-', '')
+            .replace('"', '')
+            .replace('(', '')
+            .replace(')', '') in RA_COMPS)
+
+
+def in_dec_comps(comp):
+    return (str(comp).lower()
+            .replace(' ', '')
+            .replace('_', '')
+            .replace('-', '')
+            .replace('"', '')
+            .replace('(', '')
+            .replace(')', '') in DEC_COMPS)
 
 
 class SnackbarQueue:
@@ -776,12 +801,12 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
             # pass along the error message from astroquery if the
             # data were not successfully downloaded:
             raise ValueError(
-                f"Failed query for URI '{possible_uri}' at '{url}':\n\n{msg}"
+                f"Failed query for URI '{possible_uri}' at '{url}';\n{msg}"
             )
 
         if local_path is None:
             # if not specified, this is the default location:
-            # os.path.sep does not work because on Windows that is a back slash
+            # os.path.sep does not work because on Windows that is a backslash
             # and this web path needs to be split with a forward slash
             local_path = os.path.join(os.getcwd(), parsed_uri.path.split('/')[-1])
         return local_path
@@ -1089,7 +1114,9 @@ def create_data_hash(input_data):
     # Hash the main array buffer in chunks via memoryview if possible
     try:
         mv = memoryview(arr).cast('B')
-    except TypeError:
+    except (TypeError, ValueError):
+        # TypeError: memoryview doesn't support this type
+        # ValueError: structured arrays with special chars in field names (e.g., ':')
         # Fallback - arr.tobytes() will create a copy but should work
         try:
             hasher.update(arr.tobytes())
@@ -1155,7 +1182,10 @@ def _register_random_cmap(
     contains more than 10,000 labels, adjust the `ncolors`
     kwarg to ensure uniqueness.
     """
-    cmap = make_random_cmap(ncolors=ncolors, seed=seed)
+    if PHOTUTILS_GE_3:
+        cmap = make_random_cmap(n_colors=ncolors, seed=seed)
+    else:
+        cmap = make_random_cmap(ncolors=ncolors, seed=seed)
     cmap.colors[0] = bkg_color + [bkg_alpha]
     cmap.name = cmap_name
     glue_colormaps.add(cmap_name, cmap)
@@ -1259,3 +1289,61 @@ def find_closest_polygon_mark(px, py, marks):
             closest_idx = mark.label
 
     return closest_idx
+
+
+def find_polygon_mark_with_skewer(px, py, viewer, marks):
+    """
+    Spherical (great-circle) selection: only selects if the click is INSIDE a mark.
+    If multiple marks contain the click, returns all of them.
+
+    Parameters
+    ----------
+    px : float
+        X coordinate of the click in pixel space.
+    py : float
+        Y coordinate of the click in pixel space.
+    viewer : JdavizViewer
+        The viewer instance where the click occurred.
+    marks : list of RegionOverlay
+        List of mark objects to check.
+
+    Returns
+    -------
+    chosen_labels : list of int or None
+        List of observation indices for all marks containing the click,
+        or None if no marks contain it.
+    """
+    # Convert pixel coordinates to sky coordinates (ICRS)
+    skycoord_icrs = viewer.state.reference_data.coords.pixel_to_world(px, py).icrs
+    ra_deg = skycoord_icrs.ra.deg
+    dec_deg = skycoord_icrs.dec.deg
+
+    containing_labels = []
+
+    for mark in marks:
+        label = mark.label
+        x_pix = np.asarray(mark.x)
+        y_pix = np.asarray(mark.y)
+
+        if len(x_pix) == 0 or len(y_pix) == 0:
+            continue
+
+        # Drop duplicate closing vertex if present
+        if len(x_pix) > 1 and x_pix[0] == x_pix[-1] and y_pix[0] == y_pix[-1]:
+            x_pix = x_pix[:-1]
+            y_pix = y_pix[:-1]
+
+        # Convert mark vertices to sky coordinates
+        verts_icrs = viewer.state.reference_data.coords.pixel_to_world(x_pix, y_pix).icrs
+        spherical_polygon = SphericalPolygon.from_lonlat(
+            verts_icrs.ra.deg, verts_icrs.dec.deg, degrees=True)
+
+        # Check if the click point is inside this polygon
+        if spherical_polygon.contains_lonlat(ra_deg, dec_deg, degrees=True):
+            containing_labels.append(label)
+
+    # Return all footprints that contain the click point
+    if containing_labels:
+        return containing_labels
+
+    return None

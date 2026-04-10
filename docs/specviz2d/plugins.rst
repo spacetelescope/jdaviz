@@ -4,6 +4,8 @@
 Data Analysis Plugins
 *********************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 The Specviz2D data analysis plugins are meant to aid quick-look analysis
 of 2D spectroscopic data. All plugins are accessed via the :guilabel:`plugin`
 icon in the upper right corner of the Specviz2d application.

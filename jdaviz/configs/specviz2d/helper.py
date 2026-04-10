@@ -1,3 +1,4 @@
+import warnings
 from astropy.utils.decorators import deprecated
 from specutils import Spectrum
 
@@ -14,6 +15,12 @@ class Specviz2d(Specviz):
     _default_spectrum_2d_viewer_reference_name = "spectrum-2d-viewer"
 
     def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "Specviz2d is deprecated and will be removed in version 5.2. "
+            "Please use the top-level App instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__(*args, **kwargs)
 
     @property
@@ -23,7 +30,7 @@ class Specviz2d(Specviz):
         application that is wrapped by Specviz2d.
         """
         if not hasattr(self, '_specviz'):
-            self._specviz = Specviz(app=self.app)
+            self._specviz = Specviz(app=self._app)
         return self._specviz
 
     def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
@@ -119,9 +126,13 @@ class Specviz2d(Specviz):
         if local_path is not None:
             load_kwargs['local_path'] = local_path
 
+        if show_in_viewer is not True:
+            warnings.warn(
+                'The "show_in_viewer" argument is deprecated and will be removed in a '
+                'future version. Use "viewer" instead.',
+                DeprecationWarning, stacklevel=2)
+
         if spectrum_2d is not None:
-            if spectrum_2d_label is not None:
-                spectrum_2d_label = self.app.return_unique_name(spectrum_2d_label)
             if isinstance(spectrum_2d, Spectrum):
                 # don't pass ext if input is not a file
                 ext = None
@@ -133,8 +144,6 @@ class Specviz2d(Specviz):
                       extension=ext,
                       **load_kwargs)
         if spectrum_1d is not None:
-            if spectrum_1d_label is not None:
-                spectrum_1d_label = self.app.return_unique_name(spectrum_1d_label)
             self.load(spectrum_1d, format='1D Spectrum',
                       data_label=spectrum_1d_label,
                       viewer='*' if show_in_viewer else [],

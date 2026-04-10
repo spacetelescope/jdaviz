@@ -43,11 +43,14 @@ from jdaviz import __version__
 from jdaviz import style_registry
 from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
-                                SnackbarMessage, RemoveDataMessage, SubsetRenameMessage,
-                                AddDataToViewerMessage, RemoveDataFromViewerMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage,
-                                ViewerRenamedMessage, ChangeRefDataMessage,
+                                DataRenamedMessage, SnackbarMessage, RemoveDataMessage,
+                                SubsetRenameMessage, AddDataToViewerMessage,
+                                RemoveDataFromViewerMessage, ViewerAddedMessage,
+                                ViewerRemovedMessage, ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage, LayersFinalizedMessage)
+from jdaviz.core.loaders.resolvers.file.file import PresetFileResolver
+from jdaviz.core.loaders.resolvers.object.object import PresetObjectResolver
+from jdaviz.core.loaders.resolvers.url.url import PresetURLResolver
 from jdaviz.core.registries import (tool_registry, tray_registry,
                                     viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
@@ -64,7 +67,7 @@ from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                supported_sq_angle_units,
                                                viewer_flux_conversion_equivalencies)
 
-__all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
+__all__ = ['PrivateApplication', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
 
 SplitPanes()
 GoldenLayout()
@@ -169,6 +172,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
                      'j-about-menu': 'components/about_menu.vue',
                      'j-custom-toolbar-toggle': 'components/custom_toolbar_toggle.vue',
+                     'loader-import-button': 'components/loader_import_button.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-select': 'components/plugin_select.vue',
@@ -196,7 +200,8 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'data-menu-add': 'components/data_menu_add.vue',
                      'data-menu-remove': 'components/data_menu_remove.vue',
                      'data-menu-subset-edit': 'components/data_menu_subset_edit.vue',
-                     'hover-api-hint': 'components/hover_api_hint.vue'}
+                     'hover-api-hint': 'components/hover_api_hint.vue',
+                     'j-rename-text': 'components/j_rename_text.vue'}
 
 # Register pure vue component. This allows us to do recursive component instantiation only in the
 # vue component file
@@ -263,15 +268,30 @@ class ApplicationState(State):
             'tab_headers': True,
         },
         'dense_toolbar': True,
-        # In the context of a remote server, allow/disallow showing the loader
-        # server_is_remote == False -> Usual behavior, show loader, etc.
-        # server_is_remote + remote_enable_importers==False -> hide loader panel completely,
-        #   prepopulate the data
-        # server_is_remote + remote_enable_importers==True -> hide the loader,
-        #   but allow selecting and loading items from the file. This is used for
-        #   Spectrum Lists or multi-extension images.
+        # In the context of a remote server, set default values for loader visibility
+        # server_is_remote == False -> Usual behavior, show all loaders
+        # server_is_remote == True -> Sets default disabled_loaders to exclude loaders
+        #   that require local file access or external APIs
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
-        'remote_enable_importers': True,  # Depends on server_is_remote, see above
+        'remote_enable_importers': True,  # Legacy setting, kept for backward compatibility
+        # List of loader names to exclude from the loaders panel source dropdown.
+        # If not provided (None), defaults to excluding loaders that typically require
+        # local file access or API support when server_is_remote is True.
+        # Set to [] to enable all loaders regardless of server_is_remote.
+        'disabled_loaders': None,
+        # List of telescope names to exclude from the astroquery loader telescope dropdown.
+        # Available telescopes: 'JWST', 'HST', 'SDSS', 'Gaia'
+        # Set to [] (default) to enable all telescopes.
+        'disabled_astroquery_telescopes': [],
+        # List of URL prefixes to allow in the URL loader.
+        # If None (default), any valid URL is allowed.
+        # If set to a list, only URLs starting with one of the prefixes will be accepted.
+        # Example: ['https://data.example.com/', 'https://archive.science.org/']
+        'url_prefix_whitelist': None,
+        # Hide the 'url' column in file tables from resolver queries.
+        # When True, the url column is kept in the table data (for downloading)
+        # but is not shown in the UI and cannot be made visible by the user.
+        'hide_file_table_url_column': False,
         'context': {
             'notebook': {
                 'max_height': '600px'
@@ -288,6 +308,13 @@ class ApplicationState(State):
         'nuel': read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml'),
         'api': read_icon(os.path.join(ICON_DIR, 'api.svg'), 'svg+xml'),
         'api-lock': read_icon(os.path.join(ICON_DIR, 'api_lock.svg'), 'svg+xml'),
+        'plus-box': read_icon(os.path.join(ICON_DIR, 'plus-box.svg'), 'svg+xml'),
+        'content-save': read_icon(os.path.join(ICON_DIR, 'content-save.svg'), 'svg+xml'),
+        'cog': read_icon(os.path.join(ICON_DIR, 'cog.svg'), 'svg+xml'),
+        'information-outline': read_icon(os.path.join(ICON_DIR, 'information-outline.svg'), 'svg+xml'),  # noqa
+        'tune': read_icon(os.path.join(ICON_DIR, 'tune.svg'), 'svg+xml'),
+        'selection': read_icon(os.path.join(ICON_DIR, 'selection.svg'), 'svg+xml'),
+        'selection-drag': read_icon(os.path.join(ICON_DIR, 'selection-drag.svg'), 'svg+xml'),
     }, docstring="Custom application icons")
 
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa
@@ -295,22 +322,6 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
-    # catalogs_in_dc PRs (include in changelog when removing the dev-flag):
-    # https://github.com/spacetelescope/jdaviz/pull/3761
-    # https://github.com/spacetelescope/jdaviz/pull/3777
-    # https://github.com/spacetelescope/jdaviz/pull/3778
-    # https://github.com/spacetelescope/jdaviz/pull/3799
-    # https://github.com/spacetelescope/jdaviz/pull/3814
-    # https://github.com/spacetelescope/jdaviz/pull/3835
-    # https://github.com/spacetelescope/jdaviz/pull/3854
-    # https://github.com/spacetelescope/jdaviz/pull/3856
-    # https://github.com/spacetelescope/jdaviz/pull/3863
-    # https://github.com/spacetelescope/jdaviz/pull/3867 - table viewer
-    # https://github.com/spacetelescope/jdaviz/pull/3906 - SDSS/Gaia in astroquery resolver
-    # https://github.com/spacetelescope/jdaviz/pull/3912
-    # https://github.com/spacetelescope/jdaviz/pull/3899
-    catalogs_in_dc = CallbackProperty(
-        False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(
@@ -346,7 +357,7 @@ class ApplicationState(State):
     )
 
 
-class Application(VuetifyTemplate, HubListener):
+class PrivateApplication(VuetifyTemplate, HubListener):
     """
     The main application object containing implementing the ipyvue/vuetify
     template instructions for composing the interface.
@@ -394,6 +405,12 @@ class Application(VuetifyTemplate, HubListener):
         # Create a dictionary for holding non-ipywidget viewer objects so we
         #  can reference their state easily since glue does not store viewers
         self._viewer_store = {}
+
+        # Flag to indicate a data rename operation is in progress
+        # Handlers can check this to skip processing during renames
+        self._renaming_data = False
+        # Flag to indicate a subset rename operation is in progress
+        self._renaming_subset = False
 
         from jdaviz.core.events import PluginTableAddedMessage, PluginPlotAddedMessage
         self._plugin_tables = {}
@@ -463,6 +480,8 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_subset_delete_message)
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=self._on_subset_create_message)
+        self.hub.subscribe(self, SubsetRenameMessage,
+                           handler=self._on_subset_rename_message)
 
         # Store for associations between Data entries:
         self._data_associations = self._init_data_associations()
@@ -555,6 +574,18 @@ class Application(VuetifyTemplate, HubListener):
     def _on_subset_create_message(self, msg):
         self._reserved_labels.add(msg.subset.label)
         self._on_layers_changed(msg)
+
+    def _on_subset_rename_message(self, msg):
+        # Update _reserved_labels when a subset is renamed
+        # msg has old_label and new_label attributes
+        if msg.old_label in self._reserved_labels:
+            self._reserved_labels.remove(msg.old_label)
+        self._reserved_labels.add(msg.new_label)
+
+        # Update metadata in all data entries that reference the old subset label
+        # This ensures auto-update tracking continues after subset renaming
+        for data in self.data_collection:
+            self._update_live_plugin_results_metadata(data, msg.old_label, msg.new_label, 'subset')
 
     def _on_plugin_plot_added(self, msg):
         if msg.plugin._plugin_name is None:
@@ -659,10 +690,11 @@ class Application(VuetifyTemplate, HubListener):
                                           layer_name: orientation_icons.get(layer_name,
                                                                             wcs_only_refdata_icon)}
             elif not is_not_child:
-                parent_icon = self.state.layer_icons.get(self._get_assoc_data_parent(layer_name))
+                parent_label = self._get_assoc_data_parent(layer_name)
+                parent_icon = self.state.layer_icons.get(parent_label)
                 index = len([ln for ln, ic in self.state.layer_icons.items()
                              if not ic[:4] == 'mdi-' and
-                             self._get_assoc_data_parent(ln) == parent_icon]) + 1
+                             self._get_assoc_data_parent(ln) == parent_label]) + 1
                 self.state.layer_icons = {
                     **self.state.layer_icons,
                     layer_name: f"{parent_icon}{index}"
@@ -784,10 +816,15 @@ class Application(VuetifyTemplate, HubListener):
 
         new_links = []
         for new_comp in new_data.components:
-            if getattr(new_comp, '_component_type', None) in (None, 'unknown'):
+            comp_type = getattr(new_comp, '_component_type', None)
+            is_pixel_comp = self._is_pixel_component(new_comp)
+
+            has_linkable_type = comp_type not in (None, 'unknown')
+            if not has_linkable_type and not is_pixel_comp:
                 continue
+
             # Don't link flux to flux in cubes
-            elif new_comp.label.lower() in ('flux', 'uncertainty', 'mask') and new_data.ndim == 3:
+            if new_comp.label.lower() in ('flux', 'uncertainty', 'mask') and new_data.ndim == 3:
                 continue
 
             found_match = False
@@ -795,13 +832,33 @@ class Application(VuetifyTemplate, HubListener):
                 if existing_data.label == new_data_label:
                     continue
 
-                for existing_comp in existing_data.components:
-                    if getattr(existing_comp, '_component_type', None) in (None, 'unknown'):
+                # Skip linking WCS angle components between 2D spectra
+                # (these can interfere with coordinate transformations)
+                # But allow pixel & spectral_axis linking for proper display & subset propagation
+                if new_data.ndim == existing_data.ndim == 2:
+                    if comp_type == 'angle' or (comp_type and ':angle' in comp_type):
                         continue
 
-                    # Create link if component-types match
-                    if new_comp._component_type == existing_comp._component_type:
-                        msg_text = f"Creating link {new_data.label}:{new_comp.label}({new_comp._component_type}) > {existing_data.label}:{existing_comp.label}({existing_comp._component_type})"  # noqa
+                for existing_comp in existing_data.components:
+                    existing_comp_type = getattr(existing_comp, '_component_type', None)
+                    existing_is_pixel = self._is_pixel_component(existing_comp)
+
+                    existing_has_linkable_type = existing_comp_type not in (None, 'unknown')
+                    if not existing_has_linkable_type and not existing_is_pixel:
+                        continue
+
+                    # Create link if component-types match or
+                    # if both are pixel components with same label
+                    components_match = False
+                    if comp_type is not None and comp_type == existing_comp_type:
+                        components_match = True
+                    elif (is_pixel_comp and existing_is_pixel and
+                          new_comp.label == existing_comp.label):
+                        # Link pixel components by label for 2D spectra
+                        components_match = True
+
+                    if components_match:
+                        msg_text = f"Creating link {new_data.label}:{new_comp.label}({comp_type}) > {existing_data.label}:{existing_comp.label}({existing_comp_type})"  # noqa
                         msg = SnackbarMessage(text=msg_text,
                                               color='info', sender=self)
                         self.hub.broadcast(msg)
@@ -817,7 +874,11 @@ class Application(VuetifyTemplate, HubListener):
 
         # Add all new links to the data collection
         if new_links:
-            self.data_collection.add_link(new_links)
+            # Use delay_link_manager_update() to batch link updates and prevent
+            # widget trait modifications during iteration (which causes RuntimeError
+            # in ipywidgets on Python 3.12+)
+            with self.data_collection.delay_link_manager_update():
+                self.data_collection.add_link(new_links)
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
@@ -825,7 +886,7 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
-        if self.config in CONFIGS_WITH_LOADERS and self.config not in ['specviz2d', 'deconfigged']:
+        if self.config in CONFIGS_WITH_LOADERS:
             # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
@@ -872,12 +933,6 @@ class Application(VuetifyTemplate, HubListener):
 
             dc.add_link(links)
             return
-        elif (ref_data.ndim == 2 and linked_data.ndim == 1):
-            # Needed for subset linking between 1D and 2D viewers
-            # Spectrum 1D: Pixel Axis 0 [x] <=> Spectrum 2D: Pixel Axis 1 [x]
-            links = [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
-            dc.add_link(links)
-            return
 
         # The glue-astronomy SpectralCoordinates currently seems incompatible with glue
         # WCSLink. This gets around it until there's an upstream fix. Also need to do this
@@ -886,7 +941,9 @@ class Application(VuetifyTemplate, HubListener):
                 isinstance(linked_data.coords, SpectralGWCS) and linked_data.ndim == 1):
             wc_old = ref_data.world_component_ids[ref_data.meta['spectral_axis_index']]
             wc_new = linked_data.world_component_ids[linked_data.meta['spectral_axis_index']]
-            self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
+            # Use delay_link_manager_update() to prevent widget trait modification during iteration
+            with self.data_collection.delay_link_manager_update():
+                self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
             return
 
         # NOTE: if Cubeviz ever supports multiple cubes, we might want to reintroduce WCS-linking
@@ -1037,7 +1094,7 @@ class Application(VuetifyTemplate, HubListener):
         name : str
             The label to show in the viewer toolbar for the custom tool set.
         """
-        for viewer in self._viewer_store.values():
+        for viewer in list(self._viewer_store.values()):
             tools_nested, selected_tool = callable(viewer)
             if tools_nested is None:
                 tools_nested = viewer.toolbar._original_tools_nested[:3]
@@ -1682,6 +1739,31 @@ class Application(VuetifyTemplate, HubListener):
 
         return new_state
 
+    @staticmethod
+    def _is_pixel_component(comp):
+        """
+        Determine if a component represents pixel coordinates.
+
+        Parameters
+        ----------
+        comp : `~glue.core.component.Component`
+            The component to check.
+
+        Returns
+        -------
+        bool
+            True if the component represents pixel coordinates, False otherwise.
+
+        Notes
+        -----
+        Returns True if ``_component_type`` contains 'pixel'
+        (e.g., 'pixel', 'x:pixel', 'spectral_axis:pixel').
+        All data loaded through the importer infrastructure has ``_component_type``
+        explicitly set for pixel-axis components, so no label-based fallback is needed.
+        """
+        comp_type = getattr(comp, '_component_type', None)
+        return bool(comp_type and 'pixel' in comp_type)
+
     def add_data(self, data, data_label=None, notify_done=True, parent=None):
         """
         Add data to the Glue ``DataCollection``.
@@ -1707,11 +1789,37 @@ class Application(VuetifyTemplate, HubListener):
 
         if not data_label and hasattr(data, "label"):
             data_label = data.label
-        data_label = self.return_unique_name(data_label)
-        if data_label in self.data_collection.labels:
-            warnings.warn(f"Overwriting existing data entry with label '{data_label}'")
+        if data_label is None:
+            data_label = "Unknown"
 
         self.data_collection[data_label] = data
+
+        # Set _component_type for all components if not already set.
+        # This ensures consistent component typing for data added directly via add_data()
+        # as well as data from importers (which may override with more specific types).
+        def _physical_type_from_component(comp_id, comp):
+            try:
+                comp_units = comp.units
+                if comp_units is None or comp_units == '':
+                    return comp_units, None
+                return comp_units, str(u.Unit(comp_units).physical_type)
+            except (ValueError, TypeError, AttributeError):
+                return comp_units, None
+
+        dc_entry = self.data_collection[data_label]
+        for comp_id in dc_entry.components:
+            # Only set _component_type if not already set (e.g., by an importer)
+            if not hasattr(comp_id, '_component_type') or comp_id._component_type is None:
+                comp_units, physical_type = _physical_type_from_component(
+                    str(comp_id), dc_entry.get_component(comp_id))
+
+                # Detect pixel components by label (they have no physical units)
+                # This ensures _component_type is set even when physical_type is None
+                if 'Pixel Axis' in str(comp_id):
+                    comp_id._component_type = 'pixel'
+                else:
+                    # Use physical_type as default (same as BaseImporter.assign_component_type)
+                    comp_id._component_type = physical_type
 
         # manage associated Data entries:
         self._add_assoc_data_as_parent(data_label)
@@ -1735,6 +1843,243 @@ class Application(VuetifyTemplate, HubListener):
             snackbar_message = SnackbarMessage(
                 f"Data '{data_label}' successfully added.", sender=self, color="success")
             self.hub.broadcast(snackbar_message)
+
+    def _update_layer_icons(self, old_label, new_label):
+        """
+        Update layer icons dictionary when renaming an item.
+
+        Parameters
+        ----------
+        old_label : str
+            The old label of the item.
+        new_label : str
+            The new label of the item.
+        """
+        if old_label in self.state.layer_icons:
+            self.state.layer_icons[new_label] = self.state.layer_icons[old_label]
+            _ = self.state.layer_icons.pop(old_label)
+
+        # Update _data_associations to maintain parent-child relationships
+        if old_label in self._data_associations:
+            # Move the association entry to the new label
+            self._data_associations[new_label] = self._data_associations.pop(old_label)
+
+            # Update parent references in children
+            children = self._data_associations[new_label].get('children', [])
+            for child_label in children:
+                if child_label in self._data_associations:
+                    self._data_associations[child_label]['parent'] = new_label
+
+        # Check if this is a child being renamed - update parent's children list
+        for data_label, assoc_data in self._data_associations.items():
+            if old_label in assoc_data.get('children', []):
+                # Replace old label with new label in children list
+                children = assoc_data['children']
+                children[children.index(old_label)] = new_label
+                break
+
+    def _update_data_items_list(self, old_label, new_label):
+        """
+        Update state.data_items list when renaming an item.
+
+        Parameters
+        ----------
+        old_label : str
+            The old label of the item.
+        new_label : str
+            The new label of the item.
+        """
+        for data_item in self.state.data_items:
+            if data_item['name'] == old_label:
+                data_item['name'] = new_label
+                break
+
+    def _update_live_plugin_results_metadata(self, data, old_label, new_label, subscription_type):
+        """
+        Update live plugin results metadata when renaming an item.
+
+        Parameters
+        ----------
+        data : glue.core.Data
+            The data object containing metadata to update.
+        old_label : str
+            The old label of the item.
+        new_label : str
+            The new label of the item.
+        subscription_type : str
+            The type of subscription to update ('data' or 'subset').
+
+        Returns
+        -------
+        modified : bool
+            True if metadata was modified, False otherwise.
+        """
+        if not (hasattr(data, 'meta') and '_update_live_plugin_results' in data.meta):
+            return False
+
+        results_dict = data.meta['_update_live_plugin_results']
+
+        # Get list of attribute names that reference the item
+        attrs = results_dict.get('_subscriptions', {}).get(subscription_type, [])
+
+        # Update any reference attributes that match old_label
+        modified = False
+        for attr_name in attrs:
+            if results_dict.get(attr_name) == old_label:
+                results_dict[attr_name] = new_label
+                modified = True
+
+        # Update add_results label if it exists and matches
+        # This ensures that auto-update tracking continues after data renaming
+        if 'add_results' in results_dict and isinstance(results_dict['add_results'], dict):
+            if results_dict['add_results'].get('label') == old_label:
+                results_dict['add_results']['label'] = new_label
+                modified = True
+
+        # Note: We modify the dict in place, which is sufficient for the metadata
+        # to be updated. No need to reassign to data.meta
+
+        return modified
+
+    def check_rename_availability(self, old_label, new_label, is_subset=False):
+        """
+        Check if new label already exists in reserved labels.
+        Used by front-end for dynamic user warning.
+        """
+        # Always check that the new label doesn't already exist in reserved labels
+        # (unless we're just keeping the same name)
+        if new_label is None:
+            return
+
+        if new_label != old_label and new_label.strip() in self._reserved_labels:
+            msg = (f'Cannot rename to {new_label}: '
+                   'name already exists in data collection or subsets or is unavailable.')
+            raise ValueError(msg)
+
+        # When renaming a subset, also perform subset-specific validation
+        if is_subset:
+            self._check_valid_subset_label(new_label)
+
+    def rename_data(self, old_label, new_label):
+        """
+        Rename data in the data collection and update all references.
+
+        Parameters
+        ----------
+        old_label : str
+            The current label of the data to rename.
+        new_label : str
+            The new label for the data.
+        """
+        self.check_rename_availability(old_label, new_label)
+        data = self.data_collection[old_label]
+
+        # Set flag to indicate rename is in progress
+        # This allows handlers to skip processing during renames
+        self._renaming_data = True
+        # Rename the data object
+        # Note: _rename_single_data will reset _renaming_data at the end
+        # to ensure callbacks have access to the flag during processing
+        self._rename_single_data(old_label, new_label, data)
+
+    def _rename_single_data(self, old_label, new_label, data):
+        """
+        Rename a single data entry. This is a helper method used by rename_data.
+
+        Parameters
+        ----------
+        old_label : str
+            The current label of the data to rename.
+        new_label : str
+            The new label for the data.
+        data : glue.core.Data
+            The data object to rename.
+        """
+        try:
+            # Update the data label in the data object itself
+            data.label = new_label
+
+            # Update state.data_items
+            self._update_data_items_list(old_label, new_label)
+
+            # Update live plugin results if metadata exists
+            self._update_live_plugin_results_metadata(data, old_label, new_label, 'data')
+
+            # Update metadata in OTHER data that subscribe to the renamed data
+            for d in self.data_collection:
+                if d is data:
+                    continue
+                self._update_live_plugin_results_metadata(d, old_label, new_label, 'data')
+
+            # Clear cached references to old label
+            self._clear_object_cache(old_label)
+
+            # Update reserved labels
+            if old_label in self._reserved_labels:
+                self._reserved_labels.remove(old_label)
+            self._reserved_labels.add(new_label)
+
+            # Broadcast the message BEFORE updating layer_icons
+            # This is critical: layer_icons has callbacks that trigger
+            # _update_items() in DatasetSelect/LayerSelect. If we
+            # broadcast DataRenamedMessage first, the handlers can
+            # update their 'selected' trait values before _update_items()
+            # runs. This prevents _apply_default_selection from changing
+            # 'selected' and triggering observers that would cause
+            # plugins to re-process data (like auto-extraction).
+            self.hub.broadcast(DataRenamedMessage(data, old_label, new_label, sender=self))
+
+            # Now update layer icons - callbacks will fire but selected
+            # values are already updated
+            self._update_layer_icons(old_label, new_label)
+
+            # Update viewer layer states and reference data
+            for viewer_id, viewer in list(self._viewer_store.items()):
+                # Update reference data if it matches old label
+                if (hasattr(viewer.state, 'reference_data')
+                        and viewer.state.reference_data is not None
+                        and viewer.state.reference_data.label == old_label):
+                    viewer.state.reference_data = data
+
+            # Updated derived data if applicable
+            self._rename_derived_data(old_label, new_label, 'data')
+
+        finally:
+            # Reset the renaming flag after all callbacks have been processed
+            # This ensures that _apply_default_selection in plugin components
+            # will skip resetting the selected value during the rename process
+            self._renaming_data = False
+
+    def _rename_derived_data(self, old_label, new_label, data_type):
+        for d in self.data_collection:
+            data_renamed = False
+            if data_type == 'subset':
+                # Extracted spectra are named, e.g., 'Data (Subset 1, sum)'
+                label_base = d.label.split('(')[-1].split(',')[0]
+            else:
+                label_base = d.label.split('(')[0].split('[')[0].strip()
+            # Extracted spectra are named, e.g., 'Data (Subset 1, sum)'
+            if label_base == old_label:
+                old_data_label = d.label
+                new_data_label = d.label.replace(old_label, new_label)
+                d.label = new_data_label
+                self._update_layer_icons(old_data_label, new_data_label)
+
+                # Update the entries in the old data menu
+                self._update_data_items_list(old_data_label, new_data_label)
+                data_renamed = True
+
+            # Update live plugin results subscriptions
+            modified = self._update_live_plugin_results_metadata(d, old_label, new_label,
+                                                                 data_type)
+
+            # If derived data was renamed, update the label in add_results
+            if data_renamed and modified:
+                if hasattr(d, 'meta') and '_update_live_plugin_results' in d.meta:
+                    results_dict = d.meta['_update_live_plugin_results']
+                    if 'add_results' in results_dict:
+                        results_dict['add_results']['label'] = new_data_label
+                        d.meta['_update_live_plugin_results'] = results_dict
 
     def return_data_label(self, loaded_object, ext=None, alt_name=None, check_unique=True):
         """
@@ -1965,7 +2310,7 @@ class Application(VuetifyTemplate, HubListener):
     def get_viewer_reference_names(self):
         """Return a list of available viewer reference names."""
         # Cannot sort because of None
-        return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
+        return [self._viewer_item_by_id(vid).get('reference') for vid in list(self._viewer_store)]
 
     def get_viewers_of_cls(self, cls):
         """Return a list of viewers of a specific class."""
@@ -1973,7 +2318,7 @@ class Application(VuetifyTemplate, HubListener):
             cls_name = cls
         else:
             cls_name = cls.__name__
-        return [viewer for viewer in self._viewer_store.values()
+        return [viewer for viewer in list(self._viewer_store.values())
                 if viewer.__class__.__name__ == cls_name]
 
     def _update_viewer_reference_name(
@@ -2245,14 +2590,15 @@ class Application(VuetifyTemplate, HubListener):
         else:
             subset_selected = self.session.edit_subset_mode.edit_subset[0].label
 
-        # remove the current selection label from the set of labels, because its ok
-        # if the new subset shares the name of the current selection (renaming to current name)
-        if subset_selected in self._reserved_labels:
-            self._reserved_labels.remove(subset_selected)
+        # Create a copy of reserved labels to check against, excluding the current
+        # selection label, to allow subsets to keep their current name
+        reserved_labels_to_check = set(self._reserved_labels)
+        if subset_selected in reserved_labels_to_check:
+            reserved_labels_to_check.remove(subset_selected)
 
         # now check `subset_name` against list of non-active current subset labels
         # and warn and return if it is
-        if subset_name in self._reserved_labels:
+        if subset_name in reserved_labels_to_check:
             if raise_if_invalid:
                 raise ValueError("Cannot rename subset to name of an existing subset"
                                  f" or data item: ({subset_name}).")
@@ -2286,43 +2632,24 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 raise ValueError(f"No subset named {old_label} to rename")
 
-        if check_valid:
-            if self._check_valid_subset_label(new_label):
+        # Set flag to indicate rename is in progress
+        # This allows handlers to skip processing during renames
+        self._renaming_subset = True
+        try:
+            if check_valid:
+                if self._check_valid_subset_label(new_label):
+                    subset_group.label = new_label
+            else:
                 subset_group.label = new_label
-        else:
-            subset_group.label = new_label
 
-        # Update layer icon
-        self.state.layer_icons[new_label] = self.state.layer_icons[old_label]
-        _ = self.state.layer_icons.pop(old_label)
+            # Update layer icon
+            self._update_layer_icons(old_label, new_label)
 
-        # Updated derived data if applicable
-        for d in self.data_collection:
-            data_renamed = False
-            # Extracted spectra are named, e.g., 'Data (Subset 1, sum)'
-            if d.label.split("(")[-1].split(",")[0] == old_label:
-                old_data_label = d.label
-                new_data_label = d.label.replace(old_label, new_label)
-                d.label = new_data_label
-                self.state.layer_icons[new_data_label] = self.state.layer_icons[old_data_label]
-                _ = self.state.layer_icons.pop(old_data_label)
+            # Updated derived data if applicable
+            self._rename_derived_data(old_label, new_label, 'subset')
 
-                # Update the entries in the old data menu
-                for data_item in self.state.data_items:
-                    if data_item['name'] == old_data_label:
-                        data_item['name'] = new_data_label
-
-            # Update live plugin results subscriptions
-            if hasattr(d, 'meta') and '_update_live_plugin_results' in d.meta:
-                results_dict = d.meta['_update_live_plugin_results']
-                for key in results_dict.get('_subscriptions', {}).get('subset'):
-                    if results_dict[key] == old_label:
-                        results_dict[key] = new_label
-
-                if data_renamed:
-                    results_dict['add_results']['label'] = new_data_label
-
-                d.meta['_update_live_plugin_results'] = results_dict
+        finally:
+            self._renaming_subset = False
 
         self.hub.broadcast(SubsetRenameMessage(subset_group, old_label, new_label, sender=self))
 
@@ -2505,13 +2832,27 @@ class Application(VuetifyTemplate, HubListener):
         viewer_reference : str
             Reference (or ID) of the viewer
         data_label : str
-            Label of the data to set the visiblity.  If not already loaded in the viewer, the
+            Label of the data to set the visibility. If not already loaded in the viewer, the
             data will automatically be loaded before setting the visibility
         visible : bool
             Whether to set the layer(s) to visible.
         replace : bool
             Whether to disable the visibility of all other layers in the viewer
         """
+        # During batch_load, defer viewer assignment until after linking completes.
+        # Only defer at the outermost batch_load level (== 1). Nested batch_loads
+        # (level > 1, e.g. a plugin live-update triggered inside import_region) are
+        # already handled by _delayed_show_in_viewer_labels in template_mixin, so
+        # intercepting them here as well would cause double-deferral and wrong layer ordering.
+        if getattr(self._jdaviz_helper, '_in_batch_load', 0) == 1:
+            self._jdaviz_helper.pending_set_data_visibility.append({
+                'viewer_reference': viewer_reference,
+                'data_label': data_label,
+                'visible': visible,
+                'replace': replace
+            })
+            return
+
         viewer_item = self._get_viewer_item(viewer_reference)
         viewer_id = viewer_item['id']
         viewer = self.get_viewer_by_id(viewer_id)
@@ -2534,12 +2875,18 @@ class Application(VuetifyTemplate, HubListener):
             data = self.data_collection[data_label]
 
             # set the original color based on metadata preferences, if provided, and otherwise
-            # based on the colorcycler
+            # based on the color-cycler
             # NOTE: this is intentionally not a single line to avoid incrementing the color-cycler
             # unless it is used
             color = data.meta.get('_default_color')
             if color is None:
-                color = viewer.color_cycler()
+                # check if this is a catalog/scatter layer and use scatter_color_cycler,
+                # which has brighter colors.
+                is_catalog = data.meta.get('_importer') == 'CatalogImporter'
+                if is_catalog and hasattr(viewer, 'scatter_color_cycler'):
+                    color = viewer.scatter_color_cycler()
+                else:
+                    color = viewer.color_cycler()
             viewer.add_data(data, percentile=95, color=color)
 
             # Specviz removes the data from collection in viewer.py if flux unit incompatible.
@@ -2607,13 +2954,12 @@ class Application(VuetifyTemplate, HubListener):
         # Sets the plot axes labels to be the units of the most recently
         # active data.
         viewer_data_labels = [layer.layer.label for layer in viewer.layers]
-        if len(viewer_data_labels) > 0 and getattr(self._jdaviz_helper, '_in_batch_load', 0) == 0:
+        if len(viewer_data_labels) > 0:
             # This "if" is nested on purpose to make parent "if" available
             # for other configs in the future, as needed.
             if self.config == 'imviz':
                 viewer.on_limits_change()  # Trigger compass redraw
-
-        if layers_finalized_message:
+        if layers_finalized_message is not None:
             self.hub.broadcast(layers_finalized_message)
 
     def data_item_remove(self, data_label):
@@ -2629,7 +2975,7 @@ class Application(VuetifyTemplate, HubListener):
             self._reparent_subsets(data)
 
         # Make sure the data isn't loaded in any viewers and isn't the selected orientation
-        for viewer_id, viewer in self._viewer_store.items():
+        for viewer_id, viewer in list(self._viewer_store.items()):
             if orientation_plugin is not None and self._align_by == 'wcs':
                 if viewer.state.reference_data.label == data_label:
                     self._change_reference_data(base_wcs_layer_label, viewer_id)
@@ -2734,8 +3080,7 @@ class Application(VuetifyTemplate, HubListener):
         new_existing_data_in_dc = self.existing_data_in_dc.copy()
 
         if data_added:
-            if data_hash not in new_existing_data_in_dc:
-                new_existing_data_in_dc.append(data_hash)
+            new_existing_data_in_dc.append(data_hash)
         else:
             if data_hash in new_existing_data_in_dc:
                 new_existing_data_in_dc.remove(data_hash)
@@ -3167,7 +3512,18 @@ class Application(VuetifyTemplate, HubListener):
         # registry will be populated at import
         if self.config in CONFIGS_WITH_LOADERS:
             import jdaviz.core.loaders  # noqa
+            # Determine which loaders to disable
+            disabled_loaders = self.state.settings.get('disabled_loaders')
+            if disabled_loaders is None:
+                # Default: disable loaders based on server_is_remote setting
+                if self.state.settings.get('server_is_remote', False):
+                    disabled_loaders = ['file', 'file drop', 'url', 'object',
+                                        'astroquery', 'virtual observatory']
+                else:
+                    disabled_loaders = []
             for name, Resolver in loader_resolver_registry.members.items():
+                if name in disabled_loaders:
+                    continue
                 loader = Resolver(app=self,
                                   open_callback=open,
                                   close_callback=close,
@@ -3199,6 +3555,96 @@ class Application(VuetifyTemplate, HubListener):
                                       "implemented for the deconfigged app")
         for loader in self._jdaviz_helper.loaders.values():
             loader.format._update_items()
+
+    def _add_custom_loader(self, resolver, input, name, open_in_tray=False, load=False,
+                           format=None):
+        """
+        Private method to programmatically add a custom loader with preset input.
+
+        This creates a loader entry that appears in the source dropdown but doesn't
+        show the input UI (similar to server_is_remote behavior).
+
+        Parameters
+        ----------
+        resolver : str
+            Resolver type ('file', 'object', or 'url').
+        input : str or object
+            Input for the resolver. For 'file', an absolute path to the file.
+            For 'object', any Python object. For 'url', a URL string.
+        name : str
+            Name for this loader.
+        open_in_tray : bool, optional
+            Whether to set this as the selected loader in the tray.
+        load : bool, optional
+            Whether to immediately load the data after adding the loader.
+        format : str or list of str, optional
+            If provided, restrict the format dropdown to only include the specified
+            format(s). Other formats will not be attempted or shown.
+
+        Returns
+        -------
+        loader
+            The new loader user API object.
+        """
+        # Map resolver names to preset classes
+        preset_resolver_map = {
+            'file': PresetFileResolver,
+            'object': PresetObjectResolver,
+            'url': PresetURLResolver
+        }
+
+        if resolver not in preset_resolver_map:
+            raise ValueError(f"Unknown resolver type '{resolver}'. "
+                             f"Must be one of: {', '.join(preset_resolver_map.keys())}")
+
+        PresetResolverClass = preset_resolver_map[resolver]
+
+        # Ensure unique name
+        existing_names = [item['name'] for item in self.state.loader_items]
+        if name in existing_names:
+            raise ValueError(f"Loader name must be unique. A loader with the name '{name}' already exists.")  # noqa
+
+        # Define callbacks (same as in initialization)
+        def open():
+            self.state.drawer_content = 'loaders'
+            self.state.add_subtab = 0
+
+        def close():
+            self.state.loader_selected = ''
+
+        def set_active_loader(res):
+            self.state.loader_selected = res
+
+        # Create the preset resolver instance
+        loader = PresetResolverClass(
+            input,
+            title=name,
+            app=self,
+            open_callback=open,
+            close_callback=close,
+            set_active_loader_callback=set_active_loader,
+            format=format
+        )
+
+        # Set the registry label to match the name for open_in_tray to work
+        loader._registry_label = name
+
+        # Add to loader_items
+        self.state.loader_items.append({
+            'name': name,
+            'label': name,
+            'requires_api_support': loader.requires_api_support,
+            'widget': "IPY_MODEL_" + loader.model_id,
+            'api_methods': loader.api_methods,
+        })
+
+        ldr = self._jdaviz_helper.loaders[name]
+        if open_in_tray:
+            ldr.open_in_tray()
+        if load:
+            ldr.load()
+
+        return ldr
 
     def update_tray_items_from_registry(self):
         if self.config != 'deconfigged':

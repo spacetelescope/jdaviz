@@ -4,6 +4,8 @@
 Exporting Data From Specviz2D
 *****************************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 .. _specviz2d-export-data-2d:
 
 2D Spectra

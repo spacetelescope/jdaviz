@@ -6,6 +6,7 @@ import time
 import warnings
 from contextlib import contextmanager
 from functools import cached_property, wraps
+from traitlets import link
 
 import astropy.units as u
 import bqplot
@@ -29,7 +30,7 @@ from glue_jupyter import jglue
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
-from glue_jupyter.registries import viewer_registry
+from glue_jupyter.registries import viewer_registry as glue_viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
@@ -44,11 +45,11 @@ from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator,
                                                     WithSliceSelection)
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, RestoreToolbarMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage,
+from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, DataRenamedMessage,
+                                RestoreToolbarMessage, ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
                                 ViewerVisibleLayersChangedMessage,
-                                ChangeRefDataMessage,
+                                ChangeRefDataMessage, NewViewerMessage,
                                 PluginTableAddedMessage, PluginTableModifiedMessage,
                                 PluginPlotAddedMessage, PluginPlotModifiedMessage,
                                 GlobalDisplayUnitChanged, SubsetRenameMessage)
@@ -56,11 +57,14 @@ from jdaviz.core.marks import (PluginMarkCollection,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
-                               ShadowLine, ApertureMark)
-from jdaviz.core.region_translators import regions2roi, regions2aperture
+                               ShadowLine, ApertureMark, RegionOverlay)
+from jdaviz.core.region_translators import (regions2roi,
+                                            regions2aperture,
+                                            is_stcs_string,
+                                            stcs_string2region)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
-from jdaviz.core.registries import tray_registry
+from jdaviz.core.registries import tray_registry, viewer_registry, loader_resolver_registry
 from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
@@ -97,6 +101,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'Plot', 'PlotMixin',
            'AutoTextField', 'AutoTextFieldMixin',
            'AddResults', 'AddResultsMixin',
+           '_populate_viewer_items',
            'PlotOptionsSyncState',
            'SPATIAL_DEFAULT_TEXT']
 
@@ -107,8 +112,8 @@ GLUE_STATES_WITH_HELPERS = ('size_att', 'cmap_att', 'x_att', 'y_att')
 # but may be added in the future.  If it is not in the registry, we'll add it now.
 # Once glue-jupyter with https://github.com/glue-viz/glue-jupyter/pull/402 is pinned,
 # we can safely remove this block.
-if 'histogram' not in viewer_registry.members.keys():
-    @viewer_registry('histogram')
+if 'histogram' not in glue_viewer_registry.members.keys():
+    @glue_viewer_registry('histogram')
     class RegisteredHistogramViewer(BqplotHistogramView):
         pass
 
@@ -220,43 +225,43 @@ class ViewerPropertiesMixin:
 
     @property
     def spectrum_viewer(self):
-        viewer_reference = self.app._get_first_viewer_reference_name(
+        viewer_reference = self._app._get_first_viewer_reference_name(
             require_spectrum_viewer=True
         )
         if viewer_reference is None:
             return None
 
-        return self.app.get_viewer(viewer_reference)
+        return self._app.get_viewer(viewer_reference)
 
     @property
     def spectrum_1d_viewers(self):
-        return [viewer for viewer in self.app._viewer_store.values()
+        return [viewer for viewer in self._app._viewer_store.values()
                 if _is_spectrum_viewer(viewer)]
 
     @property
     def spectrum_2d_viewer(self):
-        viewer_reference = self.app._get_first_viewer_reference_name(
+        viewer_reference = self._app._get_first_viewer_reference_name(
             require_spectrum_2d_viewer=True
         )
         if viewer_reference is None:
             return None
 
-        return self.app.get_viewer(viewer_reference)
+        return self._app.get_viewer(viewer_reference)
 
     @property
     def spectrum_2d_viewers(self):
-        return [viewer for viewer in self.app._viewer_store.values()
+        return [viewer for viewer in self._app._viewer_store.values()
                 if _is_spectrum_2d_viewer(viewer)]
 
     @property
     def flux_viewer(self):
-        viewer_reference = self.app._get_first_viewer_reference_name(
+        viewer_reference = self._app._get_first_viewer_reference_name(
             require_flux_viewer=True
         )
         if viewer_reference is None:
             return None
 
-        return self.app.get_viewer(viewer_reference)
+        return self._app.get_viewer(viewer_reference)
 
 
 class WithCache:
@@ -279,20 +284,20 @@ class CustomToolbarToggle(HubListener):
         self.plugin = plugin
         self.enabled_traitlet = enabled_traitlet
 
-        self.app.hub.subscribe(self, RestoreToolbarMessage,
-                               handler=self._on_restore_toolbar)
+        self._app.hub.subscribe(self, RestoreToolbarMessage,
+                                handler=self._on_restore_toolbar)
 
     @property
-    def app(self):
-        return self.plugin.app
+    def _app(self):
+        return self.plugin._app
 
     def toggle(self):
         if not getattr(self.plugin, self.enabled_traitlet):
-            self.app._override_viewer_tools(self.callable, self.name)
+            self._app._override_viewer_tools(self.callable, self.name)
             setattr(self.plugin, self.enabled_traitlet, True)
         else:
             # this will trigger _on_restore_toolbar and set mode_activated = False
-            self.app.hub.broadcast(RestoreToolbarMessage(sender=self))
+            self._app.hub.broadcast(RestoreToolbarMessage(sender=self))
 
     def _on_restore_toolbar(self, msg={}):
         setattr(self.plugin, self.enabled_traitlet, False)
@@ -316,6 +321,140 @@ class CustomToolbarToggleMixin(VuetifyTemplate, HubListener):
 
     def vue_toggle_custom_toolbar(self, *args):
         self.toggle_custom_toolbar()
+
+
+class FootprintDisplayMixin:
+    """
+    Mixin for displaying selectable footprint regions
+    in image viewers.
+    """
+    def vue_link_by_wcs(self, *args):
+        plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
+        if plg is not None:
+            plg.align_by = 'WCS'
+        self.is_wcs_linked = True
+
+    def _get_image_viewers(self):
+        return [viewer for viewer in self._app._viewer_store.values()
+                if _is_image_viewer(viewer)]
+
+    def _display_observation_footprints(self):
+        if 's_region' not in self.observation_table.headers_avail:
+            return
+
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
+            return
+
+        regions = []
+        region_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            region = stcs_string2region(s_region_str)
+            regions.append(region)
+            region_labels.append(idx)
+
+        if not regions:
+            return
+
+        for viewer in image_viewers:
+            viewer._add_region_overlay(
+                region=regions,
+                region_label=region_labels,
+                selected=False,
+                fill_opacities=[0]
+            )
+
+        self._sync_footprint_selection_to_viewers()
+
+    def _remove_observation_footprints(self):
+        """Remove all observation footprints from all image viewers."""
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
+            return
+
+        # Get all labels (row indices) from observation table
+        all_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            all_labels.append(idx)
+
+        if not all_labels:
+            return
+
+        # Remove footprints from all viewers
+        for viewer in image_viewers:
+            # Only remove labels that actually exist in this viewer
+            existing_labels = [
+                mark.label for mark in viewer.figure.marks
+                if isinstance(mark, RegionOverlay)
+            ]
+            labels_to_remove = [label for label in all_labels if label in existing_labels]
+            if labels_to_remove:
+                viewer._remove_region_overlay(region_label=labels_to_remove)
+
+    def _sync_footprint_selection_to_viewers(self):
+        """Sync footprint selection state across all viewers based on table selection."""
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
+            return
+
+        selected_indices = set()
+        for row in self.observation_table.selected_rows:
+            idx = self.observation_table.items.index(row)
+            selected_indices.add(idx)
+
+        valid_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            valid_labels.append(idx)
+
+        # Update selection in all viewers
+        for viewer in image_viewers:
+            for label in valid_labels:
+                if label in selected_indices:
+                    viewer._select_region_overlay(region_label=label)
+                else:
+                    viewer._deselect_region_overlay(region_label=label)
+
+    def _add_footprints_to_viewer(self, viewer):
+        # Build regions from table
+        regions = []
+        region_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            region = stcs_string2region(s_region_str)
+            regions.append(region)
+            region_labels.append(idx)
+
+        if not regions:
+            return
+
+        viewer._add_region_overlay(
+            region=regions,
+            region_label=region_labels,
+            selected=False,
+            fill_opacities=[0]
+        )
+        # Sync selection state with table
+        self._sync_footprint_selection_to_viewers()
 
 
 class LoadersMixin(VuetifyTemplate, HubListener):
@@ -352,10 +491,19 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         import jdaviz.core.loaders  # noqa
         from jdaviz.core.registries import loader_resolver_registry
         loader_items = []
+        # Determine which loaders to disable
+        disabled_loaders = self.app.state.settings.get('disabled_loaders')
+        if disabled_loaders is None:
+            # Default: disable loaders based on server_is_remote setting
+            if self._app.state.settings.get('server_is_remote', False):
+                disabled_loaders = ['file', 'file drop', 'url', 'object',
+                                    'astroquery', 'virtual observatory']
+            else:
+                disabled_loaders = []
         for name, Resolver in loader_resolver_registry.members.items():
-            if self.app.state.settings.get("server_is_remote") and name in ('file', 'file drop'):
+            if name in disabled_loaders:
                 continue
-            loader = Resolver(app=self.app,
+            loader = Resolver(app=self._app,
                               open_callback=open_accordion,
                               close_callback=close_accordion,
                               set_active_loader_callback=set_active_loader,
@@ -412,7 +560,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
 
-        self.app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
+        self._app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
         self._update_api_hints_enabled()
 
         # set user-API methods
@@ -440,7 +588,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
         """
         Allows access to the underlying Jdaviz application instance. This is
         **not** access to the helper class, but instead the
-        `jdaviz.app.Application` object.
+        `jdaviz.app.PrivateApplication` object.
         """
         return self._app
 
@@ -459,7 +607,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
     @property
     def _specviz_helper(self):
         # for helpers that have a .specviz, return that, otherwise the original helper
-        helper = self.app._jdaviz_helper
+        helper = self._app._jdaviz_helper
         return getattr(helper, 'specviz', helper)
 
     def _viewer_callback(self, viewer, plugin_method):
@@ -488,7 +636,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
                                   if k.split(':')[0] != viewer_id}
 
     def _update_api_hints_enabled(self, *args):
-        self.api_hints_enabled = self.app.state.show_api_hints
+        self.api_hints_enabled = self._app.state.show_api_hints
 
 
 def skip_if_no_updates_since_last_active(skip_if_not_active=True):
@@ -559,15 +707,24 @@ def with_spinner(spinner_traitlet='spinner', truthy=True):
 
     Each plugin gets a 'spinner' traitlet by default, but some plugins
     may want different controls for different sections/actions within the plugin.
+
+    If ``truthy`` is a string that matches an attribute name on the instance,
+    the attribute's value will be used instead. This allows subclasses to
+    override the spinner text by defining a class attribute.
     """
     def decorator(meth):
         @wraps(meth)
         def wrapper(self, *args, **kwargs):
-            setattr(self, spinner_traitlet, truthy)
+            # If truthy is a string matching an attribute name, use that attribute's value
+            if isinstance(truthy, str) and hasattr(self, truthy):
+                spinner_value = getattr(self, truthy)
+            else:
+                spinner_value = truthy
+            setattr(self, spinner_traitlet, spinner_value)
             try:
                 ret_ = meth(self, *args, **kwargs)
             finally:
-                setattr(self, spinner_traitlet, False if truthy is True else '')
+                setattr(self, spinner_traitlet, False if spinner_value is True else '')
             return ret_
         return wrapper
     return decorator
@@ -674,7 +831,7 @@ class PluginTemplateMixin(TemplateMixin):
         super().__init__(app=app, **kwargs)
 
     def new(self):
-        new = self.__class__(app=self.app)
+        new = self.__class__(app=self._app)
         new._plugin_name = self._plugin_name
         return new
 
@@ -688,14 +845,14 @@ class PluginTemplateMixin(TemplateMixin):
         Overwrite plugin description displayed under plugin title in tray.
         """
 
-        if len(self.app.state.tray_items) > 0:
+        if len(self._app.state.tray_items) > 0:
             self._plugin_description = description
 
             # update text in tray item. this is not a dictionary
             # so we have to search for the correct plugin in the list
-            for i, item in enumerate(self.app.state.tray_items):
+            for i, item in enumerate(self._app.state.tray_items):
                 if item['label'] == self._plugin_name:
-                    self.app.state.tray_items[i]['description'] = description
+                    self._app.state.tray_items[i]['description'] = description
                     break
 
         else:  # not fully initialized, fall back on empty string
@@ -813,11 +970,11 @@ class PluginTemplateMixin(TemplateMixin):
 
     @observe('irrelevant_msg')
     def _irrelevant_msg_changed(self, *args):
-        labels = [ti['label'] for ti in self.app.state.tray_items]
+        labels = [ti['label'] for ti in self._app.state.tray_items]
         if self._registry_label not in labels:
             return
         index = labels.index(self._registry_label)
-        self.app.state.tray_items[index]['is_relevant'] = len(self.irrelevant_msg) == 0
+        self._app.state.tray_items[index]['is_relevant'] = len(self.irrelevant_msg) == 0
 
     def vue_plugin_ping(self, ping_timestamp):
         if isinstance(ping_timestamp, dict):
@@ -883,8 +1040,8 @@ class PluginTemplateMixin(TemplateMixin):
         scroll_to : bool, optional
             Whether to immediately scroll to the plugin opened in the tray.
         """
-        app_state = self.app.state
-        sidebar = self._sidebar if self.app.config == 'deconfigged' else 'plugins'
+        app_state = self._app.state
+        sidebar = self._sidebar if self._app.config == 'deconfigged' else 'plugins'
         app_state.drawer_content = sidebar
 
         if sidebar == 'plugins':
@@ -907,11 +1064,11 @@ class PluginTemplateMixin(TemplateMixin):
         close_sidebar : bool
             Whether to also close the sidebar itself.
         """
-        app_state = self.app.state
+        app_state = self._app.state
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         app_state.tray_items_open = [ind for ind in app_state.tray_items_open if ind != index]
         if close_sidebar:
-            self.app.state.drawer_content = ''
+            self._app.state.drawer_content = ''
 
     @observe('plugin_opened', 'keep_active', 'irrelevant_msg')
     def _update_is_active(self, *args):
@@ -1033,11 +1190,11 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin, WithCache):
         return self._plugin
 
     @property
-    def app(self):
+    def _app(self):
         """
         Access the parent app object
         """
-        return self._plugin.app
+        return self._plugin._app
 
     @property
     def hub(self):
@@ -1051,7 +1208,7 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin, WithCache):
         def _dict_from_viewer(viewer, viewer_item):
             d = {'viewer': viewer,
                  'id': viewer_item.get('id'),
-                 'icon': self.app.state.viewer_icons.get(viewer_item.get('id'))}
+                 'icon': self._app.state.viewer_icons.get(viewer_item.get('id'))}
             if viewer_item.get('reference') is not None:
                 d['reference'] = viewer_item.get('reference')
                 d['label'] = viewer_item.get('reference')
@@ -1061,8 +1218,8 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin, WithCache):
 
             return d
 
-        return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid))
-                for vid, viewer in self.app._viewer_store.items()
+        return [_dict_from_viewer(viewer, self._app._viewer_item_by_id(vid))
+                for vid, viewer in self._app._viewer_store.items()
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
 
 
@@ -1118,8 +1275,8 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         self._manual_options = manual_options
 
         # Reserve the default and manual options strings so people can't use them as Subset labels
-        self._plugin.app._reserved_labels.add(str(default_text).lower())
-        self._plugin.app._reserved_labels.update([x["label"].lower() if isinstance(x, dict) else
+        self._plugin._app._reserved_labels.add(str(default_text).lower())
+        self._plugin._app._reserved_labels.update([x["label"].lower() if isinstance(x, dict) else
                                                   x.lower() for x in manual_options
                                                   if isinstance(x, (str, dict))])
 
@@ -1150,12 +1307,22 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return {'label': item}
 
     def __repr__(self):
+        choices_repr = self._repr_choices()
         if self.allow_multiselect:
             if self.is_multiselect and isinstance(self.selected, list):
                 # NOTE: selected is a list here so should not be wrapped with quotes
-                return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
-            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={self.choices}>"  # noqa
-        return f"<selected='{self.selected}' choices={self.choices}>"
+                return f"<selected={self.selected} multiselect={self.multiselect} choices={choices_repr}>"  # noqa
+            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={choices_repr}>"  # noqa
+        return f"<selected='{self.selected}' choices={choices_repr}>"
+
+    def _repr_choices(self):
+        repr_limit = 6
+        choices = list(self.choices)
+        if len(choices) <= repr_limit:
+            return choices
+        # limit how many options we show in repr to keep it manageable
+        preview = choices[:repr_limit]
+        return f"{str(preview)[:-1]}, ... ({len(choices)} total)]"
 
     def __eq__(self, other):
         return self.selected == other
@@ -1347,6 +1514,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return self._default_mode
 
     def _apply_default_selection(self, skip_if_current_valid=True):
+        # Skip if a data rename operation is in progress
+        # This prevents triggering observers when selected becomes
+        # temporarily invalid during rename
+        if getattr(self._app, '_renaming_data', False):
+            return
+
         if self.is_multiselect:
             if skip_if_current_valid and (self.selected is None or len(self.selected) == 0):
                 # current selection is empty and so should remain that way
@@ -1373,13 +1546,18 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
         default_empty = [] if self.is_multiselect else ''
         if self.default_mode == 'first':
-            self.selected = self.labels[0] if len(self.labels) else default_empty
+            selected = self.labels[0] if len(self.labels) else default_empty
         elif self.default_mode == 'second':
-            self.selected = self.labels[1] if len(self.labels) > 1 else default_empty
+            selected = self.labels[1] if len(self.labels) > 1 else default_empty
         elif self.default_mode == 'default_text':
-            self.selected = self._default_text if self._default_text else default_empty
+            selected = self._default_text if self._default_text else default_empty
         else:
-            self.selected = default_empty
+            selected = default_empty
+
+        if self.is_multiselect:
+            self.selected = [selected]
+        else:
+            self.selected = selected
         self._clear_cache(*self._cached_properties)
 
     def _is_valid_item(self, item, filter_callables={}):
@@ -1420,11 +1598,74 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                 self.selected = event['old']
                 raise ValueError(f"\'{event['new']}\' not one of {valid}, reverting selection to \'{event['old']}\'")  # noqa
 
+    def _update_selected_on_rename(self, old_label, new_label):
+        """
+        Update selected value when an item is renamed.
+
+        This bypasses observers by directly updating _trait_values to prevent
+        plugins from re-processing data unnecessarily.
+
+        Parameters
+        ----------
+        old_label : str
+            The old label of the renamed item.
+        new_label : str
+            The new label of the renamed item.
+
+        Returns
+        -------
+        updated : bool
+            True if selected was updated, False otherwise.
+        """
+        # Check if selected needs updating
+        update_selected = False
+        if self.is_multiselect:
+            if old_label in self.selected:
+                update_selected = True
+        else:
+            if self.selected == old_label:
+                update_selected = True
+
+        # Update selected label directly in _trait_values to bypass observers
+        if update_selected:
+            # Get the actual traitlet name on the plugin
+            selected_trait_name = self._plugin_traitlets.get('selected')
+            if self.is_multiselect:
+                new_selected = [new_label if sel == old_label else sel
+                                for sel in self.selected]
+                self._plugin._trait_values[selected_trait_name] = new_selected
+            else:
+                self._plugin._trait_values[selected_trait_name] = new_label
+            # Sync to frontend
+            self.send_state('selected')
+
+        return update_selected
+
+    def _update_items_on_rename(self, old_label, new_label):
+        """
+        Update items list when an item is renamed.
+
+        Parameters
+        ----------
+        old_label : str
+            The old label of the renamed item.
+        new_label : str
+            The new label of the renamed item.
+        """
+        # Find and update the item in the list
+        for item in self.items:
+            if item['label'] == old_label:
+                item['label'] = new_label
+                break
+        self.send_state('items')
+
 
 class SelectFileExtensionComponent(SelectPluginComponent):
-    def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
+    def __init__(self, plugin, items, selected, multiselect=None,
+                 manual_options=[], filters=[], default_mode=None):
         super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
-                         manual_options=manual_options, filters=filters)
+                         manual_options=manual_options, filters=filters,
+                         default_mode=default_mode)
 
     @property
     def selected_index(self):
@@ -1441,6 +1682,8 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def selected_obj(self):
         # returns HDU (for HDUList) or ndarray (for ImageModel/DataModel)
         if self.is_multiselect:
+            if self.selected_index is None:
+                return []
             return [self._get_selected_obj(index) for index in self.selected_index]
         return self._get_selected_obj(self.selected_index)
 
@@ -1697,6 +1940,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         hint="Select an item to modify."
       </plugin-editable-select>
     """
+
     def __init__(self, *args, **kwargs):
         """
         Parameters
@@ -1953,16 +2197,18 @@ class LayerSelect(SelectPluginComponent):
                            handler=lambda _: self._on_subset_created(),
                            priority=0)
         self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda _: self._update_items())
+                           handler=self._on_subset_updated)
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetRenameMessage,
                            handler=self._on_subset_renamed)
+        self.hub.subscribe(self, DataRenamedMessage,
+                           handler=self._on_data_renamed)
         self.hub.subscribe(self, ViewerRenamedMessage,
                            self._on_viewer_renamed_message)
 
         self.sort_by = sort_by
-        self.app.state.add_callback('layer_icons', self._update_items)
+        self._app.state.add_callback('layer_icons', self._update_items)
         self.add_observe(viewer, self._on_viewer_selected_changed)
         self.add_observe(selected, self._update_items)
         self._update_items()
@@ -1978,7 +2224,7 @@ class LayerSelect(SelectPluginComponent):
 
         if self.filter_is_root:
             def filter_is_root(data):
-                return self.app._get_assoc_data_parent(data.label) is None
+                return self._app._get_assoc_data_parent(data.label) is None
 
             # ignore layers that are children in associations:
             self.add_filter(filter_is_root)
@@ -1988,13 +2234,13 @@ class LayerSelect(SelectPluginComponent):
             def has_correct_parent(data):
                 if self.filter_is_child_of == '':
                     return False
-                return self.app._get_assoc_data_parent(data.label) == self.filter_is_child_of
+                return self._app._get_assoc_data_parent(data.label) == self.filter_is_child_of
 
             self.add_filter(has_correct_parent)
 
         if self.has_children:
             def filter_has_children(data):
-                return len(self.app._get_assoc_data_children(data.label)) > 0
+                return len(self._app._get_assoc_data_children(data.label)) > 0
 
             self.add_filter(filter_has_children)
 
@@ -2010,9 +2256,9 @@ class LayerSelect(SelectPluginComponent):
         # viewer will likely be the viewer name in most cases, but viewer id in the case
         # of additional viewers in imviz.
         try:
-            return self.app.get_viewer(viewer)
+            return self._app.get_viewer(viewer)
         except TypeError:
-            return self.app.get_viewer_by_id(viewer)
+            return self._app.get_viewer_by_id(viewer)
 
     @property
     def viewer_objs(self):
@@ -2024,7 +2270,7 @@ class LayerSelect(SelectPluginComponent):
     def _is_valid_item(self, lyr):
         def not_child_layer(lyr):
             # ignore layers that are children in associations:
-            return self.app._get_assoc_data_parent(lyr.label) is None
+            return self._app._get_assoc_data_parent(lyr.label) is None
 
         def not_spatial_subset_in_profile_viewer(lyr):
             if self.plugin.config not in ('cubeviz', 'deconfigged'):
@@ -2046,17 +2292,45 @@ class LayerSelect(SelectPluginComponent):
         def is_dq_layer(lyr):
             return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
 
-        def has_wcs_if_image_viewer_pixel_linked(lyr):
+        def catalog_has_correct_coords_based_on_link_type(lyr):
+            """
+            For catalogs in image viewers, filter based on link type. Catalog
+            must have X+Y coordinate columns assigned if pixel linked, and RA+Dec
+            coordinate columns assigned if WCS linked.
+            """
+
+            # this filter is only relevant for image viewers
             if not np.all([viewer.__class__.__name__ == 'ImvizImageView'
                            for viewer in self.viewer_objs]):
                 return True
+
+            # non-catalog layers should remain available regardless of link type
             if getattr(lyr, 'meta', {}).get('_importer', '') != 'CatalogImporter':
-                # for now, allow any non-catalog layers to reproduce
-                # expected behavior from tests
                 return True
-            if self.app._align_by.lower() == 'pixels':
-                return getattr(lyr, 'coords', None) is not None
-            return True
+
+            comp_labels = [str(x) for x in lyr.component_ids()]
+
+            # if pixel linked, only show catalog layers if they have X and Y coords
+            if self._app._align_by.lower() == 'pixels':
+                x_col = lyr.meta.get('_jdaviz_loader_x_col')
+                y_col = lyr.meta.get('_jdaviz_loader_y_col')
+                return x_col in comp_labels and y_col in comp_labels
+
+            # if WCS linked, only show catalog layers if they have RA and Dec coords
+            elif self._app._align_by.lower() == 'wcs':
+                ra_col = lyr.meta.get('_jdaviz_loader_ra_col')
+                dec_col = lyr.meta.get('_jdaviz_loader_dec_col')
+                return ra_col in comp_labels and dec_col in comp_labels
+
+            # this should never be encountered, but just in case raise an error
+            # instead of just returning None so we know something went wrong
+            else:
+                raise ValueError("_align_by must be 'wcs' or 'pixels'")
+
+        def not_in_table_viewer(lyr):
+            # exclude layers when all selected viewers are table viewers
+            return not np.all([hasattr(viewer.state, 'hidden_components')
+                               for viewer in self.viewer_objs])
 
         return super()._is_valid_item(lyr, locals())
 
@@ -2112,7 +2386,7 @@ class LayerSelect(SelectPluginComponent):
                 "zorder": zorder,
                 "from_plugin": from_plugin,
                 "live_plugin_results": live_plugin_results,
-                "icon": self.app.state.layer_icons.get(layer_label),
+                "icon": self._app.state.layer_icons.get(layer_label),
                 "visible": visibilities[0] if len(list(set(visibilities))) == 1 else 'mixed',
                 "linewidth": linewidths[0] if len(list(set(linewidths))) == 1 else 'mixed',
                 "colors": np.unique(colors).tolist()}
@@ -2140,8 +2414,10 @@ class LayerSelect(SelectPluginComponent):
                 for layer in old_viewer.state.layers:
                     if is_wcs_only(layer.layer):
                         continue
-                    layer.remove_callback('color', self._update_items)
-                    layer.remove_callback('zorder', self._update_items)
+                    if hasattr(layer, 'color'):
+                        layer.remove_callback('color', self._update_items)
+                    if hasattr(layer, 'zorder'):
+                        layer.remove_callback('zorder', self._update_items)
                     if hasattr(layer, 'cmap'):
                         layer.remove_callback('cmap', self._update_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -2171,7 +2447,7 @@ class LayerSelect(SelectPluginComponent):
                         layer.add_callback('visible', self._update_items)
 
     def _on_subset_created(self, msg=None):
-        new_subset_label = self.app.data_collection.subset_groups[-1].label
+        new_subset_label = self._app.data_collection.subset_groups[-1].label
         viewers = self.viewer if isinstance(self.viewer, list) else [self.viewer]
         for current_viewer in viewers:
             if (viewer := self._get_viewer(current_viewer)) is None:
@@ -2185,13 +2461,28 @@ class LayerSelect(SelectPluginComponent):
                     # TODO: Add ability to add new item to self.items instead of recompiling
         self._update_items({'source': 'subset_added'})
 
+    def _on_subset_updated(self, msg):
+        # Skip update if a subset rename is in progress
+        if getattr(self._app, '_renaming_subset', False):
+            return
+        self._update_items()
+
     def _on_subset_renamed(self, msg):
         # Find the subset in self.items and update the label
-        for item in self.items:
-            if item['label'] == msg.old_label:
-                item['label'] = msg.new_label
-                break
-        self.send_state("items")
+        self._update_items_on_rename(msg.old_label, msg.new_label)
+
+    def _on_data_renamed(self, msg):
+        """
+        Handle data renamed events by updating items and selected.
+
+        Note: We update selected directly in _trait_values to bypass
+        observers, preventing plugins from re-processing data.
+        """
+        # Update selected if it matches the old label
+        self._update_selected_on_rename(msg.old_label, msg.new_label)
+
+        # Update items list
+        self._update_items_on_rename(msg.old_label, msg.new_label)
 
     def _on_data_added(self, msg=None):
         if msg is None or not hasattr(msg, 'data') or msg.data is None:
@@ -2243,14 +2534,39 @@ class LayerSelect(SelectPluginComponent):
         # and visibilities later within _layer_to_dict
         layer_labels = [
             layer.layer.label for layer in all_layers
-            if self.app.state.layer_icons.get(layer.layer.label) or
+            if self._app.state.layer_icons.get(layer.layer.label) or
             self.only_wcs_layers
         ]
 
         # if remove_subset provided, subset has already been removed, enforcing the removal here
         # so data menu updates accordingly
         unique_layer_labels = list(set(layer_labels) - {remove_subset})
-        layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
+
+        # During rename operations, preserve the existing order to prevent parent-child
+        # layers from being reordered
+        is_renaming = getattr(self._app, '_renaming_data', False)
+
+        if is_renaming and hasattr(self, 'items') and self.items:
+            # Preserve existing order by matching against current items
+            existing_labels = [item['label'] for item in self.items
+                               if item.get('label') not in self.manual_options]
+
+            # Build layer_items in the same order as existing items
+            layer_items = []
+            label_to_dict = {label: self._layer_to_dict(label)
+                             for label in unique_layer_labels}
+
+            # First, add items in the existing order
+            for existing_label in existing_labels:
+                if existing_label in label_to_dict:
+                    layer_items.append(label_to_dict[existing_label])
+
+            # Then add any new items at the end
+            for label in unique_layer_labels:
+                if label not in existing_labels:
+                    layer_items.append(label_to_dict[label])
+        else:
+            layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
 
         def _sort_by_icon(items_dict):
             icon = items_dict['icon']
@@ -2263,8 +2579,58 @@ class LayerSelect(SelectPluginComponent):
                 zorder = 0
             return -1 * zorder
 
-        if self.sort_by == 'zorder':
+        if is_renaming:
+            # Skip sorting during rename to preserve order
+            pass
+        elif self.sort_by == 'zorder':
             layer_items.sort(key=_sort_by_zorder)
+
+            # Group parent data with their children and place children below parents
+            # First, identify all parent-child relationships
+            parent_to_children = {}
+            child_to_parent = {}
+
+            if hasattr(self._plugin._app, '_get_assoc_data_children'):
+                for item in layer_items:
+                    label = item['label']
+                    children = self._plugin._app._get_assoc_data_children(label)
+                    if children:
+                        parent_to_children[label] = children
+                        for child in children:
+                            child_to_parent[child] = label
+
+            # Now build the grouped list, skipping children and adding them after their parent
+            grouped_items = []
+            processed = set()
+
+            for item in layer_items:
+                label = item['label']
+
+                # Skip if already processed
+                if label in processed:
+                    continue
+
+                # Skip if this is a child (it will be added when we process its parent)
+                if label in child_to_parent:
+                    continue
+
+                # Add the parent/standalone layer
+                grouped_items.append(item)
+                processed.add(label)
+
+                # Add any children immediately after
+                if label in parent_to_children:
+                    for child_label in parent_to_children[label]:
+                        for child_item in layer_items:
+                            if (child_item['label'] == child_label and
+                                    child_label not in processed):
+                                grouped_items.append(child_item)
+                                processed.add(child_label)
+                                break
+
+            # Only use grouped items if we actually reorganized something
+            if len(grouped_items) > 0:
+                layer_items = grouped_items
         else:  # icon
             layer_items.sort(key=_sort_by_icon)
 
@@ -2425,6 +2791,7 @@ class SubsetSelect(SelectPluginComponent):
       />
 
     """
+
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
                  dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
                  default_mode='default_text', subset_selected_changed_callback=None, mode=None,
@@ -2505,12 +2872,14 @@ class SubsetSelect(SelectPluginComponent):
                            handler=lambda msg: self._on_delete_subset(msg.subset))
         self.hub.subscribe(self, SubsetRenameMessage,
                            handler=lambda msg: self._on_subset_renamed(msg))
+        self.hub.subscribe(self, DataRenamedMessage,
+                           handler=self._update_items)
 
         self._initialize_choices()
 
     def _initialize_choices(self):
         # intialize any subsets that have already been created
-        for lyr in self.app.data_collection.subset_groups:
+        for lyr in self._app.data_collection.subset_groups:
             self._update_subset(lyr)
         self._clear_cache()
 
@@ -2617,23 +2986,9 @@ class SubsetSelect(SelectPluginComponent):
     def _on_subset_renamed(self, msg):
         if self.mode == 'rename:accept':
             pass
-        # See if we're renaming the selected subset
-        update_selected = False
-        if self.selected == msg.old_label:
-            update_selected = True
-
-        # Find the subset in self.items and update the label
-        for subset in self.items:
-            if subset['label'] == msg.old_label:
-                subset['label'] = msg.new_label
-                break
-
-        # Update the selected label if needed
-        if update_selected:
-            self.selected = msg.new_label
-
-        # Force the traitlet to update.
-        self.send_state('items')
+        # Update selected if needed, then update items list
+        self._update_selected_on_rename(msg.old_label, msg.new_label)
+        self._update_items_on_rename(msg.old_label, msg.new_label)
 
     def _rename_subset(self, old_label, new_label):
         self._on_rename(old_label, new_label)
@@ -2675,7 +3030,7 @@ class SubsetSelect(SelectPluginComponent):
             selected is None
         ):
             return None
-        return self.app.get_subsets(selected)
+        return self._app.get_subsets(selected)
 
     @cached_property
     def selected_obj(self):
@@ -2684,7 +3039,7 @@ class SubsetSelect(SelectPluginComponent):
         return self._get_selected_obj(self.selected)
 
     def _get_subset_state(self, subset):
-        subset_group = [s for s in self.app.data_collection.subset_groups if
+        subset_group = [s for s in self._app.data_collection.subset_groups if
                         s.label == subset]
         if len(subset_group) == 0:
             return None
@@ -2708,18 +3063,24 @@ class SubsetSelect(SelectPluginComponent):
 
         # Use Glue's to_mask method directly rather than translating the whole Data object to
         # output class (e.g., Spectrum)
-        for sg in self.app.data_collection.subset_groups:
+        glue_mask = None
+        for sg in self._app.data_collection.subset_groups:
             if sg.label == subset:
                 if hasattr(self.plugin, "cube_fit") and self.plugin.cube_fit:
                     # In this case we hack around an issue by using the 1D mask
-                    data = [d for d in self.app.data_collection if d.ndim == 1][0]
+                    data = [d for d in self._app.data_collection if d.ndim == 1][0]
                 else:
-                    data = self.app.data_collection[dataset]
+                    data = self._app.data_collection[dataset]
                 glue_mask = ~sg.subset_state.to_mask(data)
                 break
 
-        if self.app.data_collection[dataset].ndim == 3 and glue_mask.ndim == 1:
-            data = self.app.data_collection[dataset]
+        # If no subset group was found return True (no masking)
+        if glue_mask is None:
+            data = self._app.data_collection[dataset]
+            glue_mask = np.zeros(data.shape, dtype=bool)
+
+        if self._app.data_collection[dataset].ndim == 3 and glue_mask.ndim == 1:
+            data = self._app.data_collection[dataset]
             if data.meta['spectral_axis_index'] == 0:
                 glue_mask = np.expand_dims(glue_mask, (1, 2))
             glue_mask = np.broadcast_to(glue_mask, data.shape)
@@ -2735,6 +3096,12 @@ class SubsetSelect(SelectPluginComponent):
         return self._get_subset_mask()
 
     def _get_spatial_region(self, dataset, subset=None):
+        """
+        Retrieve the spatial region object for a subset.
+
+        Returns a SkyRegion if in Imviz with WCS alignment, otherwise a PixelRegion.
+        The subset label is stored in the returned region's metadata.
+        """
         if subset is None:
             subset = self.selected
             subset_state = self.selected_subset_state
@@ -2743,10 +3110,10 @@ class SubsetSelect(SelectPluginComponent):
         if subset_state is None:
             return None
 
-        type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
-        reg = self.app.get_subsets(subset_name=subset,
-                                   include_sky_region=type == 'sky_region',
-                                   spatial_only=True)[0][type]
+        type = 'sky_region' if self._app.config == 'imviz' and self._app._align_by == 'wcs' else 'region'  # noqa: E501
+        reg = self._app.get_subsets(subset_name=subset,
+                                    include_sky_region=type == 'sky_region',
+                                    spatial_only=True)[0][type]
         reg.meta['label'] = subset
 
         return reg
@@ -2957,6 +3324,7 @@ class ApertureSubsetSelect(SubsetSelect):
       />
 
     """
+
     def __init__(self, plugin, items, selected, selected_validity,
                  scale_factor, multiselect=None,
                  dataset=None, viewers=None, default_text=None,
@@ -3030,7 +3398,7 @@ class ApertureSubsetSelect(SubsetSelect):
 
     @property
     def image_viewers(self):
-        return [viewer for viewer in self.app._viewer_store.values()
+        return [viewer for viewer in self._app._viewer_store.values()
                 if isinstance(viewer, BqplotImageView)]
 
     @property
@@ -3060,10 +3428,38 @@ class ApertureSubsetSelect(SubsetSelect):
         return all_aperture_marks
 
     def _get_mark_coords_and_validate(self, viewer=None, selected=None):
+        """
+        Convert the aperture subset ``selected`` into polygon coordinates
+        (in pixel coordinates)for drawing as an overlay in the viewer, and also
+        validate that ``selected`` is a valid aperture that can be drawn.
+
+        If the subset(s) ``selected`` are converted from sky to pixel coordinates
+        using the WCS of ``viewer``. If ``viewer`` is not provided, then the app
+        default viewer is used.
+
+        Parameters
+        ----------
+        viewer : `~glue_jupyter.bqplot.image.BqplotImageView`, optional
+            (Only relevant when ``selected`` is a SkyRegion). The viewer from
+            which the WCS of the reference layer is obtained and used to convert
+            sky regions to pixel coordinates. If not provided, the app default
+            viewer is used.
+        selected : str or list of str, optional
+            Subset label(s) to validate and convert. If not provided, uses the
+            current selection in this component.
+
+        Returns
+        -------
+        x_coords, y_coords : `~numpy.ndarray` or list
+            Polygon coordinates for ``selected``, or an empty list if selection
+            is invalid.
+        validity : dict
+            A dictionary with keys 'is_aperture' (bool), which indicates whether
+            the current selection is a valid aperture that can be drawn, and if
+            not valid, 'aperture_message' (str) to indicate the reason.
+        """
         multiselect = getattr(self, 'multiselect', False)
 
-        if viewer is None:
-            viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
         if selected is None:
             selected = self.selected
             objs = self.selected_obj if multiselect else [self.selected_obj]
@@ -3086,8 +3482,7 @@ class ApertureSubsetSelect(SubsetSelect):
         # (or selected_spatial_region) will fail.
         if np.any([len(obj) > 1 for obj in objs]):
             validity = {'is_aperture': False,
-                        'aperture_message': 'composite subsets are not supported',
-                        'is_composite': True}
+                        'aperture_message': 'composite subsets are not supported'}
             return [], [], validity
 
         if multiselect or selected != self.selected:
@@ -3107,6 +3502,12 @@ class ApertureSubsetSelect(SubsetSelect):
             if isinstance(spatial_region, PixelRegion):
                 pixel_region = spatial_region
             else:
+                if viewer is None:
+                    # TODO: deconfigged jdaviz does not have a 'default' viewer,
+                    # viewer should be passed explicitly in this case. retaining this
+                    # fallback for now to avoid errors for config-specific calls
+                    # to this method.
+                    viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
                 wcs = getattr(viewer.state.reference_data, 'coords', None)
                 if wcs is None:
                     validity = {'is_aperture': False,
@@ -3172,7 +3573,7 @@ class ApertureSubsetSelect(SubsetSelect):
         # if subset is a composite subset, skip the other logic:
         if self.is_composite:
             [subset_group] = [
-                subset_group for subset_group in self.app.data_collection.subset_groups
+                subset_group for subset_group in self._app.data_collection.subset_groups
                 if subset_group.label == self.selected]
             mask_weights = subset_group.subsets[0].to_mask().astype(np.float32)
             return mask_weights
@@ -3362,13 +3763,14 @@ class PluginTableSelect(SelectPluginComponent):
     @observe('filters')
     def _update_items(self, *args):
         manual_items = [{'label': label} for label in self.manual_options]
-        self.items = manual_items + [{'label': k} for k, v in self.plugin.app._plugin_tables.items()
-                                     if self._is_valid_item(v._obj)]
+        self.items = (manual_items +
+                      [{'label': k} for k, v in self.plugin._app._plugin_tables.items()
+                       if self._is_valid_item(v._obj)])
         self._apply_default_selection(skip_if_current_valid=True)
 
     @cached_property
     def selected_obj(self):
-        return self.plugin.app._jdaviz_helper.plugin_tables.get(self.selected)
+        return self.plugin._app._jdaviz_helper.plugin_tables.get(self.selected)
 
     def _is_valid_item(self, table):
         def not_empty_table(table):
@@ -3475,14 +3877,14 @@ class PluginPlotSelect(SelectPluginComponent):
     @observe('filters')
     def _update_items(self, *args):
         manual_items = [{'label': label} for label in self.manual_options]
-        self.items = manual_items + [{'label': k} for k, v in self.plugin.app._plugin_plots.items()
+        self.items = manual_items + [{'label': k} for k, v in self.plugin._app._plugin_plots.items()
                                      if self._is_valid_item(v._obj)]
         self._apply_default_selection(skip_if_current_valid=True)
         self._clear_cache(*self._cached_properties)
 
     @cached_property
     def selected_obj(self):
-        return self.plugin.app._jdaviz_helper.plugin_plots.get(self.selected)
+        return self.plugin._app._jdaviz_helper.plugin_plots.get(self.selected)
 
     def _is_valid_item(self, plot):
         def not_empty_plot(plot):
@@ -3673,10 +4075,10 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             return None, None, None
 
         if per_pixel:
-            if self.app.config not in ('cubeviz', 'deconfigged'):
+            if self._app.config not in ('cubeviz', 'deconfigged'):
                 raise ValueError("per-pixel only supported for cubeviz/deconfigged")
-            full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected,
-                                                             use_display_units=True)
+            full_spectrum = self._app._jdaviz_helper.get_data(self.dataset.selected,
+                                                              use_display_units=True)
         else:
             full_spectrum = dataset.get_selected_spectrum(use_display_units=True)
 
@@ -3700,9 +4102,9 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
         if spectral_subset.selected == "Entire Spectrum":
             spectrum = full_spectrum
         else:
-            sr = self.app.get_subsets(spectral_subset.selected,
-                                      simplify_spectral=True,
-                                      use_display_units=True)
+            sr = self._app.get_subsets(spectral_subset.selected,
+                                       simplify_spectral=True,
+                                       use_display_units=True)
             spectrum = extract_region(full_spectrum, sr, return_single_spectrum=True)
             sr_lower = np.nanmin(spectrum.spectral_axis[spectrum.spectral_axis >= sr.lower])  # noqa
             sr_upper = np.nanmax(spectrum.spectral_axis[spectrum.spectral_axis <= sr.upper])  # noqa
@@ -3712,7 +4114,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             return spectrum, np.zeros_like(spectrum.flux.value), spectrum
 
         # compute continuum
-        if self.continuum_subset_selected == "Surrounding" and spectral_subset.selected == "Entire Spectrum": # noqa
+        if self.continuum_subset_selected == "Surrounding" and spectral_subset.selected == "Entire Spectrum":  # noqa
             # we know we'll just use the endpoints, so let's be efficient and not even
             # try extracting from the region
             continuum_mask = np.array([0, len(spectral_axis)-1])
@@ -3890,11 +4292,11 @@ class ViewerSelect(SelectPluginComponent):
 
     @property
     def ids(self):
-        return [item['id'] for item in self.items]
+        return [item['id'] for item in self.items if 'id' in item]
 
     @property
     def references(self):
-        return [item['reference'] for item in self.items]
+        return [item['reference'] for item in self.items if 'reference' in item]
 
     def _get_selected_item(self, selected):
         if selected in self.manual_options:
@@ -3923,7 +4325,7 @@ class ViewerSelect(SelectPluginComponent):
     def _get_selected_obj(self, selected, selected_id):
         if selected in self.manual_options or selected_id is None:
             return None
-        return self.app.get_viewer_by_id(selected_id)
+        return self._app.get_viewer_by_id(selected_id)
 
     @cached_property
     def selected_obj(self):
@@ -4062,7 +4464,7 @@ class ViewerSelectCreateNew(ViewerSelect):
     def user_api(self):
         return UserApiWrapper(self,
                               expose=('create_new', 'new_label', 'selected'),
-                              readonly=('choices'),
+                              readonly=('choices',),
                               repr_callable=self.__repr__)
 
     def _on_viewer_create_new_selected(self, msg={}):
@@ -4078,9 +4480,9 @@ class ViewerSelectCreateNew(ViewerSelect):
             return
 
         # ensure the default label is unique for the data-collection
-        self.new_label.default = self.app.return_unique_name(self.new_label.default, typ='viewer')
+        self.new_label.default = self._app.return_unique_name(self.new_label.default, typ='viewer')
 
-        for viewer in self.app._jdaviz_helper.viewers.keys():
+        for viewer in getattr(self._app._jdaviz_helper, 'viewers', {}).keys():
             if self.new_label.value.strip() == viewer:
                 self.new_label.invalid_msg = f"new_label='{self.new_label.value}' already in use"
                 return
@@ -4093,7 +4495,8 @@ class ViewerSelectCreateNew(ViewerSelect):
                 self.create_new.selected = ''
                 self.select_all()
             else:
-                self.selected = self.choices[0]
+                # Use parent class logic to respect default_mode
+                super().select_default()
         elif len(self.create_new.choices) > 0:
             self.create_new.selected = self.create_new.choices[0]
 
@@ -4190,18 +4593,19 @@ class DatasetSelect(SelectPluginComponent):
         self.hub.subscribe(self, DataCollectionAddMessage, handler=self._update_items)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._update_items)
         self.hub.subscribe(self, SubsetRenameMessage, handler=self._update_items)
+        self.hub.subscribe(self, DataRenamedMessage, handler=self._on_data_renamed)
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
         self.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
                            handler=lambda _: self._clear_cache('viewers_with_selected_visible'))
 
-        self.app.state.add_callback('layer_icons', lambda _: self._update_items())
+        self._app.state.add_callback('layer_icons', lambda _: self._update_items())
         # initialize items from original viewers
         self._update_items()
 
     @property
     def default_data_cls(self):
-        if self.app.config == 'imviz':
+        if self._app.config == 'imviz':
             return NDData
         if 'is_trace' in self.filters:
             return None
@@ -4211,7 +4615,7 @@ class DatasetSelect(SelectPluginComponent):
         if selected not in self.labels:
             # _apply_default_selection will override shortly anyways
             return None
-        return next((x for x in self.app.data_collection if x.label == selected))
+        return next((x for x in self._app.data_collection if x.label == selected))
 
     @cached_property
     def selected_dc_item(self):
@@ -4234,8 +4638,8 @@ class DatasetSelect(SelectPluginComponent):
             if self.selected not in self.labels:
                 # _apply_default_selection will override shortly anyways
                 return None
-            match = self.app._jdaviz_helper.get_data(data_label=self.selected,
-                                                     cls=self.get_data_cls)
+            match = self._app._jdaviz_helper.get_data(data_label=self.selected,
+                                                      cls=self.get_data_cls)
             if match is not None:
                 return match
         # handle the case of empty Application with no viewer, we'll just pull directly
@@ -4243,6 +4647,28 @@ class DatasetSelect(SelectPluginComponent):
         return self.get_object(cls=self.default_data_cls)
 
     def get_selected_spectrum(self, use_display_units=True):
+        """
+        Get the selected spectrum, optionally converted to display units.
+
+        Parameters
+        ----------
+        use_display_units : bool, optional
+            Whether to convert the spectrum to the current display units set in
+            the unit conversion plugin. Default is True.
+
+        Returns
+        -------
+        spectrum : `~specutils.Spectrum1D`
+            The selected spectrum, converted to display units if requested.
+
+        Notes
+        -----
+        If the spectral axis unit of data is pixels, and the
+        display unit is not pixels (or vice versa), no conversion is done to allow
+        for mixed pixel/world unit viewing (this logic is handled by
+        spectral_axis_conversion, which is called from this method when converting
+        the spectral axis).
+        """
         # retrieves the 1d spectrum
         if isinstance(self.selected_obj, NDData):
             shape = self.selected_obj.data.shape
@@ -4254,7 +4680,7 @@ class DatasetSelect(SelectPluginComponent):
             if self.plugin.config != 'cubeviz':
                 raise ValueError("extracting a spectrum from a cube only supported in cubeviz")
             # we need to get the 1d extracted spectrum for the cube
-            spec_extract = self.app._jdaviz_helper.plugins['3D Spectral Extraction']._obj
+            spec_extract = self._app._jdaviz_helper.plugins['3D Spectral Extraction']._obj
             sp = spec_extract._extract_in_new_instance(self.selected,
                                                        function=self._spectral_extraction_function,
                                                        add_data=False)
@@ -4269,7 +4695,7 @@ class DatasetSelect(SelectPluginComponent):
 
     @cached_property
     def viewers_with_selected_visible(self):
-        return [viewer for viewer in self.app._viewer_store.values()
+        return [viewer for viewer in self._app._viewer_store.values()
                 if self.selected in viewer.data_menu.data_labels_visible]
 
     def _is_valid_item(self, data):
@@ -4291,7 +4717,7 @@ class DatasetSelect(SelectPluginComponent):
             return hasattr(data, 'meta') and isinstance(data.meta, dict) and len(data.meta)
 
         def layer_in_viewers(data):
-            if not len(self.app.get_viewer_reference_names()):
+            if not len(self._app.get_viewer_reference_names()):
                 # then this is a bar Application object, so ignore this filter
                 return False
             for viewer in self.viewers:
@@ -4300,23 +4726,23 @@ class DatasetSelect(SelectPluginComponent):
             return False
 
         def layer_in_spectrum_viewer(data):
-            if not len(self.app.get_viewer_reference_names()):
+            if not len(self._app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return False
-            svs = [viewer for viewer in self.app._viewer_store.values()
+            svs = [viewer for viewer in self._app._viewer_store.values()
                    if _is_spectrum_viewer(viewer)]
             return data.label in [l.layer.label for sv in svs for l in sv.layers]  # noqa E741
 
         def layer_in_spectrum_2d_viewer(data):
-            if not len(self.app.get_viewer_reference_names()):
+            if not len(self._app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return False
-            s2dvs = [viewer for viewer in self.app._viewer_store.values()
+            s2dvs = [viewer for viewer in self._app._viewer_store.values()
                      if _is_spectrum_2d_viewer(viewer)]
             return data.label in [l.layer.label for s2dv in s2dvs for l in s2dv.layers]  # noqa E741
 
         def layer_in_flux_viewer(data):
-            if not len(self.app.get_viewer_reference_names()):
+            if not len(self._app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return False
             return data.label in [lyr.layer.label for lyr in self.flux_viewer.layers]  # noqa E741
@@ -4345,7 +4771,7 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 3
 
         def is_image_or_flux_cube(data):
-            return is_image(data) or is_flux_cube(data)
+            return (is_image(data) or is_flux_cube(data)) and not is_2d_spectrum_or_trace(data)
 
         def is_spectrum(data):
             return (len(data.shape) == 1
@@ -4361,8 +4787,8 @@ class DatasetSelect(SelectPluginComponent):
             return is_spectrum(data) or is_flux_cube(data)
 
         def is_flux_cube(data):
-            if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):
-                uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
+            if hasattr(self._app._jdaviz_helper, '_loaded_uncert_cube'):
+                uncert_label = getattr(self._app._jdaviz_helper._loaded_uncert_cube, 'label', None)
             else:
                 uncert_label = None
             return (data.meta.get('_importer') == 'Spectrum3DImporter'
@@ -4392,7 +4818,7 @@ class DatasetSelect(SelectPluginComponent):
 
         def not_child_layer(data):
             # ignore layers that are children in associations:
-            return self.app._get_assoc_data_parent(data.label) is None
+            return self._app._get_assoc_data_parent(data.label) is None
 
         def same_mosviz_row(data):
             # NOTE: requires calling _update_items on a change to row
@@ -4401,7 +4827,7 @@ class DatasetSelect(SelectPluginComponent):
             if meta is None:
                 return True
             data_row = meta.get('mosviz_row', None)
-            app_row = self.app.state.settings.get('mosviz_row', None)
+            app_row = self._app.state.settings.get('mosviz_row', None)
 
             if data_row is None or app_row is None:
                 return True
@@ -4417,12 +4843,12 @@ class DatasetSelect(SelectPluginComponent):
         # future improvement: don't recreate the entire list when msg is passed
         def _dc_to_dict(data):
             d = {'label': data.label,
-                 'icon': self.app.state.layer_icons.get(data.label)}
+                 'icon': self._app.state.layer_icons.get(data.label)}
 
             return d
 
         manual_items = [{'label': label} for label in self.manual_options]
-        self.items = manual_items + [_dc_to_dict(data) for data in self.app.data_collection
+        self.items = manual_items + [_dc_to_dict(data) for data in self._app.data_collection
                                      if self._is_valid_item(data)]
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
@@ -4431,6 +4857,19 @@ class DatasetSelect(SelectPluginComponent):
     def _on_global_display_unit_changed(self, msg=None):
         if msg.axis in ('spectral', 'spectral_y'):
             self._clear_cache('selected_spectrum')
+
+    def _on_data_renamed(self, msg):
+        """
+        Handle data renamed events by updating selected values.
+
+        Note: We do NOT call _update_items() here because the layer_icons
+        callback in app._rename_data will trigger it after this handler runs.
+        We just need to update 'selected' so that when _update_items runs
+        and calls _apply_default_selection, the selected value is valid
+        and won't be changed (which would trigger observers).
+        """
+        # Update selected label directly in _trait_values to bypass observers
+        self._update_selected_on_rename(msg.old_label, msg.new_label)
 
 
 class DatasetSelectMixin(VuetifyTemplate, HubListener):
@@ -4537,10 +4976,11 @@ class AutoTextField(BasePluginComponent):
     """
 
     def __init__(self, plugin, value, default, auto,
-                 invalid_msg):
+                 invalid_msg, unique_in_data_collection=False):
         super().__init__(plugin, value=value,
                          default=default, auto=auto,
                          invalid_msg=invalid_msg)
+        self._unique_in_data_collection = unique_in_data_collection
 
         if getattr(plugin, auto):
             # ensure value starts at the default value
@@ -4557,6 +4997,12 @@ class AutoTextField(BasePluginComponent):
     def __hash__(self):
         # defining __eq__ without defining __hash__ makes the object unhashable
         return super().__hash__()
+
+    def map_value(self, attr, value):
+        # Apply return_unique_name when setting default if unique_in_data_collection is True
+        if attr == 'default' and self._unique_in_data_collection and value:
+            return self._app.return_unique_name(value)
+        return value
 
     def _on_set_to_default(self, msg={}):
         if self.auto:
@@ -4596,6 +5042,57 @@ class AutoTextFieldMixin(VuetifyTemplate, HubListener):
         self.auto_label = AutoTextField(self, 'label',
                                         'label_default', 'label_auto',
                                         'label_invalid_msg')
+
+
+def _populate_viewer_items(plugin, supported_viewers):
+    """
+    Populate viewer_create_new_items and add viewer filters based on supported viewers.
+
+    This is a shared helper function used by both AddResults and importers.
+
+    Parameters
+    ----------
+    plugin : Plugin instance
+        The plugin that has the viewer component
+    supported_viewers : list of dict
+        List of supported viewer types from _get_supported_viewers()
+
+    Returns
+    -------
+    tuple
+        (viewer_create_new_items, viewer_filter_function)
+    """
+    # Filter for config-specific restrictions
+    if plugin._app.config == 'imviz':
+        # only allow image viewers
+        supported_viewers = [item for item in supported_viewers
+                             if item.get('reference') == 'imviz-image-viewer']
+
+    # Extract items that can be created (default to True if not specified)
+    # In non-deconfigged mode, hide the create new viewer options
+    if plugin._app.config == 'deconfigged':
+        viewer_create_new_items = [item.copy() for item in supported_viewers
+                                   if item.get('allow_create', True)]
+        # Remove 'allow_create' key from the items (it's not needed in the UI)
+        for item in viewer_create_new_items:
+            item.pop('allow_create', None)
+    else:
+        viewer_create_new_items = []
+
+    # Create filter function for existing viewers
+    def viewer_in_registry_names(viewer):
+        classes = []
+        for item in supported_viewers:
+            registry_entry = viewer_registry.members.get(item.get('reference'))
+            if registry_entry is not None:
+                cls = registry_entry.get('cls')
+                if cls is not None:
+                    classes.append(cls)
+        if not classes:
+            return False
+        return isinstance(viewer, tuple(classes))
+
+    return viewer_create_new_items, viewer_in_registry_names
 
 
 class AddResults(BasePluginComponent):
@@ -4659,6 +5156,9 @@ class AddResults(BasePluginComponent):
     def __init__(self, plugin, label, label_default, label_auto,
                  label_invalid_msg, label_overwrite,
                  add_to_viewer_items, add_to_viewer_selected,
+                 add_to_viewer_create_new_items, add_to_viewer_create_new_selected,
+                 add_to_viewer_label_value, add_to_viewer_label_default,
+                 add_to_viewer_label_auto, add_to_viewer_label_invalid_msg,
                  auto_update_result=None,
                  label_whitelist_overwrite=[]):
         super().__init__(plugin, label=label,
@@ -4666,6 +5166,12 @@ class AddResults(BasePluginComponent):
                          label_invalid_msg=label_invalid_msg, label_overwrite=label_overwrite,
                          add_to_viewer_items=add_to_viewer_items,
                          add_to_viewer_selected=add_to_viewer_selected,
+                         add_to_viewer_create_new_items=add_to_viewer_create_new_items,
+                         add_to_viewer_create_new_selected=add_to_viewer_create_new_selected,
+                         add_to_viewer_label_value=add_to_viewer_label_value,
+                         add_to_viewer_label_default=add_to_viewer_label_default,
+                         add_to_viewer_label_auto=add_to_viewer_label_auto,
+                         add_to_viewer_label_invalid_msg=add_to_viewer_label_invalid_msg,
                          auto_update_result=auto_update_result)
 
         # DataCollectionAdd/Delete are fired even if remain unchecked in all viewers
@@ -4677,12 +5183,37 @@ class AddResults(BasePluginComponent):
         # allows overwriting specific data entries not from the same plugin
         self.label_whitelist_overwrite = label_whitelist_overwrite
 
-        self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
-                                   manual_options=['None'],
-                                   default_mode=self._handle_default_viewer_selected)
+        self.viewer = ViewerSelectCreateNew(plugin,
+                                            add_to_viewer_items,
+                                            add_to_viewer_selected,
+                                            add_to_viewer_create_new_items,
+                                            add_to_viewer_create_new_selected,
+                                            add_to_viewer_label_value,
+                                            add_to_viewer_label_default,
+                                            add_to_viewer_label_auto,
+                                            add_to_viewer_label_invalid_msg,
+                                            multiselect=False,
+                                            manual_options=['None'],
+                                            default_mode=self._handle_default_viewer_selected)
 
         self.auto_label = AutoTextField(plugin, label, label_default, label_auto, label_invalid_msg)
         self.add_observe(label, self._on_label_changed)
+
+        # If plugin has _get_supported_viewers, use it to populate viewer items and filters
+        if hasattr(plugin, '_get_supported_viewers'):
+            try:
+                supported_viewers = plugin._get_supported_viewers()
+                viewer_create_new_items, viewer_filter = _populate_viewer_items(
+                    plugin, supported_viewers)
+                setattr(plugin, add_to_viewer_create_new_items, viewer_create_new_items)
+                # Only add the filter if the plugin doesn't manage filters manually
+                if not hasattr(plugin, '_update_viewer_filters'):
+                    self.viewer.add_filter(viewer_filter)
+                    self.viewer.select_default()
+            except Exception:  # nosec # pragma: no cover
+                # If automatic setup fails (e.g., during initialization before components
+                # are ready), the plugin can handle filters manually or it will be set later
+                pass
 
     def __repr__(self):
         if getattr(self, 'auto_update_result', None) is not None:
@@ -4721,7 +5252,7 @@ class AddResults(BasePluginComponent):
     def results_viewers(self):
         # return the viewers where the results will be added
         if self.label_overwrite:
-            return [v for v in self.app._viewer_store.values()
+            return [v for v in self._app._viewer_store.values()
                     if self.label in v.data_menu.data_labels_visible]
         else:
             return [self.viewer.selected_obj] if self.viewer.selected_obj else []
@@ -4740,7 +5271,7 @@ class AddResults(BasePluginComponent):
             self.label_invalid_msg = 'label must be provided'
             return
 
-        for data in self.app.data_collection:
+        for data in self._app.data_collection:
             if self.label == data.label:
                 if data.meta.get('plugin', None) == self._plugin._plugin_name or\
                         data.label in self.label_whitelist_overwrite:
@@ -4780,7 +5311,7 @@ class AddResults(BasePluginComponent):
             for viewer_select_item in self.add_to_viewer_items[1:]:
                 # index 0 is for "None"
                 viewer_ref = viewer_select_item['reference']
-                viewer = self.app.get_viewer(viewer_ref)
+                viewer = self._app.get_viewer(viewer_ref)
                 for layer in viewer.layers:
                     if layer.layer.label != label:
                         continue
@@ -4794,7 +5325,31 @@ class AddResults(BasePluginComponent):
                                 preserve_these[att] = getattr(layer.state, att)
                         preserved_attributes.append(preserve_these)
         else:
-            if self.add_to_viewer_selected == 'None':
+            # Check if user wants to create a new viewer
+            if self.viewer.create_new.selected:
+                # Create the new viewer first
+                viewer_reference = self.viewer.create_new.selected_item.get('reference')
+                viewer_label = self.viewer.new_label.value.strip()
+
+                viewer_dict = viewer_registry.members.get(viewer_reference)
+                if viewer_dict is None:
+                    raise ValueError(
+                        f"Viewer reference '{viewer_reference}' not found in viewer registry"
+                    )
+                viewer_cls = viewer_dict.get('cls')
+                self._app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self._app),
+                                         vid=viewer_label,
+                                         name=viewer_label,
+                                         open_data_menu_if_empty=False)
+
+                # Now set the selection to the newly created viewer
+                add_to_viewer_refs = [viewer_label]
+                add_to_viewer_vis = [True]
+                preserved_attributes = [{}]
+
+                # Reset create_new selection so it doesn't keep creating viewers
+                self.viewer.create_new.selected = ''
+            elif self.add_to_viewer_selected == 'None':
                 add_to_viewer_refs = []
                 add_to_viewer_vis = []
                 preserved_attributes = []
@@ -4803,16 +5358,16 @@ class AddResults(BasePluginComponent):
                 add_to_viewer_vis = [True]
                 preserved_attributes = [{}]
 
-        if label in self.app.data_collection:
+        if label in self._app.data_collection:
             for viewer_ref in add_to_viewer_refs:
-                self.app.remove_data_from_viewer(viewer_ref, label)
-            self.app.data_collection.remove(self.app.data_collection[label])
+                self._app.remove_data_from_viewer(viewer_ref, label)
+            self._app.data_collection.remove(self._app.data_collection[label])
 
         if not hasattr(data_item, 'meta'):
             data_item.meta = {}
         data_item.meta['plugin'] = self.plugin._plugin_name
-        if self.app.config == 'mosviz':
-            data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
+        if self._app.config == 'mosviz':
+            data_item.meta['mosviz_row'] = self._app.state.settings['mosviz_row']
 
         if getattr(self, 'auto_update_result', False):
             data_item.meta['_update_live_plugin_results'] = self.plugin.user_api.to_dict()
@@ -4821,34 +5376,35 @@ class AddResults(BasePluginComponent):
             subscriptions = getattr(self.plugin, 'live_update_subscriptions', def_subs)
             data_item.meta['_update_live_plugin_results']['_subscriptions'] = subscriptions
 
-        if self.app.config in CONFIGS_WITH_LOADERS and format is not None:
-            self.app._jdaviz_helper.load(data_item,
-                                         loader='object', format=format,
-                                         data_label=label, viewer=load_kwargs.pop('viewer', []),
-                                         **load_kwargs)
+        # Use loader when format is provided, ensures component types are set consistently
+        # by importers. Mosviz still uses app.add_data(), as does the sonify_data plugin.
+        if self._app.config in CONFIGS_WITH_LOADERS and format is not None:
+            self._app._jdaviz_helper.load(data_item,
+                                          loader='object', format=format,
+                                          data_label=label, viewer=load_kwargs.pop('viewer', []),
+                                          auto_extract=load_kwargs.pop('auto_extract', False),
+                                          **load_kwargs)
         else:
-            # NOTE: eventually remove this entirely once all plugins are set to go through
-            # the new loaders infrastructure above
-            self.app.add_data(data_item, label)
+            self._app.add_data(data_item, label)
 
         for viewer_ref, visible, preserved in zip(add_to_viewer_refs, add_to_viewer_vis,
                                                   preserved_attributes):
             # replace the contents in the selected viewer with the results from this plugin
-            this_viewer = self.app.get_viewer(viewer_ref)
+            this_viewer = self._app.get_viewer(viewer_ref)
             if replace is not None:
                 this_replace = replace
             else:
                 this_replace = isinstance(this_viewer, BqplotImageView)
 
-            if self.app._jdaviz_helper._in_batch_load:
+            if self._app._jdaviz_helper._in_batch_load:
                 # NOTE: this currently only stores the viewer reference, and so
                 # will not handle preserving layer options if overwriting an existing
                 # entry.
-                self.app._jdaviz_helper._delayed_show_in_viewer_labels[label] = viewer_ref
+                self._app._jdaviz_helper._delayed_show_in_viewer_labels[label] = viewer_ref
             else:
-                self.app.add_data_to_viewer(viewer_ref,
-                                            label,
-                                            visible=visible, clear_other_data=this_replace)
+                self._app.add_data_to_viewer(viewer_ref,
+                                             label,
+                                             visible=visible, clear_other_data=this_replace)
 
                 if preserved != {}:
                     layer_state = [layer.state for layer in this_viewer.layers if
@@ -4899,15 +5455,33 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
 
     add_to_viewer_items = List().tag(sync=True)
     add_to_viewer_selected = Unicode().tag(sync=True)
+    # False to always show dropdown instead of switch
+    show_viewer_switch = Bool(True).tag(sync=True)
+
+    add_to_viewer_create_new_items = List().tag(sync=True)
+    add_to_viewer_create_new_selected = Unicode().tag(sync=True)
+    add_to_viewer_label_value = Unicode().tag(sync=True)
+    add_to_viewer_label_default = Unicode().tag(sync=True)
+    add_to_viewer_label_auto = Bool(True).tag(sync=True)
+    add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
 
     auto_update_result = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # In deconfigged mode, always show full dropdown instead of simple switch
+        if self._app.config == 'deconfigged':
+            self.show_viewer_switch = False
         self.add_results = AddResults(self, 'results_label',
                                       'results_label_default', 'results_label_auto',
                                       'results_label_invalid_msg', 'results_label_overwrite',
                                       'add_to_viewer_items', 'add_to_viewer_selected',
+                                      'add_to_viewer_create_new_items',
+                                      'add_to_viewer_create_new_selected',
+                                      'add_to_viewer_label_value',
+                                      'add_to_viewer_label_default',
+                                      'add_to_viewer_label_auto',
+                                      'add_to_viewer_label_invalid_msg',
                                       'auto_update_result')
 
 
@@ -4933,6 +5507,7 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._processing_change_from_glue = False
         self._processing_change_to_glue = False
         self._cached_properties = ["subscribed_states", "subscribed_icons"]
+        self._layer_watch_viewers = []  # viewers with layer callbacks for table columns
 
         self._viewer_select = viewer_select
         self._layer_select = layer_select
@@ -5070,6 +5645,20 @@ class PlotOptionsSyncState(BasePluginComponent):
         if glue_name in ('x_att', 'y_att', 'z_att'):
             # return the name of the attribute, not the object
             return str(getattr(state, glue_name))
+        if glue_name == 'hidden_components':
+            # Return visible columns (all - hidden) as list of strings.
+            # Access viewer from the state's parent to get data components.
+            viewer = self._viewer_select.selected_obj
+            if isinstance(viewer, list):
+                viewer = viewer[0] if len(viewer) else None
+            if viewer is None or not hasattr(viewer, 'widget_table'):
+                return []
+            data = viewer.widget_table.data
+            if data is None:
+                return []
+            all_components = data.main_components + data.derived_components
+            hidden_names = [str(c) for c in getattr(state, glue_name, [])]
+            return [str(c) for c in all_components if str(c) not in hidden_names]
 
         return getattr(state, glue_name)
 
@@ -5089,12 +5678,41 @@ class PlotOptionsSyncState(BasePluginComponent):
                     {'text': 'Color',
                      'value': 'One color per layer',
                      'description': 'Select a color per-layer. Layers will be composited.'}]
+        if glue_name == 'hidden_components':
+            # Return all available columns as choices
+            viewer = self._viewer_select.selected_obj
+            if isinstance(viewer, list):
+                viewer = viewer[0] if len(viewer) else None
+            if viewer is None or not hasattr(viewer, 'widget_table'):
+                return []
+            data = viewer.widget_table.data
+            if data is None:
+                return []
+            all_components = data.main_components + data.derived_components
+            return [{'text': str(c), 'value': str(c)} for c in all_components]
 
         values, labels = _get_glue_choices(state, glue_name)
         return [{'text': l, 'value': v} for v, l in zip(values, labels)]
 
+    def _on_table_viewer_layers_changed(self, msg=None):
+        """Callback when layers change on a table viewer - refresh choices."""
+        # Only refresh choices if we're tracking hidden_components
+        glue_name = self._glue_name if isinstance(self._glue_name, str) else ''
+        if glue_name != 'hidden_components':
+            return
+        # Re-run viewer/layer changed to refresh choices
+        self._on_viewer_layer_changed()
+
     def _on_viewer_layer_changed(self, msg=None):
         self._clear_cache(*self._cached_properties)
+
+        # Clear layer watch callbacks from previously tracked viewers
+        for viewer in self._layer_watch_viewers:
+            try:
+                viewer.widget_table.unobserve(self._on_table_viewer_layers_changed, names=['data'])
+            except (ValueError, AttributeError):
+                pass
+        self._layer_watch_viewers = []
 
         # clear existing callbacks - we'll re-create those we need later
         for state in self.linked_states:
@@ -5102,6 +5720,15 @@ class PlotOptionsSyncState(BasePluginComponent):
             state.remove_callback(glue_name, self._on_glue_value_changed)
             if glue_name in ['contour_visible', 'bitmap_visible']:
                 state.remove_callback('visible', self._on_glue_layer_visible_changed)
+
+        # Add data callbacks to table viewers to refresh choices when data changes
+        glue_name_str = self._glue_name if isinstance(self._glue_name, str) else ''
+        if glue_name_str == 'hidden_components':
+            for viewer in self.subscribed_viewers:
+                if viewer is not None and hasattr(viewer, 'widget_table'):
+                    viewer.widget_table.observe(self._on_table_viewer_layers_changed,
+                                                names=['data'])
+                    self._layer_watch_viewers.append(viewer)
 
         in_subscribed_states = False
         icons = []
@@ -5140,7 +5767,7 @@ class PlotOptionsSyncState(BasePluginComponent):
                 ) or (
                     # update choices in `sync` if glue state choices are updated
                     # during glue Component add/rename/delete:
-                    glue_name in ('cmap_att', 'x_att', 'y_att')
+                    glue_name in ('cmap_att', 'x_att', 'y_att', 'hidden_components')
                 ):
                     # then we can access and populate/update the choices.
                     self.sync = {**self.sync, 'choices': self._get_glue_choices(state)}
@@ -5230,6 +5857,19 @@ class PlotOptionsSyncState(BasePluginComponent):
                 self.value = msg['old']
                 self._processing_change_to_glue = False
                 return
+            elif glue_name == 'hidden_components':
+                # Convert visible column names to hidden component IDs
+                # msg['new'] is list of visible column names (strings)
+                viewer = self._viewer_select.selected_obj
+                if isinstance(viewer, list):
+                    viewer = viewer[0] if len(viewer) else None
+                if viewer is not None and hasattr(viewer, 'widget_table'):
+                    data = viewer.widget_table.data
+                    if data is not None:
+                        all_components = data.main_components + data.derived_components
+                        visible_names = set(msg['new'])
+                        hidden = [c for c in all_components if str(c) not in visible_names]
+                        setattr(glue_state, glue_name, hidden)
             else:
                 setattr(glue_state, glue_name, msg['new'])
 
@@ -5415,16 +6055,28 @@ class Table(PluginSubcomponent):
     enable_clear = Bool(True).tag(sync=True)
     clear_btn_lbl = Unicode('Clear Table').tag(sync=True)
 
+    # Loader panel traitlets for "Load into App" functionality
+    loader_items = List([]).tag(sync=True)
+    loader_selected = Unicode('object').tag(sync=True)
+    loader_panel_ind = Any(None).tag(sync=True)  # None: close, 0: open
+    api_hints_enabled = Bool(False).tag(sync=True)
+    api_hints_obj = Unicode("").tag(sync=True)
+
     def __init__(self, plugin, name='table', selected_rows_changed_callback=None,
-                 clear_callback=None,
+                 clear_callback=None, enable_load_into_app=False,
                  *args, **kwargs):
         self._qtable = None
         self._table_name = name
         self._selected_rows_changed_callback = selected_rows_changed_callback
         self._clear_callback = clear_callback
+        self._enable_load_into_app = enable_load_into_app
+        self._object_loader = None
         super().__init__(plugin, 'Table', *args, **kwargs)
 
         plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
+
+        if self._enable_load_into_app:
+            self._setup_object_loader()
 
     @property
     def user_api(self):
@@ -5433,7 +6085,19 @@ class Table(PluginSubcomponent):
                   'select_none')
         if self.enable_clear:
             expose += ('clear_table',)
+        if self._enable_load_into_app:
+            expose += ('loaders',)
         return UserApiWrapper(self, expose)
+
+    @property
+    def loaders(self):
+        """Access loaders for loading the table into the app."""
+        if not self._enable_load_into_app:
+            raise AttributeError("loaders are not enabled for this table")
+        from ipywidgets.widgets import widget_serialization
+        loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
+                   for item in self.loader_items}
+        return loaders
 
     def default_value_for_column(self, colname=None, value=None):
         if colname in self._default_values_by_colname:
@@ -5454,6 +6118,74 @@ class Table(PluginSubcomponent):
     def _selected_rows_changed(self, msg):
         if self._selected_rows_changed_callback is not None:
             self._selected_rows_changed_callback(msg)
+
+    def _setup_object_loader(self):
+        """Set up the object loader for 'Load into App' functionality."""
+        # ensure the loaders are in registy
+        import jdaviz.core.loaders  # noqa
+
+        def close_accordion():
+            self.loader_panel_ind = None
+
+        ObjectResolver = loader_resolver_registry.members.get('object')
+        if ObjectResolver is None:
+            return
+
+        self._object_loader = ObjectResolver(
+            app=self._plugin._app,
+            close_callback=close_accordion
+        )
+        # Hide the resolver UI since we're using a fixed object (the table itself)
+        self._object_loader.hide_resolver = True
+        # Customize spinner text for plugin tables
+        self._object_loader._update_format_spinner_text = 'parsing table...'
+
+        self.loader_items = [{
+            'name': 'object',
+            'label': 'object',
+            'requires_api_support': self._object_loader.requires_api_support,
+            'widget': "IPY_MODEL_" + self._object_loader.model_id
+        }]
+        self.loader_selected = 'object'
+
+        # Link api_hints_enabled from parent plugin to keep it in sync
+        link((self._plugin, 'api_hints_enabled'), (self, 'api_hints_enabled'))
+        # Also link api_hints_enabled to the ObjectResolver so it respects the app toggle
+        link((self._plugin, 'api_hints_enabled'), (self._object_loader, 'api_hints_enabled'))
+        # Set api_hints_obj to reflect the table path (e.g., plg.table)
+        self.api_hints_obj = f"{self._plugin.api_hints_obj}.{self._table_name}"
+
+    @observe('loader_panel_ind')
+    def _loader_panel_ind_changed(self, change):
+        """Update the object loader with the current table when the panel is opened."""
+        if self.loader_panel_ind == 0 and self._enable_load_into_app:
+            self._update_object_loader()
+
+    @observe('items')
+    def _items_changed(self, change):
+        """Update the object loader when the table data changes."""
+        # Only update if the loader panel is currently open
+        if self.loader_panel_ind == 0 and self._enable_load_into_app:
+            # Defer the loader update to allow the UI to update first
+            self._schedule_loader_update()
+
+    def _schedule_loader_update(self):
+        """Schedule a deferred update to the object loader."""
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            loop.call_soon(self._update_object_loader)
+        except RuntimeError:
+            # No event loop running, update synchronously
+            self._update_object_loader()
+
+    def _update_object_loader(self):
+        """Update the object loader with the current table object."""
+        if self._object_loader is None:
+            return
+        table = self.export_table()
+        if table is not None:
+            self._object_loader.object = table
 
     def add_item(self, item):
         """
@@ -5772,7 +6504,7 @@ class TableMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, table_attr_name='table', *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.table = Table(self, name=table_attr_name)
+        self.table = Table(self, name=table_attr_name, enable_load_into_app=True)
         self.table_widget = 'IPY_MODEL_'+self.table.model_id
 
     def clear_table(self):
@@ -5911,9 +6643,9 @@ class Plot(PluginSubcomponent):
                 raise ValueError("histogram requires data entries with length > 1")
 
     def _remove_data(self, label, broadcast=True):
-        dc_entry = self.app.data_collection[label]
+        dc_entry = self._app.data_collection[label]
         self.viewer.remove_data(dc_entry)
-        self.app.data_collection.remove(dc_entry)
+        self._app.data_collection.remove(dc_entry)
 
         if broadcast:
             self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
@@ -5926,10 +6658,10 @@ class Plot(PluginSubcomponent):
 
     def _update_data(self, label, reset_lims=False, **kwargs):
         self._check_valid_components(**kwargs)
-        if label not in self.app.data_collection:
+        if label not in self._app.data_collection:
             self._add_data(label, **kwargs)
             return
-        data = self.app.data_collection[label]
+        data = self._app.data_collection[label]
 
         # if not provided, fallback on existing data
         shape_mismatch = False
@@ -5970,7 +6702,7 @@ class Plot(PluginSubcomponent):
                 # then we were only trying to hide anyways
                 # (note: this ignores any other passed styles)
                 return
-        dc_entry = self.app.data_collection[label]
+        dc_entry = self._app.data_collection[label]
         if kwargs['visible']:
             if label not in self.layers.keys():
                 self.viewer.add_data(dc_entry)
@@ -5995,7 +6727,7 @@ class Plot(PluginSubcomponent):
     def _add_data(self, label, broadcast=True, **kwargs):
         self._check_valid_components(**kwargs)
         data = Data(label=label, **kwargs)
-        dc = self.app.data_collection
+        dc = self._app.data_collection
         dc.append(data)
         dc_entry = dc[label]
 

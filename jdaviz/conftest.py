@@ -27,13 +27,18 @@ from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
                                               _image_nddata_wcs)
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
-from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
-    SpectrumListImporter,
-    SpectrumListConcatenatedImporter
-)
-from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin
-from jdaviz.core.registries import tray_registry
+
+from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
+                                                   memlog_configure,
+                                                   memlog_runtest_setup,
+                                                   memlog_runtest_teardown,
+                                                   memlog_runtest_makereport,
+                                                   memlog_runtest_logreport,
+                                                   memlog_terminal_summary)
+from jdaviz.pytest_utilities.pytest_remote_skip import (remote_skip_addoption,
+                                                        remote_skip_runtest_makereport)
+from jdaviz.pytest_utilities.pytest_socket_management import cleanup_leaked_sockets
+
 
 if not NUMPY_LT_2_0:
     np.set_printoptions(legacy="1.25")
@@ -41,125 +46,88 @@ if not NUMPY_LT_2_0:
 SPECTRUM_SIZE = 10  # length of spectrum
 
 
-@pytest.fixture
-def fake_classes_in_registries():
+# ============================================================================
+# Pytest plugins
+# - Memory logging (memlog): imported from pytest_memlog.py
+# - Remote failure skipping: imported from pytest_remote_skip.py
+# In CI, these utilities may have already been called from the root
+# conftest.py, so we avoid errors by catching the ValueError pytest throws.
+# ============================================================================
+def pytest_addoption(parser):
     """
-    This fixture is meant to be used in cases where a test
-    needs to check items in the registry. It provides a
-    list of fake items in the various registries that could
-    potentially throw off those tests if not accounted for.
+    Register pytest options.
     """
-    return ('Test Fake Plugin',
-            'Test Fake 1D Spectrum List',
-            'Test Fake 1D Spectrum List Concatenated')
+    try:
+        memlog_addoption(parser)
+        remote_skip_addoption(parser)
+    except ValueError:
+        pass
 
 
-@tray_registry('test-fake-plugin', label='Test Fake Plugin', category='core')
-class FakePlugin(PluginTemplateMixin):
-    template = ''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
-@loader_importer_registry('Test Fake 1D Spectrum List')
-class FakeSpectrumListImporter(SpectrumListImporter):
-    """A fake importer for testing/convenience purposes only.
-    Mostly used to hot-update input for clean code/speed purposes.
-
-    Usage Example:
-    x = FakeSpectrumListImporter(app=deconfigged_helper.app,
-                                 resolver=deconfigged_helper.loaders['object']._obj,
-                                 input=premade_spectrum_list)
+def pytest_runtest_setup(item):
     """
-    template = ''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.new_default_data_label = None
-
-    @property
-    def input(self):
-        return super().input
-
-    @input.setter
-    def input(self, value):
-        self._input = value
-
-    @property
-    def default_data_label_from_resolver(self):
-        if hasattr(self, 'new_default_data_label'):
-            return self.new_default_data_label
-        return None
-
-
-@loader_importer_registry('Test Fake 1D Spectrum List Concatenated')
-class FakeSpectrumListConcatenatedImporter(SpectrumListConcatenatedImporter):
-    """A fake importer for testing/convenience purposes only.
-    Mostly used to hot-update input for clean code/speed purposes."""
-    template = ''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.new_default_data_label = None
-
-    @property
-    def input(self):
-        return super().input
-
-    @input.setter
-    def input(self, value):
-        self._input = value
-
-    @property
-    def default_data_label_from_resolver(self):
-        if hasattr(self, 'new_default_data_label'):
-            return self.new_default_data_label
-        return None
-
-
-def _catch_validate_known_exceptions(exceptions_to_catch,
-                                     stdout_text_to_check=''):
+    Setup hook that records memory before test.
     """
-    Context manager to catch known exceptions in CI tests. Validates the exception
-    by checking for specific text in stdout. If matched, the test is skipped. If
-    no text is provided, any occurrence of the exception will trigger the skip. If
-    the match fails, the exception is re-raised.
+    try:
+        memlog_runtest_setup(item)
+    except ValueError:
+        pass
 
-    Use as:
-    with _catch_known_exception(Exceptions):  # or via fixture catch_known_exceptions
-        catalog_plg.search(error_on_fail=True)
 
-    Parameters
-    ----------
-    exceptions_to_catch : Exception or tuple of Exceptions to catch.
-    stdout_text_to_check : str, optional
-        Text to match in stdout via substring matching.
-        Default is '' (matches any string).
+def pytest_runtest_teardown(item, nextitem):
     """
-    import contextlib
-    import io
-
-    @contextlib.contextmanager
-    def _cm():
-        buf = io.StringIO()
-        try:
-            with contextlib.redirect_stdout(buf):
-                yield buf
-        except exceptions_to_catch as etc:
-            stdout_text = buf.getvalue()
-            if stdout_text_to_check in stdout_text or isinstance(etc, TimeoutError):
-                pytest.skip(str(etc))
-            else:
-                raise
-
-    return _cm()
+    Teardown hook that records memory after test.
+    """
+    try:
+        memlog_runtest_teardown(item, nextitem)
+    except ValueError:
+        pass
 
 
-@pytest.fixture(scope='function')
-def catch_validate_known_exceptions():
-    """Context manager fixture to catch and validate known exceptions in testing."""
-    return _catch_validate_known_exceptions
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """
+    Combined hook wrapper for memlog and remote failure handling.
+
+    This hook:
+    1. Attaches memory measurements to report user_properties (memlog)
+    2. Handles remote data test failures (--skip-remote-failures option)
+    """
+    outcome = yield
+    report = outcome.get_result()
+
+    memlog_runtest_makereport(item, call, report)
+    remote_skip_runtest_makereport(item, call, report)
+
+
+def pytest_runtest_logreport(report):
+    """
+    Log report hook that collects memory measurements from user_properties.
+    """
+    try:
+        memlog_runtest_logreport(report)
+    except ValueError:
+        pass
+
+
+def pytest_terminal_summary(terminalreporter, config=None):
+    """
+    Terminal summary hook that prints memlog summary.
+    """
+    try:
+        memlog_terminal_summary(terminalreporter, config)
+    except ValueError:
+        pass
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """
+    Hook that runs at the end of each pytest session.
+
+    In xdist mode, this runs in each worker AND the controller process,
+    ensuring all sockets are cleaned up before exit.
+    """
+    cleanup_leaked_sockets()
 
 
 @pytest.fixture
@@ -269,6 +237,62 @@ def sky_coord_only_source_catalog():
     # additional columns
     catalog['magnitude'] = [12.5, 14.2, 13.8, 15.1, 16.3] * u.mag
     catalog['flux'] = [1.23e-12, 8.45e-13, 9.87e-13, 6.12e-13, 4.33e-13] * u.erg / (u.cm**2 * u.s)
+    catalog['source_id'] = ['src_001', 'src_002', 'src_003', 'src_004', 'src_005']
+
+    return catalog
+
+
+@pytest.fixture
+def pixel_coord_source_catalog():
+    """
+    Create a sample source catalog with pixel coordinates (x, y) for testing
+    pixel-linked catalog workflows.
+
+    The catalog contains 5 sources spread across a 128x128 pixel image field.
+    """
+    catalog = Table()
+
+    # x and y pixel coordinates
+    catalog['x'] = [50.0, 70.0, 30.0, 80.0, 25.0]
+    catalog['y'] = [50.0, 60.0, 40.0, 75.0, 55.0]
+
+    # additional columns
+    catalog['magnitude'] = [12.5, 14.2, 13.8, 15.1, 16.3] * u.mag
+    catalog['flux'] = [1.23e-12, 8.45e-13, 9.87e-13, 6.12e-13, 4.33e-13] * u.erg / (u.cm**2 * u.s)
+    catalog['source_id'] = ['src_001', 'src_002', 'src_003', 'src_004', 'src_005']
+
+    return catalog
+
+
+@pytest.fixture
+def wcs_linked_mixed_coord_catalog(image_2d_wcs):
+    """
+    Create a source catalog with BOTH sky coordinates AND pixel coordinates,
+    where the pixel coordinates are intentionally from a different image frame.
+
+    This simulates a common case: loading a catalog derived from one image
+    (e.g., f090w) into a viewer showing a different image (e.g., f277w),
+    where the catalog's xcentroid/ycentroid are in the original image's pixel
+    frame but the viewer should use RA/Dec -> WCS conversion for correct placement.
+
+    Sky coordinates match the image_2d_wcs fixture, but pixel coordinates are
+    offset by 1000 pixels to simulate being from a different image.
+    """
+    catalog = Table()
+
+    # RA/Dec that are valid for image_2d_wcs (within 100x100 pixel field)
+    catalog['ra'] = [337.50293, 337.52763, 337.52844, 337.47438, 337.47432] * u.deg
+    catalog['dec'] = [-20.81483, -20.80438, -20.82707, -20.82683, -20.80342] * u.deg
+
+    # Pixel coordinates that are INTENTIONALLY WRONG for image_2d_wcs.
+    # These represent pixel coords from the catalog's source image (a different image),
+    # offset by ~1000 pixels to clearly not match the viewer's reference frame.
+    # The correct pixel coords for image_2d_wcs would be ~50-80, but these are ~1050-1080.
+    catalog['xcentroid'] = [1050.0, 1070.0, 1030.0, 1080.0, 1025.0]
+    catalog['ycentroid'] = [1050.0, 1060.0, 1040.0, 1075.0, 1055.0]
+
+    # additional columns
+    catalog['magnitude'] = [12.5, 14.2, 13.8, 15.1, 16.3] * u.mag
     catalog['source_id'] = ['src_001', 'src_002', 'src_003', 'src_004', 'src_005']
 
     return catalog
@@ -693,6 +717,13 @@ except ImportError:
 
 
 def pytest_configure(config):
+    """
+    Configure pytest, including memlog initialization.
+    """
+    # Initialize memlog
+    memlog_configure(config)
+
+    # Configure pytest header modules
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
     PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'
