@@ -20,8 +20,7 @@
     <div v-if="!input_has_extensions || (extension_selected && extension_selected.length > 0 && no_common_col_msg === '')">
       <j-plugin-section-header>Select coordinate columns</j-plugin-section-header>
 
-      TODO: invert for dark!
-      <div style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
+      <div class="invert-if-dark" style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
         Select RA/Dec and/or X/Y pair to enable import. Pixel positions
         are w.r.t the image viewer reference data.
       </div>
