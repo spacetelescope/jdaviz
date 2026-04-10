@@ -208,6 +208,8 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @observe('is_active', 'show_subset_preview', 'aperture_selected')
     def _update_subset_previews(self, msg={}):
         # remove preview marks for non-selected subsets
+        if self.integration_viewer is None or self.integration_viewer.figure is None:
+            return
 
         for mark in self.integration_viewer.figure.marks:
             if isinstance(mark, PluginLine) and mark.label is not None:

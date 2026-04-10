@@ -83,7 +83,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.sound_device_indexes = None
             self.refresh_device_list()
 
-        self.add_to_viewer_selected = 'flux-viewer'
+        self._set_default_viewer_selected()
+        self.observe(self._on_add_to_viewer_items_changed, names=['add_to_viewer_items'])
         self.sonified_cube = None
         self.sonified_viewers = []
         self.sonification_wl_ranges = None
@@ -101,6 +102,16 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
+
+    def _set_default_viewer_selected(self):
+        """Set add_to_viewer_selected to 'flux-viewer' if it is a valid choice."""
+        valid_labels = [item.get('label') for item in self.add_to_viewer_items]
+        if 'flux-viewer' in valid_labels and self.add_to_viewer_selected in ('', 'None'):
+            self.add_to_viewer_selected = 'flux-viewer'
+
+    def _on_add_to_viewer_items_changed(self, change):
+        """Defer setting the default viewer until choices are populated."""
+        self._set_default_viewer_selected()
 
     def _get_supported_viewers(self):
         """Return viewer types that can display sonified data."""
