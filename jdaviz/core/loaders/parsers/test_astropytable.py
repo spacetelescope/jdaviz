@@ -52,12 +52,20 @@ def test_format_edge_cases(deconfigged_helper, tmp_path):
     assert parser.is_text_file is False
     assert parser.input_ext_format is None
 
-    # input is non-text file with no file extension
+    # input is non-text file with file extension
     binfile = tmp_path / 'data.bin'
     binfile.write_bytes(b'\x00\x01\x80\xff' * 256)
     parser = AstropyTableParser(deconfigged_helper._app, str(binfile))
     assert parser.is_text_file is False
     assert parser.input_ext_format is None
+
+    # input is non-text file with no file extension
+    binfile = tmp_path / 'data'
+    binfile.write_bytes(b'\x00\x01\x80\xff' * 256)
+    parser = AstropyTableParser(deconfigged_helper._app, str(binfile))
+    assert parser.is_text_file is False
+    with pytest.raises(ValueError):
+        _ = parser.input_ext_format
 
 
 @pytest.mark.parametrize(
