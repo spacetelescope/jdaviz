@@ -149,13 +149,7 @@ class AstropyTableParser(BaseParser):
             # exception_text is for the devs.
             # If some format fails on import but Astropy doesn't raise an exception,
             # it's likely a logic issue with selecting a format in input_ext_format.
-            exception_text = ''
-
-            if len(table) <= 1:
-                exception_text = f'Format {fmt}: Table is empty'
-
-            elif len(table.colnames) <= 1:
-                exception_text = f'Format {fmt}: Table has no columns'
+            exception_text = '' if len(table) else f'Format {fmt}: Table is empty'
 
         except Exception as e:
             table = QTable()
@@ -167,7 +161,7 @@ class AstropyTableParser(BaseParser):
                 # .dat/.txt/.tsv
                 try:
                     table = QTable.read(self.input, format='ascii')
-                    exception_text = ''
+                    exception_text = '' if len(table) else f'Format {fmt}: Table is empty'
                 except Exception as ee:
                     exception_text += f';\nAlso tried format {fmt}: {ee}'
 
