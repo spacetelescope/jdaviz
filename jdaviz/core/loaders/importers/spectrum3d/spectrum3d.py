@@ -337,7 +337,10 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                     "No primary data extension selected. Please select a FLUX extension."
                 )
         else:
-            self.import_disabled_msg = ""
+            # Extension is selected - only clear the message if it's about extension selection,
+            # not if it's about flux cube limits
+            if "No primary data extension selected" in self.import_disabled_msg:
+                self.import_disabled_msg = ""
 
     @observe('viewer_selected')
     def _update_dq_add_to_flux_viewer(self, change={}):
