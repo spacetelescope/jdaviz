@@ -22,7 +22,7 @@
                     :icon="data_menu_open ? 'mdi-close' : viewer_icons[viewer_id]"
                     :visible="true"
                     :is_subset="false"
-                    :colors="['#205f76']"
+                    :colors="['#939393']"
                     :linewidth="0"
                     :cmap_samples="cmap_samples"
                     btn_style="margin-bottom: 0px"
@@ -326,7 +326,8 @@
         hover_api_hint: '',
         lock_hover_api_hint: false,
         debounce_timer: null,
-        is_updating_layers: false
+        is_updating_layers: false,
+        max_legend_items: 4
       }
     },
     computed: {
@@ -334,12 +335,12 @@
         return this.layer_items.filter(item => item.visible);
       },
       visible_layer_items_limited: function() {
-        return this.visible_layer_items.slice(0, 4);
+        return this.visible_layer_items.slice(0, this.max_legend_items);
       },
       has_more_visible_items: function() {
         // Use a debounced check to prevent flicker during rapid updates (blinking)
         // If layer_items is changing frequently, suppress showing the ellipsis
-        return this.visible_layer_items.length > 4 && !this.is_updating_layers;
+        return this.visible_layer_items.length > this.max_legend_items && !this.is_updating_layers;
       }
     },
     watch: {
@@ -370,8 +371,27 @@
         element = element.parentElement;
       }
       this.jupyterLabCell = this.$el.closest(".jp-Notebook-cell");
+
+      // Dynamically adjust legend truncation based on viewer height.
+      // Must observe the actual viewer container (the v-card that wraps
+      // the figure), not the absolutely-positioned legend overlay whose
+      // size is driven by its own content.
+      this.$nextTick(() => {
+        this._updateMaxLegendItems();
+        const container = this._getViewerContainer();
+        if (container) {
+          this._resizeObserver = new ResizeObserver(() => {
+            this._updateMaxLegendItems();
+          });
+          this._resizeObserver.observe(container);
+        }
+      });
     },
     beforeDestroy() {
+      if (this._resizeObserver) {
+        this._resizeObserver.disconnect();
+        this._resizeObserver = null;
+      }
       let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
       if (element === null) {
         return
@@ -384,6 +404,20 @@
       }
     },
     methods: {
+      _getViewerContainer() {
+        // Walk up from the component root to find the viewer's content
+        // area — the v-card in viewer_window.vue that has an explicit
+        // height tracking the viewer panel size.
+        return this.$el && this.$el.closest('.v-card');
+      },
+      _updateMaxLegendItems() {
+        const container = this._getViewerContainer();
+        if (!container) return;
+        const viewerHeight = container.getBoundingClientRect().height;
+        const itemHeight = 30;
+        // Reserve 2 slots: 1 for the viewer icon header, 1 for the "more" indicator
+        this.max_legend_items = Math.max(1, Math.floor(viewerHeight / itemHeight) - 2);
+      },
       isSafari() {
         const ua = navigator.userAgent;
         return ua.includes('Safari') && !ua.match(/Chrome|Chromium|Edg/);
