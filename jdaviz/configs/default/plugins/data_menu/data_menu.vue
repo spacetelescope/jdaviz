@@ -22,7 +22,7 @@
                     :icon="data_menu_open ? 'mdi-close' : viewer_icons[viewer_id]"
                     :visible="true"
                     :is_subset="false"
-                    :colors="['#939393']"
+                    :colors="['#205f76']"
                     :linewidth="0"
                     :cmap_samples="cmap_samples"
                     btn_style="margin-bottom: 0px"
@@ -57,11 +57,11 @@
                 <span style="float: right; display: inline-block">
                   <j-layer-viewer-icon-stylized
                     tooltip="More data layers exist. Click to view all."
-                    :label="'...'"
-                    :icon="'mdi-dots-horizontal'"
+                    :label="'more_data_layers'"
+                    :icon="'mdi-menu-open'"
                     :visible="true"
                     :is_subset="false"
-                    :colors="['#939393']"
+                    :colors="['#205f76']"
                     :linewidth="0"
                     :cmap_samples="cmap_samples"
                     btn_style="margin-bottom: 0px"
