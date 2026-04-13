@@ -120,6 +120,52 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     specviz2d_helper.load_data(spectrum2d)
 
 
+def test_spectrum3d_deselected_extensions(deconfigged_helper):
+    """Test that deselecting uncertainty/mask extensions doesn't cause errors."""
+    from astropy.nddata import StdDevUncertainty
+    
+    # Create a 3D spectrum with uncertainty and mask
+    flux_data = np.ones((5, 10, 10)) * u.Jy
+    uncertainty_data = StdDevUncertainty(np.ones((5, 10, 10)) * 0.1)
+    mask_data = np.zeros((5, 10, 10), dtype=bool)
+    spectral_axis = np.arange(5) * u.um
+    
+    spectrum3d = Spectrum(
+        flux=flux_data,
+        spectral_axis=spectral_axis,
+        uncertainty=uncertainty_data,
+        mask=mask_data
+    )
+    
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = spectrum3d
+    ldr.format = '3D Spectrum'
+    
+    # Verify extensions are available
+    assert 'spectrum.uncertainty' in ldr.importer.unc_extension.choices
+    assert 'spectrum.mask' in ldr.importer.mask_extension.choices
+    
+    # Deselect uncertainty and mask extensions
+    ldr.importer.unc_extension.selected = ''
+    ldr.importer.mask_extension.selected = ''
+    
+    # This should not raise an AttributeError
+    ldr.load()
+    
+    # Verify only flux cube was loaded (plus auto-extracted 1d spectrum)
+    assert len(deconfigged_helper._app.data_collection) == 2
+    # The first should be the flux cube, the second should be the auto-extracted spectrum
+    assert '3D Spectrum' in deconfigged_helper._app.data_collection[0].label
+    
+    # Verify no uncertainty cube was created
+    unc_labels = [d.label for d in deconfigged_helper._app.data_collection if 'UNC' in d.label]
+    assert len(unc_labels) == 0
+    
+    # Verify no mask cube was created  
+    mask_labels = [d.label for d in deconfigged_helper._app.data_collection if 'MASK' in d.label]
+    assert len(mask_labels) == 0
+
+
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 @pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'

@@ -455,7 +455,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         if not getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None):
             self._app._jdaviz_helper._loaded_flux_cube = self._app.data_collection[data_label]
 
-        if self.has_unc and not self.flux_only:
+        if self.has_unc and not self.flux_only and self.output.uncertainty is not None:
             # TODO: detect if uncertainty exists and hide section from UI
             uncert = Spectrum(spectral_axis=self.output.spectral_axis,
                               flux=self.output.uncertainty.represent_as(StdDevUncertainty).quantity,
@@ -468,7 +468,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # TODO: this will need to be removed when removing restriction of a single flux cube
             self._app._jdaviz_helper._loaded_uncert_cube = self._app.data_collection[unc_data_label]
 
-        if self.has_mask and not self.flux_only:
+        if self.has_mask and not self.flux_only and self.output.mask is not None:
             mask = Spectrum(spectral_axis=self.output.spectral_axis,
                             flux=self.output.mask * u.dimensionless_unscaled,
                             wcs=self.output.wcs,

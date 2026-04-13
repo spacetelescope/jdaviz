@@ -709,8 +709,34 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             return [self._spectrum_from_roman_asdf(extension, meta) for extension in extensions]
         elif self.input_type == 'specutils:spectrum':
             spectrum = self.input
-            # TODO: remove uncertainty or mask if requested
-            return [spectrum]
+            # Check if uncertainty or mask should be excluded based on extension selection
+            include_uncertainty = self.unc_extension.selected not in ('', 'None')
+            include_mask = self.mask_extension.selected not in ('', 'None')
+            
+            # If all components are included, return the original spectrum
+            if include_uncertainty and include_mask:
+                return [spectrum]
+            
+            # Otherwise, create a new spectrum with only the selected components
+            kwargs = {
+                'spectral_axis': spectrum.spectral_axis,
+                'flux': spectrum.flux,
+                'meta': spectrum.meta,
+            }
+            
+            if hasattr(spectrum, 'wcs') and spectrum.wcs is not None:
+                kwargs['wcs'] = spectrum.wcs
+            
+            if hasattr(spectrum, 'spectral_axis_index') and spectrum.spectral_axis_index is not None:
+                kwargs['spectral_axis_index'] = spectrum.spectral_axis_index
+            
+            if include_uncertainty and spectrum.uncertainty is not None:
+                kwargs['uncertainty'] = spectrum.uncertainty
+            
+            if include_mask and spectrum.mask is not None:
+                kwargs['mask'] = spectrum.mask
+            
+            return [Spectrum(**kwargs)]
         elif self.input_type == 'specutils:spectrumlist':
             # return list of specutils.Spectrum objects
             selected_spectra = (self.extension.selected_obj if self.multiselect
