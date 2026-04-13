@@ -324,20 +324,16 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         Check if an extension is selected. If not, disable import with a message.
         This is only checked if no flux cube is already loaded.
         """
-        # If extension is cleared/empty, we're only loading uncertainty/mask, not flux
-        # So clear any flux cube limit message
+        # Check if extension is empty/not selected
         if hasattr(self, 'extension') and not self.extension.selected:
-            self.import_disabled_msg = ""
-            return
-
-        loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
-        if loaded_flux_cube is not None and loaded_flux_cube in self._app.data_collection:
-            # Flux cube message takes precedence (unless extension selection is cleared)
-            return
-
-        # For non-multiselect, extension.selected is a string (not a list), so check if empty/falsy
-        if hasattr(self, 'extension') and not self.extension.selected:
-            self.import_disabled_msg = "Please select an extension to import."
+            # If a flux cube is already loaded, allow loading without flux extension
+            # (this would be loading only uncertainty/mask data)
+            loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
+            if loaded_flux_cube is not None and loaded_flux_cube in self._app.data_collection:
+                self.import_disabled_msg = ""
+            else:
+                # No flux cube loaded yet, and no flux extension selected - this is invalid
+                self.import_disabled_msg = "No primary data extension selected. Please select a FLUX extension."
         else:
             self.import_disabled_msg = ""
 

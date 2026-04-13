@@ -701,41 +701,47 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if self.input_type == 'fits:hdulist':
             hdulist = self.input
             hdus = self.extension.selected_obj if self.multiselect else [self.extension.selected_obj]  # noqa
+            # Validate that at least one extension is selected
+            if not hdus or hdus[0] is None:
+                raise ValueError("No primary data extension selected. Please select a FLUX extension.")
             return [self._spectrum_from_hdu(hdulist, hdu) for hdu in hdus]
         elif self.input_type == 'asdf:roman':
             roman = self.input["roman"]
             meta = roman["meta"]
             extensions = self.extension.selected_obj if self.multiselect else [self.extension.selected_obj]  # noqa
+            # Validate that at least one extension is selected
+            if not extensions or extensions[0] is None:
+                raise ValueError("No primary data extension selected. Please select a data extension.")
             return [self._spectrum_from_roman_asdf(extension, meta) for extension in extensions]
         elif self.input_type == 'specutils:spectrum':
             spectrum = self.input
             # Check if uncertainty or mask should be excluded based on extension selection
             include_uncertainty = self.unc_extension.selected not in ('', 'None')
             include_mask = self.mask_extension.selected not in ('', 'None')
-            
+
             # If all components are included, return the original spectrum
             if include_uncertainty and include_mask:
                 return [spectrum]
-            
+
             # Otherwise, create a new spectrum with only the selected components
             kwargs = {
                 'spectral_axis': spectrum.spectral_axis,
                 'flux': spectrum.flux,
                 'meta': spectrum.meta,
             }
-            
+
             if hasattr(spectrum, 'wcs') and spectrum.wcs is not None:
                 kwargs['wcs'] = spectrum.wcs
-            
+
             if hasattr(spectrum, 'spectral_axis_index') and spectrum.spectral_axis_index is not None:
                 kwargs['spectral_axis_index'] = spectrum.spectral_axis_index
-            
+
             if include_uncertainty and spectrum.uncertainty is not None:
                 kwargs['uncertainty'] = spectrum.uncertainty
-            
+
             if include_mask and spectrum.mask is not None:
                 kwargs['mask'] = spectrum.mask
-            
+
             return [Spectrum(**kwargs)]
         elif self.input_type == 'specutils:spectrumlist':
             # return list of specutils.Spectrum objects
