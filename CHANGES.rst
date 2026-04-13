@@ -84,6 +84,8 @@ New Features
 
 - Style tweaks to scatter axis ticks and labels. [#4139]
 
+- Add support for unit conversions in aperture photometry plugin for images. [#4136]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the

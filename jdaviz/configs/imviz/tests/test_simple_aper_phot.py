@@ -5,6 +5,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
+from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils import minversion
 from astropy.utils.data import get_pkg_data_filename
@@ -20,6 +21,7 @@ from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, BaseImviz_WCS_NoWCS
 from jdaviz.core.custom_units_and_equivs import PIX2
+from jdaviz.core.unit_conversion_utils import flux_conversion_general
 
 photutils.future_column_names = True
 if minversion(photutils, '2.3.1.dev'):
@@ -631,3 +633,118 @@ def test_aper_phot_load_table_into_data_collection(imviz_helper, image_2d_wcs):
     assert len(loaded_table) == 2
     assert loaded_table['id'][0] == 1
     assert loaded_table['id'][1] == 2
+
+
+# Units that can be converted without spectral density equivalencies
+# (i.e., same physical type, just different scale)
+IMAGE_SB_UNITS = ['MJy / sr', 'Jy / sr', 'mJy / sr']
+
+
+def _compare_image_table_units(orig_tab, new_tab, orig_unit, new_unit):
+    """
+    Compare two photometry tables with different units row by row,
+    and verify the units are as expected and values are equivalent once converted.
+    """
+    assert len(orig_tab) == len(new_tab)
+
+    for i, row in enumerate(orig_tab):
+        new_unit_str = new_tab[i]['unit'] or '-'
+        orig_unit_str = row['unit'] or '-'
+        if new_unit_str != '-' and orig_unit_str != '-':
+            new_u = u.Unit(new_unit_str)
+            new_val = float(new_tab[i]['result']) * new_u
+
+            orig_u = u.Unit(orig_unit_str)
+            orig_val = float(row['result']) * orig_u
+
+            # Convert original value to new unit
+            orig_converted = flux_conversion_general(orig_val.value,
+                                                     orig_u,
+                                                     new_u,
+                                                     equivalencies=[])
+
+            # Low rtol for match since phot table is rounded
+            assert_quantity_allclose(orig_converted, new_val, rtol=1e-03)
+
+
+@pytest.mark.parametrize("sb_unit", [u.Unit(x) for x in IMAGE_SB_UNITS])
+@pytest.mark.parametrize("new_sb_unit", [u.Unit(x) for x in IMAGE_SB_UNITS])
+def test_deconfigged_image_aperphot_unit_conversions(deconfigged_helper, image_2d_wcs,
+                                                     sb_unit, new_sb_unit):
+    """
+    Test deconfigged aperture photometry with unit conversions for 2D images
+    in surface brightness units (e.g., MJy/sr, Jy/sr).
+
+    The aperture photometry plugin should respect the choice of flux unit
+    selected in the Unit Conversion plugin, and inputs and results should
+    be converted based on selection.
+    """
+    if new_sb_unit == sb_unit:  # skip 'converting' to same unit
+        return
+
+    # Get string representations
+    sb_unit_str = sb_unit.to_string()
+    new_sb_unit_str = new_sb_unit.to_string()
+
+    # Create 2D image data with specified surface brightness unit
+    # Use values that are easy to verify (e.g., array of 10s)
+    data_values = np.ones((10, 10)) * 10.0
+    data = NDData(data_values, wcs=image_2d_wcs, unit=sb_unit_str)
+
+    # Load data into deconfigged
+    deconfigged_helper.load(data, data_label='test_image')
+
+    # Get plugins
+    st = deconfigged_helper.plugins['Subset Tools']
+    ap = deconfigged_helper.plugins['Aperture Photometry']
+    uc = deconfigged_helper.plugins['Unit Conversion']
+
+    # Load aperture - simple rectangle for predictable results
+    aper = RectanglePixelRegion(center=PixCoord(x=5, y=5), width=2, height=2)
+    st.import_region(aper, combination_mode='new')
+
+    # Select dataset and aperture in plugin
+    ap.dataset.selected = 'test_image[DATA]'
+    ap.aperture.selected = 'Subset 1'
+
+    # Check initial unit traitlets are set correctly
+    assert ap._obj.display_unit == sb_unit_str
+    # Get the flux unit (without the solid angle) for flux_scaling_display_unit
+    flux_unit = sb_unit * u.sr
+    assert ap._obj.flux_scaling_display_unit == flux_unit.to_string()
+
+    # Set background to manual for easier comparison
+    ap.background.selected = 'Manual'
+    ap.background_value = 1.0
+    ap.flux_scaling = 1.0
+
+    # Do aperture photometry with initial units
+    ap._obj.vue_do_aper_phot()
+    orig_tab = Table(ap._obj.results)
+
+    # Change to new unit via Unit Conversion plugin
+    # The flux unit dropdown controls the numerator of the surface brightness
+    new_flux_unit = new_sb_unit * u.sr
+    uc.flux_unit.selected = new_flux_unit.to_string()
+
+    # Verify display units in aperture phot plugin reflect the change
+    assert ap._obj.display_unit == new_sb_unit_str
+    assert ap._obj.flux_scaling_display_unit == new_flux_unit.to_string()
+
+    # Verify background and flux scaling were converted to new unit
+    # Convert expected value from original to new unit
+    expected_bg = (1.0 * flux_unit).to(new_flux_unit).value
+    assert_allclose(ap.background_value, expected_bg, rtol=1e-5)
+
+    expected_flux_scaling = (1.0 * flux_unit).to(new_flux_unit).value
+    assert_allclose(ap._obj.flux_scaling, expected_flux_scaling, rtol=1e-5)
+
+    # Do aperture photometry with new units
+    ap._obj.vue_do_aper_phot()
+    new_tab = Table(ap._obj.results)
+
+    # Make sure results actually changed (not just reusing old results)
+    assert not np.all(orig_tab == new_tab)
+
+    # Compare output tables row by row
+    _compare_image_table_units(orig_tab, new_tab, sb_unit, new_sb_unit)

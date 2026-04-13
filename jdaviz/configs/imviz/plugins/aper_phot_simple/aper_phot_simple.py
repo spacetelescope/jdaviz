@@ -118,6 +118,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     cube_slice = Unicode("").tag(sync=True)
     is_cube = Bool(False).tag(sync=True)
 
+    is_image = Bool(False).tag(sync=True)
+
     # surface brightness display unit
     display_unit = Unicode("").tag(sync=True)
 
@@ -169,6 +171,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
         self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
+
+        # initalize cube_wave with None
+        self._cube_wave = None
 
         # Custom dataset filters for Cubes
         def valid_cube_datasets(data):
@@ -226,12 +231,26 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def _has_display_unit_support(self):
         """
-        Currently, unit conversion in this plugin is only supported for cubes.
-        When this is expanded to images in deconfigged, this logic will need
-        to change.
-        """
+        Unit conversion in this plugin is supported for --
 
-        return self.config != 'imviz' and self.display_unit != '' and self.is_cube
+        - Cubes in cubeviz and deconfigged
+        - 2D images in imviz and deconfigged
+
+        -- that have a valid display unit set.
+        """
+        if self.display_unit == '':
+            return False
+
+        # plugin supports all images in imviz and deconfigged as well
+        # as 1d collapsed cubes from cubeviz
+        if self.is_image and self.config in ('imviz', 'deconfigged', 'cubeviz'):
+            return True
+
+        # cubes are supported in cubeviz and deconfigged
+        if self.is_cube and self.config in ('cubeviz', 'deconfigged'):
+            return True
+
+        return False
 
     def _on_slice_changed(self, msg):
         self.cube_slice = f"{msg.value:.3e} {msg.value_unit}"
@@ -252,12 +271,18 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             datasets = [self.dataset.selected_dc_item]
 
         self.is_cube = False
+        self.is_image = False
         for dataset in datasets:
-            # This assumes all cubes, or no cubes.
-            # 'Is cube' here means is it a cube, or a collapsed cube.
-            if dataset.ndim > 2 or dataset.meta.get('plugin', None) == 'Collapse':
+
+            # is_cube is just the inverse of is_image, but tracking them
+            # individually for readability
+            if dataset.ndim > 2:
                 self.is_cube = True
-                break
+                self.is_image = False
+            else:
+                if dataset.ndim == 2:
+                    self.is_image = True
+                    self.is_cube = False
 
         if self.multiselect:
             # defaults are applied within the loop if the auto-switches are enabled,
@@ -570,7 +595,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 data = self.dataset.selected_dc_item
 
         comp = data.get_component(data.main_components[0])
-        if data.ndim > 2:
+        if self.is_cube:
             spectral_axis_index = getattr(data, "meta", {}).get("spectral_axis_index", 0)
             if self._cube_slice_ind is not None:
                 if spectral_axis_index == 0:
@@ -685,7 +710,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # we can use the pre-cached value
             data = self.dataset.selected_dc_item
 
-        if data.ndim > 2:
+        if self.is_cube:
             if "spectral_axis_index" in getattr(data, "meta", {}):
                 spectral_axis_index = data.meta["spectral_axis_index"]
             else:
@@ -778,7 +803,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         except ValueError:  # Clearer error message
             raise ValueError('Missing or invalid background value')
 
-        if data.ndim > 2:
+        if self.is_cube:
             if spectral_axis_index == 0:
                 comp_data = comp.data[self._cube_slice_ind, :, :]
             else:
@@ -794,7 +819,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         if hasattr(reg, 'to_pixel'):
             sky_center = reg.center
-            if data.ndim > 2:
+            if self.is_cube:
                 ycenter, xcenter = w.world_to_pixel(self._cube_wave, sky_center)[1]
             else:  # "imviz"
                 xcenter, ycenter = w.world_to_pixel(sky_center)
@@ -802,7 +827,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             xcenter = reg.center.x
             ycenter = reg.center.y
             if data.coords is not None:
-                if data.ndim > 2:
+                if self.is_cube:
                     if spectral_axis_index == 0:
                         sky = w.pixel_to_world(xcenter, ycenter, self._cube_slice_ind)
                     else:
@@ -886,13 +911,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         if include_pixarea_fac:
             # convert pixarea, which is in arcsec2/pix2 to the display solid angle unit / pix2
-            if data.ndim == 2:  # 2D images
-                # can remove once unit conversion implemented in imviz and
-                # display_solid_angle_unit traitlet is set, for now it will always be the data units
-                display_solid_angle_unit = check_if_unit_is_per_solid_angle(comp.units,
-                                                                            return_unit=True)
 
-            elif self._has_display_unit_support:
+            if self._has_display_unit_support:
                 display_solid_angle_unit = u.Unit(self.display_solid_angle_unit)
 
             else:
@@ -941,12 +961,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
 
         if self._has_display_unit_support:
-            if data.ndim > 2:
-                slice_val = self._cube_wave
-            else:
-                slice_val = u.Quantity(np.nan, self._cube_wave.unit)
 
-            phot_table.add_column(slice_val, name="slice_wave", index=29)
+            phot_table.add_column(self._cube_wave if self.is_cube else np.nan,
+                                  name="slice_wave", index=29)
 
             if comp.units:
 
@@ -956,7 +973,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
                 # equivalencies for unit conversion, will never be flux<>sb
                 # so only need spectral_density
-                equivs = u.spectral_density(self._cube_wave)
+                equivs = u.spectral_density(getattr(self, '_cube_wave', None))
 
                 if display_unit != '':
                     if phot_table['background'].unit != display_unit:
@@ -1021,8 +1038,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 plot_display_unit = None
 
             if self.current_plot_type == "Curve of Growth":
-                if data.ndim > 2:
-                    self.plot.figure.title = f'Curve of growth from aperture center at {slice_val:.4e}'  # noqa: E501
+                if self.is_cube:
+                    self.plot.figure.title = f'Curve of growth from aperture center at {self._cube_wave:.4e}'  # noqa: E501
                     eqv = u.spectral_density(self._cube_wave)
                 else:
                     self.plot.figure.title = 'Curve of growth from aperture center'
@@ -1045,8 +1062,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     self.plot.figure.axes[1].label = img_unit or 'Value'
 
                 if self.current_plot_type == "Radial Profile":
-                    if data.ndim > 2:
-                        self.plot.figure.title = f'Radial profile from aperture center at {slice_val:.4e}'  # noqa: E501
+                    if self.is_cube:
+                        self.plot.figure.title = f'Radial profile from aperture center at {self._cube_wave:.4e}'  # noqa: E501
                         eqv = u.spectral_density(self._cube_wave)
                     else:
                         self.plot.figure.title = 'Radial profile from aperture center'
@@ -1059,8 +1076,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     self.plot.update_style('profile', line_visible=True, color='gray', size=32)
 
                 else:  # Radial Profile (Raw)
-                    if data.ndim > 2:
-                        self.plot.figure.title = f'Raw radial profile from aperture center at {slice_val:.4e}'  # noqa: E501
+                    if self.is_cube:
+                        self.plot.figure.title = f'Raw radial profile from aperture center at {self._cube_wave:.4e}'  # noqa: E501
                     else:
                         self.plot.figure.title = 'Raw radial profile from aperture center'
                     x_data, y_data = _radial_profile(
@@ -1134,8 +1151,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             elif key == 'aperture_sum_mag' and x is not None:
                 tmp.append({'function': key, 'result': f'{x:.3f}', 'unit': unit})
             elif key == 'slice_wave':
-                if data.ndim > 2:
-                    tmp.append({'function': key, 'result': f'{slice_val.value:.4e}', 'unit': slice_val.unit.to_string()})  # noqa: E501
+                if self.is_cube:
+                    tmp.append({'function': key, 'result': f'{self._cube_wave.value:.4e}', 'unit': getattr(self._cube_wave, 'unit', '-')})  # noqa: E501
+                else:
+                    tmp.append({'function': key, 'result': np.nan, 'unit': '-'})
             else:
                 tmp.append({'function': key, 'result': str(x), 'unit': unit})
 
