@@ -46,7 +46,7 @@ class About(PluginTemplateMixin):
     def show_popup(self):
         self._app.force_open_about = True
 
-    def register_downstream_package(self, name, version):
+    def register_downstream_package(self, name, version, abbreviation=None):
         """
         Register a downstream package to be listed in the About panel.
 
@@ -56,10 +56,15 @@ class About(PluginTemplateMixin):
             The display name of the downstream package.
         version : str
             The installed version string.
+        abbreviation : str, optional
+            Short label shown as a badge on the version button in the app bar.
+            Defaults to the first two characters of ``name`` in lowercase.
         """
-        entry = {'name': name, 'version': version}
+        entry = {'name': name, 'version': version,
+                 'abbreviation': abbreviation or name[:2].lower()}
         if entry not in self.downstream_packages:
             self.downstream_packages = self.downstream_packages + [entry]
+            self._app.state.downstream_packages = self._app.state.downstream_packages + [entry]
 
     @property
     def user_api(self):

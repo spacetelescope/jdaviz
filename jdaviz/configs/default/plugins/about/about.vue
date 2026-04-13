@@ -11,17 +11,8 @@
     <v-row>
       <v-text-field class="v-messages v-messages__message text--secondary"
         v-model="jdaviz_version"
-        label="Version"
+        label="jdaviz version"
         hint="Version of installed Jdaviz."
-        readonly>
-      </v-text-field>
-    </v-row>
-
-    <v-row v-for="pkg in downstream_packages" :key="pkg.name">
-      <v-text-field class="v-messages v-messages__message text--secondary"
-        :value="pkg.version"
-        :label="pkg.name + ' Version'"
-        :hint="'Version of installed ' + pkg.name + '.'"
         readonly>
       </v-text-field>
     </v-row>
@@ -51,6 +42,15 @@
         For further assistance, please contact the
 
       </j-docs-link>
+    </v-row>
+
+    <v-row v-for="pkg in downstream_packages" :key="pkg.name">
+      <v-text-field class="v-messages v-messages__message text--secondary"
+        :value="pkg.version"
+        :label="pkg.name + ' version'"
+        :hint="'Version of installed ' + pkg.name + '.'"
+        readonly>
+      </v-text-field>
     </v-row>
 
   </j-tray-plugin>
