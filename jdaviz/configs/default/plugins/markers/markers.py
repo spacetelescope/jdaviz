@@ -487,10 +487,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 for viewer_id, viewer in self._app._viewer_store.items()
                 if hasattr(viewer, 'figure')}
 
-    @property
-    def coords_info(self):
-        return self._app.session.application._tools['g-coords-info']
-
     @observe('is_active')
     def _on_is_active_changed(self, *args):
         if self.disabled_msg:

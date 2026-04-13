@@ -58,7 +58,6 @@ def _register_new_app_hook(hook):
         import jdaviz
         jdaviz.register_new_app_hook(my_package.patch_app)
     """
-    global _new_app_hooks
     _new_app_hooks.append(hook)
     for app in _apps:
         hook(app)

@@ -777,8 +777,7 @@ class PluginTemplateMixin(TemplateMixin):
     _plugin_description = Unicode("").tag(sync=True)  # noqa shorter description of plugin, displayed below title in menu
 
     # Downstream configs may set _docs_link_fmt to a format string using {vdocs} to override
-    # the default docs link without subclassing. e.g.:
-    #   SubsetTools._docs_link_fmt = "https://lcviz.readthedocs.io/en/{vdocs}/plugins.html#subset-tools"
+    # the default docs link without subclassing.
     _docs_link_fmt = ''
 
     @observe('vdocs')
