@@ -32,8 +32,8 @@
                 <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">{{viewer_reference || viewer_id}}</span>
               </div>
 
-              <div v-for="item in layer_items" class="viewer-label">
-                <v-tooltip v-if="item.visible" left :open-delay="300">
+              <div v-for="(item, idx) in visible_layer_items_limited" :key="item.label + '-' + idx" class="viewer-label">
+                <v-tooltip left :open-delay="300">
                   <template v-slot:activator="{ on: labelOn, attrs: labelAttrs }">
                     <span v-bind="labelAttrs" v-on="labelOn" style="float: right; display: inline-block">
                       <j-layer-viewer-icon-stylized
@@ -53,9 +53,25 @@
                   <span>{{ item.label }}</span>
                 </v-tooltip>
               </div>
+              <div v-if="has_more_visible_items" class="viewer-label">
+                <span style="float: right; display: inline-block">
+                  <j-layer-viewer-icon-stylized
+                    tooltip="More data layers exist. Click to view all."
+                    :label="'...'"
+                    :icon="'mdi-dots-horizontal'"
+                    :visible="true"
+                    :is_subset="false"
+                    :colors="['#939393']"
+                    :linewidth="0"
+                    :cmap_samples="cmap_samples"
+                    btn_style="margin-bottom: 0px"
+                    @click="() => {data_menu_open = !data_menu_open}"
+                  />
+                </span>
+              </div>
             </div>
           </template>
-          <v-list :id="'dm-content-' + viewer_id" style="width: 400px" class="overflow-y-auto">
+          <v-list :id="'dm-content-' + viewer_id" style="width: 400px; max-height: 600px; overflow-y: auto" class="overflow-y-auto">
             <v-list-item v-if="api_hints_enabled" style="min-height: 12px">
               <v-list-item-content>
                 <span class="api-hint">
@@ -308,7 +324,38 @@
       return {
         data_menu_open: false,
         hover_api_hint: '',
-        lock_hover_api_hint: false
+        lock_hover_api_hint: false,
+        debounce_timer: null,
+        is_updating_layers: false
+      }
+    },
+    computed: {
+      visible_layer_items: function() {
+        return this.layer_items.filter(item => item.visible);
+      },
+      visible_layer_items_limited: function() {
+        return this.visible_layer_items.slice(0, 4);
+      },
+      has_more_visible_items: function() {
+        // Use a debounced check to prevent flicker during rapid updates (blinking)
+        // If layer_items is changing frequently, suppress showing the ellipsis
+        return this.visible_layer_items.length > 4 && !this.is_updating_layers;
+      }
+    },
+    watch: {
+      layer_items: function() {
+        // Set flag to suppress ellipsis during rapid updates
+        this.is_updating_layers = true;
+        clearTimeout(this.debounce_timer);
+        this.debounce_timer = setTimeout(() => {
+          this.is_updating_layers = false;
+        }, 100);  // 100ms debounce to catch rapid blinking updates
+      },
+      force_open_menu: function (val) {
+        if (val) {
+          this.data_menu_open = true;
+          this.force_open_menu = false;
+        }
       }
     },
     mounted() {
@@ -334,14 +381,6 @@
           element.removeEventListener("scroll", this.onScroll);
         }
         element = element.parentElement;
-      }
-    },
-    watch: {
-      force_open_menu: function (val) {
-        if (val) {
-          this.data_menu_open = true;
-          this.force_open_menu = false;
-        }
       }
     },
     methods: {
