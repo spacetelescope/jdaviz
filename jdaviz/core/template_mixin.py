@@ -2379,6 +2379,13 @@ class LayerSelect(SelectPluginComponent):
                                         and getattr(layer, 'visible' if not is_sonified else 'audible'))  # noqa
                     linewidths.append(getattr(layer.state, 'linewidth', 0))
 
+        # For subsets, use OR logic: visible if visible on any parent data layer
+        # For data, use the existing logic (all same or mixed)
+        if is_subset and len(visibilities) > 0:
+            visible = any(visibilities)
+        else:
+            visible = visibilities[0] if len(list(set(visibilities))) == 1 else 'mixed'
+
         return {"label": layer_label,
                 "is_subset": is_subset,
                 "is_sonified": is_sonified,
@@ -2387,7 +2394,7 @@ class LayerSelect(SelectPluginComponent):
                 "from_plugin": from_plugin,
                 "live_plugin_results": live_plugin_results,
                 "icon": self._app.state.layer_icons.get(layer_label),
-                "visible": visibilities[0] if len(list(set(visibilities))) == 1 else 'mixed',
+                "visible": visible,
                 "linewidth": linewidths[0] if len(list(set(linewidths))) == 1 else 'mixed',
                 "colors": np.unique(colors).tolist()}
 
