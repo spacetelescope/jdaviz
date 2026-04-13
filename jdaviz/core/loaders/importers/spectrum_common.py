@@ -703,7 +703,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             hdus = self.extension.selected_obj if self.multiselect else [self.extension.selected_obj]  # noqa
             # Validate that at least one extension is selected
             if not hdus or hdus[0] is None:
-                raise ValueError("No primary data extension selected. Please select a FLUX extension.")
+                raise ValueError(
+                    "No primary data extension selected. Please select a FLUX extension."
+                )
             return [self._spectrum_from_hdu(hdulist, hdu) for hdu in hdus]
         elif self.input_type == 'asdf:roman':
             roman = self.input["roman"]
@@ -711,7 +713,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             extensions = self.extension.selected_obj if self.multiselect else [self.extension.selected_obj]  # noqa
             # Validate that at least one extension is selected
             if not extensions or extensions[0] is None:
-                raise ValueError("No primary data extension selected. Please select a data extension.")
+                raise ValueError(
+                    "No primary data extension selected. Please select a data extension."
+                )
             return [self._spectrum_from_roman_asdf(extension, meta) for extension in extensions]
         elif self.input_type == 'specutils:spectrum':
             spectrum = self.input
@@ -733,7 +737,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             if hasattr(spectrum, 'wcs') and spectrum.wcs is not None:
                 kwargs['wcs'] = spectrum.wcs
 
-            if hasattr(spectrum, 'spectral_axis_index') and spectrum.spectral_axis_index is not None:
+            if (hasattr(spectrum, 'spectral_axis_index') and
+                    spectrum.spectral_axis_index is not None):
                 kwargs['spectral_axis_index'] = spectrum.spectral_axis_index
 
             if include_uncertainty and spectrum.uncertainty is not None:

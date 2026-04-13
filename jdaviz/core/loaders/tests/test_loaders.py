@@ -194,7 +194,7 @@ def test_spectrum3d_fits_no_flux_selected(deconfigged_helper):
     assert ldr.importer.unc_extension.selected == '2: ERR'
 
     # Verify the import button is disabled with appropriate message
-    assert ldr.importer._obj.import_disabled_msg == "No primary data extension selected. Please select a FLUX extension."
+    assert ldr.importer._obj.import_disabled_msg == "No primary data extension selected. Please select a FLUX extension."  # noqa
 
     # Attempting to import via API should raise ValueError with the disabled message
     with pytest.raises(ValueError, match="No primary data extension selected"):

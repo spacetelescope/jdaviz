@@ -333,7 +333,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                 self.import_disabled_msg = ""
             else:
                 # No flux cube loaded yet, and no flux extension selected - this is invalid
-                self.import_disabled_msg = "No primary data extension selected. Please select a FLUX extension."
+                self.import_disabled_msg = (
+                    "No primary data extension selected. Please select a FLUX extension."
+                )
         else:
             self.import_disabled_msg = ""
 
