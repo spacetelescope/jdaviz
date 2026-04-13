@@ -17,6 +17,15 @@
       </v-text-field>
     </v-row>
 
+    <v-row v-for="pkg in downstream_packages" :key="pkg.name">
+      <v-text-field class="v-messages v-messages__message text--secondary"
+        :value="pkg.version"
+        :label="pkg.name + ' Version'"
+        :hint="'Version of installed ' + pkg.name + '.'"
+        readonly>
+      </v-text-field>
+    </v-row>
+
     <v-row v-if="not_is_latest">
       <span class="v-messages v-messages__message text--secondary" style="color: red !important">
         A newer version ({{ jdaviz_pypi }}) is available from PyPI.

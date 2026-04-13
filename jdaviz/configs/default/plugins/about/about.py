@@ -2,7 +2,7 @@ import json
 
 import requests
 from packaging.version import Version
-from traitlets import Bool, Unicode
+from traitlets import Bool, List, Unicode
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
@@ -25,6 +25,7 @@ class About(PluginTemplateMixin):
     jdaviz_version = Unicode("unknown").tag(sync=True)
     jdaviz_pypi = Unicode("unknown").tag(sync=True)
     not_is_latest = Bool(False).tag(sync=True)
+    downstream_packages = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -44,6 +45,21 @@ class About(PluginTemplateMixin):
 
     def show_popup(self):
         self._app.force_open_about = True
+
+    def register_downstream_package(self, name, version):
+        """
+        Register a downstream package to be listed in the About panel.
+
+        Parameters
+        ----------
+        name : str
+            The display name of the downstream package.
+        version : str
+            The installed version string.
+        """
+        entry = {'name': name, 'version': version}
+        if entry not in self.downstream_packages:
+            self.downstream_packages = self.downstream_packages + [entry]
 
     @property
     def user_api(self):
