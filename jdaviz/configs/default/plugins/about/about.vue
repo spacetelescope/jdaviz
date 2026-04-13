@@ -26,14 +26,18 @@
       </v-text-field>
     </v-row>
 
-    <v-row v-if="not_is_latest">
-      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
-        A newer version ({{ jdaviz_pypi }}) is available from PyPI.
-      </span>
-      <j-docs-link link="https://pypi.org/project/jdaviz/" linktext="Go to PyPI">
-        Please update Jdaviz and restart your session.
-      </j-docs-link>
-    </v-row>
+    <div v-if="not_is_latest">
+      <v-row>
+        <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+          A newer version ({{ jdaviz_pypi }}) is available from PyPI.
+        </span>
+      </v-row>
+      <v-row>
+        <j-docs-link link="https://pypi.org/project/jdaviz/" linktext="Go to PyPI">
+          Please update Jdaviz and restart your session.
+        </j-docs-link>
+      </v-row>
+    </div>
 
     <v-row>
       <j-docs-link link="https://github.com/spacetelescope/jdaviz/blob/main/CHANGES.rst" linktext="Change Log">
