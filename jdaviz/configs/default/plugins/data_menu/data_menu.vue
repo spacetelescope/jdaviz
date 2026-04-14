@@ -327,6 +327,7 @@
         lock_hover_api_hint: false,
         debounce_timer: null,
         is_updating_layers: false,
+        settled_has_more: false,
         max_legend_items: 4
       }
     },
@@ -338,19 +339,25 @@
         return this.visible_layer_items.slice(0, this.max_legend_items);
       },
       has_more_visible_items: function() {
-        // Use a debounced check to prevent flicker during rapid updates (blinking)
-        // If layer_items is changing frequently, suppress showing the ellipsis
-        return this.visible_layer_items.length > this.max_legend_items && !this.is_updating_layers;
+        // During rapid updates (e.g. blinking), hold the last settled value
+        // so the "more" indicator doesn't flicker on or off.
+        if (this.is_updating_layers) {
+          return this.settled_has_more;
+        }
+        return this.visible_layer_items.length > this.max_legend_items;
       }
     },
     watch: {
       layer_items: function() {
-        // Set flag to suppress menu icon during rapid updates
+        // During rapid updates (e.g. blinking), mark as updating so
+        // has_more_visible_items holds its last settled value instead
+        // of flickering.  Once updates settle, snapshot the new state.
         this.is_updating_layers = true;
         clearTimeout(this.debounce_timer);
         this.debounce_timer = setTimeout(() => {
+          this.settled_has_more = this.visible_layer_items.length > this.max_legend_items;
           this.is_updating_layers = false;
-        }, 100);  // 100ms delay to catch rapid blinking updates
+        }, 100);
       },
       force_open_menu: function (val) {
         if (val) {
