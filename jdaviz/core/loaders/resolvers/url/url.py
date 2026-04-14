@@ -131,7 +131,13 @@ class PresetURLResolver(URLResolver):
     def __init__(self, url, title=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Set the URL without triggering _resolver_input_updated,
+        # which would attempt an eager download and leak SSL sockets.
+        # Format detection happens later when the user opens or loads.
+        self._defer_resolver_input_updated = True
         self.url = url
+        self._defer_resolver_input_updated = False
+
         if title is not None:
             self.title = title
         self.hide_resolver_inputs = True
