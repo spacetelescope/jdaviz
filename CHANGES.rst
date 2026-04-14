@@ -73,6 +73,9 @@ New Features
 
 - Add support for loading Spectra from BinaryHDU and TableHDU extensions. [#4097]
 
+- Fix discrepancies between deconfigged and imviz when loading subsets/regions
+  when using the WCS/orientation layer [#4130]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
