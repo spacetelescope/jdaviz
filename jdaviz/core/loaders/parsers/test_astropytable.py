@@ -34,7 +34,7 @@ def test_valid_table_files(deconfigged_helper, tmp_path,
     assert parser.input_ext_format == expected_format
 
     result = parser.output
-    assert result.meta.get('exception', '') == ''
+    assert result.meta.get('_jdaviz_exception', '') == ''
     assert 'ra' in result.colnames
     assert 'dec' in result.colnames
     assert 'flux' in result.colnames
@@ -83,4 +83,4 @@ def test_try_qtable_read_failures(deconfigged_helper, tmp_path, content, fmt,
     f.write_text(content)
     parser = AstropyTableParser(deconfigged_helper._app, str(f))
     result = parser._try_qtable_read(fmt)
-    assert expected_substr in result.meta['exception']
+    assert expected_substr in result.meta['_jdaviz_exception']
