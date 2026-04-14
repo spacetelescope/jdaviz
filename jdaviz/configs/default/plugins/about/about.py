@@ -38,7 +38,7 @@ class About(PluginTemplateMixin):
         self._plugin_description = 'Information about Jdaviz and links to documentation and resources.'  # noqa
 
     @observe('plugin_opened')
-    def _on_plugin_opened(self):
+    def _on_plugin_opened(self, *args):
         """
         Fetch the latest PyPI version lazily on first open.
 
