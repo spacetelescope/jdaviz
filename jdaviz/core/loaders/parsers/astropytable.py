@@ -165,7 +165,7 @@ class AstropyTableParser(BaseParser):
                 except Exception as ee:
                     exception_text += f';\nAlso tried format {fmt}: {ee}'
 
-        table.meta['exception'] = exception_text
+        table.meta['_jdaviz_exception'] = exception_text
         return table
 
     @cached_property
