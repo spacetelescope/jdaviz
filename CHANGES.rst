@@ -165,6 +165,8 @@ Bug Fixes
 - Fixed bug where creating new subsets in a fresh app instance and adjusting them creates a copy
   instead of adjusting the original subset. [#4083]
 
+- Fixed using `viewer.show()` with height argument not using the full height inline in the notebook. [#4134]
+
 Cubeviz
 ^^^^^^^
 
