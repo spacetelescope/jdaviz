@@ -338,13 +338,21 @@
       visible_layer_items_limited: function() {
         return this.visible_layer_items.slice(0, this.max_legend_items);
       },
+      any_layers_hidden: function() {
+        // True when any layer loaded in the viewer is not visible,
+        // detected by comparing layer_items against visible_layers.
+        return this.layer_items.some(
+          item => !item.visible && !(item.label in this.visible_layers)
+        );
+      },
       has_more_visible_items: function() {
         // During rapid updates (e.g. blinking), hold the last settled value
         // so the "more" indicator doesn't flicker on or off.
         if (this.is_updating_layers) {
           return this.settled_has_more;
         }
-        return this.visible_layer_items.length > this.max_legend_items;
+        return this.visible_layer_items.length > this.max_legend_items
+               || this.any_layers_hidden;
       }
     },
     watch: {
@@ -355,9 +363,10 @@
         this.is_updating_layers = true;
         clearTimeout(this.debounce_timer);
         this.debounce_timer = setTimeout(() => {
-          this.settled_has_more = this.visible_layer_items.length > this.max_legend_items;
+          this.settled_has_more = this.visible_layer_items.length > this.max_legend_items
+                                 || this.any_layers_hidden;
           this.is_updating_layers = false;
-        }, 100);
+        }, 50);
       },
       force_open_menu: function (val) {
         if (val) {
