@@ -345,12 +345,12 @@
     },
     watch: {
       layer_items: function() {
-        // Set flag to suppress ellipsis during rapid updates
+        // Set flag to suppress menu icon during rapid updates
         this.is_updating_layers = true;
         clearTimeout(this.debounce_timer);
         this.debounce_timer = setTimeout(() => {
           this.is_updating_layers = false;
-        }, 100);  // 100ms debounce to catch rapid blinking updates
+        }, 100);  // 100ms delay to catch rapid blinking updates
       },
       force_open_menu: function (val) {
         if (val) {
@@ -374,8 +374,7 @@
 
       // Dynamically adjust legend truncation based on viewer height.
       // Must observe the actual viewer container (the v-card that wraps
-      // the figure), not the absolutely-positioned legend overlay whose
-      // size is driven by its own content.
+      // the figure), not the legend overlay.
       this.$nextTick(() => {
         this._updateMaxLegendItems();
         const container = this._getViewerContainer();
@@ -405,9 +404,8 @@
     },
     methods: {
       _getViewerContainer() {
-        // Walk up from the component root to find the viewer's content
-        // area — the v-card in viewer_window.vue that has an explicit
-        // height tracking the viewer panel size.
+        // Find the viewer's content area, e.g. the v-card in viewer_window.vue
+        // that has an explicit height tracking the viewer panel size.
         return this.$el && this.$el.closest('.v-card');
       },
       _updateMaxLegendItems() {
