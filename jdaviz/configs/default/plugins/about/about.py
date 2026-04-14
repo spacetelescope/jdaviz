@@ -59,7 +59,7 @@ class About(PluginTemplateMixin):
 
 def latest_version_from_pypi(package_name):
     """
-    Version info for given package or ``None``.
+    Return the latest version string for a package on PyPI, or ``None``.
 
     Results are cached per-process so repeated calls do not incur
     additional network overhead.
@@ -74,12 +74,14 @@ def latest_version_from_pypi(package_name):
     except Exception:  # nosec # pragma: no cover
         pass
     else:
-        if r.ok:
-            try:
+        try:
+            if r.ok:
                 d = json.loads(r.text)
                 version = d['info']['version']
-            except Exception:  # nosec # pragma: no cover
-                pass
+        except Exception:  # nosec # pragma: no cover
+            pass
+        finally:
+            r.close()
 
     _pypi_version_cache[package_name] = version
     return version
