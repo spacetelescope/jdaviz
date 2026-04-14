@@ -57,8 +57,8 @@
                 <span style="float: right; display: inline-block">
                   <j-layer-viewer-icon-stylized
                     tooltip="More data layers exist. Click to view all."
-                    :label="'more_data_layers'"
-                    :icon="'mdi-menu-open'"
+                    label="more_data_layers"
+                    icon="mdi-menu-open"
                     :visible="true"
                     :is_subset="false"
                     :colors="['#205f76']"
