@@ -38,7 +38,7 @@ class About(PluginTemplateMixin):
         self._plugin_description = 'Information about Jdaviz and links to documentation and resources.'  # noqa
 
     @observe('plugin_opened')
-    def _on_plugin_opened(self, *args):
+    def _on_plugin_opened(self):
         """
         Fetch the latest PyPI version lazily on first open.
 
@@ -47,6 +47,9 @@ class About(PluginTemplateMixin):
         """
         if self._pypi_fetched or not self.plugin_opened:
             return
+
+        # If __version__ is unknown then there's no point to try to fetch the PyPI version,
+        # so skip it and avoid the network call now and in the future.
         self._pypi_fetched = True
 
         if __version__ == 'unknown':
@@ -55,17 +58,13 @@ class About(PluginTemplateMixin):
         _ver_pypi = latest_version_from_pypi('jdaviz')
         if _ver_pypi:
             self.jdaviz_pypi = _ver_pypi
-            self.not_is_latest = (
-                Version(__version__) < Version(_ver_pypi)
-            )
+            self.not_is_latest = Version(__version__) < Version(_ver_pypi)
+
         else:  # pragma: no cover
             self.jdaviz_pypi = 'unknown'
             self.not_is_latest = False
 
     def show_popup(self):
-        """
-        Open the About popup.
-        """
         self._app.force_open_about = True
 
     @property
@@ -101,7 +100,7 @@ def latest_version_from_pypi(package_name):
     version = None
     try:
         with requests.Session() as session:
-            r = session.get(url, timeout=10)
+            r = session.get(url, timeout=60)
             if r.ok:
                 d = r.json()
                 version = d['info']['version']
