@@ -76,6 +76,10 @@ New Features
 - Fix discrepancies between deconfigged and imviz when loading subsets/regions
   when using the WCS/orientation layer [#4130]
 
+- Data menus are now scrollable; the data menu legend is now truncated when it reaches a certain
+  height (relative to the viewer height); a button has been added to the data menu legend to
+  indicate to users that more layers can be accessed [#4137]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
