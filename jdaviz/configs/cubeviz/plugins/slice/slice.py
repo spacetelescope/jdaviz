@@ -433,7 +433,6 @@ class SpectralSlice(BaseSlicePlugin):
 
         self.viewer.add_filter(lambda viewer: isinstance(viewer, (CubevizImageView, CubevizProfileView)))  # noqa
         if self.config == 'deconfigged':
-            self.hub.subscribe(self, AddDataMessage, handler=self._set_relevant)
             self.hub.subscribe(self, RemoveDataMessage, handler=self._set_relevant)
         self._set_relevant()
 
@@ -445,6 +444,13 @@ class SpectralSlice(BaseSlicePlugin):
             self.irrelevant_msg = 'No spectral cube data loaded'
             return
         super()._set_relevant(*args)
+
+    def _on_add_data(self, msg):
+        self._set_relevant()
+        super()._on_add_data(msg)
+
+    def _on_remove_data(self, msg):
+        self._set_relevant()
 
     @observe('vdocs')
     def _update_docs_link(self, *args):

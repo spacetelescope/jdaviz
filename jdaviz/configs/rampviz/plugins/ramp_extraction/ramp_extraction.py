@@ -199,6 +199,8 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _on_subset_delete(self, msg={}):
 
         viewer = self.integration_viewer
+        if viewer is None or viewer.figure is None:
+            return
         subset_lbl = msg.subset.label
         viewer.figure.marks = [
             mark for mark in viewer.figure.marks
