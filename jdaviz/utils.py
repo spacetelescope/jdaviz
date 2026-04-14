@@ -649,7 +649,6 @@ def get_cloud_fits(possible_uri, ext=None, fsspec_filesystem=None):
     possible_uri : str
         A path or URI to the FITS file. If the URI uses the ``s3://`` scheme,
         the file is accessed via fsspec and returned as an `~astropy.io.fits.HDUList`.
-        Otherwise, the string is returned unchanged.
     ext : int, str, or list, optional
         Extension(s) to load from the FITS file. Can be an integer index (e.g., 0),
         a string name (e.g., "SCI"), or a list of such values. If `None`, all extensions
@@ -682,6 +681,7 @@ def get_cloud_fits(possible_uri, ext=None, fsspec_filesystem=None):
                 ext_list = ['PRIMARY', ext]
             else:
                 ext_list = ['PRIMARY'] + ext
+
             for extension in ext_list:
                 hdu_obj = hdul[extension]
                 downloaded_hdus.append(hdu_obj.copy())
@@ -707,8 +707,7 @@ def get_cloud_asdf(possible_uri, fsspec_filesystem=None):
     possible_uri : str
         A path or URI to the ASDF file. If the URI uses the ``s3://`` scheme,
         the file is accessed via fsspec and returned as a
-        `roman_datamodels.datamodels.DataModel`. Otherwise, the string is
-        returned unchanged.
+        `roman_datamodels.datamodels.DataModel`.
     fsspec_filesystem : `fsspec.spec.AbstractFileSystem` or None, optional
         If credentialed access is required for an S3 resource, pass in
         an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.core.S3FileSystem`
