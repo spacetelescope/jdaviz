@@ -390,3 +390,35 @@ class TestVOSSARemote:
         vo_loader.file_table.select_rows(0)
         assert vo_loader._obj.get_selected_url() is not None and len(vo_loader._obj.get_selected_url()) > 0  # noqa
 
+
+@pytest.mark.remote_data
+class TestVOSCSRemote:
+
+    def _init_vo_loader_mastcs(self):
+        """
+        Initialize vo loader with common test parameters
+
+        Returns
+        -------
+        vo_ldr_api : VO loader user API instance
+        """
+        vo_loader = jd.new_app().loaders["virtual observatory"]
+
+        # Sets common args for Remote Testing
+        vo_loader.producttype = 'Catalogs'
+        vo_loader.source = "M51"
+        vo_loader.waveband = "optical"
+        vo_loader.resource = "MAST CS"
+
+        return vo_loader
+
+    def test_mastcs_catalog_query(self):
+        """
+        Test querying the STScI MAST Cone Search for catalog targets
+        """
+        vo_loader = self._init_vo_loader_mastcs()
+        vo_loader.query_archive()
+
+        # Make sure we got products
+        ssa_out = vo_loader._obj._output
+        assert len(ssa_out) > 0
