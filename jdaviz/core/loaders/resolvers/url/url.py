@@ -2,12 +2,13 @@ from traitlets import Bool, Unicode, List, observe
 from urllib.parse import urlparse
 import os
 from functools import cached_property
+from pathlib import Path
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
-from jdaviz.utils import download_uri_to_path, get_cloud_fits
+from jdaviz.utils import download_uri_to_path, get_cloud_fits, get_cloud_asdf
 
 
 __all__ = ['URLResolver', 'PresetURLResolver']
@@ -26,10 +27,13 @@ class URLResolver(BaseResolver):
     cache = Bool(True).tag(sync=True)
     local_path = Unicode("").tag(sync=True)
     timeout = FloatHandleEmpty(10).tag(sync=True)
+    fsspec_filesystem = None
 
     def __init__(self, *args, **kwargs):
         self.local_path = os.curdir
         super().__init__(*args, **kwargs)
+
+        self.fsspec_filesystem = kwargs.get('fsspec_filesystem', None)
 
         # Initialize whitelist from settings
         whitelist = self.app.state.settings.get('url_prefix_whitelist')
@@ -109,8 +113,15 @@ class URLResolver(BaseResolver):
 
     @cached_property
     def _uri_output_file(self):
+        url_file_extension = Path(self.url.strip()).suffix.lower()  # like '.fits'
         if self.url_scheme == 's3':
-            return get_cloud_fits(self.url.strip())
+
+            if url_file_extension in ['.fits', '.fit']:
+                return get_cloud_fits(self.url.strip(), fsspec_filesystem=self.fsspec_filesystem)
+
+            elif url_file_extension == '.asdf':
+                return get_cloud_asdf(self.url.strip(), fsspec_filesystem=self.fsspec_filesystem)
+
         return download_uri_to_path(self.url.strip(), cache=self.cache,
                                     local_path=self.local_path, timeout=self.timeout)
 

@@ -182,6 +182,9 @@ Bug Fixes
 
 - Fixed bug where file drop resolver failed to process messages correctly when ipykernel>=7. [#4080]
 
+- Fixed bug when loading remote ASDF files by S3 URI, and retrieve remote
+  FITS PrimaryHDU by default. [#3980]
+
 Cubeviz
 ^^^^^^^
 
