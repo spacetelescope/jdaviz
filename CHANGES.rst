@@ -11,9 +11,6 @@ Bug Fixes
 
 - Fixed bug where file drop resolver failed to process messages correctly when ipykernel>=7. [#4080]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
@@ -21,12 +18,6 @@ Imviz
   into the viewer(s) due to absence of linking necessary for glue's rendering backend. [#4079]
 
 - Fixed a bug when trying to change link type multiple times with subsets defined. [#4096]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
