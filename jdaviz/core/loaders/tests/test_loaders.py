@@ -773,3 +773,13 @@ def test_table_spectrum_no_flux_column(deconfigged_helper, table_spectrum_no_flu
 
     # Should NOT detect as 1D Spectrum since there's no recognized flux column
     assert '1D Spectrum' not in ldr.format.choices
+
+
+def test_invalid_kwargs_error_message(specviz_helper, spectrum1d):
+    """Test that invalid kwargs to .load() produce a helpful error message with format name."""
+    # Load should fail when passing multiple invalid kwargs
+    # and the error message should include the format name
+    with pytest.raises(ValueError, match=r"Invalid argument for 1D Spectrum format: "
+                                         r"invalid_arg1, invalid_arg2"):
+        specviz_helper.load(spectrum1d, format='1D Spectrum',
+                            invalid_arg1='foo', invalid_arg2='bar')

@@ -818,4 +818,4 @@ def test_load_by_s3_uri(deconfigged_helper):
         deconfigged_helper.load(s3_uri)
 
     # no expected error:
-    deconfigged_helper.load(s3_uri, format='Image', extensions=('SCI', 'DQ'))
+    deconfigged_helper.load(s3_uri, format='Image')

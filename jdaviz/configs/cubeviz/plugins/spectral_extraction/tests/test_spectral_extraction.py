@@ -616,7 +616,7 @@ def test_spectral_extraction_scientific_validation(
     # load observations into Cubeviz
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        cubeviz_helper.load(cached_uri(uri), cache=True)
+        cubeviz_helper.load(cached_uri(uri))
 
     # add a subset with an aperture centered on each source
     subset_plugin = cubeviz_helper.plugins['Subset Tools']

@@ -233,7 +233,8 @@ class Imviz(ImageConfigHelper):
                       extension='*',  # Select all slices
                       parent=kwargs.pop('parent', None),
                       viewer=viewer,
-                      gwcs_to_fits_sip=gwcs_to_fits_sip)
+                      gwcs_to_fits_sip=gwcs_to_fits_sip,
+                      ignore_invalid_kwargs=True)
         elif isinstance(data, str) and data.endswith('.reg'):
             self.load(data,
                       format='Subset',
@@ -241,7 +242,8 @@ class Imviz(ImageConfigHelper):
                       extension=extensions,
                       parent=kwargs.pop('parent', None),
                       viewer=viewer,
-                      gwcs_to_fits_sip=gwcs_to_fits_sip)
+                      gwcs_to_fits_sip=gwcs_to_fits_sip,
+                      ignore_invalid_kwargs=True)
         else:
             # if the data-label is provided but without an
             # extension in the label, maintain previous behavior of appending
@@ -268,7 +270,8 @@ class Imviz(ImageConfigHelper):
                       extension=extensions,
                       parent=kwargs.pop('parent', None),
                       viewer=viewer,
-                      gwcs_to_fits_sip=gwcs_to_fits_sip)
+                      gwcs_to_fits_sip=gwcs_to_fits_sip,
+                      ignore_invalid_kwargs=True)
 
     def link_data(self, align_by='pixels', wcs_fallback_scheme='pixels',
                   wcs_fast_approximation=True):

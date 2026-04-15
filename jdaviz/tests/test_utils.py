@@ -71,7 +71,7 @@ def test_uri_to_download_specviz_local_path_check():
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper):
     uri = cached_uri("mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits")
-    specviz_helper.load(uri, cache=True)
+    specviz_helper.load(uri)
 
 
 @pytest.mark.remote_data
