@@ -199,6 +199,7 @@ class ConfigHelper(HubListener):
               loader=None,
               format=None,
               target=None,
+              ignore_invalid_kwargs=False,
               **kwargs):
         """
         Load data into the app. A single valid loader/importer must be able to be
@@ -216,9 +217,13 @@ class ConfigHelper(HubListener):
             Only consider a specific format
         target : string, optional
             Only consider a specific target
+        ignore_invalid_kwargs : bool, optional
+            If True, silently ignore kwargs that do not match valid inputs for the
+            selected loader/importer. If False (default), raise an error for invalid kwargs.
         kwargs :
             Additional kwargs are passed on to both the loader and importer, as applicable.
-            Any kwargs that do not match valid inputs are silently ignored.
+            If ignore_invalid_kwargs is False, any kwargs that do not match valid inputs
+            will raise a ValueError.
         """
         resolver = find_matching_resolver(self._app, inp,
                                           resolver=loader,
@@ -235,7 +240,7 @@ class ConfigHelper(HubListener):
         importer = resolver.importer
         applied_kwargs = importer._obj._apply_kwargs(kwargs)
         invalid_kwargs = [k for k in kwargs if k not in applied_kwargs + resolver._expose]
-        if len(invalid_kwargs):
+        if not ignore_invalid_kwargs and len(invalid_kwargs):
             raise ValueError(f"Invalid argument for {resolver.format.selected} format: {', '.join(invalid_kwargs)}")  # noqa
         out = resolver.load()
         # force cleanup before returning
