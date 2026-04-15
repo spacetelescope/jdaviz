@@ -69,7 +69,7 @@ class VOResolver(BaseConeSearchResolver):
         return LoaderUserApi(
             self,
             expose=[
-                "viewer", "coordframe", "radius", "radius_unit",
+                "producttype", "viewer", "coordframe", "radius", "radius_unit",
                 "source",
                 "resource_filter_coverage", "waveband", "resource",
                 "query_archive"
