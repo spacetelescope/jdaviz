@@ -129,9 +129,32 @@ class PresetURLResolver(URLResolver):
     """
 
     def __init__(self, url, title=None, *args, **kwargs):
+        self._format_detection_done = False
         super().__init__(*args, **kwargs)
 
-        self.url = url
+        # Set the URL without triggering _resolver_input_updated,
+        # which would attempt an eager download and leak SSL sockets.
+        # Format detection happens lazily when first needed
+        # (via load() or open_in_tray()).
+        with self.defer_resolver_input_updated():
+            self.url = url
+
         if title is not None:
             self.title = title
         self.hide_resolver_inputs = True
+
+    def _ensure_format_detection(self):
+        """Trigger format detection if not yet done."""
+        if not self._format_detection_done:
+            self._format_detection_done = True
+            self._resolver_input_updated()
+
+    def load(self):
+        """Import into jdaviz with all selected options."""
+        self._ensure_format_detection()
+        return super().load()
+
+    def open_in_tray(self):
+        """Show this resolver in the sidebar tray."""
+        self._ensure_format_detection()
+        return super().open_in_tray()
