@@ -806,3 +806,16 @@ def test_treat_table_as_query_toggle_keeps_switch_visible(deconfigged_helper):
     assert ldr._obj.treat_table_as_query is True
     assert ldr._obj.parsed_input_is_query is True
     assert ldr._obj.file_table_populated is True
+
+
+@pytest.mark.remote_data
+def test_load_by_s3_uri(deconfigged_helper):
+    s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
+
+    # expected failure since this could be an image or catalog
+    match = "Multiple valid loaders found for input."
+    with pytest.raises(ValueError, match=match):
+        deconfigged_helper.load(s3_uri)
+
+    # no expected error:
+    deconfigged_helper.load(s3_uri, format='Image', extensions=('SCI', 'DQ'))
