@@ -227,6 +227,7 @@ class TestVOImvizRemote:
         vo_ldr = imviz_helper.loaders["virtual observatory"]
 
         # Sets common args for Remote Testing
+        vo_ldr.producttype = "Images"
         vo_ldr.viewer.selected = "Manual"
         vo_ldr.source = "M51"
         vo_ldr.radius = 1
@@ -301,6 +302,7 @@ class TestVOImvizRemote:
         """
         # Manually set the source to a fake target
         vo_ldr = imviz_helper.loaders["virtual observatory"]
+        vo_ldr.producttype = "Images"
         vo_ldr.source = "ThisIsAFakeTargetThatWontResolveToAnything"
         vo_ldr.radius = 1
         vo_ldr.radius_unit.selected = "deg"
