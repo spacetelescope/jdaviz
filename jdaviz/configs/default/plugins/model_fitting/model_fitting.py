@@ -1707,7 +1707,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             load_kwargs = {}
             if self.add_results.viewer.selected not in (None, 'None'):
                 load_kwargs['viewer'] = self.add_results.viewer.selected
-            self.add_results.add_results_from_plugin(output_cube, load_kwargs=load_kwargs)
+            self.add_results.add_results_from_plugin(output_cube, format='3D Spectrum', load_kwargs=load_kwargs)  # noqa
             self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(
