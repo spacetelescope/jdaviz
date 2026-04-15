@@ -1,4 +1,37 @@
-4.6 (unreleased)
+5.1 (unreleased)
+================
+
+New Features
+------------
+
+Mosviz
+^^^^^^
+
+API Changes
+-----------
+
+Mosviz
+^^^^^^
+
+Bug Fixes
+---------
+
+Mosviz
+^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+5.0.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Mosviz
+^^^^^^
+
+5.0 (2026-04-15)
 ================
 
 New Features
@@ -91,12 +124,6 @@ Cubeviz
 - Added ability to load DQ extension in the cubeviz loader, which activates the
   DQ plugin in cubeviz. [#4077]
 
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
@@ -123,41 +150,29 @@ Imviz
 
 - Deprecates Imviz in favor of the generalized top-level Jdaviz application. [#4090]
 
-
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
 - Deprecates Specviz in favor of the generalized top-level Jdaviz application. [#4090]
-
 
 Specviz2d
 ^^^^^^^^^
 
 - Deprecates Specviz2d in favor of the generalized top-level Jdaviz application. [#4090]
 
-
 Bug Fixes
 ---------
 
 - Fix issue with treat_table_as_query switch where it disappeared entirely when switched 'off' [#4102]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
+- Fixed bug when loading remote ASDF files by S3 URI, and retrieve remote
+  FITS PrimaryHDU by default. [#3980]
 
 Specviz2d
 ^^^^^^^^^
+
+- Fixed bug where mouseover fails to display in 2D Spectra viewer when no wavelength mapping
+  is provided. [#4093]
 
 Other Changes and Additions
 ---------------------------
@@ -169,7 +184,7 @@ Other Changes and Additions
 
 - Update example notebooks and add examples for deconfigged. [#4052]
 
-4.5.2 (unreleased)
+4.5.2 (2026-04-15)
 ==================
 
 Bug Fixes
@@ -181,9 +196,6 @@ Bug Fixes
 - Fixed using `viewer.show()` with height argument not using the full height inline in the notebook. [#4134]
 
 - Fixed bug where file drop resolver failed to process messages correctly when ipykernel>=7. [#4080]
-
-- Fixed bug when loading remote ASDF files by S3 URI, and retrieve remote
-  FITS PrimaryHDU by default. [#3980]
 
 Cubeviz
 ^^^^^^^
@@ -206,9 +218,6 @@ Specviz2d
 ^^^^^^^^^
 
 - Fixed bug where loading two 2D spectra failed to display in the spectrum-2d viewer. [#3983]
-
-- Fixed bug where mouseover fails to display in 2D Spectra viewer when no wavelength mapping
-  is provided. [#4093]
 
 4.5.1 (2026-03-06)
 ==================
