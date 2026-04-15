@@ -735,7 +735,12 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             return
 
         if viewer_id is None:
-            viewer = self._jdaviz_helper.default_viewer._obj.glue_viewer
+            if hasattr(self._jdaviz_helper, 'default_viewer'):
+                viewer = self._jdaviz_helper.default_viewer._obj.glue_viewer
+            elif len(self._viewer_store):
+                viewer = list(self._viewer_store.values())[0]
+            else:
+                return
         else:
             viewer = self.get_viewer(viewer_id)
 
@@ -2701,7 +2706,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                                 setattr(subset_state, att, cid)
 
                     # Translate bounds through WCS if needed
-                    if (self.config == "imviz" and
+                    if (self.config in ("imviz", "deconfigged") and
                             self._jdaviz_helper.plugins["Orientation"].align_by == "WCS"):
 
                         # Default shape for WCS-only layers is 10x10, but it doesn't really matter

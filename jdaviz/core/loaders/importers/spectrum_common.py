@@ -5,11 +5,13 @@ from asdf import AsdfFile
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import InverseVariance, StdDevUncertainty, VarianceUncertainty
+from astropy.table import Table, Column
 from astropy.wcs import WCS
 from functools import cached_property
 from glue.core import HubListener
 from ipyvuetify import VuetifyTemplate
 from specutils import Spectrum, SpectrumList, SpectrumCollection
+from specutils.io.parsing_utils import generic_spectrum_from_table
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
@@ -299,6 +301,20 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             # require selection for flux
             return False
         hdu = item.get('obj')
+
+        # Check for Binary Table HDU with spectral columns (for 1D spectra only)
+        if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
+            if (hasattr(hdu, 'columns') and hdu.columns is not None and
+                    self.supported_flux_ndim == 1):
+                col_names = [name.upper() for name in hdu.columns.names]
+                # Check for wavelength column
+                has_wave = any(name in col_names for name in ['WAVE', 'WAVELENGTH', 'LAMBDA'])
+                # Check for flux column (or variations)
+                has_flux = any('FLUX' in name for name in col_names)
+                if has_wave and has_flux:
+                    return True
+
+        # Check for Image HDU (existing logic)
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
                 and ('DISPAXIS' in hdu.header
                      or hdu.header.get('CTYPE1', '') == 'WAVE'
@@ -458,7 +474,50 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         else:
             raise NotImplementedError(f"{inp} is not supported")
 
+    def _spectrum_from_table_hdu(self, hdulist, hdu):
+        """Extract spectrum from Binary Table HDU with array-valued columns."""
+        # Read the HDU as an astropy Table
+        table = Table.read(hdu)
+
+        # if columns are shape (1, N), flatten them before passing to generic_spectrum_from_table
+        needs_flattening = any(
+            col.ndim == 2 and col.shape[0] == 1 for col in table.itercols()
+        )
+
+        if needs_flattening:
+            # Create new columns with flattened data, preserving units
+            new_cols = []
+            for col in table.itercols():
+                if col.ndim == 2 and col.shape[0] == 1:
+                    # Extract first row and preserve unit
+                    new_cols.append(Column(name=col.name, data=col[0], unit=col.unit))
+                else:
+                    new_cols.append(col)
+            # Create a new table with flattened columns
+            table = Table(new_cols, meta=table.meta)
+
+        # Use specutils' generic_spectrum_from_table to parse the data
+        spectrum = generic_spectrum_from_table(table)
+
+        # Update metadata with standardized headers
+        header = hdu.header
+        metadata = standardize_metadata(header)
+        if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+            metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
+
+        # Preserve any metadata from the table parsing and update with our standardized metadata
+        if spectrum.meta is None:
+            spectrum.meta = metadata
+        else:
+            spectrum.meta.update(metadata)
+
+        return spectrum
+
     def _spectrum_from_hdu(self, hdulist, hdu):
+        # Handle Binary Table HDU with spectral columns
+        if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
+            return self._spectrum_from_table_hdu(hdulist, hdu)
+
         data = hdu.data
         header = hdu.header
         metadata = standardize_metadata(header)

@@ -2,7 +2,6 @@ import time
 import os
 
 from glue.config import viewer_tool
-from glue_jupyter.bqplot.image import BqplotImageView
 from glue.viewers.common.tool import CheckableTool
 import numpy as np
 from specutils import Spectrum
@@ -10,6 +9,7 @@ from specutils import Spectrum
 from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.tools import PanZoom, BoxZoom, _MatchedZoomMixin
 from jdaviz.configs.default.plugins.tools import ProfileFromCube
+from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 
 __all__ = []
 
@@ -25,7 +25,7 @@ class _PixelMatchedZoomMixin(_MatchedZoomMixin):
         return ['zoom_center_x', 'zoom_center_y', 'zoom_radius']
 
     def _is_matched_viewer(self, viewer):
-        return isinstance(viewer, BqplotImageView)
+        return isinstance(viewer, CubevizImageView)
 
 
 @viewer_tool

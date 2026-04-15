@@ -189,7 +189,7 @@ def _is_image_viewer(viewer):
 
 
 class ViewerPropertiesMixin:
-    # assumes that self.app is defined by the class
+    # assumes that self._app is defined by the class
     def get_matching_viewers(self, filter_or_cls, raise_if_none=False):
         """
         Get all viewers matching a filter
@@ -207,8 +207,8 @@ class ViewerPropertiesMixin:
             A list of viewer instances of the specified class type.
         """
         # mixin can be used on the Application object itself or on anything
-        # that defines self.app to point to the Application object
-        app = getattr(self, 'app', self)
+        # that defines self._app to point to the Application object
+        app = getattr(self, '_app', self)
 
         def is_match(viewer):
             if inspect.isclass(filter_or_cls):
@@ -3119,10 +3119,14 @@ class SubsetSelect(SelectPluginComponent):
         if subset_state is None:
             return None
 
-        type = 'sky_region' if self._app.config == 'imviz' and self._app._align_by == 'wcs' else 'region'  # noqa: E501
+        if self._app.config in ('imviz', 'deconfigged') and self._app._align_by == 'wcs':
+            region_type = 'sky_region'
+        else:
+            region_type = 'region'
+
         reg = self._app.get_subsets(subset_name=subset,
-                                    include_sky_region=type == 'sky_region',
-                                    spatial_only=True)[0][type]
+                                    include_sky_region=region_type == 'sky_region',
+                                    spatial_only=True)[0][region_type]
         reg.meta['label'] = subset
 
         return reg
@@ -3512,11 +3516,14 @@ class ApertureSubsetSelect(SubsetSelect):
                 pixel_region = spatial_region
             else:
                 if viewer is None:
-                    # TODO: deconfigged jdaviz does not have a 'default' viewer,
-                    # viewer should be passed explicitly in this case. retaining this
-                    # fallback for now to avoid errors for config-specific calls
-                    # to this method.
-                    viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
+                    if hasattr(self._app._jdaviz_helper, 'default_viewer'):
+                        viewer = self._app._jdaviz_helper.default_viewer._obj.glue_viewer
+                    elif len(self.image_viewers):
+                        viewer = self.image_viewers[0]
+                    else:
+                        validity = {'is_aperture': False,
+                                    'aperture_message': 'no viewer available'}
+                        return [], [], validity
                 wcs = getattr(viewer.state.reference_data, 'coords', None)
                 if wcs is None:
                     validity = {'is_aperture': False,

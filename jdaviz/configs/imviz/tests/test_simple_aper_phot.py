@@ -32,7 +32,6 @@ else:
 
 class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
 
-    @pytest.mark.skip(reason='bug when switching this test to deconfigged (JDAT-6025)')
     def test_plugin_wcs_dithered(self):
         self.orientation_plugin.align_by = 'WCS'
 
@@ -135,7 +134,7 @@ class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
         self.helper.plugins['Subset Tools'].combination_mode = 'new'
         self.helper.plugins['Subset Tools'].import_region(reg)
 
-        phot_plugin.dataset.selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.dataset.selected = 'has_wcs_1'
         phot_plugin.aperture.selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
         phot_plugin._obj.vue_do_aper_phot()
@@ -150,7 +149,7 @@ class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
         assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * PIX2, rtol=1e-4)
         assert_allclose(tbl[-1]['sum'], 28.274334, rtol=1e-4)
         assert_allclose(tbl[-1]['mean'], 1, rtol=1e-4)
-        assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
+        assert tbl[-1]['data_label'] == 'has_wcs_1'
         assert tbl[-1]['subset_label'] == 'Subset 2'
 
         # Make sure it also works on a rectangle subset.
@@ -159,7 +158,7 @@ class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
         self.helper.plugins['Subset Tools'].combination_mode = 'new'
         self.helper.plugins['Subset Tools'].import_region(reg)
 
-        phot_plugin.dataset.selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.dataset.selected = 'has_wcs_1'
         phot_plugin.aperture.selected = 'Subset 3'
         phot_plugin.background.selected = 'Subset 3'
         assert_allclose(phot_plugin.background_value, 1)
@@ -175,7 +174,7 @@ class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
         assert_quantity_allclose(tbl[-1]['sum_aper_area'], 81 * PIX2)
         assert_allclose(tbl[-1]['sum'], 0)
         assert_allclose(tbl[-1]['mean'], 0)
-        assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
+        assert tbl[-1]['data_label'] == 'has_wcs_1'
         assert tbl[-1]['subset_label'] == 'Subset 3'
 
         # Make sure background auto-updates.
@@ -186,8 +185,8 @@ class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
 
         hdu3 = fits.ImageHDU(np.ones((10, 10)) + 1, name='SCI')
         hdu3.header.update(self.wcs_2.to_header())
-        self.helper.load_data(hdu3, data_label='twos')
-        phot_plugin.dataset.selected = 'twos[SCI,1]'
+        self.helper.load(hdu3, format='Image', data_label='twos')
+        phot_plugin.dataset.selected = 'twos'
         assert_allclose(phot_plugin.background_value, 2)  # Recalculate based on new Data
 
         # Curve of growth
