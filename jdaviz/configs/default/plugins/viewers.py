@@ -1426,6 +1426,20 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
 
 @viewer_registry("scatter-viewer", label="scatter")
 class ScatterViewer(JdavizViewerMixin, BqplotScatterView):
+
+    def __init__(self, session, *args, **kwargs):
+        super().__init__(session, *args, **kwargs)
+
+        # make y axis scientific notation for readibility
+        self.figure.axes[1].tick_format = '0.1e'
+        # offset y axis label so it doesn't cover y tick labels
+        self.figure.axes[1].label_offset = "-50"
+
+        # make axis labels a little smaller so that they're the same size, but the
+        # y axis label fits
+        self.figure.axes[0].axis_label_style = {'font-size': '12px'}  # x
+        self.figure.axes[1].axis_label_style = {'font-size': '12px'}  # y
+
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],

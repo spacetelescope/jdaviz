@@ -82,6 +82,8 @@ New Features
 
 - Add additional logic to support table file formats beyond text in the astropytable parser. [#4133]
 
+- Style tweaks to scatter axis ticks and labels. [#4139]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
