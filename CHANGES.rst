@@ -80,6 +80,8 @@ New Features
   height (relative to the viewer height); a button has been added to the data menu legend to
   indicate to users that more layers can be accessed [#4137]
 
+- Add additional logic to support table file formats beyond text in the astropytable parser. [#4133]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
