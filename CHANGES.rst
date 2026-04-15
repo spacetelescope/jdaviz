@@ -4,6 +4,9 @@
 New Features
 ------------
 
+- The Virtual Observatory loader now supports querying spectral products
+  and catalog targets. [#4060]
+
 Mosviz
 ^^^^^^
 
