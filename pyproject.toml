@@ -143,6 +143,8 @@ addopts = "--doctest-rst --import-mode=append --ignore-glob='*/jdaviz/qt.py'"
 xfail_strict = true
 filterwarnings = [
     "error",
+    # Ignore SSL socket warnings from failed astroquery requests (e.g., when Gaia archive is down)
+    "ignore:Exception ignored in.*ssl\\.SSLSocket.*:pytest.PytestUnraisableExceptionWarning",
     # This line handles the DeprecationWarning from jupyter_core
     "ignore:Jupyter is migrating its paths.*:DeprecationWarning:jupyter_core.utils",
     # This ignores AstropyPendingDeprecationWarning from spectral_cube

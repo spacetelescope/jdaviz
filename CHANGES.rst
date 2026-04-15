@@ -71,6 +71,11 @@ New Features
 
 - Generalize Data Quality plugin. [#4110, #4111]
 
+- Add support for loading Spectra from BinaryHDU and TableHDU extensions. [#4097]
+
+- Fix discrepancies between deconfigged and imviz when loading subsets/regions
+  when using the WCS/orientation layer [#4130]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
@@ -162,6 +167,8 @@ Bug Fixes
 
 - Fixed bug where creating new subsets in a fresh app instance and adjusting them creates a copy
   instead of adjusting the original subset. [#4083]
+
+- Fixed using `viewer.show()` with height argument not using the full height inline in the notebook. [#4134]
 
 Cubeviz
 ^^^^^^^
