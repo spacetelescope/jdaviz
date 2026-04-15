@@ -5397,6 +5397,7 @@ class AddResults(BasePluginComponent):
                                           loader='object', format=format,
                                           data_label=label, viewer=load_kwargs.pop('viewer', []),
                                           auto_extract=load_kwargs.pop('auto_extract', False),
+                                          ignore_invalid_kwargs=True,
                                           **load_kwargs)
         else:
             self._app.add_data(data_item, label)

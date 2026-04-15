@@ -238,8 +238,7 @@ class ConfigHelper(HubListener):
             kwargs['viewer'] = '*' if kwargs.pop('show_in_viewer') else []
 
         importer = resolver.importer
-
-        valid_kwargs = resolver._expose + importer._expose
+        valid_kwargs = resolver._expose + (importer._expose if importer else [])
         invalid_kwargs = [k for k in kwargs if k not in valid_kwargs]
         if not ignore_invalid_kwargs and len(invalid_kwargs):
             raise ValueError(f"Invalid argument for {resolver.format.selected} format: {', '.join(invalid_kwargs)}")  # noqa
