@@ -80,6 +80,12 @@ New Features
   height (relative to the viewer height); a button has been added to the data menu legend to
   indicate to users that more layers can be accessed [#4137]
 
+- Add additional logic to support table file formats beyond text in the astropytable parser. [#4133]
+
+- Style tweaks to scatter axis ticks and labels. [#4139]
+
+- Add support for unit conversions in aperture photometry plugin for images. [#4136]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
@@ -173,6 +179,11 @@ Bug Fixes
   instead of adjusting the original subset. [#4083]
 
 - Fixed using `viewer.show()` with height argument not using the full height inline in the notebook. [#4134]
+
+- Fixed bug where file drop resolver failed to process messages correctly when ipykernel>=7. [#4080]
+
+- Fixed bug when loading remote ASDF files by S3 URI, and retrieve remote
+  FITS PrimaryHDU by default. [#3980]
 
 Cubeviz
 ^^^^^^^

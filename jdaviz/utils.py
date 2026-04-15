@@ -12,6 +12,7 @@ import multiprocessing as mp
 from joblib import Parallel, delayed
 
 import asdf
+import fsspec
 import numpy as np
 from astropy.io import fits
 from astropy.utils import minversion
@@ -635,26 +636,29 @@ class MultiMaskSubsetState(SubsetState):
         return cls(masks=masks)
 
 
-def get_cloud_fits(possible_uri, ext=None):
+def get_cloud_fits(possible_uri, ext=None, fsspec_filesystem=None):
     """
-    Retrieve and open a FITS file from an S3 URI using fsspec. Return the input
-    unchanged if it is not an S3 URI.
+    Load one or more extensions from a remote FITS file by its S3 URI.
 
     If ``possible_uri`` is an S3 URI, the specified extensions from the FITS
     file will be opened remotely using `astropy.io.fits` with `fsspec`.
-    Anonymous access is assumed for S3. If the URI is not S3-based, the input
-    is returned as-is.
+    Anonymous access is assumed for S3 unless ``fsspec_filesystem`` is provided.
 
     Parameters
     ----------
     possible_uri : str
         A path or URI to the FITS file. If the URI uses the ``s3://`` scheme,
         the file is accessed via fsspec and returned as an `~astropy.io.fits.HDUList`.
-        Otherwise, the string is returned unchanged.
     ext : int, str, or list, optional
         Extension(s) to load from the FITS file. Can be an integer index (e.g., 0),
         a string name (e.g., "SCI"), or a list of such values. If `None`, all extensions
         are loaded.
+    fsspec_filesystem : `fsspec.spec.AbstractFileSystem` or None, optional
+        If credentialed access is required for an S3 resource, pass in
+        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.core.S3FileSystem`
+        initialized with an AWS ``profile``, or ``key`` and ``secret``. See the
+        `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
+        for more details.
 
     Returns
     -------
@@ -662,28 +666,70 @@ def get_cloud_fits(possible_uri, ext=None):
         If the URI is an S3 FITS file, returns an `HDUList` containing the requested
         extensions. Otherwise, returns the original input string.
     """
-
-    parsed_uri = urlparse(possible_uri)
-
-    # TODO: Add caching logic
-    if not parsed_uri.scheme.lower() == 's3':
-        raise ValueError("Not an S3 URI: {}".format(possible_uri))
-
     downloaded_hdus = []
-    # this loads the requested extensions into local memory:
-    with fits.open(possible_uri, fsspec_kwargs={"anon": True}) as hdul:
-        if ext is None:
-            ext_list = list(range(len(hdul)))
-        elif not isinstance(ext, list):
-            ext_list = [ext]
-        else:
-            ext_list = ext
-        for extension in ext_list:
-            hdu_obj = hdul[extension]
-            downloaded_hdus.append(hdu_obj.copy())
+    # load the requested extensions into local memory:
+    if fsspec_filesystem is None:
+        fsspec_filesystem = fsspec.filesystem("s3", anon=True)
 
-        file_obj = fits.HDUList(downloaded_hdus)
-        return file_obj
+    # this double-context can be reduced to one after this PR
+    # is merged: https://github.com/astropy/astropy/pull/19294
+    with fsspec_filesystem.open(possible_uri) as file_stream:
+        with fits.open(file_stream) as hdul:
+            if ext is None:
+                ext_list = list(range(len(hdul)))
+            elif not isinstance(ext, list):
+                ext_list = ['PRIMARY', ext]
+            else:
+                ext_list = ['PRIMARY'] + ext
+
+            for extension in ext_list:
+                hdu_obj = hdul[extension]
+                downloaded_hdus.append(hdu_obj.copy())
+
+            file_obj = fits.HDUList(downloaded_hdus)
+            return file_obj
+
+
+def get_cloud_asdf(possible_uri, fsspec_filesystem=None):
+    """
+    Open an ASDF file stream from an S3 URI using fsspec. Return the input
+    unchanged if it is not an S3 URI.
+
+    If an open filestream is returned, the file data will not be transferred
+    from S3 to local memory until a specific attribute on the data model
+    is called which returns a numpy array, like ``data_model.data``.
+
+    Anonymous access is assumed by default, and credentials are supported by
+    providing an `fsspec_filesystem` instance.
+
+    Parameters
+    ----------
+    possible_uri : str
+        A path or URI to the ASDF file. If the URI uses the ``s3://`` scheme,
+        the file is accessed via fsspec and returned as a
+        `roman_datamodels.datamodels.DataModel`.
+    fsspec_filesystem : `fsspec.spec.AbstractFileSystem` or None, optional
+        If credentialed access is required for an S3 resource, pass in
+        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.core.S3FileSystem`
+        initialized with an AWS ``profile``, or ``key`` and ``secret``. See the
+        `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
+        for more details.
+
+    Returns
+    -------
+    file_obj : `~roman_datamodels.datamodels.DataModel` or str
+        If the URI is an S3 FITS file, returns an `HDUList` containing the requested
+        extensions. Otherwise, returns the original input string.
+    """
+    import roman_datamodels.datamodels as rdd
+
+    if fsspec_filesystem is None:
+        # by default, use anonymous access
+        fsspec_filesystem = fsspec.filesystem(protocol='s3', anon=True)
+
+    file_stream = fsspec_filesystem.open(possible_uri)
+    data_model = rdd.open(file_stream)
+    return data_model
 
 
 def cached_uri(uri):
@@ -697,9 +743,9 @@ def cached_uri(uri):
 
 
 def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None,
-                         dryrun=False):
+                         fsspec_filesystem=None, dryrun=False):
     """
-    Retrieve data from a URI (or a URL). Return the input if it
+    Download a local copy of remote data from a URI (or a URL). Return the input if it
     cannot be parsed as a URI.
 
     If ``possible_uri`` is a MAST URI, the file will be retrieved via
@@ -731,6 +777,12 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         remote requests in seconds (passed to
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
+    fsspec_filesystem : `fsspec.spec.AbstractFileSystem` or None, optional
+        If credentialed access is required for an S3 resource, pass in
+        an instance of ``fsspec.filesystem('s3', ...)`` or `s3fs.core.S3FileSystem`
+        initialized with an AWS ``profile``, or ``key`` and ``secret``. See the
+        `s3fs documentation <https://s3fs.readthedocs.io/en/latest/#credentials>`_
+        for more details.
     dryrun : bool
         Set to `True` to skip downloading data from MAST.
         This is only used for debugging.
@@ -810,6 +862,25 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
             # and this web path needs to be split with a forward slash
             local_path = os.path.join(os.getcwd(), parsed_uri.path.split('/')[-1])
         return local_path
+
+    elif parsed_uri.scheme.lower() == 's3':
+        # this dir will be created if it doesn't exist:
+        s3_download_dir = './s3_downloads/'
+        local_cache_name = os.path.join(
+            s3_download_dir,
+            os.path.basename(possible_uri)
+        )
+
+        # download the S3 object to local path, if needed:
+        if not os.path.exists(local_cache_name):
+            if fsspec_filesystem is None:
+                # assume anonymous access:
+                fsspec_filesystem = fsspec.filesystem('s3', anon=True)
+
+            os.makedirs(s3_download_dir, exist_ok=True)
+            fsspec_filesystem.get(possible_uri, local_cache_name)
+
+        return local_cache_name
 
     elif parsed_uri.scheme.lower() in ('http', 'https', 'ftp'):
         if cache_warning:
