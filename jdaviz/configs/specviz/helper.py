@@ -153,6 +153,7 @@ class Specviz(ConfigHelper, LineListMixin):
         self.load(data, format='1D Spectrum',
                   data_label=data_label,
                   viewer='*' if show_in_viewer else [],
+                  ignore_invalid_kwargs=True,
                   **load_kwargs)
 
     @property
