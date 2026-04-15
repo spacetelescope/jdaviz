@@ -5,7 +5,6 @@ from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
                                            SpectrumInputExtensionsMixin,
                                            _spectrum_assign_component_type)
-from jdaviz.core.loaders.importers.image.image import _spatial_assign_component_type
 from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS
 from jdaviz.core.template_mixin import (AutoTextField,
                                         ViewerSelectCreateNew)
@@ -116,6 +115,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # Handle spatial pixel axes (e.g., 'Pixel Axis 0 [y]') that fall outside
         # SPECTRAL_AXIS_COMP_LABELS and would otherwise get comp_type=None.
         if comp_id.startswith('Pixel Axis') and comp_id not in SPECTRAL_AXIS_COMP_LABELS:
+            from jdaviz.core.loaders.importers.image.image import _spatial_assign_component_type
             return _spatial_assign_component_type(comp_id, comp, units, physical_type)
         return _spectrum_assign_component_type(comp_id, comp, units, physical_type)
 
