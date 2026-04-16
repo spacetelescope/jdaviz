@@ -358,7 +358,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         if self.has_mask:
             expose += ['mask_data_label', 'mask_viewer']
         if self.has_dq:
-            expose += ['dq_data_label', 'dq_viewer']
+            expose += ['dq_data_label', 'dq_viewer', 'dq_add_to_flux_viewer']
         expose += ['extension']
         if self.has_unc:
             expose += ['unc_extension']
@@ -523,9 +523,14 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                     # setting viewer=None will default to self.viewer in
                     # add_to_data_collection and we don't want to clear this
                     # selection, so pass it a 'viewer' class that has a selected
-                    # attribute to get around this.
+                    # and create_new.selected to get around this.
+
                     class NoViewer:
                         selected = []
+
+                        class create_new:
+                            selected = []
+
                     viewer_for_dq = NoViewer()
                 else:
                     viewer_for_dq = self.viewer
