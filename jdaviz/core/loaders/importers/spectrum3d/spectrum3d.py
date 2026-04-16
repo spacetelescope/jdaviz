@@ -519,10 +519,16 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                 # add to flux viewer based on checkbox, or don't add to any viewer
                 if self.config == 'cubeviz':
                     viewer_for_dq = self.dq_viewer
+                elif not self.dq_add_to_flux_viewer:
+                    # setting viewer=None will default to self.viewer in
+                    # add_to_data_collection and we don't want to clear this
+                    # selection, so pass it a 'viewer' class that has a selected
+                    # attribute to get around this.
+                    class NoViewer:
+                        selected = []
+                    viewer_for_dq = NoViewer()
                 else:
                     viewer_for_dq = self.viewer
-                    if not self.dq_add_to_flux_viewer:
-                        self.viewer.selected = []
 
                 self.add_to_data_collection(dq_cube,
                                             dq_data_label,
