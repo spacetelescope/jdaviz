@@ -32,7 +32,7 @@ def test_autoconfig(uris):
     uri = uris[0]
     helper_class = uris[1]
 
-    kwargs = dict(cache=True, show=False)
+    kwargs = dict(show=False)
 
     viz_helper = jdaviz_open(cached_uri(uri), **kwargs)
     assert isinstance(viz_helper, helper_class)

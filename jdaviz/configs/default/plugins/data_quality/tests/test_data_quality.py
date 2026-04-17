@@ -88,8 +88,7 @@ def test_data_quality_plugin(helper_name, request):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
-        helper.load(cached_uri(uri), extension=('SCI', 'DQ'), format='Image',
-                    cache=True)
+        helper.load(cached_uri(uri), extension=('SCI', 'DQ'), format='Image')
 
     assert len(helper._app.data_collection) == 2
 
@@ -236,7 +235,7 @@ def test_cubeviz_dq_plugin_and_layer_visibility_bug(helper_name, request):
     uri = "mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_s3d.fits"
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        helper.load(cached_uri(uri), cache=True, format='3D Spectrum')
+        helper.load(cached_uri(uri), format='3D Spectrum')
 
     dq_plugin = helper.plugins['Data Quality']._obj
 

@@ -78,9 +78,9 @@ authors:
 - family-names: "Volfman"
   given-names: "Sabrina"
 title: "Jdaviz"
-version: 4.5.1
+version: 5.0.0
 doi: https://doi.org/10.5281/zenodo.5513927
-date-released: 2025-03-06
+date-released: 2025-04-15
 url: "https://github.com/spacetelescope/jdaviz"
 
 # see a full list of contributors here: https://github.com/spacetelescope/jdaviz/graphs/contributors
