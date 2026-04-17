@@ -22,6 +22,10 @@ Mosviz
 Other Changes and Additions
 ---------------------------
 
+- Speed up product table loading in the astroquery loader by using server-side
+  pagination in the UI and fetching product lists in a background thread so the
+  app remains responsive. [#4131]
+
 5.0.1 (unreleased)
 ==================
 
