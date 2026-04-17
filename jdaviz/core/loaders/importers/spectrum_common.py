@@ -177,6 +177,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         self.data_hashes = self.extension.data_hashes
         self.hash_map_to_label = dict(zip(self.extension.data_hashes, self.extension.labels))
         self.extension.select_default()
+        # Clear spectra cache when extension selection changes
+        self.extension.add_observe('selected', lambda _: self._clear_cache('spectra'))
 
         self.unc_extension = SelectFileExtensionComponent(self,
                                                           items='unc_extension_items',
@@ -186,6 +188,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                                           filters=[self.is_valid_unc],
                                                           default_mode='first')
         self.unc_extension.select_default()
+        # Clear spectra cache when uncertainty extension selection changes
+        self.unc_extension.add_observe('selected', lambda _: self._clear_cache('spectra'))
         self.mask_extension = SelectFileExtensionComponent(self,
                                                            items='mask_extension_items',
                                                            selected='mask_extension_selected',
@@ -194,6 +198,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                                            filters=[self.is_valid_mask],
                                                            default_mode='first')
         self.mask_extension.select_default()
+        # Clear spectra cache when mask extension selection changes
+        self.mask_extension.add_observe('selected', lambda _: self._clear_cache('spectra'))
         self.dq_extension = SelectFileExtensionComponent(self,
                                                          items='dq_extension_items',
                                                          selected='dq_extension_selected',
@@ -202,6 +208,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                                          filters=[self.is_valid_dq],
                                                          default_mode='first')
         self.dq_extension.select_default()
+        # Clear spectra cache when DQ extension selection changes
+        self.dq_extension.add_observe('selected', lambda _: self._clear_cache('spectra'))
 
         # set default data-label
         self._on_extension_change()
@@ -542,14 +550,24 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         except Exception:
             data_unit = u.count
 
+        # Check if the current HDU is the same as the uncertainty HDU
+        # (happens when loading uncertainty extension as primary data)
         if self.unc_extension.selected not in ('', 'None'):
             unc_hdu = self.unc_extension.selected_obj
-            unc_data = unc_hdu.data
+            # Don't load HDU as its own uncertainty
+            if unc_hdu is hdu:
+                unc_data = None
+            else:
+                unc_data = unc_hdu.data
         else:
             unc_data = None
         if self.mask_extension.selected not in ('', 'None'):
             mask_hdu = self.mask_extension.selected_obj
-            mask_data = mask_hdu.data
+            # Don't load HDU as its own mask
+            if mask_hdu is hdu:
+                mask_data = None
+            else:
+                mask_data = mask_hdu.data
         else:
             mask_data = None
 
@@ -677,12 +695,24 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if (target_wave_unit is None) and (target_flux_unit is None):  # Nothing to convert
             new_sc = sc
         elif target_flux_unit is None:  # Convert wavelength only
-            new_sc = sc.with_spectral_axis_unit(target_wave_unit)
+            try:
+                new_sc = sc.with_spectral_axis_unit(target_wave_unit)
+            except (u.UnitConversionError, ValueError):
+                # Can't convert spectral axis (e.g., pixels to wavelength)
+                # This can happen when loading uncertainty extensions as primary data
+                new_sc = sc
         elif target_wave_unit is None:  # Convert flux only and only PIX2 stuff
             new_sc = sc.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
         else:  # Convert both
-            new_sc = sc.with_spectral_axis_and_flux_units(
-                target_wave_unit, target_flux_unit, flux_equivalencies=_eqv_flux_to_sb_pixel())
+            try:
+                new_sc = sc.with_spectral_axis_and_flux_units(
+                    target_wave_unit, target_flux_unit, flux_equivalencies=_eqv_flux_to_sb_pixel())
+            except (u.UnitConversionError, ValueError):
+                # Can't convert spectral axis, try just flux
+                try:
+                    new_sc = sc.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
+                except (u.UnitConversionError, ValueError):
+                    new_sc = sc
         if target_wave_unit is not None:
             new_sc.meta['_orig_spec'] = sc
         # Since we create a new Spectrum, we need to copy over any original WCS info
@@ -762,9 +792,18 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             hdus = self.extension.selected_obj if self.multiselect else [self.extension.selected_obj]  # noqa
             # Validate that at least one extension is selected
             if not hdus or hdus[0] is None:
-                raise ValueError(
-                    "No primary data extension selected. Please select a FLUX extension."
-                )
+                # Check if an uncertainty extension is selected that could be used as primary
+                if self.unc_extension.selected not in ('', 'None'):
+                    # Use uncertainty extension as primary data
+                    unc_hdu = self.unc_extension.selected_obj
+                    if isinstance(unc_hdu, list):
+                        hdus = unc_hdu
+                    else:
+                        hdus = [unc_hdu]
+                else:
+                    raise ValueError(
+                        "No primary data extension selected. Please select a FLUX extension."
+                    )
             return [self._spectrum_from_hdu(hdulist, hdu) for hdu in hdus]
         elif self.input_type == 'asdf:roman':
             roman = self.input["roman"]

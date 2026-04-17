@@ -201,6 +201,46 @@ def test_spectrum3d_fits_no_flux_selected(deconfigged_helper):
         ldr.load()
 
 
+def test_spectrum3d_load_flux_then_err_only(deconfigged_helper, image_cube_hdu_obj):
+    """Test loading ERR extension as primary data when FLUX is deselected."""
+    # Use the existing fixture which has FLUX, ERR, and MASK extensions
+    hdul = image_cube_hdu_obj
+    
+    # Load FLUX without uncertainty
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdul
+    ldr.format = '3D Spectrum'
+
+    # Verify FLUX is available but ERR is not in extension choices 
+    # (due to hdu_is_valid_flux filter)
+    assert '1: FLUX' in ldr.importer.extension.choices
+    assert '2: ERR' not in ldr.importer.extension.choices
+    
+    # Load FLUX without uncertainty
+    ldr.importer.extension.selected = '1: FLUX'
+    ldr.importer.unc_extension.selected = ''
+    ldr.load()
+    
+    initial_count = len(deconfigged_helper._app.data_collection)
+    assert initial_count > 0
+    
+    # Now try to deselect FLUX and load only ERR as primary data
+    # The fix allows using the uncertainty extension as primary when no flux is selected
+    ldr.importer.extension.selected = ''
+    ldr.importer.unc_extension.selected = '2: ERR'
+    ldr.importer.mask_extension.selected = ''  # Deselect mask too
+    
+    # Set a different data label to avoid overwriting
+    ldr.importer.data_label.value = '3D Spectrum ERR'
+    
+    # This should now work - ERR can be loaded as primary data
+    ldr.load()
+    
+    # Verify ERR was loaded as new data
+    assert len(deconfigged_helper._app.data_collection) > initial_count
+    # Check that ERR was loaded
+    assert '3D Spectrum ERR' in [d.label for d in deconfigged_helper._app.data_collection]
+
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 @pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'
