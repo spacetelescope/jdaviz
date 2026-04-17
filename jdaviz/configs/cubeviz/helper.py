@@ -103,6 +103,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
                   data_label=data_label,
                   ext_data_label=f'Spectrum ({kwargs.get("function", "sum").lower()})',
                   format=format,
+                  ignore_invalid_kwargs=True,
                   **kwargs)
         return
 

@@ -7,9 +7,10 @@ import pytest
 from astropy.io import fits
 from astropy.units.quantity import Quantity
 
+from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.core.loaders import SpectrumImporter
 from jdaviz.utils import (alpha_index, download_uri_to_path,
-                          get_cloud_fits, cached_uri, escape_brackets,
+                          get_cloud_fits, get_cloud_asdf, cached_uri, escape_brackets,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
                           create_data_hash, parallelize_calculation)
 
@@ -70,7 +71,7 @@ def test_uri_to_download_specviz_local_path_check():
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper):
     uri = cached_uri("mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits")
-    specviz_helper.load(uri, cache=True)
+    specviz_helper.load(uri)
 
 
 @pytest.mark.remote_data
@@ -91,14 +92,22 @@ def test_load_s3_fits(imviz_helper):
 @pytest.mark.remote_data
 def test_get_cloud_fits_ext():
     s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
-    hdul = get_cloud_fits(s3_uri)
-    assert isinstance(hdul, fits.HDUList)
+    hdulist = get_cloud_fits(s3_uri)
+    assert isinstance(hdulist, fits.HDUList) and len(hdulist) == 10
 
-    hdul = get_cloud_fits(s3_uri, ext="SCI")
-    assert isinstance(hdul, fits.HDUList)
+    hdulist = get_cloud_fits(s3_uri, ext=["SCI", "ASDF"])
+    # return the primary extension and the SCI and ASDF extension
+    assert len(hdulist) == 3
+    assert hdulist['ASDF'].header['XTENSION'] == 'BINTABLE'
 
-    hdul = get_cloud_fits(s3_uri, ext=["SCI"])
-    assert isinstance(hdul, fits.HDUList)
+
+@pytest.mark.remote_data
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
+def test_get_cloud_asdf():
+    import roman_datamodels.datamodels as rdd
+    s3_uri = "s3://stpubdata/roman/nexus/soc_simulations/tutorial_data/r0003201001001001004_0004_wfi15_f106_cal.asdf"  # noqa: E501
+    image_model = get_cloud_asdf(s3_uri)
+    assert isinstance(image_model, rdd.ImageModel) and hasattr(image_model, 'dq')
 
 
 class FakeObject:

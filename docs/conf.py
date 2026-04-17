@@ -317,6 +317,8 @@ intersphinx_mapping.update({  # noqa: F405
     'traitlets': ('https://traitlets.readthedocs.io/en/stable/', None),
     'jwst': ('https://jwst-pipeline.readthedocs.io/en/stable/', None),
     'romancal': ('https://roman-pipeline.readthedocs.io/en/stable/', None),
+    'fsspec': ('https://filesystem-spec.readthedocs.io/en/latest/', None),
+    's3fs': ('https://s3fs.readthedocs.io/en/latest/', None),
 })
 
 # Options for linkcheck

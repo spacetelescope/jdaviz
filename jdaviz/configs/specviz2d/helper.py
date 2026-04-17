@@ -142,11 +142,13 @@ class Specviz2d(Specviz):
                       auto_extract=spectrum_1d is None,
                       viewer='*' if show_in_viewer else [],
                       extension=ext,
+                      ignore_invalid_kwargs=True,
                       **load_kwargs)
         if spectrum_1d is not None:
             self.load(spectrum_1d, format='1D Spectrum',
                       data_label=spectrum_1d_label,
                       viewer='*' if show_in_viewer else [],
+                      ignore_invalid_kwargs=True,
                       **load_kwargs)
 
     @deprecated(since="4.3", alternative="load")

@@ -92,8 +92,11 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
     helper._app.add_data_to_viewer(unc_viewer, f"{flux_label} collapsed")
 
     plg = helper.plugins["Aperture Photometry"]
+
+    # select collapsed cube dataset, which should now set is_image to True in ap phot plugin
     plg.dataset.selected = f"{flux_label} collapsed"
     plg.aperture.selected = "Subset 1"
+    assert plg._obj.is_image is True
     plg._obj.vue_do_aper_phot()
     row = plg.export_table()[2]
 
