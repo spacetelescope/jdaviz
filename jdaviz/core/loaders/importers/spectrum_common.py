@@ -710,7 +710,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             except (u.UnitConversionError, ValueError):
                 # Can't convert spectral axis, try just flux
                 try:
-                    new_sc = sc.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
+                    new_sc = sc.with_flux_unit(target_flux_unit,
+                                               equivalencies=_eqv_flux_to_sb_pixel())
                 except (u.UnitConversionError, ValueError):
                     new_sc = sc
         if target_wave_unit is not None:
