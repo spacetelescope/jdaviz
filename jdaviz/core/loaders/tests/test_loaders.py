@@ -224,10 +224,20 @@ def test_spectrum3d_load_flux_then_err_only(deconfigged_helper, image_cube_hdu_o
     initial_count = len(deconfigged_helper._app.data_collection)
     assert initial_count > 0
 
-    # Now try to deselect FLUX and load only ERR as primary data
-    # The fix allows using the uncertainty extension as primary when no flux is selected
+    # After loading flux, deselect FLUX while unc_extension is still ''.
+    # With a flux cube already loaded, import_disabled_msg should be cleared
+    # (the "select a FLUX extension" alert is not applicable when a flux cube
+    # is already in the data collection).
     ldr.importer.extension.selected = ''
+    # unc_extension is still '' from the setup above
+    assert ldr.importer.unc_extension.selected == ''
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Selecting ERR in unc_extension should keep import enabled
     ldr.importer.unc_extension.selected = '2: ERR'
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Now try to load only ERR as primary data (flux extension deselected)
     ldr.importer.mask_extension.selected = ''  # Deselect mask too
 
     # Set a different data label to avoid overwriting
@@ -235,6 +245,9 @@ def test_spectrum3d_load_flux_then_err_only(deconfigged_helper, image_cube_hdu_o
 
     # This should now work - ERR can be loaded as primary data
     ldr.load()
+
+    # No warning should be shown after a successful import
+    assert ldr.importer._obj.import_disabled_msg == ''
 
     # Verify ERR was loaded as new data
     assert len(deconfigged_helper._app.data_collection) > initial_count

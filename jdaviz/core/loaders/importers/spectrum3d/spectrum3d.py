@@ -322,23 +322,35 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     def _check_extension_selected(self, change={}):
         """
         Check if an extension is selected. If not, disable import with a message.
-        This is only checked if no flux cube is already loaded.
+        The alert is only shown when no flux cube has been loaded yet; once a flux
+        cube exists neither the "No primary data extension" nor the "Only one 3D
+        spectrum" message is applicable — the extension can legitimately be empty
+        while the unc/mask extensions are imported independently.
+
+        The check uses a broad "any 3D cube in DC" condition in addition to the
+        specific _loaded_flux_cube reference.  This is necessary to handle the
+        transient state that occurs during a label-overwrite: the old entry is
+        removed (DataCollectionDeleteMessage) before the new one is added
+        (DataCollectionAddMessage), which would temporarily make _loaded_flux_cube
+        appear absent from the collection even though a cube is being loaded.
         """
-        # Check if extension is empty/not selected
         if hasattr(self, 'extension') and not self.extension.selected:
-            # If a flux cube is already loaded, allow loading without flux extension
-            # (this would be loading only uncertainty/mask data)
             loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
-            if loaded_flux_cube is not None and loaded_flux_cube in self._app.data_collection:
+            flux_cube_in_dc = (
+                (loaded_flux_cube is not None and
+                 loaded_flux_cube in self._app.data_collection) or
+                any(d.data.ndim == 3 for d in self._app.data_collection)
+            )
+            if flux_cube_in_dc:
+                # A 3D cube is present — clear any disabled message.
                 self.import_disabled_msg = ""
             else:
-                # No flux cube loaded yet, and no flux extension selected - this is invalid
                 self.import_disabled_msg = (
                     "No primary data extension selected. Please select a FLUX extension."
                 )
         else:
-            # Extension is selected - only clear the message if it's about extension selection,
-            # not if it's about flux cube limits
+            # Extension is selected — only clear if the message is about extension selection,
+            # not if it is about the flux-cube load limit.
             if "No primary data extension selected" in self.import_disabled_msg:
                 self.import_disabled_msg = ""
 
