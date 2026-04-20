@@ -89,6 +89,7 @@ test = [
 docs = [
     "sphinx-astropy[confv2]>=1.9.1",
     "sphinx_design",
+    # replace with published version once on pip (or at least main branch on official repo)
     "docs-wireframe-demo @ https://github.com/kecnry/docs-wireframe-demo/archive/jdaviz-migration.tar.gz"
 ]
 roman = [
