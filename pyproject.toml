@@ -127,6 +127,7 @@ jdaviz = [
     "configs/*/*.yaml",
     "jdaviz_cli.ipynb",
     "jdaviz_cli_launcher.ipynb",
+    "ext/wireframe/static/*",
 ]
 "jdaviz.configs.imviz.tests" = [
     "data/*",
