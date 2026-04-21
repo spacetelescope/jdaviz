@@ -106,11 +106,17 @@
     }
 
     // Default sidebar content (can be overridden via config.customContentMap)
-    var confSettings = (typeof window !== 'undefined' && window.__confSettings) || {};
-    var loaderFormats = confSettings.loaderFormats ||
-        ['Auto', 'Image', 'Spectrum', 'Catalog', 'Cube'];
+    // Read confSettings lazily so that jdaviz-conf-settings.js can load in any order
+    function getConfSettings() {
+        return (typeof window !== 'undefined' && window.__confSettings) || {};
+    }
 
-    var SIDEBAR_CONTENT = {
+    var _sidebarContentCache = null;
+    function getSidebarContent() {
+        if (_sidebarContentCache) return _sidebarContentCache;
+        var loaderFormats = getConfSettings().loaderFormats ||
+            ['Auto', 'Image', 'Spectrum', 'Catalog', 'Cube'];
+        _sidebarContentCache = {
         'loaders': {
             tabs: ['Data', 'Viewer'],
             content: [
@@ -173,7 +179,9 @@
             learnMore: 'Learn about subsets \u2192',
             scrollTarget: 'grid-subsets'
         }
-    };
+        };
+        return _sidebarContentCache;
+    }
 
     // ── Per-instance state ──────────────────────────────────────────────
 
@@ -297,13 +305,13 @@
         if (!sidebar || !contentEl) return;
 
         // Get content map (allow override via config)
-        var contentMap = SIDEBAR_CONTENT;
+        var contentMap = getSidebarContent();
         if (instance.config.customContentMap) {
             var custom = instance.config.customContentMap;
             if (typeof custom === 'string') {
                 try { custom = JSON.parse(custom); } catch(e) { custom = {}; }
             }
-            contentMap = Object.assign({}, SIDEBAR_CONTENT, custom);
+            contentMap = Object.assign({}, getSidebarContent(), custom);
         }
 
         var data = contentMap[sidebarType];
@@ -440,7 +448,7 @@
         var state = getState(this);
         if (!state.currentSidebar) return;
 
-        var data = SIDEBAR_CONTENT[state.currentSidebar];
+        var data = getSidebarContent()[state.currentSidebar];
         if (!data || !data.tabs) return;
 
         var targetIndex = -1;
@@ -776,8 +784,8 @@
 
                 // Populate version from conf settings
                 var versionEl = root.querySelector('.jdaviz-toolbar-version');
-                if (versionEl && confSettings.version) {
-                    versionEl.textContent = 'v' + confSettings.version;
+                if (versionEl && getConfSettings().version) {
+                    versionEl.textContent = 'v' + getConfSettings().version;
                 }
 
                 // Wire up search bar click to open Sphinx search dialog
