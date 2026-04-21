@@ -37,7 +37,6 @@ UI Access
    :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: Line Lists
-   :plugin-panel-opened: false
    :demo-repeat: false
 
 Click the :guilabel:`Line Lists` icon in the plugin toolbar to:

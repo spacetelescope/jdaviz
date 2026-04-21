@@ -56,5 +56,4 @@ UI Access
    :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: Line Analysis
-   :plugin-panel-opened: false
    :demo-repeat: false

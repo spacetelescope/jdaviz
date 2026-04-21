@@ -44,7 +44,6 @@ UI Access
    :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: Catalog Search
-   :plugin-panel-opened: false
    :demo-repeat: false
 
 Click the :guilabel:`Catalog Search` icon in the plugin toolbar to:

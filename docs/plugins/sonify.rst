@@ -57,7 +57,6 @@ UI Access
    :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: Sonify Data
-   :plugin-panel-opened: false
    :demo-repeat: false
 
 Click the :guilabel:`Sonify` icon in the plugin toolbar to:

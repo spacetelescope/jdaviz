@@ -76,7 +76,6 @@ UI Access
 .. wireframe-demo::
    :demo: plugins
    :enable-only: plugins
-   :plugin-panel-opened: false
    :demo-repeat: true
 
 

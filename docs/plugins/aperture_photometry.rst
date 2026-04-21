@@ -94,7 +94,6 @@ UI Access
    :demo: plugins,plugins@1000:open-panel,plugins:select-data=Image 2
    :enable-only: plugins
    :plugin-name: Aperture Photometry
-   :plugin-panel-opened: false
    :demo-repeat: false
 
 Opening the Plugin

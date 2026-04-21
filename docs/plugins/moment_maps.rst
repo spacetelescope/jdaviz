@@ -87,7 +87,6 @@ UI Access
    :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: Moment Maps
-   :plugin-panel-opened: false
    :demo-repeat: false
 
 Workflow

@@ -22,7 +22,6 @@ UI Access
    :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: Model Fitting
-   :plugin-panel-opened: false
    :demo-repeat: false
 
 Details

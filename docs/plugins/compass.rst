@@ -28,7 +28,6 @@ UI Access
    :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: Compass
-   :plugin-panel-opened: false
    :demo-repeat: false
 
 Click the :guilabel:`Compass` icon in the plugin toolbar to toggle compass display.

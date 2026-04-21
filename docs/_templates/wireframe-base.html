@@ -1,0 +1,252 @@
+<!-- Wireframe Section -->
+<div class="wireframe-section">
+    <div class="wireframe-container">
+        <div class="wireframe-toolbar">
+            <div class="wireframe-toolbar-icon" data-sidebar="loaders" data-icon="database-import" title="Import Data"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="save" data-icon="download" title="Export"></div>
+            <div class="wireframe-toolbar-divider"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="settings" data-icon="tune" title="Plot Options"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
+            <div class="wireframe-toolbar-divider"></div>
+            <div class="wireframe-toolbar-icon mouseover-button" data-icon="auto-fix" title="Mouseover Info"></div>
+            <div class="wireframe-toolbar-spacer"></div>
+            <div class="wireframe-toolbar-right">
+                <div class="wireframe-toolbar-search-row">
+                    <input type="text" class="wireframe-toolbar-search" id="wireframe-search-input" placeholder="Search documentation..." readonly />
+                </div>
+                <div class="wireframe-toolbar-version-row">
+                    <span class="wireframe-toolbar-version">v{{ jdaviz_version }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="wireframe-main">
+            <div class="wireframe-sidebar" id="wireframe-sidebar">
+
+                <!-- ── Loaders panel (2 tabs: Data / Viewer) ─────────────────── -->
+                <div class="wireframe-sidebar-panel" data-sidebar-panel="loaders">
+                    <div class="wireframe-sidebar-tabs">
+                        <button class="wireframe-sidebar-tab active">Data</button>
+                        <button class="wireframe-sidebar-tab">Viewer</button>
+                    </div>
+                    <div class="wireframe-sidebar-body">
+                        <!-- Data tab -->
+                        <div class="wireframe-tab-panel active">
+                            <div class="wireframe-sidebar-content">
+                                {{ descriptions.loaders|capitalize }}.<br>
+                                <div class="wireframe-form-group">
+                                    <label class="wireframe-form-label">Source</label>
+                                    <select id="source-select" class="wireframe-select">
+                                        <option>file</option>
+                                        <option>file drop</option>
+                                        <option>url</option>
+                                        <option>object</option>
+                                        <option>astroquery</option>
+                                        <option>virtual observatory</option>
+                                    </select>
+                                </div>
+                                <div class="wireframe-form-group">
+                                    <label class="wireframe-form-label">Format</label>
+                                    <select id="format-select" class="wireframe-select">
+                                        <option>1D Spectrum</option>
+                                        <option>2D Spectrum</option>
+                                        <option>Image</option>
+                                        <option>Cube</option>
+                                        <option>Ramp</option>
+                                    </select>
+                                </div>
+                                <button id="load-button" class="wireframe-button">Load</button>
+                            </div>
+                            <div class="wireframe-sidebar-footer">
+                                <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-loaders">Learn more about data import →</button>
+                            </div>
+                        </div>
+                        <!-- Viewer tab -->
+                        <div class="wireframe-tab-panel">
+                            <div class="wireframe-sidebar-content">
+                                {{ descriptions.viewers|capitalize }}.<br>
+                                <div class="wireframe-form-group">
+                                    <label class="wireframe-form-label">Viewer Type</label>
+                                    <select id="viewer-type-select" class="wireframe-select">
+                                        <option>1D Spectrum</option>
+                                        <option>2D Spectrum</option>
+                                        <option>Histogram</option>
+                                        <option>Scatter</option>
+                                        <option>Image</option>
+                                        <option>Cube Flux</option>
+                                    </select>
+                                </div>
+                                <button class="wireframe-button">Create Viewer</button>
+                            </div>
+                            <div class="wireframe-sidebar-footer">
+                                <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-loaders">Explore viewer options →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Export / Save panel ────────────────────────────────────── -->
+                <div class="wireframe-sidebar-panel" data-sidebar-panel="save">
+                    <div class="wireframe-sidebar-body">
+                        <div class="wireframe-sidebar-content">
+                            {{ descriptions.export|capitalize }}.
+                        </div>
+                        <div class="wireframe-sidebar-footer">
+                            <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-export">See export options →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Settings panel (2 tabs: Plot Options / Units) ─────────── -->
+                <div class="wireframe-sidebar-panel" data-sidebar-panel="settings">
+                    <div class="wireframe-sidebar-tabs">
+                        <button class="wireframe-sidebar-tab active">Plot Options</button>
+                        <button class="wireframe-sidebar-tab">Units</button>
+                    </div>
+                    <div class="wireframe-sidebar-body">
+                        <!-- Plot Options tab -->
+                        <div class="wireframe-tab-panel active">
+                            <div class="wireframe-sidebar-content">
+                                <div class="wireframe-form-group">
+                                    <label class="wireframe-form-label">Viewer</label>
+                                    <select class="wireframe-select plot-options-viewer-dropdown" id="plot-options-viewer">
+                                        <option>viewer-1</option>
+                                    </select>
+                                </div>
+                                <div class="plot-options-section-header">Layers</div>
+                                <div class="plot-options-layer-tabs">
+                                    <button class="plot-options-layer-tab active" data-layer-color="#00FF00">A</button>
+                                </div>
+                                <div class="plot-options-color-row">
+                                    <span class="plot-options-color-label">Color</span>
+                                    <button class="plot-options-color-button" id="plot-options-color" style="background-color:#00FF00;" title="Click to change color"></button>
+                                </div>
+                                <div class="plot-options-section-header">Display</div>
+                                <div class="plot-options-input-row">
+                                    <span class="plot-options-input-label">Opacity</span>
+                                    <div class="plot-options-input-bar"></div>
+                                </div>
+                                <div class="plot-options-input-row">
+                                    <span class="plot-options-input-label">Stretch</span>
+                                    <div class="plot-options-input-bar"></div>
+                                </div>
+                                <div class="plot-options-input-row">
+                                    <span class="plot-options-input-label">Contrast</span>
+                                    <div class="plot-options-input-bar"></div>
+                                </div>
+                            </div>
+                            <div class="wireframe-sidebar-footer">
+                                <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-settings">View plot customization →</button>
+                            </div>
+                        </div>
+                        <!-- Units tab -->
+                        <div class="wireframe-tab-panel">
+                            <div class="wireframe-sidebar-content">
+                                {{ descriptions.settings_units }}
+                            </div>
+                            <div class="wireframe-sidebar-footer">
+                                <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-settings">Learn about units →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Info panel (3 tabs: Metadata / Markers / Logger) ───────── -->
+                <div class="wireframe-sidebar-panel" data-sidebar-panel="info">
+                    <div class="wireframe-sidebar-tabs">
+                        <button class="wireframe-sidebar-tab active">Metadata</button>
+                        <button class="wireframe-sidebar-tab">Markers</button>
+                        <button class="wireframe-sidebar-tab">Logger</button>
+                    </div>
+                    <div class="wireframe-sidebar-body">
+                        <div class="wireframe-tab-panel active">
+                            <div class="wireframe-sidebar-content">{{ descriptions.info_metadata }}</div>
+                            <div class="wireframe-sidebar-footer">
+                                <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-info">Explore metadata tools →</button>
+                            </div>
+                        </div>
+                        <div class="wireframe-tab-panel">
+                            <div class="wireframe-sidebar-content">{{ descriptions.info_markers|capitalize }}.</div>
+                            <div class="wireframe-sidebar-footer">
+                                <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-info">Learn about markers →</button>
+                            </div>
+                        </div>
+                        <div class="wireframe-tab-panel">
+                            <div class="wireframe-sidebar-content">{{ descriptions.info_logger }}</div>
+                            <div class="wireframe-sidebar-footer">
+                                <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-info">View logging options →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Plugins panel (expansion panels) ──────────────────────── -->
+                <div class="wireframe-sidebar-panel" data-sidebar-panel="plugins">
+                    <div class="wireframe-sidebar-content">
+                        <div class="expansion-panels">
+                            <div class="expansion-panel" data-panel-index="0">
+                                <div class="expansion-panel-header">
+                                    <span class="expansion-panel-title">{{ plugin_name }}</span>
+                                    <span class="expansion-panel-arrow">▼</span>
+                                </div>
+                                <div class="expansion-panel-content">
+                                    {{ descriptions.plugins|capitalize }}.
+                                </div>
+                            </div>
+                            <div class="expansion-panel disabled" data-panel-index="1">
+                                <div class="expansion-panel-header"><div class="expansion-panel-placeholder"></div></div>
+                            </div>
+                            <div class="expansion-panel disabled" data-panel-index="2">
+                                <div class="expansion-panel-header"><div class="expansion-panel-placeholder"></div></div>
+                            </div>
+                            <div class="expansion-panel disabled" data-panel-index="3">
+                                <div class="expansion-panel-header"><div class="expansion-panel-placeholder"></div></div>
+                            </div>
+                            <div class="expansion-panel disabled" data-panel-index="4">
+                                <div class="expansion-panel-header"><div class="expansion-panel-placeholder"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wireframe-sidebar-footer">
+                        <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-plugins">Browse analysis plugins →</button>
+                    </div>
+                </div>
+
+                <!-- ── Subsets panel ──────────────────────────────────────────── -->
+                <div class="wireframe-sidebar-panel" data-sidebar-panel="subsets">
+                    <div class="wireframe-sidebar-body">
+                        <div class="wireframe-sidebar-content">{{ descriptions.subsets|capitalize }}.</div>
+                        <div class="wireframe-sidebar-footer">
+                            <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-subsets">Learn about subsets →</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /.wireframe-sidebar -->
+
+            <div class="wireframe-viewer-area">
+                <!-- Viewers are added dynamically via viewer-add actions -->
+                <!-- Data Menu Popup (shared across all viewers) -->
+                <div class="data-menu-popup" id="data-menu-popup">
+                    <div class="data-menu-header">
+                        <div class="data-menu-title">Data Menu</div>
+                        <button class="data-menu-close" id="data-menu-close">×</button>
+                    </div>
+                    <div class="data-menu-content">
+                        <p class="data-menu-description">
+                            Control data and subset layer order and visibility for each viewer.
+                            Toggle layer visibility, reorder layers by dragging, and manage which data appears in the viewer.
+                        </p>
+                        <button class="data-menu-button wireframe-sidebar-link" data-scroll-target="grid-data-menu">Learn more about Data Menu →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Auto-cycle control button -->
+        <div class="wireframe-cycle-control" data-flyout-text="pause demo">
+            <div class="wireframe-cycle-control-icon cycle-icon-pause"></div>
+            <div class="wireframe-cycle-control-icon cycle-icon-restart hidden"></div>
+        </div>
+    </div>
+</div>

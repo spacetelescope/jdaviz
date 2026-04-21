@@ -97,7 +97,6 @@ UI Access
    :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: 3D Spectral Extraction
-   :plugin-panel-opened: false
    :demo-repeat: false
 
 Opening the Plugin

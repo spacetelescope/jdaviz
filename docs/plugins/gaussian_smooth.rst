@@ -37,7 +37,6 @@ UI Access
    :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: Gaussian Smooth
-   :plugin-panel-opened: false
    :demo-repeat: false
 
 Click the :guilabel:`Gaussian Smooth` icon in the plugin toolbar to open.

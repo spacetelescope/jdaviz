@@ -82,7 +82,6 @@ UI Access
    :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: Collapse
-   :plugin-panel-opened: false
    :demo-repeat: false
 
 Workflow
