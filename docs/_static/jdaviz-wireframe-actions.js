@@ -84,13 +84,17 @@
     }
 
     // Default sidebar content (can be overridden via config.customContentMap)
+    var confSettings = (typeof window !== 'undefined' && window.__confSettings) || {};
+    var loaderFormats = confSettings.loaderFormats ||
+        ['auto', 'image', 'spectrum', 'catalog', 'cube'];
+
     var SIDEBAR_CONTENT = {
         'loaders': {
             tabs: ['Data', 'Viewer'],
             content: [
                 'Load data into the application.<br>' +
                 formSelect('Source', 'source-select', ['file', 'astroquery', 'url']) +
-                formSelect('Format', 'format-select', ['auto', 'image', 'spectrum', 'catalog', 'cube']) +
+                formSelect('Format', 'format-select', loaderFormats) +
                 formButton('Load'),
                 'Create and configure viewers.<br>' +
                 formSelect('Viewer Type', 'viewer-type-select', ['image', 'scatter', '1D spectrum', '2D spectrum', 'histogram']) +
