@@ -44,7 +44,6 @@ html[data-theme="light"] {
     border: 2px solid var(--jdw-border);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     position: relative;
 }
 
