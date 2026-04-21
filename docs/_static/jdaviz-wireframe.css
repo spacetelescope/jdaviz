@@ -135,6 +135,39 @@ html[data-theme="light"] {
     color: rgba(255, 255, 255, 0.5);
 }
 
+.jdaviz-api-toggle-btn {
+    background: transparent;
+    border: 1px solid var(--jdw-border);
+    border-radius: 4px;
+    color: var(--jdw-text);
+    font-size: 11px;
+    font-family: monospace;
+    padding: 2px 8px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s, background 0.2s;
+}
+
+.jdaviz-api-toggle-btn:hover {
+    opacity: 0.8;
+    background: rgba(255,255,255,0.1);
+}
+
+.jdaviz-api-toggle-btn.active {
+    opacity: 1;
+    background: rgba(199, 93, 44, 0.4);
+    border-color: rgba(199, 93, 44, 0.8);
+}
+
+/* Hide sidebar footer scroll-to buttons by default; shown via .show-scroll-to */
+.jdaviz-sidebar-footer-button[data-scroll-target] {
+    display: none;
+}
+
+.show-scroll-to .jdaviz-sidebar-footer-button[data-scroll-target] {
+    display: block;
+}
+
 /* ── Main area ───────────────────────────────────────────────────── */
 
 .jdaviz-main {
@@ -651,6 +684,20 @@ html[data-theme="light"] .jdaviz-toolbar-icon.active {
 html[data-theme="light"] .jdaviz-toolbar-search {
     background: rgba(0,0,0,0.06);
     color: var(--jdw-text);
+}
+
+html[data-theme="light"] .jdaviz-api-toggle-btn {
+    color: var(--jdw-text);
+    border-color: var(--jdw-border);
+}
+
+html[data-theme="light"] .jdaviz-api-toggle-btn:hover {
+    background: rgba(0,0,0,0.06);
+}
+
+html[data-theme="light"] .jdaviz-api-toggle-btn.active {
+    background: rgba(199, 93, 44, 0.2);
+    border-color: rgba(199, 93, 44, 0.6);
 }
 
 html[data-theme="light"] .jdaviz-sidebar-tabs {

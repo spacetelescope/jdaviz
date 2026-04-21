@@ -95,17 +95,22 @@
                 'Load data into the application.<br>' +
                 formSelect('Source', 'source-select', ['file', 'astroquery', 'url']) +
                 formSelect('Format', 'format-select', loaderFormats) +
-                formButton('Load'),
+                formButton('Load') +
+                '<div class="jdaviz-api-snippet">from jdaviz import Specviz\nviz = Specviz()\nviz.load_data("spectrum.fits")</div>',
                 'Create and configure viewers.<br>' +
                 formSelect('Viewer Type', 'viewer-type-select', ['image', 'scatter', '1D spectrum', '2D spectrum', 'histogram']) +
-                formButton('Create Viewer')
+                formButton('Create Viewer') +
+                '<div class="jdaviz-api-snippet">viz.app.add_viewer("spectrum-viewer")</div>'
             ],
-            learnMore: ['Learn more about data import \u2192', 'Explore viewer options \u2192']
+            learnMore: ['Learn more about data import \u2192', 'Explore viewer options \u2192'],
+            scrollTarget: 'grid-loaders'
         },
         'save': {
             tabs: null,
-            content: 'Export data, plots, and subsets to various formats.',
-            learnMore: 'See export options \u2192'
+            content: 'Export data, plots, and subsets to various formats.' +
+                '<div class="jdaviz-api-snippet">viz.app.get_viewer("spectrum-viewer").figure.save_png("plot.png")</div>',
+            learnMore: 'See export options \u2192',
+            scrollTarget: 'grid-export'
         },
         'settings': {
             tabs: ['Plot Options', 'Units'],
@@ -113,31 +118,38 @@
                 'dynamic:plot-options',
                 'Configure display units for spectral and flux axes.<br>' +
                 formSelect('Spectral Unit', 'spectral-unit-select', ['Angstrom', 'nm', 'micron']) +
-                formSelect('Flux Unit', 'flux-unit-select', ['Jy', 'erg/s/cm\u00B2/\u00C5'])
+                formSelect('Flux Unit', 'flux-unit-select', ['Jy', 'erg/s/cm\u00B2/\u00C5']) +
+                '<div class="jdaviz-api-snippet">viz.plugins["Unit Conversion"].spectral_unit = "micron"</div>'
             ],
-            learnMore: ['View plot customization \u2192', 'Learn about units \u2192']
+            learnMore: ['View plot customization \u2192', 'Learn about units \u2192'],
+            scrollTarget: 'grid-settings'
         },
         'info': {
             tabs: ['Metadata', 'Markers', 'Logger'],
             content: [
-                'Display file metadata and header information.',
+                'Display file metadata and header information.' +
+                '<div class="jdaviz-api-snippet">viz.app.get_viewer("spectrum-viewer").data()</div>',
                 'Interactive table of markers placed on the viewer.',
                 'View history of operations and messages.'
             ],
-            learnMore: ['Explore metadata tools \u2192', 'Learn about markers \u2192', 'View logging options \u2192']
+            learnMore: ['Explore metadata tools \u2192', 'Learn about markers \u2192', 'View logging options \u2192'],
+            scrollTarget: 'grid-info'
         },
         'plugins': {
             tabs: null,
             content: 'dynamic:plugin-panels',
-            learnMore: 'Browse analysis plugins \u2192'
+            learnMore: 'Browse analysis plugins \u2192',
+            scrollTarget: 'grid-plugins'
         },
         'subsets': {
             tabs: null,
             content: 'Create and manage spatial and spectral subsets for targeted analysis.<br>' +
                 formSelect('Subset', 'subset-select', ['Subset 1', 'Subset 2']) +
                 formButton('Recenter') +
-                formButton('Delete'),
-            learnMore: 'Learn about subsets \u2192'
+                formButton('Delete') +
+                '<div class="jdaviz-api-snippet">viz.get_subsets()</div>',
+            learnMore: 'Learn about subsets \u2192',
+            scrollTarget: 'grid-subsets'
         }
     };
 
@@ -350,7 +362,21 @@
             learnMoreText = data.learnMore || '';
         }
         if (learnMoreText) {
-            footerEl.innerHTML = '<button class="jdaviz-sidebar-footer-button">' + learnMoreText + '</button>';
+            var scrollAttr = data.scrollTarget
+                ? ' data-scroll-target="' + data.scrollTarget + '"'
+                : '';
+            footerEl.innerHTML = '<button class="jdaviz-sidebar-footer-button"' + scrollAttr + '>' + learnMoreText + '</button>';
+            // Wire up scroll-to click
+            var footerBtn = footerEl.querySelector('.jdaviz-sidebar-footer-button[data-scroll-target]');
+            if (footerBtn) {
+                footerBtn.addEventListener('click', function(ev) {
+                    var targetId = footerBtn.dataset.scrollTarget;
+                    var targetEl = document.querySelector('[data-grid-id="' + targetId + '"]');
+                    if (targetEl) {
+                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            }
         } else {
             footerEl.innerHTML = '';
         }
@@ -675,6 +701,8 @@
     WireframeDemo.registerAction('api-toggle', function(step, el, contentRoot) {
         var sidebar = contentRoot.querySelector('.jdaviz-sidebar');
         if (sidebar) sidebar.classList.toggle('api-hints-visible');
+        var btn = contentRoot.querySelector('.jdaviz-api-toggle-btn');
+        if (btn) btn.classList.toggle('active');
     });
 
     } // end registerAll
@@ -726,6 +754,47 @@
                     closeBtn.addEventListener('click', function() {
                         var popup = root.querySelector('.jdaviz-data-menu-popup');
                         if (popup) popup.classList.remove('visible');
+                    });
+                }
+
+                // Populate version from conf settings
+                var versionEl = root.querySelector('.jdaviz-toolbar-version');
+                if (versionEl && confSettings.version) {
+                    versionEl.textContent = 'v' + confSettings.version;
+                }
+
+                // Wire up search bar to open Sphinx search
+                var searchInput = root.querySelector('.jdaviz-toolbar-search');
+                if (searchInput) {
+                    searchInput.removeAttribute('readonly');
+                    searchInput.addEventListener('keydown', function(ev) {
+                        if (ev.key === 'Enter' && searchInput.value.trim()) {
+                            var searchLink = document.querySelector('link[rel="search"]');
+                            var searchUrl = searchLink ? searchLink.href : 'search.html';
+                            window.location.href = searchUrl + '?q=' + encodeURIComponent(searchInput.value.trim());
+                        }
+                    });
+                }
+
+                // Wire up API toggle button
+                var apiBtn = root.querySelector('.jdaviz-api-toggle-btn');
+                if (apiBtn) {
+                    apiBtn.addEventListener('click', function(ev) {
+                        var instance = e.detail.instance;
+                        if (instance && ev.isTrusted) instance.pause();
+                        var sidebar = root.querySelector('.jdaviz-sidebar');
+                        if (sidebar) sidebar.classList.toggle('api-hints-visible');
+                        apiBtn.classList.toggle('active');
+                    });
+                }
+
+                // Apply initial classes from config (e.g. "show-scroll-to")
+                var instance = e.detail.instance;
+                if (instance && instance.config && instance.config.initialClass) {
+                    var classes = instance.config.initialClass.split(/\s+/);
+                    var section = root.querySelector('.jdaviz-wireframe-section') || root;
+                    classes.forEach(function(cls) {
+                        if (cls) section.classList.add(cls);
                     });
                 }
             }

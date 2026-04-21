@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jdaviz - Astronomical Data Visualization</title>
+    <link rel="search" title="Search" href="{{ pathto('search') }}" />
     <script>
         // Suppress ReadTheDocs custom element registration errors
         window.addEventListener('error', function(e) {
@@ -1471,6 +1472,7 @@
              data-wireframe-config='{
                "htmlSrc": "{{ pathto('_static/jdaviz-wireframe.html', 1) }}",
                "repeat": true,
+               "initialClass": "show-scroll-to",
                "steps": [
                  {"action": "show-sidebar", "value": "loaders", "delay": 1500},
                  {"action": "select-dropdown", "value": "source:file", "delay": 1500},

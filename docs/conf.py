@@ -380,6 +380,9 @@ def _generate_conf_settings_js(app):
     docs_dir = os.path.dirname(__file__)
     settings = {}
 
+    # Version string
+    settings['version'] = app.config.html_context.get('jdaviz_version', '')
+
     # Scan loaders/formats/ for RST files to populate format dropdown options
     formats_dir = os.path.join(docs_dir, 'loaders', 'formats')
     names = ['auto']
