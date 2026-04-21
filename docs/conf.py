@@ -1179,6 +1179,7 @@ wireframe_assets_dir = os.path.join(os.path.dirname(__file__), '_templates')
 wireframe_variables = {
     'jdaviz_version': html_context.get('jdaviz_version', version if dev else release),
     'descriptions': descriptions,
+    'plugin_name': 'Data Analysis Plugin',
 }
 
 
