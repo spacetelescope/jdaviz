@@ -6,6 +6,8 @@
  *
  * This file should be loaded AFTER wireframe-demo-controller.js
  * but BEFORE any wireframe-demo containers are auto-discovered.
+ * If the controller hasn't loaded yet (e.g. deferred scripts),
+ * registrations are queued and applied when 'wireframe-demo-ready' fires.
  */
 (function () {
     'use strict';
@@ -355,6 +357,8 @@
 
     // ── Register custom actions ─────────────────────────────────────────
 
+    function registerAll() {
+
     /**
      * show-sidebar: Open a sidebar panel.
      * step.value = sidebar type name (e.g. "loaders", "settings")
@@ -668,6 +672,17 @@
         var sidebar = contentRoot.querySelector('.jdaviz-sidebar');
         if (sidebar) sidebar.classList.toggle('api-hints-visible');
     });
+
+    } // end registerAll
+
+    // ── Register actions: immediately if controller is loaded, else wait ─
+    if (typeof WireframeDemo !== 'undefined' && WireframeDemo.registerAction) {
+        registerAll();
+    } else {
+        document.addEventListener('wireframe-demo-ready', function() {
+            registerAll();
+        }, { once: true });
+    }
 
     // ── Initialization hook ─────────────────────────────────────────────
     // Apply toolbar icons when any wireframe-demo finishes loading HTML.
