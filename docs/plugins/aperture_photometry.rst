@@ -91,7 +91,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: plugins,plugins@1000:open-panel,plugins:select-data=Image 2
+   :demo: plugins,plugins@1000:open-panel
    :enable-only: plugins
    :plugin-name: Aperture Photometry
    :demo-repeat: false
