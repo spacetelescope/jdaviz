@@ -389,7 +389,7 @@ def _generate_conf_settings_js(app):
     if os.path.isdir(formats_dir):
         for fn in sorted(os.listdir(formats_dir)):
             if fn.endswith('.rst') and fn not in ('index.rst', 'extensions.rst'):
-                names.append(_rst_filename_to_title(fn).lower())
+                names.append(_rst_filename_to_title(fn))
     settings['loaderFormats'] = names
 
     static_dir = os.path.join(docs_dir, '_static')

@@ -69,36 +69,58 @@
         'Data Quality', 'Sonify Data'
     ];
 
-    function generatePluginPanelsHTML() {
-        return PLUGIN_LIST.map(function(name) {
-            return '<div class="jdaviz-expansion-panel" data-plugin-name="' + name + '">' +
-                '<div class="jdaviz-expansion-header">' +
-                '<span>' + name + '</span><span class="jdaviz-expansion-chevron">\u25B6</span>' +
-                '</div>' +
-                '<div class="jdaviz-expansion-body">' +
-                '<div style="padding:8px 0;color:rgba(255,255,255,0.6);">' +
-                'Configure ' + name.toLowerCase() + ' settings.' +
-                '</div>' +
-                '</div></div>';
-        }).join('');
+    function generatePluginPanelsHTML(pluginName) {
+        var name = pluginName || PLUGIN_LIST[0];
+        return '<div class="jdaviz-expansion-panels">' +
+            '<div class="jdaviz-expansion-panel expanded" data-panel-index="0" data-plugin-name="' + name + '">' +
+            '<div class="jdaviz-expansion-panel-header">' +
+            '<span class="jdaviz-expansion-panel-title">' + name + '</span>' +
+            '<span class="jdaviz-expansion-panel-arrow">\u25BC</span>' +
+            '</div>' +
+            '<div class="jdaviz-expansion-panel-content expanded">' +
+            '<div class="jdaviz-api-snippet">plg = jd.plugins[\'' + name + '\']</div>' +
+            'Do basic data reduction and analysis tasks for specific science use-cases.' +
+            '</div>' +
+            '</div>' +
+            '<div class="jdaviz-expansion-panel disabled" data-panel-index="1">' +
+            '<div class="jdaviz-expansion-panel-header">' +
+            '<div class="jdaviz-expansion-panel-placeholder"></div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="jdaviz-expansion-panel disabled" data-panel-index="2">' +
+            '<div class="jdaviz-expansion-panel-header">' +
+            '<div class="jdaviz-expansion-panel-placeholder"></div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="jdaviz-expansion-panel disabled" data-panel-index="3">' +
+            '<div class="jdaviz-expansion-panel-header">' +
+            '<div class="jdaviz-expansion-panel-placeholder"></div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="jdaviz-expansion-panel disabled" data-panel-index="4">' +
+            '<div class="jdaviz-expansion-panel-header">' +
+            '<div class="jdaviz-expansion-panel-placeholder"></div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
     }
 
     // Default sidebar content (can be overridden via config.customContentMap)
     var confSettings = (typeof window !== 'undefined' && window.__confSettings) || {};
     var loaderFormats = confSettings.loaderFormats ||
-        ['auto', 'image', 'spectrum', 'catalog', 'cube'];
+        ['Auto', 'Image', 'Spectrum', 'Catalog', 'Cube'];
 
     var SIDEBAR_CONTENT = {
         'loaders': {
             tabs: ['Data', 'Viewer'],
             content: [
-                'Load data into the application.<br>' +
-                formSelect('Source', 'source-select', ['file', 'astroquery', 'url']) +
+                'Import data of multiple formats and from multiple sources into jdaviz.<br>' +
+                formSelect('Source', 'source-select', ['File', 'Astroquery', 'URL']) +
                 formSelect('Format', 'format-select', loaderFormats) +
                 formButton('Load') +
                 '<div class="jdaviz-api-snippet">from jdaviz import Specviz\nviz = Specviz()\nviz.load_data("spectrum.fits")</div>',
-                'Create and configure viewers.<br>' +
-                formSelect('Viewer Type', 'viewer-type-select', ['image', 'scatter', '1D spectrum', '2D spectrum', 'histogram']) +
+                'Show data in a variety of different viewers custom built for exploring astronomical data.<br>' +
+                formSelect('Viewer Type', 'viewer-type-select', ['Image', 'Scatter', '1D Spectrum', '2D Spectrum', 'Histogram']) +
                 formButton('Create Viewer') +
                 '<div class="jdaviz-api-snippet">viz.app.add_viewer("spectrum-viewer")</div>'
             ],
@@ -107,7 +129,7 @@
         },
         'save': {
             tabs: null,
-            content: 'Export data, plots, and subsets to various formats.' +
+            content: 'Export generated data, selected subsets, and viewers.' +
                 '<div class="jdaviz-api-snippet">viz.app.get_viewer("spectrum-viewer").figure.save_png("plot.png")</div>',
             learnMore: 'See export options \u2192',
             scrollTarget: 'grid-export'
@@ -116,7 +138,7 @@
             tabs: ['Plot Options', 'Units'],
             content: [
                 'dynamic:plot-options',
-                'Configure display units for spectral and flux axes.<br>' +
+                'Convert and display data in different unit systems. Choose spectral units (wavelength, frequency, energy) and flux units appropriate for your analysis.<br>' +
                 formSelect('Spectral Unit', 'spectral-unit-select', ['Angstrom', 'nm', 'micron']) +
                 formSelect('Flux Unit', 'flux-unit-select', ['Jy', 'erg/s/cm\u00B2/\u00C5']) +
                 '<div class="jdaviz-api-snippet">viz.plugins["Unit Conversion"].spectral_unit = "micron"</div>'
@@ -127,10 +149,10 @@
         'info': {
             tabs: ['Metadata', 'Markers', 'Logger'],
             content: [
-                'Display file metadata and header information.' +
+                'View FITS header information, WCS coordinates, and other metadata for loaded datasets.' +
                 '<div class="jdaviz-api-snippet">viz.app.get_viewer("spectrum-viewer").data()</div>',
-                'Interactive table of markers placed on the viewer.',
-                'View history of operations and messages.'
+                'Interactively create markers in any viewer and information about the underlying data will be exposed and available to export into the notebook.',
+                'System messages, warnings, and operation history. Monitor plugin execution, data loading status, and any issues that arise during analysis.'
             ],
             learnMore: ['Explore metadata tools \u2192', 'Learn about markers \u2192', 'View logging options \u2192'],
             scrollTarget: 'grid-info'
@@ -143,7 +165,7 @@
         },
         'subsets': {
             tabs: null,
-            content: 'Create and manage spatial and spectral subsets for targeted analysis.<br>' +
+            content: 'Select regions of interest in your data, see that synced across all viewers, and use as inputs to data analysis tasks.<br>' +
                 formSelect('Subset', 'subset-select', ['Subset 1', 'Subset 2']) +
                 formButton('Recenter') +
                 formButton('Delete') +
@@ -196,15 +218,6 @@
             '<span class="jdaviz-viewer-area-text">' + viewerId + '</span>' +
             '<div class="jdaviz-viewer-legend"></div>' +
             '</div>';
-
-        // Apply viewer toolbar icons
-        var toolIcons = viewer.querySelectorAll('.jdaviz-viewer-toolbar-icon');
-        toolIcons.forEach(function(icon) {
-            var name = icon.getAttribute('data-tool');
-            if (name && ICON_SVGS[name]) {
-                icon.style.backgroundImage = ICON_SVGS[name];
-            }
-        });
 
         setTimeout(function() { viewer.classList.remove('viewer-adding'); }, 300);
 
@@ -345,12 +358,14 @@
 
         contentEl.innerHTML = contentHtml;
 
-        // Wire up expansion panel clicks
-        contentEl.querySelectorAll('.jdaviz-expansion-header').forEach(function(hdr) {
+        // Wire up expansion panel clicks (both old and new style)
+        contentEl.querySelectorAll('.jdaviz-expansion-panel:not(.disabled) .jdaviz-expansion-panel-header').forEach(function(hdr) {
             hdr.addEventListener('click', function(ev) {
                 if (ev.isTrusted) instance.pause();
-                var panel = hdr.parentElement;
-                panel.classList.toggle('open');
+                var panel = hdr.closest('.jdaviz-expansion-panel');
+                panel.classList.toggle('expanded');
+                var contentDiv = panel.querySelector('.jdaviz-expansion-panel-content');
+                if (contentDiv) contentDiv.classList.toggle('expanded');
             });
         });
 
@@ -690,7 +705,9 @@
         var panels = contentRoot.querySelectorAll('.jdaviz-expansion-panel');
         panels.forEach(function(panel) {
             if (panel.dataset.pluginName === step.value) {
-                panel.classList.add('open');
+                panel.classList.add('expanded');
+                var contentDiv = panel.querySelector('.jdaviz-expansion-panel-content');
+                if (contentDiv) contentDiv.classList.add('expanded');
             }
         });
     });

@@ -88,11 +88,22 @@ html[data-theme="light"] {
 }
 
 .jdaviz-toolbar-divider {
-    width: 1px;
-    height: 60%;
-    align-self: center;
-    background: var(--jdw-border);
+    width: 12px;
+    height: 100%;
+    background: transparent;
+    position: relative;
     flex-shrink: 0;
+}
+
+.jdaviz-toolbar-divider::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 20%;
+    bottom: 20%;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(-50%);
 }
 
 .jdaviz-toolbar-spacer {
@@ -142,8 +153,10 @@ html[data-theme="light"] {
 }
 
 .jdaviz-toolbar-version {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .jdaviz-api-toggle-btn {
@@ -322,7 +335,6 @@ html[data-theme="light"] {
 .jdaviz-select {
     width: 100%;
     padding: 6px 8px;
-    border-radius: 4px;
     border: 1px solid var(--jdw-border);
     background: rgba(0,0,0,0.2);
     color: var(--jdw-text);
@@ -334,7 +346,6 @@ html[data-theme="light"] {
 .jdaviz-input {
     width: 100%;
     padding: 6px 8px;
-    border-radius: 4px;
     border: 1px solid var(--jdw-border);
     background: rgba(0,0,0,0.2);
     color: var(--jdw-text);
@@ -360,7 +371,6 @@ html[data-theme="light"] {
     background: var(--jdw-btn-primary);
     color: #fff;
     border: 1px solid var(--jdw-border);
-    border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -374,48 +384,81 @@ html[data-theme="light"] {
 
 /* ── Expansion panel ─────────────────────────────────────────────── */
 
+/* Remove padding from sidebar content when showing expansion panels */
+.jdaviz-sidebar-content:has(.jdaviz-expansion-panels) {
+    padding: 0;
+}
+
+.jdaviz-expansion-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
 .jdaviz-expansion-panel {
-    border: 1px solid var(--jdw-border);
-    border-radius: 4px;
-    margin: 12px 0;
-    overflow: hidden;
+    border-bottom: 1px solid var(--jdw-border);
+}
+
+.jdaviz-expansion-panel:first-child {
+    border-top: 1px solid var(--jdw-border);
 }
 
 .jdaviz-expansion-panel-header {
-    padding: 10px 16px;
-    cursor: pointer;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    font-weight: 600;
-    font-size: 13px;
+    justify-content: space-between;
+    padding: 12px 16px;
+    height: 48px;
+    cursor: pointer;
+    background: var(--jdw-sidebar-bg);
+    transition: background-color 0.2s ease;
+}
+
+.jdaviz-expansion-panel:not(.disabled) .jdaviz-expansion-panel-header:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.jdaviz-expansion-panel.disabled .jdaviz-expansion-panel-header {
+    cursor: default;
+}
+
+.jdaviz-expansion-panel-title {
+    font-size: 14px;
+    font-weight: 500;
     color: var(--jdw-text);
-    background: rgba(0,0,0,0.15);
-    transition: background 0.2s;
 }
 
-.jdaviz-expansion-panel-header:hover {
-    background: rgba(0,0,0,0.25);
+.jdaviz-expansion-panel-arrow {
+    font-size: 10px;
+    color: var(--jdw-text);
+    transition: transform 0.3s ease;
 }
 
-.jdaviz-expansion-panel-header::after {
-    content: '▸';
-    transition: transform 0.2s;
+.jdaviz-expansion-panel.expanded .jdaviz-expansion-panel-arrow {
+    transform: rotate(180deg);
 }
 
-.jdaviz-expansion-panel.expanded .jdaviz-expansion-panel-header::after {
-    transform: rotate(90deg);
+.jdaviz-expansion-panel-placeholder {
+    width: 100%;
+    height: 8px;
+    background: rgba(128, 128, 128, 0.3);
 }
 
 .jdaviz-expansion-panel-content {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease;
+    background: var(--jdw-sidebar-bg);
 }
 
-.jdaviz-expansion-panel.expanded .jdaviz-expansion-panel-content {
-    max-height: 500px;
-    padding: 12px 16px;
+.jdaviz-expansion-panel-content.expanded {
+    max-height: 1000px;
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.jdaviz-expansion-panel.disabled .jdaviz-expansion-panel-content {
+    display: none;
 }
 
 /* ── API snippet ─────────────────────────────────────────────────── */
@@ -423,7 +466,6 @@ html[data-theme="light"] {
 .jdaviz-api-snippet {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--jdw-border);
-    border-radius: 4px;
     padding: 8px 12px;
     margin: 8px 0;
     font-family: monospace;
@@ -434,6 +476,11 @@ html[data-theme="light"] {
 }
 
 .jdaviz-api-mode .jdaviz-api-snippet {
+    display: block;
+}
+
+/* API hints toggle */
+.jdaviz-sidebar.api-hints-visible .jdaviz-api-snippet {
     display: block;
 }
 
@@ -588,7 +635,6 @@ html[data-theme="light"] {
     background: rgba(0,59,77,0.95);
     padding: 6px 12px;
     padding-left: 4px;
-    border-radius: 4px;
     font-size: 11px;
     color: #fff;
     cursor: pointer;
@@ -596,9 +642,11 @@ html[data-theme="light"] {
 }
 
 .jdaviz-legend-letter {
+    color: white;
+    font-size: 12px;
     font-weight: 700;
-    color: #66ccff;
-    min-width: 10px;
+    min-width: 16px;
+    height: 16px;
 }
 
 .jdaviz-legend-text {
@@ -623,7 +671,6 @@ html[data-theme="light"] {
     transform: translate(-50%, -50%) scale(0.95);
     background: #003B4D;
     border: 2px solid var(--jdw-border);
-    border-radius: 8px;
     padding: 0;
     width: 300px;
     z-index: 200;
@@ -694,7 +741,6 @@ html[data-theme="light"] {
     color: #fff;
     font-size: 11px;
     padding: 4px 8px;
-    border-radius: 4px;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
@@ -727,104 +773,60 @@ html[data-theme="light"] {
 
 /* ── Light theme overrides ───────────────────────────────────────── */
 
-html[data-theme="light"] .jdaviz-toolbar {
-    background: #e8f4f8;
-    border-bottom-color: var(--jdw-border);
-}
-
-html[data-theme="light"] .jdaviz-toolbar-icon {
-    filter: invert(0.5);
-}
-
-html[data-theme="light"] .jdaviz-toolbar-icon.active {
-    filter: none;
-}
+/* Toolbar stays dark in light mode (matching jdaviz app) */
 
 html[data-theme="light"] .jdaviz-toolbar-search {
-    background: rgba(0,0,0,0.06);
-    color: var(--jdw-text);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+html[data-theme="light"] .jdaviz-toolbar-search::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+html[data-theme="light"] .jdaviz-toolbar-version {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 html[data-theme="light"] .jdaviz-api-toggle-btn::before {
-    filter: none;
+    filter: brightness(0) saturate(100%) invert(100%);
 }
 
 html[data-theme="light"] .jdaviz-api-toggle-btn:hover {
-    background-color: rgba(0, 125, 164, 0.15);
+    background-color: rgba(0, 125, 164, 0.3);
 }
 
 html[data-theme="light"] .jdaviz-api-toggle-btn.active {
-    background-color: rgba(0, 125, 164, 0.2);
+    background-color: rgba(0, 125, 164, 0.4);
 }
 
-html[data-theme="light"] .jdaviz-sidebar-tabs {
-    background: #d0e8f0;
+/* Sidebar tabs stay dark in light mode */
+html[data-theme="light"] .jdaviz-sidebar-tab {
+    color: #ffffff;
 }
 
 html[data-theme="light"] .jdaviz-sidebar-tab.active {
-    color: #003B4D;
-    border-bottom-color: #003B4D;
+    color: #ffffff;
+    border-bottom-color: #ffffff;
 }
 
-html[data-theme="light"] .jdaviz-viewer-toolbar {
-    background: #d0e8f0;
+/* Sidebar footer button stays white text on blue bg */
+html[data-theme="light"] .jdaviz-sidebar-footer-button {
+    color: #ffffff !important;
+}
+
+html[data-theme="light"] .jdaviz-sidebar-footer-button:hover {
+    color: #ffffff !important;
 }
 
 html[data-theme="light"] .jdaviz-api-snippet {
-    background: rgba(0,0,0,0.06);
-    color: #1a5c70;
+    background: rgba(0, 97, 126, 0.1);
+    color: #1a1a1a;
 }
 
 html[data-theme="light"] .jdaviz-data-menu-popup {
     background: #ffffff;
-}
-
-/* Expansion panels (plugins) */
-.jdaviz-expansion-panel {
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
-    margin-bottom: 6px;
-    overflow: hidden;
-}
-
-.jdaviz-expansion-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: background 0.2s;
-}
-
-.jdaviz-expansion-header:hover {
-    background: rgba(255,255,255,0.05);
-}
-
-.jdaviz-expansion-chevron {
-    font-size: 10px;
-    transition: transform 0.2s;
-}
-
-.jdaviz-expansion-panel.open .jdaviz-expansion-chevron {
-    transform: rotate(90deg);
-}
-
-.jdaviz-expansion-body {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    padding: 0 12px;
-}
-
-.jdaviz-expansion-panel.open .jdaviz-expansion-body {
-    max-height: 200px;
-    padding: 0 12px 8px;
-}
-
-/* API hints toggle */
-.jdaviz-sidebar.api-hints-visible .jdaviz-api-snippet {
-    display: block;
 }
 
 /* Light theme expansion panels */
@@ -832,10 +834,20 @@ html[data-theme="light"] .jdaviz-expansion-panel {
     border-color: rgba(0,0,0,0.1);
 }
 
-html[data-theme="light"] .jdaviz-expansion-header:hover {
+html[data-theme="light"] .jdaviz-expansion-panel:not(.disabled) .jdaviz-expansion-panel-header:hover {
     background: rgba(0,0,0,0.03);
 }
 
-html[data-theme="light"] .jdaviz-expansion-body {
-    color: rgba(0,0,0,0.6);
+html[data-theme="light"] .jdaviz-expansion-panel-content.expanded {
+    border-top-color: rgba(0,0,0,0.1);
+}
+
+/* ── Demo control button theming ─────────────────────────────────── */
+
+[data-wireframe-demo] {
+    --wfd-control-bg: rgba(0, 59, 77, 0.9);
+    --wfd-control-bg-hover: rgba(0, 125, 164, 0.9);
+    --wfd-control-border: 2px solid rgba(255, 255, 255, 0.2);
+    --wfd-control-radius: 8px;
+    --wfd-control-size: 44px;
 }
