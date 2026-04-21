@@ -39,6 +39,6 @@ Since there are many options and the exposed options depend on previous selectio
 
 .. wireframe-demo::
    :initial: save
-   :demo: pause@1000,save:api-toggle
+   :demo: pause@1000,.api-button:toggle-class=active
    :enable-only: save
    :demo-repeat: true

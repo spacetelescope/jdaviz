@@ -840,8 +840,13 @@ html[data-theme="light"] .api-learn-more {
     display: none;
 }
 
-/* Show API snippets when API mode is active */
+/* Show API snippets when API mode is active (class on container) */
 .wireframe-container.api-mode-active .api-snippet-container {
+    display: block !important;
+}
+
+/* Show API snippets when api-button is toggled active */
+.wireframe-container:has(.api-button.active) .api-snippet-container {
     display: block !important;
 }
 

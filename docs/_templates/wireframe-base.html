@@ -15,6 +15,7 @@
             <div class="wireframe-toolbar-right">
                 <div class="wireframe-toolbar-search-row">
                     <input type="text" class="wireframe-toolbar-search" id="wireframe-search-input" placeholder="Search documentation..." readonly />
+                    <button class="api-button" title="API Hints"></button>
                 </div>
                 <div class="wireframe-toolbar-version-row">
                     <span class="wireframe-toolbar-version">v{{ jdaviz_version }}</span>
@@ -57,6 +58,12 @@
                                     </select>
                                 </div>
                                 <button id="load-button" class="wireframe-button">Load</button>
+                                <div class="api-snippet-container">
+                                    <div class="api-snippet">ldr = viz.plugins['Loaders']
+ldr.source = 'file'
+ldr.format = '1D Spectrum'
+ldr.load('myfile.fits')</div>
+                                </div>
                             </div>
                             <div class="wireframe-sidebar-footer">
                                 <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-loaders">Learn more about data import →</button>
@@ -91,6 +98,12 @@
                     <div class="wireframe-sidebar-body">
                         <div class="wireframe-sidebar-content">
                             {{ descriptions.export|capitalize }}.
+                            <div class="api-snippet-container">
+                                <div class="api-snippet">exp = viz.plugins['Export']
+exp.dataset = 'mydata'
+exp.dataset_format = 'FITS'
+exp.export()</div>
+                            </div>
                         </div>
                         <div class="wireframe-sidebar-footer">
                             <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-export">See export options →</button>
@@ -135,6 +148,12 @@
                                     <span class="plot-options-input-label">Contrast</span>
                                     <div class="plot-options-input-bar"></div>
                                 </div>
+                                <div class="api-snippet-container">
+                                    <div class="api-snippet">po = viz.plugins['Plot Options']
+po.stretch = 'log'
+po.stretch_vmin = 0.01
+po.stretch_vmax = 1.0</div>
+                                </div>
                             </div>
                             <div class="wireframe-sidebar-footer">
                                 <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-settings">View plot customization →</button>
@@ -144,6 +163,11 @@
                         <div class="wireframe-tab-panel">
                             <div class="wireframe-sidebar-content">
                                 {{ descriptions.settings_units }}
+                                <div class="api-snippet-container">
+                                    <div class="api-snippet">uc = viz.plugins['Unit Conversion']
+uc.spectral_unit = 'um'
+uc.flux_unit = 'MJy/sr'</div>
+                                </div>
                             </div>
                             <div class="wireframe-sidebar-footer">
                                 <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-settings">Learn about units →</button>
@@ -161,19 +185,32 @@
                     </div>
                     <div class="wireframe-sidebar-body">
                         <div class="wireframe-tab-panel active">
-                            <div class="wireframe-sidebar-content">{{ descriptions.info_metadata }}</div>
+                            <div class="wireframe-sidebar-content">{{ descriptions.info_metadata }}
+                                <div class="api-snippet-container">
+                                    <div class="api-snippet">viz.get_data('mydata').meta</div>
+                                </div>
+                            </div>
                             <div class="wireframe-sidebar-footer">
                                 <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-info">Explore metadata tools →</button>
                             </div>
                         </div>
                         <div class="wireframe-tab-panel">
-                            <div class="wireframe-sidebar-content">{{ descriptions.info_markers|capitalize }}.</div>
+                            <div class="wireframe-sidebar-content">{{ descriptions.info_markers|capitalize }}.
+                                <div class="api-snippet-container">
+                                    <div class="api-snippet">mrk = viz.plugins['Markers']
+mrk.mark_origin = 'table'</div>
+                                </div>
+                            </div>
                             <div class="wireframe-sidebar-footer">
                                 <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-info">Learn about markers →</button>
                             </div>
                         </div>
                         <div class="wireframe-tab-panel">
-                            <div class="wireframe-sidebar-content">{{ descriptions.info_logger }}</div>
+                            <div class="wireframe-sidebar-content">{{ descriptions.info_logger }}
+                                <div class="api-snippet-container">
+                                    <div class="api-snippet">viz.logger.messages</div>
+                                </div>
+                            </div>
                             <div class="wireframe-sidebar-footer">
                                 <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-info">View logging options →</button>
                             </div>
@@ -216,7 +253,13 @@
                 <!-- ── Subsets panel ──────────────────────────────────────────── -->
                 <div class="wireframe-sidebar-panel" data-sidebar-panel="subsets">
                     <div class="wireframe-sidebar-body">
-                        <div class="wireframe-sidebar-content">{{ descriptions.subsets|capitalize }}.</div>
+                        <div class="wireframe-sidebar-content">{{ descriptions.subsets|capitalize }}.
+                            <div class="api-snippet-container">
+                                <div class="api-snippet">viz.get_subsets()
+viz.plugins['Subset Tools'].rename_subset(
+    'Subset 1', 'my-region')</div>
+                            </div>
+                        </div>
                         <div class="wireframe-sidebar-footer">
                             <button class="wireframe-sidebar-footer-button" data-scroll-target="grid-subsets">Learn about subsets →</button>
                         </div>

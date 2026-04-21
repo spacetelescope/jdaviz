@@ -56,6 +56,6 @@ and interactively do a search in the UI and reproduce in a notebook cell:
 
 .. wireframe-demo::
    :initial: loaders,loaders@1000:select-dropdown=Source:astroquery,loaders:highlight=#source-select
-   :demo: pause@1000,loaders:api-toggle
+   :demo: pause@1000,.api-button:toggle-class=active
    :enable-only: loaders
    :demo-repeat: true

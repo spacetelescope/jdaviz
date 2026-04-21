@@ -48,6 +48,6 @@ and interactively do a search in the UI and reproduce in a notebook cell:
 
 .. wireframe-demo::
    :initial: loaders,loaders:select-tab=Data,loaders:select-dropdown=Source:virtual observatory
-   :demo: loaders:api-toggle
+   :demo: .api-button:toggle-class=active
    :enable-only: loaders
    :demo-repeat: true

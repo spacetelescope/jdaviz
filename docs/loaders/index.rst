@@ -103,7 +103,7 @@ Or in the UI, click the :guilabel:`API Hints` button in the top right.
 
 .. wireframe-demo::
    :initial: loaders,loaders:select-tab=Data
-   :demo: pause@1000,loaders:api-toggle
+   :demo: pause@1000,.api-button:toggle-class=active
    :enable-only: loaders
    :demo-repeat: false
 

@@ -28,7 +28,7 @@ To enable API hints in the user interface:
 3. Click again to toggle off
 
 .. wireframe-demo::
-   :demo: loaders,loaders:api-toggle,loaders:select-tab=Viewer,save,save:api-toggle,settings,settings:api-toggle,settings:select-tab=Units,info,info:api-toggle,info:select-tab=Markers,info:select-tab=Logger,subsets,subsets:api-toggle
+   :demo: loaders,.api-button:toggle-class=active,loaders:select-tab=Viewer,save,.api-button:toggle-class=active,settings,.api-button:toggle-class=active,settings:select-tab=Units,info,.api-button:toggle-class=active,info:select-tab=Markers,info:select-tab=Logger,subsets,.api-button:toggle-class=active
    :demo-repeat: true
 
 Where Hints Appear

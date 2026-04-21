@@ -9,13 +9,16 @@ The wireframe demonstration system provides interactive UI mockups throughout th
 Overview
 ========
 
-The wireframe system consists of three modular components:
+The wireframe system is provided by the ``docs-wireframe-demo`` Sphinx extension
+(see ``pyproject.toml``) and consists of:
 
-* ``wireframe-base.html`` - HTML structure
-* ``wireframe-demo.css`` - Styling and theming
-* ``wireframe-controller.js`` - Interactive behavior and automation
+* ``wireframe-base.html`` — jdaviz's HTML structure (in ``docs/_templates/``)
+* ``wireframe-demo.css`` — jdaviz's styling and theming (in ``docs/_templates/``)
+* ``wireframe-engine.js`` — Generic interactive engine (bundled in the extension, not overridable)
 
-These components are loaded via the ``wireframe-demo`` Sphinx directive, which automatically injects them into documentation pages with full configuration support.
+The HTML and CSS live in ``docs/_templates/`` and are loaded as jdaviz-specific overrides
+of the defaults bundled in the ``docs-wireframe-demo`` package.  The engine JS is always
+loaded from the package.  All three are injected inline by the ``wireframe-demo`` directive.
 
 Component Files
 ===============
@@ -50,19 +53,21 @@ Contains all CSS styles for the wireframe, including:
 * Smooth transitions for panel expansions (0.3s ease)
 * Hover states and interactive feedback
 
-wireframe-controller.js
------------------------
+wireframe-engine.js
+-------------------
 
-Contains all JavaScript functionality using ES5 syntax:
+The generic interactive JS engine is bundled in the ``docs-wireframe-demo`` package
+(``docs_wireframe_demo/_static/wireframe-engine.js``) and is never overridden by jdaviz.
+It provides:
 
-* **Auto-cycling** - Demonstrates sidebars in sequence with configurable timing
-* **Sidebar management** - Dynamically generates content from registry or custom sources
-* **Expansion panels** - Accordion-style panels for plugins sidebar (5 panels)
-* **Demo actions** - Supports actions like ``open-panel``, ``select-data``, ``select-tab``
-* **Timing control** - Custom per-step delays using ``@delay`` syntax
-* **Repeat control** - Demos can loop continuously or stop after one cycle
-* **API snippets** - Toggleable code examples for each feature
-* **Interactive controls** - Pause/resume, manual sidebar selection
+* **Auto-cycling** — Demonstrates sidebars in sequence with configurable timing
+* **Sidebar management** — Shows/hides pre-rendered panels defined in the HTML
+* **Expansion panels** — Accordion-style panels for the plugins sidebar
+* **Demo actions** — Supports actions like ``open-panel``, ``select-tab``, ``select-dropdown``
+* **Timing control** — Custom per-step delays using ``@delay`` syntax
+* **Repeat control** — Demos can loop continuously or stop after one cycle
+* **Multi-viewer layouts** — Dynamic viewer splitting, images, legends, and tool toggles
+* **Interactive controls** — Pause/resume, manual sidebar selection
 
 Usage
 =====
@@ -120,11 +125,11 @@ This is useful when you want to set initial state without drawing attention to t
 
 .. code-block:: rst
 
-   # Normal: shows highlight on the color button
-   settings@1500:set-color=#00FF00
+   # Normal: briefly highlights the dropdown after selection
+   loaders@1500:select-dropdown=Source:file
 
-   # No highlight: sets color quietly without visual emphasis
-   settings@0!:set-color=#FF0000
+   # No highlight: selects the value quietly without visual emphasis
+   loaders@0!:select-dropdown=Format:1D Spectrum
 
 **Available Actions:**
 
@@ -132,7 +137,7 @@ This is useful when you want to set initial state without drawing attention to t
 * ``select-tab=<name>`` - Switches to a specific tab in multi-tab sidebars
 * ``select-dropdown=<label>:<value>`` - Selects a dropdown value (case-insensitive matching)
 * ``click-button=<text>`` - Clicks a button by its text content (case-insensitive)
-* ``api-toggle`` - Toggles API mode on/off
+* ``toggle-class=<classname>`` - Toggles a CSS class on the matched element
 * ``open-data-menu`` - Opens the data menu popup (standalone action)
 * ``highlight=<selector>`` - Highlights element(s) matching CSS selector (standalone action)
 
@@ -213,42 +218,13 @@ plugin-name
 
 **Default:** ``'Data Analysis Plugin'``
 
-Sets the name of the plugin in the expansion panel header.
+Sets the name of the plugin in the expansion panel header (substituted into
+``{{ plugin_name }}`` in ``wireframe-base.html``).
 
 .. code-block:: rst
 
    .. wireframe-demo::
       :plugin-name: Aperture Photometry
-
-plugin-panel-opened
--------------------
-
-**Type:** boolean
-
-**Default:** ``true``
-
-Controls whether the plugin expansion panel is open by default.
-
-.. code-block:: rst
-
-   .. wireframe-demo::
-      :plugin-panel-opened: false
-
-custom-content
---------------
-
-**Type:** string
-
-**Default:** Auto-generated from registry
-
-Provides custom HTML content for sidebars. Overrides the default content from the registry.
-
-**Format:** ``sidebar=content`` or ``sidebar:tab=content``
-
-.. code-block:: rst
-
-   .. wireframe-demo::
-      :custom-content: plugins=<div class="wireframe-description">Custom content</div>
 
 Complete Example
 ================
@@ -267,7 +243,6 @@ Here's a complete example from a plugin documentation page:
       :demo: plugins,plugins@1000:open-panel,plugins:select-dropdown=Data:Image 2,plugins@3000:highlight=.wireframe-form-group:has(#data-select)
       :enable-only: plugins
       :plugin-name: Aperture Photometry
-      :plugin-panel-opened: false
       :demo-repeat: false
 
    .. plugin-availability::
@@ -282,8 +257,7 @@ This configuration:
 4. After 3 seconds, highlights the Data dropdown group
 5. Only allows clicking on the plugins button
 6. Names the panel "Aperture Photometry"
-7. Panel starts closed
-8. Demo runs once and stops (highlight persists since it's the last step)
+7. Demo runs once and stops (highlight persists since it's the last step)
 
 Advanced Demo Actions
 =====================
@@ -353,18 +327,6 @@ Opens the data menu popup. This is a standalone action that doesn't require a si
 
 Useful for focusing on the data menu functionality without showing sidebar content.
 
-api-toggle
-----------
-
-**Syntax:** ``sidebar:api-toggle``
-
-Toggles the API mode on or off for the current sidebar view.
-
-.. code-block:: rst
-
-   .. wireframe-demo::
-      :demo: loaders,loaders@2000:api-toggle
-
 click-button
 ------------
 
@@ -384,69 +346,34 @@ This is useful for demonstrating form submission workflows:
    .. wireframe-demo::
       :demo: loaders,loaders:select-dropdown=source:file,loaders:select-dropdown=format:image,loaders@1000:click-button=Load
 
-Plot Options Actions
---------------------
+toggle-class
+------------
 
-The settings sidebar with Plot Options tab supports special actions for controlling
-the Plot Options UI elements.
+**Syntax:** ``selector:toggle-class=<classname>``
 
-select-viewer
-^^^^^^^^^^^^^
-
-**Syntax:** ``settings:select-viewer=<viewerId>``
-
-Selects a viewer in the Plot Options viewer dropdown and updates the layer tabs to show
-layers from that viewer.
+Toggles a CSS class on the element(s) matched by a CSS selector.  Because this is a CSS
+selector step, the selector must start with ``#``, ``.``, or ``[``.
 
 .. code-block:: rst
 
    .. wireframe-demo::
-      :demo: settings,settings:select-viewer=imageviewer
-      :demo-repeat: false
+      :demo: loaders,.api-button:toggle-class=active
+      :demo-repeat: true
 
-select-layer
-^^^^^^^^^^^^
+This is used to implement the **API Hints toggle**: clicking ``.api-button`` toggles its
+``active`` class, which via CSS (``':has(.api-button.active)'``) shows or hides
+``.api-snippet-container`` elements inside each sidebar panel.
 
-**Syntax:** ``settings:select-layer=<index>``
-
-Selects a layer tab by its index (0-based). Updates the color button to show that layer's color.
-
-.. code-block:: rst
-
-   .. wireframe-demo::
-      :demo: settings,settings:select-layer=0,settings@1000:select-layer=1
-      :demo-repeat: false
-
-set-color
-^^^^^^^^^
-
-**Syntax:** ``settings:set-color=<color>``
-
-Sets the color of the currently selected layer. The color can be any valid CSS color
-(hex, rgb, named colors).
+**Example — cycling API hints on/off across sidebars:**
 
 .. code-block:: rst
 
    .. wireframe-demo::
-      :demo: settings,settings:set-color=#FF0000,settings@1500:set-color=#00FF00
-      :demo-repeat: false
+      :demo: loaders,.api-button:toggle-class=active,save,.api-button:toggle-class=active
+      :demo-repeat: true
 
-**Complete Plot Options example:**
-
-.. code-block:: rst
-
-   .. wireframe-demo::
-      :initial: viewer-legend@0:default:Image|Catalog
-      :demo: settings,settings:select-viewer=default,settings:select-layer=1,settings@0:set-color=#FF0000,settings@1500:set-color=#00FF00
-      :demo-repeat: false
-
-This demonstrates:
-
-1. Opening the settings sidebar (Plot Options tab)
-2. Selecting the "default" viewer
-3. Selecting layer B (index 1)
-4. Setting color to red immediately
-5. After 1.5 seconds, changing color to green
+Each ``.api-button:toggle-class=active`` flips the button state: the first call turns
+API snippets on, the second turns them off.
 
 Standalone Actions
 ------------------
@@ -681,223 +608,58 @@ Note: ``initialState`` and ``customDemo`` are arrays of action strings, matching
 comma-separated format used in the directive. Viewers must be explicitly added using
 ``viewer-add`` actions before they can be configured with images or legends.
 
-Content Registry System
-=======================
-
-The ``WIREFRAME_CONTENT_REGISTRY`` in ``docs/conf.py`` (lines 1166-1390) defines structured data for automatic content generation.
-
-Registry Structure
-------------------
-
-The registry is a nested dictionary with three types of entries:
-
-**Simple sidebars with form elements:**
-
-.. code-block:: python
-
-   'settings': {
-       'form_elements': [
-           {
-               'type': 'select',
-               'label': 'Theme',
-               'options': ['Light', 'Dark', 'Auto']
-           },
-           {
-               'type': 'checkbox',
-               'label': 'Show tooltips'
-           },
-           {
-               'type': 'button',
-               'label': 'Apply Settings'
-           }
-       ]
-   }
-
-**Sidebars with tabs:**
-
-.. code-block:: python
-
-   'info': {
-       'tabs': ['File Info', 'Display Options'],
-       'tab_content': {
-           'File Info': {
-               'form_elements': [...]
-           },
-           'Display Options': {
-               'form_elements': [...]
-           }
-       }
-   }
-
-**Plugins sidebar:**
-
-.. code-block:: python
-
-   'plugins': {
-       'Aperture Photometry': {
-           'form_elements': [
-               {
-                   'type': 'select',
-                   'label': 'Data',
-                   'options': ['Image 1', 'Image 2']
-               },
-               {
-                   'type': 'input',
-                   'label': 'Radius',
-                   'placeholder': '5.0'
-               }
-           ]
-       },
-       'Model Fitting': {
-           'form_elements': [...]]
-       }
-   }
-
-Currently, 16 plugins are defined in the registry:
-
-* Aperture Photometry
-* Line Analysis
-* Model Fitting
-* Catalog Search
-* Collapse
-* Gaussian Smooth
-* Moment Maps
-* Spectral Extraction
-* Data Quality
-* Ramp Extraction
-* Compass
-* Footprints
-* Orientation
-* Line Lists
-* Slit Overlay
-* Sonify Data
-
-Supported Element Types
------------------------
-
-``select``
-  Dropdown menu with options array
-
-``input``
-  Text input field with optional placeholder
-
-``checkbox``
-  Checkbox with label
-
-``button``
-  Action button with label
-
-Auto-generation Functions
---------------------------
-
-``generate_form_html(form_elements)``
-  Converts element dictionaries to HTML strings. Automatically generates IDs for select elements based on their labels (e.g., label "Source" becomes ID ``source-select``).
-
-``generate_content_for_sidebar(sidebar_type, plugin_name=None)``
-  Generates complete sidebar content from registry
-
-  * Handles tabs, plugins, and simple sidebars
-  * Returns dictionary with tab keys or single 'main' key
-
-Form Element IDs
-----------------
-
-Select elements are automatically assigned IDs based on their label text:
-
-* Label: "Source" → ID: ``source-select``
-* Label: "Data Format" → ID: ``data-format-select``
-* Label: "Viewer Type" → ID: ``viewer-type-select``
-
-These IDs are useful for targeting elements with the ``highlight`` action:
-
-.. code-block:: rst
-
-   :demo: loaders,loaders@3000:highlight=#source-select
-
-JavaScript Integration
-======================
-
-Demo Parsing
-------------
-
-The JavaScript controller parses demo strings using ``indexOf`` and ``substring`` to handle:
-
-* Timing: ``@1000`` extracts 1000ms delay
-* Actions: ``:open-panel`` identifies the action
-* Values: ``=Image 2`` preserves spaces in parameter values
-
-Demo Sequence Storage
----------------------
-
-Parsed demos are stored as:
-
-.. code-block:: javascript
-
-   demoSequence = [
-       {sidebar: 'plugins', delay: 2000},
-       {sidebar: 'plugins', action: 'open-panel', delay: 1000},
-       {sidebar: 'plugins', action: 'select-data', value: 'Image 2', delay: 2000}
-   ]
-
-Auto-cycling Logic
-------------------
-
-The ``autoCycleSidebars()`` function:
-
-1. Iterates through demoSequence
-2. Applies custom delays from each step
-3. Checks ``demoRepeat`` at completion
-4. Either loops back to start or shows restart button
-
 Landing Page vs. Documentation Pages
 =====================================
 
 **Landing Page (index.html):**
 
-* Loads components via ``fetch()`` calls
-* Processes Jinja2 variables with JavaScript string replacement
-* Uses ``_static`` directory for assets
-* No Sphinx directive involved
+* Loads ``wireframe-base.html`` dynamically via ``wireframe-loader.js``
+* Variables substituted at page load via JavaScript string replacement
+* Uses ``_templates/`` directory for assets
+* No Sphinx directive involved; configure via ``window.wireframeConfig``
 
 **Documentation Pages (RST files):**
 
 * Uses ``.. wireframe-demo::`` directive
-* Sphinx processes Jinja2 variables at build time
-* Components embedded directly in HTML output
-* Supports all configuration options
+* All three assets (HTML, CSS, engine JS) embedded inline at build time
+* Sphinx substitutes ``wireframe_variables`` before embedding
+* Supports all directive options (``initial``, ``demo``, ``enable-only``, etc.)
 
 Asset Copying
 =============
 
-The ``copy_wireframe_assets()`` function in ``conf.py`` handles asset preparation for the landing page:
+The ``copy_wireframe_assets()`` build hook (in the ``docs-wireframe-demo`` package) copies
+``api.svg`` to ``_static/`` in the Sphinx output directory so the CSS can reference it.
+The ``wireframe-base.html``, ``wireframe-demo.css``, and ``wireframe-engine.js`` are all
+embedded inline by the directive — they are not copied as separate static files.
 
-1. Copies ``wireframe-demo.css`` directly to ``_static``
-2. Processes ``wireframe-base.html`` and ``wireframe-controller.js``
-3. Replaces ``{{ jdaviz_version }}`` template variable
-4. Replaces ``{{ descriptions.* }}`` variables with proper escaping
-5. Handles ``|capitalize`` Jinja2 filter
+Adding New Plugin Documentation
+================================
 
-Adding New Plugins
-==================
+To add wireframe support for a new plugin page:
 
-To add a new plugin to the wireframe system:
+1. **Edit the plugins panel in** ``docs/_templates/wireframe-base.html``:
 
-1. **Add to Registry** (``docs/conf.py``):
+   The plugins sidebar uses expansion panels.  The first panel shows the featured plugin;
+   the others are placeholder/disabled panels.  Update the first panel's content for your
+   plugin, or add a new expansion panel if needed:
 
-   .. code-block:: python
+   .. code-block:: html
 
-      'plugins': {
-          # ... existing plugins ...
-          'New Plugin Name': {
-              'form_elements': [
-                  {'type': 'select', 'label': 'Input Data', 'options': ['Data 1', 'Data 2']},
-                  {'type': 'input', 'label': 'Parameter', 'placeholder': '1.0'},
-                  {'type': 'button', 'label': 'Execute'}
-              ]
-          }
-      }
+      <div class="expansion-panel" data-panel-index="0">
+          <div class="expansion-panel-header">
+              <span class="expansion-panel-title">{{ plugin_name }}</span>
+              <span class="expansion-panel-arrow">▼</span>
+          </div>
+          <div class="expansion-panel-content">
+              {{ descriptions.plugins|capitalize }}.
+          </div>
+      </div>
 
-2. **Create Plugin Doc** (``docs/plugins/new_plugin.rst``):
+   The ``{{ plugin_name }}`` placeholder is substituted per-directive via ``:plugin-name:``,
+   so no HTML change is needed for different plugin pages.
+
+2. **Create the plugin doc** (``docs/plugins/new_plugin.rst``):
 
    .. code-block:: rst
 
@@ -911,10 +673,9 @@ To add a new plugin to the wireframe system:
          :demo: plugins,plugins@1000:open-panel
          :enable-only: plugins
          :plugin-name: New Plugin Name
-         :plugin-panel-opened: false
          :demo-repeat: false
 
-3. **Build and Test:**
+3. **Build and verify:**
 
    .. code-block:: bash
 
@@ -929,26 +690,22 @@ Modularity
 ----------
 
 Each component (HTML, CSS, JS) is in its own file, making updates straightforward.
+The engine JS is separate from the app-specific HTML/CSS, so jdaviz can change its
+templates without touching the demo infrastructure.
 
 Maintainability
 ---------------
 
-Registry-based approach eliminates duplicate HTML strings across 16+ plugin pages. Single source of truth for plugin forms.
+Sidebar content is authored once in ``wireframe-base.html``; the engine targets it by
+``data-sidebar-panel`` names.  Adding a new sidebar panel requires only HTML edits, not
+changes to the directive or engine.
 
 Reusability
 -----------
 
-Same components used in landing page and documentation pages with different loading mechanisms.
-
-Automation
-----------
-
-Auto-generation reduces manual work. Adding a plugin requires only registry entry, not HTML authoring.
-
-Reduced File Size
------------------
-
-``index.html`` reduced from 3382 to 967 lines by extracting components.
+The same ``wireframe-base.html`` and ``wireframe-demo.css`` are used for both the landing
+page and all documentation pages via ``wireframe-loader.js`` and the Sphinx directive
+respectively.
 
 Accessibility Considerations
 =============================
@@ -981,13 +738,10 @@ Variables like ``{{ jdaviz_version }}`` and ``{{ descriptions.* }}`` are:
 Sidebar Content Management
 --------------------------
 
-Content flows through three paths:
-
-1. **Registry auto-generation** - Default for known sidebars/plugins
-2. **Custom content option** - Override via ``:custom-content:``
-3. **Fallback** - Simple "description coming soon" messages
-
-The directive prioritizes: custom-content → registry → fallback
+All sidebar content is defined statically in ``docs/_templates/wireframe-base.html``.
+Template variables (``{{ descriptions.* }}``, ``{{ plugin_name }}``, etc.) are substituted
+at build time from the ``wireframe_variables`` dict in ``docs/conf.py`` and the
+``:plugin-name:`` directive option.
 
 File Paths
 ----------
@@ -1061,8 +815,8 @@ Demo not starting
 Content not appearing
 ---------------------
 
-* Verify plugin name matches registry key exactly
-* Check ``:plugin-name:`` spelling
+* Check ``:plugin-name:`` spelling matches what you expect in the panel header
+* Verify ``wireframe_variables`` in ``docs/conf.py`` has the expected description keys
 * Inspect browser console for JSON parsing errors
 
 Panel not opening
@@ -1070,7 +824,7 @@ Panel not opening
 
 * Ensure action is ``open-panel`` not ``open_panel``
 * Check timing: use ``@delay`` syntax correctly
-* Verify ``plugin-panel-opened`` is set appropriately
+* Use ``plugins@0:open-panel`` in ``:initial:`` to start with the panel open
 
 Dropdown not selecting
 ----------------------

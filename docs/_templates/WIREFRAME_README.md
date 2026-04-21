@@ -1,130 +1,75 @@
-# Wireframe Component Architecture
+# Wireframe Template Assets
 
-This document describes the refactored wireframe demonstration system.
+This directory contains jdaviz-specific assets that override the defaults bundled in the
+[`docs-wireframe-demo`](https://github.com/kecnry/docs-wireframe-demo) Sphinx extension.
 
-## Overview
+## How it works
 
-The wireframe demonstration code has been extracted from `index.html` into separate, modular components:
+The `docs-wireframe-demo` package provides:
+- The `.. wireframe-demo::` Sphinx directive
+- A generic `wireframe-engine.js` (the interactive JS runtime — not overridable)
+- Fallback `wireframe-base.html` and `wireframe-demo.css` defaults
 
-- `wireframe-base.html` - HTML structure
-- `wireframe-demo.css` - All styling
-- `wireframe-controller.js` - Interactive behavior and data
+jdaviz points `wireframe_assets_dir` at this directory in `docs/conf.py`, so the directive
+loads jdaviz's custom HTML and CSS instead of the package defaults.  The engine JS is always
+loaded from the package bundle.
 
 ## Files
 
 ### wireframe-base.html
-Contains the complete HTML structure for the interactive wireframe demonstration, including:
-- Wireframe container and toolbar
-- Sidebar panel
-- Viewer area with data menu
+
+The jdaviz-specific HTML structure for the interactive wireframe, including:
+
+- Toolbar with jdaviz's toolbar icons (`loaders`, `save`, `settings`, `info`, `plugins`,
+  `subsets`, mouseover)
+- All six sidebar panels (`loaders`, `save`, `settings`, `info`, `plugins`, `subsets`),
+  each with their tabs and content areas
+- Viewer area (dynamically populated by the engine via `viewer-*` actions)
 - Cycle control button
 
+Template variables (substituted at build time from `wireframe_variables` in `conf.py`):
+- `{{ jdaviz_version }}` — displayed in the toolbar version row
+- `{{ descriptions.loaders }}`, `{{ descriptions.export }}`, etc. — sidebar description text
+- `{{ descriptions.settings_units }}`, `{{ descriptions.info_metadata }}`, etc.
+- `{{ plugin_name }}` — expansion panel title (overridden per-directive via `:plugin-name:`)
+
 ### wireframe-demo.css
-Contains all CSS styles for the wireframe, including:
-- Layout and positioning
-- Color schemes and theming (dark/light mode)
-- Responsive design (media queries)
-- Animation and transitions
-- Component-specific styles (toolbar, sidebar, viewer, etc.)
 
-### wireframe-controller.js
-Contains all JavaScript functionality:
-- Auto-cycling through different sidebars
-- Sidebar content management
-- Interactive toolbar controls
-- Data menu popup behavior
-- Platform tab integration
-- API snippet toggling
+All CSS for the wireframe, including:
+- Layout and positioning (flexbox-based)
+- Color schemes and theming (dark/light mode via CSS variables)
+- Responsive design and media queries
+- Animation and transitions (expansion panels, highlights, viewer add/remove)
+- Component-specific styles: toolbar, sidebar panels, tabs, viewer area, data menu popup,
+  expansion panels, plot options UI
 
-## Usage
+### wireframe-loader.js
 
-### In index.html
+Utility script for cases where inline embedding isn't used (e.g. the landing page).
+Dynamically loads CSS, HTML, and JS assets from `_templates/` in sequence.
 
-The main landing page (`index.html`) loads the wireframe components externally:
-
-```html
-<!-- CSS -->
-<link rel="stylesheet" href="_templates/wireframe-demo.css">
-
-<!-- JavaScript -->
-<script src="_templates/wireframe-controller.js"></script>
-
-<!-- HTML (loaded dynamically) -->
-<div id="wireframe-placeholder"></div>
-<script>
-    fetch("_templates/wireframe-base.html")
-        .then(response => response.text())
-        .then(html => {
-            const version = "{{ jdaviz_version }}";
-            html = html.replace("{{ jdaviz_version }}", version);
-            document.getElementById("wireframe-placeholder").innerHTML = html;
-        });
-</script>
-```
-
-### In RST Documentation Files
-
-Use the `wireframe-demo` Sphinx directive to embed the wireframe in any RST file:
+## Usage in RST
 
 ```rst
 .. wireframe-demo::
+   :initial: viewer-add:horiz:v1
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Aperture Photometry
 ```
 
-This directive is defined in `conf.py` and automatically:
-1. Loads all three component files
-2. Processes Jinja2 variables (e.g., `{{ jdaviz_version }}`)
-3. Embeds the complete wireframe as raw HTML
+See `docs/dev/wireframe.rst` for full option reference.
 
-### Example: aperture_photometry.rst
+## Sidebar names
 
-The aperture photometry plugin documentation includes a wireframe at the top:
+The `data-sidebar` and `data-sidebar-panel` attribute values in `wireframe-base.html` define
+the canonical sidebar names used in `:demo:` and `:initial:` step sequences:
 
-```rst
-.. _plugins-aperture_photometry:
-
-********************
-Aperture Photometry
-********************
-
-.. wireframe-demo::
-
-.. plugin-availability::
-
-...rest of documentation...
-```
-
-## Benefits
-
-1. **Modularity**: Each component (HTML, CSS, JS) is in its own file
-2. **Maintainability**: Easier to edit and update specific parts
-3. **Reusability**: Can be used in multiple places (landing page, plugin docs, etc.)
-4. **Reduced File Size**: `index.html` reduced from 3382 to 967 lines
-5. **Better Organization**: Clearer separation of concerns
-
-## Technical Details
-
-### Jinja2 Variable Handling
-
-The wireframe HTML includes a Jinja2 template variable `{{ jdaviz_version }}` that needs to be replaced at runtime:
-
-- In `index.html`: Replaced via JavaScript fetch and string replacement
-- In RST files: Replaced by the Sphinx directive before embedding
-
-### Sidebar Content
-
-The `wireframe-controller.js` file includes a complete `sidebarContent_map` object that defines:
-- Sidebar content for each toolbar icon
-- Tab structures for multi-tab sidebars
-- API snippets for each feature
-- "Learn more" links to documentation sections
-
-This data is dynamically used to populate the sidebar when users interact with the wireframe.
-
-## Future Enhancements
-
-Potential improvements:
-- Add more sidebar content types
-- Enhance mobile responsiveness
-- Add keyboard navigation
-- Improve accessibility (ARIA labels, focus management)
-- Support for different wireframe configurations
+| Name       | Toolbar icon  | Panel content                              |
+|------------|---------------|--------------------------------------------|
+| `loaders`  | database-import | Data tab (source/format selects) + Viewer tab |
+| `save`     | download      | Export description                         |
+| `settings` | tune          | Plot Options tab + Units tab               |
+| `info`     | information   | Metadata tab + Markers tab + Logger tab    |
+| `plugins`  | wrench        | Expansion panels                           |
+| `subsets`  | selection     | Subset description                         |
