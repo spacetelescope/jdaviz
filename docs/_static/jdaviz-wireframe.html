@@ -1,0 +1,61 @@
+<!-- Jdaviz Wireframe Demo HTML -->
+<!-- Used with docs-wireframe-demo infrastructure + jdaviz-wireframe-actions.js -->
+<div class="jdaviz-wireframe-section">
+  <div class="jdaviz-wireframe-container">
+
+    <!-- Toolbar -->
+    <div class="jdaviz-toolbar">
+      <div class="jdaviz-toolbar-icon" data-sidebar="loaders" data-icon="database-import" title="Import Data"></div>
+      <div class="jdaviz-toolbar-icon" data-sidebar="save" data-icon="download" title="Export"></div>
+      <div class="jdaviz-toolbar-divider"></div>
+      <div class="jdaviz-toolbar-icon" data-sidebar="settings" data-icon="tune" title="Plot Options"></div>
+      <div class="jdaviz-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
+      <div class="jdaviz-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
+      <div class="jdaviz-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
+      <div class="jdaviz-toolbar-divider"></div>
+      <div class="jdaviz-toolbar-icon jdaviz-mouseover-btn" data-icon="auto-fix" title="Mouseover Info"></div>
+      <div class="jdaviz-toolbar-spacer"></div>
+      <div class="jdaviz-toolbar-right">
+        <div class="jdaviz-toolbar-search-row">
+          <input type="text" class="jdaviz-toolbar-search" placeholder="Search documentation..." readonly />
+        </div>
+        <div class="jdaviz-toolbar-version-row">
+          <span class="jdaviz-toolbar-version"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main area: sidebar + viewers -->
+    <div class="jdaviz-main">
+
+      <!-- Sidebar (collapsed by default) -->
+      <div class="jdaviz-sidebar">
+        <div class="jdaviz-sidebar-body">
+          <div class="jdaviz-sidebar-tabs"></div>
+          <div class="jdaviz-sidebar-content">
+            Click toolbar icons to explore sidebars
+          </div>
+        </div>
+        <div class="jdaviz-sidebar-footer"></div>
+      </div>
+
+      <!-- Viewer area -->
+      <div class="jdaviz-viewer-area">
+        <!-- Viewers are added dynamically via viewer-add action -->
+        <!-- Data Menu Popup (shared) -->
+        <div class="jdaviz-data-menu-popup" id="jdaviz-data-menu-popup">
+          <div class="jdaviz-data-menu-header">
+            <div class="jdaviz-data-menu-title">Data Menu</div>
+            <button class="jdaviz-data-menu-close">&times;</button>
+          </div>
+          <div class="jdaviz-data-menu-content">
+            <p class="jdaviz-data-menu-desc">
+              Control data and subset layer order and visibility for each viewer.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

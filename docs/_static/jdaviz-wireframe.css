@@ -1,0 +1,676 @@
+/* Jdaviz Wireframe Demo Styles
+ * Used with docs-wireframe-demo infrastructure.
+ * All selectors prefixed with jdaviz- to avoid conflicts.
+ */
+
+/* ── Theme variables ─────────────────────────────────────────────── */
+
+:root,
+html[data-theme="dark"] {
+    --jdw-bg: #003B4D;
+    --jdw-border: rgba(255, 255, 255, 0.3);
+    --jdw-sidebar-bg: rgba(0, 97, 126, 0.4);
+    --jdw-sidebar-hover: rgba(0, 125, 164, 0.6);
+    --jdw-sidebar-active: #007DA4;
+    --jdw-tab-content-bg: rgba(0, 97, 126, 0.3);
+    --jdw-btn-primary: #007DA4;
+    --jdw-btn-hover: #C75109;
+    --jdw-text: #ffffff;
+}
+
+html[data-theme="light"] {
+    --jdw-bg: #ffffff;
+    --jdw-border: rgba(0, 59, 77, 0.2);
+    --jdw-sidebar-bg: rgba(0, 125, 164, 0.15);
+    --jdw-sidebar-hover: rgba(0, 125, 164, 0.25);
+    --jdw-sidebar-active: #007DA4;
+    --jdw-tab-content-bg: rgba(0, 125, 164, 0.1);
+    --jdw-btn-primary: #007DA4;
+    --jdw-btn-hover: #C75109;
+    --jdw-text: #1a1a1a;
+}
+
+/* ── Section & container ─────────────────────────────────────────── */
+
+.jdaviz-wireframe-section {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.jdaviz-wireframe-container {
+    background: var(--jdw-bg);
+    border: 2px solid var(--jdw-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────── */
+
+.jdaviz-toolbar {
+    background: #003B4D;
+    padding: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    border-bottom: 2px solid var(--jdw-border);
+    height: 72px;
+}
+
+.jdaviz-toolbar-icon {
+    width: 48px;
+    height: 100%;
+    background-color: transparent;
+    background-size: 24px 24px;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    border: none;
+    outline: none;
+}
+
+.jdaviz-toolbar-icon:hover {
+    background-color: var(--jdw-sidebar-hover);
+}
+
+.jdaviz-toolbar-icon.active {
+    background-color: var(--jdw-btn-hover);
+}
+
+.jdaviz-toolbar-icon.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.jdaviz-toolbar-divider {
+    width: 1px;
+    height: 60%;
+    align-self: center;
+    background: var(--jdw-border);
+    flex-shrink: 0;
+}
+
+.jdaviz-toolbar-spacer {
+    flex: 1;
+}
+
+.jdaviz-toolbar-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 12px;
+    min-width: 200px;
+    flex-shrink: 0;
+}
+
+.jdaviz-toolbar-search-row {
+    margin-bottom: 4px;
+}
+
+.jdaviz-toolbar-search {
+    width: 100%;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--jdw-border);
+    background: rgba(255,255,255,0.08);
+    color: var(--jdw-text);
+    font-size: 12px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.jdaviz-toolbar-version-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.jdaviz-toolbar-version {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Main area ───────────────────────────────────────────────────── */
+
+.jdaviz-main {
+    display: flex;
+    height: 400px;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────── */
+
+.jdaviz-sidebar {
+    width: 0;
+    background: var(--jdw-sidebar-bg);
+    overflow: hidden;
+    transition: width 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    border-right: 2px solid var(--jdw-border);
+    height: 100%;
+    flex-shrink: 0;
+}
+
+.jdaviz-sidebar.visible {
+    width: 300px;
+}
+
+.jdaviz-sidebar-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.jdaviz-sidebar-tabs {
+    display: flex;
+    gap: 0;
+    background: #00617E;
+    border-bottom: 2px solid var(--jdw-border);
+    flex-shrink: 0;
+}
+
+.jdaviz-sidebar-tabs:empty {
+    display: none;
+}
+
+.jdaviz-sidebar-tab {
+    flex: 1;
+    padding: 12px 16px;
+    background: transparent;
+    color: var(--jdw-text);
+    opacity: 0.8;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.jdaviz-sidebar-tab.active {
+    background: var(--jdw-tab-content-bg);
+    color: #ffffff;
+    opacity: 1;
+    border-bottom-color: #ffffff;
+}
+
+.jdaviz-sidebar-tab:hover {
+    background: var(--jdw-sidebar-hover);
+}
+
+.jdaviz-sidebar-content {
+    padding: 16px;
+    color: var(--jdw-text);
+    font-size: 14px;
+    line-height: 1.6;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.jdaviz-sidebar-footer {
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.jdaviz-sidebar-footer:empty {
+    display: none;
+}
+
+.jdaviz-sidebar-footer-button {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    background: var(--jdw-sidebar-active);
+    color: var(--jdw-text);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    border-top: 1px solid var(--jdw-border);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.jdaviz-sidebar-footer-button:hover {
+    background: var(--jdw-btn-hover);
+    color: var(--jdw-text) !important;
+}
+
+/* ── Sidebar form controls ───────────────────────────────────────── */
+
+.jdaviz-form-group {
+    margin: 16px 0;
+}
+
+.jdaviz-form-label {
+    display: block;
+    color: var(--jdw-text);
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.jdaviz-select {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--jdw-border);
+    background: rgba(0,0,0,0.2);
+    color: var(--jdw-text);
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.jdaviz-input {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--jdw-border);
+    background: rgba(0,0,0,0.2);
+    color: var(--jdw-text);
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.jdaviz-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--jdw-text);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.jdaviz-button {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: var(--jdw-btn-primary);
+    color: #fff;
+    border: 1px solid var(--jdw-border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.2s;
+    font-family: inherit;
+}
+
+.jdaviz-button:hover {
+    background: var(--jdw-btn-hover);
+}
+
+/* ── Expansion panel ─────────────────────────────────────────────── */
+
+.jdaviz-expansion-panel {
+    border: 1px solid var(--jdw-border);
+    border-radius: 4px;
+    margin: 12px 0;
+    overflow: hidden;
+}
+
+.jdaviz-expansion-panel-header {
+    padding: 10px 16px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--jdw-text);
+    background: rgba(0,0,0,0.15);
+    transition: background 0.2s;
+}
+
+.jdaviz-expansion-panel-header:hover {
+    background: rgba(0,0,0,0.25);
+}
+
+.jdaviz-expansion-panel-header::after {
+    content: '▸';
+    transition: transform 0.2s;
+}
+
+.jdaviz-expansion-panel.expanded .jdaviz-expansion-panel-header::after {
+    transform: rotate(90deg);
+}
+
+.jdaviz-expansion-panel-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.jdaviz-expansion-panel.expanded .jdaviz-expansion-panel-content {
+    max-height: 500px;
+    padding: 12px 16px;
+}
+
+/* ── API snippet ─────────────────────────────────────────────────── */
+
+.jdaviz-api-snippet {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--jdw-border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-family: monospace;
+    font-size: 12px;
+    color: #b0d0e0;
+    white-space: pre-wrap;
+    display: none;
+}
+
+.jdaviz-api-mode .jdaviz-api-snippet {
+    display: block;
+}
+
+/* ── Viewer area ─────────────────────────────────────────────────── */
+
+.jdaviz-viewer-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.jdaviz-viewer-split {
+    display: flex;
+    flex: 1;
+    gap: 2px;
+}
+
+.jdaviz-viewer-split.horizontal {
+    flex-direction: row;
+}
+
+.jdaviz-viewer-split.vertical {
+    flex-direction: column;
+}
+
+.jdaviz-viewer {
+    flex: 1;
+    background: var(--jdw-sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-width: 100px;
+    min-height: 80px;
+    border: 1px solid var(--jdw-border);
+}
+
+.jdaviz-viewer.focused {
+    box-shadow: inset 0 0 0 2px var(--jdw-btn-hover);
+}
+
+.jdaviz-viewer.viewer-adding {
+    animation: jdaviz-viewer-slide-in 0.3s ease forwards;
+}
+
+@keyframes jdaviz-viewer-slide-in {
+    from { opacity: 0; flex: 0; }
+    to   { opacity: 1; flex: 1; }
+}
+
+.jdaviz-viewer-toolbar {
+    background: #205f76;
+    padding: 0;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-bottom: 1px solid var(--jdw-border);
+}
+
+.jdaviz-viewer-toolbar-icon {
+    width: 36px;
+    height: 36px;
+    background-size: 18px 18px;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    border-radius: 4px;
+    margin: 0 2px;
+    flex-shrink: 0;
+}
+
+.jdaviz-viewer-toolbar-icon:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.jdaviz-viewer-toolbar-icon.active {
+    background-color: var(--jdw-btn-hover);
+}
+
+.jdaviz-viewer-toolbar-spacer {
+    flex: 1;
+}
+
+.jdaviz-viewer-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.jdaviz-viewer-image-container {
+    position: absolute;
+    inset: 0;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.jdaviz-viewer-content.has-image .jdaviz-viewer-area-text {
+    display: none;
+}
+
+.jdaviz-viewer-area-text {
+    color: var(--jdw-text);
+    opacity: 0.4;
+    font-size: 14px;
+    z-index: 1;
+}
+
+.jdaviz-viewer-legend {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 2;
+}
+
+.jdaviz-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,0,0,0.5);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #fff;
+    cursor: pointer;
+}
+
+.jdaviz-legend-letter {
+    font-weight: 700;
+    color: #66ccff;
+    min-width: 10px;
+}
+
+.jdaviz-legend-text {
+    white-space: nowrap;
+}
+
+/* ── Data menu popup ─────────────────────────────────────────────── */
+
+.jdaviz-data-menu-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background: #003B4D;
+    border: 2px solid var(--jdw-border);
+    border-radius: 8px;
+    padding: 0;
+    width: 300px;
+    z-index: 200;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.jdaviz-data-menu-popup.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.jdaviz-data-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--jdw-border);
+}
+
+.jdaviz-data-menu-title {
+    font-weight: 700;
+    color: var(--jdw-text);
+    font-size: 14px;
+}
+
+.jdaviz-data-menu-close {
+    background: none;
+    border: none;
+    color: var(--jdw-text);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 4px;
+    opacity: 0.7;
+}
+
+.jdaviz-data-menu-close:hover {
+    opacity: 1;
+}
+
+.jdaviz-data-menu-content {
+    padding: 16px;
+}
+
+.jdaviz-data-menu-desc {
+    font-size: 13px;
+    color: var(--jdw-text);
+    opacity: 0.8;
+    margin: 0;
+}
+
+/* ── Mouseover button flyout ─────────────────────────────────────── */
+
+.jdaviz-mouseover-btn {
+    position: relative;
+}
+
+.jdaviz-mouseover-btn::after {
+    content: 'Mouseover Info';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+
+.jdaviz-mouseover-btn:hover::after {
+    opacity: 1;
+}
+
+/* ── Highlighted elements ────────────────────────────────────────── */
+
+.jdaviz-highlighted {
+    animation: jdaviz-highlight-pulse 2s ease-in-out infinite;
+}
+
+@keyframes jdaviz-highlight-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(199, 93, 44, 0); }
+    50%      { box-shadow: 0 0 0 6px rgba(199, 93, 44, 0.4); }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .jdaviz-toolbar-right,
+    .jdaviz-mouseover-btn {
+        display: none;
+    }
+}
+
+/* ── Light theme overrides ───────────────────────────────────────── */
+
+html[data-theme="light"] .jdaviz-toolbar {
+    background: #e8f4f8;
+    border-bottom-color: var(--jdw-border);
+}
+
+html[data-theme="light"] .jdaviz-toolbar-icon {
+    filter: invert(0.5);
+}
+
+html[data-theme="light"] .jdaviz-toolbar-icon.active {
+    filter: none;
+}
+
+html[data-theme="light"] .jdaviz-toolbar-search {
+    background: rgba(0,0,0,0.06);
+    color: var(--jdw-text);
+}
+
+html[data-theme="light"] .jdaviz-sidebar-tabs {
+    background: #d0e8f0;
+}
+
+html[data-theme="light"] .jdaviz-sidebar-tab.active {
+    color: #003B4D;
+    border-bottom-color: #003B4D;
+}
+
+html[data-theme="light"] .jdaviz-viewer-toolbar {
+    background: #d0e8f0;
+}
+
+html[data-theme="light"] .jdaviz-api-snippet {
+    background: rgba(0,0,0,0.06);
+    color: #1a5c70;
+}
+
+html[data-theme="light"] .jdaviz-data-menu-popup {
+    background: #ffffff;
+}
