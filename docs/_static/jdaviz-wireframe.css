@@ -136,27 +136,40 @@ html[data-theme="light"] {
 }
 
 .jdaviz-api-toggle-btn {
-    background: transparent;
-    border: 1px solid var(--jdw-border);
-    border-radius: 4px;
-    color: var(--jdw-text);
-    font-size: 11px;
-    font-family: monospace;
-    padding: 2px 8px;
+    width: 32px;
+    height: 28px;
+    padding: 0;
+    background-color: transparent;
+    background-image: none;
+    border: none;
     cursor: pointer;
-    opacity: 0.5;
-    transition: opacity 0.2s, background 0.2s;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.jdaviz-api-toggle-btn::before {
+    content: '';
+    display: block;
+    width: 26px;
+    height: 22px;
+    flex-shrink: 0;
+    background-image: url('api.svg');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: brightness(0) saturate(100%) invert(100%);
 }
 
 .jdaviz-api-toggle-btn:hover {
-    opacity: 0.8;
-    background: rgba(255,255,255,0.1);
+    background-color: rgba(0, 125, 164, 0.3);
 }
 
 .jdaviz-api-toggle-btn.active {
-    opacity: 1;
-    background: rgba(199, 93, 44, 0.4);
-    border-color: rgba(199, 93, 44, 0.8);
+    background-color: var(--jdw-btn-hover);
 }
 
 /* Hide sidebar footer scroll-to buttons by default; shown via .show-scroll-to */
@@ -686,18 +699,16 @@ html[data-theme="light"] .jdaviz-toolbar-search {
     color: var(--jdw-text);
 }
 
-html[data-theme="light"] .jdaviz-api-toggle-btn {
-    color: var(--jdw-text);
-    border-color: var(--jdw-border);
+html[data-theme="light"] .jdaviz-api-toggle-btn::before {
+    filter: none;
 }
 
 html[data-theme="light"] .jdaviz-api-toggle-btn:hover {
-    background: rgba(0,0,0,0.06);
+    background-color: rgba(0, 125, 164, 0.15);
 }
 
 html[data-theme="light"] .jdaviz-api-toggle-btn.active {
-    background: rgba(199, 93, 44, 0.2);
-    border-color: rgba(199, 93, 44, 0.6);
+    background-color: rgba(0, 125, 164, 0.2);
 }
 
 html[data-theme="light"] .jdaviz-sidebar-tabs {

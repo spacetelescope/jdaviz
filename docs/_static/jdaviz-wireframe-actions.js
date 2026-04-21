@@ -763,15 +763,25 @@
                     versionEl.textContent = 'v' + confSettings.version;
                 }
 
-                // Wire up search bar to open Sphinx search
+                // Wire up search bar click to open Sphinx search dialog
                 var searchInput = root.querySelector('.jdaviz-toolbar-search');
                 if (searchInput) {
-                    searchInput.removeAttribute('readonly');
-                    searchInput.addEventListener('keydown', function(ev) {
-                        if (ev.key === 'Enter' && searchInput.value.trim()) {
-                            var searchLink = document.querySelector('link[rel="search"]');
-                            var searchUrl = searchLink ? searchLink.href : 'search.html';
-                            window.location.href = searchUrl + '?q=' + encodeURIComponent(searchInput.value.trim());
+                    searchInput.addEventListener('click', function() {
+                        var instance = e.detail.instance;
+                        if (instance) instance.pause();
+                        // Try pydata-sphinx-theme search button first
+                        var searchButton = document.querySelector(
+                            'button.search-button, .search-button, ' +
+                            'button[aria-label="Search"], button.search-button__button'
+                        );
+                        if (searchButton) {
+                            searchButton.click();
+                        } else {
+                            // Fallback: try to focus the theme search input
+                            var themeInput = document.querySelector(
+                                'input[type="search"], input.search-input, #searchbox input'
+                            );
+                            if (themeInput) themeInput.focus();
                         }
                     });
                 }
