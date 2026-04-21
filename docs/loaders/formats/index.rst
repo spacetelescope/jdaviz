@@ -31,11 +31,11 @@ See :ref:`loaders-sources` for information on different ways to load data.
 UI Access
 =========
 
-.. wireframe-demo::
-   :initial: loaders
-   :demo: loaders:highlight=#format-select
-   :enable-only: loaders
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":0},{"action":"highlight","target":"#format-select","delay":1500}]
 
 API Access
 ==========

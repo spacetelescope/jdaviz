@@ -22,10 +22,11 @@ the :ref:`loaders-source-file` loader but with a more interactive interface.
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: loaders,loaders@1000:select-dropdown=Source:file drop,loaders:highlight=#source-select
-   :enable-only: loaders
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":1500},{"action":"select-dropdown","value":"Source:file drop","delay":1000},{"action":"highlight","target":"#source-select","delay":1500}]
 
 API Access
 ==============

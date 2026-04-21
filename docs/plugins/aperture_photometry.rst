@@ -90,12 +90,11 @@ Limitations
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: plugins,plugins@1000:open-panel,plugins:select-data=Image 2
-   :enable-only: plugins
-   :plugin-name: Aperture Photometry
-   :plugin-panel-opened: false
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500},{"action":"open-panel","value":"Aperture Photometry","delay":1000},{"action":"select-dropdown","value":"Data:Image 2","delay":1500}]
 
 Opening the Plugin
 ------------------

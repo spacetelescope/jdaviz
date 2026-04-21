@@ -58,6 +58,29 @@
             '</div>';
     }
 
+    // Plugin list for expansion panels
+    var PLUGIN_LIST = [
+        'Gaussian Smooth', 'Model Fitting', 'Line Lists', 'Line Analysis',
+        'Aperture Photometry', 'Moment Maps', 'Collapse',
+        '2D Spectral Extraction', '3D Spectral Extraction', 'Ramp Extraction',
+        'Orientation', 'Footprints', 'Compass', 'Catalog Search',
+        'Data Quality', 'Sonify Data'
+    ];
+
+    function generatePluginPanelsHTML() {
+        return PLUGIN_LIST.map(function(name) {
+            return '<div class="jdaviz-expansion-panel" data-plugin-name="' + name + '">' +
+                '<div class="jdaviz-expansion-header">' +
+                '<span>' + name + '</span><span class="jdaviz-expansion-chevron">\u25B6</span>' +
+                '</div>' +
+                '<div class="jdaviz-expansion-body">' +
+                '<div style="padding:8px 0;color:rgba(255,255,255,0.6);">' +
+                'Configure ' + name.toLowerCase() + ' settings.' +
+                '</div>' +
+                '</div></div>';
+        }).join('');
+    }
+
     // Default sidebar content (can be overridden via config.customContentMap)
     var SIDEBAR_CONTENT = {
         'loaders': {
@@ -99,7 +122,7 @@
         },
         'plugins': {
             tabs: null,
-            content: 'Data analysis plugins provide tools for photometry, line analysis, model fitting, and more.',
+            content: 'dynamic:plugin-panels',
             learnMore: 'Browse analysis plugins \u2192'
         },
         'subsets': {
@@ -298,9 +321,20 @@
         // Handle dynamic content
         if (contentHtml === 'dynamic:plot-options') {
             contentHtml = generatePlotOptionsHTML(root);
+        } else if (contentHtml === 'dynamic:plugin-panels') {
+            contentHtml = generatePluginPanelsHTML();
         }
 
         contentEl.innerHTML = contentHtml;
+
+        // Wire up expansion panel clicks
+        contentEl.querySelectorAll('.jdaviz-expansion-header').forEach(function(hdr) {
+            hdr.addEventListener('click', function(ev) {
+                if (ev.isTrusted) instance.pause();
+                var panel = hdr.parentElement;
+                panel.classList.toggle('open');
+            });
+        });
 
         // Build footer
         var learnMoreText = '';
@@ -612,6 +646,27 @@
     WireframeDemo.registerAction('open-data-menu', function(step, el, contentRoot) {
         var popup = contentRoot.querySelector('.jdaviz-data-menu-popup');
         if (popup) popup.classList.add('visible');
+    });
+
+    /**
+     * open-panel: Open a plugin expansion panel by name.
+     * step.value = plugin name (e.g. "Gaussian Smooth")
+     */
+    WireframeDemo.registerAction('open-panel', function(step, el, contentRoot) {
+        var panels = contentRoot.querySelectorAll('.jdaviz-expansion-panel');
+        panels.forEach(function(panel) {
+            if (panel.dataset.pluginName === step.value) {
+                panel.classList.add('open');
+            }
+        });
+    });
+
+    /**
+     * api-toggle: Toggle the API hints display in the sidebar.
+     */
+    WireframeDemo.registerAction('api-toggle', function(step, el, contentRoot) {
+        var sidebar = contentRoot.querySelector('.jdaviz-sidebar');
+        if (sidebar) sidebar.classList.toggle('api-hints-visible');
     });
 
     // ── Initialization hook ─────────────────────────────────────────────

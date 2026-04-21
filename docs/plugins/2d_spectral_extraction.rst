@@ -160,12 +160,11 @@ in the same way as any other data product in the spectrum viewer.
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: plugins,plugins@1000:open-panel
-   :enable-only: plugins
-   :plugin-name: 2D Spectral Extraction
-   :plugin-panel-opened: false
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500},{"action":"open-panel","value":"2D Spectral Extraction","delay":1000}]
 
 Click the :guilabel:`Spectral Extraction` icon in the plugin toolbar to:
 

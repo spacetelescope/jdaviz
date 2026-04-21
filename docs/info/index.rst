@@ -29,8 +29,9 @@ Jdaviz provides tools to inspect and interact with your data:
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: info
-   :enable-only: info
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"info","delay":1500}]
 

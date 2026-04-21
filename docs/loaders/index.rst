@@ -101,11 +101,11 @@ parameters for loaders. You can enable API hints:
 
 Or in the UI, click the :guilabel:`API Hints` button in the top right.
 
-.. wireframe-demo::
-   :initial: loaders,loaders:select-tab=Data
-   :demo: pause@1000,loaders:api-toggle
-   :enable-only: loaders
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":0},{"action":"select-tab","value":"Data","delay":0},{"action":"pause","delay":1000},{"action":"api-toggle","delay":1500}]
 
 When API hints are enabled, you'll see Python code snippets showing how to access and
 set various loader attributes. For example:

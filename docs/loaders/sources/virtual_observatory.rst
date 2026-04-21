@@ -21,10 +21,11 @@ using standardized interfaces.
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: loaders,loaders@1000:select-dropdown=Source:virtual observatory,loaders:highlight=#source-select
-   :enable-only: loaders
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":1500},{"action":"select-dropdown","value":"Source:virtual observatory","delay":1000},{"action":"highlight","target":"#source-select","delay":1500}]
 
 API Access
 ==========
@@ -46,8 +47,8 @@ API Access
 Since there are many options and the exposed options depend on previous selections, the best way to write a script to write a workflow loading from astroquery is to enable :ref:`userapi-api_hints`,
 and interactively do a search in the UI and reproduce in a notebook cell:
 
-.. wireframe-demo::
-   :initial: loaders,loaders:select-tab=Data,loaders:select-dropdown=Source:virtual observatory
-   :demo: loaders:api-toggle
-   :enable-only: loaders
-   :demo-repeat: true
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":0},{"action":"select-tab","value":"Data","delay":0},{"action":"select-dropdown","value":"Source:virtual observatory","delay":0},{"action":"api-toggle","delay":1500}]

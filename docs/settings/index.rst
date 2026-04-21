@@ -25,10 +25,11 @@ Jdaviz provides flexible configuration options for customizing your analysis env
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: settings
-   :enable-only: settings
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"settings","delay":1500}]
 
 
 See Also

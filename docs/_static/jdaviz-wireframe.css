@@ -674,3 +674,64 @@ html[data-theme="light"] .jdaviz-api-snippet {
 html[data-theme="light"] .jdaviz-data-menu-popup {
     background: #ffffff;
 }
+
+/* Expansion panels (plugins) */
+.jdaviz-expansion-panel {
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    overflow: hidden;
+}
+
+.jdaviz-expansion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.jdaviz-expansion-header:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.jdaviz-expansion-chevron {
+    font-size: 10px;
+    transition: transform 0.2s;
+}
+
+.jdaviz-expansion-panel.open .jdaviz-expansion-chevron {
+    transform: rotate(90deg);
+}
+
+.jdaviz-expansion-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 0 12px;
+}
+
+.jdaviz-expansion-panel.open .jdaviz-expansion-body {
+    max-height: 200px;
+    padding: 0 12px 8px;
+}
+
+/* API hints toggle */
+.jdaviz-sidebar.api-hints-visible .jdaviz-api-snippet {
+    display: block;
+}
+
+/* Light theme expansion panels */
+html[data-theme="light"] .jdaviz-expansion-panel {
+    border-color: rgba(0,0,0,0.1);
+}
+
+html[data-theme="light"] .jdaviz-expansion-header:hover {
+    background: rgba(0,0,0,0.03);
+}
+
+html[data-theme="light"] .jdaviz-expansion-body {
+    color: rgba(0,0,0,0.6);
+}

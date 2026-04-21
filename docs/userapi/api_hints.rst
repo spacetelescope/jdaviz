@@ -27,9 +27,11 @@ To enable API hints in the user interface:
 2. The button will highlight when API hints are active
 3. Click again to toggle off
 
-.. wireframe-demo::
-   :demo: loaders,loaders:api-toggle,loaders:select-tab=Viewer,save,save:api-toggle,settings,settings:api-toggle,settings:select-tab=Units,info,info:api-toggle,info:select-tab=Markers,info:select-tab=Logger,subsets,subsets:api-toggle
-   :demo-repeat: true
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: true
+   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":1500},{"action":"api-toggle","delay":1500},{"action":"select-tab","value":"Viewer","delay":1500},{"action":"show-sidebar","value":"save","delay":1500},{"action":"api-toggle","delay":1500},{"action":"show-sidebar","value":"settings","delay":1500},{"action":"api-toggle","delay":1500},{"action":"select-tab","value":"Units","delay":1500},{"action":"show-sidebar","value":"info","delay":1500},{"action":"api-toggle","delay":1500},{"action":"select-tab","value":"Markers","delay":1500},{"action":"select-tab","value":"Logger","delay":1500},{"action":"show-sidebar","value":"subsets","delay":1500},{"action":"api-toggle","delay":1500}]
 
 Where Hints Appear
 ------------------

@@ -23,11 +23,11 @@ on supported data formats.
 UI Access
 =========
 
-.. wireframe-demo::
-   :initial: loaders
-   :demo: loaders:highlight=#source-select
-   :enable-only: loaders
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":0},{"action":"highlight","target":"#source-select","delay":1500}]
 
 API Access
 ==========
