@@ -147,8 +147,10 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
         # middle of the first found layer)
         self._clear_cache()
         for viewer in self.slice_indicator_viewers:
+            x_att_pixel = getattr(viewer.state, 'x_att_pixel', None)
+            x_att_pixel_str = str(x_att_pixel) if x_att_pixel is not None else ''
             if (str(viewer.state.x_att) not in self.valid_slice_att_names and
-                    str(viewer.state.x_att_pixel) not in self.valid_slice_att_names):
+                    x_att_pixel_str not in self.valid_slice_att_names):
                 # avoid setting value to degs, before x_att is changed to wavelength, for example
                 continue
             if (self._app._get_display_unit(viewer.slice_display_unit_name) == ''
@@ -430,6 +432,24 @@ class SpectralSlice(BaseSlicePlugin):
         self.allow_disable_snapping = False
 
         self.viewer.add_filter(lambda viewer: isinstance(viewer, (CubevizImageView, CubevizProfileView)))  # noqa
+        if self.config == 'deconfigged':
+            self.hub.subscribe(self, RemoveDataMessage, handler=self._set_relevant)
+        self._set_relevant()
+
+    @observe('viewer_items')
+    def _set_relevant(self, *args):
+        if (self.config == 'deconfigged' and
+                not any(d.meta.get('_importer') == 'Spectrum3DImporter'
+                        for d in self._app.data_collection)):
+            self.irrelevant_msg = 'No spectral cube data loaded'
+            return
+        super()._set_relevant(*args)
+
+    def _on_add_data(self, msg):
+        self._set_relevant()
+        super()._on_add_data(msg)
+
+    def _on_remove_data(self, msg):
         self._set_relevant()
 
     @observe('vdocs')
