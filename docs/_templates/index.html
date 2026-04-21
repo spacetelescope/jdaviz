@@ -1649,6 +1649,39 @@ jd.show()</div>
     </div>
 
     <script>
+        // Initialize grid item toggle buttons for landing page
+        document.addEventListener('DOMContentLoaded', function() {
+            var gridItems = document.querySelectorAll('.grid-item');
+            gridItems.forEach(function(item) {
+                var content = item.querySelector('.grid-item-content');
+                if (!content) return;
+                var contentHeight = content.scrollHeight;
+                var threshold = 300;
+                if (contentHeight > threshold) {
+                    item.classList.add('has-toggle');
+                    var toggleButton = document.createElement('button');
+                    toggleButton.className = 'toggle-more';
+                    toggleButton.textContent = 'Show More';
+                    content.style.maxHeight = threshold + 'px';
+                    content.style.overflow = 'hidden';
+                    toggleButton.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        var isExpanded = item.classList.contains('expanded');
+                        if (isExpanded) {
+                            item.classList.remove('expanded');
+                            content.style.maxHeight = threshold + 'px';
+                            toggleButton.textContent = 'Show More';
+                        } else {
+                            item.classList.add('expanded');
+                            content.style.maxHeight = 'none';
+                            toggleButton.textContent = 'Show Less';
+                        }
+                    });
+                    item.appendChild(toggleButton);
+                }
+            });
+        });
+
         // Platform tabs functionality
         document.addEventListener('DOMContentLoaded', function() {
             const platformTabs = document.querySelectorAll('.platform-tab');
