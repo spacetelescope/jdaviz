@@ -207,13 +207,6 @@
                 icon.style.backgroundImage = ICON_SVGS[name];
             }
         });
-        var viewerIcons = contentRoot.querySelectorAll('.jdaviz-viewer-toolbar-icon');
-        viewerIcons.forEach(function(icon) {
-            var name = icon.getAttribute('data-tool');
-            if (name && ICON_SVGS[name]) {
-                icon.style.backgroundImage = ICON_SVGS[name];
-            }
-        });
     }
 
     // ── Helper: create a viewer element ─────────────────────────────────
@@ -545,7 +538,6 @@
 
         if (!targetViewer) {
             viewerArea.appendChild(createViewerElement(newId));
-            applyToolbarIcons(contentRoot);
             return;
         }
 
@@ -563,7 +555,6 @@
         } else {
             splitContainer.appendChild(newViewer);
         }
-        applyToolbarIcons(contentRoot);
     });
 
     /**
