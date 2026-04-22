@@ -179,9 +179,9 @@ div.output_wrapper {
   display: none;
 }
 
-.v-toolbar__items .v-btn {
+.v-toolbar-items .v-btn {
   /* allow v-toolbar-items styling to pass through tooltip wrapping span */
-  /* css is copied from .v-toolbar__items>.v-btn */
+  /* css is copied from toolbar item button styling */
   border-radius: 0;
   height: 100% !important;
   max-height: none;
