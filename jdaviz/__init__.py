@@ -37,6 +37,22 @@ global _current_index
 
 _apps = []
 
+# ipywidgets.Widget.get_state() iterates over _states_to_send, a set
+# that cam be mutated mid-iteration, causing "RuntimeError: Set changed size during iteration".
+# pass in a copy of the set (rather than the live set) to avoid this.
+import ipywidgets as ipywidgets
+import copy
+orig_get_state = ipywidgets.Widget.get_state
+
+def safe_get_state(self, key=None, drop_defaults=False):
+    
+    # make a copy of the set of keys to send so that observers can safely mutate the original set
+    key = copy.copy(key)
+    return orig_get_state(self, key=key, drop_defaults=drop_defaults)
+
+# override the original get_state with the safe version
+ipywidgets.Widget.get_state = safe_get_state
+
 
 def new_app(replace=False, set_as_current=True):
     """
