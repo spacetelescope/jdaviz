@@ -561,22 +561,6 @@ html[data-theme="light"] {
     background-color: #c75109 !important;
 }
 
-.jdaviz-viewer-toolbar-icon[data-tool="home"] {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z"/></svg>');
-}
-
-.jdaviz-viewer-toolbar-icon[data-tool="pan-zoom"] {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M13,7H11V11H7V13H11V17H13V13H17V11H13V7Z"/></svg>');
-}
-
-.jdaviz-viewer-toolbar-icon[data-tool="rect-roi"] {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M4,6H2V20A2,2 0 0,0 4,22H18V20H4V6M20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H8V4H20V16Z"/></svg>');
-}
-
-.jdaviz-viewer-toolbar-icon[data-tool="circ-roi"] {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20Z"/></svg>');
-}
-
 .jdaviz-viewer-toolbar-spacer {
     flex: 1;
 }
@@ -797,7 +781,7 @@ html[data-theme="light"] .jdaviz-api-toggle-btn:hover {
 }
 
 html[data-theme="light"] .jdaviz-api-toggle-btn.active {
-    background-color: rgba(0, 125, 164, 0.4);
+    background-color: var(--jdw-btn-hover);
 }
 
 /* Sidebar tabs stay dark in light mode */

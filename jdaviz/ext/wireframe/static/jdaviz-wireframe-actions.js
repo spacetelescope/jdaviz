@@ -124,11 +124,11 @@
                 formSelect('Source', 'source-select', ['File', 'Astroquery', 'URL']) +
                 formSelect('Format', 'format-select', loaderFormats) +
                 formButton('Load') +
-                '<div class="jdaviz-api-snippet">from jdaviz import Specviz\nviz = Specviz()\nviz.load_data("spectrum.fits")</div>',
+                '<div class="jdaviz-api-snippet">ldr = jd.loaders[\'<i>source</i>\']\nldr.load()</div>',
                 'Show data in a variety of different viewers custom built for exploring astronomical data.<br>' +
                 formSelect('Viewer Type', 'viewer-type-select', ['Image', 'Scatter', '1D Spectrum', '2D Spectrum', 'Histogram']) +
                 formButton('Create Viewer') +
-                '<div class="jdaviz-api-snippet">viz.app.add_viewer("spectrum-viewer")</div>'
+                '<div class="jdaviz-api-snippet">vc = jd.new_viewers[\'<i>viewer_type</i>\']\nvc()</div>'
             ],
             learnMore: ['Learn more about data import \u2192', 'Explore viewer options \u2192'],
             scrollTarget: 'grid-loaders'
@@ -136,7 +136,7 @@
         'save': {
             tabs: null,
             content: 'Export generated data, selected subsets, and viewers.' +
-                '<div class="jdaviz-api-snippet">viz.app.get_viewer("spectrum-viewer").figure.save_png("plot.png")</div>',
+                '<div class="jdaviz-api-snippet">plg = jd.plugins[\'Export\']</div>',
             learnMore: 'See export options \u2192',
             scrollTarget: 'grid-export'
         },
@@ -147,7 +147,7 @@
                 'Convert and display data in different unit systems. Choose spectral units (wavelength, frequency, energy) and flux units appropriate for your analysis.<br>' +
                 formSelect('Spectral Unit', 'spectral-unit-select', ['Angstrom', 'nm', 'micron']) +
                 formSelect('Flux Unit', 'flux-unit-select', ['Jy', 'erg/s/cm\u00B2/\u00C5']) +
-                '<div class="jdaviz-api-snippet">viz.plugins["Unit Conversion"].spectral_unit = "micron"</div>'
+                '<div class="jdaviz-api-snippet">plg = jd.plugins[\'Display Units\']</div>'
             ],
             learnMore: ['View plot customization \u2192', 'Learn about units \u2192'],
             scrollTarget: 'grid-settings'
@@ -156,9 +156,11 @@
             tabs: ['Metadata', 'Markers', 'Logger'],
             content: [
                 'View FITS header information, WCS coordinates, and other metadata for loaded datasets.' +
-                '<div class="jdaviz-api-snippet">viz.app.get_viewer("spectrum-viewer").data()</div>',
-                'Interactively create markers in any viewer and information about the underlying data will be exposed and available to export into the notebook.',
-                'System messages, warnings, and operation history. Monitor plugin execution, data loading status, and any issues that arise during analysis.'
+                '<div class="jdaviz-api-snippet">plg = jd.plugins[\'Metadata\']</div>',
+                'Interactively create markers in any viewer and information about the underlying data will be exposed and available to export into the notebook.' +
+                '<div class="jdaviz-api-snippet">plg = jd.plugins[\'Markers\']\nplg.export_table()</div>',
+                'System messages, warnings, and operation history. Monitor plugin execution, data loading status, and any issues that arise during analysis.' +
+                '<div class="jdaviz-api-snippet">plg = jd.plugins[\'Logger\']\nplg.history</div>'
             ],
             learnMore: ['Explore metadata tools \u2192', 'Learn about markers \u2192', 'View logging options \u2192'],
             scrollTarget: 'grid-info'
@@ -175,7 +177,7 @@
                 formSelect('Subset', 'subset-select', ['Subset 1', 'Subset 2']) +
                 formButton('Recenter') +
                 formButton('Delete') +
-                '<div class="jdaviz-api-snippet">viz.get_subsets()</div>',
+                '<div class="jdaviz-api-snippet">plg = jd.plugins[\'Subset Tools\']</div>',
             learnMore: 'Learn about subsets \u2192',
             scrollTarget: 'grid-subsets'
         }
@@ -201,6 +203,13 @@
         var icons = contentRoot.querySelectorAll('.jdaviz-toolbar-icon');
         icons.forEach(function(icon) {
             var name = icon.getAttribute('data-icon');
+            if (name && ICON_SVGS[name]) {
+                icon.style.backgroundImage = ICON_SVGS[name];
+            }
+        });
+        var viewerIcons = contentRoot.querySelectorAll('.jdaviz-viewer-toolbar-icon');
+        viewerIcons.forEach(function(icon) {
+            var name = icon.getAttribute('data-tool');
             if (name && ICON_SVGS[name]) {
                 icon.style.backgroundImage = ICON_SVGS[name];
             }
@@ -288,6 +297,8 @@
         } else {
             html += '<div style="text-align:center;color:rgba(255,255,255,0.5);margin-top:16px;">No layers in selected viewer</div>';
         }
+
+        html += '<div class="jdaviz-api-snippet">plg = jd.plugins[\'Plot Options\']</div>';
 
         return html;
     }
