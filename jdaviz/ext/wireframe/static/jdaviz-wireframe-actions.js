@@ -535,9 +535,6 @@
         var viewerArea = contentRoot.querySelector('.jdaviz-viewer-area');
         if (!viewerArea) return;
 
-        // Apply toolbar icons on first viewer add
-        applyToolbarIcons(contentRoot);
-
         var targetViewer;
         if (parentId) {
             targetViewer = contentRoot.querySelector('.jdaviz-viewer[data-viewer-id="' + parentId + '"]');
@@ -548,6 +545,7 @@
 
         if (!targetViewer) {
             viewerArea.appendChild(createViewerElement(newId));
+            applyToolbarIcons(contentRoot);
             return;
         }
 
@@ -565,6 +563,7 @@
         } else {
             splitContainer.appendChild(newViewer);
         }
+        applyToolbarIcons(contentRoot);
     });
 
     /**
