@@ -105,10 +105,12 @@
             >
               <template v-slot:activator="{ props }">
                 <v-text-field
+                    class="app-bar-search-field"
                     v-model='state.global_search'
                     append-icon='mdi-magnify'
-                    style="width: 200px; margin-right: 8px; margin-top: 2px"
+                    style="width: 200px; margin-right: 8px; margin-top: 2px; max-height: 28px"
                     density="compact"
+                    variant="underlined"
                     clearable
                     hide-details
                     single-line
@@ -578,6 +580,17 @@ export default {
 }
 .plugin-title.v-list-item:after {
   display: none !important;
+}
+.app-bar-search-field :deep(.v-field) {
+  max-height: 30px;
+}
+
+.app-bar-search-field :deep(.v-icon) {
+  height: .3em
+}
+
+.app-bar-search-field :deep(input) {
+  padding-top: 0;
 }
 .app-bar-right .v-input__append-inner {
   padding-bottom: 6px !important;
