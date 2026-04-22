@@ -49,7 +49,8 @@ def safe_get_state(self, key=None, drop_defaults=False):
 
     # make a copy of the keys to send so that observers can safely mutate
     # the original set without causing a RuntimeError
-    key = copy.copy(key)
+    if key is not None:
+        key = copy.copy(key)
     return orig_get_state(self, key=key, drop_defaults=drop_defaults)
 
 
@@ -62,7 +63,7 @@ def new_app(replace=False, set_as_current=True):
     Create a new jdaviz application instance and assign as the current instance.
 
     Parameters
-    ---------
+    ----------
     replace : bool, optional
         If True, replaces the current application instance with the new one.
         Default is False, which means a new instance is added to the list of applications.
