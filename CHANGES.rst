@@ -35,7 +35,7 @@ Bug Fixes
   during iteration error that occurs in many scenarios (linking, batch loading data,
   etc.). [#4150]
 
-- Fix spectral subsets appearing in image viewer data menu. [#4159]
+- Fix spectral subsets appearing in image viewer data menu. [#4149]
 
 Mosviz
 ^^^^^^
