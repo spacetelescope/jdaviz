@@ -63,7 +63,7 @@ def new_app(replace=False, set_as_current=True):
     Create a new jdaviz application instance and assign as the current instance.
 
     Parameters
-    ---------
+    ----------
     replace : bool, optional
         If True, replaces the current application instance with the new one.
         Default is False, which means a new instance is added to the list of applications.
