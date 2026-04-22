@@ -47,12 +47,11 @@ the JWST pipeline's :ref:`jwst:ramp_fitting_step` step or the Roman pipeline's
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: plugins,plugins@1000:open-panel
-   :enable-only: plugins
-   :plugin-name: Ramp Extraction
-   :plugin-panel-opened: false
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500},{"action":"open-panel","value":"Ramp Extraction","delay":1000}]
 
 Click the :guilabel:`Ramp Extraction` icon in the plugin toolbar to:
 

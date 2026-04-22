@@ -409,7 +409,7 @@ an interactively selected region. A typical workflow is as follows:
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
 9. Select the desired radial profile plot type using the :guilabel:`Plot Type` dropdown menu
-   (see :ref:`photutils:profiles` for more details):
+   (see :mod:`photutils.profiles` for more details):
 
   * Curve of Growth
   * Radial Profile

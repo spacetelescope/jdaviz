@@ -25,11 +25,11 @@ Features
 UI Access
 =========
 
-.. wireframe-demo::
-   :initial: viewer-add:horiz:Image,viewer-legend:Image:Layer1|Layer2
-   :demo: pause@1000,viewer-open-data-menu:Image
-   :enable-only:
-   :demo-repeat: false
+.. wireframe-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: false
+   :steps-json: [{"action":"viewer-add","value":"horiz:Image","delay":0},{"action":"viewer-legend","value":"Image:Layer1|Layer2","delay":0},{"action":"pause","delay":1000},{"action":"open-data-menu","value":"Image","delay":0}]
 
 API Access
 ==========
