@@ -783,3 +783,34 @@ def test_invalid_kwargs_error_message(specviz_helper, spectrum1d):
                                          r"invalid_arg1, invalid_arg2"):
         specviz_helper.load(spectrum1d, format='1D Spectrum',
                             invalid_arg1='foo', invalid_arg2='bar')
+
+
+def test_load_cube_no_dq_in_viewer(deconfigged_helper):
+    """
+    Test loading a cube that has a DQ extension but using setting the
+    'Add to Flux Viewer' toggle to False so the DQ cube is only added to the
+    data collection.
+    """
+
+    flux_data = np.ones((5, 10, 10), dtype=np.float32)
+    dq_data = np.zeros((5, 10, 10), dtype=np.int32)
+
+    # create HDUList with Primary + FLUX + DQ extensions
+    hdul = fits.HDUList([
+        fits.PrimaryHDU(),
+        fits.ImageHDU(data=flux_data, name='FLUX'),
+        fits.ImageHDU(data=dq_data, name='DQ')
+    ])
+
+    deconfigged_helper.load(hdul, format='3D Spectrum', dq_add_to_flux_viewer=False)
+
+    # make sure the flux viewer '3D Spectrum' only has one dataset loaded
+    data_in_flux_viewer = deconfigged_helper.viewers['3D Spectrum'].data_menu.data_labels_loaded
+    assert len(data_in_flux_viewer) == 1
+    assert '3D Spectrum' in data_in_flux_viewer
+
+    # but the DQ extension should be in the data collection, along with FLUX and
+    # the automatic extraction for a total of 3 items
+    datasets = deconfigged_helper.datasets
+    assert len(datasets) == 3
+    assert '3D Spectrum [DQ]' in datasets
