@@ -1,6 +1,6 @@
 <template>
   <div>
-  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
+  <j-flex-row v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
       v-if="mode=='select' || mode===undefined"
       :menu-props="{ left: true }"
@@ -126,12 +126,12 @@
         Applying changes...
       </v-alert>
     </span>
-  </v-row>
-  <v-row v-if="has_subregions_warning && has_subregions">
+  </j-flex-row>
+  <j-flex-row v-if="has_subregions_warning && has_subregions">
     <span class="v-messages v-messages__message text--secondary" style="color: red !important">
         {{ has_subregions_warning }}
     </span>
-  </v-row>
+  </j-flex-row>
   </div>
 </template>
 

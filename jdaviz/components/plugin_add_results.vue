@@ -44,7 +44,7 @@
       ></plugin-viewer-create-new>
     </div>
 
-    <v-row v-if="show_viewer_switch !== false && add_to_viewer_items.length === 2">
+    <j-flex-row v-if="show_viewer_switch !== false && add_to_viewer_items.length === 2">
       <v-switch v-if="label_overwrite"
         :model-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
         :label="addToViewerText"
@@ -61,13 +61,13 @@
         hint='Immediately plot results.  Data entry will be available to toggle in the data dropdown'
         persistent-hint
       ></v-switch>
-    </v-row>
+    </j-flex-row>
 
     <slot></slot>
 
     <!-- currently not exposed to users, uncomment this block and include in the
          user API for the AutoUpdate component to re-enable
-    <v-row v-if="auto_update_result !== undefined">
+    <j-flex-row v-if="auto_update_result !== undefined">
       <v-switch
         v-model="auto_update_result"
         @change="(e) => {$emit('update:auto_update_result', auto_update_result)}"
@@ -76,10 +76,10 @@
         persistent-hint
       >
       </v-switch>
-    </v-row>
+    </j-flex-row>
     -->
 
-    <v-row justify="end">
+    <j-flex-row justify="end">
       <j-tooltip :tooltipcontent="label_overwrite ? action_tooltip+' and replace existing entry' : action_tooltip">
         <plugin-action-button
           :spinner="action_spinner"
@@ -90,7 +90,7 @@
           {{ actionButtonText }}
         </plugin-action-button>
       </j-tooltip>
-    </v-row>
+    </j-flex-row>
   </div>
 </template>
 

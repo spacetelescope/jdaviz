@@ -2,7 +2,7 @@
   <v-container
     class="tray-plugin"
     style="padding-left: 24px; padding-right: 24px; padding-top: 12px" >
-    <v-row>
+    <j-flex-row>
       <div style="width: calc(100% - 32px)">
         <j-docs-link :link="link">{{ description }}</j-docs-link>
       </div>
@@ -10,13 +10,13 @@
       <div style="width: 32px">
         <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </div>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-if="isDisabled()">
+    <j-flex-row v-if="isDisabled()">
       <span> {{ getDisabledMsg() }}</span>
-    </v-row>
+    </j-flex-row>
     <div v-else>
-      <v-row v-if="uses_active_status && keep_active !== undefined" style="padding-bottom: 24px">
+      <j-flex-row v-if="uses_active_status && keep_active !== undefined" style="padding-bottom: 24px">
         <!-- TODO: update:keep_active is not working!!! -->
         <plugin-switch
           :value="keep_active"
@@ -26,7 +26,7 @@
           :api_hints_enabled="api_hints_enabled"
           hint="Consider plugin active (showing any previews and enabling all keypress events) even when not opened"
         />
-      </v-row>
+      </j-flex-row>
 
       <slot></slot>
     </div>

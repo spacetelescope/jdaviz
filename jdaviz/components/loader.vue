@@ -34,7 +34,7 @@
         <v-container>
           <v-alert v-if="image_data_loaded && is_wcs_linked !== undefined && treat_table_as_query && observation_table_populated && !is_wcs_linked"
                    type="warning" dense style="margin-bottom: 16px; margin-top: 8px">
-            <v-row no-gutters align="center">
+            <v-row class="vuetify2" no-gutters align="center">
               <v-col>
                 <strong>Images are not linked by WCS.</strong> Link images to view footprints properly.
               </v-col>
@@ -91,7 +91,7 @@
 
             <div v-if="treat_table_as_query && file_table_populated">
               <span class="table-title">Files</span>
-              <v-row>
+              <j-flex-row>
                 <v-expansion-panels popout>
                   <v-expansion-panel>
                     <v-expansion-panel-title v-slot="{ open }">
@@ -99,7 +99,7 @@
                     </v-expansion-panel-title>
                     <v-expansion-panel-text class="plugin-expansion-panel-content">
                       <v-main>
-                        <v-row>
+                        <j-flex-row>
                           <v-text-field
                             :model-value="file_timeout"
                             @update:modelValue="$emit('update:file_timeout', Number($event))"
@@ -109,7 +109,7 @@
                             :label="api_hints_enabled ? 'ldr.file_timeout =' : 'Timeout (s)'"
                             :class="api_hints_enabled ? 'api-hint' : null"
                           ></v-text-field>
-                        </v-row>
+                        </j-flex-row>
 
                         <plugin-switch
                           :value="file_cache"
@@ -123,7 +123,7 @@
                     </v-expansion-panel-text>
                   </v-expansion-panel>
                 </v-expansion-panels>
-              </v-row>
+              </j-flex-row>
 
               <span v-if="api_hints_enabled" class="api-hint">ldr.file_table</span>
 
@@ -144,7 +144,7 @@
           <!-- format (parser/importer) selection and UI -->
           <j-plugin-section-header>Importer</j-plugin-section-header>
 
-          <v-row v-if="target_items.length >= 2" style="padding-right: 16px">
+          <j-flex-row v-if="target_items.length>= 2" style="padding-right: 16px">
             <plugin-select-filter
               :items="target_items"
               :selected="target_selected"
@@ -153,27 +153,27 @@
               api_hint="ldr.target ="
               :api_hints_enabled="api_hints_enabled"
             />
-          </v-row>
+          </j-flex-row>
 
-          <v-row v-if="parsed_input_is_empty">
+          <j-flex-row v-if="parsed_input_is_empty">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input is empty.
             </v-alert>
-          </v-row>
-          <v-row v-if="parsed_input_is_resolvable">
+          </j-flex-row>
+          <j-flex-row v-if="parsed_input_is_resolvable">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input cannot be resolved.
             </v-alert>
-          </v-row>
-          <v-row v-else-if="format_items.length == 0 && valid_import_formats">
+          </j-flex-row>
+          <j-flex-row v-else-if="format_items.length == 0 && valid_import_formats">
               <v-alert type="warning" style="margin-right: -12px; width: 100%">
                   No compatible importer found. Supported input types include: {{ valid_import_formats }}.
               </v-alert>
-          </v-row>
-          <v-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
+          </j-flex-row>
+          <j-flex-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
               <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">ldr.format = '{{ format_selected }}'</span>
               <span v-else><b>Format:</b> {{ format_selected }}</span>
-          </v-row>
+          </j-flex-row>
           <plugin-select
               v-if="format_items.length >= 2"
               :show_if_single_entry="false"

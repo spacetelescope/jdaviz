@@ -25,7 +25,7 @@
       hint="Minimum verbosity level to show in the log below."
     ></plugin-select>
 
-    <v-row justify="end">
+    <j-flex-row justify="end">
       <plugin-action-button
         :disabled="history.length == 0"
         :results_isolated_to_plugin="true"
@@ -39,12 +39,10 @@
             'Clear History'
           }}
       </plugin-action-button>
-    </v-row>
+    </j-flex-row>
 
     <v-alert v-if="history.length === 0" density="compact" type="info">No logger messages</v-alert>
-    <v-row
-        density="compact"
-        @click="(e) => {e.stopImmediatePropagation()}"
+    <j-flex-row density="compact" @click="(e) => {e.stopImmediatePropagation()}"
         v-for="(hist, index) in history.slice().reverse()"
         style="margin: 6px 0px 0px 0px; max-width: 100%; overflow: hidden"
     >
@@ -52,14 +50,14 @@
         density="compact"
         style="width: 100%; overflow: scroll; white-space: wrap; word-wrap: break-word;"
         :type="hist.color">
-          <v-row v-if="api_hints_enabled">
+          <j-flex-row v-if="api_hints_enabled">
             <span class="api-hint" style="margin-left: 12px">
               plg.history[{{history.length - 1 - index}}]
             </span>
-          </v-row>
+          </j-flex-row>
           [{{hist.time}}]: {{hist.text}}
       </v-alert>
-    </v-row>
+    </j-flex-row>
 
   </j-tray-plugin>
 </template>

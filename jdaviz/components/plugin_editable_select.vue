@@ -1,6 +1,6 @@
 <template>
   <div>
-  <v-row>
+  <j-flex-row>
     <v-select
       v-if="mode=='select'"
       attach
@@ -87,7 +87,7 @@
         Applying changes...
       </v-alert>
     </span>
-  </v-row>
+  </j-flex-row>
  </div>
 </template>
 
