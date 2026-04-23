@@ -30,6 +30,8 @@ let orderCounter = 0
 let reloadQueued = false
 let lastEmittedStateHash = ''
 let lastLoadedExternalStateHash = ''
+let sizeObserver = null
+let resizeFrame = null
 
 const GL_COMPONENT_TYPE = '__jdz_gl_component__'
 
@@ -201,6 +203,19 @@ function ensureLayout() {
   })
 
   layoutInstance.value = gl
+}
+
+function scheduleRootResize() {
+  if (resizeFrame !== null) {
+    cancelAnimationFrame(resizeFrame)
+  }
+
+  resizeFrame = requestAnimationFrame(() => {
+    resizeFrame = null
+    if (layoutInstance.value) {
+      layoutInstance.value.updateRootSize(true)
+    }
+  })
 }
 
 function buildTemplateLayout() {
@@ -717,6 +732,13 @@ function queueTemplateReload() {
 }
 
 onMounted(() => {
+  if (typeof ResizeObserver !== 'undefined' && hostElement.value) {
+    sizeObserver = new ResizeObserver(() => {
+      scheduleRootResize()
+    })
+    sizeObserver.observe(hostElement.value)
+  }
+
   queueTemplateReload()
 })
 
@@ -752,6 +774,16 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  if (resizeFrame !== null) {
+    cancelAnimationFrame(resizeFrame)
+    resizeFrame = null
+  }
+
+  if (sizeObserver) {
+    sizeObserver.disconnect()
+    sizeObserver = null
+  }
+
   const registry = getGlobalLayoutRegistry()
   if (registry && registry[layoutId]) {
     delete registry[layoutId]
