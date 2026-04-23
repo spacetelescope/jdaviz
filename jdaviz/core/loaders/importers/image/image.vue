@@ -31,7 +31,7 @@
       :api_hints_enabled="api_hints_enabled"
       :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.  Will resolve to the following data labels:' : 'Label to assign to the new data entry.'"
     ></plugin-auto-label>
-    <v-row v-if="data_label_is_prefix">
+    <j-flex-row v-if="data_label_is_prefix">
         <j-tooltip v-for="(suff, index) in data_label_suffices"
           :key="suff"
           :tooltipcontent="data_label_overwrite_by_index[index] ? 'Will overwrite existing entry' : 'New entry'">
@@ -44,9 +44,9 @@
             {{data_label_value}}{{suff}}
           </v-chip>
         </j-tooltip>
-    </v-row>
+    </j-flex-row>
 
-    <v-row>
+    <j-flex-row>
       <plugin-switch
         v-model:value="gwcs_to_fits_sip"
         label="Approximate GWCS with FITS SIP"
@@ -54,8 +54,8 @@
         :api_hints_enabled="api_hints_enabled"
         hint="If GWCS exists, try to convert into FITS SIP for better performance aligning images (typical precision <0.1 pixels)."
       />
-    </v-row>
-    <v-row v-if="expose_align_by_options">
+    </j-flex-row>
+    <j-flex-row v-if="expose_align_by_options">
       <v-radio-group
         :label="api_hints_enabled ? 'ldr.importer.align_by = ' : 'Align by'"
         :class="api_hints_enabled ? 'api-hint' : null"
@@ -72,7 +72,7 @@
           :value="item.label"
         ></v-radio>
       </v-radio-group>
-    </v-row>
+    </j-flex-row>
 
     <plugin-viewer-create-new
       :items="viewer_items"

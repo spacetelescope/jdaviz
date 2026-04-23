@@ -1,7 +1,7 @@
 <template>
   <div v-if="sync.in_subscribed_states" style="display: grid; padding-top: 4px; padding-bottom: 4px"> <!-- overlay container -->
     <div style="grid-area: 1/1">
-      <v-row class="row-no-outside-padding">
+      <v-row class="row-no-outside-padding vuetify2">
         <v-col :cols="multiselect ? '8' : '12'" style="padding: 0">
           <div style="grid-area: 1/1">
             <slot></slot>

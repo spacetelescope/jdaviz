@@ -1,5 +1,5 @@
 <template>
-    <v-row justify="end" class="row-no-outside-padding">
+    <j-flex-row justify="end" class="row-no-outside-padding">
         <div v-if="api_hints_enabled && api_hint">
             <span class="api-hint" style="margin-right: 6px">{{ api_hint }}</span>
         </div>
@@ -25,7 +25,7 @@
                 </v-btn>
             </j-tooltip>
         </div>
-    </v-row>
+    </j-flex-row>
 </template>
 
 <script>

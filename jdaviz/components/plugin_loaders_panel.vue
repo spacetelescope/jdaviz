@@ -1,5 +1,5 @@
 <template>
-  <v-row v-if="loader_items.length > 0">
+  <j-flex-row v-if="loader_items.length> 0">
     <v-expansion-panels
       accordion
       focusable
@@ -22,7 +22,7 @@
         </v-expansion-panel-text>
       </v-expansion-panel>
     </v-expansion-panels>
-  </v-row>
+  </j-flex-row>
 </template>
 
 <script>

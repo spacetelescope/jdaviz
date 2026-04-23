@@ -110,7 +110,7 @@
                 :suffix="display_units['image'] || 'pix'"
               />
             </glue-state-sync-wrapper>
-            <v-row v-if="x_min_sync.in_subscribed_states || x_max_sync.in_subscribed_states || y_min_sync.in_subscribed_states || y_max_sync.in_subscribed_states" justify="end">
+            <j-flex-row v-if="x_min_sync.in_subscribed_states || x_max_sync.in_subscribed_states || y_min_sync.in_subscribed_states || y_max_sync.in_subscribed_states" justify="end">
               <plugin-action-button
                 :results_isolated_to_plugin="false"
                 :api_hints_enabled="api_hints_enabled"
@@ -122,7 +122,7 @@
                   'Reset viewer bounds'
                 }}
               </plugin-action-button>
-            </v-row>
+            </j-flex-row>
           </v-expansion-panel-text>
         </v-expansion-panel>
         <v-expansion-panel v-if="hist_xlog_sync.in_subscribed_states || hist_ylog_sync.in_subscribed_states || hist_n_bin_sync.in_subscribed_states || hist_x_min_sync.in_subscribed_states || hist_x_max_sync.in_subscribed_states || hist_cumulative_sync.in_subscribed_states || hist_normalize_sync.in_subscribed_states || hist_update_bins_on_reset_limits_sync.in_subscribed_states">
@@ -230,9 +230,9 @@
             <v-list-item v-bind="props" :title="undefined">
               <span style="margin-top: 8px; margin-bottom: 0px">
                 {{ item.raw.text }}
-                <v-row v-if="item.raw.description" style="line-height: 1.0; margin: 0px; opacity: 0.85; font-size: 8pt">
+                <j-flex-row v-if="item.raw.description" style="line-height: 1.0; margin: 0px; opacity: 0.85; font-size: 8pt">
                   {{ item.raw.description }}
-                </v-row>
+                </j-flex-row>
               </span>
             </v-list-item>
           </template>
@@ -241,7 +241,7 @@
     </div>
 
     <div v-if="image_color_mode_value === 'One color per layer' && !image_color_mode_sync['mixed']">
-      <v-row justify="end">
+      <j-flex-row justify="end">
         <j-tooltip tooltipcontent="Apply preset RGB colors, scaling, and opacities to visible layers">
           <plugin-action-button
             :spinner="apply_RGB_presets_spinner"
@@ -256,7 +256,7 @@
             }}
           </plugin-action-button>
         </j-tooltip>
-      </v-row>
+      </j-flex-row>
     </div>
 
     <!-- GENERAL:AXES -->
@@ -323,16 +323,16 @@
 
     <!-- LAYER OPTIONS -->
     <div v-if="api_hints_enabled">
-      <v-row v-if="layer_items.length > 1">
+      <j-flex-row v-if="layer_items.length> 1">
         <span class="api-hint">
           plg.layer.multiselect = {{ boolToString(layer_multiselect) }}
         </span>
-      </v-row>
-      <v-row>
+      </j-flex-row>
+      <j-flex-row>
         <span class="api-hint">
           plg.layer = {{ layer_multiselect ? layer_selected : '\''+layer_selected+'\'' }}
         </span>
-      </v-row>
+      </j-flex-row>
     </div>
 
     <plugin-layer-select-tabs
@@ -721,14 +721,14 @@
             only when the stretch percentile is min/max, stretch function
             is linear, contrast is 1.0, and bias is 0.5. Click below
             to choose these settings.
-            <v-row justify='end'>
+            <j-flex-row justify='end'>
             <plugin-action-button
               :results_isolated_to_plugin="true"
               @click="image_segmentation_map_presets"
             >
               Image segmentation map
             </plugin-action-button>
-            </v-row>
+            </j-flex-row>
           </v-alert>
 
         </glue-state-sync-wrapper>
@@ -853,14 +853,14 @@
             ></v-progress-circular>
           </div>
 
-        <v-row>
+        <j-flex-row>
           <v-expansion-panels accordion>
             <v-expansion-panel>
               <v-expansion-panel-title v-slot="{ open }">
                 <span style="padding: 6px">More Stretch Options</span>
               </v-expansion-panel-title>
               <v-expansion-panel-text class="plugin-expansion-panel-content">
-                <v-row>
+                <j-flex-row>
                   <v-text-field
                       ref="stretch_hist_nbins"
                       :label="api_hints_enabled ? 'plg.stretch_hist_nbins =' : 'Number of Bins'"
@@ -872,8 +872,8 @@
                       :rules="[() => stretch_hist_nbins !== '' || 'This field is required',
                                () => stretch_hist_nbins > 0 || 'Number of Bins must be greater than zero']"
                   ></v-text-field>
-                </v-row>
-                <v-row>
+                </j-flex-row>
+                <j-flex-row>
                   <plugin-switch
                     v-model:value="stretch_hist_zoom_limits"
                     class="hide-input"
@@ -882,8 +882,8 @@
                     :api_hints_enabled="api_hints_enabled"
                     :disabled="viewer_multiselect && viewer_selected.length > 1"
                   />
-                </v-row>
-                <v-row>
+                </j-flex-row>
+                <j-flex-row>
                   <plugin-switch
                     v-model:value="stretch_curve_visible"
                     class="hide-input"
@@ -891,7 +891,7 @@
                     api_hint="plg.stretch_curve_visible ="
                     :api_hints_enabled="api_hints_enabled"
                   />
-                </v-row>
+                </j-flex-row>
                 <glue-state-sync-wrapper :sync="stretch_vmin_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_vmin')">
                   <v-text-field
                     ref="stretch_vmin"
@@ -915,7 +915,7 @@
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
-        </v-row>
+        </j-flex-row>
 
       </div>
 

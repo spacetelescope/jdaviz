@@ -15,7 +15,7 @@
     </span>
 
     <h1 class="mt-8 mb-6" style="color: white">Welcome to Jdaviz!</h1>
-    <v-row align-center>
+    <v-row class="vuetify2" align-center>
       <v-col>
         <span class="white--text">
             As of version 5.0, Jdaviz has been generalized to work with mixed data types, rather than needing to select a specific
@@ -45,7 +45,7 @@
         <span class="mx-4 white--text font-weight-bold">The functionality below is deprecated as of version 5.0.</span>
         <v-divider style="border-color: white !important; border-width: 3px 0 0 0; opacity: 1"></v-divider>
     </div>
-    <v-row>
+    <j-flex-row>
         <v-text-field
             v-model="filepath"
             class="my-4"
@@ -79,7 +79,7 @@
                   attempt to identify a compatible configuration for your selected dataset. If one cannot
                   be found, you can manually select a configuration to load your data into.
                   <v-container>
-                      <v-row>
+                      <v-row class="vuetify2">
                       <v-col>
                           <jupyter-widget v-if="file_browser_widget" :widget="file_browser_widget" :key="file_browser_widget"/>
                       </v-col>
@@ -96,9 +96,9 @@
               </v-card>
            </v-dialog>
         </j-tooltip>
-    </v-row>
+    </j-flex-row>
 
-    <v-row justify="center">
+    <j-flex-row justify="center">
       <v-btn
         v-for="config in configs"
         class="mx-3"
@@ -122,6 +122,6 @@
                 </span>
             </div>
       </v-btn>
-    </v-row>
+    </j-flex-row>
   </div>
 </template>

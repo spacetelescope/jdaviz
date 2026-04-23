@@ -14,9 +14,9 @@
       To use Sonify Data, install strauss and restart Jdaviz. You can do this by running pip install strauss
       in the command line and then launching Jdaviz.
     </v-alert>
-    <v-row>
+    <j-flex-row>
       <j-docs-link>Choose the input cube, spectral subset and any advanced sonification options.</j-docs-link>
-    </v-row>
+    </j-flex-row>
     <plugin-dataset-select
       :items="dataset_items"
       v-model:selected="dataset_selected"
@@ -36,14 +36,14 @@
       :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the wavelength range."
     />
-    <v-row>
+    <j-flex-row>
       <v-expansion-panels accordion>
         <v-expansion-panel>
           <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Advanced Sound Options</span>
           </v-expansion-panel-title>
           <v-expansion-panel-text class="plugin-expansion-panel-content">
-            <v-row>
+            <j-flex-row>
               <v-text-field
                 ref="audfrqmin"
                 type="number"
@@ -52,8 +52,8 @@
                 hint="The minimum audio frequency used to represent the spectra (Hz)"
                 persistent-hint
               ></v-text-field>
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <v-text-field
                 ref="audfrqmax"
                 type="number"
@@ -62,8 +62,8 @@
                 hint="The maximum audio frequency used to represent the spectra (Hz)"
                 persistent-hint
               ></v-text-field>
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <v-text-field
                 ref="assidx"
                 type="number"
@@ -72,8 +72,8 @@
                 hint="The desired audio spectrum scaling index, typically > 1."
                 persistent-hint
               ></v-text-field>
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <v-text-field
                 ref="ssvidx"
                 type="number"
@@ -82,16 +82,16 @@
                 hint="The desired spectrum-spectrum volume index, typically [0,1]."
                 persistent-hint
               ></v-text-field>
-            </v-row>
-	    <v-row>
+            </j-flex-row>
+	    <j-flex-row>
               <v-switch
                 v-model="use_pccut"
                 label="Use Flux Percentile Cut?"
                 hint="Whether to only sonify flux above a min. percentile (else use absolute values)"
                 persistent-hint
                ></v-switch>
-	    </v-row>
-            <v-row v-if="use_pccut">
+	    </j-flex-row>
+            <j-flex-row v-if="use_pccut">
               <v-text-field
                 ref="pccut"
                 type="number"
@@ -100,28 +100,28 @@
                 hint="The minimum percentile to be heard."
                 persistent-hint
               ></v-text-field>
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
                <v-switch
                  v-model="eln"
                  label="Equal Loudness Equalisation"
                  hint="Whether to equalise for uniform perceived loudness"
                  persistent-hint
                 ></v-switch>
-            </v-row>
+            </j-flex-row>
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </j-flex-row>
     <j-plugin-section-header>Live Sound Options</j-plugin-section-header>
-    <v-row>
+    <j-flex-row>
       <plugin-action-button
         @click="refresh_device_list_in_dropdown"
       >
         Refresh Device List
       </plugin-action-button>
-    </v-row>
-    <v-row>
+    </j-flex-row>
+    <j-flex-row>
       <v-select
         :menu-props="{ left: true }"
         attach
@@ -131,12 +131,12 @@
         hint="Device which sound will be output from."
         persistent-hint
         ></v-select>
-    </v-row>
+    </j-flex-row>
 
-    <v-row>
+    <j-flex-row>
         Overall Volume
         <glue-throttled-slider label="Volume" wait="300" max="100" step="1" v-model:value="volume" hide-details class="no-hint" />
-    </v-row>
+    </j-flex-row>
     <j-plugin-section-header>Add Results Options</j-plugin-section-header>
       <plugin-add-results
           v-model:label="results_label"

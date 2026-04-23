@@ -32,7 +32,7 @@
       :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.  Will resolve to the following data labels:' : 'Label to assign to the new data entry.'"
     >
     </plugin-auto-label>
-    <v-row v-if="data_label_is_prefix">
+    <j-flex-row v-if="data_label_is_prefix">
         <j-tooltip v-for="(suff, index) in data_label_suffices"
           :key="suff"
           :tooltipcontent="data_label_overwrite_by_index[index] ? 'Will overwrite existing entry' : 'New entry'">
@@ -45,7 +45,7 @@
             {{data_label_value}}{{suff}}
           </v-chip>
         </j-tooltip>
-    </v-row>
+    </j-flex-row>
 
     <plugin-viewer-create-new
       :items="viewer_items"

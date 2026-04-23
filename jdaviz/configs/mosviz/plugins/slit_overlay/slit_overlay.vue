@@ -6,7 +6,7 @@
     v-model:api_hints_enabled="api_hints_enabled"
     v-model:scroll_to="scroll_to">
 
-    <v-row>
+    <j-flex-row>
       <plugin-switch
         v-model:value="visible"
         label="Visible"
@@ -14,6 +14,6 @@
         :api_hints_enabled="api_hints_enabled"
         hint="Show slit in the image viewer."
       />
-    </v-row>
+    </j-flex-row>
   </j-tray-plugin>
 </template>

@@ -1,6 +1,6 @@
 <template>
   <div>
-  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
+  <j-flex-row v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
       :menu-props="{ left: true }"
       attach
@@ -67,7 +67,7 @@
       </v-list-item>
     </template>
    </v-select>
-  </v-row>
+  </j-flex-row>
  </div>
 </template>
 

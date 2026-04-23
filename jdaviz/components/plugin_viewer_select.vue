@@ -1,10 +1,10 @@
 <template>
   <div>
-    <v-row v-if="show_multiselect_toggle && api_hints_enabled && api_hint_multiselect">
+    <j-flex-row v-if="show_multiselect_toggle && api_hints_enabled && api_hint_multiselect">
       <span :class="api_hints_enabled && api_hint_multiselect ? 'api-hint' : null">
         {{  api_hint_multiselect }} {{  multiselect ? 'True' : 'False' }}
       </span>
-    </v-row>
+    </j-flex-row>
     <div v-if="show_multiselect_toggle" style="position: absolute; width: 32px; right: 0px; margin-right: 12px; margin-top: -6px; z-index: 999">
     <j-tooltip tipid='viewer-multiselect-toggle'>
       <v-btn
@@ -16,7 +16,7 @@
       </v-btn>
     </j-tooltip>
   </div>
-  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
+  <j-flex-row v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
       :menu-props="{ left: true }"
       attach
@@ -82,7 +82,7 @@
       </v-list-item>
     </template>
    </v-select>
-  </v-row>
+  </j-flex-row>
  </div>
 </template>
 

@@ -8,7 +8,7 @@
       >
         <v-alert color="error">This viewer has been closed at the app-level and this instance is no longer connected or functional.</v-alert>
       </v-overlay>
-      <v-row style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
+      <j-flex-row style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
         <j-tooltip v-if="config !== 'deconfigged'" tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
           <v-btn
             variant="outlined"
@@ -41,7 +41,7 @@
         <span v-if="tool_override_mode.length === 0" class='toolbar-popout-span' style="float: right; margin-top: 4px; color: white;">
           <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
         </span>
-      </v-row>
+      </j-flex-row>
     </div>
 
     <v-card tile flat style="width: 100%; height: calc(100% - 42px); overflow: hidden; overflow: hidden;">

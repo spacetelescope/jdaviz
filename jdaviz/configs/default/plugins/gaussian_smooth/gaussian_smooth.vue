@@ -31,7 +31,7 @@
         hint="Select the data to be smoothed."
       />
 
-      <v-row>
+      <j-flex-row>
         <v-text-field
           ref="stddev"
           :label="api_hints_enabled ? 'plg.stddev =' : 'Standard deviation'"
@@ -43,7 +43,7 @@
           :rules="[() => !!stddev || 'This field is required',
                    () => stddev > 0 || 'Kernel must be greater than zero']"
         ></v-text-field>
-      </v-row>
+      </j-flex-row>
 
       <plugin-add-results
         v-model:label="results_label"

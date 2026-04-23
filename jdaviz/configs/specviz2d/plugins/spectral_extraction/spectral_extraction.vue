@@ -11,14 +11,14 @@
     :popout_button="popout_button"
     v-model:scroll_to="scroll_to">
 
-    <v-row>
+    <j-flex-row>
       <v-expansion-panels popout>
         <v-expansion-panel>
           <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Settings</span>
           </v-expansion-panel-title>
           <v-expansion-panel-text class="plugin-expansion-panel-content">
-            <v-row>
+            <j-flex-row>
               <plugin-switch
                 v-model:value="interactive_extract"
                 label="Show live-extraction"
@@ -26,19 +26,19 @@
                 :api_hints_enabled="api_hints_enabled"
                 hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
               />
-            </v-row>
+            </j-flex-row>
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </j-flex-row>
 
     <div @mouseover="() => active_step='trace'">
       <j-plugin-section-header :active="active_step==='trace'">Trace</j-plugin-section-header>
-      <v-row>
+      <j-flex-row>
         <j-docs-link>
           Create a trace for the spectrum.  See the <j-external-link link='https://specreduce.readthedocs.io/en/latest/#module-specreduce.tracing' linktext='specreduce docs'></j-external-link> for more details on the available trace types.
         </j-docs-link>
-      </v-row>
+      </j-flex-row>
 
       <plugin-dataset-select
         :items="trace_trace_items"
@@ -51,7 +51,7 @@
       />
 
       <div v-if="trace_trace_selected !== 'New Trace'">
-        <v-row>
+        <j-flex-row>
           <v-text-field
             :label="api_hints_enabled ? 'plg.trace_offset =' : 'Offset'"
             :class="api_hints_enabled ? 'api-hint' : null"
@@ -62,7 +62,7 @@
             persistent-hint
           >
           </v-text-field>
-        </v-row>
+        </j-flex-row>
       </div>
       <div v-else>
         <plugin-dataset-select
@@ -84,7 +84,7 @@
           hint="Method to use for creating trace"
         />
 
-        <v-row v-if="trace_type_selected!=='Flat'">
+        <j-flex-row v-if="trace_type_selected!=='Flat'">
           <v-text-field
             :label="api_hints_enabled ? 'plg.trace_order =' : 'Order'"
             :class="api_hints_enabled ? 'api-hint' : null"
@@ -97,9 +97,9 @@
             persistent-hint
           >
           </v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             :label="api_hints_enabled ? 'plg.trace_pixel = ' : 'Pixel'"
             :class="api_hints_enabled ? 'api-hint' : null"
@@ -110,9 +110,9 @@
             persistent-hint
           >
           </v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row v-if="trace_type_selected!=='Flat'">
+        <j-flex-row v-if="trace_type_selected!=='Flat'">
           <plugin-switch
             v-model:value="trace_do_binning"
             label="Bin input spectrum"
@@ -131,22 +131,22 @@
             persistent-hint
           >
           </v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row v-if="trace_type_selected!=='Flat' && !trace_do_binning">
+        <j-flex-row v-if="trace_type_selected!=='Flat' && !trace_do_binning">
           <span class="v-messages v-messages__message text--secondary">
             <b style="color: red !important">WARNING:</b> Trace fitting may be slow without binning.
           </span>
-        </v-row>
+        </j-flex-row>
 
-        <v-row v-if="trace_type_selected!=='Flat' && trace_do_binning && trace_bins > 20">
+        <j-flex-row v-if="trace_type_selected!=='Flat' && trace_do_binning && trace_bins> 20">
           <span class="v-messages v-messages__message text--secondary">
             <b style="color: red !important">WARNING:</b> Trace fitting may be slow with a large number of bins.
           </span>
-        </v-row>
+        </j-flex-row>
 
 
-        <v-row v-if="trace_type_selected!=='Flat'">
+        <j-flex-row v-if="trace_type_selected!=='Flat'">
           <v-text-field
             :label="api_hints_enabled ? 'plg.trace_window = ' : 'Window Width'"
             :class="api_hints_enabled ? 'api-hint' : null"
@@ -158,7 +158,7 @@
             persistent-hint
           >
           </v-text-field>
-        </v-row>
+        </j-flex-row>
 
         <plugin-select
           v-if="trace_type_selected!=='Flat'"
@@ -171,7 +171,7 @@
         />
       </div>
 
-      <v-row>
+      <j-flex-row>
         <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-title v-slot="{ open }">
@@ -204,20 +204,20 @@
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
-      </v-row>
+      </j-flex-row>
     </div>
 
     <div @mouseover="() => active_step='bg'">
       <j-plugin-section-header :active="active_step==='bg'">Background</j-plugin-section-header>
-      <v-row>
+      <j-flex-row>
         <j-docs-link>Create a background and/or background-subtracted image.</j-docs-link>
-      </v-row>
+      </j-flex-row>
 
-      <v-row v-if="ext_dataset_selected !== 'From Plugin'">
+      <j-flex-row v-if="ext_dataset_selected !== 'From Plugin'">
         <span class="v-messages v-messages__message text--secondary">
           <b style="color: red !important">NOTE:</b> extracted spectrum is using "{{ext_dataset_selected}}" as input data, so will not update in real-time.  Switch to "From Plugin" to use the background subtraction defined here.
         </span>
-      </v-row>
+      </j-flex-row>
 
       <plugin-dataset-select
         :items="bg_dataset_items"
@@ -248,7 +248,7 @@
         hint="Trace to use as reference for background window(s).  'From Plugin' uses trace defined in Trace section above."
       />
 
-      <v-row v-if="bg_type_selected === 'Manual'">
+      <j-flex-row v-if="bg_type_selected === 'Manual'">
         <v-text-field
           :label="api_hints_enabled ? 'plg.bg_trace_pixel' : 'Pixel'"
           :class="api_hints_enabled ? 'api-hint' : null"
@@ -259,9 +259,9 @@
           persistent-hint
         >
         </v-text-field>
-      </v-row>
+      </j-flex-row>
 
-      <v-row v-if="['OneSided', 'TwoSided'].indexOf(bg_type_selected) !== -1">
+      <j-flex-row v-if="['OneSided', 'TwoSided'].indexOf(bg_type_selected) !== -1">
         <v-text-field
           :label="api_hints_enabled ? 'plg.bg_separation =' : 'Separation'"
           :class="api_hints_enabled ? 'api-hint' : null"
@@ -272,9 +272,9 @@
           persistent-hint
         >
         </v-text-field>
-      </v-row>
+      </j-flex-row>
 
-      <v-row>
+      <j-flex-row>
         <v-text-field
           :label="api_hints_enabled ? 'plg.bg_width =' : 'Width'"
           :class="api_hints_enabled ? 'api-hint' : null"
@@ -285,7 +285,7 @@
           persistent-hint
         >
         </v-text-field>
-      </v-row>
+      </j-flex-row>
 
       <plugin-select
         :items="bg_statistic_items.map(i => i.label)"
@@ -296,7 +296,7 @@
         hint="Statistic to use over the background window."
       />
 
-      <v-row>
+      <j-flex-row>
         <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-title v-slot="{ open }">
@@ -329,8 +329,8 @@
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
-      </v-row>
-      <v-row>
+      </j-flex-row>
+      <j-flex-row>
         <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-title v-slot="{ open }">
@@ -362,8 +362,8 @@
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
-      </v-row>
-      <v-row>
+      </j-flex-row>
+      <j-flex-row>
         <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-title v-slot="{ open }">
@@ -395,16 +395,16 @@
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
-      </v-row>
+      </j-flex-row>
     </div>
 
     <div @mouseover="() => active_step='ext'">
       <j-plugin-section-header :active="active_step==='ext'">Extraction</j-plugin-section-header>
-      <v-row>
+      <j-flex-row>
         <j-docs-link>
           Extract a 1D spectrum from a 2D spectrum.  See the <j-external-link link='https://specreduce.readthedocs.io/en/latest/#module-specreduce.extract' linktext='specreduce docs'></j-external-link> for more details on the available extraction methods.
         </j-docs-link>
-      </v-row>
+      </j-flex-row>
 
       <plugin-dataset-select
         :items="ext_dataset_items"
@@ -435,13 +435,13 @@
         hint="Method to use for extracting the spectrum."
       />
 
-      <v-row v-if="ext_uncert_warn">
+      <j-flex-row v-if="ext_uncert_warn">
         <span class="v-messages v-messages__message text--secondary">
           <b style="color: red !important">WARNING:</b> uncertainties on input 2D spectrum have unclear units; assuming standard deviation.
         </span>
-      </v-row>
+      </j-flex-row>
 
-      <v-row v-if="ext_type_selected === 'Boxcar'">
+      <j-flex-row v-if="ext_type_selected === 'Boxcar'">
         <v-text-field
           :label="api_hints_enabled ? 'plg.ext_width =' : 'Width'"
           :class="api_hints_enabled ? 'api-hint' : null"
@@ -452,7 +452,7 @@
           persistent-hint
         >
         </v-text-field>
-      </v-row>
+      </j-flex-row>
 
       <plugin-select
         v-if="ext_type_selected === 'Horne'"
@@ -464,7 +464,7 @@
         hint="Profile to use for Horne extraction."
       />
 
-      <v-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
+      <j-flex-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
         <v-text-field
           :label="api_hints_enabled ? 'plg.self_prof_n_bins =' : 'N Bins'"
           :class="api_hints_enabled ? 'api-hint' : null"
@@ -476,10 +476,10 @@
           persistent-hint
         >
         </v-text-field>
-      </v-row>
+      </j-flex-row>
 
       <div v-if="ext_type_selected === 'Horne'">
-        <v-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
+        <j-flex-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
           <v-text-field
             :label="api_hints_enabled ? 'plg.self_prof_interp_degree_x =' : 'Interpolation Degree (X)'"
             :class="api_hints_enabled ? 'api-hint' : null"
@@ -491,9 +491,9 @@
             persistent-hint
           >
           </v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
+        <j-flex-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
           <v-text-field
             :label="api_hints_enabled ? 'plg.self_prof_interp_degree_y =' : 'Interpolation Degree (Y)'"
             :class="api_hints_enabled ? 'api-hint' : null"
@@ -505,7 +505,7 @@
             persistent-hint
           >
           </v-text-field>
-        </v-row>
+        </j-flex-row>
       </div>
 
       <plugin-add-results
@@ -534,11 +534,11 @@
       ></plugin-add-results>
     </div>
 
-    <v-row v-if="ext_specreduce_err">
+    <j-flex-row v-if="ext_specreduce_err">
       <span class="v-messages v-messages__message text--secondary">
         <b style="color: red !important">ERROR from specreduce:</b> {{ext_specreduce_err}}
       </span>
-    </v-row>
+    </j-flex-row>
 
     </div>
   </j-tray-plugin>

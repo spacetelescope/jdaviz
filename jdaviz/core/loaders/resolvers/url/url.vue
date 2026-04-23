@@ -26,7 +26,7 @@
     :custom_toolbar_enabled="custom_toolbar_enabled"
   >
     <div v-if="!hide_resolver_inputs">
-      <v-row style="margin-bottom: 24px">
+      <j-flex-row style="margin-bottom: 24px">
         <v-text-field
           v-model='url'
           prepend-icon='mdi-link-box'
@@ -35,15 +35,15 @@
           :class="api_hints_enabled ? 'api-hint' : null"
           :error-messages="parsed_input_is_resolvable ? [parsed_input_is_resolvable] : []"
         ></v-text-field>
-      </v-row>
+      </j-flex-row>
 
-      <v-row v-if="url_not_whitelisted">
+      <j-flex-row v-if="url_not_whitelisted">
         <v-alert type="warning" style="margin-right: -12px; width: 100%">
           The URL must start with: {{ url_prefix_whitelist.join(', ') }}
         </v-alert>
-      </v-row>
+      </j-flex-row>
 
-      <v-row v-if="url_scheme !== 's3'">
+      <j-flex-row v-if="url_scheme !== 's3'">
         <v-text-field
           v-model.number='timeout'
           type="number"
@@ -52,7 +52,7 @@
           :label="api_hints_enabled ? 'ldr.timeout =' : 'Timeout (s)'"
           :class="api_hints_enabled ? 'api-hint' : null"
         ></v-text-field>
-      </v-row>
+      </j-flex-row>
 
       <plugin-switch
         v-if="url_scheme !== 's3'"

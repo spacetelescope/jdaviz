@@ -9,14 +9,14 @@
       :popout_button="popout_button"
       v-model:scroll_to="scroll_to">
 
-    <v-row>
+    <j-flex-row>
       <v-expansion-panels popout>
         <v-expansion-panel>
           <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Indicator Settings</span>
           </v-expansion-panel-title>
           <v-expansion-panel-text class="plugin-expansion-panel-content">
-            <v-row v-if="allow_disable_snapping">
+            <j-flex-row v-if="allow_disable_snapping">
               <plugin-switch
                   v-model:value="snap_to_slice"
                   label="Snap to Slice"
@@ -24,8 +24,8 @@
                   :api_hints_enabled="api_hints_enabled"
                   hint="Snap indicator (and value) to the nearest slice in the cube."
               />
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <plugin-switch
                   v-model:value="show_indicator"
                   label="Show Indicator"
@@ -33,8 +33,8 @@
                   :api_hints_enabled="api_hints_enabled"
                   hint="Show slice indicator even when slice tool is inactive."
               />
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <plugin-switch
                   v-model:value="show_value"
                   label="Show Value"
@@ -42,19 +42,19 @@
                   :api_hints_enabled="api_hints_enabled"
                   :hint="'Show slice '+value_label.toLowerCase()+' in label to right of indicator.'"
               />
-            </v-row>
+            </j-flex-row>
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </j-flex-row>
 
-    <v-row justify="end" class="ignore-api-hints">
+    <j-flex-row justify="end" class="ignore-api-hints">
       <v-btn color="primary" variant="text" v-if="!cube_viewer_exists" @click="create_cube_viewer">
         Show Cube Viewer
       </v-btn>
-    </v-row>
+    </j-flex-row>
 
-    <v-row>
+    <j-flex-row>
       <v-text-field
           type="number"
           v-model.number="value"
@@ -65,9 +65,9 @@
           :hint="value_label+' corresponding to slice.'+(snap_to_slice && value_editing ? '  Indicator will snap to slice when clicking or tabbing away from input.' : '')"
           :suffix="value_unit"
       ></v-text-field>
-    </v-row>
+    </j-flex-row>
 
-    <v-row class="row-no-outside-padding row-min-bottom-padding ignore-api-hints">
+    <v-row class="row-no-outside-padding row-min-bottom-padding ignore-api-hints vuetify2">
       <v-col>
         <v-tooltip location="top">
           <template v-slot:activator="{ props }">

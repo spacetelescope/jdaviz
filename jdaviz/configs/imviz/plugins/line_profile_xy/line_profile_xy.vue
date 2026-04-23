@@ -16,38 +16,38 @@
       persistent-hint
     />
 
-    <v-row>
+    <j-flex-row>
       <v-text-field
         v-model.number='selected_x'
         type="number"
         label="X"
         hint="Value of X"
       ></v-text-field>
-    </v-row>
+    </j-flex-row>
 
-    <v-row>
+    <j-flex-row>
       <v-text-field
         v-model.number='selected_y'
         type="number"
         label="Y"
         hint="Value of Y"
       ></v-text-field>
-    </v-row>
+    </j-flex-row>
 
-    <v-row justify="end">
+    <j-flex-row justify="end">
       <plugin-action-button
         :results_isolated_to_plugin="true"
         @click="draw_plot"
       >
         Plot
       </plugin-action-button>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-if="plot_available">
+    <j-flex-row v-if="plot_available">
       <jupyter-widget v-if="plot_across_x_widget" :widget="plot_across_x_widget" :key="plot_across_x_widget"/>
       <br/>
       <jupyter-widget v-if="plot_across_y_widget" :widget="plot_across_y_widget" :key="plot_across_y_widget"/>
-    </v-row>
+    </j-flex-row>
 
   </j-tray-plugin>
 </template>

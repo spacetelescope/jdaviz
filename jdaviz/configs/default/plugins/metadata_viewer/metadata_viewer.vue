@@ -20,7 +20,7 @@
       hint="Select the data to see metadata."
     />
 
-    <v-row v-if="has_primary || api_hints_enabled">
+    <j-flex-row v-if="has_primary || api_hints_enabled">
       <plugin-switch
         v-model:value="show_primary"
         label='Show primary header'
@@ -28,16 +28,16 @@
         :api_hints_enabled="api_hints_enabled"
         hint="Show MEF primary header metadata instead."
       />
-    </v-row>
+    </j-flex-row>
 
     <j-plugin-section-header>Metadata</j-plugin-section-header>
     <div v-if="has_metadata">
-      <v-row v-if="api_hints_enabled">
+      <j-flex-row v-if="api_hints_enabled">
         <span class="api-hint">
           plg.metadata
         </span>
-      </v-row>
-      <v-row>
+      </j-flex-row>
+      <j-flex-row>
         <v-text-field
           v-model='metadata_filter'
           append-icon='mdi-magnify'
@@ -45,8 +45,8 @@
           clearable
           hide-details
         ></v-text-field>
-      </v-row>
-      <v-row
+      </j-flex-row>
+      <v-row class="vuetify2"
         v-for="item in metadata.filter((item) => {return metadata_filter === null || item.join().toLowerCase().indexOf(metadata_filter.toLowerCase()) !== -1})"
         :key="item[0]"
         no-gutters>
@@ -54,11 +54,11 @@
         <v-col v-if="has_comments" cols=12 class="text--secondary">{{ item[2] }}</v-col>
       </v-row>
     </div>
-    <v-row v-else>
+    <j-flex-row v-else>
       <span class="v-messages v-messages__message text--secondary">
           Selected data does not contain any metadata.
       </span>
-    </v-row>
+    </j-flex-row>
 
   </j-tray-plugin>
 </template>

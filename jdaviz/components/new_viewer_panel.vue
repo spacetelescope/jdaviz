@@ -16,11 +16,11 @@
     ></v-select>
 
     <v-container>
-      <v-row>
+      <j-flex-row>
         <v-alert v-if="new_viewer_items_filtered.length === 0" type="warning" style="margin-left: 12px; margin-right: 12px;">
           Add data before creating viewers.
         </v-alert>
-      </v-row>
+      </j-flex-row>
 
       <span v-if="new_viewer_selected && new_viewer_selected.length > 0 && api_hints_enabled" class="api-hint" style="font-weight: bold; padding-left: 6px">
         vc = {{ api_hints_obj }}.new_viewers['{{ new_viewer_selected }}']

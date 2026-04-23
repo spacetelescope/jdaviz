@@ -10,9 +10,9 @@
     :disabled_msg="disabled_msg"
     v-model:scroll_to="scroll_to">
 
-    <v-row v-if="plot_available" style="padding: 0px">
+    <j-flex-row v-if="plot_available" style="padding: 0px">
       <jupyter-widget v-if="plot_widget" :widget="plot_widget" :key="plot_widget"/>
-    </v-row>
+    </j-flex-row>
 
     <plugin-dataset-select
       :items="dataset_items"
@@ -24,7 +24,7 @@
       hint="Select the data to compute the profile."
     />
 
-    <v-row>
+    <v-row class="vuetify2">
       <span v-if="api_hints_enabled" class="api-hint" style="font-size: 10px">
         plg.pixel =
       </span>
@@ -62,7 +62,7 @@
     />
 
     <div v-if="!use_full_width">
-      <v-row>
+      <v-row class="vuetify2">
         <span v-if="api_hints_enabled" class="api-hint" style="font-size: 10px">
           plg.y_pixel =
         </span>
@@ -91,7 +91,7 @@
         </v-col>
     </v-row>
 
-      <v-row>
+      <v-row class="vuetify2">
         <span v-if="api_hints_enabled" class="api-hint" style="font-size: 10px">
           plg.width =
         </span>

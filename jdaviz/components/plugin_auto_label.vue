@@ -1,5 +1,5 @@
 <template>
-  <v-row>
+  <j-flex-row>
     <v-form ref="form" style="width: 100%">
       <v-text-field
         ref="textField"
@@ -25,7 +25,7 @@
         </template>
       </v-text-field>
     </v-form>
-  </v-row>
+  </j-flex-row>
 </template>
 <script>
 export default {
