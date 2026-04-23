@@ -6188,12 +6188,9 @@ class Table(PluginSubcomponent):
                 [m for m in missing_headers if self._new_col_visible(m)]
 
         # Build all items with JSON conversion
-        all_items = []
-        for row in table:
-            row_dict = {}
-            for col in table.colnames:
-                row_dict[col] = self._json_safe(col, row[col])
-            all_items.append(row_dict)
+        all_items = [
+            {col: self._json_safe(col, row[col]) for col in table.colnames} for row in table
+        ]
 
         # Set all items (triggers server pagination)
         self.set_all_items(all_items)
