@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
-      contents: read
+      contents: write
       models: read
     steps:
       - uses: actions/checkout@v4
@@ -16,4 +16,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           docs-root: docs/
+          max-prompt-tokens: '6000'
           source-root: jdaviz/
