@@ -1,0 +1,19 @@
+name: Wireframe Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+      models: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: kecnry/docs-wireframe-demo/.github/actions/wireframe-review@llm-wireframe-watcher
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          docs-root: docs/
+          source-root: jdaviz/
