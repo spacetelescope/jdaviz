@@ -18,7 +18,7 @@
       :hint="'Label for the newly created ' + create_new_selected + ' viewer.'"
     >
       <j-tooltip tooltipcontent="Cancel creating new viewer">
-        <v-btn icon @click="$emit('update:create_new_selected', '')"><v-icon>mdi-close</v-icon></v-btn>
+        <v-btn icon density="compact" variant="text" @click="$emit('update:create_new_selected', '')"><v-icon>mdi-close</v-icon></v-btn>
       </j-tooltip>
     </plugin-auto-label>
   </div>
