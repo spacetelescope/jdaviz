@@ -16,9 +16,9 @@
         <template v-slot:prepend-inner>
           <slot></slot>
         </template>
-        <template v-slot:append>
+        <template v-slot:append-inner>
           <j-tooltip v-if="!auto || showIcon" :tooltipcontent="auto ? 'Using default (click to use custom)' : 'Using custom (click to use default)'">
-            <v-btn icon small @click="() => {$emit('update:auto', !auto)}" style="padding-bottom: 4px" @mouseenter="showIcon = true" @mouseleave="showIcon = false">
+            <v-btn icon density="compact" variant="text" @click="() => {$emit('update:auto', !auto)}" style="padding-bottom: 4px" @mouseenter="showIcon = true" @mouseleave="showIcon = false">
               <v-icon :color="auto ? 'accent' : ''" style="transform: rotate(180deg);">mdi-label</v-icon>
             </v-btn>
           </j-tooltip>
