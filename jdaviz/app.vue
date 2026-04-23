@@ -40,6 +40,11 @@
             <img :src="state.subset_mode_create ? state.icons['selection-drag'] : state.icons['selection']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
+        <j-tooltip tipid="app-toolbar-help">
+          <v-btn icon @click="() => {if (state.drawer_content === 'help') {state.drawer_content = ''} else {state.drawer_content = 'help'}}" :class="{active : state.drawer_content === 'help'}">
+            <img :src="state.icons['help-circle']" width="24" class="color-to-white"/>
+          </v-btn>
+        </j-tooltip>
 
         <v-divider vertical style="margin: 0px 10px"></v-divider>
       </v-toolbar-items>
