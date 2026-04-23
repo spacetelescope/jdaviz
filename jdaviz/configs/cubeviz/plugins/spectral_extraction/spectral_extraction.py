@@ -7,6 +7,7 @@ from astropy.coordinates import SpectralCoord
 from astropy.nddata import NDDataArray, StdDevUncertainty
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 
+from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.marks import PluginLine
@@ -211,6 +212,13 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
+
+    @property
+    def image_viewers(self):
+        # Override the image_viewers property inherited from ApertureSubsetSelectMixin
+        # to be more specific
+        return [viewer for viewer in self._app._viewer_store.values()
+                if isinstance(viewer, CubevizImageView)]
 
     @property
     def user_api(self):
