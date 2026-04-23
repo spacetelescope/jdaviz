@@ -27,7 +27,7 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":0},{"action":"highlight","target":"#source-select","delay":1500}]
+   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":0},{"action":"highlight","target":"#source-select","delay":1500,"caption":"Select the data source"}]
 
 API Access
 ==========

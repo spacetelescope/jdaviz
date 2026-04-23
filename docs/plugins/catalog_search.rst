@@ -44,7 +44,7 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500},{"action":"open-panel","value":"Catalog Search","delay":1000}]
+   :steps-json: [{"action": "show-sidebar", "value": "plugins", "delay": 1500, "caption": "Open the plugin toolbar"}, {"action": "open-panel", "value": "Catalog Search", "delay": 1000, "caption": "Open the Catalog Search plugin"}]
 
 Click the :guilabel:`Catalog Search` icon in the plugin toolbar to:
 

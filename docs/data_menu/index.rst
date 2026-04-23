@@ -29,7 +29,7 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action":"viewer-add","value":"horiz:Image","delay":0},{"action":"viewer-legend","value":"Image:Layer1|Layer2","delay":0},{"action":"pause","delay":1000},{"action":"open-data-menu","value":"Image","delay":0}]
+   :steps-json: [{"action":"viewer-add","value":"horiz:Image","delay":0},{"action":"viewer-legend","value":"Image:Layer1|Layer2","delay":0},{"action":"pause","delay":1000},{"action":"open-data-menu","value":"Image","delay":0,"caption":"Open the Image viewer data menu"}]
 
 API Access
 ==========

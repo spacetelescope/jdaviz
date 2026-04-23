@@ -33,5 +33,4 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action":"show-sidebar","value":"info","delay":1500}]
-
+   :steps-json: [{"action": "show-sidebar", "value": "info", "delay": 1500, "caption": "Open the info sidebar"}]

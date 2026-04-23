@@ -105,7 +105,7 @@ Or in the UI, click the :guilabel:`API Hints` button in the top right.
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":0},{"action":"select-tab","value":"Data","delay":0},{"action":"pause","delay":1000},{"action":"api-toggle","delay":1500}]
+   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 0}, {"action": "select-tab", "value": "Data", "delay": 0}, {"action": "pause", "delay": 1000}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}]
 
 When API hints are enabled, you'll see Python code snippets showing how to access and
 set various loader attributes. For example:

@@ -31,7 +31,7 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":1500},{"action":"select-dropdown","value":"Source:object","delay":1000},{"action":"highlight","target":"#source-select","delay":1500}]
+   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-dropdown", "value": "Source:object", "delay": 1000, "caption": "Set source to object"}, {"action": "highlight", "target": "#source-select", "delay": 1500}]
 
 Note that the object loader is only available when there is API access (e.g., in Jupyter notebooks),
 but although there is a UI, requires API access to be functional.

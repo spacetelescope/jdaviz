@@ -25,7 +25,7 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":1500},{"action":"select-dropdown","value":"Source:virtual observatory","delay":1000},{"action":"highlight","target":"#source-select","delay":1500}]
+   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-dropdown", "value": "Source:virtual observatory", "delay": 1000, "caption": "Set source to virtual observatory"}, {"action": "highlight", "target": "#source-select", "delay": 1500}]
 
 API Access
 ==========
@@ -51,4 +51,4 @@ and interactively do a search in the UI and reproduce in a notebook cell:
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":0},{"action":"select-tab","value":"Data","delay":0},{"action":"select-dropdown","value":"Source:virtual observatory","delay":0},{"action":"api-toggle","delay":1500}]
+   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 0}, {"action": "select-tab", "value": "Data", "delay": 0}, {"action": "select-dropdown", "value": "Source:virtual observatory", "delay": 0}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}]

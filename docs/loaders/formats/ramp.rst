@@ -46,7 +46,7 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action":"show-sidebar","value":"loaders","delay":1500},{"action":"select-dropdown","value":"Format:Ramp","delay":1000},{"action":"highlight","target":"#format-select","delay":1500}]
+   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-dropdown", "value": "Format:Ramp", "delay": 1000, "caption": "Set format to Ramp"}, {"action": "highlight", "target": "#format-select", "delay": 1500}]
 
 See Also
 ========
