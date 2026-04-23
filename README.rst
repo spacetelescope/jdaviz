@@ -22,29 +22,40 @@
     :target: https://www.astropy.org
     :alt: Powered by Astropy
 
-``jdaviz`` is a package of astronomical data analysis visualization tools based on the Jupyter platform. It is one tool that is a part of STScI's larger `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_. These GUI-based tools link data
-visualization and interactive analysis.  They are designed to work
-within a Jupyter notebook cell, as a standalone desktop application,
-or as embedded windows within a website -- all with nearly-identical
+``jdaviz`` is a package of astronomical data analysis visualization tools based
+on the Jupyter platform. It is one tool that is a part of STScI's
+larger `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
+These GUI-based tools link data visualization and interactive analysis. 
+They are designed to work within a Jupyter notebook cell, as a standalone desktop
+application, or as embedded windows within a website -- all with nearly-identical
 user interfaces. ``jdaviz`` is under active development, and users who
 encounter bugs in existing features are encouraged to open issues in this
 repository.
 
 ``jdaviz`` provides data viewers and analysis plugins that can be flexibly
 combined as desired to create interactive applications that fit your workflow.
-Three named preset configurations for common use cases are provided. **Specviz**
-is a tool for visualization and quick-look analysis of 1D astronomical spectra.
-**Mosviz** is a visualization tool for many astronomical spectra,
-typically the output of a multi-object spectrograph (e.g., JWST
-NIRSpec), and includes viewers for 1D and 2D spectra as well as
-contextual information like on-sky views of the spectrograph slit.
-**Cubeviz** provides a view of spectroscopic data cubes (like those to be
-produced by JWST MIRI), along with 1D spectra extracted from the cube.
-**Imviz** provides visualization and quick-look analysis for 2D astronomical
-images.
+In the most recent release (5.0), ``jdaviz`` has been refactored to combine what
+were previously separate 'configurations' (Cubeviz, Specviz, Specviz2D, Imviz,
+and Mosviz) into a single, flexible application that supports mixed viewer
+types. 
 
-This tool is designed with instrument modes from the James Webb Space Telescope (JWST) in mind, but
-the tool should be flexible enough to read in data from many astronomical telescopes.  The documentation provides a complete `table of all supported modes <https://jdaviz.readthedocs.io/en/latest/#jwst-instrument-modes-in-jdaviz>`_.
+**Image viewers** support 2D images, and include tools for panning, zooming, and
+aperture photometry, and other quick-look analysis. **Spectrum viewers** support
+1D and 2D spectra, and include tools for extraction, measuring spectral features,
+fitting lines, among other analysis and quick-look tasks. **Cube viewers** provide a
+view of spectroscopic data cubes (like those to be produced by JWST MIRI), along
+with 1D spectra extracted from the cube.
+
+**Mosviz** still exists as an standalone configuration and as of v5.0 has not yet
+been integrated into the main application. It is a visualization tool for many
+astronomical spectra, typically the output of a multi-object spectrograph
+(e.g., JWST NIRSpec), and includes viewers for 1D and 2D spectra as well as
+contextual information like on-sky views of the spectrograph slit.
+
+
+This tool is designed with instrument modes from the James Webb Space Telescope
+(JWST) in mind, but the tool should be flexible enough to read in data from many
+astronomical telescopes.  The documentation provides a complete `table of all supported modes <https://jdaviz.readthedocs.io/en/latest/#jwst-instrument-modes-in-jdaviz>`_.
 
 Installing
 ----------
@@ -93,17 +104,15 @@ The power of ``jdaviz`` is that it can integrated into your Jupyter notebook wor
 
 .. code-block:: python
 
-    from jdaviz import Specviz
+    import jdaviz as jd
 
-    specviz = Specviz()
-    specviz.show()
+    jd.show()
 
-To learn more about the various ``jdaviz`` application configurations and loading data, see the
-`Specviz <https://jdaviz.readthedocs.io/en/latest/specviz/import_data.html>`_,
-`Cubeviz <https://jdaviz.readthedocs.io/en/latest/cubeviz/import_data.html>`_,
-`Mosviz <https://jdaviz.readthedocs.io/en/latest/mosviz/import_data.html>`_,
-`Imviz <https://jdaviz.readthedocs.io/en/latest/imviz/import_data.html>`_,
-or `Specviz2D <https://jdaviz.readthedocs.io/en/latest/specviz2d/import_data.html>`_ tools.
+To learn more about the suppored ``jdaviz`` viewer types, see `https://jdaviz.readthedocs.io/en/stable/viewers/index.html`_
+
+
+ and loading data, see the
+`Data Formats <https://jdaviz.readthedocs.io/en/stable/loaders/formats/index.html`_ tools.
 
 ``jdaviz`` also provides a directory of `sample notebooks <https://jdaviz.readthedocs.io/en/latest/sample_notebooks.html>`_ to test the application, located in the ``notebooks`` sub-directory
 of the git repository.  ``CubevizExample.ipynb`` is provided as an example that loads a JWST data cube with the
