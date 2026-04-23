@@ -28,14 +28,14 @@
     :footprint_select_icon="footprint_select_icon"
     :custom_toolbar_enabled="custom_toolbar_enabled"
   >
-    <v-row v-if="!server_is_remote && !hide_resolver_inputs" style="padding-left: 12px; margin-bottom: 16px">
+    <j-flex-row v-if="!server_is_remote && !hide_resolver_inputs" style="padding-left: 12px; margin-bottom: 16px">
       Select a file with data you want to load into this instance of Jdaviz.
-    </v-row>
-    <v-row v-if="api_hints_enabled">
+    </j-flex-row>
+    <j-flex-row v-if="api_hints_enabled">
       <span class="api-hint">
         ldr.filepath = '{{ filepath }}'
       </span>
-    </v-row>
+    </j-flex-row>
     <jupyter-widget
       v-if="file_chooser_widget && !server_is_remote && !hide_resolver_inputs"
       :widget="file_chooser_widget"

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-row>
+    <j-flex-row>
       <v-select
         :menu-props="{ left: true }"
         attach
@@ -51,15 +51,15 @@
            {{from_file.split("/").slice(-1)[0]}}
          </span>
       </v-chip>
-    </v-row>
+    </j-flex-row>
     <v-dialog :value="selected === 'From File...' && from_file.length == 0" height="400" width="600">
       <v-card v-if="deprecate_from_file">
         <v-card-title class="headline" color="primary" primary-title>Import Behavior Changed</v-card-title>
         <v-card-text>
           <v-container>
-            <v-row>
+            <j-flex-row>
               <v-alert color="warning">This functionality has been moved to the top of the plugin under "Import"</v-alert>
-            </v-row>
+            </j-flex-row>
           </v-container>
         </v-card-text>
         <v-card-actions>
@@ -72,17 +72,17 @@
         <v-card-text>
           {{ dialog_hint }}
           <v-container>
-            <v-row>
+            <v-row class="vuetify2">
               <v-col>
                 <slot></slot>
               </v-col>
             </v-row>
-            <v-row v-if="from_file_message.length > 0" :style='"color: red"'>
+            <j-flex-row v-if="from_file_message.length> 0" :style='"color: red"'>
               {{from_file_message}}
-            </v-row>
-            <v-row v-else>
+            </j-flex-row>
+            <j-flex-row v-else>
               Valid file
-            </v-row>
+            </j-flex-row>
           </v-container>
         </v-card-text>
 

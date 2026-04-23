@@ -17,7 +17,7 @@
           viewer{{ config == 'cubeviz' ? ', though only one data cube may be loaded per instance' : ''}}.
           Note that single clicks navigate into directories.
           <v-container>
-            <v-row>
+            <v-row class="vuetify2">
               <v-col>
                 <g-file-import id="file-uploader"></g-file-import>
                 <span style="color: red;">{{ error_message }}</span>

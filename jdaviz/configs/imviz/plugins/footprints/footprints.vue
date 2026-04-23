@@ -53,11 +53,11 @@
       style="margin-left: -12px; margin-right: -12px"
     >
       cannot plot footprint when aligned by pixels (see Orientation plugin).
-      <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
+      <j-flex-row justify="end" style="margin-right: 2px; margin-top: 16px">
         <v-btn @click="link_by_wcs">
           link by WCS
         </v-btn>
-      </v-row>
+      </j-flex-row>
     </v-alert>
     <v-alert v-if="viewer_items.length===0" type='warning' style="margin-left: -12px; margin-right: -12px">
       no valid viewers (with necessary WCS information) to show footprint overlay.
@@ -77,7 +77,7 @@
         hint="Select viewers to display this overlay"
       />
 
-      <v-row>
+      <j-flex-row>
         <plugin-switch
           v-model:value="visible"
           label="Visible"
@@ -85,9 +85,9 @@
           :api_hints_enabled="api_hints_enabled"
           :use_eye_icon="true"
         />
-      </v-row>
+      </j-flex-row>
 
-      <v-row>
+      <j-flex-row>
         <plugin-color-picker
           label='Overlay Color'
           label_inline="true"
@@ -96,8 +96,8 @@
           :value="color"
           @color-update="throttledSetColor($event.hexa)"
         />
-      </v-row>
-      <v-row>
+      </j-flex-row>
+      <j-flex-row>
         <plugin-slider
           label="Fill Opacity"
           api_hint="plg.fill_opacity = "
@@ -107,7 +107,7 @@
           step="0.01"
           v-model:value="fill_opacity"
         />
-      </v-row>
+      </j-flex-row>
 
       <j-plugin-section-header>Footprint Definition</j-plugin-section-header>
       <v-alert v-if="!has_pysiaf" type="warning" style="margin-left: -12px; margin-right: -12px">
@@ -143,7 +143,7 @@
       </plugin-file-import-select>
 
       <div v-if="preset_selected !== 'From File...' && preset_selected !== 'None'">
-        <v-row>
+        <j-flex-row>
           <span style="line-height: 36px; font-size: 12px; color: #666666; width: 100%">Center RA/Dec</span>
           <j-tooltip v-for="viewer_ref in viewer_selected" :tooltipcontent="'center RA/DEC on current zoom-limits of '+viewer_ref">
           <v-btn
@@ -157,9 +157,9 @@
             }}
           </v-btn>
           </j-tooltip>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             v-model.number="ra"
             type="number"
@@ -170,9 +170,9 @@
             hint="Right Ascension (degrees)"
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             v-model.number="dec"
             type="number"
@@ -183,9 +183,9 @@
             hint="Declination (degrees)"
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             v-model.number="pa"
             type="number"
@@ -196,9 +196,9 @@
                   to central vertical axis in North to East direction."
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             v-model.number="v2_offset"
             type="number"
@@ -209,9 +209,9 @@
                   center, as from a dither pattern."
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             v-model.number="v3_offset"
             type="number"
@@ -222,7 +222,7 @@
                   center, as from a dither pattern."
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
       </div>
     </div>
 

@@ -1,11 +1,11 @@
 <template>
   <div>
-    <v-row v-if="disabled_msg && disabled_msg.length > 0" style="margin-bottom: 8px; margin-top: 12px">
+    <j-flex-row v-if="disabled_msg && disabled_msg.length> 0" style="margin-bottom: 8px; margin-top: 12px">
       <v-alert type="warning" style="width: 100%; margin-left: 12px; margin-right: 12px;">
         {{ disabled_msg }}
       </v-alert>
-    </v-row>
-    <v-row justify="end">
+    </j-flex-row>
+    <j-flex-row justify="end">
       <j-tooltip :tooltipcontent="tooltipText">
         <plugin-action-button
           :spinner="spinner"
@@ -16,7 +16,7 @@
           {{ api_hints_enabled ? api_hint : buttonText }}
         </plugin-action-button>
       </j-tooltip>
-    </v-row>
+    </j-flex-row>
   </div>
 </template>
 

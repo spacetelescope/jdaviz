@@ -41,16 +41,16 @@
         hint="Select a viewer to retrieve center coordinates, or Manual for manual coordinate entry."
       />
 
-      <v-row v-if="viewer_selected !== 'Manual'">
+      <j-flex-row v-if="viewer_selected !== 'Manual'">
         <v-switch
           v-model="coord_follow_viewer_pan"
           label="Follow Viewer Center"
           hint="Automatically adjust coordinates as viewer pans and zooms"
           persistent-hint
         ></v-switch>
-      </v-row>
+      </j-flex-row>
 
-      <v-row>
+      <j-flex-row>
         <div :style="!(viewer_selected !== 'Manual' && !coord_follow_viewer_pan) ? 'width: 100%' : 'width: calc(100% - 32px)'">
           <v-text-field
             v-model="source"
@@ -76,7 +76,7 @@
             </v-btn>
           </j-tooltip>
         </div>
-      </v-row>
+      </j-flex-row>
 
       <plugin-select
         :items="coordframe_choices.map(i => i.label)"
@@ -88,7 +88,7 @@
         :disabled="viewer_selected !== 'Manual'"
       ></plugin-select>
 
-      <v-row justify="space-between">
+      <j-flex-row justify="space-between">
         <div :style="{ width: '55%' }">
           <v-text-field
             v-model.number="radius"
@@ -108,7 +108,7 @@
             :api_hints_enabled="api_hints_enabled"
           ></plugin-select>
         </div>
-      </v-row>
+      </j-flex-row>
 
       <j-plugin-section-header>Telescope/Mission</j-plugin-section-header>
 
@@ -123,7 +123,7 @@
         hint="Select a telescope to search for data"
       ></plugin-select>
 
-      <v-row justify="space-between" style="margin-top: 12px">
+      <j-flex-row justify="space-between" style="margin-top: 12px">
         <v-text-field
           v-model.number='max_results'
           type="number"
@@ -133,12 +133,12 @@
           persistent-hint
           hint="Maximum number of results to return from the query"
         ></v-text-field>
-      </v-row>
+      </j-flex-row>
     </v-form>
 
 
 
-    <v-row class="row-no-outside-padding" justify="end" style="margin-top: 32px">
+    <j-flex-row class="row-no-outside-padding" justify="end" style="margin-top: 32px">
       <plugin-action-button
         :spinner="results_loading"
         :disabled="!all_fields_filled"
@@ -151,19 +151,19 @@
               'Query Archive'
           }}
       </plugin-action-button>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-if="returned_no_results">
+    <j-flex-row v-if="returned_no_results">
       <v-alert type="warning">
         The search returned no results. Please modify your query parameters and try again.
       </v-alert>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-if="returned_max_results">
+    <j-flex-row v-if="returned_max_results">
       <v-alert type="warning">
         The number of results returned has reached the maximum limit set ({{ max_results }}). Consider increasing the maximum results to ensure all data is retrieved.
       </v-alert>
-    </v-row>
+    </j-flex-row>
   </j-loader>
 </template>
 

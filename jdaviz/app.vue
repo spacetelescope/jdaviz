@@ -121,7 +121,7 @@
               <v-card style="min-width: 350px; max-height: 500px; overflow-y: scroll">
                 <v-container>
                   <div v-for="ldrItem in loader_items_filtered" :key="ldrItem.label">
-                    <v-row v-if="trayItemVisible(ldrItem, state.global_search)">
+                    <j-flex-row v-if="trayItemVisible(ldrItem, state.global_search)">
                       <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'loaders', label: ldrItem.label})}">
                         <v-list-item-title>
                           Loader: {{ ldrItem.label }}
@@ -135,10 +135,10 @@
                           </v-list-item-subtitle>
                         </template>
                       </v-list-item>
-                    </v-row>
+                    </j-flex-row>
                   </div>
                   <div v-for="vcItem in state.new_viewer_items" :key="vcItem.label">
-                    <v-row v-if="vcItem.is_relevant && trayItemVisible(vcItem, state.global_search)">
+                    <j-flex-row v-if="vcItem.is_relevant && trayItemVisible(vcItem, state.global_search)">
                       <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'new_viewers', label: vcItem.label})}">
                         <v-list-item-title>
                           New Viewer: {{ vcItem.label }}
@@ -152,10 +152,10 @@
                           </v-list-item-subtitle>
                         </template>
                       </v-list-item>
-                    </v-row>
+                    </j-flex-row>
                   </div>
                   <div v-for="dmItem in state.viewer_items" :key="dmItem.name">
-                    <v-row v-if="trayItemVisible(dmItem, state.global_search)">
+                    <j-flex-row v-if="trayItemVisible(dmItem, state.global_search)">
                       <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'data_menus', label: dmItem.name})}">
                         <v-list-item-title>
                           Data Menu: {{ dmItem.name }}
@@ -169,10 +169,10 @@
                           </v-list-item-subtitle>
                         </template>
                       </v-list-item>
-                    </v-row>
+                    </j-flex-row>
                   </div>
                   <div v-for="(trayItem, index) in state.tray_items" :key="index">
-                    <v-row v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.global_search)">
+                    <j-flex-row v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.global_search)">
                       <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'plugins', label: trayItem.label})}">
                         <v-list-item-title>
                           {{ trayItem.label }}
@@ -189,7 +189,7 @@
                           {{ trayItem.tray_item_description }}
                         </v-list-item-subtitle>
                       </v-list-item>
-                    </v-row>
+                    </j-flex-row>
                   </div>
                 </v-container>
               </v-card>

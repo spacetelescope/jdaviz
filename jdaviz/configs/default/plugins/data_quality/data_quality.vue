@@ -38,7 +38,7 @@
       label="Flag definitions"
     />
 
-    <v-row class="row-no-padding">
+    <v-row class="row-no-padding vuetify2">
       <v-col>
         <plugin-slider
           label="Data quality relative opacity"
@@ -54,7 +54,7 @@
     </v-row>
 
     <j-plugin-section-header>Quality Flags</j-plugin-section-header>
-    <v-row class="row-no-padding">
+    <v-row class="row-no-padding vuetify2">
       <v-col cols=6>
         <j-tooltip tipid='plugin-dq-show-all'>
           <v-btn
@@ -90,7 +90,7 @@
     </v-row>
 
     <v-col>
-      <v-row>
+      <v-row class="vuetify2">
       <v-select
         :menu-props="{ left: true }"
         attach
@@ -129,7 +129,7 @@
       </v-col>
       </v-row>
     </v-col>
-    <v-row >
+    <v-row class="vuetify2" >
       <v-col cols=3 align="left">
         Color
       </v-col>
@@ -138,12 +138,12 @@
       </v-col>
     </v-row>
 
-    <v-row>
+    <j-flex-row>
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="(item, index) in decoded_flags" key=":item">
           <div v-if="flagVisible(item, item.decomposed, flags_filter)">
             <v-expansion-panel-title v-slot="{ open }">
-              <v-row no-gutters align="center">
+              <v-row class="vuetify2" no-gutters align="center">
                 <v-col cols=1>
                 </v-col>
                   <v-col cols=2>
@@ -160,24 +160,24 @@
             </v-row>
             </v-expansion-panel-title>
             <v-expansion-panel-text>
-              <v-row no-gutters align="center">
+              <v-row class="vuetify2" no-gutters align="center">
                 <v-col cols=2 align="left">
                   <v-btn :color="item.show ? 'accent' : 'default'" icon @click="toggleVisibility(index)">
  <v-icon>{{item.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
                   </v-btn>
                 </v-col>
               <v-col cols=8 align="left">
-                <v-row v-for="(item, key, index) in item.decomposed">
+                <j-flex-row v-for="(item, key, index) in item.decomposed">
                   <span v-if="item.name !== null && item.name.length > 0"><strong>{{item.name}}</strong> ({{key}}): {{item.description}}</span>
                   <span v-else><strong>{{key}}</strong>: {{item.description}}</span>
-                </v-row>
+                </j-flex-row>
               </v-col>
               </v-row>
             </v-expansion-panel-text>
           </div>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </j-flex-row>
   </j-tray-plugin>
 </template>
 

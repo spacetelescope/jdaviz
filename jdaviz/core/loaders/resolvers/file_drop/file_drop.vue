@@ -25,9 +25,9 @@
     :footprint_select_icon="footprint_select_icon"
     :custom_toolbar_enabled="custom_toolbar_enabled"
   >
-    <v-row>
+    <j-flex-row>
       Select a file from your local file system and send to jdaviz through the browser.
-    </v-row>
+    </j-flex-row>
     <v-alert v-if="api_hints_enabled" type="info">
       Use UI to select file (no API access available).
     </v-alert>

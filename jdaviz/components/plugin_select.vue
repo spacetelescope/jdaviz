@@ -1,5 +1,5 @@
 <template>
-  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
+  <j-flex-row v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
       :menu-props="{ left: true }"
       attach
@@ -116,7 +116,7 @@
       </template>
     </v-select>
     <slot> </slot>
-  </v-row>
+  </j-flex-row>
 </template>
 
 <script>

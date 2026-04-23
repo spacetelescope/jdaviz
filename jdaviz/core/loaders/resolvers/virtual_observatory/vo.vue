@@ -38,16 +38,16 @@
         hint="Select a viewer to retrieve center coordinates, or Manual for manual coordinate entry."
       />
 
-      <v-row v-if="viewer_selected !== 'Manual'">
+      <j-flex-row v-if="viewer_selected !== 'Manual'">
         <v-switch
           v-model="coord_follow_viewer_pan"
           label="Follow Viewer Center"
           hint="Automatically adjust coordinates as viewer pans and zooms"
           persistent-hint
         ></v-switch>
-      </v-row>
+      </j-flex-row>
 
-      <v-row>
+      <j-flex-row>
         <div :style="!(viewer_selected !== 'Manual' && !coord_follow_viewer_pan) ? 'width: 100%' : 'width: calc(100% - 32px)'">
           <v-text-field
             v-model="source"
@@ -73,7 +73,7 @@
             </v-btn>
           </j-tooltip>
         </div>
-      </v-row>
+      </j-flex-row>
 
       <plugin-select
         :items="coordframe_choices.map(i => i.label)"
@@ -85,7 +85,7 @@
         :disabled="viewer_selected !== 'Manual'"
       ></plugin-select>
 
-      <v-row justify="space-between">
+      <j-flex-row justify="space-between">
         <div :style="{ width: '55%' }">
           <v-text-field
             v-model.number="radius"
@@ -105,10 +105,10 @@
             :api_hints_enabled="api_hints_enabled"
           ></plugin-select>
         </div>
-      </v-row>
+      </j-flex-row>
 
       <j-plugin-section-header>Survey Collections</j-plugin-section-header>
-      <v-row>
+      <j-flex-row>
         <j-tooltip tipid='plugin-vo-filter-coverage'>
           <plugin-switch
             v-model:value="resource_filter_coverage"
@@ -117,7 +117,7 @@
             :api_hints_enabled="api_hints_enabled"
           ></plugin-switch>
         </j-tooltip>
-      </v-row>
+      </j-flex-row>
 
       <plugin-select
         :show_if_single_entry="true"
@@ -145,7 +145,7 @@
       ></plugin-select>
     </v-form>
 
-    <v-row class="row-no-outside-padding" justify="end">
+    <j-flex-row class="row-no-outside-padding" justify="end">
       <plugin-action-button
         :spinner="results_loading"
         :disabled="!all_fields_filled"
@@ -158,7 +158,7 @@
               'Query Archive'
           }}
       </plugin-action-button>
-    </v-row>
+    </j-flex-row>
   </j-loader>
 </template>
 
