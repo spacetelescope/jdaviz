@@ -337,13 +337,17 @@
     var PLUGIN_LIST = Object.keys(PLUGINS);
 
     function generatePluginPanelsHTML(pluginName) {
-        var name = pluginName || PLUGIN_LIST[0];
-        // Only use rich per-plugin content when a specific plugin is explicitly requested
-        var plugin = pluginName ? PLUGINS[name] : null;
-        var pluginContent = plugin
-            ? plugin.html + '<div class="jdaviz-api-snippet">' + plugin.api + '</div>'
-            : 'Do basic data reduction and analysis tasks for specific science use-cases.' +
-              '<div class="jdaviz-api-snippet">plg = jd.plugins[\'' + name + '\']</div>';
+        var name, pluginContent;
+        if (pluginName && PLUGINS[pluginName]) {
+            // Specific plugin requested: use its title and rich content
+            name = pluginName;
+            var plugin = PLUGINS[name];
+            pluginContent = plugin.html + '<div class="jdaviz-api-snippet">' + plugin.api + '</div>';
+        } else {
+            // No specific plugin: show generic placeholder panel
+            name = 'Data Analysis Plugin';
+            pluginContent = 'Do basic data reduction and analysis tasks for specific science use-cases.';
+        }
         return '<div class="jdaviz-expansion-panels">' +
             '<div class="jdaviz-expansion-panel expanded" data-panel-index="0" data-plugin-name="' + name + '">' +
             '<div class="jdaviz-expansion-panel-header">' +
