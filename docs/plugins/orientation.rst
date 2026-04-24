@@ -65,7 +65,8 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action": "show-sidebar", "value": "plugins", "delay": 1500, "caption": "Open the plugin toolbar"}, {"action": "open-panel", "value": "Orientation", "delay": 1000, "caption": "Open the Orientation plugin"}]
+   :init-steps-json: [{"action":"set-plugin","value":"Orientation"}]
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Orientation","delay":1000,"caption":"Open the Orientation plugin"}]
 
 Click the :guilabel:`Orientation` icon in the plugin toolbar to:
 

@@ -28,7 +28,8 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action": "show-sidebar", "value": "plugins", "delay": 1500, "caption": "Open the plugin toolbar"}, {"action": "open-panel", "value": "Compass", "delay": 1000, "caption": "Open the Compass plugin"}]
+   :init-steps-json: [{"action":"set-plugin","value":"Compass"}]
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Compass","delay":1000,"caption":"Open the Compass plugin"}]
 
 Click the :guilabel:`Compass` icon in the plugin toolbar to toggle compass display.
 

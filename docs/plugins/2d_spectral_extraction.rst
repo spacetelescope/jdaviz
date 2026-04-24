@@ -164,7 +164,8 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action": "show-sidebar", "value": "plugins", "delay": 1500, "caption": "Open the plugin toolbar"}, {"action": "open-panel", "value": "2D Spectral Extraction", "delay": 1000, "caption": "Open the 2D Spectral Extraction plugin"}]
+   :init-steps-json: [{"action":"set-plugin","value":"2D Spectral Extraction"}]
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"2D Spectral Extraction","delay":1000,"caption":"Open the 2D Spectral Extraction plugin"}]
 
 Click the :guilabel:`Spectral Extraction` icon in the plugin toolbar to:
 

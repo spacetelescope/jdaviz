@@ -37,6 +37,7 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
+   :init-steps-json: [{"action":"set-plugin","value":"Gaussian Smooth"}]
    :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Gaussian Smooth","delay":1000,"caption":"Open the Gaussian Smooth plugin"}]
 
 Click the :guilabel:`Gaussian Smooth` icon in the plugin toolbar to open.

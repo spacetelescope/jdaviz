@@ -47,7 +47,8 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action": "show-sidebar", "value": "plugins", "delay": 1500, "caption": "Open the plugin toolbar"}, {"action": "open-panel", "value": "Data Quality", "delay": 1000, "caption": "Open the Data Quality plugin"}]
+   :init-steps-json: [{"action":"set-plugin","value":"Data Quality"}]
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Data Quality","delay":1000,"caption":"Open the Data Quality plugin"}]
 
 Click the :guilabel:`Data Quality` icon in the plugin toolbar to:
 

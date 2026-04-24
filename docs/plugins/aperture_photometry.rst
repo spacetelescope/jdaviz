@@ -94,6 +94,7 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
+   :init-steps-json: [{"action":"set-plugin","value":"Aperture Photometry"}]
    :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Aperture Photometry","delay":1000,"caption":"Open Aperture Photometry"},{"action":"select-dropdown","value":"Data:Image 2","delay":1500,"caption":"Select the dataset"}]
 
 Opening the Plugin

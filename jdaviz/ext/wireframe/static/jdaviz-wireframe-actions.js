@@ -331,7 +331,8 @@
 
     function generatePluginPanelsHTML(pluginName) {
         var name = pluginName || PLUGIN_LIST[0];
-        var plugin = PLUGINS[name];
+        // Only use rich per-plugin content when a specific plugin is explicitly requested
+        var plugin = pluginName ? PLUGINS[name] : null;
         var pluginContent = plugin
             ? plugin.html + '<div class="jdaviz-api-snippet">' + plugin.api + '</div>'
             : 'Do basic data reduction and analysis tasks for specific science use-cases.' +
@@ -629,7 +630,9 @@
         if (contentHtml === 'dynamic:plot-options') {
             contentHtml = generatePlotOptionsHTML(root);
         } else if (contentHtml === 'dynamic:plugin-panels') {
-            contentHtml = generatePluginPanelsHTML();
+            var panelName = state.openPanel || null;
+            state.openPanel = null;
+            contentHtml = generatePluginPanelsHTML(panelName);
         }
 
         contentEl.innerHTML = contentHtml;
@@ -687,6 +690,11 @@
     WireframeDemo.registerAction('show-sidebar', function(step, el, contentRoot) {
         var sidebarType = step.value;
         applyToolbarIcons(contentRoot);
+        // Clear openPanel so the animated show-sidebar always shows the generic plugin list;
+        // set-plugin / open-panel steps are responsible for revealing specific plugin content.
+        if (sidebarType === 'plugins') {
+            getState(this).openPanel = null;
+        }
         renderSidebar(this, sidebarType, 0);
 
         // Highlight the toolbar icon
@@ -972,17 +980,25 @@
 
     /**
      * open-panel: Open a plugin expansion panel by name.
+     * Re-renders the plugin panels sidebar with the named plugin expanded.
      * step.value = plugin name (e.g. "Gaussian Smooth")
      */
     WireframeDemo.registerAction('open-panel', function(step, el, contentRoot) {
-        var panels = contentRoot.querySelectorAll('.jdaviz-expansion-panel');
-        panels.forEach(function(panel) {
-            if (panel.dataset.pluginName === step.value) {
-                panel.classList.add('expanded');
-                var contentDiv = panel.querySelector('.jdaviz-expansion-panel-content');
-                if (contentDiv) contentDiv.classList.add('expanded');
-            }
-        });
+        var state = getState(this);
+        state.openPanel = step.value;
+        // Re-render the plugins sidebar so the correct plugin panel is expanded
+        renderSidebar(this, 'plugins', 0);
+    });
+
+    /**
+     * set-plugin: Pre-load the default plugin for manual sidebar interactions.
+     * Used in init-steps-json to configure which plugin content appears when the
+     * user manually opens the plugins sidebar (before or after the animation).
+     * Does not open the sidebar — no visible change on init.
+     * step.value = plugin name (e.g. "Gaussian Smooth")
+     */
+    WireframeDemo.registerAction('set-plugin', function(step, el, contentRoot) {
+        getState(this).defaultPlugin = step.value;
     });
 
     /**
@@ -1032,6 +1048,11 @@
                                 icon.classList.remove('active');
                                 state.currentSidebar = null;
                             } else {
+                                // For plugins sidebar, use defaultPlugin if one was pre-loaded
+                                // via the set-plugin init step (user opened manually)
+                                if (sidebarType === 'plugins' && state.defaultPlugin && !state.openPanel) {
+                                    state.openPanel = state.defaultPlugin;
+                                }
                                 renderSidebar(instance, sidebarType, 0);
                             }
                         }

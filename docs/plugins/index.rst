@@ -77,7 +77,7 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: true
-   :steps-json: [{"action": "show-sidebar", "value": "plugins", "delay": 1500, "caption": "Open the plugin toolbar"}]
+   :init-steps-json: [{"action":"show-sidebar","value":"plugins"}]
 
 API Access
 ==========

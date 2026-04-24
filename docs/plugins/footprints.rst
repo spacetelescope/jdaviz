@@ -43,7 +43,8 @@ UI Access
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action": "show-sidebar", "value": "plugins", "delay": 1500, "caption": "Open the plugin toolbar"}, {"action": "open-panel", "value": "Footprints", "delay": 1000, "caption": "Open the Footprints plugin"}]
+   :init-steps-json: [{"action":"set-plugin","value":"Footprints"}]
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Footprints","delay":1000,"caption":"Open the Footprints plugin"}]
 
 Click the :guilabel:`Footprints` icon in the plugin toolbar to:
 
