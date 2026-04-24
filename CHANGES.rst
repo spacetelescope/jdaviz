@@ -39,6 +39,9 @@ Bug Fixes
 
 - Fix Data Quality plugin support for Roman ASDF images. [#4089]
 
+- Multiply values from spectrum-at-spaxel tool by PIXAR_SR when available to match
+  units of other extracted fluxes. [#4156]
+
 Mosviz
 ^^^^^^
 
