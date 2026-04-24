@@ -2,16 +2,8 @@ name: Wireframe Review
 on:
   pull_request:
     types: [opened, synchronize]
-  issue_comment:
-    types: [created]
 jobs:
   review:
-    # Run on PR events, or on issue comments that start with /wireframe-apply on a PR
-    if: >-
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'issue_comment' &&
-       github.event.issue.pull_request &&
-       startsWith(github.event.comment.body, '/wireframe-apply'))
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -27,3 +19,4 @@ jobs:
           max-prompt-tokens: '6000'
           source-root: jdaviz/
           fail-on-error: 'true'
+          auto-apply: 'true'
