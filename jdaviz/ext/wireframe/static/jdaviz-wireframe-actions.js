@@ -60,17 +60,282 @@
             '</div>';
     }
 
-    // Plugin list for expansion panels
-    var PLUGIN_LIST = [
-        'Gaussian Smooth', 'Model Fitting', 'Line Lists', 'Line Analysis',
-        'Aperture Photometry', 'Moment Maps', 'Collapse',
-        '2D Spectral Extraction', '3D Spectral Extraction', 'Ramp Extraction',
-        'Orientation', 'Footprints', 'Compass', 'Catalog Search',
-        'Data Quality', 'Sonify Data'
-    ];
+    function formRange(label, min, max, val) {
+        return '<div class="jdaviz-form-group"><label class="jdaviz-form-label">' + label +
+            '</label><input type="range" class="jdaviz-range" min="' + min + '" max="' + max +
+            '" value="' + val + '" /></div>';
+    }
+
+    function formToggle(label, checked) {
+        return '<div class="jdaviz-toggle-group"><span class="jdaviz-form-label" style="margin:0">' + label +
+            '</span><label class="jdaviz-toggle"><input type="checkbox"' +
+            (checked ? ' checked' : '') + ' /><span class="jdaviz-toggle-track"></span></label></div>';
+    }
+
+    function formModes(options, activeIdx) {
+        var html = '<div class="jdaviz-mode-row">';
+        options.forEach(function(o, i) {
+            html += '<button class="jdaviz-mode-btn' + (i === activeIdx ? ' active' : '') + '">' + o + '</button>';
+        });
+        return html + '</div>';
+    }
+
+    function formResults(text) {
+        return '<div class="jdaviz-results-box">' + (text || 'No results yet') + '</div>';
+    }
+
+    function formDesc(text) {
+        return '<p class="jdaviz-plugin-desc">' + text + '</p>';
+    }
+
+    // ── Per-plugin content definitions ──────────────────────────────────
+
+    var PLUGINS = {
+        'Gaussian Smooth': {
+            html: formDesc('Smooth data with a Gaussian kernel.') +
+                formSelect('Dataset', 'gs-data', ['Spectrum1D[flux]', 'Spectrum1D[uncertainty]']) +
+                formInput('Std Dev', '2.0') +
+                formSelect('Mode', 'gs-mode', ['Spectral', 'Spatial']) +
+                formButton('Apply'),
+            api: "plg = jd.plugins['Gaussian Smooth']\nplg.stddev = 2.0\nplg.smooth()"
+        },
+        'Model Fitting': {
+            html: formDesc('Fit spectral models to data.') +
+                formSelect('Dataset', 'mf-data', ['Spectrum1D[flux]']) +
+                formSelect('Spectral Subset', 'mf-subset', ['Entire Spectrum', 'Subset 1']) +
+                formSelect('Model', 'mf-model', ['Gaussian1D', 'Lorentz1D', 'Polynomial1D', 'Voigt1D']) +
+                formInput('Center', '2.95') +
+                formInput('Amplitude', '3.5e6') +
+                formInput('Std Dev', '0.15') +
+                formButton('Fit Model') +
+                formResults('Fit not yet run'),
+            api: "plg = jd.plugins['Model Fitting']\nplg.model_component = 'Gaussian1D'\nplg.calculate_fit()"
+        },
+        'Line Lists': {
+            html: formDesc('Overlay spectral line identifications.') +
+                formSelect('Preset', 'll-preset', ['Custom', 'SDSS-III/IV', 'H-alpha', 'Common Stellar']) +
+                formInput('Redshift', '0.0') +
+                formInput('Radial Velocity (km/s)', '0.0') +
+                formCheckbox('Show line labels') +
+                formButton('Load Lines'),
+            api: "plg = jd.plugins['Line Lists']\nplg.rs_redshift = 0.0"
+        },
+        'Line Analysis': {
+            html: formDesc('Compute line measurements: flux, EW, FWHM, centroid.') +
+                formSelect('Dataset', 'la-data', ['Spectrum1D[flux]']) +
+                formSelect('Spectral Subset', 'la-subset', ['Subset 1', 'Subset 2']) +
+                formToggle('Continuum Subtracted', true) +
+                formButton('Calculate') +
+                formResults('Flux: \u2014\nEq. Width: \u2014\nCentroid: \u2014\nFWHM: \u2014'),
+            api: "plg = jd.plugins['Line Analysis']\nplg.get_results()"
+        },
+        'Unit Conversion': {
+            html: formDesc('Convert spectral and flux units globally.') +
+                formSelect('Spectral Unit', 'uc-spec', ['Angstrom', 'nm', 'um', 'Hz', 'eV']) +
+                formSelect('Flux Unit', 'uc-flux', ['Jy', 'MJy', 'erg/s/cm\u00B2/\u00C5', 'W/m\u00B2/Hz']) +
+                formSelect('Angle Unit', 'uc-angle', ['sr', 'pix\u00B2']),
+            api: "plg = jd.plugins['Unit Conversion']\nplg.spectral_unit = 'um'"
+        },
+        'Plot Options': {
+            html: formDesc('Customize plot appearance.') +
+                formSelect('Viewer', 'po-viewer', ['Viewer 1', 'Viewer 2']) +
+                formSelect('Layer', 'po-layer', ['Layer A', 'Layer B']) +
+                '<div class="jdaviz-form-group"><label class="jdaviz-form-label">Color</label>' +
+                '<input type="color" class="jdaviz-input" value="#00FF00" style="height:28px;padding:2px" /></div>' +
+                formSelect('Stretch', 'po-stretch', ['Linear', 'Sqrt', 'Log', 'Power', 'Squared']) +
+                formRange('Contrast', 0, 100, 50) +
+                formRange('Bias', 0, 100, 50) +
+                formRange('Opacity', 0, 100, 100),
+            api: "plg = jd.plugins['Plot Options']\nplg.stretch_function = 'sqrt'"
+        },
+        'Subset Tools': {
+            html: formDesc('Create and manage spatial/spectral regions of interest.') +
+                formSelect('Subset', 'st-sub', ['Create New', 'Subset 1', 'Subset 2']) +
+                '<label class="jdaviz-form-label">Shape</label>' +
+                formModes(['Circle', 'Rect', 'Ellipse', 'Annulus'], 0) +
+                '<label class="jdaviz-form-label" style="margin-top:10px">Mode</label>' +
+                formModes(['New', 'Replace', 'Or', 'And', 'Xor', 'Not'], 0) +
+                formButton('Recenter') +
+                formButton('Delete'),
+            api: "plg = jd.plugins['Subset Tools']"
+        },
+        'Aperture Photometry': {
+            html: formDesc('Aperture photometry on images.') +
+                formSelect('Dataset', 'ap-data', ['Image[SCI]']) +
+                formSelect('Aperture', 'ap-aper', ['Subset 1 (Circle)', 'Subset 2 (Annulus)']) +
+                formSelect('Flux Unit', 'ap-unit', ['count', 'Jy', 'erg/s/cm\u00B2/\u00C5']) +
+                formButton('Calculate') +
+                formResults('Aperture sum: \u2014\nMean: \u2014\nStd: \u2014\nS/N: \u2014'),
+            api: "plg = jd.plugins['Aperture Photometry']\nplg.calculate_photometry()"
+        },
+        'Moment Maps': {
+            html: formDesc('Compute moment maps from data cubes.') +
+                formSelect('Dataset', 'mm-data', ['Spectrum1D[flux]']) +
+                formSelect('Spectral Subset', 'mm-sub', ['Entire Spectrum', 'Subset 1']) +
+                formSelect('Moment', 'mm-order', ['0 (Integrated Flux)', '1 (Velocity)', '2 (Velocity Dispersion)', '3 (Skewness)']) +
+                formToggle('Continuum subtraction', false) +
+                formButton('Calculate'),
+            api: "plg = jd.plugins['Moment Maps']\nplg.n_moment = 0\nplg.calculate_moment()"
+        },
+        'Collapse': {
+            html: formDesc('Collapse a data cube along the spectral axis.') +
+                formSelect('Dataset', 'col-data', ['Spectrum1D[flux]']) +
+                formSelect('Spectral Subset', 'col-sub', ['Entire Spectrum', 'Subset 1']) +
+                formSelect('Function', 'col-func', ['Sum', 'Mean', 'Median', 'Min', 'Max']) +
+                formButton('Collapse'),
+            api: "plg = jd.plugins['Collapse']\nplg.collapse()"
+        },
+        '2D Spectral Extraction': {
+            html: formDesc('Extract 1D spectra from 2D spectral images.') +
+                formSelect('Dataset', 'se2-data', ['Spectrum2D[SCI]']) +
+                formSelect('Trace Model', 'se2-trace', ['Spline', 'Polynomial', 'Legendre']) +
+                formSelect('Background', 'se2-bg', ['None', 'Manual', 'Fit']) +
+                formButton('Extract'),
+            api: "plg = jd.plugins['Spectral Extraction']\nplg.extract()"
+        },
+        '3D Spectral Extraction': {
+            html: formDesc('Extract 1D spectra from 3D data cubes.') +
+                formSelect('Dataset', 'se-data', ['Spectrum1D[flux]']) +
+                formSelect('Aperture', 'se-aper', ['Entire Cube', 'Subset 1', 'Subset 2']) +
+                '<label class="jdaviz-form-label">Aperture Shape</label>' +
+                formModes(['Circle', 'Rect', 'Annulus'], 0) +
+                formSelect('Function', 'se-func', ['Sum', 'Mean', 'Median', 'Min', 'Max']) +
+                formToggle('Background subtraction', false) +
+                formButton('Extract'),
+            api: "plg = jd.plugins['Spectral Extraction']\nplg.extract()"
+        },
+        'Ramp Extraction': {
+            html: formDesc('Extract data from JWST ramp observations.') +
+                formSelect('Dataset', 're-data', ['Ramp[SCI]']) +
+                formSelect('Extraction Mode', 're-mode', ['Integration', 'Group', 'Slope']) +
+                formButton('Extract'),
+            api: "plg = jd.plugins['Ramp Extraction']"
+        },
+        'Orientation': {
+            html: formDesc('Link images by WCS or pixel coordinates.') +
+                formSelect('Viewer', 'or-viewer', ['Image Viewer']) +
+                '<label class="jdaviz-form-label">Alignment</label>' +
+                formModes(['Pixels', 'WCS'], 1) +
+                formButton('Link'),
+            api: "plg = jd.plugins['Orientation']"
+        },
+        'Footprints': {
+            html: formDesc('Overlay instrument footprint regions.') +
+                formSelect('Viewer', 'fp-viewer', ['Image Viewer']) +
+                formInput('Region File', 'footprint.reg') +
+                formToggle('Visible', true) +
+                formButton('Import Region'),
+            api: "plg = jd.plugins['Footprints']"
+        },
+        'Compass': {
+            html: formDesc('Display compass, data label, and zoom box.') +
+                formSelect('Viewer', 'cp-viewer', ['Image Viewer']) +
+                '<div style="text-align:center;padding:12px;color:rgba(255,255,255,0.5)">' +
+                '<div style="font-size:24px;margin-bottom:6px">\u2191 N&emsp;\u2192 E</div>' +
+                '<div style="font-size:11px">Zoom: 4.2\u00D7</div></div>',
+            api: "plg = jd.plugins['Compass']"
+        },
+        'Catalog Search': {
+            html: formDesc('Query online astronomical catalogs.') +
+                formSelect('Viewer', 'cs-viewer', ['Image Viewer']) +
+                formSelect('Catalog', 'cs-cat', ['SDSS', 'Gaia DR3', '2MASS', 'WISE']) +
+                formInput('Search Radius (arcsec)', '60') +
+                formInput('Max Sources', '100') +
+                formButton('Search') +
+                formResults('No catalog results yet'),
+            api: "plg = jd.plugins['Catalog Search']\nplg.search()"
+        },
+        'Data Quality': {
+            html: formDesc('Visualize data quality flags.') +
+                formSelect('Viewer', 'dq-viewer', ['Viewer 1', 'Viewer 2']) +
+                formSelect('Science Layer', 'dq-sci', ['Spectrum1D[flux]']) +
+                formSelect('DQ Layer', 'dq-dq', ['Spectrum1D[dq]']) +
+                formRange('Opacity', 0, 100, 80) +
+                formCheckbox('DO_NOT_USE') +
+                formCheckbox('SATURATED') +
+                formCheckbox('JUMP_DET') +
+                formCheckbox('NON_SCIENCE'),
+            api: "plg = jd.plugins['Data Quality']"
+        },
+        'Sonify Data': {
+            html: formDesc('Convert spectral data to audio.') +
+                formSelect('Dataset', 'son-data', ['Spectrum1D[flux]']) +
+                formSelect('Spectral Subset', 'son-sub', ['Entire Spectrum']) +
+                formInput('Min Frequency (Hz)', '200') +
+                formInput('Max Frequency (Hz)', '2000') +
+                formButton('Play'),
+            api: "plg = jd.plugins['Sonify Data']"
+        },
+        'Export': {
+            html: formDesc('Export data, subsets, and viewers in various formats.') +
+                formSelect('Format', 'export-fmt', ['FITS', 'CSV', 'ECSV', 'PNG', 'SVG']) +
+                formInput('Filename', 'export.fits') +
+                formCheckbox('Custom size') +
+                formButton('Export'),
+            api: "plg = jd.plugins['Export']\nplg.export()"
+        },
+        'Markers': {
+            html: formDesc('Create markers and measure positions.') +
+                formSelect('Viewer', 'mk-viewer', ['Viewer 1', 'Viewer 2']) +
+                formResults('No markers created\n\nClick in a viewer to create markers.') +
+                formButton('Export Table') +
+                formButton('Clear All'),
+            api: "plg = jd.plugins['Markers']\nplg.export_table()"
+        },
+        'Metadata Viewer': {
+            html: formDesc('View FITS header and metadata.') +
+                formSelect('Dataset', 'mv-data', ['Spectrum1D[flux]', 'Spectrum1D[uncertainty]']) +
+                formCheckbox('Show primary header') +
+                formInput('Filter', 'keyword...') +
+                formResults('SIMPLE  = T\nBITPIX  = -64\nNAXIS   = 3\nCRVAL3  = 0.6\nCDELT3  = 0.001\nCTYPE3  = WAVE'),
+            api: "plg = jd.plugins['Metadata Viewer']"
+        },
+        'Logger': {
+            html: formDesc('System messages and operation history.') +
+                formSelect('Popup Verbosity', 'log-popup', ['Error', 'Warning', 'Info', 'Debug']) +
+                formSelect('History Verbosity', 'log-hist', ['Info', 'Debug', 'Warning', 'Error']) +
+                formResults('[INFO] Data loaded successfully\n[INFO] Cube shape: (30, 40, 2048)\n[WARN] NaN values detected in flux') +
+                formButton('Clear History'),
+            api: "plg = jd.plugins['Logger']\nplg.history"
+        },
+        'Slice': {
+            html: formDesc('Select a spectral slice of the data cube.') +
+                formSelect('Viewer', 'sl-viewer', ['Viewer 1', 'Viewer 2']) +
+                formRange('Slice', 0, 2047, 1024) +
+                '<div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.5)">' +
+                '\u03bb = 2.9486 \u03bcm (slice 1024 / 2048)</div>' +
+                formToggle('Snap to slice', true) +
+                formToggle('Show indicator', true),
+            api: "plg = jd.plugins['Slice']\nplg.slice = 1024\nplg.wavelength"
+        },
+        'Image Profiles (XY)': {
+            html: formDesc('Plot line profiles across images.') +
+                formSelect('Viewer', 'xy-viewer', ['Image Viewer']) +
+                formInput('X Pixel', '512') +
+                formInput('Y Pixel', '512') +
+                formButton('Plot Profiles'),
+            api: "plg = jd.plugins['Image Profiles (XY)']"
+        },
+        'Cross Dispersion Profile': {
+            html: formDesc('Measure cross-dispersion profile at a wavelength.') +
+                formInput('Wavelength / Pixel', '1024') +
+                formInput('Window Width (px)', '10') +
+                formCheckbox('Use full width') +
+                formButton('Measure'),
+            api: "plg = jd.plugins['Cross Dispersion Profile']"
+        }
+    };
+
+    // Plugin list for expansion panels (ordered for display)
+    var PLUGIN_LIST = Object.keys(PLUGINS);
 
     function generatePluginPanelsHTML(pluginName) {
         var name = pluginName || PLUGIN_LIST[0];
+        var plugin = PLUGINS[name];
+        var pluginContent = plugin
+            ? plugin.html + '<div class="jdaviz-api-snippet">' + plugin.api + '</div>'
+            : 'Do basic data reduction and analysis tasks for specific science use-cases.' +
+              '<div class="jdaviz-api-snippet">plg = jd.plugins[\'' + name + '\']</div>';
         return '<div class="jdaviz-expansion-panels">' +
             '<div class="jdaviz-expansion-panel expanded" data-panel-index="0" data-plugin-name="' + name + '">' +
             '<div class="jdaviz-expansion-panel-header">' +
@@ -78,8 +343,7 @@
             '<span class="jdaviz-expansion-panel-arrow">\u25BC</span>' +
             '</div>' +
             '<div class="jdaviz-expansion-panel-content expanded">' +
-            '<div class="jdaviz-api-snippet">plg = jd.plugins[\'' + name + '\']</div>' +
-            'Do basic data reduction and analysis tasks for specific science use-cases.' +
+            pluginContent +
             '</div>' +
             '</div>' +
             '<div class="jdaviz-expansion-panel disabled" data-panel-index="1">' +

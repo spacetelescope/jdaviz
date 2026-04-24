@@ -381,6 +381,133 @@ html[data-theme="light"] {
     background: var(--jdw-btn-hover);
 }
 
+/* ── Plugin description text ─────────────────────────────────────── */
+
+.jdaviz-plugin-desc {
+    margin: 0 0 10px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.65);
+    font-family: sans-serif;
+}
+
+html[data-theme="light"] .jdaviz-plugin-desc {
+    color: rgba(0, 0, 0, 0.55);
+}
+
+/* ── Range slider ────────────────────────────────────────────────── */
+
+.jdaviz-range {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    accent-color: var(--jdw-btn-primary);
+}
+
+/* ── Results box ─────────────────────────────────────────────────── */
+
+.jdaviz-results-box {
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--jdw-border);
+    border-radius: 2px;
+    font-size: 12px;
+    font-family: monospace;
+    color: rgba(255, 255, 255, 0.55);
+    min-height: 36px;
+    white-space: pre-wrap;
+}
+
+html[data-theme="light"] .jdaviz-results-box {
+    background: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.5);
+}
+
+/* ── Toggle switch ───────────────────────────────────────────────── */
+
+.jdaviz-toggle-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 10px 0;
+}
+
+.jdaviz-toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.jdaviz-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.jdaviz-toggle-track {
+    position: absolute;
+    inset: 0;
+    background: rgba(128, 128, 128, 0.4);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.jdaviz-toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 2px;
+    top: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+}
+
+.jdaviz-toggle input:checked + .jdaviz-toggle-track {
+    background: var(--jdw-btn-primary);
+}
+
+.jdaviz-toggle input:checked + .jdaviz-toggle-track::after {
+    transform: translateX(16px);
+}
+
+/* ── Mode buttons row ────────────────────────────────────────────── */
+
+.jdaviz-mode-row {
+    display: flex;
+    gap: 2px;
+    margin: 6px 0 10px;
+}
+
+.jdaviz-mode-btn {
+    flex: 1;
+    padding: 5px 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--jdw-border);
+    color: var(--jdw-text);
+    font-size: 11px;
+    font-family: sans-serif;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    text-align: center;
+}
+
+.jdaviz-mode-btn:first-child { border-radius: 3px 0 0 3px; }
+.jdaviz-mode-btn:last-child  { border-radius: 0 3px 3px 0; }
+
+.jdaviz-mode-btn.active {
+    background: var(--jdw-btn-primary);
+    color: #fff;
+    border-color: var(--jdw-btn-primary);
+}
+
+html[data-theme="light"] .jdaviz-mode-btn {
+    background: rgba(0, 0, 0, 0.05);
+}
+
 /* ── Expansion panel ─────────────────────────────────────────────── */
 
 /* Remove padding from sidebar content when showing expansion panels */
