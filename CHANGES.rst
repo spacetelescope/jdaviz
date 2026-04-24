@@ -126,6 +126,8 @@ New Features
 
 - Add support for unit conversions in aperture photometry plugin for images. [#4136]
 
+- Added projection to return of AIDA get_viewport method. [#4076]
+
 Cubeviz
 ^^^^^^^
 - Added ability to load DQ extension in the cubeviz loader, which activates the
