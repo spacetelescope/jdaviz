@@ -74,8 +74,6 @@ UI Access
 =========
 
 .. wireframe-demo:: _static/jdaviz-wireframe.html
-   :js: jdaviz-wireframe-actions.js
-   :css: jdaviz-wireframe.css
    :repeat: true
    :init-steps-json: [{"action":"show-sidebar","value":"plugins"}]
 

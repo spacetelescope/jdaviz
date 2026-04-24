@@ -12,6 +12,13 @@
 (function () {
     'use strict';
 
+    // Guard: jdaviz.ext.wireframe loads this globally AND the directive `:js:`
+    // option also injects it inline — prevent double-registration of the
+    // wireframe-demo-loaded listener (which would cause each toolbar click to
+    // open then immediately close the sidebar due to two handlers firing).
+    if (typeof window !== 'undefined' && window.__jdavizWireframeActionsLoaded) { return; }
+    if (typeof window !== 'undefined') { window.__jdavizWireframeActionsLoaded = true; }
+
     // ── Icon SVGs (Material Design Icons as data URIs) ──────────────────
 
     var ICON_SVGS = {

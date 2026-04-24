@@ -48,8 +48,6 @@ UI Access
 =========
 
 .. wireframe-demo:: _static/jdaviz-wireframe.html
-   :js: jdaviz-wireframe-actions.js
-   :css: jdaviz-wireframe.css
    :repeat: false
    :init-steps-json: [{"action":"set-plugin","value":"Ramp Extraction"}]
    :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Ramp Extraction","delay":1000,"caption":"Open the Ramp Extraction plugin"}]
