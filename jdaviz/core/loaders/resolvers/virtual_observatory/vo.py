@@ -5,7 +5,7 @@ from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError, DALQueryError
 from pyvo.utils.vocabularies import VocabularyError
 from requests.exceptions import ConnectionError as RequestConnectionError
-from traitlets import Bool, Any, List, observe
+from traitlets import Bool, Any, List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_resolver_registry
@@ -19,10 +19,17 @@ from jdaviz.core.user_api import LoaderUserApi
 
 __all__ = ["VOResolver"]
 
+VO_PROTOCOL = {"Images": {'protocol': 'sia', 'size_arg': 'size'},
+               "Spectra": {'protocol': 'ssa', 'size_arg': 'diameter'},
+               "Catalogs": {'protocol': 'scs', 'size_arg': 'radius'}}
+
 
 @loader_resolver_registry("virtual observatory")
 class VOResolver(BaseConeSearchResolver):
     template_file = __file__, "vo.vue"
+
+    producttype_selected = Unicode("Images").tag(sync=True)
+    producttype_choices = List(list({"label": type} for type in VO_PROTOCOL.keys())).tag(sync=True)
 
     waveband_items = List().tag(sync=True)
     waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
@@ -33,6 +40,10 @@ class VOResolver(BaseConeSearchResolver):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.producttype = SelectPluginComponent(
+            self, items="producttype_choices", selected="producttype_selected"
+        )
 
         # Waveband properties to filter available registry resources
         self.waveband = SelectPluginComponent(
@@ -58,7 +69,7 @@ class VOResolver(BaseConeSearchResolver):
         return LoaderUserApi(
             self,
             expose=[
-                "viewer", "coordframe", "radius", "radius_unit",
+                "producttype", "viewer", "coordframe", "radius", "radius_unit",
                 "source",
                 "resource_filter_coverage", "waveband", "resource",
                 "query_archive"
@@ -72,7 +83,7 @@ class VOResolver(BaseConeSearchResolver):
     @with_spinner(spinner_traitlet="resources_loading")
     def query_registry_resources(self, event={}):
         """
-        Query Virtual Observatory registry for all SIA services
+        Query Virtual Observatory registry for all services
         that serve data in that waveband around the source.
         Then update the dropdown accordingly.
         """
@@ -106,7 +117,7 @@ class VOResolver(BaseConeSearchResolver):
 
         try:
             registry_args = [
-                registry.Servicetype("sia"),
+                registry.Servicetype(VO_PROTOCOL[self.producttype_selected]['protocol']),
                 registry.Waveband(self.waveband_selected),
             ]
             # If coverage filtering is enabled, lookup current
@@ -178,13 +189,13 @@ class VOResolver(BaseConeSearchResolver):
         then attempts to parse as a target name.
         """
         try:
-            # Query SIA service
+            # Query service
             # Service is indexed via short name (resource_selected), which is the suggested way
             # according to PyVO docs. Though disclaimer that collisions COULD occur. If so,
             # consider indexing on the full IVOID, which is guaranteed unique.
-            sia_service = self._full_registry_results[
+            vo_service = self._full_registry_results[
                 self.resource_selected
-            ].get_service(service_type="sia")
+            ].get_service(service_type=VO_PROTOCOL[self.producttype_selected]['protocol'])
             try:
                 # First parse user-provided source as direct coordinates
                 coord = SkyCoord(
@@ -207,26 +218,30 @@ class VOResolver(BaseConeSearchResolver):
                     )
             # Once coordinate lookup is complete, search service using these coords.
             try:
-                sia_results = sia_service.search(
+                vo_results = vo_service.search(
                     coord,
-                    size=(
-                        (self.radius * u.Unit(self.radius_unit.selected))
-                        if self.radius > 0.0
-                        else None
-                    ),
-                    format="image/fits",
+                    **{
+                        VO_PROTOCOL[self.producttype_selected]['size_arg']: (
+                            (self.radius * u.Unit(self.radius_unit.selected))
+                            if self.radius > 0.0
+                            else None
+                        )
+                    },
+                    format=("" if self.producttype_selected == "Catalogs" else "fits"),
                 )
             except DALQueryError as e:
                 # We've run into issues where the service assumes a FORMAT and injects it for us.
                 # If the "image/fits" is duplicated, remove our requested format and rely on theirs
                 if "Wrong FORMAT=image/fits,image/fits" in str(e):
-                    sia_results = sia_service.search(
+                    vo_results = vo_service.search(
                         coord,
-                        size=(
-                            (self.radius * u.Unit(self.radius_unit.selected))
-                            if self.radius > 0.0
-                            else None
-                        ),
+                        **{
+                            "diameter" if self.producttype_selected == "Spectra" else "size": (
+                                (self.radius * u.Unit(self.radius_unit.selected))
+                                if self.radius > 0.0
+                                else None
+                            )
+                        },
                     )
                 else:
                     self.hub.broadcast(
@@ -237,10 +252,10 @@ class VOResolver(BaseConeSearchResolver):
                             color="error",
                         )
                     )
-            if len(sia_results) == 0:
+            if len(vo_results) == 0:
                 self.hub.broadcast(
                     SnackbarMessage(
-                        f"No observations returned at coords {coord} from VO SIA resource: {sia_service.baseurl}",  # noqa: E501
+                        f"No observations returned at coords {coord} from VO resource: {vo_service.baseurl}",  # noqa: E501
                         sender=self,
                         color="error",
                     )
@@ -248,7 +263,7 @@ class VOResolver(BaseConeSearchResolver):
             else:
                 self.hub.broadcast(
                     SnackbarMessage(
-                        f"{len(sia_results)} SIA results found!",
+                        f"{len(vo_results)} {self.producttype_selected} results found!",
                         sender=self,
                         color="success",
                     )
@@ -263,7 +278,7 @@ class VOResolver(BaseConeSearchResolver):
                 )
             )
         try:
-            self._output = sia_results.to_table()
+            self._output = vo_results.to_table()
         except Exception as e:
             self.hub.broadcast(
                 SnackbarMessage(

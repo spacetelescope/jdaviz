@@ -570,7 +570,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _parsed_input_to_file_table(self, parsed_input_table):
         if 'location' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
+        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'download', 'Filename', 'access_url'):  # noqa: E501
             if map_to_location in parsed_input_table.colnames:
                 parsed_input_table.rename_column(map_to_location, 'location')
                 return parsed_input_table

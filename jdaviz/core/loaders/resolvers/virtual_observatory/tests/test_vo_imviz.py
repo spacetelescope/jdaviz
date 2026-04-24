@@ -7,6 +7,7 @@ import warnings
 from pyvo.io.vosi.endpoint import parse_capabilities
 from pyvo.utils.xml.exceptions import UnknownElementWarning
 
+import jdaviz as jd
 from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS
 
 
@@ -227,6 +228,7 @@ class TestVOImvizRemote:
         vo_ldr = imviz_helper.loaders["virtual observatory"]
 
         # Sets common args for Remote Testing
+        vo_ldr.producttype = "Images"
         vo_ldr.viewer.selected = "Manual"
         vo_ldr.source = "M51"
         vo_ldr.radius = 1
@@ -301,6 +303,7 @@ class TestVOImvizRemote:
         """
         # Manually set the source to a fake target
         vo_ldr = imviz_helper.loaders["virtual observatory"]
+        vo_ldr.producttype = "Images"
         vo_ldr.source = "ThisIsAFakeTargetThatWontResolveToAnything"
         vo_ldr.radius = 1
         vo_ldr.radius_unit.selected = "deg"
@@ -348,3 +351,74 @@ class TestVOImvizRemote:
         assert vo_ldr._obj.get_selected_url() is None
         vo_ldr.file_table.select_rows(0)
         assert vo_ldr._obj.get_selected_url() is not None and len(vo_ldr._obj.get_selected_url()) > 0  # noqa
+
+
+@pytest.mark.remote_data
+class TestVOSSARemote:
+
+    def _init_vo_loader_esossap(self):
+        """
+        Initialize vo loader with common test parameters
+
+        Returns
+        -------
+        vo_ldr_api : VO loader user API instance
+        """
+        vo_loader = jd.new_app().loaders["virtual observatory"]
+
+        # Sets common args for Remote Testing
+        vo_loader.producttype = 'Spectra'
+        vo_loader.source = "NGC 5534"
+        vo_loader.waveband = "optical"
+        vo_loader.resource = "ESO SSAP"
+
+        return vo_loader
+
+    def test_esossap_data_url(self):
+        """
+        Test querying the ESO SSAP for spectral products
+        """
+        vo_loader = self._init_vo_loader_esossap()
+        vo_loader.query_archive()
+
+        # Make sure we got products
+        ssa_out = vo_loader._obj._output
+        assert len(ssa_out) > 0
+
+        # Load first data product
+        assert vo_loader._obj.get_selected_url() is None
+        vo_loader.file_table.select_rows(0)
+        assert vo_loader._obj.get_selected_url() is not None and len(vo_loader._obj.get_selected_url()) > 0  # noqa
+
+
+@pytest.mark.remote_data
+class TestVOSCSRemote:
+
+    def _init_vo_loader_mastcs(self):
+        """
+        Initialize vo loader with common test parameters
+
+        Returns
+        -------
+        vo_ldr_api : VO loader user API instance
+        """
+        vo_loader = jd.new_app().loaders["virtual observatory"]
+
+        # Sets common args for Remote Testing
+        vo_loader.producttype = 'Catalogs'
+        vo_loader.source = "M51"
+        vo_loader.waveband = "optical"
+        vo_loader.resource = "MAST CS"
+
+        return vo_loader
+
+    def test_mastcs_catalog_query(self):
+        """
+        Test querying the STScI MAST Cone Search for catalog targets
+        """
+        vo_loader = self._init_vo_loader_mastcs()
+        vo_loader.query_archive()
+
+        # Make sure we got products
+        ssa_out = vo_loader._obj._output
+        assert len(ssa_out) > 0
