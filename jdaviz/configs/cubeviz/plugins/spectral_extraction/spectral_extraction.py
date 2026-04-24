@@ -324,6 +324,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                         f"Automatic {self.resulting_product_name} extraction for {subset_lbl} failed",  # noqa
                         color='error', sender=self, timeout=10000,
                         traceback=e)
+                    raise
                 else:
                     msg = SnackbarMessage(
                         f"Automatic {self.resulting_product_name} extraction for {subset_lbl} successful",  # noqa
