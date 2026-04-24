@@ -42,7 +42,7 @@ UI Access
 
 .. wireframe-demo:: _static/jdaviz-wireframe.html
    :repeat: false
-   :init-steps-json: [{"action":"set-plugin","value":"Catalog Search"}]
+   :init-steps-json: [{"action":"set-plugin","value":"Catalog Search"},{"action":"disable-toolbar-except","value":"plugins"}]
    :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Catalog Search","delay":1000,"caption":"Open the Catalog Search plugin"}]
 
 Click the :guilabel:`Catalog Search` icon in the plugin toolbar to:

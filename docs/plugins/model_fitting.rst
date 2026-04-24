@@ -20,7 +20,7 @@ UI Access
 
 .. wireframe-demo:: _static/jdaviz-wireframe.html
    :repeat: false
-   :init-steps-json: [{"action":"set-plugin","value":"Model Fitting"}]
+   :init-steps-json: [{"action":"set-plugin","value":"Model Fitting"},{"action":"disable-toolbar-except","value":"plugins"}]
    :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Model Fitting","delay":1000,"caption":"Open the Model Fitting plugin"}]
 
 Details

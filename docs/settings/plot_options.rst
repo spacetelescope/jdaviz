@@ -12,4 +12,4 @@ UI Access
 
 .. wireframe-demo:: _static/jdaviz-wireframe.html
    :repeat: false
-   :init-steps-json: [{"action":"show-sidebar","value":"settings"},{"action":"select-tab","value":"Plot Options"}]
+   :init-steps-json: [{"action":"show-sidebar","value":"settings"},{"action":"select-tab","value":"Plot Options"},{"action":"disable-toolbar-except","value":"settings"}]

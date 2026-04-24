@@ -32,9 +32,8 @@ UI Access
 =========
 
 .. wireframe-demo:: _static/jdaviz-wireframe.html
-   :js: jdaviz-wireframe-actions.js
-   :css: jdaviz-wireframe.css
    :repeat: false
+   :init-steps-json: [{"action":"disable-toolbar-except","value":"loaders"}]
    :steps-json: [{"action":"show-sidebar","value":"loaders","delay":0},{"action":"highlight","target":"#format-select","delay":1500,"caption":"Select the data format"}]
 
 API Access

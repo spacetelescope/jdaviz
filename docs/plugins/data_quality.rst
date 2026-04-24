@@ -45,7 +45,7 @@ UI Access
 
 .. wireframe-demo:: _static/jdaviz-wireframe.html
    :repeat: false
-   :init-steps-json: [{"action":"set-plugin","value":"Data Quality"}]
+   :init-steps-json: [{"action":"set-plugin","value":"Data Quality"},{"action":"disable-toolbar-except","value":"plugins"}]
    :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Data Quality","delay":1000,"caption":"Open the Data Quality plugin"}]
 
 Click the :guilabel:`Data Quality` icon in the plugin toolbar to:

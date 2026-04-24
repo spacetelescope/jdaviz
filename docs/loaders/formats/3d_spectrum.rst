@@ -48,9 +48,8 @@ UI Access
 =========
 
 .. wireframe-demo:: _static/jdaviz-wireframe.html
-   :js: jdaviz-wireframe-actions.js
-   :css: jdaviz-wireframe.css
    :repeat: false
+   :init-steps-json: [{"action":"disable-toolbar-except","value":"loaders"}]
    :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-dropdown", "value": "Format:3D Spectrum", "delay": 1000, "caption": "Set format to 3D Spectrum"}, {"action": "highlight", "target": "#format-select", "delay": 1500}]
 
 See Also

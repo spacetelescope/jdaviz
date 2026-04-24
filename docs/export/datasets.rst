@@ -11,9 +11,8 @@ UI Access
 =========
 
 .. wireframe-demo:: _static/jdaviz-wireframe.html
-   :js: jdaviz-wireframe-actions.js
-   :css: jdaviz-wireframe.css
    :repeat: false
+   :init-steps-json: [{"action":"disable-toolbar-except","value":"save"}]
    :steps-json: [{"action": "show-sidebar", "value": "save", "delay": 1500, "caption": "Open the export sidebar"}]
 
 Top-Level API Access

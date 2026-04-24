@@ -1013,6 +1013,21 @@
     });
 
     /**
+     * disable-toolbar-except: Add the .disabled class to all toolbar icons
+     * except the one matching step.value.  Used in init-steps-json to focus
+     * the demo on a single tray (e.g. "plugins", "loaders", "settings").
+     * step.value = data-sidebar value to keep enabled (e.g. "plugins")
+     */
+    WireframeDemo.registerAction('disable-toolbar-except', function(step, el, contentRoot) {
+        var keep = step.value;
+        contentRoot.querySelectorAll('.jdaviz-toolbar-icon[data-sidebar]').forEach(function(icon) {
+            if (icon.dataset.sidebar !== keep) {
+                icon.classList.add('disabled');
+            }
+        });
+    });
+
+    /**
      * api-toggle: Toggle the API hints display in the sidebar.
      */
     WireframeDemo.registerAction('api-toggle', function(step, el, contentRoot) {
