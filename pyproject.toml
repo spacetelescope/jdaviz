@@ -47,7 +47,8 @@ dependencies = [
     "spherical-geometry",
     # This pin can be removed once Solara releases a compatibility fix
     # See https://github.com/widgetti/solara/pull/1151
-    "starlette<1.0"
+    "starlette<1.0",
+    "jupyter_ui_poll>=1.1.0",
 ]
 license-files = ["LICENSE.rst", "licenses/IPYFILECHOOSER_LICENSE.rst", "licenses/IMEXAM_LICENSE.txt", "licenses/GINGA_LICENSE.txt", "licenses/TEMPLATE_LICENCE.rst"]
 dynamic = [
@@ -157,6 +158,7 @@ filterwarnings = [
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13",
     "ignore::DeprecationWarning:glue",
+    "ignore:There is no current event loop.*:DeprecationWarning",
     "ignore:The load_data function is deprecated.*",
     "ignore:.*show_in_viewer.*:DeprecationWarning",
     # This warning will not fail in CI, but causes issues running tests locally on Windows so test locally if considering
