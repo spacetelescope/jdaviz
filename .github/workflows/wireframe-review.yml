@@ -18,3 +18,4 @@ jobs:
           docs-root: docs/
           max-prompt-tokens: '6000'
           source-root: jdaviz/
+          fail-on-error: 'true'
