@@ -11,7 +11,7 @@ jobs:
       models: read
     steps:
       - uses: actions/checkout@v4
-      - uses: kecnry/docs-wireframe-demo/.github/actions/wireframe-review@llm-wireframe-watcher
+      - uses: spacetelescope/docs-wireframe-demo/.github/actions/wireframe-review@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
