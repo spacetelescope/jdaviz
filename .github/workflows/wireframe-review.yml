@@ -16,7 +16,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           docs-root: docs/
-          max-prompt-tokens: '6000'
+          max-prompt-tokens: '8000'
           source-root: jdaviz/
           fail-on-error: 'true'
           auto-apply: 'true'
