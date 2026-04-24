@@ -4,7 +4,7 @@
 export default {
   created() {
     this.$vuetify.theme.themes.light = {
-      toolbar: "#003B4D",
+      toolbar: "#1B5E20",
       primary: "#00617E",
       secondary: "#007DA4",
       accent: "#C75109",
@@ -20,7 +20,7 @@ export default {
       viewer_toolbar: '#205f76',
     };
     this.$vuetify.theme.themes.dark = {
-      toolbar: "#153A4B",
+      toolbar: "#1B3A20",
       primary: "#53CBFF",
       secondary: "#007DA4",
       accent: "#FF9D42",
