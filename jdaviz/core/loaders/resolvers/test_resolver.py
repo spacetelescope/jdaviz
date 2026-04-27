@@ -845,16 +845,12 @@ class TestIsValid:
                            match=rf'(?s)No valid loaders found for input.*{wrong_format}'):
             deconfigged_helper.load(request.getfixturevalue(data_fixture), format=wrong_format)
 
-    def test_load_nonexistent_format(self, deconfigged_helper, image_2d_wcs):
+    def test_load_nonexistent_format_file(self, deconfigged_helper, image_2d_wcs):
         """
-        Check loading a nonexistent file.
+        Check loading a nonexistent file and setting a nonexistent format.
         """
         with pytest.raises(ValueError, match='No valid loaders found for input.'):
             deconfigged_helper.load(image_2d_wcs, format='fake format')
 
-    def test_load_nonexistent_file(self, deconfigged_helper):
-        """
-        Check loading a nonexistent file.
-        """
         with pytest.raises(ValueError, match='No valid loaders found for input.'):
             deconfigged_helper.load('this_file_does_not_exist.fits')
