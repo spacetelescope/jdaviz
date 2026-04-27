@@ -27,7 +27,7 @@
         <v-container>
           <v-alert v-if="image_data_loaded && is_wcs_linked !== undefined && treat_table_as_query && observation_table_populated && !is_wcs_linked"
                    type="warning" dense style="margin-bottom: 16px; margin-top: 8px">
-            <v-row no-gutters align="center">
+            <v-row class="vuetify2" no-gutters align="center">
               <v-col>
                 <strong>Images are not linked by WCS.</strong> Link images to view footprints properly.
               </v-col>
@@ -57,7 +57,7 @@
             <j-plugin-section-header>Query Results</j-plugin-section-header>
             <plugin-switch
               label="Treat Table as Query"
-              :value.sync="treat_table_as_query"
+              :value="treat_table_as_query"
               @update:value="$emit('update:treat_table_as_query', $event)"
               api_hint="ldr.treat_table_as_query ="
               :api_hints_enabled="api_hints_enabled"
@@ -68,44 +68,46 @@
               <span class="table-title">Observations</span>
               <span v-if="api_hints_enabled" class="api-hint">ldr.observation_table</span>
 
-              <jupyter-widget v-if="treat_table_as_query" :widget="observation_table"></jupyter-widget>
+              <jupyter-widget v-if="treat_table_as_query && observation_table" :widget="observation_table" :key="observation_table"></jupyter-widget>
             </div>
             <div v-if="treat_table_as_query && file_table_populated">
               <span class="table-title">Files</span>
-              <v-row>
+              <j-flex-row>
                 <v-expansion-panels popout>
                   <v-expansion-panel>
-                    <v-expansion-panel-header v-slot="{ open }">
+                    <v-expansion-panel-title v-slot="{ open }">
                       <span style="padding: 6px">File Download Options</span>
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content class="plugin-expansion-panel-content">
-                      <v-content>
-                        <v-row>
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text class="plugin-expansion-panel-content">
+                      <v-main>
+                        <j-flex-row>
                           <v-text-field
-                            v-model.number='file_timeout'
+                            :model-value="file_timeout"
+                            @update:modelValue="$emit('update:file_timeout', Number($event))"
                             type="number"
                             style="padding: 0px 8px"
                             suffix="s"
                             :label="api_hints_enabled ? 'ldr.file_timeout =' : 'Timeout (s)'"
                             :class="api_hints_enabled ? 'api-hint' : null"
                           ></v-text-field>
-                        </v-row>
+                        </j-flex-row>
 
                         <plugin-switch
-                          :value.sync="file_cache"
+                          :value="file_cache"
+                          @update:value="$emit('update:file_cache', $event)"
                           label="Cache File"
                           api_hint="ldr.file_cache = "
                           :api_hints_enabled="api_hints_enabled"
                           hint="Whether to attempt to read from the cache if this same URL has been previously fetched."
                         ></plugin-switch>
-                      </v-content>
-                    </v-expansion-panel-content>
+                      </v-main>
+                    </v-expansion-panel-text>
                   </v-expansion-panel>
                 </v-expansion-panels>
-              </v-row>
+              </j-flex-row>
 
               <span v-if="api_hints_enabled" class="api-hint">ldr.file_table</span>
-              <jupyter-widget v-if="treat_table_as_query" :widget="file_table"></jupyter-widget>
+              <jupyter-widget v-if="treat_table_as_query && file_table" :widget="file_table" :key="file_table"></jupyter-widget>
             </div>
           </div>
           <!-- end observation/file table -->
@@ -113,41 +115,41 @@
           <!-- format (parser/importer) selection and UI -->
           <j-plugin-section-header>Importer</j-plugin-section-header>
 
-          <v-row v-if="target_items.length >= 2" style="padding-right: 16px">
+          <j-flex-row v-if="target_items.length>= 2" style="padding-right: 16px">
             <plugin-select-filter
               :items="target_items"
-              :selected.sync="target_selected"
+              :selected="target_selected"
               @update:selected="$emit('update:target_selected', $event)"
               tooltip_suffix="compatible formats"
               api_hint="ldr.target ="
               :api_hints_enabled="api_hints_enabled"
             />
-          </v-row>
+          </j-flex-row>
 
-          <v-row v-if="parsed_input_is_empty">
+          <j-flex-row v-if="parsed_input_is_empty">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input is empty.
             </v-alert>
-          </v-row>
-          <v-row v-if="parsed_input_is_resolvable">
+          </j-flex-row>
+          <j-flex-row v-if="parsed_input_is_resolvable">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input cannot be resolved.
             </v-alert>
-          </v-row>
-          <v-row v-else-if="format_items.length == 0 && valid_import_formats">
+          </j-flex-row>
+          <j-flex-row v-else-if="format_items.length == 0 && valid_import_formats">
               <v-alert type="warning" style="margin-right: -12px; width: 100%">
                   No compatible importer found. Supported input types include: {{ valid_import_formats }}.
               </v-alert>
-          </v-row>
-          <v-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
+          </j-flex-row>
+          <j-flex-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
               <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">ldr.format = '{{ format_selected }}'</span>
               <span v-else><b>Format:</b> {{ format_selected }}</span>
-          </v-row>
+          </j-flex-row>
           <plugin-select
               v-if="format_items.length >= 2"
               :show_if_single_entry="false"
               :items="format_items.map(i => i.label)"
-              :selected.sync="format_selected"
+              :selected="format_selected"
               @update:selected="$emit('update:format_selected', $event)"
               label="Format"
               api_hint="ldr.format ="
@@ -155,7 +157,7 @@
               hint="Choose input format"
           ></plugin-select>
           <div v-if="format_selected.length > 0" style="margin-top: 16px; margin-left: -12px; margin-right: -12px">
-              <jupyter-widget :widget="importer_widget"></jupyter-widget>
+              <jupyter-widget v-if="importer_widget" :widget="importer_widget" :key="importer_widget"></jupyter-widget>
           </div>
         </v-container>
       </v-card-text>
@@ -164,7 +166,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['title', 'popout_button', 'spinner',
           'parsed_input_is_empty', 'parsed_input_is_resolvable',
           'parsed_input_is_query', 'treat_table_as_query',

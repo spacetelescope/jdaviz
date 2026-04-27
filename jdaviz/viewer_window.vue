@@ -8,15 +8,14 @@
       >
         <v-alert color="error">This viewer has been closed at the app-level and this instance is no longer connected or functional.</v-alert>
       </v-overlay>
-      <v-row dense style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
+      <j-flex-row style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
         <j-tooltip v-if="config !== 'deconfigged'" tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
           <v-btn
-            text
+            variant="outlined"
             elevation="3"
             color="white"
-            tile
+            rounded="0"
             icon
-            outlined
             style="height: 42px; width: 42px"
             @click="$emit('call-viewer-method', {'id': id, 'method': '_deprecated_data_menu'})"
             >
@@ -38,17 +37,19 @@
         </v-toolbar-items>
         <j-play-pause-widget v-if="reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': id, 'method': 'next_row'})"></j-play-pause-widget>
         <v-spacer></v-spacer>
-        <jupyter-widget class='jdaviz-nested-toolbar' :widget="toolbar_widget"></jupyter-widget>
-        <span v-if="tool_override_mode.length === 0" class='toolbar-popout-span' style="float: right; margin-top: 4px;">
+        <jupyter-widget v-if="toolbar_widget" class='jdaviz-nested-toolbar' :widget="toolbar_widget" :key="toolbar_widget"></jupyter-widget>
+        <span v-if="tool_override_mode.length === 0" class='toolbar-popout-span' style="float: right; margin-top: 4px; color: white;">
           <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
         </span>
-      </v-row>
+      </j-flex-row>
     </div>
 
     <v-card tile flat style="width: 100%; height: calc(100% - 42px); overflow: hidden; overflow: hidden;">
-      <jupyter-widget :widget="data_menu_widget"></jupyter-widget>
+      <jupyter-widget v-if="data_menu_widget" :widget="data_menu_widget" :key="data_menu_widget"></jupyter-widget>
       <jupyter-widget
+        v-if="figure_widget"
         :widget="figure_widget"
+        :key="figure_widget"
         :ref="'figure-widget-'+id"
         style="width: 100%; height: 100%; overflow: hidden;"
       ></jupyter-widget>
@@ -57,7 +58,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   mounted() {
     this.ensureFullHeightChain();
   },

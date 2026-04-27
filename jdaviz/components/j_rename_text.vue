@@ -70,7 +70,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: {
     value: {
       type: String,

@@ -2,19 +2,19 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Plot Options"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <!-- VIEWER OPTIONS -->
     <plugin-viewer-select
       :items="viewer_items"
-      :selected.sync="viewer_selected"
-      :multiselect.sync="viewer_multiselect"
+      v-model:selected="viewer_selected"
+      v-model:multiselect="viewer_multiselect"
       :show_multiselect_toggle="viewer_multiselect || viewer_items.length > 1"
       :icon_checktoradial="icon_checktoradial"
       :icon_radialtocheck="icon_radialtocheck"
@@ -26,19 +26,19 @@
       :hint="viewer_multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
-    <v-row v-if="viewer_selected.length > 0">
+    <div v-if="viewer_selected.length > 0">
       <v-expansion-panels accordion>
         <v-expansion-panel v-if="x_min_sync.in_subscribed_states || x_max_sync.in_subscribed_states || y_min_sync.in_subscribed_states || y_max_sync.in_subscribed_states || zoom_center_x_sync.in_subscribed_states || zoom_center_y_sync.in_subscribed_states || zoom_radius_sync.in_subscribed_states">
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Viewer Bounds</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
             <glue-state-sync-wrapper :sync="x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('x_min')">
               <glue-float-field
                 ref="x_min"
                 :label="api_hints_enabled ? 'plg.x_min =' : 'X Min'"
                 :class="api_hints_enabled ? 'api-hint' : null"
-                :value.sync="x_min_value"
+                v-model:value="x_min_value"
                 type="number"
                 :step="x_bound_step"
                 :suffix="display_units['spectral']"
@@ -49,7 +49,7 @@
                 ref="x_max"
                 :label="api_hints_enabled ? 'plg.x_max =' : 'X Max'"
                 :class="api_hints_enabled ? 'api-hint' : null"
-                :value.sync="x_max_value"
+                v-model:value="x_max_value"
                 type="number"
                 :step="x_bound_step"
                 :suffix="display_units['spectral']"
@@ -60,7 +60,7 @@
                 ref="y_min"
                 :label="api_hints_enabled ? 'plg.y_min =' : 'Y Min'"
                 :class="api_hints_enabled ? 'api-hint' : null"
-                :value.sync="y_min_value"
+                v-model:value="y_min_value"
                 type="number"
                 :step="y_bound_step"
                 :suffix="display_units['flux']"
@@ -71,7 +71,7 @@
                 ref="y_max"
                 :label="api_hints_enabled ? 'plg.y_max =' : 'Y Max'"
                 :class="api_hints_enabled ? 'api-hint' : null"
-                :value.sync="y_max_value"
+                v-model:value="y_max_value"
                 type="number"
                 :step="y_bound_step"
                 :suffix="display_units['flux']"
@@ -82,7 +82,7 @@
                 ref="zoom_center_x"
                 :label="api_hints_enabled ? 'plg.zoom_center_x =' : 'X Center'"
                 :class="api_hints_enabled ? 'api-hint' : null"
-                :value.sync="zoom_center_x_value"
+                v-model:value="zoom_center_x_value"
                 type="number"
                 :step="zoom_step"
                 :suffix="display_units['image'] || 'pix'"
@@ -93,7 +93,7 @@
                 ref="zoom_center_y"
                 :label="api_hints_enabled ? 'plg.zoom_center_y =' : 'Y Center'"
                 :class="api_hints_enabled ? 'api-hint' : null"
-                :value.sync="zoom_center_y_value"
+                v-model:value="zoom_center_y_value"
                 type="number"
                 :step="zoom_step"
                 :suffix="display_units['image'] || 'pix'"
@@ -104,13 +104,13 @@
                 ref="zoom_radius"
                 :label="api_hints_enabled ? 'plg.zoom_radius =' : 'Zoom-radius'"
                 :class="api_hints_enabled ? 'api-hint' : null"
-                :value.sync="zoom_radius_value"
+                v-model:value="zoom_radius_value"
                 type="number"
                 :step="zoom_step"
                 :suffix="display_units['image'] || 'pix'"
               />
             </glue-state-sync-wrapper>
-            <v-row v-if="x_min_sync.in_subscribed_states || x_max_sync.in_subscribed_states || y_min_sync.in_subscribed_states || y_max_sync.in_subscribed_states" justify="end">
+            <j-flex-row v-if="x_min_sync.in_subscribed_states || x_max_sync.in_subscribed_states || y_min_sync.in_subscribed_states || y_max_sync.in_subscribed_states" justify="end">
               <plugin-action-button
                 :results_isolated_to_plugin="false"
                 :api_hints_enabled="api_hints_enabled"
@@ -122,18 +122,18 @@
                   'Reset viewer bounds'
                 }}
               </plugin-action-button>
-            </v-row>
-          </v-expansion-panel-content>
+            </j-flex-row>
+          </v-expansion-panel-text>
         </v-expansion-panel>
         <v-expansion-panel v-if="hist_xlog_sync.in_subscribed_states || hist_ylog_sync.in_subscribed_states || hist_n_bin_sync.in_subscribed_states || hist_x_min_sync.in_subscribed_states || hist_x_max_sync.in_subscribed_states || hist_cumulative_sync.in_subscribed_states || hist_normalize_sync.in_subscribed_states || hist_update_bins_on_reset_limits_sync.in_subscribed_states">
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Histogram Options</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
             <glue-state-sync-wrapper v-if="hist_xlog_sync.in_subscribed_states" :sync="hist_xlog_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_xlog')">
               <plugin-switch
                 label="X Log Scale"
-                :value.sync="hist_xlog_value"
+                v-model:value="hist_xlog_value"
                 api_hint='plg.hist_xlog = '
                 :api_hints_enabled="api_hints_enabled"
               />
@@ -141,7 +141,7 @@
             <glue-state-sync-wrapper v-if="hist_ylog_sync.in_subscribed_states" :sync="hist_ylog_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_ylog')">
               <plugin-switch
                 label="Y Log Scale"
-                :value.sync="hist_ylog_value"
+                v-model:value="hist_ylog_value"
                 api_hint='plg.hist_ylog = '
                 :api_hints_enabled="api_hints_enabled"
               />
@@ -151,7 +151,7 @@
                 ref="hist_n_bin"
                 :label="api_hints_enabled ? 'plg.hist_n_bin =' : 'Number of Bins'"
                 :class="api_hints_enabled ? 'api-hint' : null"
-                :value.sync="hist_n_bin_value"
+                v-model:value="hist_n_bin_value"
                 type="number"
                 step="1"
                 min="1"
@@ -162,7 +162,7 @@
                 ref="hist_x_min"
                 :label="api_hints_enabled ? 'plg.hist_x_min =' : 'Histogram X Min'"
                 :class="api_hints_enabled ? 'api-hint' : null"
-                :value.sync="hist_x_min_value"
+                v-model:value="hist_x_min_value"
                 type="number"
               />
             </glue-state-sync-wrapper>
@@ -171,14 +171,14 @@
                 ref="hist_x_max"
                 :label="api_hints_enabled ? 'plg.hist_x_max =' : 'Histogram X Max'"
                 :class="api_hints_enabled ? 'api-hint' : null"
-                :value.sync="hist_x_max_value"
+                v-model:value="hist_x_max_value"
                 type="number"
               />
             </glue-state-sync-wrapper>
             <glue-state-sync-wrapper v-if="hist_cumulative_sync.in_subscribed_states" :sync="hist_cumulative_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_cumulative')">
               <plugin-switch
                 label="Cumulative"
-                :value.sync="hist_cumulative_value"
+                v-model:value="hist_cumulative_value"
                 api_hint='plg.hist_cumulative = '
                 :api_hints_enabled="api_hints_enabled"
               />
@@ -186,7 +186,7 @@
             <glue-state-sync-wrapper v-if="hist_normalize_sync.in_subscribed_states" :sync="hist_normalize_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_normalize')">
               <plugin-switch
                 label="Normalize"
-                :value.sync="hist_normalize_value"
+                v-model:value="hist_normalize_value"
                 api_hint='plg.hist_normalize = '
                 :api_hints_enabled="api_hints_enabled"
               />
@@ -194,15 +194,15 @@
             <glue-state-sync-wrapper v-if="hist_update_bins_on_reset_limits_sync.in_subscribed_states" :sync="hist_update_bins_on_reset_limits_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_update_bins_on_reset_limits')">
               <plugin-switch
                 label="Update Bins on Reset Limits"
-                :value.sync="hist_update_bins_on_reset_limits_value"
+                v-model:value="hist_update_bins_on_reset_limits_value"
                 api_hint='plg.hist_update_bins_on_reset_limits = '
                 :api_hints_enabled="api_hints_enabled"
               />
             </glue-state-sync-wrapper>
-          </v-expansion-panel-content>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </div>
 
     <div v-if="image_color_mode_sync.in_subscribed_states">
       <glue-state-sync-wrapper :sync="image_color_mode_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('image_color_mode')">
@@ -215,31 +215,33 @@
           :class="api_hints_enabled ? 'api-hint' : null"
           hint="Whether each layer gets a single color or colormap."
           persistent-hint
-          dense
+          density="compact"
         >
           <template v-slot:selection="{ item }">
             <span :class="api_hints_enabled ? 'api-hint' : null">
               {{ api_hints_enabled ?
-                '\'' + item.text + '\''
+                '\'' + item.raw.text + '\''
                 :
-                item.text
+                item.raw.text
               }}
             </span>
           </template>
-          <template v-slot:item="{ item }">
-            <span style="margin-top: 8px; margin-bottom: 0px">
-                {{ item.text }}
-              <v-row v-if="item.description" style="line-height: 1.0; margin: 0px; opacity: 0.85; font-size: 8pt">
-                {{ item.description }}
-              </v-row>
-            </span>
+          <template v-slot:item="{ props, item }">
+            <v-list-item v-bind="props" :title="undefined">
+              <span style="margin-top: 8px; margin-bottom: 0px">
+                {{ item.raw.text }}
+                <j-flex-row v-if="item.raw.description" style="line-height: 1.0; margin: 0px; opacity: 0.85; font-size: 8pt">
+                  {{ item.raw.description }}
+                </j-flex-row>
+              </span>
+            </v-list-item>
           </template>
         </v-select>
       </glue-state-sync-wrapper>
     </div>
 
     <div v-if="image_color_mode_value === 'One color per layer' && !image_color_mode_sync['mixed']">
-      <v-row justify="end">
+      <j-flex-row justify="end">
         <j-tooltip tooltipcontent="Apply preset RGB colors, scaling, and opacities to visible layers">
           <plugin-action-button
             :spinner="apply_RGB_presets_spinner"
@@ -254,13 +256,13 @@
             }}
           </plugin-action-button>
         </j-tooltip>
-      </v-row>
+      </j-flex-row>
     </div>
 
     <!-- GENERAL:AXES -->
     <glue-state-sync-wrapper v-if="axes_visible_sync.in_subscribed_states && viewer_selected.length > 0 && config !== 'imviz'" :sync="axes_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('axes_visible')">
       <plugin-switch
-        :value.sync="axes_visible_value"
+        v-model:value="axes_visible_value"
         label="Show axes"
         api_hint="plg.axes_visible = "
         :api_hints_enabled="api_hints_enabled"
@@ -269,7 +271,7 @@
 
     <glue-state-sync-wrapper v-if="uncertainty_visible_sync.in_subscribed_states" :sync="uncertainty_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('uncertainty_visible')">
       <plugin-switch
-        :value.sync="uncertainty_visible_value"
+        v-model:value="uncertainty_visible_value"
         label="Plot uncertainties"
         api_hint='plg.uncertainty_visible = '
         :api_hints_enabled="api_hints_enabled"
@@ -279,7 +281,7 @@
     <glue-state-sync-wrapper v-if="xatt_value && xatt_sync.in_subscribed_states" :sync="xatt_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('xatt')">
       <glue-state-select
         :items="xatt_sync.choices"
-        :selected.sync="xatt_value"
+        v-model:selected="xatt_value"
         label="Xatt"
         api_hint="plg.xatt = "
         :api_hints_enabled="api_hints_enabled"
@@ -289,7 +291,7 @@
     <glue-state-sync-wrapper v-if="yatt_value && yatt_sync.in_subscribed_states" :sync="yatt_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('yatt')">
       <glue-state-select
         :items="xatt_sync.choices"
-        :selected.sync="yatt_value"
+        v-model:selected="yatt_value"
         label="Yatt"
         api_hint="plg.yatt = "
         :api_hints_enabled="api_hints_enabled"
@@ -321,22 +323,22 @@
 
     <!-- LAYER OPTIONS -->
     <div v-if="api_hints_enabled">
-      <v-row v-if="layer_items.length > 1">
+      <j-flex-row v-if="layer_items.length> 1">
         <span class="api-hint">
           plg.layer.multiselect = {{ boolToString(layer_multiselect) }}
         </span>
-      </v-row>
-      <v-row>
+      </j-flex-row>
+      <j-flex-row>
         <span class="api-hint">
           plg.layer = {{ layer_multiselect ? layer_selected : '\''+layer_selected+'\'' }}
         </span>
-      </v-row>
+      </j-flex-row>
     </div>
 
     <plugin-layer-select-tabs
       :items="layer_items"
-      :selected.sync="layer_selected"
-      :multiselect.sync="layer_multiselect"
+      v-model:selected="layer_selected"
+      v-model:multiselect="layer_multiselect"
       :show_multiselect_toggle="layer_multiselect || layer_items.length > 1"
       :icon_checktoradial="icon_checktoradial"
       :icon_radialtocheck="icon_radialtocheck"
@@ -354,7 +356,7 @@
       <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || marker_visible_sync.in_subscribed_states || hist_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states || sonified_audible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="marker_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_visible')">
         <plugin-switch
-          :value.sync="marker_visible_value"
+          v-model:value="marker_visible_value"
           label="Show Scatter Layer"
           api_hint='plg.marker_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -364,7 +366,7 @@
 
       <glue-state-sync-wrapper v-if="!marker_visible_sync.in_subscribed_states" :sync="line_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_visible')">
         <plugin-switch
-          :value.sync="line_visible_value"
+          v-model:value="line_visible_value"
           label="Show Line"
           api_hint='plg.line_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -374,7 +376,7 @@
 
       <glue-state-sync-wrapper :sync="hist_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('hist_visible')">
         <plugin-switch
-          :value.sync="hist_visible_value"
+          v-model:value="hist_visible_value"
           label="Show Histogram Layer"
           api_hint='plg.hist_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -384,7 +386,7 @@
 
       <glue-state-sync-wrapper :sync="subset_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_visible')">
         <plugin-switch
-          :value.sync="subset_visible_value"
+          v-model:value="subset_visible_value"
           label="Show Subset"
           api_hint='plg.subset_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -410,13 +412,13 @@
             wait="300"
             max="1"
             step="0.01"
-            :value.sync="subset_opacity_value"
+            v-model:value="subset_opacity_value"
           />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="sonified_audible_sync.in_subscribed_states" :sync="volume_sync"">
           <plugin-switch
-              :value.sync="sonified_audible_value"
+              v-model:value="sonified_audible_value"
               label="Audible"
               api_hint='plg.sonified_audible = '
               :api_hints_enabled="api_hints_enabled"
@@ -432,7 +434,7 @@
             wait="300"
             max="100"
             step="1"
-            :value.sync="volume_value"
+            v-model:value="volume_value"
           />
       </glue-state-sync-wrapper>
 
@@ -441,7 +443,7 @@
       <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && ((!marker_visible_sync.in_subscribed_states && line_visible_value) || (marker_visible_sync.in_subscribed_states && marker_visible_value)))">Line</j-plugin-section-header>
       <glue-state-sync-wrapper v-if="marker_visible_sync.in_subscribed_states && marker_visible_value" :sync="line_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_visible')">
         <plugin-switch
-          :value.sync="line_visible_value"
+          v-model:value="line_visible_value"
           label="Show Line"
           api_hint='plg.line_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -463,7 +465,7 @@
         <glue-float-field
           :label="api_hints_enabled ? 'plg.line_width =' : 'Line Width'"
           :class="api_hints_enabled ? 'api-hint' : null"
-          :value.sync="line_width_value"
+          v-model:value="line_width_value"
         />
       </glue-state-sync-wrapper>
 
@@ -475,13 +477,13 @@
             wait="300"
             max="1"
             step="0.01"
-            :value.sync="line_opacity_value"
+            v-model:value="line_opacity_value"
           />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_as_steps_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_as_steps')">
         <plugin-switch
-          :value.sync="line_as_steps_value"
+          v-model:value="line_as_steps_value"
           label="Plot profile as steps"
           api_hint="plg.line_as_steps = "
           :api_hints_enabled="api_hints_enabled"
@@ -493,7 +495,7 @@
         <j-plugin-section-header>Marker</j-plugin-section-header>
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_fill_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_fill')">
           <plugin-switch
-            :value.sync="marker_fill_value"
+            v-model:value="marker_fill_value"
             label="Fill Marker"
             api_hint='plg.marker_fill = '
             :api_hints_enabled="api_hints_enabled"
@@ -508,7 +510,7 @@
             wait="300"
             max="1"
             step="0.01"
-            :value.sync="marker_opacity_value"
+            v-model:value="marker_opacity_value"
           />
         </glue-state-sync-wrapper>
 
@@ -530,7 +532,7 @@
             wait="300"
             max="10"
             step="0.1"
-            :value.sync="marker_size_value"
+            v-model:value="marker_size_value"
           />
         </glue-state-sync-wrapper>
 
@@ -542,14 +544,14 @@
             wait="300"
             max="10"
             step="0.1"
-            :value.sync="marker_size_scale_value"
+            v-model:value="marker_size_scale_value"
           />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_col_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_col')">
           <glue-state-select
             :items="marker_size_col_sync.choices"
-            :selected.sync="marker_size_col_value"
+            v-model:selected="marker_size_col_value"
             label="Column"
             api_hint="plg.marker_size_col = "
             :api_hints_enabled="api_hints_enabled"
@@ -582,7 +584,7 @@
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_color_mode_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_color_mode')">
           <glue-state-select
             :items="marker_color_mode_sync.choices"
-            :selected.sync="marker_color_mode_value"
+            v-model:selected="marker_color_mode_value"
             label="Color Mode"
             api_hint="plg.marker_color_mode = "
             :api_hints_enabled="api_hints_enabled"
@@ -602,7 +604,7 @@
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_color_col_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_color_col')">
           <glue-state-select
             :items="marker_color_col_sync.choices"
-            :selected.sync="marker_color_col_value"
+            v-model:selected="marker_color_col_value"
             label="Column"
             api_hint="plg.marker_color_col = "
             :api_hints_enabled="api_hints_enabled"
@@ -612,7 +614,7 @@
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_colormap_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_colormap')">
           <glue-state-select
             :items="marker_colormap_sync.choices"
-            :selected.sync="marker_colormap_value"
+            v-model:selected="marker_colormap_value"
             label="Colormap"
             api_hint="plg.marker_colormap = "
             :api_hints_enabled="api_hints_enabled"
@@ -653,7 +655,7 @@
             wait="300"
             max="1"
             step="0.01"
-            :value.sync="hist_opacity_value"
+            v-model:value="hist_opacity_value"
           />
         </glue-state-sync-wrapper>
 
@@ -675,7 +677,7 @@
       <j-plugin-section-header v-if="image_visible_sync.in_subscribed_states">Image</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="image_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_visible')">
         <plugin-switch
-          :value.sync="image_visible_value"
+          v-model:value="image_visible_value"
           label="Show Image"
           api_hint='plg.image_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -692,21 +694,23 @@
             v-model="image_colormap_value"
             :label="api_hints_enabled ? 'plg.image_colormap =' : 'Colormap'"
             :class="api_hints_enabled ? 'api-hint' : null"
-            dense
+            density="compact"
           >
             <template v-slot:selection="{ item, index }">
               <span :class="api_hints_enabled ? 'api-hint' : null">
                 {{ api_hints_enabled ?
-                  '\'' + item.text + '\''
+                  '\'' + item.raw.text + '\''
                   :
-                  item.text
+                  item.raw.text
                 }}
               </span>
             </template>
-            <template v-slot:item="{ item }">
-              <v-card :style="'background: '+ colorStyle(item, cmap_samples)" width="100%" class="d-flex justify-center align-center text-center">
-                <span style="color: white; font-weight: bold; text-shadow: 0px 0px 3px black">{{ item.text }}</span>
-              </v-card>
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :title="undefined">
+                <v-card :style="'background: '+ colorStyle(item.raw, cmap_samples)" width="100%" class="d-flex justify-center align-center text-center">
+                  <span style="color: white; font-weight: bold; text-shadow: 0px 0px 3px black">{{ item.raw.text }}</span>
+                </v-card>
+              </v-list-item>
             </template>
           </v-select>
           <v-alert v-if="image_colormap_value == 'Random' && (
@@ -717,14 +721,14 @@
             only when the stretch percentile is min/max, stretch function
             is linear, contrast is 1.0, and bias is 0.5. Click below
             to choose these settings.
-            <v-row justify='end'>
+            <j-flex-row justify='end'>
             <plugin-action-button
               :results_isolated_to_plugin="true"
               @click="image_segmentation_map_presets"
             >
               Image segmentation map
             </plugin-action-button>
-            </v-row>
+            </j-flex-row>
           </v-alert>
 
         </glue-state-sync-wrapper>
@@ -746,7 +750,7 @@
             wait="300"
             max="1"
             step="0.01"
-            :value.sync="image_opacity_value"
+            v-model:value="image_opacity_value"
           />
         </glue-state-sync-wrapper>
 
@@ -758,7 +762,7 @@
             wait="300"
             max="4"
             step="0.01"
-            :value.sync="image_contrast_value"
+            v-model:value="image_contrast_value"
           />
         </glue-state-sync-wrapper>
 
@@ -770,7 +774,7 @@
             wait="300"
             max="1"
             step="0.01"
-            :value.sync="image_bias_value"
+            v-model:value="image_bias_value"
           />
         </glue-state-sync-wrapper>
       </div>
@@ -780,7 +784,7 @@
       <glue-state-sync-wrapper :sync="stretch_function_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_function')">
         <glue-state-select
           :items="stretch_function_sync.choices"
-          :selected.sync="stretch_function_value"
+          v-model:selected="stretch_function_value"
           label="Stretch Function"
           api_hint="plg.stretch_function = "
           :api_hints_enabled="api_hints_enabled"
@@ -790,7 +794,7 @@
       <glue-state-sync-wrapper :sync="stretch_preset_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_preset')">
         <glue-state-select
           :items="stretch_preset_sync.choices"
-          :selected.sync="stretch_preset_value"
+          v-model:selected="stretch_preset_value"
           label="Stretch Percentile Preset"
           api_hint="plg.stretch_preset = "
           :api_hints_enabled="api_hints_enabled"
@@ -830,7 +834,7 @@
                                            'stretch_vmin', 'stretch_vmax',
                                            'image_color_mode', 'image_color', 'image_colormap'])"
             >
-              <jupyter-widget :widget="stretch_histogram_widget"/>
+              <jupyter-widget v-if="stretch_histogram_widget" :widget="stretch_histogram_widget" :key="stretch_histogram_widget"/>
             </glue-state-sync-wrapper>
           </div>
           <div v-if="stretch_hist_spinner"
@@ -849,14 +853,14 @@
             ></v-progress-circular>
           </div>
 
-        <v-row>
+        <j-flex-row>
           <v-expansion-panels accordion>
             <v-expansion-panel>
-              <v-expansion-panel-header v-slot="{ open }">
+              <v-expansion-panel-title v-slot="{ open }">
                 <span style="padding: 6px">More Stretch Options</span>
-              </v-expansion-panel-header>
-              <v-expansion-panel-content class="plugin-expansion-panel-content">
-                <v-row>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text class="plugin-expansion-panel-content">
+                <j-flex-row>
                   <v-text-field
                       ref="stretch_hist_nbins"
                       :label="api_hints_enabled ? 'plg.stretch_hist_nbins =' : 'Number of Bins'"
@@ -868,26 +872,26 @@
                       :rules="[() => stretch_hist_nbins !== '' || 'This field is required',
                                () => stretch_hist_nbins > 0 || 'Number of Bins must be greater than zero']"
                   ></v-text-field>
-                </v-row>
-                <v-row>
+                </j-flex-row>
+                <j-flex-row>
                   <plugin-switch
-                    :value.sync="stretch_hist_zoom_limits"
+                    v-model:value="stretch_hist_zoom_limits"
                     class="hide-input"
                     label="Limit histogram to current zoom limits"
                     api_hint='plg.stretch_hist_zoom_limits ='
                     :api_hints_enabled="api_hints_enabled"
                     :disabled="viewer_multiselect && viewer_selected.length > 1"
                   />
-                </v-row>
-                <v-row>
+                </j-flex-row>
+                <j-flex-row>
                   <plugin-switch
-                    :value.sync="stretch_curve_visible"
+                    v-model:value="stretch_curve_visible"
                     class="hide-input"
                     label="Show stretch function curve"
                     api_hint="plg.stretch_curve_visible ="
                     :api_hints_enabled="api_hints_enabled"
                   />
-                </v-row>
+                </j-flex-row>
                 <glue-state-sync-wrapper :sync="stretch_vmin_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_vmin')">
                   <v-text-field
                     ref="stretch_vmin"
@@ -908,10 +912,10 @@
                     :step="stretch_vstep"
                   ></v-text-field>
                 </glue-state-sync-wrapper>
-              </v-expansion-panel-content>
+              </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
-        </v-row>
+        </j-flex-row>
 
       </div>
 
@@ -921,7 +925,7 @@
         <div style="grid-area: 1/1">
           <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_visible')">
             <plugin-switch
-              :value.sync="contour_visible_value"
+              v-model:value="contour_visible_value"
               label="Show Contours"
               api_hint='plg.contour_visible = '
               :api_hints_enabled="api_hints_enabled"
@@ -931,19 +935,19 @@
 
           <div v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">
             <glue-state-sync-wrapper :sync="contour_mode_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_mode')">
-              <v-btn-toggle dense v-model="contour_mode_value" style="margin-right: 8px; margin-top: 8px">
-                  <v-tooltip bottom>
-                      <template v-slot:activator="{ on }">
-                          <v-btn v-on="on" small value="Linear">
+              <v-btn-toggle density="compact" v-model="contour_mode_value" style="margin-right: 8px; margin-top: 8px">
+                  <v-tooltip location="bottom">
+                      <template v-slot:activator="{ props }">
+                          <v-btn v-bind="props" small value="Linear">
                               <v-icon>mdi-call-made</v-icon>
                           </v-btn>
                       </template>
                       <span>linear</span>
                   </v-tooltip>
 
-                  <v-tooltip bottom>
-                      <template v-slot:activator="{ on }">
-                          <v-btn v-on="on" small value="Custom">
+                  <v-tooltip location="bottom">
+                      <template v-slot:activator="{ props }">
+                          <v-btn v-bind="props" small value="Custom">
                               <v-icon>mdi-wrench</v-icon>
                           </v-btn>
                       </template>
@@ -957,7 +961,7 @@
                 <glue-float-field
                   :label="api_hints_enabled ? 'plg.contour_min =' : 'Contour Min'"
                   :class="api_hints_enabled ? 'api-hint' : null"
-                  :value.sync="contour_min_value"
+                  v-model:value="contour_min_value"
                 />
               </glue-state-sync-wrapper>
 
@@ -965,7 +969,7 @@
                 <glue-float-field
                   :label="api_hints_enabled ? 'plg.contour_max = ' : 'Contour Max'"
                   :class="api_hints_enabled ? 'api-hint' : null"
-                  :value.sync="contour_max_value"
+                  v-model:value="contour_max_value"
                 />
               </glue-state-sync-wrapper>
 
@@ -973,7 +977,7 @@
                 <glue-float-field
                   :label="api_hints_enabled ? 'plg.contour_nlevels =' : 'Number of Contour Levels'"
                   :class="api_hints_enabled ? 'api-hint' : null"
-                  :value.sync="contour_nlevels_value"
+                  v-model:value="contour_nlevels_value"
                 />
               </glue-state-sync-wrapper>
             </div>
@@ -1012,7 +1016,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   created() {
     this.contour_custom_levels_user_editing = false
     this.throttledSetValue = _.throttle(
@@ -1053,7 +1057,7 @@ module.exports = {
       var colors = []
       var style = 'repeating-linear-gradient( 90deg, '
       colors = cmap_samples[item.value]
-      for ([ci, color] of colors.entries()) {
+      for (let [ci, color] of colors.entries()) {
         var start = ci*cmap_strip_width
         var end = (ci+1)*cmap_strip_width
         style += color + ' '+start+'%, ' + color + ' '+end+'%'
@@ -1079,7 +1083,8 @@ module.exports = {
     background-color: rgba(0,0,0,0.1);
   }
 
-  .theme--dark .layer-tab-selected {
+  .theme--dark .layer-tab-selected,
+  .v-theme--dark .layer-tab-selected {
     background-color: rgba(255,255,255,0.1);
   }
 

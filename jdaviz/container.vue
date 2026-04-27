@@ -26,6 +26,7 @@
     >
       <jupyter-widget
         :widget="viewer.widget"
+        :key="viewer.widget || viewer.id"
         :ref="'viewer-widget-'+viewer.id"
        ></jupyter-widget>
     </gl-component>
@@ -36,7 +37,7 @@
 </style>
 
 <script>
-module.exports = {
+export default {
   name: "g-viewer-tab",
   props: ["stack", "data_items", "closefn", "app_settings", "config", "icons", "viewer_icons", "layer_icons"],
   created() {

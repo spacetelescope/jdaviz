@@ -1,5 +1,5 @@
 <template>
-  <v-row>
+  <j-flex-row>
     <j-tooltip :tooltipcontent="enabled ? 'Disable' : 'Enable' + ' ' + text">
       <v-btn
         :color="enabled ? 'accent' : 'default'"
@@ -15,11 +15,11 @@
         </span>
       </v-btn>
     </j-tooltip>
-  </v-row>
+  </j-flex-row>
 </template>
 
 <script>
-  module.exports = {
+  export default {
     props: ['enabled', 'text', 'api_hints_enabled', 'api_hint_enable', 'api_hint_disable']
   };
 </script>

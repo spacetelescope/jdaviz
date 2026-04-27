@@ -1,8 +1,8 @@
 <template>
   <v-toolbar-items>
     <v-dialog v-model="dialog" height="400" width="600">
-      <template v-slot:activator="{ on }">
-        <v-btn tile depressed v-on="on" color="turquoise">
+      <template v-slot:activator="{ props }">
+        <v-btn rounded="0" variant="flat" v-bind="props" color="turquoise">
           Import Data
         </v-btn>
       </template>
@@ -17,7 +17,7 @@
           viewer{{ config == 'cubeviz' ? ', though only one data cube may be loaded per instance' : ''}}.
           Note that single clicks navigate into directories.
           <v-container>
-            <v-row>
+            <v-row class="vuetify2">
               <v-col>
                 <g-file-import id="file-uploader"></g-file-import>
                 <span style="color: red;">{{ error_message }}</span>
@@ -28,8 +28,8 @@
 
         <v-card-actions>
           <div class="flex-grow-1"></div>
-          <v-btn color="primary" text @click="dialog = false">Cancel</v-btn>
-          <v-btn color="primary" text @click="load_data" :disabled="!valid_path">Import</v-btn>
+          <v-btn color="primary" variant="text" @click="dialog = false">Cancel</v-btn>
+          <v-btn color="primary" variant="text" @click="load_data" :disabled="!valid_path">Import</v-btn>
         </v-card-actions>
 
       </v-card>

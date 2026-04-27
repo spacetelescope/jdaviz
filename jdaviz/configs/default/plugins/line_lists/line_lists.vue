@@ -4,21 +4,21 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-viewer-select
        :items="viewer_items"
-       :selected.sync="viewer_selected"
+       v-model:selected="viewer_selected"
        label="Viewer"
        :show_if_single_entry="false"
        hint="Select a viewer to show lines."
     />
 
     <j-plugin-section-header>Identified Line</j-plugin-section-header>
-    <v-row>
+    <j-flex-row>
       <j-docs-link>Highlight a line and identify its name by using the line selection tool in the spectrum viewer.</j-docs-link>
-    </v-row>
-    <v-row v-if="rs_enabled">
+    </j-flex-row>
+    <j-flex-row v-if="rs_enabled">
       <j-tooltip v-if='identify_label' tipid='plugin-line-lists-line-identify-chip-active'>
         <v-chip
           v-if="identify_label"
@@ -32,13 +32,13 @@
           <img class="invert-if-dark" :src="identify_line_icon" width="20"/> no line selected
         </v-chip>
       </j-tooltip>
-    </v-row>
+    </j-flex-row>
 
     <j-plugin-section-header>Redshift</j-plugin-section-header>
-    <v-row>
+    <j-flex-row>
       <j-docs-link>Shift spectral lines according to a specific redshift. Only enabled if at least one line is plotted.</j-docs-link>
-    </v-row>
-    <v-row style='margin-bottom: 0px'>
+    </j-flex-row>
+    <j-flex-row style='margin-bottom: 0px'>
       <!-- colors are main_style.vue primary and toolbar colors -->
       <v-slider
         :value="rs_slider"
@@ -55,14 +55,14 @@
         :disabled="!rs_enabled"
       >
       </v-slider>
-    </v-row>
-    <v-row style='margin-top: -24px'>
+    </j-flex-row>
+    <j-flex-row style='margin-top: -24px'>
       <span class='text--secondary' style='max-width: 30%; white-space: nowrap;'>-{{rs_slider_half_range}}</span>
       <v-spacer/>
       <span class='text--secondary' style='max-width: 30%; white-space: nowrap;'>+{{rs_slider_half_range}}</span>
-    </v-row>
+    </j-flex-row>
 
-    <v-row class="row-no-outside-padding row-min-bottom-padding">
+    <v-row class="row-no-outside-padding row-min-bottom-padding vuetify2">
       <v-col>
         <v-text-field
           :value='rs_redshift'
@@ -81,7 +81,7 @@
       </v-col>
     </v-row>
 
-    <v-row class="row-no-outside-padding">
+    <v-row class="row-no-outside-padding vuetify2">
       <v-col>
         <v-text-field
           v-model.number="rs_rv"
@@ -101,7 +101,7 @@
     </v-row>
 
     <j-plugin-section-header>Preset Line Lists</j-plugin-section-header>
-    <v-row>
+    <j-flex-row>
       <v-select
         :menu-props="{ left: true }"
         attach
@@ -111,15 +111,15 @@
         hint="Select a line list to load. Toggle visibility of loaded lines in section below."
         persistent-hint
       ></v-select>
-    </v-row>
+    </j-flex-row>
 
-    <v-row justify="end">
+    <j-flex-row justify="end">
       <j-tooltip tipid='plugin-line-lists-load'>
         <plugin-action-button
           :results_isolated_to_plugin="true"
           @click="load_list">Load List</plugin-action-button>
       </j-tooltip>
-    </v-row>
+    </j-flex-row>
 
 
     <j-plugin-section-header>Loaded Lines</j-plugin-section-header>
@@ -132,11 +132,11 @@
       <img class="invert-if-dark" :src="identify_line_icon" width="20"/>
     </j-custom-toolbar-toggle>
 
-    <v-row>
+    <j-flex-row>
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="item in loaded_lists" key=":item">
-          <v-expansion-panel-header v-slot="{ open }">
-            <v-row no-gutters align="center" style="max-width: calc(100% - 26px)">
+          <v-expansion-panel-title v-slot="{ open }">
+            <v-row class="vuetify2" no-gutters align="center" style="max-width: calc(100% - 26px)">
               <v-col cols=2>
                 <v-btn
                   v-if="item != 'Custom'"
@@ -144,7 +144,7 @@
                   small="true"
                   icon
                 >
-                  <v-icon>mdi-close-circle</v-icon>
+ <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
               </v-col>
               <v-col cols=2>
@@ -161,65 +161,65 @@
 
 
             </v-row>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
 
             <div v-if="item == 'Custom'" style="padding-top: 16px">
-              <v-row class="row-min-bottom-padding" style="display: block">
+              <j-flex-row class="row-min-bottom-padding" style="display: block">
                   <j-tooltip tipid='plugin-line-lists-line-name'>
                     <v-text-field
                       label="Line Name"
                       v-model="custom_name"
-                      dense
+                      density="compact"
                     >
                     </v-text-field>
                   </j-tooltip>
-              </v-row>
+              </j-flex-row>
 
-              <v-row class="row-min-bottom-padding" style="display: block">
+              <j-flex-row class="row-min-bottom-padding" style="display: block">
                 <j-tooltip tipid='plugin-line-lists-custom-rest'>
                   <v-text-field
                     label="Rest Value"
                     v-model="custom_rest"
-                    dense
+                    density="compact"
                   >
                   </v-text-field>
                 </j-tooltip>
-              </v-row>
+              </j-flex-row>
 
-              <v-row class="row-min-bottom-padding" style="display: block">
+              <j-flex-row class="row-min-bottom-padding" style="display: block">
                 <j-tooltip tipid='plugin-line-lists-custom-unit'>
                     <plugin-select
                       :items="custom_unit_choices"
-                      :selected.sync="custom_unit"
+                      v-model:selected="custom_unit"
                       label="Unit"
-                      dense
+                      density="compact"
                     />
                 </j-tooltip>
-              </v-row>
+              </j-flex-row>
 
-              <v-row justify="end">
+              <j-flex-row justify="end">
                 <j-tooltip tipid='plugin-line-lists-add-custom-line'>
-                  <v-btn color="primary" text @click="add_custom_line">Add Line</v-btn>
+                  <v-btn color="primary" variant="text" @click="add_custom_line">Add Line</v-btn>
                 </j-tooltip>
-              </v-row>
+              </j-flex-row>
             </div>
 
             <div v-if="list_contents[item].lines.length">
 
-              <v-row class="row-no-padding" style="margin-top: 4px">
+              <v-row class="row-no-padding vuetify2" style="margin-top: 4px">
                 <v-col cols=6 style="padding: 0">
                   <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
                     <v-btn
-                      tile
+                      rounded="0"
                       :elevation=0
                       x-small
-                      dense
+                      density="compact"
                       color="turquoise"
-                      dark
+                      theme="dark"
                       style="padding-left: 8px; padding-right: 6px;"
                       @click="show_all_in_list(item)">
-                      <v-icon left small dense style="margin-right: 2px">mdi-eye</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye</v-icon>
                       Plot All
                     </v-btn>
                   </j-tooltip>
@@ -227,22 +227,22 @@
                 <v-col cols=6 style="text-align: right; padding: 0">
                   <j-tooltip tipid='plugin-line-lists-erase-all-in-list'>
                     <v-btn
-                      tile
+                      rounded="0"
                       :elevation=0
                       x-small
-                      dense
+                      density="compact"
                       color="turquoise"
-                      dark
+                      theme="dark"
                       style="padding-left: 8px; padding-right: 6px;"
                       @click="hide_all_in_list(item)">
-                      <v-icon left small dense style="margin-right: 2px">mdi-eye-off</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye-off</v-icon>
                       Erase All
                     </v-btn>
                   </j-tooltip>
                 </v-col>
               </v-row>
 
-              <v-row>
+              <j-flex-row>
                 <j-tooltip tipid='plugin-line-lists-spectral-range'>
                   <v-btn
                     icon
@@ -260,20 +260,20 @@
                   clearable
                   hide-details
                 ></v-text-field>
-              </v-row>
+              </j-flex-row>
 
-              <v-row>
+              <j-flex-row>
                 <span class='text--primary' style="overflow-wrap: anywhere; font-size: 10pt;">
                   <b>Medium: {{list_contents[item].medium}}</b>
                 </span>
-              </v-row>
+              </j-flex-row>
 
               <v-divider style="margin-bottom: 8px"></v-divider>
 
-              <v-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
+              <j-flex-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
                 <div v-if="lineItemVisible(line, lines_filter, filter_range)">
 
-                  <v-row class="row-no-vertical-padding-margin" style="margin: 0px">
+                  <v-row class="row-no-vertical-padding-margin vuetify2" style="margin: 0px">
                     <v-col cols=7  style="padding: 0">
                       <span class='text--primary' style="overflow-wrap: anywhere; font-size: 16pt; padding-top: 3px;">
                         <b>{{line.linename}}</b>
@@ -290,19 +290,19 @@
                     <v-col cols=3 align="right" style="padding: 0">
                       <j-tooltip tipid='plugin-line-lists-line-visible'>
                         <v-btn :color="line.show ? 'accent' : 'default'" icon @click="change_visible([item, line, line_ind])">
-                          <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+ <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
                         </v-btn>
                       </j-tooltip style="padding: 0">
                     </v-col>
 
                   </v-row>
-                  <v-row class="row-min-bottom-padding" >
+                  <v-row class="row-min-bottom-padding vuetify2" >
                     <v-col cols=6 style="padding-bottom: 3px; padding-top: 0px">
                       <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Rest</b/></v-subheader>
                       <v-text-field
                         v-model="line.rest"
                         class="mt-0 pt-0"
-                        dense
+                        density="compact"
                         :hint="line.unit"
                         persistent-hint
                         disabled
@@ -316,7 +316,7 @@
                         @blur="unpause_tables"
                         step="0.1"
                         class="mt-0 pt-0"
-                        dense
+                        density="compact"
                         type="number"
                         :hint="line.unit"
                         persistent-hint
@@ -324,26 +324,26 @@
                     </v-col>
                   </v-row>
                 </div>
-              </v-row>
+              </j-flex-row>
             </div>
-          </v-expansion-panel-content>
+          </v-expansion-panel-text>
         <v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </j-flex-row>
 
-    <v-row class="row-no-padding">
+    <v-row class="row-no-padding vuetify2">
       <v-col cols=6>
         <j-tooltip tipid='plugin-line-lists-erase-all'>
           <v-btn
-            tile
+            rounded="0"
             :elevation=0
             x-small
-            dense
+            density="compact"
             color="turquoise"
-            dark
+            theme="dark"
             style="padding-left: 8px; padding-right: 6px;"
             @click="plot_all_lines">
-            <v-icon left small dense style="margin-right: 2px">mdi-eye</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye</v-icon>
             Plot All
           </v-btn>
         </j-tooltip>
@@ -351,15 +351,15 @@
       <v-col cols=6 style="text-align: right">
         <j-tooltip tipid='plugin-line-lists-plot-all'>
           <v-btn
-            tile
+            rounded="0"
             :elevation=0
             x-small
-            dense
+            density="compact"
             color="turquoise"
-            dark
+            theme="dark"
             style="padding-left: 8px; padding-right: 6px;"
             @click="erase_all_lines">
-            <v-icon left small dense style="margin-right: 2px">mdi-eye-off</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye-off</v-icon>
             Erase All
           </v-btn>
         </j-tooltip>
@@ -371,9 +371,10 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     methods: {
       lineItemVisible(lineItem, lines_filter, filter_range) {
+        let text_filter
         if (lines_filter === null || lines_filter.length == 0) {
           text_filter = true
         }
@@ -382,6 +383,7 @@
           text_filter = lineItem.linename.toLowerCase().indexOf(lines_filter.toLowerCase()) !== -1
         }
 
+        let in_range
         if (filter_range) {
           in_range = (lineItem.obs > this.spectrum_viewer_min) && (lineItem.obs < this.spectrum_viewer_max)
         }
