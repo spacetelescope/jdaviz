@@ -34,6 +34,7 @@ Bug Fixes
   during iteration error that occurs in many scenarios (linking, batch loading data,
   etc.). [#4150]
 
+- Fix passing strings to selected traitlet without expanding into characters. [#4157]
 
 Mosviz
 ^^^^^^
