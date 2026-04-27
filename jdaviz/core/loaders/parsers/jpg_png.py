@@ -11,8 +11,7 @@ __all__ = ['JPGPNGParser']
 @loader_parser_registry('jpgpng')
 class JPGPNGParser(BaseParser):
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz2d', 'lcviz', 'imviz'):
             # NOTE: temporary during deconfig process
             return False

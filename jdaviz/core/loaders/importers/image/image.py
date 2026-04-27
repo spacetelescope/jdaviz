@@ -185,8 +185,7 @@ class ImageImporter(BaseImporterToDataCollection):
             expose += ['extension']
         return ImporterUserApi(self, expose)
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
@@ -214,17 +213,13 @@ class ImageImporter(BaseImporterToDataCollection):
         if isinstance(self.input, np.ndarray) and self.input.ndim == 3:
             return len(self.extension.choices) > 0
 
-        try:
-            output = self.output
-        except Exception:  # noqa
+        output = self.output
+        is_spectral = all([wcs_is_spectral(getattr(data, 'coords', None)) for data in output])
+        if is_spectral:
+            # Reject 2D spectra with spectral WCS coordinates
+            # that pass the FITS/NDData condition
             return False
-        else:
-            is_spectral = all([wcs_is_spectral(getattr(data, 'coords', None)) for data in output])
-            if is_spectral:
-                # Reject 2D spectra with spectral WCS coordinates
-                # that pass the FITS/NDData condition
-                return False
-            return True
+        return True
 
     @observe('viewer_create_new_selected')
     def _on_create_new_viewer_selected(self, msg):

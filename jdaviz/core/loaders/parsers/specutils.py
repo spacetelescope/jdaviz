@@ -19,15 +19,11 @@ __all__ = ['SpecutilsSpectrumParser',
 class SpecutilsSpectrumParser(BaseParser):
     SpecutilsCls = Spectrum
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
-        try:
-            self.output
-        except Exception:
-            return False
+        _ = self.output
         return True
 
     @cached_property
@@ -37,11 +33,10 @@ class SpecutilsSpectrumParser(BaseParser):
 
 @loader_parser_registry('specutils.Spectrum(array)')
 class SpecutilsSpectrumArrayParser(SpecutilsSpectrumParser):
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         return (isinstance(self.input, np.ndarray)
                 and self.input.ndim in (1, 2, 3)
-                and super().is_valid)
+                and super()._check_is_valid())
 
     @cached_property
     def output(self):
@@ -62,12 +57,11 @@ class SpecutilsSpectrumArrayParser(SpecutilsSpectrumParser):
 class SpecutilsSpectrumListParser(SpecutilsSpectrumParser):
     SpecutilsCls = SpectrumList
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz'):
             # NOTE: temporary during deconfig process
             return False
-        return super().is_valid and len(self.output) > 1
+        return super()._check_is_valid() and len(self.output) > 1
 
     @cached_property
     def output(self):

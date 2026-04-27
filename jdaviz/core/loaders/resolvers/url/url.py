@@ -69,8 +69,7 @@ class URLResolver(BaseResolver):
     def user_api(self):
         return LoaderUserApi(self, expose=['url', 'cache', 'local_path', 'timeout'])
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         # NOTE: if changing this, also update the object resolver to reject the same
         valid_scheme = self.url_scheme in ['http', 'https', 'mast', 'ftp', 's3']
         if not valid_scheme:

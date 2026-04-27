@@ -198,8 +198,7 @@ class RampImporter(BaseImporterToDataCollection):
             expose += ['integration']
         return ImporterUserApi(self, expose)
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
@@ -218,10 +217,7 @@ class RampImporter(BaseImporterToDataCollection):
         if isinstance(self.input, fits.HDUList) and self.input[1].header['NAXIS'] != 4:
             return False
 
-        try:
-            self.output
-        except Exception:
-            return False
+        _ = self.output
         return True
 
     @observe('data_label_value', 'function_selected')

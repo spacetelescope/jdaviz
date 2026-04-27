@@ -1,10 +1,10 @@
 from functools import cached_property
-from jdaviz.core.template_mixin import WithCache
+from jdaviz.core.template_mixin import WithCache, ValidatorMixin
 
 __all__ = ['BaseParser']
 
 
-class BaseParser(WithCache):
+class BaseParser(WithCache, ValidatorMixin):
     def __init__(self, app, inp):
         self._app = app
         self._input = inp
@@ -13,9 +13,8 @@ class BaseParser(WithCache):
     def app(self):
         return self._app
 
-    @property
-    def is_valid(self):
-        raise NotImplementedError("Subclasses must implement is_valid property")  # pragma: nocover
+    def _check_is_valid(self):
+        raise NotImplementedError("Subclasses must implement _check_is_valid()")  # pragma: nocover
 
     @property
     def input(self):

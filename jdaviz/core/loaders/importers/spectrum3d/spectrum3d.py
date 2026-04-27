@@ -368,21 +368,15 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             expose += ['dq_extension']
         return ImporterUserApi(self, expose)
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
-        try:
-            if self.spectrum.flux.ndim != 3:
-                return False
-        except Exception:
+
+        if self.spectrum.flux.ndim != 3:
             return False
 
-        try:
-            self.output
-        except Exception:
-            return False
+        _ = self.output
         return True
 
     @observe('data_label_value', 'function_selected')
