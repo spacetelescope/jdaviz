@@ -9,7 +9,7 @@ from specutils import SpectralRegion
 
 from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
-from jdaviz.core.template_mixin import TableMixin, Table
+from jdaviz.core.template_mixin import TableMixin, Table, IsValidWrapper, ValidatorMixin
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -408,6 +408,52 @@ def test_export_table(deconfigged_helper, sky_coord_only_source_catalog,
     else:
         table_obj.export_table(filename, format=valid_format)
         assert os.path.isfile(filename)
+
+
+class TestValidation:
+    """
+    Tests for IsValidWrapper and ValidatorMixin from template_mixin.py.
+    """
+
+    @pytest.mark.parametrize('expected_bool, expected_str', [
+        (True, 'all good'),
+        (False, 'something went wrong'),
+        (True, ''),
+        (False, 'bad input'),  # List input
+    ])
+    def test_is_valid_wrapper_valid_input(self, expected_bool, expected_str):
+        """
+        Test IsValidWrapper with various inputs.
+        """
+        # Try with just the boolean to check default messages
+        wrapper = IsValidWrapper(expected_bool)
+        assert bool(wrapper) is expected_bool
+        if bool(wrapper):
+            assert str(wrapper) == 'valid'
+        else:
+            assert str(wrapper) == 'invalid'
+
+        wrapper = IsValidWrapper((expected_bool, expected_str))
+        assert bool(wrapper) is expected_bool
+        assert str(wrapper) == expected_str
+
+        # Feed purposefully bad input
+        with pytest.raises(ValueError, match='is_valid_result must be a'):
+            _ = IsValidWrapper(expected_str)
+
+    def test_validator_mixin_exception_in_check(self):
+        """
+        Test ValidatorMixin catches exceptions from _check_is_valid.
+        """
+        class BrokenValidator(ValidatorMixin):
+            def _check_is_valid(self):
+                msg = 'unexpected error during validation'
+                raise RuntimeError(msg)
+
+        obj = BrokenValidator()
+        result = obj.is_valid
+        assert bool(result) is False
+        assert 'unexpected error during validation' in str(result)
 
 
 # ── Server-side pagination tests ─────────────────────────────────────────────

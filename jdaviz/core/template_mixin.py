@@ -282,7 +282,8 @@ class IsValidWrapper:
     A wrapper class for the result of is_valid to provide context dependent behavior.
 
     This class provides a boolean where necessary (most cases) and a message when failure due to
-    invalid input is necessary to explain the failure.
+    invalid input is necessary to explain the failure. This also gives us flexibility in the
+    future to provide custom messages for known failure modes in specific loaders if need-be.
 
     Parameters
     ----------
@@ -300,7 +301,7 @@ class IsValidWrapper:
                              'boolean or a tuple/list of (boolean, message)')
 
     def __bool__(self):
-        return self.is_valid or not self.message
+        return self.is_valid
 
     def __str__(self):
         return self.message
