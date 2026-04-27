@@ -12,8 +12,7 @@ __all__ = ['RegionsParser']
 
 @loader_parser_registry('Regions')
 class RegionsParser(BaseParser):
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if isinstance(self.input, str):
             if is_stcs_string(self.input):
                 return True
@@ -23,6 +22,7 @@ class RegionsParser(BaseParser):
             elif self._app.config in ('specviz', 'specviz2d'):
                 return ext == 'ecsv'
             return ext in ('reg', 'fits', 'ecsv')
+        return False
 
     @cached_property
     def output(self):

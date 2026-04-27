@@ -32,8 +32,7 @@ class FootprintImporter(BaseImporterToPlugin):
         self.observe(self._on_label_changed, 'footprint_label_value')
         self._on_label_changed()
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         # TODO: handle str > region in parser
 
         def _ensure_sky(region):

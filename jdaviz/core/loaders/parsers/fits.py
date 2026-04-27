@@ -11,8 +11,7 @@ __all__ = ['FITSParser']
 @loader_parser_registry('fits')
 class FITSParser(BaseParser):
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz2d',
                                     'lcviz', 'imviz', 'cubeviz',
                                     'rampviz'):
@@ -20,9 +19,9 @@ class FITSParser(BaseParser):
             return False
 
         try:
-            self.output
-        except Exception:
-            return False
+            _ = self.output
+        except Exception as e:
+            return False, str(e)
 
         return True
 

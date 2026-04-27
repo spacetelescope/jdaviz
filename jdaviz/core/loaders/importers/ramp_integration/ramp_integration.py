@@ -25,8 +25,7 @@ class RampIntegrationImporter(BaseImporterToDataCollection):
     def _get_supported_viewers():
         return [{'label': 'Ramp Integration', 'reference': 'rampviz-profile-viewer'}]
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False

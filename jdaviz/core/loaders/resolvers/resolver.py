@@ -108,7 +108,12 @@ class FormatSelect(SelectPluginComponent):
                 this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
                 if this_parser.is_valid:
-                    importer_input = this_parser.output
+                    try:
+                        importer_input = this_parser.output
+                    except Exception as e:
+                        self._invalid_importers[parser_name] = f'Parser exception: {e}'
+                        this_parser._cleanup()
+                        continue
                 else:
                     self._invalid_importers[parser_name] = str(this_parser.is_valid)
                     self._invalid_importers.setdefault(parser_name, str(this_parser.is_valid))

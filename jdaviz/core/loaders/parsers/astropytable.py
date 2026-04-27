@@ -20,8 +20,7 @@ class AstropyTableParser(BaseParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
 
         if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
@@ -58,12 +57,8 @@ class AstropyTableParser(BaseParser):
             pass
 
         # next, see if this is a catalog written to a file
-        try:
-            table = self.output
-        except Exception:
-            return False
-        else:
-            return len(table) > 0
+        table = self.output
+        return len(table) > 0
 
     @property
     def is_text_file(self, blocksize=4096):

@@ -27,8 +27,7 @@ class ObjectResolver(BaseResolver):
     def user_api(self):
         return LoaderUserApi(self, expose=['object'])
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if isinstance(self.object, str):
             # reject strings that should go through file
             # or url resolvers instead
