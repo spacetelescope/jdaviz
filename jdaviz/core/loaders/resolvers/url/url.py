@@ -71,13 +71,13 @@ class URLResolver(BaseResolver):
 
     def _check_is_valid(self):
         # NOTE: if changing this, also update the object resolver to reject the same
-        valid_scheme = self.url_scheme in ['http', 'https', 'mast', 'ftp', 's3']
-        if not valid_scheme:
-            return False
+        valid_schemes = ['http', 'https', 'mast', 'ftp', 's3']
+        if self.url_scheme not in valid_schemes:
+            return False, f"URI scheme must be one of {','.join(valid_schemes)}."
 
         # Check whitelist if configured
         if self.url_not_whitelisted:
-            return False
+            return False, 'URI is not whitelisted.'
 
         return True
 

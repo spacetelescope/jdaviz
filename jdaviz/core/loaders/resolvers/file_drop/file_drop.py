@@ -96,7 +96,7 @@ class FileDropResolver(BaseResolver):
         return LoaderUserApi(self, expose=[])
 
     @property
-    def is_valid(self):
+    def _check_is_valid(self):
         return True
 
     @property
