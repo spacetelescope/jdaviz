@@ -1051,9 +1051,12 @@ def wildcard_match(obj, value, choices=None):
         if choices is None:
             return value
 
-    # any works for both str and iterable
+    # Convert value to an iterable for checking, but don't iterate over string characters
+    value_to_check = [value] if isinstance(value, str) else value
+
+    # Check if any item contains wildcards
     if (getattr(obj, 'allow_multiselect', False)
-            and any(has_wildcard(v) for v in value if isinstance(v, str))):
+            and any(has_wildcard(v) for v in value_to_check if isinstance(v, str))):
         if isinstance(value, str):
             obj.multiselect = True
             value = wildcard_match_str(choices, value)
@@ -1066,7 +1069,15 @@ def wildcard_match(obj, value, choices=None):
     # Basically, '*' of empty should return empty---we don't want to error out. For other
     # patterns like 'foo*' not matching anything, we use the error to notify the user of no match.
     # e.g. value == ['*'] or ['*', '*'], choices == [] -> match == [] (rather than ['*'])
-    if all(vi == '*' for v in value for vi in v):  # List of strings
+    # Check if all items in the result are '*' wildcards (avoid iterating over string characters)
+    if isinstance(value, str):
+        all_wildcards = (value == '*')
+    elif isinstance(value, (list, tuple)):
+        all_wildcards = all(v == '*' for v in value if isinstance(v, str))
+    else:
+        all_wildcards = False
+
+    if all_wildcards:
         value = [] if getattr(obj, 'multiselect', False) else ''
 
     return value
