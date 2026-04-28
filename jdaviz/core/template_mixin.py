@@ -280,31 +280,25 @@ class WithCache:
 class IsValidWrapper:
     """
     A wrapper class for the result of is_valid to provide context dependent behavior.
-
-    This class provides a boolean where necessary (most cases) and a message when failure due to
-    invalid input is necessary to explain the failure. This also gives us flexibility in the
-    future to provide custom messages for known failure modes in specific loaders if need-be.
+    This class provides a message when there is a failure due to invalid input.
 
     Parameters
     ----------
-    is_valid_result : bool or tuple or list
-        Either True/False or a tuple/list of (boolean, message).
+    is_valid_result : str
+        Either empty (True) or set to message indicating failure (False).
     """
     def __init__(self, is_valid_result):
-        if isinstance(is_valid_result, bool):
-            self.is_valid = is_valid_result
-            self.message = 'valid' if is_valid_result else 'invalid'
-        elif isinstance(is_valid_result, (tuple, list)) and len(is_valid_result) == 2:
-            self.is_valid, self.message = is_valid_result
+        if isinstance(is_valid_result, str):
+            self._is_valid = not bool(is_valid_result)
+            self._message = is_valid_result
         else:
-            raise ValueError('is_valid_result must be a '
-                             'boolean or a tuple/list of (boolean, message)')
+            raise ValueError('Validity checks (_check_is_valid) must return a string.')
 
     def __bool__(self):
-        return self.is_valid
+        return self._is_valid
 
     def __str__(self):
-        return self.message
+        return self._message
 
 
 class ValidatorMixin:
@@ -325,7 +319,7 @@ class ValidatorMixin:
         try:
             is_valid = IsValidWrapper(self._check_is_valid())
         except Exception as e:
-            is_valid = IsValidWrapper((False, str(e)))
+            is_valid = IsValidWrapper(str(e))
 
         return is_valid
 
@@ -335,8 +329,9 @@ class ValidatorMixin:
 
         Returns
         -------
-        bool or tuple
-            Either True/False or a tuple of (boolean, message).
+        str
+            Empty string if valid, otherwise a message indicating
+            the reason for invalidity.
         """
         raise NotImplementedError("Subclasses must implement _check_is_valid()")  # pragma: nocover
 

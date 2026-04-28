@@ -12,10 +12,15 @@ __all__ = ['JPGPNGParser']
 class JPGPNGParser(BaseParser):
 
     def _check_is_valid(self):
-        if self._app.config not in ('deconfigged', 'specviz2d', 'lcviz', 'imviz'):
+        accepted_configs = ('deconfigged', 'specviz2d', 'lcviz', 'imviz')
+        if self._app.config not in accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
-        return isinstance(self.input, str) and self.input.endswith(('.jpg', '.jpeg', '.png'))
+            return f"jpgpng format is only supported in {', '.join(accepted_configs)}."
+
+        if not (isinstance(self.input, str) and self.input.endswith(('.jpg', '.jpeg', '.png'))):
+            return 'Input must be a string path ending in .jpg, .jpeg, or .png.'
+
+        return ''
 
     @cached_property
     def output(self):

@@ -415,31 +415,28 @@ class TestValidation:
     Tests for IsValidWrapper and ValidatorMixin from template_mixin.py.
     """
 
-    @pytest.mark.parametrize('expected_bool, expected_str', [
-        (True, 'all good'),
-        (False, 'something went wrong'),
-        (True, ''),
-        (False, 'bad input'),  # List input
+    @pytest.mark.parametrize('input_str, expected_bool', [
+        ('', True),
+        ('something went wrong', False),
+        ('bad input', False),
     ])
-    def test_is_valid_wrapper_valid_input(self, expected_bool, expected_str):
+    def test_is_valid_wrapper_valid_input(self, input_str, expected_bool):
         """
         Test IsValidWrapper with various inputs.
         """
-        # Try with just the boolean to check default messages
-        wrapper = IsValidWrapper(expected_bool)
+        wrapper = IsValidWrapper(input_str)
         assert bool(wrapper) is expected_bool
-        if bool(wrapper):
-            assert str(wrapper) == 'valid'
-        else:
-            assert str(wrapper) == 'invalid'
+        assert str(wrapper) == input_str
 
-        wrapper = IsValidWrapper((expected_bool, expected_str))
-        assert bool(wrapper) is expected_bool
-        assert str(wrapper) == expected_str
-
-        # Feed purposefully bad input
-        with pytest.raises(ValueError, match='is_valid_result must be a'):
-            _ = IsValidWrapper(expected_str)
+    def test_is_valid_wrapper_invalid_input(self):
+        """
+        Test IsValidWrapper rejects non-string input.
+        """
+        match_str = re.escape('Validity checks (_check_is_valid) must return a string.')
+        with pytest.raises(ValueError, match=match_str):
+            _ = IsValidWrapper(True)
+        with pytest.raises(ValueError, match=match_str):
+            _ = IsValidWrapper((True, 'msg'))
 
     def test_validator_mixin_exception_in_check(self):
         """

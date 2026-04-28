@@ -68,12 +68,12 @@ class FileResolver(BaseResolver):
 
     def _check_is_valid(self):
         if not os.path.exists(self.filepath):
-            return False, 'Filepath does not exist.'
+            return 'Filepath does not exist.'
 
         if not os.path.isfile(self.filepath):
-            return False, 'Filepath is not a file.'
+            return 'Filepath is not a file.'
 
-        return True
+        return ''
 
     @property
     def default_label(self):
