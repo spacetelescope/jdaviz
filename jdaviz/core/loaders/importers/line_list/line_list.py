@@ -32,7 +32,6 @@ class LineListImporter(BaseImporterToPlugin):
         self.observe(self._on_label_changed, 'line_list_label_value')
         self._on_label_changed()
 
-    @property
     def _check_is_valid(self):
         """Validate that the input is a QTable with required columns."""
         if not isinstance(self.input, QTable):
