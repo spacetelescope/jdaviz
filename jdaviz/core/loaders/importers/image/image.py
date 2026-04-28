@@ -190,6 +190,13 @@ class ImageImporter(BaseImporterToDataCollection):
         if self._app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
+
+        # Reject FITS files that look like light curves (have BinTableHDU with TIME column)
+        if isinstance(self.input, fits.HDUList):
+            for hdu in self.input:
+                if isinstance(hdu, fits.BinTableHDU) and 'TIME' in hdu.columns.names:
+                    return False
+
         # flat image, not a cube
         # isinstance NDData
         if self.input_has_extensions and not len(self.extension.choices):

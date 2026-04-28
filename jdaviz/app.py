@@ -235,6 +235,8 @@ class ApplicationState(State):
         0, docstring="Index of the active subtab in the info sidebar.")
     jdaviz_version = CallbackProperty(
         __version__, docstring="Version of Jdaviz.")
+    downstream_packages = ListCallbackProperty(
+        docstring="List of downstream packages registered with this app instance.")
     global_search = CallbackProperty(
         '', docstring="Global search string.")
     global_search_menu = CallbackProperty(
