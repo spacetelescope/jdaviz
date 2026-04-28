@@ -428,7 +428,7 @@ class TestValidation:
         assert bool(wrapper) is expected_bool
         assert wrapper.message == str(wrapper) == input_str
         assert (repr(wrapper) ==
-                f'{type(wrapper).__name__}(_is_valid={expected_bool}, message="{input_str}")')
+                f"{type(wrapper).__name__}(_is_valid={expected_bool}, message='{input_str}')")
 
     def test_is_valid_wrapper_invalid_input(self):
         """
