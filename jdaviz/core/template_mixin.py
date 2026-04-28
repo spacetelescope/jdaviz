@@ -6341,7 +6341,13 @@ class Table(PluginSubcomponent):
             self.headers_visible = self.headers_visible + [m for m in missing_headers if self._new_col_visible(m)]  # noqa
 
         # clean data to show in the UI
-        self.items = self.items + [{k: self._json_safe(k, v) for k, v in item.items()}]
+        new_row = {k: self._json_safe(k, v) for k, v in item.items()}
+        if self.server_pagination:
+            self._all_items = self._all_items + [new_row]
+            self.server_items_length = len(self._all_items)
+            self._push_current_page()
+        else:
+            self.items = self.items + [new_row]
         self._plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
 
     def __len__(self):
