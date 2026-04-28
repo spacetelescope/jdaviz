@@ -3,6 +3,7 @@
 
 Bug Fixes
 ---------
+
 - Fix 'add to flux viewer' toggle in DQ cube loader to fix issue where the DQ
   cube was being added to the flux viewer even when toggled off. [#4145]
 
@@ -10,6 +11,7 @@ Bug Fixes
   during iteration error that occurs in many scenarios (linking, batch loading data,
   etc.). [#4150]
 
+- Fix spectral subsets appearing in image viewer data menu. [#4149]
 
 Mosviz
 ^^^^^^
