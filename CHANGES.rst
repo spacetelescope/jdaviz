@@ -4,9 +4,6 @@
 New Features
 ------------
 
-- Errors from load are now more explicit, either as a result of known invalid cases or
-  as errors producing during import. [#4159]
-
 Mosviz
 ^^^^^^
 
@@ -30,6 +27,9 @@ Other Changes and Additions
 
 Bug Fixes
 ---------
+
+- Errors from load are now more explicit, either as a result of known invalid cases or
+  as errors producing during import. [#4159]
 
 - Fix 'add to flux viewer' toggle in DQ cube loader to fix issue where the DQ
   cube was being added to the flux viewer even when toggled off. [#4145]
