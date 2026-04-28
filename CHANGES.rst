@@ -4,6 +4,9 @@
 New Features
 ------------
 
+- Errors from load are now more explicit, either as a result of known invalid cases or
+  as errors producing during import. [#4159]
+
 Mosviz
 ^^^^^^
 
