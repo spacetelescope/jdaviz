@@ -120,6 +120,141 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     specviz2d_helper.load_data(spectrum2d)
 
 
+def test_spectrum3d_deselected_extensions(deconfigged_helper):
+    """Test that deselecting uncertainty/mask extensions doesn't cause errors."""
+    from astropy.nddata import StdDevUncertainty
+
+    # Create a 3D spectrum with uncertainty and mask
+    flux_data = np.ones((5, 10, 10)) * u.Jy
+    uncertainty_data = StdDevUncertainty(np.ones((5, 10, 10)) * 0.1)
+    mask_data = np.zeros((5, 10, 10), dtype=bool)
+    spectral_axis = np.arange(5) * u.um
+
+    spectrum3d = Spectrum(
+        flux=flux_data,
+        spectral_axis=spectral_axis,
+        uncertainty=uncertainty_data,
+        mask=mask_data
+    )
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = spectrum3d
+    ldr.format = '3D Spectrum'
+
+    # Verify extensions are available
+    assert 'spectrum.uncertainty' in ldr.importer.unc_extension.choices
+    assert 'spectrum.mask' in ldr.importer.mask_extension.choices
+
+    # Deselect uncertainty and mask extensions
+    ldr.importer.unc_extension.selected = ''
+    ldr.importer.mask_extension.selected = ''
+
+    # This should not raise an AttributeError
+    ldr.load()
+
+    # Verify only flux cube was loaded (plus auto-extracted 1d spectrum)
+    assert len(deconfigged_helper._app.data_collection) == 2
+    # The first should be the flux cube, the second should be the auto-extracted spectrum
+    assert '3D Spectrum' in deconfigged_helper._app.data_collection[0].label
+
+    # Verify no uncertainty cube was created
+    unc_labels = [d.label for d in deconfigged_helper._app.data_collection if 'UNC' in d.label]
+    assert len(unc_labels) == 0
+
+    # Verify no mask cube was created
+    mask_labels = [d.label for d in deconfigged_helper._app.data_collection if 'MASK' in d.label]
+    assert len(mask_labels) == 0
+
+
+def test_spectrum3d_fits_no_flux_selected(deconfigged_helper):
+    """Test error handling when FLUX extension is deselected for FITS input."""
+    # Create a FITS HDUList with FLUX, ERR, and DQ extensions
+    flux_data = np.ones((5, 10, 10), dtype=np.float32)
+    err_data = np.ones((5, 10, 10), dtype=np.float32) * 0.1
+    dq_data = np.zeros((5, 10, 10), dtype=np.int32)
+
+    hdul = fits.HDUList([
+        fits.PrimaryHDU(),
+        fits.ImageHDU(flux_data, name='FLUX'),
+        fits.ImageHDU(err_data, name='ERR'),
+        fits.ImageHDU(dq_data, name='DQ')
+    ])
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdul
+    ldr.format = '3D Spectrum'
+
+    # Verify all extensions are available
+    assert '1: FLUX' in ldr.importer.extension.choices
+    assert '2: ERR' in ldr.importer.unc_extension.choices
+
+    # Deselect FLUX (primary) extension
+    ldr.importer.extension.selected = ''
+    # ERR should still be selected
+    assert ldr.importer.unc_extension.selected == '2: ERR'
+
+    # Verify the import button is disabled with appropriate message
+    assert ldr.importer._obj.import_disabled_msg == "No primary data extension selected. Please select a FLUX extension."  # noqa
+
+    # Attempting to import via API should raise ValueError with the disabled message
+    with pytest.raises(ValueError, match="No primary data extension selected"):
+        ldr.load()
+
+
+def test_spectrum3d_load_flux_then_err_only(deconfigged_helper, image_cube_hdu_obj):
+    """Test loading ERR extension as primary data when FLUX is deselected."""
+    # Use the existing fixture which has FLUX, ERR, and MASK extensions
+    hdul = image_cube_hdu_obj
+
+    # Load FLUX without uncertainty
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdul
+    ldr.format = '3D Spectrum'
+
+    # Verify FLUX is available but ERR is not in extension choices
+    # (due to hdu_is_valid_flux filter)
+    assert '1: FLUX' in ldr.importer.extension.choices
+    assert '2: ERR' not in ldr.importer.extension.choices
+
+    # Load FLUX without uncertainty
+    ldr.importer.extension.selected = '1: FLUX'
+    ldr.importer.unc_extension.selected = ''
+    ldr.load()
+
+    initial_count = len(deconfigged_helper._app.data_collection)
+    assert initial_count > 0
+
+    # After loading flux, deselect FLUX while unc_extension is still ''.
+    # With a flux cube already loaded, import_disabled_msg should be cleared
+    # (the "select a FLUX extension" alert is not applicable when a flux cube
+    # is already in the data collection).
+    ldr.importer.extension.selected = ''
+    # unc_extension is still '' from the setup above
+    assert ldr.importer.unc_extension.selected == ''
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Selecting ERR in unc_extension should keep import enabled
+    ldr.importer.unc_extension.selected = '2: ERR'
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Now try to load only ERR as primary data (flux extension deselected)
+    ldr.importer.mask_extension.selected = ''  # Deselect mask too
+
+    # Set a different data label to avoid overwriting
+    ldr.importer.data_label.value = '3D Spectrum ERR'
+
+    # This should now work - ERR can be loaded as primary data
+    ldr.load()
+
+    # No warning should be shown after a successful import
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Verify ERR was loaded as new data
+    assert len(deconfigged_helper._app.data_collection) > initial_count
+    # Check that ERR was loaded
+    assert '3D Spectrum ERR' in [d.label for d in deconfigged_helper._app.data_collection]
+
+
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 @pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'
