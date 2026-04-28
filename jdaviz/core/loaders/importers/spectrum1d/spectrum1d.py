@@ -60,23 +60,20 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
     def _get_supported_viewers():
         return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
-    @property
-    def is_valid(self):
-        if self._app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
+    def _check_is_valid(self):
+        accepted_configs = ('deconfigged', 'specviz', 'specviz2d', 'cubeviz')
+        if self._app.config not in accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
+            return f"spectrum1d importer is only supported in {', '.join(accepted_configs)}'."
+
         if not len(self.extension.choices):
-            return False
-        try:
-            if np.any([spectrum.flux.ndim not in (1, 2) for spectrum in self.spectra]):
-                return False
-        except Exception:
-            return False
-        try:
-            self.output
-        except Exception:
-            return False
-        return True
+            return 'No extensions available.'
+
+        if np.any([spectrum.flux.ndim not in (1, 2) for spectrum in self.spectra]):
+            return 'All spectra must have 1D or 2D flux.'
+
+        _ = self.output
+        return ''
 
     def _apply_kwargs(self, kwargs):
         applied_kwargs = super()._apply_kwargs(kwargs)

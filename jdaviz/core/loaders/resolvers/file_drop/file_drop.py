@@ -95,9 +95,8 @@ class FileDropResolver(BaseResolver):
     def user_api(self):
         return LoaderUserApi(self, expose=[])
 
-    @property
-    def is_valid(self):
-        return True
+    def _check_is_valid(self):
+        return ''
 
     @property
     def default_label(self):

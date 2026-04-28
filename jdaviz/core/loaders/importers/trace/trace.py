@@ -13,10 +13,15 @@ class TraceImporter(BaseImporterToDataCollection):
     def _get_supported_viewers():
         return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
-            return False
-        return (isinstance(self.input, Trace)
-                and 'Spectral Extraction' in self._app._jdaviz_helper.plugins)
+            return 'Trace importer is only supported in deconfigged, specviz2d.'
+
+        if not isinstance(self.input, Trace):
+            return 'Input is not a Trace.'
+
+        if 'Spectral Extraction' not in self._app._jdaviz_helper.plugins:
+            return 'Spectral Extraction plugin (for Trace) not available.'
+
+        return ''

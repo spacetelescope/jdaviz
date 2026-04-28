@@ -66,9 +66,14 @@ class FileResolver(BaseResolver):
             # consider empty if a directory or non-existent file is selected
             self.parsed_input_is_empty = True
 
-    @property
-    def is_valid(self):
-        return os.path.exists(self.filepath) and os.path.isfile(self.filepath)  # noqa
+    def _check_is_valid(self):
+        if not os.path.exists(self.filepath):
+            return 'Filepath does not exist.'
+
+        if not os.path.isfile(self.filepath):
+            return 'Filepath is not a file.'
+
+        return ''
 
     @property
     def default_label(self):

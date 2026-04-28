@@ -198,11 +198,10 @@ class RampImporter(BaseImporterToDataCollection):
             expose += ['integration']
         return ImporterUserApi(self, expose)
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'rampviz'):
             # NOTE: temporary during deconfig process
-            return False
+            return 'ramp importer is only supported in deconfigged, rampviz.'
 
         # Filter out None types from isinstance check (optional dependencies)
         valid_types = tuple(
@@ -213,16 +212,13 @@ class RampImporter(BaseImporterToDataCollection):
             if t is not None
         )
         if not isinstance(self.input, valid_types):
-            return False
+            return 'Input is not a supported ramp data type.'
 
         if isinstance(self.input, fits.HDUList) and self.input[1].header['NAXIS'] != 4:
-            return False
+            return 'FITS HDUList must have NAXIS = 4.'
 
-        try:
-            self.output
-        except Exception:
-            return False
-        return True
+        _ = self.output
+        return ''
 
     @observe('data_label_value', 'function_selected')
     def _data_label_changed(self, msg={}):

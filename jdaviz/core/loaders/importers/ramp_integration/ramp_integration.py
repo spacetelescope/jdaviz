@@ -25,13 +25,15 @@ class RampIntegrationImporter(BaseImporterToDataCollection):
     def _get_supported_viewers():
         return [{'label': 'Ramp Integration', 'reference': 'rampviz-profile-viewer'}]
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'rampviz'):
             # NOTE: temporary during deconfig process
-            return False
+            return 'ramp_integration importer is only supported in deconfigged, rampviz.'
 
-        return isinstance(self.input, (np.ndarray, NDDataArray))
+        if not isinstance(self.input, (np.ndarray, NDDataArray)):
+            return 'Input must be a numpy array or NDDataArray.'
+
+        return ''
 
     @property
     def output(self):

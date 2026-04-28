@@ -18,20 +18,14 @@ __all__ = ['ASDFParser']
 @loader_parser_registry('asdf')
 class ASDFParser(BaseParser):
 
-    @property
-    def is_valid(self):
-        if self._app.config not in ('deconfigged', 'imviz',
-                                    'specviz', 'specviz2d',
-                                    'rampviz'):
+    def _check_is_valid(self):
+        accepted_configs = ('deconfigged', 'imviz', 'specviz', 'specviz2d', 'rampviz')
+        if self._app.config not in accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
+            return f"asdf format is only supported in {', '.join(accepted_configs)}."
 
-        try:
-            self.output
-        except Exception:
-            return False
-
-        return True
+        _ = self.output
+        return ''
 
     @cached_property
     def output(self):

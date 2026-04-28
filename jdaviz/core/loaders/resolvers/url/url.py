@@ -69,18 +69,17 @@ class URLResolver(BaseResolver):
     def user_api(self):
         return LoaderUserApi(self, expose=['url', 'cache', 'local_path', 'timeout'])
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         # NOTE: if changing this, also update the object resolver to reject the same
-        valid_scheme = self.url_scheme in ['http', 'https', 'mast', 'ftp', 's3']
-        if not valid_scheme:
-            return False
+        valid_schemes = ['http', 'https', 'mast', 'ftp', 's3']
+        if self.url_scheme not in valid_schemes:
+            return f"URI scheme must be one of {', '.join(valid_schemes)}."
 
         # Check whitelist if configured
         if self.url_not_whitelisted:
-            return False
+            return 'URI is not whitelisted.'
 
-        return True
+        return ''
 
     @property
     def default_label(self):

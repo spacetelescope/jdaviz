@@ -198,49 +198,49 @@ class TestLineLists:
 
         deconfigged_helper.load(spectrum1d)
 
+        # Create a minimal mock importer object for testing _check_is_valid
+        class MockImporter:
+            def __init__(self, input_table):
+                self.input = input_table
+                self.has_default_plugin = True
+
         # Test missing linename column
         lt = QTable()
         lt['rest'] = [5007, 6563] * u.AA
-        # Create a mock importer to test validation
-        is_valid = LineListImporter.is_valid.__get__(
-            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
-        )
-        assert not is_valid
+        mock = MockImporter(lt)
+        result = LineListImporter._check_is_valid(mock)
+        assert result == "Input must have a 'linename' column."
 
         # Test missing rest column
         lt = QTable()
         lt['linename'] = ['O III', 'Halpha']
-        is_valid = LineListImporter.is_valid.__get__(
-            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
-        )
-        assert not is_valid
+        mock = MockImporter(lt)
+        result = LineListImporter._check_is_valid(mock)
+        assert result == "Input must have a 'rest' column."
 
         # Test rest column without units
         lt = QTable()
         lt['linename'] = ['O III', 'Halpha']
         lt['rest'] = [5007, 6563]  # No units
-        is_valid = LineListImporter.is_valid.__get__(
-            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
-        )
-        assert not is_valid
+        mock = MockImporter(lt)
+        result = LineListImporter._check_is_valid(mock)
+        assert result == "The 'rest' column must have astropy units."
 
         # Test negative rest values
         lt = QTable()
         lt['linename'] = ['O III', 'Halpha']
         lt['rest'] = [-5007, 6563] * u.AA
-        is_valid = LineListImporter.is_valid.__get__(
-            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
-        )
-        assert not is_valid
+        mock = MockImporter(lt)
+        result = LineListImporter._check_is_valid(mock)
+        assert result == 'All rest values must be positive.'
 
         # Test valid table
         lt = QTable()
         lt['linename'] = ['O III', 'Halpha']
         lt['rest'] = [5007, 6563] * u.AA
-        is_valid = LineListImporter.is_valid.__get__(
-            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
-        )
-        assert is_valid
+        mock = MockImporter(lt)
+        result = LineListImporter._check_is_valid(mock)
+        assert result == ''
 
     @pytest.mark.parametrize("helper_name", ['specviz_helper', 'deconfigged_helper'])
     def test_import_line_list_generic_helper(self, helper_name, spectrum1d, request):

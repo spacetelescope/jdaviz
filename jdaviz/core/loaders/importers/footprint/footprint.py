@@ -32,8 +32,7 @@ class FootprintImporter(BaseImporterToPlugin):
         self.observe(self._on_label_changed, 'footprint_label_value')
         self._on_label_changed()
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         # TODO: handle str > region in parser
 
         def _ensure_sky(region):
@@ -41,9 +40,16 @@ class FootprintImporter(BaseImporterToPlugin):
                 return np.all([_ensure_sky(reg) for reg in region.regions])
             return hasattr(region, 'to_pixel')
 
-        return (isinstance(self.input, (regions.Region, regions.Regions))
-                and _ensure_sky(self.input)
-                and self.has_default_plugin)
+        if not isinstance(self.input, (regions.Region, regions.Regions)):
+            return 'Input must be a Region or Regions object.'
+
+        if not _ensure_sky(self.input):
+            return 'Input regions must be sky regions.'
+
+        if not self.has_default_plugin:
+            return 'Footprint plugin is not available.'
+
+        return ''
 
     @property
     def user_api(self):

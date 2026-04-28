@@ -277,6 +277,68 @@ class WithCache:
                 del self.__dict__[attr]
 
 
+class IsValidWrapper:
+    """
+    A wrapper class for the result of is_valid to provide context dependent behavior.
+    This class provides a message when there is a failure due to invalid input.
+
+    Parameters
+    ----------
+    is_valid_result : str
+        Either empty (True) or set to message indicating failure (False).
+    """
+    def __init__(self, is_valid_result):
+        if isinstance(is_valid_result, str):
+            self._is_valid = not bool(is_valid_result)
+            self.message = is_valid_result
+        else:
+            raise ValueError('Validity checks (_check_is_valid) must return a string.')
+
+    def __bool__(self):
+        return self._is_valid
+
+    def __str__(self):
+        return self.message
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(_is_valid={self._is_valid}, message='{self.message}')"
+
+
+class ValidatorMixin:
+    """
+    Mixin that provides automatic wrapping of is_valid results in IsValidWrapper.
+
+    Subclasses should implement `_check_is_valid()` instead of `is_valid` property.
+    The `is_valid` property is provided automatically and wraps the result.
+    """
+
+    @property
+    def is_valid(self):
+        """
+        Returns wrapped is_valid result.
+
+        Subclasses should override _check_is_valid() to provide validation logic.
+        """
+        try:
+            is_valid = IsValidWrapper(self._check_is_valid())
+        except Exception as e:
+            is_valid = IsValidWrapper(str(e))
+
+        return is_valid
+
+    def _check_is_valid(self):
+        """
+        Override this in subclasses to return validation result.
+
+        Returns
+        -------
+        str
+            Empty string if valid, otherwise a message indicating
+            the reason for invalidity.
+        """
+        raise NotImplementedError("Subclasses must implement _check_is_valid()")  # pragma: nocover
+
+
 class CustomToolbarToggle(HubListener):
     def __init__(self, plugin, enabled_traitlet, callable, name):
         super().__init__()

@@ -9,7 +9,7 @@ from specutils import SpectralRegion
 
 from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
-from jdaviz.core.template_mixin import TableMixin, Table
+from jdaviz.core.template_mixin import TableMixin, Table, IsValidWrapper, ValidatorMixin
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -408,3 +408,48 @@ def test_export_table(deconfigged_helper, sky_coord_only_source_catalog,
     else:
         table_obj.export_table(filename, format=valid_format)
         assert os.path.isfile(filename)
+
+
+class TestValidation:
+    """
+    Tests for IsValidWrapper and ValidatorMixin from template_mixin.py.
+    """
+
+    @pytest.mark.parametrize('input_str, expected_bool', [
+        ('', True),
+        ('something went wrong', False),
+        ('bad input', False),
+    ])
+    def test_is_valid_wrapper_valid_input(self, input_str, expected_bool):
+        """
+        Test IsValidWrapper with various inputs.
+        """
+        wrapper = IsValidWrapper(input_str)
+        assert bool(wrapper) is expected_bool
+        assert wrapper.message == str(wrapper) == input_str
+        assert (repr(wrapper) ==
+                f"{type(wrapper).__name__}(_is_valid={expected_bool}, message='{input_str}')")
+
+    def test_is_valid_wrapper_invalid_input(self):
+        """
+        Test IsValidWrapper rejects non-string input.
+        """
+        match_str = re.escape('Validity checks (_check_is_valid) must return a string.')
+        with pytest.raises(ValueError, match=match_str):
+            _ = IsValidWrapper(True)
+        with pytest.raises(ValueError, match=match_str):
+            _ = IsValidWrapper((True, 'msg'))
+
+    def test_validator_mixin_exception_in_check(self):
+        """
+        Test ValidatorMixin catches exceptions from _check_is_valid.
+        """
+        class BrokenValidator(ValidatorMixin):
+            def _check_is_valid(self):
+                msg = 'unexpected error during validation'
+                raise RuntimeError(msg)
+
+        obj = BrokenValidator()
+        result = obj.is_valid
+        assert bool(result) is False
+        assert 'unexpected error during validation' in str(result)

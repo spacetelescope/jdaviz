@@ -10,7 +10,8 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         AutoTextField,
                                         ViewerSelectCreateNew,
-                                        with_spinner)
+                                        with_spinner,
+                                        ValidatorMixin)
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (standardize_metadata,
                           _wcs_only_label,
@@ -46,7 +47,7 @@ def _physical_type_from_component(comp_id, comp):
         return comp_units, None
 
 
-class BaseImporter(PluginTemplateMixin):
+class BaseImporter(PluginTemplateMixin, ValidatorMixin):
     # preference order of parsers, by registry name.  If empty, the first found match will
     # be used by default.  If not empty, the first match in the list will be used (including
     # over any parsers not included in the list).  If not empty but no valid parsers are in
@@ -82,10 +83,9 @@ class BaseImporter(PluginTemplateMixin):
 
         return applied_kwargs
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         # override by subclass
-        return False  # pragma: nocover
+        return 'Not implemented.'  # pragma: nocover
 
     @property
     def resolver(self):

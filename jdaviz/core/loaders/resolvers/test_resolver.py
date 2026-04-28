@@ -819,3 +819,38 @@ def test_load_by_s3_uri(deconfigged_helper):
 
     # no expected error:
     deconfigged_helper.load(s3_uri, format='Image')
+
+
+class TestIsValid:
+    """
+    Tests for is_valid behavior across resolvers, parsers, and importers
+    during load operations with mismatched formats.
+    """
+
+    @pytest.mark.parametrize(
+        ('data_fixture', 'wrong_format'), [
+            ('image_2d_wcs', '1D Spectrum'),
+            ('image_2d_wcs', '3D Spectrum'),
+            ('spectrum1d', 'Image'),
+            ('spectrum1d', '3D Spectrum'),
+            ('spectrum1d_cube', '1D Spectrum'),
+            ('spectrum1d_cube', 'Image'),
+        ])
+    def test_load_data_as_wrong_format(self,
+                                       data_fixture, wrong_format, deconfigged_helper, request):
+        """
+        Check loading data with a mismatched format.
+        """
+        with pytest.raises(ValueError,
+                           match=rf'(?s)No valid loaders found for input.*{wrong_format}'):
+            deconfigged_helper.load(request.getfixturevalue(data_fixture), format=wrong_format)
+
+    def test_load_nonexistent_format_file(self, deconfigged_helper, image_2d_wcs):
+        """
+        Check loading a nonexistent file and setting a nonexistent format.
+        """
+        with pytest.raises(ValueError, match='No valid loaders found for input.'):
+            deconfigged_helper.load(image_2d_wcs, format='fake format')
+
+        with pytest.raises(ValueError, match='No valid loaders found for input.'):
+            deconfigged_helper.load('this_file_does_not_exist.fits')

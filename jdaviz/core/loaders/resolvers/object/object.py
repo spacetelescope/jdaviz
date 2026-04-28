@@ -27,17 +27,21 @@ class ObjectResolver(BaseResolver):
     def user_api(self):
         return LoaderUserApi(self, expose=['object'])
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if isinstance(self.object, str):
             # reject strings that should go through file
             # or url resolvers instead
             if Path(self.object).exists():
-                return False
+                return 'Object is a file path.'
+
             if self.object.strip().startswith(('http://', 'https://',
                                                'ftp://', 's3://', 'mast://')):
-                return False
-        return not isinstance(self.object, Path)
+                return 'Object is an uri.'
+
+        if isinstance(self.object, Path):
+            return 'Path objects should be treated as files.'
+
+        return ''
 
     @property
     def object(self):
