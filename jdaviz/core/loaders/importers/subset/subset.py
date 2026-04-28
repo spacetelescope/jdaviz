@@ -41,8 +41,10 @@ class SubsetImporter(BaseImporterToPlugin):
     def _check_is_valid(self):
         if not isinstance(self.input, (Regions, SpectralRegion)):
             return 'Input must be a Regions or SpectralRegion object.'
+
         if not self.has_default_plugin:
             return 'Subset Tools plugin is not available.'
+
         return ''
 
     @property

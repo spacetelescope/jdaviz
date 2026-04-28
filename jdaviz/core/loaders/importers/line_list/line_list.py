@@ -33,27 +33,30 @@ class LineListImporter(BaseImporterToPlugin):
         self._on_label_changed()
 
     @property
-    def is_valid(self):
+    def _check_is_valid(self):
         """Validate that the input is a QTable with required columns."""
         if not isinstance(self.input, QTable):
-            return False
+            return 'Input must be a QTable.'
 
         # Check for required columns
         if "linename" not in self.input.colnames:
-            return False
+            return "Input must have a 'linename' column."
 
         if "rest" not in self.input.colnames:
-            return False
+            return "Input must have a 'rest' column."
 
         # Check that rest column has units
         if not hasattr(self.input['rest'], 'unit') or self.input['rest'].unit is None:
-            return False
+            return "The 'rest' column must have astropy units."
 
         # Check for positive rest values
         if np.any(self.input['rest'] <= 0):
-            return False
+            return 'All rest values must be positive.'
 
-        return self.has_default_plugin
+        if not self.has_default_plugin:
+            return f'{self.default_plugin} plugin not available.'
+
+        return ''
 
     @property
     def user_api(self):
