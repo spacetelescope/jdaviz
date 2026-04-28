@@ -1,5 +1,6 @@
 import os
 import re
+import threading
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
@@ -309,6 +310,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.file_table.show_rowselect = True
         self.file_table.item_key = "location"
         self.file_table.multiselect = False
+        self.file_table.server_pagination = True
         self.file_table._selected_rows_changed_callback = self.on_file_select_changed
 
         # Setup footprint selection
@@ -669,7 +671,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
                 for row in observation_table:
                     self.observation_table.add_item(row)
-                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible # noqa
+                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible  # noqa
                                                           if h not in ['s_region']]
 
                 # See 'input is empty' comment above
@@ -712,19 +714,25 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if len(self.observation_table.selected_rows) == 0:
             self._app.hub.broadcast(SnackbarMessage("No observation currently selected",
                                                     sender=self, color="warning"))
+            self.file_table._clear_table()
+            self.file_table_populated = False
         else:
             datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
-            results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
-            file_table = self._parsed_input_to_file_table(results)
-            if file_table is not None:
-                self.file_table._clear_table()
-                for row in file_table:
-                    self.file_table.add_item(row)
-                self.file_table_populated = True
-            else:
-                self._app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
-                                                        sender=self, color="error"))
-                self.file_table_populated = False
+            threading.Thread(target=self._fetch_and_populate_file_table,
+                             args=(datasets,), daemon=True).start()
+
+    def _fetch_and_populate_file_table(self, datasets):
+        results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
+        file_table = self._parsed_input_to_file_table(results)
+        if file_table is not None:
+            self.file_table.selected_rows = []
+            self.file_table.selected_indices = []
+            self.file_table.set_all_items_from_table(file_table)
+            self.file_table_populated = True
+        else:
+            self._app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
+                                                    sender=self, color="error"))
+            self.file_table_populated = False
 
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""

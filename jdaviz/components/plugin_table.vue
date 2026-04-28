@@ -53,6 +53,8 @@
         :show-select="show_rowselect"
         :single-select="!multiselect"
         v-model="selected_rows"
+        :server-items-length="server_pagination ? server_items_length : -1"
+        :options.sync="table_options"
         class="elevation-1 width-100"
       ></v-data-table>
     </v-row>
