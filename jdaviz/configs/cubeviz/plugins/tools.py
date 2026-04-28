@@ -1,6 +1,7 @@
 import time
 import os
 
+import astropy.units as u
 from glue.config import viewer_tool
 from glue.viewers.common.tool import CheckableTool
 import numpy as np
@@ -160,6 +161,7 @@ class SpectrumPerSpaxel(ProfileFromCube):
             spectrum = cube_data.get_object(statistic=None)
         # Note: change this when Spectrum.with_spectral_axis is fixed.
         x_unit = self._profile_viewer.state.x_display_unit
+        y_unit = self._profile_viewer.state.y_display_unit
         if spectrum.spectral_axis.unit != x_unit:
             new_spectral_axis = spectrum.spectral_axis.to(x_unit)
             spectrum = Spectrum(spectrum.flux, new_spectral_axis)
@@ -177,7 +179,9 @@ class SpectrumPerSpaxel(ProfileFromCube):
                 y_values = spectrum.flux[x, y, :].value
             else:
                 y_values = spectrum.flux[:, y, x].value
-            if spectrum.flux.unit.physical_type == 'surface brightness':
+            # Convert to flux if possible and necessary
+            if (spectrum.flux.unit.physical_type == 'surface brightness' and
+                    'flux' in str(u.Unit(y_unit).physical_type)):
                 y_values *= scale
             if np.all(np.isnan(y_values)):
                 self._mark.visible = False
