@@ -13,7 +13,6 @@ class TraceImporter(BaseImporterToDataCollection):
     def _get_supported_viewers():
         return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
 
-    @property
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
