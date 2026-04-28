@@ -73,7 +73,7 @@ class URLResolver(BaseResolver):
         # NOTE: if changing this, also update the object resolver to reject the same
         valid_schemes = ['http', 'https', 'mast', 'ftp', 's3']
         if self.url_scheme not in valid_schemes:
-            return False, f"URI scheme must be one of {','.join(valid_schemes)}."
+            return False, f"URI scheme must be one of {', '.join(valid_schemes)}."
 
         # Check whitelist if configured
         if self.url_not_whitelisted:
