@@ -209,7 +209,7 @@ class TestLineLists:
         lt['rest'] = [5007, 6563] * u.AA
         mock = MockImporter(lt)
         result = LineListImporter._check_is_valid(mock)
-        assert result  == "Input must have a 'linename' column."
+        assert result == "Input must have a 'linename' column."
 
         # Test missing rest column
         lt = QTable()
