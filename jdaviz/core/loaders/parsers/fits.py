@@ -18,11 +18,7 @@ class FITSParser(BaseParser):
             # NOTE: temporary during deconfig process
             return False
 
-        try:
-            _ = self.output
-        except Exception as e:
-            return False, str(e)
-
+        _ = self.output
         return True
 
     @cached_property
