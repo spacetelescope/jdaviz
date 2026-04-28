@@ -152,10 +152,7 @@ class SpectrumPerSpaxel(ProfileFromCube):
                 return
             cube_data = cube_data[0]
 
-        if 'PIXAR_SR' in cube_data.meta:
-            scale = cube_data.meta['PIXAR_SR']
-        else:
-            scale = None
+        scale = cube_data.meta.get('PIXAR_SR', 1)
 
         if isinstance(cube_data, Spectrum):
             spectrum = cube_data
@@ -180,7 +177,7 @@ class SpectrumPerSpaxel(ProfileFromCube):
                 y_values = spectrum.flux[x, y, :].value
             else:
                 y_values = spectrum.flux[:, y, x].value
-            if spectrum.flux.unit.physical_type == 'surface brightness' and scale is not None:
+            if spectrum.flux.unit.physical_type == 'surface brightness':
                 y_values *= scale
             if np.all(np.isnan(y_values)):
                 self._mark.visible = False
