@@ -19,14 +19,13 @@ __all__ = ['ASDFParser']
 class ASDFParser(BaseParser):
 
     def _check_is_valid(self):
-        if self._app.config not in ('deconfigged', 'imviz',
-                                    'specviz', 'specviz2d',
-                                    'rampviz'):
+        accepted_configs = ('deconfigged', 'imviz', 'specviz', 'specviz2d', 'rampviz')
+        if self._app.config not in accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
+            return f"asdf format is only supported in {', '.join(accepted_configs)}."
 
         _ = self.output
-        return True
+        return ''
 
     @cached_property
     def output(self):

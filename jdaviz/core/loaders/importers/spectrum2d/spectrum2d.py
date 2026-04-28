@@ -121,11 +121,13 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
-            return False
+            return 'spectrum2d importer is only supported in deconfigged, specviz2d.'
+
         if self.spectrum.flux.ndim != 2:
-            return False
+            return 'Spectrum flux must be 2D.'
+
         _ = self.output
-        return True
+        return ''
 
     @observe('extension_selected')
     def _on_extension_selected_changed(self, change={}):

@@ -527,7 +527,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
     def _check_is_valid(self):
         # override by subclass
-        return False  # pragma: nocover
+        return 'Not implemented.'  # pragma: nocover
 
     @property
     def input(self):
@@ -1169,7 +1169,7 @@ class BaseConeSearchResolver(BaseResolver):
     def _check_is_valid(self):
         # these resolvers do not accept any direct, (default_input = None), so can
         # always be considered valid
-        return True
+        return ''
 
 
 def _format_resolver_error(resolver_dict, formats=None, no_align=False):

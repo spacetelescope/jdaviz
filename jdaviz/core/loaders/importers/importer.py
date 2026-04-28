@@ -85,7 +85,7 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
 
     def _check_is_valid(self):
         # override by subclass
-        return False  # pragma: nocover
+        return 'Not implemented.'  # pragma: nocover
 
     @property
     def resolver(self):

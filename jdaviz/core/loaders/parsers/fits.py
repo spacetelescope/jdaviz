@@ -12,14 +12,14 @@ __all__ = ['FITSParser']
 class FITSParser(BaseParser):
 
     def _check_is_valid(self):
-        if self._app.config not in ('deconfigged', 'specviz2d',
-                                    'lcviz', 'imviz', 'cubeviz',
-                                    'rampviz'):
+        accepted_configs = ('deconfigged', 'specviz2d', 'lcviz', 'imviz', 'cubeviz', 'rampviz')
+        if self._app.config not in accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
+            return (f"fits format is only supported in the {', '.join(accepted_configs)} "
+                    f"configurations.")
 
         _ = self.output
-        return True
+        return ''
 
     @cached_property
     def output(self):

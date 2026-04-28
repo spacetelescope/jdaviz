@@ -32,16 +32,16 @@ class ObjectResolver(BaseResolver):
             # reject strings that should go through file
             # or url resolvers instead
             if Path(self.object).exists():
-                return False, 'object is a file path.'
+                return 'Object is a file path.'
 
             if self.object.strip().startswith(('http://', 'https://',
                                                'ftp://', 's3://', 'mast://')):
-                return False, 'object is an uri.'
+                return 'Object is an uri.'
 
         if isinstance(self.object, Path):
-            return False, 'Path objects should be treated as files.'
+            return 'Path objects should be treated as files.'
 
-        return True
+        return ''
 
     @property
     def object(self):

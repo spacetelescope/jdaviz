@@ -24,17 +24,17 @@ class AstropyTableParser(BaseParser):
 
         if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
-            return False
+            return 'astropy.Table format is only supported in deconfigged, imviz, mastviz.'
 
         if self.input is None:
-            return False
+            return 'Input must not be None.'
 
         # first, check if this is a Table or QTable object
         if isinstance(self.input, (Table, QTable)):
             if len(self.input) == 0:
-                return False
+                return 'Table is empty.'
             else:
-                return True
+                return ''
 
         # fits files can be successfully opened with table.read
         # try to reject fits files from being validated as catalogs
@@ -42,23 +42,29 @@ class AstropyTableParser(BaseParser):
         # it as a catalog type if it opens successfully
         # eventually we may want to accept BinTableHDU/TableHDU
         # inside fits so this logic should be improved then
-        if isinstance(self.input, (fits.ImageHDU, fits.HDUList, fits.PrimaryHDU, fits.CompImageHDU)):  # noqa
-            return False
+        if isinstance(self.input,
+                      (fits.ImageHDU, fits.HDUList, fits.PrimaryHDU, fits.CompImageHDU)):
+            return 'Input is a FITS HDU, not a table.'
+
         elif isinstance(self.input, np.ndarray):
             # arrays can be loaded as tables, skip these so images/spectra
             # aren't mis-identified as catalogs
-            return False
+            return 'Input is a numpy array, not a table.'
+
         try:
             f = fits.open(self.input)
             f.close()
-            return False
+            return 'Input is a FITS file, not a table.'
         except (OSError, FileNotFoundError, VerifyError):  # noqa
             # if we can't open as fits, continue checking if catalog
             pass
 
         # next, see if this is a catalog written to a file
         table = self.output
-        return len(table) > 0
+        if len(table) > 0:
+            return ''
+
+        return 'Table is empty.'
 
     @property
     def is_text_file(self, blocksize=4096):
