@@ -26,6 +26,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.roi import CircularAnnulusROI
+from glue.core.subset import RangeSubsetState
 from glue_jupyter import jglue
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.bqplot.histogram import BqplotHistogramView
@@ -2217,6 +2218,7 @@ class LayerSelect(SelectPluginComponent):
         # TODO: all of these add_filter commands should be refactored to pass filters directly
         # to the init and defined in _is_valid_item()
         self.add_filter('not_spatial_subset_in_profile_viewer')
+        self.add_filter('not_spectral_subset_in_image_viewer')
 
         self.filter_is_root = is_root
         self.has_children = has_children
@@ -2282,6 +2284,18 @@ class LayerSelect(SelectPluginComponent):
             # at this point, we are in cubeviz and ALL selected viewers are profile viewers,
             # so we want to exclude spatial subsets
             return get_subset_type(lyr) != 'spatial'
+
+        def not_spectral_subset_in_image_viewer(lyr):
+            if self.plugin.config not in ('deconfigged'):
+                return True
+            if np.any([viewer.__class__.__name__ not in ('CubevizImageView', 'ImvizImageView')
+                       for viewer in self.viewer_objs]):
+                return True
+
+            if hasattr(lyr, 'subset_state'):
+                return not isinstance(lyr.subset_state, RangeSubsetState)
+
+            return True
 
         def is_trace(lyr):
             return 'Trace' in getattr(getattr(lyr, 'data', None), 'meta', [])
