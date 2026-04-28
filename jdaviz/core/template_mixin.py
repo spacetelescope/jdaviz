@@ -290,7 +290,7 @@ class IsValidWrapper:
     def __init__(self, is_valid_result):
         if isinstance(is_valid_result, str):
             self._is_valid = not bool(is_valid_result)
-            self._message = is_valid_result
+            self.message = is_valid_result
         else:
             raise ValueError('Validity checks (_check_is_valid) must return a string.')
 
@@ -298,7 +298,10 @@ class IsValidWrapper:
         return self._is_valid
 
     def __str__(self):
-        return self._message
+        return self.message
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(_is_valid={self._is_valid}, message="{self.message}")'
 
 
 class ValidatorMixin:

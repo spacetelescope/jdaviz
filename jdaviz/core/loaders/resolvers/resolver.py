@@ -114,8 +114,8 @@ class FormatSelect(SelectPluginComponent):
                         this_parser._cleanup()
                         continue
                 else:
-                    self._invalid_importers[parser_name] = str(this_parser.is_valid)
-                    self._invalid_importers.setdefault(parser_name, str(this_parser.is_valid))
+                    self._invalid_importers[parser_name] = this_parser.is_valid.message
+                    self._invalid_importers.setdefault(parser_name, this_parser.is_valid.message)
                     this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
@@ -174,7 +174,7 @@ class FormatSelect(SelectPluginComponent):
                             # target filters
                             self._importers[importer_name] = this_importer
                     else:
-                        self._invalid_importers[label] = str(this_importer.is_valid)
+                        self._invalid_importers[label] = this_importer.is_valid.message
 
         # Sort to move Catalog to the end of the list
         catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
@@ -601,7 +601,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # calls self.parse_input() on the subclass and caches
             parsed_input = self.parsed_input
             if not self.is_valid:
-                raise ValueError(str(self.is_valid))
+                raise ValueError(self.is_valid.message)
         except Exception as e:  # nosec
             self.parsed_input_is_empty = False
             self.parsed_input_is_query = False
@@ -1306,8 +1306,8 @@ def find_matching_resolver(app,
             continue
 
         if not this_resolver.is_valid:
-            invalid_resolvers[resolver_name] = str(this_resolver.is_valid)
-            invalid_resolvers.setdefault(resolver_name, str(this_resolver.is_valid))
+            invalid_resolvers[resolver_name] = this_resolver.is_valid.message
+            invalid_resolvers.setdefault(resolver_name, this_resolver.is_valid.message)
             continue
 
         if target is not None:
