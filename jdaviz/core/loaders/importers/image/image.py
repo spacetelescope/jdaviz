@@ -35,6 +35,7 @@ else:
     HAS_ROMAN_DATAMODELS = True
 
 MAX_N_SLICE = 16
+roman_extensions = ['data', 'err', 'dq', 'var_poisson']
 
 __all__ = ['ImageImporter', '_spatial_assign_component_type']
 
@@ -113,12 +114,18 @@ class ImageImporter(BaseImporterToDataCollection):
         if isinstance(input, fits.hdu.image.ImageHDU):
             input = fits.HDUList([input])
 
-        input_is_roman = (HAS_ROMAN_DATAMODELS and
-                          isinstance(input, (rdd.ImageModel, rdd.DataModel)))
+        input_is_roman_imagemodel = (
+            HAS_ROMAN_DATAMODELS and isinstance(input, rdd.ImageModel)
+        )
+        input_is_roman_asdf = isinstance(input, asdf.AsdfFile) and 'roman' in input
+
         input_is_3d_array = isinstance(input, np.ndarray) and input.ndim == 3
-        self.input_has_extensions = (isinstance(input, fits.HDUList) or
-                                     input_is_roman or
-                                     input_is_3d_array)
+        self.input_has_extensions = any((
+            isinstance(input, fits.HDUList),
+            input_is_roman_imagemodel,
+            input_is_roman_asdf,
+            input_is_3d_array
+        ))
         if self.input_has_extensions:
             if isinstance(input, fits.HDUList):
                 filters = [_validate_fits_image2d]
@@ -130,9 +137,19 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'data_hash': create_data_hash(hdu),
                                 'obj': hdu}
                                for index, hdu in enumerate(input)]
-            elif input_is_roman:
-                filters = [_validate_roman_ext]
-                ext_options = [{'label': f"{index}: {key}",
+            elif input_is_roman_asdf:
+                filters = [_validate_asdf_image_ext]
+                ext_options = [{'label': key,
+                                'name': key,
+                                'ver': None,
+                                'name_ver': key,
+                                'index': index,
+                                'data_hash': create_data_hash(value),
+                                'obj': value}
+                               for index, (key, value) in enumerate(input['roman'].items())]
+            elif input_is_roman_imagemodel:
+                filters = [_validate_roman_imagemodel_ext]
+                ext_options = [{'label': key,
                                 'name': key,
                                 'ver': None,
                                 'name_ver': key,
@@ -329,8 +346,9 @@ class ImageImporter(BaseImporterToDataCollection):
             else:
                 raise ValueError(f'Cannot load as image with ndim={input.ndim}')
         # asdf
-        elif (isinstance(input, asdf.AsdfFile)):
-            data = [_roman_asdf_2d_to_glue_data(input, ext='data')]
+        elif isinstance(input, asdf.AsdfFile):
+            data = [_roman_asdf_2d_to_glue_data(input, ext=ext)
+                    for ext in self.extension.selected_name]
         # roman data models
         elif HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)):
             data = [_roman_asdf_2d_to_glue_data(input, ext=ext)
@@ -439,9 +457,14 @@ def _validate_fits_image2d(item):
             and not wcs_is_spectral(getattr(hdu, 'coords', None)))
 
 
-def _validate_roman_ext(item):
-    name = item.get('name')
-    return name in ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
+def _validate_asdf_image_ext(item):
+    value = item.get('obj')
+    return getattr(value, 'ndim', None) == 2
+
+
+def _validate_roman_imagemodel_ext(item):
+    value = item.get('obj')
+    return getattr(value, 'ndim', None) == 2
 
 
 def _hdu2data(hdu, hdulist, include_wcs=True):

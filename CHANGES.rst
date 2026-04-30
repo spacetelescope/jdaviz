@@ -37,6 +37,8 @@ Bug Fixes
 
 - Fix spectral subsets appearing in image viewer data menu. [#4149]
 
+- Fix Data Quality plugin support for Roman ASDF images. [#4089]
+
 Mosviz
 ^^^^^^
 
