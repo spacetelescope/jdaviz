@@ -2,12 +2,12 @@
 import os
 import numpy as np
 from PIL import Image
-
+from datetime import datetime
 from astropy.wcs.utils import fit_wcs_from_points
 from pyavm import AVM
 
 
-def png_to_jpg_avm(viz, viewer, png_filename):
+def png_embed_avm(viz, viewer, png_filename, format='jpg'):
     """Convert a PNG screenshot to JPG with Astronomy Visualization Metadata (AVM).
 
     Parameters
@@ -18,8 +18,11 @@ def png_to_jpg_avm(viz, viewer, png_filename):
         Glue viewer exported in the PNG screenshot screenshot
     png_filename : path-like, str
         Path to PNG screenshot
+    format : str {'jpg', 'png'}
+        Write out the image with embedded AVM as type ``format``
     """
     # open temporary PNG
+    print(f"{png_filename=}")
     img = Image.open(png_filename)
     png_shape = img.size
 
@@ -58,19 +61,26 @@ def png_to_jpg_avm(viz, viewer, png_filename):
     png_avm.Creator = 'jdaviz'
     png_avm.Rights = ''
     png_avm.Credit = ''
-    png_avm.ID = ''
-    png_avm.MetadataDate = ''
+    # png_avm.ID = viewer.reference
+    # png_avm.MetadataDate = datetime.now().strftime("%Y-%m-%dT%H:%M")
 
-    jpg_path = str(png_filename).replace('.png', '.jpg')
+    dest_path = str(png_filename).replace('.png', f'.{format}')
+    dest_path_tmp = str(png_filename).replace('.png', f'_tmp.{format}')
 
-    try:
-        jpg_path_tmp = str(png_filename).replace('.png', '_tmp.jpg')
+    # try:
+    if True:
+        # write out temporary file
 
-        # write out temporary JPG (drop alpha channel)
-        img.convert('RGB').save(jpg_path_tmp)
+        if format == 'jpg':
+            # drop alpha channel for JPG files
+            img.convert('RGB').save(dest_path_tmp)
+        elif format == 'png':
+            # PNG supports alpha channel, no conversion necessary
+            img.save(dest_path_tmp)
 
         # embed AVM into final JPG
-        png_avm.embed(jpg_path_tmp, jpg_path, verify=True)
-    finally:
+        png_avm.embed(dest_path_tmp, dest_path, verify=True)
+
+    # finally:
         # ensure tmp file gets removed
-        os.remove(jpg_path_tmp)
+        os.remove(dest_path_tmp)
