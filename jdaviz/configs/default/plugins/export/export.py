@@ -11,7 +11,7 @@ from regions import CircleSkyRegion, EllipseSkyRegion
 from specutils import Spectrum
 from traitlets import Bool, List, Unicode, observe
 
-from jdaviz.configs.default.plugins.export.avm import png_to_jpg_avm
+from jdaviz.configs.default.plugins.export.avm import png_embed_avm
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.marks import ShadowMixin
 from jdaviz.core.registries import tray_registry
@@ -447,7 +447,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     @with_spinner()
     def export(self, filename=None, show_dialog=None, overwrite=False,
-               raise_error_for_overwrite=True, embed_avm=False):
+               raise_error_for_overwrite=True, embed_avm=True):
         """
         Export selected item(s)
 
@@ -514,15 +514,24 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                 width=f"{self.image_width}px" if self.image_custom_size else None,
                                 height=f"{self.image_height}px" if self.image_custom_size else None)
 
-            elif filetype == "jpg":
+            elif embed_avm and filetype in ('jpg', 'png'):
                 # export screenshot to JPG with AVM by:
                 #   (1) export a temporary PNG
                 #   (2) convert temporary PNG to a temporary JPG with PIL
                 #   (3) use pyAVM to embed AVM into a final copy of the temporary JPG
 
                 try:
-                    # export PNG
-                    tmp_filename = Path(str(Path(filename)).replace('.jpg', '.png'))
+                    # export as PNG, even if final filetype will be JPG
+                    # note: following `replace` assumes lower case extensions
+                    tmp_filename = Path(
+                        str(Path(filename)).replace('.jpg', '.png')
+                    )
+                    print(tmp_filename)
+
+                    # wait for PNG to be available before continuing
+                    while viewer.figure._upload_png_callback is not None:
+                        time.sleep(0.05)
+
                     self.save_figure(
                         viewer, tmp_filename, 'png', show_dialog=show_dialog,
                         width=f"{self.image_width}px" if self.image_custom_size else None,
@@ -531,16 +540,20 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
                     # wait for PNG to be available before continuing
                     while viewer.figure._upload_png_callback is not None:
-                        time.sleep(0.1)
+                        time.sleep(0.05)
 
                     # now convert to JPG with AVM
-                    png_to_jpg_avm(self.app._jdaviz_helper, viewer, tmp_filename)
+                    png_embed_avm(self.app._jdaviz_helper, viewer, tmp_filename, format=filetype)
+
+                except Exception as e:
+                    print(f"Could not complete {filetype} export, raised: {e}")
 
                 finally:
                     # remove temporary png file, even if there are exceptions
                     os.remove(tmp_filename)
 
             else:
+
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
                                  width=f"{self.image_width}px" if self.image_custom_size else None,
                                  height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa
@@ -671,6 +684,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f.write(data)
 
             except Exception as e:
+                print(e)
                 self.hub.broadcast(SnackbarMessage(
                     f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
                     sender=self, color="error", traceback=e))
@@ -734,7 +748,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 threading.Thread(target=wait_in_other_thread).start()
             _widget_after_first_display(cloned_viewer.figure, on_figure_displayed)
             _show_hidden(cloned_viewer.figure, width, height)
-        elif filetype == 'png':
+        elif filetype in ('png', 'jpg'):
             # NOTE: get_png already check if _upload_png_callback is not None
             get_png(viewer.figure)
 
