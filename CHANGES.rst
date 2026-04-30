@@ -37,6 +37,8 @@ Bug Fixes
 
 - Fix spectral subsets appearing in image viewer data menu. [#4149]
 
+- Fix Data Quality plugin support for Roman ASDF images. [#4089]
+
 Mosviz
 ^^^^^^
 
@@ -205,8 +207,6 @@ Bug Fixes
 - Fixed using `viewer.show()` with height argument not using the full height inline in the notebook. [#4134]
 
 - Fixed bug where file drop resolver failed to process messages correctly when ipykernel>=7. [#4080]
-
-- Fix Data Quality plugin support for Roman ASDF images. [#4089]
 
 Cubeviz
 ^^^^^^^
