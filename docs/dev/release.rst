@@ -289,20 +289,8 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
      Bug Fixes
      ---------
 
-     Cubeviz
-     ^^^^^^^
-
-     Imviz
-     ^^^^^
-
      Mosviz
      ^^^^^^
-
-     Specviz
-     ^^^^^^^
-
-     Specviz2d
-     ^^^^^^^^^
 
     Update the ``CITATION.cff`` file's ``date-released``, ``version`` and
     ``authors`` (if any new) sections to match the release branch.
