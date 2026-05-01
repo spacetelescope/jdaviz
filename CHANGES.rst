@@ -22,7 +22,17 @@ Mosviz
 Other Changes and Additions
 ---------------------------
 
-5.0.1 (unreleased)
+5.0.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Mosviz
+^^^^^^
+
+
+5.0.1 (2026-05-01)
 ==================
 
 Bug Fixes
@@ -42,8 +52,6 @@ Bug Fixes
 - Multiply values from spectrum-at-spaxel tool by PIXAR_SR when available to match
   units of other extracted fluxes. [#4156]
 
-Mosviz
-^^^^^^
 
 5.0 (2026-04-15)
 ================
