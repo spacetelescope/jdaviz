@@ -5,6 +5,9 @@ authors:
 - family-names: "Averbukh"
   given-names: "Jesse"
   orcid: "https://orcid.org/0000-0002-0041-0363"
+- family-names: "Betti"
+  given-names: "Sarah"
+  orcid: "https://orcid.org/0000-0002-8667-6428
 - family-names: "Bradley"
   given-names: "Larry"
   orcid: "https://orcid.org/0000-0002-7908-9284"
@@ -80,7 +83,7 @@ authors:
 title: "Jdaviz"
 version: 5.0.1
 doi: https://doi.org/10.5281/zenodo.5513927
-date-released: 2025-05-01
+date-released: 2026-05-01
 url: "https://github.com/spacetelescope/jdaviz"
 
 # see a full list of contributors here: https://github.com/spacetelescope/jdaviz/graphs/contributors

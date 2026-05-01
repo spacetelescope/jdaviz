@@ -18,8 +18,6 @@ Bug Fixes
 - Multiply values from spectrum-at-spaxel tool by PIXAR_SR when available to match
   units of other extracted fluxes. [#4156]
 
-Mosviz
-^^^^^^
 
 5.0 (2026-04-15)
 ================
