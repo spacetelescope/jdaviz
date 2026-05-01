@@ -115,9 +115,18 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube,
                                          'World 13h39m59.9192s +27d00m00.7200s (ICRS)',
                                          '204.9996633015 27.0001999996 (deg)')
 
+    flux_viewer.toolbar.active_tool.on_mouse_move(
+        {'event': 'mousemove', 'domain': {'x': 2, 'y': 1}})
+    if cube_type == 'Surface Brightness':
+        # test cube has PIXAR_ST = 10
+        assert_allclose(flux_viewer.toolbar.active_tool._mark.y, [60, 140])
+    else:
+        assert_allclose(flux_viewer.toolbar.active_tool._mark.y, [6, 14])
+
     # Click on spaxel location
     x = 1
     y = 1
+
     flux_viewer.toolbar.active_tool.on_mouse_event(
         {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
     assert len(flux_viewer.native_marks) == 3
