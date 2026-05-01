@@ -8,6 +8,27 @@ Mosviz
 ^^^^^^
 
 
+5.0.1 (2026-05-01)
+==================
+
+Bug Fixes
+---------
+
+- Fix 'add to flux viewer' toggle in DQ cube loader to fix issue where the DQ
+  cube was being added to the flux viewer even when toggled off. [#4145]
+
+- Workaround patch to ipywidgets.Widget.get_state to avoid set size changed
+  during iteration error that occurs in many scenarios (linking, batch loading data,
+  etc.). [#4150]
+
+- Fix spectral subsets appearing in image viewer data menu. [#4149]
+
+- Fix Data Quality plugin support for Roman ASDF images. [#4089]
+
+- Multiply values from spectrum-at-spaxel tool by PIXAR_SR when available to match
+  units of other extracted fluxes. [#4156]
+
+
 5.0 (2026-04-15)
 ================
 
