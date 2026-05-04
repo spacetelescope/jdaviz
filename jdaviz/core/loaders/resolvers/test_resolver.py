@@ -841,6 +841,8 @@ class TestIsValid:
         """
         Check loading data with a mismatched format.
         """
+        # Performing the check like this, we ensure the wrong format is somewhere in the
+        # error string
         with pytest.raises(ValueError,
                            match=rf'(?s)No valid loaders found for input.*{wrong_format}'):
             deconfigged_helper.load(request.getfixturevalue(data_fixture), format=wrong_format)
