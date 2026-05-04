@@ -64,7 +64,6 @@ Bug Fixes
 
 - Fix passing strings to selected traitlet without expanding into characters. [#4157]
 
-
 5.0 (2026-04-15)
 ================
 
