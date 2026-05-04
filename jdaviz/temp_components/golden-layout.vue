@@ -32,8 +32,10 @@ let lastEmittedStateHash = ''
 let lastLoadedExternalStateHash = ''
 let sizeObserver = null
 let resizeFrame = null
+let dragCleanupFrame = null
 
 const GL_COMPONENT_TYPE = '__jdz_gl_component__'
+const STALE_DRAG_PROXY_SELECTOR = 'body > .lm_dragProxy'
 
 function getGlobalLayoutRegistry() {
   if (typeof window === 'undefined') {
@@ -215,6 +217,24 @@ function scheduleRootResize() {
     if (layoutInstance.value) {
       layoutInstance.value.updateRootSize(true)
     }
+  })
+}
+
+function removeStaleDragProxies() {
+  // GoldenLayout appends drag proxies to document.body, outside Vue's lifecycle.
+  for (const element of document.querySelectorAll(STALE_DRAG_PROXY_SELECTOR)) {
+    element.remove()
+  }
+}
+
+function scheduleDragProxyCleanup() {
+  if (dragCleanupFrame !== null) {
+    cancelAnimationFrame(dragCleanupFrame)
+  }
+
+  dragCleanupFrame = requestAnimationFrame(() => {
+    dragCleanupFrame = null
+    removeStaleDragProxies()
   })
 }
 
@@ -649,6 +669,7 @@ function loadLayout(layoutConfig) {
     return
   }
 
+  removeStaleDragProxies()
   ensureLayout()
   if (!layoutInstance.value) {
     return
@@ -732,6 +753,8 @@ function queueTemplateReload() {
 }
 
 onMounted(() => {
+  removeStaleDragProxies()
+
   if (typeof ResizeObserver !== 'undefined' && hostElement.value) {
     sizeObserver = new ResizeObserver(() => {
       scheduleRootResize()
@@ -740,6 +763,14 @@ onMounted(() => {
   }
 
   queueTemplateReload()
+
+  window.addEventListener('mouseup', scheduleDragProxyCleanup)
+  window.addEventListener('pointerup', scheduleDragProxyCleanup)
+  window.addEventListener('pointercancel', scheduleDragProxyCleanup)
+  window.addEventListener('touchend', scheduleDragProxyCleanup)
+  window.addEventListener('touchcancel', scheduleDragProxyCleanup)
+  window.addEventListener('dragend', scheduleDragProxyCleanup)
+  window.addEventListener('blur', scheduleDragProxyCleanup)
 })
 
 watch(
@@ -779,6 +810,19 @@ onBeforeUnmount(() => {
     resizeFrame = null
   }
 
+  if (dragCleanupFrame !== null) {
+    cancelAnimationFrame(dragCleanupFrame)
+    dragCleanupFrame = null
+  }
+
+  window.removeEventListener('mouseup', scheduleDragProxyCleanup)
+  window.removeEventListener('pointerup', scheduleDragProxyCleanup)
+  window.removeEventListener('pointercancel', scheduleDragProxyCleanup)
+  window.removeEventListener('touchend', scheduleDragProxyCleanup)
+  window.removeEventListener('touchcancel', scheduleDragProxyCleanup)
+  window.removeEventListener('dragend', scheduleDragProxyCleanup)
+  window.removeEventListener('blur', scheduleDragProxyCleanup)
+
   if (sizeObserver) {
     sizeObserver.disconnect()
     sizeObserver = null
@@ -799,6 +843,8 @@ onBeforeUnmount(() => {
     layoutInstance.value.destroy()
     layoutInstance.value = null
   }
+
+  removeStaleDragProxies()
 })
 </script>
 
