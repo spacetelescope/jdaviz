@@ -52,6 +52,7 @@ Bug Fixes
 - Multiply values from spectrum-at-spaxel tool by PIXAR_SR when available to match
   units of other extracted fluxes. [#4156]
 
+- Fix passing strings to selected traitlet without expanding into characters. [#4157]
 
 5.0 (2026-04-15)
 ================
