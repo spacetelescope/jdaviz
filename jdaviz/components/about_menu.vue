@@ -1,20 +1,19 @@
 <template>
   <v-menu
     v-model="popup_open"
-    offset-y
+    location="bottom"
     absolute
     style="max-width: 600px"
     :close-on-content-click="false"
   >
-    <template v-slot:activator="{ on, attrs }">
+    <template v-slot:activator="{ props }">
       <j-tooltip tooltipcontent="Show app information and docs">
         <v-btn
-          text
+          variant="text"
           id="about-scroll-target"
-          v-bind="attrs"
-          v-on="on"
+          v-bind="props"
+
           color="white"
-          @click="() => {popup_open = !popup_open}"
           style="font-family: monospace; font-size: 10pt; text-transform: lowercase; margin-left: 4px; margin-right: 6px; padding: 2px">
         v{{ jdaviz_version }}
         </v-btn>
@@ -23,13 +22,13 @@
 
     <v-card id="about-scroll-content">
       <span v-if="api_hints_enabled" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj }}.plugins['About']</span>
-      <jupyter-widget :widget="about_widget"></jupyter-widget>
+      <jupyter-widget v-if="about_widget" :widget="about_widget" :key="about_widget"></jupyter-widget>
     </v-card>
   </v-menu>
 </template>
 
 <script>
-  module.exports = {
+  export default {
     props: ['jdaviz_version', 'api_hints_obj', 'api_hints_enabled', 'about_widget', 'force_open_about'],
     data: function () {
       return {
@@ -49,7 +48,7 @@
       }
       this.jupyterLabCell = this.$el.closest(".jp-Notebook-cell");
     },
-    beforeDestroy() {
+    beforeUnmount() {
       let element = document.getElementById('about-scroll-target')
       if (element === null) {
         return

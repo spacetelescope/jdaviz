@@ -2,7 +2,7 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Data Quality"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#data-quality'"
     @plugin-ping="plugin_ping($event)"
@@ -10,7 +10,7 @@
 
     <plugin-layer-select
       :items="science_layer_items"
-      :selected.sync="science_layer_selected"
+      v-model:selected="science_layer_selected"
       :multiselect="science_layer_multiselect"
       :icons="icons"
       :show_if_single_entry="true"
@@ -22,7 +22,7 @@
 
     <plugin-layer-select
       :items="dq_layer_items"
-      :selected.sync="dq_layer_selected"
+      v-model:selected="dq_layer_selected"
       :multiselect="dq_layer_multiselect"
       label="Data quality"
       api_hint="plg.dq_layer ="
@@ -34,11 +34,11 @@
 
     <plugin-select
       :items="flag_map_items"
-      :selected.sync="flag_map_selected"
+      v-model:selected="flag_map_selected"
       label="Flag definitions"
     />
 
-    <v-row class="row-no-padding">
+    <v-row class="row-no-padding vuetify2">
       <v-col>
         <plugin-slider
           label="Data quality relative opacity"
@@ -48,25 +48,25 @@
           min="0"
           max="1"
           step="0.01"
-          :value.sync="dq_layer_opacity"
+          v-model:value="dq_layer_opacity"
         />
       </v-col>
     </v-row>
 
     <j-plugin-section-header>Quality Flags</j-plugin-section-header>
-    <v-row class="row-no-padding">
+    <v-row class="row-no-padding vuetify2">
       <v-col cols=6>
         <j-tooltip tipid='plugin-dq-show-all'>
           <v-btn
-            tile
+            rounded="0"
             :elevation=0
             x-small
-            dense
+            density="compact"
             color="turquoise"
-            dark
+            theme="dark"
             style="padding-left: 8px; padding-right: 6px;"
             @click="show_all_flags">
-            <v-icon left small dense style="margin-right: 2px">mdi-eye</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye</v-icon>
             Show All
           </v-btn>
         </j-tooltip>
@@ -74,15 +74,15 @@
       <v-col cols=6 style="text-align: right">
         <j-tooltip tipid='plugin-dq-hide-all'>
           <v-btn
-            tile
+            rounded="0"
             :elevation=0
             x-small
-            dense
+            density="compact"
             color="turquoise"
-            dark
+            theme="dark"
             style="padding-left: 8px; padding-right: 6px;"
             @click="hide_all_flags">
-            <v-icon left small dense style="margin-right: 2px">mdi-eye-off</v-icon>
+ <v-icon start small style="margin-right: 2px">mdi-eye-off</v-icon>
             Hide All
           </v-btn>
         </j-tooltip>
@@ -90,46 +90,46 @@
     </v-row>
 
     <v-col>
-      <v-row>
+      <v-row class="vuetify2">
       <v-select
         :menu-props="{ left: true }"
         attach
         multiple
         :items="Object.keys(flag_map_definitions_selected).map(Number)"
         item-value="item => item"
-        item-text="item"
+        item-title="item"
         v-model="flags_filter"
         label="Filter by bits"
         hint="Any flags containing these decomposed bits will be visualized."
         persistent-hint
       >
-        <template v-slot:item="{active, item, attrs, on}">
-          <v-list-item v-on="on" v-bind="attrs" #default="{active}">
+        <template v-slot:item="{ active, item, props }">
+          <v-list-item v-bind="props" #default="{active}">
             <v-list-item-action>
-            <v-checkbox :input-value="active"></v-checkbox>
+            <v-checkbox :model-value="active"></v-checkbox>
             </v-list-item-action>
-            <v-list-item-content>
-              <v-list-item-title v-if="flag_map_definitions_selected[item].name.length > 0">
-                {{item + ': ' + flag_map_definitions_selected[item].name}}
+            <div class="v-list-item-content">
+              <v-list-item-title v-if="flag_map_definitions_selected[flagItemKey(item)].name.length > 0">
+                {{ flagItemKey(item) + ': ' + flag_map_definitions_selected[flagItemKey(item)].name }}
               </v-list-item-title>
-              <v-list-item-title v-else-if="flag_map_definitions_selected[item].description.length > 25">
-                {{item + ': ' + flag_map_definitions_selected[item].description.slice(0, 25) + "..."}}
+              <v-list-item-title v-else-if="flag_map_definitions_selected[flagItemKey(item)].description.length > 25">
+                {{ flagItemKey(item) + ': ' + flag_map_definitions_selected[flagItemKey(item)].description.slice(0, 25) + "..." }}
               </v-list-item-title>
               <v-list-item-title v-else>
-                {{item + ': ' + flag_map_definitions_selected[item].description}}
+                {{ flagItemKey(item) + ': ' + flag_map_definitions_selected[flagItemKey(item)].description }}
               </v-list-item-title>
-            </v-list-item-content>
+            </div>
           </v-list-item>
         </template>
       </v-select>
       <v-col align="right">
-        <v-btn text @click="clear_flags_filter" color="accent">
+        <v-btn variant="text" @click="clear_flags_filter" color="accent">
           Clear Filter
         </v-btn>
       </v-col>
       </v-row>
     </v-col>
-    <v-row >
+    <v-row class="vuetify2" >
       <v-col cols=3 align="left">
         Color
       </v-col>
@@ -138,12 +138,12 @@
       </v-col>
     </v-row>
 
-    <v-row>
+    <j-flex-row>
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="(item, index) in decoded_flags" key=":item">
           <div v-if="flagVisible(item, item.decomposed, flags_filter)">
-            <v-expansion-panel-header v-slot="{ open }">
-              <v-row no-gutters align="center">
+            <v-expansion-panel-title v-slot="{ open }">
+              <v-row class="vuetify2" no-gutters align="center">
                 <v-col cols=1>
                 </v-col>
                   <v-col cols=2>
@@ -158,32 +158,32 @@
                   <div><strong>{{item.flag}}</strong> ({{Object.keys(item.decomposed).join(', ')}})</div>
                 </v-col>
             </v-row>
-            </v-expansion-panel-header>
-            <v-expansion-panel-content>
-              <v-row no-gutters align="center">
+            </v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <v-row class="vuetify2" no-gutters align="center">
                 <v-col cols=2 align="left">
                   <v-btn :color="item.show ? 'accent' : 'default'" icon @click="toggleVisibility(index)">
-                    <v-icon>{{item.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+ <v-icon>{{item.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
                   </v-btn>
                 </v-col>
               <v-col cols=8 align="left">
-                <v-row v-for="(item, key, index) in item.decomposed">
+                <j-flex-row v-for="(item, key, index) in item.decomposed">
                   <span v-if="item.name !== null && item.name.length > 0"><strong>{{item.name}}</strong> ({{key}}): {{item.description}}</span>
                   <span v-else><strong>{{key}}</strong>: {{item.description}}</span>
-                </v-row>
+                </j-flex-row>
               </v-col>
               </v-row>
-            </v-expansion-panel-content>
+            </v-expansion-panel-text>
           </div>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </j-flex-row>
   </j-tray-plugin>
 </template>
 
 
 <script>
-  module.exports = {
+  export default {
   created() {
     this.throttledSetColor = _.throttle(
       (index, color) => {
@@ -192,6 +192,12 @@
       100);
   },
   methods: {
+    flagItemKey(item) {
+      if (item && typeof item === 'object' && Object.prototype.hasOwnProperty.call(item, 'raw')) {
+        return item.raw;
+      }
+      return item;
+    },
     toggleVisibility(index) {
       this.update_visibility(index)
     },

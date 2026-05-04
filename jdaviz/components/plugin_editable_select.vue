@@ -1,28 +1,28 @@
 <template>
   <div>
-  <v-row>
+  <j-flex-row>
     <v-select
       v-if="mode=='select'"
       attach
       :menu-props="{ left: true }"
       :items="items"
-      v-model="selected"
-      @change="$emit('update:selected', $event)"
+      :model-value="selected"
+      @update:modelValue="$emit('update:selected', $event)"
       :label="api_hints_enabled && api_hint ? api_hint : label"
       :class="api_hints_enabled && api_hint ? 'api-hint' : null"
       :hint="hint"
       :rules="rules ? rules : []"
-      item-text="label"
+      item-title="label"
       item-value="label"
       persistent-hint
     >
-      <template slot="selection" slot-scope="data">
+      <template #selection="{ item }">
         <div class="single-line" style="width: 100%">
           <span :class="api_hints_enabled ? 'api-hint' : null">
             {{ api_hints_enabled ?
-              '\'' + data.item.label + '\''
+              '\'' + item.raw.label + '\''
               :
-              data.item.label
+              item.raw.label
             }}
           </span>
         </div>
@@ -62,8 +62,9 @@
     </v-alert>
     <v-text-field
       v-else-if="['rename', 'add'].indexOf(mode) !== -1"
-      v-model="edit_value"
-      @keyup="if ($event.key == 'Enter') {changeAccept()} else if ($event.key == 'Escape') {changeCancel()} else {$emit('update:edit_value', $event.target.value)}"
+      :model-value="edit_value"
+      @update:modelValue="$emit('update:edit_value', $event)"
+      @keyup="if ($event.key == 'Enter') {changeAccept()} else if ($event.key == 'Escape') {changeCancel()}"
       :label="textFieldLabel"
       :class="textFieldClass"
       :hint="mode == 'rename' ? 'Rename '+label.toLowerCase() : 'Add '+label.toLowerCase()"
@@ -86,12 +87,12 @@
         Applying changes...
       </v-alert>
     </span>
-  </v-row>
+  </j-flex-row>
  </div>
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['mode', 'edit_value', 'items', 'selected', 'multiselect', 'label', 'hint', 'rules',
           'api_hint', 'api_hint_add', 'api_hint_rename', 'api_hint_remove', 'api_hints_enabled'
   ],

@@ -2,26 +2,26 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Subset Tools"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#subset-tools'"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-loaders-panel
       v-if="!server_is_remote"
-      :loader_panel_ind.sync="loader_panel_ind"
+      v-model:loader_panel_ind="loader_panel_ind"
       :loader_items="loader_items"
-      :loader_selected.sync="loader_selected"
+      v-model:loader_selected="loader_selected"
       :api_hints_enabled="api_hints_enabled"
     ></plugin-loaders-panel>
 
-    <v-row v-if="api_hints_enabled && config === 'imviz'">
+    <j-flex-row v-if="api_hints_enabled && config === 'imviz'">
       <span class="api-hint">
         plg.subset.multiselect = {{ boolToString(multiselect) }}
       </span>
-    </v-row>
-    <v-row v-if="config === 'imviz'">
+    </j-flex-row>
+    <j-flex-row v-if="config === 'imviz'">
       <div style="width: calc(100% - 32px)">
       </div>
       <div style="width: 32px">
@@ -35,17 +35,17 @@
           </v-btn>
         </j-tooltip>
       </div>
-    </v-row>
+    </j-flex-row>
 
-    <v-row align=center>
+    <v-row class="vuetify2" align=center>
       <v-col cols=10 justify="left">
         <plugin-subset-select
           :items="subset_items"
-          :selected.sync="subset_selected"
+          v-model:selected="subset_selected"
           :multiselect="multiselect"
           :show_if_single_entry="true"
-          :mode.sync="subset_select_mode"
-          :edit_value.sync="subset_edit_value"
+          v-model:mode="subset_select_mode"
+          v-model:edit_value="subset_edit_value"
           :rename_error_message="rename_error_message"
           label="Subset"
           api_hint="plg.subset ="
@@ -62,34 +62,34 @@
       </v-col>
     </v-row>
 
-    <v-row v-if="api_hints_enabled" style="margin-top: -32px">
+    <j-flex-row v-if="api_hints_enabled" style="margin-top: -32px">
       <span class="api-hint">
         plg.combination_mode = '{{ combination_mode_selected }}'
       </span>
-    </v-row>
+    </j-flex-row>
 
     <!-- Sub-plugin for recentering of spatial subset (Imviz only) -->
-    <v-row v-if="(config=='imviz' || config=='deconfigged') && is_centerable">
+    <j-flex-row v-if="(config=='imviz' || config=='deconfigged') && is_centerable">
       <v-expansion-panels accordion v-model="subplugins_opened">
         <v-expansion-panel>
-          <v-expansion-panel-header >
+          <v-expansion-panel-title >
             <span style="padding: 6px">Recenter</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
             <plugin-dataset-select
              :items="recenter_dataset_items"
-             :selected.sync="recenter_dataset_selected"
+             v-model:selected="recenter_dataset_selected"
              :show_if_single_entry="true"
              label="Data"
              api_hint="plg.recenter_dataset ="
              :api_hints_enabled="api_hints_enabled"
              hint="Select the data for centroiding."
             />
-            <v-row justify="end" no-gutters>
+            <j-flex-row justify="end" no-gutters>
               <j-tooltip tooltipcontent="Recenter subset to centroid of selected data">
                 <v-btn
                   color="primary"
-                  text
+                  variant="text"
                   @click="recenter_subset"
                   :class="api_hints_enabled ? 'api-hint' : null"
                 >
@@ -100,17 +100,17 @@
                   }}
                 </v-btn>
               </j-tooltip>
-            </v-row>
-          </v-expansion-panel-content>
+            </j-flex-row>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </j-flex-row>
 
     <!-- Show all subregions of a subset, including Glue state and subset type. -->
     <div v-for="(region, index) in subset_definitions">
       <j-plugin-section-header style="margin: 0px; margin-left: -12px; text-align: left; font-size: larger; font-weight: bold">
        Subregion {{ index }}</j-plugin-section-header>
-      <v-row class="row-no-outside-padding">
+      <j-flex-row class="row-no-outside-padding">
         <div style="margin-top: 4px">
             {{ subset_types[index] }} applied with
         </div>
@@ -136,10 +136,10 @@
               xor mode
             </div>
         </div>
-      </v-row>
+      </j-flex-row>
 
       <div v-for="(item, index2) in region">
-        <v-row v-if="item.name === 'Parent' || item.name === 'Masked values'" class="row-no-outside-padding">
+        <j-flex-row v-if="item.name === 'Parent' || item.name === 'Masked values'" class="row-no-outside-padding">
           <v-text-field
             :label="item.name"
             :value="item.value"
@@ -148,23 +148,23 @@
             :hint="item.name === 'Parent' ? 'Subset was defined with respect to this reference data (read-only)' : 'Number of elements included by mask'"
             persistent-hint
           ></v-text-field>
-        </v-row>
-        <v-row v-else class="row-no-outside-padding">
+        </j-flex-row>
+        <j-flex-row v-else class="row-no-outside-padding">
           <v-text-field
             :label="api_hints_enabled ? 'plg.update_subset(\'' + subset_selected + '\', subregion=' + index + ', ' + item.att + '=' + item.value + ')' : item.name"
             v-model.number="item.value"
             type="number"
-            @keyup="if ($event.key == 'Enter') {update_subset()}"
+            @keyup.enter="update_subset"
             style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
             :suffix="item.unit ? item.unit.replace('Angstrom', 'A') : ''"
             :class="api_hints_enabled ? 'api-hint' : null"
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
       </div>
     </div>
 
-      <v-row v-if="!multiselect" justify="end" no-gutters>
+      <j-flex-row v-if="!multiselect" justify="end" no-gutters>
         <j-tooltip v-if="can_freeze" tooltipcontent="Freeze subset to a mask on the underlying data entries">
           <plugin-action-button
             :results_isolated_to_plugin="false"
@@ -187,7 +187,7 @@
             }}
           </plugin-action-button>
         </j-tooltip>
-        <v-alert v-if="api_hints_enabled" type="info" dense>
+        <v-alert v-if="api_hints_enabled" type="info" density="compact">
           see individual commands above to update subset properties
         </v-alert>
         <plugin-action-button
@@ -197,12 +197,12 @@
         >
           Update
         </plugin-action-button>
-      </v-row>
+      </j-flex-row>
   </j-tray-plugin>
 </template>
 
 <script>
-module.exports = {
+export default {
   methods: {
     boolToString(b) {
       if (b) {

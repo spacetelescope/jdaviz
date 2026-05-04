@@ -11,8 +11,6 @@ from astropy.io import fits
 from astropy.time import Time
 from echo import (CallbackProperty, DictCallbackProperty,
                   ListCallbackProperty, delay_callback)
-from ipygoldenlayout import GoldenLayout
-from ipysplitpanes import SplitPanes
 import numpy as np
 from glue.config import data_translator, settings as glue_settings
 from glue.core import HubListener
@@ -68,9 +66,6 @@ from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                viewer_flux_conversion_equivalencies)
 
 __all__ = ['PrivateApplication', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
-
-SplitPanes()
-GoldenLayout()
 
 enable_spaxel_unit()
 
@@ -153,6 +148,14 @@ glue_settings.DATA_ALPHA = 1
 glue_settings.UNIT_CONVERTER = 'custom-jdaviz'
 
 custom_components = {'j-tooltip': 'components/tooltip.vue',
+                     'splitpanes': 'temp_components/splitpanes.vue',
+                     'pane': 'temp_components/pane.vue',
+                     'golden-layout': 'temp_components/golden-layout.vue',
+                     'gl-row': 'temp_components/gl-row.vue',
+                     'gl-col': 'temp_components/gl-col.vue',
+                     'gl-stack': 'temp_components/gl-stack.vue',
+                     'gl-component': 'temp_components/gl-component.vue',
+                     'j-flex-row': 'components/flex_row.vue',
                      'j-external-link': 'components/external_link.vue',
                      'j-docs-link': 'components/docs_link.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',

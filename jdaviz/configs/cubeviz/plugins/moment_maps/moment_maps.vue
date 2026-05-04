@@ -2,24 +2,24 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Moment Maps"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :popout_button="popout_button"
     :disabled_msg="disabled_msg"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <j-plugin-section-header>Cube</j-plugin-section-header>
-    <v-row>
+    <j-flex-row>
       <j-docs-link>Choose the input cube and spectral subset.</j-docs-link>
-    </v-row>
+    </j-flex-row>
 
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="false"
       label="Data"
       api_hint="plg.dataset ="
@@ -29,7 +29,7 @@
 
     <plugin-subset-select
       :items="spectral_subset_items"
-      :selected.sync="spectral_subset_selected"
+      v-model:selected="spectral_subset_selected"
       :has_subregions="spectral_subset_selected_has_subregions"
       :show_if_single_entry="true"
       has_subregions_warning="The selected selected subset has subregions, the entire range will be used, ignoring any gaps."
@@ -40,7 +40,7 @@
     />
 
     <j-plugin-section-header>Continuum Subtraction</j-plugin-section-header>
-    <v-row>
+    <j-flex-row>
       <j-docs-link v-if="continuum_subset_selected==='None'">
         Choose whether and how to compute the continuum for continuum subtraction.
       </j-docs-link>
@@ -50,11 +50,11 @@
         When this plugin is opened, a visual indicator will show on the spectrum plot showing the continuum fitted as a thick line, and interpolated into the line region as a thin line.
         When computing the moment map, these same input options will be used to compute and subtract a linear continuum for each spaxel, independently.
       </j-docs-link>
-    </v-row>
+    </j-flex-row>
 
     <plugin-subset-select
       :items="continuum_subset_items"
-      :selected.sync="continuum_subset_selected"
+      v-model:selected="continuum_subset_selected"
       :show_if_single_entry="true"
       :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
       label="Continuum"
@@ -66,7 +66,7 @@
     <plugin-dataset-select
       v-if="continuum_subset_selected !== 'None'"
       :items="continuum_dataset_items"
-      :selected.sync="continuum_dataset_selected"
+      v-model:selected="continuum_dataset_selected"
       :show_if_single_entry="false"
       label="Continuum Spectrum"
       api_hint="plg.continuum_dataset ="
@@ -74,7 +74,7 @@
       hint="Select the spectrum used to visualize the continuum inputs.  The continuum will be recomputed on the input cube when computing the moment map."
     />
 
-    <v-row v-if="continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">
+    <j-flex-row v-if="continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
            in line_analysis.py  -->
       <v-text-field
@@ -90,14 +90,14 @@
         persistent-hint
       >
       </v-text-field>
-    </v-row>
+    </j-flex-row>
 
     <j-plugin-section-header>Moment</j-plugin-section-header>
-    <v-row>
+    <j-flex-row>
       <j-docs-link>Options for generating the moment map.</j-docs-link>
-    </v-row>
+    </j-flex-row>
 
-    <v-row>
+    <j-flex-row>
       <v-text-field
         ref="n_moment"
         type="number"
@@ -109,10 +109,10 @@
         :rules="[() => n_moment !== '' || 'This field is required',
                  () => n_moment >=0 || 'Moment must be positive']"
       ></v-text-field>
-    </v-row>
+    </j-flex-row>
 
     <div v-if="dataset_spectral_unit !== ''">
-      <v-row>
+      <j-flex-row>
         <v-radio-group
           :label="api_hints_enabled ? 'plg.output_unit =' : 'Output Units'"
           :class="api_hints_enabled ? 'api-hint' : null"
@@ -127,8 +127,8 @@
             :value="item.label"
           ></v-radio>
         </v-radio-group>
-      </v-row>
-      <v-row v-if="output_unit_selected !== 'Spectral Unit' && output_unit_selected !== 'Surface Brightness'">
+      </j-flex-row>
+      <j-flex-row v-if="output_unit_selected !== 'Spectral Unit' && output_unit_selected !== 'Surface Brightness'">
         <v-text-field
         ref="reference_wavelength"
         type="number"
@@ -141,23 +141,23 @@
         :rules="[() => reference_wavelength !== '' || 'This field is required',
                  () => reference_wavelength > 0 || 'Wavelength must be positive']"
         ></v-text-field>
-      </v-row>
+      </j-flex-row>
     </div>
 
     <plugin-add-results
-      :label.sync="results_label"
+      v-model:label="results_label"
       :label_default="results_label_default"
-      :label_auto.sync="results_label_auto"
+      v-model:label_auto="results_label_auto"
       :label_invalid_msg="results_label_invalid_msg"
       :label_overwrite="results_label_overwrite"
       label_hint="Label for the collapsed cube"
       :add_to_viewer_items="add_to_viewer_items"
-      :add_to_viewer_selected.sync="add_to_viewer_selected"
+      v-model:add_to_viewer_selected="add_to_viewer_selected"
       :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
-      :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
-      :add_to_viewer_label_value.sync="add_to_viewer_label_value"
+      v-model:add_to_viewer_create_new_selected="add_to_viewer_create_new_selected"
+      v-model:add_to_viewer_label_value="add_to_viewer_label_value"
       :add_to_viewer_label_default="add_to_viewer_label_default"
-      :add_to_viewer_label_auto.sync="add_to_viewer_label_auto"
+      v-model:add_to_viewer_label_auto="add_to_viewer_label_auto"
       :add_to_viewer_label_invalid_msg="add_to_viewer_label_invalid_msg"
       action_label="Calculate"
       action_tooltip="Calculate moment map"
@@ -169,16 +169,16 @@
       @click:action="calculate_moment"
     ></plugin-add-results>
 
-    <v-row v-if="n_moment > 0 && output_unit_selected === 'Flux'">
+    <j-flex-row v-if="n_moment> 0 && output_unit_selected === 'Flux'">
       <span class="v-messages v-messages__message text--secondary" style="color: red !important">
           Cannot calculate moment: Output unit set to invalid value from API.
       </span>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-else-if="n_moment > 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0">
+    <j-flex-row v-else-if="n_moment> 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0">
       <span class="v-messages v-messages__message text--secondary" style="color: red !important">
           Cannot calculate moment: Must set reference wavelength for output in velocity units.
       </span>
-    </v-row>
+    </j-flex-row>
   </j-tray-plugin>
 </template>

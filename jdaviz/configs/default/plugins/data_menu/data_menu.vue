@@ -3,14 +3,13 @@
     <div class="viewer-label-container">
       <div>
         <v-menu
-          offset-x
-          left
-          nudge-left="8"
+          location="start"
+          :offset="[8, 0]"
           transition="slide-x-reverse-transition"
           :close-on-content-click="false"
           v-model="data_menu_open">
-          <template v-slot:activator="{ on, attrs }">
-            <div :id="'layer-legend-'+ viewer_id" class="layer-legend">
+          <template v-slot:activator="{ props }">
+            <div :id="'layer-legend-'+ viewer_id" class="layer-legend" v-bind="props">
               <div
                 v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0 || data_menu_open"
                 :class="loaded_n_data === 0 && !data_menu_open ? 'viewer-label pulse' : 'viewer-label'"
@@ -26,7 +25,6 @@
                     :linewidth="0"
                     :cmap_samples="cmap_samples"
                     btn_style="margin-bottom: 0px"
-                    @click="() => {data_menu_open = !data_menu_open}"
                   />
                 </span>
                 <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">{{viewer_reference || viewer_id}}</span>
@@ -46,7 +44,6 @@
                         :linewidth="item.linewidth"
                         :cmap_samples="cmap_samples"
                         btn_style="margin-bottom: 0px"
-                        @click="() => {data_menu_open = !data_menu_open}"
                       />
                     </span>
                   </template>
@@ -65,7 +62,6 @@
                     :linewidth="0"
                     :cmap_samples="cmap_samples"
                     btn_style="margin-bottom: 0px"
-                    @click="() => {data_menu_open = !data_menu_open}"
                   />
                 </span>
               </div>
@@ -73,14 +69,14 @@
           </template>
           <v-list :id="'dm-content-' + viewer_id" style="width: 400px; max-height: 600px; overflow-y: auto" class="overflow-y-auto">
             <v-list-item v-if="api_hints_enabled" style="min-height: 12px">
-              <v-list-item-content>
+              <div class="v-list-item-content">
                 <span class="api-hint">
                   <b>dm = {{ api_hints_obj }}.viewers['{{viewer_reference}}'].data_menu</b>
                 </span>
-              </v-list-item-content>
+              </div>
             </v-list-item>
             <v-list-item class="dm-header">
-              <v-list-item-icon>
+              <v-list-item-action>
                 <j-tooltip
                   v-if="false"
                   tooltipcontent="Reorder layers (COMING SOON)"
@@ -92,10 +88,10 @@
                     <v-icon class="invert-if-dark">mdi-format-vertical-align-center</v-icon>
                   </v-btn>
                 </j-tooltip>
-              </v-list-item-icon>
-              <v-list-item-content
+              </v-list-item-action>
+              <div class="v-list-item-content"
                 v-if="loaded_n_data > 0"
-                style="display: inline-block"
+                style="min-width: 0; flex: 1 1 auto;"
               >
                 <j-tooltip
                   v-if="orientation_enabled"
@@ -113,41 +109,41 @@
                 </j-tooltip>
                 <v-select
                   v-if="orientation_enabled && orientation_align_by_wcs && orientation_layer_items.length > 0"
-                  dense
+                  density="compact"
                   :items="orientation_layer_items"
                   v-model="orientation_layer_selected"
                   :label="api_hints_enabled ? 'dm.orientation = ' : 'Orientation'"
                   :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : 'invert-if-dark'"
-                  item-text="label"
+                  item-title="label"
                   item-value="label"
                   :hide-details="true"
                   style="padding-top: 8px !important; padding-bottom: 4px !important; display: inline-block; width: 212px"
                 >
-                  <template slot="selection" slot-scope="data">
+                  <template v-slot:selection="{ item }">
                     <div class="single-line" style="width: 100%">
                       <span :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : null">
-                        <j-layer-viewer-icon v-if="data.item.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+                        <j-layer-viewer-icon v-if="item.raw.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="item.raw.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
                         {{ api_hints_enabled ?
-                          '\'' + data.item.label + '\''
+                          '\'' + item.raw.label + '\''
                           :
-                          data.item.label
+                          item.raw.label
                         }}
                       </span>
                     </div>
                   </template>
-                  <template slot="item" slot-scope="data">
-                    <div class="single-line">
+                  <template v-slot:item="{ props, item }">
+                    <v-list-item v-bind="props" :title="undefined" class="single-line">
                       <span>
-                        <j-layer-viewer-icon span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
-                        {{ data.item.label }}
+                        <j-layer-viewer-icon span_style="margin-right: 4px" :icon="item.raw.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+                        {{ item.raw.label }}
                       </span>
-                    </div>
+                    </v-list-item>
                   </template>
                 </v-select>
-              </v-list-item-content>
-              <v-list-item-content v-else>
+              </div>
+              <div class="v-list-item-content" v-else>
                 <span>No data in viewer</span>
-              </v-list-item-content>
+              </div>
               <v-list-item-action>
                 <data-menu-add
                   :dataset_items="dataset_items"
@@ -164,94 +160,112 @@
             <v-list-item
               v-if="api_hints_enabled"
             >
-              <v-list-item-content>
+              <div class="v-list-item-content">
                 <span class="api-hint">dm.layer = {{ layer_selected }}</span>
-              </v-list-item-content>
+              </div>
             </v-list-item>
-            <v-list-item-group
+            <v-item-group
               v-model="dm_layer_selected"
               active-class="active-list-item"
               style="max-height: 265px; overflow-y: auto;"
               multiple
-              dense
+              density="compact"
             >
               <div>
-                <draggable v-model="layer_items">
-                  <v-list-item
-                    v-for="(item, index) in layer_items"
-                    :key="index"
-                    class="layer-select"
-                    :style="/\d/.test(item.icon) ? 'padding-left: 32px' : ''"
-                    @dragstart="onDragStart($event)"
-                    @dragend="onDragEnd"
-                  >
-                    <v-list-item-icon>
-                      <j-layer-viewer-icon-stylized
-                          :label="item.label"
-                          :icon="item.icon"
-                          :visible="item.visible"
-                          :is_subset="item.is_subset"
-                          :colors="item.colors"
-                          :linewidth="item.linewidth"
-                          :cmap_samples="cmap_samples"
-                          btn_style="margin-bottom: 0px"
-                          disabled="true"
-                        />
-                    </v-list-item-icon>
-                    <v-list-item-content>
-                      <div style="display: flex; align-items: flex-start; line-height: 28px; min-width: 0;">
-                        <span style="display: inline-flex; align-items: center; flex-shrink: 0; margin-right: 4px;">
-                          <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                          <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
-                          <j-plugin-live-results-icon v-if="item.live_plugin_results" />
-                        </span>
-                        <j-rename-text
-                          :value="item.label"
-                          :show-pencil="true"
-                          :rename-error-message="rename_error_messages[item.label] || ''"
-                          :api-hint-rename="api_hints_enabled ? 'dm.rename(\'' + item.label + '\', \'<new_name>\')' : ''"
-                          :show-api-hint="api_hints_enabled"
-                          @input="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
-                          @cancel="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
-                          @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
-                        />
+                <draggable v-model="layer_items" item-key="label">
+                  <template #item="{ element: item, index }">
+                    <v-list-item
+                      :key="item.label"
+                      :class="layer_selected && layer_selected.includes(item.label) ? 'layer-select active-list-item' : 'layer-select'"
+                      :style="/\d/.test(item.icon) ? 'padding-left: 32px' : ''"
+                      @click="onLayerClick(index, $event)"
+                      @dragstart="onDragStart($event)"
+                      @dragend="onDragEnd"
+                    >
+                      <v-list-item-action>
+                        <j-layer-viewer-icon-stylized
+                            :label="item.label"
+                            :icon="item.icon"
+                            :visible="item.visible"
+                            :is_subset="item.is_subset"
+                            :colors="item.colors"
+                            :linewidth="item.linewidth"
+                            :cmap_samples="cmap_samples"
+                            btn_style="margin-bottom: 0px"
+                            disabled="true"
+                          />
+                      </v-list-item-action>
+                      <div class="v-list-item-content" style="min-width: 0; flex: 1 1 auto;">
+                        <div style="display: flex; align-items: center; line-height: 22px; min-width: 0;">
+                          <span style="display: inline-flex; align-items: center; flex-shrink: 0; margin-right: 4px;">
+                            <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
+                            <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
+                            <j-plugin-live-results-icon v-if="item.live_plugin_results" />
+                          </span>
+                          <j-rename-text
+                            :value="item.label"
+                            :show-pencil="true"
+                            font-size="14px"
+                            :rename-error-message="rename_error_messages[item.label] || ''"
+                            :api-hint-rename="api_hints_enabled ? 'dm.rename(\'' + item.label + '\', \'<new_name>\')' : ''"
+                            :show-api-hint="api_hints_enabled"
+                            @input="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
+                            @cancel="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
+                            @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
+                          />
+                        </div>
                       </div>
-                    </v-list-item-content>
-                    <v-list-item-action>
-                      <j-tooltip
-                        v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
-                        tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
-                      >
-                        <v-btn icon disabled>
-                          <v-icon>mdi-eye-off</v-icon>
-                        </v-btn>
-                      </j-tooltip>
-                      <j-tooltip
-                        v-else-if="viewer_supports_visible_toggle"
-                        :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
-                      >
-                        <plugin-switch
-                          :value="item.visible"
-                          @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-                          @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
-                          @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
-                          :api_hints_enabled="false"
-                          :use_icon="item.is_sonified ? 'speaker' : 'eye'"
-                        />
-                      </j-tooltip>
-                    </v-list-item-action>
-                  </v-list-item>
+                      <v-list-item-action>
+                        <j-tooltip
+                          v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
+                          tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
+                        >
+                          <v-btn icon disabled>
+                            <v-icon>mdi-eye-off</v-icon>
+                          </v-btn>
+                        </j-tooltip>
+                        <j-tooltip
+                          v-else-if="viewer_supports_visible_toggle"
+                          :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
+                        >
+                          <plugin-switch
+                            :value="item.visible"
+                            @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
+                            @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
+                            @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
+                            :api_hints_enabled="false"
+                            :use_icon="item.is_sonified ? 'speaker' : 'eye'"
+                          />
+                        </j-tooltip>
+                      </v-list-item-action>
+                    </v-list-item>
+                  </template>
                 </draggable>
               </div>
-            </v-list-item-group>
+            </v-item-group>
             <hover-api-hint
               v-if="api_hints_enabled"
-              :hover_api_hint.sync="hover_api_hint"
-              :lock_hover_api_hint.sync="lock_hover_api_hint"
+              v-model:hover_api_hint="hover_api_hint"
+              v-model:lock_hover_api_hint="lock_hover_api_hint"
               :icons="icons"
             />
             <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
-              <v-list-item-content style="display: inline-block">
+              <div class="v-list-item-content" style="display: flex; justify-content: flex-end; align-items: center; gap: 4px; width: 100%; min-width: 0;">
+                <j-tooltip
+                  :span_style="'display: inline-block; float: right; ' + (info_enabled ? '' : 'cursor: default;')"
+                  :tooltipcontent="info_tooltip"
+                >
+                  <v-btn
+                    icon
+                    variant="text"
+                    size="small"
+                    density="default"
+                    @click="view_info"
+                    :disabled="!info_enabled"
+                  >
+                    <v-icon class="invert-if-dark">mdi-label</v-icon>
+                  </v-btn>
+                </j-tooltip>
                 <data-menu-remove
                   :delete_enabled="delete_enabled"
                   :delete_tooltip="delete_tooltip"
@@ -262,18 +276,6 @@
                   @remove-from-viewer="remove_from_viewer"
                   @remove-from-app="remove_from_app"
                 />
-                <j-tooltip
-                  :span_style="'display: inline-block; float: right; ' + (info_enabled ? '' : 'cursor: default;')"
-                  :tooltipcontent="info_tooltip"
-                >
-                  <v-btn
-                    icon
-                    @click="view_info"
-                    :disabled="!info_enabled"
-                  >
-                    <v-icon class="invert-if-dark">mdi-label</v-icon>
-                  </v-btn>
-                </j-tooltip>
                 <data-menu-subset-edit
                   :subset_edit_enabled="subset_edit_enabled"
                   :subset_resize_in_viewer_enabled="subset_resize_in_viewer_enabled"
@@ -289,7 +291,7 @@
                                                               data_menu_open = false}"
                   @resize-subset-in-viewer="() => {resize_subset_in_viewer(); data_menu_open = false}"
                 />
-              </v-list-item-content>
+              </div>
             </v-list-item>
           </v-list>
         </v-menu>
@@ -302,7 +304,7 @@
         <v-list-item
           v-for="data in dataset_items"
         >
-          <v-list-item-content>
+          <div class="v-list-item-content">
             <j-tooltip tooltipcontent="add data to viewer">
               <span
                 style="cursor: pointer; width: 100%"
@@ -311,7 +313,7 @@
                 {{ data.label }}
               </span>
             </j-tooltip>
-          </v-list-item-content>
+          </div>
         </v-list-item>
       </v-list>
     </div>
@@ -319,7 +321,12 @@
 </template>
 
 <script>
-  module.exports = {
+  import draggable from 'https://esm.sh/vuedraggable@4.1.0?external=vue'
+
+  export default {
+    components: {
+      draggable
+    },
     data: function () {
       return {
         data_menu_open: false,
@@ -402,7 +409,7 @@
         }
       });
     },
-    beforeDestroy() {
+    beforeUnmount() {
       if (this._resizeObserver) {
         this._resizeObserver.disconnect();
         this._resizeObserver = null;
@@ -500,12 +507,29 @@
         } else {
           return 'False'
         }
+      },
+      onLayerClick(index, event) {
+        if (event?.defaultPrevented) {
+          return;
+        }
+        if (this.layer_multiselect) {
+          const selected = Array.isArray(this.dm_layer_selected) ? [...this.dm_layer_selected] : [];
+          const selectedIndex = selected.indexOf(index);
+          if (selectedIndex === -1) {
+            selected.push(index);
+          } else {
+            selected.splice(selectedIndex, 1);
+          }
+          this.dm_layer_selected = selected;
+        } else {
+          this.dm_layer_selected = [index];
+        }
       }
     },
   }
 </script>
 
-<style scoped>
+<style>
   .viewer-label-container {
     position: absolute;
     right: 0;
@@ -534,47 +558,63 @@
     padding-top: 0px !important;
     padding-bottom: 0px !important;
   }
-  .v-list-item__icon, .v-list-item__content, .v-list-item__action {
-    /* even denser than dense */
+  .dm-header,
+  .dm-footer,
+  .layer-select {
+    min-height: 40px !important;
+    padding-inline: 6px !important;
+  }
+  .dm-header > .v-list-item__content,
+  .layer-select > .v-list-item__content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
     padding-top: 4px !important;
     padding-bottom: 4px !important;
-    margin-top: 2px !important;
-    margin-bottom: 2px !important;
   }
-  .v-list-item__icon {
-    margin-top: 6px !important;
+  .dm-header > .v-list-item__content > .v-list-item-action,
+  .layer-select > .v-list-item__content > .v-list-item-action {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    align-self: center;
+    flex: 0 0 auto;
+  }
+  .dm-header > .v-list-item__content > .v-list-item-action:last-child,
+  .layer-select > .v-list-item__content > .v-list-item-action:last-child {
+    margin-left: auto !important;
+  }
+  .layer-select > .v-list-item__content > .v-list-item-action:first-child {
+    margin-right: 6px !important;
   }
   .layer-select {
     /* spacing between entries so selections are more apparent */
     margin-top: 1px !important;
     margin-bottom: 1px !important;
   }
-  /* Reduce padding between icon, content, and action in layer items */
-  .layer-select > .v-list-item__icon {
-    margin-right: 12px !important;
-  }
-  .layer-select > .v-list-item__content {
-    margin-right: 0 !important;
-    padding-right: 0 !important;
-  }
-  .layer-select > .v-list-item__action {
-    margin-left: 2px !important;
-  }
   .layer-select:nth-child(even) {
     /* alternating row colors */
     background-color: #f1f2f85a;
   }
-  .theme--dark .layer-select:nth-child(even) {
+  .theme--dark .layer-select:nth-child(even),
+  .v-theme--dark .layer-select:nth-child(even) {
     /* darker alternating row colors in dark mode */
     background-color: #1a1a1a;
   }
-  .theme--dark .layer-select:nth-child(odd) {
+  .theme--dark .layer-select:nth-child(odd),
+  .v-theme--dark .layer-select:nth-child(odd) {
     /* slightly darker odd rows in dark mode */
     background-color: #0d0d0d;
   }
   .active-list-item {
-    background-color: #d1f4ff75 !important;
+    background-color: #dddddd !important;
     font-weight: 500;
+  }
+  .theme--dark .active-list-item,
+  .v-theme--dark .active-list-item {
+    background-color: #242424 !important;
   }
   .dm-header, .dm-footer {
     background-color: #003B4D !important;

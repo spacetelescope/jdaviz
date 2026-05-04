@@ -15,8 +15,7 @@
     </span>
 
     <h1 class="mt-8 mb-6" style="color: white">Welcome to Jdaviz!</h1>
-
-    <v-row align-center>
+    <v-row class="vuetify2" align-center>
       <v-col>
         <span class="white--text">
             As of version 5.0, Jdaviz has been generalized to work with mixed data types, rather than needing to select a specific
@@ -46,14 +45,13 @@
         <span class="mx-4 white--text font-weight-bold">The functionality below is deprecated as of version 5.0.</span>
         <v-divider style="border-color: white !important; border-width: 3px 0 0 0; opacity: 1"></v-divider>
     </div>
-
-    <v-row>
+    <j-flex-row>
         <v-text-field
             v-model="filepath"
             class="my-4"
             autofocus="true"
-            dark
-            outlined
+            theme="dark"
+            variant="outlined"
             label="File Path"
             :hint="hint"
             persistent-hint
@@ -63,15 +61,15 @@
 
         <j-tooltip tooltipcontent="select file from disk" span_style="height: 80px">
           <v-dialog v-model="file_browser_visible" max-width="1000" max-height="800">
-              <template v-slot:activator="{ on }">
+              <template v-slot:activator="{ props }">
                   <v-btn
-                      v-on="on"
+                      v-bind="props"
                       @click="open_file_dialog"
                       class="ma-2"
                       color="#1E617F"
                       style="top: 7px; height: 57px"
                       dark>
-                      <v-icon large>mdi-file-upload</v-icon>
+ <v-icon large>mdi-file-upload</v-icon>
                   </v-btn>
               </template>
               <v-card max-height="800">
@@ -81,9 +79,9 @@
                   attempt to identify a compatible configuration for your selected dataset. If one cannot
                   be found, you can manually select a configuration to load your data into.
                   <v-container>
-                      <v-row>
+                      <v-row class="vuetify2">
                       <v-col>
-                          <jupyter-widget :widget="file_browser_widget" v-if="file_browser_widget"/>
+                          <jupyter-widget v-if="file_browser_widget" :widget="file_browser_widget" :key="file_browser_widget"/>
                       </v-col>
                       </v-row>
                   </v-container>
@@ -91,16 +89,16 @@
 
                   <v-card-actions>
                   <div class="flex-grow-1"></div>
-                      <v-btn color="primary" text @click="file_browser_visible = false">Cancel</v-btn>
-                      <v-btn color="primary" text @click="choose_file">Import</v-btn>
+                      <v-btn color="primary" variant="text" @click="file_browser_visible = false">Cancel</v-btn>
+                      <v-btn color="primary" variant="text" @click="choose_file">Import</v-btn>
                   </v-card-actions>
 
               </v-card>
            </v-dialog>
         </j-tooltip>
-    </v-row>
+    </j-flex-row>
 
-    <v-row justify="center">
+    <j-flex-row justify="center">
       <v-btn
         v-for="config in configs"
         class="mx-3"
@@ -124,6 +122,6 @@
                 </span>
             </div>
       </v-btn>
-    </v-row>
+    </j-flex-row>
   </div>
 </template>

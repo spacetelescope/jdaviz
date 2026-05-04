@@ -5,49 +5,49 @@
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-viewer-select
       :items="viewer_items"
-      :selected.sync="viewer_selected"
+      v-model:selected="viewer_selected"
       label="Viewer"
       :show_if_single_entry="false"
       hint="Select a viewer to plot."
       persistent-hint
     />
 
-    <v-row>
+    <j-flex-row>
       <v-text-field
         v-model.number='selected_x'
         type="number"
         label="X"
         hint="Value of X"
       ></v-text-field>
-    </v-row>
+    </j-flex-row>
 
-    <v-row>
+    <j-flex-row>
       <v-text-field
         v-model.number='selected_y'
         type="number"
         label="Y"
         hint="Value of Y"
       ></v-text-field>
-    </v-row>
+    </j-flex-row>
 
-    <v-row justify="end">
+    <j-flex-row justify="end">
       <plugin-action-button
         :results_isolated_to_plugin="true"
         @click="draw_plot"
       >
         Plot
       </plugin-action-button>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-if="plot_available">
-      <jupyter-widget :widget="plot_across_x_widget"/>
+    <j-flex-row v-if="plot_available">
+      <jupyter-widget v-if="plot_across_x_widget" :widget="plot_across_x_widget" :key="plot_across_x_widget"/>
       <br/>
-      <jupyter-widget :widget="plot_across_y_widget"/>
-    </v-row>
+      <jupyter-widget v-if="plot_across_y_widget" :widget="plot_across_y_widget" :key="plot_across_y_widget"/>
+    </j-flex-row>
 
   </j-tray-plugin>
 </template>

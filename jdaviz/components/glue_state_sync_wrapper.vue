@@ -1,7 +1,7 @@
 <template>
   <div v-if="sync.in_subscribed_states" style="display: grid; padding-top: 4px; padding-bottom: 4px"> <!-- overlay container -->
     <div style="grid-area: 1/1">
-      <v-row class="row-no-outside-padding">
+      <v-row class="row-no-outside-padding vuetify2">
         <v-col :cols="multiselect ? '8' : '12'" style="padding: 0">
           <div style="grid-area: 1/1">
             <slot></slot>
@@ -23,18 +23,17 @@
                border: 2px solid #00617E;
                background-color: rgb(245 245 245 / 70%);">
         <v-icon
-          large 
-          dark
+          large
           color="#00617E"
           style="height: 100%"
-          >mdi-link-off</v-icon>
+        >mdi-link-off</v-icon>
       </div> 
     </j-tooltip>
   </div>
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['sync', 'multiselect']
 };
 </script>

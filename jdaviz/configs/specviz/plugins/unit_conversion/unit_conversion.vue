@@ -2,17 +2,17 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Unit Conversion"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-select
       v-if="has_spectral"
       :items="spectral_unit_items.map(i => i.label)"
-      :selected.sync="spectral_unit_selected"
+      v-model:selected="spectral_unit_selected"
       :show_if_single_entry="true"
       label="Spectral Unit"
       api_hint="plg.spectral_unit ="
@@ -23,7 +23,7 @@
     <plugin-select
       v-if="has_time"
       :items="time_unit_items.map(i => i.label)"
-      :selected.sync="time_unit_selected"
+      v-model:selected="time_unit_selected"
       :show_if_single_entry="true"
       label="Time Unit"
       api_hint="plg.time_unit ="
@@ -34,7 +34,7 @@
     <plugin-select
       v-if="has_flux"
       :items="flux_unit_items.map(i => i.label)"
-      :selected.sync="flux_unit_selected"
+      v-model:selected="flux_unit_selected"
       :show_if_single_entry="true"
       label="Flux Unit"
       api_hint="plg.flux_unit ="
@@ -45,7 +45,7 @@
     <plugin-select
       v-if="has_angle"
       :items="angle_unit_items.map(i => i.label)"
-      :selected.sync="angle_unit_selected"
+      v-model:selected="angle_unit_selected"
       :show_if_single_entry="true"
       label="Angle Unit"
       api_hint="plg.angle_unit ="
@@ -53,7 +53,7 @@
       hint="Global display unit for solid angle."
     />
 
-    <v-row v-if="has_sb">
+    <j-flex-row v-if="has_sb">
       <v-text-field
         v-model="sb_unit_selected"
         :label="api_hints_enabled ? 'plg.sb_unit' : 'Surface Brightness Unit'"
@@ -62,16 +62,16 @@
         persistent-hint
         :disabled='true'
       ></v-text-field>
-    </v-row>
+    </j-flex-row>
 
     <div v-if="config == 'cubeviz' || config == 'deconfigged'">
-      <v-row>
+      <j-flex-row>
         <v-divider></v-divider>
-      </v-row>
+      </j-flex-row>
 
       <plugin-select
         :items="spectral_y_type_items.map(i => i.label)"
-        :selected.sync="spectral_y_type_selected"
+        v-model:selected="spectral_y_type_selected"
         :show_if_single_entry="true"
         label="Spectral y-axis Type"
         api_hint="plg.spectral_y_type ="

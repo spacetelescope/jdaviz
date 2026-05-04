@@ -7,10 +7,10 @@
       :api_hints_enabled="api_hints_enabled"
     ></plugin-input-header>
     <v-menu>
-      <template v-slot:activator="{ on }">
+      <template v-slot:activator="{ props }">
           <span class="color-menu"
                 :style="`background:${value}; cursor: pointer`"
-                @click.stop="on.click"
+                v-bind="props"
           >&nbsp;</span>
       </template>
       <div @click.stop="" style="text-align: end; background-color: white">
@@ -33,7 +33,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     props: ['label', 'label_inline', 'api_hint', 'api_hints_enabled', 'value'],
   };
 </script>

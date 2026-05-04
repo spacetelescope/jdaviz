@@ -4,8 +4,6 @@ import threading
 
 import solara
 import solara.lab
-import ipygoldenlayout
-import ipysplitpanes
 import ipyvue
 
 import jdaviz
@@ -38,8 +36,6 @@ def on_kernel_start():
 
 
 def create_shared_widgets():
-    ipysplitpanes.SplitPanes()
-    ipygoldenlayout.GoldenLayout()
     for name, path in custom_components.items():
         ipyvue.register_component_from_file(None, name,
                                             os.path.join(os.path.dirname(jdaviz.__file__), path))

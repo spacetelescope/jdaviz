@@ -1,6 +1,6 @@
 <template>
   <div class="plugin-table-component" v-if="show_if_empty || items.length">
-    <v-row style="margin: 0px 0px -8px 0px !important">
+    <j-flex-row style="margin: 0px 0px -8px 0px !important">
       <div class="row-select">
         <v-select
           class="no-hint"
@@ -25,15 +25,15 @@
             @click="() => {if (headers_visible.length < headers_avail.length) { headers_visible = headers_avail} else {headers_visible = []}}"
           >
             <v-list-item-action>
-              <v-icon>
+ <v-icon>
                 {{ headers_visible.length == headers_avail.length ? 'mdi-close-box' : headers_visible.length ? 'mdi-minus-box' : 'mdi-checkbox-blank-outline' }}
               </v-icon>
             </v-list-item-action>
-            <v-list-item-content>
+            <div class="v-list-item-content">
               <v-list-item-title>
                 {{ headers_visible.length < headers_avail.length ? "Select All" : "Clear All" }}
               </v-list-item-title>
-            </v-list-item-content>
+            </div>
           </v-list-item>
           <v-divider class="mt-2"></v-divider>
         </template>
@@ -42,12 +42,12 @@
       <div style="line-height: 64px; width: 32px" class="only-show-in-tray">
         <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </div>
-    </v-row>
+    </j-flex-row>
 
-    <v-row style="margin: 0px 0px 8px 0px !important">
+    <j-flex-row style="margin: 0px 0px 8px 0px !important">
       <v-data-table
-        dense
-        :headers="headers_visible_sorted.map(item => {return {'text': item, 'value': item}})"
+        density="compact"
+        :headers="headers_visible_sorted.map(item => {return {'title': item, 'key': item}})"
         :items="items"
         :item-key="item_key"
         :show-select="show_rowselect"
@@ -55,15 +55,15 @@
         v-model="selected_rows"
         class="elevation-1 width-100"
       ></v-data-table>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-if="enable_clear && clear_table && items.length" justify="end">
+    <j-flex-row v-if="enable_clear && clear_table && items.length" justify="end">
       <plugin-action-button
         :results_isolated_to_plugin="true"
         @click="clear_table"
         >{{ clear_btn_lbl }}
       </plugin-action-button>
-    </v-row>
+    </j-flex-row>
 
     <div style="margin-left: 14px; margin-right: 14px">
       <plugin-loaders-panel
@@ -81,7 +81,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   computed: {
     headers_visible_sorted() {
       return this.headers_avail.filter(item => this.headers_visible.indexOf(item) !== -1);

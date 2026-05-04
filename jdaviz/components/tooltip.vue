@@ -1,8 +1,13 @@
 <template>
-  <v-tooltip v-if="getTooltipHtml()" bottom :open-delay="getOpenDelay()"
-      :nudge-bottom="getNudgeBottom()">
-    <template v-slot:activator="{ on, attrs }">
-      <span v-bind="attrs" v-on="on" :style="getSpanStyle()">
+  <v-tooltip
+    v-if="getTooltipHtml()"
+    location="bottom"
+    :open-delay="getOpenDelay()"
+    :offset="getOffset()"
+    :disabled="disabled"
+  >
+    <template v-slot:activator="{ props }">
+      <span v-bind="props" :style="getSpanStyle()">
         <slot></slot>
       </span>
     </template>
@@ -118,8 +123,8 @@ const tooltips = {
 }
 
 
-module.exports = {
-  props: ['tooltipcontent', 'tipid', 'delay', 'nudgebottom', 'span_style'],
+export default {
+  props: ['tooltipcontent', 'tipid', 'delay', 'nudgebottom', 'span_style', 'disabled'],
   methods: {
     getTooltipHtml() {
       // use tooltipcontent if provided, default to tooltips dictionary
@@ -146,6 +151,9 @@ module.exports = {
       // buttons but others around just the icon.  Only applies to tooltip,
       // not doctip.
       return this.$props.nudgebottom || 0;
+    },
+    getOffset() {
+      return [0, this.getNudgeBottom()];
     },
   }
 };
