@@ -40,7 +40,7 @@ from photutils.aperture import CircularAperture, EllipticalAperture, Rectangular
 from regions import PixelRegion
 from specutils import Spectrum
 from specutils.manipulation import extract_region
-from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
+from traitlets import Any, Bool, Dict, Float, HasTraits, Int, List, Unicode, observe
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator,
@@ -329,6 +329,7 @@ class FootprintDisplayMixin:
     Mixin for displaying selectable footprint regions
     in image viewers.
     """
+
     def vue_link_by_wcs(self, *args):
         plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
         if plg is not None:
@@ -6084,6 +6085,11 @@ class Table(PluginSubcomponent):
     enable_clear = Bool(True).tag(sync=True)
     clear_btn_lbl = Unicode('Clear Table').tag(sync=True)
 
+    # Server-side pagination traitlets
+    server_pagination = Bool(False).tag(sync=True)
+    server_items_length = Int(0).tag(sync=True)
+    table_options = Dict({}).tag(sync=True)
+
     # Loader panel traitlets for "Load into App" functionality
     loader_items = List([]).tag(sync=True)
     loader_selected = Unicode('object').tag(sync=True)
@@ -6096,6 +6102,7 @@ class Table(PluginSubcomponent):
                  *args, **kwargs):
         self._qtable = None
         self._table_name = name
+        self._all_items = []  # full item cache for server-side pagination
         self._selected_rows_changed_callback = selected_rows_changed_callback
         self._clear_callback = clear_callback
         self._enable_load_into_app = enable_load_into_app
@@ -6147,6 +6154,60 @@ class Table(PluginSubcomponent):
     def _selected_rows_changed(self, msg):
         if self._selected_rows_changed_callback is not None:
             self._selected_rows_changed_callback(msg)
+
+    @observe('table_options')
+    def _table_options_changed(self, msg):
+        if not self.server_pagination or not self._all_items:
+            return
+        self._push_current_page()
+
+    def _push_current_page(self):
+        """Push only the current page slice of _all_items to items."""
+        opts = self.table_options
+        page = opts.get('page', 1)
+        per_page = opts.get('itemsPerPage', 10)
+        if per_page == -1:
+            self.items = self._all_items
+            return
+        start = (page - 1) * per_page
+        end = start + per_page
+        self.items = self._all_items[start:end]
+
+    def set_all_items(self, all_items):
+        """
+        Populate the table with server-side pagination.
+        Stores all items in cache and pushes only the current page.
+        """
+        self._all_items = all_items
+        self.server_items_length = len(all_items)
+        self.table_options = {**self.table_options, 'page': 1}
+        self._push_current_page()
+
+    def set_all_items_from_table(self, table):
+        """
+        Populate the table from an astropy QTable/Table using server-side pagination.
+        Handles QTable caching, header updates, JSON conversion, and pagination.
+        """
+        if len(table) == 0:
+            self._clear_table()
+            return
+        # Cache the QTable
+        self._qtable = QTable(table)
+        # Update headers
+        all_headers = list(table.colnames)
+        missing_headers = [h for h in all_headers if h not in self.headers_avail]
+        if missing_headers:
+            self.headers_avail = self.headers_avail + missing_headers
+            self.headers_visible = self.headers_visible + \
+                [m for m in missing_headers if self._new_col_visible(m)]
+
+        # Build all items with JSON conversion
+        all_items = [
+            {col: self._json_safe(col, row[col]) for col in table.colnames} for row in table
+        ]
+
+        # Set all items (triggers server pagination)
+        self.set_all_items(all_items)
 
     def _setup_object_loader(self):
         """Set up the object loader for 'Load into App' functionality."""
@@ -6216,6 +6277,48 @@ class Table(PluginSubcomponent):
         if table is not None:
             self._object_loader.object = table
 
+    def _json_safe(self, column, item):
+        """Convert item to JSON-safe format for frontend display."""
+        def float_precision(column, item):
+            if column in ('slice', 'index'):
+                # stored in astropy table as a float so we can also store nans,
+                # but should display in the UI without any decimals
+                return f"{item:.0f}"
+            elif column in ('pixel', 'pixel_x', 'pixel_y'):
+                return f"{item:0.3f}"
+            elif column in ('xcenter', 'ycenter'):
+                return f"{item:0.1f}"
+            elif column in ('sum', 'spectral_axis'):
+                return f"{item:.3e}"
+            else:
+                return f"{item:0.5f}"
+
+        if isinstance(item, SkyCoord):
+            return item.to_string('hmsdms', precision=4)
+        elif isinstance(item, u.Quantity) and not np.isnan(item):
+            return f"{float_precision(column, item.value)} {item.unit.to_string()}"
+        elif hasattr(item, 'to_string'):
+            return item.to_string()
+        elif isinstance(item, float) and np.isnan(item):
+            return ''
+        elif isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
+            return ''
+        elif isinstance(item, float):
+            return float_precision(column, item)
+        elif isinstance(item, (list, tuple)):
+            return [float_precision(column, i) if isinstance(i, float) else i for i in item]
+        elif isinstance(item, (np.float32, np.float64)):
+            return float(item)
+        elif isinstance(item, u.Quantity):
+            return {"value": item.value.tolist() if item.size > 1 else item.value, "unit": str(item.unit)}  # noqa: E501
+        elif isinstance(item, np.bool_):
+            return bool(item)
+        elif isinstance(item, np.ndarray):
+            return item.tolist()
+        elif isinstance(item, tuple):
+            return tuple(self._json_safe(column, v) for v in item)
+        return item
+
     def add_item(self, item):
         """
         Add an item/row to the table.
@@ -6224,48 +6327,6 @@ class Table(PluginSubcomponent):
         ----------
         item : QTable, QTableRow, or dictionary of row-name, value pairs
         """
-        def json_safe(column, item):
-            def float_precision(column, item):
-                if column in ('slice', 'index'):
-                    # stored in astropy table as a float so we can also store nans,
-                    # but should display in the UI without any decimals
-                    return f"{item:.0f}"
-                elif column in ('pixel', 'pixel_x', 'pixel_y'):
-                    return f"{item:0.3f}"
-                elif column in ('xcenter', 'ycenter'):
-                    return f"{item:0.1f}"
-                elif column in ('sum', 'spectral_axis'):
-                    return f"{item:.3e}"
-                else:
-                    return f"{item:0.5f}"
-
-            if isinstance(item, SkyCoord):
-                return item.to_string('hmsdms', precision=4)
-            elif isinstance(item, u.Quantity) and not np.isnan(item):
-                return f"{float_precision(column, item.value)} {item.unit.to_string()}"
-
-            elif hasattr(item, 'to_string'):
-                return item.to_string()
-            elif isinstance(item, float) and np.isnan(item):
-                return ''
-            elif isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
-                return ''
-            elif isinstance(item, float):
-                return float_precision(column, item)
-            elif isinstance(item, (list, tuple)):
-                return [float_precision(column, i) if isinstance(i, float) else i for i in item]
-            elif isinstance(item, (np.float32, np.float64)):
-                return float(item)
-            elif isinstance(item, u.Quantity):
-                return {"value": item.value.tolist() if item.size > 1 else item.value, "unit": str(item.unit)}     # noqa: E501
-            elif isinstance(item, np.bool_):
-                return bool(item)
-            elif isinstance(item, np.ndarray):
-                return item.tolist()
-            elif isinstance(item, tuple):
-                return tuple(json_safe(v) for v in item)
-            return item
-
         if isinstance(item, QTable):
             for row in item:
                 self.add_item(row)
@@ -6294,10 +6355,18 @@ class Table(PluginSubcomponent):
             self.headers_visible = self.headers_visible + [m for m in missing_headers if self._new_col_visible(m)]  # noqa
 
         # clean data to show in the UI
-        self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
+        new_row = {k: self._json_safe(k, v) for k, v in item.items()}
+        if self.server_pagination:
+            self._all_items = self._all_items + [new_row]
+            self.server_items_length = len(self._all_items)
+            self._push_current_page()
+        else:
+            self.items = self.items + [new_row]
         self._plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
 
     def __len__(self):
+        if self.server_pagination and self._all_items:
+            return len(self._all_items)
         return len(self.items)
 
     def _clear_table(self):
@@ -6305,6 +6374,9 @@ class Table(PluginSubcomponent):
         self.selected_rows = []
         self.selected_indices = []
         self._qtable = None
+        self._all_items = []
+        if self.server_pagination:
+            self.server_items_length = 0
         self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
 
     def clear_table(self):
