@@ -1,6 +1,8 @@
 import numpy as np
 from astropy.nddata import NDData
+import astropy.units as u
 from regions import CirclePixelRegion, PixCoord
+from specutils import SpectralRegion
 
 
 def test_load_nddata(imviz_helper):
@@ -70,3 +72,18 @@ def test_rename_data_and_subsets(deconfigged_helper, image_hdu_wcs):
     dm.rename('Subset 1', 'my subset')
     assert 'my subset' in [x['label'] for x in dm.layer_items]
     assert 'Subset 1' not in [x['label'] for x in dm.layer_items]
+
+
+def test_only_compatible_subsets_in_menu(deconfigged_helper, image_hdu_wcs, spectrum1d):
+    deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='image_data')
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spectrum')
+
+    subset_plugin = deconfigged_helper.plugins['Subset Tools']._obj
+    subset_plugin.import_region(SpectralRegion(6200 * u.AA, 6800 * u.AA))
+
+    iv = deconfigged_helper.viewers['Image']
+    sv = deconfigged_helper.viewers['1D Spectrum']
+
+    # Make sure the spectral subset is only in the spectrum viewer's data menu
+    assert "Subset 1" not in iv.data_menu.layer.choices
+    assert "Subset 1" in sv.data_menu.layer.choices

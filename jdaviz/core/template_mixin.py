@@ -26,6 +26,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.roi import CircularAnnulusROI
+from glue.core.subset import RangeSubsetState
 from glue_jupyter import jglue
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.bqplot.histogram import BqplotHistogramView
@@ -69,8 +70,8 @@ from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
-    _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global,
-    wildcard_match, CONFIGS_WITH_LOADERS
+    _wcs_only_label, layer_is_not_dq as utils_layer_is_not_dq,
+    wildcard_match, CONFIGS_WITH_LOADERS, layer_is_dq as utils_layer_is_dq
 )
 
 
@@ -2218,6 +2219,7 @@ class LayerSelect(SelectPluginComponent):
         # TODO: all of these add_filter commands should be refactored to pass filters directly
         # to the init and defined in _is_valid_item()
         self.add_filter('not_spatial_subset_in_profile_viewer')
+        self.add_filter('not_spectral_subset_in_image_viewer')
 
         self.filter_is_root = is_root
         self.has_children = has_children
@@ -2284,6 +2286,18 @@ class LayerSelect(SelectPluginComponent):
             # so we want to exclude spatial subsets
             return get_subset_type(lyr) != 'spatial'
 
+        def not_spectral_subset_in_image_viewer(lyr):
+            if self.plugin.config not in ('deconfigged'):
+                return True
+            if np.any([viewer.__class__.__name__ not in ('CubevizImageView', 'ImvizImageView')
+                       for viewer in self.viewer_objs]):
+                return True
+
+            if hasattr(lyr, 'subset_state'):
+                return not isinstance(lyr.subset_state, RangeSubsetState)
+
+            return True
+
         def is_trace(lyr):
             return 'Trace' in getattr(getattr(lyr, 'data', None), 'meta', [])
 
@@ -2291,7 +2305,7 @@ class LayerSelect(SelectPluginComponent):
             return not is_trace(lyr)
 
         def is_dq_layer(lyr):
-            return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
+            return utils_layer_is_dq(lyr)
 
         def catalog_has_correct_coords_based_on_link_type(lyr):
             """
@@ -4848,7 +4862,7 @@ class DatasetSelect(SelectPluginComponent):
                 return True
             return data_row == app_row
 
-        layer_is_not_dq = layer_is_not_dq_global
+        layer_is_not_dq = utils_layer_is_not_dq
 
         return super()._is_valid_item(data, locals())
 

@@ -4,6 +4,9 @@
 New Features
 ------------
 
+* Data menu/legend overflow: more data label icons are now shown and two or more icons must be
+  present beyond the overflow limit before the overflow icon will appear. [#4160]
+
 Mosviz
 ^^^^^^
 
@@ -26,16 +29,38 @@ Other Changes and Additions
   pagination in the UI and fetching product lists in a background thread so the
   app remains responsive. [#4131]
 
-5.0.1 (unreleased)
+
+5.0.2 (unreleased)
 ==================
 
 Bug Fixes
 ---------
-- Fix 'add to flux viewer' toggle in DQ cube loader to fix issue where the DQ
-  cube was being added to the flux viewer even when toggled off. [#4145]
 
 Mosviz
 ^^^^^^
+
+
+5.0.1 (2026-05-01)
+==================
+
+Bug Fixes
+---------
+
+- Fix 'add to flux viewer' toggle in DQ cube loader to fix issue where the DQ
+  cube was being added to the flux viewer even when toggled off. [#4145]
+
+- Workaround patch to ipywidgets.Widget.get_state to avoid set size changed
+  during iteration error that occurs in many scenarios (linking, batch loading data,
+  etc.). [#4150]
+
+- Fix spectral subsets appearing in image viewer data menu. [#4149]
+
+- Fix Data Quality plugin support for Roman ASDF images. [#4089]
+
+- Multiply values from spectrum-at-spaxel tool by PIXAR_SR when available to match
+  units of other extracted fluxes. [#4156]
+
+- Fix passing strings to selected traitlet without expanding into characters. [#4157]
 
 5.0 (2026-04-15)
 ================
@@ -124,6 +149,8 @@ New Features
 - Style tweaks to scatter axis ticks and labels. [#4139]
 
 - Add support for unit conversions in aperture photometry plugin for images. [#4136]
+
+- Added projection to return of AIDA get_viewport method. [#4076]
 
 Cubeviz
 ^^^^^^^
