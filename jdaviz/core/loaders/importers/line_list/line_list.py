@@ -46,7 +46,7 @@ class LineListImporter(BaseImporterToPlugin):
 
         # Check that rest column has units
         if not hasattr(self.input['rest'], 'unit') or self.input['rest'].unit is None:
-            return "The 'rest' column must have astropy units."
+            return "'rest' column must be an astropy Quantity object."
 
         # Check for positive rest values
         if np.any(self.input['rest'] <= 0):
