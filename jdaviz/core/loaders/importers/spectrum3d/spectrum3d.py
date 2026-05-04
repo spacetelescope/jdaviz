@@ -374,7 +374,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
-            return 'spectrum3d importer is only supported in deconfigged, cubeviz.'
+            return 'spectrum3d importer is only supported in cubeviz.'
 
         if self.spectrum.flux.ndim != 3:
             return 'Spectrum flux must be 3D.'

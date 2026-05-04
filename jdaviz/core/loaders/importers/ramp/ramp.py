@@ -201,7 +201,7 @@ class RampImporter(BaseImporterToDataCollection):
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'rampviz'):
             # NOTE: temporary during deconfig process
-            return 'ramp importer is only supported in deconfigged, rampviz.'
+            return 'ramp importer is only supported in rampviz.'
 
         # Filter out None types from isinstance check (optional dependencies)
         valid_types = tuple(

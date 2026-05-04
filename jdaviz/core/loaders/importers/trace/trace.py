@@ -16,7 +16,7 @@ class TraceImporter(BaseImporterToDataCollection):
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
-            return 'Trace importer is only supported in deconfigged, specviz2d.'
+            return 'Trace importer is only supported in specviz2d.'
 
         if not isinstance(self.input, Trace):
             return 'Input is not a Trace.'
