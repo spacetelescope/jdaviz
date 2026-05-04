@@ -61,10 +61,10 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
     def _check_is_valid(self):
-        accepted_configs = ('deconfigged', 'specviz', 'specviz2d', 'cubeviz')
-        if self._app.config not in accepted_configs:
+        accepted_configs = ['specviz', 'specviz2d', 'cubeviz']
+        if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
-            return f"spectrum1d importer is only supported in {', '.join(accepted_configs)}'."
+            return f"spectrum1d importer is only supported in {', '.join(accepted_configs)}."
 
         if not len(self.extension.choices):
             return 'No extensions available.'

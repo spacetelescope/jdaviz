@@ -20,8 +20,8 @@ class SpecutilsSpectrumParser(BaseParser):
     SpecutilsCls = Spectrum
 
     def _check_is_valid(self):
-        accepted_configs = ('deconfigged', 'specviz', 'specviz2d', 'cubeviz')
-        if self._app.config not in accepted_configs:
+        accepted_configs = ['specviz', 'specviz2d', 'cubeviz']
+        if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
             return f"specutils.Spectrum format is only supported in {', '.join(accepted_configs)}."
 
@@ -63,8 +63,7 @@ class SpecutilsSpectrumListParser(SpecutilsSpectrumParser):
 
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz'):
-            # NOTE: temporary during deconfig process
-            return 'specutils.SpectrumList format is only supported in deconfigged, specviz.'
+            return 'specutils.SpectrumList format is only supported in specviz.'
         result = super()._check_is_valid()
         if result:
             return result

@@ -12,8 +12,8 @@ __all__ = ['JPGPNGParser']
 class JPGPNGParser(BaseParser):
 
     def _check_is_valid(self):
-        accepted_configs = ('deconfigged', 'specviz2d', 'lcviz', 'imviz')
-        if self._app.config not in accepted_configs:
+        accepted_configs = ['specviz2d', 'lcviz', 'imviz']
+        if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
             return f"jpgpng format is only supported in {', '.join(accepted_configs)}."
 
