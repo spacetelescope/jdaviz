@@ -29,7 +29,7 @@ Other Changes and Additions
   pagination in the UI and fetching product lists in a background thread so the
   app remains responsive. [#4131]
 
-5.0.1 (unreleased)
+5.0.2 (unreleased)
 ==================
 
 Bug Fixes
