@@ -4,6 +4,9 @@
 New Features
 ------------
 
+* Data menu/legend overflow: more data label icons are now shown and two or more icons must be
+  present beyond the overflow limit before the overflow icon will appear. [#4160]
+
 Mosviz
 ^^^^^^
 
