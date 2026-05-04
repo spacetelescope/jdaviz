@@ -6,41 +6,43 @@
       :selected.sync="extension_selected"
       :show_if_single_entry="true"
       :multiselect="multiselect"
+      :nonmultiselect_allow_clear="true"
       :exists_in_dc="existing_data_in_dc"
       label="Extension"
       api_hint="ldr.importer.extension ="
       :api_hints_enabled="api_hints_enabled"
       hint="Extension from the FITS HDUList to use for the flux/science cube."
     />
-    <plugin-auto-label
-      :value.sync="data_label_value"
-      :default="data_label_default"
-      :auto.sync="data_label_auto"
-      :invalid_msg="data_label_invalid_msg"
-      label="Data Label"
-      api_hint="ldr.importer.data_label ="
-      :api_hints_enabled="api_hints_enabled"
-      hint="Label to assign to the new flux/science cube data entry."
-    ></plugin-auto-label>
+    <div v-if="extension_selected.length > 0">
+      <plugin-auto-label
+        :value.sync="data_label_value"
+        :default="data_label_default"
+        :auto.sync="data_label_auto"
+        :invalid_msg="data_label_invalid_msg"
+        label="Data Label"
+        api_hint="ldr.importer.data_label ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Label to assign to the new flux/science cube data entry."
+      ></plugin-auto-label>
 
-    <plugin-viewer-create-new
-      :items="viewer_items"
-      :selected.sync="viewer_selected"
-      :create_new_items="viewer_create_new_items"
-      :create_new_selected.sync="viewer_create_new_selected"
-      :new_label_value.sync="viewer_label_value"
-      :new_label_default="viewer_label_default"
-      :new_label_auto.sync="viewer_label_auto"
-      :new_label_invalid_msg="viewer_label_invalid_msg"
-      :multiselect="viewer_multiselect"
-      :show_multiselect_toggle="false"
-      label="Viewer for Flux Cube"
-      api_hint="ldr.importer.viewer ="
-      :api_hints_enabled="api_hints_enabled"
-      :show_if_single_entry="true"
-      hint="Select the viewer to use for the imported flux/science cube."
-    ></plugin-viewer-create-new>
-
+      <plugin-viewer-create-new
+        :items="viewer_items"
+        :selected.sync="viewer_selected"
+        :create_new_items="viewer_create_new_items"
+        :create_new_selected.sync="viewer_create_new_selected"
+        :new_label_value.sync="viewer_label_value"
+        :new_label_default="viewer_label_default"
+        :new_label_auto.sync="viewer_label_auto"
+        :new_label_invalid_msg="viewer_label_invalid_msg"
+        :multiselect="viewer_multiselect"
+        :show_multiselect_toggle="false"
+        label="Viewer for Flux Cube"
+        api_hint="ldr.importer.viewer ="
+        :api_hints_enabled="api_hints_enabled"
+        :show_if_single_entry="true"
+        hint="Select the viewer to use for the imported flux/science cube."
+      ></plugin-viewer-create-new>
+    </div>
     <div v-if="unc_extension_items.length >= 1">
       <j-plugin-section-header>Uncertainty Cube</j-plugin-section-header>
       <plugin-select

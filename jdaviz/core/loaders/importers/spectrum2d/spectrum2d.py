@@ -47,6 +47,9 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Initialize _spectrum_unit before filters are added (set in output property)
+        self._spectrum_unit = None
+
         if self.default_data_label_from_resolver:
             self.data_label.default = self.default_data_label_from_resolver
         elif self._app.config == 'specviz2d':
@@ -92,6 +95,10 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # Use the cached spectrum unit instead of accessing it from the
             # spectrum object, which may reference a closed file in some situations
             spectrum_unit = self._spectrum_unit
+
+            # If spectrum_unit hasn't been cached yet, allow loading
+            if spectrum_unit is None:
+                return True
 
             if not isinstance(spectrum_unit, u.Unit):
                 spectrum_unit = u.Unit(spectrum_unit)
@@ -153,6 +160,18 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # Cache the spectral axis unit on load to avoid accessing a potentially
         # closed file reference later when the filter is called
         self._spectrum_unit = getattr(spectrum.spectral_axis, 'unit', None)
+        # Re-apply filters now that we have the actual spectral axis unit
+        self.ext_viewer._update_items(auto_select=False)
+        # Check if current selection is still valid after filtering and update if needed
+        if self.ext_viewer.is_multiselect:
+            # If any selected viewer was filtered out, reapply default selection
+            if any(s not in self.ext_viewer.choices for s in self.ext_viewer.selected):
+                self.ext_viewer.select_default()
+        else:
+            # If selected viewer was filtered out and no create_new is set, reapply default
+            if (self.ext_viewer.selected not in self.ext_viewer.choices and
+                    not self.ext_viewer.create_new.selected):
+                self.ext_viewer.select_default()
         return spectrum
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
