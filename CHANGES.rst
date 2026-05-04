@@ -35,9 +35,6 @@ Other Changes and Additions
 5.0.2 (unreleased)
 ==================
 
-- Errors from load are now more explicit, either as a result of known invalid cases or
-  as errors producing during import. [#4159]
-
 Bug Fixes
 ---------
 
