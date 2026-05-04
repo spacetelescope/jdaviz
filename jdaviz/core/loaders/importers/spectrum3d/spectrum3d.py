@@ -338,6 +338,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         to the data collection.
         """
         if self.config == 'deconfigged':
+            # Check if viewer component exists (may not during initialization)
+            if not hasattr(self, 'viewer'):
+                return
             # Check if viewer.selected is empty (could be list or string depending on multiselect)
             v = self.viewer.selected
             has_viewer = bool(v) if isinstance(v, str) else len(v) > 0
