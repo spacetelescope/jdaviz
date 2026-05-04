@@ -224,7 +224,7 @@ class TestLineLists:
         lt['rest'] = [5007, 6563]  # No units
         mock = MockImporter(lt)
         result = LineListImporter._check_is_valid(mock)
-        assert result == "The 'rest' column must have astropy units."
+        assert result == "'rest' column must be an astropy Quantity object."
 
         # Test negative rest values
         lt = QTable()
