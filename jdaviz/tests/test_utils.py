@@ -241,6 +241,37 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
         assert match_result == expected
 
 
+def test_wildcard_match_string_in_multiselect(deconfigged_helper, spectrum1d):
+    """
+    Test that a plain string (no wildcards) in multiselect mode is not iterated
+    over as characters.
+
+    This test verifies the fix for the issue where passing a string to a dataset parameter
+    in multiselect mode would iterate over characters instead of treating it as a single item.
+    """
+    # Load multiple datasets
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label="dataset1")
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label="dataset2")
+
+    # Use Gaussian Smooth plugin which has a dataset selector
+    gs = deconfigged_helper.plugins['Gaussian Smooth']
+
+    # Get the internal SelectPluginComponent to test wildcard_match behavior
+    dataset_selector = gs._obj.dataset
+
+    # Ensure multiselect is initially disabled (will be enabled by wildcard_match if needed)
+    dataset_selector.multiselect = False
+
+    # Pass a plain string (no wildcards) - should not iterate over characters
+    match_result = wildcard_match(dataset_selector, 'dataset1')
+    assert match_result == 'dataset1'  # String should be returned as-is
+
+    # Test that wildcard_match also handles lists properly
+    dataset_selector.multiselect = False  # Reset
+    match_result = wildcard_match(dataset_selector, ['dataset1', 'dataset2'])
+    assert match_result == ['dataset1', 'dataset2']
+
+
 @pytest.mark.parametrize('n_cpu', [1, 2, None])
 class TestParallelizeCalculation:
     """
