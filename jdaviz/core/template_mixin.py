@@ -776,6 +776,15 @@ class PluginTemplateMixin(TemplateMixin):
     docs_link = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     docs_description = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     _plugin_description = Unicode("").tag(sync=True)  # noqa shorter description of plugin, displayed below title in menu
+
+    # Downstream configs may set _docs_link_fmt to a format string using {vdocs} to override
+    # the default docs link without subclassing.
+    _docs_link_fmt = ''
+
+    @observe('vdocs')
+    def _update_docs_link(self, *args):
+        if self._docs_link_fmt:
+            self.docs_link = self._docs_link_fmt.format(vdocs=self.vdocs)
     plugin_opened = Bool(False).tag(sync=True)  # noqa any instance of the plugin is open (recently sent an "alive" ping)
     uses_active_status = Bool(False).tag(sync=True)  # noqa whether the plugin has live-preview marks, set to True in plugins to expose keep_active switch
     keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
@@ -6084,6 +6093,11 @@ class Table(PluginSubcomponent):
     enable_clear = Bool(True).tag(sync=True)
     clear_btn_lbl = Unicode('Clear Table').tag(sync=True)
 
+    # When True, headers_visible and export_table() will omit columns whose
+    # every row value is empty (nan / empty string). Useful for configs that
+    # share a common wide header set but only populate a subset of columns.
+    _skip_empty_columns = False
+
     # Loader panel traitlets for "Load into App" functionality
     loader_items = List([]).tag(sync=True)
     loader_selected = Unicode('object').tag(sync=True)
@@ -6142,6 +6156,20 @@ class Table(PluginSubcomponent):
     @staticmethod
     def _new_col_visible(colname):
         return True
+
+    def _compute_populated_headers(self):
+        """Return ``headers_avail`` filtered to columns with at least one non-empty value.
+
+        A value is considered empty when its JSON-display representation equals ``''``
+        (i.e. NaN floats, all-NaN tuples, and empty strings all render as ``''``).
+        When the table has no rows every header in ``headers_avail`` is returned.
+        """
+        if not self.items:
+            return list(self.headers_avail)
+        return [
+            h for h in self.headers_avail
+            if any(item.get(h, '') != '' for item in self.items)
+        ]
 
     @observe('selected_rows')
     def _selected_rows_changed(self, msg):
@@ -6295,6 +6323,8 @@ class Table(PluginSubcomponent):
 
         # clean data to show in the UI
         self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
+        if self._skip_empty_columns:
+            self.headers_visible = self._compute_populated_headers()
         self._plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
 
     def __len__(self):
@@ -6305,6 +6335,9 @@ class Table(PluginSubcomponent):
         self.selected_rows = []
         self.selected_indices = []
         self._qtable = None
+        if self._skip_empty_columns:
+            # Reset to show all available headers so the next mark populates cleanly
+            self.headers_visible = list(self.headers_avail)
         self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
 
     def clear_table(self):
@@ -6435,6 +6468,10 @@ class Table(PluginSubcomponent):
         """
         if filename is None:
             # TODO: default to only showing selected columns?
+            if self._skip_empty_columns and self._qtable is not None:
+                populated = self._compute_populated_headers()
+                cols = [c for c in self._qtable.colnames if c in populated]
+                return self._qtable[cols] if cols else self._qtable
             return self._qtable
 
         if "_orig_colnames_for_jdaviz_export" in self._qtable.meta:

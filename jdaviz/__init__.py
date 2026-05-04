@@ -36,6 +36,31 @@ global _apps
 global _current_index
 
 _apps = []
+_new_app_hooks = []
+
+
+def _register_new_app_hook(hook):
+    """
+    Register a callable to be invoked on every new jdaviz App instance.
+
+    The hook is also immediately applied to all existing App instances,
+    so packages can safely call this regardless of import order.
+
+    Parameters
+    ----------
+    hook : callable
+        A callable that accepts a single argument: the new ``App`` instance.
+
+    Examples
+    --------
+    Register a hook that patches every app with custom behaviour::
+
+        import jdaviz
+        jdaviz.register_new_app_hook(my_package.patch_app)
+    """
+    _new_app_hooks.append(hook)
+    for app in _apps:
+        hook(app)
 
 # ipywidgets.Widget.get_state() iterates over _states_to_send, a set
 # that cam be mutated mid-iteration, causing "RuntimeError: Set changed size during iteration".
@@ -84,6 +109,8 @@ def new_app(replace=False, set_as_current=True):
     # rename the internal Application instance and/or merge functionality in with the
     # App class to avoid confusion.
     ca = App(api_hints_obj='jd')
+    for hook in _new_app_hooks:
+        hook(ca)
     if replace:
         _apps[_current_index] = ca
     else:

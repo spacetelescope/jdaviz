@@ -190,6 +190,7 @@
               :api_hints_obj="api_hints_obj"
               :api_hints_enabled="state.show_api_hints"
               :about_widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('About')].widget"
+              :downstream_packages="state.downstream_packages"
               :force_open_about.sync="force_open_about"
             ></j-about-menu>
 
