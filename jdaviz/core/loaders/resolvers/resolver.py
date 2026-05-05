@@ -628,7 +628,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             return
 
         # first attempt to parse the input as a table
-        parsed_input_table = self._parsed_input_to_table(parsed_input)
+        parsed_input_table = None
+        if self._restrict_to_formats is None or "Catalog" in self._restrict_to_formats:
+            parsed_input_table = self._parsed_input_to_table(parsed_input)
+
         # if the input could be parsed as a table, try to interpret it as
         # either an observation table or file table. parsed_input_table
         # will be None if it could not be parsed as a table.
