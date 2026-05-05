@@ -203,7 +203,9 @@ class ImageImporter(BaseImporterToDataCollection):
         return ImporterUserApi(self, expose)
 
     def _check_is_valid(self):
-        accepted_configs = ['imviz', 'mastviz', 'cubeviz', 'rampviz']
+        # generalized jdaviz isn't the valid config name, but we can
+        # drop it here for the string output.
+        accepted_configs = ['imviz', 'mastviz', 'cubeviz', 'rampviz', 'generalized jdaviz']
         if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
             return f"image importer is only supported in {', '.join(accepted_configs)}."

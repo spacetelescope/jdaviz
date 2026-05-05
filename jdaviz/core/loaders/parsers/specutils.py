@@ -20,7 +20,9 @@ class SpecutilsSpectrumParser(BaseParser):
     SpecutilsCls = Spectrum
 
     def _check_is_valid(self):
-        accepted_configs = ['specviz', 'specviz2d', 'cubeviz']
+        # generalized jdaviz isn't the valid config name, but we can
+        # drop it here for the string output.
+        accepted_configs = ['specviz', 'specviz2d', 'cubeviz', 'generalized jdaviz']
         if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
             return f"specutils.Spectrum format is only supported in {', '.join(accepted_configs)}."

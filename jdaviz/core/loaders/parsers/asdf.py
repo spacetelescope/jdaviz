@@ -19,7 +19,9 @@ __all__ = ['ASDFParser']
 class ASDFParser(BaseParser):
 
     def _check_is_valid(self):
-        accepted_configs = ['imviz', 'specviz', 'specviz2d', 'rampviz']
+        # generalized jdaviz isn't the valid config name, but we can
+        # drop it here for the string output.
+        accepted_configs = ['imviz', 'specviz', 'specviz2d', 'rampviz', 'generalized jdaviz']
         if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
             return f"asdf format is only supported in {', '.join(accepted_configs)}."
