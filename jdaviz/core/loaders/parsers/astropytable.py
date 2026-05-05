@@ -24,7 +24,7 @@ class AstropyTableParser(BaseParser):
 
         if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
-            return 'astropy.Table format is only supported in imviz, mastviz.'
+            return 'astropy.Table format is only supported in imviz, mastviz, generalized jdaviz.'
 
         if self.input is None:
             return 'Input must not be None.'

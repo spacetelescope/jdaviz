@@ -65,7 +65,7 @@ class SpecutilsSpectrumListParser(SpecutilsSpectrumParser):
 
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz'):
-            return 'specutils.SpectrumList format is only supported in specviz.'
+            return 'specutils.SpectrumList format is only supported in specviz, generalized jdaviz.'
         result = super()._check_is_valid()
         if result:
             return result

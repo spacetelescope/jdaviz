@@ -28,7 +28,7 @@ class RampIntegrationImporter(BaseImporterToDataCollection):
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'rampviz'):
             # NOTE: temporary during deconfig process
-            return 'ramp_integration importer is only supported in rampviz.'
+            return 'ramp_integration importer is only supported in rampviz, generalized jdaviz.'
 
         if not isinstance(self.input, (np.ndarray, NDDataArray)):
             return 'Input must be a numpy array or NDDataArray.'
