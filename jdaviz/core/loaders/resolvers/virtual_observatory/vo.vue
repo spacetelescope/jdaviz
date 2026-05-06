@@ -32,6 +32,8 @@
         :selected.sync="producttype_selected"
         label="Data Product"
         hint="Type of Data Products to Query"
+        api_hint="ldr.producttype ="
+        :api_hints_enabled="api_hints_enabled"
         :disabled="false"
       ></plugin-select>
 
