@@ -33,7 +33,17 @@ class LineListImporter(BaseImporterToPlugin):
         self._on_label_changed()
 
     def _check_is_valid(self):
-        """Validate that the input is a QTable with required columns."""
+        """
+        Checks if the input is a valid QTable with required columns.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         if not isinstance(self.input, QTable):
             return 'Input must be a QTable.'
 

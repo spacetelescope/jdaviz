@@ -526,6 +526,17 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         return self
 
     def _check_is_valid(self):
+        """
+        Checks if the resolver input is valid (override in subclasses).
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         # override by subclass
         return 'Not implemented.'  # pragma: nocover
 
@@ -1167,6 +1178,17 @@ class BaseConeSearchResolver(BaseResolver):
         self.viewer_centered = True
 
     def _check_is_valid(self):
+        """
+        Checks if the input is a valid cone search configuration.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         # these resolvers do not accept any direct, (default_input = None), so can
         # always be considered valid
         return ''
