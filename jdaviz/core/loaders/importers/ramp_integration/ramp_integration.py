@@ -25,13 +25,26 @@ class RampIntegrationImporter(BaseImporterToDataCollection):
     def _get_supported_viewers():
         return [{'label': 'Ramp Integration', 'reference': 'rampviz-profile-viewer'}]
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid ramp integration data array.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         if self._app.config not in ('deconfigged', 'rampviz'):
             # NOTE: temporary during deconfig process
-            return False
+            return 'ramp_integration importer is only supported in rampviz, generalized jdaviz.'
 
-        return isinstance(self.input, (np.ndarray, NDDataArray))
+        if not isinstance(self.input, (np.ndarray, NDDataArray)):
+            return 'Input must be a numpy array or NDDataArray.'
+
+        return ''
 
     @property
     def output(self):

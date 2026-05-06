@@ -55,7 +55,7 @@ class TestFileDropResolverBasic:
         # Check that LoaderUserApi was created
         assert isinstance(api, LoaderUserApi)
 
-        assert file_drop_resolver.is_valid is True
+        assert bool(file_drop_resolver.is_valid) is True
         assert file_drop_resolver.default_label is None
 
         # Test that _on_total_progress updates progress trait.

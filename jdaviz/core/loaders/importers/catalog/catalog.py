@@ -181,19 +181,21 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         return self.input
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
-            return False
+            return 'Catalog importer is only supported in imviz, mastviz, generalized jdaviz.'
+
         if isinstance(self.input, (Table, QTable)) and len(self.input):
-            return True
+            return ''
+
         elif isinstance(self.input, HDUList):
             # check for the presence of at least one TableHDU/BinTableHDU extension
             for i, hdu in enumerate(self.input):
                 if isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0:
-                    return True
-        return False
+                    return ''
+
+        return 'Input is not a valid catalog.'
 
     def _update_col_items_and_selected(self, base_attr, options, select_first=True):
         """update column items and selected value."""

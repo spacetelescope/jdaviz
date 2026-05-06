@@ -11,12 +11,29 @@ __all__ = ['JPGPNGParser']
 @loader_parser_registry('jpgpng')
 class JPGPNGParser(BaseParser):
 
-    @property
-    def is_valid(self):
-        if self._app.config not in ('deconfigged', 'specviz2d', 'lcviz', 'imviz'):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid JPG or PNG image.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by a ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
+        # generalized jdaviz isn't the valid config name, but we can
+        # drop it here for the string output.
+        accepted_configs = ['specviz2d', 'lcviz', 'imviz', 'generalized jdaviz']
+        if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
-        return isinstance(self.input, str) and self.input.endswith(('.jpg', '.jpeg', '.png'))
+            return f"jpg/png format is only supported in {', '.join(accepted_configs)}."
+
+        if not (isinstance(self.input, str) and self.input.endswith(('.jpg', '.jpeg', '.png'))):
+            return 'Input must be a string path ending in .jpg, .jpeg, or .png.'
+
+        return ''
 
     @cached_property
     def output(self):

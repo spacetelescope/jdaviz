@@ -4,8 +4,11 @@
 New Features
 ------------
 
-* Data menu/legend overflow: more data label icons are now shown and two or more icons must be
+- Data menu/legend overflow: more data label icons are now shown and two or more icons must be
   present beyond the overflow limit before the overflow icon will appear. [#4160]
+
+- Errors from load are now more explicit, either as a result of known invalid cases or
+  as errors producing during import. [#4159]
 
 Mosviz
 ^^^^^^

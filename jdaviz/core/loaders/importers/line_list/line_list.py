@@ -32,28 +32,40 @@ class LineListImporter(BaseImporterToPlugin):
         self.observe(self._on_label_changed, 'line_list_label_value')
         self._on_label_changed()
 
-    @property
-    def is_valid(self):
-        """Validate that the input is a QTable with required columns."""
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid QTable with required columns.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         if not isinstance(self.input, QTable):
-            return False
+            return 'Input must be a QTable.'
 
         # Check for required columns
         if "linename" not in self.input.colnames:
-            return False
+            return "Input must have a 'linename' column."
 
         if "rest" not in self.input.colnames:
-            return False
+            return "Input must have a 'rest' column."
 
         # Check that rest column has units
         if not hasattr(self.input['rest'], 'unit') or self.input['rest'].unit is None:
-            return False
+            return "'rest' column must be an astropy Quantity object."
 
         # Check for positive rest values
         if np.any(self.input['rest'] <= 0):
-            return False
+            return 'All rest values must be positive.'
 
-        return self.has_default_plugin
+        if not self.has_default_plugin:
+            return f'{self.default_plugin} plugin not available.'
+
+        return ''
 
     @property
     def user_api(self):

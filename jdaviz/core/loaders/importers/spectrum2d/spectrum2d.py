@@ -118,21 +118,16 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                   'extension', 'unc_extension', 'mask_extension']
         return ImporterUserApi(self, expose)
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
-            return False
-        try:
-            if self.spectrum.flux.ndim != 2:
-                return False
-        except Exception:
-            return False
-        try:
-            self.output
-        except Exception:
-            return False
-        return True
+            return 'spectrum2d importer is only supported in specviz2d, generalized jdaviz.'
+
+        if self.spectrum.flux.ndim != 2:
+            return 'Spectrum flux must be 2D.'
+
+        _ = self.output
+        return ''
 
     @observe('extension_selected')
     def _on_extension_selected_changed(self, change={}):

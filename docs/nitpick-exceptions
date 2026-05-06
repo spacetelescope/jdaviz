@@ -12,3 +12,5 @@ py:class ipywidgets.widgets.valuewidget.ValueWidget
 py:class ipywidgets.widgets.widget_box.VBox
 py:class glue_jupyter.bqplot.common.tools.BqplotPanZoomMode
 py:class glue_jupyter.bqplot.image.state.BqplotImageViewerState
+
+py:class t.Any
