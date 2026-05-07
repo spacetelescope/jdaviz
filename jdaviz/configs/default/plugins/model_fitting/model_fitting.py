@@ -411,13 +411,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     @observe('cube_fit')
     def _cube_fit_changed(self, event={}):
-        # In deconfigged, make sure we don't end up in an edge case where there isn't actually
-        # cube data
-        if self.config == 'deconfigged':
-            self._check_has_cube_data()
-            if event.get('new') and not self.has_cube_data:
-                self.cube_fit == False
-                return
         self._update_viewer_filters(event=event)
 
         sb_unit = self._app._get_display_unit('sb')
@@ -1383,8 +1376,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 break
         else:
             self.has_cube_data = False
-
-        print(self.has_cube_data)
+            # Make sure cube_fit is also False
+            self.cube_fit = False
 
     @observe("dataset_selected", "dataset_items", "cube_fit")
     def _set_default_results_label(self, event={}):
