@@ -137,8 +137,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Perform aperture photometry for drawn regions.'
-        if self.config == 'deconfigged':
-            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/aperture_photometry.html'  # noqa
 
         self.dataset.add_filter('is_image_or_flux_cube')
 

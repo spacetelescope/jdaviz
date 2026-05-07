@@ -107,8 +107,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self._plugin_description = 'Rotate image viewer orientation and choose alignment (pixel or sky).'  # noqa
 
         self.docs_description = "Control how images are aligned (by pixel or WCS) and set the orientation/rotation of the viewer."  # noqa
-        if self.config == 'deconfigged':
-            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/orientation.html'  # noqa
 
         self.viewer._allow_multiselect = False
         self.viewer.add_filter('is_imviz_image_viewer', 'reference_has_wcs')
