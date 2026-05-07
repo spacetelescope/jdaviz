@@ -4,6 +4,8 @@ from copy import deepcopy
 
 import astropy.units as u
 from astropy.modeling import fitting
+from glue.core.message import (DataCollectionAddMessage,
+                               DataCollectionDeleteMessage)
 from specutils import Spectrum
 from specutils.fitting import fit_lines
 from specutils.utils import QuantityModel
@@ -112,6 +114,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     display_order = Bool(False).tag(sync=True)
 
     cube_fit = Bool(False).tag(sync=True)
+    has_cube_data = Bool(False).tag(sync=True)
 
     # residuals (non-cube fit only)
     residuals_calculate = Bool(False).tag(sync=True)
@@ -218,6 +221,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=self._check_has_cube_data)
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=self._check_has_cube_data)
 
         self.parallel_n_cpu = None
         if self.config == "deconfigged":
@@ -404,6 +411,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     @observe('cube_fit')
     def _cube_fit_changed(self, event={}):
+        # In deconfigged, make sure we don't end up in an edge case where there isn't actually
+        # cube data
+        if self.config == 'deconfigged':
+            self._check_has_cube_data()
+            if event.get('new') and not self.has_cube_data:
+                self.cube_fit == False
+                return
         self._update_viewer_filters(event=event)
 
         sb_unit = self._app._get_display_unit('sb')
@@ -686,6 +700,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             if self.dataset_selected in self._app.data_collection.labels:
                 data = self._app.data_collection[self.dataset_selected].get_object(statistic=None)
             else:  # User selected some subset from spectrum viewer, just use original cube
+                # TODO: generalize this for deconfigged
                 data = self._app.data_collection[0].get_object(statistic=None)
             spatial_axes = [0, 1, 2]
             spatial_axes.remove(data.spectral_axis_index)
@@ -1361,6 +1376,16 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         self.model_equation_invalid_msg = ''
 
+    def _check_has_cube_data(self, event={}):
+        for dataset in self._app.data_collection:
+            if dataset.ndim == 3:
+                self.has_cube_data = True
+                break
+        else:
+            self.has_cube_data = False
+
+        print(self.has_cube_data)
+
     @observe("dataset_selected", "dataset_items", "cube_fit")
     def _set_default_results_label(self, event={}):
         label_comps = []
@@ -1621,6 +1646,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self.dataset_selected in self._app.data_collection.labels:
             data = self._app.data_collection[self.dataset_selected]
         else:  # User selected some subset from spectrum viewer, just use original cube
+            # TODO: generalize this for deconfigged
             data = self._app.data_collection[0]
 
         # First, ensure that the selected data is cube-like. It is possible

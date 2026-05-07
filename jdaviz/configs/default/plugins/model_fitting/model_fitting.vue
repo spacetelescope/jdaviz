@@ -8,7 +8,7 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
-    <v-row v-if="config=='cubeviz' || config=='deconfigged'">
+    <v-row v-if="(config=='cubeviz' || config=='deconfigged') && has_cube_data">
       <plugin-switch
         :value.sync="cube_fit"
         label="Cube Fit"
