@@ -415,7 +415,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other']
+        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other', 'hdu']
         if self.input_has_extensions:
             expose += ['extension']
         return ImporterUserApi(self, expose=expose)

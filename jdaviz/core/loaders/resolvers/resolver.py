@@ -521,7 +521,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     self.default_input_cast(inp) if self.default_input_cast else inp)
             user_api = self.user_api
             for k, v in kwargs.items():
+                print(f"Checking for {k}")
                 if hasattr(user_api, k):
+                    print(f"Setting {k} to {v}")
                     setattr(user_api, k, v)
         return self
 
@@ -555,15 +557,17 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def parsed_input(self):
         return self.parse_input()
 
-    def _parsed_input_to_table(self, parsed_input):
+    def _parsed_input_to_table(self, parsed_input, hdu=None):
         if (isinstance(parsed_input, str)
                 and os.path.exists(parsed_input) and os.path.isfile(parsed_input)):
             # try to read into a table which could be a products list
             try:
+                '''
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore",
                                           message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
-                    parsed_input = astropyTable.read(parsed_input)
+                '''
+                parsed_input = astropyTable.read(parsed_input, hdu=hdu)
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, astropyTable):
@@ -640,7 +644,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # first attempt to parse the input as a table
         parsed_input_table = None
         if self._restrict_to_formats is None or "Catalog" in self._restrict_to_formats:
-            parsed_input_table = self._parsed_input_to_table(parsed_input)
+            hdu = getattr(self.user_api, 'hdu', None)
+            print(f"HDU is {hdu}")
+            print(self.user_api)
+            parsed_input_table = self._parsed_input_to_table(parsed_input, hdu=hdu)
 
         # if the input could be parsed as a table, try to interpret it as
         # either an observation table or file table. parsed_input_table
@@ -934,7 +941,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
     @property
     def user_api(self):
-        return LoaderUserApi(self)
+        return LoaderUserApi(self, expose=['hdu,'])
 
     @property
     def default_label(self):
