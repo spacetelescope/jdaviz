@@ -57,8 +57,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``cube_fit``
-      Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
-      collapsed spectrum.
+      Only exposed for Cubeviz and generalized Jdaviz.  Whether to fit the model to the cube
+      instead of to the collapsed spectrum.
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to fit the model.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
@@ -189,7 +189,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                             selected='fitter_selected')
         self._enforce_spline_fitter()
 
-        if self.config == 'cubeviz':
+        if self.config in ('cubeviz', 'deconfigged'):
             # use mean whenever extracting the 1D spectrum of a cube to initialize model params
             self.dataset._spectral_extraction_function = 'Mean'
         # by default, require entries to be in spectrum-viewer (not other cubeviz images, etc)
@@ -204,7 +204,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                        'residuals_label_auto', 'residuals_label_invalid_msg')
 
         headers = ['model', 'data_label', 'spectral_subset', 'equation']
-        if self.config == 'cubeviz':
+        if self.config in ('cubeviz', 'deconfigged'):
             headers += ['cube_fit']
 
         self.table.headers_avail = headers
@@ -244,7 +244,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @property
     def user_api(self):
         expose = ['dataset']
-        if self.config == "cubeviz":
+        if self.config in ('cubeviz', 'deconfigged'):
             expose += ['cube_fit']
         expose += ['spectral_subset', 'model_component',
                    'poly_order', 'model_component_label', 'model_components',
@@ -393,6 +393,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # Model fitted to cube, return image viewer
             if self.config == 'cubeviz':
                 return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
+            elif self.config == 'deconfigged':
+                return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'},
+                        {'label': 'Image', 'reference': 'imviz-image-viewer'}]
             else:
                 return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
         else:
@@ -1284,7 +1287,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Disable computing model if cube_fit is active and
         # Spline1D component is present in the equation
-        if self._app.config == 'cubeviz' and self.cube_fit:
+        if self._app.config in ('cubeviz', 'deconfigged') and self.cube_fit:
             id_to_type = {cm['id']: cm.get('model_type') for cm in self.component_models}
             has_spline_in_eq = any(id_to_type.get(name) == 'Spline1D'
                                    for name in self.equation_components)
