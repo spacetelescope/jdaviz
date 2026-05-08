@@ -95,7 +95,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         self._plugin_description = 'Return statistics for spectral line.'
 
         if self.config == 'deconfigged':
-            self.docs_link = f'https://jdaviz.readthedocs.io/en/{vdocs}/plugins/line_analysis.html'  # noqa
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/line_analysis.html'  # noqa
 
         self.update_results(None)
 
