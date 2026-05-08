@@ -130,6 +130,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Export data/plots and other outputs to a file.'
 
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/export/index.html'
+
         # NOTE: if adding export support for non-plugin products, also update the language
         # in the UI as well as in _set_dataset_not_supported_msg
         self.dataset.filters = ['is_not_wcs_only', 'not_child_layer',
