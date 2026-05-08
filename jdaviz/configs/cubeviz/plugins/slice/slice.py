@@ -74,6 +74,9 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Select and interact with slice of cube in image viewers.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/spectral_slice.html'  # noqa
+
 
         self._cached_properties = ['valid_selection_values', 'valid_selection_values_sorted',
                                    'valid_indicator_values', 'valid_indicator_values_sorted',

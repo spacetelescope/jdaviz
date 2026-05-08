@@ -92,6 +92,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Create a 2D image from a data cube.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/moment_maps.html'  # noqa
 
         self.moment = None
 

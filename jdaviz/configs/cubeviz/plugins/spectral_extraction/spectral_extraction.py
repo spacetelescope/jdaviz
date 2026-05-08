@@ -136,6 +136,9 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract a spectrum from a spectral cube.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/3d_spectral_extraction.html'  # noqa
+
 
         self.extracted_spec = None
 
