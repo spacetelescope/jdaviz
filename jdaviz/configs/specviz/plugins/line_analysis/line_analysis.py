@@ -94,6 +94,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Return statistics for spectral line.'
 
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{vdocs}/plugins/line_analysis.html'
+
         self.update_results(None)
 
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
