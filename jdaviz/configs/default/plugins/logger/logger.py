@@ -33,9 +33,6 @@ class Logger(PluginTemplateMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Access history of logger messages.'
 
-        if self.config == 'deconfigged':
-            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/info/logger.html'
-
         self.popup_verbosity = SelectPluginComponent(self,
                                                      items='popup_verbosity_items',
                                                      selected='popup_verbosity_selected',
