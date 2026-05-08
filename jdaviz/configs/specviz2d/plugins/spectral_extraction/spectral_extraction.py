@@ -277,7 +277,6 @@ class SpectralExtraction2D(PluginTemplateMixin):
         if self.config == 'deconfigged':
             self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/2d_spectral_extraction.html'  # noqa
 
-
         # TRACE
         self.trace_trace = DatasetSelect(self,
                                          'trace_trace_items',

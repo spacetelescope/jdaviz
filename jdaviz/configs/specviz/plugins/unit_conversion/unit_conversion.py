@@ -106,8 +106,7 @@ class UnitConversion(PluginTemplateMixin):
         self._plugin_description = 'Convert the units of displayed physical quantities.'
 
         if self.config == 'deconfigged':
-            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/settings/display_units.html'
-
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/settings/display_units.html'  # noqa
 
         self._cached_properties = ['image_layers']
 

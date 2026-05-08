@@ -139,7 +139,6 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.config == 'deconfigged':
             self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/3d_spectral_extraction.html'  # noqa
 
-
         self.extracted_spec = None
 
         self.dataset.filters = ['is_flux_cube']

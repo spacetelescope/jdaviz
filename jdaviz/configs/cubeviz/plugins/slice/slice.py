@@ -77,7 +77,6 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
         if self.config == 'deconfigged':
             self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/spectral_slice.html'  # noqa
 
-
         self._cached_properties = ['valid_selection_values', 'valid_selection_values_sorted',
                                    'valid_indicator_values', 'valid_indicator_values_sorted',
                                    'valid_values', 'valid_values_sorted']
