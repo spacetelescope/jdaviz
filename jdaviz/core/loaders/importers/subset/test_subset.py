@@ -99,14 +99,14 @@ class TestSubsetImporter:
         """
         importer = self.generate_importer(regions_input)
 
-        assert importer.is_valid is True
+        assert bool(importer.is_valid) is True
         assert importer.default_plugin == 'Subset Tools'
 
         importer = self.generate_importer(spectral_region)
-        assert importer.is_valid is True
+        assert bool(importer.is_valid) is True
 
         importer = self.generate_importer('not a region')
-        assert importer.is_valid is False
+        assert bool(importer.is_valid) is False
 
     def test_label_default_updates_with_subset_count(self, regions_input, spectral_region):
         """

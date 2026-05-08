@@ -12,17 +12,27 @@ __all__ = ['RegionsParser']
 
 @loader_parser_registry('Regions')
 class RegionsParser(BaseParser):
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if isinstance(self.input, str):
             if is_stcs_string(self.input):
-                return True
+                return ''
+
             ext = self.input.split('.')[-1]
             if self._app.config == 'imviz':
-                return ext in ('reg', 'fits')
+                if ext in ('reg', 'fits'):
+                    return ''
+                return f'Unsupported extension .{ext} for imviz regions.'
+
             elif self._app.config in ('specviz', 'specviz2d'):
-                return ext == 'ecsv'
-            return ext in ('reg', 'fits', 'ecsv')
+                if ext == 'ecsv':
+                    return ''
+                return f'Unsupported extension .{ext} for {self._app.config} regions.'
+
+            if ext in ('reg', 'fits', 'ecsv'):
+                return ''
+            return f'Unsupported extension .{ext} for regions.'
+
+        return 'Input must be a string path or STCS string.'
 
     @cached_property
     def output(self):

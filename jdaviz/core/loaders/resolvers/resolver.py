@@ -29,7 +29,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         UnitSelectPluginComponent,
                                         ViewerSelect,
                                         with_spinner,
-                                        _is_image_viewer)
+                                        _is_image_viewer,
+                                        ValidatorMixin)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
@@ -106,18 +107,16 @@ class FormatSelect(SelectPluginComponent):
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
-                try:
-                    if this_parser.is_valid:
+                if this_parser.is_valid:
+                    try:
                         importer_input = this_parser.output
-                    else:
-                        self._invalid_importers[parser_name] = 'Input considered invalid by parser'
-                        importer_input = None
-                except Exception as e:
-                    self._invalid_importers[parser_name] = f'Parser exception: {e}'
-                    importer_input = None
-
-                if importer_input is None:
-                    self._invalid_importers.setdefault(parser_name, 'importer_input is None')
+                    except Exception as e:
+                        self._invalid_importers[parser_name] = f'Parser exception: {e}'
+                        this_parser._cleanup()
+                        continue
+                else:
+                    self._invalid_importers[parser_name] = this_parser.is_valid.message
+                    self._invalid_importers.setdefault(parser_name, this_parser.is_valid.message)
                     this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
@@ -176,7 +175,7 @@ class FormatSelect(SelectPluginComponent):
                             # target filters
                             self._importers[importer_name] = this_importer
                     else:
-                        self._invalid_importers[label] = 'Input considered invalid by importer'
+                        self._invalid_importers[label] = this_importer.is_valid.message
 
         # Sort to move Catalog to the end of the list
         catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
@@ -240,7 +239,8 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin):
+class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin,
+                   ValidatorMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
@@ -525,10 +525,20 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     setattr(user_api, k, v)
         return self
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the resolver input is valid (override in subclasses).
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         # override by subclass
-        return False  # pragma: nocover
+        return 'Not implemented.'  # pragma: nocover
 
     @property
     def input(self):
@@ -604,7 +614,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # calls self.parse_input() on the subclass and caches
             parsed_input = self.parsed_input
             if not self.is_valid:
-                raise ValueError("Input is invalid for the selected resolver.")
+                raise ValueError(self.is_valid.message)
         except Exception as e:  # nosec
             self.parsed_input_is_empty = False
             self.parsed_input_is_query = False
@@ -1167,11 +1177,21 @@ class BaseConeSearchResolver(BaseResolver):
 
         self.viewer_centered = True
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid cone search configuration.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         # these resolvers do not accept any direct, (default_input = None), so can
         # always be considered valid
-        return True
+        return ''
 
 
 def _format_resolver_error(resolver_dict, formats=None, no_align=False):
@@ -1251,7 +1271,7 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
                     return True
             return False
 
-        if formats is None or not any(formats):
+        if formats is None or not any(formats) or 'object' in formats:
             return True
 
         # Check if there's an arrow separator
@@ -1314,13 +1334,10 @@ def find_matching_resolver(app,
             if resolver_name == 'url' and 'timeout' in str(e):
                 raise e
             continue
-        try:
-            is_valid = this_resolver.is_valid
-        except Exception as e:  # nosec
-            invalid_resolvers[resolver_name] = f'is_valid exception: {e}'
-            is_valid = False
-        if not is_valid:
-            invalid_resolvers.setdefault(resolver_name, 'Input considered invalid by resolver.')
+
+        if not this_resolver.is_valid:
+            invalid_resolvers[resolver_name] = this_resolver.is_valid.message
+            invalid_resolvers.setdefault(resolver_name, this_resolver.is_valid.message)
             continue
 
         if target is not None:

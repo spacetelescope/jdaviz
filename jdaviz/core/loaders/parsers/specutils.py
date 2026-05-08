@@ -19,16 +19,27 @@ __all__ = ['SpecutilsSpectrumParser',
 class SpecutilsSpectrumParser(BaseParser):
     SpecutilsCls = Spectrum
 
-    @property
-    def is_valid(self):
-        if self._app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid specutils Spectrum.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
+        # generalized jdaviz isn't the valid config name, but we can
+        # drop it here for the string output.
+        accepted_configs = ['specviz', 'specviz2d', 'cubeviz', 'generalized jdaviz']
+        if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
-        try:
-            self.output
-        except Exception:
-            return False
-        return True
+            return f"specutils.Spectrum format is only supported in {', '.join(accepted_configs)}."
+
+        _ = self.output
+        return ''
 
     @cached_property
     def output(self):
@@ -37,11 +48,23 @@ class SpecutilsSpectrumParser(BaseParser):
 
 @loader_parser_registry('specutils.Spectrum(array)')
 class SpecutilsSpectrumArrayParser(SpecutilsSpectrumParser):
-    @property
-    def is_valid(self):
-        return (isinstance(self.input, np.ndarray)
-                and self.input.ndim in (1, 2, 3)
-                and super().is_valid)
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid array for specutils parsing.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
+        if not (isinstance(self.input, np.ndarray)
+                and self.input.ndim in (1, 2, 3)):
+            return 'Input must be a numpy array with 1, 2, or 3 dimensions.'
+
+        return super()._check_is_valid()
 
     @cached_property
     def output(self):
@@ -62,12 +85,26 @@ class SpecutilsSpectrumArrayParser(SpecutilsSpectrumParser):
 class SpecutilsSpectrumListParser(SpecutilsSpectrumParser):
     SpecutilsCls = SpectrumList
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid specutils SpectrumList.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         if self._app.config not in ('deconfigged', 'specviz'):
-            # NOTE: temporary during deconfig process
-            return False
-        return super().is_valid and len(self.output) > 1
+            return 'specutils.SpectrumList format is only supported in specviz, generalized jdaviz.'
+        result = super()._check_is_valid()
+        if result:
+            return result
+        if len(self.output) <= 1:
+            return 'SpectrumList must contain more than one spectrum.'
+        return ''
 
     @cached_property
     def output(self):

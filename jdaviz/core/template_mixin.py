@@ -81,6 +81,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'with_spinner', 'with_temp_disable',
            'WithCache', 'LoadersMixin', 'ViewerPropertiesMixin',
            'CustomToolbarToggle', 'CustomToolbarToggleMixin',
+           'IsValidWrapper', 'ValidatorMixin',
            'BasePluginComponent',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
@@ -275,6 +276,70 @@ class WithCache:
         for attr in attrs:
             if attr in self.__dict__:
                 del self.__dict__[attr]
+
+
+class IsValidWrapper:
+    """
+    A wrapper class for the result of is_valid to provide context dependent behavior.
+    This class provides a message when there is a failure due to invalid input.
+
+    Parameters
+    ----------
+    is_valid_result : str
+        Either empty (True) or set to message indicating failure (False).
+    """
+    def __init__(self, is_valid_result):
+        if isinstance(is_valid_result, str):
+            self._is_valid = not bool(is_valid_result)
+            self.message = is_valid_result
+        else:
+            raise ValueError('Validity checks (_check_is_valid) must return a string.')
+
+    def __bool__(self):
+        return self._is_valid
+
+    def __str__(self):
+        return self.message
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(_is_valid={self._is_valid}, message='{self.message}')"
+
+
+class ValidatorMixin:
+    """
+    Mixin that provides automatic wrapping of is_valid results in IsValidWrapper.
+
+    Subclasses should implement `_check_is_valid()` instead of `is_valid` property.
+    The `is_valid` property is provided automatically and wraps the result.
+    """
+
+    @property
+    def is_valid(self):
+        """
+        Returns wrapped is_valid result.
+
+        Subclasses should override _check_is_valid() to provide validation logic.
+        """
+        try:
+            is_valid = IsValidWrapper(self._check_is_valid())
+        except Exception as e:
+            is_valid = IsValidWrapper(str(e))
+
+        return is_valid
+
+    def _check_is_valid(self):
+        """
+        Checks if the input is valid (override in subclasses).
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
+        raise NotImplementedError("Subclasses must implement _check_is_valid()")  # pragma: nocover
 
 
 class CustomToolbarToggle(HubListener):

@@ -202,46 +202,61 @@ class ImageImporter(BaseImporterToDataCollection):
             expose += ['extension']
         return ImporterUserApi(self, expose)
 
-    @property
-    def is_valid(self):
-        if self._app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid image data object.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
+        # generalized jdaviz isn't the valid config name, but we can
+        # drop it here for the string output.
+        accepted_configs = ['imviz', 'mastviz', 'cubeviz', 'rampviz', 'generalized jdaviz']
+        if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
+            return f"image importer is only supported in {', '.join(accepted_configs)}."
+
         # flat image, not a cube
         # isinstance NDData
         if self.input_has_extensions and not len(self.extension.choices):
-            return False
+            return 'No extensions available.'
 
         if isinstance(self.input, Spectrum):
             # Spectrum objects subclass NDData so they must be rejected explicitly
             supported_input_type = False
+
         elif isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
                                      NDData, np.ndarray, Data)):
             supported_input_type = True
+
         elif isinstance(self.input, (asdf.AsdfFile)) or \
                 (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))):
             supported_input_type = True
+
         else:
             supported_input_type = False
 
         if not supported_input_type:
-            return False
+            return 'Input is not a supported image data type.'
 
         # 3D numpy arrays are valid if they have extension choices set up
         if isinstance(self.input, np.ndarray) and self.input.ndim == 3:
-            return len(self.extension.choices) > 0
+            if len(self.extension.choices) > 0:
+                return ''
+            return 'No extensions available for 3D array.'
 
-        try:
-            output = self.output
-        except Exception:  # noqa
-            return False
-        else:
-            is_spectral = all([wcs_is_spectral(getattr(data, 'coords', None)) for data in output])
-            if is_spectral:
-                # Reject 2D spectra with spectral WCS coordinates
-                # that pass the FITS/NDData condition
-                return False
-            return True
+        output = self.output
+        is_spectral = all([wcs_is_spectral(getattr(data, 'coords', None)) for data in output])
+        if is_spectral:
+            # Reject 2D spectra with spectral WCS coordinates
+            # that pass the FITS/NDData condition
+            return 'Input has spectral WCS coordinates.'
+        return ''
 
     @observe('viewer_create_new_selected')
     def _on_create_new_viewer_selected(self, msg):
