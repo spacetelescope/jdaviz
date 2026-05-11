@@ -3,8 +3,8 @@
     <v-form ref="form" style="width: 100%">
       <v-text-field
         ref="textField"
-        :value="displayValue"
-        @keyup="if(auto) {if ($event.srcElement._value === displayValue) {return}; $emit('update:auto', false)}; $emit('update:value', $event.srcElement._value)"
+        :model-value="displayValue"
+        @update:modelValue="updateValue"
         @mouseenter="showIcon = true"
         @mouseleave="showIcon = false"
         :label="api_hints_enabled && api_hint ? api_hint : label"
@@ -48,6 +48,17 @@ export default {
        },
        invalid_msg() {
           this.$refs.form.validate();
+       }
+  },
+  methods: {
+       updateValue(value) {
+          if(this.$props.auto && value === this.displayValue) {
+            return;
+          }
+          if(this.$props.auto) {
+            this.$emit('update:auto', false);
+          }
+          this.$emit('update:value', value);
        }
   }
 };
