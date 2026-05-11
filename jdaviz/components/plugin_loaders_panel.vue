@@ -1,12 +1,12 @@
 <template>
-  <j-flex-row v-if="loader_items.length> 0">
+  <j-flex-row v-if="loader_items.length> 0" no-gutters>
     <v-expansion-panels
       accordion
       focusable
       :model-value="loader_panel_ind"
       @update:modelValue="$emit('update:loader_panel_ind', $event)"
     >
-      <v-expansion-panel>
+      <v-expansion-panel :value="0">
         <v-expansion-panel-title v-slot="{ open }">
           <span style="padding: 6px">{{ title }}</span>
         </v-expansion-panel-title>
