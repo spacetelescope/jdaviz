@@ -11,8 +11,7 @@
       <j-flex-row style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
         <j-tooltip v-if="config !== 'deconfigged'" tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
           <v-btn
-            variant="outlined"
-            elevation="3"
+            variant="text"
             color="white"
             rounded="0"
             icon
