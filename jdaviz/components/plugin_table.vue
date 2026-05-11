@@ -65,12 +65,12 @@
       </plugin-action-button>
     </j-flex-row>
 
-    <div style="margin-left: 14px; margin-right: 14px">
+    <div style="margin-left: 14px; margin-right: 14px; padding-bottom: 8px">
       <plugin-loaders-panel
         v-if="loader_items && loader_items.length > 0"
-        :loader_panel_ind.sync="loader_panel_ind"
+        v-model:loader_panel_ind="loader_panel_ind"
         :loader_items="loader_items"
-        :loader_selected.sync="loader_selected"
+        v-model:loader_selected="loader_selected"
         :api_hints_enabled="api_hints_enabled"
         :api_hints_obj="api_hints_obj"
         title="Load Table into App"
