@@ -4,7 +4,7 @@ import threading
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
-from traitlets import Bool, Float, Instance, List, Unicode, observe, default
+from traitlets import Any, Bool, Float, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -248,6 +248,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     _update_format_spinner_text = 'searching for valid formats...'
 
     spinner = Unicode("").tag(sync=True)
+    hdu = Any(None).tag(sync=True)
 
     parsed_input_is_empty = Bool(True).tag(sync=True)
     parsed_input_is_resolvable = Unicode("").tag(sync=True)
@@ -521,9 +522,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     self.default_input_cast(inp) if self.default_input_cast else inp)
             user_api = self.user_api
             for k, v in kwargs.items():
-                print(f"Checking for {k}")
                 if hasattr(user_api, k):
-                    print(f"Setting {k} to {v}")
                     setattr(user_api, k, v)
         return self
 
@@ -562,11 +561,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 and os.path.exists(parsed_input) and os.path.isfile(parsed_input)):
             # try to read into a table which could be a products list
             try:
-                '''
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore",
-                                          message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
-                '''
                 parsed_input = astropyTable.read(parsed_input, hdu=hdu)
             except Exception:  # nosec
                 return None
@@ -645,8 +639,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         parsed_input_table = None
         if self._restrict_to_formats is None or "Catalog" in self._restrict_to_formats:
             hdu = getattr(self.user_api, 'hdu', None)
-            print(f"HDU is {hdu}")
-            print(self.user_api)
             parsed_input_table = self._parsed_input_to_table(parsed_input, hdu=hdu)
 
         # if the input could be parsed as a table, try to interpret it as
@@ -941,7 +933,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
     @property
     def user_api(self):
-        return LoaderUserApi(self, expose=['hdu,'])
+        return LoaderUserApi(self, expose=['hdu'])
 
     @property
     def default_label(self):
