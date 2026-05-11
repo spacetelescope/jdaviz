@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { markRaw, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { GoldenLayout as GoldenLayoutCore } from 'https://esm.sh/golden-layout@2.6.0?bundle'
 
 const props = defineProps({
@@ -19,7 +19,7 @@ const props = defineProps({
 const emit = defineEmits(['state'])
 
 const hostElement = ref(null)
-const layoutInstance = ref(null)
+const layoutInstance = shallowRef(null)
 const nodes = new Map()
 const componentNodes = new Map()
 const componentNodesByConfigId = new Map()
@@ -116,7 +116,7 @@ function ensureLayout() {
     return
   }
 
-  const gl = new GoldenLayoutCore(hostElement.value)
+  const gl = markRaw(new GoldenLayoutCore(hostElement.value))
 
   function extractNodeId(factoryArg, container) {
     if (factoryArg && typeof factoryArg === 'object') {
