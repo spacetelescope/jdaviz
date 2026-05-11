@@ -6,7 +6,7 @@
     :parsed_input_is_empty="parsed_input_is_empty"
     :parsed_input_is_resolvable="parsed_input_is_resolvable"
     :parsed_input_is_query="parsed_input_is_query"
-    :treat_table_as_query.sync="treat_table_as_query"
+    v-model:treat_table_as_query="treat_table_as_query"
     :observation_table="observation_table"
     :observation_table_populated="observation_table_populated"
     :file_table="file_table"
@@ -14,9 +14,9 @@
     :file_cache="file_cache"
     :file_timeout="file_timeout"
     :target_items="target_items"
-    :target_selected.sync="target_selected"
+    v-model:target_selected="target_selected"
     :format_items="format_items"
-    :format_selected.sync="format_selected"
+    v-model:format_selected="format_selected"
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
     :server_is_remote="server_is_remote"
@@ -25,13 +25,13 @@
     :footprint_select_icon="footprint_select_icon"
     :custom_toolbar_enabled="custom_toolbar_enabled"
   >
-    <v-row>
+    <j-flex-row>
       Select a file from your local file system and send to jdaviz through the browser.
-    </v-row>
+    </j-flex-row>
     <v-alert v-if="api_hints_enabled" type="info">
       Use UI to select file (no API access available).
     </v-alert>
-    <jupyter-widget :widget="file_drop_widget"></jupyter-widget>
+    <jupyter-widget v-if="file_drop_widget" :widget="file_drop_widget" :key="file_drop_widget"></jupyter-widget>
     <v-progress-linear v-if="progress !== 100" :value="progress"></v-progress-linear>
     <v-alert v-if="nfiles > 1" type="warning">
       Multiple files dropped, only using first entry.

@@ -1,11 +1,11 @@
 <template>
-  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
+  <j-flex-row v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
       :menu-props="{ left: true }"
       attach
       :items="items"
-      v-model="selected"
-      @change="$emit('update:selected', $event)"
+      :model-value="selected"
+      @update:modelValue="$emit('update:selected', $event)"
       :class="api_hints_enabled && api_hint ? 'api-hint' : null"
       :label="api_hints_enabled && api_hint ? api_hint : (label ? label : 'Data')"
       :hint="hint ? hint : 'Select data.'"
@@ -13,24 +13,24 @@
       :multiple="multiselect"
       :chips="multiselect"
       :disabled="disabled"
-      item-text="label"
+      item-title="label"
       item-value="label"
       persistent-hint
     >
-      <template slot="selection" slot-scope="data">
+      <template #selection="{ item }">
         <div class="single-line" style="width: 100%">
           <v-chip v-if="multiselect" style="width: calc(100% - 10px)">
             <span>
-              <j-layer-viewer-icon v-if="data.item.icon" span_style="margin-right: 4px" :icon="data.item.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
-              {{ data.item.label }}
+              <j-layer-viewer-icon v-if="item.raw.icon" span_style="margin-right: 4px" :icon="item.raw.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+              {{ item.raw.label }}
             </span>
           </v-chip>
           <span v-else :class="api_hints_enabled ? 'api-hint' : null">
-            <j-layer-viewer-icon v-if="data.item.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="data.item.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+            <j-layer-viewer-icon v-if="item.raw.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="item.raw.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
             {{ api_hints_enabled ?
-              '\'' + data.item.label + '\''
+              '\'' + item.raw.label + '\''
               :
-              data.item.label
+              item.raw.label
             }}
           </span>
         </div>
@@ -46,27 +46,27 @@
             {{ selected.length == items.length ? 'mdi-close-box' : selected.length ? 'mdi-minus-box' : 'mdi-checkbox-blank-outline' }}
           </v-icon>
         </v-list-item-action>
-        <v-list-item-content>
+        <div class="v-list-item-content">
           <v-list-item-title>
             {{ selected.length < items.length ? "Select All" : "Clear All" }}
           </v-list-item-title>
-        </v-list-item-content>
+        </div>
         </v-list-item>
         <v-divider class="mt-2"></v-divider>
       </template>
-      <template slot="item" slot-scope="data">
-        <div class="single-line">
+      <template #item="{ props, item }">
+        <v-list-item v-bind="props" :title="undefined" class="single-line">
           <span>
-            <j-layer-viewer-icon v-if="data.item.icon" span_style="margin-right: 4px" :icon="data.item.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
-            {{ data.item.label }}
+            <j-layer-viewer-icon v-if="item.raw.icon" span_style="margin-right: 4px" :icon="item.raw.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+            {{ item.raw.label }}
           </span>
-        </div>
+        </v-list-item>
       </template>
    </v-select>
-  </v-row>
+  </j-flex-row>
 </template>
 <script>
-module.exports = {
+export default {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
           'api_hint', 'api_hints_enabled', 'disabled']
 }

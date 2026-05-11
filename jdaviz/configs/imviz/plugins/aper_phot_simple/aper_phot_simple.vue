@@ -3,14 +3,14 @@
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#aperture-photometry'"
     :uses_active_status="uses_active_status"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <j-multiselect-toggle
-      :multiselect.sync="multiselect"
+      v-model:multiselect="multiselect"
       :icon_checktoradial="icon_checktoradial"
       :icon_radialtocheck="icon_radialtocheck"
       tooltip="Toggle batch mode"
@@ -18,7 +18,7 @@
 
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :multiselect="multiselect"
       :show_if_single_entry="false"
       label="Data"
@@ -28,7 +28,7 @@
     />
 
     <div v-if='is_cube'>
-      <v-row class="row-no-outside-padding row-min-bottom-padding">
+      <v-row class="row-no-outside-padding row-min-bottom-padding vuetify2">
         <v-col>
           <v-text-field
             :value="cube_slice"
@@ -45,7 +45,7 @@
     <div v-if='dataset_selected.length > 0'>
       <plugin-subset-select
         :items="aperture_items"
-        :selected.sync="aperture_selected"
+        v-model:selected="aperture_selected"
         :multiselect="multiselect"
         :show_if_single_entry="true"
         label="Aperture"
@@ -54,16 +54,16 @@
         :api_hints_enabled="api_hints_enabled"
       />
 
-      <v-row v-if="aperture_selected.length && !aperture_selected_validity.is_aperture">
+      <j-flex-row v-if="aperture_selected.length && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary" style="color: red !important">
             {{aperture_selected}} is not a valid aperture: {{aperture_selected_validity.aperture_message}}.
         </span>
-      </v-row>
+      </j-flex-row>
 
       <div v-if="aperture_selected.length > 0">
         <plugin-subset-select
           :items="background_items"
-          :selected.sync="background_selected"
+          v-model:selected="background_selected"
           :show_if_single_entry="true"
           label="Background"
           hint="Select subset region for background calculation (cannot be a composite subset)."
@@ -71,18 +71,18 @@
           :api_hints_enabled="api_hints_enabled"
         />
 
-        <v-row v-if="(multiselect && aperture_selected.includes(background_selected)) || aperture_selected === background_selected">
+        <j-flex-row v-if="(multiselect && aperture_selected.includes(background_selected)) || aperture_selected === background_selected">
           <span class="v-messages v-messages__message text--secondary" style="color: red !important">
               Background and aperture cannot be set to the same subset
           </span>
-        </v-row>
+        </j-flex-row>
 
-        <v-row v-if="multiselect && background_selected !== 'Manual'">
+        <j-flex-row v-if="multiselect && background_selected !== 'Manual'">
           <span class="v-messages v-messages__message text--secondary">
             <b>Batch mode:</b> background value will be automatically computed for each selected data entry separately and exposed in the output table.
           </span>
-        </v-row>
-        <v-row v-else>
+        </j-flex-row>
+        <j-flex-row v-else>
           <v-text-field
             v-model.number="background_value"
             type="number"
@@ -94,17 +94,17 @@
             :class="api_hints_enabled ? 'api-hint' : null"
           >
           </v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row v-if="multiselect">
+        <j-flex-row v-if="multiselect">
           <v-switch
             v-model="pixel_area_multi_auto"
             label="Auto pixel area"
             :hint="pixel_area_multi_auto ? 'Pixel area will be automatically computed for each selected data entry separately and exposed in the output table.' : 'Pixel area will be held fixed at the value below for each iteration.'"
             persistent-hint
           />
-        </v-row>
-        <v-row v-if="(!multiselect || !pixel_area_multi_auto) && display_solid_angle_unit!='pix2'">
+        </j-flex-row>
+        <j-flex-row v-if="(!multiselect || !pixel_area_multi_auto) && display_solid_angle_unit!='pix2'">
 
           <v-text-field
             :label="api_hints_enabled ? 'plg.pixel_area =' : 'Pixel area'"
@@ -115,9 +115,9 @@
             persistent-hint
           >
           </v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             :label="api_hints_enabled ? 'plg.counts_factor =' : 'Counts conversion factor'"
             :class="api_hints_enabled ? 'api-hint' : null"
@@ -128,17 +128,17 @@
             :rules="[() => counts_factor>=0 || 'Counts conversion factor cannot be negative.']"
           >
           </v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row v-if="multiselect">
+        <j-flex-row v-if="multiselect">
           <v-switch
             v-model="flux_scaling_multi_auto"
             label="Auto flux scaling"
             :hint="flux_scaling_multi_auto ? 'Flux scaling will be automatically computed for each selected data entry separately and exposed in the output table.' : 'Flux scaling will be held fixed at the value below for each iteration.'"
             persistent-hint
           />
-        </v-row>
-        <v-row v-if="!multiselect || !flux_scaling_multi_auto">
+        </j-flex-row>
+        <j-flex-row v-if="!multiselect || !flux_scaling_multi_auto">
           <v-text-field
             v-model.number="flux_scaling"
             type="number"
@@ -149,30 +149,30 @@
             :class="api_hints_enabled ? 'api-hint' : null"
           >
           </v-text-field>
-        </v-row>
-        <v-row v-if="flux_scaling_warning.length > 0">
+        </j-flex-row>
+        <j-flex-row v-if="flux_scaling_warning.length> 0">
           <span class="v-messages v-messages__message text--secondary" style="color: red !important">
             {{flux_scaling_warning}}
           </span>
-        </v-row>
+        </j-flex-row>
 
         <plugin-select
           v-if="!multiselect"
           :items="plot_types"
-          :selected.sync="current_plot_type"
+          v-model:selected="current_plot_type"
           label="Plot Type"
           hint="Aperture photometry plot type"
           api_hint="plg.current_plot_type = "
           :api_hints_enabled="api_hints_enabled"
         />
 
-        <v-row v-if="!multiselect && current_plot_type==='Radial Profile (Raw)' && aperture_area > 5000">
+        <j-flex-row v-if="!multiselect && current_plot_type==='Radial Profile (Raw)' && aperture_area> 5000">
           <span class="v-messages v-messages__message text--secondary">
               <b>WARNING</b>: Computing and displaying raw profile of an aperture containing ~{{aperture_area}} pixels may be slow or unresponsive.
           </span>
-        </v-row>
+        </j-flex-row>
 
-        <v-row v-if="!multiselect && current_plot_type.indexOf('Radial Profile') != -1">
+        <j-flex-row v-if="!multiselect && current_plot_type.indexOf('Radial Profile') != -1">
 
           <v-switch
             hint="Fit Gaussian1D to radial profile"
@@ -181,9 +181,9 @@
             :label="api_hints_enabled ? 'plg.fit_radial_profile =' : 'Fit Gaussian'"
             :class="api_hints_enabled ? 'api-hint' : null">
           </v-switch>
-        </v-row>
+        </j-flex-row>
 
-        <v-row justify="end">
+        <j-flex-row justify="end">
           <plugin-action-button
             :results_isolated_to_plugin="true"
             @click="do_aper_phot"
@@ -197,27 +197,27 @@
               'Calculate'
             }}
           </plugin-action-button>
-        </v-row>
+        </j-flex-row>
       </div>
     </div>
 
-    <v-row v-if="result_failed_msg.length > 0">
+    <j-flex-row v-if="result_failed_msg.length> 0">
       <span class="v-messages v-messages__message text--secondary" style="color: red !important">
           <b>WARNING</b>: {{result_failed_msg}}
       </span>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-if="!multiselect && plot_available">
-      <jupyter-widget :widget="plot_widget"/>
-    </v-row>
+    <j-flex-row v-if="!multiselect && plot_available">
+      <jupyter-widget v-if="plot_widget" :widget="plot_widget" :key="plot_widget"/>
+    </j-flex-row>
 
     <div v-if="!multiselect && plot_available && fit_radial_profile && current_plot_type != 'Curve of Growth'">
       <j-plugin-section-header>Gaussian Fit Results</j-plugin-section-header>
-      <v-row no-gutters>
+      <v-row class="vuetify2" no-gutters>
         <v-col cols=6><U>Result</U></v-col>
         <v-col cols=6><U>Value</U></v-col>
       </v-row>
-      <v-row
+      <v-row class="vuetify2"
         v-for="item in fit_results"
         :key="item.function"
         no-gutters>
@@ -231,12 +231,12 @@
     <div v-if="!multiselect && result_available">
       <j-plugin-section-header>Photometry Results</j-plugin-section-header>
 
-      <v-row no-gutters>
+      <v-row class="vuetify2" no-gutters>
         <v-col cols=6><U>Result</U></v-col>
         <v-col cols=4><U>Value</U></v-col>
         <v-col cols=2><U>Unit</U></v-col>
       </v-row>
-      <v-row
+      <v-row class="vuetify2"
         v-for="item in results"
         :key="item.function"
         no-gutters>
@@ -248,7 +248,7 @@
 
     <div v-if="result_available">
       <j-plugin-section-header>Results History</j-plugin-section-header>
-      <jupyter-widget :widget="table_widget"></jupyter-widget>
+      <jupyter-widget v-if="table_widget" :widget="table_widget" :key="table_widget"></jupyter-widget>
     </div>
   </j-tray-plugin>
 </template>

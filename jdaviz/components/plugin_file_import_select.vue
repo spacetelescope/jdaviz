@@ -1,14 +1,14 @@
 <template>
   <div>
-    <v-row>
+    <j-flex-row>
       <v-select
         :menu-props="{ left: true }"
         attach
         :items="items"
-        item-text="label"
+        item-title="label"
         item-value="label"
-        v-model="selected"
-        @change="$emit('update:selected', $event)"
+        :model-value="selected"
+        @update:modelValue="$emit('update:selected', $event)"
         :label="api_hints_enabled && api_hint ? api_hint : label"
         :class="api_hints_enabled && api_hint ? 'api-hint' : null"
         :hint="hint"
@@ -20,18 +20,20 @@
               {{'\'' + selected + '\''}}
             </span>
             <span v-else>
-              <v-icon v-if="item.icon && item.icon.length < 50" small>{{ item.icon }}</v-icon>
-              <img v-else-if="item.icon" :src="item.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
+              <v-icon v-if="item.raw.icon && item.raw.icon.length < 50" small>{{ item.raw.icon }}</v-icon>
+              <img v-else-if="item.raw.icon" :src="item.raw.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
               {{ selected }}
             </span>
           </div>
         </template>
-        <template v-slot:item="{ item }">
-          <span style="margin-top: 8px; margin-bottom: 0px">
-            <v-icon v-if="item.icon && item.icon.length < 50" small>{{ item.icon }}</v-icon>
-            <img v-else-if="item.icon" :src="item.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
-            {{ item.label }}
-          </span>
+        <template #item="{ props, item }">
+          <v-list-item v-bind="props" :title="undefined">
+            <span style="margin-top: 8px; margin-bottom: 0px">
+              <v-icon v-if="item.raw.icon && item.raw.icon.length < 50" small>{{ item.raw.icon }}</v-icon>
+              <img v-else-if="item.raw.icon" :src="item.raw.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
+              {{ item.raw.label }}
+            </span>
+          </v-list-item>
         </template>
 
       </v-select>
@@ -49,20 +51,20 @@
            {{from_file.split("/").slice(-1)[0]}}
          </span>
       </v-chip>
-    </v-row>
+    </j-flex-row>
     <v-dialog :value="selected === 'From File...' && from_file.length == 0" height="400" width="600">
       <v-card v-if="deprecate_from_file">
         <v-card-title class="headline" color="primary" primary-title>Import Behavior Changed</v-card-title>
         <v-card-text>
           <v-container>
-            <v-row>
+            <j-flex-row>
               <v-alert color="warning">This functionality has been moved to the top of the plugin under "Import"</v-alert>
-            </v-row>
+            </j-flex-row>
           </v-container>
         </v-card-text>
         <v-card-actions>
           <div class="flex-grow-1"></div>
-          <v-btn color="primary" text @click="$emit('click-cancel')">Cancel</v-btn>
+          <v-btn color="primary" variant="text" @click="$emit('click-cancel')">Cancel</v-btn>
         </v-card-actions>
       </v-card>
       <v-card v-else>
@@ -70,24 +72,24 @@
         <v-card-text>
           {{ dialog_hint }}
           <v-container>
-            <v-row>
+            <v-row class="vuetify2">
               <v-col>
                 <slot></slot>
               </v-col>
             </v-row>
-            <v-row v-if="from_file_message.length > 0" :style='"color: red"'>
+            <j-flex-row v-if="from_file_message.length> 0" :style='"color: red"'>
               {{from_file_message}}
-            </v-row>
-            <v-row v-else>
+            </j-flex-row>
+            <j-flex-row v-else>
               Valid file
-            </v-row>
+            </j-flex-row>
           </v-container>
         </v-card-text>
 
         <v-card-actions>
           <div class="flex-grow-1"></div>
-          <v-btn color="primary" text @click="$emit('click-cancel')">Cancel</v-btn>
-          <v-btn color="primary" text @click="$emit('click-import')" :disabled="from_file_message.length > 0">Load</v-btn>
+          <v-btn color="primary" variant="text" @click="$emit('click-cancel')">Cancel</v-btn>
+          <v-btn color="primary" variant="text" @click="$emit('click-import')" :disabled="from_file_message.length > 0">Load</v-btn>
         </v-card-actions>
 
       </v-card>
@@ -96,7 +98,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'from_file', 'from_file_message',
           'dialog_title', 'dialog_hint', 'api_hint', 'api_hints_enabled', 'deprecate_from_file'],
 };

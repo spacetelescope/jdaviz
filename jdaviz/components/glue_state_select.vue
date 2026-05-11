@@ -3,18 +3,20 @@
     attach
     :menu-props="{ left: true }"
     :items="items"
-    v-model="selected"
-    @change="$emit('update:selected', $event)"
+    :model-value="selected"
+    @update:modelValue="$emit('update:selected', $event)"
     :label="api_hints_enabled && api_hint ? api_hint : label"
     :class="api_hints_enabled && api_hint ? 'api-hint no-hint' : 'no-hint'"
-    dense
+    density="compact"
+    item-title="text"
+    item-value="value"
   >
     <template v-slot:selection="{ item, index }">
       <span :class="api_hints_enabled ? 'api-hint' : null">
         {{ api_hints_enabled ?
-          '\'' + item.text + '\''
+          '\'' + item.raw.text + '\''
           :
-          item.text
+          item.raw.text
         }}
       </span>
     </template>
@@ -22,7 +24,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['items', 'selected', 'label', 'api_hint', 'api_hints_enabled']
 };
 </script>

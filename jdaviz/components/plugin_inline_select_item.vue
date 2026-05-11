@@ -10,7 +10,7 @@
     </v-btn>
     <span :class="api_hints_enabled ? 'api-hint' : null">
       <j-layer-viewer-icon v-if="item.icon && !api_hints_enabled" :icon="item.icon" :prevent_invert_if_dark="false"></j-layer-viewer-icon>
-      <v-icon v-else-if="item.color && item.type && !api_hints_enabled" left :color="item.color">
+      <v-icon v-else-if="item.color && item.type && !api_hints_enabled" start :color="item.color">
         {{ item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
       </v-icon>
       {{ api_hints_enabled ?
@@ -23,7 +23,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['item', 'selected', 'multiselect', 'single_select_allow_blank', 'api_hints_enabled'],
   methods: {
     isSelected() {
@@ -34,23 +34,27 @@ module.exports = {
       }
     },
     clicked() {
+      let selected
+
       if (this.multiselect) {
         if (this.isSelected()) {
-          this.selected.pop(this.item.label)
+          selected = this.selected.filter(item => item !== this.item.label)
         } else {
-          this.selected.push(this.item.label)
+          selected = this.selected.concat(this.item.label)
         }
       } else {
         if (this.isSelected()) {
           // TODO: setting to allow vs forbid blank
           if (this.single_select_allow_blank) {
-            this.selected = ''
+            selected = ''
+          } else {
+            selected = this.selected
           }
         } else {
-          this.selected = this.item.label
+          selected = this.item.label
         }
       }
-      this.$emit('update:selected', this.selected)
+      this.$emit('update:selected', selected)
     }
   },
 };

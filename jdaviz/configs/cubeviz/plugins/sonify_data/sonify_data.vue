@@ -4,9 +4,9 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#cubeviz-sonify-data'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to"
+    v-model:scroll_to="scroll_to"
     :disabled_msg="disabled_msg">
 
     <j-plugin-section-header>Cube Pre-Sonification Options</j-plugin-section-header>
@@ -14,12 +14,12 @@
       To use Sonify Data, install strauss and restart Jdaviz. You can do this by running pip install strauss
       in the command line and then launching Jdaviz.
     </v-alert>
-    <v-row>
+    <j-flex-row>
       <j-docs-link>Choose the input cube, spectral subset and any advanced sonification options.</j-docs-link>
-    </v-row>
+    </j-flex-row>
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="false"
       label="Data"
       api_hint="plg.dataset ="
@@ -29,21 +29,21 @@
     />
     <plugin-subset-select
       :items="spectral_subset_items"
-      :selected.sync="spectral_subset_selected"
+      v-model:selected="spectral_subset_selected"
       :show_if_single_entry="true"
       label="Spectral range"
       api_hint="plg.spectral_subset ="
       :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the wavelength range."
     />
-    <v-row>
+    <j-flex-row>
       <v-expansion-panels accordion>
         <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Advanced Sound Options</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <v-row>
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
+            <j-flex-row>
               <v-text-field
                 ref="audfrqmin"
                 type="number"
@@ -52,8 +52,8 @@
                 hint="The minimum audio frequency used to represent the spectra (Hz)"
                 persistent-hint
               ></v-text-field>
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <v-text-field
                 ref="audfrqmax"
                 type="number"
@@ -62,8 +62,8 @@
                 hint="The maximum audio frequency used to represent the spectra (Hz)"
                 persistent-hint
               ></v-text-field>
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <v-text-field
                 ref="assidx"
                 type="number"
@@ -72,8 +72,8 @@
                 hint="The desired audio spectrum scaling index, typically > 1."
                 persistent-hint
               ></v-text-field>
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <v-text-field
                 ref="ssvidx"
                 type="number"
@@ -82,16 +82,16 @@
                 hint="The desired spectrum-spectrum volume index, typically [0,1]."
                 persistent-hint
               ></v-text-field>
-            </v-row>
-	    <v-row>
+            </j-flex-row>
+	    <j-flex-row>
               <v-switch
                 v-model="use_pccut"
                 label="Use Flux Percentile Cut?"
                 hint="Whether to only sonify flux above a min. percentile (else use absolute values)"
                 persistent-hint
                ></v-switch>
-	    </v-row>
-            <v-row v-if="use_pccut">
+	    </j-flex-row>
+            <j-flex-row v-if="use_pccut">
               <v-text-field
                 ref="pccut"
                 type="number"
@@ -100,28 +100,28 @@
                 hint="The minimum percentile to be heard."
                 persistent-hint
               ></v-text-field>
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
                <v-switch
                  v-model="eln"
                  label="Equal Loudness Equalisation"
                  hint="Whether to equalise for uniform perceived loudness"
                  persistent-hint
                 ></v-switch>
-            </v-row>
-          </v-expansion-panel-content>
+            </j-flex-row>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </j-flex-row>
     <j-plugin-section-header>Live Sound Options</j-plugin-section-header>
-    <v-row>
+    <j-flex-row>
       <plugin-action-button
         @click="refresh_device_list_in_dropdown"
       >
         Refresh Device List
       </plugin-action-button>
-    </v-row>
-    <v-row>
+    </j-flex-row>
+    <j-flex-row>
       <v-select
         :menu-props="{ left: true }"
         attach
@@ -131,27 +131,27 @@
         hint="Device which sound will be output from."
         persistent-hint
         ></v-select>
-    </v-row>
+    </j-flex-row>
 
-    <v-row>
+    <j-flex-row>
         Overall Volume
-        <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
-    </v-row>
+        <glue-throttled-slider label="Volume" wait="300" max="100" step="1" v-model:value="volume" hide-details class="no-hint" />
+    </j-flex-row>
     <j-plugin-section-header>Add Results Options</j-plugin-section-header>
       <plugin-add-results
-          :label.sync="results_label"
+          v-model:label="results_label"
           :label_default="results_label_default"
-          :label_auto.sync="results_label_auto"
+          v-model:label_auto="results_label_auto"
           :label_invalid_msg="results_label_invalid_msg"
           :label_overwrite="results_label_overwrite"
           label_hint="Label for the sonified data"
           :add_to_viewer_items="add_to_viewer_items"
-          :add_to_viewer_selected.sync="add_to_viewer_selected"
+          v-model:add_to_viewer_selected="add_to_viewer_selected"
           :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
-          :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
-          :add_to_viewer_label_value.sync="add_to_viewer_label_value"
+          v-model:add_to_viewer_create_new_selected="add_to_viewer_create_new_selected"
+          v-model:add_to_viewer_label_value="add_to_viewer_label_value"
           :add_to_viewer_label_default="add_to_viewer_label_default"
-          :add_to_viewer_label_auto.sync="add_to_viewer_label_auto"
+          v-model:add_to_viewer_label_auto="add_to_viewer_label_auto"
           :add_to_viewer_label_invalid_msg="add_to_viewer_label_invalid_msg"
           add_to_viewer_hint="Add sonified layer to selected viewer. The sonified data will be available to add to all relevant viewers after creation."
           action_label="Sonify data"
