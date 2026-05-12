@@ -197,6 +197,8 @@ class BaseImporterToDataCollection(BaseImporter):
     viewer_label_auto = Bool(True).tag(sync=True)
     viewer_label_invalid_msg = Unicode().tag(sync=True)
 
+    data_type = None
+
     def __init__(self, app, resolver, parser, input, **kwargs):
         super().__init__(app, resolver, parser, input, **kwargs)
         self.data_label = AutoTextField(self, 'data_label_value',
@@ -318,7 +320,8 @@ class BaseImporterToDataCollection(BaseImporter):
     def add_to_data_collection(self, data, data_label=None, data_hash=None,
                                parent=None,
                                viewer_select=None,
-                               cls=None):
+                               cls=None,
+                               data_type=None):
         """
         Add data to the data collection (and optionally to viewers).
 
@@ -386,6 +389,10 @@ class BaseImporterToDataCollection(BaseImporter):
         data.meta['_importer'] = self.__class__.__name__
         # Create a hashed representation of the data if not already present
         data.meta['_data_hash'] = data_hash if data_hash is not None else create_data_hash(data)
+        if data_type is not None:
+            data.meta['_data_type'] = data_type
+        elif self.data_type is not None:
+            data.meta['_data_type'] = self.data_type
 
         # Add the data to data collection.
         self._app.add_data(data, data_label=data_label)

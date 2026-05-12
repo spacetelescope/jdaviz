@@ -44,6 +44,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     ext_viewer_label_auto = Bool(True).tag(sync=True)
     ext_viewer_label_invalid_msg = Unicode().tag(sync=True)
 
+    data_type = '2D Spectrum'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -186,4 +188,5 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         self._app.hub.broadcast(msg)
 
         if ext is not None:
-            self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
+            self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer,
+                                        data_type='1D Spectrum')

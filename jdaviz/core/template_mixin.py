@@ -4869,10 +4869,12 @@ class DatasetSelect(SelectPluginComponent):
             return (is_image(data) or is_flux_cube(data)) and not is_2d_spectrum_or_trace(data)
 
         def is_spectrum(data):
-                return data.meta.get('_importer') in ('SpectrumImporter')
+            return (data.meta.get('_importer') == 'SpectrumImporter' or
+                    data.meta.get('_data_type') == '1D Spectrum')
 
         def is_2d_spectrum_or_trace(data):
-                return data.meta.get('_importer') in ('Spectrum2DImporter', 'TraceImporter')
+            return (data.meta.get('_importer') in ('Spectrum2DImporter', 'TraceImporter') and
+                    data.meta.get('_data_type') != '1D Spectrum')
 
         def is_spectrum_or_flux_cube(data):
             return is_spectrum(data) or is_flux_cube(data)

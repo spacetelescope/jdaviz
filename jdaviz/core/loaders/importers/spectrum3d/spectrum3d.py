@@ -116,6 +116,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     ext_viewer_label_auto = Bool(True).tag(sync=True)
     ext_viewer_label_invalid_msg = Unicode().tag(sync=True)
 
+    data_type = '3D Spectrum'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -503,7 +505,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         self._app.hub.broadcast(msg)
 
         if ext is not None:
-            self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
+            self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer,
+                                        data_type='1D Spectrum')
 
             if self.has_dq and not self.flux_only:
                 dq_hdu = self.dq_extension.selected_obj
