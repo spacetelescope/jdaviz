@@ -5,6 +5,7 @@ py:class ipyvuetify.VuetifyTemplate.VuetifyTemplate
 py:class glue_jupyter.table.viewer.TableViewer
 
 # Upstream refs not found
+py:class t.Any
 py:class bqplot.marks.Lines
 py:class bqplot.marks.Scatter
 py:class bqplot.marks.Label
