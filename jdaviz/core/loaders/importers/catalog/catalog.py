@@ -3,13 +3,14 @@ from astropy.io.fits import BinTableHDU, HDUList, TableHDU
 from astropy.table import Table, QTable, vstack
 import astropy.units as u
 import numpy as np
+import re
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import RA_COMPS, DEC_COMPS, create_data_hash
+from jdaviz.utils import RA_COMPS, DEC_COMPS, create_data_hash, WORDS_TO_EXCLUDE
 
 __all__ = ['CatalogImporter']
 
@@ -183,7 +184,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
+        if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
             return False
         if isinstance(self.input, (Table, QTable)) and len(self.input):
@@ -242,6 +243,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         self._update_col_items_and_selected('col_other', input.colnames, select_first=False)
 
+
     def _guess_coord_cols(self, col):
         """
         Rough guess at detecting RA/Dec/X/Y columns from input table to determine
@@ -252,6 +254,14 @@ class CatalogImporter(BaseImporterToDataCollection):
         column is found, the initial selection in the drop down for RA/x, dec/y
         columns will be '---' (no selection)
         """
+
+        # regular expressions to guess which columns correspond to ra, dec, x, y
+        COORD_PATTERNS = {
+            "ra": re.compile(r'^ra$|^ra', re.IGNORECASE),  # contains RA with or without delimiter
+            "dec": re.compile(r'^dec$|^dec', re.IGNORECASE),
+            "x": re.compile(r'^x(pix(el)?)$|^x$', re.IGNORECASE),  # x, xpix, xpixel
+            "y": re.compile(r'^y(pix(el)?)$|^y$', re.IGNORECASE),  # y, ypix, ypixel
+        }
 
         input = self.input_as_table
 
@@ -264,41 +274,37 @@ class CatalogImporter(BaseImporterToDataCollection):
             return
 
         idx = None
-        if col in ['ra', 'dec']:
+        if col in ['ra', 'dec']: # if they are already SkyCoord objects, that's RA/Dec
             col_is_sc = [isinstance(input[colnames[i]], SkyCoord) for i in range(len(colnames))]
             if np.any(col_is_sc):
                 idx = np.where(col_is_sc)[0][0]
 
         if idx is None:
-            # remove spaces/underscores/hyphens/quotes/parentheses and make lowercase for matching
-            # TODO: merge this functionality with utils.in_ra_comps / in_dec_comps?
-            all_column_names = np.array([
-                str(x).lower()
-                .replace(' ', '')
-                .replace('_', '')
-                .replace('-', '')
-                .replace('"', '')
-                .replace('(', '')
-                .replace(')', '')
-                for x in colnames
-            ])
-            get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
-            if col == 'ra':
-                idx = get_idx(all_column_names, RA_COMPS, None)
-            elif col == 'dec':
-                idx = get_idx(all_column_names, DEC_COMPS, None)
-            elif col == 'x':
-                col_possibilities = ["x", "xpos", "xcentroid", "xcenter",
-                                     "xpixel", "pixelx", "xpix", "ximage", "ximg",
-                                     "xcoord", "xcoordinate", "sourcex", "xsource",
-                                     "x1", "x2"]
-                idx = get_idx(all_column_names, col_possibilities, None)
-            elif col == 'y':
-                col_possibilities = ["y", "ypos", "ycentroid", "ycenter",
-                                     "ypixel", "pixely", "ypix", "yimage", "yimg",
-                                     "ycoord", "ycoordinate", "sourcey", "ysource",
-                                     "y1", "y2"]
-                idx = get_idx(all_column_names, col_possibilities, None)
+            all_column_names = [str(x).lower().strip() for x in colnames]
+
+            get_idx = lambda x, s, d: s.index(x) if x in s else d
+
+            if col in ("ra", "dec"):
+                token_pattern = COORD_PATTERNS[col]
+                check = lambda tokens: (
+                        not any(token in WORDS_TO_EXCLUDE for token in tokens)
+                        and any(token_pattern.match(t) for t in tokens)
+                    )
+
+            elif col in ("x", "y"):
+                # x/y: allowlist approach — match whole column name
+                token_pattern = COORD_PATTERNS[col]
+                check = lambda tokens: any(token_pattern.match(t) for t in tokens)
+
+            for c in all_column_names:
+                tokens = re.split(r'[\s_\-\.]+', c)
+                if check(tokens):
+                    idx = get_idx(c, all_column_names, None)
+
+            #for col in columns:
+                #tokens = re.split(r'[\s_\-\.]+', col.lower().strip())
+               # if check(tokens):
+                   # return col
 
         # if no good candidate found, default to '---' (no selection) for
         # the default selection.
