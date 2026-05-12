@@ -4869,14 +4869,10 @@ class DatasetSelect(SelectPluginComponent):
             return (is_image(data) or is_flux_cube(data)) and not is_2d_spectrum_or_trace(data)
 
         def is_spectrum(data):
-            return (len(data.shape) == 1
-                    and data.coords is not None
-                    and wcs_is_spectral(getattr(data, 'coords', None)))
+                return data.meta.get('_importer') in ('SpectrumImporter')
 
         def is_2d_spectrum_or_trace(data):
-            return (data.ndim == 2
-                    and data.coords is not None
-                    and wcs_is_spectral(getattr(data, 'coords', None))) or 'Trace' in data.meta
+                return data.meta.get('_importer') in ('Spectrum2DImporter', 'TraceImporter')
 
         def is_spectrum_or_flux_cube(data):
             return is_spectrum(data) or is_flux_cube(data)
