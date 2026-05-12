@@ -4771,8 +4771,9 @@ class DatasetSelect(SelectPluginComponent):
         if len(shape) == 3:
             # then this is a cube, but we want the 1D spectrum,
             # so we can pass through the 3D Spectral Extraction plugin
-            if self.plugin.config != 'cubeviz':
-                raise ValueError("extracting a spectrum from a cube only supported in cubeviz")
+            if self.plugin.config not in ('cubeviz', 'deconfigged'):
+                raise ValueError("extracting a spectrum from a cube only supported in cubeviz"
+                                 " or generalized Jdaviz")
             # we need to get the 1d extracted spectrum for the cube
             spec_extract = self._app._jdaviz_helper.plugins['3D Spectral Extraction']._obj
             sp = spec_extract._extract_in_new_instance(self.selected,
