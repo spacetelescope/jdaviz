@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fix missing toggle for cube fitting in Model Fitting plugin in generalized Jdaviz. [#4172]
+
 Mosviz
 ^^^^^^
 
