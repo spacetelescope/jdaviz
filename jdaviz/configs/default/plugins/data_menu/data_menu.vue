@@ -215,6 +215,16 @@
                           @cancel="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
                           @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
                         />
+                        <j-tooltip :tooltipcontent="copied_label === item.label ? 'Copied' : 'Copy label to clipboard'">
+                          <v-btn
+                            icon
+                            x-small
+                            style="margin-left: 2px; opacity: 0.6"
+                            @click.stop="copyLabel(item.label)"
+                          >
+                            <v-icon small>{{ copied_label === item.label ? 'mdi-check' : 'mdi-clipboard-outline' }}</v-icon>
+                          </v-btn>
+                        </j-tooltip>
                       </div>
                     </v-list-item-content>
                     <v-list-item-action>
@@ -325,6 +335,7 @@
         data_menu_open: false,
         hover_api_hint: '',
         lock_hover_api_hint: false,
+        copied_label: '',
         debounce_timer: null,
         is_updating_layers: false,
         settled_has_more: false,
@@ -479,6 +490,12 @@
         const offsetX = event.clientX - draggedBounds.left;
         const offsetY = event.clientY - draggedBounds.top;
         event.dataTransfer.setDragImage(dragGhostEl, offsetX, offsetY);
+      },
+      copyLabel(label) {
+        navigator.clipboard.writeText(label).then(() => {
+          this.copied_label = label;
+          setTimeout(() => { this.copied_label = ''; }, 1500);
+        });
       },
       onDragEnd() {
         if (this._dragGhostParent && this._dragGhostParent.parentNode) {
