@@ -10,6 +10,8 @@ New Features
 - Errors from load are now more explicit, either as a result of known invalid cases or
   as errors producing during import. [#4159]
 
+- Data labels are now able to be copied from the data menu with the addition of a copy to clipboard button. [#4177]
+
 Mosviz
 ^^^^^^
 
