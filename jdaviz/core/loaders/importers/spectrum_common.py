@@ -21,8 +21,7 @@ from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
 from jdaviz.utils import (standardize_metadata,
                           create_data_hash,
                           PRIHDR_KEY,
-                          SPECTRAL_AXIS_COMP_LABELS,
-                          _get_celestial_wcs)
+                          SPECTRAL_AXIS_COMP_LABELS)
 
 __all__ = ['SpectrumInputExtensionsMixin', '_spectrum_assign_component_type']
 
@@ -674,14 +673,14 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         else:  # Convert both
             new_sc = sc.with_spectral_axis_and_flux_units(
                 target_wave_unit, target_flux_unit, flux_equivalencies=_eqv_flux_to_sb_pixel())
-        if target_wave_unit is not None:
-            new_sc.meta['_orig_spec'] = sc
+        # if target_wave_unit is not None:
+        #     new_sc.meta['_orig_spec'] = sc
         # Since we create a new Spectrum, we need to copy over any original WCS info
         # since the WCS will be replaced by a SpectralGWCS object instead of the original
         # astropy.wcs.WCS object.
         # This is needed for the subset tools to work properly.
-        if new_sc.flux.ndim == 3 and _get_celestial_wcs(sc.wcs) is not None:
-            new_sc.meta['_orig_spatial_wcs'] = _get_celestial_wcs(sc.wcs)
+        # if new_sc.flux.ndim == 3 and _get_celestial_wcs(sc.wcs) is not None:
+        #     new_sc.meta['_orig_spatial_wcs'] = _get_celestial_wcs(sc.wcs)
 
         return new_sc
 
