@@ -2,10 +2,16 @@ from jdaviz.core.loaders.importers.spectrum3d.spectrum3d import Spectrum3DImport
 
 
 def test_spectrum3d_importer_is_valid(deconfigged_helper, spectrum1d, spectrum1d_cube):
-    """Test all string-returning scenarios in Spectrum3DImporter._check_is_valid."""
+    """Test _check_is_valid for Spectrum3DImporter: success and failure cases."""
     resolver = deconfigged_helper.loaders['object']._obj
 
-    # Init with valid 3D spectrum, swap to 1D flux, clear cached spectra
+    # Success: valid 3D spectrum
+    importer = Spectrum3DImporter(app=deconfigged_helper._app,
+                                  resolver=resolver, parser=None,
+                                  input=spectrum1d_cube)
+    assert importer._check_is_valid() == ''
+
+    # Failure: 1D flux rejected by 3D importer
     importer = Spectrum3DImporter(app=deconfigged_helper._app,
                                   resolver=resolver, parser=None,
                                   input=spectrum1d_cube)
