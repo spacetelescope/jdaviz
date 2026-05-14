@@ -1,6 +1,4 @@
-
 from astropy.table import Table
-import pytest
 
 from jdaviz.core.loaders.importers.catalog.catalog import CatalogImporter
 
