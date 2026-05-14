@@ -223,7 +223,6 @@
                           <v-btn
                             icon
                             x-small
-                            style="opacity: 0.6"
                             @click.stop="copyLabel(item.label)"
                           >
                             <v-icon small>{{ copied_label === item.label ? 'mdi-check' : 'mdi-clipboard-outline' }}</v-icon>
