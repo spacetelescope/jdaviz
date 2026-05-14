@@ -1,8 +1,10 @@
 <template>
   <j-tray-plugin
     plugin_key="Cross Dispersion Profile"
+    :config="config"
     :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description"
+    :link="docs_link"
     :uses_active_status="uses_active_status"
     :keep_active.sync="keep_active"
     @plugin-ping="plugin_ping($event)"
