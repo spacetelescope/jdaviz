@@ -12,11 +12,17 @@ def test_trace_importer_is_valid(deconfigged_helper, specviz2d_helper):
     resolver = deconfigged_helper.loaders['object']._obj
     trace = FlatTrace(image=NDData(np.ones((10, 20)), unit=u.Jy), trace_pos=5.0)
 
-    def _create_importer(input_app=deconfigged_helper._app, input_data=trace):
-        return TraceImporter(app=input_app, resolver=resolver, parser=None, input=input_data)
+    def _create_importer(input_helper=deconfigged_helper,
+                         input_resolver=resolver,
+                         input_data=trace):
+        return TraceImporter(app=input_helper._app,
+                             resolver=input_resolver,
+                             parser=None,
+                             input=input_data)
 
     # Success: valid Trace with Spectral Extraction plugin available (specviz2d)
-    importer = _create_importer(input_app=specviz2d_helper)
+    resolver2d = specviz2d_helper.loaders['object']._obj
+    importer = _create_importer(input_helper=specviz2d_helper, input_resolver=resolver2d)
     assert importer._check_is_valid() == ''
 
     # Failure: Trace without Spectral Extraction plugin (deconfigged has no plugin)
