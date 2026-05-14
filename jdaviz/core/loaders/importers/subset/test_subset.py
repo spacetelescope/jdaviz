@@ -108,6 +108,23 @@ class TestSubsetImporter:
         importer = self.generate_importer('not a region')
         assert bool(importer.is_valid) is False
 
+    def test_subset_importer_is_valid(self):
+        """Test all string-returning scenarios in SubsetImporter._check_is_valid."""
+        # Non-Region/SpectralRegion input
+        importer = self.generate_importer('not a region')
+        assert importer._check_is_valid() == 'Input must be a Regions or SpectralRegion object.'
+
+        # When Subset Tools plugin is not available
+        from jdaviz.configs.deconfigged.helper import App as DeconfiggedApp
+        bare_app = DeconfiggedApp()
+        bare_importer = SubsetImporter(app=bare_app._app,
+                                       resolver=None,
+                                       parser=None,
+                                       input=Regions([CirclePixelRegion(
+                                           center=PixCoord(10, 20), radius=5)]))
+        if 'Subset Tools' not in bare_app.plugins:
+            assert bare_importer._check_is_valid() == 'Subset Tools plugin is not available.'
+
     def test_label_default_updates_with_subset_count(self, regions_input, spectral_region):
         """
         Test that default label updates based on subset count.
