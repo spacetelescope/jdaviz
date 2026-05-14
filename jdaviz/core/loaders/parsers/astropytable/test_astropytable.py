@@ -112,8 +112,7 @@ def test_astropytable_parser_is_valid(deconfigged_helper, tmp_path):
     assert parser._check_is_valid() == 'Table is empty.'
 
     filepath = str(tmp_path / 'empty.ecsv')
-    QTable({'a': u.Quantity([], unit=u.m)}).write(filepath, format='ascii.ecsv',
-                                                 overwrite=True)
+    QTable({'a': u.Quantity([], unit=u.m)}).write(filepath, format='ascii.ecsv', overwrite=True)
     parser = AstropyTableParser(deconfigged_helper._app, filepath)
     assert parser._check_is_valid() == 'Table is empty.'
 

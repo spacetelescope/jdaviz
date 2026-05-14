@@ -49,4 +49,3 @@ def test_check_regions_is_valid_specviz2d(specviz2d_helper):
     # Failure: unsupported extension
     parser = RegionsParser(specviz2d_helper._app, 'file.reg')
     assert parser._check_is_valid() == 'Unsupported extension .reg for specviz2d regions.'
-

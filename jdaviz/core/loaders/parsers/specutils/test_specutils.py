@@ -1,7 +1,6 @@
 import numpy as np
 import astropy.units as u
 from astropy.table import QTable
-from specutils import Spectrum, SpectrumList
 
 from jdaviz.core.loaders.parsers.specutils.specutils import (SpecutilsSpectrumArrayParser,
                                                              SpecutilsSpectrumListParser)
