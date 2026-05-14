@@ -81,6 +81,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Query catalog for objects within region on sky.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/catalog_search.html'  # noqa
 
         self.viewer.add_filter('is_imviz_image_viewer')
 

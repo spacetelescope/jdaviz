@@ -88,6 +88,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                        'world_ra', 'world_dec', 'world:unreliable',
                        'value', 'value:unit', 'value:unreliable',
                        'viewer']
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/info/markers.html'
         else:
             # allow downstream configs to override headers
             headers = kwargs.get('headers', [])

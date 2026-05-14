@@ -144,6 +144,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Fit an analytic model to data or a subset of data.'
 
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/model_fitting.html'  # noqa
+
         # create the label first so that when model_component defaults to the first selection,
         # the label automatically defaults as well
         self.model_component_label = AutoTextField(self, 'comp_label', 'comp_label_default',

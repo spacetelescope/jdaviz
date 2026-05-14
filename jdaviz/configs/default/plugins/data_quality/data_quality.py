@@ -80,6 +80,8 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Data Quality layer visualization options.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/data_quality.html'  # noqa
 
         self.icons = {k: v for k, v in self._app.state.icons.items()}
 
