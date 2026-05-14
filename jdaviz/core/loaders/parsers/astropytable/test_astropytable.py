@@ -84,3 +84,50 @@ def test_try_qtable_read_failures(deconfigged_helper, tmp_path, content, fmt,
     parser = AstropyTableParser(deconfigged_helper._app, str(f))
     result = parser._try_qtable_read(fmt)
     assert expected_substr in result.meta['_jdaviz_exception']
+
+
+def test_astropytable_parser_is_valid(deconfigged_helper, tmp_path):
+    """Test _check_is_valid for AstropyTableParser: success and failure cases."""
+    import numpy as np
+    from astropy.io import fits
+
+    # Success: non-empty QTable object
+    parser = AstropyTableParser(deconfigged_helper._app,
+                                QTable({'a': [1, 2], 'b': [3, 4]}))
+    assert parser._check_is_valid() == ''
+
+    # Success: non-empty table read from an ECSV file
+    filepath = str(tmp_path / 'catalog.ecsv')
+    QTable({'ra': [10.0] * u.deg, 'dec': [-5.0] * u.deg}).write(
+        filepath, format='ascii.ecsv', overwrite=True)
+    parser = AstropyTableParser(deconfigged_helper._app, filepath)
+    assert parser._check_is_valid() == ''
+
+    # Failure: None input
+    parser = AstropyTableParser(deconfigged_helper._app, None)
+    assert parser._check_is_valid() == 'Input must not be None.'
+
+    # Failure: empty QTable and empty table from file
+    parser = AstropyTableParser(deconfigged_helper._app, QTable())
+    assert parser._check_is_valid() == 'Table is empty.'
+
+    filepath = str(tmp_path / 'empty.ecsv')
+    QTable({'a': u.Quantity([], unit=u.m)}).write(filepath, format='ascii.ecsv',
+                                                 overwrite=True)
+    parser = AstropyTableParser(deconfigged_helper._app, filepath)
+    assert parser._check_is_valid() == 'Table is empty.'
+
+    # Failure: FITS HDU and HDUList rejected
+    for inp in (fits.PrimaryHDU(), fits.HDUList([fits.PrimaryHDU()])):
+        parser = AstropyTableParser(deconfigged_helper._app, inp)
+        assert parser._check_is_valid() == 'Input is a FITS HDU, not a table.'
+
+    # Failure: numpy array rejected
+    parser = AstropyTableParser(deconfigged_helper._app, np.array([1, 2, 3]))
+    assert parser._check_is_valid() == 'Input is a numpy array, not a table.'
+
+    # Failure: FITS file on disk rejected
+    filepath = str(tmp_path / 'test.fits')
+    fits.PrimaryHDU(data=[1, 2, 3]).writeto(filepath)
+    parser = AstropyTableParser(deconfigged_helper._app, filepath)
+    assert parser._check_is_valid() == 'Input is a FITS file, not a table.'
