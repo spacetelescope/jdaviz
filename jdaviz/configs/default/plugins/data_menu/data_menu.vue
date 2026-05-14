@@ -215,40 +215,42 @@
                           @cancel="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
                           @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
                         />
+                      </div>
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <div style="display: flex; align-items: center;">
                         <j-tooltip :tooltipcontent="copied_label === item.label ? 'Copied' : 'Copy label to clipboard'">
                           <v-btn
                             icon
                             x-small
-                            style="margin-left: 2px; opacity: 0.6"
+                            style="opacity: 0.6"
                             @click.stop="copyLabel(item.label)"
                           >
                             <v-icon small>{{ copied_label === item.label ? 'mdi-check' : 'mdi-clipboard-outline' }}</v-icon>
                           </v-btn>
                         </j-tooltip>
+                        <j-tooltip
+                          v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
+                          tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
+                        >
+                          <v-btn icon disabled>
+                            <v-icon>mdi-eye-off</v-icon>
+                          </v-btn>
+                        </j-tooltip>
+                        <j-tooltip
+                          v-else-if="viewer_supports_visible_toggle"
+                          :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
+                        >
+                          <plugin-switch
+                            :value="item.visible"
+                            @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
+                            @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
+                            @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
+                            :api_hints_enabled="false"
+                            :use_icon="item.is_sonified ? 'speaker' : 'eye'"
+                          />
+                        </j-tooltip>
                       </div>
-                    </v-list-item-content>
-                    <v-list-item-action>
-                      <j-tooltip
-                        v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
-                        tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
-                      >
-                        <v-btn icon disabled>
-                          <v-icon>mdi-eye-off</v-icon>
-                        </v-btn>
-                      </j-tooltip>
-                      <j-tooltip
-                        v-else-if="viewer_supports_visible_toggle"
-                        :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
-                      >
-                        <plugin-switch
-                          :value="item.visible"
-                          @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-                          @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
-                          @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
-                          :api_hints_enabled="false"
-                          :use_icon="item.is_sonified ? 'speaker' : 'eye'"
-                        />
-                      </j-tooltip>
                     </v-list-item-action>
                   </v-list-item>
                 </draggable>
