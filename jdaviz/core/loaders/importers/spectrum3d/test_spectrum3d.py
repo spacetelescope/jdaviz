@@ -12,9 +12,6 @@ def test_spectrum3d_importer_is_valid(deconfigged_helper, spectrum1d, spectrum1d
     assert importer._check_is_valid() == ''
 
     # Failure: 1D flux rejected by 3D importer
-    importer = Spectrum3DImporter(app=deconfigged_helper._app,
-                                  resolver=resolver, parser=None,
-                                  input=spectrum1d_cube)
     importer._input = spectrum1d
     if 'spectra' in importer.__dict__:
         del importer.__dict__['spectra']

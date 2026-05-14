@@ -28,6 +28,8 @@ def test_image_importer_is_valid(deconfigged_helper):
     assert importer._check_is_valid() == 'Input is not a supported image data type.'
 
     # Failure: HDUList with no valid image extensions
+    # Can't hotswap with ._input, need to update the extensions attribute (this is
+    # the case for several below as well)
     hdul = fits.HDUList([fits.PrimaryHDU(),
                          fits.ImageHDU(data=np.ones((10, 10)))])
     importer = _create_importer(input_data=hdul)

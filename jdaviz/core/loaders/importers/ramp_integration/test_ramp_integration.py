@@ -14,7 +14,5 @@ def test_ramp_integration_importer_is_valid(deconfigged_helper):
     assert importer._check_is_valid() == ''
 
     # Failure: non-array, non-NDDataArray input
-    importer = RampIntegrationImporter(app=deconfigged_helper._app,
-                                       resolver=resolver, parser=None,
-                                       input='not_an_array')
+    importer._input = 'not_an_array'
     assert importer._check_is_valid() == 'Input must be a numpy array or NDDataArray.'
