@@ -1,12 +1,13 @@
 import numpy as np
 import astropy.units as u
 from astropy.nddata import NDData
+from unittest.mock import MagicMock, patch
 from specreduce.tracing import FlatTrace
 
 from jdaviz.core.loaders.importers.trace.trace import TraceImporter
 
 
-def test_trace_importer_is_valid(deconfigged_helper, specviz2d_helper):
+def test_trace_importer_is_valid(deconfigged_helper):
     """Test _check_is_valid for TraceImporter: success and failure cases."""
 
     resolver = deconfigged_helper.loaders['object']._obj
@@ -20,10 +21,14 @@ def test_trace_importer_is_valid(deconfigged_helper, specviz2d_helper):
                              parser=None,
                              input=input_data)
 
-    # Success: valid Trace with Spectral Extraction plugin available (specviz2d)
-    resolver2d = specviz2d_helper.loaders['object']._obj
-    importer = _create_importer(input_helper=specviz2d_helper, input_resolver=resolver2d)
-    assert importer._check_is_valid() == ''
+    # Success: valid Trace with Spectral Extraction plugin available
+    # Create a mock _jdaviz_helper with a plugins dict that contains 'Spectral Extraction'
+    # Otherwise we have to use specviz2d to have the plugin
+    mock_helper = MagicMock()
+    mock_helper.plugins = {'Spectral Extraction': None}
+    with patch.object(deconfigged_helper._app, '_jdaviz_helper', mock_helper):
+        importer = _create_importer()
+        assert importer._check_is_valid() == ''
 
     # Failure: Trace without Spectral Extraction plugin (deconfigged has no plugin)
     importer = _create_importer()
