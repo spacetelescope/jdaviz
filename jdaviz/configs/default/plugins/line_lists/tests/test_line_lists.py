@@ -8,6 +8,7 @@ from specutils import Spectrum
 
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import get_available_linelists
+from jdaviz.core.loaders.importers.line_list import LineListImporter
 
 
 # two-argument Table.loc is deprecated as of Astropy 7.2. Syntax update will be needed
@@ -194,53 +195,47 @@ class TestLineLists:
 
     def test_import_line_list_validation(self, deconfigged_helper, spectrum1d):
         """Test that import validation catches invalid tables"""
-        from jdaviz.core.loaders.importers.line_list import LineListImporter
 
         deconfigged_helper.load(spectrum1d)
 
-        # Create a minimal mock importer object for testing _check_is_valid
-        class MockImporter:
-            def __init__(self, input_table):
-                self.input = input_table
-                self.has_default_plugin = True
+        def _create_importer(input_data=None):
+            resolver = deconfigged_helper.loaders['object']._obj
+            return LineListImporter(app=deconfigged_helper._app,
+                                    resolver=resolver, parser=None,
+                                    input=input_data)
 
         # Test missing linename column
         lt = QTable()
         lt['rest'] = [5007, 6563] * u.AA
-        mock = MockImporter(lt)
-        result = LineListImporter._check_is_valid(mock)
-        assert result == "Input must have a 'linename' column."
+        importer = _create_importer(lt)
+        assert importer._check_is_valid() == "Input must have a 'linename' column."
 
         # Test missing rest column
         lt = QTable()
         lt['linename'] = ['O III', 'Halpha']
-        mock = MockImporter(lt)
-        result = LineListImporter._check_is_valid(mock)
-        assert result == "Input must have a 'rest' column."
+        importer = _create_importer(lt)
+        assert importer._check_is_valid() == "Input must have a 'rest' column."
 
         # Test rest column without units
         lt = QTable()
         lt['linename'] = ['O III', 'Halpha']
         lt['rest'] = [5007, 6563]  # No units
-        mock = MockImporter(lt)
-        result = LineListImporter._check_is_valid(mock)
-        assert result == "'rest' column must be an astropy Quantity object."
+        importer = _create_importer(lt)
+        assert importer._check_is_valid() == "'rest' column must be an astropy Quantity object."
 
         # Test negative rest values
         lt = QTable()
         lt['linename'] = ['O III', 'Halpha']
         lt['rest'] = [-5007, 6563] * u.AA
-        mock = MockImporter(lt)
-        result = LineListImporter._check_is_valid(mock)
-        assert result == 'All rest values must be positive.'
+        importer = _create_importer(lt)
+        assert importer._check_is_valid() == 'All rest values must be positive.'
 
         # Test valid table
         lt = QTable()
         lt['linename'] = ['O III', 'Halpha']
         lt['rest'] = [5007, 6563] * u.AA
-        mock = MockImporter(lt)
-        result = LineListImporter._check_is_valid(mock)
-        assert result == ''
+        importer = _create_importer(lt)
+        assert importer._check_is_valid() == ''
 
     @pytest.mark.parametrize("helper_name", ['specviz_helper', 'deconfigged_helper'])
     def test_import_line_list_generic_helper(self, helper_name, spectrum1d, request):
