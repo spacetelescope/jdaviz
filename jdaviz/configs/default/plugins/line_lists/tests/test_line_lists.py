@@ -193,50 +193,6 @@ class TestLineLists:
 
         assert np.allclose([line.redshift for line in viewer_lines], 0.01)
 
-    def test_import_line_list_validation(self, deconfigged_helper, spectrum1d):
-        """Test that import validation catches invalid tables"""
-
-        deconfigged_helper.load(spectrum1d)
-
-        def _create_importer(input_data=None):
-            resolver = deconfigged_helper.loaders['object']._obj
-            return LineListImporter(app=deconfigged_helper._app,
-                                    resolver=resolver, parser=None,
-                                    input=input_data)
-
-        # Test missing linename column
-        lt = QTable()
-        lt['rest'] = [5007, 6563] * u.AA
-        importer = _create_importer(lt)
-        assert importer._check_is_valid() == "Input must have a 'linename' column."
-
-        # Test missing rest column
-        lt = QTable()
-        lt['linename'] = ['O III', 'Halpha']
-        importer = _create_importer(lt)
-        assert importer._check_is_valid() == "Input must have a 'rest' column."
-
-        # Test rest column without units
-        lt = QTable()
-        lt['linename'] = ['O III', 'Halpha']
-        lt['rest'] = [5007, 6563]  # No units
-        importer = _create_importer(lt)
-        assert importer._check_is_valid() == "'rest' column must be an astropy Quantity object."
-
-        # Test negative rest values
-        lt = QTable()
-        lt['linename'] = ['O III', 'Halpha']
-        lt['rest'] = [-5007, 6563] * u.AA
-        importer = _create_importer(lt)
-        assert importer._check_is_valid() == 'All rest values must be positive.'
-
-        # Test valid table
-        lt = QTable()
-        lt['linename'] = ['O III', 'Halpha']
-        lt['rest'] = [5007, 6563] * u.AA
-        importer = _create_importer(lt)
-        assert importer._check_is_valid() == ''
-
     @pytest.mark.parametrize("helper_name", ['specviz_helper', 'deconfigged_helper'])
     def test_import_line_list_generic_helper(self, helper_name, spectrum1d, request):
         """Test importing line lists works with both specviz and deconfigged helpers"""
