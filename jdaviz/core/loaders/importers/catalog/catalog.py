@@ -17,6 +17,7 @@ __all__ = ['CatalogImporter']
 
 @loader_importer_registry("Catalog")
 class CatalogImporter(BaseImporterToDataCollection):
+
     template_file = __file__, "./catalog.vue"
 
     # for catalogs with source positions in sky coordinates
