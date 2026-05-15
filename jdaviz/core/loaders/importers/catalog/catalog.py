@@ -257,10 +257,10 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         # regular expressions to guess which columns correspond to ra, dec, x, y
         COORD_PATTERNS = {
-            "ra": re.compile(r'^ra$|^ra', re.IGNORECASE),  # contains RA with or without delimiter
-            "dec": re.compile(r'^dec$|^dec', re.IGNORECASE),
-            "x": re.compile(r'^x(pix(el)?)$|^x$', re.IGNORECASE),  # x, xpix, xpixel
-            "y": re.compile(r'^y(pix(el)?)$|^y$', re.IGNORECASE),  # y, ypix, ypixel
+            "ra": re.compile(r'^ra$|^ra|ra$', re.IGNORECASE),  # contains RA, dec with or without delimiter
+            "dec": re.compile(r'^dec$|^dec|dec$', re.IGNORECASE),
+            "x": re.compile(r'^x(pix(el)?)$|^x$|^x', re.IGNORECASE),  # x, xpix, xpixel
+            "y": re.compile(r'^y(pix(el)?)$|^y$|^y', re.IGNORECASE),  # y, ypix, ypixel
         }
 
         input = self.input_as_table
@@ -288,23 +288,19 @@ class CatalogImporter(BaseImporterToDataCollection):
                 token_pattern = COORD_PATTERNS[col]
                 check = lambda tokens: (
                         not any(token in WORDS_TO_EXCLUDE for token in tokens)
-                        and any(token_pattern.match(t) for t in tokens)
+                        and any(token_pattern.search(t) for t in tokens)
                     )
 
             elif col in ("x", "y"):
                 # x/y: allowlist approach — match whole column name
                 token_pattern = COORD_PATTERNS[col]
-                check = lambda tokens: any(token_pattern.match(t) for t in tokens)
+                check = lambda tokens: any(token_pattern.search(t) for t in tokens)
 
             for c in all_column_names:
                 tokens = re.split(r'[\s_\-\.]+', c)
                 if check(tokens):
                     idx = get_idx(c, all_column_names, None)
 
-            #for col in columns:
-                #tokens = re.split(r'[\s_\-\.]+', col.lower().strip())
-               # if check(tokens):
-                   # return col
 
         # if no good candidate found, default to '---' (no selection) for
         # the default selection.
