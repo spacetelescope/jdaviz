@@ -24,5 +24,5 @@ def test_object_resolver_is_valid(deconfigged_helper, tmp_path):
         assert resolver._check_is_valid() == 'Object is an uri.'
 
     # Failure: Path objects
-    resolver._object = Path('/tmp/test.fits')
+    resolver._object = filepath
     assert resolver._check_is_valid() == 'Path objects should be treated as files.'
