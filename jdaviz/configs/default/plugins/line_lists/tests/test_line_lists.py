@@ -8,7 +8,6 @@ from specutils import Spectrum
 
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import get_available_linelists
-from jdaviz.core.loaders.importers.line_list import LineListImporter
 
 
 # two-argument Table.loc is deprecated as of Astropy 7.2. Syntax update will be needed
