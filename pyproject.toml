@@ -167,6 +167,8 @@ filterwarnings = [
     "ignore:Rampviz is deprecated and will be removed in version 5.2.*:DeprecationWarning",
     "ignore:Specviz is deprecated and will be removed in version 5.2.*:DeprecationWarning",
     "ignore:Specviz2d is deprecated and will be removed in version 5.2.*:DeprecationWarning",
+    "ignore:The TestRunner class will be deprecated in a future version.",
+    "ignore:The TestRunnerBase class will be deprecated in a future version."
 ]
 
 
