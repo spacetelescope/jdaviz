@@ -1,4 +1,3 @@
-from pathlib import Path
 from jdaviz.core.loaders.resolvers.object.object import ObjectResolver
 
 
