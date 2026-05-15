@@ -6,6 +6,8 @@ Bug Fixes
 
 - Fix missing toggle for cube fitting in Model Fitting plugin in generalized Jdaviz. [#4172]
 
+- Fix broken "Learn More" links throughout app. [#4173]
+
 Mosviz
 ^^^^^^
 

@@ -32,6 +32,8 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Plot line profiles across X and Y.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/image_profiles.html'  # noqa
 
         self.plot_across_x = Plot(self, name='across_x')
         self.plot_across_y = Plot(self, name='across_y')
