@@ -1,9 +1,9 @@
-.. _plugins-line-profiles:
+.. _plugins-image-profiles:
 .. rst-class:: section-icon-mdi-tune-variant
 
-*************
-Line Profiles
-*************
+*************************
+Image Profiles (X/Y cuts)
+*************************
 
 .. plugin-availability::
 
@@ -12,9 +12,15 @@ Extract and analyze spatial line profiles from images.
 Description
 ===========
 
-The Line Profiles (XY) plugin extracts pixel values along a line drawn on an image,
+This plugin extracts pixel values along a line drawn on an image,
 showing how flux varies spatially. This is useful for analyzing extended sources,
-edges, or gradients.
+edges, or gradients.. The line profiles in X and Y can be extracted by either:
+pressing ``l`` at the desired pixel location on the image viewer while the plugin is open,
+or by manually specifying the pixel coordinates X and Y, before selecting the :guilabel:`PLOT`
+button. The top visible image, the same one displayed under :ref:`imviz-compass`,
+will be used for these plots.
+
+This plugin only considers pixel locations, not sky coordinates.
 
 **Key Features:**
 
@@ -26,7 +32,7 @@ edges, or gradients.
 UI Access
 =========
 
-Click the :guilabel:`Line Profiles` icon in the plugin toolbar to:
+Click the :guilabel:`Image Profiles (XY)` icon in the plugin toolbar to:
 
 1. Draw a line on the image
 2. View the profile plot
@@ -37,7 +43,7 @@ API Access
 
 .. code-block:: python
 
-    plg = imviz.plugins['Line Profiles']
+    plg = jd.plugins['Image Profiles (XY)']
     # Access profile data programmatically
 
 .. plugin-api-refs::

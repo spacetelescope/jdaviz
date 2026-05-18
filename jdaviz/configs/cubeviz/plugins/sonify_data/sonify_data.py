@@ -73,6 +73,9 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         self._plugin_description = 'Sonify a data cube'
         self.docs_description = 'Sonify a data cube using the Strauss package.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/sonify.html'
+
         if not self.has_strauss or sd.default.device[1] < 0:
             self.disabled_msg = ('To use Sonify Data, install strauss and restart Jdaviz. You '
                                  'can do this by running pip install strauss in the command'
@@ -117,7 +120,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         Update default label when a new sonification is added to the viewer.
         """
         # Modify default label to avoid vue error from re-using label
-        self.results_label_default = self.app.return_unique_name('Sonified data', typ='data')
+        self.results_label_default = self._app.return_unique_name('Sonified data', typ='data')
 
     def _data_added_to_viewer(self, msg):
         # Keep track of the volume attribute for each layer.
@@ -191,7 +194,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         msg = SnackbarMessage(f"'{previous_label}' sonified successfully in {t1-t0} seconds.",
                               color='success',
                               sender=self)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln, use_pccut, results_label):

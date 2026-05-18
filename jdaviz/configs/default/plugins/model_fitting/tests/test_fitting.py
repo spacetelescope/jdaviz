@@ -196,9 +196,9 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
     # even though the spectral y axis is in 'flux' by default
     plugin.cube_fit = True
 
-    assert cubeviz_helper.app._get_display_unit('spectral') == wav_unit
-    assert cubeviz_helper.app._get_display_unit('spectral_y') == flux_unit
-    assert cubeviz_helper.app._get_display_unit('sb') == sb_unit
+    assert cubeviz_helper._app._get_display_unit('spectral') == wav_unit
+    assert cubeviz_helper._app._get_display_unit('spectral_y') == flux_unit
+    assert cubeviz_helper._app._get_display_unit('sb') == sb_unit
 
     plugin.create_model_component("Linear1D", "L")
     # NOTE: Hardcoding n_cpu=1 to run in serial, it's slower to spool up
@@ -401,8 +401,8 @@ def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
 
     # Check Cubeviz roundtrip. This should automatically go through wcs1d-fits reader.
     cubeviz_helper.load_data(out_fn)
-    assert len(cubeviz_helper.app.data_collection) == 3
-    data_sci = cubeviz_helper.app.data_collection["fitted_cube"]
+    assert len(cubeviz_helper._app.data_collection) == 3
+    data_sci = cubeviz_helper._app.data_collection["fitted_cube"]
     flux_sci = data_sci.get_component("flux")
     assert_allclose(flux_sci.data, fitted_spectrum.flux.value)
     # now that the flux cube was loaded into cubeviz, there will be a factor
@@ -412,7 +412,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
     assert_allclose(coo[0].value, coo_expected[0].value)  # SpectralCoord
     assert_allclose([coo[1].ra.deg, coo[1].dec.deg],
                     [coo_expected[1].ra.deg, coo_expected[1].dec.deg])
-    data_mask = cubeviz_helper.app.data_collection["fitted_cube [MASK]"]
+    data_mask = cubeviz_helper._app.data_collection["fitted_cube [MASK]"]
     flux_mask = data_mask.get_component("flux")
     assert_array_equal(flux_mask.data, mask)
 
@@ -549,7 +549,7 @@ def test_cube_fit_with_nans(cubeviz_helper):
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
-    result = cubeviz_helper.app.data_collection['model']
+    result = cubeviz_helper._app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
 
     # Switch back to non-cube fit, check that units are marked incompatible
@@ -565,7 +565,7 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     spec.flux[5, 5, 7] = 10 * u.nJy
     cubeviz_helper.load_data(spec, data_label="test")
 
-    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    sv = cubeviz_helper._app.get_viewer('spectrum-viewer')
     sv.apply_roi(XRangeROI(0, 5))
 
     mf = cubeviz_helper.plugins["Model Fitting"]
@@ -577,7 +577,7 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
-    result = cubeviz_helper.app.data_collection['model']
+    result = cubeviz_helper._app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
 
 
@@ -601,7 +601,7 @@ def test_fit_with_count_units(cubeviz_helper):
 
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'ct / pix2'
 
-    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    model_flux = cubeviz_helper._app.data_collection[-1].get_component('flux')
     assert model_flux.units == 'ct / pix2'
 
 
@@ -635,7 +635,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
                                       [9.30e-05, 9.80e-05, 1.03e-04, 1.08e-04],
                                       [9.40e-05, 9.90e-05, 1.04e-04, 1.09e-04]]).T
 
-    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    model_flux = cubeviz_helper._app.data_collection[-1].get_component('flux')
     assert model_flux.units == f'MJy / {solid_angle_string}'
     assert np.allclose(model_flux.data[1, :, :], expected_result_slice)
 
@@ -646,7 +646,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
-    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    model_flux = cubeviz_helper._app.data_collection[-1].get_component('flux')
     assert model_flux.units == f'Jy / {solid_angle_string}'
     assert np.allclose(model_flux.data[1, :, :], expected_result_slice * 1e6)
 
@@ -671,7 +671,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
-    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    model_flux = cubeviz_helper._app.data_collection[-1].get_component('flux')
     assert model_flux.units == expected_unit_string
 
 
@@ -742,7 +742,7 @@ def test_different_fitters(specviz_helper, spectrum1d, fitter):
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
 
-    result = specviz_helper.app.data_collection['model']
+    result = specviz_helper._app.data_collection['model']
     expected_result = [6000., 6222.22222222, 6444.44444444, 6666.66666667, 6888.88888889,
                        7111.11111111, 7333.33333333, 7555.55555556, 7777.77777778, 8000.] * u.AA
     assert_allclose(result.get_object().spectral_axis, expected_result)
@@ -767,7 +767,7 @@ def test_specviz2d_linking(specviz2d_helper):
     spectrum_data = Spectrum(data, wcs=wcs, meta=header)
     specviz2d_helper.load_data(spectrum_2d=spectrum_data)
 
-    viewer_1d = specviz2d_helper.app.get_viewer(
+    viewer_1d = specviz2d_helper._app.get_viewer(
         specviz2d_helper._default_spectrum_viewer_reference_name)
 
     mf = specviz2d_helper.plugins['Model Fitting']
@@ -874,7 +874,7 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     # Make sure the slope units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'W / (Angstrom Hz m2)'
 
-    model = specviz_helper.app.data_collection['model'].get_object(Spectrum)
+    model = specviz_helper._app.data_collection['model'].get_object(Spectrum)
     assert model.flux.unit == 'W / (Hz m2)'
     assert_allclose(model.flux, spec.flux.to('W / (Hz m2)'), rtol=1e-2)
 

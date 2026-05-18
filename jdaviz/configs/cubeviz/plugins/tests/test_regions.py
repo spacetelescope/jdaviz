@@ -2,12 +2,13 @@
 Generic handling logic already covered in
 jdaviz/configs/imviz/tests/test_regions.py
 """
-import numpy as np
-import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, EllipsePixelRegion,
                      EllipseSkyRegion)
+import numpy as np
+from numpy.testing import assert_allclose
+import pytest
 from specutils import Spectrum, SpectralRegion
 
 from jdaviz.configs.imviz.tests.test_regions import BaseRegionHandler
@@ -20,13 +21,13 @@ class TestLoadRegions(BaseRegionHandler):
         cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label='has_microns')
         # This is used in BaseRegionHandler
         self.viewer = cubeviz_helper.default_viewer._obj.glue_viewer
-        self.spectrum_viewer = cubeviz_helper.app.get_viewer(
+        self.spectrum_viewer = cubeviz_helper._app.get_viewer(
             cubeviz_helper._default_spectrum_viewer_reference_name
         )
 
     def teardown_method(self, method):
         """Clear all the subsets for the next test method."""
-        self.cubeviz.app.delete_subsets()
+        self.cubeviz._app.delete_subsets()
 
     def test_regions_mask(self):
         mask = np.zeros((9, 10), dtype=np.bool_)
@@ -75,8 +76,15 @@ class TestLoadRegions(BaseRegionHandler):
         assert list(spatial_subsets_as_regions.keys()) == ['Subset 1'], spatial_subsets_as_regions
         assert isinstance(spatial_subsets_as_regions['Subset 1'], EllipsePixelRegion)
         # ensure agreement between app.get_subsets and subset_tools.get_regions
-        ss = self.cubeviz.app.get_subsets()
-        assert ss['Subset 1'][0]['region'] == spatial_subsets_as_regions['Subset 1']
+        ss = self.cubeviz._app.get_subsets()
+
+        actual = spatial_subsets_as_regions['Subset 1']
+        expected = ss['Subset 1'][0]['region']
+        assert type(actual) is type(expected)
+        assert_allclose(actual.center.x, expected.center.x)
+        assert_allclose(actual.center.y, expected.center.y)
+        assert_allclose(actual.width, expected.width)
+        assert_allclose(actual.height, expected.height)
 
         # NOTE: This does not test that spectrum from Subset is actually scientifically accurate.
         # Get spectral regions only.

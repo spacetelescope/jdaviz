@@ -40,7 +40,7 @@ class SlitOverlay(PluginTemplateMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Add a slit to the image viewer.'
 
-        table = self.app.get_viewer(self._default_table_viewer_reference_name)
+        table = self._app.get_viewer(self._default_table_viewer_reference_name)
         table.figure_widget.observe(self.place_slit_overlay, names=['highlighted'])
 
         self._slit_overlay_mark = None
@@ -52,25 +52,25 @@ class SlitOverlay(PluginTemplateMixin):
     @property
     def _default_table_viewer_reference_name(self):
         return getattr(
-            self.app._jdaviz_helper, '_default_table_viewer_reference_name', 'table-viewer'
+            self._app._jdaviz_helper, '_default_table_viewer_reference_name', 'table-viewer'
         )
 
     @property
     def _default_image_viewer_reference_name(self):
         return getattr(
-            self.app._jdaviz_helper, '_default_image_viewer_reference_name', 'image-viewer'
+            self._app._jdaviz_helper, '_default_image_viewer_reference_name', 'image-viewer'
         )
 
     @property
     def _default_spectrum_viewer_reference_name(self):
         return getattr(
-            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+            self._app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
         )
 
     @property
     def _default_spectrum_2d_viewer_reference_name(self):
         return getattr(
-            self.app._jdaviz_helper,
+            self._app._jdaviz_helper,
             '_default_spectrum_2d_viewer_reference_name',
             'spectrum-2d-viewer'
         )
@@ -98,10 +98,10 @@ class SlitOverlay(PluginTemplateMixin):
         self.remove_slit_overlay()
 
         # Get data from relevant viewers
-        image_data = self.app.get_viewer(
+        image_data = self._app.get_viewer(
             self._default_image_viewer_reference_name
         ).state.reference_data
-        spec2d_data = self.app.get_viewer(
+        spec2d_data = self._app.get_viewer(
             self._default_spectrum_2d_viewer_reference_name
         ).data()
 
@@ -120,7 +120,7 @@ class SlitOverlay(PluginTemplateMixin):
                 x_coords = pix_rec.vertices.x
                 y_coords = pix_rec.vertices.y
 
-                image_viewer = self.app.get_viewer(self._default_image_viewer_reference_name)
+                image_viewer = self._app.get_viewer(self._default_image_viewer_reference_name)
                 fig_image = image_viewer.figure
 
                 if image_viewer.toolbar.active_tool is not None:
@@ -152,7 +152,7 @@ class SlitOverlay(PluginTemplateMixin):
 
     def remove_slit_overlay(self):
         if self._slit_overlay_mark is not None:
-            image_figure = self.app.get_viewer(
+            image_figure = self._app.get_viewer(
                 self._default_image_viewer_reference_name
             ).figure
             # We need to do the following instead of just removing directly on

@@ -31,11 +31,11 @@ class TestTableViewerTools:
         ldr.importer.viewer.create_new = 'Table'
         ldr.load()
 
-        self.app = deconfigged_helper
+        self._app = deconfigged_helper
         self.wcs = image_2d_wcs
 
         # Get the image viewer
-        image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
+        image_viewers = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
         assert len(image_viewers) == 1
         self.viewer = image_viewers[0]
 
@@ -233,7 +233,7 @@ class TestTableViewerTools:
         tool.activate()
 
         # Get initial subset count
-        initial_subset_count = len(self.app.app.data_collection.subset_groups)
+        initial_subset_count = len(self._app._app.data_collection.subset_groups)
 
         # Check some rows
         self.table_viewer.widget_table.checked = [0, 1, 2]
@@ -243,7 +243,7 @@ class TestTableViewerTools:
         apply_tool.activate()
 
         # A new subset should have been created
-        new_subset_count = len(self.app.app.data_collection.subset_groups)
+        new_subset_count = len(self._app._app.data_collection.subset_groups)
         assert new_subset_count == initial_subset_count + 1
 
     def test_select_table_row_tool_in_image_viewer(self):
@@ -349,7 +349,7 @@ class TestTableViewerToolsMultipleViewers:
         vc()
 
         # Get viewers
-        image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
+        image_viewers = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
         self.viewer1 = image_viewers[0]
         self.viewer2 = image_viewers[1] if len(image_viewers) > 1 else image_viewers[0]
 
@@ -437,7 +437,7 @@ class TestTableViewerToolsWcsLinkedMixedCoords:
         self.wcs = image_2d_wcs
 
         # Get the image viewer
-        image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
+        image_viewers = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
         assert len(image_viewers) == 1
         self.viewer = image_viewers[0]
 
@@ -565,10 +565,10 @@ class TestTableViewerToolsPixelLinked:
         ldr.importer.col_y.selected = 'y'
         ldr.load()
 
-        self.app = deconfigged_helper
+        self._app = deconfigged_helper
 
         # Get the image viewer
-        image_viewers = list(deconfigged_helper.app.get_viewers_of_cls('ImvizImageView'))
+        image_viewers = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
         assert len(image_viewers) == 1
         self.viewer = image_viewers[0]
 
@@ -582,7 +582,7 @@ class TestTableViewerToolsPixelLinked:
     def test_pixel_linked_zoom_applies_correct_limits(self):
         """Test that zoom-to-selected works with pixel-linked catalogs."""
         # Verify we're pixel-linked
-        assert self.app.app._align_by == 'pixels'
+        assert self._app._app._align_by == 'pixels'
 
         toolbar = self.table_viewer.toolbar
         tool = toolbar.tools['jdaviz:table_zoom_to_selected']
@@ -625,7 +625,7 @@ class TestTableViewerToolsPixelLinked:
     def test_pixel_linked_highlight_marks_appear(self):
         """Test that highlight marks appear with pixel-linked catalogs."""
         # Verify we're pixel-linked
-        assert self.app.app._align_by == 'pixels'
+        assert self._app._app._align_by == 'pixels'
 
         toolbar = self.table_viewer.toolbar
         tool = toolbar.tools['jdaviz:table_highlight_selected']

@@ -32,33 +32,46 @@
                 <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">{{viewer_reference || viewer_id}}</span>
               </div>
 
-              <div v-for="item in layer_items" class="viewer-label">
-                <div v-if="item.visible">
-                  <span style="float: right">
-                    <j-layer-viewer-icon-stylized
-                      tooltip="View data layers and subsets"
-                      :label="item.label"
-                      :icon="item.icon"
-                      :visible="item.visible"
-                      :is_subset="item.is_subset"
-                      :colors="item.colors"
-                      :linewidth="item.linewidth"
-                      :cmap_samples="cmap_samples"
-                      btn_style="margin-bottom: 0px"
-                      @click="() => {data_menu_open = !data_menu_open}"
-                    />
-                  </span>
-                  <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">
-                    <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                    <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
-                    <j-plugin-live-results-icon v-if="item.live_plugin_results" />
-                    {{ item.label }}
-                  </span>
-                </div>
+              <div v-for="(item, idx) in visible_layer_items_limited" :key="item.label + '-' + idx" class="viewer-label">
+                <v-tooltip left :open-delay="300">
+                  <template v-slot:activator="{ on: labelOn, attrs: labelAttrs }">
+                    <span v-bind="labelAttrs" v-on="labelOn" style="float: right; display: inline-block">
+                      <j-layer-viewer-icon-stylized
+                        tooltip="View data layers and subsets"
+                        :label="item.label"
+                        :icon="item.icon"
+                        :visible="item.visible"
+                        :is_subset="item.is_subset"
+                        :colors="item.colors"
+                        :linewidth="item.linewidth"
+                        :cmap_samples="cmap_samples"
+                        btn_style="margin-bottom: 0px"
+                        @click="() => {data_menu_open = !data_menu_open}"
+                      />
+                    </span>
+                  </template>
+                  <span>{{ item.label }}</span>
+                </v-tooltip>
+              </div>
+              <div v-if="has_more_visible_items" class="viewer-label">
+                <span style="float: right; display: inline-block">
+                  <j-layer-viewer-icon-stylized
+                    tooltip="More data layers exist. Click to view all."
+                    label="more_data_layers"
+                    icon="mdi-menu-open"
+                    :visible="true"
+                    :is_subset="false"
+                    :colors="['#205f76']"
+                    :linewidth="0"
+                    :cmap_samples="cmap_samples"
+                    btn_style="margin-bottom: 0px"
+                    @click="() => {data_menu_open = !data_menu_open}"
+                  />
+                </span>
               </div>
             </div>
           </template>
-          <v-list :id="'dm-content-' + viewer_id" style="width: 400px" class="overflow-y-auto">
+          <v-list :id="'dm-content-' + viewer_id" style="width: 400px; max-height: 600px; overflow-y: auto" class="overflow-y-auto">
             <v-list-item v-if="api_hints_enabled" style="min-height: 12px">
               <v-list-item-content>
                 <span class="api-hint">
@@ -205,27 +218,38 @@
                       </div>
                     </v-list-item-content>
                     <v-list-item-action>
-                      <j-tooltip
-                        v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
-                        tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
-                      >
-                        <v-btn icon disabled>
-                          <v-icon>mdi-eye-off</v-icon>
-                        </v-btn>
-                      </j-tooltip>
-                      <j-tooltip
-                        v-else-if="viewer_supports_visible_toggle"
-                        :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
-                      >
-                        <plugin-switch
-                          :value="item.visible"
-                          @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-                          @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
-                          @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
-                          :api_hints_enabled="false"
-                          :use_icon="item.is_sonified ? 'speaker' : 'eye'"
-                        />
-                      </j-tooltip>
+                      <div style="display: flex; align-items: center;">
+                        <j-tooltip :tooltipcontent="copied_label === item.label ? 'Copied' : 'Copy label to clipboard'">
+                          <v-btn
+                            icon
+                            x-small
+                            @click.stop="copyLabel(item.label)"
+                          >
+                            <v-icon small>{{ copied_label === item.label ? 'mdi-check' : 'mdi-clipboard-outline' }}</v-icon>
+                          </v-btn>
+                        </j-tooltip>
+                        <j-tooltip
+                          v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
+                          tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
+                        >
+                          <v-btn icon disabled>
+                            <v-icon>mdi-eye-off</v-icon>
+                          </v-btn>
+                        </j-tooltip>
+                        <j-tooltip
+                          v-else-if="viewer_supports_visible_toggle"
+                          :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
+                        >
+                          <plugin-switch
+                            :value="item.visible"
+                            @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
+                            @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
+                            @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
+                            :api_hints_enabled="false"
+                            :use_icon="item.is_sonified ? 'speaker' : 'eye'"
+                          />
+                        </j-tooltip>
+                      </div>
                     </v-list-item-action>
                   </v-list-item>
                 </draggable>
@@ -311,7 +335,64 @@
       return {
         data_menu_open: false,
         hover_api_hint: '',
-        lock_hover_api_hint: false
+        lock_hover_api_hint: false,
+        copied_label: '',
+        debounce_timer: null,
+        is_updating_layers: false,
+        settled_has_more: false,
+        max_legend_items: 4
+      }
+    },
+    computed: {
+      visible_layer_items: function() {
+        return this.layer_items.filter(item => item.visible);
+      },
+      visible_layer_items_limited: function() {
+        // When the overflow icon is shown, keep max_legend_items data items so
+        // the total slot count (data + overflow) stays within the available
+        // viewer height.  When no overflow icon is needed we can fill that
+        // spare slot with the next data item instead.
+        const showOverflow = this.visible_layer_items.length > this.max_legend_items + 1
+                             || this.any_layers_hidden;
+        const limit = showOverflow ? this.max_legend_items : this.max_legend_items + 1;
+        return this.visible_layer_items.slice(0, limit);
+      },
+      any_layers_hidden: function() {
+        // True when any layer loaded in the viewer is not visible,
+        // detected by comparing layer_items against visible_layers.
+        return this.layer_items.some(
+          item => !item.visible && !(item.label in this.visible_layers)
+        );
+      },
+      has_more_visible_items: function() {
+        // During rapid updates (e.g. blinking), hold the last settled value
+        // so the "more" indicator doesn't flicker on or off.
+        // Only show overflow icon when two or more items would be hidden.
+        if (this.is_updating_layers) {
+          return this.settled_has_more;
+        }
+        return this.visible_layer_items.length > this.max_legend_items + 1
+               || this.any_layers_hidden;
+      }
+    },
+    watch: {
+      layer_items: function() {
+        // During rapid updates (e.g. blinking), mark as updating so
+        // has_more_visible_items holds its last settled value instead
+        // of flickering.  Once updates settle, snapshot the new state.
+        this.is_updating_layers = true;
+        clearTimeout(this.debounce_timer);
+        this.debounce_timer = setTimeout(() => {
+          this.settled_has_more = this.visible_layer_items.length > this.max_legend_items + 1
+                                 || this.any_layers_hidden;
+          this.is_updating_layers = false;
+        }, 50);
+      },
+      force_open_menu: function (val) {
+        if (val) {
+          this.data_menu_open = true;
+          this.force_open_menu = false;
+        }
       }
     },
     mounted() {
@@ -326,8 +407,26 @@
         element = element.parentElement;
       }
       this.jupyterLabCell = this.$el.closest(".jp-Notebook-cell");
+
+      // Dynamically adjust legend truncation based on viewer height.
+      // Must observe the actual viewer container (the v-card that wraps
+      // the figure), not the legend overlay.
+      this.$nextTick(() => {
+        this._updateMaxLegendItems();
+        const container = this._getViewerContainer();
+        if (container) {
+          this._resizeObserver = new ResizeObserver(() => {
+            this._updateMaxLegendItems();
+          });
+          this._resizeObserver.observe(container);
+        }
+      });
     },
     beforeDestroy() {
+      if (this._resizeObserver) {
+        this._resizeObserver.disconnect();
+        this._resizeObserver = null;
+      }
       let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
       if (element === null) {
         return
@@ -339,15 +438,22 @@
         element = element.parentElement;
       }
     },
-    watch: {
-      force_open_menu: function (val) {
-        if (val) {
-          this.data_menu_open = true;
-          this.force_open_menu = false;
-        }
-      }
-    },
     methods: {
+      _getViewerContainer() {
+        // Find the viewer's content area, e.g. the v-card in viewer_window.vue
+        // that has an explicit height tracking the viewer panel size.
+        return this.$el && this.$el.closest('.v-card');
+      },
+      _updateMaxLegendItems() {
+        const container = this._getViewerContainer();
+        if (!container) return;
+        const viewerHeight = container.getBoundingClientRect().height;
+        const itemHeight = 30;
+        // Cap legend at 55% of viewer height so it doesn't dominate the view.
+        // Reserve 2 slots: 1 for the viewer icon header, 1 for the "more" indicator.
+        const usableHeight = viewerHeight * 0.55;
+        this.max_legend_items = Math.max(1, Math.floor(usableHeight / itemHeight) - 2);
+      },
       isSafari() {
         const ua = navigator.userAgent;
         return ua.includes('Safari') && !ua.match(/Chrome|Chromium|Edg/);
@@ -385,6 +491,12 @@
         const offsetX = event.clientX - draggedBounds.left;
         const offsetY = event.clientY - draggedBounds.top;
         event.dataTransfer.setDragImage(dragGhostEl, offsetX, offsetY);
+      },
+      copyLabel(label) {
+        navigator.clipboard.writeText(label).then(() => {
+          this.copied_label = label;
+          setTimeout(() => { this.copied_label = ''; }, 1500);
+        });
       },
       onDragEnd() {
         if (this._dragGhostParent && this._dragGhostParent.parentNode) {

@@ -58,8 +58,8 @@ def _calculate_line_flux(viz_helper):
     Assumes the plugin hasn't been opened yet
     '''
     # Open the plugin and force the calculation
-    viz_helper.app.state.drawer_content = 'plugins'
-    line_analysis_plugin = viz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    viz_helper._app.state.drawer_content = 'plugins'
+    line_analysis_plugin = viz_helper._app.get_tray_item_from_name('specviz-line-analysis')
     line_analysis_plugin.keep_active = True
 
     # Retrieve Results
@@ -85,7 +85,7 @@ def test_cubeviz_collapse_fluxunits(
     # Initialize Cubeviz with specific data and collapse function
     data_label = "Test Cube"
     cubeviz_helper.load_data(data, data_label=data_label)
-    cubeviz_helper.app.get_viewer('spectrum-viewer').state.function = function
+    cubeviz_helper._app.get_viewer('spectrum-viewer').state.function = function
 
     lineflux_result = _calculate_line_flux(cubeviz_helper)
     autocollapsed_spectrum_unit = (cubeviz_helper.

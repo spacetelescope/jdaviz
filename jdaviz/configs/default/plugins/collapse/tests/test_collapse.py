@@ -7,7 +7,7 @@ from specutils import Spectrum
 @pytest.mark.filterwarnings('ignore')
 def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     cubeviz_helper.load_data(Spectrum(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
-    dc = cubeviz_helper.app.data_collection
+    dc = cubeviz_helper._app.data_collection
 
     # TODO: this now fails when instantiating Collapse after initialization
     coll = cubeviz_helper.plugins['Collapse']._obj

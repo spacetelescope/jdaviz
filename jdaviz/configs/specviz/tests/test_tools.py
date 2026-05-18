@@ -7,7 +7,7 @@ def test_homezoom_matchx(specviz_helper, spectrum1d):
     Test HomeZoomMatchX tool activates and resets zoom in viewer.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     # Change the zoom
     viewer.state.x_min = 6500
@@ -27,7 +27,7 @@ def test_boxzoom_matchx(specviz_helper, spectrum1d):
     Test BoxZoomMatchX tool with zoom interaction.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     # Activate box zoom tool
     tool = viewer.toolbar.tools['jdaviz:boxzoom_matchx']
@@ -46,7 +46,7 @@ def test_xrangezoom_matchx(specviz_helper, spectrum1d):
     Test XRangeZoomMatchX tool with horizontal zoom interaction.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     # Activate x-range zoom tool
     tool = viewer.toolbar.tools['jdaviz:xrangezoom_matchx']
@@ -67,7 +67,7 @@ def test_panzoom_matchx(specviz_helper, spectrum1d):
     Test PanZoomMatchX tool activation and deactivation.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     # Activate pan zoom tool
     tool = viewer.toolbar.tools['jdaviz:panzoom_matchx']
@@ -86,7 +86,7 @@ def test_panzoomx_matchx(specviz_helper, spectrum1d):
     Test PanZoomXMatchX tool for horizontal-only panning.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     # Activate pan zoom x tool
     tool = viewer.toolbar.tools['jdaviz:panzoomx_matchx']
@@ -105,7 +105,7 @@ def test_matched_zoom_between_viewers(specviz_helper, spectrum1d):
     Test that matched zoom tools synchronize x-limits between viewers.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     # Activate matched box zoom
     tool = viewer.toolbar.tools['jdaviz:boxzoom_matchx']
@@ -134,8 +134,8 @@ class TestMapLimits:
     def _setup(deconfigged_helper, spectrum, tool_name='homezoom_matchx'):
         deconfigged_helper.load(spectrum, format='2D Spectrum')
 
-        spectrum_viewer = deconfigged_helper.app.get_viewer('1D Spectrum')
-        spectrum2d_viewer = deconfigged_helper.app.get_viewer('2D Spectrum')
+        spectrum_viewer = deconfigged_helper._app.get_viewer('1D Spectrum')
+        spectrum2d_viewer = deconfigged_helper._app.get_viewer('2D Spectrum')
 
         spectrum_tool = spectrum_viewer.toolbar.tools.get(f"jdaviz:{tool_name}")
         spectrum2d_tool = spectrum2d_viewer.toolbar.tools.get(f"jdaviz:{tool_name}")
@@ -162,7 +162,7 @@ class TestMapLimits:
         # In order for `_map_limits` to detect the spectral axis component,
         # and therefore perform the unit conversion,
         # it must have 'Wavelength' in its label.
-        for component in deconfigged_helper.app.data_collection[0].components:
+        for component in deconfigged_helper._app.data_collection[0].components:
             if component.label == 'World 1':
                 component.label = 'Wavelength'
                 break
@@ -220,7 +220,7 @@ def test_is_matched_viewer(specviz_helper, spectrum1d):
     Test the _is_matched_viewer method identifies correct viewer types.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     tool = viewer.toolbar.tools['jdaviz:homezoom_matchx']
 
@@ -237,7 +237,7 @@ def test_matched_zoom_disable_in_other_viewer(specviz_helper, spectrum1d):
     Test that activating matched zoom disables it in other viewers.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     tool = viewer.toolbar.tools['jdaviz:boxzoom_matchx']
 
@@ -259,7 +259,7 @@ def test_match_axes_property(specviz_helper, spectrum1d):
     Test that matched zoom tools have correct match_axes property.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     tool = viewer.toolbar.tools['jdaviz:homezoom_matchx']
 
@@ -274,7 +274,7 @@ def test_tool_icons_exist(specviz_helper, spectrum1d):
     Test that all matched zoom tools have valid icon paths.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     tool_ids = [
         'jdaviz:homezoom_matchx',

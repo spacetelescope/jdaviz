@@ -5,9 +5,12 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
+from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.utils import minversion
 from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose, assert_array_equal
+import photutils
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
 from photutils.datasets import make_4gaussians_image
@@ -16,18 +19,28 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRe
 
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_NoWCS
+from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, BaseImviz_WCS_NoWCS
 from jdaviz.core.custom_units_and_equivs import PIX2
+from jdaviz.core.unit_conversion_utils import flux_conversion_general
+
+photutils.future_column_names = True
+if minversion(photutils, '2.3.1.dev'):
+    SEMIMAJOR_AXIS = 'semimajor_axis'
+    SEMIMINOR_AXIS = 'semiminor_axis'
+else:
+    SEMIMAJOR_AXIS = 'semimajor_sigma'
+    SEMIMINOR_AXIS = 'semiminor_sigma'
 
 
-class TestSimpleAperPhot(BaseImviz_WCS_WCS):
+class TestSimpleAperPhot(BaseDeconfiggedImage_WCS_WCS):
+
     def test_plugin_wcs_dithered(self):
-        self.imviz.link_data(align_by='wcs')  # They are dithered by 1 pixel on X
+        self.orientation_plugin.align_by = 'WCS'
 
         reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5).to_sky(self.wcs_1)
-        self.imviz.plugins['Subset Tools'].import_region(reg)
+        self.helper.plugins['Subset Tools'].import_region(reg)
 
-        phot_plugin = self.imviz.plugins['Aperture Photometry']
+        phot_plugin = self.helper.plugins['Aperture Photometry']
 
         # Model fitting is already tested in astropy.
         # Here, we enable it just to make sure it does not crash.
@@ -43,7 +56,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.aperture.selected = phot_plugin.aperture.labels[0]
         assert_allclose(phot_plugin.background_value, 0)
 
-        phot_plugin.dataset.selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.dataset.selected = 'has_wcs_1'
         phot_plugin.aperture.selected = phot_plugin.aperture.labels[0]
         with pytest.raises(ValueError):
             phot_plugin.background.selected = 'no_such_subset'
@@ -51,14 +64,14 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(phot_plugin.background_value, 0)
 
         # Perform photometry on both images using same Subset.
-        phot_plugin.dataset.selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.dataset.selected = 'has_wcs_1'
         phot_plugin.aperture.selected = 'Subset 1'
         assert phot_plugin.dataset.selected_dc_item is not None
         phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
         assert len(tbl) == 1
 
-        phot_plugin.dataset.selected = 'has_wcs_2[SCI,1]'
+        phot_plugin.dataset.selected = 'has_wcs_2'
         phot_plugin.current_plot_type = 'Radial Profile (Raw)'
         assert phot_plugin.dataset.selected_dc_item is not None
         assert phot_plugin.aperture.selected_spatial_region is not None
@@ -79,7 +92,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
             'sum_aper_area', 'pixarea_tot', 'aperture_sum_counts', 'aperture_sum_counts_err',
             'counts_fac', 'aperture_sum_mag', 'flux_scaling', 'min', 'max', 'mean', 'median',
             'mode', 'std', 'mad_std', 'var', 'biweight_location', 'biweight_midvariance',
-            'fwhm', 'semimajor_sigma', 'semiminor_sigma', 'orientation', 'eccentricity',
+            'fwhm', SEMIMAJOR_AXIS, SEMIMINOR_AXIS, 'orientation', 'eccentricity',
             'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
@@ -101,11 +114,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(tbl['biweight_location'], 1)
         assert_allclose(tbl['biweight_midvariance'], 0)
         assert_quantity_allclose(tbl['fwhm'], 5.15018758 * u.pix)
-        assert_quantity_allclose(tbl['semimajor_sigma'], 2.18708329 * u.pix)
-        assert_quantity_allclose(tbl['semiminor_sigma'], 2.18708329 * u.pix)
+        assert_quantity_allclose(tbl[SEMIMAJOR_AXIS], 2.18708329 * u.pix)
+        assert_quantity_allclose(tbl[SEMIMINOR_AXIS], 2.18708329 * u.pix)
         assert_quantity_allclose(tbl['orientation'], 0 * u.deg)
         assert_quantity_allclose(tbl['eccentricity'], 0)
-        assert_array_equal(tbl['data_label'], ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]'])
+        assert_array_equal(tbl['data_label'], ['has_wcs_1', 'has_wcs_2'])
         assert_array_equal(tbl['subset_label'], ['Subset 1', 'Subset 1'])
         assert tbl['timestamp'].scale == 'utc'
 
@@ -120,10 +133,10 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Make sure it also works on an ellipse subset.
         reg = EllipsePixelRegion(center=PixCoord(x=4.5, y=2.0), width=9.0, height=4.0).to_sky(self.wcs_1)  # noqa: E501
-        self.imviz.plugins['Subset Tools'].combination_mode = 'new'
-        self.imviz.plugins['Subset Tools'].import_region(reg)
+        self.helper.plugins['Subset Tools'].combination_mode = 'new'
+        self.helper.plugins['Subset Tools'].import_region(reg)
 
-        phot_plugin.dataset.selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.dataset.selected = 'has_wcs_1'
         phot_plugin.aperture.selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
         phot_plugin._obj.vue_do_aper_phot()
@@ -138,16 +151,16 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * PIX2, rtol=1e-4)
         assert_allclose(tbl[-1]['sum'], 28.274334, rtol=1e-4)
         assert_allclose(tbl[-1]['mean'], 1, rtol=1e-4)
-        assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
+        assert tbl[-1]['data_label'] == 'has_wcs_1'
         assert tbl[-1]['subset_label'] == 'Subset 2'
 
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
         reg = RectanglePixelRegion(center=PixCoord(x=4.5, y=4.5), width=9, height=9).to_sky(self.wcs_1)  # noqa: E501
-        self.imviz.plugins['Subset Tools'].combination_mode = 'new'
-        self.imviz.plugins['Subset Tools'].import_region(reg)
+        self.helper.plugins['Subset Tools'].combination_mode = 'new'
+        self.helper.plugins['Subset Tools'].import_region(reg)
 
-        phot_plugin.dataset.selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.dataset.selected = 'has_wcs_1'
         phot_plugin.aperture.selected = 'Subset 3'
         phot_plugin.background.selected = 'Subset 3'
         assert_allclose(phot_plugin.background_value, 1)
@@ -163,7 +176,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_quantity_allclose(tbl[-1]['sum_aper_area'], 81 * PIX2)
         assert_allclose(tbl[-1]['sum'], 0)
         assert_allclose(tbl[-1]['mean'], 0)
-        assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
+        assert tbl[-1]['data_label'] == 'has_wcs_1'
         assert tbl[-1]['subset_label'] == 'Subset 3'
 
         # Make sure background auto-updates.
@@ -174,8 +187,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         hdu3 = fits.ImageHDU(np.ones((10, 10)) + 1, name='SCI')
         hdu3.header.update(self.wcs_2.to_header())
-        self.imviz.load_data(hdu3, data_label='twos')
-        phot_plugin.dataset.selected = 'twos[SCI,1]'
+        self.helper.load(hdu3, format='Image', data_label='twos')
+        phot_plugin.dataset.selected = 'twos'
         assert_allclose(phot_plugin.background_value, 2)  # Recalculate based on new Data
 
         # Curve of growth
@@ -184,7 +197,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert phot_plugin.plot._obj.figure.title == 'Curve of growth from aperture center'
 
     def test_batch_unpack(self):
-        phot_plugin = self.imviz.plugins['Aperture Photometry']
+        phot_plugin = self.helper.plugins['Aperture Photometry']
 
         # NOTE: these input values are not currently validated, so it does not matter that the
         # datasets and subsets do not exist with these names (if that changes, this test will
@@ -211,24 +224,25 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
                              'flux_scaling': 3}]
 
     def test_batch_phot(self):
-        self.imviz.link_data(align_by='wcs')  # They are dithered by 1 pixel on X
-        self.imviz.plugins['Subset Tools'].import_region(
+
+        self.orientation_plugin.align_by = 'WCS'
+        self.subset_plugin.import_region(
             CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5)
         )  # Draw a circle
 
-        phot_plugin = self.imviz.plugins['Aperture Photometry']
-        assert phot_plugin.dataset.choices == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
+        phot_plugin = self.helper.plugins['Aperture Photometry']
+        assert phot_plugin.dataset.choices == ['has_wcs_1', 'has_wcs_2']
         assert phot_plugin.aperture.choices == ['Subset 1']
 
         phot_plugin.aperture.selected = 'Subset 1'
-        phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'Subset 1'},  # noqa
-                                                {'dataset': 'has_wcs_2[SCI,1]'}])
+        phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1', 'aperture': 'Subset 1'},  # noqa
+                                                {'dataset': 'has_wcs_2'}])
 
         assert len(phot_plugin.table._obj) == 2
 
         with pytest.raises(RuntimeError):
-            phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'DNE'},  # noqa
-                                                    {'dataset': 'has_wcs_2[SCI,1]', 'aperture': 'Subset 1'}])  # noqa
+            phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1', 'aperture': 'DNE'},  # noqa
+                                                    {'dataset': 'has_wcs_2', 'aperture': 'Subset 1'}])  # noqa
 
         # second entry above should have been successful, resulting in one addition to the results
         assert len(phot_plugin.table._obj) == 3
@@ -281,7 +295,7 @@ class TestAdvancedAperPhot:
 
         # Link them by WCS
         imviz_helper.link_data(align_by='wcs')
-        w = imviz_helper.app.data_collection[0].coords
+        w = imviz_helper._app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
         imviz_helper.plugins['Subset Tools'].import_region([
@@ -471,7 +485,7 @@ class TestRadialProfile():
 
 
 # NOTE: This test only tests the curve of growth algorithm and does
-#       not care if the actual plugin use centroid or not.
+#       not care if the actual plugin use centroid or not
 @pytest.mark.parametrize('with_unit', (False, True))
 def test_curve_of_growth(with_unit):
     data = np.ones((51, 51))
@@ -619,3 +633,118 @@ def test_aper_phot_load_table_into_data_collection(imviz_helper, image_2d_wcs):
     assert len(loaded_table) == 2
     assert loaded_table['id'][0] == 1
     assert loaded_table['id'][1] == 2
+
+
+# Units that can be converted without spectral density equivalencies
+# (i.e., same physical type, just different scale)
+IMAGE_SB_UNITS = ['MJy / sr', 'Jy / sr', 'mJy / sr']
+
+
+def _compare_image_table_units(orig_tab, new_tab, orig_unit, new_unit):
+    """
+    Compare two photometry tables with different units row by row,
+    and verify the units are as expected and values are equivalent once converted.
+    """
+    assert len(orig_tab) == len(new_tab)
+
+    for i, row in enumerate(orig_tab):
+        new_unit_str = new_tab[i]['unit'] or '-'
+        orig_unit_str = row['unit'] or '-'
+        if new_unit_str != '-' and orig_unit_str != '-':
+            new_u = u.Unit(new_unit_str)
+            new_val = float(new_tab[i]['result']) * new_u
+
+            orig_u = u.Unit(orig_unit_str)
+            orig_val = float(row['result']) * orig_u
+
+            # Convert original value to new unit
+            orig_converted = flux_conversion_general(orig_val.value,
+                                                     orig_u,
+                                                     new_u,
+                                                     equivalencies=[])
+
+            # Low rtol for match since phot table is rounded
+            assert_quantity_allclose(orig_converted, new_val, rtol=1e-03)
+
+
+@pytest.mark.parametrize("sb_unit", [u.Unit(x) for x in IMAGE_SB_UNITS])
+@pytest.mark.parametrize("new_sb_unit", [u.Unit(x) for x in IMAGE_SB_UNITS])
+def test_deconfigged_image_aperphot_unit_conversions(deconfigged_helper, image_2d_wcs,
+                                                     sb_unit, new_sb_unit):
+    """
+    Test deconfigged aperture photometry with unit conversions for 2D images
+    in surface brightness units (e.g., MJy/sr, Jy/sr).
+
+    The aperture photometry plugin should respect the choice of flux unit
+    selected in the Unit Conversion plugin, and inputs and results should
+    be converted based on selection.
+    """
+    if new_sb_unit == sb_unit:  # skip 'converting' to same unit
+        return
+
+    # Get string representations
+    sb_unit_str = sb_unit.to_string()
+    new_sb_unit_str = new_sb_unit.to_string()
+
+    # Create 2D image data with specified surface brightness unit
+    # Use values that are easy to verify (e.g., array of 10s)
+    data_values = np.ones((10, 10)) * 10.0
+    data = NDData(data_values, wcs=image_2d_wcs, unit=sb_unit_str)
+
+    # Load data into deconfigged
+    deconfigged_helper.load(data, data_label='test_image')
+
+    # Get plugins
+    st = deconfigged_helper.plugins['Subset Tools']
+    ap = deconfigged_helper.plugins['Aperture Photometry']
+    uc = deconfigged_helper.plugins['Unit Conversion']
+
+    # Load aperture - simple rectangle for predictable results
+    aper = RectanglePixelRegion(center=PixCoord(x=5, y=5), width=2, height=2)
+    st.import_region(aper, combination_mode='new')
+
+    # Select dataset and aperture in plugin
+    ap.dataset.selected = 'test_image[DATA]'
+    ap.aperture.selected = 'Subset 1'
+
+    # Check initial unit traitlets are set correctly
+    assert ap._obj.display_unit == sb_unit_str
+    # Get the flux unit (without the solid angle) for flux_scaling_display_unit
+    flux_unit = sb_unit * u.sr
+    assert ap._obj.flux_scaling_display_unit == flux_unit.to_string()
+
+    # Set background to manual for easier comparison
+    ap.background.selected = 'Manual'
+    ap.background_value = 1.0
+    ap.flux_scaling = 1.0
+
+    # Do aperture photometry with initial units
+    ap._obj.vue_do_aper_phot()
+    orig_tab = Table(ap._obj.results)
+
+    # Change to new unit via Unit Conversion plugin
+    # The flux unit dropdown controls the numerator of the surface brightness
+    new_flux_unit = new_sb_unit * u.sr
+    uc.flux_unit.selected = new_flux_unit.to_string()
+
+    # Verify display units in aperture phot plugin reflect the change
+    assert ap._obj.display_unit == new_sb_unit_str
+    assert ap._obj.flux_scaling_display_unit == new_flux_unit.to_string()
+
+    # Verify background and flux scaling were converted to new unit
+    # Convert expected value from original to new unit
+    expected_bg = (1.0 * flux_unit).to(new_flux_unit).value
+    assert_allclose(ap.background_value, expected_bg, rtol=1e-5)
+
+    expected_flux_scaling = (1.0 * flux_unit).to(new_flux_unit).value
+    assert_allclose(ap._obj.flux_scaling, expected_flux_scaling, rtol=1e-5)
+
+    # Do aperture photometry with new units
+    ap._obj.vue_do_aper_phot()
+    new_tab = Table(ap._obj.results)
+
+    # Make sure results actually changed (not just reusing old results)
+    assert not np.all(orig_tab == new_tab)
+
+    # Compare output tables row by row
+    _compare_image_table_units(orig_tab, new_tab, sb_unit, new_sb_unit)

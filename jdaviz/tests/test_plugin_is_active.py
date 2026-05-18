@@ -2,7 +2,7 @@ from traitlets import Bool, Float, observe
 from time import sleep
 
 from jdaviz import Cubeviz
-from jdaviz.app import Application
+from jdaviz.app import PrivateApplication
 from jdaviz.core.config import get_configuration
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, skip_if_no_updates_since_last_active
@@ -35,7 +35,7 @@ def test_is_active():
     config = get_configuration('cubeviz')
     config['tray'] = ['test-slow-plugin']
 
-    cubeviz_app = Application(config)
+    cubeviz_app = PrivateApplication(config)
     cubeviz_helper = Cubeviz(cubeviz_app)
 
     plg = cubeviz_helper.plugins['Test Slow Plugin']._obj

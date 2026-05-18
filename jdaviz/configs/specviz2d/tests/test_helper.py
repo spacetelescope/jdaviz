@@ -9,7 +9,7 @@ def test_helper(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d)
     assert isinstance(specviz2d_helper.specviz, Specviz)
 
-    specviz2d_helper.app.data_collection[0].meta['Trace'] = "Test"
+    specviz2d_helper._app.data_collection[0].meta['Trace'] = "Test"
 
     # Test both the old and new API
     returned_data = specviz2d_helper.datasets["Spectrum 2D"].get_data()

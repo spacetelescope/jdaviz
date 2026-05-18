@@ -1,14 +1,14 @@
 from specutils import Spectrum
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS
 from jdaviz.core.user_api import DataApi, SpectralDataApi, SpatialDataApi, SpectralSpatialDataApi
 import pytest
 import re
 
 
 # This applies to all viz but testing with Imviz should be enough.
-class TestImviz_WCS_WCS(BaseImviz_WCS_WCS):
-    def test_imviz_zoom_level(self):
-        v = self.imviz.viewers['imviz-0']
+class TestDeconfiggedImage_WCS_WCS(BaseDeconfiggedImage_WCS_WCS):
+    def test_image_zoom_level(self):
+        v = self.helper.viewers['Image']
         assert v._obj.glue_viewer.state.x_min == -0.5
         assert v._obj.glue_viewer.state.x_max == 9.5
 
@@ -17,12 +17,12 @@ class TestImviz_WCS_WCS(BaseImviz_WCS_WCS):
         assert v._obj.glue_viewer.state.x_min == 1.5
         assert v._obj.glue_viewer.state.x_max == 6.5
 
-    def test_imviz_viewers(self):
-        self.imviz.create_image_viewer()
-        self.imviz.create_image_viewer()
+    def test_image_viewers(self):
+        self.helper.new_viewers['Image']()
+        self.helper.new_viewers['Image']()
 
         # regression test for https://github.com/spacetelescope/jdaviz/pull/2624
-        assert len(self.imviz.viewers) == 3
+        assert len(self.helper.viewers) == 3
 
 
 def test_specviz_zoom_level(specviz_helper):
@@ -44,13 +44,13 @@ def test_specviz_data_labels(specviz_helper, spectrum1d):
 
 
 def test_toggle_api_hints(specviz_helper):
-    assert specviz_helper.app.state.show_api_hints is False
+    assert specviz_helper._app.state.show_api_hints is False
     specviz_helper.toggle_api_hints()
-    assert specviz_helper.app.state.show_api_hints is True
+    assert specviz_helper._app.state.show_api_hints is True
     specviz_helper.toggle_api_hints(True)
-    assert specviz_helper.app.state.show_api_hints is True
+    assert specviz_helper._app.state.show_api_hints is True
     specviz_helper.toggle_api_hints()
-    assert specviz_helper.app.state.show_api_hints is False
+    assert specviz_helper._app.state.show_api_hints is False
 
 
 def test_wildcard_match_extensions(specviz_helper, premade_spectrum_list):
@@ -152,25 +152,25 @@ def test_viewer_create_new(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper.new_viewers.keys()) == 0
     # passing [] should not load into a new viewer nor should it create a new viewer
     deconfigged_helper.load(spectrum1d, format='1D Spectrum', viewer=[], data_label='data1')
-    assert len(deconfigged_helper.app.data_collection) == 1
+    assert len(deconfigged_helper._app.data_collection) == 1
     assert len(deconfigged_helper.viewers) == 0
     assert len(deconfigged_helper.new_viewers.keys()) > 0
 
     # passing nothing when there are no viewers should create a new viewer
     deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='data2')
-    assert len(deconfigged_helper.app.data_collection) == 2
+    assert len(deconfigged_helper._app.data_collection) == 2
     assert len(deconfigged_helper.viewers) == 1
     assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 1
 
     # passing nothing when there is a viewer should default to loading into that viewer
     deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='data3')
-    assert len(deconfigged_helper.app.data_collection) == 3
+    assert len(deconfigged_helper._app.data_collection) == 3
     assert len(deconfigged_helper.viewers) == 1
     assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 2
 
     # passing a string of a viewer that does not exist should create a viewer with that label
     deconfigged_helper.load(spectrum1d, format='1D Spectrum', viewer='user-defined-viewer', data_label='data4')  # noqa
-    assert len(deconfigged_helper.app.data_collection) == 4
+    assert len(deconfigged_helper._app.data_collection) == 4
     assert len(deconfigged_helper.viewers) == 2
     assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 2
     assert len(deconfigged_helper.viewers['user-defined-viewer'].data_menu.layer.choices) == 1
@@ -212,7 +212,7 @@ def test_expected_data_api_class(deconfigged_helper,
     ]
 
     # Disable linking to speed up test
-    deconfigged_helper.app.auto_link = False
+    deconfigged_helper._app.auto_link = False
 
     # Load all data at once
     for data, data_format, expected_api in test_cases:

@@ -278,7 +278,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
     def reset_limits(self, *event):
         # TODO: use consistent logic for all image viewers by removing this if-statement
         # if/when WCS linking is supported (i.e. in cubeviz)
-        if getattr(self, '_viewer', None) is not None and self._viewer.jdaviz_app.config != 'imviz':
+        if getattr(self, '_viewer', None) is not None and self._viewer.jdaviz_app.config not in ('imviz', 'deconfigged'):  # noqa: E501
             return super().reset_limits(*event)
         if self.reference_data is None:  # Nothing to do
             return

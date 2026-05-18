@@ -54,7 +54,7 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
         if self.close_callback is not None:
             self.close_callback()
         if close_sidebar:
-            self.app.state.drawer_content = ''
+            self._app.state.drawer_content = ''
 
     def open_in_tray(self):
         """
@@ -78,11 +78,11 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
 
     @observe('is_relevant')
     def _is_relevant_changed(self, *args):
-        labels = [ti['label'] for ti in self.app.state.new_viewer_items]
+        labels = [ti['label'] for ti in self._app.state.new_viewer_items]
         if self._registry_label not in labels:
             return
         index = labels.index(self._registry_label)
-        self.app.state.new_viewer_items[index]['is_relevant'] = self.is_relevant
+        self._app.state.new_viewer_items[index]['is_relevant'] = self.is_relevant
 
     @observe('viewer_label_value', 'viewer_items')
     def _viewer_label_value_changed(self, *args):
@@ -99,7 +99,7 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
         if not hasattr(self, 'viewer'):
             return
         if self.viewer_label_default in self.viewer.choices:
-            self.viewer_label_default = self.app.return_unique_name(self.viewer_label_default, 'viewer')  # noqa
+            self.viewer_label_default = self._app.return_unique_name(self.viewer_label_default, 'viewer')  # noqa
 
     def __call__(self):
         """
@@ -107,10 +107,11 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
         """
         if self.viewer_label_invalid_msg:
             raise ValueError(self.viewer_label_invalid_msg)
-        nv = self.app._on_new_viewer(NewViewerMessage(self.viewer_class,
-                                                      data=None,
-                                                      sender=self.app),
-                                     vid=self.viewer_label_value, name=self.viewer_label_value)
+        nv = self._app._on_new_viewer(NewViewerMessage(self.viewer_class,
+                                                       data=None,
+                                                       sender=self.app),
+                                      vid=self.viewer_label_value,
+                                      name=self.viewer_label_value)
         dm = nv.data_menu
         for dataset in self.dataset.selected:
             dm.add_data(dataset)

@@ -148,7 +148,7 @@ class VOResolver(BaseConeSearchResolver):
         except (DALFormatError, VocabularyError) as e:
             # HTTP Error 403 is being issued as a string as part of the
             # VocabularyError when the registry is having issues.
-            if type(e.cause) is RequestConnectionError or 'HTTP Error 403' in e:
+            if type(e.cause) is RequestConnectionError or 'HTTP Error 403' in str(e):
                 self.hub.broadcast(
                     SnackbarMessage(
                         f"Can't connect to VO registry. Check your internet connection: {e}",

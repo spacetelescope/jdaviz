@@ -9,7 +9,7 @@ from matplotlib.colors import hex2color
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
-    PluginTemplateMixin, LayerSelect, ViewerSelectMixin
+    PluginTemplateMixin, LayerSelect, ViewerSelectMixin, _is_image_viewer as is_image_viewer
 )
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
@@ -31,7 +31,7 @@ telescope_names = {
 }
 
 
-@tray_registry('g-data-quality', label="Data Quality")
+@tray_registry('g-data-quality', label="Data Quality", category="data:analysis")
 class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Data Quality Plugin Documentation <imviz-data-quality>` for more details.
@@ -48,7 +48,6 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     * ``dq_layer_opacity``: Opacity of the data quality layer.
     * ``decoded_flags``: List of decoded flags from the selected flag map.
     * ``flags_filter``: List of flags to display.
-    * ``flag_map``: Name of the selected flag map.
     * ``flag_map_definitions_selected``: Dictionary of the selected flag map.
     """
     template_file = __file__, "data_quality.vue"
@@ -81,8 +80,10 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Data Quality layer visualization options.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/data_quality.html'  # noqa
 
-        self.icons = {k: v for k, v in self.app.state.icons.items()}
+        self.icons = {k: v for k, v in self._app.state.icons.items()}
 
         self.science_layer = LayerSelect(
             self, 'science_layer_items', 'science_layer_selected',
@@ -102,16 +103,12 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         self._set_irrelevant()
         self._update_available_viewers()
 
+        if self.config == 'deconfigged':
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dq_layer_items'])
+
     def _update_available_viewers(self):
         if not hasattr(self, 'viewer'):
             return
-
-        def is_image_viewer(viewer):
-            from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-            from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
-            from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
-
-            return isinstance(viewer, (ImvizImageView, CubevizImageView, RampvizImageView))
 
         viewer_filter_names = [filt.__name__ for filt in self.viewer.filters]
         if 'is_image_viewer' not in viewer_filter_names:
@@ -128,7 +125,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         children_available = any([
             len(assoc['children']) > 0
-            for label, assoc in getattr(self.app, '_data_associations', {}).items()
+            for label, assoc in getattr(self._app, '_data_associations', {}).items()
         ])
         self.irrelevant_msg = (
             '' if children_available else
@@ -145,7 +142,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         # listen for changes on the image opacity, and update the
         # data quality layer opacity on changes to the science layer opacity
-        plot_options = self.app.get_tray_item_from_name('g-plot-options')
+        plot_options = self._app.get_tray_item_from_name('g-plot-options')
         plot_options.observe(self.update_opacity, 'image_opacity_value')
 
     def load_default_flag_maps(self):
@@ -218,10 +215,10 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
             # for cubeviz, also change uncert-viewer defaults to
             # map the out-of-bounds regions to the cmap's `bad` color:
-            if self.app.config in ('cubeviz', 'rampviz'):
-                viewer = self.app.get_viewer(
+            if self._app.config in ('cubeviz', 'rampviz'):
+                viewer = self._app.get_viewer(
                     getattr(
-                        self.app._jdaviz_helper,
+                        self._app._jdaviz_helper,
                         '_default_uncert_viewer_reference_name', 'level-2'
                     )
                 )
@@ -238,13 +235,16 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             stretch_object = dq_layer.state.stretch_object
             stretch_object.flags = flag_bits
 
-            with delay_callback(dq_layer.state, 'alpha', 'cmap', 'v_min', 'v_max'):
+            with delay_callback(dq_layer.state, 'alpha', 'cmap', 'v_min', 'v_max', 'cmap_bad'):
                 if len(flag_bits):
                     dq_layer.state.v_min = min(flag_bits)
                     dq_layer.state.v_max = max(flag_bits)
 
                 dq_layer.state.alpha = self.dq_layer_opacity
                 dq_layer.state.cmap = cmap
+
+                # make un-flagged pixels in DQ array transparent:
+                dq_layer.state.cmap_bad = (0, 0, 0, 0)
 
     def get_dq_layers(self, viewers=None):
         if self.dq_layer_selected == '':
@@ -316,7 +316,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         for dq_layer in dq_layers:
             with delay_callback(
-                    dq_layer.state, 'v_min', 'v_max', 'alpha', 'stretch', 'cmap'
+                    dq_layer.state, 'v_min', 'v_max', 'alpha', 'stretch', 'cmap', 'cmap_bad'
             ):
                 # set correct stretch and limits:
                 # dq_layer.state.stretch = 'lookup'
@@ -339,6 +339,9 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
                     dq_layer.state.v_max = max(flag_bits)
 
                 dq_layer.state.alpha = self.dq_layer_opacity
+
+                # make un-flagged pixels in DQ array transparent:
+                dq_layer.state.cmap_bad = (0, 0, 0, 0)
 
     def update_visibility(self, index):
         self.decoded_flags[index]['show'] = not self.decoded_flags[index]['show']

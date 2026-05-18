@@ -1,8 +1,8 @@
 import time
 import os
 
+import astropy.units as u
 from glue.config import viewer_tool
-from glue_jupyter.bqplot.image import BqplotImageView
 from glue.viewers.common.tool import CheckableTool
 import numpy as np
 from specutils import Spectrum
@@ -10,6 +10,7 @@ from specutils import Spectrum
 from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.tools import PanZoom, BoxZoom, _MatchedZoomMixin
 from jdaviz.configs.default.plugins.tools import ProfileFromCube
+from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 
 __all__ = []
 
@@ -25,7 +26,7 @@ class _PixelMatchedZoomMixin(_MatchedZoomMixin):
         return ['zoom_center_x', 'zoom_center_y', 'zoom_radius']
 
     def _is_matched_viewer(self, viewer):
-        return isinstance(viewer, BqplotImageView)
+        return isinstance(viewer, CubevizImageView)
 
 
 @viewer_tool
@@ -152,12 +153,15 @@ class SpectrumPerSpaxel(ProfileFromCube):
                 return
             cube_data = cube_data[0]
 
+        scale = cube_data.meta.get('PIXAR_SR', 1)
+
         if isinstance(cube_data, Spectrum):
             spectrum = cube_data
         else:
             spectrum = cube_data.get_object(statistic=None)
         # Note: change this when Spectrum.with_spectral_axis is fixed.
         x_unit = self._profile_viewer.state.x_display_unit
+        y_unit = self._profile_viewer.state.y_display_unit
         if spectrum.spectral_axis.unit != x_unit:
             new_spectral_axis = spectrum.spectral_axis.to(x_unit)
             spectrum = Spectrum(spectrum.flux, new_spectral_axis)
@@ -175,6 +179,10 @@ class SpectrumPerSpaxel(ProfileFromCube):
                 y_values = spectrum.flux[x, y, :].value
             else:
                 y_values = spectrum.flux[:, y, x].value
+            # Convert to flux if possible and necessary
+            if (spectrum.flux.unit.physical_type == 'surface brightness' and
+                    'flux' in str(u.Unit(y_unit).physical_type)):
+                y_values *= scale
             if np.all(np.isnan(y_values)):
                 self._mark.visible = False
                 return

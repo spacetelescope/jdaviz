@@ -10,7 +10,8 @@ from astropy.wcs import WCS
 from gwcs import coordinate_frames as cf, wcs as gwcs_wcs
 
 __all__ = ['_image_hdu_nowcs', '_image_hdu_wcs', '_image_nddata_wcs',
-           'BaseImviz_WCS_NoWCS', 'BaseImviz_WCS_WCS', 'BaseImviz_WCS_GWCS', 'BaseImviz_GWCS_GWCS']
+           'BaseImviz_WCS_NoWCS', 'BaseDeconfiggedImage_WCS_WCS',
+           'BaseImviz_WCS_GWCS', 'BaseImviz_GWCS_GWCS']
 
 
 def _image_hdu_nowcs(arr=np.ones((10, 10)), name='SCI'):
@@ -60,25 +61,26 @@ class BaseImviz_WCS_NoWCS:
         # Data without WCS
         hdu_nowcs = _image_hdu_nowcs(arr=np.arange(100).reshape((10, 10)))
         imviz_helper.load_data(hdu_nowcs, data_label='no_wcs')
-        imviz_helper.app.data_collection[1].coords = None
+        imviz_helper._app.data_collection[1].coords = None
 
         self.wcs = WCS(hdu_wcs.header)
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer._obj.glue_viewer
         self.subset_plugin = self.imviz.plugins['Subset Tools']
+        self.orientation_plugin = self.imviz.plugins['Orientation']
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)
         self.viewer.state._set_axes_aspect_ratio(1)
 
 
-class BaseImviz_WCS_WCS:
+class BaseDeconfiggedImage_WCS_WCS:
     @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_helper):
+    def setup_class(self, deconfigged_helper):
         arr = np.ones((10, 10))
         # First data with WCS, same as the one in BaseImviz_WCS_NoWCS.
         hdu1 = _image_hdu_wcs(arr=arr)
-        imviz_helper.load_data(hdu1, data_label='has_wcs_1')
+        deconfigged_helper.load(hdu1, format='Image', data_label='has_wcs_1')
 
         # Second data with WCS, similar to above but dithered by 1 pixel in X.
         hdu2 = fits.ImageHDU(arr, name='SCI')
@@ -94,12 +96,20 @@ class BaseImviz_WCS_WCS:
                             'CRPIX2': 1,
                             'CRVAL2': -20.833333059999998,
                             'NAXIS2': 10})
-        imviz_helper.load_data(hdu2, data_label='has_wcs_2')
+        deconfigged_helper.load(hdu2, format='Image', data_label='has_wcs_2')
 
         self.wcs_1 = WCS(hdu1.header)
         self.wcs_2 = WCS(hdu2.header)
-        self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
+        self.helper = deconfigged_helper
+
+        # commonly accessed plugins
+        self.subset_plugin = self.helper.plugins['Subset Tools']
+        self.orientation_plugin = self.helper.plugins['Orientation']
+
+        # get glue viewer obj rather than viewer API so we can access certain
+        # attributes in tests (shape, layers, etc.) that are not exposed in
+        # the viewer API
+        self.viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)
@@ -156,6 +166,8 @@ class BaseImviz_WCS_GWCS:
         self.wcs_2 = w_gwcs
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer._obj.glue_viewer
+        self.subset_plugin = self.imviz.plugins['Subset Tools']
+        self.orientation_plugin = self.imviz.plugins['Orientation']
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)
@@ -206,6 +218,8 @@ class BaseImviz_GWCS_GWCS:
         self.wcs_2 = w_gwcs_2
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer._obj.glue_viewer
+        self.subset_plugin = self.imviz.plugins['Subset Tools']
+        self.orientation_plugin = self.imviz.plugins['Orientation']
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)

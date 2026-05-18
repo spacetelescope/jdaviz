@@ -13,7 +13,7 @@ from jdaviz.configs.default.plugins.plot_options.plot_options import SplineStret
 @pytest.mark.filterwarnings('ignore')
 def test_multiselect(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube)
-    po = cubeviz_helper.app.get_tray_item_from_name('g-plot-options')
+    po = cubeviz_helper._app.get_tray_item_from_name('g-plot-options')
 
     # default selection for viewer should be flux-viewer (first in list) and nothing for layer
     assert po.viewer.multiselect is False
@@ -38,9 +38,9 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
     assert po.axes_visible.value is False
 
     for viewer_name in ['flux-viewer', 'uncert-viewer']:
-        assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is False
+        assert cubeviz_helper._app.get_viewer(viewer_name).state.show_axes is False
 
-    assert cubeviz_helper.app.get_viewer('spectrum-viewer').state.show_axes is True
+    assert cubeviz_helper._app.get_viewer('spectrum-viewer').state.show_axes is True
     assert po.axes_visible.sync['mixed'] is False
 
     # adding another viewer should show a mixed-state
@@ -56,10 +56,10 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
     assert po.axes_visible.value is False
 
     for viewer_name in ['flux-viewer', 'uncert-viewer']:
-        assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is False
+        assert cubeviz_helper._app.get_viewer(viewer_name).state.show_axes is False
 
     for viewer_name in ['spectrum-viewer']:
-        assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is True
+        assert cubeviz_helper._app.get_viewer(viewer_name).state.show_axes is True
 
     po.viewer_multiselect = False
     # should default back to the first selected entry
@@ -76,7 +76,7 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
 @pytest.mark.filterwarnings('ignore')
 def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
-    po = cubeviz_helper.app.get_tray_item_from_name('g-plot-options')
+    po = cubeviz_helper._app.get_tray_item_from_name('g-plot-options')
     po.plugin_opened = True
 
     assert po.stretch_histogram is not None
@@ -104,7 +104,7 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     assert_allclose(hist_lyr.layer.data['x'], flux_cube_sample)
 
     # change viewer limits
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
     fv.state.x_max = 0.5 * fv.state.x_max
     # viewer limits should not be affected by default
     # (re-retrieve layer - it should not have changed)
@@ -327,7 +327,7 @@ def test_track_mixed_states(imviz_helper):
     # Initialize two viewer with 3 data each.
     # Each layer of the data will be RGB
     arr = np.arange(36).reshape(6, 6)
-    po = imviz_helper.app.get_tray_item_from_name("g-plot-options")
+    po = imviz_helper._app.get_tray_item_from_name("g-plot-options")
     rgb_colors = ["#ff0000", "#00ff00", "#0000ff"]
 
     for i in range(3):
@@ -342,7 +342,7 @@ def test_track_mixed_states(imviz_helper):
     po.viewer_selected = "imviz-1"
     po.image_color_mode_value = 'One color per layer'
     for i in range(3):
-        imviz_helper.app.add_data_to_viewer("imviz-1", data_label=f"array_{i}")
+        imviz_helper._app.add_data_to_viewer("imviz-1", data_label=f"array_{i}")
         po.layer_selected = f"array_{i}"
         po.image_color.value = rgb_colors[i]
 

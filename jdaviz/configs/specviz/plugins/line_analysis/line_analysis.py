@@ -94,6 +94,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Return statistics for spectral line.'
 
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/line_analysis.html'  # noqa
+
         self.update_results(None)
 
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
@@ -142,7 +145,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                                              irrelevant_msg_callback=self._irrelevant_msg_callback)
 
     def _irrelevant_msg_callback(self, *args):
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             if not len(self.dataset_items):
                 irrelevant_msg = 'Line Analysis unavailable without data loaded in spectrum viewer'  # noqa
             else:
@@ -173,7 +176,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
     def _on_viewers_changed(self, msg):
         # when accessing the selected data, access the spectrum-viewer version
-        self.dataset._viewers = [v.reference_id for v in self.app._viewer_store.values()
+        self.dataset._viewers = [v.reference_id for v in self._app._viewer_store.values()
                                  if isinstance(v, Spectrum1DViewer)]
 
     def _on_viewer_data_changed(self, msg):
@@ -192,7 +195,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         if msg.data.label not in viewer_data_labels:
             return
 
-        viewer_data = self.app._jdaviz_helper.get_data(data_label=msg.data.label)
+        viewer_data = self._app._jdaviz_helper.get_data(data_label=msg.data.label)
 
         # If no data is currently plotted, don't attempt to update
         if viewer_data is None:
@@ -327,7 +330,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         display the results.
         """
 
-        if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None:  # noqa
+        if not hasattr(self, 'dataset') or self._app._jdaviz_helper is None:  # noqa
             # during initial init, this can trigger before the component is initialized
             return
 

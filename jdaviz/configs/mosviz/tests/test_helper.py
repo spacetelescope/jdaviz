@@ -36,7 +36,7 @@ def test_table_scrolling(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d):
 
     mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image)
 
-    table = mosviz_helper.app.get_viewer('table-viewer')
+    table = mosviz_helper._app.get_viewer('table-viewer')
     # first row is automatically selected in the UI
     # (otherwise it would be None which is a case not handled)
     table.widget_table.highlighted = 0

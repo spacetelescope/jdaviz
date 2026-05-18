@@ -40,7 +40,7 @@ def test_subset_definition_with_composite_subset(cubeviz_helper, spectrum1d_cube
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         cubeviz_helper.load_data(spectrum1d_cube)
-    cubeviz_helper.app.get_tray_item_from_name('g-subset-tools')
+    cubeviz_helper._app.get_tray_item_from_name('g-subset-tools')
 
 
 circle_subset_info = {'xc': {'pixel_name': 'X Center (pixels)', 'wcs_name':
@@ -123,7 +123,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
         assert subset_defs[0][i+1]['value'] == subset_info[attr]['initial_value']
 
     # get original subset location as a sky region for use later
-    original_subs = imviz_helper.app.get_subsets(include_sky_region=True)
+    original_subs = imviz_helper._app.get_subsets(include_sky_region=True)
     original_sky_region = original_subs['Subset 1'][0]['sky_region']
 
     # move subset (subset state is what is modified in UI)
@@ -141,18 +141,18 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
         assert subset_defs[0][i+1]['value'] == subset_info[attr]['final_value']
 
     # get updated subset location as a sky region, we need this later
-    updated_sky_region = imviz_helper.app.get_subsets(include_sky_region=True)
+    updated_sky_region = imviz_helper._app.get_subsets(include_sky_region=True)
     updated_sky_region = updated_sky_region['Subset 1'][0]['sky_region']
 
     # remove subsets and change link type to wcs
-    dc = imviz_helper.app.data_collection
+    dc = imviz_helper._app.data_collection
     dc.remove_subset_group(dc.subset_groups[0])
     imviz_helper.link_data(align_by='wcs')
     assert plugin.display_sky_coordinates  # linking change should trigger change to True
 
     # apply original subset. transform sky coord of original subset to new pixels
     # using wcs of orientation layer (won't be the same as original pixels when pix linked)
-    img_wcs = imviz_helper.app.data_collection['Default orientation'].coords
+    img_wcs = imviz_helper._app.data_collection['Default orientation'].coords
     new_pix_region = original_sky_region.to_pixel(img_wcs)
     new_roi = regions2roi(new_pix_region)
     imviz_helper.plugins['Subset Tools'].import_region(new_roi)
@@ -208,7 +208,7 @@ def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, m
     cubeviz_helper.load_data(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
     plg.import_region(spec_regions, combination_mode=mode, subset_label=subset_label)
-    subsets = cubeviz_helper.app.get_subsets()
+    subsets = cubeviz_helper._app.get_subsets()
     print(subsets)
     assert len(subsets) == len_subsets
     if subset_label is None:
@@ -219,7 +219,7 @@ def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, m
         for label in list(subset_label):
             assert label in subsets
     assert len(subsets[subset_label[0]]) == len_subregions
-    assert cubeviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
+    assert cubeviz_helper._app.session.edit_subset_mode.mode == ReplaceMode
 
 
 def test_bad_labels(cubeviz_helper, spectrum1d_cube):
@@ -245,20 +245,20 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
     local_path = str(tmp_path / 'spectral_region.ecsv')
     s.write(local_path)
     plg.import_region(local_path)
-    subsets = cubeviz_helper.app.get_subsets()
+    subsets = cubeviz_helper._app.get_subsets()
     assert len(subsets) == 1
 
     plg.import_region(SpectralRegion(7 * u.um, 8 * u.um), edit_subset='Subset 1',
                       combination_mode='or')
 
-    subsets = cubeviz_helper.app.get_subsets()
+    subsets = cubeviz_helper._app.get_subsets()
     assert len(subsets['Subset 1']) == 2
 
     subset2 = (SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
                SpectralRegion(5.8 * u.um, 5.9 * u.um))
     plg.import_region(subset2, combination_mode=['new', 'andnot'])
 
-    assert cubeviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
+    assert cubeviz_helper._app.session.edit_subset_mode.mode == ReplaceMode
 
     with pytest.raises(ValueError, match='\'test\' not one of'):
         plg.combination_mode = 'test'
@@ -277,7 +277,7 @@ def test_import_sky_region_in_cubeviz(cubeviz_helper, spectrum1d_cube):
 
     status = plg.import_region(aperture, return_bad_regions=True, subset_label='Test 1')
     assert status == []
-    assert cubeviz_helper.app.get_subsets('Test 1')
+    assert cubeviz_helper._app.get_subsets('Test 1')
 
 
 def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
@@ -360,8 +360,8 @@ def test_get_regions_composite(imviz_helper):
 
     # create a composite subset created from these circular subsets
     # that are applied with remove/and not to subtract the smaller from the larger
-    imviz_helper.app.session.edit_subset_mode._mode = NewMode
-    subset_groups = imviz_helper.app.data_collection.subset_groups
+    imviz_helper._app.session.edit_subset_mode._mode = NewMode
+    subset_groups = imviz_helper._app.data_collection.subset_groups
     new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
     imviz_helper.default_viewer._obj.glue_viewer.apply_subset_state(new_subset)
 
@@ -377,7 +377,7 @@ def test_get_regions_composite(imviz_helper):
     assert regions['Subset 3'][1][1] == 'AndNotState'
 
     # make sure the same regions are returned by app.get_subsets
-    get_subsets = imviz_helper.app.get_subsets()
+    get_subsets = imviz_helper._app.get_subsets()
     assert sorted(get_subsets) == ["Subset 1", "Subset 2", "Subset 3"]
 
     # Now, create two concentric circular subsets and combine them to form a circular annulus.
@@ -385,8 +385,8 @@ def test_get_regions_composite(imviz_helper):
                                         radius=45.0), combination_mode='new')
     plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
                                         radius=25.0), combination_mode='new')
-    imviz_helper.app.session.edit_subset_mode._mode = NewMode
-    subset_groups = imviz_helper.app.data_collection.subset_groups
+    imviz_helper._app.session.edit_subset_mode._mode = NewMode
+    subset_groups = imviz_helper._app.data_collection.subset_groups
     new_subset = subset_groups[3].subset_state & ~subset_groups[4].subset_state
     imviz_helper.default_viewer._obj.glue_viewer.apply_subset_state(new_subset)
 
@@ -398,7 +398,7 @@ def test_get_regions_composite(imviz_helper):
     # If and/or/xor are used to create composite subsets, they can be
     # represented as CompoundRegions.
     for sub, op in [('7', operator.and_), ('8', operator.or_), ('9', operator.xor)]:
-        imviz_helper.app.session.edit_subset_mode._mode = NewMode
+        imviz_helper._app.session.edit_subset_mode._mode = NewMode
         new_subset = op(subset_groups[3].subset_state, subset_groups[4].subset_state)
         imviz_helper.default_viewer._obj.glue_viewer.apply_subset_state(new_subset)
         regions = plg.get_regions()
@@ -507,7 +507,7 @@ def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
     st.import_region(regions, combination_mode=['new', 'andnot'])
 
     # app.get_subsets, composite region should be returned as 2 sky regions
-    ss = imviz_helper.app.get_subsets(include_sky_region=True)
+    ss = imviz_helper._app.get_subsets(include_sky_region=True)
     for expected_region, actual in zip(regions, ss['Subset 1']):
         sky_region = actual['sky_region']
         assert_quantity_allclose(sky_region.center.ra, expected_region.center.ra)
@@ -560,7 +560,7 @@ def test_rename_subset(cubeviz_helper, spectrum1d_cube):
     plg.rename_subset("Subset 1", "Test Rename")
 
     assert plg.subset.choices == ['Create New', 'Test Rename', 'Subset 2']
-    assert cubeviz_helper.app.data_collection[-1].label == "Spectrum (Test Rename, sum)"
+    assert cubeviz_helper._app.data_collection[-1].label == "Spectrum (Test Rename, sum)"
 
     plg.subset = "Subset 2"
     plg.rename_selected("Second Test")
@@ -583,7 +583,7 @@ def test_delete_subset(cubeviz_helper, spectrum1d_cube):
     plg.delete_subset("Subset 1")
 
     assert plg.subset.choices == ['Create New', 'Subset 2']
-    assert len(cubeviz_helper.app.data_collection) == 2
+    assert len(cubeviz_helper._app.data_collection) == 2
 
 
 def test_update_subset(cubeviz_helper, spectrum1d_cube):
@@ -632,7 +632,7 @@ def test_data_menu_subset_delete(cubeviz_helper, spectrum1d_cube):
     # load a second spectral region after spatial region
     plg.import_region(SpectralRegion(1.6 * u.um, 2 * u.um))
 
-    print(cubeviz_helper.app.data_collection)
+    print(cubeviz_helper._app.data_collection)
     expected_dm_layer_len = 4
 
     assert (len(cubeviz_helper.viewers['spectrum-viewer'].data_menu.layer.choices) ==

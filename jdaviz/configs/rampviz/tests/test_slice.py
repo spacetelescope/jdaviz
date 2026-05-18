@@ -12,7 +12,7 @@ def test_slice_jwst(rampviz_helper, jwst_level_1b_ramp):
 
 
 def _slice(helper, ramp_cube):
-    app = helper.app
+    app = helper._app
     sl = helper.plugins['Ramp Slice']._obj
 
     # No data yet
@@ -39,11 +39,11 @@ def _slice(helper, ramp_cube):
     assert len(slice_values) == 10
 
     assert sl.value == slice_values[len(slice_values) // 2]
-    assert helper.app.get_viewer("group-viewer").slice == len(slice_values) // 2
-    assert helper.app.get_viewer("group-viewer").state.slices[-1] == 5
-    assert helper.app.get_viewer("diff-viewer").state.slices[-1] == 5
+    assert helper._app.get_viewer("group-viewer").slice == len(slice_values) // 2
+    assert helper._app.get_viewer("group-viewer").state.slices[-1] == 5
+    assert helper._app.get_viewer("diff-viewer").state.slices[-1] == 5
     sl.value = float(slice_values[0])
-    assert helper.app.get_viewer("group-viewer").slice == 0
+    assert helper._app.get_viewer("group-viewer").slice == 0
     assert sl.value == slice_values[0]
 
     sl.value = float(slice_values[1])
@@ -86,7 +86,7 @@ def test_indicator_settings_jwst(rampviz_helper, jwst_level_1b_ramp):
 
 def _indicator_settings(helper, ramp):
     helper.load_data(ramp, data_label='test')
-    app = helper.app
+    app = helper._app
     app.add_data_to_viewer("group-viewer", "test[DATA]")
     app.add_data_to_viewer("integration-viewer", "test (median)")
     sl = helper.plugins['Ramp Slice']._obj
@@ -117,7 +117,7 @@ def test_init_slice_jwst(rampviz_helper, jwst_level_1b_ramp):
 def _init_slice(helper, ramp):
     helper.load_data(ramp, data_label='test')
 
-    fv = helper.app.get_viewer('group-viewer')
+    fv = helper._app.get_viewer('group-viewer')
     sl = helper.plugins['Ramp Slice']
     slice_values = sl._obj.valid_selection_values_sorted
 

@@ -1,4 +1,76 @@
-4.6 (unreleased)
+5.1 (unreleased)
+================
+
+New Features
+------------
+
+- Data menu/legend overflow: more data label icons are now shown and two or more icons must be
+  present beyond the overflow limit before the overflow icon will appear. [#4160]
+
+- Errors from load are now more explicit, either as a result of known invalid cases or
+  as errors producing during import. [#4159]
+
+- Data labels are now able to be copied from the data menu with the addition of a copy to clipboard button. [#4177]
+
+Mosviz
+^^^^^^
+
+API Changes
+-----------
+
+Mosviz
+^^^^^^
+
+Bug Fixes
+---------
+
+Mosviz
+^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+- Speed up product table loading in the astroquery loader by using server-side
+  pagination in the UI and fetching product lists in a background thread so the
+  app remains responsive. [#4131]
+
+5.0.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- Fix missing toggle for cube fitting in Model Fitting plugin in generalized Jdaviz. [#4172]
+
+- Fix broken "Learn More" links throughout app. [#4173]
+
+Mosviz
+^^^^^^
+
+
+5.0.1 (2026-05-01)
+==================
+
+Bug Fixes
+---------
+
+- Fix 'add to flux viewer' toggle in DQ cube loader to fix issue where the DQ
+  cube was being added to the flux viewer even when toggled off. [#4145]
+
+- Workaround patch to ipywidgets.Widget.get_state to avoid set size changed
+  during iteration error that occurs in many scenarios (linking, batch loading data,
+  etc.). [#4150]
+
+- Fix spectral subsets appearing in image viewer data menu. [#4149]
+
+- Fix Data Quality plugin support for Roman ASDF images. [#4089]
+
+- Multiply values from spectrum-at-spaxel tool by PIXAR_SR when available to match
+  units of other extracted fluxes. [#4156]
+
+- Fix passing strings to selected traitlet without expanding into characters. [#4157]
+
+5.0 (2026-04-15)
 ================
 
 New Features
@@ -17,7 +89,9 @@ New Features
 
 - Support in plot options to set which columns are visible for table viewers. [#4033]
 
-- Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
+- Added `skewer` mode to footprint selection that only selects when clicking inside a footprint.
+  Footprint selection tools now support control+click or command+click to toggle
+  selections (add/remove individual footprints without replacing the current selection). [#3962, #4034]
 
 - Added ability to load catalogs from FITS file extensions through the Catalog loader. [#3998]
 
@@ -49,14 +123,47 @@ New Features
 - Provide better error reporting when attempting to load data via `load`
   and loaders infrastructure. [#4058]
 
+- Allow launching generalized Jdaviz from the command line and deprecate configs from that interface. [#4087, #4115]
+
+- Added ability to load spectra with 'IVAR' and 'VAR' uncertainty extensions. [#4091]
+
+- Line list loader to allow loading custom line lists from a table or file. [#4082]
+
+- Avoid attempting to convert units in image viewers that are likely moment map data. This
+  fix allows the user to load moment map data into an existing image viewer, and use
+  unit converison functionality when there is moment map data in a viewer. [#4085]
+
+- Add ability to toggle between flux and surface brightness in deconfigged.
+  Avoid attempting to convert units in image viewers that are likely moment map
+  data. This fix allows the user to load moment map data into an existing image
+  viewer, and use unit converison functionality when there is moment map data in
+  an Image or 3D Spectrum viewer. [#4085]
+
+- Fixed batch aperture photometry mode in deconfigged. [#4106]
+
+- Generalize Data Quality plugin. [#4110, #4111]
+
+- Add support for loading Spectra from BinaryHDU and TableHDU extensions. [#4097]
+
+- Fix discrepancies between deconfigged and imviz when loading subsets/regions
+  when using the WCS/orientation layer [#4130]
+
+- Data menus are now scrollable; the data menu legend is now truncated when it reaches a certain
+  height (relative to the viewer height); a button has been added to the data menu legend to
+  indicate to users that more layers can be accessed [#4137]
+
+- Add additional logic to support table file formats beyond text in the astropytable parser. [#4133]
+
+- Style tweaks to scatter axis ticks and labels. [#4139]
+
+- Add support for unit conversions in aperture photometry plugin for images. [#4136]
+
+- Added projection to return of AIDA get_viewport method. [#4076]
+
 Cubeviz
 ^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
+- Added ability to load DQ extension in the cubeviz loader, which activates the
+  DQ plugin in cubeviz. [#4077]
 
 Specviz
 ^^^^^^^
@@ -71,57 +178,76 @@ Specviz2d
 API Changes
 -----------
 
+- Deprecate ``show_in_viewer`` argument in ``load`` in favor of using the ``viewer`` argument to specify
+  which viewer(s) to show the data in, or whether to create a new viewer. [#4116]
+
 Cubeviz
 ^^^^^^^
+
+- Deprecates Cubeviz in favor of the generalized top-level Jdaviz application. [#4090]
 
 Imviz
 ^^^^^
 
-Mosviz
-^^^^^^
+- Deprecates Imviz in favor of the generalized top-level Jdaviz application. [#4090]
 
 Specviz
 ^^^^^^^
 
+- Deprecates Specviz in favor of the generalized top-level Jdaviz application. [#4090]
+
 Specviz2d
 ^^^^^^^^^
+
+- Deprecates Specviz2d in favor of the generalized top-level Jdaviz application. [#4090]
 
 Bug Fixes
 ---------
 
-Cubeviz
-^^^^^^^
+- Fix issue with treat_table_as_query switch where it disappeared entirely when switched 'off' [#4102]
 
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
+- Fixed bug when loading remote ASDF files by S3 URI, and retrieve remote
+  FITS PrimaryHDU by default. [#3980]
 
 Specviz2d
 ^^^^^^^^^
 
+- Fixed bug where mouseover fails to display in 2D Spectra viewer when no wavelength mapping
+  is provided. [#4093]
+
 Other Changes and Additions
 ---------------------------
+
+- Fixed an issue that occurred when destroying a 2D Spectrum viewer due to a units check that
+  attempted to read from a file that was no longer in memory due to cleanup procedures. [#4105]
 
 - Deprecated the Catalog Search plugin in favor of the astroquery loader + table viewers. [#4023]
 
 - Update example notebooks and add examples for deconfigged. [#4052]
 
-4.5.2 (unreleased)
+4.5.2 (2026-04-15)
 ==================
 
 Bug Fixes
 ---------
+
+- Fixed bug where creating new subsets in a fresh app instance and adjusting them creates a copy
+  instead of adjusting the original subset. [#4083]
+
+- Fixed using `viewer.show()` with height argument not using the full height inline in the notebook. [#4134]
+
+- Fixed bug where file drop resolver failed to process messages correctly when ipykernel>=7. [#4080]
 
 Cubeviz
 ^^^^^^^
 
 Imviz
 ^^^^^
+
+- Fixed bug where calling `jd.show()` before `batch_load` context caused data not to load correctly
+  into the viewer(s) due to absence of linking necessary for glue's rendering backend. [#4079]
+
+- Fixed a bug when trying to change link type multiple times with subsets defined. [#4096]
 
 Mosviz
 ^^^^^^

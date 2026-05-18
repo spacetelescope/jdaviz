@@ -274,7 +274,7 @@ Alternatively, you can display the app object directly:
 .. code-block:: python
 
     imviz = Imviz()
-    imviz.app  # Display in notebook cell output
+    imviz._app  # Display in notebook cell output
 
 This is equivalent to ``imviz.show(loc='inline')`` but provides less control over the display.
 

@@ -4,12 +4,14 @@ import numpy as np
 from asdf import AsdfFile
 from astropy import units as u
 from astropy.io import fits
-from astropy.nddata import StdDevUncertainty
+from astropy.nddata import InverseVariance, StdDevUncertainty, VarianceUncertainty
+from astropy.table import Table, Column
 from astropy.wcs import WCS
 from functools import cached_property
 from glue.core import HubListener
 from ipyvuetify import VuetifyTemplate
 from specutils import Spectrum, SpectrumList, SpectrumCollection
+from specutils.io.parsing_utils import generic_spectrum_from_table
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
@@ -62,6 +64,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
     mask_extension_items = List().tag(sync=True)
     mask_extension_selected = Any().tag(sync=True)
+
+    dq_extension_items = List().tag(sync=True)
+    dq_extension_selected = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -177,12 +182,20 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                                            filters=[self.is_valid_mask],
                                                            default_mode='first')
         self.mask_extension.select_default()
+        self.dq_extension = SelectFileExtensionComponent(self,
+                                                         items='dq_extension_items',
+                                                         selected='dq_extension_selected',
+                                                         multiselect='multiselect',
+                                                         manual_options=ext_options,
+                                                         filters=[self.is_valid_dq],
+                                                         default_mode='first')
+        self.dq_extension.select_default()
 
         # set default data-label
         self._on_extension_change()
 
     def _cleanup(self):
-        for attr in ('extension', 'unc_extension', 'mask_extension'):
+        for attr in ('extension', 'unc_extension', 'mask_extension', 'dq_extension'):
             if not hasattr(self, attr):
                 continue
 
@@ -282,12 +295,26 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid light curve HDU, False otherwise.
+            True if the HDU is a valid flux HDU, False otherwise.
         """
         if item.get('label') == 'None':
             # require selection for flux
             return False
         hdu = item.get('obj')
+
+        # Check for Binary Table HDU with spectral columns (for 1D spectra only)
+        if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
+            if (hasattr(hdu, 'columns') and hdu.columns is not None and
+                    self.supported_flux_ndim == 1):
+                col_names = [name.upper() for name in hdu.columns.names]
+                # Check for wavelength column
+                has_wave = any(name in col_names for name in ['WAVE', 'WAVELENGTH', 'LAMBDA'])
+                # Check for flux column (or variations)
+                has_flux = any('FLUX' in name for name in col_names)
+                if has_wave and has_flux:
+                    return True
+
+        # Check for Image HDU (existing logic)
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
                 and ('DISPAXIS' in hdu.header
                      or hdu.header.get('CTYPE1', '') == 'WAVE'
@@ -329,11 +356,11 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid light curve HDU, False otherwise.
+            True if the HDU is a valid uncertainty HDU. False otherwise.
         """
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
-                and hdu.header.get('EXTNAME', '') == 'ERR')
+                and (hdu.header.get('EXTNAME', '') in ['ERR', 'IVAR', 'VAR']))
 
     def asdf_roman_is_valid_unc(self, item):
         # TODO: should this instead have options just to include or not
@@ -365,7 +392,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         Returns
         -------
         bool
-            True if the HDU is a valid light curve HDU, False otherwise.
+            True if the HDU is a valid mask HDU, False otherwise.
         """
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
@@ -376,10 +403,46 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         # include and pull from the flux extension?
         return False
 
+    def is_valid_dq(self, item):
+        if item.get('label') == 'None':
+            return True
+        if self.input_type == 'fits:hdulist':
+            return self.hdu_is_valid_dq(item)
+        if self.input_type == 'asdf:roman':
+            return self.asdf_roman_is_valid_dq(item)
+        if self.input_type == 'specutils:spectrum':
+            return False  # Spectrum doesn't have a dq attribute
+        if self.input_type == 'specutils:spectrumlist':
+            return False  # TODO: replace this
+        raise NotImplementedError("Unknown input type")
+
+    def hdu_is_valid_dq(self, item):
+        """
+        Check if the HDU is valid to be imported for the data quality in a Spectrum.
+
+        Parameters
+        ----------
+        hdu : `astropy.io.fits.hdu.base.HDUBase`
+            The HDU to check.
+
+        Returns
+        -------
+        bool
+            True if the HDU is a valid DQ HDU, False otherwise.
+        """
+        hdu = item.get('obj')
+        return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
+                and hdu.header.get('EXTNAME', '') == 'DQ')
+
+    def asdf_roman_is_valid_dq(self, item):
+        name = item.get('name')
+        return name == 'dq'
+
     @observe('extension_items',
              'extension_selected',
              'unc_extension_selected',
-             'mask_extension_selected')
+             'mask_extension_selected',
+             'dq_extension_selected')
     def _on_extension_change(self, change={}):
         self._clear_cache('spectra')
 
@@ -411,7 +474,50 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         else:
             raise NotImplementedError(f"{inp} is not supported")
 
+    def _spectrum_from_table_hdu(self, hdulist, hdu):
+        """Extract spectrum from Binary Table HDU with array-valued columns."""
+        # Read the HDU as an astropy Table
+        table = Table.read(hdu)
+
+        # if columns are shape (1, N), flatten them before passing to generic_spectrum_from_table
+        needs_flattening = any(
+            col.ndim == 2 and col.shape[0] == 1 for col in table.itercols()
+        )
+
+        if needs_flattening:
+            # Create new columns with flattened data, preserving units
+            new_cols = []
+            for col in table.itercols():
+                if col.ndim == 2 and col.shape[0] == 1:
+                    # Extract first row and preserve unit
+                    new_cols.append(Column(name=col.name, data=col[0], unit=col.unit))
+                else:
+                    new_cols.append(col)
+            # Create a new table with flattened columns
+            table = Table(new_cols, meta=table.meta)
+
+        # Use specutils' generic_spectrum_from_table to parse the data
+        spectrum = generic_spectrum_from_table(table)
+
+        # Update metadata with standardized headers
+        header = hdu.header
+        metadata = standardize_metadata(header)
+        if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+            metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
+
+        # Preserve any metadata from the table parsing and update with our standardized metadata
+        if spectrum.meta is None:
+            spectrum.meta = metadata
+        else:
+            spectrum.meta.update(metadata)
+
+        return spectrum
+
     def _spectrum_from_hdu(self, hdulist, hdu):
+        # Handle Binary Table HDU with spectral columns
+        if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
+            return self._spectrum_from_table_hdu(hdulist, hdu)
+
         data = hdu.data
         header = hdu.header
         metadata = standardize_metadata(header)
@@ -439,7 +545,16 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             mask_data = None
 
         if unc_data is not None:
-            unc = StdDevUncertainty(unc_data * data_unit)
+            # if extension is IVAR/VAR, convert to standard deviation for
+            # consistency internally
+            if self.unc_extension.selected_obj.header.get('EXTNAME', '') == 'IVAR':
+                unc = InverseVariance(unc_data).represent_as(StdDevUncertainty)
+                unc.unit = data_unit
+            elif self.unc_extension.selected_obj.header.get('EXTNAME', '') == 'VAR':
+                unc = VarianceUncertainty(unc_data).represent_as(StdDevUncertainty)
+                unc.unit = data_unit
+            else:
+                unc = StdDevUncertainty(unc_data * data_unit)
         else:
             unc = None
 
@@ -453,7 +568,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     mask_data = mask_data.T
                 if getattr(wcs, 'naxis', 0) == 2:
                     wcs = wcs.swapaxes(0, 1)
-                self.app.hub.broadcast(SnackbarMessage(
+                self._app.hub.broadcast(SnackbarMessage(
                     f"Transposed input data to {data.shape}",
                     sender=self, color="warning"))
 

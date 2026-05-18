@@ -88,8 +88,6 @@ Available formats
 -----------------
 
 - ``'1D Spectrum'`` - For individual 1D :class:`~specutils.Spectrum` objects or files containing a single spectrum
-- ``'1D Spectrum List'`` - For `~specutils.SpectrumList` objects or files containing multiple spectra
-- ``'1D Spectrum Concatenated'`` - For combining multiple spectra into a single spectrum
 - ``'Image'`` - For 2D image data
 - ``'2D Spectrum'`` - For 2D spectral data
 - ``'3D Spectrum'`` - For 3D spectral cube data

@@ -4,9 +4,9 @@ from echo import delay_callback
 
 from glue.config import viewer_tool
 from glue.viewers.common.tool import CheckableTool
-from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.utils import debounced
 
+from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.core.tools import BoxZoom, PanZoom, _MatchedZoomMixin
 from jdaviz.utils import get_top_layer_index
 
@@ -24,7 +24,7 @@ class _ImvizMatchedZoomMixin(_MatchedZoomMixin):
         return ['zoom_center_x', 'zoom_center_y', 'zoom_radius']
 
     def _is_matched_viewer(self, viewer):
-        return isinstance(viewer, BqplotImageView)
+        return isinstance(viewer, ImvizImageView)
 
 
 @viewer_tool

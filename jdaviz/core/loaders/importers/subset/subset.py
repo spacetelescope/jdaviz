@@ -38,10 +38,14 @@ class SubsetImporter(BaseImporterToPlugin):
         self.observe(self._on_label_changed, 'subset_label_value')
         self._on_label_changed()
 
-    @property
-    def is_valid(self):
-        return (isinstance(self.input, (Regions, SpectralRegion))
-                and self.has_default_plugin)
+    def _check_is_valid(self):
+        if not isinstance(self.input, (Regions, SpectralRegion)):
+            return 'Input must be a Regions or SpectralRegion object.'
+
+        if not self.has_default_plugin:
+            return 'Subset Tools plugin is not available.'
+
+        return ''
 
     @property
     def default_plugin(self):
@@ -55,7 +59,7 @@ class SubsetImporter(BaseImporterToPlugin):
 
         # set the default label to be the same as glue would set if
         # not passing subset_label explicitly
-        self.subset_label_default = f"Subset {self.app.data_collection._sg_count + 1}"
+        self.subset_label_default = f"Subset {self._app.data_collection._sg_count + 1}"
 
         if self.subset_label_value == self.subset_label_default:
             # _check_valid_subset_label will say this is invalid,
@@ -64,7 +68,7 @@ class SubsetImporter(BaseImporterToPlugin):
             return
 
         try:
-            self.app._check_valid_subset_label(self.subset_label_value, raise_if_invalid=True)
+            self._app._check_valid_subset_label(self.subset_label_value, raise_if_invalid=True)
         except ValueError as e:
             self.subset_label_invalid_msg = f'invalid subset_label: {str(e)}'
             return
@@ -84,5 +88,5 @@ class SubsetImporter(BaseImporterToPlugin):
             kwargs = {}
         else:
             kwargs = {'subset_label': self.subset_label_value.strip()}
-        self.app._jdaviz_helper.plugins['Subset Tools'].import_region(self.input,
+        self._app._jdaviz_helper.plugins['Subset Tools'].import_region(self.input,
                                                                       **kwargs)  # noqa

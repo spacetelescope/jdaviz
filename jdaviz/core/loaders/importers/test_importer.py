@@ -28,22 +28,22 @@ class TestBaseImporter(BaseImporter):
 
 def test_update_existing_data_in_dc_traitlet(deconfigged_helper, premade_spectrum_list):
     # Test the sync
-    test_obj = TestBaseImporter(app=deconfigged_helper.app,
+    test_obj = TestBaseImporter(app=deconfigged_helper._app,
                                 resolver=deconfigged_helper.loaders['object']._obj,
                                 parser=None,
                                 input=premade_spectrum_list)
 
     assert len(test_obj.existing_data_in_dc) == 0
-    assert len(test_obj.app.existing_data_in_dc) == 0
+    assert len(test_obj._app.existing_data_in_dc) == 0
 
-    test_obj.app.existing_data_in_dc.append('test_value')
+    test_obj._app.existing_data_in_dc.append('test_value')
     # Check that the observer ran and updated the importer traitlet
-    assert test_obj.existing_data_in_dc == test_obj.app.existing_data_in_dc
+    assert test_obj.existing_data_in_dc == test_obj._app.existing_data_in_dc
 
     test_obj.existing_data_in_dc.append('test_value2')
     # The update works on both because of mutability, but it's safer
     # to set the app value directly
-    assert test_obj.existing_data_in_dc == test_obj.app.existing_data_in_dc
+    assert test_obj.existing_data_in_dc == test_obj._app.existing_data_in_dc
 
 
 class TestResetAndCheckExistingDataInDC:
@@ -53,7 +53,7 @@ class TestResetAndCheckExistingDataInDC:
         spectrum_list = SpectrumList([_create_spectrum1d_with_spectral_unit(seed=i)
                                       for i in range(5)])
 
-        test_obj = TestBaseImporter(app=deconfigged_helper.app,
+        test_obj = TestBaseImporter(app=deconfigged_helper._app,
                                     resolver=deconfigged_helper.loaders['object']._obj,
                                     parser=None,
                                     input=spectrum_list)
@@ -87,7 +87,7 @@ class TestResetAndCheckExistingDataInDC:
         test_obj.hash_map_to_label = dict(zip(dh_list, labels_list))
 
         # These *should* be the same thanks to the observer on the app traitlet
-        assert len(test_obj.existing_data_in_dc) == len(test_obj.app.existing_data_in_dc) == 1
+        assert len(test_obj.existing_data_in_dc) == len(test_obj._app.existing_data_in_dc) == 1
         assert dh_list[0] in test_obj.existing_data_in_dc
 
         # Now reset again, should be the same result
@@ -96,7 +96,7 @@ class TestResetAndCheckExistingDataInDC:
 
         # Mock the broadcast method to catch the snackbar message that will pop out
         # when we run the reset and check again
-        with patch.object(deconfigged_helper.app.hub, 'broadcast') as mock_broadcast:
+        with patch.object(deconfigged_helper._app.hub, 'broadcast') as mock_broadcast:
             # TODO: Uncomment when we decide to make this a warning/exception
             # with pytest.warns(UserWarning, match=re.escape(msg)):
             test_obj.reset_and_check_existing_data_in_dc()
@@ -123,17 +123,17 @@ class TestResetAndCheckExistingDataInDC:
 
         # Although two SpectrumList objects are loaded into the data collection,
         # they share no data in common so only one value should be in existing_data_in_dc
-        assert len(test_obj.existing_data_in_dc) == len(test_obj.app.existing_data_in_dc) == 1
+        assert len(test_obj.existing_data_in_dc) == len(test_obj._app.existing_data_in_dc) == 1
         assert dh_list[-1] in test_obj.existing_data_in_dc
 
-        deconfigged_helper.app.data_item_remove(test_obj.app.data_collection[1].data.label)
+        deconfigged_helper._app.data_item_remove(test_obj._app.data_collection[1].data.label)
         # Again, existing_data_in_dc is updated from _update_existing_data_in_dc
         # in app.py, however we want to doublecheck that
         # reset_and_check_existing_data_in_dc works as expected
-        assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper.app.existing_data_in_dc) == 0  # noqa
+        assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper._app.existing_data_in_dc) == 0  # noqa
 
         test_obj.reset_and_check_existing_data_in_dc()
-        assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper.app.existing_data_in_dc) == 0  # noqa
+        assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper._app.existing_data_in_dc) == 0  # noqa
 
     def test_reset_and_check_all_importers(self, deconfigged_helper,
                                            image_hdu_wcs, spectrum1d, spectrum2d,
@@ -164,7 +164,7 @@ class TestResetAndCheckExistingDataInDC:
 
             # Mock the broadcast method to catch the snackbar message that should be raised
             # when we run the reset and check again
-            with patch.object(deconfigged_helper.app.hub, 'broadcast') as mock_broadcast:
+            with patch.object(deconfigged_helper._app.hub, 'broadcast') as mock_broadcast:
                 # TODO: Uncomment when we decide to make this a warning/exception
                 # with pytest.warns(UserWarning, match=re.escape(msg)):
                 test_obj.reset_and_check_existing_data_in_dc()
@@ -183,18 +183,18 @@ def test_reject_2d_spectrum_as_image(deconfigged_helper, spectrum2d, mos_spectru
         deconfigged_helper.load(spectrum2d, format='Image')
 
     # Verify no data was loaded
-    assert len(deconfigged_helper.app.data_collection) == 0
+    assert len(deconfigged_helper._app.data_collection) == 0
 
     # Try again with 2D Spectrum as HDU with spectral wcs
     with pytest.raises(ValueError, match="No valid loaders found for input."):
         deconfigged_helper.load(mos_spectrum2d_as_hdulist[1], format='Image')
 
     # Verify no data was loaded
-    assert len(deconfigged_helper.app.data_collection) == 0
+    assert len(deconfigged_helper._app.data_collection) == 0
 
     # Verify we're able to load as 2d spectrum in follow-up
     deconfigged_helper.load(spectrum2d, format='2D Spectrum')
-    assert len(deconfigged_helper.app.data_collection) > 0
+    assert len(deconfigged_helper._app.data_collection) > 0
 
 
 def test_image_importer_expose_align_by_options(deconfigged_helper, image_hdu_wcs):
@@ -233,8 +233,8 @@ class TestDataLabelOverwrite:
         ldr.importer.data_label = 'test_spectrum'
         ldr.load()
 
-        assert 'test_spectrum' in deconfigged_helper.app.data_collection
-        assert len(deconfigged_helper.app.data_collection) == 1
+        assert 'test_spectrum' in deconfigged_helper._app.data_collection
+        assert len(deconfigged_helper._app.data_collection) == 1
 
         # Now try to load with the same label - should set overwrite flag
         ldr2 = deconfigged_helper.loaders['object']
@@ -249,8 +249,8 @@ class TestDataLabelOverwrite:
 
         # Load should succeed and overwrite the existing data
         ldr2.load()
-        assert len(deconfigged_helper.app.data_collection) == 1
-        assert 'test_spectrum' in deconfigged_helper.app.data_collection
+        assert len(deconfigged_helper._app.data_collection) == 1
+        assert 'test_spectrum' in deconfigged_helper._app.data_collection
 
     def test_no_overwrite_new_label(self, deconfigged_helper, spectrum1d):
         """Test that data_label_overwrite is False for new labels."""
@@ -355,8 +355,8 @@ class TestDataLabelOverwrite:
         ldr.importer.data_label = 'viewer_test'
         ldr.load()
 
-        assert 'viewer_test' in deconfigged_helper.app.data_collection
-        original_data = deconfigged_helper.app.data_collection['viewer_test']
+        assert 'viewer_test' in deconfigged_helper._app.data_collection
+        original_data = deconfigged_helper._app.data_collection['viewer_test']
 
         # Load replacement data with same label (use different spectrum)
         ldr2 = deconfigged_helper.loaders['object']
@@ -366,10 +366,10 @@ class TestDataLabelOverwrite:
         ldr2.load()
 
         # Should still only have one entry with that label
-        assert len([d for d in deconfigged_helper.app.data_collection
+        assert len([d for d in deconfigged_helper._app.data_collection
                     if d.label == 'viewer_test']) == 1
 
         # The data should be the new data (different flux values)
-        new_data = deconfigged_helper.app.data_collection['viewer_test']
+        new_data = deconfigged_helper._app.data_collection['viewer_test']
         # Verify it's actually different data (the object should be different)
         assert new_data is not original_data

@@ -274,6 +274,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract 1D spectrum from 2D image.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/2d_spectral_extraction.html'  # noqa
 
         # TRACE
         self.trace_trace = DatasetSelect(self,
@@ -457,8 +459,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
         self.ext_add_results.label_whitelist_overwrite = ['1D Spectrum', '2D Spectrum (auto-ext)']
         self.ext_results_label_default = '2D Spectrum (auto-ext)'
 
-        self.app.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
-                               lambda _: self._update_plugin_marks())
+        self._app.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
+                                lambda _: self._update_plugin_marks())
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['trace_dataset_items'])
@@ -623,7 +625,7 @@ class SpectralExtraction2D(PluginTemplateMixin):
     @observe('is_active', 'active_step')
     @skip_if_not_tray_instance()
     def _update_plugin_marks(self, msg={}):
-        if self.app._jdaviz_helper is None:
+        if self._app._jdaviz_helper is None:
             return
 
         if not len(self.marks):
@@ -1062,7 +1064,7 @@ class SpectralExtraction2D(PluginTemplateMixin):
         try:
             self.export_bg_img(add_data=True)
         except Exception as e:
-            self.app.hub.broadcast(
+            self._app.hub.broadcast(
                 SnackbarMessage(f"Specreduce background failed with the following error: {repr(e)}",
                                 color='error', sender=self, traceback=e)
             )
@@ -1210,13 +1212,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
             # TODO: eventually generalize this logic into add_results_from_plugin
             if not len(self.marks_viewers1d):
                 # no spectrum1d viewer, create one now and set the default viewer
-                viewer_ref = self.app.return_unique_name('1D Spectrum',
-                                                         typ='viewer')
-                self.app._on_new_viewer(NewViewerMessage(Spectrum1DViewer,
-                                                         data=None,
-                                                         sender=self.app),
-                                        vid=viewer_ref, name=viewer_ref,
-                                        open_data_menu_if_empty=False)
+                viewer_ref = self._app.return_unique_name('1D Spectrum',
+                                                          typ='viewer')
+                self._app._on_new_viewer(NewViewerMessage(Spectrum1DViewer,
+                                                          data=None,
+                                                          sender=self.app),
+                                         vid=viewer_ref, name=viewer_ref,
+                                         open_data_menu_if_empty=False)
                 self.ext_add_results.viewer = viewer_ref
 
             self.ext_add_results.add_results_from_plugin(spectrum,

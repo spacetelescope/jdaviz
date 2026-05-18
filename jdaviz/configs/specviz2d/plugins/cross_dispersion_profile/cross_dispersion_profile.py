@@ -95,6 +95,8 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Visualize cross-dispersion profile.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/cross_dispersion_profile.html'  # noqa
 
         self.dataset = DatasetSelect(self,
                                      'dataset_items',
@@ -225,7 +227,7 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
 
     @property
     def marks_viewers1d(self):
-        return self.app.get_viewers_of_cls(Spectrum1DViewer)
+        return self._app.get_viewers_of_cls(Spectrum1DViewer)
 
     @property
     def marks(self):

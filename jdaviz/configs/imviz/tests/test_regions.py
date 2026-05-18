@@ -31,7 +31,7 @@ class BaseRegionHandler:
 class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
     def teardown_method(self, method):
         """Clear all the subsets for the next test method."""
-        self.imviz.app.delete_subsets()
+        self.imviz._app.delete_subsets()
 
     def test_regions_invalid(self):
         # Wrong object
@@ -103,7 +103,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
             assert self.imviz.plugins['Subset Tools'].get_regions() == {}
 
         # Also test deletion by label here.
-        self.imviz.app.delete_subsets('MaskedSubset 1')
+        self.imviz._app.delete_subsets('MaskedSubset 1')
         self.verify_region_loaded('MaskedSubset 1', count=0)
 
         # Adding another mask will increment from 2 even when 1 is now available.
@@ -118,7 +118,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
         # Deletion of non-existent label raises error
         with pytest.raises(ValueError, match=r'foo not in data collection, can not delete\.'):
-            self.imviz.app.delete_subsets('foo')
+            self.imviz._app.delete_subsets('foo')
 
     def test_regions_pixel(self):
         # A little out-of-bounds should still overlay the overlapped part.
@@ -171,7 +171,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         # This file actually will load 2 annuli
         regfile = get_pkg_data_filename('data/ds9_annulus_01.reg')
         self.imviz.load_data(regfile)
-        assert len(self.imviz.app.data_collection) == 2  # Make sure not loaded as data
+        assert len(self.imviz._app.data_collection) == 2  # Make sure not loaded as data
 
         # Test data is set up such that 1 pixel is 1 arcsec.
         subset_radii = {"Subset 1": [0.5, 1], "Subset 2": [1, 3]}
@@ -275,18 +275,18 @@ class TestGetRegions(BaseImviz_WCS_NoWCS):
         assert subsets['Subset 1'].center == PixCoord(4.5, 4.5)
         assert subsets['Subset 2'].center == PixCoord(4.5, 4.5)
         # ensure agreement between app.get_subsets and subset_tools.get_regions
-        ss = self.imviz.app.get_subsets()
+        ss = self.imviz._app.get_subsets()
         assert ss['Subset 1'][0]['region'] == subsets['Subset 1']
         assert ss['Subset 2'][0]['region'] == subsets['Subset 2']
 
         # Create a third subset that is an annulus.
         self.imviz.plugins['Subset Tools'].combination_mode = "new"
-        subset_groups = self.imviz.app.data_collection.subset_groups
+        subset_groups = self.imviz._app.data_collection.subset_groups
         new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
         self.viewer.apply_subset_state(new_subset)
 
         subsets = self.imviz.plugins['Subset Tools'].get_regions()
-        assert len(self.imviz.app.data_collection.subset_groups) == 3
+        assert len(self.imviz._app.data_collection.subset_groups) == 3
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3'], subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
         assert isinstance(subsets['Subset 2'], CirclePixelRegion)
@@ -295,5 +295,5 @@ class TestGetRegions(BaseImviz_WCS_NoWCS):
         assert subsets['Subset 3'].center == PixCoord(4.5, 4.5)
 
         # Clear the regions for next test.
-        self.imviz.app.delete_subsets()
-        assert len(self.imviz.app.data_collection.subset_groups) == 0
+        self.imviz._app.delete_subsets()
+        assert len(self.imviz._app.data_collection.subset_groups) == 0

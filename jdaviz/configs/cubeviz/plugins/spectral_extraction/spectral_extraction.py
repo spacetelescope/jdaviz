@@ -136,6 +136,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract a spectrum from a spectral cube.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/3d_spectral_extraction.html'  # noqa
 
         self.extracted_spec = None
 
@@ -223,7 +225,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @observe('dataset_items')
     def _update_disabled_msg(self, msg={}):
-        for data in self.app.data_collection:
+        for data in self._app.data_collection:
             if data.data.ndim == 3:
                 self.disabled_msg = ''
                 break
@@ -266,7 +268,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_indicator_viewers(self):
-        return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
+        return [v for v in self._app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
 
     @observe('active_step', 'is_active')
     def _active_step_changed(self, *args):
@@ -277,7 +279,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_plugin(self):
-        return self.app._jdaviz_helper.plugins['Spectral Slice']
+        return self._app._jdaviz_helper.plugins['Spectral Slice']
 
     @observe('aperture_items')
     @skip_if_not_tray_instance()
@@ -295,7 +297,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 # Check if an auto-extracted spectrum already exists for this subset
                 # by checking metadata (not data labels, since user may have renamed)
                 already_has_extraction = False
-                for data in self.app.data_collection:
+                for data in self._app.data_collection:
                     plugin_inputs = data.meta.get('_update_live_plugin_results', None)
                     if plugin_inputs is None:
                         continue
@@ -318,7 +320,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     msg = SnackbarMessage(
                         f"Automatic {self.resulting_product_name} extraction for {subset_lbl} successful",  # noqa
                         color='success', sender=self)
-                self.app.hub.broadcast(msg)
+                self._app.hub.broadcast(msg)
 
     def _extract_in_new_instance(self, dataset=None, function='Sum', subset_lbl=None,
                                  auto_update=False, add_data=False):
@@ -370,9 +372,9 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def _on_global_display_unit_changed(self, msg=None):
         if msg is None:
-            self.flux_units = str(self.app._get_display_unit('flux'))
-            self.sb_units = str(self.app._get_display_unit('sb'))
-            self.spectrum_y_units = str(self.app._get_display_unit('spectral_y'))
+            self.flux_units = str(self._app._get_display_unit('flux'))
+            self.sb_units = str(self._app._get_display_unit('sb'))
+            self.spectrum_y_units = str(self._app._get_display_unit('spectral_y'))
         elif msg.axis == 'flux':
             self.flux_units = str(msg.unit)
         elif msg.axis == 'sb':
@@ -415,7 +417,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def uncert_cube(self):
         if (hasattr(self._app._jdaviz_helper, '_loaded_flux_cube') and
-                hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube') and
+                hasattr(self._app._jdaviz_helper, '_loaded_uncert_cube') and
                 self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label):
             return self._app._jdaviz_helper._loaded_uncert_cube
         else:
@@ -425,7 +427,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def mask_cube(self):
         if (hasattr(self._app._jdaviz_helper, '_loaded_flux_cube') and
-                hasattr(self.app._jdaviz_helper, '_loaded_mask_cube') and
+                hasattr(self._app._jdaviz_helper, '_loaded_mask_cube') and
                 self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label):
             return self._app._jdaviz_helper._loaded_mask_cube
         else:
@@ -434,7 +436,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_display_unit(self):
-        return astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
+        return astropy.units.Unit(self._app._get_display_unit(self.slice_display_unit_name))
 
     @property
     def inverted_mask_non_science(self):

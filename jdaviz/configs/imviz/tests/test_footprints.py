@@ -206,7 +206,7 @@ def test_api_after_linking(imviz_helper):
                         'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
                         'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
 
-    viewer = imviz_helper.app.get_viewer_by_id('imviz-0')
+    viewer = imviz_helper._app.get_viewer_by_id('imviz-0')
 
     ndd = NDData(arr, wcs=image_2d_wcs)
     imviz_helper.load_data(ndd, data_label='data1')

@@ -22,6 +22,20 @@ showing detector layouts and orientations for planning or analysis.
 * Multiple footprint overlays
 * Export footprint regions
 
+This plugin supports loading and overplotting instrument footprint overlays on the image viewers.
+Any number of overlays can be plotted simultaneously from any number of the available
+preset instruments (requires ``pysiaf`` to be installed), by loading an Astropy regions object from
+a file, or by passing an ``STC-S`` string.
+
+The top dropdown allows renaming, adding, and removing footprint overlays.  To modify the display
+and input parameters for a given overlay, select the overlay in the dropdown, and modify the choices
+in the plugin to change its color, opacity, visibilities in any image viewer in the app.
+You can also select between various preset instruments and change the input options
+(position on the sky, position angle, offsets, etc).
+
+To import a file, open the "Import" section at the top of the dropdown and select a valid file (must
+be able to be parsed by `regions.Regions.read`) from the applicable source.
+
 UI Access
 =========
 
@@ -44,14 +58,11 @@ API Access
 
 .. code-block:: python
 
-    plg = imviz.plugins['Footprints']
-    # Add and configure footprints programmatically
+    plg = jd.plugins['Footprints']
+    plg.open_in_tray()
+    plg.add_overlay('my imported overlay')  # or fp.rename_overlay to rename an existing entry
+    plg.import_region(region)
 
 .. plugin-api-refs::
    :module: jdaviz.configs.imviz.plugins.footprints.footprints
    :class: Footprints
-
-See Also
-========
-
-* :ref:`imviz-footprints` - Footprints documentation

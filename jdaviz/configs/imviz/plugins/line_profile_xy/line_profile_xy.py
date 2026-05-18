@@ -32,6 +32,8 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Plot line profiles across X and Y.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/image_profiles.html'  # noqa
 
         self.plot_across_x = Plot(self, name='across_x')
         self.plot_across_y = Plot(self, name='across_y')
@@ -67,12 +69,12 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         viewer.add_event_callback(callback, events=['keydown'])
 
     def _on_viewer_added(self, msg):
-        self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
+        self._create_viewer_callbacks(self._app.get_viewer_by_id(msg.viewer_id))
 
     @observe('is_active')
     def _is_active_changed(self, msg):
         # subscribe/unsubscribe to keypress events across all viewers
-        for viewer in self.app._viewer_store.values():
+        for viewer in self._app._viewer_store.values():
             if not hasattr(viewer, 'figure'):
                 # table viewer, etc
                 continue

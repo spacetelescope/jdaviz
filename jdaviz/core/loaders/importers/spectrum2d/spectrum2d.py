@@ -49,7 +49,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         if self.default_data_label_from_resolver:
             self.data_label.default = self.default_data_label_from_resolver
-        elif self.app.config == 'specviz2d':
+        elif self._app.config == 'specviz2d':
             self.data_label.default = '2D Spectrum'
 
         self.ext_data_label = AutoTextField(self,
@@ -71,7 +71,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                                 default_mode='empty')
         supported_viewers = [{'label': '1D Spectrum',
                               'reference': 'spectrum-1d-viewer'}]
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.ext_viewer_create_new_items = supported_viewers
 
         def viewer_in_registry_names(viewer):
@@ -84,13 +84,14 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # get display unit from viewer state if it exists
             viewer_x_unit = getattr(viewer.state, 'x_display_unit', None)
 
-            # if the viewer unit is None, its an empty viewer and anything
+            # if the viewer unit is None, it's an empty viewer and anything
             # can be loaded into it
             if viewer_x_unit is None:
                 return True
 
-            # compare viewer display unit to the spectral axis unit of the spectrum
-            spectrum_unit = getattr(self.output.spectral_axis, 'unit', None)
+            # Use the cached spectrum unit instead of accessing it from the
+            # spectrum object, which may reference a closed file in some situations
+            spectrum_unit = self._spectrum_unit
 
             if not isinstance(spectrum_unit, u.Unit):
                 spectrum_unit = u.Unit(spectrum_unit)
@@ -117,21 +118,16 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                   'extension', 'unc_extension', 'mask_extension']
         return ImporterUserApi(self, expose)
 
-    @property
-    def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz2d'):
+    def _check_is_valid(self):
+        if self._app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
-            return False
-        try:
-            if self.spectrum.flux.ndim != 2:
-                return False
-        except Exception:
-            return False
-        try:
-            self.output
-        except Exception:
-            return False
-        return True
+            return 'spectrum2d importer is only supported in specviz2d, generalized jdaviz.'
+
+        if self.spectrum.flux.ndim != 2:
+            return 'Spectrum flux must be 2D.'
+
+        _ = self.output
+        return ''
 
     @observe('extension_selected')
     def _on_extension_selected_changed(self, change={}):
@@ -148,7 +144,11 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def output(self):
-        return self.spectrum
+        spectrum = self.spectrum
+        # Cache the spectral axis unit on load to avoid accessing a potentially
+        # closed file reference later when the filter is called
+        self._spectrum_unit = getattr(spectrum.spectral_axis, 'unit', None)
+        return spectrum
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         # Handle spatial pixel axes (e.g., 'Pixel Axis 0 [y]') that fall outside
@@ -168,7 +168,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             return
 
         try:
-            spext = self.app.get_tray_item_from_name('spectral-extraction-2d')
+            spext = self._app.get_tray_item_from_name('spectral-extraction-2d')
             ext = spext._extract_in_new_instance(dataset=data_label,
                                                  add_data=False)
         except Exception as e:
@@ -183,7 +183,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                 " See the 2D spectral extraction plugin for details or to"
                 " perform a custom extraction.",
                 color='warning', sender=self, timeout=10000)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)
 
         if ext is not None:
             self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)

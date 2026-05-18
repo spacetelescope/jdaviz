@@ -2,7 +2,7 @@
 Plugin Components
 *****************
 
-Plugin components exist to provide re-usable UI elements across multiple plugins, both for 
+Plugin components exist to provide re-usable UI elements across multiple plugins, both for
 consistency in behavior between plugins and also for simplification of code.
 
 The general concept is to move as much shared code into these components, and out of the plugins, as
@@ -11,7 +11,7 @@ possible.
 Design Philosophy
 -----------------
 
-Each component consists of three parts: 
+Each component consists of three parts:
 
 1. Python component class in the `~jdaviz.core.template_mixin` module, which inherits from `~jdaviz.core.template_mixin.BasePluginComponent` and
 passes the string names of the traitlets it needs to the constructor as keyword arguments.  This class isolates the
@@ -42,12 +42,12 @@ something like ``@update:value="$emit('update_value', $event)"`` in the relevant
 
 `~jdaviz.core.template_mixin.BasePluginComponent` provides the following functionality to all components:
 
-* `~jdaviz.core.template_mixin.BasePluginComponent.app`, 
+* `~jdaviz.core.template_mixin.BasePluginComponent._app`,
   `~jdaviz.core.template_mixin.BasePluginComponent.hub`, and
-  `~jdaviz.core.template_mixin.BasePluginComponent.plugin` properties to access the respective 
+  `~jdaviz.core.template_mixin.BasePluginComponent.plugin` properties to access the respective
   instances.
 * `~jdaviz.core.template_mixin.BasePluginComponent.viewer_dicts` property
-  to access a list of dictionaries, with keys: ``viewer``, ``id``, 
+  to access a list of dictionaries, with keys: ``viewer``, ``id``,
   ``reference``, and ``label`` (``reference`` if available, otherwise ``id``).
 * :meth:`~jdaviz.core.template_mixin.BasePluginComponent.add_observe` method to
   connect a callback to the proper traitlet in the parent plugin. This
@@ -77,7 +77,7 @@ considering changing to a different architecture, the following should be consid
 
 Considerations when Writing/Using Components
 --------------------------------------------
-  
+
 * Plugin components are specifically designed to be used within plugins, and should not be used
   elsewhere.
 * Plugin components must use ``add_observe`` instead of ``@observe`` for any traitlets referenced

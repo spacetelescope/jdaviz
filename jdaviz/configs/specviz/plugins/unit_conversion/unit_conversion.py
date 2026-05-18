@@ -105,6 +105,9 @@ class UnitConversion(PluginTemplateMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Convert the units of displayed physical quantities.'
 
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/settings/display_units.html'  # noqa
+
         self._cached_properties = ['image_layers']
 
         if self.config not in ['specviz', 'specviz2d', 'cubeviz', 'deconfigged']:
@@ -158,7 +161,7 @@ class UnitConversion(PluginTemplateMixin):
                                                      items='spectral_y_type_items',
                                                      selected='spectral_y_type_selected')
 
-        if self.app.config == 'deconfigged':
+        if self._app.config == 'deconfigged':
             self.observe_traitlets_for_relevancy(
                 traitlets_to_observe=['spectral_unit_selected',
                                       'flux_unit_selected',
@@ -180,7 +183,7 @@ class UnitConversion(PluginTemplateMixin):
             readonly = ['sb_unit']
         if self.has_time:
             expose += ['time_unit']
-        if self.config == 'cubeviz':
+        if self.config in ['cubeviz', 'deconfigged']:
             expose += ['spectral_y_type', 'spectral_y_unit']
         return PluginUserApi(self, expose=expose, readonly=readonly)
 
@@ -216,8 +219,8 @@ class UnitConversion(PluginTemplateMixin):
         if self.config == 'cubeviz':
             # NOTE: this assumes data_collection[0] is the science (flux/sb) cube
             if (
-                len(self.app.data_collection) > 0
-                and not self.app.data_collection[0].meta.get('PIXAR_SR')
+                len(self._app.data_collection) > 0
+                and not self._app.data_collection[0].meta.get('PIXAR_SR')
             ):
                 self.pixar_sr_exists = False
 
@@ -252,7 +255,7 @@ class UnitConversion(PluginTemplateMixin):
                 or (self.config in ('cubeviz', 'deconfigged')
                     and not len(self.spectral_y_type_selected))):
 
-            data_obj = self.app._jdaviz_helper.get_data(msg.data.label)
+            data_obj = self._app._jdaviz_helper.get_data(msg.data.label)
 
             # if the viewer is spectral and the data is Spectrum, get flux/sb/spectral
             # axis units from the Spectrum object

@@ -21,7 +21,7 @@ Jdaviz provides a wide range of data analysis plugins for different types of ast
    3d_spectral_extraction
    ramp_extraction
    cross_dispersion_profile
-   line_profiles
+   image_profiles
    compass
    catalog_search
    data_quality
@@ -52,7 +52,7 @@ Plugins provide specialized analysis capabilities tailored to different data typ
 
 **Image Analysis (2D)**
   - Aperture Photometry
-  - Line Profiles (XY)
+  - Image Profiles (XY)
   - Compass
   - Orientation
   - Footprints

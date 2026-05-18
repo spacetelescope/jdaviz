@@ -48,6 +48,9 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 RemoveDataFromViewerMessage, ViewerAddedMessage,
                                 ViewerRemovedMessage, ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage, LayersFinalizedMessage)
+from jdaviz.core.loaders.resolvers.file.file import PresetFileResolver
+from jdaviz.core.loaders.resolvers.object.object import PresetObjectResolver
+from jdaviz.core.loaders.resolvers.url.url import PresetURLResolver
 from jdaviz.core.registries import (tool_registry, tray_registry,
                                     viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
@@ -64,7 +67,7 @@ from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                supported_sq_angle_units,
                                                viewer_flux_conversion_equivalencies)
 
-__all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
+__all__ = ['PrivateApplication', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
 
 SplitPanes()
 GoldenLayout()
@@ -265,15 +268,30 @@ class ApplicationState(State):
             'tab_headers': True,
         },
         'dense_toolbar': True,
-        # In the context of a remote server, allow/disallow showing the loader
-        # server_is_remote == False -> Usual behavior, show loader, etc.
-        # server_is_remote + remote_enable_importers==False -> hide loader panel completely,
-        #   prepopulate the data
-        # server_is_remote + remote_enable_importers==True -> hide the loader,
-        #   but allow selecting and loading items from the file. This is used for
-        #   Spectrum Lists or multi-extension images.
+        # In the context of a remote server, set default values for loader visibility
+        # server_is_remote == False -> Usual behavior, show all loaders
+        # server_is_remote == True -> Sets default disabled_loaders to exclude loaders
+        #   that require local file access or external APIs
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
-        'remote_enable_importers': True,  # Depends on server_is_remote, see above
+        'remote_enable_importers': True,  # Legacy setting, kept for backward compatibility
+        # List of loader names to exclude from the loaders panel source dropdown.
+        # If not provided (None), defaults to excluding loaders that typically require
+        # local file access or API support when server_is_remote is True.
+        # Set to [] to enable all loaders regardless of server_is_remote.
+        'disabled_loaders': None,
+        # List of telescope names to exclude from the astroquery loader telescope dropdown.
+        # Available telescopes: 'JWST', 'HST', 'SDSS', 'Gaia'
+        # Set to [] (default) to enable all telescopes.
+        'disabled_astroquery_telescopes': [],
+        # List of URL prefixes to allow in the URL loader.
+        # If None (default), any valid URL is allowed.
+        # If set to a list, only URLs starting with one of the prefixes will be accepted.
+        # Example: ['https://data.example.com/', 'https://archive.science.org/']
+        'url_prefix_whitelist': None,
+        # Hide the 'url' column in file tables from resolver queries.
+        # When True, the url column is kept in the table data (for downloading)
+        # but is not shown in the UI and cannot be made visible by the user.
+        'hide_file_table_url_column': False,
         'context': {
             'notebook': {
                 'max_height': '600px'
@@ -339,7 +357,7 @@ class ApplicationState(State):
     )
 
 
-class Application(VuetifyTemplate, HubListener):
+class PrivateApplication(VuetifyTemplate, HubListener):
     """
     The main application object containing implementing the ipyvue/vuetify
     template instructions for composing the interface.
@@ -715,7 +733,12 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         if viewer_id is None:
-            viewer = self._jdaviz_helper.default_viewer._obj.glue_viewer
+            if hasattr(self._jdaviz_helper, 'default_viewer'):
+                viewer = self._jdaviz_helper.default_viewer._obj.glue_viewer
+            elif len(self._viewer_store):
+                viewer = list(self._viewer_store.values())[0]
+            else:
+                return
         else:
             viewer = self.get_viewer(viewer_id)
 
@@ -856,7 +879,11 @@ class Application(VuetifyTemplate, HubListener):
 
         # Add all new links to the data collection
         if new_links:
-            self.data_collection.add_link(new_links)
+            # Use delay_link_manager_update() to batch link updates and prevent
+            # widget trait modifications during iteration (which causes RuntimeError
+            # in ipywidgets on Python 3.12+)
+            with self.data_collection.delay_link_manager_update():
+                self.data_collection.add_link(new_links)
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
@@ -919,7 +946,9 @@ class Application(VuetifyTemplate, HubListener):
                 isinstance(linked_data.coords, SpectralGWCS) and linked_data.ndim == 1):
             wc_old = ref_data.world_component_ids[ref_data.meta['spectral_axis_index']]
             wc_new = linked_data.world_component_ids[linked_data.meta['spectral_axis_index']]
-            self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
+            # Use delay_link_manager_update() to prevent widget trait modification during iteration
+            with self.data_collection.delay_link_manager_update():
+                self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
             return
 
         # NOTE: if Cubeviz ever supports multiple cubes, we might want to reintroduce WCS-linking
@@ -1070,7 +1099,7 @@ class Application(VuetifyTemplate, HubListener):
         name : str
             The label to show in the viewer toolbar for the custom tool set.
         """
-        for viewer in self._viewer_store.values():
+        for viewer in list(self._viewer_store.values()):
             tools_nested, selected_tool = callable(viewer)
             if tools_nested is None:
                 tools_nested = viewer.toolbar._original_tools_nested[:3]
@@ -2010,7 +2039,7 @@ class Application(VuetifyTemplate, HubListener):
             self._update_layer_icons(old_label, new_label)
 
             # Update viewer layer states and reference data
-            for viewer_id, viewer in self._viewer_store.items():
+            for viewer_id, viewer in list(self._viewer_store.items()):
                 # Update reference data if it matches old label
                 if (hasattr(viewer.state, 'reference_data')
                         and viewer.state.reference_data is not None
@@ -2286,7 +2315,7 @@ class Application(VuetifyTemplate, HubListener):
     def get_viewer_reference_names(self):
         """Return a list of available viewer reference names."""
         # Cannot sort because of None
-        return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
+        return [self._viewer_item_by_id(vid).get('reference') for vid in list(self._viewer_store)]
 
     def get_viewers_of_cls(self, cls):
         """Return a list of viewers of a specific class."""
@@ -2294,7 +2323,7 @@ class Application(VuetifyTemplate, HubListener):
             cls_name = cls
         else:
             cls_name = cls.__name__
-        return [viewer for viewer in self._viewer_store.values()
+        return [viewer for viewer in list(self._viewer_store.values())
                 if viewer.__class__.__name__ == cls_name]
 
     def _update_viewer_reference_name(
@@ -2675,7 +2704,7 @@ class Application(VuetifyTemplate, HubListener):
                                 setattr(subset_state, att, cid)
 
                     # Translate bounds through WCS if needed
-                    if (self.config == "imviz" and
+                    if (self.config in ("imviz", "deconfigged") and
                             self._jdaviz_helper.plugins["Orientation"].align_by == "WCS"):
 
                         # Default shape for WCS-only layers is 10x10, but it doesn't really matter
@@ -2808,13 +2837,27 @@ class Application(VuetifyTemplate, HubListener):
         viewer_reference : str
             Reference (or ID) of the viewer
         data_label : str
-            Label of the data to set the visiblity.  If not already loaded in the viewer, the
+            Label of the data to set the visibility. If not already loaded in the viewer, the
             data will automatically be loaded before setting the visibility
         visible : bool
             Whether to set the layer(s) to visible.
         replace : bool
             Whether to disable the visibility of all other layers in the viewer
         """
+        # During batch_load, defer viewer assignment until after linking completes.
+        # Only defer at the outermost batch_load level (== 1). Nested batch_loads
+        # (level > 1, e.g. a plugin live-update triggered inside import_region) are
+        # already handled by _delayed_show_in_viewer_labels in template_mixin, so
+        # intercepting them here as well would cause double-deferral and wrong layer ordering.
+        if getattr(self._jdaviz_helper, '_in_batch_load', 0) == 1:
+            self._jdaviz_helper.pending_set_data_visibility.append({
+                'viewer_reference': viewer_reference,
+                'data_label': data_label,
+                'visible': visible,
+                'replace': replace
+            })
+            return
+
         viewer_item = self._get_viewer_item(viewer_reference)
         viewer_id = viewer_item['id']
         viewer = self.get_viewer_by_id(viewer_id)
@@ -2837,7 +2880,7 @@ class Application(VuetifyTemplate, HubListener):
             data = self.data_collection[data_label]
 
             # set the original color based on metadata preferences, if provided, and otherwise
-            # based on the colorcycler
+            # based on the color-cycler
             # NOTE: this is intentionally not a single line to avoid incrementing the color-cycler
             # unless it is used
             color = data.meta.get('_default_color')
@@ -2916,13 +2959,12 @@ class Application(VuetifyTemplate, HubListener):
         # Sets the plot axes labels to be the units of the most recently
         # active data.
         viewer_data_labels = [layer.layer.label for layer in viewer.layers]
-        if len(viewer_data_labels) > 0 and getattr(self._jdaviz_helper, '_in_batch_load', 0) == 0:
+        if len(viewer_data_labels) > 0:
             # This "if" is nested on purpose to make parent "if" available
             # for other configs in the future, as needed.
             if self.config == 'imviz':
                 viewer.on_limits_change()  # Trigger compass redraw
-
-        if layers_finalized_message:
+        if layers_finalized_message is not None:
             self.hub.broadcast(layers_finalized_message)
 
     def data_item_remove(self, data_label):
@@ -2938,7 +2980,7 @@ class Application(VuetifyTemplate, HubListener):
             self._reparent_subsets(data)
 
         # Make sure the data isn't loaded in any viewers and isn't the selected orientation
-        for viewer_id, viewer in self._viewer_store.items():
+        for viewer_id, viewer in list(self._viewer_store.items()):
             if orientation_plugin is not None and self._align_by == 'wcs':
                 if viewer.state.reference_data.label == data_label:
                     self._change_reference_data(base_wcs_layer_label, viewer_id)
@@ -3475,7 +3517,18 @@ class Application(VuetifyTemplate, HubListener):
         # registry will be populated at import
         if self.config in CONFIGS_WITH_LOADERS:
             import jdaviz.core.loaders  # noqa
+            # Determine which loaders to disable
+            disabled_loaders = self.state.settings.get('disabled_loaders')
+            if disabled_loaders is None:
+                # Default: disable loaders based on server_is_remote setting
+                if self.state.settings.get('server_is_remote', False):
+                    disabled_loaders = ['file', 'file drop', 'url', 'object',
+                                        'astroquery', 'virtual observatory']
+                else:
+                    disabled_loaders = []
             for name, Resolver in loader_resolver_registry.members.items():
+                if name in disabled_loaders:
+                    continue
                 loader = Resolver(app=self,
                                   open_callback=open,
                                   close_callback=close,
@@ -3507,6 +3560,96 @@ class Application(VuetifyTemplate, HubListener):
                                       "implemented for the deconfigged app")
         for loader in self._jdaviz_helper.loaders.values():
             loader.format._update_items()
+
+    def _add_custom_loader(self, resolver, input, name, open_in_tray=False, load=False,
+                           format=None):
+        """
+        Private method to programmatically add a custom loader with preset input.
+
+        This creates a loader entry that appears in the source dropdown but doesn't
+        show the input UI (similar to server_is_remote behavior).
+
+        Parameters
+        ----------
+        resolver : str
+            Resolver type ('file', 'object', or 'url').
+        input : str or object
+            Input for the resolver. For 'file', an absolute path to the file.
+            For 'object', any Python object. For 'url', a URL string.
+        name : str
+            Name for this loader.
+        open_in_tray : bool, optional
+            Whether to set this as the selected loader in the tray.
+        load : bool, optional
+            Whether to immediately load the data after adding the loader.
+        format : str or list of str, optional
+            If provided, restrict the format dropdown to only include the specified
+            format(s). Other formats will not be attempted or shown.
+
+        Returns
+        -------
+        loader
+            The new loader user API object.
+        """
+        # Map resolver names to preset classes
+        preset_resolver_map = {
+            'file': PresetFileResolver,
+            'object': PresetObjectResolver,
+            'url': PresetURLResolver
+        }
+
+        if resolver not in preset_resolver_map:
+            raise ValueError(f"Unknown resolver type '{resolver}'. "
+                             f"Must be one of: {', '.join(preset_resolver_map.keys())}")
+
+        PresetResolverClass = preset_resolver_map[resolver]
+
+        # Ensure unique name
+        existing_names = [item['name'] for item in self.state.loader_items]
+        if name in existing_names:
+            raise ValueError(f"Loader name must be unique. A loader with the name '{name}' already exists.")  # noqa
+
+        # Define callbacks (same as in initialization)
+        def open():
+            self.state.drawer_content = 'loaders'
+            self.state.add_subtab = 0
+
+        def close():
+            self.state.loader_selected = ''
+
+        def set_active_loader(res):
+            self.state.loader_selected = res
+
+        # Create the preset resolver instance
+        loader = PresetResolverClass(
+            input,
+            title=name,
+            app=self,
+            open_callback=open,
+            close_callback=close,
+            set_active_loader_callback=set_active_loader,
+            format=format
+        )
+
+        # Set the registry label to match the name for open_in_tray to work
+        loader._registry_label = name
+
+        # Add to loader_items
+        self.state.loader_items.append({
+            'name': name,
+            'label': name,
+            'requires_api_support': loader.requires_api_support,
+            'widget': "IPY_MODEL_" + loader.model_id,
+            'api_methods': loader.api_methods,
+        })
+
+        ldr = self._jdaviz_helper.loaders[name]
+        if open_in_tray:
+            ldr.open_in_tray()
+        if load:
+            ldr.load()
+
+        return ldr
 
     def update_tray_items_from_registry(self):
         if self.config != 'deconfigged':

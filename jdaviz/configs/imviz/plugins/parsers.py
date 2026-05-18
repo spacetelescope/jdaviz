@@ -54,7 +54,7 @@ def parse_data(app, file_obj, ext=None, data_label=None,
 
     Parameters
     ----------
-    app : `~jdaviz.app.Application`
+    app : `~jdaviz.app.PrivateApplication`
         The application-level object used to reference the viewers.
 
     file_obj : str or obj

@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 
 from jdaviz import __version__
 from jdaviz.configs.default.plugins.about.about import latest_version_from_pypi
@@ -16,15 +17,31 @@ def test_get_latest_version_from_pypi():
     assert v is None
 
 
-# NOTE: Theoretically now all the tests in jdaviz are remote data tests
-# because all the viz loads About plugin and About plugin always polls
-# PyPI for the latest release version. If that bothers you or PyPI
-# starts blocking us as spammer, we can consider caching it at package level
-# but that introduces new non-standard package attributes.
 def test_about_basic(specviz_helper):
-    plg = specviz_helper.plugins["About"]._obj
+    """
+    Test that the About plugin populates version info lazily.
+
+    The PyPI check is deferred until the plugin is first opened,
+    so before simulating an open we expect the default 'unknown'.
+    """
+    plg = specviz_helper.plugins['About']._obj
 
     assert plg.jdaviz_version == __version__
-    assert isinstance(plg.jdaviz_pypi, str)
-    # not_is_latest can be non-deterministic because user can be running
-    # this test from an older version going forward, so we skip checking it.
+
+    # Before opening, pypi version has not been fetched yet.
+    assert plg.jdaviz_pypi == 'unknown'
+    assert plg._pypi_fetched is False
+
+    # Simulate the plugin being opened (triggers the lazy fetch).
+    # Mock the network call to avoid real HTTP requests in
+    # non-remote tests.
+    with patch(
+        'jdaviz.configs.default.plugins.about.about'
+        '.latest_version_from_pypi',
+        return_value='99.0.0',
+    ):
+        plg.plugin_opened = True
+
+    assert plg._pypi_fetched is True
+    assert plg.jdaviz_pypi == '99.0.0'
+    assert plg.not_is_latest is True

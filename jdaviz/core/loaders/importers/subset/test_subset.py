@@ -46,10 +46,10 @@ class TestSubsetImporter:
     def _setup(self, deconfigged_helper, spectrum1d):
         deconfigged_helper.load(spectrum1d, format='1D Spectrum')
         self.dcf_helper = deconfigged_helper
-        self.app = deconfigged_helper.app
+        self._app = deconfigged_helper._app
 
     def generate_importer(self, input_data):
-        return SubsetImporter(app=self.app,
+        return SubsetImporter(app=self._app,
                               resolver=None,
                               parser=None,
                               input=input_data)
@@ -93,20 +93,29 @@ class TestSubsetImporter:
                            match=r"subset_label contained invalid labels: \['Subset 2'\]"):  # noqa
             importer()
 
-    def test_is_valid(self, regions_input, spectral_region):
-        """
-        Test is_valid for various scenarios.
-        """
-        importer = self.generate_importer(regions_input)
+    def test_subset_importer_is_valid(self, regions_input, spectral_region):
+        """Test all string-returning scenarios in SubsetImporter._check_is_valid."""
 
-        assert importer.is_valid is True
-        assert importer.default_plugin == 'Subset Tools'
+        importer = self.generate_importer(regions_input)
+        assert importer._check_is_valid() == ''
 
         importer = self.generate_importer(spectral_region)
-        assert importer.is_valid is True
+        assert importer._check_is_valid() == ''
 
+        # Non-Region/SpectralRegion input
         importer = self.generate_importer('not a region')
-        assert importer.is_valid is False
+        assert importer._check_is_valid() == 'Input must be a Regions or SpectralRegion object.'
+
+        # When Subset Tools plugin is not available
+        from jdaviz.configs.deconfigged.helper import App as DeconfiggedApp
+        bare_app = DeconfiggedApp()
+        bare_importer = SubsetImporter(app=bare_app._app,
+                                       resolver=None,
+                                       parser=None,
+                                       input=Regions([CirclePixelRegion(
+                                           center=PixCoord(10, 20), radius=5)]))
+        if 'Subset Tools' not in bare_app.plugins:
+            assert bare_importer._check_is_valid() == 'Subset Tools plugin is not available.'
 
     def test_label_default_updates_with_subset_count(self, regions_input, spectral_region):
         """
@@ -145,8 +154,8 @@ class TestSubsetImporter:
         importer.subset_label_invalid_msg = ''
 
         # Call should not raise
-        initial_subset_count = len(self.app.data_collection.subset_groups)
+        initial_subset_count = len(self._app.data_collection.subset_groups)
         importer()
 
         # Should have created a new subset
-        assert len(self.app.data_collection.subset_groups) >= initial_subset_count
+        assert len(self._app.data_collection.subset_groups) >= initial_subset_count

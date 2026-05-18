@@ -4,14 +4,19 @@ from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 from numpy.testing import assert_allclose
 
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, create_example_gwcs
+from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, create_example_gwcs
 
 
-class TestPanZoomTools(BaseImviz_WCS_WCS):
+class TestPanZoomTools(BaseDeconfiggedImage_WCS_WCS):
     def test_panzoom_tools(self):
-        v = self.imviz.default_viewer._obj.glue_viewer
-        v2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs_1[SCI,1]')
+        v = self.viewer
+        v2 = self.helper.new_viewers['Image']()
+
+        # get glue viewer from second image viewer
+        v2 = self.helper.viewers['Image (1)']._obj.glue_viewer
+
+        self.helper._app.add_data_to_viewer('Image', 'has_wcs_1')
+        self.helper._app.add_data_to_viewer('Image (1)', 'has_wcs_2')
 
         t = v.toolbar.tools['jdaviz:boxzoommatch']
         # original limits (x_min, x_max, y_min, y_max): -0.5 9.5 -0.5 9.5
@@ -148,7 +153,7 @@ def test_compass_open_while_load(imviz_helper):
 
     # Should not crash even if Compass is open in tray.
     imviz_helper.load_data(np.ones((2, 2)))
-    assert len(imviz_helper.app.data_collection) == 1
+    assert len(imviz_helper._app.data_collection) == 1
 
 
 def test_tool_visibility(imviz_helper):
@@ -162,7 +167,8 @@ def test_tool_visibility(imviz_helper):
     tb.active_tool_id = 'jdaviz:boxzoom'
 
     imviz_helper.create_image_viewer()
-    imviz_helper.app.set_data_visibility('imviz-1', imviz_helper.app.data_collection[0].label, True)
+    data_label = imviz_helper._app.data_collection[0].label
+    imviz_helper._app.set_data_visibility('imviz-1', data_label, True)
 
     assert tb.tools_data['jdaviz:boxzoommatch']['visible']
     assert tb.active_tool_id == 'jdaviz:boxzoom'

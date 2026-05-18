@@ -28,7 +28,7 @@ def test_data_retrieval(cubeviz_helper):
 
     # two ways of retrieving data from the viewer.
     # They should return the same spectral values
-    a1 = cubeviz_helper.app.get_viewer(spectrum_viewer_reference_name).data()
+    a1 = cubeviz_helper._app.get_viewer(spectrum_viewer_reference_name).data()
     a2 = cubeviz_helper.datasets["Spectrum (sum)"].get_data()
     # Test the old API as well
     a3 = cubeviz_helper.get_data("Spectrum (sum)")

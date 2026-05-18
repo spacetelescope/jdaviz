@@ -4,6 +4,8 @@ from copy import deepcopy
 
 import astropy.units as u
 from astropy.modeling import fitting
+from glue.core.message import (DataCollectionAddMessage,
+                               DataCollectionDeleteMessage)
 from specutils import Spectrum
 from specutils.fitting import fit_lines
 from specutils.utils import QuantityModel
@@ -57,8 +59,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``cube_fit``
-      Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
-      collapsed spectrum.
+      Only exposed for Cubeviz and generalized Jdaviz.  Whether to fit the model to the cube
+      instead of to the collapsed spectrum.
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to fit the model.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
@@ -112,6 +114,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     display_order = Bool(False).tag(sync=True)
 
     cube_fit = Bool(False).tag(sync=True)
+    has_cube_data = Bool(False).tag(sync=True)
 
     # residuals (non-cube fit only)
     residuals_calculate = Bool(False).tag(sync=True)
@@ -140,6 +143,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Fit an analytic model to data or a subset of data.'
+
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/model_fitting.html'  # noqa
 
         # create the label first so that when model_component defaults to the first selection,
         # the label automatically defaults as well
@@ -189,7 +195,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                             selected='fitter_selected')
         self._enforce_spline_fitter()
 
-        if self.config == 'cubeviz':
+        if self.config in ('cubeviz', 'deconfigged'):
             # use mean whenever extracting the 1D spectrum of a cube to initialize model params
             self.dataset._spectral_extraction_function = 'Mean'
         # by default, require entries to be in spectrum-viewer (not other cubeviz images, etc)
@@ -204,7 +210,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                        'residuals_label_auto', 'residuals_label_invalid_msg')
 
         headers = ['model', 'data_label', 'spectral_subset', 'equation']
-        if self.config == 'cubeviz':
+        if self.config in ('cubeviz', 'deconfigged'):
             headers += ['cube_fit']
 
         self.table.headers_avail = headers
@@ -218,6 +224,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=self._check_has_cube_data)
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=self._check_has_cube_data)
 
         self.parallel_n_cpu = None
         if self.config == "deconfigged":
@@ -228,13 +238,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @property
     def _default_spectrum_viewer_reference_name(self):
         return getattr(
-            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+            self._app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
         )
 
     @property
     def _default_flux_viewer_reference_name(self):
         return getattr(
-            self.app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
+            self._app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
         )
 
     @property
@@ -244,7 +254,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @property
     def user_api(self):
         expose = ['dataset']
-        if self.config == "cubeviz":
+        if self.config in ('cubeviz', 'deconfigged'):
             expose += ['cube_fit']
         expose += ['spectral_subset', 'model_component',
                    'poly_order', 'model_component_label', 'model_components',
@@ -393,6 +403,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # Model fitted to cube, return image viewer
             if self.config == 'cubeviz':
                 return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
+            elif self.config == 'deconfigged':
+                return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'},
+                        {'label': 'Image', 'reference': 'imviz-image-viewer'}]
             else:
                 return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
         else:
@@ -403,8 +416,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def _cube_fit_changed(self, event={}):
         self._update_viewer_filters(event=event)
 
-        sb_unit = self.app._get_display_unit('sb')
-        spectral_y_unit = self.app._get_display_unit('spectral_y')
+        sb_unit = self._app._get_display_unit('sb')
+        spectral_y_unit = self._app._get_display_unit('spectral_y')
         if event.get('new'):
             self._units['y'] = str(sb_unit)
             self.dataset.add_filter('is_flux_cube')
@@ -630,12 +643,12 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Need to set the units the first time we initialize a model component, after this
         # we listen for display unit changes
         if self._units.get('x', '') == '':
-            self._units['x'] = str(self.app._get_display_unit('spectral'))
+            self._units['x'] = str(self._app._get_display_unit('spectral'))
         if self._units.get('y', '') == '':
             if self.cube_fit:
-                self._units['y'] = str(self.app._get_display_unit('sb'))
+                self._units['y'] = str(self._app._get_display_unit('sb'))
             else:
-                self._units['y'] = str(self.app._get_display_unit('spectral_y'))
+                self._units['y'] = str(self._app._get_display_unit('spectral_y'))
 
         if model_comp == "Polynomial1D":
             # self.poly_order is the value in the widget for creating
@@ -664,10 +677,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 # with jdaviz default units (based on x/y units) but need to
                 # convert the default parameter unit to these units
                 if default_param.unit != default_units:
-                    pixar_sr = self.app.data_collection[0].meta.get('PIXAR_SR', 1)
-                    viewer = self.app.get_viewer("spectrum-viewer")
+                    pixar_sr = self._app.data_collection[0].meta.get('PIXAR_SR', 1)
+                    viewer = self._app.get_viewer("spectrum-viewer")
                     # TODO: I suspect this doesn't actually work, but never gets called -Ricky
-                    cube_wave = viewer.slice_value * u.Unit(self.app._get_display_unit('spectral'))
+                    cube_wave = viewer.slice_value * u.Unit(self._app._get_display_unit('spectral'))
                     equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
 
                     initial_val = flux_conversion_general([default_param.value],
@@ -680,10 +693,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         if self.cube_fit:
             # We need to input the whole cube when initializing the model so the units are correct.
-            if self.dataset_selected in self.app.data_collection.labels:
-                data = self.app.data_collection[self.dataset_selected].get_object(statistic=None)
+            if self.dataset_selected in self._app.data_collection.labels:
+                data = self._app.data_collection[self.dataset_selected].get_object(statistic=None)
             else:  # User selected some subset from spectrum viewer, just use original cube
-                data = self.app.data_collection[0].get_object(statistic=None)
+                # TODO: generalize this for deconfigged
+                data = self._app.data_collection[0].get_object(statistic=None)
             spatial_axes = [0, 1, 2]
             spatial_axes.remove(data.spectral_axis_index)
             masked_spectrum = self._apply_subset_masks(data, self.spectral_subset,
@@ -787,7 +801,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         if axis == 'y':
             # The units have to be in surface brightness for a cube fit.
-            uc = self.app._jdaviz_helper.plugins.get('Unit Conversion', None)
+            uc = self._app._jdaviz_helper.plugins.get('Unit Conversion', None)
             if uc is None:
                 return
             if not self.cube_fit:
@@ -798,7 +812,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     # and specviz so this check doesn't have to be done
                     unit = u.Unit(uc.spectral_y_unit)
                 else:
-                    unit = u.Unit(self.app._get_display_unit('spectral_y'))
+                    unit = u.Unit(self._app._get_display_unit('spectral_y'))
 
             else:
                 if unit != uc._obj.sb_unit_selected:
@@ -806,7 +820,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
                     return
                 elif msg.axis == 'flux' and uc._obj.has_sb:
-                    unit = u.Unit(self.app._get_display_unit('sb'))
+                    unit = u.Unit(self._app._get_display_unit('sb'))
 
         if 'x' in self._units and 'y' in self._units:
             # Not populated yet on startup
@@ -1132,7 +1146,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         for label in models:
             data_label = label.split(" (")[0]
             if data_label not in data_shapes:
-                data_shapes[data_label] = self.app.data_collection[data_label].data.shape
+                data_shapes[data_label] = self._app.data_collection[data_label].data.shape
 
         param_dict = {}
         parameters_cube = {}
@@ -1284,7 +1298,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Disable computing model if cube_fit is active and
         # Spline1D component is present in the equation
-        if self.app.config == 'cubeviz' and self.cube_fit:
+        if self._app.config in ('cubeviz', 'deconfigged') and self.cube_fit:
             id_to_type = {cm['id']: cm.get('model_type') for cm in self.component_models}
             has_spline_in_eq = any(id_to_type.get(name) == 'Spline1D'
                                    for name in self.equation_components)
@@ -1358,10 +1372,20 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         self.model_equation_invalid_msg = ''
 
+    def _check_has_cube_data(self, event={}):
+        for dataset in self._app.data_collection:
+            if dataset.ndim == 3:
+                self.has_cube_data = True
+                break
+        else:
+            self.has_cube_data = False
+            # Make sure cube_fit is also False
+            self.cube_fit = False
+
     @observe("dataset_selected", "dataset_items", "cube_fit")
     def _set_default_results_label(self, event={}):
         label_comps = []
-        if hasattr(self, 'dataset') and (len(self.dataset.labels) > 1 or self.app.config == 'mosviz'):  # noqa
+        if hasattr(self, 'dataset') and (len(self.dataset.labels) > 1 or self._app.config == 'mosviz'):  # noqa
             label_comps += [self.dataset_selected]
         label_comps += ["model"]
         self.results_label_default = " ".join(label_comps)
@@ -1615,10 +1639,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self._warn_if_no_equation():
             return
 
-        if self.dataset_selected in self.app.data_collection.labels:
-            data = self.app.data_collection[self.dataset_selected]
+        if self.dataset_selected in self._app.data_collection.labels:
+            data = self._app.data_collection[self.dataset_selected]
         else:  # User selected some subset from spectrum viewer, just use original cube
-            data = self.app.data_collection[0]
+            # TODO: generalize this for deconfigged
+            data = self._app.data_collection[0]
 
         # First, ensure that the selected data is cube-like. It is possible
         # that the user has selected a pre-existing 1d data object.
@@ -1639,7 +1664,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         spatial_axes = [0, 1, 2]
         spatial_axes.remove(spec.spectral_axis_index)
 
-        sb_unit = self.app._get_display_unit('sb')
+        sb_unit = self._app._get_display_unit('sb')
         if spec.flux.unit != sb_unit:
             # ensure specutils has access to jdaviz custom unit equivalencies
             pixar_sr = spec.meta.get('_pixel_scale_factor', None)

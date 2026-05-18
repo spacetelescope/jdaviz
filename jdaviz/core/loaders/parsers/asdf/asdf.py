@@ -18,20 +18,16 @@ __all__ = ['ASDFParser']
 @loader_parser_registry('asdf')
 class ASDFParser(BaseParser):
 
-    @property
-    def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz',
-                                   'specviz', 'specviz2d',
-                                   'rampviz'):
+    def _check_is_valid(self):
+        # generalized jdaviz isn't the valid config name, but we can
+        # drop it here for the string output.
+        accepted_configs = ['imviz', 'specviz', 'specviz2d', 'rampviz', 'generalized jdaviz']
+        if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
+            return f"asdf format is only supported in {', '.join(accepted_configs)}."
 
-        try:
-            self.output
-        except Exception:
-            return False
-
-        return True
+        _ = self.output
+        return ''
 
     @cached_property
     def output(self):
@@ -41,7 +37,7 @@ class ASDFParser(BaseParser):
             except (ImportError, TypeError) as e:  # noqa: F841
                 warnings.warn(
                     f"{self.input} could not be opened with the `roman_datamodels` package, "
-                    "as it gave the following error: {e}. This file will be loaded with the `asdf` directly",  # noqa: E501
+                    f"as it gave the following error: {e}. This file will be loaded with the `asdf` package directly",  # noqa: E501
                     UserWarning
                 )
         else:

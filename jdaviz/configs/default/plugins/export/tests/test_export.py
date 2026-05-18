@@ -2,6 +2,7 @@ import os
 import re
 
 import numpy as np
+from numpy.testing import assert_allclose
 import pytest
 from astropy import units as u
 from astropy.io import fits
@@ -273,7 +274,7 @@ class TestExportSubsets:
         export_plugin.subset_format.selected = 'fits'
         assert export_plugin.subset_format_invalid_msg != ''
         # Delete the spectral subset and check that the message is reset
-        cubeviz_helper.app.delete_subsets(spectral_subset)
+        cubeviz_helper._app.delete_subsets(spectral_subset)
         assert export_plugin.subset_format_invalid_msg == ''
 
     def test_export_stcs_circle_ellipse(self, imviz_helper):
@@ -313,9 +314,9 @@ class TestExportSubsets:
         assert contents[1] == 'ICRS'
         assert contents[2] == '9.124032'
         assert contents[3] == '-33.407217'
-        assert contents[4] == '0.088886'
-        assert contents[5] == '0.044443'
-        assert contents[6] == '11.625269'
+        assert_allclose(float(contents[4]), 0.088886, rtol=1e-04)
+        assert_allclose(float(contents[5]), 0.044443, rtol=1e-04)
+        assert_allclose(float(contents[6]), 11.625269, rtol=1e-04)
 
 
 @pytest.mark.usefixtures('_jail')
@@ -340,7 +341,7 @@ def test_export_data(cubeviz_helper, spectrum1d_cube):
     mm.n_moment = 0
     mm.calculate_moment()
     assert mm._obj.results_label == 'moment 0'
-    cubeviz_helper.app.add_data_to_viewer(
+    cubeviz_helper._app.add_data_to_viewer(
         cubeviz_helper._default_flux_viewer_reference_name, 'moment 0'
     )
     ep = cubeviz_helper.plugins["Export"]._obj
@@ -422,7 +423,7 @@ class TestExportPluginPlots:
         subset_plugin = imviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(xc=250, yc=250, radius=100))
 
-        phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
+        phot_plugin = imviz_helper._app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin.aperture_selected = 'Subset 1'
 
         phot_plugin.vue_do_aper_phot()

@@ -116,52 +116,52 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
     def test_non_wcs_layer_labels(self):
         from jdaviz.utils import get_wcs_only_layer_labels
 
-        assert len(self.imviz.app.data_collection) == 2
-        assert len(self.imviz.app.state.layer_icons) == 2
+        assert len(self.imviz._app.data_collection) == 2
+        assert len(self.imviz._app.state.layer_icons) == 2
 
         self.imviz.link_data(align_by="wcs")
-        assert len(self.imviz.app.data_collection) == 3
-        assert len(self.imviz.app.state.layer_icons) == 3
+        assert len(self.imviz._app.data_collection) == 3
+        assert len(self.imviz._app.state.layer_icons) == 3
 
         # Confirm the WCS-only layer is created by WCS-linking .
-        assert len(get_wcs_only_layer_labels(self.imviz.app)) == 1
+        assert len(get_wcs_only_layer_labels(self.imviz._app)) == 1
 
         # Load a WCS-only layer, bypassing normal labeling scheme.
         ndd = wcs_utils._get_rotated_nddata_from_label(
-            app=self.imviz.app,
+            app=self.imviz._app,
             data_label="fits_wcs[DATA]",
             rotation_angle=5 * u.deg
         )
         self.imviz.load_data(ndd, data_label='ndd')
-        assert self.imviz.app.data_collection[3].label == 'ndd'
+        assert self.imviz._app.data_collection[3].label == 'ndd'
 
         # Confirm that all data in collection are labeled.
-        assert len(self.imviz.app.data_collection) == 4  # 3 + 1
+        assert len(self.imviz._app.data_collection) == 4  # 3 + 1
         # NOTE: should be 4 once wcs-only layer is parsed through loaders
-        assert len(self.imviz.app.state.layer_icons) == 3  # 4
+        assert len(self.imviz._app.state.layer_icons) == 3  # 4
 
         # Confirm the new WCS-only layer is logged.
-        assert len(get_wcs_only_layer_labels(self.imviz.app)) == 2
+        assert len(get_wcs_only_layer_labels(self.imviz._app)) == 2
 
         # Load a second WCS-only layer.
         ndd2 = wcs_utils._get_rotated_nddata_from_label(
-            app=self.imviz.app,
+            app=self.imviz._app,
             data_label="fits_wcs[DATA]",
             rotation_angle=45 * u.deg
         )
         self.imviz.load_data(ndd2, data_label="rot: 45.00 deg")
-        assert self.imviz.app.data_collection[4].label == "rot: 45.00 deg"
+        assert self.imviz._app.data_collection[4].label == "rot: 45.00 deg"
 
         # Confirm that all data in collection are labeled.
-        assert len(self.imviz.app.data_collection) == 5  # 3 + 2
+        assert len(self.imviz._app.data_collection) == 5  # 3 + 2
         # NOTE: should be 5 once wcs-only layer is parsed through loaders
-        assert len(self.imviz.app.state.layer_icons) == 3  # 5
+        assert len(self.imviz._app.state.layer_icons) == 3  # 5
 
         # Confirm the second WCS-only layer is logged
-        assert len(get_wcs_only_layer_labels(self.imviz.app)) == 3
+        assert len(get_wcs_only_layer_labels(self.imviz._app)) == 3
 
         # First entry is image data and the default reference data.
-        assert self.imviz.app.state.layer_icons["fits_wcs[DATA]"] == "a"
+        assert self.imviz._app.state.layer_icons["fits_wcs[DATA]"] == "a"
         assert self.viewer.state.reference_data.label == base_wcs_layer_label
 
 
@@ -169,7 +169,7 @@ def test_get_rotated_nddata_from_label_no_wcs(imviz_helper):
     a = np.zeros((2, 2), dtype=np.int8)
     imviz_helper.load_data(a, data_label="no_wcs")
     with pytest.raises(ValueError, match=r".*has no WCS for rotation"):
-        wcs_utils._get_rotated_nddata_from_label(imviz_helper.app, "no_wcs", 0 * u.deg)
+        wcs_utils._get_rotated_nddata_from_label(imviz_helper._app, "no_wcs", 0 * u.deg)
 
 
 def test_compute_scale():

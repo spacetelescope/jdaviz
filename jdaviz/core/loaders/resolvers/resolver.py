@@ -1,4 +1,6 @@
 import os
+import re
+import threading
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
@@ -27,7 +29,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         UnitSelectPluginComponent,
                                         ViewerSelect,
                                         with_spinner,
-                                        _is_image_viewer)
+                                        _is_image_viewer,
+                                        ValidatorMixin)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
@@ -95,49 +98,47 @@ class FormatSelect(SelectPluginComponent):
             parser_input = self.plugin.output
         except Exception as e:
             self.items = []
-            self._invalid_importers = f'resolver exception: {e}'
+            self._invalid_importers = f'Resolver exception: {e}'
             self._apply_default_selection()
             return
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
-                this_parser = Parser(self.plugin.app, parser_input)
+                this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
-                try:
-                    if this_parser.is_valid:
+                if this_parser.is_valid:
+                    try:
                         importer_input = this_parser.output
-                    else:
-                        self._invalid_importers[parser_name] = 'not valid'
-                        importer_input = None
-                except Exception as e:
-                    self._invalid_importers[parser_name] = f'parser exception: {e}'
-                    importer_input = None
-
-                if importer_input is None:
-                    self._invalid_importers.setdefault(parser_name, 'importer_input is None')
+                    except Exception as e:
+                        self._invalid_importers[parser_name] = f'Parser exception: {e}'
+                        this_parser._cleanup()
+                        continue
+                else:
+                    self._invalid_importers[parser_name] = this_parser.is_valid.message
+                    self._invalid_importers.setdefault(parser_name, this_parser.is_valid.message)
                     this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     label = f"{parser_name} > {importer_name}"
                     if getattr(self.plugin, '_restrict_to_formats', None) is not None and \
                             importer_name not in self.plugin._restrict_to_formats:
-                        self._invalid_importers[label] = 'not matching format restriction'  # noqa
+                        self._invalid_importers[label] = 'Not matching format restriction'  # noqa
                         continue
                     try:
-                        this_importer = Importer(app=self.plugin.app,
+                        this_importer = Importer(app=self.plugin._app,
                                                  resolver=self.plugin,
                                                  parser=this_parser,
                                                  input=importer_input)
                     except Exception as e:  # nosec
-                        self._invalid_importers[label] = f'importer exception: {e}'
+                        self._invalid_importers[label] = f'Importer exception: {e}'
                         continue
                     if self.debug:
                         self._dbg_importers[label] = this_importer
                     if (self.plugin._restrict_to_target is not None and
                             this_importer.target.get('label') != self.plugin._restrict_to_target):
                         # skip importers that do not match the target
-                        self._invalid_importers[label] = 'not matching target'
+                        self._invalid_importers[label] = 'Not matching target'
                         continue
                     if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
@@ -174,9 +175,12 @@ class FormatSelect(SelectPluginComponent):
                             # target filters
                             self._importers[importer_name] = this_importer
                     else:
-                        self._invalid_importers[label] = 'not valid'
+                        self._invalid_importers[label] = this_importer.is_valid.message
 
-        self.items = all_formats
+        # Sort to move Catalog to the end of the list
+        catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
+        other_formats = [f for f in all_formats if f['label'] != 'Catalog']
+        self.items = other_formats + catalog_formats
         self._apply_default_selection()
 
 
@@ -235,7 +239,8 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin):
+class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin,
+                   ValidatorMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
@@ -270,6 +275,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     server_is_remote = Bool(False).tag(sync=True)
     # Hide the resolver UI (title, input fields, query results) and show only importer selection
     hide_resolver = Bool(False).tag(sync=True)
+    # Hide only the resolver input fields (for preset loaders), but still show query results
+    hide_resolver_inputs = Bool(False).tag(sync=True)
 
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
@@ -301,27 +308,28 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.file_table.enable_clear = False
         self.file_table.show_if_empty = False
         self.file_table.show_rowselect = True
-        self.file_table.item_key = "url"
+        self.file_table.item_key = "location"
         self.file_table.multiselect = False
+        self.file_table.server_pagination = True
         self.file_table._selected_rows_changed_callback = self.on_file_select_changed
 
         # Setup footprint selection
         if self.app is not None:
             self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
-            self.app.hub.subscribe(self, FootprintOverlayClickMessage,
-                                   handler=self._on_region_select)
+            self._app.hub.subscribe(self, FootprintOverlayClickMessage,
+                                    handler=self._on_region_select)
             self.image_data_loaded = any(layer_is_image_data(data)
-                                         for data in self.app.data_collection)
-            self.app.hub.subscribe(self, DataCollectionAddMessage,
-                                   handler=self._on_collection_data_added)
-            self.app.hub.subscribe(self, DataCollectionDeleteMessage,
-                                   handler=self._on_data_removed)
-            self.app.hub.subscribe(self, LinkUpdatedMessage,
-                                   handler=self._on_link_type_updated)
-            self.app.hub.subscribe(self, ViewerAddedMessage,
-                                   handler=self._on_viewer_added)
-            self.app.hub.subscribe(self, AddDataMessage,
-                                   handler=self._on_viewer_data_added)
+                                         for data in self._app.data_collection)
+            self._app.hub.subscribe(self, DataCollectionAddMessage,
+                                    handler=self._on_collection_data_added)
+            self._app.hub.subscribe(self, DataCollectionDeleteMessage,
+                                    handler=self._on_data_removed)
+            self._app.hub.subscribe(self, LinkUpdatedMessage,
+                                    handler=self._on_link_type_updated)
+            self._app.hub.subscribe(self, ViewerAddedMessage,
+                                    handler=self._on_viewer_added)
+            self._app.hub.subscribe(self, AddDataMessage,
+                                    handler=self._on_viewer_data_added)
 
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
@@ -346,12 +354,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                                    selected='target_selected')
 
         # Ensure traitlet and app state are in sync at init
-        self.server_is_remote = self.app.state.settings.get('server_is_remote',
-                                                            self.server_is_remote)
+        self.server_is_remote = self._app.state.settings.get('server_is_remote',
+                                                             self.server_is_remote)
 
         # Set up bidirectional synchronization
         # Listen for changes to app.state.settings and update traitlet
-        self.app.state.add_callback('settings', self._on_app_settings_changed)
+        self._app.state.add_callback('settings', self._on_app_settings_changed)
 
     @default('observation_table')
     def _default_observation_table(self):
@@ -359,11 +367,47 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                      name='observation_table',
                      title='Observations')
 
+    def _file_table_col_visible(self, colname):
+        """
+        Determine if a column should be visible in the file table.
+
+        Parameters
+        ----------
+        colname : str
+            The name of the column to check.
+
+        Returns
+        -------
+        bool
+            True if the column should be visible, False otherwise.
+        """
+        hide_location = self.app.state.settings.get('hide_file_table_location_column', False)
+        if colname == 'location' and hide_location:
+            return False
+        return True
+
     @default('file_table')
     def _default_file_table(self):
-        return Table(self,
-                     name='file_table',
-                     title='Files')
+        file_table = Table(self,
+                           name='file_table',
+                           title='Files')
+
+        # Override _new_col_visible to hide 'url' column if setting is enabled
+        file_table._new_col_visible = self._file_table_col_visible
+
+        return file_table
+
+    @observe('file_table_populated')
+    def _on_file_table_populated(self, change={}):
+        """Remove location from headers_avail if hiding is enabled."""
+        if not change.get('new', False):
+            return
+        hide_location = self.app.state.settings.get('hide_file_table_location_column', False)
+        if hide_location and 'location' in self.file_table.headers_avail:
+            # Remove location from headers_avail (dropdown) but keep in data
+            self.file_table.headers_avail = [
+                h for h in self.file_table.headers_avail if h != 'location'
+            ]
 
     def _on_app_settings_changed(self, new_settings_dict):
         """
@@ -376,8 +420,39 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         """
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
+        # Update file table location column visibility if the setting changed
+        hide_location = new_settings_dict.get('hide_file_table_location_column', False)
+
+        # Update the _new_col_visible function with current settings
+        self.file_table._new_col_visible = self._file_table_col_visible
+
+        # Check if location column exists in the actual data
+        location_in_data = (self.file_table._qtable is not None and
+                            'location' in self.file_table._qtable.colnames)
+
+        if location_in_data:
+            if hide_location:
+                # Remove location from both available and visible headers
+                self.file_table.headers_avail = [
+                    h for h in self.file_table.headers_avail if h != 'location'
+                ]
+                self.file_table.headers_visible = [
+                    h for h in self.file_table.headers_visible if h != 'location'
+                ]
+            else:
+                # location should be available - add it back if missing
+                if 'location' not in self.file_table.headers_avail:
+                    self.file_table.headers_avail = (
+                        self.file_table.headers_avail + ['location']
+                    )
+                if 'location' not in self.file_table.headers_visible:
+                    self.file_table.headers_visible = (
+                        self.file_table.headers_visible + ['location']
+                    )
+
     def _on_collection_data_added(self, msg):
-        self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
+        self.image_data_loaded = any(layer_is_image_data(data)
+                                     for data in self._app.data_collection)
 
     def _on_viewer_data_added(self, msg):
         """
@@ -395,7 +470,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if not hasattr(msg, 'viewer_id') or msg.viewer_id is None:
             return
 
-        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        viewer = self._app.get_viewer_by_id(msg.viewer_id)
         if viewer is None:
             return
         # Check if it's an image viewer
@@ -418,7 +493,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self._add_footprints_to_viewer(viewer)
 
     def _on_data_removed(self, msg):
-        self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
+        self.image_data_loaded = any(layer_is_image_data(data)
+                                     for data in self._app.data_collection)
 
     def _on_link_type_updated(self, msg=None):
         self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
@@ -449,10 +525,20 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     setattr(user_api, k, v)
         return self
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the resolver input is valid (override in subclasses).
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         # override by subclass
-        return False  # pragma: nocover
+        return 'Not implemented.'  # pragma: nocover
 
     @property
     def input(self):
@@ -474,7 +560,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 and os.path.exists(parsed_input) and os.path.isfile(parsed_input)):
             # try to read into a table which could be a products list
             try:
-                parsed_input = astropyTable.read(parsed_input)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore",
+                                          message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
+                    parsed_input = astropyTable.read(parsed_input)
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, astropyTable):
@@ -491,11 +580,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         return None
 
     def _parsed_input_to_file_table(self, parsed_input_table):
-        if 'url' in parsed_input_table.colnames:
+        if 'location' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_url in ('URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
-            if map_to_url in parsed_input_table.colnames:
-                parsed_input_table.rename_column(map_to_url, 'url')
+        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
+            if map_to_location in parsed_input_table.colnames:
+                parsed_input_table.rename_column(map_to_location, 'location')
                 return parsed_input_table
         return None
 
@@ -525,7 +614,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # calls self.parse_input() on the subclass and caches
             parsed_input = self.parsed_input
             if not self.is_valid:
-                raise ValueError("input is not valid for the selected resolver.")
+                raise ValueError(self.is_valid.message)
         except Exception as e:  # nosec
             self.parsed_input_is_empty = False
             self.parsed_input_is_query = False
@@ -553,10 +642,25 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # if the input could be parsed as a table, try to interpret it as
         # either an observation table or file table. parsed_input_table
         # will be None if it could not be parsed as a table.
-        if self.treat_table_as_query and parsed_input_table is not None:
+        if parsed_input_table is not None:
             file_table = self._parsed_input_to_file_table(parsed_input_table)
             observation_table = self._parsed_input_to_observation_table(parsed_input_table)
-            if file_table is not None:
+
+            is_query = file_table is not None or observation_table is not None
+            if is_query and not self.treat_table_as_query:
+                # Keep parsed_input_is_query True so the toggle switch stays visible.
+                # Set everything else in the meantime.
+                self.parsed_input_is_resolvable = ''
+                self.parsed_input_is_empty = False
+                self.parsed_input_is_query = True
+                self.observation_table_populated = False
+                self.file_table_populated = False
+                self.observation_table._clear_table()
+                self.file_table._clear_table()
+                self._update_format_items()
+                return
+
+            if self.treat_table_as_query and file_table is not None:
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
 
@@ -571,14 +675,13 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.file_table_populated = True
                 return
 
-            observation_table = self._parsed_input_to_observation_table(parsed_input_table)
-            if observation_table is not None:
+            if self.treat_table_as_query and observation_table is not None:
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
 
                 for row in observation_table:
                     self.observation_table.add_item(row)
-                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible # noqa
+                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible  # noqa
                                                           if h not in ['s_region']]
 
                 # See 'input is empty' comment above
@@ -619,21 +722,27 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self._sync_footprint_selection_to_viewers()
         # Fetch products if rows are selected
         if len(self.observation_table.selected_rows) == 0:
-            self.app.hub.broadcast(SnackbarMessage("No observation currently selected",
-                                                   sender=self, color="warning"))
+            self._app.hub.broadcast(SnackbarMessage("No observation currently selected",
+                                                    sender=self, color="warning"))
+            self.file_table._clear_table()
+            self.file_table_populated = False
         else:
             datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
-            results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
-            file_table = self._parsed_input_to_file_table(results)
-            if file_table is not None:
-                self.file_table._clear_table()
-                for row in file_table:
-                    self.file_table.add_item(row)
-                self.file_table_populated = True
-            else:
-                self.app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
-                                                       sender=self, color="error"))
-                self.file_table_populated = False
+            threading.Thread(target=self._fetch_and_populate_file_table,
+                             args=(datasets,), daemon=True).start()
+
+    def _fetch_and_populate_file_table(self, datasets):
+        results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
+        file_table = self._parsed_input_to_file_table(results)
+        if file_table is not None:
+            self.file_table.selected_rows = []
+            self.file_table.selected_indices = []
+            self.file_table.set_all_items_from_table(file_table)
+            self.file_table_populated = True
+        else:
+            self._app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
+                                                    sender=self, color="error"))
+            self.file_table_populated = False
 
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""
@@ -682,21 +791,33 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 idx = self.observation_table.items.index(row)
                 currently_selected.add(idx)
 
-            # Toggle all found footprints as a group
-            # If ALL are selected, deselect ALL; otherwise select ALL
             selected_indices_set = set(selected_indices)
-            if selected_indices_set.issubset(currently_selected):
-                # All found footprints are already selected - deselect them all
-                currently_selected -= selected_indices_set
+            if msg.ctrl_key:
+                # If Ctrl key is pressed, toggle selection
+                if selected_indices_set.issubset(currently_selected):
+                    # All footprints selected by click were already selected,
+                    # so we remove them from the selected set to deselect:
+                    currently_selected.difference_update(selected_indices_set)
+                else:
+                    # At least one footprint selected by click was not already
+                    # selected, so we add them to the selected set:
+                    currently_selected.update(selected_indices_set)
             else:
-                # At least one is not selected - select them all
-                currently_selected |= selected_indices_set
+                # Default Click: Replace selection unless already selected
+                if not selected_indices_set.issubset(currently_selected):
+                    # Not selected - replace selection with just this footprint
+                    currently_selected = selected_indices_set
+                # If already selected, keep current selection (no change)
 
             # Update the table selection
             if currently_selected:
                 self.observation_table.select_rows(sorted(list(currently_selected)))
             else:
                 # Clear selection
+                self.observation_table.selected_rows = []
+        else:
+            # Clicked outside - deselect all
+            if msg.mode == 'skewer':
                 self.observation_table.selected_rows = []
 
     def _on_viewer_added(self, msg):
@@ -706,7 +827,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if not (self.parsed_input_is_query and self.treat_table_as_query):
             return
 
-        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        viewer = self._app.get_viewer_by_id(msg.viewer_id)
         if viewer is None:
             return
         # Check if it's an image viewer
@@ -741,10 +862,21 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def get_selected_url(self):
         if len(self.file_table.selected_rows) != 1:
             return None
-        url = self.file_table.selected_rows[0]['url']
-        if not url.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')):
-            return f'https://mast.stsci.edu/search/{self.guess_mission(url)}/api/v0.1/retrieve_product?product_name={url}'  # noqa
-        return url
+        location = self.file_table.selected_rows[0]['location']
+
+        # Check if it's a local file path (absolute, relative, or home directory)
+        # or if it starts with a recognized URL scheme
+        if (location.startswith(('/', './', '../', '~')) or  # Unix-style paths
+                # URL schemes
+                location.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')) or
+                (len(location) > 2 and location[1] == ':' and location[2] in ('\\', '/'))):
+            # Windows-style absolute path (e.g., C:\... or C:/...)
+            return location
+
+        # Otherwise, assume it's a MAST product name and construct the URL
+        mission = self.guess_mission(location)
+        return (f'https://mast.stsci.edu/search/{mission}/api/v0.1/'
+                f'retrieve_product?product_name={location}')
 
     @with_spinner('spinner', 'downloading file...')
     def _download_from_file_table(self):
@@ -878,7 +1010,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if self.close_callback is not None:
             self.close_callback()
         if close_sidebar:
-            self.app.state.drawer_content = ''
+            self._app.state.drawer_content = ''
 
     def open_in_tray(self):
         """
@@ -1017,7 +1149,7 @@ class BaseConeSearchResolver(BaseResolver):
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
         if (
-            len(self.app._jdaviz_helper.datasets) < 1
+            len(self._app._jdaviz_helper.datasets) < 1
             or viewer.state.reference_data is None
             or viewer.state.reference_data.coords is None
         ):
@@ -1025,7 +1157,7 @@ class BaseConeSearchResolver(BaseResolver):
             return
 
         # Obtain center point of the current image and convert into sky coordinates
-        if self.app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
+        if self._app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
             skycoord_center = SkyCoord(
                 viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
             )
@@ -1045,11 +1177,21 @@ class BaseConeSearchResolver(BaseResolver):
 
         self.viewer_centered = True
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid cone search configuration.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         # these resolvers do not accept any direct, (default_input = None), so can
         # always be considered valid
-        return True
+        return ''
 
 
 def _format_resolver_error(resolver_dict, formats=None, no_align=False):
@@ -1078,25 +1220,76 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
         Formatted text table of resolver names and their statuses.
     """
     # Width of the dot-aligned resolver/format name column
-    resolver_alignment_width = 40
+    resolver_alignment_width = 42
     if no_align:
         resolver_alignment_width = 2
-    # Maximum length for a (possibly trimmed) status string
-    truncation_len = 57
-    full_table_width = resolver_alignment_width + truncation_len
 
     def _matches_format(key):
         """
         Return True if *key* matches the requested formats filter.
+
+        Matches if any substring from the requested formats appears in the key,
+        or any substring from the key appears in a requested format, e.g.
+        if the requested format is '1D Spectrum' then it would match to
+        '1D Spectrum', 'Specutils.Spectrum', 'Specutils.Spectrum(array)', etc.
+        When key contains '>' (e.g., 'resolver > format'), only the part after
+        '>' is checked, and only direct/exact matches are performed (case-insensitive).
+        Splits both key and format by spaces, dots, and parentheses to extract substrings.
         """
-        if formats is None or not any(formats):
+        def _extract_substrings(text):
+            """
+            Extract substrings by splitting on spaces, dots, and parentheses.
+            """
+            substrings = set(re.split(r'[\s.()]+', text.lower()))
+            substrings.discard('')
+            return substrings
+
+        def _check_direct_match(_check_key, _formats):
+            """
+            Check if _check_key directly matches any format (case-insensitive).
+            """
+            check_key_lower = _check_key.lower()
+            for fmt in _formats:
+                if fmt is not None and fmt.lower() == check_key_lower:
+                    return True
+            return False
+
+        def _check_substring_match(_check_key, _formats):
+            """
+            Check if any substring from formats matches any substring from check_key.
+            """
+            key_substrings = _extract_substrings(_check_key)
+            for fmt in _formats:
+                if fmt is None:
+                    continue
+                # Direct substring match
+                if fmt.lower() in _check_key.lower():
+                    return True
+                # Substring intersection
+                fmt_substrings = _extract_substrings(fmt)
+                if fmt_substrings & key_substrings:
+                    return True
+            return False
+
+        if formats is None or not any(formats) or 'object' in formats:
             return True
-        return any(fmt in key for fmt in formats if fmt is not None)
+
+        # Check if there's an arrow separator
+        if '>' in key:
+            check_key = key.split('>')[-1].strip()
+            return _check_direct_match(check_key, formats)
+
+        # No arrow: use substring matching logic
+        return _check_substring_match(key, formats)
 
     lines = []
 
+    if 'object' in resolver_dict:
+        # ensure 'object' is always last in the output since it always has sub-entries
+        resolver_dict['object'] = resolver_dict.pop('object')
+
     for resolver_name, resolver_info in resolver_dict.items():
-        status_str = str(resolver_info)
+        status_str = str(resolver_info).replace('\n', ' ')
         if isinstance(resolver_info, dict):
             filtered = {k: v for k, v in resolver_info.items()
                         if _matches_format(k)}
@@ -1104,9 +1297,9 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
                 continue
 
             lines.append(f'\n{resolver_name}:')
-            lines.append('-' * full_table_width)
+            lines.append('-' * resolver_alignment_width)
             for fmt_name, status in filtered.items():
-                status_str = str(status)
+                status_str = str(status).replace('\n', ' ')
                 lines.append(f'  {fmt_name:.<{resolver_alignment_width - 2}}'
                              f' {status_str}')
             lines.append('')
@@ -1137,17 +1330,14 @@ def find_matching_resolver(app,
         try:
             this_resolver = Resolver.from_input(app, inp, format=format, **kwargs)
         except Exception as e:  # nosec
-            invalid_resolvers[resolver_name] = f'resolver exception: {e}'
+            invalid_resolvers[resolver_name] = f'Resolver exception: {e}'
             if resolver_name == 'url' and 'timeout' in str(e):
                 raise e
             continue
-        try:
-            is_valid = this_resolver.is_valid
-        except Exception as e:  # nosec
-            invalid_resolvers[resolver_name] = f'is_valid exception: {e}'
-            is_valid = False
-        if not is_valid:
-            invalid_resolvers.setdefault(resolver_name, 'not valid')
+
+        if not this_resolver.is_valid:
+            invalid_resolvers[resolver_name] = this_resolver.is_valid.message
+            invalid_resolvers.setdefault(resolver_name, this_resolver.is_valid.message)
             continue
 
         if target is not None:
@@ -1172,7 +1362,7 @@ def find_matching_resolver(app,
             valid_resolvers.append((this_resolver, resolver_name, fmt_item['label']))
 
     if len(valid_resolvers) == 0:
-        msg = (f'No valid loaders found for input. Tried:\n'
+        msg = (f'No valid loaders found for input. Tried:\n\n'
                f'{_format_resolver_error(invalid_resolvers, formats=formats)}\n')  # noqa
         raise ValueError(msg)
     elif len(valid_resolvers) > 1:
@@ -1181,8 +1371,8 @@ def find_matching_resolver(app,
         for resolver, resolver_name, fmt_label in valid_resolvers:
             if resolver_name not in valid_resolvers_dict:
                 valid_resolvers_dict[resolver_name] = {}
-            fmt_label = f"{fmt_label}: jd.load(obj_to_load, format='{fmt_label})'"
-            valid_resolvers_dict[resolver_name][fmt_label] = 'valid'
+            fmt_label = f"{fmt_label}: jd.load(obj_to_load, format='{fmt_label}')"
+            valid_resolvers_dict[resolver_name][fmt_label] = ''
 
         msg = (f'Multiple valid loaders found for input. '
                f'Please specify a format from the following as:\n'

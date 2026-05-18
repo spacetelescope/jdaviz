@@ -64,7 +64,7 @@
       ></v-text-field>
     </v-row>
 
-    <div v-if="config == 'cubeviz'">
+    <div v-if="config == 'cubeviz' || config == 'deconfigged'">
       <v-row>
         <v-divider></v-divider>
       </v-row>

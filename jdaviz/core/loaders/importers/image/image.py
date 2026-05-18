@@ -35,6 +35,7 @@ else:
     HAS_ROMAN_DATAMODELS = True
 
 MAX_N_SLICE = 16
+roman_extensions = ['data', 'err', 'dq', 'var_poisson']
 
 __all__ = ['ImageImporter', '_spatial_assign_component_type']
 
@@ -98,7 +99,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                               selected='align_by_selected',
                                               manual_options=['Pixels', 'WCS'])
 
-        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        align_plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
         if align_plg is not None:
             self.expose_align_by_options = True
             self.align_by.selected = align_plg.align_by.selected
@@ -113,12 +114,18 @@ class ImageImporter(BaseImporterToDataCollection):
         if isinstance(input, fits.hdu.image.ImageHDU):
             input = fits.HDUList([input])
 
-        input_is_roman = (HAS_ROMAN_DATAMODELS and
-                          isinstance(input, (rdd.ImageModel, rdd.DataModel)))
+        input_is_roman_imagemodel = (
+            HAS_ROMAN_DATAMODELS and isinstance(input, rdd.ImageModel)
+        )
+        input_is_roman_asdf = isinstance(input, asdf.AsdfFile) and 'roman' in input
+
         input_is_3d_array = isinstance(input, np.ndarray) and input.ndim == 3
-        self.input_has_extensions = (isinstance(input, fits.HDUList) or
-                                     input_is_roman or
-                                     input_is_3d_array)
+        self.input_has_extensions = any((
+            isinstance(input, fits.HDUList),
+            input_is_roman_imagemodel,
+            input_is_roman_asdf,
+            input_is_3d_array
+        ))
         if self.input_has_extensions:
             if isinstance(input, fits.HDUList):
                 filters = [_validate_fits_image2d]
@@ -130,9 +137,19 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'data_hash': create_data_hash(hdu),
                                 'obj': hdu}
                                for index, hdu in enumerate(input)]
-            elif input_is_roman:
-                filters = [_validate_roman_ext]
-                ext_options = [{'label': f"{index}: {key}",
+            elif input_is_roman_asdf:
+                filters = [_validate_asdf_image_ext]
+                ext_options = [{'label': key,
+                                'name': key,
+                                'ver': None,
+                                'name_ver': key,
+                                'index': index,
+                                'data_hash': create_data_hash(value),
+                                'obj': value}
+                               for index, (key, value) in enumerate(input['roman'].items())]
+            elif input_is_roman_imagemodel:
+                filters = [_validate_roman_imagemodel_ext]
+                ext_options = [{'label': key,
                                 'name': key,
                                 'ver': None,
                                 'name_ver': key,
@@ -185,46 +202,61 @@ class ImageImporter(BaseImporterToDataCollection):
             expose += ['extension']
         return ImporterUserApi(self, expose)
 
-    @property
-    def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid image data object.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
+        # generalized jdaviz isn't the valid config name, but we can
+        # drop it here for the string output.
+        accepted_configs = ['imviz', 'mastviz', 'cubeviz', 'rampviz', 'generalized jdaviz']
+        if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
+            return f"image importer is only supported in {', '.join(accepted_configs)}."
+
         # flat image, not a cube
         # isinstance NDData
         if self.input_has_extensions and not len(self.extension.choices):
-            return False
+            return 'No extensions available.'
 
         if isinstance(self.input, Spectrum):
             # Spectrum objects subclass NDData so they must be rejected explicitly
             supported_input_type = False
+
         elif isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
                                      NDData, np.ndarray, Data)):
             supported_input_type = True
+
         elif isinstance(self.input, (asdf.AsdfFile)) or \
                 (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))):
             supported_input_type = True
+
         else:
             supported_input_type = False
 
         if not supported_input_type:
-            return False
+            return 'Input is not a supported image data type.'
 
         # 3D numpy arrays are valid if they have extension choices set up
         if isinstance(self.input, np.ndarray) and self.input.ndim == 3:
-            return len(self.extension.choices) > 0
+            if len(self.extension.choices) > 0:
+                return ''
+            return 'No extensions available for 3D array.'
 
-        try:
-            output = self.output
-        except Exception:  # noqa
-            return False
-        else:
-            is_spectral = all([wcs_is_spectral(getattr(data, 'coords', None)) for data in output])
-            if is_spectral:
-                # Reject 2D spectra with spectral WCS coordinates
-                # that pass the FITS/NDData condition
-                return False
-            return True
+        output = self.output
+        is_spectral = all([wcs_is_spectral(getattr(data, 'coords', None)) for data in output])
+        if is_spectral:
+            # Reject 2D spectra with spectral WCS coordinates
+            # that pass the FITS/NDData condition
+            return 'Input has spectral WCS coordinates.'
+        return ''
 
     @observe('viewer_create_new_selected')
     def _on_create_new_viewer_selected(self, msg):
@@ -235,7 +267,7 @@ class ImageImporter(BaseImporterToDataCollection):
         Orientation plugin relevancy to change.
         """
 
-        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        align_plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
         if align_plg is None:
             self.expose_align_by_options = (msg['new'] == 'Image')
 
@@ -329,8 +361,9 @@ class ImageImporter(BaseImporterToDataCollection):
             else:
                 raise ValueError(f'Cannot load as image with ndim={input.ndim}')
         # asdf
-        elif (isinstance(input, asdf.AsdfFile)):
-            data = [_roman_asdf_2d_to_glue_data(input, ext='data')]
+        elif isinstance(input, asdf.AsdfFile):
+            data = [_roman_asdf_2d_to_glue_data(input, ext=ext)
+                    for ext in self.extension.selected_name]
         # roman data models
         elif HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)):
             data = [_roman_asdf_2d_to_glue_data(input, ext=ext)
@@ -425,7 +458,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
 
-        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        align_plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
         if align_plg is not None:
             align_plg.align_by.selected = self.align_by.selected
 
@@ -439,9 +472,14 @@ def _validate_fits_image2d(item):
             and not wcs_is_spectral(getattr(hdu, 'coords', None)))
 
 
-def _validate_roman_ext(item):
-    name = item.get('name')
-    return name in ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
+def _validate_asdf_image_ext(item):
+    value = item.get('obj')
+    return getattr(value, 'ndim', None) == 2
+
+
+def _validate_roman_imagemodel_ext(item):
+    value = item.get('obj')
+    return getattr(value, 'ndim', None) == 2
 
 
 def _hdu2data(hdu, hdulist, include_wcs=True):
@@ -540,7 +578,7 @@ def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
     else:
         ext_values = file_obj['roman'][ext]
     bunit = getattr(ext_values, 'unit', '')
-    component = Component(np.array(ext_values), units=bunit)
+    component = Component(np.asarray(ext_values), units=bunit)
     data.add_component(component=component, label=comp_label)
     data.meta.update(standardize_metadata(dict(meta)))
 

@@ -36,6 +36,8 @@ from sphinx.util.docutils import SphinxDirective
 
 # Suppress deprecation warning for data_labels during documentation build
 warnings.filterwarnings('ignore', message='.*data_labels function is deprecated.*')
+# Suppress deprecation warning for .app property during documentation build
+warnings.filterwarnings('ignore', message='.*app function is deprecated.*')
 
 from jdaviz import __version__
 
@@ -315,6 +317,8 @@ intersphinx_mapping.update({  # noqa: F405
     'traitlets': ('https://traitlets.readthedocs.io/en/stable/', None),
     'jwst': ('https://jwst-pipeline.readthedocs.io/en/stable/', None),
     'romancal': ('https://roman-pipeline.readthedocs.io/en/stable/', None),
+    'fsspec': ('https://filesystem-spec.readthedocs.io/en/latest/', None),
+    's3fs': ('https://s3fs.readthedocs.io/en/latest/', None),
 })
 
 # Options for linkcheck
@@ -370,6 +374,8 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
         'api': 'API',
         'url': 'URL',
     }
+
+    links.append({'text': 'Overview', 'href': os.path.join(directory, 'index')})
 
     for filename in sorted(os.listdir(dir_path)):
         if filename.endswith('.rst') and filename != 'index.rst' and filename != 'extensions.rst':
@@ -1168,6 +1174,102 @@ class PluginApiReferencesDirective(SphinxDirective):
             return [error_node]
 
 
+def extract_loader_options(option_type):
+    """
+    Dynamically extract loader option names from the docs/loaders/ directory.
+
+    Parameters
+    ----------
+    option_type : str
+        Either 'formats' or 'sources' to specify which subdirectory to scan.
+
+    Returns
+    -------
+    list
+        List of option names extracted from the RST file titles.
+    """
+    # Determine the base directory (docs root)
+    # Try multiple methods to ensure we get the right path
+    if hasattr(__file__, '__file__'):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        base_dir = os.path.dirname(os.path.abspath('conf.py'))
+
+    subdir = os.path.join(base_dir, 'loaders', option_type)
+    option_names = []
+
+    # Fallback lists in case extraction fails
+    fallbacks = {
+        'formats': ['1D Spectrum', '2D Spectrum', '3D Spectrum',
+                    'Image', 'Catalog', 'Ramp', 'Line List'],
+        'sources': ['file', 'file drop', 'url', 'object', 'astroquery', 'virtual observatory']
+    }
+
+    # Get all RST files except index.rst
+    if os.path.exists(subdir):
+        files = sorted([f for f in os.listdir(subdir) if f.endswith('.rst') and f != 'index.rst'])
+
+        for filename in files:
+            filepath = os.path.join(subdir, filename)
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()
+                    # Look for RST title pattern: asterisks, title, asterisks
+                    for i in range(1, len(lines) - 1):
+                        prev_line = lines[i - 1].strip()
+                        curr_line = lines[i].strip()
+                        next_line = lines[i + 1].strip()
+
+                        # Check if surrounded by asterisks (RST title)
+                        if (prev_line and all(c == '*' for c in prev_line) and
+                            next_line and all(c == '*' for c in next_line) and
+                                curr_line):
+                            title = curr_line
+
+                            # Process based on type
+                            if option_type == 'formats':
+                                # Remove " Format" suffix if present
+                                if title.endswith(' Format'):
+                                    title = title[:-7]
+                            elif option_type == 'sources':
+                                # Extract name from "Loading from X"
+                                # or "Loading via X" or "Loading X"
+                                if title.startswith('Loading from '):
+                                    title = title[13:].lower()
+                                elif title.startswith('Loading via '):
+                                    title = title[12:].lower()
+                                elif title.startswith('Loading '):
+                                    title = title[8:].lower()
+                                # Special case: "Python Objects" -> "object"
+                                if title == 'python objects':
+                                    title = 'object'
+
+                            option_names.append(title)
+                            break
+            except Exception:
+                # Skip files that can't be read
+                continue
+
+    # Return extracted list, or fallback to hardcoded list if extraction fails
+    if option_names:
+        # Validate that extracted list contains all fallback items
+        expected = fallbacks.get(option_type, [])
+        # Convert to lowercase for case-insensitive comparison
+        extracted_lower = [item.lower() for item in option_names]
+
+        missing_items = [item for item in expected if item.lower() not in extracted_lower]
+
+        if missing_items:
+            raise ValueError(
+                f"Extracted {option_type} options are missing expected items: {missing_items}. "
+                f"Extracted: {option_names}, Expected to contain: {expected}"
+            )
+
+        return option_names
+    else:
+        return fallbacks.get(option_type, [])
+
+
 # Wireframe Content Registry
 # Defines form elements and content for all sidebars, tabs, and plugins
 WIREFRAME_CONTENT_REGISTRY = {
@@ -1177,10 +1279,9 @@ WIREFRAME_CONTENT_REGISTRY = {
             'Data': {
                 'form_elements': [
                     {'type': 'select', 'label': 'Source', 'options':
-                        ['file', 'file drop', 'url',
-                         'object', 'astroquery', 'virtual observatory']},
+                        extract_loader_options('sources')},
                     {'type': 'select', 'label': 'Format', 'options':
-                        ['1D Spectrum', '2D Spectrum', 'Image']},
+                        extract_loader_options('formats')},
                     {'type': 'button', 'label': 'Load'}
                 ]
             },

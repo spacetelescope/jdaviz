@@ -26,4 +26,4 @@ class RowLock(TemplateMixin):
         # Send the RowLockMessage which will update is_locked in _row_lock_changed
         # but will also set the application state in the Mosviz helper
         msg = RowLockMessage(not self.is_locked, sender=self)
-        self.app.hub.broadcast(msg)
+        self._app.hub.broadcast(msg)

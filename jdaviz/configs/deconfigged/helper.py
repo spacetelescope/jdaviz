@@ -10,8 +10,8 @@ class App(ConfigHelper, LineListMixin):
     def __init__(self, *args, **kwargs):
         api_hints_obj = kwargs.pop('api_hints_obj', 'viz')
         super().__init__(*args, **kwargs)
-        self.app.api_hints_obj = api_hints_obj
+        self._app.api_hints_obj = api_hints_obj
 
         # Temporary during deconfig process
         self.load = self._load
-        self.app.state.dev_loaders = True
+        self._app.state.dev_loaders = True

@@ -7,12 +7,16 @@ from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
 
 
+__all__ = ['ObjectResolver', 'PresetObjectResolver']
+
+
 @loader_resolver_registry('object')
 class ObjectResolver(BaseResolver):
     template_file = __file__, "object.vue"
     default_input = 'object'
     requires_api_support = True
 
+    title = Unicode("Python Object (from API)").tag(sync=True)
     object_repr = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -23,17 +27,32 @@ class ObjectResolver(BaseResolver):
     def user_api(self):
         return LoaderUserApi(self, expose=['object'])
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid Python object.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         if isinstance(self.object, str):
             # reject strings that should go through file
             # or url resolvers instead
             if Path(self.object).exists():
-                return False
+                return 'Object is a file path.'
+
             if self.object.strip().startswith(('http://', 'https://',
                                                'ftp://', 's3://', 'mast://')):
-                return False
-        return not isinstance(self.object, Path)
+                return 'Object is an uri.'
+
+        if isinstance(self.object, Path):
+            return 'Path objects should be treated as files.'
+
+        return ''
 
     @property
     def object(self):
@@ -47,3 +66,22 @@ class ObjectResolver(BaseResolver):
 
     def parse_input(self):
         return self.object
+
+
+class PresetObjectResolver(ObjectResolver):
+    """
+    An ObjectResolver variant with a pre-set object that doesn't show
+    input widgets. Used for programmatically adding objects.
+
+    This resolver behaves like the object resolver but hides the input fields
+    by setting hide_resolver_inputs=True, while still showing query results
+    and importer selection.
+    """
+
+    def __init__(self, object, title=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.object = object
+        if title is not None:
+            self.title = title
+        self.hide_resolver_inputs = True

@@ -7,9 +7,10 @@ import pytest
 from astropy.io import fits
 from astropy.units.quantity import Quantity
 
+from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.core.loaders import SpectrumImporter
 from jdaviz.utils import (alpha_index, download_uri_to_path,
-                          get_cloud_fits, cached_uri, escape_brackets,
+                          get_cloud_fits, get_cloud_asdf, cached_uri, escape_brackets,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
                           create_data_hash, parallelize_calculation)
 
@@ -70,34 +71,43 @@ def test_uri_to_download_specviz_local_path_check():
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper):
     uri = cached_uri("mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits")
-    specviz_helper.load_data(uri, cache=True)
+    specviz_helper.load(uri)
 
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz2d(specviz2d_helper):
     uri = cached_uri("mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits")  # noqa: E501
     specviz2d_helper.load_data(uri, cache=True)
+    # NOTE: if changing to load, will need to pass format='2D Spectrum'
 
 
 @pytest.mark.remote_data
 def test_load_s3_fits(imviz_helper):
     """Test loading a JWST FITS file from an S3 URI into Imviz."""
     s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
-    imviz_helper.load_data(s3_uri)
-    assert len(imviz_helper.app.data_collection) > 0
+    imviz_helper.load(s3_uri, format='Image')
+    assert len(imviz_helper._app.data_collection) > 0
 
 
 @pytest.mark.remote_data
 def test_get_cloud_fits_ext():
     s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
-    hdul = get_cloud_fits(s3_uri)
-    assert isinstance(hdul, fits.HDUList)
+    hdulist = get_cloud_fits(s3_uri)
+    assert isinstance(hdulist, fits.HDUList) and len(hdulist) == 10
 
-    hdul = get_cloud_fits(s3_uri, ext="SCI")
-    assert isinstance(hdul, fits.HDUList)
+    hdulist = get_cloud_fits(s3_uri, ext=["SCI", "ASDF"])
+    # return the primary extension and the SCI and ASDF extension
+    assert len(hdulist) == 3
+    assert hdulist['ASDF'].header['XTENSION'] == 'BINTABLE'
 
-    hdul = get_cloud_fits(s3_uri, ext=["SCI"])
-    assert isinstance(hdul, fits.HDUList)
+
+@pytest.mark.remote_data
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
+def test_get_cloud_asdf():
+    import roman_datamodels.datamodels as rdd
+    s3_uri = "s3://stpubdata/roman/nexus/soc_simulations/tutorial_data/r0003201001001001004_0004_wfi15_f106_cal.asdf"  # noqa: E501
+    image_model = get_cloud_asdf(s3_uri)
+    assert isinstance(image_model, rdd.ImageModel) and hasattr(image_model, 'dq')
 
 
 class FakeObject:
@@ -196,7 +206,7 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
 
     # Making sure a stand-in for a SelectPluginComponent object with an attribute
     # that has `choices` works as expected
-    test_importer = SpectrumImporter(app=deconfigged_helper.app,
+    test_importer = SpectrumImporter(app=deconfigged_helper._app,
                                      resolver=deconfigged_helper.loaders['object']._obj,
                                      parser=None,
                                      input=premade_spectrum_list)
@@ -229,6 +239,37 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
         match_result = wildcard_match(test_obj, selection)
         assert test_obj.multiselect is True
         assert match_result == expected
+
+
+def test_wildcard_match_string_in_multiselect(deconfigged_helper, spectrum1d):
+    """
+    Test that a plain string (no wildcards) in multiselect mode is not iterated
+    over as characters.
+
+    This test verifies the fix for the issue where passing a string to a dataset parameter
+    in multiselect mode would iterate over characters instead of treating it as a single item.
+    """
+    # Load multiple datasets
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label="dataset1")
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label="dataset2")
+
+    # Use Gaussian Smooth plugin which has a dataset selector
+    gs = deconfigged_helper.plugins['Gaussian Smooth']
+
+    # Get the internal SelectPluginComponent to test wildcard_match behavior
+    dataset_selector = gs._obj.dataset
+
+    # Ensure multiselect is initially disabled (will be enabled by wildcard_match if needed)
+    dataset_selector.multiselect = False
+
+    # Pass a plain string (no wildcards) - should not iterate over characters
+    match_result = wildcard_match(dataset_selector, 'dataset1')
+    assert match_result == 'dataset1'  # String should be returned as-is
+
+    # Test that wildcard_match also handles lists properly
+    dataset_selector.multiselect = False  # Reset
+    match_result = wildcard_match(dataset_selector, ['dataset1', 'dataset2'])
+    assert match_result == ['dataset1', 'dataset2']
 
 
 @pytest.mark.parametrize('n_cpu', [1, 2, None])
