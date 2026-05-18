@@ -1,12 +1,15 @@
 <template>
   <div>
-    <v-btn 
+    <v-btn
       icon
+      variant="text"
+      size="small"
+      elevation="0"
       :color="isSelected() ? 'accent' : 'default'"
       @click="clicked"
     >
-        <v-icon v-if="multiselect">{{isSelected() ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
-        <v-icon v-else>{{isSelected() ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
+        <v-icon size="22" v-if="multiselect">{{isSelected() ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
+        <v-icon size="22" v-else>{{isSelected() ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
     </v-btn>
     <span :class="api_hints_enabled ? 'api-hint' : null">
       <j-layer-viewer-icon v-if="item.icon && !api_hints_enabled" :icon="item.icon" :prevent_invert_if_dark="false"></j-layer-viewer-icon>
