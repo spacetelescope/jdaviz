@@ -10,6 +10,8 @@ New Features
 - Errors from load are now more explicit, either as a result of known invalid cases or
   as errors producing during import. [#4159]
 
+- Data labels are now able to be copied from the data menu with the addition of a copy to clipboard button. [#4177]
+
 Mosviz
 ^^^^^^
 
@@ -39,6 +41,8 @@ Bug Fixes
 ---------
 
 - Fix missing toggle for cube fitting in Model Fitting plugin in generalized Jdaviz. [#4172]
+
+- Fix broken "Learn More" links throughout app. [#4173]
 
 Mosviz
 ^^^^^^

@@ -274,6 +274,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract 1D spectrum from 2D image.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/2d_spectral_extraction.html'  # noqa
 
         # TRACE
         self.trace_trace = DatasetSelect(self,
