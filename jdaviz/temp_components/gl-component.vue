@@ -116,7 +116,6 @@ onMounted(() => {
       const config = {
         type: 'component',
         componentType: '__jdz_gl_component__',
-        componentState: { __nodeId: nodeId },
         title: props.title || tabId || fallbackId || '',
         isClosable: props.closable,
         reorderEnabled: props.reorderEnabled,

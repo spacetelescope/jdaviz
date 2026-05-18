@@ -32,6 +32,7 @@ let lastEmittedStateHash = ''
 let lastLoadedExternalStateHash = ''
 let sizeObserver = null
 let resizeFrame = null
+let settleResizeFrames = []
 let dragCleanupFrame = null
 
 const GL_COMPONENT_TYPE = '__jdz_gl_component__'
@@ -57,7 +58,7 @@ function safeHash(value) {
   }
 }
 
-function isStateCompatible(state, componentNodeIds, componentConfigIds = new Set()) {
+function isStateCompatible(state, componentConfigIds = new Set()) {
   if (!state || typeof state !== 'object' || !state.root) {
     return false
   }
@@ -68,15 +69,11 @@ function isStateCompatible(state, componentNodeIds, componentConfigIds = new Set
     }
 
     if (item.type === 'component') {
-      const nodeId = item.componentState && item.componentState.__nodeId
       const rawId = item.id
       const configId = Array.isArray(rawId) ? (rawId.length ? String(rawId[0]) : null) : (
         rawId !== undefined && rawId !== null ? String(rawId) : null
       )
-      return (
-        (!!nodeId && componentNodeIds.has(String(nodeId)))
-        || (!!configId && componentConfigIds.has(configId))
-      )
+      return !!configId && componentConfigIds.has(configId)
     }
 
     const content = Array.isArray(item.content) ? item.content : []
@@ -197,8 +194,8 @@ function ensureLayout() {
   })
 
   gl.on('stateChanged', () => {
-    const saved = gl.saveLayout()
-    lastEmittedStateHash = safeHash(saved)
+    const saved = stripRuntimeLayoutState(gl.saveLayout())
+    lastEmittedStateHash = layoutComparisonHash(saved)
     // Allow re-applying the same external saved state after local edits.
     lastLoadedExternalStateHash = ''
     emit('state', saved)
@@ -217,6 +214,37 @@ function scheduleRootResize() {
     if (layoutInstance.value) {
       layoutInstance.value.updateRootSize(true)
     }
+  })
+}
+
+function updateRootSize() {
+  if (layoutInstance.value) {
+    layoutInstance.value.updateRootSize(true)
+  }
+}
+
+function scheduleSettledRootResize() {
+  for (const frame of settleResizeFrames) {
+    cancelAnimationFrame(frame)
+  }
+  settleResizeFrames = []
+
+  const scheduleFrame = (callback) => {
+    const frame = requestAnimationFrame(() => {
+      settleResizeFrames = settleResizeFrames.filter((value) => value !== frame)
+      callback()
+    })
+    settleResizeFrames.push(frame)
+  }
+
+  nextTick(() => {
+    updateRootSize()
+    scheduleFrame(() => {
+      updateRootSize()
+      scheduleFrame(() => {
+        updateRootSize()
+      })
+    })
   })
 }
 
@@ -268,6 +296,10 @@ function buildTemplateLayout() {
 
     if (node.kind === 'component') {
       componentNodes.set(node.id, node)
+      if (!config.componentState || typeof config.componentState !== 'object') {
+        config.componentState = {}
+      }
+      config.componentState.__nodeId = node.id
       const configId = config && config.id !== undefined && config.id !== null
         ? (Array.isArray(config.id) ? config.id[0] : config.id)
         : null
@@ -308,6 +340,40 @@ function cloneValue(value) {
   }
 }
 
+function stripRuntimeItemState(item) {
+  if (!item || typeof item !== 'object') {
+    return item
+  }
+
+  const stripped = cloneValue(item)
+  delete stripped.__nodeId
+
+  for (const key of ['componentState', 'state']) {
+    if (stripped[key] && typeof stripped[key] === 'object') {
+      delete stripped[key].__nodeId
+      if (Object.keys(stripped[key]).length === 0) {
+        delete stripped[key]
+      }
+    }
+  }
+
+  if (Array.isArray(stripped.content)) {
+    stripped.content = stripped.content
+      .map((child) => stripRuntimeItemState(child))
+      .filter((child) => !!child)
+  }
+
+  return stripped
+}
+
+function stripRuntimeLayoutState(layout) {
+  const stripped = cloneValue(layout) || {}
+  if (stripped.root) {
+    stripped.root = stripRuntimeItemState(stripped.root)
+  }
+  return stripped
+}
+
 function normalizedConfigId(item) {
   if (!item || typeof item !== 'object') {
     return null
@@ -323,26 +389,14 @@ function normalizedConfigId(item) {
   return String(rawId)
 }
 
-function normalizedNodeId(item) {
-  if (!item || typeof item !== 'object') {
-    return null
-  }
-
-  if (item.componentState && item.componentState.__nodeId) {
-    return String(item.componentState.__nodeId)
-  }
-  if (item.state && item.state.__nodeId) {
-    return String(item.state.__nodeId)
-  }
-  if (item.__nodeId) {
-    return String(item.__nodeId)
-  }
-  return null
+function runtimeNodeId(item) {
+  return item && item.componentState && item.componentState.__nodeId
+    ? String(item.componentState.__nodeId)
+    : null
 }
 
 function collectTemplateComponentMaps(root) {
   const byConfigId = new Map()
-  const byNodeId = new Map()
   const components = []
 
   const walk = (item) => {
@@ -354,12 +408,8 @@ function collectTemplateComponentMaps(root) {
       const cloned = cloneValue(item)
       components.push(cloned)
       const configId = normalizedConfigId(cloned)
-      const nodeId = normalizedNodeId(cloned)
       if (configId) {
         byConfigId.set(configId, cloned)
-      }
-      if (nodeId) {
-        byNodeId.set(nodeId, cloned)
       }
       return
     }
@@ -371,7 +421,7 @@ function collectTemplateComponentMaps(root) {
   }
 
   walk(root)
-  return { byConfigId, byNodeId, components }
+  return { byConfigId, components }
 }
 
 function reconcileStateItem(item, templateMaps) {
@@ -381,18 +431,14 @@ function reconcileStateItem(item, templateMaps) {
 
   if (item.type === 'component') {
     const configId = normalizedConfigId(item)
-    const nodeId = normalizedNodeId(item)
-    const templateComponent = (
-      (configId ? templateMaps.byConfigId.get(configId) : null)
-      || (nodeId ? templateMaps.byNodeId.get(nodeId) : null)
-    )
+    const templateComponent = configId ? templateMaps.byConfigId.get(configId) : null
 
     if (!templateComponent) {
       return null
     }
 
     const reconciled = cloneValue(item)
-    const templateNodeId = normalizedNodeId(templateComponent)
+    const templateNodeId = runtimeNodeId(templateComponent)
     if (templateNodeId) {
       if (!reconciled.componentState || typeof reconciled.componentState !== 'object') {
         reconciled.componentState = {}
@@ -443,12 +489,8 @@ function collectExistingComponentKeys(root) {
 
     if (item.type === 'component') {
       const configId = normalizedConfigId(item)
-      const nodeId = normalizedNodeId(item)
       if (configId) {
         keys.add(`id:${configId}`)
-      }
-      if (nodeId) {
-        keys.add(`node:${nodeId}`)
       }
       return
     }
@@ -479,11 +521,7 @@ function reconcileLayoutState(baseState, templateLayout) {
   const existingKeys = collectExistingComponentKeys(reconciledRoot)
   const missingComponents = templateMaps.components.filter((component) => {
     const configId = normalizedConfigId(component)
-    const nodeId = normalizedNodeId(component)
     if (configId && existingKeys.has(`id:${configId}`)) {
-      return false
-    }
-    if (nodeId && existingKeys.has(`node:${nodeId}`)) {
       return false
     }
     return true
@@ -635,6 +673,25 @@ function normalizeLayoutForLoad(layout) {
   return normalized
 }
 
+function normalizeAndSanitizeLayout(layout) {
+  const normalizedLayout = normalizeLayoutForLoad(layout)
+  forceSanitizeItemSizes(normalizedLayout.root)
+  return normalizedLayout
+}
+
+function normalizeLayoutForComparison(layout) {
+  const normalizedLayout = normalizeAndSanitizeLayout(layout)
+  if (normalizedLayout.root) {
+    normalizedLayout.root = stripRuntimeItemState(normalizedLayout.root)
+  }
+  normalizedLayout.header = { show: normalizeHeaderShow(normalizedLayout.header && normalizedLayout.header.show) }
+  return normalizedLayout
+}
+
+function layoutComparisonHash(layout) {
+  return safeHash(normalizeLayoutForComparison(layout))
+}
+
 function forceSanitizeItemSizes(item) {
   if (!item || typeof item !== 'object') {
     return
@@ -675,15 +732,10 @@ function loadLayout(layoutConfig) {
     return
   }
 
-  const normalizedLayout = normalizeLayoutForLoad(layoutConfig)
-  forceSanitizeItemSizes(normalizedLayout.root)
+  const normalizedLayout = normalizeAndSanitizeLayout(layoutConfig)
 
   layoutInstance.value.loadLayout(normalizedLayout)
-  nextTick(() => {
-    if (layoutInstance.value) {
-      layoutInstance.value.updateRootSize(true)
-    }
-  })
+  scheduleSettledRootResize()
 }
 
 function queueTemplateReload() {
@@ -700,13 +752,8 @@ function queueTemplateReload() {
     }
 
     const externalState = props.state
-    const externalStateHash = safeHash(externalState)
+    const externalStateHash = layoutComparisonHash(externalState)
     const normalizedExternalState = externalState ? normalizeLayoutForLoad(externalState) : null
-    const componentNodeIds = new Set(
-      Array.from(nodes.values())
-        .filter((node) => node.kind === 'component')
-        .map((node) => node.id),
-    )
     const componentConfigIds = new Set(
       Array.from(nodes.values())
         .filter((node) => node.kind === 'component')
@@ -731,13 +778,13 @@ function queueTemplateReload() {
       && externalStateHash !== lastEmittedStateHash
       && externalStateHash !== lastLoadedExternalStateHash
       && normalizedExternalState
-      && isStateCompatible(normalizedExternalState, componentNodeIds, componentConfigIds)
+      && isStateCompatible(normalizedExternalState, componentConfigIds)
     ) {
       lastLoadedExternalStateHash = externalStateHash
       baseState = normalizedExternalState
     } else if (layoutInstance.value) {
       const liveState = normalizeLayoutForLoad(layoutInstance.value.saveLayout())
-      if (isStateCompatible(liveState, componentNodeIds, componentConfigIds)) {
+      if (isStateCompatible(liveState, componentConfigIds)) {
         baseState = liveState
       }
     }
@@ -771,6 +818,7 @@ onMounted(() => {
   window.addEventListener('touchcancel', scheduleDragProxyCleanup)
   window.addEventListener('dragend', scheduleDragProxyCleanup)
   window.addEventListener('blur', scheduleDragProxyCleanup)
+  window.addEventListener('resize', scheduleRootResize)
 })
 
 watch(
@@ -794,7 +842,11 @@ watch(
       return
     }
 
-    const stateHash = safeHash(nextState)
+    const stateHash = layoutComparisonHash(nextState)
+    const liveStateHash = layoutInstance.value ? layoutComparisonHash(layoutInstance.value.saveLayout()) : ''
+    if (stateHash && stateHash === liveStateHash) {
+      return
+    }
     if (!stateHash || stateHash === lastEmittedStateHash || stateHash === lastLoadedExternalStateHash) {
       return
     }
@@ -810,6 +862,11 @@ onBeforeUnmount(() => {
     resizeFrame = null
   }
 
+  for (const frame of settleResizeFrames) {
+    cancelAnimationFrame(frame)
+  }
+  settleResizeFrames = []
+
   if (dragCleanupFrame !== null) {
     cancelAnimationFrame(dragCleanupFrame)
     dragCleanupFrame = null
@@ -822,6 +879,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('touchcancel', scheduleDragProxyCleanup)
   window.removeEventListener('dragend', scheduleDragProxyCleanup)
   window.removeEventListener('blur', scheduleDragProxyCleanup)
+  window.removeEventListener('resize', scheduleRootResize)
 
   if (sizeObserver) {
     sizeObserver.disconnect()
