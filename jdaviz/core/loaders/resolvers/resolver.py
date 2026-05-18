@@ -644,7 +644,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             if self.format.selected:
                 ext = getattr(self.importer, 'extension', None)
                 if ext is not None:
-                    hdu = ext.selected_index[0]
+                    hdu = ext.selected_index
+                    if isinstance(hdu, list):
+                        hdu = hdu[0]
             parsed_input_table = self._parsed_input_to_table(parsed_input, hdu=hdu)
 
         # if the input could be parsed as a table, try to interpret it as
