@@ -55,6 +55,8 @@ class CatalogImporter(BaseImporterToDataCollection):
     extension_multiselect = Bool(True).tag(sync=True)
     no_common_col_msg = Unicode().tag(sync=True)
 
+    hdu = Any(None).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

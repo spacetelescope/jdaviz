@@ -56,7 +56,6 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
 
     import_disabled_msg = Unicode().tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
-    hdu = Any(None).tag(sync=True)
 
     existing_data_in_dc = List([]).tag(sync=True)
 
