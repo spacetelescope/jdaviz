@@ -335,6 +335,16 @@ a:active {
   min-height: 0;
   height: var(--jdaviz-notebook-max-height);
   max-height: var(--jdaviz-notebook-max-height);
+  overflow: hidden;
+}
+
+.v-application.jdaviz.jdaviz-notebook-context .v-main,
+.v-application.jdaviz.jdaviz-notebook-context .v-main > .v-container,
+.v-application.jdaviz.jdaviz-notebook-context .splitpanes {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 span.api-hint, span.api-hint-header {
