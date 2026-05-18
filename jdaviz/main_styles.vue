@@ -88,6 +88,15 @@ div.output_wrapper {
   padding: 0px;
 }
 
+.v-slider:not(.v-input--disabled) .v-slider-track__background,
+.v-slider:not(.v-input--disabled) .v-slider-track__fill {
+  background-color: rgb(var(--v-theme-viewer_toolbar));
+}
+
+.v-slider:not(.v-input--disabled) .v-slider-thumb {
+  color: rgb(var(--v-theme-viewer_toolbar));
+}
+
 .plugin-header {
   /* ensure dropdown arrow aligns to the top for tall headers */
   align-items: start !important;
