@@ -594,4 +594,3 @@ def test_select_catalog_table_rows(imviz_helper, image_2d_wcs):
     # test select_none
     catalogs_plugin.select_none()
     assert len(plugin_table.selected_rows) == 0
-
