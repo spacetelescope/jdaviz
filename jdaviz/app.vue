@@ -1,5 +1,10 @@
 <template>
-  <v-app id="web-app" :style="checkNotebookContext() ? 'display: inline' : 'display: flex'" :class="'jdaviz ' + config" ref="mainapp">
+  <v-app
+    id="web-app"
+    :style="checkNotebookContext() ? 'display: inline; --jdaviz-notebook-max-height: ' + state.settings.context.notebook.max_height : 'display: flex'"
+    :class="'jdaviz ' + config + (checkNotebookContext() ? ' jdaviz-notebook-context' : '')"
+    ref="mainapp"
+  >
     <jupyter-widget v-if="style_registry_instance" :widget="style_registry_instance" :key="style_registry_instance"></jupyter-widget>
     <div style="overflow: hidden; width: 0px; height: 0px">
       <jupyter-widget
@@ -222,7 +227,7 @@
     </v-app-bar>
 
     <v-main
-      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5; border-top: 0px' : ''"
+      :style="checkNotebookContext() ? 'border: solid 1px #e5e5e5; border-top: 0px' : ''"
       :class="checkNotebookContext() ? '' : 'jdaviz__content--not-in-notebook'"
     >
       <v-container class="fill-height pa-0" fluid>
