@@ -5,6 +5,7 @@ from jdaviz.core.loaders.importers.catalog.catalog import CatalogImporter
 def test_coord_column(deconfigged_helper,
                       sky_coord_only_source_catalog,
                       coordinate_name):
+    """Test _guess_coord_cols for CatalogImporter: success and failure cases."""
     resolver = deconfigged_helper.loaders['object']._obj
     importer = CatalogImporter(app=deconfigged_helper._app,
                                resolver=resolver, parser=None,
@@ -27,6 +28,7 @@ def test_coord_column(deconfigged_helper,
 def test_pixel_column(deconfigged_helper,
                       sky_coord_only_source_catalog,
                       pixel_name):
+    '''Test _guess_coord_cols for CatalogImporter: success and failure cases.'''
     resolver = deconfigged_helper.loaders['object']._obj
     importer = CatalogImporter(app=deconfigged_helper._app,
                                resolver=resolver, parser=None,
