@@ -10,10 +10,9 @@ from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import RA_COMPS, DEC_COMPS, create_data_hash, WORDS_TO_EXCLUDE
+from jdaviz.utils import create_data_hash, WORDS_TO_EXCLUDE
 
 __all__ = ['CatalogImporter']
-
 
 @loader_importer_registry("Catalog")
 class CatalogImporter(BaseImporterToDataCollection):
@@ -258,7 +257,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         # regular expressions to guess which columns correspond to ra, dec, x, y
         COORD_PATTERNS = {
-            "ra": re.compile(r'^ra$|^ra|ra$', re.IGNORECASE),  # contains RA, dec with or without delimiter
+            "ra": re.compile(r'^ra$|^ra|ra$', re.IGNORECASE),  # contains RA, dec w/wo delimiter
             "dec": re.compile(r'^dec$|^dec|dec$', re.IGNORECASE),
             "x": re.compile(r'^x(pix(el)?)$|^x$|^x', re.IGNORECASE),  # x, xpix, xpixel
             "y": re.compile(r'^y(pix(el)?)$|^y$|^y', re.IGNORECASE),  # y, ypix, ypixel
@@ -290,7 +289,7 @@ class CatalogImporter(BaseImporterToDataCollection):
                 check = lambda tokens: (
                         not any(token in WORDS_TO_EXCLUDE for token in tokens)
                         and any(token_pattern.search(t) for t in tokens)
-                    )
+                        )
 
             elif col in ("x", "y"):
                 # x/y: allowlist approach — match whole column name
