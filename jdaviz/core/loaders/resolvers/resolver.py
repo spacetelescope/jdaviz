@@ -4,7 +4,7 @@ import threading
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
-from traitlets import Any, Bool, Float, Instance, List, Unicode, observe, default
+from traitlets import Bool, Float, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -248,7 +248,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     _update_format_spinner_text = 'searching for valid formats...'
 
     spinner = Unicode("").tag(sync=True)
-    extension = Any(None).tag(sync=True)
 
     parsed_input_is_empty = Bool(True).tag(sync=True)
     parsed_input_is_resolvable = Unicode("").tag(sync=True)
