@@ -469,12 +469,17 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # Entire Cube
             return self.inverted_mask_non_science
 
+        print(self.aperture.selected)
+        print(f"self.marks: {self.marks}")
+
         aperture_mask = self.aperture.get_mask(
                             self.dataset.selected_obj,
                             self.aperture_method_selected,
                             self.slice_display_unit,
                             self.spatial_axes,
                             self.reference_spectral_value if self.wavelength_dependent else None)
+
+        print(f"aperture mask: {aperture_mask.shape} : {aperture_mask}")
 
         aperture_mask = np.array(aperture_mask)
 
