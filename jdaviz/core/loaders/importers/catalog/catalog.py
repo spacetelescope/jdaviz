@@ -55,8 +55,6 @@ class CatalogImporter(BaseImporterToDataCollection):
     extension_multiselect = Bool(True).tag(sync=True)
     no_common_col_msg = Unicode().tag(sync=True)
 
-    hdu = Any(None).tag(sync=True)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -417,7 +415,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other', 'hdu']
+        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other']
         if self.input_has_extensions:
             expose += ['extension']
         return ImporterUserApi(self, expose=expose)

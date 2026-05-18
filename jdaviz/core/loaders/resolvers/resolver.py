@@ -248,7 +248,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     _update_format_spinner_text = 'searching for valid formats...'
 
     spinner = Unicode("").tag(sync=True)
-    hdu = Any(None).tag(sync=True)
+    extension = Any(None).tag(sync=True)
 
     parsed_input_is_empty = Bool(True).tag(sync=True)
     parsed_input_is_resolvable = Unicode("").tag(sync=True)
@@ -641,7 +641,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # first attempt to parse the input as a table
         parsed_input_table = None
         if self._restrict_to_formats is None or "Catalog" in self._restrict_to_formats:
-            hdu = getattr(self.user_api, 'hdu', None)
+            hdu = None
+            if self.format.selected:
+                ext = getattr(self.importer, 'extension', None)
+                if ext is not None:
+                    hdu = ext.selected_index[0]
             parsed_input_table = self._parsed_input_to_table(parsed_input, hdu=hdu)
 
         # if the input could be parsed as a table, try to interpret it as
@@ -936,7 +940,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
     @property
     def user_api(self):
-        return LoaderUserApi(self, expose=['hdu'])
+        return LoaderUserApi(self)
 
     @property
     def default_label(self):

@@ -37,7 +37,7 @@ class FileResolver(BaseResolver):
 
     @property
     def user_api(self):
-        return LoaderUserApi(self, expose=['filepath', 'hdu'])
+        return LoaderUserApi(self, expose=['filepath'])
 
     @classmethod
     def from_input(cls, app, inp, **kwargs):
