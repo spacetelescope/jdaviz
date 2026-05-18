@@ -523,7 +523,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
 
-        wcs = WCS(header, hdulist)
+        wcs = WCS(header, hdulist, preserve_units=True)
 
         spectral_axis_index = None
 
@@ -662,6 +662,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                         target_wave_unit = u.Unit(hdr[cunit_key])
                         found_target = True
                         break
+        print('!!!!!!!!!!!!!!', target_wave_unit, sc.spectral_axis.unit)
         if target_wave_unit == sc.spectral_axis.unit:
             target_wave_unit = None
         if (target_wave_unit is None) and (target_flux_unit is None):  # Nothing to convert

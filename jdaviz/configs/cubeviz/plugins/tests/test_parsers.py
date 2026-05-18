@@ -124,7 +124,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
 @pytest.mark.filterwarnings('ignore')
 def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     flux = image_cube_hdu_obj[1].data << u.Unit(image_cube_hdu_obj[1].header['BUNIT'])
-    wcs = WCS(image_cube_hdu_obj[1].header, image_cube_hdu_obj)
+    wcs = WCS(image_cube_hdu_obj[1].header, image_cube_hdu_obj, preserve_units=True)
     sc = Spectrum(flux=flux, wcs=wcs)
     cubeviz_helper.load_data(sc)
 
