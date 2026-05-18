@@ -330,6 +330,13 @@ a:active {
   font-weight: 500 !important;
 }
 
+.v-application.jdaviz.jdaviz-notebook-context,
+.v-application.jdaviz.jdaviz-notebook-context .v-application__wrap {
+  min-height: 0;
+  height: var(--jdaviz-notebook-max-height);
+  max-height: var(--jdaviz-notebook-max-height);
+}
+
 span.api-hint, span.api-hint-header {
   color: #007BA1 !important;
   font-family: monospace;
