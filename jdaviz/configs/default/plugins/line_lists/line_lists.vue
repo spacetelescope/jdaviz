@@ -39,7 +39,6 @@
       <j-docs-link>Shift spectral lines according to a specific redshift. Only enabled if at least one line is plotted.</j-docs-link>
     </j-flex-row>
     <j-flex-row style='margin-bottom: 0px'>
-      <!-- colors are main_style.vue primary and toolbar colors -->
       <v-slider
         :value="rs_slider"
         @input="throttledSlider"
@@ -48,9 +47,6 @@
         :max="rs_slider_half_range"
         :min="-rs_slider_half_range"
         :step="rs_slider_step"
-        color="#00617E"
-        track-color="#00617E"
-        thumb-color="#153A4B"
         hide-details
         :disabled="!rs_enabled"
       >
