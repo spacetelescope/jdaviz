@@ -1,11 +1,9 @@
 <template>
-  <span
-    v-if="use_icon"
-    @mouseover="$emit('mouseover')"
-    @mouseleave="$emit('mouseleave')"
-  >
+  <span v-if="use_icon">
     <v-btn
       icon
+      @mouseover="$emit('mouseover')"
+      @mouseleave="$emit('mouseleave')"
       @click.stop="$emit('update:value', !value); $emit('click', !value)"
     >
       <v-icon>mdi-{{ use_icon == 'speaker' ? 'speaker' : 'eye'}}{{ value ? '' : '-off' }}</v-icon>
