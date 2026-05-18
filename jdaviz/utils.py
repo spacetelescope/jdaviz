@@ -76,8 +76,12 @@ DEC_COMPS = ['declination', 'dec', 'decdeg', 'decdeg',
              'decdegrees', 'declinationdegrees', 'declinationdeg',
              'decobj', 'objdec', 'decsource', 'sourcedec', 'decj2000', 'dec2000',
              'worlddec', 'targdec', 'scidec']
-WORDS_TO_EXCLUDE = ['radius', 'fluxradius', 'radio', 'radial', 'radialvelocity', 'extragalactic', 'infrared',
-                 'fraction', 'gradient', 'ratio', 'radian', 'random', 'parallax', 'decade', 'decadal', 'decrement', 'deconvolved']
+WORDS_TO_EXCLUDE = ['radius', 'fluxradius', 'radio', 'radial',
+                    'radialvelocity', 'extragalactic', 'infrared',
+                    'fraction', 'gradient', 'ratio',
+                    'radian', 'random', 'parallax',
+                    'decade', 'decadal', 'decrement', 'deconvolved']
+
 
 def in_ra_comps(comp):
     return (str(comp).lower()
