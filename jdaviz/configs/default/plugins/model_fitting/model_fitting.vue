@@ -48,7 +48,7 @@
     </j-flex-row>
 
     <j-plugin-section-header>Model Components</j-plugin-section-header>
-    <v-form v-model="form_valid_model_component">
+    <v-form v-model="formValidModelComponent">
       <j-flex-row v-if="model_comp_items">
         <v-select
           attach
@@ -392,6 +392,16 @@
       this.sanitizeCompLabel = (v) => {
         // strip non-word character entries
         this.comp_label = v.replace(/[\W]+/g, '');
+      }
+    },
+    computed: {
+      formValidModelComponent: {
+        get() {
+          return this.form_valid_model_component
+        },
+        set(value) {
+          this.form_valid_model_component = value === true
+        }
       }
     },
     methods: {
