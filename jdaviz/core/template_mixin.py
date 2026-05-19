@@ -3717,6 +3717,8 @@ class ApertureSubsetSelect(SubsetSelect):
                     aperture.h = radii_h[index]
 
                 slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
+                if slice_mask is None:
+                    return slice_mask
                 # Add slice mask to fractional pixel array
                 if slice_axis == 2:
                     mask_weights[:, :, index] = slice_mask
@@ -3727,8 +3729,11 @@ class ApertureSubsetSelect(SubsetSelect):
         else:
             # Cylindrical aperture
             slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
+            if slice_mask is None:
+                return slice_mask
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
             mask_weights = np.stack([slice_mask] * flux_cube.shape[slice_axis], axis=slice_axis)
+        print(f"mask_weights: {mask_weights}")
         return mask_weights
 
 

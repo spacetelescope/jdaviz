@@ -469,9 +469,6 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # Entire Cube
             return self.inverted_mask_non_science
 
-        print(self.aperture.selected)
-        print(f"self.marks: {self.marks}")
-
         aperture_mask = self.aperture.get_mask(
                             self.dataset.selected_obj,
                             self.aperture_method_selected,
@@ -479,9 +476,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                             self.spatial_axes,
                             self.reference_spectral_value if self.wavelength_dependent else None)
 
-        print(f"aperture mask: {aperture_mask.shape} : {aperture_mask}")
-
-        aperture_mask = np.array(aperture_mask)
+        if aperture_mask is None:
+            return aperture_mask
 
         if self.dataset.selected_obj.spectral_axis_index == 0 and aperture_mask.ndim == 1:
             return (
@@ -732,6 +728,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             raise ValueError("aperture and background cannot be set to the same subset")
 
         selected_func = self.function_selected.lower()
+        if self.aperture_weight_mask is None:
+            return
         spec = self._extract_from_aperture(self.cube, self.uncert_cube, self.mask_cube,
                                            self.aperture, self.aperture_weight_mask,
                                            self.wavelength_dependent,
