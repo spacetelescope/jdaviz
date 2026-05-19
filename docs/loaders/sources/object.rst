@@ -20,6 +20,7 @@ The object loader supports various astronomical data object types:
 - :class:`~specutils.SpectrumCollection` - Collections of spectra
 - :class:`~astropy.nddata.NDData` - Generic N-dimensional data
 - :class:`~astropy.nddata.CCDData` - CCD image data
+- :class:`~astropy.table.Table` and :class:`~astropy.table.QTable` - Tabular data
 - NumPy arrays (with appropriate metadata)
 
 See :ref:`loaders-formats` for information on how to specify the format parameter.
