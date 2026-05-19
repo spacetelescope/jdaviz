@@ -2653,6 +2653,13 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             # Updated derived data if applicable
             self._rename_derived_data(old_label, new_label, 'subset')
 
+            # ensure that things waiting to be batch processed are renamed as well
+            delayed_labels = self._jdaviz_helper._delayed_show_in_viewer_labels
+            for key in list(delayed_labels):
+                if old_label in key:
+                    new_key = key.replace(old_label, new_label)
+                    delayed_labels[new_key] = delayed_labels.pop(key)
+
         finally:
             self._renaming_subset = False
 
