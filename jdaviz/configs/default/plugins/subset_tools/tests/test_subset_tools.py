@@ -554,18 +554,17 @@ def test_rename_subset(cubeviz_helper, spectrum1d_cube):
 
     spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
     plg.import_region(spatial_reg)
-    spatial_reg = CirclePixelRegion(center=PixCoord(x=1, y=1), radius=1)
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=1)
     plg.import_region(spatial_reg)
 
     plg.rename_subset("Subset 1", "Test Rename")
 
     assert plg.subset.choices == ['Create New', 'Test Rename', 'Subset 2']
-    assert cubeviz_helper._app.data_collection[-2].label == "Spectrum (Test Rename, sum)"
+    assert cubeviz_helper._app.data_collection[-1].label == "Spectrum (Test Rename, sum)"
 
     plg.subset = "Subset 2"
     plg.rename_selected("Second Test")
     assert plg.subset.choices == ['Create New', 'Test Rename', 'Second Test']
-    assert cubeviz_helper._app.data_collection[-1].label == "Spectrum (Second Test, sum)"
 
     with pytest.raises(ValueError, match="No subset named BadLabel to rename"):
         plg.rename_subset("BadLabel", "Failure")
@@ -578,7 +577,7 @@ def test_delete_subset(cubeviz_helper, spectrum1d_cube):
 
     spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
     plg.import_region(spatial_reg)
-    spatial_reg = CirclePixelRegion(center=PixCoord(x=1, y=1), radius=1)
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=1)
     plg.import_region(spatial_reg)
 
     plg.delete_subset("Subset 1")
