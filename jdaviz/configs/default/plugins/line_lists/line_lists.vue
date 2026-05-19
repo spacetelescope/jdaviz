@@ -102,7 +102,8 @@
         :menu-props="{ left: true }"
         attach
         :items="available_lists"
-        @change="list_selected"
+        :model-value="preset_list_selected"
+        @update:modelValue="preset_list_selected = $event; list_selected($event)"
         label="Available Line Lists"
         hint="Select a line list to load. Toggle visibility of loaded lines in section below."
         persistent-hint
@@ -370,6 +371,22 @@
 
 <script>
   export default {
+    data() {
+      return {
+        preset_list_selected: null
+      }
+    },
+    watch: {
+      available_lists: {
+        immediate: true,
+        handler(lists) {
+          if (this.preset_list_selected === null && lists.length) {
+            this.preset_list_selected = lists[0]
+            this.list_selected(lists[0])
+          }
+        }
+      }
+    },
     methods: {
       lineItemVisible(lineItem, lines_filter, filter_range) {
         let text_filter
