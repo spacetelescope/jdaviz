@@ -97,6 +97,10 @@ div.output_wrapper {
   color: rgb(var(--v-theme-viewer_toolbar));
 }
 
+.v-slider .v-slider__container {
+  margin-bottom: 16px;
+}
+
 .plugin-header {
   /* ensure dropdown arrow aligns to the top for tall headers */
   align-items: start !important;
