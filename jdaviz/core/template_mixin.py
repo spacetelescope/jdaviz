@@ -3733,7 +3733,7 @@ class ApertureSubsetSelect(SubsetSelect):
                 return slice_mask
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
             mask_weights = np.stack([slice_mask] * flux_cube.shape[slice_axis], axis=slice_axis)
-        print(f"mask_weights: {mask_weights}")
+
         return mask_weights
 
 
