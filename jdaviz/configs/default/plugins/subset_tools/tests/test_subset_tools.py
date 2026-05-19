@@ -268,8 +268,8 @@ def test_import_sky_region_in_cubeviz(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
 
-    ra = 339.0149557 * u.deg
-    dec = 33.97591 * u.deg
+    ra = 205.0 * u.deg
+    dec = 27.0 * u.deg
     coord = SkyCoord(ra=ra, dec=dec, unit=u.deg)
     aper_rad = 0.5 * u.arcsec
 

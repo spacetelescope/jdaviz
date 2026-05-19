@@ -44,6 +44,9 @@ Bug Fixes
 
 - Fix broken "Learn More" links throughout app. [#4173]
 
+- Fix 3D spectral extraction in cases where other types of data are loaded in addition
+  to the cube. [#4181]
+
 Mosviz
 ^^^^^^
 
