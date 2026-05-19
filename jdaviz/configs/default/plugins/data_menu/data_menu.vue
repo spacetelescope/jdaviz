@@ -242,7 +242,7 @@
                         >
                           <plugin-switch
                             :value="item.visible"
-                            @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
+                            @click="(value) => {set_layer_visibility({layer: item.label, value: value}); hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(value)+')'}"
                             @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
                             @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
                             :api_hints_enabled="false"
