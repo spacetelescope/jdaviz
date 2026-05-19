@@ -121,7 +121,7 @@
     <j-plugin-section-header>Loaded Lines</j-plugin-section-header>
     <j-custom-toolbar-toggle
       v-if="loaded_lists.length > 0"
-      class="loaded-lines-toolbar"
+      class="mb-4"
       :enabled="custom_toolbar_enabled"
       text="line selection tools in spectrum viewer"
       @toggle-custom-toolbar="toggle_custom_toolbar"
@@ -129,9 +129,9 @@
       <img class="invert-if-dark" :src="identify_line_icon" width="20"/>
     </j-custom-toolbar-toggle>
 
-    <j-flex-row class="loaded-lines-list">
+    <j-flex-row class="mt-1">
       <v-expansion-panels accordion>
-        <v-expansion-panel v-for="item in loaded_lists" key=":item">
+        <v-expansion-panel v-for="item in loaded_lists" key=":item" class="mb-3">
           <v-expansion-panel-title v-slot="{ open }">
             <v-row class="vuetify2" no-gutters align="center" style="max-width: calc(100% - 26px)">
               <v-col cols=2>
@@ -162,8 +162,8 @@
           <v-expansion-panel-text class="plugin-expansion-panel-content">
 
             <div v-if="item == 'Custom'" style="padding-top: 16px">
-              <j-flex-row class="row-min-bottom-padding" style="display: block">
-                  <j-tooltip tipid='plugin-line-lists-line-name'>
+              <j-flex-row class="row-min-bottom-padding" no-gutters>
+                  <j-tooltip tipid='plugin-line-lists-line-name' span_style="display: block; width: 100%;">
                     <v-text-field
                       label="Line Name"
                       v-model="custom_name"
@@ -173,8 +173,8 @@
                   </j-tooltip>
               </j-flex-row>
 
-              <j-flex-row class="row-min-bottom-padding" style="display: block">
-                <j-tooltip tipid='plugin-line-lists-custom-rest'>
+              <j-flex-row class="row-min-bottom-padding" no-gutters>
+                <j-tooltip tipid='plugin-line-lists-custom-rest' span_style="display: block; width: 100%;">
                   <v-text-field
                     label="Rest Value"
                     v-model="custom_rest"
@@ -184,9 +184,10 @@
                 </j-tooltip>
               </j-flex-row>
 
-              <j-flex-row class="row-min-bottom-padding" style="display: block">
-                <j-tooltip tipid='plugin-line-lists-custom-unit'>
+              <j-flex-row class="row-min-bottom-padding" no-gutters>
+                <j-tooltip tipid='plugin-line-lists-custom-unit' span_style="display: block; width: 100%;">
                     <plugin-select
+                      no-gutters
                       :items="custom_unit_choices"
                       v-model:selected="custom_unit"
                       label="Unit"
@@ -204,7 +205,7 @@
 
             <div v-if="list_contents[item].lines.length">
 
-              <v-row class="row-no-padding loaded-lines-actions vuetify2">
+              <v-row class="row-no-padding mt-4 mb-3">
                 <v-col cols=6 style="padding: 0">
                   <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
                     <v-btn
@@ -433,20 +434,4 @@
       border: 2px solid rgba(0,0,0,0.54);
   }
 
-  .loaded-lines-toolbar {
-    margin-bottom: 16px;
-  }
-
-  .loaded-lines-list {
-    margin-top: 4px;
-  }
-
-  .loaded-lines-list .v-expansion-panel {
-    margin-bottom: 12px;
-  }
-
-  .loaded-lines-actions {
-    margin-top: 16px;
-    margin-bottom: 12px;
-  }
 </style>
