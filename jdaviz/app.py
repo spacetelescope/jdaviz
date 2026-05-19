@@ -243,6 +243,10 @@ class ApplicationState(State):
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(
         False, docstring="Whether to show API hints.")
+    in_notebook = CallbackProperty(
+        False, docstring="Whether the app is running in a notebook (Jupyter) context. "
+                         "Set to True when show() is called, and used to show the API hints "
+                         "toggle button even in popout windows that lack notebook DOM elements.")
     subset_mode_create = CallbackProperty(
         False, docstring="Whether to create a new subset.")
 
