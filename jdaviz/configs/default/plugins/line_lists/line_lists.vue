@@ -121,6 +121,7 @@
     <j-plugin-section-header>Loaded Lines</j-plugin-section-header>
     <j-custom-toolbar-toggle
       v-if="loaded_lists.length > 0"
+      class="loaded-lines-toolbar"
       :enabled="custom_toolbar_enabled"
       text="line selection tools in spectrum viewer"
       @toggle-custom-toolbar="toggle_custom_toolbar"
@@ -128,7 +129,7 @@
       <img class="invert-if-dark" :src="identify_line_icon" width="20"/>
     </j-custom-toolbar-toggle>
 
-    <j-flex-row>
+    <j-flex-row class="loaded-lines-list">
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="item in loaded_lists" key=":item">
           <v-expansion-panel-title v-slot="{ open }">
@@ -203,7 +204,7 @@
 
             <div v-if="list_contents[item].lines.length">
 
-              <v-row class="row-no-padding vuetify2" style="margin-top: 4px">
+              <v-row class="row-no-padding loaded-lines-actions vuetify2">
                 <v-col cols=6 style="padding: 0">
                   <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
                     <v-btn
@@ -430,5 +431,22 @@
       font-size: 16px;
       padding-left: 16px;
       border: 2px solid rgba(0,0,0,0.54);
+  }
+
+  .loaded-lines-toolbar {
+    margin-bottom: 16px;
+  }
+
+  .loaded-lines-list {
+    margin-top: 4px;
+  }
+
+  .loaded-lines-list .v-expansion-panel {
+    margin-bottom: 12px;
+  }
+
+  .loaded-lines-actions {
+    margin-top: 16px;
+    margin-bottom: 12px;
   }
 </style>
