@@ -2207,7 +2207,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         match = check_if_dup.match(label)
         label_without_dup = match.group(1) if match else label
 
-        if label in exist_labels:
+        if any(label_without_dup in label for label in exist_labels):
             label = f"{label_without_dup} ({max_number + 1})"
 
         elif label not in exist_labels and label_without_dup not in exist_labels:
