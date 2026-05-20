@@ -139,8 +139,9 @@
                 <v-btn
                   v-if="item != 'Custom'"
                   @click.stop="remove_list(item)"
-                  small="true"
                   icon
+                  variant="text"
+                  density="compact"
                 >
  <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
@@ -245,9 +246,10 @@
                 <j-tooltip tipid='plugin-line-lists-spectral-range'>
                   <v-btn
                     icon
+                    variant="text"
                     @click="filter_range = !filter_range"
                     style="width: 30px; margin-top: 4px"
-                    ><img :class="filter_range ? 'color-to-accent' : 'invert-if-dark'" :src="filter_range_icon"/>
+                    ><img :class="filter_range ? 'color-to-accent' : 'invert-if-dark'" :src="filter_range_icon" width="20"/>
 
                   </v-btn>
                 </j-tooltip>
@@ -281,14 +283,23 @@
 
                     <v-col cols=2 align="right" style="padding: 0">
                       <j-tooltip tipid='plugin-line-lists-line-identify'>
-                        <v-btn icon @click="set_identify([item, line, line_ind])">
+                        <v-btn
+                          icon
+                          variant="text"
+                          density="compact"
+                          @click="set_identify([item, line, line_ind])">
                           <img :class="line.identify ? 'color-to-accent' : 'invert-if-dark'" :src="identify_line_icon" width="20"/>
                         </v-btn>
                       </j-tooltip>
                     </v-col>
                     <v-col cols=3 align="right" style="padding: 0">
                       <j-tooltip tipid='plugin-line-lists-line-visible'>
-                        <v-btn :color="line.show ? 'accent' : 'default'" icon @click="change_visible([item, line, line_ind])">
+                        <v-btn
+                          :color="line.show ? 'accent' : 'inherit'"
+                          icon
+                          variant="text"
+                          density="compact"
+                          @click="change_visible([item, line, line_ind])">
  <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
                         </v-btn>
                       </j-tooltip style="padding: 0">
