@@ -221,6 +221,12 @@ class ImageImporter(BaseImporterToDataCollection):
             # NOTE: temporary during deconfig process
             return f"image importer is only supported in {', '.join(accepted_configs)}."
 
+        # Reject FITS files that look like light curves (have BinTableHDU with TIME column)
+        if isinstance(self.input, fits.HDUList):
+            for hdu in self.input:
+                if isinstance(hdu, fits.BinTableHDU) and 'TIME' in hdu.columns.names:
+                    return 'contains TIME column'
+
         # flat image, not a cube
         # isinstance NDData
         if self.input_has_extensions and not len(self.extension.choices):
