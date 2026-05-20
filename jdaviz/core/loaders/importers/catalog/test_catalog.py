@@ -1,4 +1,3 @@
-
 from astropy.table import Table, QTable
 from jdaviz.core.loaders.importers.catalog.catalog import CatalogImporter
 
@@ -86,6 +85,7 @@ def test_pixel_column_detection(deconfigged_helper):
     # so they should be set as a placeholder value of '---'
     assert importer.col_x == '---'
     assert importer.col_y == '---'
+
 
 
 def test_catalog_importer_is_valid(deconfigged_helper):
