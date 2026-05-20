@@ -40,8 +40,8 @@
     </j-flex-row>
     <j-flex-row style='margin-bottom: 0px'>
       <v-slider
-        :value="rs_slider"
-        @input="throttledSlider"
+        :model-value="rs_slider"
+        @update:modelValue="throttledSlider"
         @end="slider_reset"
         class="align-center"
         :max="rs_slider_half_range"
@@ -61,8 +61,8 @@
     <v-row class="row-no-outside-padding row-min-bottom-padding vuetify2">
       <v-col>
         <v-text-field
-          :value='rs_redshift'
-          @input='setRedshiftFloat'
+          :model-value='rs_redshift'
+          @update:modelValue='setRedshiftFloat'
           @blur="unpause_tables"
           :step="rs_slider_step"
           class="mt-0 pt-0"
@@ -80,8 +80,8 @@
     <v-row class="row-no-outside-padding vuetify2">
       <v-col>
         <v-text-field
-          v-model.number="rs_rv"
-          @input='setRVFloat'
+          :model-value="rs_rv"
+          @update:modelValue='setRVFloat'
           @blur="unpause_tables"
           :step="rs_rv_step"
           class="mt-0 pt-0"
@@ -138,7 +138,7 @@
               <v-col cols=2>
                 <v-btn
                   v-if="item != 'Custom'"
-                  @click.native.stop="remove_list(item)"
+                  @click.stop="remove_list(item)"
                   small="true"
                   icon
                 >
@@ -310,8 +310,8 @@
                     <v-col cols=6 style="padding-top: 0px">
                       <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Observed</b/></v-subheader>
                       <v-text-field
-                        v-model.number="line.obs"
-                        @input="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: true})"
+                        :model-value="line.obs"
+                        @update:modelValue="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: true})"
                         @blur="unpause_tables"
                         step="0.1"
                         class="mt-0 pt-0"

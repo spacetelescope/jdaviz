@@ -31,7 +31,7 @@
       <v-row class="row-no-outside-padding row-min-bottom-padding vuetify2">
         <v-col>
           <v-text-field
-            :value="cube_slice"
+            :model-value="cube_slice"
             class="mt-0 pt-0"
             :label="api_hints_enabled ? 'plg.cube_slice' : 'Slice wavelength'"
             :class="api_hints_enabled ? 'api-hint' : null"
