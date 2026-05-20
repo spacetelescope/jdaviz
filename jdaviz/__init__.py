@@ -62,6 +62,7 @@ def _register_new_app_hook(hook):
     for app in _apps:
         hook(app)
 
+
 # ipywidgets.Widget.get_state() iterates over _states_to_send, a set
 # that cam be mutated mid-iteration, causing "RuntimeError: Set changed size during iteration".
 # pass in a copy of the set (rather than the live set) to avoid this.
