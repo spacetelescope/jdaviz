@@ -10,13 +10,13 @@ from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import create_data_hash, WORDS_TO_EXCLUDE
+from jdaviz.utils import create_data_hash, COORD_WORDS_TO_EXCLUDE
 
 __all__ = ['CatalogImporter']
 
+
 @loader_importer_registry("Catalog")
 class CatalogImporter(BaseImporterToDataCollection):
-
     template_file = __file__, "./catalog.vue"
 
     # for catalogs with source positions in sky coordinates
@@ -257,10 +257,10 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         # regular expressions to guess which columns correspond to ra, dec, x, y
         COORD_PATTERNS = {
-            "ra": re.compile(r'^ra$|^ra|ra$', re.IGNORECASE),  # contains RA, dec w/wo delimiter
-            "dec": re.compile(r'^dec$|^dec|dec$', re.IGNORECASE),
-            "x": re.compile(r'^x(pix(el)?)$|^x$|^x', re.IGNORECASE),  # x, xpix, xpixel
-            "y": re.compile(r'^y(pix(el)?)$|^y$|^y', re.IGNORECASE),  # y, ypix, ypixel
+            "ra": re.compile(r'^ra$|^ra|ra$|^right$|^ascension$', re.IGNORECASE),
+            "dec": re.compile(r'^dec$|^dec|dec$|^declination$', re.IGNORECASE),
+            "x": re.compile(r'^x(pix(el)?)$|^x$|^x', re.IGNORECASE),
+            "y": re.compile(r'^y(pix(el)?)$|^y$|^y', re.IGNORECASE),
         }
 
         input = self.input_as_table
@@ -282,25 +282,17 @@ class CatalogImporter(BaseImporterToDataCollection):
         if idx is None:
             all_column_names = [str(x).lower().strip() for x in colnames]
 
-            get_idx = lambda x, s, d: s.index(x) if x in s else d
+            get_idx = lambda x, s, d: s.index(x) if x in s else d # noqa
 
-            if col in ("ra", "dec"):
+            if col in ("ra", "dec", "x", "y"):
                 token_pattern = COORD_PATTERNS[col]
-                check = lambda tokens: (
-                        not any(token in WORDS_TO_EXCLUDE for token in tokens)
-                        and any(token_pattern.search(t) for t in tokens)
-                        )
-
-            elif col in ("x", "y"):
-                # x/y: allowlist approach — match whole column name
-                token_pattern = COORD_PATTERNS[col]
-                check = lambda tokens: any(token_pattern.search(t) for t in tokens)
+            else:
+                raise NotImplementedError(f"Not a valid coordinate column: {col}.")
 
             for c in all_column_names:
                 tokens = re.split(r'[\s_\-\.]+', c)
-                if check(tokens):
+                if self._check_col_tokens(col, token_pattern, tokens):
                     idx = get_idx(c, all_column_names, None)
-
 
         # if no good candidate found, default to '---' (no selection) for
         # the default selection.
@@ -310,6 +302,14 @@ class CatalogImporter(BaseImporterToDataCollection):
         # non-selection is the second option, so you don't have to scroll
         # all the way down to see that its an option not to load a column
         return [return_cols[0]] + ['---'] + return_cols[1:]
+
+    def _check_col_tokens(self, col, token_pattern, tokens):
+        if col in ("ra", "dec", "x", "y"):
+            return (not any(token in COORD_WORDS_TO_EXCLUDE for token in tokens)
+                    and any(token_pattern.search(t) for t in tokens)
+                    )
+        else:
+            raise NotImplementedError(f"Not a valid coordinate column: {col}.")
 
     def _valid_coord_units(self, coord):
         """Valid choices for Ra, Dec units."""
