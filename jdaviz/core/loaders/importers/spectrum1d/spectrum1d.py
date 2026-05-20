@@ -60,23 +60,33 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
     def _get_supported_viewers():
         return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
-    @property
-    def is_valid(self):
-        if self._app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid 1D spectrum.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
+        # generalized jdaviz isn't the valid config name, but we can
+        # drop it here for the string output.
+        accepted_configs = ['specviz', 'specviz2d', 'cubeviz', 'generalized jdaviz']
+        if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
-            return False
+            return f"spectrum1d importer is only supported in {', '.join(accepted_configs)}."
+
         if not len(self.extension.choices):
-            return False
-        try:
-            if np.any([spectrum.flux.ndim not in (1, 2) for spectrum in self.spectra]):
-                return False
-        except Exception:
-            return False
-        try:
-            self.output
-        except Exception:
-            return False
-        return True
+            return 'No extensions available.'
+
+        if np.any([spectrum.flux.ndim not in (1, 2) for spectrum in self.spectra]):
+            return 'All spectra must have 1D or 2D flux.'
+
+        _ = self.output
+        return ''
 
     def _apply_kwargs(self, kwargs):
         applied_kwargs = super()._apply_kwargs(kwargs)

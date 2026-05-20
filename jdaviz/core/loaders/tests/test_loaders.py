@@ -1,7 +1,9 @@
 import numpy as np
 import pytest
+import time
 from pathlib import Path
 from itertools import product
+from unittest.mock import patch
 
 from astropy import units as u
 from astropy.table import Table
@@ -423,6 +425,12 @@ def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
 
     ldr.observation_table.select_rows(0)
 
+    # file table is now populated asynchronously in a background thread;
+    # poll briefly until it finishes
+    deadline = time.time() + 30
+    while not ldr._obj.file_table_populated and time.time() < deadline:
+        time.sleep(0.1)
+
     assert ldr._obj.file_table_populated is True
     assert ldr._obj.get_selected_url() is None
 
@@ -449,6 +457,85 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     assert len(loader.format.choices) > 0
 
     loader.load()
+
+
+# ── Server-side pagination / resolver threading tests ────────────────────────
+
+def test_file_table_server_pagination_enabled(deconfigged_helper):
+    """Resolver sets server_pagination=True on the file_table at init."""
+    ldr = deconfigged_helper.loaders['object']
+    assert ldr._obj.file_table.server_pagination is True
+
+
+def test_fetch_and_populate_file_table_success(deconfigged_helper):
+    """_fetch_and_populate_file_table populates file table via set_all_items_from_table."""
+    ldr = deconfigged_helper.loaders['object']
+    resolver = ldr._obj
+
+    mock_file_table = Table({'name': ['file1.fits', 'file2.fits'],
+                             'location': ['http://a.fits', 'http://b.fits']})
+
+    with patch.object(resolver, '_get_product_list', return_value=mock_file_table), \
+         patch.object(resolver, '_parsed_input_to_file_table', return_value=mock_file_table):
+        resolver._fetch_and_populate_file_table(['dataset1'])
+
+    assert resolver.file_table_populated is True
+    assert resolver.file_table.server_items_length == 2
+    assert len(resolver.file_table._all_items) == 2
+    assert resolver.file_table.selected_rows == []
+
+
+def test_fetch_and_populate_file_table_no_products(deconfigged_helper):
+    """_fetch_and_populate_file_table handles no products by clearing the table."""
+    ldr = deconfigged_helper.loaders['object']
+    resolver = ldr._obj
+
+    # Pre-populate so we can verify it gets cleared
+    resolver.file_table._all_items = [{'name': 'old.fits'}]
+    resolver.file_table.server_items_length = 1
+    resolver.file_table_populated = True
+
+    with patch.object(resolver, '_get_product_list', return_value=None), \
+         patch.object(resolver, '_parsed_input_to_file_table', return_value=None):
+        resolver._fetch_and_populate_file_table(['dataset1'])
+
+    assert resolver.file_table_populated is False
+
+
+def test_fetch_and_populate_file_table_resets_selection(deconfigged_helper):
+    """_fetch_and_populate_file_table clears previous row selection before populating."""
+    ldr = deconfigged_helper.loaders['object']
+    resolver = ldr._obj
+
+    # Simulate a pre-existing selection
+    resolver.file_table.selected_rows = [{'name': 'old.fits', 'location': 'http://old.fits'}]
+
+    mock_file_table = Table({'name': ['new.fits'], 'location': ['http://new.fits']})
+
+    with patch.object(resolver, '_get_product_list', return_value=mock_file_table), \
+         patch.object(resolver, '_parsed_input_to_file_table', return_value=mock_file_table):
+        resolver._fetch_and_populate_file_table(['dataset1'])
+
+    assert resolver.file_table.selected_rows == []
+
+
+def test_on_observation_select_no_selection_clears_file_table(deconfigged_helper):
+    """on_observation_select_changed clears file table when no observation is selected."""
+    ldr = deconfigged_helper.loaders['object']
+    resolver = ldr._obj
+
+    # Pre-populate file table state
+    resolver.file_table._all_items = [{'name': 'file.fits'}]
+    resolver.file_table.server_items_length = 1
+    resolver.file_table_populated = True
+
+    # Ensure no rows are selected in the observation table
+    resolver.observation_table.selected_rows = []
+    resolver.on_observation_select_changed()
+
+    assert resolver.file_table._all_items == []
+    assert resolver.file_table.server_items_length == 0
+    assert resolver.file_table_populated is False
 
 
 @pytest.mark.parametrize('order', ([0, 1, 2], [0, 2, 1], [2, 0, 1], [2, 1, 0], [1, 2, 0]))

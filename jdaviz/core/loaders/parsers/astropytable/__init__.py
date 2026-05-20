@@ -1,0 +1,1 @@
+from .astropytable import *  # noqa

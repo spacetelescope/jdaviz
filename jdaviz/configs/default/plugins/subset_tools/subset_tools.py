@@ -164,6 +164,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             self._plugin_description = 'Select and interact with spectral subsets.'
         else:
             self._plugin_description = 'Select and interact with subsets.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/subsets/index.html'
 
         self.components = {
             'g-subset-mode': SelectionModeMenu(session=self.session)
