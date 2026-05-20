@@ -34,7 +34,7 @@ Other Changes and Additions
   pagination in the UI and fetching product lists in a background thread so the
   app remains responsive. [#4131]
 
-- Footprint selection in object loader now defaults to skewer mode. [#4186]
+- Footprint selection in loaders now defaults to skewer mode. [#4186]
 
 5.0.2 (unreleased)
 ==================
