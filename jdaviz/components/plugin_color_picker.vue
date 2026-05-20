@@ -14,8 +14,8 @@
           >&nbsp;</span>
       </template>
       <div @click.stop="" style="text-align: end; background-color: white">
-          <v-color-picker :value="value"
-                          @update:color="$emit('color-update', $event)"></v-color-picker>
+          <v-color-picker :model-value="value"
+                          @update:modelValue="$emit('color-update', $event)"></v-color-picker>
       </div>
     </v-menu>
     <span

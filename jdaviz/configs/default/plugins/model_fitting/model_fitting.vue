@@ -134,7 +134,7 @@
             <v-expansion-panel-title v-slot="{ open }">
               <v-row class="vuetify2" no-gutters align="center">
                 <v-col cols=3>
-                  <v-btn @click.native.stop="remove_model(item.id)" icon style="width: 60%">
+                  <v-btn @click.stop="remove_model(item.id)" icon style="width: 60%">
  <v-icon>mdi-close-circle</v-icon>
                   </v-btn>
                 </v-col>

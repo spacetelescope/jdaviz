@@ -194,7 +194,7 @@
 
           <j-flex-row v-if="selected_line">
             <v-text-field
-              :value='selected_line_redshift'
+              :model-value='selected_line_redshift'
               class="mt-0 pt-0"
               type="number"
               label="Redshift"

@@ -142,7 +142,7 @@
         <j-flex-row v-if="item.name === 'Parent' || item.name === 'Masked values'" class="row-no-outside-padding">
           <v-text-field
             :label="item.name"
-            :value="item.value"
+            :model-value="item.value"
             style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
             :readonly="true"
             :hint="item.name === 'Parent' ? 'Subset was defined with respect to this reference data (read-only)' : 'Number of elements included by mask'"

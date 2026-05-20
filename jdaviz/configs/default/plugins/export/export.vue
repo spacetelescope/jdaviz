@@ -277,7 +277,7 @@
     <v-row v-if="serverside_enabled" class="row-no-outside-padding row-min-bottom-padding vuetify2">
       <v-col>
         <v-text-field
-          :value="filepath"
+          :model-value="filepath"
           :label="api_hints_enabled ? 'plg.filepath' : 'Filepath'"
           :class="api_hints_enabled ? 'api-hint' : null"
           hint="Filepath export location.  If filename is not a full path, the filepath will include the default export directory."
@@ -336,7 +336,7 @@
       <v-overlay
         absolute
         opacity=0.5
-        :value="overwrite_warn"
+        :model-value="overwrite_warn"
         :zIndex=3
         style="grid-area: 1/1;
                margin-left: -24px;

@@ -18,21 +18,21 @@
       <v-select
         v-for="(widget, idx) in custom_widget_items"
         :key="idx"
-        :value="custom_widget_selected[idx]"
-        @input="(val) => update_widget_selection(idx, val)"
+        :model-value="custom_widget_selected[idx]"
+        @update:modelValue="(val) => update_widget_selection(idx, val)"
         :items="widget.items"
         :placeholder="widget.label"
         :multiple="widget.multiselect"
         :chips="widget.multiselect"
         :small-chips="widget.multiselect"
         deletable-chips
-        dense
+        density="compact"
         solo
         flat
         hide-details
         style="min-width: 120px; max-width: 250px;"
         class="custom-toolbar-select"
-        item-text="label"
+        item-title="label"
         item-value="value"
       ></v-select>
     </span>

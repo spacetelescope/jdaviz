@@ -52,7 +52,7 @@
          </span>
       </v-chip>
     </j-flex-row>
-    <v-dialog :value="selected === 'From File...' && from_file.length == 0" height="400" width="600">
+    <v-dialog :model-value="selected === 'From File...' && from_file.length == 0" height="400" width="600">
       <v-card v-if="deprecate_from_file">
         <v-card-title class="headline" color="primary" primary-title>Import Behavior Changed</v-card-title>
         <v-card-text>

@@ -137,7 +137,7 @@
         <v-overlay
           absolute
           opacity=1.0
-          :value="overwrite_warn && export_enabled"
+          :model-value="overwrite_warn && export_enabled"
           :zIndex=3
           style="grid-area: 1/1;
                  margin-left: -24px;

@@ -311,7 +311,7 @@
         multiple
         chips
         deletable-chips
-        dense
+        density="compact"
       >
         <template v-slot:selection="{ index }">
           <span v-if="index === 0">
@@ -986,10 +986,10 @@
                 <v-text-field
                   :label="api_hints_enabled ? 'plg.contour_custom_levels =' : 'Contour Levels'"
                   :class="api_hints_enabled ? 'api-hint' : null"
-                  :value="contour_custom_levels_txt"
+                  :model-value="contour_custom_levels_txt"
                   @focus="contour_custom_levels_focus"
                   @blur="contour_custom_levels_blur"
-                  @input="contour_custom_levels_set_value"/>
+                  @update:modelValue="contour_custom_levels_set_value"/>
               </glue-state-sync-wrapper>
             </div>
           </div>
