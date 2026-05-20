@@ -2170,16 +2170,21 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # removed so that the remainder of the label can be checked
         # against the label.
         check_if_dup = re.compile(r"(.*)(\s\(\d*\))$")
+
+        # Helper function to extract base label (without dup suffix)
+        def get_base_label(lbl):
+            m = check_if_dup.match(lbl)
+            return m.group(1) if m else lbl
+
         number_of_duplicates = 0
         max_number = 0
         for exist_label in exist_labels:
             # If label is a duplicate of another label
             if re.fullmatch(check_if_dup, exist_label):
-                exist_label_split = exist_label.split(" ")
-                exist_label_without_dup = " ".join(exist_label_split[:-1])
+                exist_label_without_dup = get_base_label(exist_label)
+                # Extract number from the dup suffix
+                number_dup = int(exist_label.split()[-1][1:-1])
                 exist_label = exist_label_without_dup
-                # Remove parentheses and cast to float
-                number_dup = int(exist_label_split[-1][1:-1])
                 # Used to keep track the max number of duplicates,
                 # even if not all duplicates are loaded (or some
                 # are renamed)
@@ -2204,10 +2209,10 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # causes issues. This block alters the duplicate number to be something unique
         # (one more than the max number duplicate found)
         # if a duplicate is still found in data_collection.
-        match = check_if_dup.match(label)
-        label_without_dup = match.group(1) if match else label
+        label_without_dup = get_base_label(label)
 
-        if any(label_without_dup in label for label in exist_labels):
+        if any(get_base_label(exist_label) == label_without_dup
+               for exist_label in exist_labels):
             label = f"{label_without_dup} ({max_number + 1})"
 
         elif label not in exist_labels and label_without_dup not in exist_labels:
