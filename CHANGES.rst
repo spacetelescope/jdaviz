@@ -46,6 +46,8 @@ Bug Fixes
 
 - Fix broken "Learn More" links throughout app. [#4173]
 
+- API hints toggle button to show in popout windows. [#4184]
+
 Mosviz
 ^^^^^^
 

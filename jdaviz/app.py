@@ -243,6 +243,8 @@ class ApplicationState(State):
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(
         False, docstring="Whether to show API hints.")
+    in_notebook = CallbackProperty(
+        False, docstring="Whether the app is running in a notebook (Jupyter) context")
     subset_mode_create = CallbackProperty(
         False, docstring="Whether to create a new subset.")
 
