@@ -2204,10 +2204,15 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # causes issues. This block alters the duplicate number to be something unique
         # (one more than the max number duplicate found)
         # if a duplicate is still found in data_collection.
+        match = check_if_dup.match(label)
+        label_without_dup = match.group(1) if match else label
+
         if label in exist_labels:
-            label_split = label.split(" ")
-            label_without_dup = " ".join(label_split[:-1])
             label = f"{label_without_dup} ({max_number + 1})"
+
+        elif label not in exist_labels and label_without_dup not in exist_labels:
+            # Reset label to base if items have been deleted
+            label = label_without_dup
 
         return label
 

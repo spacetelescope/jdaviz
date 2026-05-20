@@ -95,11 +95,13 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
             self.viewer_label_invalid_msg = ''
 
     @observe('viewer_items')
-    def _viewer_items_changed(self, *args):
+    def _viewer_items_changed(self, event):
         if not hasattr(self, 'viewer'):
             return
-        if self.viewer_label_default in self.viewer.choices:
-            self.viewer_label_default = self._app.return_unique_name(self.viewer_label_default, 'viewer')  # noqa
+
+        # This now works for viewers added or destroyed
+        self.viewer_label_default = self._app.return_unique_name(self.viewer_label_default,
+                                                                 'viewer')
 
     def __call__(self):
         """
