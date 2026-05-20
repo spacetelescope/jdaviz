@@ -288,7 +288,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     is_wcs_linked = Bool(False).tag(sync=True)
     image_data_loaded = Bool(False).tag(sync=True)
     footprint_select_icon = Unicode(read_icon(os.path.join(
-        ICON_DIR, 'footprint_select.svg'), 'svg+xml')).tag(sync=True)
+        ICON_DIR, 'skewer_select.svg'), 'svg+xml')).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         self.set_active_loader_callback = kwargs.pop('set_active_loader_callback', None)
@@ -334,7 +334,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
                     's_region' in self.observation_table.headers_avail):
-                return viewer.toolbar._original_tools_nested[:3] + ['jdaviz:selectregion', 'jdaviz:skewerregion'], 'jdaviz:selectregion'  # noqa: E501
+                return viewer.toolbar._original_tools_nested[:3] + ['jdaviz:selectregion', 'jdaviz:skewerregion'], 'jdaviz:skewerregion'  # noqa: E501
             return None, None
 
         self.custom_toolbar.callable = custom_toolbar
