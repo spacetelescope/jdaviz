@@ -112,27 +112,37 @@ class TestViewerCreatorObject:
         idx = labels.index('1D Spectrum')
         assert self.dcf_helper._app.state.new_viewer_items[idx]['is_relevant'] is True
 
-    def test_viewer_label_validation_duplicate(self):
+    def test_viewer_label_defaults_and_duplicates(self):
         """
-        Test that duplicate viewer labels are properly rejected.
+        Test that duplicate viewer labels are properly handled.
         """
         # Create first viewer
         viewer1 = self.dcf_helper.new_viewers['1D Spectrum']()
         assert viewer1._obj.id == '1D Spectrum (1)'
 
-        # Try to create another with the same label
-        creator = self.dcf_helper.new_viewers['1D Spectrum']._obj
-        # The default should update to avoid conflict
-        assert creator.viewer_label_default != '1D Spectrum'
+        # Create another two with the same label
+        viewer2 = self.dcf_helper.new_viewers['1D Spectrum']()
+        # The defaults should update to avoid conflict
+        assert viewer2._obj.id == '1D Spectrum (2)'
+        assert self.creator.viewer_label_default == '1D Spectrum (3)'
 
-        creator.viewer_label_value = '1D Spectrum'
+        # Remove the middle viewer and check that the new default label is not changed
+        self.dcf_helper._app.vue_destroy_viewer_item('1D Spectrum (1)')
+        assert self.creator.viewer_label_default == '1D Spectrum (3)'
+
+        # Remove the last viewer and check that the new default label is reset
+        self.dcf_helper._app.vue_destroy_viewer_item('1D Spectrum (2)')
+        assert self.creator.viewer_label_default == '1D Spectrum (1)'
+        
+        # Check duplicate validation
+        self.creator.viewer_label_value = '1D Spectrum'
 
         msg = "Viewer label '1D Spectrum' already in use."
-        assert creator.viewer_label_invalid_msg == msg
+        assert self.creator.viewer_label_invalid_msg == msg
 
         # Calling should raise ValueError
         with pytest.raises(ValueError, match=msg):
-            creator()
+            self.creator()
 
     def test_viewer_creator_with_datasets(self):
         """
