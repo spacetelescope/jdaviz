@@ -95,7 +95,7 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
             self.viewer_label_invalid_msg = ''
 
     @observe('viewer_items')
-    def _viewer_items_changed(self, event):
+    def _viewer_items_changed(self, *args):
         if not hasattr(self, 'viewer'):
             return
 
