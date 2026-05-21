@@ -61,6 +61,7 @@
               @update:value="$emit('update:treat_table_as_query', $event)"
               api_hint="ldr.treat_table_as_query ="
               :api_hints_enabled="api_hints_enabled"
+              hint="When toggled on, the archive query results will be an interactive table that will retrieve associated files for selected rows."
               style="margin-bottom: 12px"
             ></plugin-switch>
 
