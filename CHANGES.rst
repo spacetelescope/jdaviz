@@ -100,6 +100,9 @@ Bug Fixes
 
 - Fix passing strings to selected traitlet without expanding into characters. [#4157]
 
+- Stop using SkyCoord.from_name() to try to resolve sources in the astroquery loader
+  that are already RA and Dec coordinates. [#4193]
+
 5.0 (2026-04-15)
 ================
 
