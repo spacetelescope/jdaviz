@@ -1,4 +1,5 @@
 from astropy.coordinates import SkyCoord
+from astropy.coordinates.name_resolve import NameResolveError
 from astropy import units as u
 
 
@@ -79,7 +80,15 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
     @with_spinner(spinner_traitlet="results_loading")
     def query_archive(self):
-        skycoord_center = SkyCoord.from_name(self.source, frame=self.coordframe.selected)
+        try:
+            skycoord_center = SkyCoord.from_name(self.source, frame=self.coordframe.selected)
+        except NameResolveError as e:
+            # Sesame name resolution can fail when the service is unreachable (SSL timeout,
+            # redirect error, etc.). Surface the failure as a snackbar rather than propagating
+            # the exception to the caller.
+            errmsg = f"Unable to resolve source coordinates: {self.source}"
+            self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self, traceback=e))
+            return
         radius = self.radius * u.Unit(self.radius_unit.selected)
 
         if self.telescope.selected in ('JWST', 'HST'):

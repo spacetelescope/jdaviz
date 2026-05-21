@@ -2,6 +2,7 @@ import os
 import requests
 
 from astropy.coordinates import SkyCoord
+from astropy.coordinates.name_resolve import NameResolveError
 from astropy.table import Table, QTable
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.io import fits
@@ -354,6 +355,9 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
     ldr.max_results = 10
     try:
         ldr.query_archive()
+    except NameResolveError as exc:
+        # Sesame can be unreachable in CI (SSL timeout / redirect failure); skip instead of fail.
+        pytest.skip(f"Name resolution failed (Sesame unavailable): {exc}")
     except requests.exceptions.HTTPError as exc:
         msg = str(exc)
         if '408' in msg or 'timeout' in msg.lower() or 'aborted' in msg.lower():
@@ -411,7 +415,11 @@ def test_astroquery_jwst_hst(deconfigged_helper, telescope):
     ldr.source = 'M4'
     ldr.telescope = telescope
     ldr.max_results = 10
-    ldr.query_archive()
+    try:
+        ldr.query_archive()
+    except NameResolveError as exc:
+        # Sesame can be unreachable in CI (SSL timeout / redirect failure); skip instead of fail.
+        pytest.skip(f"Name resolution failed (Sesame unavailable): {exc}")
 
     assert ldr._obj.parsed_input_is_query is True
     assert ldr.treat_table_as_query is True
