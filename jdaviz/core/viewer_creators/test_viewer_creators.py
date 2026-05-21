@@ -133,7 +133,7 @@ class TestViewerCreatorObject:
         # Remove the last viewer and check that the new default label is reset
         self.dcf_helper._app.vue_destroy_viewer_item('1D Spectrum (2)')
         assert self.creator.viewer_label_default == '1D Spectrum (1)'
-        
+
         # Check duplicate validation
         self.creator.viewer_label_value = '1D Spectrum'
 
