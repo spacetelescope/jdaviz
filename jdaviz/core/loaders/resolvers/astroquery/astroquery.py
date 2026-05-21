@@ -78,19 +78,34 @@ class AstroqueryResolver(BaseConeSearchResolver):
             ],
         )
 
-    @with_spinner(spinner_traitlet="results_loading")
-    def query_archive(self):
-        output = None
-        skycoord_center = None
+    def _source_to_skycoord(self):
+        # Check to see if source is "[RA] [Dec]" (in degrees)
+        split_source = self.source.split(' ')
+        if len(split_source) == 2:
+            try:
+                _ = float(split_source[0])
+                _ = float(split_source[1])
+                return SkyCoord(self.source, unit=u.deg, frame=self.coordframe.selected)
+            except ValueError:
+                pass
 
+        # Otherwise try to resolve coordinates from the source name
         try:
-            skycoord_center = SkyCoord.from_name(self.source, frame=self.coordframe.selected)
+            return SkyCoord.from_name(self.source, frame=self.coordframe.selected)
         except NameResolveError as e:
             # Sesame name resolution can fail when the service is unreachable (SSL timeout,
             # redirect error, etc.). Surface the failure as a snackbar rather than propagating
             # the exception to the caller. Keep processing below so we clear stale results.
             errmsg = f"Unable to resolve source coordinates: {self.source}"
             self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self, traceback=e))
+            return None
+
+    @with_spinner(spinner_traitlet="results_loading")
+    def query_archive(self):
+        output = None
+
+        skycoord_center = self._source_to_skycoord()
+
         radius = self.radius * u.Unit(self.radius_unit.selected)
 
         # Only query the selected archive when name resolution succeeded.
