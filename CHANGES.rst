@@ -42,6 +42,9 @@ Bug Fixes
 
 - Fix broken "Learn More" links throughout app. [#4173]
 
+- Fix aperture photometry plugin remaining visible in tray after all 
+  image viewers are removed. [#4189]
+
 Mosviz
 ^^^^^^
 
