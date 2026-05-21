@@ -14,6 +14,8 @@ New Features
 
 - Importing Catalogs now has improved automatic detection of ra/dec/x/y columns. [#4183]
 
+- Label default behavior now adjusts for added or removed data/viewers for any that uses
+  _app.return_unique_name. Viewer default labels are now automatically updated as well. [#4192]
 
 Mosviz
 ^^^^^^
@@ -67,7 +69,7 @@ Bug Fixes
 
 - API hints toggle button to show in popout windows. [#4184]
 
-- Fix aperture photometry plugin remaining visible in tray after all 
+- Fix aperture photometry plugin remaining visible in tray after all
   image viewers are removed. [#4189]
 
 Mosviz
