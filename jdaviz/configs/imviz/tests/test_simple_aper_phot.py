@@ -582,6 +582,31 @@ def test_aper_phot_basic(helper_name, image_2d_wcs, request):
     assert len(tbl) == 1
 
 
+def test_aper_phot_irrelevant_after_viewer_destroy(deconfigged_helper, image_2d_wcs):
+    """
+    Test that aperture photometry plugin is removed from plugin tray
+    when all image viewers are removed.
+    """
+    data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(data, data_label='test_image')
+
+    app = deconfigged_helper._app
+    phot_plugin = deconfigged_helper.plugins['Aperture Photometry']
+
+    # Plugin should be exist in plugin tray while an image viewer exists
+    assert phot_plugin._obj.irrelevant_msg == ''
+    tray_labels = [ti['label'] for ti in app.state.tray_items]
+    ap_index = tray_labels.index('Aperture Photometry')
+    assert app.state.tray_items[ap_index]['is_relevant']
+
+    app.vue_destroy_viewer_item(app.get_viewer_ids()[0])
+    assert app.get_viewer_ids() == []
+
+    # Plugin should now not exist in plugin tray since no image viewers remain
+    assert phot_plugin._obj.irrelevant_msg != ''
+    assert not app.state.tray_items[ap_index]['is_relevant']
+
+
 def test_aper_phot_load_table_into_data_collection(imviz_helper, image_2d_wcs):
     """
     Test that aperture photometry table can be loaded back into the data collection

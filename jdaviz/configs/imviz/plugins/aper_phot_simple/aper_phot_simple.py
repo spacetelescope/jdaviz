@@ -141,6 +141,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/aperture_photometry.html'  # noqa
 
         self.dataset.add_filter('is_image_or_flux_cube')
+        self.dataset.add_filter('layer_in_viewers')
 
         self.background = SubsetSelect(self,
                                        'background_items',
