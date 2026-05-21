@@ -74,9 +74,11 @@ Bug Fixes
 - Fix aperture photometry plugin remaining visible in tray after all
   image viewers are removed. [#4189]
 
+- Stop using SkyCoord.from_name() to try to resolve sources in the astroquery loader
+  that are already RA and Dec coordinates. [#4193]
+
 Mosviz
 ^^^^^^
-
 
 5.0.1 (2026-05-01)
 ==================
@@ -99,9 +101,6 @@ Bug Fixes
   units of other extracted fluxes. [#4156]
 
 - Fix passing strings to selected traitlet without expanding into characters. [#4157]
-
-- Stop using SkyCoord.from_name() to try to resolve sources in the astroquery loader
-  that are already RA and Dec coordinates. [#4193]
 
 5.0 (2026-04-15)
 ================
