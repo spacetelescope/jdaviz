@@ -83,8 +83,6 @@ class AstroqueryResolver(BaseConeSearchResolver):
         split_source = self.source.split(' ')
         if len(split_source) == 2:
             try:
-                _ = float(split_source[0])
-                _ = float(split_source[1])
                 return SkyCoord(self.source, unit=u.deg, frame=self.coordframe.selected)
             except ValueError:
                 pass
