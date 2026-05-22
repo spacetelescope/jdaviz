@@ -64,6 +64,15 @@
               hint="When toggled on, the archive query results will be an interactive table that will retrieve associated files for selected rows."
               style="margin-bottom: 12px"
             ></plugin-switch>
+            <plugin-switch
+              label="Limit to Science Products"
+              :value.sync="limit_to_science_products"
+              @update:value="$emit('update:limit_to_science_products', $event)"
+              api_hint="ldr.limit_to_science_products ="
+              :api_hints_enabled="api_hints_enabled"
+              hint="When toggled on, selecting a row from the query results table will only retrieve the associated science type files (not reference, guidestar, etc)."
+              style="margin-bottom: 12px"
+            ></plugin-switch>
 
             <div v-if="treat_table_as_query && observation_table_populated">
               <span class="table-title">Observations</span>
@@ -168,7 +177,7 @@
 module.exports = {
   props: ['title', 'popout_button', 'spinner',
           'parsed_input_is_empty', 'parsed_input_is_resolvable',
-          'parsed_input_is_query', 'treat_table_as_query',
+          'parsed_input_is_query', 'treat_table_as_query', 'limit_to_science_products',
           'observation_table', 'observation_table_populated',
           'file_table', 'file_table_populated',
           'file_cache', 'file_timeout',

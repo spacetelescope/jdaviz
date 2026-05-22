@@ -260,6 +260,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
     observation_table = Instance(Table).tag(sync=True, **widget_serialization)
     observation_table_populated = Bool(False).tag(sync=True)
+    # Limit to type='science' when retrieving products for selected observation
+    limit_to_science_products = Bool(True).tag(sync=True)
     file_table = Instance(Table).tag(sync=True, **widget_serialization)
     file_table_populated = Bool(False).tag(sync=True)
 
@@ -715,7 +717,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     @with_spinner('spinner', 'fetching product list...')
     def _get_product_list(self, mission, dataset):
         self.missions_query.mission = mission
-        return self.missions_query.get_product_list(dataset)
+        products = self.missions_query.get_product_list(dataset)
+        if self.limit_to_science_products:
+            products = self.missions_query.filter_products(products, type='science')
+        return products
 
     @staticmethod
     def guess_mission(dataset):
