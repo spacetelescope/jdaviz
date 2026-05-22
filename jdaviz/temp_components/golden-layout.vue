@@ -505,6 +505,16 @@ function collectExistingComponentKeys(root) {
   return keys
 }
 
+function countLayoutStacks(item) {
+  if (!item || typeof item !== 'object') {
+    return 0
+  }
+
+  const content = Array.isArray(item.content) ? item.content : []
+  const nestedCount = content.reduce((total, child) => total + countLayoutStacks(child), 0)
+  return (item.type === 'stack' ? 1 : 0) + nestedCount
+}
+
 function reconcileLayoutState(baseState, templateLayout) {
   if (!templateLayout || !templateLayout.root) {
     return baseState
@@ -528,6 +538,10 @@ function reconcileLayoutState(baseState, templateLayout) {
   })
 
   if (missingComponents.length) {
+    if (countLayoutStacks(templateLayout.root) > countLayoutStacks(reconciledRoot)) {
+      return cloneValue(templateLayout)
+    }
+
     let targetStack = findFirstStack(reconciledRoot)
 
     if (!targetStack) {
