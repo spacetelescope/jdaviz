@@ -452,17 +452,18 @@ class TestParseImage:
         assert_array_equal(tbl[0]['aperture_sum_mag'], None)
         assert_array_equal(tbl[0]['flux_scaling'], None)
         assert_quantity_allclose(tbl[0]['sum_aper_area'], 2583.959958 * PIX2, rtol=1e-3)
-        # This file keeps changing in reprocessing between two shapes, which gives different values
+        # This file keeps changing in reprocessing between two shapes and also differs slightly
+        # between photutils versions (~0.5%), so rtol is set accordingly.
         if data.shape[1] == 4219:
-            assert_quantity_allclose(tbl[0]['sum'], 112.712406 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['min'], -0.02422 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['max'], 1.577081 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['mean'], 0.043684 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['sum'], 112.712406 * data_unit, rtol=1e-2)
+            assert_quantity_allclose(tbl[0]['min'], -0.02422 * data_unit, rtol=1e-2)
+            assert_quantity_allclose(tbl[0]['max'], 1.577081 * data_unit, rtol=1e-2)
+            assert_quantity_allclose(tbl[0]['mean'], 0.043684 * data_unit, rtol=1e-2)
         elif data.shape[1] == 4220:
-            assert_quantity_allclose(tbl[0]['sum'], 126.582084 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['min'], -0.027572 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['max'], 4.021776 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['mean'], 0.049325 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['sum'], 126.582084 * data_unit, rtol=1e-2)
+            assert_quantity_allclose(tbl[0]['min'], -0.027572 * data_unit, rtol=1e-2)
+            assert_quantity_allclose(tbl[0]['max'], 4.021776 * data_unit, rtol=1e-2)
+            assert_quantity_allclose(tbl[0]['mean'], 0.049325 * data_unit, rtol=1e-2)
 
         # Request specific extension (name only), use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
