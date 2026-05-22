@@ -421,6 +421,12 @@ def test_astroquery_jwst_hst(deconfigged_helper, telescope):
         # Sesame can be unreachable in CI (SSL timeout / redirect failure); skip instead of fail.
         pytest.skip(f"Name resolution failed (Sesame unavailable): {exc}")
 
+    # query_archive() catches NameResolveError internally (broadcasts snackbar + returns early)
+    # rather than propagating it, so the except above is dead code for that case.
+    # Check _output directly to detect a silent name-resolution or network failure.
+    if ldr._obj._output is None:
+        pytest.skip("Name resolution or MAST query failed silently (Sesame unavailable)")
+
     assert ldr._obj.parsed_input_is_query is True
     assert ldr.treat_table_as_query is True
 
