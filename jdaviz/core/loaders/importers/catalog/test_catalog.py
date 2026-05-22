@@ -41,10 +41,10 @@ def test_coord_column(deconfigged_helper,
 
     # specifically test that 'right ascension' is read as an RA column and not as a Dec column
     this_table = sky_coord_only_source_catalog.copy()
-    this_table.rename_column(coordinate_name, 'right ascension')
+    this_table.rename_column(coordinate_name, 'rightascension')
     importer._input = this_table
     if coordinate_name == 'ra':
-        assert importer._guess_coord_cols(coordinate_name)[0] == 'right ascension'
+        assert importer._guess_coord_cols(coordinate_name)[0] == 'rightascension'
     elif coordinate_name == 'dec':
         assert importer._guess_coord_cols(coordinate_name)[0] == '---'
 
