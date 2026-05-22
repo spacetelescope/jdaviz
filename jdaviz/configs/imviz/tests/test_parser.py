@@ -458,9 +458,10 @@ class TestParseImage:
         # aperture happens to be the most negative/positive.  A data reprocessing can change that
         # pixel's value by much more than the ~0.5% shift seen in aggregate statistics (sum/mean),
         # so rtol is not appropriate here.  atol is used instead:
-        #   - min is a noise-dominated pixel (~0.001 electron/s background), so a small atol suffices.
-        #   - max is a bright source pixel (~1-4 electron/s), which can shift by ~5% on reprocessing,
-        #     requiring a larger atol scaled to its brightness.
+        #   - min is a noise-dominated pixel (~0.001 electron/s background), so a small atol
+        #     suffices.
+        #   - max is a bright source pixel (~1-4 electron/s), which can shift by ~5% on
+        #     reprocessing, requiring a larger atol scaled to its brightness.
         if data.shape[1] == 4219:
             assert_quantity_allclose(tbl[0]['sum'], 112.712406 * data_unit, rtol=1e-2)
             assert_quantity_allclose(tbl[0]['min'], -0.02422 * data_unit, atol=0.05 * data_unit)
