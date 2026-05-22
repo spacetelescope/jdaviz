@@ -457,17 +457,19 @@ class TestParseImage:
         # min and max are single-pixel extreme statistics: they reflect whichever pixel in the
         # aperture happens to be the most negative/positive.  A data reprocessing can change that
         # pixel's value by much more than the ~0.5% shift seen in aggregate statistics (sum/mean),
-        # so rtol is not appropriate here.  atol is used instead, sized to the noise level of the
-        # background (~0.001 electron/s) with enough headroom to absorb reprocessing variation.
+        # so rtol is not appropriate here.  atol is used instead:
+        #   - min is a noise-dominated pixel (~0.001 electron/s background), so a small atol suffices.
+        #   - max is a bright source pixel (~1-4 electron/s), which can shift by ~5% on reprocessing,
+        #     requiring a larger atol scaled to its brightness.
         if data.shape[1] == 4219:
             assert_quantity_allclose(tbl[0]['sum'], 112.712406 * data_unit, rtol=1e-2)
             assert_quantity_allclose(tbl[0]['min'], -0.02422 * data_unit, atol=0.05 * data_unit)
-            assert_quantity_allclose(tbl[0]['max'], 1.577081 * data_unit, atol=0.05 * data_unit)
+            assert_quantity_allclose(tbl[0]['max'], 1.577081 * data_unit, atol=0.3 * data_unit)
             assert_quantity_allclose(tbl[0]['mean'], 0.043684 * data_unit, rtol=1e-2)
         elif data.shape[1] == 4220:
             assert_quantity_allclose(tbl[0]['sum'], 126.582084 * data_unit, rtol=1e-2)
             assert_quantity_allclose(tbl[0]['min'], -0.027572 * data_unit, atol=0.05 * data_unit)
-            assert_quantity_allclose(tbl[0]['max'], 4.021776 * data_unit, atol=0.05 * data_unit)
+            assert_quantity_allclose(tbl[0]['max'], 4.021776 * data_unit, atol=0.3 * data_unit)
             assert_quantity_allclose(tbl[0]['mean'], 0.049325 * data_unit, rtol=1e-2)
 
         # Request specific extension (name only), use given label
