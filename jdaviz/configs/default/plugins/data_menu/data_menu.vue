@@ -31,7 +31,7 @@
               </div>
 
               <div v-for="(item, idx) in visible_layer_items_limited" :key="item.label + '-' + idx" class="viewer-label">
-                <v-tooltip left :open-delay="300">
+                <v-tooltip location="left" :open-delay="300">
                   <template v-slot:activator="{ on: labelOn, attrs: labelAttrs }">
                     <span v-bind="labelAttrs" v-on="labelOn" style="float: right; display: inline-block">
                       <j-layer-viewer-icon-stylized
