@@ -34,6 +34,8 @@ let sizeObserver = null
 let resizeFrame = null
 let settleResizeFrames = []
 let dragCleanupFrame = null
+let suppressCloseEvents = false
+let suppressCloseReleaseFrame = null
 
 const GL_COMPONENT_TYPE = '__jdz_gl_component__'
 const STALE_DRAG_PROXY_SELECTOR = 'body > .lm_dragProxy'
@@ -56,6 +58,41 @@ function safeHash(value) {
   } catch (error) {
     return ''
   }
+}
+
+function clearSuppressCloseReleaseFrame() {
+  if (suppressCloseReleaseFrame !== null) {
+    cancelAnimationFrame(suppressCloseReleaseFrame)
+    suppressCloseReleaseFrame = null
+  }
+}
+
+function suppressClosesUntilNextFrame(callback) {
+  clearSuppressCloseReleaseFrame()
+  suppressCloseEvents = true
+  try {
+    callback()
+  } finally {
+    suppressCloseReleaseFrame = requestAnimationFrame(() => {
+      suppressCloseReleaseFrame = null
+      suppressCloseEvents = false
+    })
+  }
+}
+
+function suppressCloses(callback) {
+  clearSuppressCloseReleaseFrame()
+  suppressCloseEvents = true
+  try {
+    callback()
+  } finally {
+    suppressCloseEvents = false
+  }
+}
+
+function cancelCloseSuppression() {
+  clearSuppressCloseReleaseFrame()
+  suppressCloseEvents = false
 }
 
 function isStateCompatible(state, componentConfigIds = new Set()) {
@@ -171,7 +208,10 @@ function ensureLayout() {
     }
 
     const handleClose = () => {
-      node.emitDestroy && node.emitDestroy({ $root: true, __nodeId: nodeId })
+      if (suppressCloseEvents) {
+        return
+      }
+      node.emitUserClose && node.emitUserClose()
     }
 
     container.on('resize', handleResize)
@@ -748,7 +788,9 @@ function loadLayout(layoutConfig) {
 
   const normalizedLayout = normalizeAndSanitizeLayout(layoutConfig)
 
-  layoutInstance.value.loadLayout(normalizedLayout)
+  suppressClosesUntilNextFrame(() => {
+    layoutInstance.value.loadLayout(normalizedLayout)
+  })
   scheduleSettledRootResize()
 }
 
@@ -886,6 +928,8 @@ onBeforeUnmount(() => {
     dragCleanupFrame = null
   }
 
+  cancelCloseSuppression()
+
   window.removeEventListener('mouseup', scheduleDragProxyCleanup)
   window.removeEventListener('pointerup', scheduleDragProxyCleanup)
   window.removeEventListener('pointercancel', scheduleDragProxyCleanup)
@@ -912,8 +956,10 @@ onBeforeUnmount(() => {
   }
 
   if (layoutInstance.value) {
-    layoutInstance.value.destroy()
-    layoutInstance.value = null
+    suppressCloses(() => {
+      layoutInstance.value.destroy()
+      layoutInstance.value = null
+    })
   }
 
   removeStaleDragProxies()

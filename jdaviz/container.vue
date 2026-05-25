@@ -21,7 +21,7 @@
       :title="viewer.reference || viewer.id"
       :tab-id="viewer.id"
       @resize="(e) => $emit('resize', e)"
-      @destroy="destroy($event, viewer.id)"
+      @user-close="closefn(viewer.id)"
       style="display: flex; flex-flow: column; height: 100%; overflow-y: auto; overflow-x: hidden"
     >
       <jupyter-widget
@@ -53,12 +53,6 @@ export default {
   methods: {
     computeChildrenPath() {
       return this.$parent.computeChildrenPath();
-    },
-    destroy(source, viewerId) {
-      /* There seems to be no close event provided by vue-golden-layout, so we can't distinguish
-       * between a user closing a tab or a re-render. However, when the user closes a tab, the
-       * source of the event is a vue component. We can use that distinction as a close signal. */
-      source.$root && this.closefn(viewerId);
     }
   },
   computed: {
