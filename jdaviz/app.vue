@@ -440,8 +440,7 @@
       v-model="state.snackbar.show"
       :timeout="snackbarTimeout"
       :color="state.snackbar.color"
-      top
-      right
+      location="top right"
       transition="slide-x-transition"
       absolute
       style="margin-right: 95px; margin-top: -2px"
