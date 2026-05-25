@@ -24,7 +24,7 @@ const props = defineProps({
   height: { type: [String, Number], default: undefined },
 })
 
-const emit = defineEmits(['resize', 'destroy'])
+const emit = defineEmits(['resize', 'user-close'])
 
 let layoutContext = null
 const nodeId = `gl-component-${Math.random().toString(36).slice(2)}`
@@ -106,8 +106,8 @@ onMounted(() => {
     emitResize(payload) {
       emit('resize', payload)
     },
-    emitDestroy(payload) {
-      emit('destroy', payload)
+    emitUserClose() {
+      emit('user-close')
     },
     getConfig() {
       const tabId = props.tabId !== undefined && props.tabId !== null ? String(props.tabId) : null
