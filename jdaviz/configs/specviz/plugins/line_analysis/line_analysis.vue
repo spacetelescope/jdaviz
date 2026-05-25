@@ -179,7 +179,7 @@
             </v-col>
             <v-col cols=10>
               <v-select
-                :menu-props="{ left: true }"
+                :menu-props="{ location: 'bottom start' }"
                 attach
                 :items="line_menu_items"
                 item-title="title"

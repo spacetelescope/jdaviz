@@ -92,7 +92,7 @@
     <v-col>
       <v-row class="vuetify2">
       <v-select
-        :menu-props="{ left: true }"
+        :menu-props="{ location: 'bottom start' }"
         attach
         multiple
         :items="Object.keys(flag_map_definitions_selected).map(Number)"

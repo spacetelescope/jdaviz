@@ -2,7 +2,7 @@
   <div>
     <j-flex-row>
       <v-select
-        :menu-props="{ left: true }"
+        :menu-props="{ location: 'bottom start' }"
         attach
         :items="items"
         item-title="label"

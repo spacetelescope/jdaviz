@@ -4,7 +4,7 @@
     <v-select
       v-if="mode=='select'"
       attach
-      :menu-props="{ left: true }"
+      :menu-props="{ location: 'bottom start' }"
       :items="items"
       :model-value="selected"
       @update:modelValue="$emit('update:selected', $event)"

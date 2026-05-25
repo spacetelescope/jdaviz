@@ -123,7 +123,7 @@
     </j-flex-row>
     <j-flex-row>
       <v-select
-        :menu-props="{ left: true }"
+        :menu-props="{ location: 'bottom start' }"
         attach
         :items="sound_devices_items"
         v-model="sound_devices_selected"

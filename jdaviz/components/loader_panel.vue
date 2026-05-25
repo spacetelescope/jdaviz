@@ -2,7 +2,7 @@
   <div>
     <v-select
       v-if="!hide_resolver"
-      :menu-props="{ left: true }"
+      :menu-props="{ location: 'bottom start' }"
       attach
       :items="loader_items_filtered"
       :model-value="loader_selected"
