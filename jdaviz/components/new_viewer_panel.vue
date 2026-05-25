@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-select
-      :menu-props="{ left: true }"
+      :menu-props="{ location: 'bottom start' }"
       attach
       :items="new_viewer_items_filtered"
       :model-value="new_viewer_selected"

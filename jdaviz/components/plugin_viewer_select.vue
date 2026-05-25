@@ -18,7 +18,7 @@
   </div>
   <j-flex-row v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
-      :menu-props="{ left: true }"
+      :menu-props="{ location: 'bottom start' }"
       attach
       :items="items"
       :model-value="selected"

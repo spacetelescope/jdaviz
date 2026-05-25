@@ -208,7 +208,7 @@
       <glue-state-sync-wrapper :sync="image_color_mode_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('image_color_mode')">
         <v-select
           attach
-          :menu-props="{ left: true }"
+          :menu-props="{ location: 'bottom start' }"
           :items="image_color_mode_sync.choices"
           v-model="image_color_mode_value"
           :label="api_hints_enabled ? 'plg.image_color_mode = ' : 'Color Mode'"
@@ -301,7 +301,7 @@
     <glue-state-sync-wrapper :sync="table_columns_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('table_columns_visible')">
       <v-select
         attach
-        :menu-props="{ left: true }"
+        :menu-props="{ location: 'bottom start' }"
         :items="table_columns_visible_sync.choices"
         v-model="table_columns_visible_value"
         :label="api_hints_enabled ? 'plg.table_columns_visible =' : 'Visible Columns'"
@@ -689,7 +689,7 @@
         <glue-state-sync-wrapper v-if="image_color_mode_value === 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_colormap_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_colormap')">
           <v-select
             attach
-            :menu-props="{ left: true }"
+            :menu-props="{ location: 'bottom start' }"
             :items="image_colormap_sync.choices"
             v-model="image_colormap_value"
             :label="api_hints_enabled ? 'plg.image_colormap =' : 'Colormap'"

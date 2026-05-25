@@ -99,7 +99,7 @@
     <j-plugin-section-header>Preset Line Lists</j-plugin-section-header>
     <j-flex-row>
       <v-select
-        :menu-props="{ left: true }"
+        :menu-props="{ location: 'bottom start' }"
         attach
         :items="available_lists"
         :model-value="preset_list_selected"
