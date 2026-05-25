@@ -205,7 +205,7 @@
               </j-flex-row>
             </div>
 
-            <div v-if="list_contents[item].lines.length">
+            <div v-if="list_contents[item].lines.length" class="loaded-lines-content">
 
               <v-row class="row-no-padding mt-4 mb-3">
                 <v-col cols=6 style="padding: 0">
@@ -272,7 +272,7 @@
               <v-divider style="margin-bottom: 8px"></v-divider>
 
               <j-flex-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
-                <div v-if="lineItemVisible(line, lines_filter, filter_range)">
+                <div v-if="lineItemVisible(line, lines_filter, filter_range)" style="width: 100%;">
 
                   <v-row class="row-no-vertical-padding-margin vuetify2" style="margin: 0px">
                     <v-col cols=7  style="padding: 0">
@@ -460,6 +460,13 @@
       font-size: 16px;
       padding-left: 16px;
       border: 2px solid rgba(0,0,0,0.54);
+  }
+  
+  .loaded-lines-content {
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 8px;
+    padding-right: 8px;
   }
 
 </style>
