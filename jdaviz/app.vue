@@ -438,7 +438,7 @@
     </v-main>
     <v-snackbar
       v-model="state.snackbar.show"
-      :timeout="state.snackbar.timeout"
+      :timeout="snackbarTimeout"
       :color="state.snackbar.color"
       top
       right
@@ -491,6 +491,11 @@ export default {
       return this.state.loader_items.filter(item => {
         return !disabled_loaders.includes(item.name);
       });
+    },
+    snackbarTimeout() {
+      // Jdaviz uses 0 to mean "timeout is controlled by the backend queue".
+      // Vuetify 3 treats 0 as "close immediately"; -1 keeps the snackbar open.
+      return Number(this.state.snackbar.timeout) === 0 ? -1 : this.state.snackbar.timeout;
     },
   },
   methods: {
