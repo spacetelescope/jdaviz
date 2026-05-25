@@ -256,7 +256,7 @@
 
                 <v-text-field
                   v-model="lines_filter"
-                  append-icon='mdi-magnify'
+                  append-inner-icon='mdi-magnify'
                   style="padding: 0px 0px; margin-left: 8px; max-width: calc(100% - 38px)"
                   clearable
                   hide-details
