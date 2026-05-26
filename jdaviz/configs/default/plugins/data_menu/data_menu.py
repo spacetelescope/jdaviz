@@ -24,7 +24,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue.viewers.scatter.state import ScatterLayerState
 from glue_jupyter.bqplot.image import BqplotImageView
 
-import ipyvuedraggable
+# import ipyvuedraggable
 
 __all__ = ['DataMenu']
 
@@ -126,7 +126,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         super().__init__(*args, **kwargs)
 
         # Trigger the loading of ipyvuedraggable in the frontend in notebook and Solara.
-        ipyvuedraggable.Draggable()
+        # ipyvuedraggable.Draggable()
         self._viewer = viewer
         self._during_select_sync = False
 

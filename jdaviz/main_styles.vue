@@ -3,7 +3,13 @@
 <script>
 export default {
   created() {
-    this.$vuetify.theme.themes.light = {
+    const theme = this.$vuetify?.theme;
+    const vuetifyThemes = theme?.themes;
+    if (!vuetifyThemes) {
+      return;
+    }
+
+    const lightColors = {
       toolbar: "#003B4D",
       primary: "#00617E",
       secondary: "#007DA4",
@@ -19,7 +25,8 @@ export default {
       active: '#C75109',
       viewer_toolbar: '#205f76',
     };
-    this.$vuetify.theme.themes.dark = {
+
+    const darkColors = {
       toolbar: "#153A4B",
       primary: "#53CBFF",
       secondary: "#007DA4",
@@ -34,6 +41,24 @@ export default {
       gray: '#141414',
       active: '#C75109',
       viewer_toolbar: '#205f76',
+    };
+
+    // Vuetify 3 theme entries include metadata (`dark`, `variables`) plus `colors`.
+    // Update only the colors to avoid replacing the full theme object.
+    if (!vuetifyThemes.light) {
+      vuetifyThemes.light = { dark: false, colors: {}, variables: {} };
+    }
+    if (!vuetifyThemes.dark) {
+      vuetifyThemes.dark = { dark: true, colors: {}, variables: {} };
+    }
+
+    vuetifyThemes.light.colors = {
+      ...(vuetifyThemes.light.colors || {}),
+      ...lightColors,
+    };
+    vuetifyThemes.dark.colors = {
+      ...(vuetifyThemes.dark.colors || {}),
+      ...darkColors,
     };
   },
 }
@@ -63,12 +88,25 @@ div.output_wrapper {
   padding: 0px;
 }
 
+.v-slider:not(.v-input--disabled) .v-slider-track__background,
+.v-slider:not(.v-input--disabled) .v-slider-track__fill {
+  background-color: rgb(var(--v-theme-viewer_toolbar));
+}
+
+.v-slider:not(.v-input--disabled) .v-slider-thumb {
+  color: rgb(var(--v-theme-viewer_toolbar));
+}
+
+.v-slider .v-slider__container {
+  margin-bottom: 16px;
+}
+
 .plugin-header {
   /* ensure dropdown arrow aligns to the top for tall headers */
   align-items: start !important;
 }
 
-.plugin-header .v-expansion-panel-header__icon {
+.plugin-header .v-expansion-panel-title__icon {
   margin-top: 4px;
 }
 
@@ -83,7 +121,8 @@ div.output_wrapper {
   align-items: center;
 }
 
-.v-tabs-items {
+.v-tabs-items,
+.v-window {
   height: 100%;
 }
 
@@ -153,9 +192,9 @@ div.output_wrapper {
   display: none;
 }
 
-.v-toolbar__items .v-btn {
+.v-toolbar-items .v-btn {
   /* allow v-toolbar-items styling to pass through tooltip wrapping span */
-  /* css is copied from .v-toolbar__items>.v-btn */
+  /* css is copied from toolbar item button styling */
   border-radius: 0;
   height: 100% !important;
   max-height: none;
@@ -169,7 +208,7 @@ div.output_wrapper {
   z-index: 10000 !important;
 }
 
-.v-expansion-panel-content__wrap {
+.v-expansion-panel-text__wrapper {
   padding-left: 12px !important;
   padding-right: 12px !important;
 }
@@ -190,7 +229,7 @@ a:active {
   text-decoration: none;
 }
 
-.invert, .invert-if-dark.theme--dark {
+.invert, .invert-if-dark.theme--dark, .v-theme--dark .invert-if-dark {
   filter: invert(1) saturate(1) brightness(100);
   color: white;
 }
@@ -219,12 +258,17 @@ a:active {
   height: 42px !important;
   border: none !important;
   min-width: 42px !important;
-  /* remove "dimming" since we use orange background for active */
-  color: transparent !important;
+  /* keep icons visible in Vuetify 3 (older transparent-color hack hides content) */
+  color: inherit !important;
 }
 
 .jdaviz-nested-toolbar .v-btn-toggle>.v-btn.v-btn {
     opacity: 1;
+}
+
+.jdaviz-nested-toolbar .v-btn .v-btn__content,
+.plugin-nested-toolbar .v-btn .v-btn__content {
+  opacity: 1 !important;
 }
 
 .suboptions-carrot {
@@ -242,7 +286,8 @@ a:active {
   background-color: #c7510996 !important;
 }
 
-.v-divider.theme--dark {
+.v-divider.theme--dark,
+.v-theme--dark .v-divider {
   /* make the v-divider standout more */
   border-color: hsla(0,0%,100%,.35) !important;
 }
@@ -260,9 +305,11 @@ a:active {
   filter: brightness(0) saturate(100%) invert(100%);
 }
 
+/* TODO: is this still needed? It breaks tooltip positioning
 .v-overlay__content {
   position: unset !important;
 }
+*/
 
 .jdaviz__content--not-in-notebook {
   max-height: calc(100% - 48px);
@@ -294,6 +341,23 @@ a:active {
   font-size: 15px !important;
   font-family: Roboto, sans-serif !important;
   font-weight: 500 !important;
+}
+
+.v-application.jdaviz.jdaviz-notebook-context,
+.v-application.jdaviz.jdaviz-notebook-context .v-application__wrap {
+  min-height: 0;
+  height: var(--jdaviz-notebook-max-height);
+  max-height: var(--jdaviz-notebook-max-height);
+  overflow: hidden;
+}
+
+.v-application.jdaviz.jdaviz-notebook-context .v-main,
+.v-application.jdaviz.jdaviz-notebook-context .v-main > .v-container,
+.v-application.jdaviz.jdaviz-notebook-context .splitpanes {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 span.api-hint, span.api-hint-header {

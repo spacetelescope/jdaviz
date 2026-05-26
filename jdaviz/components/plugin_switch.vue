@@ -2,6 +2,9 @@
   <span v-if="use_icon">
     <v-btn
       icon
+      variant="text"
+      size="small"
+      density="default"
       @mouseover="$emit('mouseover')"
       @mouseleave="$emit('mouseleave')"
       @click.stop="$emit('update:value', !value); $emit('click', !value)"
@@ -20,14 +23,14 @@
     :label="api_hints_enabled && api_hint ? api_hint+' '+boolToString(value) : label"
     :class="api_hints_enabled && api_hint ? 'api-hint' : null"
     :hint="hint"
-    v-model="value"
-    @change="$emit('update:value', $event); $emit('click', $event)"
+    :model-value="value"
+    @update:modelValue="$emit('update:value', $event); $emit('click', $event)"
     persistent-hint>
   </v-switch>
 </template>
 
 <script>
-  module.exports = {
+  export default {
     props: ['value', 'label', 'hint', 'api_hint', 'api_hints_enabled', 'use_icon'],
     methods: {
       boolToString(b) {

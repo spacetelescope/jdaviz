@@ -6,7 +6,7 @@
     :parsed_input_is_empty="parsed_input_is_empty"
     :parsed_input_is_resolvable="parsed_input_is_resolvable"
     :parsed_input_is_query="parsed_input_is_query"
-    :treat_table_as_query.sync="treat_table_as_query"
+    v-model:treat_table_as_query="treat_table_as_query"
     :observation_table="observation_table"
     :observation_table_populated="observation_table_populated"
     :file_table="file_table"
@@ -14,9 +14,9 @@
     :file_cache="file_cache"
     :file_timeout="file_timeout"
     :target_items="target_items"
-    :target_selected.sync="target_selected"
+    v-model:target_selected="target_selected"
     :format_items="format_items"
-    :format_selected.sync="format_selected"
+    v-model:format_selected="format_selected"
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
     :valid_import_formats="valid_import_formats"
@@ -28,14 +28,18 @@
     :footprint_select_icon="footprint_select_icon"
     :custom_toolbar_enabled="custom_toolbar_enabled"
   >
-    <v-row v-if="!server_is_remote && !hide_resolver_inputs" style="padding-left: 12px; margin-bottom: 16px">
+    <j-flex-row v-if="!server_is_remote && !hide_resolver_inputs" style="padding-left: 12px; margin-bottom: 16px">
       Select a file with data you want to load into this instance of Jdaviz.
-    </v-row>
-    <v-row v-if="api_hints_enabled">
+    </j-flex-row>
+    <j-flex-row v-if="api_hints_enabled">
       <span class="api-hint">
         ldr.filepath = '{{ filepath }}'
       </span>
-    </v-row>
-    <jupyter-widget v-if="file_chooser_widget && !server_is_remote && !hide_resolver_inputs" :widget="file_chooser_widget"></jupyter-widget>
+    </j-flex-row>
+    <jupyter-widget
+      v-if="file_chooser_widget && !server_is_remote && !hide_resolver_inputs"
+      :widget="file_chooser_widget"
+      :key="file_chooser_widget"
+    ></jupyter-widget>
   </j-loader>
 </template>
