@@ -272,31 +272,31 @@
               ></v-text-field>
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
-                  <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && (trayItem.sidebar === 'plugins' || config !== 'deconfigged')">
+                  <template v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && (trayItem.sidebar === 'plugins' || config !== 'deconfigged')">
                     <v-expansion-panel-title class="plugin-header">
-                      <v-list-item style="display: grid; min-height: 6px" class="plugin-title">
-                        <v-list-item-title>
+                      <div class="d-flex flex-column pl-4">
+                        <div class="text-subtitle-1">
                           <j-tooltip :tipid="trayItem.name">
                             {{ trayItem.label }}
                           </j-tooltip>
-                        </v-list-item-title>
-                        <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                        </div>
+                        <div v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                           <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
-                        </v-list-item-subtitle>
+                        </div>
                         <template v-if="state.show_api_hints && state.tray_items_filter.length">
-                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(trayItem, state.tray_items_filter)" :key="`drawer-decfg-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <div v-for="api_method in trayItemMethodMatch(trayItem, state.tray_items_filter)" :key="`drawer-decfg-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                             <span class="api-hint">plg.{{ api_method }}</span>
-                          </v-list-item-subtitle>
+                          </div>
                         </template>
-                        <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
+                        <div class="text-caption text-medium-emphasis">
                           {{ trayItem.tray_item_description }}
-                        </v-list-item-subtitle>
-                      </v-list-item>
+                        </div>
+                      </div>
                     </v-expansion-panel-title>
                     <v-expansion-panel-text style="margin-left: -12px; margin-right: -12px;">
                       <jupyter-widget v-if="state.tray_items_open.includes(index) && trayItem.widget" :widget="trayItem.widget" :key="trayItem.widget"></jupyter-widget>
                     </v-expansion-panel-text>
-                  </div>
+                  </template>
                 </v-expansion-panel>
               </v-expansion-panels>
               <v-divider></v-divider>
@@ -401,31 +401,31 @@
               ></v-text-field>
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
-                  <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && trayItem.label !== 'Logger'">
+                  <template v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && trayItem.label !== 'Logger'">
                     <v-expansion-panel-title class="plugin-header">
-                      <v-list-item style="display: grid; min-height: 6px" class="plugin-title">
-                        <v-list-item-title>
+                      <div class="d-flex flex-column pl-4">
+                        <div class="text-subtitle-1">
                           <j-tooltip :tipid="trayItem.name">
                             {{ trayItem.label }}
                           </j-tooltip>
-                        </v-list-item-title>
-                        <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                        </div>
+                        <div v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                           <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
-                        </v-list-item-subtitle>
+                        </div>
                         <template v-if="state.show_api_hints && state.tray_items_filter.length">
-                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(trayItem, state.tray_items_filter)" :key="`drawer-cfg-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <div v-for="api_method in trayItemMethodMatch(trayItem, state.tray_items_filter)" :key="`drawer-cfg-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                             <span class="api-hint">plg.{{ api_method }}</span>
-                          </v-list-item-subtitle>
+                          </div>
                         </template>
-                        <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
+                        <div class="text-caption text-medium-emphasis">
                           {{ trayItem.tray_item_description }}
-                        </v-list-item-subtitle>
-                      </v-list-item>
+                        </div>
+                      </div>
                     </v-expansion-panel-title>
                     <v-expansion-panel-text style="margin-left: -12px; margin-right: -12px;">
                       <jupyter-widget v-if="state.tray_items_open.includes(index) && trayItem.widget" :widget="trayItem.widget" :key="trayItem.widget"></jupyter-widget>
                     </v-expansion-panel-text>
-                  </div>
+                  </template>
                 </v-expansion-panel>
               </v-expansion-panels>
               <v-divider></v-divider>
@@ -585,7 +585,7 @@ export default {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 4px;
-  padding-right: 12px;
+  padding-right: 0;
 }
 .plugin-title.v-list-item:after {
   display: none !important;
