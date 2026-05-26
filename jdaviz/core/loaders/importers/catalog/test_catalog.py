@@ -53,7 +53,7 @@ def test_coord_column_detection(deconfigged_helper):
 def test_coord_column(deconfigged_helper,
                       sky_coord_only_source_catalog,
                       coordinate_name):
-    """Test _guess_coord_cols for CatalogImporter: success and failure cases."""
+    """Test internal method _guess_coord_cols for CatalogImporter: success and failure cases."""
     resolver = deconfigged_helper.loaders['object']._obj
     importer = CatalogImporter(app=deconfigged_helper._app,
                                resolver=resolver, parser=None,
@@ -93,7 +93,7 @@ def test_coord_column(deconfigged_helper,
         assert importer._guess_coord_cols(coordinate_name)[0] == '---'
 
 
-def test_pixel_column(deconfigged_helper):
+def test_pixel_column_detection(deconfigged_helper):
     '''Test automatic detection of x/y columns with various naming
     conventions, and that non-pixel-coordinate columns are not misidentified as
     pixel-coordinate columns (e.g 'galaxy' which contains 'x' but should not be
@@ -128,6 +128,35 @@ def test_pixel_column(deconfigged_helper):
     # so they should be set as a placeholder value of '---'
     assert importer.col_x == '---'
     assert importer.col_y == '---'
+
+@pytest.mark.parametrize("coordinate_name", ['x', 'y'])
+def test_pixel_column(deconfigged_helper,
+                      sky_coord_only_source_catalog,
+                      coordinate_name):
+    """Test internal method _guess_coord_cols for CatalogImporter: success and failure cases."""
+    resolver = deconfigged_helper.loaders['object']._obj
+    importer = CatalogImporter(app=deconfigged_helper._app,
+                               resolver=resolver, parser=None,
+                               input=sky_coord_only_source_catalog)
+
+    sky_coord_only_source_catalog.rename_column('ra', 'x')
+    sky_coord_only_source_catalog.rename_column('dec', 'y')
+
+    variations_to_pass = [coordinate_name.upper(), coordinate_name + '_source',
+                          'pixel_' + coordinate_name, coordinate_name + 'pix']
+
+    for v in variations_to_pass:
+        this_table = sky_coord_only_source_catalog.copy()
+        this_table.rename_column(coordinate_name, v)
+        importer._input = this_table
+        assert importer._guess_coord_cols(coordinate_name)[0] == v
+
+    variations_to_fail = ['galaxy', 'parallax', 'velocity']
+    for v in variations_to_fail:
+        this_table = sky_coord_only_source_catalog.copy()
+        this_table.rename_column(coordinate_name, v)
+        importer._input = this_table
+        assert importer._guess_coord_cols(coordinate_name)[0] == '---'
 
 
 def test_catalog_importer_is_valid(deconfigged_helper):
