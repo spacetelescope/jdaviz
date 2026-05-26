@@ -763,4 +763,4 @@ def test_deconfigged_image_aperphot_unit_conversions(deconfigged_helper, image_2
 
     # Plugin should now not exist in plugin tray since no image viewers remain
     assert ap._obj.irrelevant_msg != ''
-    assert not app.state.tray_items[ap_index]['is_relevant'] 
+    assert not app.state.tray_items[ap_index]['is_relevant']
