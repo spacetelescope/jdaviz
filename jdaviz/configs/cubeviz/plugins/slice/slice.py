@@ -451,9 +451,6 @@ class SpectralSlice(BaseSlicePlugin):
         self._set_relevant()
         super()._on_add_data(msg)
 
-    def _on_remove_data(self, msg):
-        self._set_relevant()
-
     @observe('vdocs')
     def _update_docs_link(self, *args):
         self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/cubeviz/plugins.html#slice'
