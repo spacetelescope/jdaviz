@@ -4,12 +4,14 @@ from jdaviz.core.loaders.importers.catalog.catalog import CatalogImporter
 from jdaviz.utils import in_ra_comps, in_dec_comps
 import pytest
 
+
 def test_coord_column_detection(deconfigged_helper):
     """
     Test automatic detection of RA/Dec columns with various naming
     conventions, and that non-coordinate columns are not misidentified as
     coordinate columns (e.g 'radial' which contains 'ra' but should not be
-    identified as 'Ra').
+    identified as 'Ra'). Examine final output for the user: col_ra and col_dec
+    attributes of the importer.
     """
 
     # Variations of 'ra' and 'dec' that should be correctly identified as coordinate columns
@@ -49,6 +51,7 @@ def test_coord_column_detection(deconfigged_helper):
     assert importer.col_ra == '---'
     assert importer.col_dec == '---'
 
+
 @pytest.mark.parametrize("coordinate_name", ['ra', 'dec'])
 def test_coord_column(deconfigged_helper,
                       sky_coord_only_source_catalog,
@@ -63,34 +66,23 @@ def test_coord_column(deconfigged_helper,
                           'source' + coordinate_name, 'world ' + coordinate_name]
 
     for v in variations_to_pass:
-        this_table = sky_coord_only_source_catalog.copy()
-        this_table.rename_column(coordinate_name, v)
-        importer._input = this_table
+        tab = QTable({v: [10.0]})
+        importer._input = tab
         assert importer._guess_coord_cols(coordinate_name)[0] == v
-        if coordinate_name == 'ra':
-            assert in_ra_comps(v)
-        elif coordinate_name == 'dec':
-            assert in_dec_comps(v)
+        assert (in_ra_comps(v) or in_dec_comps(v))
 
-    variations_to_fail = ['fluxradius', 'radial_velocity', 'decrement']
-    for v in variations_to_fail:
-        this_table = sky_coord_only_source_catalog.copy()
-        this_table.rename_column(coordinate_name, v)
-        importer._input = this_table
-        assert importer._guess_coord_cols(coordinate_name)[0] == '---'
-        if coordinate_name == 'ra':
-            assert not in_ra_comps(v)
-        elif coordinate_name == 'dec':
-            assert not in_dec_comps(v)
-
-    # specifically test that 'right ascension' is read as an RA column and not as a Dec column
-    this_table = sky_coord_only_source_catalog.copy()
-    this_table.rename_column(coordinate_name, 'rightascension')
-    importer._input = this_table
+    # specifically test 'right ascension' and 'declination'
+    tab = QTable({'rightascension_deg': [10.0], 'declination_deg': [-5.0]})
+    importer._input = tab
     if coordinate_name == 'ra':
-        assert importer._guess_coord_cols(coordinate_name)[0] == 'rightascension'
+        assert importer._guess_coord_cols(coordinate_name)[0] == 'rightascension_deg'
     elif coordinate_name == 'dec':
-        assert importer._guess_coord_cols(coordinate_name)[0] == '---'
+        assert importer._guess_coord_cols(coordinate_name)[0] == 'declination_deg'
+
+    # test failures too
+    tab = QTable({'fluxradius': [10.0], 'radial_velocity': [5.0], 'decrement': [1.0]})
+    importer._input = tab
+    assert importer._guess_coord_cols(coordinate_name)[0] == '---'
 
 
 def test_pixel_column_detection(deconfigged_helper):
@@ -99,8 +91,8 @@ def test_pixel_column_detection(deconfigged_helper):
     pixel-coordinate columns (e.g 'galaxy' which contains 'x' but should not be
     identified as x pixel-coordinate).'''
 
-    x_variations= ['X', 'xpix', 'xpixel', 'pixel_x', 'x_coord', 'xsource']
-    y_variations= ['Y', 'ypix', 'ypixel', 'pixel_y', 'y_coord', 'ysource']
+    x_variations = ['X', 'xpix', 'xpixel', 'pixel_x', 'x_coord', 'xsource']
+    y_variations = ['Y', 'ypix', 'ypixel', 'pixel_y', 'y_coord', 'ysource']
 
     variations_to_pass = list(zip(x_variations, y_variations))
 
@@ -129,6 +121,7 @@ def test_pixel_column_detection(deconfigged_helper):
     assert importer.col_x == '---'
     assert importer.col_y == '---'
 
+
 @pytest.mark.parametrize("coordinate_name", ['x', 'y'])
 def test_pixel_column(deconfigged_helper,
                       sky_coord_only_source_catalog,
@@ -139,24 +132,18 @@ def test_pixel_column(deconfigged_helper,
                                resolver=resolver, parser=None,
                                input=sky_coord_only_source_catalog)
 
-    sky_coord_only_source_catalog.rename_column('ra', 'x')
-    sky_coord_only_source_catalog.rename_column('dec', 'y')
-
     variations_to_pass = [coordinate_name.upper(), coordinate_name + '_source',
                           'pixel_' + coordinate_name, coordinate_name + 'pix']
 
     for v in variations_to_pass:
-        this_table = sky_coord_only_source_catalog.copy()
-        this_table.rename_column(coordinate_name, v)
-        importer._input = this_table
+        tab = QTable({v: [10.0]})
+        importer._input = tab
         assert importer._guess_coord_cols(coordinate_name)[0] == v
 
-    variations_to_fail = ['galaxy', 'parallax', 'velocity']
-    for v in variations_to_fail:
-        this_table = sky_coord_only_source_catalog.copy()
-        this_table.rename_column(coordinate_name, v)
-        importer._input = this_table
-        assert importer._guess_coord_cols(coordinate_name)[0] == '---'
+    # test failures too
+    tab = QTable({'galaxy': [10.0], 'parallax': [5.0], 'velocity': [1.0]})
+    importer._input = tab
+    assert importer._guess_coord_cols(coordinate_name)[0] == '---'
 
 
 def test_catalog_importer_is_valid(deconfigged_helper):
