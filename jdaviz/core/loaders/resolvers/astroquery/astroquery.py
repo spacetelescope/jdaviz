@@ -80,24 +80,27 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
     @with_spinner(spinner_traitlet="results_loading")
     def query_archive(self):
+        output = None
+        skycoord_center = None
+
         try:
             skycoord_center = SkyCoord.from_name(self.source, frame=self.coordframe.selected)
         except NameResolveError as e:
             # Sesame name resolution can fail when the service is unreachable (SSL timeout,
             # redirect error, etc.). Surface the failure as a snackbar rather than propagating
-            # the exception to the caller.
+            # the exception to the caller. Keep processing below so we clear stale results.
             errmsg = f"Unable to resolve source coordinates: {self.source}"
             self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self, traceback=e))
-            return
         radius = self.radius * u.Unit(self.radius_unit.selected)
 
-        if self.telescope.selected in ('JWST', 'HST'):
+        # Only query the selected archive when name resolution succeeded.
+        if skycoord_center is not None and self.telescope.selected in ('JWST', 'HST'):
             from astroquery.mast import MastMissions
 
             mission = MastMissions(mission=self.telescope.selected)
             output = mission.query_region(skycoord_center, radius=radius.value)
 
-        elif self.telescope.selected == 'SDSS':
+        elif skycoord_center is not None and self.telescope.selected == 'SDSS':
             from astroquery.sdss import SDSS
 
             r_max = 3 * u.arcmin
@@ -120,12 +123,12 @@ class AstroqueryResolver(BaseConeSearchResolver):
                                                    sender=self,
                                                    traceback=e))
                 output = None  # will force returned_max_results = False, returned_no_results = True
-        elif self.telescope.selected == 'Gaia':
+        elif skycoord_center is not None and self.telescope.selected == 'Gaia':
             from astroquery.gaia import Gaia
 
             Gaia.ROW_LIMIT = self.max_results
             output = Gaia.query_object(skycoord_center, radius=radius)
-        else:
+        elif skycoord_center is not None:
             raise NotImplementedError(f"Querying for {self.telescope.selected} is not supported.")
 
         if output is not None and len(output) > self.max_results:
