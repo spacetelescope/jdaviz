@@ -49,6 +49,8 @@ Bug Fixes
 - Fix units related issue in imviz aperture photometry plugin when applying
   pixel area factor to data in surface brightness units. [#4188]
 
+- Fix bug related to loading catalogs where units are determined from coordinate string. [#4199]
+
 Mosviz
 ^^^^^^
 
