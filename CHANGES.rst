@@ -34,6 +34,8 @@ Other Changes and Additions
   pagination in the UI and fetching product lists in a background thread so the
   app remains responsive. [#4131]
 
+- Footprint selection in loaders now defaults to skewer mode. [#4186]
+
 5.0.2 (unreleased)
 ==================
 
@@ -43,6 +45,9 @@ Bug Fixes
 - Fix missing toggle for cube fitting in Model Fitting plugin in generalized Jdaviz. [#4172]
 
 - Fix broken "Learn More" links throughout app. [#4173]
+
+- Fix units related issue in imviz aperture photometry plugin when applying
+  pixel area factor to data in surface brightness units. [#4188]
 
 Mosviz
 ^^^^^^
