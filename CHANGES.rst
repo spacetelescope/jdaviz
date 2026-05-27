@@ -14,8 +14,8 @@ New Features
 
 - Importing Catalogs now has improved automatic detection of ra/dec/x/y columns. [#4183]
 
-- Label default behavior now adjusts for added or removed data/viewers for any that uses
-  _app.return_unique_name. Viewer default labels are now automatically updated as well. [#4192]
+- Label default behavior now adjusts for added or removed data/viewers for any that enforce a unique naming scheme
+  i.e. viewer -> viewer (1) -> viewer (2) etc. Viewer default labels are now automatically updated as well. [#4192]
 
 Mosviz
 ^^^^^^
