@@ -115,11 +115,6 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
                                       vid=self.viewer_label_value,
                                       name=self.viewer_label_value)
 
-        # Reset auto mode after successful creation so the label field advances
-        # to the next unique default. Without this, if there's a viewer failure,
-        # the `invalid_msg` is set making it seem as if the issue were a label
-        # issue not a viewer creation issue.
-        self.viewer_label_auto = True
         dm = nv.data_menu
         for dataset in self.dataset.selected:
             dm.add_data(dataset)
