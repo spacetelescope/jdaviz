@@ -14,6 +14,7 @@ from jdaviz.utils import create_data_hash, COORD_WORDS_TO_EXCLUDE
 
 __all__ = ['CatalogImporter']
 
+
 @loader_importer_registry("Catalog")
 class CatalogImporter(BaseImporterToDataCollection):
     template_file = __file__, "./catalog.vue"
