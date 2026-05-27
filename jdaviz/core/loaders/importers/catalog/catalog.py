@@ -32,6 +32,9 @@ class CatalogImporter(BaseImporterToDataCollection):
     col_dec_unit_items = List().tag(sync=True)
     col_dec_unit_selected = Unicode().tag(sync=True)
 
+    coord_frame_items = List().tag(sync=True)
+    coord_frame_selected = Unicode().tag(sync=True)
+
     # for catalogs with source positions in pixel coordinates
     col_x_items = List().tag(sync=True)
     col_x_selected = Unicode().tag(sync=True)
@@ -108,6 +111,10 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                   items='col_dec_unit_items',
                                                   selected='col_dec_unit_selected',
                                                   manual_options=self._valid_coord_units('dec'))
+        self.coord_frame = SelectPluginComponent(self,
+                                                 items='coord_frame_items',
+                                                 selected='coord_frame_selected',
+                                                 manual_options=['icrs', 'fk5', 'fk4', 'galactic', 'ecliptic'])
 
         # dropdown for source ID column
         self.col_id = SelectPluginComponent(self,
@@ -490,6 +497,14 @@ class CatalogImporter(BaseImporterToDataCollection):
                 ra = ra.astype(float) * u.Unit(self.col_ra_unit_selected)
             if getattr(dec, 'unit') is None:
                 dec = dec.astype(float) * u.Unit(self.col_dec_unit_selected)
+
+            # apply selection of coordinate frame if not already in ICRS
+            # if the coordinates are in a different frame, they will be transformed
+            # to ICRS, which is the internal frame used in jdaviz for consistency
+            if self.coord_frame_selected not in ['', 'icrs']:
+                sc_temp = SkyCoord(ra, dec, frame=self.coord_frame_selected)
+                ra = sc_temp.icrs.ra
+                dec = sc_temp.icrs.dec
 
             output_table[col_ra_selected] = ra
             output_table[col_dec_selected] = dec

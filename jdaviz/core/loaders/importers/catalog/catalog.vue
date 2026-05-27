@@ -62,6 +62,15 @@
       ></plugin-select>
 
       <plugin-select
+        :items="coord_frame_items.map(i => i.label)"
+        :selected.sync="coord_frame_selected"
+        label="Coordinate Frame"
+        hint="Select the coordinate frame for the RA/Dec coordinates."
+        api_hint="ldr.importer.coord_frame ="
+        :api_hints_enabled="api_hints_enabled"
+      ></plugin-select>
+
+      <plugin-select
         :items="col_x_items.map(i => i.label)"
         :selected.sync="col_x_selected"
         label="X Column"
