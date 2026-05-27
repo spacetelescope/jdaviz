@@ -1,7 +1,6 @@
 import warnings
 import pytest
 
-from astropy.io import fits
 from astropy.utils import minversion
 import gwcs
 import numpy as np
