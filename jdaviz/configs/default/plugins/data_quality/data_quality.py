@@ -20,7 +20,7 @@ from jdaviz.configs.default.plugins.data_quality.dq_utils import (
 
 __all__ = ['DataQuality']
 
-telescope_names = {
+TELESCOPE_NAMES = {
     "jwst": "JWST",
     "roman": "Roman",
     "hst-stis": "HST/STIS",
@@ -148,7 +148,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     def load_default_flag_maps(self):
         for name in dq_flag_map_paths:
             self.flag_map_definitions[name] = load_flag_map(name)
-            self.flag_map_items = self.flag_map_items + [telescope_names[name]]
+            self.flag_map_items = self.flag_map_items + [TELESCOPE_NAMES[name]]
 
     @property
     def dq_layer_selected_flattened(self):
@@ -396,7 +396,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
                     if i is not None
                 )
 
-            flag_map_to_select = telescope_names.get(telescope.lower())
+            flag_map_to_select = TELESCOPE_NAMES.get(telescope.lower())
             self.flag_map_selected = flag_map_to_select
 
     def vue_hide_all_flags(self, event):
