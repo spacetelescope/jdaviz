@@ -145,6 +145,10 @@ def test_pixel_column(deconfigged_helper,
     importer._input = tab
     assert importer._guess_coord_cols(coordinate_name)[0] == '---'
 
+    # test error if coordinate column not given as 'ra', 'dec', 'x' or 'y'
+    with pytest.raises(NotImplementedError, match='Not a valid coordinate column'):
+        importer._guess_coord_cols("galaxy")
+
 
 def test_catalog_importer_is_valid(deconfigged_helper):
     """Test _check_is_valid for CatalogImporter: success and failure cases."""
