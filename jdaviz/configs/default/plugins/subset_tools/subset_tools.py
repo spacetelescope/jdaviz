@@ -126,6 +126,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     can_freeze = Bool(False).tag(sync=True)
     server_is_remote = Bool(False).tag(sync=True)
 
+    # Downstream configs can set _default_can_freeze = True at import time to enable
+    # the freeze button without subclassing this plugin.
+    _default_can_freeze = False
+
     icon_replace = Unicode(read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
     icon_or = Unicode(read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
     icon_and = Unicode(read_icon(os.path.join(icon_path("glue_and", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
@@ -140,6 +144,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Apply can_freeze default (downstream configs may set _default_can_freeze = True)
+        self.can_freeze = self._default_can_freeze
 
         # Initialize server_is_remote from settings
         self.server_is_remote = self.app.state.settings.get('server_is_remote', False)
