@@ -275,9 +275,9 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         idx = None
         if col in ['ra', 'dec']:
-            col_is_sc = [isinstance(input[colnames[i]], SkyCoord) for i in range(len(colnames))]
-            if np.any(col_is_sc):
-                idx = np.where(col_is_sc)[0][0]
+            col_is_skycoord = [isinstance(input[colnames[i]], SkyCoord) for i in range(len(colnames))]
+            if np.any(col_is_skycoord):
+                idx = np.where(col_is_skycoord)[0][0]
 
         if idx is None:
             all_column_names = [str(x).lower().strip() for x in colnames]
@@ -473,12 +473,12 @@ class CatalogImporter(BaseImporterToDataCollection):
             # determine if the string format is recognizable as Lon/Lat coordinates.
             if isinstance(ra[0], str):
                 try:
-                    ra = SkyCoord(ra, 90 * u.deg).ra  # dummy value just to parse string
+                    ra = SkyCoord(ra, '0d0m0s').ra  # dummy value 'ra' twice, just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse RA column as string coordinates.")
             if isinstance(dec[0], str):
                 try:
-                    dec = SkyCoord(0 * u.deg, dec).dec  # dummy value just to parse string
+                    dec = SkyCoord('0h0m0s', dec).dec  # dummy value 'dec' twice, just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse Dec column as string coordinates.")
 
