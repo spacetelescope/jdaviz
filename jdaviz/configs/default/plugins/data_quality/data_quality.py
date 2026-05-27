@@ -179,19 +179,23 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def validate_flag_decode_possible(self):
+        if not hasattr(self, 'dq_layer'):
+            return False
         return (
-            self.flag_map_selected is not None and
             len(self.dq_layer.selected_obj) > 0 and
             len(self.unique_flags) > 0
         )
 
     @observe('flag_map_selected')
     def update_flag_map_definitions_selected(self, event):
+        if self.flag_map_selected is None:
+            return
+
         flag_map_key = self.flag_map_selected.lower().replace('/', '-')
         selected = self.flag_map_definitions[flag_map_key]
         self.flag_map_definitions_selected = selected
 
-        # clear decoded_flags with a meaningless one:
+        # re-decode with the real flag map:
         self.init_decoding()
         self._update_cmap()
 
@@ -203,7 +207,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         unique_flags = self.unique_flags
         cmap, rgba_colors = generate_listed_colormap(n_flags=len(unique_flags))
         self.decoded_flags = decode_flags(
-            flag_map=self.flag_map_definitions_selected,
+            flag_map=self.flag_map_definitions_selected or {},
             unique_flags=unique_flags,
             rgba_colors=rgba_colors
         )
