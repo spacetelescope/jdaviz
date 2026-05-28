@@ -262,6 +262,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     observation_table_populated = Bool(False).tag(sync=True)
     file_table = Instance(Table).tag(sync=True, **widget_serialization)
     file_table_populated = Bool(False).tag(sync=True)
+    file_table_fetch_message = Unicode("").tag(sync=True)
 
     # options to download selected item in products list
     file_cache = Bool(True).tag(sync=True)
@@ -712,7 +713,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def missions_query(self):
         return MastMissions()
 
-    @with_spinner('spinner', 'fetching product list...')
+    @with_spinner('spinner', 'loading files from selected footprints...')
     def _get_product_list(self, mission, dataset):
         self.missions_query.mission = mission
         return self.missions_query.get_product_list(dataset)
@@ -749,10 +750,15 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.file_table.selected_indices = []
             self.file_table.set_all_items_from_table(file_table)
             self.file_table_populated = True
+            num_products = len(file_table)
+            self.file_table_fetch_message = (
+                f"{num_products} files added to file table from selected footprints"
+            )
         else:
             self._app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
                                                     sender=self, color="error"))
             self.file_table_populated = False
+            self.file_table_fetch_message = ""
 
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""
