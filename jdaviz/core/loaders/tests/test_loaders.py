@@ -239,11 +239,16 @@ def test_spectrum3d_load_flux_then_err_only(deconfigged_helper, image_cube_hdu_o
     ldr.importer.unc_extension.selected = '2: ERR'
     assert ldr.importer._obj.import_disabled_msg == ''
 
-    # Now try to load only ERR as primary data (flux extension deselected)
+    # Now try to load only ERR as primary data (flux extension deselected).
+    # The auto-generated data_label.default must have changed to reflect the
+    # ERR extension so the second load does not silently overwrite the first.
     ldr.importer.mask_extension.selected = ''  # Deselect mask too
-
-    # Set a different data label to avoid overwriting
-    ldr.importer.data_label.value = '3D Spectrum ERR'
+    flux_label = deconfigged_helper._app.data_collection[0].label
+    assert ldr.importer._obj.data_label_value != flux_label, (
+        f"data_label_value should differ from flux label, "
+        f"got: {ldr.importer._obj.data_label_value}"
+    )
+    expected_err_label = ldr.importer._obj.data_label_value  # e.g. '3D Spectrum [ERR]'
 
     # This should now work - ERR can be loaded as primary data
     ldr.load()
@@ -251,10 +256,9 @@ def test_spectrum3d_load_flux_then_err_only(deconfigged_helper, image_cube_hdu_o
     # No warning should be shown after a successful import
     assert ldr.importer._obj.import_disabled_msg == ''
 
-    # Verify ERR was loaded as new data
+    # Verify ERR was loaded as a *new* entry in the data collection
     assert len(deconfigged_helper._app.data_collection) > initial_count
-    # Check that ERR was loaded
-    assert '3D Spectrum ERR' in [d.label for d in deconfigged_helper._app.data_collection]
+    assert expected_err_label in [d.label for d in deconfigged_helper._app.data_collection]
 
 
 @pytest.mark.remote_data
@@ -1026,7 +1030,7 @@ def test_load_cube_no_dq_in_viewer(deconfigged_helper):
 
     deconfigged_helper.load(hdul, format='3D Spectrum', dq_add_to_flux_viewer=False)
 
-    # make sure the flux viewer '3D Spectrum' only has one dataset loaded
+    # make sure the flux viewer only has one dataset loaded
     data_in_flux_viewer = deconfigged_helper.viewers['3D Spectrum'].data_menu.data_labels_loaded
     assert len(data_in_flux_viewer) == 1
     assert '3D Spectrum' in data_in_flux_viewer

@@ -138,13 +138,14 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                 return isinstance(viewer, tuple(classes))
             return viewer_filter
 
-        # FLUX CUBE
-        if self.default_data_label_from_resolver:
-            self.data_label.default = self.default_data_label_from_resolver
-        elif self.config == 'cubeviz':
-            self.data_label.default = '3D Spectrum [FLUX]'
-        else:
-            self.data_label.default = '3D Spectrum'
+        # FLUX CUBE — set the initial default label and register instance-level
+        # observers so _update_data_label_default fires when the user changes
+        # extension selections, but NOT during super().__init__() setup.
+        self._update_data_label_default()
+        self.extension.add_observe(self.extension._plugin_traitlets['selected'],
+                                   lambda _: self._update_data_label_default())
+        self.unc_extension.add_observe(self.unc_extension._plugin_traitlets['selected'],
+                                       lambda _: self._update_data_label_default())
 
         if self.config == 'cubeviz':
             self.viewer.selected = ['flux-viewer']
@@ -318,6 +319,41 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # No flux cube loaded or it was removed, check extension selection instead
             self._check_extension_selected()
 
+    def _compute_default_data_label(self):
+        """
+        Return the appropriate ``data_label.default`` for the current extension
+        selection without storing any extra state.
+
+        Normal case (flux extension selected, or no extension selected yet):
+          cubeviz   -> ``'<base> [FLUX]'``
+          deconfigged -> ``'<base>'``
+
+        ERR-as-primary case (extension empty, unc_extension non-empty):
+          both configs -> ``'<base> [<UNC_EXTNAME>]'``
+
+        This ensures that loading a non-flux extension as primary data (e.g.
+        ERR-only after a flux cube is already loaded) gets a unique default
+        label and does not silently overwrite the previously-loaded flux cube.
+
+        The *base* is taken from the resolver (e.g. the filename stem) when
+        available, falling back to ``'3D Spectrum'``.
+        """
+        base = self.default_data_label_from_resolver or '3D Spectrum'
+        # ERR-as-primary: extension is deselected but unc_extension is selected
+        if (hasattr(self, 'extension') and not self.extension.selected
+                and hasattr(self, 'unc_extension')
+                and self.unc_extension.selected not in ('', 'None')):
+            unc_name = self.unc_extension.selected.split(': ', 1)[-1]
+            return f"{base} [{unc_name}]"
+        # Normal case: preserve the original per-config label exactly
+        if self.config == 'cubeviz':
+            return f"{base} [FLUX]"
+        return base
+
+    def _update_data_label_default(self, change={}):
+        """Keep ``data_label.default`` in sync with the current extension selection."""
+        self.data_label.default = self._compute_default_data_label()
+
     @observe('extension_selected')
     def _check_extension_selected(self, change={}):
         """
@@ -397,25 +433,12 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         return ImporterUserApi(self, expose)
 
     def _check_is_valid(self):
-        """
-        Checks if the input is a valid 3D spectral cube.
-
-        The output of this method is wrapped by the IsValidWrapper
-        helper class that converts the string to an inverted boolean,
-        i.e. empty string => True, non-empty string => False
-        since the string (when filled) carries error information.
-        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
-        that wraps the check in a try/except statement so that individual
-        '_check_is_valid' calls no longer need to catch potential failures.
-        """
         if self._app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
-            return 'spectrum3d importer is only supported in cubeviz, generalized jdaviz.'
-
+            return 'Importer only supported in deconfigged and cubeviz'
         if self.spectrum.flux.ndim != 3:
-            return 'Spectrum flux must be 3D.'
-
-        _ = self.output
+            return 'Input spectrum flux must be 3-dimensional'
+        self.output
         return ''
 
     @observe('data_label_value', 'function_selected')
