@@ -26,6 +26,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.roi import CircularAnnulusROI
+from glue.core.subset import RangeSubsetState
 from glue_jupyter import jglue
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.bqplot.histogram import BqplotHistogramView
@@ -39,7 +40,7 @@ from photutils.aperture import CircularAperture, EllipticalAperture, Rectangular
 from regions import PixelRegion
 from specutils import Spectrum
 from specutils.manipulation import extract_region
-from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
+from traitlets import Any, Bool, Dict, Float, HasTraits, Int, List, Unicode, observe
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator,
@@ -69,8 +70,8 @@ from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
-    _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global,
-    wildcard_match, CONFIGS_WITH_LOADERS
+    _wcs_only_label, layer_is_not_dq as utils_layer_is_not_dq,
+    wildcard_match, CONFIGS_WITH_LOADERS, layer_is_dq as utils_layer_is_dq
 )
 
 
@@ -80,6 +81,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'with_spinner', 'with_temp_disable',
            'WithCache', 'LoadersMixin', 'ViewerPropertiesMixin',
            'CustomToolbarToggle', 'CustomToolbarToggleMixin',
+           'IsValidWrapper', 'ValidatorMixin',
            'BasePluginComponent',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
@@ -276,6 +278,70 @@ class WithCache:
                 del self.__dict__[attr]
 
 
+class IsValidWrapper:
+    """
+    A wrapper class for the result of is_valid to provide context dependent behavior.
+    This class provides a message when there is a failure due to invalid input.
+
+    Parameters
+    ----------
+    is_valid_result : str
+        Either empty (True) or set to message indicating failure (False).
+    """
+    def __init__(self, is_valid_result):
+        if isinstance(is_valid_result, str):
+            self._is_valid = not bool(is_valid_result)
+            self.message = is_valid_result
+        else:
+            raise ValueError('Validity checks (_check_is_valid) must return a string.')
+
+    def __bool__(self):
+        return self._is_valid
+
+    def __str__(self):
+        return self.message
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(_is_valid={self._is_valid}, message='{self.message}')"
+
+
+class ValidatorMixin:
+    """
+    Mixin that provides automatic wrapping of is_valid results in IsValidWrapper.
+
+    Subclasses should implement `_check_is_valid()` instead of `is_valid` property.
+    The `is_valid` property is provided automatically and wraps the result.
+    """
+
+    @property
+    def is_valid(self):
+        """
+        Returns wrapped is_valid result.
+
+        Subclasses should override _check_is_valid() to provide validation logic.
+        """
+        try:
+            is_valid = IsValidWrapper(self._check_is_valid())
+        except Exception as e:
+            is_valid = IsValidWrapper(str(e))
+
+        return is_valid
+
+    def _check_is_valid(self):
+        """
+        Checks if the input is valid (override in subclasses).
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
+        raise NotImplementedError("Subclasses must implement _check_is_valid()")  # pragma: nocover
+
+
 class CustomToolbarToggle(HubListener):
     def __init__(self, plugin, enabled_traitlet, callable, name):
         super().__init__()
@@ -328,6 +394,7 @@ class FootprintDisplayMixin:
     Mixin for displaying selectable footprint regions
     in image viewers.
     """
+
     def vue_link_by_wcs(self, *args):
         plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
         if plg is not None:
@@ -775,6 +842,15 @@ class PluginTemplateMixin(TemplateMixin):
     docs_link = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     docs_description = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     _plugin_description = Unicode("").tag(sync=True)  # noqa shorter description of plugin, displayed below title in menu
+
+    # Downstream configs may set _docs_link_fmt to a format string using {vdocs} to override
+    # the default docs link without subclassing.
+    _docs_link_fmt = ''
+
+    @observe('vdocs')
+    def _update_docs_link(self, *args):
+        if self._docs_link_fmt:
+            self.docs_link = self._docs_link_fmt.format(vdocs=self.vdocs)
     plugin_opened = Bool(False).tag(sync=True)  # noqa any instance of the plugin is open (recently sent an "alive" ping)
     uses_active_status = Bool(False).tag(sync=True)  # noqa whether the plugin has live-preview marks, set to True in plugins to expose keep_active switch
     keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
@@ -2220,6 +2296,7 @@ class LayerSelect(SelectPluginComponent):
         # TODO: all of these add_filter commands should be refactored to pass filters directly
         # to the init and defined in _is_valid_item()
         self.add_filter('not_spatial_subset_in_profile_viewer')
+        self.add_filter('not_spectral_subset_in_image_viewer')
 
         self.filter_is_root = is_root
         self.has_children = has_children
@@ -2286,6 +2363,18 @@ class LayerSelect(SelectPluginComponent):
             # so we want to exclude spatial subsets
             return get_subset_type(lyr) != 'spatial'
 
+        def not_spectral_subset_in_image_viewer(lyr):
+            if self.plugin.config not in ('deconfigged'):
+                return True
+            if np.any([viewer.__class__.__name__ not in ('CubevizImageView', 'ImvizImageView')
+                       for viewer in self.viewer_objs]):
+                return True
+
+            if hasattr(lyr, 'subset_state'):
+                return not isinstance(lyr.subset_state, RangeSubsetState)
+
+            return True
+
         def is_trace(lyr):
             return 'Trace' in getattr(getattr(lyr, 'data', None), 'meta', [])
 
@@ -2293,7 +2382,7 @@ class LayerSelect(SelectPluginComponent):
             return not is_trace(lyr)
 
         def is_dq_layer(lyr):
-            return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
+            return utils_layer_is_dq(lyr)
 
         def catalog_has_correct_coords_based_on_link_type(lyr):
             """
@@ -4695,8 +4784,9 @@ class DatasetSelect(SelectPluginComponent):
         if len(shape) == 3:
             # then this is a cube, but we want the 1D spectrum,
             # so we can pass through the 3D Spectral Extraction plugin
-            if self.plugin.config != 'cubeviz':
-                raise ValueError("extracting a spectrum from a cube only supported in cubeviz")
+            if self.plugin.config not in ('cubeviz', 'deconfigged'):
+                raise ValueError("extracting a spectrum from a cube only supported in cubeviz"
+                                 " or generalized Jdaviz")
             # we need to get the 1d extracted spectrum for the cube
             spec_extract = self._app._jdaviz_helper.plugins['3D Spectral Extraction']._obj
             sp = spec_extract._extract_in_new_instance(self.selected,
@@ -4792,14 +4882,12 @@ class DatasetSelect(SelectPluginComponent):
             return (is_image(data) or is_flux_cube(data)) and not is_2d_spectrum_or_trace(data)
 
         def is_spectrum(data):
-            return (len(data.shape) == 1
-                    and data.coords is not None
-                    and wcs_is_spectral(getattr(data, 'coords', None)))
+            return (data.meta.get('_importer') == 'SpectrumImporter' or
+                    data.meta.get('_data_type') == '1D Spectrum')
 
         def is_2d_spectrum_or_trace(data):
-            return (data.ndim == 2
-                    and data.coords is not None
-                    and wcs_is_spectral(getattr(data, 'coords', None))) or 'Trace' in data.meta
+            return (data.meta.get('_importer') in ('Spectrum2DImporter', 'TraceImporter') and
+                    data.meta.get('_data_type') != '1D Spectrum')
 
         def is_spectrum_or_flux_cube(data):
             return is_spectrum(data) or is_flux_cube(data)
@@ -4851,7 +4939,7 @@ class DatasetSelect(SelectPluginComponent):
                 return True
             return data_row == app_row
 
-        layer_is_not_dq = layer_is_not_dq_global
+        layer_is_not_dq = utils_layer_is_not_dq
 
         return super()._is_valid_item(data, locals())
 
@@ -6074,6 +6162,16 @@ class Table(PluginSubcomponent):
     enable_clear = Bool(True).tag(sync=True)
     clear_btn_lbl = Unicode('Clear Table').tag(sync=True)
 
+    # Server-side pagination traitlets
+    server_pagination = Bool(False).tag(sync=True)
+    server_items_length = Int(0).tag(sync=True)
+    table_options = Dict({}).tag(sync=True)
+
+    # When True, headers_visible and export_table() will omit columns whose
+    # every row value is empty (nan / empty string). Useful for configs that
+    # share a common wide header set but only populate a subset of columns.
+    _skip_empty_columns = False
+
     # Loader panel traitlets for "Load into App" functionality
     loader_items = List([]).tag(sync=True)
     loader_selected = Unicode('object').tag(sync=True)
@@ -6086,6 +6184,7 @@ class Table(PluginSubcomponent):
                  *args, **kwargs):
         self._qtable = None
         self._table_name = name
+        self._all_items = []  # full item cache for server-side pagination
         self._selected_rows_changed_callback = selected_rows_changed_callback
         self._clear_callback = clear_callback
         self._enable_load_into_app = enable_load_into_app
@@ -6133,10 +6232,78 @@ class Table(PluginSubcomponent):
     def _new_col_visible(colname):
         return True
 
+    def _compute_populated_headers(self):
+        """Return ``headers_avail`` filtered to columns with at least one non-empty value.
+
+        A value is considered empty when its JSON-display representation equals ``''``
+        (i.e. NaN floats, all-NaN tuples, and empty strings all render as ``''``).
+        When the table has no rows every header in ``headers_avail`` is returned.
+        """
+        if not self.items:
+            return list(self.headers_avail)
+        return [
+            h for h in self.headers_avail
+            if any(item.get(h, '') != '' for item in self.items)
+        ]
+
     @observe('selected_rows')
     def _selected_rows_changed(self, msg):
         if self._selected_rows_changed_callback is not None:
             self._selected_rows_changed_callback(msg)
+
+    @observe('table_options')
+    def _table_options_changed(self, msg):
+        if not self.server_pagination or not self._all_items:
+            return
+        self._push_current_page()
+
+    def _push_current_page(self):
+        """Push only the current page slice of _all_items to items."""
+        opts = self.table_options
+        page = opts.get('page', 1)
+        per_page = opts.get('itemsPerPage', 10)
+        if per_page == -1:
+            self.items = self._all_items
+            return
+        start = (page - 1) * per_page
+        end = start + per_page
+        self.items = self._all_items[start:end]
+
+    def set_all_items(self, all_items):
+        """
+        Populate the table with server-side pagination.
+        Stores all items in cache and pushes only the current page.
+        """
+        self._all_items = all_items
+        self.server_items_length = len(all_items)
+        self.table_options = {**self.table_options, 'page': 1}
+        self._push_current_page()
+
+    def set_all_items_from_table(self, table):
+        """
+        Populate the table from an astropy QTable/Table using server-side pagination.
+        Handles QTable caching, header updates, JSON conversion, and pagination.
+        """
+        if len(table) == 0:
+            self._clear_table()
+            return
+        # Cache the QTable
+        self._qtable = QTable(table)
+        # Update headers
+        all_headers = list(table.colnames)
+        missing_headers = [h for h in all_headers if h not in self.headers_avail]
+        if missing_headers:
+            self.headers_avail = self.headers_avail + missing_headers
+            self.headers_visible = self.headers_visible + \
+                [m for m in missing_headers if self._new_col_visible(m)]
+
+        # Build all items with JSON conversion
+        all_items = [
+            {col: self._json_safe(col, row[col]) for col in table.colnames} for row in table
+        ]
+
+        # Set all items (triggers server pagination)
+        self.set_all_items(all_items)
 
     def _setup_object_loader(self):
         """Set up the object loader for 'Load into App' functionality."""
@@ -6206,6 +6373,48 @@ class Table(PluginSubcomponent):
         if table is not None:
             self._object_loader.object = table
 
+    def _json_safe(self, column, item):
+        """Convert item to JSON-safe format for frontend display."""
+        def float_precision(column, item):
+            if column in ('slice', 'index'):
+                # stored in astropy table as a float so we can also store nans,
+                # but should display in the UI without any decimals
+                return f"{item:.0f}"
+            elif column in ('pixel', 'pixel_x', 'pixel_y'):
+                return f"{item:0.3f}"
+            elif column in ('xcenter', 'ycenter'):
+                return f"{item:0.1f}"
+            elif column in ('sum', 'spectral_axis'):
+                return f"{item:.3e}"
+            else:
+                return f"{item:0.5f}"
+
+        if isinstance(item, SkyCoord):
+            return item.to_string('hmsdms', precision=4)
+        elif isinstance(item, u.Quantity) and not np.isnan(item):
+            return f"{float_precision(column, item.value)} {item.unit.to_string()}"
+        elif hasattr(item, 'to_string'):
+            return item.to_string()
+        elif isinstance(item, float) and np.isnan(item):
+            return ''
+        elif isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
+            return ''
+        elif isinstance(item, float):
+            return float_precision(column, item)
+        elif isinstance(item, (list, tuple)):
+            return [float_precision(column, i) if isinstance(i, float) else i for i in item]
+        elif isinstance(item, (np.float32, np.float64)):
+            return float(item)
+        elif isinstance(item, u.Quantity):
+            return {"value": item.value.tolist() if item.size > 1 else item.value, "unit": str(item.unit)}  # noqa: E501
+        elif isinstance(item, np.bool_):
+            return bool(item)
+        elif isinstance(item, np.ndarray):
+            return item.tolist()
+        elif isinstance(item, tuple):
+            return tuple(self._json_safe(column, v) for v in item)
+        return item
+
     def add_item(self, item):
         """
         Add an item/row to the table.
@@ -6214,48 +6423,6 @@ class Table(PluginSubcomponent):
         ----------
         item : QTable, QTableRow, or dictionary of row-name, value pairs
         """
-        def json_safe(column, item):
-            def float_precision(column, item):
-                if column in ('slice', 'index'):
-                    # stored in astropy table as a float so we can also store nans,
-                    # but should display in the UI without any decimals
-                    return f"{item:.0f}"
-                elif column in ('pixel', 'pixel_x', 'pixel_y'):
-                    return f"{item:0.3f}"
-                elif column in ('xcenter', 'ycenter'):
-                    return f"{item:0.1f}"
-                elif column in ('sum', 'spectral_axis'):
-                    return f"{item:.3e}"
-                else:
-                    return f"{item:0.5f}"
-
-            if isinstance(item, SkyCoord):
-                return item.to_string('hmsdms', precision=4)
-            elif isinstance(item, u.Quantity) and not np.isnan(item):
-                return f"{float_precision(column, item.value)} {item.unit.to_string()}"
-
-            elif hasattr(item, 'to_string'):
-                return item.to_string()
-            elif isinstance(item, float) and np.isnan(item):
-                return ''
-            elif isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
-                return ''
-            elif isinstance(item, float):
-                return float_precision(column, item)
-            elif isinstance(item, (list, tuple)):
-                return [float_precision(column, i) if isinstance(i, float) else i for i in item]
-            elif isinstance(item, (np.float32, np.float64)):
-                return float(item)
-            elif isinstance(item, u.Quantity):
-                return {"value": item.value.tolist() if item.size > 1 else item.value, "unit": str(item.unit)}     # noqa: E501
-            elif isinstance(item, np.bool_):
-                return bool(item)
-            elif isinstance(item, np.ndarray):
-                return item.tolist()
-            elif isinstance(item, tuple):
-                return tuple(json_safe(v) for v in item)
-            return item
-
         if isinstance(item, QTable):
             for row in item:
                 self.add_item(row)
@@ -6284,10 +6451,20 @@ class Table(PluginSubcomponent):
             self.headers_visible = self.headers_visible + [m for m in missing_headers if self._new_col_visible(m)]  # noqa
 
         # clean data to show in the UI
-        self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
+        new_row = {k: self._json_safe(k, v) for k, v in item.items()}
+        if self.server_pagination:
+            self._all_items = self._all_items + [new_row]
+            self.server_items_length = len(self._all_items)
+            self._push_current_page()
+        else:
+            self.items = self.items + [new_row]
+        if self._skip_empty_columns:
+            self.headers_visible = self._compute_populated_headers()
         self._plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
 
     def __len__(self):
+        if self.server_pagination and self._all_items:
+            return len(self._all_items)
         return len(self.items)
 
     def _clear_table(self):
@@ -6295,6 +6472,12 @@ class Table(PluginSubcomponent):
         self.selected_rows = []
         self.selected_indices = []
         self._qtable = None
+        self._all_items = []
+        if self.server_pagination:
+            self.server_items_length = 0
+        if self._skip_empty_columns:
+            # Reset to show all available headers so the next mark populates cleanly
+            self.headers_visible = list(self.headers_avail)
         self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
 
     def clear_table(self):
@@ -6425,6 +6608,10 @@ class Table(PluginSubcomponent):
         """
         if filename is None:
             # TODO: default to only showing selected columns?
+            if self._skip_empty_columns and self._qtable is not None:
+                populated = self._compute_populated_headers()
+                cols = [c for c in self._qtable.colnames if c in populated]
+                return self._qtable[cols] if cols else self._qtable
             return self._qtable
 
         if "_orig_colnames_for_jdaviz_export" in self._qtable.meta:

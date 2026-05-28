@@ -150,7 +150,7 @@ they can be manipulated and analyzed in the application as a single entity:
 
     from specutils import SpectrumList
     spec_list = SpectrumList([spec1d_1, spec1d_2])
-    specviz.load(spec_list, format="1D Spectrum List")
+    specviz.load(spec_list, format="1D Spectrum", extension="*")
     specviz.show()
 
 In the screenshot below, the combined spectrum is plotted in gray, and one of

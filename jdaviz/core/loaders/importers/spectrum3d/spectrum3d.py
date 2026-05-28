@@ -363,6 +363,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         to the data collection.
         """
         if self.config == 'deconfigged':
+            # Check if viewer component exists (may not during initialization)
+            if not hasattr(self, 'viewer'):
+                return
             # Check if viewer.selected is empty (could be list or string depending on multiselect)
             v = self.viewer.selected
             has_viewer = bool(v) if isinstance(v, str) else len(v) > 0
@@ -393,22 +396,27 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             expose += ['dq_extension']
         return ImporterUserApi(self, expose)
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid 3D spectral cube.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         if self._app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
-            return False
-        try:
-            if self.spectrum.flux.ndim != 3:
-                return False
-        except Exception:
-            return False
+            return 'spectrum3d importer is only supported in cubeviz, generalized jdaviz.'
 
-        try:
-            self.output
-        except Exception:
-            return False
-        return True
+        if self.spectrum.flux.ndim != 3:
+            return 'Spectrum flux must be 3D.'
+
+        _ = self.output
+        return ''
 
     @observe('data_label_value', 'function_selected')
     def _data_label_changed(self, msg={}):
@@ -520,7 +528,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         self._app.hub.broadcast(msg)
 
         if ext is not None:
-            self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
+            self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer,
+                                        data_type='1D Spectrum')
 
             if self.has_dq and not self.flux_only:
                 dq_hdu = self.dq_extension.selected_obj

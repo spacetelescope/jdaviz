@@ -11,20 +11,18 @@ __all__ = ['FITSParser']
 @loader_parser_registry('fits')
 class FITSParser(BaseParser):
 
-    @property
-    def is_valid(self):
-        if self._app.config not in ('deconfigged', 'specviz2d',
-                                    'lcviz', 'imviz', 'cubeviz',
-                                    'rampviz'):
+    def _check_is_valid(self):
+        # generalized jdaviz isn't the valid config name, but we can
+        # drop it here for the string output.
+        accepted_configs = ['specviz2d', 'lcviz', 'imviz', 'cubeviz', 'rampviz',
+                            'generalized jdaviz']
+        if self._app.config not in accepted_configs + ['deconfigged']:
             # NOTE: temporary during deconfig process
-            return False
+            return (f"fits format is only supported in the {', '.join(accepted_configs)} "
+                    f"configurations.")
 
-        try:
-            self.output
-        except Exception:
-            return False
-
-        return True
+        _ = self.output
+        return ''
 
     @cached_property
     def output(self):

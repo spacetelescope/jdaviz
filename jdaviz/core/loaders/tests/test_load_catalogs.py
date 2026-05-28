@@ -50,12 +50,12 @@ def _make_catalog_xy_radec(with_units=True, colnames=None):
 
 def _make_catalog_string_coord_columns():
     # complete nonsense coordinates, just care about parsing the units
-    ra = ['5° 55′ 55″', '5° 55′ 55″', '5° 55′ 55″']
-    dec = ['4° 44′ 44″', '4° 44′ 44″', '4° 44′ 44″']
-    x = ['1', '2', '3']
-    y = ['4', '5', '6']
-    obj_id = ['source1', 'source2', 'source3']
-    flux = [10, 20, 30] * u.Jy
+    ra = ['5° 55′ 55″', '5° 55′ 55″', '5° 55′ 55″', '09h59m46.18778822s']
+    dec = ['4° 44′ 44″', '4° 44′ 44″', '4° 44′ 44″', '+02d11m32.14597268s']
+    x = ['1', '2', '3', '4']
+    y = ['4', '5', '6', '7']
+    obj_id = ['source1', 'source2', 'source3', 'source4']
+    flux = [10, 20, 30, 40] * u.Jy
 
     return QTable(data=[ra, dec, x, y, obj_id, flux],
                   names=['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux'])

@@ -136,6 +136,9 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
         # description displayed under plugin title in tray
         self._plugin_description = 'Plot spectral lines from preset or custom line lists.'
 
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/line_lists.html'  # noqa
+
     def _irrelevant_msg_callback(self, *args):
         if not hasattr(self, 'viewer'):
             return None

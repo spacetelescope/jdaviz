@@ -1,5 +1,6 @@
 import os
 import re
+import threading
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
@@ -28,7 +29,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         UnitSelectPluginComponent,
                                         ViewerSelect,
                                         with_spinner,
-                                        _is_image_viewer)
+                                        _is_image_viewer,
+                                        ValidatorMixin)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
@@ -105,18 +107,16 @@ class FormatSelect(SelectPluginComponent):
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
-                try:
-                    if this_parser.is_valid:
+                if this_parser.is_valid:
+                    try:
                         importer_input = this_parser.output
-                    else:
-                        self._invalid_importers[parser_name] = 'Input considered invalid by parser'
-                        importer_input = None
-                except Exception as e:
-                    self._invalid_importers[parser_name] = f'Parser exception: {e}'
-                    importer_input = None
-
-                if importer_input is None:
-                    self._invalid_importers.setdefault(parser_name, 'importer_input is None')
+                    except Exception as e:
+                        self._invalid_importers[parser_name] = f'Parser exception: {e}'
+                        this_parser._cleanup()
+                        continue
+                else:
+                    self._invalid_importers[parser_name] = this_parser.is_valid.message
+                    self._invalid_importers.setdefault(parser_name, this_parser.is_valid.message)
                     this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
@@ -175,7 +175,7 @@ class FormatSelect(SelectPluginComponent):
                             # target filters
                             self._importers[importer_name] = this_importer
                     else:
-                        self._invalid_importers[label] = 'Input considered invalid by importer'
+                        self._invalid_importers[label] = this_importer.is_valid.message
 
         # Sort to move Catalog to the end of the list
         catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
@@ -239,7 +239,8 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin):
+class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin,
+                   ValidatorMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
@@ -287,7 +288,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     is_wcs_linked = Bool(False).tag(sync=True)
     image_data_loaded = Bool(False).tag(sync=True)
     footprint_select_icon = Unicode(read_icon(os.path.join(
-        ICON_DIR, 'footprint_select.svg'), 'svg+xml')).tag(sync=True)
+        ICON_DIR, 'skewer_select.svg'), 'svg+xml')).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         self.set_active_loader_callback = kwargs.pop('set_active_loader_callback', None)
@@ -309,6 +310,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.file_table.show_rowselect = True
         self.file_table.item_key = "location"
         self.file_table.multiselect = False
+        self.file_table.server_pagination = True
         self.file_table._selected_rows_changed_callback = self.on_file_select_changed
 
         # Setup footprint selection
@@ -332,7 +334,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
                     's_region' in self.observation_table.headers_avail):
-                return viewer.toolbar._original_tools_nested[:3] + ['jdaviz:selectregion', 'jdaviz:skewerregion'], 'jdaviz:selectregion'  # noqa: E501
+                return viewer.toolbar._original_tools_nested[:3] + ['jdaviz:skewerregion', 'jdaviz:selectregion'], 'jdaviz:skewerregion'  # noqa: E501
             return None, None
 
         self.custom_toolbar.callable = custom_toolbar
@@ -523,10 +525,20 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     setattr(user_api, k, v)
         return self
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the resolver input is valid (override in subclasses).
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         # override by subclass
-        return False  # pragma: nocover
+        return 'Not implemented.'  # pragma: nocover
 
     @property
     def input(self):
@@ -543,7 +555,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def parsed_input(self):
         return self.parse_input()
 
-    def _parsed_input_to_table(self, parsed_input):
+    def _parsed_input_to_table(self, parsed_input, hdu=None):
         if (isinstance(parsed_input, str)
                 and os.path.exists(parsed_input) and os.path.isfile(parsed_input)):
             # try to read into a table which could be a products list
@@ -551,7 +563,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore",
                                           message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
-                    parsed_input = astropyTable.read(parsed_input)
+                    parsed_input = astropyTable.read(parsed_input, hdu=hdu)
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, astropyTable):
@@ -602,7 +614,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # calls self.parse_input() on the subclass and caches
             parsed_input = self.parsed_input
             if not self.is_valid:
-                raise ValueError("Input is invalid for the selected resolver.")
+                raise ValueError(self.is_valid.message)
         except Exception as e:  # nosec
             self.parsed_input_is_empty = False
             self.parsed_input_is_query = False
@@ -626,7 +638,17 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             return
 
         # first attempt to parse the input as a table
-        parsed_input_table = self._parsed_input_to_table(parsed_input)
+        parsed_input_table = None
+        if self._restrict_to_formats is None or "Catalog" in self._restrict_to_formats:
+            hdu = None
+            if self.format.selected:
+                ext = getattr(self.importer, 'extension', None)
+                if ext is not None:
+                    hdu = ext.selected_index
+                    if isinstance(hdu, list):
+                        hdu = hdu[0]
+            parsed_input_table = self._parsed_input_to_table(parsed_input, hdu=hdu)
+
         # if the input could be parsed as a table, try to interpret it as
         # either an observation table or file table. parsed_input_table
         # will be None if it could not be parsed as a table.
@@ -669,7 +691,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
                 for row in observation_table:
                     self.observation_table.add_item(row)
-                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible # noqa
+                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible  # noqa
                                                           if h not in ['s_region']]
 
                 # See 'input is empty' comment above
@@ -712,19 +734,25 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if len(self.observation_table.selected_rows) == 0:
             self._app.hub.broadcast(SnackbarMessage("No observation currently selected",
                                                     sender=self, color="warning"))
+            self.file_table._clear_table()
+            self.file_table_populated = False
         else:
             datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
-            results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
-            file_table = self._parsed_input_to_file_table(results)
-            if file_table is not None:
-                self.file_table._clear_table()
-                for row in file_table:
-                    self.file_table.add_item(row)
-                self.file_table_populated = True
-            else:
-                self._app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
-                                                        sender=self, color="error"))
-                self.file_table_populated = False
+            threading.Thread(target=self._fetch_and_populate_file_table,
+                             args=(datasets,), daemon=True).start()
+
+    def _fetch_and_populate_file_table(self, datasets):
+        results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
+        file_table = self._parsed_input_to_file_table(results)
+        if file_table is not None:
+            self.file_table.selected_rows = []
+            self.file_table.selected_indices = []
+            self.file_table.set_all_items_from_table(file_table)
+            self.file_table_populated = True
+        else:
+            self._app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
+                                                    sender=self, color="error"))
+            self.file_table_populated = False
 
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""
@@ -1159,11 +1187,21 @@ class BaseConeSearchResolver(BaseResolver):
 
         self.viewer_centered = True
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the input is a valid cone search configuration.
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         # these resolvers do not accept any direct, (default_input = None), so can
         # always be considered valid
-        return True
+        return ''
 
 
 def _format_resolver_error(resolver_dict, formats=None, no_align=False):
@@ -1243,7 +1281,7 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
                     return True
             return False
 
-        if formats is None or not any(formats):
+        if formats is None or not any(formats) or 'object' in formats:
             return True
 
         # Check if there's an arrow separator
@@ -1306,13 +1344,10 @@ def find_matching_resolver(app,
             if resolver_name == 'url' and 'timeout' in str(e):
                 raise e
             continue
-        try:
-            is_valid = this_resolver.is_valid
-        except Exception as e:  # nosec
-            invalid_resolvers[resolver_name] = f'is_valid exception: {e}'
-            is_valid = False
-        if not is_valid:
-            invalid_resolvers.setdefault(resolver_name, 'Input considered invalid by resolver.')
+
+        if not this_resolver.is_valid:
+            invalid_resolvers[resolver_name] = this_resolver.is_valid.message
+            invalid_resolvers.setdefault(resolver_name, this_resolver.is_valid.message)
             continue
 
         if target is not None:

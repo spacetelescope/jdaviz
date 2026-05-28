@@ -181,19 +181,21 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         return self.input
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
-            return False
+            return 'Catalog importer is only supported in imviz, mastviz, generalized jdaviz.'
+
         if isinstance(self.input, (Table, QTable)) and len(self.input):
-            return True
+            return ''
+
         elif isinstance(self.input, HDUList):
             # check for the presence of at least one TableHDU/BinTableHDU extension
             for i, hdu in enumerate(self.input):
                 if isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0:
-                    return True
-        return False
+                    return ''
+
+        return 'Input is not a valid catalog.'
 
     def _update_col_items_and_selected(self, base_attr, options, select_first=True):
         """update column items and selected value."""
@@ -473,12 +475,12 @@ class CatalogImporter(BaseImporterToDataCollection):
             # determine if the string format is recognizable as Lon/Lat coordinates.
             if isinstance(ra[0], str):
                 try:
-                    ra = SkyCoord(ra, ra).ra  # dummy value 'ra' twice, just to parse string
+                    ra = SkyCoord(ra, 90 * u.deg).ra  # dummy value just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse RA column as string coordinates.")
             if isinstance(dec[0], str):
                 try:
-                    dec = SkyCoord(dec, dec).dec  # dummy value 'dec' twice, just to parse string
+                    dec = SkyCoord(0 * u.deg, dec).dec  # dummy value just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse Dec column as string coordinates.")
 

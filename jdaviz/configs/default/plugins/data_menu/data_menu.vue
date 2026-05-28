@@ -218,27 +218,38 @@
                       </div>
                     </v-list-item-content>
                     <v-list-item-action>
-                      <j-tooltip
-                        v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
-                        tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
-                      >
-                        <v-btn icon disabled>
-                          <v-icon>mdi-eye-off</v-icon>
-                        </v-btn>
-                      </j-tooltip>
-                      <j-tooltip
-                        v-else-if="viewer_supports_visible_toggle"
-                        :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
-                      >
-                        <plugin-switch
-                          :value="item.visible"
-                          @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-                          @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
-                          @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
-                          :api_hints_enabled="false"
-                          :use_icon="item.is_sonified ? 'speaker' : 'eye'"
-                        />
-                      </j-tooltip>
+                      <div style="display: flex; align-items: center;">
+                        <j-tooltip :tooltipcontent="copied_label === item.label ? 'Copied' : 'Copy label to clipboard'">
+                          <v-btn
+                            icon
+                            x-small
+                            @click.stop="copyLabel(item.label)"
+                          >
+                            <v-icon small>{{ copied_label === item.label ? 'mdi-check' : 'mdi-clipboard-outline' }}</v-icon>
+                          </v-btn>
+                        </j-tooltip>
+                        <j-tooltip
+                          v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
+                          tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
+                        >
+                          <v-btn icon disabled>
+                            <v-icon>mdi-eye-off</v-icon>
+                          </v-btn>
+                        </j-tooltip>
+                        <j-tooltip
+                          v-else-if="viewer_supports_visible_toggle"
+                          :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
+                        >
+                          <plugin-switch
+                            :value="item.visible"
+                            @click="(value) => {set_layer_visibility({layer: item.label, value: value}); hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(value)+')'}"
+                            @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
+                            @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
+                            :api_hints_enabled="false"
+                            :use_icon="item.is_sonified ? 'speaker' : 'eye'"
+                          />
+                        </j-tooltip>
+                      </div>
                     </v-list-item-action>
                   </v-list-item>
                 </draggable>
@@ -325,6 +336,7 @@
         data_menu_open: false,
         hover_api_hint: '',
         lock_hover_api_hint: false,
+        copied_label: '',
         debounce_timer: null,
         is_updating_layers: false,
         settled_has_more: false,
@@ -336,7 +348,14 @@
         return this.layer_items.filter(item => item.visible);
       },
       visible_layer_items_limited: function() {
-        return this.visible_layer_items.slice(0, this.max_legend_items);
+        // When the overflow icon is shown, keep max_legend_items data items so
+        // the total slot count (data + overflow) stays within the available
+        // viewer height.  When no overflow icon is needed we can fill that
+        // spare slot with the next data item instead.
+        const showOverflow = this.visible_layer_items.length > this.max_legend_items + 1
+                             || this.any_layers_hidden;
+        const limit = showOverflow ? this.max_legend_items : this.max_legend_items + 1;
+        return this.visible_layer_items.slice(0, limit);
       },
       any_layers_hidden: function() {
         // True when any layer loaded in the viewer is not visible,
@@ -348,10 +367,11 @@
       has_more_visible_items: function() {
         // During rapid updates (e.g. blinking), hold the last settled value
         // so the "more" indicator doesn't flicker on or off.
+        // Only show overflow icon when two or more items would be hidden.
         if (this.is_updating_layers) {
           return this.settled_has_more;
         }
-        return this.visible_layer_items.length > this.max_legend_items
+        return this.visible_layer_items.length > this.max_legend_items + 1
                || this.any_layers_hidden;
       }
     },
@@ -363,7 +383,7 @@
         this.is_updating_layers = true;
         clearTimeout(this.debounce_timer);
         this.debounce_timer = setTimeout(() => {
-          this.settled_has_more = this.visible_layer_items.length > this.max_legend_items
+          this.settled_has_more = this.visible_layer_items.length > this.max_legend_items + 1
                                  || this.any_layers_hidden;
           this.is_updating_layers = false;
         }, 50);
@@ -429,9 +449,9 @@
         if (!container) return;
         const viewerHeight = container.getBoundingClientRect().height;
         const itemHeight = 30;
-        // Cap legend at 50% of viewer height so it doesn't dominate the view.
+        // Cap legend at 55% of viewer height so it doesn't dominate the view.
         // Reserve 2 slots: 1 for the viewer icon header, 1 for the "more" indicator.
-        const usableHeight = viewerHeight * 0.5;
+        const usableHeight = viewerHeight * 0.55;
         this.max_legend_items = Math.max(1, Math.floor(usableHeight / itemHeight) - 2);
       },
       isSafari() {
@@ -471,6 +491,12 @@
         const offsetX = event.clientX - draggedBounds.left;
         const offsetY = event.clientY - draggedBounds.top;
         event.dataTransfer.setDragImage(dragGhostEl, offsetX, offsetY);
+      },
+      copyLabel(label) {
+        navigator.clipboard.writeText(label).then(() => {
+          this.copied_label = label;
+          setTimeout(() => { this.copied_label = ''; }, 1500);
+        });
       },
       onDragEnd() {
         if (this._dragGhostParent && this._dragGhostParent.parentNode) {

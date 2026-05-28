@@ -94,6 +94,9 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract a ramp from a ramp cube.'
 
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/ramp_extraction.html'  # noqa
+
         self.dataset.filters = ['is_ramp_group_cube']
 
         # TODO: in the future this could be generalized with support in SelectPluginComponent
@@ -199,6 +202,8 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _on_subset_delete(self, msg={}):
 
         viewer = self.integration_viewer
+        if viewer is None or viewer.figure is None:
+            return
         subset_lbl = msg.subset.label
         viewer.figure.marks = [
             mark for mark in viewer.figure.marks
@@ -208,6 +213,8 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @observe('is_active', 'show_subset_preview', 'aperture_selected')
     def _update_subset_previews(self, msg={}):
         # remove preview marks for non-selected subsets
+        if self.integration_viewer is None or self.integration_viewer.figure is None:
+            return
 
         for mark in self.integration_viewer.figure.marks:
             if isinstance(mark, PluginLine) and mark.label is not None:

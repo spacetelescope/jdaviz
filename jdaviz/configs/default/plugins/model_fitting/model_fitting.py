@@ -4,6 +4,8 @@ from copy import deepcopy
 
 import astropy.units as u
 from astropy.modeling import fitting
+from glue.core.message import (DataCollectionAddMessage,
+                               DataCollectionDeleteMessage)
 from specutils import Spectrum
 from specutils.fitting import fit_lines
 from specutils.utils import QuantityModel
@@ -57,8 +59,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``cube_fit``
-      Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
-      collapsed spectrum.
+      Only exposed for Cubeviz and generalized Jdaviz.  Whether to fit the model to the cube
+      instead of to the collapsed spectrum.
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to fit the model.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
@@ -112,6 +114,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     display_order = Bool(False).tag(sync=True)
 
     cube_fit = Bool(False).tag(sync=True)
+    has_cube_data = Bool(False).tag(sync=True)
 
     # residuals (non-cube fit only)
     residuals_calculate = Bool(False).tag(sync=True)
@@ -140,6 +143,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Fit an analytic model to data or a subset of data.'
+
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/model_fitting.html'  # noqa
 
         # create the label first so that when model_component defaults to the first selection,
         # the label automatically defaults as well
@@ -189,7 +195,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                             selected='fitter_selected')
         self._enforce_spline_fitter()
 
-        if self.config == 'cubeviz':
+        if self.config in ('cubeviz', 'deconfigged'):
             # use mean whenever extracting the 1D spectrum of a cube to initialize model params
             self.dataset._spectral_extraction_function = 'Mean'
         # by default, require entries to be in spectrum-viewer (not other cubeviz images, etc)
@@ -204,7 +210,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                        'residuals_label_auto', 'residuals_label_invalid_msg')
 
         headers = ['model', 'data_label', 'spectral_subset', 'equation']
-        if self.config == 'cubeviz':
+        if self.config in ('cubeviz', 'deconfigged'):
             headers += ['cube_fit']
 
         self.table.headers_avail = headers
@@ -218,6 +224,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=self._check_has_cube_data)
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=self._check_has_cube_data)
 
         self.parallel_n_cpu = None
         if self.config == "deconfigged":
@@ -244,7 +254,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @property
     def user_api(self):
         expose = ['dataset']
-        if self.config == "cubeviz":
+        if self.config in ('cubeviz', 'deconfigged'):
             expose += ['cube_fit']
         expose += ['spectral_subset', 'model_component',
                    'poly_order', 'model_component_label', 'model_components',
@@ -393,6 +403,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # Model fitted to cube, return image viewer
             if self.config == 'cubeviz':
                 return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
+            elif self.config == 'deconfigged':
+                return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'},
+                        {'label': 'Image', 'reference': 'imviz-image-viewer'}]
             else:
                 return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
         else:
@@ -623,6 +636,12 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._enforce_spline_fitter()
 
     def _initialize_model_component(self, model_comp, comp_label, poly_order=None):
+
+        if self.dataset_selected == '':
+            # We don't have to use a snackbar here because the UI should
+            # always have a selection
+            raise ValueError('You must select a dataset before proceeding.')
+
         new_model = {"id": comp_label, "model_type": model_comp,
                      "parameters": [], "model_kwargs": {}}
         model_cls = MODELS[model_comp]
@@ -680,10 +699,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         if self.cube_fit:
             # We need to input the whole cube when initializing the model so the units are correct.
-            if self.dataset_selected in self._app.data_collection.labels:
-                data = self._app.data_collection[self.dataset_selected].get_object(statistic=None)
-            else:  # User selected some subset from spectrum viewer, just use original cube
-                data = self._app.data_collection[0].get_object(statistic=None)
+            data = self._app.data_collection[self.dataset_selected].get_object(statistic=None)
+
             spatial_axes = [0, 1, 2]
             spatial_axes.remove(data.spectral_axis_index)
             masked_spectrum = self._apply_subset_masks(data, self.spectral_subset,
@@ -1284,7 +1301,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Disable computing model if cube_fit is active and
         # Spline1D component is present in the equation
-        if self._app.config == 'cubeviz' and self.cube_fit:
+        if self._app.config in ('cubeviz', 'deconfigged') and self.cube_fit:
             id_to_type = {cm['id']: cm.get('model_type') for cm in self.component_models}
             has_spline_in_eq = any(id_to_type.get(name) == 'Spline1D'
                                    for name in self.equation_components)
@@ -1357,6 +1374,16 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self.model_equation_invalid_msg = f'{", ".join(components_not_valid)} {msg}'
             return
         self.model_equation_invalid_msg = ''
+
+    def _check_has_cube_data(self, event={}):
+        for dataset in self._app.data_collection:
+            if dataset.ndim == 3:
+                self.has_cube_data = True
+                break
+        else:
+            self.has_cube_data = False
+            # Make sure cube_fit is also False
+            self.cube_fit = False
 
     @observe("dataset_selected", "dataset_items", "cube_fit")
     def _set_default_results_label(self, event={}):
@@ -1612,13 +1639,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     def _fit_model_to_cube(self, add_data):
 
+        if self.dataset_selected == '':
+            # We don't have to use a snackbar here because the UI should
+            # always have a selection
+            raise ValueError('You must select a dataset before proceeding.')
+
         if self._warn_if_no_equation():
             return
 
-        if self.dataset_selected in self._app.data_collection.labels:
-            data = self._app.data_collection[self.dataset_selected]
-        else:  # User selected some subset from spectrum viewer, just use original cube
-            data = self._app.data_collection[0]
+        data = self._app.data_collection[self.dataset_selected]
 
         # First, ensure that the selected data is cube-like. It is possible
         # that the user has selected a pre-existing 1d data object.

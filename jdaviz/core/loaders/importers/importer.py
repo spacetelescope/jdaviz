@@ -10,7 +10,8 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         AutoTextField,
                                         ViewerSelectCreateNew,
-                                        with_spinner)
+                                        with_spinner,
+                                        ValidatorMixin)
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (standardize_metadata,
                           _wcs_only_label,
@@ -46,7 +47,7 @@ def _physical_type_from_component(comp_id, comp):
         return comp_units, None
 
 
-class BaseImporter(PluginTemplateMixin):
+class BaseImporter(PluginTemplateMixin, ValidatorMixin):
     # preference order of parsers, by registry name.  If empty, the first found match will
     # be used by default.  If not empty, the first match in the list will be used (including
     # over any parsers not included in the list).  If not empty but no valid parsers are in
@@ -82,10 +83,20 @@ class BaseImporter(PluginTemplateMixin):
 
         return applied_kwargs
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
+        """
+        Checks if the importer input is valid (override in subclasses).
+
+        The output of this method is wrapped by the IsValidWrapper
+        helper class that converts the string to an inverted boolean,
+        i.e. empty string => True, non-empty string => False
+        since the string (when filled) carries error information.
+        Furthermore, the actual 'is_valid' check is handled by the ValidatorMixin
+        that wraps the check in a try/except statement so that individual
+        '_check_is_valid' calls no longer need to catch potential failures.
+        """
         # override by subclass
-        return False  # pragma: nocover
+        return 'Not implemented.'  # pragma: nocover
 
     @property
     def resolver(self):
@@ -307,7 +318,8 @@ class BaseImporterToDataCollection(BaseImporter):
     def add_to_data_collection(self, data, data_label=None, data_hash=None,
                                parent=None,
                                viewer_select=None,
-                               cls=None):
+                               cls=None,
+                               data_type=None):
         """
         Add data to the data collection (and optionally to viewers).
 
@@ -375,6 +387,8 @@ class BaseImporterToDataCollection(BaseImporter):
         data.meta['_importer'] = self.__class__.__name__
         # Create a hashed representation of the data if not already present
         data.meta['_data_hash'] = data_hash if data_hash is not None else create_data_hash(data)
+        if data_type is not None:
+            data.meta['_data_type'] = data_type
 
         # Add the data to data collection.
         self._app.add_data(data, data_label=data_label)
