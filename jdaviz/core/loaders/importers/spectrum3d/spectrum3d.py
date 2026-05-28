@@ -325,8 +325,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         selection without storing any extra state.
 
         Normal case (flux extension selected, or no extension selected yet):
-          cubeviz   -> ``'<base> [FLUX]'``
-          deconfigged -> ``'<base>'``
+          cubeviz, no resolver label  -> ``'3D Spectrum [FLUX]'``
+          cubeviz, resolver label     -> ``'<resolver_label>'`` (unchanged)
+          deconfigged                 -> ``'<base>'``
 
         ERR-as-primary case (extension empty, unc_extension non-empty):
           both configs -> ``'<base> [<UNC_EXTNAME>]'``
@@ -345,8 +346,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                 and self.unc_extension.selected not in ('', 'None')):
             unc_name = self.unc_extension.selected.split(': ', 1)[-1]
             return f"{base} [{unc_name}]"
-        # Normal case: preserve the original per-config label exactly
-        if self.config == 'cubeviz':
+        # Normal case: only append [FLUX] when there is no resolver-derived label
+        # (i.e. when falling back to '3D Spectrum'), matching the original behavior.
+        if self.config == 'cubeviz' and not self.default_data_label_from_resolver:
             return f"{base} [FLUX]"
         return base
 
@@ -437,7 +439,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # NOTE: temporary during deconfig process
             return 'Importer only supported in deconfigged and cubeviz'
         if self.spectrum.flux.ndim != 3:
-            return 'Input spectrum flux must be 3-dimensional'
+            return 'Spectrum flux must be 3D.'
         self.output
         return ''
 
