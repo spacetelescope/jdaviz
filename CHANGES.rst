@@ -8,6 +8,9 @@ Bug Fixes
 
 - Fix broken "Learn More" links throughout app. [#4173]
 
+- Fix units related issue in imviz aperture photometry plugin when applying
+  pixel area factor to data in surface brightness units. [#4188]
+
 Mosviz
 ^^^^^^
 
