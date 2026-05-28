@@ -261,11 +261,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         # Copy 3D WCS from input cube.
         data = self.dataset.selected_dc_item
-        # Similar to coords_info logic.
-        if '_orig_spec' in getattr(data, 'meta', {}):
-            w = data.meta['_orig_spec'].wcs
-        else:
-            w = data.coords
+        w = data.coords
 
         # Create a new cube with the old metadata. Note that astropy
         # convolution generates values for masked (NaN) data.

@@ -609,11 +609,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     comp_data = comp.data[0, :, :]
                 else:
                     comp_data = comp.data[:, :, 0].T
-            # Similar to coords_info logic.
-            if '_orig_spec' in getattr(data, 'meta', {}):
-                w = data.meta['_orig_spec'].wcs.celestial
-            else:
-                w = data.coords.celestial
+            w = data.coords.celestial
         else:  # "imviz"
             comp_data = comp.data  # ny, nx
             w = data.coords
@@ -809,11 +805,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 comp_data = comp.data[self._cube_slice_ind, :, :]
             else:
                 comp_data = comp.data[:, :, self._cube_slice_ind].T
-            # Similar to coords_info logic.
-            if '_orig_spec' in getattr(data, 'meta', {}):
-                w = data.meta['_orig_spec'].wcs
-            else:
-                w = data.coords
+            w = data.coords
         else:  # "imviz"
             comp_data = comp.data  # ny, nx
             w = data.coords
