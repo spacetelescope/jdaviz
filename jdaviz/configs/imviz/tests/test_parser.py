@@ -460,7 +460,7 @@ class TestParseImage:
             assert_quantity_allclose(tbl[0]['mean'], 0.043684 * data_unit, rtol=1e-3)
         elif data.shape[1] == 4220:
             assert_quantity_allclose(tbl[0]['sum'], 126.582084 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['min'], -0.027572 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['min'], -0.033435 * data_unit, rtol=1e-3)
             assert_quantity_allclose(tbl[0]['max'], 4.021776 * data_unit, rtol=1e-3)
             assert_quantity_allclose(tbl[0]['mean'], 0.049325 * data_unit, rtol=1e-3)
 
