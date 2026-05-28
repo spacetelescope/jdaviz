@@ -13,6 +13,7 @@
     :observation_table_populated="observation_table_populated"
     :file_table="file_table"
     :file_table_populated="file_table_populated"
+    :file_table_fetch_message="file_table_fetch_message"
     :file_cache="file_cache"
     :file_timeout="file_timeout"
     :target_items="target_items"
