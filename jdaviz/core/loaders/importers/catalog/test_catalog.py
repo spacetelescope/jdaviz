@@ -1,8 +1,6 @@
 
 from astropy.table import Table, QTable
 from jdaviz.core.loaders.importers.catalog.catalog import CatalogImporter
-from jdaviz.utils import in_ra_comps, in_dec_comps
-import pytest
 
 
 def test_coord_column_detection(deconfigged_helper):
@@ -52,39 +50,6 @@ def test_coord_column_detection(deconfigged_helper):
     assert importer.col_dec == '---'
 
 
-@pytest.mark.parametrize("coordinate_name", ['ra', 'dec'])
-def test_coord_column(deconfigged_helper,
-                      sky_coord_only_source_catalog,
-                      coordinate_name):
-    """Test internal method _guess_coord_cols for CatalogImporter: success and failure cases."""
-    resolver = deconfigged_helper.loaders['object']._obj
-    importer = CatalogImporter(app=deconfigged_helper._app,
-                               resolver=resolver, parser=None,
-                               input=sky_coord_only_source_catalog)
-
-    variations_to_pass = [coordinate_name.upper(), coordinate_name + '_gaia',
-                          'source' + coordinate_name, 'world ' + coordinate_name]
-
-    for v in variations_to_pass:
-        tab = QTable({v: [10.0]})
-        importer._input = tab
-        assert importer._guess_coord_cols(coordinate_name)[0] == v
-        assert (in_ra_comps(v) or in_dec_comps(v))
-
-    # specifically test 'right ascension' and 'declination'
-    tab = QTable({'rightascension_deg': [10.0], 'declination_deg': [-5.0]})
-    importer._input = tab
-    if coordinate_name == 'ra':
-        assert importer._guess_coord_cols(coordinate_name)[0] == 'rightascension_deg'
-    elif coordinate_name == 'dec':
-        assert importer._guess_coord_cols(coordinate_name)[0] == 'declination_deg'
-
-    # test failures too
-    tab = QTable({'fluxradius': [10.0], 'radial_velocity': [5.0], 'decrement': [1.0]})
-    importer._input = tab
-    assert importer._guess_coord_cols(coordinate_name)[0] == '---'
-
-
 def test_pixel_column_detection(deconfigged_helper):
     '''Test automatic detection of x/y columns with various naming
     conventions, and that non-pixel-coordinate columns are not misidentified as
@@ -120,34 +85,6 @@ def test_pixel_column_detection(deconfigged_helper):
     # so they should be set as a placeholder value of '---'
     assert importer.col_x == '---'
     assert importer.col_y == '---'
-
-
-@pytest.mark.parametrize("coordinate_name", ['x', 'y'])
-def test_pixel_column(deconfigged_helper,
-                      sky_coord_only_source_catalog,
-                      coordinate_name):
-    """Test internal method _guess_coord_cols for CatalogImporter: success and failure cases."""
-    resolver = deconfigged_helper.loaders['object']._obj
-    importer = CatalogImporter(app=deconfigged_helper._app,
-                               resolver=resolver, parser=None,
-                               input=sky_coord_only_source_catalog)
-
-    variations_to_pass = [coordinate_name.upper(), coordinate_name + '_source',
-                          'pixel_' + coordinate_name, coordinate_name + 'pix']
-
-    for v in variations_to_pass:
-        tab = QTable({v: [10.0]})
-        importer._input = tab
-        assert importer._guess_coord_cols(coordinate_name)[0] == v
-
-    # test failures too
-    tab = QTable({'galaxy': [10.0], 'parallax': [5.0], 'velocity': [1.0]})
-    importer._input = tab
-    assert importer._guess_coord_cols(coordinate_name)[0] == '---'
-
-    # test error if coordinate column not given as 'ra', 'dec', 'x' or 'y'
-    with pytest.raises(NotImplementedError, match='Not a valid coordinate column'):
-        importer._guess_coord_cols("galaxy")
 
 
 def test_catalog_importer_is_valid(deconfigged_helper):

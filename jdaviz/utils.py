@@ -67,15 +67,6 @@ SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
                              'Velocity', 'Wavenumber',
                              'World 0', 'World 1',
                              'Pixel Axis 0 [x]', 'Pixel Axis 1 [x]')
-# NOTE: RA_COMPS and DEC_COMPS are compared without any delimiters and in lowercase
-RA_COMPS = ['rightascension', 'ra', 'radeg', 'radeg',
-            'radegrees', 'rightascensiondegrees', 'rightascensiondeg',
-            'raobj', 'objra', 'sourcera', 'rasource', 'raj2000', 'ra2000',
-            'worldra', 'targra', 'scira']
-DEC_COMPS = ['declination', 'dec', 'decdeg', 'decdeg',
-             'decdegrees', 'declinationdegrees', 'declinationdeg',
-             'decobj', 'objdec', 'decsource', 'sourcedec', 'decj2000', 'dec2000',
-             'worlddec', 'targdec', 'scidec']
 COORD_WORDS_TO_EXCLUDE = ['radius', 'radio', 'radial', 'extragalactic',
                           'infrared', 'fraction', 'gradient', 'ratio',
                           'integrated,' 'radian', 'random', 'parallax', 'range',

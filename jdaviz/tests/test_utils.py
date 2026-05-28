@@ -12,7 +12,8 @@ from jdaviz.core.loaders import SpectrumImporter
 from jdaviz.utils import (alpha_index, download_uri_to_path,
                           get_cloud_fits, get_cloud_asdf, cached_uri, escape_brackets,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
-                          create_data_hash, parallelize_calculation)
+                          create_data_hash, parallelize_calculation,
+                          in_ra_comps, in_dec_comps)
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -459,3 +460,22 @@ def test_create_data_hash_none():
     assert create_data_hash([None, None, None]) is None
     assert create_data_hash(np.array([])) is None
     assert create_data_hash(np.array([None, None, None])) is None
+
+
+@pytest.mark.parametrize("coordinate_name", ['ra', 'dec'])
+def test_coord_column(coordinate_name):
+    """Test regex for in_ra_comps and in_dec_comps utilities"""
+    variations_to_pass = [coordinate_name.upper(), coordinate_name + '_gaia',
+                          'source' + coordinate_name, 'world ' + coordinate_name,
+                          coordinate_name + '2000']
+
+    for v in variations_to_pass:
+        if coordinate_name == 'ra':
+            assert in_ra_comps(v)
+        elif coordinate_name == 'dec':
+            assert in_dec_comps(v)
+
+    variations_to_fail = ['radius', 'galaxy', 'deconvolve']
+    for v in variations_to_fail:
+        assert not in_ra_comps(v)
+        assert not in_dec_comps(v)
