@@ -2702,8 +2702,10 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                             subset_att = getattr(subset_state, att)
                             data_components = new_parent.components
                             if subset_att not in data_components:
-                                cid = [c for c in data_components if c.label == subset_att.label][0]
-                                setattr(subset_state, att, cid)
+                                cid = [c for c in data_components if c.label == subset_att.label]
+                                if len(cid):
+                                    cid = cid[0]
+                                    setattr(subset_state, att, cid)
 
                     # Translate bounds through WCS if needed
                     if (self.config in ("imviz", "deconfigged") and
