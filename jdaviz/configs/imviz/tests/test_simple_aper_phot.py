@@ -522,24 +522,26 @@ def test_curve_of_growth(with_unit):
         _curve_of_growth(data, cen, EllipticalAnnulus(cen, 3, 8, 5), pixarea_fac=pixarea_fac)
 
 
-def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
-    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label='test')
-    phot_plugin = cubeviz_helper.plugins['Aperture Photometry']
-    uc_plugin = cubeviz_helper.plugins['Unit Conversion']
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']
+def test_cubeviz_batch(deconfigged_helper, spectrum1d_cube_fluxunit_jy_per_steradian, image_nddata_wcs_sb):  # noqa
+    # First load an image so we can check that this works with mixed data
+    deconfigged_helper.load(image_nddata_wcs_sb, data_label='image', format='Image')
+    deconfigged_helper.load(spectrum1d_cube_fluxunit_jy_per_steradian, data_label='cube')
+    phot_plugin = deconfigged_helper.plugins['Aperture Photometry']
+    uc_plugin = deconfigged_helper.plugins['Unit Conversion']
+    subset_plugin = deconfigged_helper.plugins['Subset Tools']
 
     subset_plugin.import_region(CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2),
                                 combination_mode='new')
     subset_plugin.import_region(CirclePixelRegion(center=PixCoord(x=3, y=3), radius=2),
                                 combination_mode='new')
 
-    phot_plugin.dataset.selected = 'test[FLUX]'
+    phot_plugin.dataset.selected = 'cube'
     phot_plugin.multiselect = True
     phot_plugin.aperture.selected = ['Subset 1', 'Subset 2']
 
     phot_plugin.calculate_batch_photometry(full_exceptions=True)
     assert len(phot_plugin.table._obj) == 2
-    tbl = cubeviz_helper.plugins['Aperture Photometry'].export_table()
+    tbl = deconfigged_helper.plugins['Aperture Photometry'].export_table()
     assert_quantity_allclose(tbl['sum'], [5.980836e-12, 2.037396e-10] * u.Jy, rtol=1e-4)
 
     # Test that it still works after unit conversion
@@ -548,7 +550,7 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
     phot_plugin.calculate_batch_photometry(full_exceptions=True)
 
     assert len(phot_plugin.table._obj) == 4
-    tbl = cubeviz_helper.plugins['Aperture Photometry'].export_table()
+    tbl = deconfigged_helper.plugins['Aperture Photometry'].export_table()
     # get_aperture_photometry_results converts all to the same units
     assert_quantity_allclose(tbl['sum'],
                              [5.980836e-12, 2.037396e-10, 5.980836e-12, 2.037396e-10] * u.Jy,

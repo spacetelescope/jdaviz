@@ -693,6 +693,11 @@ def image_nddata_wcs():
     return _image_nddata_wcs()
 
 
+@pytest.fixture
+def image_nddata_wcs_sb():
+    return _image_nddata_wcs(unit=u.Unit('Jy/sr'))
+
+
 # Copied over from https://github.com/spacetelescope/ci_watson
 @pytest.fixture(scope='function')
 def _jail(tmp_path):

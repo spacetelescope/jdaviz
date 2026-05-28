@@ -53,6 +53,9 @@ Bug Fixes
 
 - Fix bug related to loading catalogs where units are determined from coordinate string. [#4199]
 
+- Fix 3D spectral extraction in cases where other types of data are loaded in addition
+  to the cube. [#4181]
+
 Mosviz
 ^^^^^^
 
