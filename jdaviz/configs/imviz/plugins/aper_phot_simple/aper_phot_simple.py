@@ -1163,7 +1163,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 tmp.append({'function': key, 'result': f'{x:.3f}', 'unit': unit})
             elif key == 'slice_wave':
                 if self.is_cube:
-                    tmp.append({'function': key, 'result': f'{self._cube_wave.value:.4e}', 'unit': getattr(self._cube_wave, 'unit', '-')})  # noqa: E501
+                    tmp.append({'function': key, 'result': f'{self._cube_wave.value:.4e}', 'unit': str(getattr(self._cube_wave, 'unit', '-'))})  # noqa: E501
                 else:
                     tmp.append({'function': key, 'result': np.nan, 'unit': '-'})
             else:

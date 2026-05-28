@@ -5,6 +5,7 @@ import re
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI, CircularAnnulusROI
+import numpy as np
 from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                 EllipticalAperture, SkyEllipticalAperture,
                                 RectangularAperture, SkyRectangularAperture,
@@ -131,6 +132,12 @@ def regions2aperture(region_shape):
     aperture2regions
 
     """
+    if hasattr(region_shape, 'center') and hasattr(region_shape.center, 'xy'):
+        if not np.all(np.isfinite(region_shape.center.xy)):
+            raise ValueError(f"Region center {region_shape.center.xy} contains non-finite values. "
+                             "This usually happens when a SkyRegion is converted to PixelRegion "
+                             "using an incompatible WCS or is out of bounds on the target image.")
+
     if isinstance(region_shape, CirclePixelRegion):
         aperture = CircularAperture(region_shape.center.xy, region_shape.radius)
 

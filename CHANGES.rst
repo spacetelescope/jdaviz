@@ -13,6 +13,9 @@ Bug Fixes
 
 - Fix rare bug when deleting data with a subset defined. [#4198]
 
+- Fix 3D spectral extraction in cases where other types of data are loaded in addition
+  to the cube. [#4181]
+
 Mosviz
 ^^^^^^
 
