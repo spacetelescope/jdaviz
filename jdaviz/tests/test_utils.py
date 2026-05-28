@@ -464,10 +464,11 @@ def test_create_data_hash_none():
 
 def test_coord_column(coordinate_name):
     """Test regex for in_ra_comps and in_dec_comps utilities"""
-    
     variations_to_pass = []
     for coordinate_name in ('ra', 'dec'):
-        variations_to_pass.append([coordinate_name.upper(), coordinate_name + '_gaia', 'source' + coordinate_name, 'world ' + coordinate_name, coordinate_name + '2000'])
+        variations_to_pass.append([coordinate_name.upper(), coordinate_name + '_gaia',
+                                   'source' + coordinate_name, 'world ' + coordinate_name,
+                                   coordinate_name + '2000'])
 
     # Convert to list of paired tuples, i.e. [(ra1, dec1), (ra2, dec2), ...]
     variations_to_pass = list(zip(*variations_to_pass))
