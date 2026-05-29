@@ -1,5 +1,4 @@
 import os
-import requests
 
 from astropy.coordinates import SkyCoord
 from astropy.table import Table, QTable
@@ -352,15 +351,7 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
     ldr.source = 'M4'
     ldr.telescope = 'Gaia'
     ldr.max_results = 10
-    try:
-        ldr.query_archive()
-    except requests.exceptions.HTTPError as exc:
-        msg = str(exc)
-        if '408' in msg or 'timeout' in msg.lower() or 'aborted' in msg.lower():
-            pytest.skip(f"Remote archive query timed out: {exc}")
-        raise
-    except requests.exceptions.RequestException as exc:
-        pytest.skip(f"Transient remote archive failure: {exc}")
+    ldr.query_archive()
     assert 'Catalog' in ldr.format.choices
     ldr.format = 'Catalog'
 
