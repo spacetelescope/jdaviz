@@ -257,6 +257,8 @@ a:active {
 .jupyter-widgets-popout-container .v-application.jdaviz {
   min-height: 100vh;
   max-height: 100vh;
+  min-width: 100vw;
+  max-width: 100vw;
 }
 
 /* #popout-widget-container line can be removed once users use ipypopout >= 1.3.0 */
