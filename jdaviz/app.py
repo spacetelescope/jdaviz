@@ -1123,6 +1123,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # If 2D coords, return as is
         elif getattr(parent_data.coords, 'world_n_dim', None) == 2:
             return parent_data.coords
+        # If _orig_spatial_wcs is stored, use that (cubeviz case)
+        elif parent_data.meta.get("_orig_spatial_wcs"):
+            return parent_data.meta.get("_orig_spatial_wcs")
         else:
             return None
 

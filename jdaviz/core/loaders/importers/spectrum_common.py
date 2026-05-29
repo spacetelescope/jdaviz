@@ -662,7 +662,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                         target_wave_unit = u.Unit(hdr[cunit_key])
                         found_target = True
                         break
-        print('!!!!!!!!!!!!!!', target_wave_unit, sc.spectral_axis.unit)
         if target_wave_unit == sc.spectral_axis.unit:
             target_wave_unit = None
         if (target_wave_unit is None) and (target_flux_unit is None):  # Nothing to convert
@@ -674,6 +673,12 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         else:  # Convert both
             new_sc = sc.with_spectral_axis_and_flux_units(
                 target_wave_unit, target_flux_unit, flux_equivalencies=_eqv_flux_to_sb_pixel())
+        # Since we create a new Spectrum, we need to copy over any original WCS info
+        # since the WCS will be replaced by a SpectralGWCS object instead of the original
+        # astropy.wcs.WCS object.
+        # This is needed for the subset tools to work properly.
+        if new_sc.flux.ndim == 3 and _get_celestial_wcs(sc.wcs) is not None:
+            new_sc.meta['_orig_spatial_wcs'] = _get_celestial_wcs(sc.wcs)
 
         return new_sc
 

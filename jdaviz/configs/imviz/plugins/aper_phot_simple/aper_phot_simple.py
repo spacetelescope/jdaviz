@@ -31,7 +31,7 @@ from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_conversion_general,
                                                handle_squared_flux_unit_conversions)
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.utils import PRIHDR_KEY
+from jdaviz.utils import PRIHDR_KEY, _get_celestial_wcs
 
 __all__ = ['SimpleAperturePhotometry']
 
@@ -609,7 +609,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     comp_data = comp.data[0, :, :]
                 else:
                     comp_data = comp.data[:, :, 0].T
-            w = data.coords.celestial
+            w = _get_celestial_wcs(data.coords)
         else:  # "imviz"
             comp_data = comp.data  # ny, nx
             w = data.coords
