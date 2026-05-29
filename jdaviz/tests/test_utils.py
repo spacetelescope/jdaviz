@@ -462,7 +462,7 @@ def test_create_data_hash_none():
     assert create_data_hash(np.array([None, None, None])) is None
 
 
-def test_coord_column(coordinate_name):
+def test_coord_column():
     """Test regex for in_ra_comps and in_dec_comps utilities"""
     variations_to_pass = []
     for coordinate_name in ('ra', 'dec'):
