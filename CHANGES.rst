@@ -12,6 +12,11 @@ New Features
 
 - Data labels are now able to be copied from the data menu with the addition of a copy to clipboard button. [#4177]
 
+- Loader now displays inline loading status and success confirmation messages at the
+  top of the loader window when fetching files from selected footprints. Success
+  messages auto-dismiss after 4 seconds and a progress indicator appears on the file
+  table during loading. [#4203]
+
 Mosviz
 ^^^^^^
 
