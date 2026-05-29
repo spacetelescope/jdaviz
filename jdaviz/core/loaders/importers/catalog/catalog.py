@@ -35,6 +35,9 @@ class CatalogImporter(BaseImporterToDataCollection):
     coord_frame_items = List().tag(sync=True)
     coord_frame_selected = Unicode().tag(sync=True)
 
+    coord_equinox_items = List().tag(sync=True)
+    coord_equinox_selected = Unicode().tag(sync=True)
+
     # for catalogs with source positions in pixel coordinates
     col_x_items = List().tag(sync=True)
     col_x_selected = Unicode().tag(sync=True)
@@ -115,6 +118,11 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                  items='coord_frame_items',
                                                  selected='coord_frame_selected',
                                                  manual_options=['icrs', 'fk5', 'fk4', 'galactic', 'ecliptic'])
+
+        self.coord_equinox = SelectPluginComponent(self,
+                                                   items='coord_equinox_items',
+                                                   selected='coord_equinox_selected',
+                                                   manual_options=['J2000.0', 'J1950.0', 'B1950.0', 'B1900.0'])
 
         # dropdown for source ID column
         self.col_id = SelectPluginComponent(self,
@@ -502,7 +510,10 @@ class CatalogImporter(BaseImporterToDataCollection):
             # if the coordinates are in a different frame, they will be transformed
             # to ICRS, which is the internal frame used in jdaviz for consistency
             if self.coord_frame_selected not in ['', 'icrs']:
-                sc_temp = SkyCoord(ra, dec, frame=self.coord_frame_selected)
+                kwargs = {'frame': self.coord_frame_selected}
+                if self.coord_frame_selected in ('fk5', 'fk4') and self.coord_equinox_selected:
+                    kwargs['equinox'] = self.coord_equinox_selected
+                sc_temp = SkyCoord(ra, dec, **kwargs)
                 ra = sc_temp.icrs.ra
                 dec = sc_temp.icrs.dec
 

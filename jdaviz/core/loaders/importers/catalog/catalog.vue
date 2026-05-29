@@ -70,6 +70,15 @@
         :api_hints_enabled="api_hints_enabled"
       ></plugin-select>
 
+      <plugin-select v-if="coord_frame_selected === 'fk5' || coord_frame_selected === 'fk4'"
+        :items="coord_equinox_items.map(i => i.label)"
+        :selected.sync="coord_equinox_selected"
+        label="Equinox"
+        hint="Equinox for the coordinate frame (relevant for FK5/FK4 frames)."
+        api_hint="ldr.importer.coord_equinox ="
+        :api_hints_enabled="api_hints_enabled"
+      ></plugin-select>
+
       <plugin-select
         :items="col_x_items.map(i => i.label)"
         :selected.sync="col_x_selected"
