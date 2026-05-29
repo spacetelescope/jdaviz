@@ -218,27 +218,38 @@
                       </div>
                     </v-list-item-content>
                     <v-list-item-action>
-                      <j-tooltip
-                        v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
-                        tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
-                      >
-                        <v-btn icon disabled>
-                          <v-icon>mdi-eye-off</v-icon>
-                        </v-btn>
-                      </j-tooltip>
-                      <j-tooltip
-                        v-else-if="viewer_supports_visible_toggle"
-                        :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
-                      >
-                        <plugin-switch
-                          :value="item.visible"
-                          @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-                          @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
-                          @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
-                          :api_hints_enabled="false"
-                          :use_icon="item.is_sonified ? 'speaker' : 'eye'"
-                        />
-                      </j-tooltip>
+                      <div style="display: flex; align-items: center;">
+                        <j-tooltip :tooltipcontent="copied_label === item.label ? 'Copied' : 'Copy label to clipboard'">
+                          <v-btn
+                            icon
+                            x-small
+                            @click.stop="copyLabel(item.label)"
+                          >
+                            <v-icon small>{{ copied_label === item.label ? 'mdi-check' : 'mdi-clipboard-outline' }}</v-icon>
+                          </v-btn>
+                        </j-tooltip>
+                        <j-tooltip
+                          v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
+                          tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
+                        >
+                          <v-btn icon disabled>
+                            <v-icon>mdi-eye-off</v-icon>
+                          </v-btn>
+                        </j-tooltip>
+                        <j-tooltip
+                          v-else-if="viewer_supports_visible_toggle"
+                          :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
+                        >
+                          <plugin-switch
+                            :value="item.visible"
+                            @click="(value) => {set_layer_visibility({layer: item.label, value: value}); hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(value)+')'}"
+                            @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
+                            @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
+                            :api_hints_enabled="false"
+                            :use_icon="item.is_sonified ? 'speaker' : 'eye'"
+                          />
+                        </j-tooltip>
+                      </div>
                     </v-list-item-action>
                   </v-list-item>
                 </draggable>
@@ -325,6 +336,7 @@
         data_menu_open: false,
         hover_api_hint: '',
         lock_hover_api_hint: false,
+        copied_label: '',
         debounce_timer: null,
         is_updating_layers: false,
         settled_has_more: false,
@@ -479,6 +491,12 @@
         const offsetX = event.clientX - draggedBounds.left;
         const offsetY = event.clientY - draggedBounds.top;
         event.dataTransfer.setDragImage(dragGhostEl, offsetX, offsetY);
+      },
+      copyLabel(label) {
+        navigator.clipboard.writeText(label).then(() => {
+          this.copied_label = label;
+          setTimeout(() => { this.copied_label = ''; }, 1500);
+        });
       },
       onDragEnd() {
         if (this._dragGhostParent && this._dragGhostParent.parentNode) {

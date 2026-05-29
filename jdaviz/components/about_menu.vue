@@ -17,6 +17,12 @@
           @click="() => {popup_open = !popup_open}"
           style="font-family: monospace; font-size: 10pt; text-transform: lowercase; margin-left: 4px; margin-right: 6px; padding: 2px">
         v{{ jdaviz_version }}
+        <span
+          v-if="downstream_packages && downstream_packages.length > 0"
+          style="margin-left: 4px; border-radius: 10px; padding: 0 4px; font-size: 9pt; line-height: 1.6"
+        >
+          + {{ downstream_packages.length == 1 ? downstream_packages[0].abbreviation : downstream_packages.length }}
+        </span>
         </v-btn>
       </j-tooltip>
     </template>
@@ -30,7 +36,7 @@
 
 <script>
   module.exports = {
-    props: ['jdaviz_version', 'api_hints_obj', 'api_hints_enabled', 'about_widget', 'force_open_about'],
+    props: ['jdaviz_version', 'api_hints_obj', 'api_hints_enabled', 'about_widget', 'force_open_about', 'downstream_packages'],
     data: function () {
       return {
         popup_open: false,

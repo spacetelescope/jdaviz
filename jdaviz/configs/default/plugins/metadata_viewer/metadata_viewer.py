@@ -48,6 +48,7 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/info/metadata.html'
 
     @property
     def user_api(self):

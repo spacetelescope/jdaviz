@@ -10,6 +10,8 @@ New Features
 - Errors from load are now more explicit, either as a result of known invalid cases or
   as errors producing during import. [#4159]
 
+- Data labels are now able to be copied from the data menu with the addition of a copy to clipboard button. [#4177]
+
 Mosviz
 ^^^^^^
 
@@ -32,6 +34,8 @@ Other Changes and Additions
   pagination in the UI and fetching product lists in a background thread so the
   app remains responsive. [#4131]
 
+- Footprint selection in loaders now defaults to skewer mode. [#4186]
+
 5.0.2 (unreleased)
 ==================
 
@@ -39,6 +43,18 @@ Bug Fixes
 ---------
 
 - Fix missing toggle for cube fitting in Model Fitting plugin in generalized Jdaviz. [#4172]
+
+- Fix broken "Learn More" links throughout app. [#4173]
+
+- Fix units related issue in imviz aperture photometry plugin when applying
+  pixel area factor to data in surface brightness units. [#4188]
+
+- Fix rare bug when deleting data with a subset defined. [#4198]
+
+- Fix bug related to loading catalogs where units are determined from coordinate string. [#4199]
+
+- Fix 3D spectral extraction in cases where other types of data are loaded in addition
+  to the cube. [#4181]
 
 Mosviz
 ^^^^^^

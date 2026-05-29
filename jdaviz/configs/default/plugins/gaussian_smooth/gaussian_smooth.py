@@ -73,6 +73,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         self._plugin_description = 'Smooth data with a Gaussian kernel.'
 
         if self._app.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/gaussian_smooth.html'  # noqa
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     def _get_supported_viewers(self):

@@ -842,6 +842,15 @@ class PluginTemplateMixin(TemplateMixin):
     docs_link = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     docs_description = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     _plugin_description = Unicode("").tag(sync=True)  # noqa shorter description of plugin, displayed below title in menu
+
+    # Downstream configs may set _docs_link_fmt to a format string using {vdocs} to override
+    # the default docs link without subclassing.
+    _docs_link_fmt = ''
+
+    @observe('vdocs')
+    def _update_docs_link(self, *args):
+        if self._docs_link_fmt:
+            self.docs_link = self._docs_link_fmt.format(vdocs=self.vdocs)
     plugin_opened = Bool(False).tag(sync=True)  # noqa any instance of the plugin is open (recently sent an "alive" ping)
     uses_active_status = Bool(False).tag(sync=True)  # noqa whether the plugin has live-preview marks, set to True in plugins to expose keep_active switch
     keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
@@ -3717,6 +3726,8 @@ class ApertureSubsetSelect(SubsetSelect):
                     aperture.h = radii_h[index]
 
                 slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
+                if slice_mask is None:
+                    return slice_mask
                 # Add slice mask to fractional pixel array
                 if slice_axis == 2:
                     mask_weights[:, :, index] = slice_mask
@@ -3727,8 +3738,11 @@ class ApertureSubsetSelect(SubsetSelect):
         else:
             # Cylindrical aperture
             slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
+            if slice_mask is None:
+                return slice_mask
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
             mask_weights = np.stack([slice_mask] * flux_cube.shape[slice_axis], axis=slice_axis)
+
         return mask_weights
 
 
@@ -4869,14 +4883,12 @@ class DatasetSelect(SelectPluginComponent):
             return (is_image(data) or is_flux_cube(data)) and not is_2d_spectrum_or_trace(data)
 
         def is_spectrum(data):
-            return (len(data.shape) == 1
-                    and data.coords is not None
-                    and wcs_is_spectral(getattr(data, 'coords', None)))
+            return (data.meta.get('_importer') == 'SpectrumImporter' or
+                    data.meta.get('_data_type') == '1D Spectrum')
 
         def is_2d_spectrum_or_trace(data):
-            return (data.ndim == 2
-                    and data.coords is not None
-                    and wcs_is_spectral(getattr(data, 'coords', None))) or 'Trace' in data.meta
+            return (data.meta.get('_importer') in ('Spectrum2DImporter', 'TraceImporter') and
+                    data.meta.get('_data_type') != '1D Spectrum')
 
         def is_spectrum_or_flux_cube(data):
             return is_spectrum(data) or is_flux_cube(data)
@@ -6156,6 +6168,11 @@ class Table(PluginSubcomponent):
     server_items_length = Int(0).tag(sync=True)
     table_options = Dict({}).tag(sync=True)
 
+    # When True, headers_visible and export_table() will omit columns whose
+    # every row value is empty (nan / empty string). Useful for configs that
+    # share a common wide header set but only populate a subset of columns.
+    _skip_empty_columns = False
+
     # Loader panel traitlets for "Load into App" functionality
     loader_items = List([]).tag(sync=True)
     loader_selected = Unicode('object').tag(sync=True)
@@ -6215,6 +6232,20 @@ class Table(PluginSubcomponent):
     @staticmethod
     def _new_col_visible(colname):
         return True
+
+    def _compute_populated_headers(self):
+        """Return ``headers_avail`` filtered to columns with at least one non-empty value.
+
+        A value is considered empty when its JSON-display representation equals ``''``
+        (i.e. NaN floats, all-NaN tuples, and empty strings all render as ``''``).
+        When the table has no rows every header in ``headers_avail`` is returned.
+        """
+        if not self.items:
+            return list(self.headers_avail)
+        return [
+            h for h in self.headers_avail
+            if any(item.get(h, '') != '' for item in self.items)
+        ]
 
     @observe('selected_rows')
     def _selected_rows_changed(self, msg):
@@ -6428,6 +6459,8 @@ class Table(PluginSubcomponent):
             self._push_current_page()
         else:
             self.items = self.items + [new_row]
+        if self._skip_empty_columns:
+            self.headers_visible = self._compute_populated_headers()
         self._plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
 
     def __len__(self):
@@ -6443,6 +6476,9 @@ class Table(PluginSubcomponent):
         self._all_items = []
         if self.server_pagination:
             self.server_items_length = 0
+        if self._skip_empty_columns:
+            # Reset to show all available headers so the next mark populates cleanly
+            self.headers_visible = list(self.headers_avail)
         self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
 
     def clear_table(self):
@@ -6573,6 +6609,10 @@ class Table(PluginSubcomponent):
         """
         if filename is None:
             # TODO: default to only showing selected columns?
+            if self._skip_empty_columns and self._qtable is not None:
+                populated = self._compute_populated_headers()
+                cols = [c for c in self._qtable.colnames if c in populated]
+                return self._qtable[cols] if cols else self._qtable
             return self._qtable
 
         if "_orig_colnames_for_jdaviz_export" in self._qtable.meta:

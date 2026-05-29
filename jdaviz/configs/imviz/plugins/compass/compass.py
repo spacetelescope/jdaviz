@@ -39,6 +39,8 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Show active data label, compass, and zoom box.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/compass.html'  # noqa
 
         self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
