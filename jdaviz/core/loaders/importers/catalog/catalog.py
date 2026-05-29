@@ -473,12 +473,12 @@ class CatalogImporter(BaseImporterToDataCollection):
             # determine if the string format is recognizable as Lon/Lat coordinates.
             if isinstance(ra[0], str):
                 try:
-                    ra = SkyCoord(ra, ra).ra  # dummy value 'ra' twice, just to parse string
+                    ra = SkyCoord(ra, 90 * u.deg).ra  # dummy value just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse RA column as string coordinates.")
             if isinstance(dec[0], str):
                 try:
-                    dec = SkyCoord(dec, dec).dec  # dummy value 'dec' twice, just to parse string
+                    dec = SkyCoord(0 * u.deg, dec).dec  # dummy value just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse Dec column as string coordinates.")
 
