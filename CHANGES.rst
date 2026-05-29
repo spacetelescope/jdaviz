@@ -22,6 +22,11 @@ New Features
 - Add option to limit results to science products when retrieving files from an archive query
   results table. [#4194]
 
+- Loader now displays inline loading status and success confirmation messages at the
+  top of the loader window when fetching files from selected footprints. Success
+  messages auto-dismiss after 4 seconds and a progress indicator appears on the file
+  table during loading. [#4203]
+
 Mosviz
 ^^^^^^
 
