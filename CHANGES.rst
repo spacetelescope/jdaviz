@@ -56,6 +56,8 @@ Bug Fixes
 - Fix 3D spectral extraction in cases where other types of data are loaded in addition
   to the cube. [#4181]
 
+- API hints toggle button to show in popout windows. [#4184]
+
 Mosviz
 ^^^^^^
 
