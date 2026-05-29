@@ -117,11 +117,11 @@ class TestViewerCreatorObject:
         Test that duplicate viewer labels are properly handled.
         """
         # Create first viewer
-        viewer1 = self.dcf_helper.new_viewers['1D Spectrum']()
+        viewer1 = self.creator()
         assert viewer1._obj.id == '1D Spectrum (1)'
 
         # Create another two with the same label
-        viewer2 = self.dcf_helper.new_viewers['1D Spectrum']()
+        viewer2 = self.creator()
         # The defaults should update to avoid conflict
         assert viewer2._obj.id == '1D Spectrum (2)'
         assert self.creator.viewer_label_default == '1D Spectrum (3)'
