@@ -509,10 +509,14 @@ class CatalogImporter(BaseImporterToDataCollection):
             # apply selection of coordinate frame if not already in ICRS
             # if the coordinates are in a different frame, they will be transformed
             # to ICRS, which is the internal frame used in jdaviz for consistency
+
             if self.coord_frame_selected not in ['', 'icrs']:
                 kwargs = {'frame': self.coord_frame_selected}
-                if self.coord_frame_selected in ('fk5', 'fk4') and self.coord_equinox_selected:
-                    kwargs['equinox'] = self.coord_equinox_selected
+                # i think? ICRS is a fixed frame so we dont need to expose choice
+                # of 'equinox' for that frame, so do it here
+                if self.coord_frame_selected not in ['', 'J2000']:
+                        kwargs['equinox'] = self.coord_equinox_selected
+            
                 sc_temp = SkyCoord(ra, dec, **kwargs)
                 ra = sc_temp.icrs.ra
                 dec = sc_temp.icrs.dec

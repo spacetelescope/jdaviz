@@ -70,7 +70,7 @@
         :api_hints_enabled="api_hints_enabled"
       ></plugin-select>
 
-      <plugin-select v-if="coord_frame_selected === 'fk5' || coord_frame_selected === 'fk4'"
+      <plugin-select v-if="coord_frame_selected !== 'icrs'"
         :items="coord_equinox_items.map(i => i.label)"
         :selected.sync="coord_equinox_selected"
         label="Equinox"
