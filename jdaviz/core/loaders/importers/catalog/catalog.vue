@@ -65,7 +65,7 @@
         :items="coord_frame_items.map(i => i.label)"
         :selected.sync="coord_frame_selected"
         label="Coordinate Frame"
-        hint="Select the coordinate frame for the RA/Dec coordinates."
+        hint="Select the coordinate frame for the sky coordinates."
         api_hint="ldr.importer.coord_frame ="
         :api_hints_enabled="api_hints_enabled"
       ></plugin-select>
@@ -74,7 +74,7 @@
         :items="coord_equinox_items.map(i => i.label)"
         :selected.sync="coord_equinox_selected"
         label="Equinox"
-        hint="Equinox for the coordinate frame (relevant for FK5/FK4 frames)."
+        hint="Equinox for the coordinate frame."
         api_hint="ldr.importer.coord_equinox ="
         :api_hints_enabled="api_hints_enabled"
       ></plugin-select>
