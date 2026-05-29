@@ -1,6 +1,91 @@
-from astropy.table import Table
 
+from astropy.table import Table, QTable
 from jdaviz.core.loaders.importers.catalog.catalog import CatalogImporter
+
+
+def test_coord_column_detection(deconfigged_helper):
+    """
+    Test automatic detection of RA/Dec columns with various naming
+    conventions, and that non-coordinate columns are not misidentified as
+    coordinate columns (e.g 'radial' which contains 'ra' but should not be
+    identified as 'Ra'). Examine final output for the user: col_ra and col_dec
+    attributes of the importer.
+    """
+
+    # Variations of 'ra' and 'dec' that should be correctly identified as coordinate columns
+    # testing a mix of case/delimeter variations
+    ra_variations = ['Right_Ascension', 'ra', 'radeg',
+                     'radegrees', 'right-ascension-Degrees', 'rightascension_deg',
+                     'raobj', 'objra', 'sourcera', 'Rasource', 'raj2000', 'ra2000',
+                     'worldra', 'targra', 'sci-ra']
+    dec_variations = ['declination', 'dec', 'dec_deg',
+                      'dec-degrees', 'declination_degrees', 'declinationdeg',
+                      'decobj', 'objdec', 'DECsource', 'sourcedec', 'decJ2000',
+                      'dec2000', 'world_dec', 'targdec', 'SCI_dec']
+
+    variations_to_pass = list(zip(ra_variations, dec_variations))
+
+    for v in variations_to_pass:
+        ra, dec = v  # unpack RA and Dec column names
+        tab = QTable({ra: [10.0], dec: [-5.0]})
+
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = tab
+        ldr.format = 'Catalog'
+        importer = ldr.importer
+
+        # make sure the coordinate columns were correctly identified
+        assert importer.col_ra == ra
+        assert importer.col_dec == dec
+
+    # check that certain strings that contain 'ra' and 'dec' substrings are not
+    # misidentified as coordinate columns
+    tab = QTable({'radial_velocity': [10.0], 'fluxradius': [5.0], 'decrement': [1.0]})
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = tab
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+    # none of the column names in the input table should have been identified as RA or Dec columns,
+    # so they should be set as a placeholder value of '---'
+    assert importer.col_ra == '---'
+    assert importer.col_dec == '---'
+
+
+def test_pixel_column_detection(deconfigged_helper):
+    '''Test automatic detection of x/y columns with various naming
+    conventions, and that non-pixel-coordinate columns are not misidentified as
+    pixel-coordinate columns (e.g 'galaxy' which contains 'x' but should not be
+    identified as x pixel-coordinate).'''
+
+    x_variations = ['X', 'xpix', 'xpixel', 'pixel_x', 'x_coord', 'xsource']
+    y_variations = ['Y', 'ypix', 'ypixel', 'pixel_y', 'y_coord', 'ysource']
+
+    variations_to_pass = list(zip(x_variations, y_variations))
+
+    for v in variations_to_pass:
+        x, y = v  # unpack RA and Dec column names
+        tab = QTable({x: [10.0], y: [5.0]})
+
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = tab
+        ldr.format = 'Catalog'
+        importer = ldr.importer
+
+        # make sure the coordinate columns were correctly identified
+        assert importer.col_x == x
+        assert importer.col_y == y
+
+    # check that certain strings that contain 'x' and 'y' substrings are not
+    # misidentified as pixel coordinate columns
+    tab = QTable({'galaxy': [10.0], 'parallax': [5.0], 'velocity': [1.0]})
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = tab
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+    # none of the column names in the input table should have been identified as x or y columns,
+    # so they should be set as a placeholder value of '---'
+    assert importer.col_x == '---'
+    assert importer.col_y == '---'
 
 
 def test_catalog_importer_is_valid(deconfigged_helper):

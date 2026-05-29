@@ -12,6 +12,9 @@ New Features
 
 - Data labels are now able to be copied from the data menu with the addition of a copy to clipboard button. [#4177]
 
+- Importing Catalogs now has improved automatic detection of ra/dec/x/y columns. [#4183]
+
+
 Mosviz
 ^^^^^^
 
