@@ -316,7 +316,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         header = hdulist[ext].header
         metadata = standardize_metadata(header)
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
-        wcs = WCS(header, hdulist)
+        wcs = WCS(header, hdulist, preserve_units=True)
         if transpose:
             data = data.T
             wcs = wcs.swapaxes(0, 1)

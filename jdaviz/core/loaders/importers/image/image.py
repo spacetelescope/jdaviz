@@ -501,7 +501,7 @@ def _hdu2data(hdu, hdulist, include_wcs=True):
         data.meta[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
     data.meta.update(standardize_metadata(hdu.header))
     if include_wcs:
-        data.coords = WCS(hdu.header, hdulist)
+        data.coords = WCS(hdu.header, hdulist, preserve_units=True)
     component = Component.autotyped(hdu.data, units=bunit)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=AstropyWarning)
