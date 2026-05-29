@@ -21,7 +21,8 @@ from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
 from jdaviz.utils import (standardize_metadata,
                           create_data_hash,
                           PRIHDR_KEY,
-                          SPECTRAL_AXIS_COMP_LABELS)
+                          SPECTRAL_AXIS_COMP_LABELS,
+                          _get_celestial_wcs)
 
 __all__ = ['SpectrumInputExtensionsMixin', '_spectrum_assign_component_type']
 
