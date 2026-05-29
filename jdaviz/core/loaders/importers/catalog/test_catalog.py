@@ -217,7 +217,6 @@ def test_pixel_column_detection(deconfigged_helper):
     assert importer.col_y == '---'
 
 
-
 def test_catalog_importer_is_valid(deconfigged_helper):
     """Test _check_is_valid for CatalogImporter: success and failure cases."""
     resolver = deconfigged_helper.loaders['object']._obj
