@@ -4,7 +4,6 @@ from astropy.table import Table, QTable, vstack
 import astropy.units as u
 import numpy as np
 import re
-from regions import PixCoord
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
@@ -276,14 +275,9 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         idx = None
         if col in ['ra', 'dec']:
-            col_is_skycoord = [isinstance(input[colnames[i]], SkyCoord) for i in range(len(colnames))]
-            if np.any(col_is_skycoord):
-                idx = np.where(col_is_skycoord)[0][0]
-
-        if col in ['x', 'y']:
-            col_is_pixcoord = [isinstance(input[colnames[i]], PixCoord) for i in range(len(colnames))]
-            if np.any(col_is_pixcoord):
-                idx = np.where(col_is_pixcoord)[0][0]
+            col_is_sc = [isinstance(input[colnames[i]], SkyCoord) for i in range(len(colnames))]
+            if np.any(col_is_sc):
+                idx = np.where(col_is_sc)[0][0]
 
         if idx is None:
             all_column_names = [str(x).lower().strip() for x in colnames]
@@ -479,12 +473,12 @@ class CatalogImporter(BaseImporterToDataCollection):
             # determine if the string format is recognizable as Lon/Lat coordinates.
             if isinstance(ra[0], str):
                 try:
-                    ra = SkyCoord(ra, '0d0m0s').ra  # dummy value 'ra' twice, just to parse string
+                    ra = SkyCoord(ra, 90 * u.deg).ra  # dummy dec, just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse RA column as string coordinates.")
             if isinstance(dec[0], str):
                 try:
-                    dec = SkyCoord('0h0m0s', dec).dec  # dummy value 'dec' twice, just to parse string
+                    dec = SkyCoord(0 * u.deg, dec).dec  # dummy ra, just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse Dec column as string coordinates.")
 
@@ -504,23 +498,6 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         # handle output construction for X and Y coordinate columns, if selected
         if (self.col_x_selected in table.colnames) and (self.col_y_selected in table.colnames):  # noqa
-            # Check if input column is PixCoord
-            x = input[self.col_x_selected]
-            y = input[self.col_y_selected]
-
-            col_x_selected = self.col_x_selected  # final output col name
-            col_y_selected = self.col_y_selected  # final output col name
-
-            if isinstance(x, PixCoord):
-                x = x.x
-                col_x_selected = 'PixCoord_X'
-            if isinstance(y, PixCoord):
-                y = y.y
-                col_y_selected = 'PixCoord_Y'
-
-            output_table[col_x_selected] = x
-            output_table[col_y_selected] = y
-
             # if input is a string, try to convert to floats
             if isinstance(input[self.col_x_selected][0], str):
                 try:
