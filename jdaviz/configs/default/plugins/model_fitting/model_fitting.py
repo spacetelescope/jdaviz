@@ -636,6 +636,12 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._enforce_spline_fitter()
 
     def _initialize_model_component(self, model_comp, comp_label, poly_order=None):
+
+        if self.dataset_selected == '':
+            # We don't have to use a snackbar here because the UI should
+            # always have a selection
+            raise ValueError('You must select a dataset before proceeding.')
+
         new_model = {"id": comp_label, "model_type": model_comp,
                      "parameters": [], "model_kwargs": {}}
         model_cls = MODELS[model_comp]
@@ -693,11 +699,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         if self.cube_fit:
             # We need to input the whole cube when initializing the model so the units are correct.
-            if self.dataset_selected in self._app.data_collection.labels:
-                data = self._app.data_collection[self.dataset_selected].get_object(statistic=None)
-            else:  # User selected some subset from spectrum viewer, just use original cube
-                # TODO: generalize this for deconfigged
-                data = self._app.data_collection[0].get_object(statistic=None)
+            data = self._app.data_collection[self.dataset_selected].get_object(statistic=None)
+
             spatial_axes = [0, 1, 2]
             spatial_axes.remove(data.spectral_axis_index)
             masked_spectrum = self._apply_subset_masks(data, self.spectral_subset,
@@ -1636,14 +1639,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     def _fit_model_to_cube(self, add_data):
 
+        if self.dataset_selected == '':
+            # We don't have to use a snackbar here because the UI should
+            # always have a selection
+            raise ValueError('You must select a dataset before proceeding.')
+
         if self._warn_if_no_equation():
             return
 
-        if self.dataset_selected in self._app.data_collection.labels:
-            data = self._app.data_collection[self.dataset_selected]
-        else:  # User selected some subset from spectrum viewer, just use original cube
-            # TODO: generalize this for deconfigged
-            data = self._app.data_collection[0]
+        data = self._app.data_collection[self.dataset_selected]
 
         # First, ensure that the selected data is cube-like. It is possible
         # that the user has selected a pre-existing 1d data object.

@@ -288,7 +288,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     is_wcs_linked = Bool(False).tag(sync=True)
     image_data_loaded = Bool(False).tag(sync=True)
     footprint_select_icon = Unicode(read_icon(os.path.join(
-        ICON_DIR, 'footprint_select.svg'), 'svg+xml')).tag(sync=True)
+        ICON_DIR, 'skewer_select.svg'), 'svg+xml')).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         self.set_active_loader_callback = kwargs.pop('set_active_loader_callback', None)
@@ -334,7 +334,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
                     's_region' in self.observation_table.headers_avail):
-                return viewer.toolbar._original_tools_nested[:3] + ['jdaviz:selectregion', 'jdaviz:skewerregion'], 'jdaviz:selectregion'  # noqa: E501
+                return viewer.toolbar._original_tools_nested[:3] + ['jdaviz:skewerregion', 'jdaviz:selectregion'], 'jdaviz:skewerregion'  # noqa: E501
             return None, None
 
         self.custom_toolbar.callable = custom_toolbar
@@ -555,7 +555,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def parsed_input(self):
         return self.parse_input()
 
-    def _parsed_input_to_table(self, parsed_input):
+    def _parsed_input_to_table(self, parsed_input, hdu=None):
         if (isinstance(parsed_input, str)
                 and os.path.exists(parsed_input) and os.path.isfile(parsed_input)):
             # try to read into a table which could be a products list
@@ -563,7 +563,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore",
                                           message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
-                    parsed_input = astropyTable.read(parsed_input)
+                    parsed_input = astropyTable.read(parsed_input, hdu=hdu)
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, astropyTable):
@@ -638,7 +638,17 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             return
 
         # first attempt to parse the input as a table
-        parsed_input_table = self._parsed_input_to_table(parsed_input)
+        parsed_input_table = None
+        if self._restrict_to_formats is None or "Catalog" in self._restrict_to_formats:
+            hdu = None
+            if self.format.selected:
+                ext = getattr(self.importer, 'extension', None)
+                if ext is not None:
+                    hdu = ext.selected_index
+                    if isinstance(hdu, list):
+                        hdu = hdu[0]
+            parsed_input_table = self._parsed_input_to_table(parsed_input, hdu=hdu)
+
         # if the input could be parsed as a table, try to interpret it as
         # either an observation table or file table. parsed_input_table
         # will be None if it could not be parsed as a table.
