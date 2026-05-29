@@ -13,6 +13,15 @@ def test_coord_column_detection(deconfigged_helper):
     """
 
     # Variations of 'ra' and 'dec' that should be correctly identified as coordinate columns
+    # testing a mix of case/delimeter variations, but not an exhaustive list of all possible variations
+    ra_variations = ['Right_Ascension', 'ra', 'radeg',
+                     'radegrees', 'right-ascension-Degrees', 'rightascension_deg',
+                     'raobj', 'objra', 'sourcera', 'Rasource', 'raj2000', 'ra2000',
+                     'worldra', 'targra', 'sci-ra']
+    dec_variations = ['declination', 'dec', 'dec_deg',
+                      'dec-degrees', 'declination_degrees', 'declinationdeg',
+                      'decobj', 'objdec', 'DECsource', 'sourcedec', 'decJ2000',
+                      'dec2000', 'world_dec', 'targdec', 'SCI_dec']
     ra_variations = ['rightascension', 'ra', 'radeg',
                      'radegrees', 'rightascensiondegrees', 'rightascensiondeg',
                      'raobj', 'objra', 'sourcera', 'rasource', 'raj2000', 'ra2000',
