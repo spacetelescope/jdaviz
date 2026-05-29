@@ -31,7 +31,7 @@ from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipypopout import PopoutButton
-from ipyvuetify import VuetifyTemplate
+from ipyvuetify import VuetifyTemplate, theme as vuetify_theme
 from ipywidgets import widget_serialization
 from traitlets import Dict, Bool, List, Unicode, Any
 from specutils import Spectrum, SpectralRegion
@@ -214,6 +214,40 @@ for name, path in custom_components.items():
 
 ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
+
+vuetify_theme.themes.light.primary = "#00617E"
+vuetify_theme.themes.light.secondary = "#007DA4"
+vuetify_theme.themes.light.error = '#FF5252'
+vuetify_theme.themes.light.info = '#2196F3'
+vuetify_theme.themes.light.success = '#4CAF50'
+vuetify_theme.themes.light.warning = '#FFC107'
+vuetify_theme.themes.light.custom_theme_colors = {
+    'toolbar': "#003B4D",
+    'accent': "#C75109",
+    'turquoise': "#007BA1",
+    'lightblue': "#E3F2FD",
+    'spinner': "#163C4C",
+    'gray': '#F8F8F8',
+    'active': '#C75109',
+    'viewer_toolbar': '#205f76',
+}
+
+vuetify_theme.themes.dark.primary = "#53CBFF"
+vuetify_theme.themes.dark.secondary = "#007DA4"
+vuetify_theme.themes.dark.error = '#FF5252'
+vuetify_theme.themes.dark.info = '#2196F3'
+vuetify_theme.themes.dark.success = '#4CAF50'
+vuetify_theme.themes.dark.warning = '#FFC107'
+vuetify_theme.themes.dark.custom_theme_colors = {
+    'toolbar': "#153A4B",
+    'accent': "#FF9D42",
+    'turquoise': "#007BA1",
+    'lightblue': "#E3F2FD",
+    'spinner': "#ACE1FF",
+    'gray': '#141414',
+    'active': '#C75109',
+    'viewer_toolbar': '#205f76',
+}
 
 style_registry.add((__file__, 'main_styles.vue'))
 
