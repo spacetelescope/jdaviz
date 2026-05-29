@@ -217,6 +217,48 @@ def test_pixel_column_detection(deconfigged_helper):
     assert importer.col_y == '---'
 
 
+def test_skycoord_column_detection(deconfigged_helper):
+    """
+    Test automatic detection of ra/dec columns when input catalog has a column of SkyCoord objects.
+    """
+    ra = [149.0, 150.0, 151.0] * u.degree
+    dec = [1.9, 2.0, 2.1] * u.degree
+    x = [1, 2, 3]
+    y = [4, 5, 6]
+
+    # Success: SkyCoord instance
+    tab = QTable({'coords': SkyCoord(ra=ra, dec=dec), 'x': x, 'y': y})
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = tab
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+
+    # make sure the coordinate columns were correctly identified
+    assert isinstance(importer.input['coords'], SkyCoord)
+    assert 'SkyCoord_RA' in importer.output.keys()
+    assert 'SkyCoord_Dec' in importer.output.keys()
+
+
+def test_pixcoord_column_detection(deconfigged_helper):
+    """
+    If a PixCoord object is passed to the catalog importer, it should ignore those columns.
+    """
+    ra = [149.0, 150.0, 151.0] * u.degree
+    dec = [1.9, 2.0, 2.1] * u.degree
+    x = [1, 2, 3]
+    y = [4, 5, 6]
+
+    # Failure: PixCoord instance
+    tab = QTable({'coords': SkyCoord(ra=ra, dec=dec), 'pix': PixCoord(x=x, y=y)})
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = tab
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+
+    # make sure x and y are ignored
+    assert 'pix' not in importer.output.keys()
+
+
 def test_catalog_importer_is_valid(deconfigged_helper):
     """Test _check_is_valid for CatalogImporter: success and failure cases."""
     resolver = deconfigged_helper.loaders['object']._obj
