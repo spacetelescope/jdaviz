@@ -430,7 +430,8 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other']
+        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other',
+                  'coord_frame', 'coord_equinox']
         if self.input_has_extensions:
             expose += ['extension']
         return ImporterUserApi(self, expose=expose)
@@ -513,9 +514,9 @@ class CatalogImporter(BaseImporterToDataCollection):
             if self.coord_frame_selected not in ['', 'icrs']:
                 kwargs = {'frame': self.coord_frame_selected}
                 # i think? ICRS is a fixed frame so we dont need to expose choice
-                # of 'equinox' for that frame, so do it here
-                if self.coord_frame_selected not in ['', 'J2000']:
-                        kwargs['equinox'] = self.coord_equinox_selected
+                # of 'equinox' for that frame, so do it here. ignore galactic too?
+                if self.coord_equinox_selected not in ['', 'J2000'] and self.coord_frame_selected != 'galactic':
+                    kwargs['equinox'] = self.coord_equinox_selected
             
                 sc_temp = SkyCoord(ra, dec, **kwargs)
                 ra = sc_temp.icrs.ra
