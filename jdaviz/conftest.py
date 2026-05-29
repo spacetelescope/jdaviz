@@ -681,11 +681,15 @@ def image_hdu_wcs():
 
 @pytest.fixture
 def multi_extension_image_hdu_wcs():
+    dq_arr = np.zeros((10, 10), dtype=np.int32)
+    dq_arr[2, 3] = 1
+    dq_arr[5, 5] = 4
+    dq_arr[7, 8] = 5
     return fits.HDUList([fits.PrimaryHDU(),
                          _image_hdu_wcs(),
                          _image_hdu_nowcs(np.zeros((10, 10)), name='MASK'),
                          _image_hdu_nowcs(name='ERR'),
-                         _image_hdu_nowcs(name='DQ')])
+                         _image_hdu_nowcs(dq_arr, name='DQ')])
 
 
 @pytest.fixture
