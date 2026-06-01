@@ -368,6 +368,8 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
     assert 'Catalog' in ldr.format.choices
     ldr.format = 'Catalog'
 
+    ldr.importer.col_ra = 'ra'
+    ldr.importer.col_dec = 'dec'
     ldr.importer.col_id = 'source_id'
     ldr.importer.col_other = ['parallax', 'pm', 'bp_rp', 'phot_rp_mean_mag']
     ldr.importer.viewer.create_new = 'Scatter'
