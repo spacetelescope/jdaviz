@@ -118,9 +118,8 @@ def test_pixcoord_column_detection(deconfigged_helper):
     y = [4, 5, 6]
 
     # Success: PixCoord instance
-    tab = QTable({'coords': SkyCoord(ra=ra, dec=dec), 'pix': PixCoord(x=x, y=y)})
     ldr = deconfigged_helper.loaders['object']
-    ldr.object = tab
+    ldr.object = QTable({'coords': SkyCoord(ra=ra, dec=dec), 'pix': PixCoord(x=x, y=y)})
     ldr.format = 'Catalog'
     importer = ldr.importer
 
