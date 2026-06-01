@@ -261,6 +261,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     observation_table = Instance(Table).tag(sync=True, **widget_serialization)
     observation_table_populated = Bool(False).tag(sync=True)
     # Limit to type='science' when retrieving products for selected observation
+    can_filter_science = Bool(False).tag(sync=True)
     limit_to_science_products = Bool(True).tag(sync=True)
     file_table = Instance(Table).tag(sync=True, **widget_serialization)
     file_table_populated = Bool(False).tag(sync=True)

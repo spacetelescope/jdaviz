@@ -470,7 +470,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # For counts conversion, PHOTFLAM is used to convert "counts" to flux manually,
             # which is the opposite of JWST, so we just do not do it here.
             instrument = meta.get('INSTRUME', '').lower()
-            detector = meta.get('DETECTOR', '').lower()
+            detector = str(meta.get('DETECTOR', '')).lower()
             if instrument == 'acs':
                 if detector == 'wfc':
                     defaults['pixel_area'] = 0.05 * 0.05

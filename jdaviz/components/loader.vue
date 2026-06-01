@@ -65,6 +65,7 @@
               style="margin-bottom: 12px"
             ></plugin-switch>
             <plugin-switch
+              v-if="can_filter_science"
               label="Limit to Science Products"
               :value.sync="limit_to_science_products"
               @update:value="$emit('update:limit_to_science_products', $event)"
@@ -177,7 +178,8 @@
 module.exports = {
   props: ['title', 'popout_button', 'spinner',
           'parsed_input_is_empty', 'parsed_input_is_resolvable',
-          'parsed_input_is_query', 'treat_table_as_query', 'limit_to_science_products',
+          'parsed_input_is_query', 'treat_table_as_query',
+          'can_filter_science', 'limit_to_science_products',
           'observation_table', 'observation_table_populated',
           'file_table', 'file_table_populated',
           'file_cache', 'file_timeout',
