@@ -18,6 +18,9 @@ Bug Fixes
 
 - Fix bug related to loading catalogs where units are determined from coordinate string. [#4199]
 
+- Fix aperture photometry plugin remaining visible in tray after all 
+  image viewers are removed. [#4189]
+
 Mosviz
 ^^^^^^
 
