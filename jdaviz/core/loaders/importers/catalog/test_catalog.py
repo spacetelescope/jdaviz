@@ -97,9 +97,8 @@ def test_skycoord_column_detection(deconfigged_helper):
     y = [4, 5, 6]
 
     # Success: SkyCoord instance
-    tab = QTable({'coords': SkyCoord(ra=ra, dec=dec), 'x': x, 'y': y})
     ldr = deconfigged_helper.loaders['object']
-    ldr.object = tab
+    ldr.object = QTable({'coords': SkyCoord(ra=ra, dec=dec), 'x': x, 'y': y})
     ldr.format = 'Catalog'
     importer = ldr.importer
 
