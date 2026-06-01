@@ -750,3 +750,17 @@ def test_deconfigged_image_aperphot_unit_conversions(deconfigged_helper, image_2
 
     # Compare output tables row by row
     _compare_image_table_units(orig_tab, new_tab, sb_unit, new_sb_unit)
+
+    # Plugin should be exist in plugin tray while an image viewer exists
+    app = deconfigged_helper._app
+    assert ap._obj.irrelevant_msg == ''
+    tray_labels = [ti['label'] for ti in app.state.tray_items]
+    ap_index = tray_labels.index('Aperture Photometry')
+    assert app.state.tray_items[ap_index]['is_relevant']
+
+    app.vue_destroy_viewer_item(app.get_viewer_ids()[0])
+    assert app.get_viewer_ids() == []
+
+    # Plugin should now not exist in plugin tray since no image viewers remain
+    assert ap._obj.irrelevant_msg != ''
+    assert not app.state.tray_items[ap_index]['is_relevant']

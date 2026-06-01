@@ -61,6 +61,9 @@ Bug Fixes
 
 - API hints toggle button to show in popout windows. [#4184]
 
+- Fix aperture photometry plugin remaining visible in tray after all 
+  image viewers are removed. [#4189]
+
 Mosviz
 ^^^^^^
 
