@@ -14,6 +14,7 @@ New Features
 
 - Importing Catalogs now has improved automatic detection of ra/dec/x/y columns. [#4183]
 
+- Imported Catalogs can accept SkyCoord and PixCoord columns. [#4205]
 
 Mosviz
 ^^^^^^

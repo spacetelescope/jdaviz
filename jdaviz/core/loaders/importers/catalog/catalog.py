@@ -4,6 +4,7 @@ from astropy.table import Table, QTable, vstack
 import astropy.units as u
 import numpy as np
 import re
+from regions import PixCoord
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
@@ -280,6 +281,11 @@ class CatalogImporter(BaseImporterToDataCollection):
             if np.any(col_is_sc):
                 idx = np.where(col_is_sc)[0][0]
 
+        elif col in ['x', 'y']:
+            col_is_pc = [isinstance(input[colnames[i]][0], PixCoord) for i in range(len(colnames))]
+            if np.any(col_is_pc):
+                idx = np.where(col_is_pc)[0][0]
+
         if idx is None:
             all_column_names = [str(x).lower().strip() for x in colnames]
 
@@ -506,6 +512,13 @@ class CatalogImporter(BaseImporterToDataCollection):
                     output_table['X'] = x_col
                 except ValueError:
                     raise ValueError("Could not parse X column as numeric values.")
+            # if input is a PixCoord instance, isolate x
+            elif isinstance(input[self.col_x_selected][0], PixCoord):
+                try:
+                    x_col = [float(x.x) for x in table[self.col_x_selected]]
+                    output_table['X'] = x_col
+                except ValueError:
+                    raise ValueError("Could not parse X column as PixCoord values.")
             else:
                 output_table['X'] = table[self.col_x_selected].astype(float)
 
@@ -515,6 +528,12 @@ class CatalogImporter(BaseImporterToDataCollection):
                     output_table['Y'] = y_col
                 except ValueError:
                     raise ValueError("Could not parse Y column as numeric values.")
+            elif isinstance(input[self.col_y_selected][0], PixCoord):
+                try:
+                    y_col = [float(y.y) for y in table[self.col_y_selected]]
+                    output_table['Y'] = y_col
+                except ValueError:
+                    raise ValueError("Could not parse Y column as PixCoord values.")
             else:
                 output_table['Y'] = table[self.col_y_selected].astype(float)
 
