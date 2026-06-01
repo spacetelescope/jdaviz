@@ -79,6 +79,43 @@ def test_roman_against_rdm():
         assert flag_map_loaded[flag]['name'] == flag_map_expected[flag]['name']
 
 
+@pytest.mark.parametrize('helper_name', ['imviz_helper', 'deconfigged_helper'])
+def test_dq_display_without_telescop_metadata(helper_name, request, multi_extension_image_hdu_wcs):
+    """
+    DQ layers must be properly initialized with the lookup stretch
+    and a DQ colormap even when the FITS file has no TELESCOP header
+    (telescope auto-detection fails). Previously the DQ layer was
+    left with default stretch=linear + cmap=gray, rendering as a
+    completely black picture.
+    """
+    helper = request.getfixturevalue(helper_name)
+    helper.load(multi_extension_image_hdu_wcs, extension=('SCI', 'DQ'), format='Image')
+    dq_plugin = helper.plugins['Data Quality']._obj
+
+    # No telescope metadata → flag_map_selected stays None
+    assert dq_plugin.flag_map_selected is None
+
+    # DQ flags should still be decoded (with raw bit values since no flag map is available)
+    assert len(dq_plugin.decoded_flags) == 3
+    decoded_flag_values = [f['flag'] for f in dq_plugin.decoded_flags]
+    # The flag values from the fixture
+    assert decoded_flag_values == [1, 4, 5]
+
+    # DQ layer must have the lookup stretch and transparent bad pixels
+    viewer_name = 'Image' if helper_name == 'deconfigged_helper' else 'imviz-0'
+    viewer = helper._app.get_viewer(viewer_name)
+    dq_layers = dq_plugin.get_dq_layers([viewer])
+    assert len(dq_layers) == 1
+
+    dq_layer = dq_layers[0]
+    assert dq_layer.state.stretch == 'lookup'
+    assert dq_layer.state.cmap_bad == (0, 0, 0, 0)
+    assert dq_layer.state.alpha == dq_plugin.dq_layer_opacity
+
+    # v_min/v_max should span the actual flag range
+    assert dq_layer.state.v_min, dq_layer.state.v_max == (1, 5)
+
+
 @pytest.mark.remote_data
 @pytest.mark.parametrize('helper_name', ['imviz_helper', 'deconfigged_helper'])
 def test_data_quality_plugin(helper_name, request):
