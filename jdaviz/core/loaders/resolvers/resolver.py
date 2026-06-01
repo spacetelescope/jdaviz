@@ -718,7 +718,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _get_product_list(self, mission, dataset):
         self.missions_query.mission = mission
         products = self.missions_query.get_product_list(dataset)
-        if self.limit_to_science_products:
+        if self.limit_to_science_products and 'type' in products.colnames:
             products = self.missions_query.filter_products(products, type='science')
         return products
 
