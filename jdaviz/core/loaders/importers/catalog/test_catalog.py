@@ -25,10 +25,7 @@ def test_coord_column_detection(deconfigged_helper):
                       'decobj', 'objdec', 'DECsource', 'sourcedec', 'decJ2000',
                       'dec2000', 'world_dec', 'targdec', 'SCI_dec']
 
-    variations_to_pass = list(zip(ra_variations, dec_variations))
-
-    for v in variations_to_pass:
-        ra, dec = v  # unpack RA and Dec column names
+    for ra, dec in zip(ra_variations, dec_variations):
         tab = QTable({ra: [10.0], dec: [-5.0]})
 
         ldr = deconfigged_helper.loaders['object']
