@@ -343,9 +343,13 @@ class BaseImporterToDataCollection(BaseImporter):
             Label of the parent data entry. If provided, establishes this data
             as a child of the parent (e.g., DQ layer as child of SCI layer).
             Used by the Data Quality plugin to associate layers.
-        viewer_select : `~jdaviz.core.template_mixin.ViewerSelect`, optional
+        viewer_select : `~jdaviz.core.template_mixin.ViewerSelect`, False, or None, optional
             Viewer selection component to determine which viewers to add the
-            data to. If not provided, uses ``self.viewer``.
+            data to. If not provided or ``None``, uses ``self.viewer``. Pass
+            ``False`` to skip adding the data to any viewer entirely, without
+            needing to provide a viewer_select component or override the current
+            setting of the loader viewer select when adding to data collection
+            from a plugin, for example.
         cls : class, optional
             The native data class to store in metadata for later export via
             ``get_data``. If not provided, uses the class of the input data.
@@ -414,6 +418,9 @@ class BaseImporterToDataCollection(BaseImporter):
             self._app._link_new_data_by_component_type(data_label)
 
         # Determine which viewer(s) to add the data to.
+        if viewer_select is False:
+            return
+
         viewer_select = viewer_select if viewer_select is not None else self.viewer
 
         # user requested creating a new viewer for this data.
