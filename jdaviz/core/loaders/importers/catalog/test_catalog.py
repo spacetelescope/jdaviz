@@ -110,7 +110,7 @@ def test_skycoord_column_detection(deconfigged_helper):
 
 def test_pixcoord_column_detection(deconfigged_helper):
     """
-    If a PixCoord object is passed to the catalog importer, parse them into X/Y pixel columns.
+    If a PixCoord object is passed to the catalog importer, parse it into X/Y pixel columns.
     """
     ra = [149.0, 150.0, 151.0] * u.degree
     dec = [1.9, 2.0, 2.1] * u.degree
