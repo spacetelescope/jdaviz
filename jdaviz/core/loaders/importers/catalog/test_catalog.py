@@ -1,6 +1,8 @@
-
+from astropy.coordinates import SkyCoord
 from astropy.table import Table, QTable
+import astropy.units as u
 from jdaviz.core.loaders.importers.catalog.catalog import CatalogImporter
+from regions import PixCoord
 
 
 def test_coord_column_detection(deconfigged_helper):
@@ -23,10 +25,7 @@ def test_coord_column_detection(deconfigged_helper):
                       'decobj', 'objdec', 'DECsource', 'sourcedec', 'decJ2000',
                       'dec2000', 'world_dec', 'targdec', 'SCI_dec']
 
-    variations_to_pass = list(zip(ra_variations, dec_variations))
-
-    for v in variations_to_pass:
-        ra, dec = v  # unpack RA and Dec column names
+    for ra, dec in zip(ra_variations, dec_variations):
         tab = QTable({ra: [10.0], dec: [-5.0]})
 
         ldr = deconfigged_helper.loaders['object']
@@ -52,10 +51,10 @@ def test_coord_column_detection(deconfigged_helper):
 
 
 def test_pixel_column_detection(deconfigged_helper):
-    '''Test automatic detection of x/y columns with various naming
+    """Test automatic detection of x/y columns with various naming
     conventions, and that non-pixel-coordinate columns are not misidentified as
     pixel-coordinate columns (e.g 'galaxy' which contains 'x' but should not be
-    identified as x pixel-coordinate).'''
+    identified as x pixel-coordinate)."""
 
     x_variations = ['X', 'xpix', 'xpixel', 'pixel_x', 'x_coord', 'xsource']
     y_variations = ['Y', 'ypix', 'ypixel', 'pixel_y', 'y_coord', 'ysource']
@@ -86,6 +85,48 @@ def test_pixel_column_detection(deconfigged_helper):
     # so they should be set as a placeholder value of '---'
     assert importer.col_x == '---'
     assert importer.col_y == '---'
+
+
+def test_skycoord_column_detection(deconfigged_helper):
+    """
+    Test automatic detection of ra/dec columns when input catalog has a column of SkyCoord objects.
+    """
+    ra = [149.0, 150.0, 151.0] * u.degree
+    dec = [1.9, 2.0, 2.1] * u.degree
+    x = [1, 2, 3]
+    y = [4, 5, 6]
+
+    # Success: SkyCoord instance
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = QTable({'coords': SkyCoord(ra=ra, dec=dec), 'x': x, 'y': y})
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+
+    # make sure the coordinate columns were correctly identified
+    assert isinstance(importer.input['coords'], SkyCoord)
+    assert 'SkyCoord_RA' in importer.output.keys()
+    assert 'SkyCoord_Dec' in importer.output.keys()
+
+
+def test_pixcoord_column_detection(deconfigged_helper):
+    """
+    If a PixCoord object is passed to the catalog importer, parse it into X/Y pixel columns.
+    """
+    ra = [149.0, 150.0, 151.0] * u.degree
+    dec = [1.9, 2.0, 2.1] * u.degree
+    x = [1, 2, 3]
+    y = [4, 5, 6]
+
+    # Success: PixCoord instance
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = QTable({'coords': SkyCoord(ra=ra, dec=dec), 'pix': PixCoord(x=x, y=y)})
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+
+    # make sure x and y are ignored
+    assert isinstance(importer.input['pix'][0], PixCoord)
+    assert 'X' in importer.output.keys()
+    assert 'Y' in importer.output.keys()
 
 
 def test_catalog_importer_is_valid(deconfigged_helper):

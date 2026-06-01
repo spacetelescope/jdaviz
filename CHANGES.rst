@@ -14,6 +14,8 @@ New Features
 
 - Importing Catalogs now has improved automatic detection of ra/dec/x/y columns. [#4183]
 
+- Imported Catalogs can accept SkyCoord and PixCoord columns. [#4205]
+
 - Label default behavior now adjusts for added *or* removed data/viewers i.e. viewer -> viewer (1) ->
   viewer (2) -> remove viewer (2) -> default is again viewer(2) [#4192]
 
