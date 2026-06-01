@@ -39,6 +39,12 @@ Other Changes and Additions
 
 - Footprint selection in loaders now defaults to skewer mode. [#4186]
 
+- When loading a non-flux extension as primary data (e.g. an ERR-only cube
+  after a flux cube is already loaded), the default data label now reactively
+  updates to include the extension name (e.g. ``'3D Spectrum [ERR]'``) instead
+  of reusing the existing flux cube label, which previously caused a silent
+  overwrite. [#4125]
+
 5.0.2 (unreleased)
 ==================
 
