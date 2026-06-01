@@ -417,60 +417,60 @@ class BaseImporterToDataCollection(BaseImporter):
         if self._app.config in CONFIGS_WITH_LOADERS:
             self._app._link_new_data_by_component_type(data_label)
 
-        # Determine which viewer(s) to add the data to.
-        if viewer_select is False:
-            return
+        # Determine which viewer(s) to add the data to, if any
 
         viewer_select = viewer_select if viewer_select is not None else self.viewer
 
-        # user requested creating a new viewer for this data.
-        if viewer_select.create_new.selected:
-            viewer_reference = viewer_select.create_new.selected_item.get('reference')
-            viewer_label = viewer_select.new_label.value.strip()
+        if viewer_select:
+            # user requested creating a new viewer for this data.
+            if viewer_select.create_new.selected:
+                viewer_reference = viewer_select.create_new.selected_item.get('reference')
+                viewer_label = viewer_select.new_label.value.strip()
 
-            # Create the new viewer instance
-            viewer_dict = viewer_registry.members.get(viewer_reference)
-            viewer_cls = viewer_dict.get('cls')
-            self._app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
-                                     vid=viewer_label,
-                                     name=viewer_label,
-                                     open_data_menu_if_empty=False)
-            viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
-            viewer.data_menu.add_data(data_label)
-
-            # default to selecting this new viewer for next import
-            viewer_select.create_new.selected = ''
-            viewer_select.selected = [viewer_label]
-
-        # if no viewers selected, just notify user that data was loaded
-        # but not displayed anywhere.
-        elif len(viewer_select.selected) == 0:
-            if len(self._app._jdaviz_helper.viewers):
-                msg = f"{data_label} loaded without any viewers selected - add manually from viewer data-menu"  # noqa
-            else:
-                msg = f"{data_label} loaded but no viewers were created.  Create viewers manually and add data from data-menu"  # noqa
-            # Don't warn for WCS-only layers (orientation reference layers)
-            # or for data added via a plugin (e.g moment maps)
-            from_plugin = new_dc_entry.meta.get('plugin', False)
-            if not new_dc_entry.meta.get(_wcs_only_label, False) and not from_plugin:
-                self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
-
-        # otherwise, add data to all selected viewers.
-        else:
-            failed_viewers = []
-            exceptions = []
-            for viewer_label in viewer_select.selected:
+                # Create the new viewer instance
+                viewer_dict = viewer_registry.members.get(viewer_reference)
+                viewer_cls = viewer_dict.get('cls')
+                self._app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
+                                         vid=viewer_label,
+                                         name=viewer_label,
+                                         open_data_menu_if_empty=False)
                 viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
-                try:
-                    viewer.data_menu.add_data(data_label)
-                except Exception as e:
-                    failed_viewers.append(viewer_label)
-                    exceptions.append(str(e))
-            # Report any failures (e.g., incompatible data types for the viewer)
-            if len(failed_viewers) > 0:
-                msg = f"Failed to add {data_label} to viewers: {', '.join(failed_viewers)}"
-                self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error',
-                                                        traceback=exceptions))
+                viewer.data_menu.add_data(data_label)
+
+                # default to selecting this new viewer for next import
+                viewer_select.create_new.selected = ''
+                viewer_select.selected = [viewer_label]
+
+        else:
+            # if no viewers selected, just notify user that data was loaded
+            # but not displayed anywhere.
+            if viewer_select is False or len(viewer_select.selected) == 0:
+                if len(self._app._jdaviz_helper.viewers):
+                    msg = f"{data_label} loaded without any viewers selected - add manually from viewer data-menu"  # noqa
+                else:
+                    msg = f"{data_label} loaded but no viewers were created.  Create viewers manually and add data from data-menu"  # noqa
+                # Don't warn for WCS-only layers (orientation reference layers)
+                # or for data added via a plugin (e.g moment maps)
+                from_plugin = new_dc_entry.meta.get('plugin', False)
+                if not new_dc_entry.meta.get(_wcs_only_label, False) and not from_plugin:
+                    self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+
+            # otherwise, add data to all selected viewers.
+            else:
+                failed_viewers = []
+                exceptions = []
+                for viewer_label in viewer_select.selected:
+                    viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
+                    try:
+                        viewer.data_menu.add_data(data_label)
+                    except Exception as e:
+                        failed_viewers.append(viewer_label)
+                        exceptions.append(str(e))
+                # Report any failures (e.g., incompatible data types for the viewer)
+                if len(failed_viewers) > 0:
+                    msg = f"Failed to add {data_label} to viewers: {', '.join(failed_viewers)}"
+                    self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error',
+                                                            traceback=exceptions))
 
     @with_spinner('import_spinner')
     def __call__(self):
