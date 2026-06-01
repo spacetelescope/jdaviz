@@ -541,7 +541,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
 
-        wcs = WCS(header, hdulist)
+        wcs = WCS(header, hdulist, preserve_units=True)
 
         spectral_axis_index = None
 
@@ -714,8 +714,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                                equivalencies=_eqv_flux_to_sb_pixel())
                 except (u.UnitConversionError, ValueError):
                     new_sc = sc
-        if target_wave_unit is not None:
-            new_sc.meta['_orig_spec'] = sc
         # Since we create a new Spectrum, we need to copy over any original WCS info
         # since the WCS will be replaced by a SpectralGWCS object instead of the original
         # astropy.wcs.WCS object.

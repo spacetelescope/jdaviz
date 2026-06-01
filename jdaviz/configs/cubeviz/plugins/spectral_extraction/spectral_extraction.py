@@ -7,6 +7,7 @@ from astropy.coordinates import SpectralCoord
 from astropy.nddata import NDDataArray, StdDevUncertainty
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 
+from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.marks import PluginLine
@@ -211,6 +212,13 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
+
+    @property
+    def image_viewers(self):
+        # Override the image_viewers property inherited from ApertureSubsetSelectMixin
+        # to be more specific
+        return [viewer for viewer in self._app._viewer_store.values()
+                if isinstance(viewer, CubevizImageView)]
 
     @property
     def user_api(self):
@@ -460,15 +468,23 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # Entire Cube
             return self.inverted_mask_non_science
 
-        return (
-            self.inverted_mask_non_science *
-            self.aperture.get_mask(
-                self.dataset.selected_obj,
-                self.aperture_method_selected,
-                self.slice_display_unit,
-                self.spatial_axes,
-                self.reference_spectral_value if self.wavelength_dependent else None)
-        )
+        aperture_mask = self.aperture.get_mask(
+                            self.dataset.selected_obj,
+                            self.aperture_method_selected,
+                            self.slice_display_unit,
+                            self.spatial_axes,
+                            self.reference_spectral_value if self.wavelength_dependent else None)
+
+        if aperture_mask is None:
+            return aperture_mask
+
+        if self.dataset.selected_obj.spectral_axis_index == 0 and aperture_mask.ndim == 1:
+            return (
+                aperture_mask[:, np.newaxis, np.newaxis] *
+                self.inverted_mask_non_science
+            )
+        else:
+            return self.inverted_mask_non_science * aperture_mask
 
     @property
     def bg_weight_mask(self):
@@ -540,8 +556,6 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mask = nddata.mask
 
         # Use the spectral coordinate from the WCS:
-        if '_orig_spec' in cube.meta:
-            wcs = cube.meta['_orig_spec'].wcs.spectral
         if hasattr(cube.coords, 'spectral'):
             wcs = cube.coords.spectral
         elif hasattr(cube.coords, 'spectral_wcs'):
@@ -711,6 +725,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             raise ValueError("aperture and background cannot be set to the same subset")
 
         selected_func = self.function_selected.lower()
+        if self.aperture_weight_mask is None:
+            return
         spec = self._extract_from_aperture(self.cube, self.uncert_cube, self.mask_cube,
                                            self.aperture, self.aperture_weight_mask,
                                            self.wavelength_dependent,
@@ -816,7 +832,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return {}
         # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
         sv = self.slice_indicator_viewers[0]
-        marks = {'extract': PluginLine(sv, visible=self.is_active),
+        marks = {'extract': PluginLine(sv, visible=self.is_active and self.active_step != 'bg'),
                  'bg_extract': PluginLine(sv,
                                           line_style='dotted',
                                           visible=self.is_active and self.active_step == 'bg')}
@@ -851,6 +867,11 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not visible:
             self._clear_marks()
             return
+
+        # Make sure we've updated since the necessary viewers were created
+        if self.marks == {}:
+            del self.marks
+            _ = self.marks
 
         # ensure the correct visibility, always (whether or not there have been updates)
         self.marks['bg_extract'].visible = self.active_step == 'bg' and self.bg_selected != self.background.default_text  # noqa

@@ -68,9 +68,6 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
 def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
     cubeviz_helper._app.add_data(spectrum1d, "test")
 
-    dc = cubeviz_helper._app.data_collection
-    dc[0].meta["_orig_spec"] = spectrum1d
-
     cubeviz_helper._app.add_data_to_viewer('spectrum-viewer', 'test')
     unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     cubeviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6600 * unit,
@@ -124,7 +121,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
 @pytest.mark.filterwarnings('ignore')
 def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     flux = image_cube_hdu_obj[1].data << u.Unit(image_cube_hdu_obj[1].header['BUNIT'])
-    wcs = WCS(image_cube_hdu_obj[1].header, image_cube_hdu_obj)
+    wcs = WCS(image_cube_hdu_obj[1].header, image_cube_hdu_obj, preserve_units=True)
     sc = Spectrum(flux=flux, wcs=wcs)
     cubeviz_helper.load_data(sc)
 

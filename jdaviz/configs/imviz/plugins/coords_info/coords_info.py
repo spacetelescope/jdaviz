@@ -457,12 +457,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             else:
                 coo_data = image
 
-            if '_orig_spec' in getattr(coo_data, 'meta', {}):
-                # Hack around various WCS propagation issues in Cubeviz, example:
-                # https://github.com/glue-viz/glue-astronomy/issues/75
-                data_wcs = coo_data.meta['_orig_spec'].wcs
-                wcs_ndim = 3
-            elif data_has_valid_wcs(coo_data):
+            if data_has_valid_wcs(coo_data):
                 data_wcs = coo_data.coords
                 wcs_ndim = coo_data.ndim
             else:

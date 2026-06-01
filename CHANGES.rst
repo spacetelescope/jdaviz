@@ -12,6 +12,9 @@ New Features
 
 - Data labels are now able to be copied from the data menu with the addition of a copy to clipboard button. [#4177]
 
+- Importing Catalogs now has improved automatic detection of ra/dec/x/y columns. [#4183]
+
+
 Mosviz
 ^^^^^^
 
@@ -55,7 +58,14 @@ Bug Fixes
 - Fix units related issue in imviz aperture photometry plugin when applying
   pixel area factor to data in surface brightness units. [#4188]
 
+- Fix rare bug when deleting data with a subset defined. [#4198]
+
 - Fix bug related to loading catalogs where units are determined from coordinate string. [#4199]
+
+- Fix 3D spectral extraction in cases where other types of data are loaded in addition
+  to the cube. [#4181]
+
+- API hints toggle button to show in popout windows. [#4184]
 
 Mosviz
 ^^^^^^

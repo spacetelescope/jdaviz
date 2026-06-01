@@ -1660,10 +1660,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
 
         # Get the primary data component
-        if "_orig_spec" in data.meta:
-            spec = data.meta["_orig_spec"]
-        else:
-            spec = data.get_object(cls=Spectrum, statistic=None)
+        spec = data.get_object(cls=Spectrum, statistic=None)
 
         spatial_axes = [0, 1, 2]
         spatial_axes.remove(spec.spectral_axis_index)

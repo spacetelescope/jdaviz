@@ -138,6 +138,12 @@ def show_widget(widget, loc, title, height=None):  # pragma: no cover
                            "To learn more, see our documentation at: "
                            "https://jdaviz.readthedocs.io")
 
+    # Store whether the app is in a notebook context within the app state
+    # (used for whether to show the API hints toggle button)
+    app_state = getattr(widget, 'state', None) or getattr(getattr(widget, '_app', None), 'state', None)  # noqa
+    if app_state is not None and hasattr(app_state, 'in_notebook'):
+        app_state.in_notebook = True
+
     if loc == "inline":
         if height is not None:
             if isinstance(height, int):
@@ -3729,6 +3735,8 @@ class ApertureSubsetSelect(SubsetSelect):
                     aperture.h = radii_h[index]
 
                 slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
+                if slice_mask is None:
+                    return slice_mask
                 # Add slice mask to fractional pixel array
                 if slice_axis == 2:
                     mask_weights[:, :, index] = slice_mask
@@ -3739,8 +3747,11 @@ class ApertureSubsetSelect(SubsetSelect):
         else:
             # Cylindrical aperture
             slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
+            if slice_mask is None:
+                return slice_mask
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
             mask_weights = np.stack([slice_mask] * flux_cube.shape[slice_axis], axis=slice_axis)
+
         return mask_weights
 
 

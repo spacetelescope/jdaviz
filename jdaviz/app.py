@@ -245,6 +245,8 @@ class ApplicationState(State):
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(
         False, docstring="Whether to show API hints.")
+    in_notebook = CallbackProperty(
+        False, docstring="Whether the app is running in a notebook (Jupyter) context")
     subset_mode_create = CallbackProperty(
         False, docstring="Whether to create a new subset.")
 
@@ -2655,6 +2657,13 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             # Updated derived data if applicable
             self._rename_derived_data(old_label, new_label, 'subset')
 
+            # ensure that things waiting to be batch processed are renamed as well
+            delayed_labels = self._jdaviz_helper._delayed_show_in_viewer_labels
+            for key in list(delayed_labels):
+                if old_label in key:
+                    new_key = key.replace(old_label, new_label)
+                    delayed_labels[new_key] = delayed_labels.pop(key)
+
         finally:
             self._renaming_subset = False
 
@@ -2702,8 +2711,10 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                             subset_att = getattr(subset_state, att)
                             data_components = new_parent.components
                             if subset_att not in data_components:
-                                cid = [c for c in data_components if c.label == subset_att.label][0]
-                                setattr(subset_state, att, cid)
+                                cid = [c for c in data_components if c.label == subset_att.label]
+                                if len(cid):
+                                    cid = cid[0]
+                                    setattr(subset_state, att, cid)
 
                     # Translate bounds through WCS if needed
                     if (self.config in ("imviz", "deconfigged") and

@@ -31,7 +31,7 @@ from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_conversion_general,
                                                handle_squared_flux_unit_conversions)
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.utils import PRIHDR_KEY
+from jdaviz.utils import PRIHDR_KEY, _get_celestial_wcs
 
 __all__ = ['SimpleAperturePhotometry']
 
@@ -609,11 +609,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     comp_data = comp.data[0, :, :]
                 else:
                     comp_data = comp.data[:, :, 0].T
-            # Similar to coords_info logic.
-            if '_orig_spec' in getattr(data, 'meta', {}):
-                w = data.meta['_orig_spec'].wcs.celestial
-            else:
-                w = data.coords.celestial
+            w = _get_celestial_wcs(data.coords)
         else:  # "imviz"
             comp_data = comp.data  # ny, nx
             w = data.coords
@@ -809,11 +805,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 comp_data = comp.data[self._cube_slice_ind, :, :]
             else:
                 comp_data = comp.data[:, :, self._cube_slice_ind].T
-            # Similar to coords_info logic.
-            if '_orig_spec' in getattr(data, 'meta', {}):
-                w = data.meta['_orig_spec'].wcs
-            else:
-                w = data.coords
+            w = data.coords
         else:  # "imviz"
             comp_data = comp.data  # ny, nx
             w = data.coords
@@ -1163,7 +1155,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 tmp.append({'function': key, 'result': f'{x:.3f}', 'unit': unit})
             elif key == 'slice_wave':
                 if self.is_cube:
-                    tmp.append({'function': key, 'result': f'{self._cube_wave.value:.4e}', 'unit': getattr(self._cube_wave, 'unit', '-')})  # noqa: E501
+                    tmp.append({'function': key, 'result': f'{self._cube_wave.value:.4e}', 'unit': str(getattr(self._cube_wave, 'unit', '-'))})  # noqa: E501
                 else:
                     tmp.append({'function': key, 'result': np.nan, 'unit': '-'})
             else:
