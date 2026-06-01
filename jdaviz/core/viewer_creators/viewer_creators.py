@@ -98,8 +98,10 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
     def _viewer_items_changed(self, *args):
         if not hasattr(self, 'viewer'):
             return
-        if self.viewer_label_default in self.viewer.choices:
-            self.viewer_label_default = self._app.return_unique_name(self.viewer_label_default, 'viewer')  # noqa
+
+        # This now works for viewers added or destroyed
+        self.viewer_label_default = self._app.return_unique_name(self.viewer_label_default,
+                                                                 'viewer')
 
     def __call__(self):
         """
@@ -112,6 +114,7 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
                                                        sender=self.app),
                                       vid=self.viewer_label_value,
                                       name=self.viewer_label_value)
+
         dm = nv.data_menu
         for dataset in self.dataset.selected:
             dm.add_data(dataset)

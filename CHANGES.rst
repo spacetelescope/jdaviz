@@ -16,6 +16,9 @@ New Features
 
 - Imported Catalogs can accept SkyCoord and PixCoord columns. [#4205]
 
+- Label default behavior now adjusts for added *or* removed data/viewers i.e. viewer -> viewer (1) ->
+  viewer (2) -> remove viewer (2) -> default is again viewer(2) [#4192]
+
 Mosviz
 ^^^^^^
 
@@ -68,7 +71,7 @@ Bug Fixes
 
 - API hints toggle button to show in popout windows. [#4184]
 
-- Fix aperture photometry plugin remaining visible in tray after all 
+- Fix aperture photometry plugin remaining visible in tray after all
   image viewers are removed. [#4189]
 
 Mosviz

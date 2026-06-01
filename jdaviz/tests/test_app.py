@@ -100,6 +100,23 @@ def test_duplicate_data_labels(deconfigged_helper, input_data, input_format, req
     assert any([dc_entry.label == expected_label_base for dc_entry in dc])
     assert any([dc_entry.label == f'{expected_label_base} (1)' for dc_entry in dc])
 
+    # Add one more to check that it iterates correctly
+    deconfigged_helper.load(input_data, format=input_format)
+    assert any([dc_entry.label == f'{expected_label_base} (2)' for dc_entry in dc])
+    # Check default label
+    assert (deconfigged_helper._app.return_data_label(expected_label_base) ==
+            f'{expected_label_base} (3)')
+
+    # Now remove data from the middle and check that the default label is still (3)
+    deconfigged_helper._app.data_item_remove(f'{expected_label_base} (1)')
+    assert (deconfigged_helper._app.return_data_label(expected_label_base) ==
+            f'{expected_label_base} (3)')
+
+    # Remove data from the top and check that the default label is reset to (1)
+    deconfigged_helper._app.data_item_remove(f'{expected_label_base} (2)')
+    assert (deconfigged_helper._app.return_data_label(expected_label_base) ==
+            f'{expected_label_base} (1)')
+
     # Test overwrite when using custom labels
     deconfigged_helper.load(input_data, format=input_format, data_label="test")
     deconfigged_helper.load(input_data, format=input_format, data_label="test")
