@@ -83,6 +83,11 @@ div.output_wrapper {
   align-items: center;
 }
 
+.glue-edit-bar {
+  /* glue table edit bar to not conflict with viewer legend */
+  padding-right: 36px !important;
+}
+
 .v-tabs-items {
   height: 100%;
 }
