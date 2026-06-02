@@ -28,6 +28,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
         super().__init__(*args, **kwargs)
 
         # Get list of available telescopes, filtering out disabled ones
+        self.can_filter_science = True
         all_telescopes = ['JWST', 'HST', 'SDSS', 'Gaia']
         disabled_telescopes = self.app.state.settings.get('disabled_astroquery_telescopes', [])
         available_telescopes = [t for t in all_telescopes if t not in disabled_telescopes]
@@ -74,7 +75,8 @@ class AstroqueryResolver(BaseConeSearchResolver):
                 "source",
                 "telescope",
                 "max_results",
-                "query_archive"
+                "query_archive",
+                "limit_to_science_products"
             ],
         )
 
