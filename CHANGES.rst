@@ -22,6 +22,9 @@ New Features
 - The Virtual Observatory loader now supports querying spectral products
   and catalog targets. [#4060]
 
+- Add option to limit results to science products when retrieving files from an archive query
+  results table. [#4194]
+
 Mosviz
 ^^^^^^
 
