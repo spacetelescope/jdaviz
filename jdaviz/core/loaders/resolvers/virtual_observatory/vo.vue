@@ -152,7 +152,7 @@
         :search="true"
         api_hint="ldr.resource ="
         :api_hints_enabled="api_hints_enabled"
-        hint="Select a SIA resource to query"
+        hint="Select a resource to query"
       ></plugin-select>
     </v-form>
 
