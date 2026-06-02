@@ -343,13 +343,11 @@ class BaseImporterToDataCollection(BaseImporter):
             Label of the parent data entry. If provided, establishes this data
             as a child of the parent (e.g., DQ layer as child of SCI layer).
             Used by the Data Quality plugin to associate layers.
-        viewer_select : `~jdaviz.core.template_mixin.ViewerSelect`, False, or None, optional
+        viewer_select : `~jdaviz.core.template_mixin.ViewerSelect`, ``False``, or None, optional
             Viewer selection component to determine which viewers to add the
             data to. If not provided or ``None``, uses ``self.viewer``. Pass
-            ``False`` to skip adding the data to any viewer entirely, without
-            needing to provide a viewer_select component or override the current
-            setting of the loader viewer select when adding to data collection
-            from a plugin, for example.
+            ``False`` to skip adding the data to any viewer entirely independent
+              the selection on ``self.viewer``.
         cls : class, optional
             The native data class to store in metadata for later export via
             ``get_data``. If not provided, uses the class of the input data.
@@ -417,60 +415,63 @@ class BaseImporterToDataCollection(BaseImporter):
         if self._app.config in CONFIGS_WITH_LOADERS:
             self._app._link_new_data_by_component_type(data_label)
 
-        # Determine which viewer(s) to add the data to, if any
-
+        # Determine which viewer(s) to add the data to.
         viewer_select = viewer_select if viewer_select is not None else self.viewer
 
-        if viewer_select:
-            # user requested creating a new viewer for this data.
-            if viewer_select.create_new.selected:
-                viewer_reference = viewer_select.create_new.selected_item.get('reference')
-                viewer_label = viewer_select.new_label.value.strip()
+        if viewer_select is False:
+            # return without adding to viewers or broadcasting snackbar message that
+            # data was loaded but not added to viewers. we don't want this snackbar
+            # if data is being added to DC intentionally without a viewer from a plugin
+            return
 
-                # Create the new viewer instance
-                viewer_dict = viewer_registry.members.get(viewer_reference)
-                viewer_cls = viewer_dict.get('cls')
-                self._app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
-                                         vid=viewer_label,
-                                         name=viewer_label,
-                                         open_data_menu_if_empty=False)
-                viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
-                viewer.data_menu.add_data(data_label)
+        # user requested creating a new viewer for this data.
+        if viewer_select.create_new.selected:
+            viewer_reference = viewer_select.create_new.selected_item.get('reference')
+            viewer_label = viewer_select.new_label.value.strip()
 
-                # default to selecting this new viewer for next import
-                viewer_select.create_new.selected = ''
-                viewer_select.selected = [viewer_label]
+            # Create the new viewer instance
+            viewer_dict = viewer_registry.members.get(viewer_reference)
+            viewer_cls = viewer_dict.get('cls')
+            self._app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
+                                     vid=viewer_label,
+                                     name=viewer_label,
+                                     open_data_menu_if_empty=False)
+            viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
+            viewer.data_menu.add_data(data_label)
 
-        else:
-            # if no viewers selected, just notify user that data was loaded
-            # but not displayed anywhere.
-            if viewer_select is False or len(viewer_select.selected) == 0:
-                if len(self._app._jdaviz_helper.viewers):
-                    msg = f"{data_label} loaded without any viewers selected - add manually from viewer data-menu"  # noqa
-                else:
-                    msg = f"{data_label} loaded but no viewers were created.  Create viewers manually and add data from data-menu"  # noqa
-                # Don't warn for WCS-only layers (orientation reference layers)
-                # or for data added via a plugin (e.g moment maps)
-                from_plugin = new_dc_entry.meta.get('plugin', False)
-                if not new_dc_entry.meta.get(_wcs_only_label, False) and not from_plugin:
-                    self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+            # default to selecting this new viewer for next import
+            viewer_select.create_new.selected = ''
+            viewer_select.selected = [viewer_label]
 
-            # otherwise, add data to all selected viewers.
+        # if no viewers selected, just notify user that data was loaded
+        # but not displayed anywhere.
+        elif len(viewer_select.selected) == 0:
+            if len(self._app._jdaviz_helper.viewers):
+                msg = f"{data_label} loaded without any viewers selected - add manually from viewer data-menu"  # noqa
             else:
-                failed_viewers = []
-                exceptions = []
-                for viewer_label in viewer_select.selected:
-                    viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
-                    try:
-                        viewer.data_menu.add_data(data_label)
-                    except Exception as e:
-                        failed_viewers.append(viewer_label)
-                        exceptions.append(str(e))
-                # Report any failures (e.g., incompatible data types for the viewer)
-                if len(failed_viewers) > 0:
-                    msg = f"Failed to add {data_label} to viewers: {', '.join(failed_viewers)}"
-                    self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error',
-                                                            traceback=exceptions))
+                msg = f"{data_label} loaded but no viewers were created.  Create viewers manually and add data from data-menu"  # noqa
+            # Don't warn for WCS-only layers (orientation reference layers)
+            # or for data added via a plugin (e.g moment maps)
+            from_plugin = new_dc_entry.meta.get('plugin', False)
+            if not new_dc_entry.meta.get(_wcs_only_label, False) and not from_plugin:
+                self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+
+        # otherwise, add data to all selected viewers.
+        else:
+            failed_viewers = []
+            exceptions = []
+            for viewer_label in viewer_select.selected:
+                viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
+                try:
+                    viewer.data_menu.add_data(data_label)
+                except Exception as e:
+                    failed_viewers.append(viewer_label)
+                    exceptions.append(str(e))
+            # Report any failures (e.g., incompatible data types for the viewer)
+            if len(failed_viewers) > 0:
+                msg = f"Failed to add {data_label} to viewers: {', '.join(failed_viewers)}"
+                self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error',
+                                                        traceback=exceptions))
 
     @with_spinner('import_spinner')
     def __call__(self):
