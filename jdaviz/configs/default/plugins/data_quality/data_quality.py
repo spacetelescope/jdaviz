@@ -20,7 +20,7 @@ from jdaviz.configs.default.plugins.data_quality.dq_utils import (
 
 __all__ = ['DataQuality']
 
-telescope_names = {
+TELESCOPE_NAMES = {
     "jwst": "JWST",
     "roman": "Roman",
     "hst-stis": "HST/STIS",
@@ -148,7 +148,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     def load_default_flag_maps(self):
         for name in dq_flag_map_paths:
             self.flag_map_definitions[name] = load_flag_map(name)
-            self.flag_map_items = self.flag_map_items + [telescope_names[name]]
+            self.flag_map_items = self.flag_map_items + [TELESCOPE_NAMES[name]]
 
     @property
     def dq_layer_selected_flattened(self):
@@ -179,19 +179,23 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def validate_flag_decode_possible(self):
+        if not hasattr(self, 'dq_layer'):
+            return False
         return (
-            self.flag_map_selected is not None and
             len(self.dq_layer.selected_obj) > 0 and
             len(self.unique_flags) > 0
         )
 
     @observe('flag_map_selected')
     def update_flag_map_definitions_selected(self, event):
+        if self.flag_map_selected is None:
+            return
+
         flag_map_key = self.flag_map_selected.lower().replace('/', '-')
         selected = self.flag_map_definitions[flag_map_key]
         self.flag_map_definitions_selected = selected
 
-        # clear decoded_flags with a meaningless one:
+        # re-decode with the real flag map:
         self.init_decoding()
         self._update_cmap()
 
@@ -203,7 +207,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         unique_flags = self.unique_flags
         cmap, rgba_colors = generate_listed_colormap(n_flags=len(unique_flags))
         self.decoded_flags = decode_flags(
-            flag_map=self.flag_map_definitions_selected,
+            flag_map=self.flag_map_definitions_selected or {},
             unique_flags=unique_flags,
             rgba_colors=rgba_colors
         )
@@ -392,7 +396,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
                     if i is not None
                 )
 
-            flag_map_to_select = telescope_names.get(telescope.lower())
+            flag_map_to_select = TELESCOPE_NAMES.get(telescope.lower())
             self.flag_map_selected = flag_map_to_select
 
     def vue_hide_all_flags(self, event):
