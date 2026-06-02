@@ -19,9 +19,9 @@ from jdaviz.core.user_api import LoaderUserApi
 
 __all__ = ["VOResolver"]
 
-VO_PROTOCOL = {"Images": {'protocol': 'sia', 'size_arg': 'size'},
-               "Spectra": {'protocol': 'ssa', 'size_arg': 'diameter'},
-               "Catalogs": {'protocol': 'scs', 'size_arg': 'radius'}}
+VO_PROTOCOL = {"Image": {'protocol': 'sia', 'size_arg': 'size'},
+               "Spectrum": {'protocol': 'ssa', 'size_arg': 'diameter'},
+               "Catalog": {'protocol': 'scs', 'size_arg': 'radius'}}
 
 
 @loader_resolver_registry("virtual observatory")
