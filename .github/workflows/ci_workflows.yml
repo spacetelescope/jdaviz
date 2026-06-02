@@ -44,33 +44,33 @@ jobs:
             toxenv: securityaudit
             allow_failure: false
 
-          - name: Python 3.11 with coverage checking and all deps
+          - name: Python 3.13 with coverage checking and all deps
             os: ubuntu-latest
-            python: '3.11'
-            toxenv: py311-test-alldeps-cov
+            python: '3.13'
+            toxenv: py313-test-alldeps-cov
             toxposargs: --run-slow
             allow_failure: false
 
-          - name: Python 3.11 with only remote data, coverage checking, and all deps
+          - name: Python 3.13 with only remote data, coverage checking, and all deps
             os: ubuntu-latest
-            python: '3.11'
-            toxenv: py311-test-alldeps-cov
+            python: '3.13'
+            toxenv: py313-test-alldeps-cov
             toxposargs: --remote-data --run-slow -m remote_data
             allow_failure: true
 
-          - name: OS X - Python 3.12
+          - name: OS X - Python 3.13
             os: macos-latest
-            python: '3.12'
-            toxenv: py312-test
+            python: '3.13'
+            toxenv: py313-test
             allow_failure: false
 
-          - name: Windows - Python 3.12
+          - name: Windows - Python 3.13
             os: windows-latest
-            python: '3.12'
-            toxenv: py312-test
+            python: '3.13'
+            toxenv: py313-test
             allow_failure: false
 
-          - name: Linux - Python 3.13
+          - name: Linux - Python 3.14
             os: ubuntu-latest
             python: '3.13'
             toxenv: py313-test
@@ -92,10 +92,10 @@ jobs:
             toxposargs: --remote-data --run-slow -m remote_data
             allow_failure: true
 
-          - name: Python 3.11 with stable versions of dependencies and Roman
+          - name: Python 3.12 with stable versions of dependencies and Roman
             os: ubuntu-latest
-            python: '3.11'
-            toxenv: py311-test-romandeps
+            python: '3.12'
+            toxenv: py312-test-romandeps
             allow_failure: true
 
     steps:
