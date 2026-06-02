@@ -228,7 +228,7 @@ class TestVOImvizRemote:
         vo_ldr = imviz_helper.loaders["virtual observatory"]
 
         # Sets common args for Remote Testing
-        vo_ldr.producttype = "Images"
+        vo_ldr.producttype = "Image"
         vo_ldr.viewer.selected = "Manual"
         vo_ldr.source = "M51"
         vo_ldr.radius = 1
@@ -303,7 +303,7 @@ class TestVOImvizRemote:
         """
         # Manually set the source to a fake target
         vo_ldr = imviz_helper.loaders["virtual observatory"]
-        vo_ldr.producttype = "Images"
+        vo_ldr.producttype = "Image"
         vo_ldr.source = "ThisIsAFakeTargetThatWontResolveToAnything"
         vo_ldr.radius = 1
         vo_ldr.radius_unit.selected = "deg"
@@ -367,7 +367,7 @@ class TestVOSSARemote:
         vo_loader = jd.new_app().loaders["virtual observatory"]
 
         # Sets common args for Remote Testing
-        vo_loader.producttype = 'Spectra'
+        vo_loader.producttype = 'Spectrum'
         vo_loader.source = "NGC 5534"
         vo_loader.waveband = "optical"
         vo_loader.resource = "ESO SSAP"
@@ -405,7 +405,7 @@ class TestVOSCSRemote:
         vo_loader = jd.new_app().loaders["virtual observatory"]
 
         # Sets common args for Remote Testing
-        vo_loader.producttype = 'Catalogs'
+        vo_loader.producttype = 'Catalog'
         vo_loader.source = "M51"
         vo_loader.waveband = "optical"
         vo_loader.resource = "MAST CS"
