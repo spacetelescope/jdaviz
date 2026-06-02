@@ -582,6 +582,15 @@ def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
     assert len(ldr._obj.output) > 0
 
 
+@pytest.mark.remote_data
+def test_failed_astroquery(deconfigged_helper):
+    ldr = deconfigged_helper.loaders['astroquery']
+    ldr.source = "Bad Object"
+    ldr.query_archive()
+    snackbar_msg = "Unable to resolve source coordinates: Bad Object"
+    assert deconfigged_helper.plugins['Logger'].history[-1]['text'] == snackbar_msg
+
+
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     s = SpectralRegion(5*u.um, 6*u.um)
     local_path = str(tmp_path / 'spectral_region.ecsv')
