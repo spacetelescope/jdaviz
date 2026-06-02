@@ -296,10 +296,9 @@ class CatalogImporter(BaseImporterToDataCollection):
             else:
                 raise NotImplementedError(f"Not a valid coordinate column: {col}.")
 
-            for c in all_column_names:
-                tokens = re.split(r'[\s_\-\.]+', c)
-                if self._check_col_tokens(col, token_pattern, tokens):
-                    idx = get_idx(c, all_column_names, None)
+            idx = next((get_idx(c, all_column_names, None) for c in all_column_names
+                        if self._check_col_tokens(col, token_pattern, re.split(r'[\s_\-\.]+', c))),
+                       None)
 
         # if no good candidate found, default to '---' (no selection) for
         # the default selection.
