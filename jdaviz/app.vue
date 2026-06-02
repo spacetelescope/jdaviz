@@ -61,7 +61,7 @@
 
       <v-spacer></v-spacer>
       <v-toolbar-items v-if="config !== 'deconfigged'">
-        <j-tooltip tipid="app-toolbar-popout" span_style="scale: 0.8; margin-left: -4px; margin-right: -4px">
+        <j-tooltip v-if="!state.in_notebook || checkNotebookContext()" tipid="app-toolbar-popout" span_style="scale: 0.8; margin-left: -4px; margin-right: -4px">
           <jupyter-widget :widget="popout_button" ></jupyter-widget>
         </j-tooltip>
         <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-help">
@@ -69,7 +69,7 @@
             <v-icon medium>mdi-help-box</v-icon>
           </v-btn>
         </j-tooltip>
-        <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
+        <j-tooltip v-if="state.show_toolbar_buttons && (checkNotebookContext() || state.in_notebook)" tipid="app-api-hints">
           <v-btn icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
             <img :src="state.icons['api']" width="24" class="invert-if-dark" style="opacity: 1.0"/>
           </v-btn>
@@ -194,12 +194,12 @@
               :force_open_about.sync="force_open_about"
             ></j-about-menu>
 
-            <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
+            <j-tooltip v-if="state.show_toolbar_buttons && (checkNotebookContext() || state.in_notebook)" tipid="app-api-hints">
               <v-btn small icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
                 <img :src="state.icons['api']" width="24" class="color-to-white" style="opacity: 1.0; padding-top: 2px; padding-bottom: 2px"/>
               </v-btn>
             </j-tooltip>
-            <j-tooltip tipid="app-toolbar-popout" span_style="scale: 0.8; margin-left: -4px; margin-right: -4px">
+            <j-tooltip v-if="!state.in_notebook || checkNotebookContext()" tipid="app-toolbar-popout" span_style="scale: 0.8; margin-left: -4px; margin-right: -4px">
               <jupyter-widget :widget="popout_button" ></jupyter-widget>
             </j-tooltip>
           </span>
@@ -228,6 +228,7 @@
                     :api_hints_obj="api_hints_obj || config"
                     :server_is_remote="state.settings.server_is_remote"
                     :disabled_loaders="state.settings.disabled_loaders"
+                    :in_notebook="state.in_notebook"
                   ></j-loader-panel>
                 </v-tab-item>
                 <v-tab-item style="padding-bottom: 40px">
@@ -364,6 +365,7 @@
                 :api_hints_obj="api_hints_obj || config"
                 :server_is_remote="state.settings.server_is_remote"
                 :disabled_loaders="state.settings.disabled_loaders"
+                :in_notebook="state.in_notebook"
               ></j-loader-panel>
             </v-card>
 

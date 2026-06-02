@@ -137,6 +137,12 @@ def show_widget(widget, loc, title, height=None):  # pragma: no cover
                            "To learn more, see our documentation at: "
                            "https://jdaviz.readthedocs.io")
 
+    # Store whether the app is in a notebook context within the app state
+    # (used for whether to show the API hints toggle button)
+    app_state = getattr(widget, 'state', None) or getattr(getattr(widget, '_app', None), 'state', None)  # noqa
+    if app_state is not None and hasattr(app_state, 'in_notebook'):
+        app_state.in_notebook = True
+
     if loc == "inline":
         if height is not None:
             if isinstance(height, int):
