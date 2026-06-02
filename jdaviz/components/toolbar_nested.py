@@ -34,9 +34,16 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     suboptions_y = traitlets.Float().tag(sync=True)
     # string indicating the current tool override mode
     tool_override_mode = traitlets.Unicode("").tag(sync=True)
-    # list of custom widget items to display in the toolbar
-    # currently only supports dropdowns:
-    # (list of dicts with 'label', 'value', 'items', 'multiselect')
+    # list of custom widget items to display in the toolbar.
+    # each dict may have:
+    #   type       : 'select' (default) or 'text'
+    #   label      : placeholder / label string
+    # for type 'select':
+    #   items      : list of dicts with 'label' and 'value' keys
+    #   multiselect: bool (default False)
+    #   selected   : initial selection (list for multiselect, scalar otherwise)
+    # for type 'text':
+    #   selected   : initial string value (default '')
     custom_widget_items = traitlets.List([]).tag(sync=True)
     # currently selected values in custom widgets (list of values, one per widget)
     custom_widget_selected = traitlets.List([]).tag(sync=True)
@@ -229,15 +236,19 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         for i, widget in enumerate(new_widgets):
             if i < len(self.custom_widget_selected):
                 current_selected = self.custom_widget_selected[i]
-                new_values = [item['value'] for item in widget.get('items', [])]
-                if widget.get('multiselect', False):
-                    # Filter to only values that still exist
-                    valid_selected = [v for v in current_selected if v in new_values]
-                    widget['selected'] = valid_selected if len(valid_selected) else new_values
+                if widget.get('type') == 'text':
+                    # Always preserve the current text value
+                    widget['selected'] = current_selected
                 else:
-                    # Keep current if still valid, otherwise use widget default
-                    if current_selected in new_values:
-                        widget['selected'] = current_selected
+                    new_values = [item['value'] for item in widget.get('items', [])]
+                    if widget.get('multiselect', False):
+                        # Filter to only values that still exist
+                        valid_selected = [v for v in current_selected if v in new_values]
+                        widget['selected'] = valid_selected if len(valid_selected) else new_values
+                    else:
+                        # Keep current if still valid, otherwise use widget default
+                        if current_selected in new_values:
+                            widget['selected'] = current_selected
 
         self.custom_widget_items = new_widgets
         self.custom_widget_selected = [w.get('selected', []) for w in new_widgets]

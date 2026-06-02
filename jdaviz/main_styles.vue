@@ -1,7 +1,44 @@
 <template>
 </template>
 <script>
+const NAN_RE = /^\s*(nan|NaN|np\.float\d*\(nan\)|np\.nan\d*\(nan\))\s*$/;
+
+function markNanCells(root) {
+  root.querySelectorAll('td').forEach(td => {
+    // Only look at the direct text of the cell, ignoring child widget elements
+    const text = Array.from(td.childNodes)
+      .filter(n => n.nodeType === Node.TEXT_NODE)
+      .map(n => n.textContent)
+      .join('')
+      .trim() || td.textContent.trim();
+    if (NAN_RE.test(text)) {
+      td.setAttribute('data-jd-nan', 'true');
+    } else {
+      td.removeAttribute('data-jd-nan');
+    }
+  });
+}
+
 export default {
+  mounted() {
+    const observer = new MutationObserver(mutations => {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (node.nodeType !== Node.ELEMENT_NODE) continue;
+          if (node.tagName === 'TD') {
+            markNanCells(node.parentElement || node);
+          } else {
+            markNanCells(node);
+          }
+        }
+        // also handle in-place text updates (e.g. editable cell reset)
+        if (m.type === 'characterData' && m.target.parentElement?.tagName === 'TD') {
+          markNanCells(m.target.parentElement.parentElement || m.target.parentElement);
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  },
   created() {
     this.$vuetify.theme.themes.light = {
       toolbar: "#003B4D",
@@ -86,6 +123,12 @@ div.output_wrapper {
 .glue-edit-bar {
   /* glue table edit bar to not conflict with viewer legend */
   padding-right: 36px !important;
+}
+
+/* hide NaN float values that glue serialises as 'nan' / 'np.float64(nan)' etc. */
+td[data-jd-nan="true"] {
+  color: transparent !important;
+  user-select: none;
 }
 
 .v-tabs-items {

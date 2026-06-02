@@ -1477,6 +1477,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
+                    ['jdaviz:table_add_column'],
                     ['jdaviz:viewer_clone']
                    ]
 
