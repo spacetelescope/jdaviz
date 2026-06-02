@@ -789,59 +789,102 @@ class TableApplyZoom(_BaseTableApplyTool):
 
 
 @viewer_tool
-class TableAddColumn(Tool):
+class TableEditColumns(Tool):
     icon = os.path.join(ICON_DIR, 'table-column-plus-after.svg')
-    tool_id = 'jdaviz:table_add_column'
-    action_text = 'Add column'
-    tool_tip = 'Add a new empty column to the table data'
+    tool_id = 'jdaviz:table_edit_columns'
+    action_text = 'Edit columns'
+    tool_tip = 'Add, rename, or remove table columns'
 
     def activate(self):
-        self.viewer.toolbar.override_tools(
-            ['jdaviz:table_apply_add_column'],
-            'Add Column',
-            custom_widgets=[{'type': 'text', 'label': 'Column name', 'selected': ''}],
-        )
-
-    def is_visible(self):
-        if self.viewer.jdaviz_app.config != 'deconfigged':
-            return False
-        if not hasattr(self.viewer, 'widget_table'):
-            return False
-        return True
-
-
-@viewer_tool
-class TableApplyAddColumn(Tool):
-    icon = os.path.join(ICON_DIR, 'check.svg')
-    tool_id = 'jdaviz:table_apply_add_column'
-    action_text = 'Apply add column'
-    tool_tip = 'Add a new column with the given name to all table data entries'
-
-    def activate(self):
+        import numpy as np
         from glue.core import Component
 
-        selected = self.viewer.toolbar.custom_widget_selected
-        column_name = (selected[0] if selected else '').strip()
-        if column_name:
-            new_component_ids = []
-            seen_data = set()
-            for layer_artist in self.viewer.layers:
+        viewer = self.viewer
+        toolbar = viewer.toolbar
+
+        # Enter override mode (no extra tool buttons — just the close button)
+        toolbar.override_tools([], 'Edit Columns')
+
+        # --- Helpers operating directly on the viewer's data ---
+        def _iter_data():
+            seen = set()
+            for layer_artist in viewer.layers:
                 data = layer_artist.layer
-                # For subsets, get the parent Data object
-                if hasattr(data, 'data'):
+                if hasattr(data, 'data'):  # Subset
                     data = data.data
-                if id(data) in seen_data:
-                    continue
-                seen_data.add(id(data))
-                n_rows = data.shape[0]
-                data.add_component(Component(np.full(n_rows, '', dtype=object)), column_name)
-                new_component_ids.append(data.id[column_name])
+                if id(data) not in seen:
+                    seen.add(id(data))
+                    yield data
 
-            # Make the new columns editable in the table viewer
-            existing = list(self.viewer.state.editable_components)
-            self.viewer.state.editable_components = existing + new_component_ids
+        def _role_labels():
+            role = set()
+            for data in _iter_data():
+                meta = getattr(data, 'meta', {}) or {}
+                for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
+                            '_jdaviz_loader_x_col', '_jdaviz_loader_y_col'):
+                    val = meta.get(key)
+                    if val:
+                        role.add(val)
+                if '_jdaviz_loader_x_col' in meta:
+                    role.add('X')
+                if '_jdaviz_loader_y_col' in meta:
+                    role.add('Y')
+                if '_jdaviz_id_col' in meta:
+                    role.add('ID')
+            return role
 
-        self.viewer.toolbar.restore_tools()
+        def _on_add(label):
+            for data in _iter_data():
+                data.add_component(
+                    Component(np.full(data.shape[0], '', dtype=object)), label
+                )
+                cid = data.id[label]
+                viewer.state.editable_components = (
+                    list(viewer.state.editable_components) + [cid]
+                )
+
+        def _on_rename(old_name, new_name):
+            for data in _iter_data():
+                if old_name in [c.label for c in data.main_components]:
+                    data.id[old_name].label = new_name
+            viewer.redraw()
+
+        def _on_remove(label):
+            for data in _iter_data():
+                if label in [c.label for c in data.main_components]:
+                    cid = data.id[label]
+                    viewer.state.editable_components = [
+                        c for c in viewer.state.editable_components if c is not cid
+                    ]
+                    data.remove_component(cid)
+
+        # Build initial column list directly from the viewer's layers
+        seen_labels = []
+        for data in _iter_data():
+            for cid in data.main_components:
+                if cid.label not in seen_labels:
+                    seen_labels.append(cid.label)
+
+        roles = _role_labels()
+        selected = seen_labels[0] if seen_labels else ''
+
+        toolbar.setup_column_editor(
+            items=seen_labels,
+            selected=selected,
+            non_removable=selected in roles,
+            on_add=_on_add,
+            on_rename=_on_rename,
+            on_remove=_on_remove,
+        )
+
+        # Keep non_removable in sync as the selection changes
+        def _update_non_removable(change):
+            toolbar.toolbar_column_non_removable = change['new'] in _role_labels()
+        toolbar.observe(_update_non_removable, names=['toolbar_column_selected'])
+
+        def _cleanup():
+            toolbar.unobserve(_update_non_removable, names=['toolbar_column_selected'])
+        toolbar._toolbar_cleanup_callback = _cleanup
 
     def is_visible(self):
         if self.viewer.jdaviz_app.config != 'deconfigged':

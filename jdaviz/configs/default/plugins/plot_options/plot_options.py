@@ -26,7 +26,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, 
                                         PlotOptionsSyncState, Plot,
                                         EditableSelectPluginComponent,
                                         skip_if_no_updates_since_last_active, with_spinner)
-from jdaviz.core.events import ChangeRefDataMessage, ViewerAddedMessage
+from jdaviz.core.events import AddDataMessage, ChangeRefDataMessage, ViewerAddedMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
@@ -849,6 +849,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=self._on_data_added_to_viewer)
+
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=self._on_refdata_change)
 
@@ -1251,6 +1254,11 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         if not hasattr(self, 'viewer'):
             return
         self._refresh_table_column_options()
+
+    def _on_data_added_to_viewer(self, msg):
+        viewer = self._get_table_viewer()
+        if viewer is not None and msg.viewer is viewer:
+            self._refresh_table_column_options()
 
     @observe('viewer_selected')
     def _on_viewer_selected_reset_table_edit(self, msg=None):

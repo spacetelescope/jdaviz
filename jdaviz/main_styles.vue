@@ -254,6 +254,11 @@ a:active {
   filter: invert(1) saturate(1) brightness(100);
 }
 
+.jdaviz-nested-toolbar .custom-toolbar-editable-select .v-icon {
+  /* editable-select action icons are already styled directly; skip the invert */
+  filter: none !important;
+}
+
 .theme--dark .jdaviz-nested-toolbar .v-icon:not(.suboptions-carrot),
 .theme--dark .plugin-nested-toolbar .v-icon:not(.suboptions-carrot) {
   /* in dark mode, Vuetify icons are already white; cancel the inversion above
