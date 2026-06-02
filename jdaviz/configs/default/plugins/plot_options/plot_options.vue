@@ -296,28 +296,43 @@
       />
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper :sync="table_columns_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('table_columns_visible')">
-      <v-select
-        attach
-        :menu-props="{ left: true }"
-        :items="table_columns_visible_sync.choices"
-        v-model="table_columns_visible_value"
-        :label="api_hints_enabled ? 'plg.table_columns_visible =' : 'Visible Columns'"
-        :class="api_hints_enabled ? 'api-hint' : null"
-        hint="Select which columns are shown in the table."
-        persistent-hint
-        multiple
-        chips
-        deletable-chips
-        dense
-      >
-        <template v-slot:selection="{ index }">
-          <span v-if="index === 0">
-            {{ table_columns_visible_value.length === table_columns_visible_sync.choices.length ? 'All columns' : `${table_columns_visible_value.length} of ${table_columns_visible_sync.choices.length} columns` }}
-          </span>
-        </template>
-      </v-select>
-    </glue-state-sync-wrapper>
+    <div v-if="table_columns_visible_sync.in_subscribed_states">
+      <j-plugin-section-header>Table Columns</j-plugin-section-header>
+
+      <glue-state-sync-wrapper :sync="table_columns_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('table_columns_visible')">
+        <v-select
+          attach
+          :menu-props="{ left: true }"
+          :items="table_columns_visible_sync.choices"
+          v-model="table_columns_visible_value"
+          :label="api_hints_enabled ? 'plg.table_columns_visible =' : 'Visible Columns'"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          hint="Select which columns are shown in the table."
+          persistent-hint
+          multiple
+          chips
+          deletable-chips
+          dense
+        >
+          <template v-slot:selection="{ index }">
+            <span v-if="index === 0">
+              {{ table_columns_visible_value.length === table_columns_visible_sync.choices.length ? 'All columns' : `${table_columns_visible_value.length} of ${table_columns_visible_sync.choices.length} columns` }}
+            </span>
+          </template>
+        </v-select>
+      </glue-state-sync-wrapper>
+
+      <plugin-editable-select
+        :mode.sync="table_column_mode"
+        :edit_value.sync="table_column_edit_value"
+        :items="table_column_items"
+        :selected.sync="table_column_selected"
+        :non_removable="!table_column_is_removable"
+        label="Column"
+        hint="Select a column to rename or remove, or add a new column."
+        :api_hints_enabled="api_hints_enabled"
+      ></plugin-editable-select>
+    </div>
 
     <!-- LAYER OPTIONS -->
     <div v-if="api_hints_enabled">

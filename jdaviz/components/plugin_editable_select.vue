@@ -32,7 +32,7 @@
         <j-tooltip tooltipcontent="rename" v-if="!multiselect">
           <v-icon style="cursor: pointer" @click="modeRename">mdi-pencil</v-icon>
         </j-tooltip>
-        <j-tooltip tooltipcontent="remove" v-if="!multiselect">
+        <j-tooltip tooltipcontent="remove" v-if="!multiselect && !non_removable">
           <v-icon style="cursor: pointer" @click="modeRemove">mdi-delete</v-icon>
         </j-tooltip>
         <j-tooltip tooltipcontent="create new">
@@ -93,7 +93,8 @@
 <script>
 module.exports = {
   props: ['mode', 'edit_value', 'items', 'selected', 'multiselect', 'label', 'hint', 'rules',
-          'api_hint', 'api_hint_add', 'api_hint_rename', 'api_hint_remove', 'api_hints_enabled'
+          'api_hint', 'api_hint_add', 'api_hint_rename', 'api_hint_remove', 'api_hints_enabled',
+          'non_removable'
   ],
   computed: {
     textFieldLabel() {
