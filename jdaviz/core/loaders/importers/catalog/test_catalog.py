@@ -128,30 +128,31 @@ def test_pixcoord_column_detection(deconfigged_helper):
     assert 'X' in importer.output.keys()
     assert 'Y' in importer.output.keys()
 
-def roman_catalog_detection(deconfigged_helper):
+
+def test_roman_catalog_detection(deconfigged_helper):
     """
     Test automatic detection of ra/dec columns when input catalog has multiple columns that could
     be interpreted as coordinates (e.g., 'ra', 'ra_centroid', 'ra_err'), which will be the case
-    for Roman source catalogs. CatalogImporter should default to the first match.
+    for Roman photometric catalogs. CatalogImporter should default to the first match,
+    but should exclude uncertainty or window columns like 'ra_min' or 'ra_err'.
     """
     ra = [149.0, 150.0, 151.0] * u.degree
     dec = [1.9, 2.0, 2.1] * u.degree
-    ra_centroid = [149.5, 150.5, 151.5] * u.degree
-    dec_centroid = [1.95, 2.05, 2.15] * u.degree
     x = [1, 2, 3]
     y = [4, 5, 6]
-    x_model = [2, 3, 4]
-    y_model = [5, 6, 7]
 
-    tab = QTable({'ra': ra, 'dec': dec, 'ra_centroid': ra_centroid, 'dec_centroid': dec_centroid,
-                'x': x, 'y': y, 'x_model': x_model, 'y_model': y_model})
+    tab = QTable({'ra_err': ra, 'dec_err': dec,
+                  'ra': ra, 'dec': dec,
+                  'ra_centroid': ra, 'dec_centroid': dec,
+                  'x': x, 'y': y,
+                  'x_model': x, 'y_model': y})
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = tab
     ldr.format = 'Catalog'
     importer = ldr.importer
 
-    # make sure the coordinate columns were correctly identified
+    # make sure the coordinate columns default to the first not-excluded match
     assert importer.col_ra == 'ra'
     assert importer.col_dec == 'dec'
     assert importer.col_x == 'x'
