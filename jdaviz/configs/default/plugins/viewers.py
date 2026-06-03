@@ -1498,6 +1498,13 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self.widget_table.observe(self._on_checked_changed, names=['checked'])
         self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
 
+        # Inline column-header editing
+        self.widget_table.show_add_column_button = True
+        self._update_non_removable_headers()
+        self.widget_table.observe(self._on_header_renamed, names=['header_renamed'])
+        self.widget_table.observe(self._on_header_deleted, names=['header_deleted'])
+        self.widget_table.observe(self._on_add_column_request, names=['add_column_request'])
+
         # Subscribe to RestoreToolbarMessage to clean up checkbox state
         # when toolbar is restored (e.g., by clicking X on custom toolbar)
         self.hub.subscribe(self, RestoreToolbarMessage,
@@ -1651,3 +1658,95 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Clear selection marks in image viewers when this table viewer is removed
         # (toolbar cleanup is handled generically by NestedJupyterToolbar)
         self._clear_selection_marks()
+
+    # ------------------------------------------------------------------
+    # Inline column-header editing helpers
+    # ------------------------------------------------------------------
+
+    def _iter_table_data(self):
+        """Yield each unique glue Data object visible in this viewer."""
+        seen = set()
+        for layer_artist in self.layers:
+            data = layer_artist.layer
+            if hasattr(data, 'data'):  # Subset
+                data = data.data
+            if id(data) not in seen:
+                seen.add(id(data))
+                yield data
+
+    def _role_labels(self):
+        """Return the set of column names that are 'role' columns (non-removable)."""
+        role = set()
+        for data in self._iter_table_data():
+            meta = getattr(data, 'meta', {}) or {}
+            for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
+                        '_jdaviz_loader_x_col', '_jdaviz_loader_y_col'):
+                val = meta.get(key)
+                if val:
+                    role.add(val)
+            if '_jdaviz_loader_x_col' in meta:
+                role.add('X')
+            if '_jdaviz_loader_y_col' in meta:
+                role.add('Y')
+            if '_jdaviz_id_col' in meta:
+                role.add('ID')
+        return role
+
+    def _update_non_removable_headers(self):
+        """Sync the non_removable_headers list to the table widget."""
+        self.widget_table.non_removable_headers = sorted(self._role_labels())
+
+    def _on_header_renamed(self, change):
+        """Handle a column rename committed inline in the table header."""
+        data = change['new']
+        old_name = data.get('column', '')
+        new_name = data.get('newName', '')
+        if not old_name or not new_name or old_name == new_name:
+            return
+        for glue_data in self._iter_table_data():
+            if old_name in [c.label for c in glue_data.main_components]:
+                glue_data.id[old_name].label = new_name
+        self.redraw()
+        self._update_non_removable_headers()
+
+    def _on_header_deleted(self, change):
+        """Handle a column deletion triggered from the inline table header editor."""
+        label = change['new']
+        if not label:
+            return
+        for glue_data in self._iter_table_data():
+            if label in [c.label for c in glue_data.main_components]:
+                cid = glue_data.id[label]
+                self.state.editable_components = [
+                    c for c in self.state.editable_components if c is not cid
+                ]
+                glue_data.remove_component(cid)
+        self._update_non_removable_headers()
+
+    def _on_add_column_request(self, change):
+        """Handle the '+' button click: create a new empty column and enter edit mode."""
+        import numpy as np
+        from glue.core import Component
+
+        existing = []
+        for glue_data in self._iter_table_data():
+            existing += [c.label for c in glue_data.main_components]
+        n = 1
+        while f'Column {n}' in existing:
+            n += 1
+        label = f'Column {n}'
+
+        for glue_data in self._iter_table_data():
+            glue_data.add_component(
+                Component(np.full(glue_data.shape[0], '', dtype=object)), label
+            )
+            cid = glue_data.id[label]
+            self.state.editable_components = (
+                list(self.state.editable_components) + [cid]
+            )
+
+        # Signal the Vue template to enter edit mode for the new header.
+        # Reset first so the watch fires even if the previous value was the same string.
+        self.widget_table.header_enter_edit_mode = ''
+        self.widget_table.header_enter_edit_mode = label
+        self._update_non_removable_headers()

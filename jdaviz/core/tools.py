@@ -796,45 +796,18 @@ class TableEditColumns(Tool):
     tool_tip = 'Add, rename, or remove table columns'
 
     def activate(self):
-        import numpy as np
-        from glue.core import Component
-
         viewer = self.viewer
         toolbar = viewer.toolbar
 
         # Enter override mode (no extra tool buttons — just the close button)
         toolbar.override_tools([], 'Edit Columns')
 
-        # --- Helpers operating directly on the viewer's data ---
-        def _iter_data():
-            seen = set()
-            for layer_artist in viewer.layers:
-                data = layer_artist.layer
-                if hasattr(data, 'data'):  # Subset
-                    data = data.data
-                if id(data) not in seen:
-                    seen.add(id(data))
-                    yield data
-
-        def _role_labels():
-            role = set()
-            for data in _iter_data():
-                meta = getattr(data, 'meta', {}) or {}
-                for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
-                            '_jdaviz_loader_x_col', '_jdaviz_loader_y_col'):
-                    val = meta.get(key)
-                    if val:
-                        role.add(val)
-                if '_jdaviz_loader_x_col' in meta:
-                    role.add('X')
-                if '_jdaviz_loader_y_col' in meta:
-                    role.add('Y')
-                if '_jdaviz_id_col' in meta:
-                    role.add('ID')
-            return role
-
+        # Delegate data helpers to the viewer so they stay in sync with the
+        # inline header-edit path added in JdavizTableViewer.
         def _on_add(label):
-            for data in _iter_data():
+            import numpy as np
+            from glue.core import Component
+            for data in viewer._iter_table_data():
                 data.add_component(
                     Component(np.full(data.shape[0], '', dtype=object)), label
                 )
@@ -842,30 +815,33 @@ class TableEditColumns(Tool):
                 viewer.state.editable_components = (
                     list(viewer.state.editable_components) + [cid]
                 )
+            viewer._update_non_removable_headers()
 
         def _on_rename(old_name, new_name):
-            for data in _iter_data():
+            for data in viewer._iter_table_data():
                 if old_name in [c.label for c in data.main_components]:
                     data.id[old_name].label = new_name
             viewer.redraw()
+            viewer._update_non_removable_headers()
 
         def _on_remove(label):
-            for data in _iter_data():
+            for data in viewer._iter_table_data():
                 if label in [c.label for c in data.main_components]:
                     cid = data.id[label]
                     viewer.state.editable_components = [
                         c for c in viewer.state.editable_components if c is not cid
                     ]
                     data.remove_component(cid)
+            viewer._update_non_removable_headers()
 
         # Build initial column list directly from the viewer's layers
         seen_labels = []
-        for data in _iter_data():
+        for data in viewer._iter_table_data():
             for cid in data.main_components:
                 if cid.label not in seen_labels:
                     seen_labels.append(cid.label)
 
-        roles = _role_labels()
+        roles = viewer._role_labels()
         selected = seen_labels[0] if seen_labels else ''
 
         toolbar.setup_column_editor(
@@ -879,7 +855,7 @@ class TableEditColumns(Tool):
 
         # Keep non_removable in sync as the selection changes
         def _update_non_removable(change):
-            toolbar.toolbar_column_non_removable = change['new'] in _role_labels()
+            toolbar.toolbar_column_non_removable = change['new'] in viewer._role_labels()
         toolbar.observe(_update_non_removable, names=['toolbar_column_selected'])
 
         def _cleanup():
