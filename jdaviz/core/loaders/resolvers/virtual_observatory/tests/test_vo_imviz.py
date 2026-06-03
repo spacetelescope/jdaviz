@@ -40,13 +40,13 @@ class TestVODeconfiggedImageLocal(BaseDeconfiggedImage_WCS_WCS):
         self.helper.new_viewers['Image']()
         self.helper._app.remove_data_from_viewer("Image", "has_wcs_2")
 
-        # Check default viewer is "Manual"
+        # Default input mode is "Source", so no viewer auto-centering yet
         vo_ldr = self.helper.loaders["virtual observatory"]._obj
-        assert vo_ldr.viewer.selected == "Manual"
+        assert vo_ldr.input_selected == "Source"
         assert vo_ldr.source == ""
 
-        # Switch to first viewer and verify coordinates have switched
-        vo_ldr.viewer.selected = "Image"
+        # Switch to Viewer input mode — auto-centers on the currently selected viewer
+        vo_ldr.input_select.selected = "Viewer"
         ra_str, dec_str = vo_ldr.source.split()
         np.testing.assert_allclose(
             float(ra_str), self._data_center_coords["has_wcs_1[SCI,1]"]["ra"]
@@ -115,6 +115,8 @@ def test_link_type_autocoord(imviz_helper):
     imviz_helper.load_data(hdu2, data_label="has_wcs_2")
 
     vo_ldr = imviz_helper.loaders["virtual observatory"]._obj
+    # Use Viewer mode so that link-type changes trigger auto-centering
+    vo_ldr.input_select.selected = "Viewer"
     vo_ldr.viewer.selected = "imviz-0"
     vo_ldr.center_on_data()
     ra_str, dec_str = vo_ldr.source.split()
@@ -227,7 +229,6 @@ class TestVOImvizRemote:
         vo_ldr = imviz_helper.loaders["virtual observatory"]
 
         # Sets common args for Remote Testing
-        vo_ldr.viewer.selected = "Manual"
         vo_ldr.source = "M51"
         vo_ldr.radius = 1
         vo_ldr.radius_unit.selected = "deg"

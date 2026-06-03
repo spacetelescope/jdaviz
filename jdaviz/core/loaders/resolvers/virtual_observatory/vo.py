@@ -58,8 +58,10 @@ class VOResolver(BaseConeSearchResolver):
         return LoaderUserApi(
             self,
             expose=[
-                "viewer", "coordframe", "radius", "radius_unit",
+                "input_select", "viewer", "coordframe", "radius", "radius_unit",
                 "source",
+                "catalog", "catalog_subset", "catalog_col_type",
+                "query_progress",
                 "resource_filter_coverage", "waveband", "resource",
                 "query_archive"
             ],
@@ -92,7 +94,7 @@ class VOResolver(BaseConeSearchResolver):
                 "Source is required for registry querying when coverage filtering is enabled. "
                 + (
                     "Please enter your coordinates above "
-                    if self.viewer == "Manual"
+                    if self.input_selected != 'Viewer'
                     else f"Load data into viewer {self.viewer} first before querying "
                 )
                 + "or disable coverage filtering."
@@ -170,42 +172,15 @@ class VOResolver(BaseConeSearchResolver):
             )
             raise
 
-    @with_spinner(spinner_traitlet="results_loading")
-    def query_archive(self):
+    def _query_single_coord(self, coord):
         """
-        Once a specific VO resource is selected, query it with the user-specified source target.
-        User input for source is first attempted to be parsed as a SkyCoord coordinate. If not,
-        then attempts to parse as a target name.
+        Query the selected SIA resource for a single SkyCoord.
+        Returns an astropy Table or None.
         """
         try:
-            # Query SIA service
-            # Service is indexed via short name (resource_selected), which is the suggested way
-            # according to PyVO docs. Though disclaimer that collisions COULD occur. If so,
-            # consider indexing on the full IVOID, which is guaranteed unique.
             sia_service = self._full_registry_results[
                 self.resource_selected
             ].get_service(service_type="sia")
-            try:
-                # First parse user-provided source as direct coordinates
-                coord = SkyCoord(
-                    self.source, unit=u.deg, frame=self.coordframe_selected
-                )
-            except Exception:
-                try:
-                    # If that didn't work, try parsing it as an object name
-                    coord = SkyCoord.from_name(
-                        self.source, frame=self.coordframe_selected
-                    )
-                except Exception as e:
-                    self.hub.broadcast(
-                        SnackbarMessage(
-                            f"Unable to resolve source coordinates: {self.source}",
-                            sender=self,
-                            color="error",
-                            traceback=e
-                        )
-                    )
-            # Once coordinate lookup is complete, search service using these coords.
             try:
                 sia_results = sia_service.search(
                     coord,
@@ -217,8 +192,6 @@ class VOResolver(BaseConeSearchResolver):
                     format="image/fits",
                 )
             except DALQueryError as e:
-                # We've run into issues where the service assumes a FORMAT and injects it for us.
-                # If the "image/fits" is duplicated, remove our requested format and rely on theirs
                 if "Wrong FORMAT=image/fits,image/fits" in str(e):
                     sia_results = sia_service.search(
                         coord,
@@ -237,37 +210,76 @@ class VOResolver(BaseConeSearchResolver):
                             color="error",
                         )
                     )
+                    return None
             if len(sia_results) == 0:
                 self.hub.broadcast(
                     SnackbarMessage(
-                        f"No observations returned at coords {coord} from VO SIA resource: {sia_service.baseurl}",  # noqa: E501
+                        f"No observations returned at coords {coord} from VO SIA resource: "
+                        f"{sia_service.baseurl}",
                         sender=self,
                         color="error",
                     )
                 )
-            else:
-                self.hub.broadcast(
-                    SnackbarMessage(
-                        f"{len(sia_results)} SIA results found!",
-                        sender=self,
-                        color="success",
-                    )
-                )
+                return None
+            return sia_results.to_table()
         except Exception as e:
             self.hub.broadcast(
                 SnackbarMessage(
-                    f"Unable to locate files for source {self.source}: {e}",
+                    f"Unable to locate files for source {coord}: {e}",
                     sender=self,
                     color="error",
                     traceback=e
                 )
             )
+            return None
+
+    @with_spinner(spinner_traitlet="results_loading")
+    def query_archive(self):
+        """
+        Once a specific VO resource is selected, query it with the user-specified source target.
+        User input for source is first attempted to be parsed as a SkyCoord coordinate. If not,
+        then attempts to parse as a target name.
+        """
+        # --- Catalog mode: loop over catalog rows ---
+        if self.input_selected == 'Catalog':
+            self._query_catalog(self._query_single_coord)
+            return
+
+        # --- Source / Viewer mode: single coordinate ---
         try:
-            self._output = sia_results.to_table()
+            try:
+                coord = SkyCoord(
+                    self.source, unit=u.deg, frame=self.coordframe_selected
+                )
+            except Exception:
+                try:
+                    coord = SkyCoord.from_name(
+                        self.source, frame=self.coordframe_selected
+                    )
+                except Exception as e:
+                    self.hub.broadcast(
+                        SnackbarMessage(
+                            f"Unable to resolve source coordinates: {self.source}",
+                            sender=self,
+                            color="error",
+                            traceback=e
+                        )
+                    )
+                    return
+            result = self._query_single_coord(coord)
+            if result is not None and len(result) > 0:
+                self.hub.broadcast(
+                    SnackbarMessage(
+                        f"{len(result)} SIA results found!",
+                        sender=self,
+                        color="success",
+                    )
+                )
+            self._output = result
         except Exception as e:
             self.hub.broadcast(
                 SnackbarMessage(
-                    f"Unable to populate table for source {self.source}: {e}",
+                    f"Unable to locate files for source {self.source}: {e}",
                     sender=self,
                     color="error",
                     traceback=e

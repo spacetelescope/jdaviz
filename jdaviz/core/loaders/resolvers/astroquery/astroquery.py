@@ -71,8 +71,10 @@ class AstroqueryResolver(BaseConeSearchResolver):
         return LoaderUserApi(
             self,
             expose=[
-                "viewer", "coordframe", "radius", "radius_unit",
+                "input_select", "viewer", "coordframe", "radius", "radius_unit",
                 "source",
+                "catalog", "catalog_subset", "catalog_col_type",
+                "query_progress",
                 "telescope",
                 "max_results",
                 "query_archive",
@@ -80,58 +82,74 @@ class AstroqueryResolver(BaseConeSearchResolver):
             ],
         )
 
-    @with_spinner(spinner_traitlet="results_loading")
-    def query_archive(self):
+    def _query_single_coord(self, skycoord_center):
+        """
+        Query the selected archive for a single SkyCoord.
+        Returns an astropy Table or None.
+        """
         output = None
-        skycoord_center = None
-
-        try:
-            skycoord_center = SkyCoord.from_name(self.source, frame=self.coordframe.selected)
-        except NameResolveError as e:
-            # Sesame name resolution can fail when the service is unreachable (SSL timeout,
-            # redirect error, etc.). Surface the failure as a snackbar rather than propagating
-            # the exception to the caller. Keep processing below so we clear stale results.
-            errmsg = f"Unable to resolve source coordinates: {self.source}"
-            self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self, traceback=e))
         radius = self.radius * u.Unit(self.radius_unit.selected)
 
-        # Only query the selected archive when name resolution succeeded.
-        if skycoord_center is not None and self.telescope.selected in ('JWST', 'HST'):
+        if self.telescope.selected in ('JWST', 'HST'):
             from astroquery.mast import MastMissions
 
             mission = MastMissions(mission=self.telescope.selected)
             output = mission.query_region(skycoord_center, radius=radius.value)
 
-        elif skycoord_center is not None and self.telescope.selected == 'SDSS':
+        elif self.telescope.selected == 'SDSS':
             from astroquery.sdss import SDSS
 
             r_max = 3 * u.arcmin
-            if radius > r_max:  # SDSS now has radius max limit
+            if radius > r_max:
                 self.hub.broadcast(SnackbarMessage(
                     f"Radius for {self.telescope.selected} has max radius of {r_max}\' but got "
                     f"{radius.to(u.arcmin)}, using {r_max}.",
                     color='warning', sender=self))
                 radius = r_max
 
-            # queries the region (based on the provided center point and radius)
-            # finds all the sources in that region
             try:
                 output = SDSS.query_region(skycoord_center, radius=radius,
                                            data_release=17)
             except Exception as e:  # nosec
-                errmsg = (f"Failed to query {self.telescope.selected} with c={skycoord_center} and "
-                          f"r={radius}: {repr(e)}")
+                errmsg = (f"Failed to query {self.telescope.selected} with "
+                          f"c={skycoord_center} and r={radius}: {repr(e)}")
                 self.hub.broadcast(SnackbarMessage(errmsg, color='error',
                                                    sender=self,
                                                    traceback=e))
-                output = None  # will force returned_max_results = False, returned_no_results = True
-        elif skycoord_center is not None and self.telescope.selected == 'Gaia':
+                output = None
+
+        elif self.telescope.selected == 'Gaia':
             from astroquery.gaia import Gaia
 
             Gaia.ROW_LIMIT = self.max_results
             output = Gaia.query_object(skycoord_center, radius=radius)
+
         elif skycoord_center is not None:
-            raise NotImplementedError(f"Querying for {self.telescope.selected} is not supported.")
+            raise NotImplementedError(
+                f"Querying for {self.telescope.selected} is not supported."
+            )
+
+        return output
+
+    @with_spinner(spinner_traitlet="results_loading")
+    def query_archive(self):
+        # --- Catalog mode: loop over catalog rows ---
+        if self.input_selected == 'Catalog':
+            self._query_catalog(self._query_single_coord)
+            return
+
+        # --- Source / Viewer mode: single coordinate ---
+        output = None
+        skycoord_center = None
+
+        try:
+            skycoord_center = SkyCoord.from_name(self.source, frame=self.coordframe.selected)
+        except NameResolveError as e:
+            errmsg = f"Unable to resolve source coordinates: {self.source}"
+            self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self, traceback=e))
+
+        if skycoord_center is not None:
+            output = self._query_single_coord(skycoord_center)
 
         if output is not None and len(output) > self.max_results:
             output = output[:self.max_results]
