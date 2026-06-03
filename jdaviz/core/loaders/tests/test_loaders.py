@@ -261,6 +261,30 @@ def test_spectrum3d_load_flux_then_err_only(deconfigged_helper, image_cube_hdu_o
     assert expected_err_label in [d.label for d in deconfigged_helper._app.data_collection]
 
 
+@pytest.mark.parametrize(
+    "obstype, wcs_type, dispaxis, instrument, expected",
+    [
+        # STIS sx2/flt/raw spectroscopic: spectral WCS + DISPAXIS
+        ('SPECTROSCOPIC', 'spectral', 1, 'STIS', '2D Spectrum'),
+        # WFC3/IR grism drz spectroscopic: celestial WCS, no DISPAXIS.
+        ('SPECTROSCOPIC', 'celestial', None, 'WFC3', '2D Spectrum'),
+        # ACS drz imaging: celestial WCS, no DISPAXIS
+        ('IMAGING', 'celestial', None, 'ACS', 'Image'),
+        # COS flt imaging: celestial WCS but DISPAXIS present.
+        ('IMAGING', 'celestial', 1, 'COS', 'Image'),
+    ],
+)
+def test_hst_product_identifications(deconfigged_helper, hst_product_hdulist,
+                                     obstype, wcs_type, dispaxis, instrument, expected):
+    hdulist = hst_product_hdulist(obstype=obstype, wcs_type=wcs_type,
+                                  dispaxis=dispaxis, instrument=instrument)
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdulist
+
+    choices = ldr.format.choices
+    assert expected in choices
+
+
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 @pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'
