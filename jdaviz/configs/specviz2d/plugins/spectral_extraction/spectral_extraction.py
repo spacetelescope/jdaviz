@@ -965,7 +965,7 @@ class SpectralExtraction2D(PluginTemplateMixin):
         elif self.bg_trace_selected == 'From Plugin':
             trace = self.export_trace(add_data=False)
         else:
-            trace = self.bg_trace.get_selected_spectrum(use_disaply_units=True)
+            trace = self.bg_trace.get_selected_spectrum(use_display_units=True)
 
         return trace
 
