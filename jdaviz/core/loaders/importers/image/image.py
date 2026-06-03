@@ -20,7 +20,7 @@ from jdaviz.core.template_mixin import (SelectFileExtensionComponent,
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import wcs_is_spectral
+from jdaviz.utils import wcs_is_spectral, hst_obstype
 
 from jdaviz.utils import (
     PRIHDR_KEY, in_dec_comps, in_ra_comps, standardize_metadata, standardize_roman_metadata,
@@ -226,6 +226,12 @@ class ImageImporter(BaseImporterToDataCollection):
             for hdu in self.input:
                 if isinstance(hdu, fits.BinTableHDU) and 'TIME' in hdu.columns.names:
                     return 'contains TIME column'
+
+            # Some HST products share file suffixes/structure between imaging and
+            # spectroscopic observations. The OBSTYPE header keyword is used to
+            # delineate between the two.
+            if hst_obstype(self.input) == 'spectroscopic':
+                return 'HST spectroscopic product (OBSTYPE=SPECTROSCOPIC).'
 
         # flat image, not a cube
         # isinstance NDData
