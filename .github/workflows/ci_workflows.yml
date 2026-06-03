@@ -51,10 +51,10 @@ jobs:
             toxposargs: --run-slow
             allow_failure: false
 
-          - name: Python 3.11 with only remote data and all deps
+          - name: Python 3.11 with only remote data, coverage checking, and all deps
             os: ubuntu-latest
             python: '3.11'
-            toxenv: py311-test-alldeps
+            toxenv: py311-test-alldeps-cov
             toxposargs: --remote-data --run-slow -m remote_data
             allow_failure: true
 
