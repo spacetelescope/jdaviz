@@ -61,7 +61,7 @@ presets (N-up, E-left/right) or provide your own sky angle.
 UI Access
 =========
 
-.. wireframe-demo:: _static/jdaviz-wireframe.html
+.. guidestar-demo:: _static/jdaviz-wireframe.html
    :repeat: false
    :init-steps-json: [{"action":"set-plugin","value":"Orientation"},{"action":"disable-toolbar-except","value":"plugins"}]
    :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Orientation","delay":1000,"caption":"Open the Orientation plugin"}]

@@ -31,7 +31,7 @@ See :ref:`loaders-sources` for information on different ways to load data.
 UI Access
 =========
 
-.. wireframe-demo:: _static/jdaviz-wireframe.html
+.. guidestar-demo:: _static/jdaviz-wireframe.html
    :repeat: false
    :init-steps-json: [{"action":"disable-toolbar-except","value":"loaders"}]
    :steps-json: [{"action":"show-sidebar","value":"loaders","delay":0},{"action":"highlight","target":"#format-select","delay":1500,"caption":"Select the data format"}]

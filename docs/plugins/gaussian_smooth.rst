@@ -33,7 +33,7 @@ viewer data menus.
 UI Access
 =========
 
-.. wireframe-demo:: _static/jdaviz-wireframe.html
+.. guidestar-demo:: _static/jdaviz-wireframe.html
    :repeat: false
    :init-steps-json: [{"action":"set-plugin","value":"Gaussian Smooth"},{"action":"disable-toolbar-except","value":"plugins"}]
    :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Gaussian Smooth","delay":1000,"caption":"Open the Gaussian Smooth plugin"}]

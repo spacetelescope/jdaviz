@@ -27,7 +27,7 @@ To enable API hints in the user interface:
 2. The button will highlight when API hints are active
 3. Click again to toggle off
 
-.. wireframe-demo:: _static/jdaviz-wireframe.html
+.. guidestar-demo:: _static/jdaviz-wireframe.html
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: true

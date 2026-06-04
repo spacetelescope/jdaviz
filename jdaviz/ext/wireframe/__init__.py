@@ -6,14 +6,14 @@ CSS, and actions JS by adding this extension to their Sphinx conf.py::
 
     extensions = [
         'jdaviz.ext.wireframe',
-        'docs_wireframe_demo',
+        'guidestar',
         # ...
     ]
 
 Then embed a demo with project-specific steps in their template::
 
-    <div data-wireframe-demo
-         data-wireframe-config='{"htmlSrc": "jdaviz-wireframe.html", ...}'>
+    <div data-guidestar
+         data-guidestar-config='{"htmlSrc": "jdaviz-wireframe.html", ...}'>
     </div>
 """
 

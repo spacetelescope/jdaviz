@@ -1,20 +1,20 @@
 /**
  * Jdaviz Wireframe Demo — Custom Actions
  *
- * Registers jdaviz-specific actions with the docs-wireframe-demo
- * infrastructure via WireframeDemo.registerAction().
+ * Registers jdaviz-specific actions with the guidestar
+ * infrastructure via Guidestar.registerAction().
  *
  * This file should be loaded AFTER wireframe-demo-controller.js
  * but BEFORE any wireframe-demo containers are auto-discovered.
  * If the controller hasn't loaded yet (e.g. deferred scripts),
- * registrations are queued and applied when 'wireframe-demo-ready' fires.
+ * registrations are queued and applied when 'guidestar-ready' fires.
  */
 (function () {
     'use strict';
 
     // Guard: jdaviz.ext.wireframe loads this globally AND the directive `:js:`
     // option also injects it inline — prevent double-registration of the
-    // wireframe-demo-loaded listener (which would cause each toolbar click to
+    // guidestar-loaded listener (which would cause each toolbar click to
     // open then immediately close the sidebar due to two handlers firing).
     if (typeof window !== 'undefined' && window.__jdavizWireframeActionsLoaded) { return; }
     if (typeof window !== 'undefined') { window.__jdavizWireframeActionsLoaded = true; }
@@ -698,7 +698,7 @@
      * show-sidebar: Open a sidebar panel.
      * step.value = sidebar type name (e.g. "loaders", "settings")
      */
-    WireframeDemo.registerAction('show-sidebar', function(step, el, contentRoot) {
+    Guidestar.registerAction('show-sidebar', function(step, el, contentRoot) {
         var sidebarType = step.value;
         applyToolbarIcons(contentRoot);
         // Clear openPanel so the animated show-sidebar always shows the generic plugin list;
@@ -718,7 +718,7 @@
     /**
      * hide-sidebar: Close the sidebar.
      */
-    WireframeDemo.registerAction('hide-sidebar', function(step, el, contentRoot) {
+    Guidestar.registerAction('hide-sidebar', function(step, el, contentRoot) {
         var sidebar = contentRoot.querySelector('.jdaviz-sidebar');
         if (sidebar) sidebar.classList.remove('visible');
         var icons = contentRoot.querySelectorAll('.jdaviz-toolbar-icon[data-sidebar]');
@@ -731,7 +731,7 @@
      * select-tab: Select a tab within the current sidebar by name.
      * step.value = tab name (e.g. "Viewer", "Units")
      */
-    WireframeDemo.registerAction('select-tab', function(step, el, contentRoot) {
+    Guidestar.registerAction('select-tab', function(step, el, contentRoot) {
         var state = getState(this);
         if (!state.currentSidebar) return;
 
@@ -757,7 +757,7 @@
      * select-dropdown: Select a dropdown value by label text.
      * step.value = "label:option" (e.g. "source:file", "format:image")
      */
-    WireframeDemo.registerAction('select-dropdown', function(step, el, contentRoot) {
+    Guidestar.registerAction('select-dropdown', function(step, el, contentRoot) {
         if (!step.value) return;
         var parts = step.value.split(':');
         var targetLabel = parts[0].trim().toLowerCase();
@@ -783,7 +783,7 @@
      * click-button: Click a button by text content.
      * step.value = button label (e.g. "Load", "Create Viewer")
      */
-    WireframeDemo.registerAction('click-button', function(step, el, contentRoot) {
+    Guidestar.registerAction('click-button', function(step, el, contentRoot) {
         if (!step.value) return;
         var target = step.value.toLowerCase();
         var self = this;
@@ -801,7 +801,7 @@
      * viewer-add: Add a new viewer.
      * step.value = "direction:newId" or "direction:newId:parentId"
      */
-    WireframeDemo.registerAction('viewer-add', function(step, el, contentRoot) {
+    Guidestar.registerAction('viewer-add', function(step, el, contentRoot) {
         if (!step.value) return;
         var params = step.value.split(':');
         var direction = params[0] || 'horiz';
@@ -844,7 +844,7 @@
      * viewer-image: Set background image for a viewer.
      * step.value = "viewerId:imagePath"
      */
-    WireframeDemo.registerAction('viewer-image', function(step, el, contentRoot) {
+    Guidestar.registerAction('viewer-image', function(step, el, contentRoot) {
         if (!step.value) return;
         var params = step.value.split(':');
         var viewerId = params[0];
@@ -871,7 +871,7 @@
      * viewer-legend: Set legend layers for a viewer.
      * step.value = "viewerId:layer1|layer2"
      */
-    WireframeDemo.registerAction('viewer-legend', function(step, el, contentRoot) {
+    Guidestar.registerAction('viewer-legend', function(step, el, contentRoot) {
         if (!step.value) return;
         var params = step.value.split(':');
         var viewerId = params[0];
@@ -901,7 +901,7 @@
      * viewer-focus: Visually emphasize a viewer.
      * step.value = viewerId
      */
-    WireframeDemo.registerAction('viewer-focus', function(step, el, contentRoot) {
+    Guidestar.registerAction('viewer-focus', function(step, el, contentRoot) {
         var viewers = contentRoot.querySelectorAll('.jdaviz-viewer');
         viewers.forEach(function(v) { v.classList.remove('focused'); });
         if (step.value) {
@@ -914,7 +914,7 @@
      * viewer-remove: Remove a viewer.
      * step.value = viewerId
      */
-    WireframeDemo.registerAction('viewer-remove', function(step, el, contentRoot) {
+    Guidestar.registerAction('viewer-remove', function(step, el, contentRoot) {
         if (!step.value) return;
         var viewer = contentRoot.querySelector('.jdaviz-viewer[data-viewer-id="' + step.value + '"]');
         if (!viewer) return;
@@ -939,7 +939,7 @@
      * viewer-tool-toggle: Toggle a viewer toolbar tool.
      * step.value = "viewerId:toolName"
      */
-    WireframeDemo.registerAction('viewer-tool-toggle', function(step, el, contentRoot) {
+    Guidestar.registerAction('viewer-tool-toggle', function(step, el, contentRoot) {
         if (!step.value) return;
         var params = step.value.split(':');
         var viewerId = params[0];
@@ -959,7 +959,7 @@
      * select-layer: Select a layer tab in Plot Options.
      * step.value = layer index (e.g. "1")
      */
-    WireframeDemo.registerAction('select-layer', function(step, el, contentRoot) {
+    Guidestar.registerAction('select-layer', function(step, el, contentRoot) {
         var layerIndex = parseInt(step.value, 10) || 0;
         var tabs = contentRoot.querySelectorAll('.jdaviz-layer-tab');
         if (tabs[layerIndex]) {
@@ -973,7 +973,7 @@
      * set-color: Set the color button in Plot Options.
      * step.value = color string (e.g. "#FF0000")
      */
-    WireframeDemo.registerAction('set-color', function(step, el, contentRoot) {
+    Guidestar.registerAction('set-color', function(step, el, contentRoot) {
         var colorBtn = contentRoot.querySelector('.jdaviz-color-btn');
         if (colorBtn && step.value) {
             colorBtn.style.background = step.value;
@@ -984,7 +984,7 @@
     /**
      * open-data-menu: Open the data menu popup.
      */
-    WireframeDemo.registerAction('open-data-menu', function(step, el, contentRoot) {
+    Guidestar.registerAction('open-data-menu', function(step, el, contentRoot) {
         var popup = contentRoot.querySelector('.jdaviz-data-menu-popup');
         if (popup) popup.classList.add('visible');
     });
@@ -994,7 +994,7 @@
      * Re-renders the plugin panels sidebar with the named plugin expanded.
      * step.value = plugin name (e.g. "Gaussian Smooth")
      */
-    WireframeDemo.registerAction('open-panel', function(step, el, contentRoot) {
+    Guidestar.registerAction('open-panel', function(step, el, contentRoot) {
         var state = getState(this);
         state.openPanel = step.value;
         // Re-render the plugins sidebar so the correct plugin panel is expanded
@@ -1008,7 +1008,7 @@
      * Does not open the sidebar — no visible change on init.
      * step.value = plugin name (e.g. "Gaussian Smooth")
      */
-    WireframeDemo.registerAction('set-plugin', function(step, el, contentRoot) {
+    Guidestar.registerAction('set-plugin', function(step, el, contentRoot) {
         getState(this).defaultPlugin = step.value;
     });
 
@@ -1018,7 +1018,7 @@
      * the demo on a single tray (e.g. "plugins", "loaders", "settings").
      * step.value = data-sidebar value to keep enabled (e.g. "plugins")
      */
-    WireframeDemo.registerAction('disable-toolbar-except', function(step, el, contentRoot) {
+    Guidestar.registerAction('disable-toolbar-except', function(step, el, contentRoot) {
         var keep = step.value;
         contentRoot.querySelectorAll('.jdaviz-toolbar-icon[data-sidebar]').forEach(function(icon) {
             if (icon.dataset.sidebar !== keep) {
@@ -1030,7 +1030,7 @@
     /**
      * api-toggle: Toggle the API hints display in the sidebar.
      */
-    WireframeDemo.registerAction('api-toggle', function(step, el, contentRoot) {
+    Guidestar.registerAction('api-toggle', function(step, el, contentRoot) {
         var sidebar = contentRoot.querySelector('.jdaviz-sidebar');
         if (sidebar) sidebar.classList.toggle('api-hints-visible');
         var btn = contentRoot.querySelector('.jdaviz-api-toggle-btn');
@@ -1040,21 +1040,21 @@
     } // end registerAll
 
     // ── Register actions: immediately if controller is loaded, else wait ─
-    if (typeof WireframeDemo !== 'undefined' && WireframeDemo.registerAction) {
+    if (typeof Guidestar !== 'undefined' && Guidestar.registerAction) {
         registerAll();
     } else {
-        document.addEventListener('wireframe-demo-ready', function() {
+        document.addEventListener('guidestar-ready', function() {
             registerAll();
         }, { once: true });
     }
 
     // ── Initialization hook ─────────────────────────────────────────────
     // Apply toolbar icons when any wireframe-demo finishes loading HTML.
-    // This listens for the event dispatched by the docs-wireframe-demo controller.
+    // This listens for the event dispatched by the guidestar controller.
 
-    document.addEventListener('wireframe-demo-loaded', function(e) {
+    document.addEventListener('guidestar-loaded', function(e) {
         if (e.detail && e.detail.container) {
-            var root = e.detail.container.querySelector('.wfd-content');
+            var root = e.detail.container.querySelector('.gs-content');
             if (root && root.querySelector('.jdaviz-toolbar')) {
                 applyToolbarIcons(root);
 

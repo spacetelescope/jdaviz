@@ -11,7 +11,7 @@ jobs:
       models: read
     steps:
       - uses: actions/checkout@v4
-      - uses: spacetelescope/docs-wireframe-demo/.github/actions/wireframe-review@main
+      - uses: spacetelescope/guidestar/.github/actions/wireframe-review@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

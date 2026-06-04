@@ -1,5 +1,5 @@
 /* Jdaviz Wireframe Demo Styles
- * Used with docs-wireframe-demo infrastructure.
+ * Used with guidestar infrastructure.
  * All selectors prefixed with jdaviz- to avoid conflicts.
  */
 
@@ -970,10 +970,10 @@ html[data-theme="light"] .jdaviz-expansion-panel-content.expanded {
 
 /* ── Demo control button theming ─────────────────────────────────── */
 
-[data-wireframe-demo] {
-    --wfd-control-bg: rgba(0, 59, 77, 0.9);
-    --wfd-control-bg-hover: rgba(0, 125, 164, 0.9);
-    --wfd-control-border: 2px solid rgba(255, 255, 255, 0.2);
-    --wfd-control-radius: 8px;
-    --wfd-control-size: 44px;
+[data-guidestar] {
+    --gs-control-bg: rgba(0, 59, 77, 0.9);
+    --gs-control-bg-hover: rgba(0, 125, 164, 0.9);
+    --gs-control-border: 2px solid rgba(255, 255, 255, 0.2);
+    --gs-control-radius: 8px;
+    --gs-control-size: 44px;
 }

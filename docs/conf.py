@@ -159,7 +159,7 @@ dev = "dev" in release
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2])
 
-extensions += ['sphinx.ext.extlinks', 'sphinx_design', 'docs_wireframe_demo',  # noqa: F405
+extensions += ['sphinx.ext.extlinks', 'sphinx_design', 'guidestar',  # noqa: F405
                'jdaviz.ext.wireframe']
 
 # get the most recent git commit hash at build time:

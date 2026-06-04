@@ -86,7 +86,7 @@ test = [
 docs = [
     "sphinx-astropy[confv2]>=1.9.1",
     "sphinx_design",
-    "docs-wireframe-demo @ git+https://github.com/kecnry/docs-wireframe-demo.git@style-improvements"
+    "guidestar @ git+https://github.com/spacetelescope/guidestar.git"
 ]
 roman = [
     "roman_datamodels>=0.26.0",
