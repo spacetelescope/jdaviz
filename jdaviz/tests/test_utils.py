@@ -12,7 +12,8 @@ from jdaviz.core.loaders import SpectrumImporter
 from jdaviz.utils import (alpha_index, download_uri_to_path,
                           get_cloud_fits, get_cloud_asdf, cached_uri, escape_brackets,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
-                          create_data_hash, parallelize_calculation)
+                          create_data_hash, parallelize_calculation,
+                          in_ra_comps, in_dec_comps)
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -241,6 +242,37 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
         assert match_result == expected
 
 
+def test_wildcard_match_string_in_multiselect(deconfigged_helper, spectrum1d):
+    """
+    Test that a plain string (no wildcards) in multiselect mode is not iterated
+    over as characters.
+
+    This test verifies the fix for the issue where passing a string to a dataset parameter
+    in multiselect mode would iterate over characters instead of treating it as a single item.
+    """
+    # Load multiple datasets
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label="dataset1")
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label="dataset2")
+
+    # Use Gaussian Smooth plugin which has a dataset selector
+    gs = deconfigged_helper.plugins['Gaussian Smooth']
+
+    # Get the internal SelectPluginComponent to test wildcard_match behavior
+    dataset_selector = gs._obj.dataset
+
+    # Ensure multiselect is initially disabled (will be enabled by wildcard_match if needed)
+    dataset_selector.multiselect = False
+
+    # Pass a plain string (no wildcards) - should not iterate over characters
+    match_result = wildcard_match(dataset_selector, 'dataset1')
+    assert match_result == 'dataset1'  # String should be returned as-is
+
+    # Test that wildcard_match also handles lists properly
+    dataset_selector.multiselect = False  # Reset
+    match_result = wildcard_match(dataset_selector, ['dataset1', 'dataset2'])
+    assert match_result == ['dataset1', 'dataset2']
+
+
 @pytest.mark.parametrize('n_cpu', [1, 2, None])
 class TestParallelizeCalculation:
     """
@@ -428,3 +460,25 @@ def test_create_data_hash_none():
     assert create_data_hash([None, None, None]) is None
     assert create_data_hash(np.array([])) is None
     assert create_data_hash(np.array([None, None, None])) is None
+
+
+def test_coord_column():
+    """Test regex for in_ra_comps and in_dec_comps utilities"""
+
+    variations_to_pass = []
+    for coordinate_name in ('ra', 'dec'):
+        variations_to_pass.append([coordinate_name.upper(), coordinate_name + '_gaia',
+                                   'source' + coordinate_name, 'world ' + coordinate_name,
+                                   coordinate_name + '2000'])
+
+    # Convert to list of paired tuples, i.e. [(ra1, dec1), (ra2, dec2), ...]
+    variations_to_pass = list(zip(*variations_to_pass))
+
+    for (ra, dec) in variations_to_pass:
+        assert in_ra_comps(ra)
+        assert in_dec_comps(dec)
+
+    variations_to_fail = ['radius', 'galaxy', 'deconvolve']
+    for v in variations_to_fail:
+        assert not in_ra_comps(v)
+        assert not in_dec_comps(v)

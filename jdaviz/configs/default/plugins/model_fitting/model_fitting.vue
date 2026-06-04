@@ -8,7 +8,7 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
-    <v-row v-if="config=='cubeviz'">
+    <v-row v-if="(config=='cubeviz' || config=='deconfigged') && has_cube_data">
       <plugin-switch
         :value.sync="cube_fit"
         label="Cube Fit"
@@ -24,7 +24,7 @@
     <plugin-dataset-select
       :items="dataset_items"
       :selected.sync="dataset_selected"
-      :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1 || api_hints_enabled"
+      :show_if_single_entry="['mosviz', 'cubeviz', 'deconfigged'].indexOf(config) !== -1 || api_hints_enabled"
       label="Data"
       api_hint="plg.dataset ="
       :api_hints_enabled="api_hints_enabled"
@@ -341,7 +341,7 @@
         :disabled = "dataset_selected === ''"
         @click:action="apply"
       >
-        <div v-if="config!=='cubeviz' || !cube_fit">
+        <div v-if="(config!=='cubeviz' && config!=='deconfigged') || !cube_fit">
           <v-row>
             <plugin-switch
               :value.sync="residuals_calculate"

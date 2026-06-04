@@ -73,6 +73,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         self._plugin_description = 'Smooth data with a Gaussian kernel.'
 
         if self._app.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/gaussian_smooth.html'  # noqa
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     def _get_supported_viewers(self):
@@ -260,11 +261,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         # Copy 3D WCS from input cube.
         data = self.dataset.selected_dc_item
-        # Similar to coords_info logic.
-        if '_orig_spec' in getattr(data, 'meta', {}):
-            w = data.meta['_orig_spec'].wcs
-        else:
-            w = data.coords
+        w = data.coords
 
         # Create a new cube with the old metadata. Note that astropy
         # convolution generates values for masked (NaN) data.

@@ -1,7 +1,9 @@
 import numpy as np
 import pytest
+import time
 from pathlib import Path
 from itertools import product
+from unittest.mock import patch
 
 from astropy import units as u
 from astropy.table import Table
@@ -118,6 +120,145 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     data[3] = np.arange(10)
     spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
     specviz2d_helper.load_data(spectrum2d)
+
+
+def test_spectrum3d_deselected_extensions(deconfigged_helper):
+    """Test that deselecting uncertainty/mask extensions doesn't cause errors."""
+    from astropy.nddata import StdDevUncertainty
+
+    # Create a 3D spectrum with uncertainty and mask
+    flux_data = np.ones((5, 10, 10)) * u.Jy
+    uncertainty_data = StdDevUncertainty(np.ones((5, 10, 10)) * 0.1)
+    mask_data = np.zeros((5, 10, 10), dtype=bool)
+    spectral_axis = np.arange(5) * u.um
+
+    spectrum3d = Spectrum(
+        flux=flux_data,
+        spectral_axis=spectral_axis,
+        uncertainty=uncertainty_data,
+        mask=mask_data
+    )
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = spectrum3d
+    ldr.format = '3D Spectrum'
+
+    # Verify extensions are available
+    assert 'spectrum.uncertainty' in ldr.importer.unc_extension.choices
+    assert 'spectrum.mask' in ldr.importer.mask_extension.choices
+
+    # Deselect uncertainty and mask extensions
+    ldr.importer.unc_extension.selected = ''
+    ldr.importer.mask_extension.selected = ''
+
+    # This should not raise an AttributeError
+    ldr.load()
+
+    # Verify only flux cube was loaded (plus auto-extracted 1d spectrum)
+    assert len(deconfigged_helper._app.data_collection) == 2
+    # The first should be the flux cube, the second should be the auto-extracted spectrum
+    assert '3D Spectrum' in deconfigged_helper._app.data_collection[0].label
+
+    # Verify no uncertainty cube was created
+    unc_labels = [d.label for d in deconfigged_helper._app.data_collection if 'UNC' in d.label]
+    assert len(unc_labels) == 0
+
+    # Verify no mask cube was created
+    mask_labels = [d.label for d in deconfigged_helper._app.data_collection if 'MASK' in d.label]
+    assert len(mask_labels) == 0
+
+
+def test_spectrum3d_fits_no_flux_selected(deconfigged_helper):
+    """Test error handling when FLUX extension is deselected for FITS input."""
+    # Create a FITS HDUList with FLUX, ERR, and DQ extensions
+    flux_data = np.ones((5, 10, 10), dtype=np.float32)
+    err_data = np.ones((5, 10, 10), dtype=np.float32) * 0.1
+    dq_data = np.zeros((5, 10, 10), dtype=np.int32)
+
+    hdul = fits.HDUList([
+        fits.PrimaryHDU(),
+        fits.ImageHDU(flux_data, name='FLUX'),
+        fits.ImageHDU(err_data, name='ERR'),
+        fits.ImageHDU(dq_data, name='DQ')
+    ])
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdul
+    ldr.format = '3D Spectrum'
+
+    # Verify all extensions are available
+    assert '1: FLUX' in ldr.importer.extension.choices
+    assert '2: ERR' in ldr.importer.unc_extension.choices
+
+    # Deselect FLUX (primary) extension
+    ldr.importer.extension.selected = ''
+    # ERR should still be selected
+    assert ldr.importer.unc_extension.selected == '2: ERR'
+
+    # Verify the import button is disabled with appropriate message
+    assert ldr.importer._obj.import_disabled_msg == "No primary data extension selected. Please select a FLUX extension."  # noqa
+
+    # Attempting to import via API should raise ValueError with the disabled message
+    with pytest.raises(ValueError, match="No primary data extension selected"):
+        ldr.load()
+
+
+def test_spectrum3d_load_flux_then_err_only(deconfigged_helper, image_cube_hdu_obj):
+    """Test loading ERR extension as primary data when FLUX is deselected."""
+    # Use the existing fixture which has FLUX, ERR, and MASK extensions
+    hdul = image_cube_hdu_obj
+
+    # Load FLUX without uncertainty
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdul
+    ldr.format = '3D Spectrum'
+
+    # Verify FLUX is available but ERR is not in extension choices
+    # (due to hdu_is_valid_flux filter)
+    assert '1: FLUX' in ldr.importer.extension.choices
+    assert '2: ERR' not in ldr.importer.extension.choices
+
+    # Load FLUX without uncertainty
+    ldr.importer.extension.selected = '1: FLUX'
+    ldr.importer.unc_extension.selected = ''
+    ldr.load()
+
+    initial_count = len(deconfigged_helper._app.data_collection)
+    assert initial_count > 0
+
+    # After loading flux, deselect FLUX while unc_extension is still ''.
+    # With a flux cube already loaded, import_disabled_msg should be cleared
+    # (the "select a FLUX extension" alert is not applicable when a flux cube
+    # is already in the data collection).
+    ldr.importer.extension.selected = ''
+    # unc_extension is still '' from the setup above
+    assert ldr.importer.unc_extension.selected == ''
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Selecting ERR in unc_extension should keep import enabled
+    ldr.importer.unc_extension.selected = '2: ERR'
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Now try to load only ERR as primary data (flux extension deselected).
+    # The auto-generated data_label.default must have changed to reflect the
+    # ERR extension so the second load does not silently overwrite the first.
+    ldr.importer.mask_extension.selected = ''  # Deselect mask too
+    flux_label = deconfigged_helper._app.data_collection[0].label
+    assert ldr.importer._obj.data_label_value != flux_label, (
+        f"data_label_value should differ from flux label, "
+        f"got: {ldr.importer._obj.data_label_value}"
+    )
+    expected_err_label = ldr.importer._obj.data_label_value  # e.g. '3D Spectrum [ERR]'
+
+    # This should now work - ERR can be loaded as primary data
+    ldr.load()
+
+    # No warning should be shown after a successful import
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Verify ERR was loaded as a *new* entry in the data collection
+    assert len(deconfigged_helper._app.data_collection) > initial_count
+    assert expected_err_label in [d.label for d in deconfigged_helper._app.data_collection]
 
 
 @pytest.mark.remote_data
@@ -423,6 +564,12 @@ def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
 
     ldr.observation_table.select_rows(0)
 
+    # file table is now populated asynchronously in a background thread;
+    # poll briefly until it finishes
+    deadline = time.time() + 30
+    while not ldr._obj.file_table_populated and time.time() < deadline:
+        time.sleep(0.1)
+
     assert ldr._obj.file_table_populated is True
     assert ldr._obj.get_selected_url() is None
 
@@ -433,6 +580,15 @@ def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
     # but let's at least make sure the download was successful
     # and points to a local temporary cache file
     assert len(ldr._obj.output) > 0
+
+
+@pytest.mark.remote_data
+def test_failed_astroquery(deconfigged_helper):
+    ldr = deconfigged_helper.loaders['astroquery']
+    ldr.source = "Bad Object"
+    ldr.query_archive()
+    snackbar_msg = "Unable to resolve source coordinates: Bad Object"
+    assert deconfigged_helper.plugins['Logger'].history[-1]['text'] == snackbar_msg
 
 
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
@@ -449,6 +605,85 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     assert len(loader.format.choices) > 0
 
     loader.load()
+
+
+# ── Server-side pagination / resolver threading tests ────────────────────────
+
+def test_file_table_server_pagination_enabled(deconfigged_helper):
+    """Resolver sets server_pagination=True on the file_table at init."""
+    ldr = deconfigged_helper.loaders['object']
+    assert ldr._obj.file_table.server_pagination is True
+
+
+def test_fetch_and_populate_file_table_success(deconfigged_helper):
+    """_fetch_and_populate_file_table populates file table via set_all_items_from_table."""
+    ldr = deconfigged_helper.loaders['object']
+    resolver = ldr._obj
+
+    mock_file_table = Table({'name': ['file1.fits', 'file2.fits'],
+                             'location': ['http://a.fits', 'http://b.fits']})
+
+    with patch.object(resolver, '_get_product_list', return_value=mock_file_table), \
+         patch.object(resolver, '_parsed_input_to_file_table', return_value=mock_file_table):
+        resolver._fetch_and_populate_file_table(['dataset1'])
+
+    assert resolver.file_table_populated is True
+    assert resolver.file_table.server_items_length == 2
+    assert len(resolver.file_table._all_items) == 2
+    assert resolver.file_table.selected_rows == []
+
+
+def test_fetch_and_populate_file_table_no_products(deconfigged_helper):
+    """_fetch_and_populate_file_table handles no products by clearing the table."""
+    ldr = deconfigged_helper.loaders['object']
+    resolver = ldr._obj
+
+    # Pre-populate so we can verify it gets cleared
+    resolver.file_table._all_items = [{'name': 'old.fits'}]
+    resolver.file_table.server_items_length = 1
+    resolver.file_table_populated = True
+
+    with patch.object(resolver, '_get_product_list', return_value=None), \
+         patch.object(resolver, '_parsed_input_to_file_table', return_value=None):
+        resolver._fetch_and_populate_file_table(['dataset1'])
+
+    assert resolver.file_table_populated is False
+
+
+def test_fetch_and_populate_file_table_resets_selection(deconfigged_helper):
+    """_fetch_and_populate_file_table clears previous row selection before populating."""
+    ldr = deconfigged_helper.loaders['object']
+    resolver = ldr._obj
+
+    # Simulate a pre-existing selection
+    resolver.file_table.selected_rows = [{'name': 'old.fits', 'location': 'http://old.fits'}]
+
+    mock_file_table = Table({'name': ['new.fits'], 'location': ['http://new.fits']})
+
+    with patch.object(resolver, '_get_product_list', return_value=mock_file_table), \
+         patch.object(resolver, '_parsed_input_to_file_table', return_value=mock_file_table):
+        resolver._fetch_and_populate_file_table(['dataset1'])
+
+    assert resolver.file_table.selected_rows == []
+
+
+def test_on_observation_select_no_selection_clears_file_table(deconfigged_helper):
+    """on_observation_select_changed clears file table when no observation is selected."""
+    ldr = deconfigged_helper.loaders['object']
+    resolver = ldr._obj
+
+    # Pre-populate file table state
+    resolver.file_table._all_items = [{'name': 'file.fits'}]
+    resolver.file_table.server_items_length = 1
+    resolver.file_table_populated = True
+
+    # Ensure no rows are selected in the observation table
+    resolver.observation_table.selected_rows = []
+    resolver.on_observation_select_changed()
+
+    assert resolver.file_table._all_items == []
+    assert resolver.file_table.server_items_length == 0
+    assert resolver.file_table_populated is False
 
 
 @pytest.mark.parametrize('order', ([0, 1, 2], [0, 2, 1], [2, 0, 1], [2, 1, 0], [1, 2, 0]))
@@ -804,7 +1039,7 @@ def test_load_cube_no_dq_in_viewer(deconfigged_helper):
 
     deconfigged_helper.load(hdul, format='3D Spectrum', dq_add_to_flux_viewer=False)
 
-    # make sure the flux viewer '3D Spectrum' only has one dataset loaded
+    # make sure the flux viewer only has one dataset loaded
     data_in_flux_viewer = deconfigged_helper.viewers['3D Spectrum'].data_menu.data_labels_loaded
     assert len(data_in_flux_viewer) == 1
     assert '3D Spectrum' in data_in_flux_viewer

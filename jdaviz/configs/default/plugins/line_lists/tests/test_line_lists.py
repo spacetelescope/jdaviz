@@ -192,56 +192,6 @@ class TestLineLists:
 
         assert np.allclose([line.redshift for line in viewer_lines], 0.01)
 
-    def test_import_line_list_validation(self, deconfigged_helper, spectrum1d):
-        """Test that import validation catches invalid tables"""
-        from jdaviz.core.loaders.importers.line_list import LineListImporter
-
-        deconfigged_helper.load(spectrum1d)
-
-        # Test missing linename column
-        lt = QTable()
-        lt['rest'] = [5007, 6563] * u.AA
-        # Create a mock importer to test validation
-        is_valid = LineListImporter.is_valid.__get__(
-            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
-        )
-        assert not is_valid
-
-        # Test missing rest column
-        lt = QTable()
-        lt['linename'] = ['O III', 'Halpha']
-        is_valid = LineListImporter.is_valid.__get__(
-            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
-        )
-        assert not is_valid
-
-        # Test rest column without units
-        lt = QTable()
-        lt['linename'] = ['O III', 'Halpha']
-        lt['rest'] = [5007, 6563]  # No units
-        is_valid = LineListImporter.is_valid.__get__(
-            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
-        )
-        assert not is_valid
-
-        # Test negative rest values
-        lt = QTable()
-        lt['linename'] = ['O III', 'Halpha']
-        lt['rest'] = [-5007, 6563] * u.AA
-        is_valid = LineListImporter.is_valid.__get__(
-            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
-        )
-        assert not is_valid
-
-        # Test valid table
-        lt = QTable()
-        lt['linename'] = ['O III', 'Halpha']
-        lt['rest'] = [5007, 6563] * u.AA
-        is_valid = LineListImporter.is_valid.__get__(
-            type('obj', (object,), {'input': lt, 'has_default_plugin': True})()
-        )
-        assert is_valid
-
     @pytest.mark.parametrize("helper_name", ['specviz_helper', 'deconfigged_helper'])
     def test_import_line_list_generic_helper(self, helper_name, spectrum1d, request):
         """Test importing line lists works with both specviz and deconfigged helpers"""

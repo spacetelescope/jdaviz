@@ -75,7 +75,4 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
         new_sc = sc.with_spectral_axis_and_flux_units(
             target_wave_unit, target_flux_unit, flux_equivalencies=_eqv_flux_to_sb_pixel())
 
-    if target_wave_unit is not None:
-        new_sc.meta['_orig_spec'] = sc  # Need this for later
-
     return new_sc

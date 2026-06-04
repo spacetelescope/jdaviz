@@ -1,6 +1,8 @@
 import os
+import requests
 
 from astropy.coordinates import SkyCoord
+from astropy.coordinates.name_resolve import NameResolveError
 from astropy.table import Table, QTable
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.io import fits
@@ -50,12 +52,12 @@ def _make_catalog_xy_radec(with_units=True, colnames=None):
 
 def _make_catalog_string_coord_columns():
     # complete nonsense coordinates, just care about parsing the units
-    ra = ['5° 55′ 55″', '5° 55′ 55″', '5° 55′ 55″']
-    dec = ['4° 44′ 44″', '4° 44′ 44″', '4° 44′ 44″']
-    x = ['1', '2', '3']
-    y = ['4', '5', '6']
-    obj_id = ['source1', 'source2', 'source3']
-    flux = [10, 20, 30] * u.Jy
+    ra = ['5° 55′ 55″', '5° 55′ 55″', '5° 55′ 55″', '09h59m46.18778822s']
+    dec = ['4° 44′ 44″', '4° 44′ 44″', '4° 44′ 44″', '+02d11m32.14597268s']
+    x = ['1', '2', '3', '4']
+    y = ['4', '5', '6', '7']
+    obj_id = ['source1', 'source2', 'source3', 'source4']
+    flux = [10, 20, 30, 40] * u.Jy
 
     return QTable(data=[ra, dec, x, y, obj_id, flux],
                   names=['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux'])
@@ -351,10 +353,23 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
     ldr.source = 'M4'
     ldr.telescope = 'Gaia'
     ldr.max_results = 10
-    ldr.query_archive()
+    try:
+        ldr.query_archive()
+    except NameResolveError as exc:
+        # Sesame can be unreachable in CI (SSL timeout / redirect failure); skip instead of fail.
+        pytest.skip(f"Name resolution failed (Sesame unavailable): {exc}")
+    except requests.exceptions.HTTPError as exc:
+        msg = str(exc)
+        if '408' in msg or 'timeout' in msg.lower() or 'aborted' in msg.lower():
+            pytest.skip(f"Remote archive query timed out: {exc}")
+        raise
+    except requests.exceptions.RequestException as exc:
+        pytest.skip(f"Transient remote archive failure: {exc}")
     assert 'Catalog' in ldr.format.choices
     ldr.format = 'Catalog'
 
+    ldr.importer.col_ra = 'ra'
+    ldr.importer.col_dec = 'dec'
     ldr.importer.col_id = 'source_id'
     ldr.importer.col_other = ['parallax', 'pm', 'bp_rp', 'phot_rp_mean_mag']
     ldr.importer.viewer.create_new = 'Scatter'
@@ -402,7 +417,21 @@ def test_astroquery_jwst_hst(deconfigged_helper, telescope):
     ldr.source = 'M4'
     ldr.telescope = telescope
     ldr.max_results = 10
-    ldr.query_archive()
+    try:
+        ldr.query_archive()
+    except requests.exceptions.HTTPError as exc:
+        msg = str(exc)
+        if '408' in msg or 'timeout' in msg.lower() or 'aborted' in msg.lower():
+            pytest.skip(f"Remote archive query timed out: {exc}")
+        raise
+    except requests.exceptions.RequestException as exc:
+        pytest.skip(f"Transient remote archive failure: {exc}")
+
+    # query_archive() silently swallows NameResolveError (broadcast + cleared output state), so
+    # _output stays None when name resolution fails without raising. Skip rather than asserting
+    # False.
+    if ldr._obj._output is None:
+        pytest.skip("Name resolution or MAST query failed silently (Sesame unavailable)")
 
     assert ldr._obj.parsed_input_is_query is True
     assert ldr.treat_table_as_query is True

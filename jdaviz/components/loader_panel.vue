@@ -27,7 +27,7 @@
 
 <script>
 module.exports = {
-  props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'server_is_remote', 'disabled_loaders', 'hide_resolver'],
+  props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'server_is_remote', 'disabled_loaders', 'hide_resolver', 'in_notebook'],
   computed: {
     loader_items_filtered() {
       var has_api_support = this.checkNotebookContext();
@@ -67,7 +67,8 @@ module.exports = {
     checkNotebookContext() {
       this.notebook_context = document.getElementById("ipython-main-app")
         || document.querySelector('.jp-LabShell')
-        || document.querySelector(".lm-Widget#main"); /* Notebook 7 */
+        || document.querySelector(".lm-Widget#main") /* Notebook 7 */
+        || this.in_notebook;
       return this.notebook_context;
     },
   }

@@ -548,3 +548,20 @@ def test_all_nan_uncert_subset(specviz_helper):
     # # and that this value is correctly set to false, even though there IS
     # # a mismatch, since its the entire array it will be reset
     assert plugin._obj.non_finite_uncertainty_mismatch is True
+
+
+def test_cube_fit_toggle_deconfigged(deconfigged_helper, spectrum1d_cube, spectrum1d):
+    deconfigged_helper.load(spectrum1d_cube, data_label='cube')
+    deconfigged_helper.load(spectrum1d)
+
+    plg = deconfigged_helper.plugins['Model Fitting']
+    assert plg._obj.has_cube_data
+
+    plg.cube_fit = True
+
+    data_menu = deconfigged_helper.viewers['3D Spectrum'].data_menu
+    data_menu.layer.selected = ['cube']
+    data_menu.remove_from_app()
+
+    assert plg._obj.has_cube_data is False
+    assert plg.cube_fit is False

@@ -31,7 +31,7 @@ from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_conversion_general,
                                                handle_squared_flux_unit_conversions)
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.utils import PRIHDR_KEY
+from jdaviz.utils import PRIHDR_KEY, _get_celestial_wcs
 
 __all__ = ['SimpleAperturePhotometry']
 
@@ -137,6 +137,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Perform aperture photometry for drawn regions.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/aperture_photometry.html'  # noqa
 
         self.dataset.add_filter('is_image_or_flux_cube')
 
@@ -241,9 +243,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.display_unit == '':
             return False
 
-        # plugin supports all images in imviz and deconfigged as well
-        # as 1d collapsed cubes from cubeviz
-        if self.is_image and self.config in ('imviz', 'deconfigged', 'cubeviz'):
+        # plugin supports all images in deconfigged as well as 1d collapsed cubes in cubeviz
+        if self.is_image and self.config in ('deconfigged', 'cubeviz'):
             return True
 
         # cubes are supported in cubeviz and deconfigged
@@ -469,7 +470,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # For counts conversion, PHOTFLAM is used to convert "counts" to flux manually,
             # which is the opposite of JWST, so we just do not do it here.
             instrument = meta.get('INSTRUME', '').lower()
-            detector = meta.get('DETECTOR', '').lower()
+            detector = str(meta.get('DETECTOR', '')).lower()
             if instrument == 'acs':
                 if detector == 'wfc':
                     defaults['pixel_area'] = 0.05 * 0.05
@@ -608,11 +609,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     comp_data = comp.data[0, :, :]
                 else:
                     comp_data = comp.data[:, :, 0].T
-            # Similar to coords_info logic.
-            if '_orig_spec' in getattr(data, 'meta', {}):
-                w = data.meta['_orig_spec'].wcs.celestial
-            else:
-                w = data.coords.celestial
+            w = _get_celestial_wcs(data.coords)
         else:  # "imviz"
             comp_data = comp.data  # ny, nx
             w = data.coords
@@ -808,11 +805,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 comp_data = comp.data[self._cube_slice_ind, :, :]
             else:
                 comp_data = comp.data[:, :, self._cube_slice_ind].T
-            # Similar to coords_info logic.
-            if '_orig_spec' in getattr(data, 'meta', {}):
-                w = data.meta['_orig_spec'].wcs
-            else:
-                w = data.coords
+            w = data.coords
         else:  # "imviz"
             comp_data = comp.data  # ny, nx
             w = data.coords
@@ -910,14 +903,24 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         rawsum = phot_table['sum'][0]
 
         if include_pixarea_fac:
+            if self._has_display_unit_support:
+                display_solid_angle_unit = u.Unit(self.display_solid_angle_unit)
+            else:
+                if comp.units and check_if_unit_is_per_solid_angle(u.Unit(comp.units)):
+                    display_solid_angle_unit = check_if_unit_is_per_solid_angle(u.Unit(comp.units), return_unit=True)  # noqa: E501
+                else:
+                    # this scenario should not be encountered since 'include_pixarea_fac'
+                    # is True only if data or display unit is surface brightness, but just
+                    # to be safe
+                    m = "Can't apply pixel area factor to data that is not in surface brightness units."  # noqa: E501
+                    self.hub.broadcast(SnackbarMessage(m, color='warning', sender=self))
+                    include_pixarea_fac = False
+
+        if include_pixarea_fac:
             # convert pixarea, which is in arcsec2/pix2 to the display solid angle unit / pix2
 
             if self._has_display_unit_support:
                 display_solid_angle_unit = u.Unit(self.display_solid_angle_unit)
-
-            else:
-                raise NotImplementedError(
-                    f"Unsupported config {self.config} for aperture photometry.")
 
             # if angle unit is pix2, pixarea should be 1 pixel2 per pixel2
             if display_solid_angle_unit == PIX2:
@@ -1152,7 +1155,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 tmp.append({'function': key, 'result': f'{x:.3f}', 'unit': unit})
             elif key == 'slice_wave':
                 if self.is_cube:
-                    tmp.append({'function': key, 'result': f'{self._cube_wave.value:.4e}', 'unit': getattr(self._cube_wave, 'unit', '-')})  # noqa: E501
+                    tmp.append({'function': key, 'result': f'{self._cube_wave.value:.4e}', 'unit': str(getattr(self._cube_wave, 'unit', '-'))})  # noqa: E501
                 else:
                     tmp.append({'function': key, 'result': np.nan, 'unit': '-'})
             else:

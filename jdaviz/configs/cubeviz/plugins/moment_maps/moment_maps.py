@@ -92,6 +92,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Create a 2D image from a data cube.'
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/moment_maps.html'  # noqa
 
         self.moment = None
 
@@ -272,10 +274,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                              f"moment {self.n_moment}")
 
         if self.continuum.selected == 'None':
-            if "_orig_spec" in self.dataset.selected_obj.meta:
-                cube = self.dataset.selected_obj.meta["_orig_spec"]
-            else:
-                cube = self.dataset.selected_obj
+            cube = self.dataset.selected_obj
         else:
             _, _, cube = self._get_continuum(self.continuum_dataset,
                                              self.spectral_subset,
@@ -304,11 +303,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         # Extract 2D WCS from input cube.
         data = self.dataset.selected_dc_item
-        # Similar to coords_info logic.
-        if '_orig_spec' in getattr(data, 'meta', {}):
-            w = data.meta['_orig_spec'].wcs
-        else:
-            w = data.coords
+        w = data.coords
 
         # Convert spectral axis to velocity units if desired output is in velocity
         if n_moment > 0 and self.output_unit_selected.lower().startswith("velocity"):

@@ -94,6 +94,9 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract a ramp from a ramp cube.'
 
+        if self.config == 'deconfigged':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/ramp_extraction.html'  # noqa
+
         self.dataset.filters = ['is_ramp_group_cube']
 
         # TODO: in the future this could be generalized with support in SelectPluginComponent

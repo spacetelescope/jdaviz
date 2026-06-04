@@ -138,13 +138,14 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                 return isinstance(viewer, tuple(classes))
             return viewer_filter
 
-        # FLUX CUBE
-        if self.default_data_label_from_resolver:
-            self.data_label.default = self.default_data_label_from_resolver
-        elif self.config == 'cubeviz':
-            self.data_label.default = '3D Spectrum [FLUX]'
-        else:
-            self.data_label.default = '3D Spectrum'
+        # FLUX CUBE — set the initial default label and register instance-level
+        # observers so _update_data_label_default fires when the user changes
+        # extension selections, but NOT during super().__init__() setup.
+        self._update_data_label_default()
+        self.extension.add_observe(self.extension._plugin_traitlets['selected'],
+                                   lambda _: self._update_data_label_default())
+        self.unc_extension.add_observe(self.unc_extension._plugin_traitlets['selected'],
+                                       lambda _: self._update_data_label_default())
 
         if self.config == 'cubeviz':
             self.viewer.selected = ['flux-viewer']
@@ -297,6 +298,12 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             self._check_extension_selected()
             return
 
+        # If extension is cleared/empty, we're only loading uncertainty/mask, not flux
+        # So skip the flux cube limit check
+        if hasattr(self, 'extension') and not self.extension.selected:
+            self._check_extension_selected()
+            return
+
         loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
 
         # Check if the flux cube reference exists and is still in the data collection
@@ -312,22 +319,67 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # No flux cube loaded or it was removed, check extension selection instead
             self._check_extension_selected()
 
+    def _compute_default_data_label(self):
+        """
+        Return the appropriate ``data_label.default`` for the current extension
+        selection without storing any extra state.
+
+        Normal case (flux extension selected, or no extension selected yet):
+          cubeviz, no resolver label  -> ``'3D Spectrum [FLUX]'``
+          cubeviz, resolver label     -> ``'<resolver_label>'`` (unchanged)
+          deconfigged                 -> ``'<base>'``
+
+        ERR-as-primary case (extension empty, unc_extension non-empty):
+          both configs -> ``'<base> [<UNC_EXTNAME>]'``
+
+        This ensures that loading a non-flux extension as primary data (e.g.
+        ERR-only after a flux cube is already loaded) gets a unique default
+        label and does not silently overwrite the previously-loaded flux cube.
+
+        The *base* is taken from the resolver (e.g. the filename stem) when
+        available, falling back to ``'3D Spectrum'``.
+        """
+        base = self.default_data_label_from_resolver or '3D Spectrum'
+        # ERR-as-primary: extension is deselected but unc_extension is selected
+        if (hasattr(self, 'extension') and not self.extension.selected
+                and hasattr(self, 'unc_extension')
+                and self.unc_extension.selected not in ('', 'None')):
+            unc_name = self.unc_extension.selected.split(': ', 1)[-1]
+            return f"{base} [{unc_name}]"
+        # Normal case: only append [FLUX] when there is no resolver-derived label
+        # (i.e. when falling back to '3D Spectrum'), matching the original behavior.
+        if self.config == 'cubeviz' and not self.default_data_label_from_resolver:
+            return f"{base} [FLUX]"
+        return base
+
+    def _update_data_label_default(self, change={}):
+        """Keep ``data_label.default`` in sync with the current extension selection."""
+        self.data_label.default = self._compute_default_data_label()
+
     @observe('extension_selected')
     def _check_extension_selected(self, change={}):
         """
         Check if an extension is selected. If not, disable import with a message.
-        This is only checked if no flux cube is already loaded.
+        The message is only shown when no flux cube has been loaded yet.
         """
-        loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
-        if loaded_flux_cube is not None and loaded_flux_cube in self._app.data_collection:
-            # Flux cube message takes precedence
-            return
-
-        # For non-multiselect, extension.selected is a string (not a list), so check if empty/falsy
         if hasattr(self, 'extension') and not self.extension.selected:
-            self.import_disabled_msg = "Please select an extension to import."
+            loaded_flux_cube = getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None)
+            flux_cube_in_dc = (
+                loaded_flux_cube is not None and
+                loaded_flux_cube in self._app.data_collection
+            )
+            if flux_cube_in_dc:
+                # A 3D cube is present — clear any disabled message.
+                self.import_disabled_msg = ""
+            else:
+                self.import_disabled_msg = (
+                    "No primary data extension selected. Please select a FLUX extension."
+                )
         else:
-            self.import_disabled_msg = ""
+            # Extension is selected — only clear if the message is about extension selection,
+            # not if it is about the flux-cube load limit.
+            if "No primary data extension selected" in self.import_disabled_msg:
+                self.import_disabled_msg = ""
 
     @observe('viewer_selected')
     def _update_dq_add_to_flux_viewer(self, change={}):
@@ -338,6 +390,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         to the data collection.
         """
         if self.config == 'deconfigged':
+            # Check if viewer component exists (may not during initialization)
+            if not hasattr(self, 'viewer'):
+                return
             # Check if viewer.selected is empty (could be list or string depending on multiselect)
             v = self.viewer.selected
             has_viewer = bool(v) if isinstance(v, str) else len(v) > 0
@@ -368,22 +423,14 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             expose += ['dq_extension']
         return ImporterUserApi(self, expose)
 
-    @property
-    def is_valid(self):
+    def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
-            return False
-        try:
-            if self.spectrum.flux.ndim != 3:
-                return False
-        except Exception:
-            return False
-
-        try:
-            self.output
-        except Exception:
-            return False
-        return True
+            return 'Importer only supported in deconfigged and cubeviz'
+        if self.spectrum.flux.ndim != 3:
+            return 'Spectrum flux must be 3D.'
+        self.output
+        return ''
 
     @observe('data_label_value', 'function_selected')
     def _data_label_changed(self, msg={}):
@@ -443,7 +490,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         if not getattr(self._app._jdaviz_helper, '_loaded_flux_cube', None):
             self._app._jdaviz_helper._loaded_flux_cube = self._app.data_collection[data_label]
 
-        if self.has_unc and not self.flux_only:
+        if self.has_unc and not self.flux_only and self.output.uncertainty is not None:
             # TODO: detect if uncertainty exists and hide section from UI
             uncert = Spectrum(spectral_axis=self.output.spectral_axis,
                               flux=self.output.uncertainty.represent_as(StdDevUncertainty).quantity,
@@ -456,7 +503,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # TODO: this will need to be removed when removing restriction of a single flux cube
             self._app._jdaviz_helper._loaded_uncert_cube = self._app.data_collection[unc_data_label]
 
-        if self.has_mask and not self.flux_only:
+        if self.has_mask and not self.flux_only and self.output.mask is not None:
             mask = Spectrum(spectral_axis=self.output.spectral_axis,
                             flux=self.output.mask * u.dimensionless_unscaled,
                             wcs=self.output.wcs,
@@ -495,13 +542,18 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         self._app.hub.broadcast(msg)
 
         if ext is not None:
-            self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
+            self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer,
+                                        data_type='1D Spectrum')
 
             if self.has_dq and not self.flux_only:
                 dq_hdu = self.dq_extension.selected_obj
 
+                # Skip DQ loading if no DQ extension was selected
+                if dq_hdu is None:
+                    return
+
                 # for DQ components, map zeros to nans
-                # so that they are not displayed in the DQ colormap
+                # so that they are not displayed in the colormap
                 dq_data = np.float32(dq_hdu.data)
                 dq_data[dq_data == 0] = np.nan
 

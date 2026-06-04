@@ -48,8 +48,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'get_reference_image_data', 'standardize_roman_metadata',
            'wildcard_match', 'cmap_samples', 'glue_colormaps',
            'att_to_componentid', 'create_data_hash',
-           'in_ra_comps', 'in_dec_comps', 'RA_COMPS', 'DEC_COMPS',
-           'SPECTRAL_AXIS_COMP_LABELS']
+           'in_ra_comps', 'in_dec_comps', 'SPECTRAL_AXIS_COMP_LABELS']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -67,35 +66,26 @@ SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
                              'Velocity', 'Wavenumber',
                              'World 0', 'World 1',
                              'Pixel Axis 0 [x]', 'Pixel Axis 1 [x]')
-# NOTE: RA_COMPS and DEC_COMPS are compared without any delimeters and in lowercase
-RA_COMPS = ['rightascension', 'ra', 'radeg', 'radeg',
-            'radegrees', 'rightascensiondegrees', 'rightascensiondeg',
-            'raobj', 'objra', 'sourcera', 'rasource', 'raj2000', 'ra2000',
-            'worldra', 'targra', 'scira']
-DEC_COMPS = ['declination', 'dec', 'decdeg', 'decdeg',
-             'decdegrees', 'declinationdegrees', 'declinationdeg',
-             'decobj', 'objdec', 'decsource', 'sourcedec', 'decj2000', 'dec2000',
-             'worlddec', 'targdec', 'scidec']
+COORD_WORDS_TO_EXCLUDE = ['radius', 'radio', 'radial', 'extragalactic',
+                          'infrared', 'fraction', 'gradient', 'ratio',
+                          'integrated,' 'radian', 'random', 'parallax', 'range',
+                          'decade', 'decadal', 'decrement', 'deconvolve']
 
 
 def in_ra_comps(comp):
-    return (str(comp).lower()
-            .replace(' ', '')
-            .replace('_', '')
-            .replace('-', '')
-            .replace('"', '')
-            .replace('(', '')
-            .replace(')', '') in RA_COMPS)
+    ra_pattern = re.compile(r'^ra$|^ra|ra$|^right$|^ascension$', re.IGNORECASE)
+    tokens = re.split(r'[\s_\-\.]+', comp)
+    return (not any(token in COORD_WORDS_TO_EXCLUDE for token in tokens)
+            and any(ra_pattern.search(t) for t in tokens)
+            )
 
 
 def in_dec_comps(comp):
-    return (str(comp).lower()
-            .replace(' ', '')
-            .replace('_', '')
-            .replace('-', '')
-            .replace('"', '')
-            .replace('(', '')
-            .replace(')', '') in DEC_COMPS)
+    dec_pattern = re.compile(r'^dec$|^dec|dec$|^declination$', re.IGNORECASE)
+    tokens = re.split(r'[\s_\-\.]+', comp)
+    return (not any(token in COORD_WORDS_TO_EXCLUDE for token in tokens)
+            and any(dec_pattern.search(t) for t in tokens)
+            )
 
 
 class SnackbarQueue:
@@ -352,8 +342,17 @@ def is_not_wcs_only(layer):
     return not is_wcs_only(layer)
 
 
-def layer_is_not_dq(data):
-    return '[DQ' not in data.label
+def layer_is_dq(lyr):
+    data = getattr(lyr, 'data', None)
+    metadata = getattr(data, 'meta', {})
+    extension = metadata.get('_extname', '')
+    if extension is None:
+        return False
+    return extension.upper() == 'DQ'
+
+
+def layer_is_not_dq(lyr):
+    return not layer_is_dq(lyr)
 
 
 def standardize_metadata(metadata):
@@ -1051,9 +1050,12 @@ def wildcard_match(obj, value, choices=None):
         if choices is None:
             return value
 
-    # any works for both str and iterable
+    # Convert value to an iterable for checking, but don't iterate over string characters
+    value_to_check = [value] if isinstance(value, str) else value
+
+    # Check if any item contains wildcards
     if (getattr(obj, 'allow_multiselect', False)
-            and any(has_wildcard(v) for v in value if isinstance(v, str))):
+            and any(has_wildcard(v) for v in value_to_check if isinstance(v, str))):
         if isinstance(value, str):
             obj.multiselect = True
             value = wildcard_match_str(choices, value)
@@ -1066,7 +1068,15 @@ def wildcard_match(obj, value, choices=None):
     # Basically, '*' of empty should return empty---we don't want to error out. For other
     # patterns like 'foo*' not matching anything, we use the error to notify the user of no match.
     # e.g. value == ['*'] or ['*', '*'], choices == [] -> match == [] (rather than ['*'])
-    if all(vi == '*' for v in value for vi in v):  # List of strings
+    # Check if all items in the result are '*' wildcards (avoid iterating over string characters)
+    if isinstance(value, str):
+        all_wildcards = (value == '*')
+    elif isinstance(value, (list, tuple)):
+        all_wildcards = all(v == '*' for v in value if isinstance(v, str))
+    else:
+        all_wildcards = False
+
+    if all_wildcards:
         value = [] if getattr(obj, 'multiselect', False) else ''
 
     return value

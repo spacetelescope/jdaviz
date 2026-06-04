@@ -64,6 +64,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         self._plugin_description = 'Collapse a spectral cube along one axis.'
 
         if self.config == "deconfigged":
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/plugins/collapse.html'
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     def _get_supported_viewers(self):
@@ -108,11 +109,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
 
         # Extract 2D WCS from input cube.
         data = self.dataset.selected_dc_item
-        # Similar to coords_info logic.
-        if '_orig_spec' in getattr(data, 'meta', {}):
-            w = data.meta['_orig_spec'].wcs
-        else:
-            w = data.coords
+        w = data.coords
         if isinstance(w, GWCS):
             data_wcs = WCS(w.to_fits_sip())
         else:

@@ -68,9 +68,6 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
 def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
     cubeviz_helper._app.add_data(spectrum1d, "test")
 
-    dc = cubeviz_helper._app.data_collection
-    dc[0].meta["_orig_spec"] = spectrum1d
-
     cubeviz_helper._app.add_data_to_viewer('spectrum-viewer', 'test')
     unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     cubeviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6600 * unit,
@@ -124,7 +121,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
 @pytest.mark.filterwarnings('ignore')
 def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     flux = image_cube_hdu_obj[1].data << u.Unit(image_cube_hdu_obj[1].header['BUNIT'])
-    wcs = WCS(image_cube_hdu_obj[1].header, image_cube_hdu_obj)
+    wcs = WCS(image_cube_hdu_obj[1].header, image_cube_hdu_obj, preserve_units=True)
     sc = Spectrum(flux=flux, wcs=wcs)
     cubeviz_helper.load_data(sc)
 
@@ -202,6 +199,7 @@ def test_spectrum3d_no_wcs_parse(cubeviz_helper, flux_unit):
     assert flux.units == f'{flux_unit / PIX2}'
 
 
+@pytest.mark.filterwarnings('ignore:The default extension selection')
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     cubeviz_helper.load_data(spectrum1d)
 
@@ -214,7 +212,6 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     assert label_mouseover.as_text() == ('', '', '')
 
 
-@pytest.mark.skip(reason="Need to refactor extension handling first")
 def test_numpy_cube(cubeviz_helper):
     arr = np.ones(24).reshape((4, 3, 2))  # x, y, z
 
@@ -233,7 +230,7 @@ def test_numpy_cube(cubeviz_helper):
     # Check context of first cube.
     data = cubeviz_helper._app.data_collection[0]
     flux = data.get_component('flux')
-    assert data.label == 'Array'
+    assert data.label == '3D Spectrum [FLUX]'
     assert data.shape == (4, 3, 2)  # x, y, z
     assert isinstance(data.coords, GWCS)
     assert flux.units == 'ct / pix2'
@@ -241,7 +238,7 @@ def test_numpy_cube(cubeviz_helper):
     # Check context of second cube.
     data = cubeviz_helper._app.data_collection[1]
     flux = data.get_component('flux')
-    assert data.label == 'uncert_array'
+    assert data.label == 'uncert_array[FLUX]'
     assert data.shape == (4, 3, 2)  # x, y, z
     assert isinstance(data.coords, GWCS)
     assert flux.units == 'ct / pix2'
