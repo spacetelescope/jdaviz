@@ -217,7 +217,7 @@ def test_data_quality_plugin(helper_name, request):
 
 
 @pytest.mark.remote_data
-def test_data_quality_plugin_hst_wfc3(imviz_helper):
+def test_data_quality_plugin_hst_STIS(imviz_helper):
 
     # load HST/STIS observations:
     uri = "mast:HST/product/o3tt02010_sx2.fits"
