@@ -278,11 +278,17 @@ def test_hst_product_identification_and_load(deconfigged_helper, hst_product_hdu
                                              obstype, wcs_type, dispaxis, instrument, expected):
     hdulist = hst_product_hdulist(obstype=obstype, wcs_type=wcs_type,
                                   dispaxis=dispaxis, instrument=instrument)
+    options = {'2D Spectrum', 'Image'}
+    unexpected = options.difference({expected}).pop()
     ldr = deconfigged_helper.loaders['object']
     ldr.object = hdulist
 
     choices = ldr.format.choices
     assert expected in choices
+    # Some HST products share file suffixes/structure between imaging and
+    # spectroscopic observations. The OBSTYPE header keyword is used to
+    # delineate between the two.
+    assert unexpected not in choices
 
     ldr.format = expected
     ldr.importer()
