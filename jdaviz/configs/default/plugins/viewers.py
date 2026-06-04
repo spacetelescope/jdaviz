@@ -1511,6 +1511,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=self._on_viewer_removed)
 
+
     def _on_table_select_row_click(self, msg):
         """Handle click from image viewer to select/toggle closest table row."""
         # Only respond if this message is for this table viewer
@@ -1563,6 +1564,94 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             self.widget_table.checked = current_checked
         except Exception:  # nosec # pragma: no cover
             pass
+
+    def _add_or_update_column(self, column_name, data=None):
+        """
+        Add a new column to the table or update it if it already exists.
+        If data is None, the column will be filled with None-type values.
+        """
+
+        tab = self.widget_table
+        nrows = tab.data.size
+
+        # some input checking with informative error messages
+        if column_name is None:
+            raise ValueError("Column name must be provided.")
+
+        try:
+            column_name = str(column_name)
+        except TypeError:
+            raise ValueError("Column name must be convertible to a string.")
+
+        if data is not None and len(data) != nrows:
+            s = "Length of new column data does not match number of rows in the table."
+            raise ValueError(s)
+
+        if data is None:
+            data = [None] * nrows
+
+        if column_name in [c.label for c in tab.data.components]:
+            # Update existing column with new data or NaN if data is None
+            tab.data.update_components({tab.data.get_component(column_name): data})
+        else:
+            # Add new column
+            tab.data.add_component(data, column_name)
+
+    def add_column(self, column_name, data=None):
+        """
+        Add a new data column to the table.
+
+        Parameters
+        ----------
+        column_name : str
+            The name of the column to add.
+        data : list-like, optional
+            The data for the column. Must be the same length as the number of
+            rows in the table. If None, the column will be filled with None-type
+            values.
+
+        Raises
+        ------
+        ValueError
+            If column_name is not provided, not a string, or if data length does
+            not match number of rows in the table.
+        """
+
+        # make sure column name is not in table already
+        if column_name in [c.label for c in self.widget_table.data.components]:
+            raise ValueError(f"Column '{column_name}' already exists in the table. Use update_column to update it instead.")  # noqa: E501
+
+        self._add_or_update_column(column_name, data)
+
+    def update_column(self, column_name, data):
+        """
+        Update the data in an existing column of the table.
+
+        Parameters
+        ----------
+        column_name : str
+            The name of the column to update.
+        data : list-like
+            The data for the column. Must be the same length as the number of
+            rows in the table.
+
+        Raises
+        ------
+        ValueError
+            If column_name is not provided, not a string, or if data length does
+            not match number of rows in the table.
+        """
+        # convert column_name to string, if possible, otherwise raise error
+        try:
+            column_name = str(column_name)
+        except TypeError:
+            raise ValueError("Column name must be convertible to a string.")
+
+        # make sure column name is already in table before trying to update
+        if column_name not in [c.label for c in self.widget_table.data.components]:
+            raise ValueError(f"Column '{column_name}' does not exist in the table. Use add_column to add it first.")  # noqa: E501
+
+        self._add_or_update_column(column_name, data)
 
     def _on_checked_changed(self, change):
         """Update highlight marks in image viewers when checked rows change."""
