@@ -274,8 +274,8 @@ def test_spectrum3d_load_flux_then_err_only(deconfigged_helper, image_cube_hdu_o
         ('IMAGING', 'celestial', 1, 'COS', 'Image'),
     ],
 )
-def test_hst_product_identifications(deconfigged_helper, hst_product_hdulist,
-                                     obstype, wcs_type, dispaxis, instrument, expected):
+def test_hst_product_identification_and_load(deconfigged_helper, hst_product_hdulist,
+                                              obstype, wcs_type, dispaxis, instrument, expected):
     hdulist = hst_product_hdulist(obstype=obstype, wcs_type=wcs_type,
                                   dispaxis=dispaxis, instrument=instrument)
     ldr = deconfigged_helper.loaders['object']
@@ -283,6 +283,9 @@ def test_hst_product_identifications(deconfigged_helper, hst_product_hdulist,
 
     choices = ldr.format.choices
     assert expected in choices
+
+    ldr.format = expected
+    ldr.importer()
 
 
 @pytest.mark.remote_data
