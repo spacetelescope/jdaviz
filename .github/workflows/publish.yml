@@ -23,18 +23,18 @@ jobs:
 
     - uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
     - name: Build pytestargs from labels
       id: build-pytestargs
       run: |
         pytestargs=""
-        
+
         # Add --skip-remote-failures if 'skip-remote-failures' label is present
         if ${{ contains(github.event.pull_request.labels.*.name, 'skip-remote-failures') }}; then
           pytestargs="--skip-remote-failures"
         fi
-        
+
         # Export as step output so later steps can reference it.
         echo "pytestargs=$pytestargs" >> $GITHUB_OUTPUT
 
