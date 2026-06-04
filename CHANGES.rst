@@ -35,7 +35,7 @@ Bug Fixes
 ---------
 
 - HST products (as defined by ``OBSTYPE``) are now correctly identified as being
-  either images or 2D spectra. [#]
+  either images or 2D spectra. [#4217]
 
 Mosviz
 ^^^^^^
