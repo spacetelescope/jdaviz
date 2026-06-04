@@ -35,7 +35,7 @@ to avoid version conflicts with other packages you may have installed, for examp
 
 .. code-block:: bash
 
-    conda create -n jdaviz-env python=3.11
+    conda create -n jdaviz-env python=3.13
     conda activate jdaviz-env
 
 Pip Install
@@ -59,7 +59,7 @@ Common Issues
 If you encounter problems while following these installation instructions,
 please consult :ref:`known installation issues <known_issues_installation>`.
 
-Note that ``jdaviz`` requires Python 3.11 or newer. If your ``pip`` corresponds to an older version of
+Note that ``jdaviz`` requires Python 3.12 or newer. If your ``pip`` corresponds to an older version of
 Python, it will raise an error that it cannot find a valid package.
 
 Users occasionally encounter problems running the pure ``pip`` install above. For those
@@ -90,7 +90,7 @@ the interface.
     :alt: Create environment with Anaconda Navigator
 
 Give a name to the environment (in this example we call it jdaviz_navigator) and
-select Python with a version greater than 3.11.
+select Python with a version greater than 3.12.
 
 .. image:: ./img/navigator_nameenv.png
     :alt: Name environment with Anaconda Navigator

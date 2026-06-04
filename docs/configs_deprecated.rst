@@ -90,7 +90,7 @@ contextual information like on-sky views of the spectrograph slit.
 
 .. warning::
 
-   As of ``jdaviz`` version 4.2, please use Python 3.11 or
+   As of ``jdaviz`` version 5.0, please use Python 3.12 or
    greater to get the latest bug fixes and feature additions for ``jdaviz``.
 
 .. note::
