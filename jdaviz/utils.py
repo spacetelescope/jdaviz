@@ -70,7 +70,7 @@ COORD_WORDS_TO_EXCLUDE = ['radius', 'radio', 'radial', 'extragalactic',
                           'infrared', 'fraction', 'gradient', 'ratio',
                           'integrated,' 'radian', 'random', 'parallax', 'range',
                           'decade', 'decadal', 'decrement', 'deconvolve',
-                          'err', 'psf', 'bbox', 'min', 'max']
+                          'err', 'bbox', 'min', 'max']
 
 
 def in_ra_comps(comp):
