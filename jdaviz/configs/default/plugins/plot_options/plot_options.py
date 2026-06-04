@@ -433,6 +433,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     axes_visible_value = Bool().tag(sync=True)
     axes_visible_sync = Dict().tag(sync=True)
 
+    layer_is_top = Bool(False).tag(sync=True)
+
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
@@ -980,6 +982,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                 return
             self.active_layer = viewer.active_image_layer.layer.label
 
+        # Refresh the top-layer button state whenever the viewer's layer list changes
+        # (e.g. a layer is added, removed, or reordered via the data menu).
+        self._update_layer_is_top()
+
     def vue_unmix_state(self, names):
         if isinstance(names, str):
             names = [names]
@@ -1051,6 +1057,77 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
+
+    @observe('layer_selected', 'viewer_selected', 'layer_items',
+             'layer_multiselect', 'viewer_multiselect')
+    def _update_layer_is_top(self, msg={}):
+        if (not hasattr(self, 'viewer') or self.viewer_multiselect or self.layer_multiselect
+                or not self.viewer.selected or not self.layer_selected):
+            self.layer_is_top = False
+            return
+        selected_item = next(
+            (item for item in self.layer_items if item.get('label') == self.layer_selected), None
+        )
+        if selected_item is None or selected_item.get('is_subset'):
+            self.layer_is_top = False
+            return
+        # When viewer_multiselect transitions True→False, this observer fires before
+        # ViewerSelect._multiselect_changed clears its cached_property.  Proactively
+        # clear it so selected_obj is always recomputed fresh here.
+        self.viewer._clear_cache('selected_obj')
+        try:
+            viewer = self.viewer.selected_obj
+        except Exception:
+            self.layer_is_top = False
+            return
+        if viewer is None:
+            self.layer_is_top = False
+            return
+        # Child layers (DQ, uncertainty, WCS-only) float above their parent via zorder + 0.1
+        # and cannot be independently promoted; treat them as already on top.
+        child_labels = set(
+            child for data in self._app.data_collection
+            for child in self._app._get_assoc_data_children(data.label)
+        )
+        if self.layer_selected in child_labels:
+            self.layer_is_top = True
+            return
+        # Single pass: track both the selected layer's zorder and the running maximum.
+        # Exclude subsets, child layers, and WCS-only/orientation layers from the comparison.
+        selected_zorder = max_zorder = None
+        for lyr in viewer.state.layers:
+            if (hasattr(lyr, 'layer') and hasattr(lyr, 'zorder') and lyr.zorder is not None
+                    and not hasattr(lyr.layer, 'subset_state')
+                    and is_not_wcs_only(lyr.layer)
+                    and lyr.layer.label not in child_labels):
+                if max_zorder is None or lyr.zorder > max_zorder:
+                    max_zorder = lyr.zorder
+                if lyr.layer.label == self.layer_selected:
+                    selected_zorder = lyr.zorder
+        self.layer_is_top = (selected_zorder is not None and selected_zorder == max_zorder)
+
+    def vue_set_layer_to_top(self, data):
+        self.set_layer_to_top()
+
+    def set_layer_to_top(self):
+        """Set the currently selected layer as the top layer in the image viewer."""
+        if self.viewer_multiselect or self.layer_multiselect:
+            raise ValueError("set_layer_to_top only works with a single viewer and layer selected")
+        viewer = self.viewer.selected_obj
+        layer_label = self.layer_selected
+        # Use the maximum zorder across ALL layers (including orientation/WCS-only and subsets)
+        # so the selected layer is placed strictly above every other layer. Using only image
+        # zorders would create a tie with the orientation layer (whose zorder DataMenu sets just
+        # above image layers), which can cause ambiguous sort order in DataMenu normalization.
+        all_zorders = [lyr.zorder for lyr in viewer.state.layers
+                       if hasattr(lyr, 'zorder') and lyr.zorder is not None]
+        if not all_zorders:
+            return
+        for lyr in viewer.state.layers:
+            if hasattr(lyr, 'layer') and lyr.layer.label == layer_label:
+                lyr.zorder = max(all_zorders) + 1
+                break
+        self._update_layer_is_top()
 
     @observe('viewer_selected',
              'x_min_value', 'x_max_value',

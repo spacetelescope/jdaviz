@@ -267,6 +267,17 @@
         />
     </glue-state-sync-wrapper>
 
+    <!-- SET LAYER TO TOP -->
+    <v-row v-if="image_visible_sync.in_subscribed_states && !layer_multiselect && !viewer_multiselect && viewer_selected.length > 0" justify="end">
+      <plugin-action-button
+        :results_isolated_to_plugin="false"
+        :disabled="layer_is_top"
+        @click="set_layer_to_top"
+      >
+        {{ layer_is_top ? 'top layer' : 'set layer to top' }}
+      </plugin-action-button>
+    </v-row>
+
     <glue-state-sync-wrapper v-if="uncertainty_visible_sync.in_subscribed_states" :sync="uncertainty_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('uncertainty_visible')">
       <plugin-switch
         :value.sync="uncertainty_visible_value"
