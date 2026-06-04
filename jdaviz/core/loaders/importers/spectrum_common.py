@@ -330,7 +330,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if obstype is not None and self.supported_flux_ndim == 2:
             if obstype == 'imaging':
                 return False
-            # spectroscopic: accept the standard science image extensions
+
             if (len(getattr(hdu, 'shape', [])) == 2
                     and hdu.header.get('EXTNAME', '').upper() in ('SCI', 'FLUX', 'DATA')):
                 return True
