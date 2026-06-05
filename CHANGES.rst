@@ -21,11 +21,6 @@ New Features
 
 - Imported Catalogs default to the first ra/dec/x/y match if multiple options are available.
   Increased the list of strings to exclude: now excludes bounding box and source position error columns. [#4216]
-- Add option to limit results to science products when retrieving files from an archive query
-  results table. [#4194]
-
-- Imported Catalogs default to the first ra/dec/x/y match if multiple options are available.
-  Increased the list of strings to exclude: now excludes bounding box and source position error columns. [#4216]
 
 - Add option to limit results to science products when retrieving files from an archive query
   results table. [#4194]
