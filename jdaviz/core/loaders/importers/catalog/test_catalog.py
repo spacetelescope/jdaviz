@@ -144,6 +144,7 @@ def test_roman_catalog_detection(deconfigged_helper):
     tab = QTable({'ra_err': ra, 'dec_err': dec,
                   'ra': ra, 'dec': dec,
                   'ra_centroid': ra, 'dec_centroid': dec,
+                  'ra_min': ra, 'dec_min': dec,
                   'x': x, 'y': y,
                   'x_model': x, 'y_model': y})
 
