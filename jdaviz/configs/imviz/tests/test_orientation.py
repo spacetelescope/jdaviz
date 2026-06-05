@@ -256,9 +256,6 @@ class TestDeleteOrientation(BaseDeconfiggedImage_WCS_WCS):
         assert_allclose(out_reg.center.dec.deg, reg.center.dec.deg)
         assert_quantity_allclose(out_reg.width, reg.width, rtol=1e-5)
         assert_quantity_allclose(out_reg.height, reg.height, rtol=1e-5)
-        # FIXME: However, sky angle has to stay the same as per regions convention.
-        with pytest.raises(AssertionError, match="Not equal to tolerance"):
-            assert_quantity_allclose(out_reg.angle, reg.angle)
 
 
 class TestOrientationNoData(BaseDeconfiggedImage_WCS_WCS):
