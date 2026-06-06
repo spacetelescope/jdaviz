@@ -977,3 +977,16 @@ html[data-theme="light"] .jdaviz-expansion-panel-content.expanded {
     --gs-control-radius: 8px;
     --gs-control-size: 44px;
 }
+
+/* ── Fullscreen: fill available width ────────────────────────────── */
+
+/*
+ * Without the :viewport: guidestar option, the wireframe is rendered at
+ * its natural size (max-width: 1000px).  In fullscreen the guidestar
+ * container expands to 100vw × 100vh but the section stays pinned at
+ * 1000px.  Remove the cap so the wireframe stretches to fill the screen.
+ */
+[data-guidestar]:fullscreen .jdaviz-wireframe-section,
+[data-guidestar]:-webkit-full-screen .jdaviz-wireframe-section {
+    max-width: none;
+}
