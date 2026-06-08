@@ -24,6 +24,8 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.scatter import BqplotScatterView
 from glue_jupyter.table import TableViewer
 
+from jdaviz.components.table_widget import JdavizTableWidget
+
 from astropy.utils import deprecated
 from astropy import units as u
 from astropy.nddata import (
@@ -1477,9 +1479,10 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
-                    ['jdaviz:table_edit_columns'],
                     ['jdaviz:viewer_clone']
                    ]
+
+    _widget_table_cls = JdavizTableWidget
 
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
@@ -1499,11 +1502,14 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
 
         # Inline column-header editing
-        self.widget_table.show_add_column_button = True
         self._update_non_removable_headers()
         self.widget_table.observe(self._on_header_renamed, names=['header_renamed'])
         self.widget_table.observe(self._on_header_deleted, names=['header_deleted'])
-        self.widget_table.observe(self._on_add_column_request, names=['add_column_request'])
+
+        # Inline column-header editing
+        self._update_non_removable_headers()
+        self.widget_table.observe(self._on_header_renamed, names=['header_renamed'])
+        self.widget_table.observe(self._on_header_deleted, names=['header_deleted'])
 
         # Subscribe to RestoreToolbarMessage to clean up checkbox state
         # when toolbar is restored (e.g., by clicking X on custom toolbar)
@@ -1675,7 +1681,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                 yield data
 
     def _role_labels(self):
-        """Return the set of column names that are 'role' columns (non-removable)."""
+        """Return the set of column names that are non-removable role columns."""
         role = set()
         for data in self._iter_table_data():
             meta = getattr(data, 'meta', {}) or {}
@@ -1693,7 +1699,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         return role
 
     def _update_non_removable_headers(self):
-        """Sync the non_removable_headers list to the table widget."""
+        """Sync non_removable_headers to the table widget."""
         self.widget_table.non_removable_headers = sorted(self._role_labels())
 
     def _on_header_renamed(self, change):
@@ -1721,32 +1727,4 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     c for c in self.state.editable_components if c is not cid
                 ]
                 glue_data.remove_component(cid)
-        self._update_non_removable_headers()
-
-    def _on_add_column_request(self, change):
-        """Handle the '+' button click: create a new empty column and enter edit mode."""
-        import numpy as np
-        from glue.core import Component
-
-        existing = []
-        for glue_data in self._iter_table_data():
-            existing += [c.label for c in glue_data.main_components]
-        n = 1
-        while f'Column {n}' in existing:
-            n += 1
-        label = f'Column {n}'
-
-        for glue_data in self._iter_table_data():
-            glue_data.add_component(
-                Component(np.full(glue_data.shape[0], '', dtype=object)), label
-            )
-            cid = glue_data.id[label]
-            self.state.editable_components = (
-                list(self.state.editable_components) + [cid]
-            )
-
-        # Signal the Vue template to enter edit mode for the new header.
-        # Reset first so the watch fires even if the previous value was the same string.
-        self.widget_table.header_enter_edit_mode = ''
-        self.widget_table.header_enter_edit_mode = label
         self._update_non_removable_headers()

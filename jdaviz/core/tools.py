@@ -803,7 +803,7 @@ class TableEditColumns(Tool):
         toolbar.override_tools([], 'Edit Columns')
 
         # Delegate data helpers to the viewer so they stay in sync with the
-        # inline header-edit path added in JdavizTableViewer.
+        # inline header-edit path handled by JdavizTableViewer.
         def _on_add(label):
             import numpy as np
             from glue.core import Component
@@ -834,7 +834,6 @@ class TableEditColumns(Tool):
                     data.remove_component(cid)
             viewer._update_non_removable_headers()
 
-        # Build initial column list directly from the viewer's layers
         seen_labels = []
         for data in viewer._iter_table_data():
             for cid in data.main_components:
@@ -853,7 +852,6 @@ class TableEditColumns(Tool):
             on_remove=_on_remove,
         )
 
-        # Keep non_removable in sync as the selection changes
         def _update_non_removable(change):
             toolbar.toolbar_column_non_removable = change['new'] in viewer._role_labels()
         toolbar.observe(_update_non_removable, names=['toolbar_column_selected'])
