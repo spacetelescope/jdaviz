@@ -38,18 +38,12 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     # each dict may have:
     #   label      : placeholder / label string
     #   items      : list of dicts with 'label' and 'value' keys
+    #   type       : 'text' or 'select' (default: 'select')
     #   multiselect: bool (default False)
     #   selected   : initial selection (list for multiselect, scalar otherwise)
     custom_widget_items = traitlets.List([]).tag(sync=True)
     # currently selected values in custom widgets (list of values, one per widget)
     custom_widget_selected = traitlets.List([]).tag(sync=True)
-
-    # traitlets for the editable-select column widget (linked to plot_options when active)
-    toolbar_column_items = traitlets.List([]).tag(sync=True)
-    toolbar_column_selected = traitlets.Unicode('').tag(sync=True)
-    toolbar_column_mode = traitlets.Unicode('').tag(sync=True)
-    toolbar_column_edit_value = traitlets.Unicode('').tag(sync=True)
-    toolbar_column_non_removable = traitlets.Bool(False).tag(sync=True)
 
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
@@ -64,10 +58,6 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
 
         # Build the initial toolbar
         self._build_toolbar(tools_nested, default_tool_priority)
-
-        # Storage for column editor cleanup callback and component instance
-        self._toolbar_cleanup_callback = None
-        self._toolbar_column_component = None
 
         # toolbars in the main app viewers need to respond to the data-collection, etc,
         # but those in plugins do not
@@ -96,71 +86,6 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 msg.viewer_id == self.viewer.reference_id and
                 self.tool_override_mode):
             self.restore_tools(all_viewers=True)
-
-    @property
-    def hub(self):
-        return self.viewer.hub
-
-    @property
-    def _app(self):
-        return self.viewer.jdaviz_app
-
-    def setup_column_editor(self, items, selected='', non_removable=False,
-                            on_add=None, on_rename=None, on_remove=None,
-                            validate_choice=None):
-        """
-        Configure the editable-select column editor in the current toolbar override.
-
-        Must be called after ``override_tools()``.  Appends a ``{'type':
-        'editable-select'}`` entry to ``custom_widget_items`` so the Vue
-        template renders ``plugin-editable-select`` for that slot.
-
-        Parameters
-        ----------
-        items : list
-            List of column name strings.
-        selected : str
-            Currently selected column name.
-        non_removable : bool
-            Whether the current selection is non-removable (delete icon hidden).
-        on_add : callable, optional
-            Called with ``(label,)`` when a new column is added.
-        on_rename : callable, optional
-            Called with ``(old_label, new_label)`` when a column is renamed.
-        on_remove : callable, optional
-            Called with ``(label,)`` when a column is removed.
-        validate_choice : callable, optional
-            Called with ``(label,)``; return ``''`` if valid or an error message
-            string if invalid.
-        """
-        from jdaviz.core.template_mixin import EditableSelectPluginComponent
-
-        if self._toolbar_column_component is None:
-            self._toolbar_column_component = EditableSelectPluginComponent(
-                self,
-                name='column',
-                mode='toolbar_column_mode',
-                edit_value='toolbar_column_edit_value',
-                items='toolbar_column_items',
-                selected='toolbar_column_selected',
-                manual_options=[],
-                default_mode='empty',
-            )
-
-        comp = self._toolbar_column_component
-        comp._on_add = on_add or (lambda *a: None)
-        comp._on_rename = on_rename or (lambda *a: None)
-        comp._on_remove = on_remove or (lambda *a: None)
-        if validate_choice is not None:
-            comp._validate_choice = validate_choice
-        comp._manual_options = list(items)
-        comp._update_items()
-        if selected:
-            self.toolbar_column_selected = selected
-        self.toolbar_column_non_removable = non_removable
-        self.toolbar_column_mode = 'select'
-        # Append an editable-select entry so the Vue loop renders it
-        self.custom_widget_items = self.custom_widget_items + [{'type': 'editable-select'}]
 
     def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[],
                        custom_widgets=None, custom_widgets_callback=None, active_tool=None):
@@ -281,19 +206,6 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self.custom_widget_items = []
         self.custom_widget_selected = []
         self._custom_widgets_callback = None
-        # Reset the column editor component if one has been created
-        comp = getattr(self, '_toolbar_column_component', None)
-        if comp is not None:
-            comp._manual_options = []
-            comp._update_items()
-        if getattr(self, '_toolbar_cleanup_callback', None) is not None:
-            self._toolbar_cleanup_callback()
-            self._toolbar_cleanup_callback = None
-        self.toolbar_column_items = []
-        self.toolbar_column_selected = ''
-        self.toolbar_column_mode = ''
-        self.toolbar_column_edit_value = ''
-        self.toolbar_column_non_removable = False
 
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError

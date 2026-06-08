@@ -24,9 +24,8 @@ from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, LayerSelect,
                                         PlotOptionsSyncState, Plot,
-                                        EditableSelectPluginComponent,
                                         skip_if_no_updates_since_last_active, with_spinner)
-from jdaviz.core.events import AddDataMessage, ChangeRefDataMessage, ViewerAddedMessage
+from jdaviz.core.events import ChangeRefDataMessage, ViewerAddedMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
@@ -484,13 +483,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     # Table viewer options
     table_columns_visible_value = List().tag(sync=True)
     table_columns_visible_sync = Dict().tag(sync=True)
-    # EditableSelectPluginComponent traitlets for column management
-    table_column_items = List([]).tag(sync=True)
-    table_column_selected = Unicode('').tag(sync=True)
-    table_column_mode = Unicode('').tag(sync=True)
-    table_column_edit_value = Unicode('').tag(sync=True)
-    # True when the currently selected column is not a loader role column
-    table_column_is_removable = Bool(False).tag(sync=True)
 
     # Downstream configs may register extra layer filter functions and user_api
     # modifications at import time via the classmethods below, rather than subclassing.
@@ -537,22 +529,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         # Apply any layer filter factories registered by downstream configs
         for filter_factory in self._layer_filter_hooks:
             self.layer.add_filter(filter_factory(self))
-
-        self.table_column = EditableSelectPluginComponent(
-            self,
-            name='column',
-            mode='table_column_mode',
-            edit_value='table_column_edit_value',
-            items='table_column_items',
-            selected='table_column_selected',
-            manual_options=[],
-            default_mode='empty',
-            on_add=self._on_table_column_add,
-            on_rename=self._on_table_column_rename,
-            on_remove=self._on_table_column_remove,
-            validate_choice=self._validate_table_column_name,
-        )
-        self.observe(self._on_table_column_selected_changed, 'table_column_selected')
 
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
@@ -849,9 +825,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
-        self.hub.subscribe(self, AddDataMessage,
-                           handler=self._on_data_added_to_viewer)
-
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=self._on_refdata_change)
 
@@ -1134,136 +1107,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             tool = viewer.toolbar.tools.get('jdaviz:homezoom', None)
             if tool is not None:
                 tool.activate()
-
-    # ------------------------------------------------------------------
-    # Table column management helpers
-    # ------------------------------------------------------------------
-
-    def _get_table_viewer(self):
-        """Return the single selected table viewer, or None if not applicable."""
-        if self.viewer_multiselect:
-            return None
-        viewer = self.viewer.selected_obj
-        if viewer is None or not hasattr(viewer, 'widget_table'):
-            return None
-        return viewer
-
-    def _iter_table_data(self, viewer):
-        """Yield unique Data objects (not Subsets) from a table viewer's layers."""
-        seen = set()
-        for layer_artist in viewer.layers:
-            data = layer_artist.layer
-            if hasattr(data, 'data'):  # Subset
-                data = data.data
-            if id(data) not in seen:
-                seen.add(id(data))
-                yield data
-
-    def _get_role_column_labels(self, data):
-        """Return the set of column labels assigned a loader role (RA/Dec/X/Y/ID)."""
-        meta = getattr(data, 'meta', {}) or {}
-        role_labels = set()
-        for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
-                    '_jdaviz_loader_x_col', '_jdaviz_loader_y_col'):
-            val = meta.get(key)
-            if val:
-                role_labels.add(val)
-        if '_jdaviz_loader_x_col' in meta:
-            role_labels.add('X')
-        if '_jdaviz_loader_y_col' in meta:
-            role_labels.add('Y')
-        if '_jdaviz_id_col' in meta:
-            role_labels.add('ID')
-        return role_labels
-
-    def _all_role_labels(self, viewer):
-        """Return the union of role labels across all data in the viewer."""
-        role_labels = set()
-        for data in self._iter_table_data(viewer):
-            role_labels |= self._get_role_column_labels(data)
-        return role_labels
-
-    def _validate_table_column_name(self, label):
-        """Validate a proposed new column name (called by EditableSelectPluginComponent)."""
-        viewer = self._get_table_viewer()
-        if viewer is None:
-            return 'No table viewer selected.'
-        return ''
-
-    def _on_table_column_add(self, label):
-        from glue.core import Component
-        viewer = self._get_table_viewer()
-        if viewer is None:
-            raise ValueError('No table viewer selected.')
-        for data in self._iter_table_data(viewer):
-            data.add_component(
-                Component(np.full(data.shape[0], '', dtype=object)), label
-            )
-            cid = data.id[label]
-            viewer.state.editable_components = list(viewer.state.editable_components) + [cid]
-        self._refresh_table_column_options()
-
-    def _on_table_column_rename(self, old_name, new_name):
-        viewer = self._get_table_viewer()
-        if viewer is None:
-            return
-        for data in self._iter_table_data(viewer):
-            if old_name in [c.label for c in data.main_components]:
-                data.id[old_name].label = new_name
-        viewer.redraw()
-        self._refresh_table_column_options()
-
-    def _on_table_column_remove(self, label):
-        viewer = self._get_table_viewer()
-        if viewer is None:
-            return
-        for data in self._iter_table_data(viewer):
-            if label in [c.label for c in data.main_components]:
-                cid = data.id[label]
-                viewer.state.editable_components = [
-                    c for c in viewer.state.editable_components if c is not cid
-                ]
-                data.remove_component(cid)
-        self._refresh_table_column_options()
-
-    def _refresh_table_column_options(self):
-        """Rebuild the EditableSelectPluginComponent's option list from glue Data."""
-        viewer = self._get_table_viewer()
-        seen_labels = []
-        if viewer is not None:
-            for data in self._iter_table_data(viewer):
-                for cid in data.main_components:
-                    if cid.label not in seen_labels:
-                        seen_labels.append(cid.label)
-        self.table_column._manual_options = seen_labels
-        self.table_column._update_items()
-        self._on_table_column_selected_changed()
-
-    def _on_table_column_selected_changed(self, msg=None):
-        """Update table_column_is_removable whenever the selected column changes."""
-        viewer = self._get_table_viewer()
-        if viewer is None or not self.table_column_selected:
-            self.table_column_is_removable = False
-            return
-        self.table_column_is_removable = (
-            self.table_column_selected not in self._all_role_labels(viewer)
-        )
-
-    @observe('viewer_selected')
-    def _update_table_column_choices(self, msg=None):
-        if not hasattr(self, 'viewer'):
-            return
-        self._refresh_table_column_options()
-
-    def _on_data_added_to_viewer(self, msg):
-        viewer = self._get_table_viewer()
-        if viewer is not None and msg.viewer is viewer:
-            self._refresh_table_column_options()
-
-    @observe('viewer_selected')
-    def _on_viewer_selected_reset_table_edit(self, msg=None):
-        self.table_column_mode = 'select'
-        self.table_column_edit_value = ''
 
     @observe('stretch_function_sync', 'stretch_params_sync',
              'stretch_vmin_sync', 'stretch_vmax_sync',

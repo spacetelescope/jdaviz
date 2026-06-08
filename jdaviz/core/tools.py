@@ -789,76 +789,59 @@ class TableApplyZoom(_BaseTableApplyTool):
 
 
 @viewer_tool
-class TableEditColumns(Tool):
+class TableAddColumn(Tool):
     icon = os.path.join(ICON_DIR, 'table-column-plus-after.svg')
-    tool_id = 'jdaviz:table_edit_columns'
-    action_text = 'Edit columns'
-    tool_tip = 'Add, rename, or remove table columns'
+    tool_id = 'jdaviz:table_add_column'
+    action_text = 'Add column'
+    tool_tip = 'Add a new empty column to the table data'
 
     def activate(self):
-        viewer = self.viewer
-        toolbar = viewer.toolbar
-
-        # Enter override mode (no extra tool buttons — just the close button)
-        toolbar.override_tools([], 'Edit Columns')
-
-        # Delegate data helpers to the viewer so they stay in sync with the
-        # inline header-edit path handled by JdavizTableViewer.
-        def _on_add(label):
-            import numpy as np
-            from glue.core import Component
-            for data in viewer._iter_table_data():
-                data.add_component(
-                    Component(np.full(data.shape[0], '', dtype=object)), label
-                )
-                cid = data.id[label]
-                viewer.state.editable_components = (
-                    list(viewer.state.editable_components) + [cid]
-                )
-            viewer._update_non_removable_headers()
-
-        def _on_rename(old_name, new_name):
-            for data in viewer._iter_table_data():
-                if old_name in [c.label for c in data.main_components]:
-                    data.id[old_name].label = new_name
-            viewer.redraw()
-            viewer._update_non_removable_headers()
-
-        def _on_remove(label):
-            for data in viewer._iter_table_data():
-                if label in [c.label for c in data.main_components]:
-                    cid = data.id[label]
-                    viewer.state.editable_components = [
-                        c for c in viewer.state.editable_components if c is not cid
-                    ]
-                    data.remove_component(cid)
-            viewer._update_non_removable_headers()
-
-        seen_labels = []
-        for data in viewer._iter_table_data():
-            for cid in data.main_components:
-                if cid.label not in seen_labels:
-                    seen_labels.append(cid.label)
-
-        roles = viewer._role_labels()
-        selected = seen_labels[0] if seen_labels else ''
-
-        toolbar.setup_column_editor(
-            items=seen_labels,
-            selected=selected,
-            non_removable=selected in roles,
-            on_add=_on_add,
-            on_rename=_on_rename,
-            on_remove=_on_remove,
+        self.viewer.toolbar.override_tools(
+            ['jdaviz:table_apply_add_column'],
+            'Add Column',
+            custom_widgets=[{'type': 'text', 'label': 'Column name', 'selected': ''}],
         )
 
-        def _update_non_removable(change):
-            toolbar.toolbar_column_non_removable = change['new'] in viewer._role_labels()
-        toolbar.observe(_update_non_removable, names=['toolbar_column_selected'])
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
 
-        def _cleanup():
-            toolbar.unobserve(_update_non_removable, names=['toolbar_column_selected'])
-        toolbar._toolbar_cleanup_callback = _cleanup
+
+@viewer_tool
+class TableApplyAddColumn(Tool):
+    icon = os.path.join(ICON_DIR, 'check.svg')
+    tool_id = 'jdaviz:table_apply_add_column'
+    action_text = 'Apply add column'
+    tool_tip = 'Add a new column with the given name to all table data entries'
+
+    def activate(self):
+        from glue.core import Component
+
+        selected = self.viewer.toolbar.custom_widget_selected
+        column_name = (selected[0] if selected else '').strip()
+        if column_name:
+            new_component_ids = []
+            seen_data = set()
+            for layer_artist in self.viewer.layers:
+                data = layer_artist.layer
+                # For subsets, get the parent Data object
+                if hasattr(data, 'data'):
+                    data = data.data
+                if id(data) in seen_data:
+                    continue
+                seen_data.add(id(data))
+                n_rows = data.shape[0]
+                data.add_component(Component(np.full(n_rows, '', dtype=object)), column_name)
+                new_component_ids.append(data.id[column_name])
+
+            # Make the new columns editable in the table viewer
+            existing = list(self.viewer.state.editable_components)
+            self.viewer.state.editable_components = existing + new_component_ids
+
+        self.viewer.toolbar.restore_tools()
 
     def is_visible(self):
         if self.viewer.jdaviz_app.config != 'deconfigged':

@@ -13,21 +13,24 @@
       </v-btn>
     </v-btn-toggle>
 
-    <!-- Custom widgets: dropdowns and/or editable-select column editor -->
-    <span v-if="custom_widget_items.length > 0" style="display: inline-flex; align-items: center; vertical-align: top; min-height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
+    <!-- Custom widgets (dropdowns and text inputs) -->
+    <span v-if="custom_widget_items.length > 0" style="display: inline-flex; align-items: center; vertical-align: top; height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
       <template v-for="(widget, idx) in custom_widget_items">
-        <plugin-editable-select v-if="widget.type === 'editable-select'"
-          :key="'editable-select-' + idx"          class="custom-toolbar-editable-select"          style="min-width: 250px; max-width: 340px; margin: 0 4px; align-self: center;"
-          :mode.sync="toolbar_column_mode"
-          :edit_value.sync="toolbar_column_edit_value"
-          :items="toolbar_column_items"
-          :selected.sync="toolbar_column_selected"
-          :non_removable="toolbar_column_non_removable"
-          :api_hints_enabled="false"
-          :hide_hint="true"
-          label="Column"
-        ></plugin-editable-select>
-        <v-select v-else
+        <v-text-field
+          v-if="widget.type === 'text'"
+          :key="'text-' + idx"
+          :value="custom_widget_selected[idx]"
+          @input="(val) => update_widget_selection(idx, val)"
+          :placeholder="widget.label"
+          dense
+          solo
+          flat
+          hide-details
+          style="min-width: 160px; max-width: 260px;"
+          class="custom-toolbar-text-input"
+        ></v-text-field>
+        <v-select
+          v-else
           :key="'select-' + idx"
           :value="custom_widget_selected[idx]"
           @input="(val) => update_widget_selection(idx, val)"
@@ -195,42 +198,23 @@
 .custom-toolbar-select >>> input::placeholder {
   color: rgba(255, 255, 255, 0.7) !important;
 }
-/* editable-select in toolbar: same blue treatment, icons always visible */
-.custom-toolbar-editable-select >>> .v-input__slot {
+.custom-toolbar-text-input {
+  background-color: #007ba1 !important;
+  border-radius: 4px !important;
+}
+.custom-toolbar-text-input >>> .v-input__slot {
   min-height: 32px !important;
-  padding: 0 4px 0 8px !important;
+  padding: 0 8px !important;
   background-color: #007ba1 !important;
 }
-.custom-toolbar-editable-select >>> .v-text-field.v-text-field--solo .v-input__slot,
-.custom-toolbar-editable-select >>> .v-input__slot {
-  background-color: #007ba1 !important;
-}
-.custom-toolbar-editable-select >>> .v-input__control {
+.custom-toolbar-text-input >>> .v-input__control {
   min-height: 32px !important;
 }
-.custom-toolbar-editable-select >>> .v-select__selections {
-  min-height: 28px !important;
-  padding: 0 !important;
-}
-.custom-toolbar-editable-select >>> .v-select__selection {
+.custom-toolbar-text-input >>> input {
   color: white !important;
+  font-size: 13px;
 }
-.custom-toolbar-editable-select >>> .v-input__append-inner {
-  align-self: center !important;
-  margin-top: 0 !important;
-  overflow: visible !important;
-}
-.custom-toolbar-editable-select >>> .v-icon {
-  color: black !important;
-}
-.custom-toolbar-editable-select >>> input {
-  color: white !important;
-}
-.custom-toolbar-editable-select >>> input::placeholder {
+.custom-toolbar-text-input >>> input::placeholder {
   color: rgba(255, 255, 255, 0.7) !important;
 }
-.custom-toolbar-editable-select >>> .v-text-field__slot {
-  background-color: #007ba1 !important;
-}
-
 </style>
