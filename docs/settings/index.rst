@@ -25,11 +25,9 @@ Jdaviz provides flexible configuration options for customizing your analysis env
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: settings
-   :enable-only: settings
-   :demo-repeat: false
-
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"show-sidebar","value":"settings"},{"action":"disable-toolbar-except","value":"settings"}]
 
 See Also
 ========

@@ -39,12 +39,10 @@ be able to be parsed by `regions.Regions.read`) from the applicable source.
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: plugins,plugins@1000:open-panel
-   :enable-only: plugins
-   :plugin-name: Footprints
-   :plugin-panel-opened: false
-   :demo-repeat: false
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"set-plugin","value":"Footprints"},{"action":"disable-toolbar-except","value":"plugins"}]
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Footprints","delay":1000,"caption":"Open the Footprints plugin"}]
 
 Click the :guilabel:`Footprints` icon in the plugin toolbar to:
 

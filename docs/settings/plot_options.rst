@@ -10,7 +10,6 @@ Documentation coming soon. See :ref:`display` for related information.
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: settings,settings:select-tab=Plot Options
-   :enable-only: settings
-   :demo-repeat: false
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"show-sidebar","value":"settings"},{"action":"select-tab","value":"Plot Options"},{"action":"disable-toolbar-except","value":"settings"}]

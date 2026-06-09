@@ -18,12 +18,10 @@ including Gaussian, Lorentzian, and polynomial models.
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: plugins,plugins@1000:open-panel
-   :enable-only: plugins
-   :plugin-name: Model Fitting
-   :plugin-panel-opened: false
-   :demo-repeat: false
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"set-plugin","value":"Model Fitting"},{"action":"disable-toolbar-except","value":"plugins"}]
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Model Fitting","delay":1000,"caption":"Open the Model Fitting plugin"}]
 
 Details
 =======

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jdaviz - Astronomical Data Visualization</title>
+    <link rel="search" title="Search" href="{{ pathto('search') }}" />
     <script>
         // Suppress ReadTheDocs custom element registration errors
         window.addEventListener('error', function(e) {
@@ -387,64 +388,6 @@
             border-color: var(--grid-border);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
             filter: brightness(1.1);
-        }
-
-        .grid-item:hover::before {
-            transform: translate(-50%, -50%) scale(2);
-            opacity: 0.01;
-        }
-
-        .grid-item::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 120px;
-            height: 120px;
-            opacity: 0.08;
-            z-index: 0;
-            transition: all 0.6s ease;
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-
-        .grid-item[data-icon="mdi-plus-box"]::before {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M19,19V5H5V19H19M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5C3,3.89 3.9,3 5,3H19M11,7H13V11H17V13H13V17H11V13H7V11H11V7Z" /></svg>');
-        }
-
-        .grid-item[data-icon="mdi-tune-variant"]::before {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M8 13C6.14 13 4.59 14.28 4.14 16H2V18H4.14C4.59 19.72 6.14 21 8 21S11.41 19.72 11.86 18H22V16H11.86C11.41 14.28 9.86 13 8 13M8 19C6.9 19 6 18.1 6 17C6 15.9 6.9 15 8 15S10 15.9 10 17C10 18.1 9.1 19 8 19M19.86 6C19.41 4.28 17.86 3 16 3S12.59 4.28 12.14 6H2V8H12.14C12.59 9.72 14.14 11 16 11S19.41 9.72 19.86 8H22V6H19.86M16 9C14.9 9 14 8.1 14 7C14 5.9 14.9 5 16 5S18 5.9 18 7C18 8.1 17.1 9 16 9Z" /></svg>');
-        }
-
-        .grid-item[data-icon="mdi-selection"]::before {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M2 2H8V4H4V8H2V2M2 16H4V20H8V22H2V16M16 2H22V8H20V4H16V2M20 16H22V22H16V20H20V16Z" /></svg>');
-        }
-
-        .grid-item[data-icon="mdi-content-save"]::before {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" /></svg>');
-        }
-
-        .grid-item[data-icon="mdi-cog"]::before {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" /></svg>');
-        }
-
-        .grid-item[data-icon="mdi-information-outline"]::before {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z" /></svg>');
-        }
-
-        .grid-item[data-icon="mdi-alpha-a-box-outline"]::before {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M3,5A2,2 0 0,1 5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5M5,5V19H19V5H5M11,7H13A2,2 0 0,1 15,9V17H13V13H11V17H9V9A2,2 0 0,1 11,7M11,9V11H13V9H11Z" /></svg>');
-        }
-
-        .grid-item[data-icon="mdi-auto-fix"]::before {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M7.5,5.6L5,7L6.4,4.5L5,2L7.5,3.4L10,2L8.6,4.5L10,7L7.5,5.6M19.5,15.4L22,14L20.6,16.5L22,19L19.5,17.6L17,19L18.4,16.5L17,14L19.5,15.4M22,2L20.6,4.5L22,7L19.5,5.6L17,7L18.4,4.5L17,2L19.5,3.4L22,2M13.34,12.78L15.78,10.34L13.66,8.22L11.22,10.66L13.34,12.78M14.37,7.29L16.71,9.63C17.1,10 17.1,10.65 16.71,11.04L5.04,22.71C4.65,23.1 4,23.1 3.63,22.71L1.29,20.37C0.9,20 0.9,19.35 1.29,18.96L12.96,7.29C13.35,6.9 14,6.9 14.37,7.29Z" /></svg>');
-        }
-
-        .grid-item[data-icon="api"]::before {
-            background-image: url('_static/api.svg');
-            filter: invert(1);
         }
 
         .grid-item-content {
@@ -1131,6 +1074,11 @@
             padding: 0;
         }
 
+        #jdaviz-landing-wireframe {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
         /* Media Queries */
         @media (max-width: 768px) {
             .grid-container {
@@ -1385,93 +1333,9 @@
             color: #ffffff !important;
         }
 
-        /* Light Mode - Fix overlay icons to use page background color */
-        html[data-theme="light"] .grid-item[data-icon]::before {
-            background-color: var(--bg-gradient-start) !important;
-        }
-
-        /* Wireframe styles loaded from external file */
+        /* Wireframe styles loaded from external files */
     </style>
-    <link rel="stylesheet" href="{{ pathto('_static/wireframe-demo.css', 1) }}">
-    <script>
-        // Configure wireframe for landing page (show all features)
-        // For index.html (not using Sphinx directive), configure via window.wireframeConfig
-        // Options:
-        //   showScrollTo: boolean - Show "Learn more" buttons
-        //   initialState: array - Actions to apply immediately on load
-        //   customDemo: array - Demo sequence actions
-        //   demoRepeat: boolean - Whether demo loops
-        //
-        // Action syntax: "action@duration" where duration is how long the step lasts (ms)
-        // Viewer action examples for initialState or customDemo:
-        //   "viewer-add@duration:direction:newId" - Add a viewer (direction: horiz, vert, h, v)
-        //   "viewer-image@duration:viewerId:imagePath" - Set viewer background image
-        //   "viewer-legend@duration:viewerId:layer1|layer2" - Set legend layers
-        //   "viewer-focus@duration:viewerId" - Focus/highlight a viewer
-        //   "viewer-remove@duration:viewerId" - Remove a viewer
-        window.wireframeConfig = {
-            showScrollTo: true,
-            customDemo: [
-                // Open loaders sidebar
-                "loaders@1500",
-                // Set source to file
-                "loaders@1500:select-dropdown=source:file",
-                // Set format to image
-                "loaders@1500:select-dropdown=format:image",
-                // Click load button
-                "loaders@100:click-button=Load",
-                // Add Image viewer, set image, set legend (immediately)
-                "viewer-add@0:horiz:Image",
-                "viewer-image@0:Image:{{ pathto('_static/cosmic_cliffs_pbn.png', 1) }}",
-                "viewer-legend@3000:Image:Cosmic Cliffs",
-                // Set source to astroquery
-                "loaders@1500:select-dropdown=source:astroquery",
-                // Set format to catalog
-                "loaders@1500:select-dropdown=format:catalog",
-                // Click load button
-                "loaders@100:click-button=Load",
-                // Replace image with image with catalog scatter on top and update legend (immediately)
-                "viewer-image@0:Image:{{ pathto('_static/cosmic_cliffs_pbn_cat.png', 1) }}",
-                "viewer-legend@3000:Image:Catalog|Cosmic Cliffs",
-                // Go to plot options and setup initial state
-                "settings@1500",
-                // Select Image in Plot Options, select layer B (index 1)
-                // "settings@0:select-viewer=Image",
-                "settings@0:select-layer=1",
-                // init color to red immediately (no highlight), then show setting to green
-                "settings@1500!:set-color=#FF0000",
-                "settings@0:set-color=#00FF00",
-                "viewer-image@3000:Image:{{ pathto('_static/cosmic_cliffs_pbn_cat_green.png', 1) }}",
-                // Switch to Viewer tab
-                "loaders@1500",
-                "loaders@1500:select-tab=Viewer",
-                // Set viewer type to scatter
-                "loaders@1500:select-dropdown=viewer type:scatter",
-                // Click create viewer button
-                "loaders@100:click-button=Create Viewer",
-                // Add Scatter viewer and set its legend (immediately)
-                "viewer-add@0:vert:Scatter",
-                "viewer-image@0:Scatter:{{ pathto('_static/hr_diagram.png', 1) }}",
-                "viewer-legend@3000:Scatter:Catalog",
-                // select subset in scatter viewer (update image to show highlighted)
-                "subsets@1500",
-                // Activate the subset tool in the scatter viewer
-                "viewer-tool-toggle@1500:Scatter:subset",
-                "viewer-image@0:Scatter:{{ pathto('_static/hr_diagram_subset.png', 1) }}",
-                "viewer-image@3000:Image:{{ pathto('_static/cosmic_cliffs_pbn_cat_green_subset.png', 1) }}",
-                "viewer-tool-toggle@1500:Scatter:subset",
-                // cycle through other tabs
-                "plugins@3000",
-                "info@3000",
-                "info@3000:select-tab=Markers",
-                "info@3000:select-tab=Logger",
-                "settings@3000",
-                "settings@3000:select-tab=Units",
-                "save@5000"
-            ]
-        };
-    </script>
-    <script src="{{ pathto('_static/wireframe-controller.js', 1) }}"></script>
+    <script src="{{ pathto('_static/jdaviz-conf-settings.js', 1) }}"></script>
 </head>
 <body>
     <div class="container">
@@ -1540,23 +1404,42 @@
             Access Jdaviz through cloud-based platforms like TIKE or Roman Nexus, with pre-configured environments and data access.
         </div>
 
-        <!-- Wireframe Section (loaded from external file) -->
-        <div id="wireframe-placeholder"></div>
-        <script>
-            // Load wireframe HTML
-            fetch("{{ pathto('_static/wireframe-base.html', 1) }}")
-                .then(response => response.text())
-                .then(html => {
-                    // Replace Jinja2 variable with actual value
-                    const version = "{{ jdaviz_version }}";
-                    html = html.replace("{{ jdaviz_version }}", version);
-                    document.getElementById("wireframe-placeholder").innerHTML = html;
-
-                    // Manually trigger wireframe initialization after HTML is injected
-                    // Dispatch a custom event that the controller can listen for
-                    document.dispatchEvent(new CustomEvent('wireframe-loaded'));
-                });
-        </script>
+        <!-- Wireframe Section (powered by guidestar) -->
+        <div id="jdaviz-landing-wireframe"
+             data-guidestar
+             data-guidestar-config='{
+               "htmlSrc": "{{ pathto('_static/jdaviz-wireframe.html', 1) }}",
+               "repeat": true,
+               "initialClass": "show-scroll-to",
+               "steps": [
+                 {"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"},
+                 {"action": "select-dropdown", "value": "source:file", "delay": 1500, "caption": "Select file as the data source"},
+                 {"action": "select-dropdown", "value": "format:image", "delay": 1500, "caption": "Choose image format"},
+                 {"actions": [{"action": "click-button", "value": "Load", "delay": 500}, {"action": "viewer-add", "value": "horiz:Image"}, {"action": "viewer-image", "value": "Image:{{ pathto('_static/cosmic_cliffs_pbn.png', 1) }}"}, {"action": "viewer-legend", "value": "Image:Cosmic Cliffs"}], "delay": 3000, "caption": "Load the data"},
+                 {"action": "select-dropdown", "value": "source:astroquery", "delay": 1500, "caption": "Query a catalog from Astroquery"},
+                 {"action": "select-dropdown", "value": "format:catalog", "delay": 1500},
+                 {"actions": [{"action": "click-button", "value": "Load", "delay": 500}, {"action": "viewer-image", "value": "Image:{{ pathto('_static/cosmic_cliffs_pbn_cat.png', 1) }}"}, {"action": "viewer-legend", "value": "Image:Catalog|Cosmic Cliffs"}], "delay": 3000, "caption": "Load the catalog"},
+                 {"action": "show-sidebar", "value": "settings", "delay": 1500, "caption": "Open plot settings"},
+                 {"actions": [{"action": "select-layer", "value": "1"}, {"action": "set-color", "value": "#FF0000"}], "delay": 1500, "noHighlight": true, "caption": "Change the catalog marker color"},
+                 {"actions": [{"action": "set-color", "value": "#00FF00"}, {"action": "viewer-image", "value": "Image:{{ pathto('_static/cosmic_cliffs_pbn_cat_green.png', 1) }}"}], "delay": 3000},
+                 {"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Create a new viewer"},
+                 {"action": "select-tab", "value": "Viewer", "delay": 1500},
+                 {"action": "select-dropdown", "value": "viewer type:scatter", "delay": 1500, "caption": "Choose scatter plot type"},
+                 {"actions": [{"action": "click-button", "value": "Create Viewer", "delay": 500}, {"action": "viewer-add", "value": "vert:Scatter"}, {"action": "viewer-image", "value": "Scatter:{{ pathto('_static/hr_diagram.png', 1) }}"}, {"action": "viewer-legend", "value": "Scatter:Catalog"}], "delay": 3000, "caption": "HR diagram from the catalog"},
+                 {"action": "show-sidebar", "value": "subsets", "delay": 1500, "caption": "Open the subset tools"},
+                 {"action": "viewer-tool-toggle", "value": "Scatter:subset", "delay": 1500, "caption": "Draw a subset on the scatter plot"},
+                 {"actions": [{"action": "viewer-image", "value": "Scatter:{{ pathto('_static/hr_diagram_subset.png', 1) }}", "delay": 500}, {"action": "viewer-image", "value": "Image:{{ pathto('_static/cosmic_cliffs_pbn_cat_green_subset.png', 1) }}"}], "delay": 3000, "caption": "Subset is linked across all viewers"},
+                 {"action": "viewer-tool-toggle", "value": "Scatter:subset", "delay": 1500},
+                 {"action": "show-sidebar", "value": "plugins", "delay": 3000, "caption": "Browse available plugins"},
+                 {"action": "show-sidebar", "value": "info", "delay": 3000, "caption": "View data information and metadata"},
+                 {"action": "select-tab", "value": "Markers", "delay": 3000},
+                 {"action": "select-tab", "value": "Logger", "delay": 3000},
+                 {"action": "show-sidebar", "value": "settings", "delay": 3000, "caption": "Configure plot settings and units"},
+                 {"action": "select-tab", "value": "Units", "delay": 3000},
+                 {"action": "show-sidebar", "value": "save", "delay": 5000, "caption": "Save or export your work"}
+               ]
+             }'>
+        </div>
 
         <!-- Tab-specific Content -->
         <div class="platform-content-section">
@@ -1693,6 +1576,39 @@ jd.show()</div>
     </div>
 
     <script>
+        // Initialize grid item toggle buttons for landing page
+        document.addEventListener('DOMContentLoaded', function() {
+            var gridItems = document.querySelectorAll('.grid-item');
+            gridItems.forEach(function(item) {
+                var content = item.querySelector('.grid-item-content');
+                if (!content) return;
+                var contentHeight = content.scrollHeight;
+                var threshold = 300;
+                if (contentHeight > threshold) {
+                    item.classList.add('has-toggle');
+                    var toggleButton = document.createElement('button');
+                    toggleButton.className = 'toggle-more';
+                    toggleButton.textContent = 'Show More';
+                    content.style.maxHeight = threshold + 'px';
+                    content.style.overflow = 'hidden';
+                    toggleButton.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        var isExpanded = item.classList.contains('expanded');
+                        if (isExpanded) {
+                            item.classList.remove('expanded');
+                            content.style.maxHeight = threshold + 'px';
+                            toggleButton.textContent = 'Show More';
+                        } else {
+                            item.classList.add('expanded');
+                            content.style.maxHeight = 'none';
+                            toggleButton.textContent = 'Show Less';
+                        }
+                    });
+                    item.appendChild(toggleButton);
+                }
+            });
+        });
+
         // Platform tabs functionality
         document.addEventListener('DOMContentLoaded', function() {
             const platformTabs = document.querySelectorAll('.platform-tab');

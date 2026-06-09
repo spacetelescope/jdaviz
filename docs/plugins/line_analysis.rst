@@ -52,9 +52,7 @@ The Line Analysis plugin can be run from the API:
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: plugins,plugins@1000:open-panel
-   :enable-only: plugins
-   :plugin-name: Line Analysis
-   :plugin-panel-opened: false
-   :demo-repeat: false
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"set-plugin","value":"Line Analysis"},{"action":"disable-toolbar-except","value":"plugins"}]
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Line Analysis","delay":1000,"caption":"Open the Line Analysis plugin"}]

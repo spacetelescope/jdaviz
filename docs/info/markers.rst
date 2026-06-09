@@ -15,10 +15,10 @@ allows the user to measure distances between points in a viewer.
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: info,info:select-tab=Markers
-   :enable-only: info
-   :demo-repeat: false
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"disable-toolbar-except","value":"info"}]
+   :steps-json: [{"action": "show-sidebar", "value": "info", "delay": 1500, "caption": "Open the info sidebar"}, {"action": "select-tab", "value": "Markers", "delay": 1500, "caption": "Select the Markers tab"}]
 
 Details
 =======
