@@ -146,6 +146,9 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
             for row in line_table:
                 if row["listname"] is None:
                     row["listname"] = "Custom"
+                    # Assume a custom line should be shown (necessary if erase_spectral_lines()
+                    # has previously been called, since that permanently sets "show" to 0)
+                    row["show"] = True
 
         # Convert colors to hexa values, or set to default (red)
         if "colors" not in line_table.colnames:
@@ -247,22 +250,21 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
         # Deprecated wrapper preserved for backward compatibility.
         warnings.warn(
             "plot_spectral_line is deprecated; use plot_spectral_lines(line=...) instead",
-            DeprecationWarning,
+            DeprecationWarning, stacklevel=2
         )
         return self.plot_spectral_lines(line=line, global_redshift=global_redshift,
                                         plot_units=plot_units, **kwargs)
 
-    def plot_spectral_lines(self, line=None, colors=None, global_redshift=None,
+    def plot_spectral_lines(self, line=None, global_redshift=None, colors=None,
                             plot_units=None, **kwargs):
         """Plot either a single spectral line or the set loaded in ``self.spectral_lines``.
 
-        If ``line`` is provided (a table row or a string index/linename), the
-        function will behave like the old ``plot_spectral_line``. If ``line`` is
-        None, the function behaves like the old ``plot_spectral_lines`` and
-        draws all rows that have ``show == True``.
+        If ``line`` is provided (a table row, a string index/linename, or a QTable), the
+        function will plot that specific line(s). If ``line`` is None, the function behaves
+        like the old ``plot_spectral_lines`` and draws all rows.
 
         Examples:
-            Plot all enabled lines:
+            Plot all lines:
                 plot_spectral_lines()
 
             Plot a single line by name:
@@ -278,7 +280,25 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
             if global_redshift is None:
                 global_redshift = line
             line = None
-        fig = self.figure
+
+        # Get the redshift: prefer global_redshift, then the Line Lists
+        # plugin's redshift (if available), then self.redshift, then 0
+        redshift = 0
+        if global_redshift is None:
+            try:
+                ll_plugin = self.jdaviz_app.get_tray_item_from_name('g-line-list')
+                # plugin trait is `rs_redshift`; allow for None/empty
+                plugin_redshift = getattr(ll_plugin, 'rs_redshift', None)
+                if plugin_redshift is not None:
+                    redshift = float(plugin_redshift)
+                else:
+                    redshift = self.redshift if self.redshift is not None else 0
+            except Exception:
+                # If plugin not available or any error, fall back
+                redshift = self.redshift if self.redshift is not None else 0
+        else:
+            redshift = global_redshift
+        #print(f"redshift:{redshift}")
 
         # Single-line behavior
         if line is not None:
@@ -294,22 +314,16 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
                     else:
                         raise KeyError(f"Line '{line}' not found in spectral_lines table")
 
+            # Erase this line if it already existed, to avoid duplication
+            self.erase_spectral_lines(name_rest=line["name_rest"])
+
             if plot_units is None:
                 plot_units = self.data()[0].spectral_axis.unit
-
-            # Get the redshift: prefer global_redshift, then self.redshift, then 0
-            if global_redshift is None:
-                redshift = self.redshift if self.redshift is not None else 0
-            else:
-                redshift = global_redshift
 
             color = colors if colors is not None else line["colors"]
 
             mark = self._create_spectral_mark(line, plot_units, redshift, color,
                                               **kwargs)
-
-            # Erase this line if it already existed, to avoid duplication
-            self.erase_spectral_lines(name_rest=line["name_rest"])
 
             # Add mark and broadcast
             self.figure.marks = self.figure.marks + [mark]
@@ -317,31 +331,32 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
             self._broadcast_plotted_lines()
             return
 
-        # Multi-line behavior (original plot_spectral_lines)
+        # Handle QTable passed as first argument
+        lines_to_plot = self.spectral_lines
         self.erase_spectral_lines(show_none=False)
+            # Reset all show flags to True so they will be plotted
+        self.spectral_lines["show"] = True
+        if plot_units is None:
+            plot_units = self.data()[0].spectral_axis.unit
 
-        # Check to see if colors were defined for each line
+                # Check to see if colors were defined for each line
         if colors is None:
             colors = ["indigo"]
-        if "colors" in self.spectral_lines.columns:
-            colors = self.spectral_lines["colors"]
-        elif len(colors) != len(self.spectral_lines):
-            colors = colors * len(self.spectral_lines)
-
-        lines = self.spectral_lines
-        plot_units = self.data()[0].spectral_axis.unit
-
-        # apply redshift to all lines in the table
-        redshift = self.redshift if global_redshift is None else global_redshift
+        if "colors" in lines_to_plot.colnames:
+            colors = lines_to_plot["colors"]
+        elif len(colors) != len(lines_to_plot):
+            colors = colors * len(lines_to_plot)
 
         marks = []
-        for line, color in zip(lines, colors):
-            if not line["show"]:
+        for line_row, color in zip(lines_to_plot, colors):
+             # Only plot if show is not explicitly False
+            if "show" in lines_to_plot.colnames and not line_row["show"]:
                 continue
-            marks.append(self._create_spectral_mark(line, plot_units, redshift,
-                                                    color, **kwargs))
-        fig.marks = fig.marks + marks
+            marks.append(self._create_spectral_mark(line_row, plot_units, redshift,
+                                                            color, **kwargs))
+        self.figure.marks = self.figure.marks + marks
         self._broadcast_plotted_lines()
+        return
 
     def available_linelists(self):
         return get_available_linelists()
