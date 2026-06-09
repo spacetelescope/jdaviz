@@ -186,6 +186,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Linear".
     * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Custom".
+    * :meth:`set_layer_to_top`
     * ``volume_level`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. Set the volume for the selected sonified layer.
     * ``sonified_audible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -853,7 +854,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                        'image_contrast', 'image_bias',
                        'contour_visible', 'contour_mode',
                        'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels',
-                       'stretch_curve_visible', 'apply_RGB_presets']
+                       'stretch_curve_visible', 'apply_RGB_presets', 'set_layer_to_top']
         if self.config == 'deconfigged':
             expose += ['xatt', 'yatt', 'hist_visible', 'hist_color', 'hist_opacity',
                        'hist_xlog', 'hist_ylog', 'hist_n_bin', 'hist_x_min', 'hist_x_max',
@@ -1110,7 +1111,11 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.set_layer_to_top()
 
     def set_layer_to_top(self):
-        """Set the currently selected layer as the top layer in the image viewer."""
+        """Set the currently selected layer as the top layer in the image viewer.
+
+        The selected layer is also made visible, and its opacity is set to 1 if it
+        was zero, so that the change is actually reflected at the top of the viewer.
+        """
         if self.viewer_multiselect or self.layer_multiselect:
             raise ValueError("set_layer_to_top only works with a single viewer and layer selected")
         viewer = self.viewer.selected_obj
@@ -1126,6 +1131,12 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         for lyr in viewer.state.layers:
             if hasattr(lyr, 'layer') and lyr.layer.label == layer_label:
                 lyr.zorder = max(all_zorders) + 1
+                # ensure the layer is visible (and has non-zero opacity) so that
+                # promoting it to the top is actually reflected in the viewer
+                if hasattr(lyr, 'bitmap_visible'):
+                    lyr.bitmap_visible = True
+                if getattr(lyr, 'alpha', None) == 0:
+                    lyr.alpha = 1
                 break
         self._update_layer_is_top()
 
