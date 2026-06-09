@@ -47,10 +47,10 @@ The loader automatically detects and parses standard spectroscopic data formats.
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: loaders,loaders@1000:select-dropdown=Format:1D Spectrum,loaders:highlight=#format-select
-   :enable-only: loaders
-   :demo-repeat: false
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"disable-toolbar-except","value":"loaders"}]
+   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-dropdown", "value": "Format:1D Spectrum", "delay": 1000, "caption": "Set format to 1D Spectrum"}, {"action": "highlight", "target": "#format-select", "delay": 1500}]
 
 See Also
 ========
