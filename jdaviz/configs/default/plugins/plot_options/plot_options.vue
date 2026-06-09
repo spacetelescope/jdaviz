@@ -693,8 +693,7 @@
           class="ignore-api-hints"
           style="margin-left: -12px; margin-right: -12px"
         >
-          The currently selected layer is not the top layer. Changes made here will not be
-          reflected in the viewer until the "set layer to top" button below is pressed.
+          Changes to the currently selected layer may not be apparent in the viewer because it is underneath other layers.
         </v-alert>
         <v-row justify="end">
           <j-tooltip :tooltipcontent="layer_selected + ' may not be visible in the viewer because it is not the top layer, click to bring to the top'">
@@ -709,8 +708,8 @@
                   (image_visible_value && image_opacity_value > 0 ?
                     'set layer to top' :
                     (image_opacity_value > 0 ?
-                      'set to top and set visible' :
-                      'set layer to top and set visible'))
+                      'set layer to top and visible' :
+                      'set layer to top and opacity = 1'))
               }}
             </plugin-action-button>
           </j-tooltip>
