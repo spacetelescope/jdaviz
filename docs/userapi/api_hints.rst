@@ -27,9 +27,11 @@ To enable API hints in the user interface:
 2. The button will highlight when API hints are active
 3. Click again to toggle off
 
-.. wireframe-demo::
-   :demo: loaders,loaders:api-toggle,loaders:select-tab=Viewer,save,save:api-toggle,settings,settings:api-toggle,settings:select-tab=Units,info,info:api-toggle,info:select-tab=Markers,info:select-tab=Logger,subsets,subsets:api-toggle
-   :demo-repeat: true
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :js: jdaviz-wireframe-actions.js
+   :css: jdaviz-wireframe.css
+   :repeat: true
+   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}, {"action": "select-tab", "value": "Viewer", "delay": 1500, "caption": "Select the Viewer tab"}, {"action": "show-sidebar", "value": "save", "delay": 1500, "caption": "Open the export sidebar"}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}, {"action": "show-sidebar", "value": "settings", "delay": 1500, "caption": "Open the settings sidebar"}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}, {"action": "select-tab", "value": "Units", "delay": 1500, "caption": "Select the Units tab"}, {"action": "show-sidebar", "value": "info", "delay": 1500, "caption": "Open the info sidebar"}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}, {"action": "select-tab", "value": "Markers", "delay": 1500, "caption": "Select the Markers tab"}, {"action": "select-tab", "value": "Logger", "delay": 1500, "caption": "Select the Logger tab"}, {"action": "show-sidebar", "value": "subsets", "delay": 1500, "caption": "Open the subset tools"}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}]
 
 Where Hints Appear
 ------------------

@@ -53,12 +53,10 @@ so that multiple sonified layers can be adjusted like a mixing board.
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: plugins,plugins@1000:open-panel
-   :enable-only: plugins
-   :plugin-name: Sonify Data
-   :plugin-panel-opened: false
-   :demo-repeat: false
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"set-plugin","value":"Sonify Data"},{"action":"disable-toolbar-except","value":"plugins"}]
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Sonify Data","delay":1000,"caption":"Open the Sonify Data plugin"}]
 
 Click the :guilabel:`Sonify` icon in the plugin toolbar to:
 

@@ -43,12 +43,10 @@ to select a color for any flag.
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: plugins,plugins@1000:open-panel
-   :enable-only: plugins
-   :plugin-name: Data Quality
-   :plugin-panel-opened: false
-   :demo-repeat: false
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"set-plugin","value":"Data Quality"},{"action":"disable-toolbar-except","value":"plugins"}]
+   :steps-json: [{"action":"show-sidebar","value":"plugins","delay":1500,"caption":"Open the plugin toolbar"},{"action":"open-panel","value":"Data Quality","delay":1000,"caption":"Open the Data Quality plugin"}]
 
 Click the :guilabel:`Data Quality` icon in the plugin toolbar to:
 
