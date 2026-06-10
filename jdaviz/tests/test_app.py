@@ -472,7 +472,7 @@ def test_add_custom_loader_object(deconfigged_helper, spectrum1d):
     assert my_table_item['requires_api_support'] is True
 
 
-# Ignore bad 404 handling in python 3.14 for now
+# Ignore more strict 404 handling in python 3.14 for now
 @pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_add_custom_loader_url(deconfigged_helper):
     """Test _add_custom_loader with a URL resolver."""
@@ -486,7 +486,7 @@ def test_add_custom_loader_url(deconfigged_helper):
     assert 'remote_file' in deconfigged_helper._app._jdaviz_helper.loaders
 
 
-# Ignore bad 404 handling in python 3.14 for now
+# Ignore more strict 404 handling in python 3.14 for now
 @pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_add_custom_loader_invalid_resolver(deconfigged_helper):
     """Test _add_custom_loader with an invalid resolver type."""
