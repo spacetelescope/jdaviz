@@ -88,9 +88,9 @@ def suppress_widget_comms():
     many datasets are loaded in a loop, the resulting flood of comm messages can
     exceed Jupyter's IOPub message-rate limit ("IOPub message rate exceeded").
 
-    Here, the ``create_comm`` method temporarily uses a dummy comm (:class:`comm.DummyComm`)
-    to prevent temporary widgets from sending messages to the browser. Widgets constructed in
-    this block are still fully functional Python objects.
+    Here, the ``create_comm`` method temporarily uses a dummy comm to prevent temporary widgets
+    from sending messages to the browser. Widgets constructed in this block are still fully
+    functional Python objects.
 
     Notes
     -----
