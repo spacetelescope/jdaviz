@@ -1623,6 +1623,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         self._add_or_update_column(column_name, data)
 
+        # and make the user-added column editable
+        self.widget_table.state.editable_components += [self.widget_table.data.id[column_name]]
+
     def update_column(self, column_name, data):
         """
         Update the data in an existing column of the table.
