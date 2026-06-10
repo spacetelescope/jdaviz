@@ -1,3 +1,5 @@
+from cProfile import label
+
 from echo import delay_callback, CallbackProperty
 
 import warnings
@@ -1479,6 +1481,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     ['jdaviz:table_subset'],
                     ['jdaviz:viewer_clone']
                    ]
+    
 
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
@@ -1624,7 +1627,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self._add_or_update_column(column_name, data)
 
         # and make the user-added column editable
-        self.state.editable_components += [self.widget_table.data.id[column_name]]
+        cid = self.layers[0].layer.data.get_component(column_name)
+        self.state.editable_components = list(self.state.editable_components) + [cid]
+
 
     def update_column(self, column_name, data):
         """
