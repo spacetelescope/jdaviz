@@ -134,7 +134,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # spectroscopic observations. The OBSTYPE header keyword is used to
         # delineate between the two.
         if hst_obstype(self.input) == 'imaging':
-            return 'HST imaging products are not valid as a 2D spectrum.'
+            return 'HST imaging products (OBSTYPE=IMAGING) are not valid as a 2D spectrum.'
 
         if self.spectrum.flux.ndim != 2:
             return 'Spectrum flux must be 2D.'
