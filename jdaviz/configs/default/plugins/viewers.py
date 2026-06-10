@@ -1,5 +1,3 @@
-from cProfile import label
-
 from echo import delay_callback, CallbackProperty
 
 import warnings
@@ -1481,7 +1479,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     ['jdaviz:table_subset'],
                     ['jdaviz:viewer_clone']
                    ]
-    
 
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
@@ -1513,7 +1510,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # if this table viewer is removed while tools are active
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=self._on_viewer_removed)
-
 
     def _on_table_select_row_click(self, msg):
         """Handle click from image viewer to select/toggle closest table row."""
@@ -1629,7 +1625,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # and make the user-added column editable
         cid = self.layers[0].layer.data.get_component(column_name)
         self.state.editable_components = list(self.state.editable_components) + [cid]
-
 
     def update_column(self, column_name, data):
         """
