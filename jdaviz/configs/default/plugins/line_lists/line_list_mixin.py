@@ -11,7 +11,7 @@ class LineListMixin:
 
     _redshift = 0
 
-    def load_line_list(self, line_table):
+    def load_line_list(self, line_table, replace=False):
         """
         Convenience function to load a line list and update the plugin UI.
         Delegates to the Line Lists plugin to avoid code duplication.

@@ -146,9 +146,6 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
             for row in line_table:
                 if row["listname"] is None:
                     row["listname"] = "Custom"
-                    # Assume a custom line should be shown (necessary if erase_spectral_lines()
-                    # has previously been called, since that permanently sets "show" to 0)
-                    row["show"] = True
 
         # Convert colors to hexa values, or set to default (red)
         if "colors" not in line_table.colnames:
@@ -283,6 +280,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
 
         # Get the redshift: prefer global_redshift, then the Line Lists
         # plugin's redshift (if available), then self.redshift, then 0
+        # for some reason, redshift needs to be initialized
         redshift = 0
         if global_redshift is None:
             try:
@@ -299,7 +297,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
         else:
             redshift = global_redshift
 
-        # Single-line behavior
+        # Single-line behavior: old plot_spectral_line
         if line is not None:
             if isinstance(line, str):
                 # Try the full index first, otherwise name only
@@ -350,7 +348,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
 
         marks = []
         for line_row, color in zip(lines_to_plot, colors):
-             # Only plot if show is not explicitly False
+             # Plot only the lines with show=True
             if "show" in lines_to_plot.colnames and not line_row["show"]:
                 continue
             marks.append(self._create_spectral_mark(line_row, plot_units, redshift,
