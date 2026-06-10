@@ -472,6 +472,7 @@ def test_add_custom_loader_object(deconfigged_helper, spectrum1d):
     assert my_table_item['requires_api_support'] is True
 
 
+@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_add_custom_loader_url(deconfigged_helper):
     """Test _add_custom_loader with a URL resolver."""
     # Use a simple test URL (it doesn't need to be valid for the loader creation)
