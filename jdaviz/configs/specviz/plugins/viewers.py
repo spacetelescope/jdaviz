@@ -177,7 +177,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
 
         # Plot redshifted lines that have show=True
         if np.any(self.spectral_lines["show"]):
-            self.plot_spectral_lines()
+            self.plot_spectral_lines(show_all=False)
 
         if return_table:
             return line_table
@@ -256,7 +256,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
                                         plot_units=plot_units, **kwargs)
 
     def plot_spectral_lines(self, line=None, global_redshift=None, colors=None,
-                            plot_units=None, **kwargs):
+                            plot_units=None, show_all=True, **kwargs):
         """Plot either a single spectral line or the set loaded in ``self.spectral_lines``.
 
         If ``line`` is provided (a table row, a string index/linename, or a QTable), the
@@ -273,8 +273,8 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
 
             Plot all lines with custom redshift:
                 plot_spectral_lines(global_redshift=0.01)
-                plot_spectral_lines(colors=None, global_redshift=0.01)
         """
+
         # if line is a numeric type, treat it as global_redshift
         if isinstance(line, (int, float)):
             if global_redshift is None:
@@ -298,12 +298,11 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
                 redshift = self.redshift if self.redshift is not None else 0
         else:
             redshift = global_redshift
-        #print(f"redshift:{redshift}")
 
         # Single-line behavior
         if line is not None:
             if isinstance(line, str):
-                # Try the full index first (for backend calls), otherwise name only
+                # Try the full index first, otherwise name only
                 try:
                     line = self.spectral_lines.loc[line]
                 except KeyError:
@@ -316,6 +315,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
 
             # Erase this line if it already existed, to avoid duplication
             self.erase_spectral_lines(name_rest=line["name_rest"])
+            self.spectral_lines.loc[line["name_rest"]]["show"] = True
 
             if plot_units is None:
                 plot_units = self.data()[0].spectral_axis.unit
@@ -327,19 +327,20 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
 
             # Add mark and broadcast
             self.figure.marks = self.figure.marks + [mark]
-            line["show"] = True
             self._broadcast_plotted_lines()
             return
 
-        # Handle QTable passed as first argument
+        # If line is None, plot the whole table given to load_line_list
         lines_to_plot = self.spectral_lines
         self.erase_spectral_lines(show_none=False)
-            # Reset all show flags to True so they will be plotted
-        self.spectral_lines["show"] = True
+        # Reset all show flags to True so they will be plotted.
+        # Necessary if erase_spectral_lines() has previously been called
+        if show_all==True:
+            self.spectral_lines["show"] = True
         if plot_units is None:
             plot_units = self.data()[0].spectral_axis.unit
 
-                # Check to see if colors were defined for each line
+        # Check to see if colors were defined for each line
         if colors is None:
             colors = ["indigo"]
         if "colors" in lines_to_plot.colnames:

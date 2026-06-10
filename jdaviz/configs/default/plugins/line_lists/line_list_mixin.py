@@ -45,11 +45,11 @@ class LineListMixin:
         if viewer is not None:
             viewer.plot_spectral_line(line, global_redhsift=global_redshift)
 
-    def plot_spectral_lines(self, line=None, global_redshift=None):
+    def plot_spectral_lines(self, line=None, global_redshift=None, show_all=True):
         """Convenience function to get to the viewer function"""
         viewer = self._get_spectrum_viewer()
         if viewer is not None:
-            viewer.plot_spectral_lines(line, global_redshift)
+            viewer.plot_spectral_lines(line, global_redshift, show_all=show_all)
 
     @property
     def spectral_lines(self):
