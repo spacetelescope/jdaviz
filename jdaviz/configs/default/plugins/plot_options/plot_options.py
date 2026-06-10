@@ -978,10 +978,16 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             viewer = self.viewer.selected_obj
 
         if viewer is self.viewer.selected_obj and self._viewer_is_image_viewer():  # noqa
-            if viewer.active_image_layer is None:
+            # Use the same exclusion set as ``layer_is_top`` / ``set_layer_to_top`` so that
+            # the highlighted (top) layer is determined consistently: subsets, WCS-only/
+            # orientation layers, and associated child layers (DQ, uncertainty, etc.) are
+            # excluded from the comparison.
+            eligible_layers = self._eligible_top_layers(viewer)
+            if not eligible_layers:
                 self.active_layer = ""
-                return
-            self.active_layer = viewer.active_image_layer.layer.label
+            else:
+                top_layer = max(eligible_layers, key=lambda lyr: lyr.zorder)
+                self.active_layer = top_layer.layer.label
 
         # Refresh the top-layer button state whenever the viewer's layer list changes
         # (e.g. a layer is added, removed, or reordered via the data menu).
@@ -1059,6 +1065,26 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
 
+    def _assoc_child_labels(self):
+        # Labels of layers that are associated children (DQ, uncertainty, WCS-only) of
+        # another data layer.  These float above their parent via zorder + 0.1 and cannot
+        # be independently promoted, so they are excluded from top-layer determination.
+        return set(
+            child for data in self._app.data_collection
+            for child in self._app._get_assoc_data_children(data.label)
+        )
+
+    def _eligible_top_layers(self, viewer):
+        # Image layers eligible to be considered the 'top' layer in the viewer.
+        # Excludes subsets, WCS-only/orientation layers, and associated child layers,
+        # matching the logic used by ``set_layer_to_top`` / ``layer_is_top``.
+        child_labels = self._assoc_child_labels()
+        return [lyr for lyr in viewer.state.layers
+                if (hasattr(lyr, 'layer') and hasattr(lyr, 'zorder') and lyr.zorder is not None
+                    and not hasattr(lyr.layer, 'subset_state')
+                    and is_not_wcs_only(lyr.layer)
+                    and lyr.layer.label not in child_labels)]
+
     @observe('layer_selected', 'viewer_selected', 'layer_items',
              'layer_multiselect', 'viewer_multiselect')
     def _update_layer_is_top(self, msg={}):
@@ -1086,25 +1112,17 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             return
         # Child layers (DQ, uncertainty, WCS-only) float above their parent via zorder + 0.1
         # and cannot be independently promoted; treat them as already on top.
-        child_labels = set(
-            child for data in self._app.data_collection
-            for child in self._app._get_assoc_data_children(data.label)
-        )
-        if self.layer_selected in child_labels:
+        if self.layer_selected in self._assoc_child_labels():
             self.layer_is_top = True
             return
-        # Single pass: track both the selected layer's zorder and the running maximum.
-        # Exclude subsets, child layers, and WCS-only/orientation layers from the comparison.
-        selected_zorder = max_zorder = None
-        for lyr in viewer.state.layers:
-            if (hasattr(lyr, 'layer') and hasattr(lyr, 'zorder') and lyr.zorder is not None
-                    and not hasattr(lyr.layer, 'subset_state')
-                    and is_not_wcs_only(lyr.layer)
-                    and lyr.layer.label not in child_labels):
-                if max_zorder is None or lyr.zorder > max_zorder:
-                    max_zorder = lyr.zorder
-                if lyr.layer.label == self.layer_selected:
-                    selected_zorder = lyr.zorder
+        # Compare the selected layer's zorder against the running maximum across all
+        # eligible layers (subsets, child layers, and WCS-only/orientation layers excluded).
+        eligible_layers = self._eligible_top_layers(viewer)
+        max_zorder = max((lyr.zorder for lyr in eligible_layers), default=None)
+        selected_zorder = next(
+            (lyr.zorder for lyr in eligible_layers
+             if lyr.layer.label == self.layer_selected), None
+        )
         self.layer_is_top = (selected_zorder is not None and selected_zorder == max_zorder)
 
     def vue_set_layer_to_top(self, data):
