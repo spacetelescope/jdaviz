@@ -22,6 +22,8 @@ New Features
 - Add option to limit results to science products when retrieving files from an archive query
   results table. [#4194]
 
+- Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#6070]
+
 Mosviz
 ^^^^^^
 
