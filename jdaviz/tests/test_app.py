@@ -472,7 +472,8 @@ def test_add_custom_loader_object(deconfigged_helper, spectrum1d):
     assert my_table_item['requires_api_support'] is True
 
 
-# Ignore more strict 404 handling in python 3.14 for now
+# Ignore more strict 404 handling in python 3.14 
+# TODO: for now
 @pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_add_custom_loader_url(deconfigged_helper):
     """Test _add_custom_loader with a URL resolver."""
