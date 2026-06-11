@@ -456,9 +456,12 @@ class SpectralSlice(BaseSlicePlugin):
         # Ignore messages from tools in non-cubeviz viewers (e.g. the time slice tool
         # in an lcviz TimeScatterView), so that spectral and temporal slices remain
         # independent when multiple viewer types coexist in a deconfigged app.
+        # Use type() rather than isinstance() so that lcviz's CubeView (which
+        # inherits CubevizImageView) is correctly excluded, and so that
+        # Spectrum1DViewer (used directly in deconfigged) is correctly included.
         sender_viewer = getattr(msg.sender, 'viewer', None)
-        if sender_viewer is not None and not isinstance(
-                sender_viewer, (CubevizImageView, CubevizProfileView, Spectrum1DViewer)):
+        if sender_viewer is not None and type(sender_viewer) not in (
+                CubevizImageView, CubevizProfileView, Spectrum1DViewer):
             return
         super()._on_select_slice_message(msg)
 
@@ -505,8 +508,8 @@ class RampSlice(BaseSlicePlugin):
         # slice types remain independent when multiple viewer types coexist in a
         # deconfigged app.
         sender_viewer = getattr(msg.sender, 'viewer', None)
-        if sender_viewer is not None and not isinstance(
-                sender_viewer, (RampvizImageView, RampvizProfileView)):
+        if sender_viewer is not None and type(sender_viewer) not in (
+                RampvizImageView, RampvizProfileView):
             return
         super()._on_select_slice_message(msg)
 
