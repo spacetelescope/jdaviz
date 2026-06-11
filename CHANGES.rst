@@ -80,6 +80,8 @@ Bug Fixes
 - Stop using SkyCoord.from_name() to try to resolve sources in the astroquery loader
   that are already RA and Dec coordinates. [#4193]
 
+- Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
+
 Mosviz
 ^^^^^^
 
