@@ -87,6 +87,7 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     cb = po.stretch_histogram._marks["colorbar"]
     assert_allclose(cb.x, po.stretch_histogram.figure.marks[0].x)
     assert_allclose(cb.y, 1)
+    # remove version check once glue-jupyer >0.29.0 is pinned
     if Version(glue_jupyter.__version__) <= Version('0.29.0'):  # Gray scale, linear
         assert cb.colors == [
             '#050505', '#0f0f0f', '#191919', '#232323', '#2e2e2e',
