@@ -1623,7 +1623,8 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self._add_or_update_column(column_name, data)
 
         # and make the user-added column editable
-        cid = self.layers[0].layer.data.get_component(column_name)
+        cid = self.layers[0].layer.data.id[column_name]
+        print(cid, type(cid))
         self.state.editable_components = list(self.state.editable_components) + [cid]
 
     def update_column(self, column_name, data):
