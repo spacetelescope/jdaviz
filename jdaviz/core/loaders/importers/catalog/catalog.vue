@@ -62,6 +62,24 @@
       ></plugin-select>
 
       <plugin-select
+        :items="coord_frame_items.map(i => i.label)"
+        :selected.sync="coord_frame_selected"
+        label="Coordinate Frame"
+        hint="Select the coordinate frame for the sky coordinates."
+        api_hint="ldr.importer.coord_frame ="
+        :api_hints_enabled="api_hints_enabled"
+      ></plugin-select>
+
+      <plugin-select v-if="coord_frame_selected !== 'icrs' && coord_frame_selected !== 'galactic'"
+        :items="coord_equinox_items.map(i => i.label)"
+        :selected.sync="coord_equinox_selected"
+        label="Equinox"
+        hint="Equinox for the coordinate frame."
+        api_hint="ldr.importer.coord_equinox ="
+        :api_hints_enabled="api_hints_enabled"
+      ></plugin-select>
+
+      <plugin-select
         :items="col_x_items.map(i => i.label)"
         :selected.sync="col_x_selected"
         label="X Column"

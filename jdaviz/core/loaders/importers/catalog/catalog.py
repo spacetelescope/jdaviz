@@ -34,6 +34,12 @@ class CatalogImporter(BaseImporterToDataCollection):
     col_dec_unit_items = List().tag(sync=True)
     col_dec_unit_selected = Unicode().tag(sync=True)
 
+    coord_frame_items = List().tag(sync=True)
+    coord_frame_selected = Unicode().tag(sync=True)
+
+    coord_equinox_items = List().tag(sync=True)
+    coord_equinox_selected = Unicode().tag(sync=True)
+
     # for catalogs with source positions in pixel coordinates
     col_x_items = List().tag(sync=True)
     col_x_selected = Unicode().tag(sync=True)
@@ -110,6 +116,15 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                   items='col_dec_unit_items',
                                                   selected='col_dec_unit_selected',
                                                   manual_options=self._valid_coord_units('dec'))
+        self.coord_frame = SelectPluginComponent(self,
+                                                 items='coord_frame_items',
+                                                 selected='coord_frame_selected',
+                                                 manual_options=['icrs', 'fk5', 'fk4', 'galactic', 'ecliptic'])
+
+        self.coord_equinox = SelectPluginComponent(self,
+                                                   items='coord_equinox_items',
+                                                   selected='coord_equinox_selected',
+                                                   manual_options=['J2000.0', 'J1950.0', 'B1950.0', 'B1900.0'])
 
         # dropdown for source ID column
         self.col_id = SelectPluginComponent(self,
@@ -420,7 +435,8 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other']
+        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other',
+                  'coord_frame', 'coord_equinox']
         if self.input_has_extensions:
             expose += ['extension']
         return ImporterUserApi(self, expose=expose)
@@ -495,6 +511,21 @@ class CatalogImporter(BaseImporterToDataCollection):
                 ra = ra.astype(float) * u.Unit(self.col_ra_unit_selected)
             if getattr(dec, 'unit') is None:
                 dec = dec.astype(float) * u.Unit(self.col_dec_unit_selected)
+
+            # apply selection of coordinate frame if not already in ICRS
+            # if the coordinates are in a different frame, they will be transformed
+            # to ICRS, which is the internal frame used in jdaviz for consistency
+
+            if self.coord_frame_selected not in ['', 'icrs']:
+                kwargs = {'frame': self.coord_frame_selected}
+                # i think? ICRS is a fixed frame so we dont need to expose choice
+                # of 'equinox' for that frame, so do it here. ignore galactic too?
+                if self.coord_equinox_selected not in ['', 'J2000'] and self.coord_frame_selected != 'galactic':
+                    kwargs['equinox'] = self.coord_equinox_selected
+            
+                sc_temp = SkyCoord(ra, dec, **kwargs)
+                ra = sc_temp.icrs.ra
+                dec = sc_temp.icrs.dec
 
             output_table[col_ra_selected] = ra
             output_table[col_dec_selected] = dec
