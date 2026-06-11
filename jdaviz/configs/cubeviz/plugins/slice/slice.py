@@ -15,6 +15,7 @@ from jdaviz.configs.cubeviz.plugins.viewers import (
 from jdaviz.configs.cubeviz.helper import _spectral_axis_names
 from jdaviz.configs.rampviz.helper import _temporal_axis_names
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, SliceToolStateMessage,
                                 SliceSelectSliceMessage, SliceValueUpdatedMessage,
@@ -457,7 +458,7 @@ class SpectralSlice(BaseSlicePlugin):
         # independent when multiple viewer types coexist in a deconfigged app.
         sender_viewer = getattr(msg.sender, 'viewer', None)
         if sender_viewer is not None and not isinstance(
-                sender_viewer, (CubevizImageView, CubevizProfileView)):
+                sender_viewer, (CubevizImageView, CubevizProfileView, Spectrum1DViewer)):
             return
         super()._on_select_slice_message(msg)
 
