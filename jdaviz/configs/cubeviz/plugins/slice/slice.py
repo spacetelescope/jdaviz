@@ -451,6 +451,16 @@ class SpectralSlice(BaseSlicePlugin):
         self._set_relevant()
         super()._on_add_data(msg)
 
+    def _on_select_slice_message(self, msg):
+        # Ignore messages from tools in non-cubeviz viewers (e.g. the time slice tool
+        # in an lcviz TimeScatterView), so that spectral and temporal slices remain
+        # independent when multiple viewer types coexist in a deconfigged app.
+        sender_viewer = getattr(msg.sender, 'viewer', None)
+        if sender_viewer is not None and not isinstance(
+                sender_viewer, (CubevizImageView, CubevizProfileView)):
+            return
+        super()._on_select_slice_message(msg)
+
     @observe('vdocs')
     def _update_docs_link(self, *args):
         self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/cubeviz/plugins.html#slice'
@@ -488,6 +498,16 @@ class RampSlice(BaseSlicePlugin):
 
         self.viewer.add_filter(lambda viewer: isinstance(viewer, (RampvizImageView, RampvizProfileView)))  # noqa
         self._set_relevant()
+
+    def _on_select_slice_message(self, msg):
+        # Ignore messages from tools in non-rampviz viewers so that ramp and other
+        # slice types remain independent when multiple viewer types coexist in a
+        # deconfigged app.
+        sender_viewer = getattr(msg.sender, 'viewer', None)
+        if sender_viewer is not None and not isinstance(
+                sender_viewer, (RampvizImageView, RampvizProfileView)):
+            return
+        super()._on_select_slice_message(msg)
 
     @observe('vdocs')
     def _update_docs_link(self, *args):
