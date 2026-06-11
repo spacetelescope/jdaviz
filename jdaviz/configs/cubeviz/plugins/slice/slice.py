@@ -465,6 +465,19 @@ class SpectralSlice(BaseSlicePlugin):
             return
         super()._on_select_slice_message(msg)
 
+    @property
+    def slice_selection_viewers(self):
+        # Use type() to exclude lcviz's CubeView, which inherits CubevizImageView
+        return [v for v in self._app._viewer_store.values()
+                if type(v) is CubevizImageView]
+
+    @property
+    def slice_indicator_viewers(self):
+        # CubevizProfileView (cubeviz) and Spectrum1DViewer (deconfigged) are the
+        # spectral profile viewers; type() excludes any lcviz subclasses
+        return [v for v in self._app._viewer_store.values()
+                if type(v) in (CubevizProfileView, Spectrum1DViewer)]
+
     @observe('vdocs')
     def _update_docs_link(self, *args):
         self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/cubeviz/plugins.html#slice'
@@ -512,6 +525,16 @@ class RampSlice(BaseSlicePlugin):
                 RampvizImageView, RampvizProfileView):
             return
         super()._on_select_slice_message(msg)
+
+    @property
+    def slice_selection_viewers(self):
+        return [v for v in self._app._viewer_store.values()
+                if type(v) is RampvizImageView]
+
+    @property
+    def slice_indicator_viewers(self):
+        return [v for v in self._app._viewer_store.values()
+                if type(v) is RampvizProfileView]
 
     @observe('vdocs')
     def _update_docs_link(self, *args):
