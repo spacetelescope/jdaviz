@@ -3,8 +3,10 @@ import pytest
 from astropy import units as u
 from astropy.nddata import NDData
 from astropy.table import QTable
+import glue_jupyter
 import matplotlib
 from numpy.testing import assert_allclose
+from packaging.version import Version
 from photutils.datasets import make_4gaussians_image
 
 from jdaviz.configs.default.plugins.plot_options.plot_options import SplineStretch
@@ -85,12 +87,25 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     cb = po.stretch_histogram._marks["colorbar"]
     assert_allclose(cb.x, po.stretch_histogram.figure.marks[0].x)
     assert_allclose(cb.y, 1)
-    assert cb.colors == [  # Gray scale, linear
-        '#050505', '#0f0f0f', '#191919', '#232323', '#2e2e2e',
-        '#383838', '#424242', '#4c4c4c', '#575757', '#616161',
-        '#6b6b6b', '#757575', '#808080', '#8a8a8a', '#949494',
-        '#9e9e9e', '#a8a8a8', '#b3b3b3', '#bdbdbd', '#c7c7c7',
-        '#d1d1d1', '#dcdcdc', '#e6e6e6', '#f0f0f0', '#fafafa']
+    if Version(glue_jupyter.__version__) <= Version('0.29.0'):  # Gray scale, linear
+        assert cb.colors == [
+            '#050505', '#0f0f0f', '#191919', '#232323', '#2e2e2e',
+            '#383838', '#424242', '#4c4c4c', '#575757', '#616161',
+            '#6b6b6b', '#757575', '#808080', '#8a8a8a', '#949494',
+            '#9e9e9e', '#a8a8a8', '#b3b3b3', '#bdbdbd', '#c7c7c7',
+            '#d1d1d1', '#dcdcdc', '#e6e6e6', '#f0f0f0', '#fafafa']
+    else:
+        assert cb.colors == [
+            '#000000', '#0a0a0a', '#0a0a0a', '#141414', '#141414',
+            '#1e1e1e', '#1e1e1e', '#282828', '#282828', '#333333',
+            '#333333', '#3d3d3d', '#3d3d3d', '#474747', '#474747',
+            '#515151', '#515151', '#5c5c5c', '#5c5c5c', '#666666',
+            '#666666', '#707070', '#707070', '#7a7a7a', '#7a7a7a',
+            '#858585', '#858585', '#8f8f8f', '#8f8f8f', '#999999',
+            '#999999', '#a3a3a3', '#a3a3a3', '#aeaeae', '#aeaeae',
+            '#b8b8b8', '#b8b8b8', '#c2c2c2', '#c2c2c2', '#cccccc',
+            '#cccccc', '#d7d7d7', '#d7d7d7', '#e1e1e1', '#e1e1e1',
+            '#ebebeb', '#ebebeb', '#f5f5f5', '#f5f5f5', '#ffffff']
 
     hist_lyr = po.stretch_histogram.layers['histogram']
     flux_cube_sample = hist_lyr.layer.data['x']
