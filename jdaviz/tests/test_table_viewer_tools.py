@@ -351,7 +351,7 @@ class TestTableViewerTools:
             def __str__(self):
                 return 42
 
-        with pytest.raises(ValueError, match="Column name must be a string."):
+        with pytest.raises(ValueError, match='Column name must be convertible to a string.'):
             tv.add_column(BadString(), new_data)
 
         # but a non-string that CAN be converted to a string should work (e.g. an int)
@@ -363,6 +363,12 @@ class TestTableViewerTools:
         tv.add_column('none_col', None)
         assert 'none_col' in [c.label for c in tv.widget_table.data.components]
         assert np.all(tv.widget_table.data.get_component('none_col').data == [None])
+
+        # ensure that user-defined columns are editable by default
+        editable = [x.label for x in list(tv.state.editable_components)]
+        assert 'new_col' in editable
+        assert '123' in editable
+        assert 'none_col' in editable
 
     def test_update_column(self):
         """
