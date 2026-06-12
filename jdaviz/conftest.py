@@ -646,6 +646,51 @@ def mos_spectrum2d_as_hdulist():
 
 
 @pytest.fixture
+def hst_product_hdulist():
+    """Factory for synthetic HST FITS products that can be either imaging or
+    spectroscopic depending on the observation mode. Used to reproduce the
+    ambiguous cases where the WCS alone is insufficient to identify the format.
+    """
+    def _make_hdulist(obstype='SPECTROSCOPIC', wcs_type='spectral', dispaxis=None,
+                      instrument='STIS', obsmode='ACCUM', shape=(20, 30), n_sci=1):
+        primary = fits.PrimaryHDU()
+        primary.header['TELESCOP'] = 'HST'
+        primary.header['INSTRUME'] = instrument
+        primary.header['OBSTYPE'] = obstype
+        primary.header['OBSMODE'] = obsmode
+
+        if wcs_type == 'spectral':
+            wcs_cards = {'CTYPE1': 'WAVE', 'CUNIT1': 'Angstrom',
+                         'CRVAL1': 5000.0, 'CRPIX1': 1.0, 'CDELT1': 1.0,
+                         'CTYPE2': 'ANGLE', 'CUNIT2': 'deg',
+                         'CRVAL2': 0.0, 'CRPIX2': 1.0, 'CDELT2': 1e-5}
+        elif wcs_type == 'celestial':
+            wcs_cards = {'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg',
+                         'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg',
+                         'CRVAL1': 5.0, 'CRVAL2': 5.0,
+                         'CRPIX1': 1.0, 'CRPIX2': 1.0,
+                         'CDELT1': -1.5e-5, 'CDELT2': 1.5e-5}
+        else:  # no WCS
+            wcs_cards = {}
+
+        np.random.seed(42)
+        hdus = [primary]
+        for ver in range(1, n_sci + 1):
+            for extname in ('SCI', 'ERR', 'DQ'):
+                hdu = fits.ImageHDU(np.random.sample(shape).astype(np.float32))
+                hdu.name = extname
+                hdu.ver = ver
+                hdu.header['EXTNAME'] = extname
+                hdu.header.update(wcs_cards)
+                if dispaxis is not None:
+                    hdu.header['DISPAXIS'] = dispaxis
+                hdus.append(hdu)
+        return fits.HDUList(hdus)
+
+    return _make_hdulist
+
+
+@pytest.fixture
 def mos_image():
     header = {
         'WCSAXES': 2,

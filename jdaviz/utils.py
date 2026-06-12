@@ -48,7 +48,8 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'get_reference_image_data', 'standardize_roman_metadata',
            'wildcard_match', 'cmap_samples', 'glue_colormaps',
            'att_to_componentid', 'create_data_hash',
-           'in_ra_comps', 'in_dec_comps', 'SPECTRAL_AXIS_COMP_LABELS']
+           'in_ra_comps', 'in_dec_comps', 'SPECTRAL_AXIS_COMP_LABELS',
+           'hst_obstype']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -926,6 +927,39 @@ def layer_is_wcs_only(layer):
 def get_wcs_only_layer_labels(app):
     return [data.label for data in app.data_collection
             if layer_is_wcs_only(data)]
+
+
+def hst_obstype(hdulist):
+    """Return the HST observation type from the ``OBSTYPE`` keyword.
+
+    Some HST products share file suffixes/structure between imaging and
+    spectroscopic observations (e.g. STIS sx2/raw, WFC3/IR grism drz),
+    and their per-extension WCS is not always sufficient to distinguish the two.
+    The ``OBSTYPE`` keyword is used instead.
+
+    Parameters
+    ----------
+    hdulist : `astropy.io.fits.HDUList`
+        The HDUList to inspect.
+
+    Returns
+    -------
+    str or None
+        ``'imaging'`` or ``'spectroscopic'`` for HST products with a recognized
+        ``OBSTYPE``, otherwise ``None`` (including for non-HST data).
+    """
+    if not isinstance(hdulist, fits.HDUList) or len(hdulist) == 0:
+        return None
+
+    primary_header = hdulist[0].header
+    if str(primary_header.get('TELESCOP', '')).strip().lower() != 'hst':
+        return None
+
+    obstype = str(primary_header.get('OBSTYPE', '')).strip().lower()
+    if obstype in ('imaging', 'spectroscopic'):
+        return obstype
+
+    return None
 
 
 def wcs_is_spectral(wcs):
