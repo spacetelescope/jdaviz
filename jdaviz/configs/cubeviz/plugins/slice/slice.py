@@ -15,6 +15,7 @@ from jdaviz.configs.cubeviz.plugins.viewers import (
 from jdaviz.configs.cubeviz.helper import _spectral_axis_names
 from jdaviz.configs.rampviz.helper import _temporal_axis_names
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, SliceToolStateMessage,
                                 SliceSelectSliceMessage, SliceValueUpdatedMessage,
@@ -451,6 +452,32 @@ class SpectralSlice(BaseSlicePlugin):
         self._set_relevant()
         super()._on_add_data(msg)
 
+    def _on_select_slice_message(self, msg):
+        # Ignore messages from tools in non-cubeviz viewers (e.g. the time slice tool
+        # in an lcviz TimeScatterView), so that spectral and temporal slices remain
+        # independent when multiple viewer types coexist in a deconfigged app.
+        # Use type() rather than isinstance() so that lcviz's CubeView (which
+        # inherits CubevizImageView) is correctly excluded, and so that
+        # Spectrum1DViewer (used directly in deconfigged) is correctly included.
+        sender_viewer = getattr(msg.sender, 'viewer', None)
+        if sender_viewer is not None and type(sender_viewer) not in (
+                CubevizImageView, CubevizProfileView, Spectrum1DViewer):
+            return
+        super()._on_select_slice_message(msg)
+
+    @property
+    def slice_selection_viewers(self):
+        # Use type() to exclude lcviz's CubeView, which inherits CubevizImageView
+        return [v for v in self._app._viewer_store.values()
+                if type(v) is CubevizImageView]
+
+    @property
+    def slice_indicator_viewers(self):
+        # CubevizProfileView (cubeviz) and Spectrum1DViewer (deconfigged) are the
+        # spectral profile viewers; type() excludes any lcviz subclasses
+        return [v for v in self._app._viewer_store.values()
+                if type(v) in (CubevizProfileView, Spectrum1DViewer)]
+
     @observe('vdocs')
     def _update_docs_link(self, *args):
         self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/cubeviz/plugins.html#slice'
@@ -488,6 +515,26 @@ class RampSlice(BaseSlicePlugin):
 
         self.viewer.add_filter(lambda viewer: isinstance(viewer, (RampvizImageView, RampvizProfileView)))  # noqa
         self._set_relevant()
+
+    def _on_select_slice_message(self, msg):
+        # Ignore messages from tools in non-rampviz viewers so that ramp and other
+        # slice types remain independent when multiple viewer types coexist in a
+        # deconfigged app.
+        sender_viewer = getattr(msg.sender, 'viewer', None)
+        if sender_viewer is not None and type(sender_viewer) not in (
+                RampvizImageView, RampvizProfileView):
+            return
+        super()._on_select_slice_message(msg)
+
+    @property
+    def slice_selection_viewers(self):
+        return [v for v in self._app._viewer_store.values()
+                if type(v) is RampvizImageView]
+
+    @property
+    def slice_indicator_viewers(self):
+        return [v for v in self._app._viewer_store.values()
+                if type(v) is RampvizProfileView]
 
     @observe('vdocs')
     def _update_docs_link(self, *args):
