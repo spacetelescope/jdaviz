@@ -320,6 +320,80 @@ class TestTableViewerTools:
 
         toolbar.restore_tools()
 
+    def test_add_column(self):
+        """
+        Test that add_column adds a new column to the table, and that the
+        expected errors are raised when trying to do this incorrectly.
+        """
+        tv = self.table_viewer
+
+        # add a new column with valid data
+        new_data = ['a', 'b', 'c', 'd', 'e']
+        tv.add_column('new_col', new_data)
+
+        # make sure the column was added to the table in the viewer
+        assert 'new_col' in [c.label for c in tv.widget_table.data.components]
+        assert np.all(tv.widget_table.data.get_component('new_col').data == new_data)
+
+        # try to add a column with a name that already exists, should raise ValueError
+        m = "Column 'ra' already exists in the table. Use update_column to update it instead."
+        with pytest.raises(ValueError, match=m):
+            tv.add_column('ra', new_data)
+
+        # try to add a column with data of incorrect length, should raise ValueError
+        m = "Length of new column data does not match number of rows in the table."
+        with pytest.raises(ValueError, match=m):
+            tv.add_column('new_col_invalid', ['a', 'b'])
+
+        # try to add a column with non-string that can't be converted to a string
+        # should raise ValueError
+        class BadString:
+            def __str__(self):
+                return 42
+
+        with pytest.raises(ValueError, match='Column name must be convertible to a string.'):
+            tv.add_column(BadString(), new_data)
+
+        # but a non-string that CAN be converted to a string should work (e.g. an int)
+        tv.add_column(123, new_data)
+        assert '123' in [c.label for c in tv.widget_table.data.components]
+
+        # adding a column with data=None should create a column of all None values
+        # (this logic was retained from how MosViz handled this)
+        tv.add_column('none_col', None)
+        assert 'none_col' in [c.label for c in tv.widget_table.data.components]
+        assert np.all(tv.widget_table.data.get_component('none_col').data == [None])
+
+        # ensure that user-defined columns are editable by default
+        editable = [x.label for x in list(tv.state.editable_components)]
+        assert 'new_col' in editable
+        assert '123' in editable
+        assert 'none_col' in editable
+
+    def test_update_column(self):
+        """
+        Test that update_column updates an existing column in the table, and that the
+        expected errors are raised when trying to do this incorrectly.
+        """
+        tv = self.table_viewer
+
+        # update an existing column with valid data
+        new_ra_data = [10, 20, 30, 40, 50]
+        tv.update_column('ra', new_ra_data)
+
+        # make sure the column was updated in the table in the viewer
+        assert np.all(tv.widget_table.data.get_component('ra').data == new_ra_data)
+
+        # try to update a column that doesn't exist, should raise ValueError
+        m = "Column 'nonexistent_col' does not exist in the table. Use add_column to add it first."
+        with pytest.raises(ValueError, match=m):
+            tv.update_column('nonexistent_col', new_ra_data)
+
+        # try to update a column with data of incorrect length, should raise ValueError
+        m = "Length of new column data does not match number of rows in the table."
+        with pytest.raises(ValueError, match=m):
+            tv.update_column('ra', [10, 20])
+
 
 class TestTableViewerToolsMultipleViewers:
     """Test table viewer tools with multiple image viewers."""
