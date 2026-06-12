@@ -3,6 +3,9 @@ import warnings
 import numpy as np
 import threading
 
+import ipywidgets.widgets.widget as _widget_mod
+from comm import DummyComm
+
 import pytest
 from astropy.io import fits
 from astropy.units.quantity import Quantity
@@ -12,7 +15,8 @@ from jdaviz.core.loaders import SpectrumImporter
 from jdaviz.utils import (alpha_index, download_uri_to_path,
                           get_cloud_fits, get_cloud_asdf, cached_uri, escape_brackets,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
-                          create_data_hash, parallelize_calculation)
+                          create_data_hash, parallelize_calculation,
+                          suppress_widget_comms)
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -459,3 +463,34 @@ def test_create_data_hash_none():
     assert create_data_hash([None, None, None]) is None
     assert create_data_hash(np.array([])) is None
     assert create_data_hash(np.array([None, None, None])) is None
+
+
+class TestSuppressWidgetComms:
+
+    def setup_method(self):
+        self.sentinel = object()
+        self.original = _widget_mod.comm.create_comm
+
+    def teardown_method(self):
+        _widget_mod.comm.create_comm = self.original
+
+    def test_suppress_widget_comms_returns_dummy_comm(self):
+        """Within suppress_widget_comms, create_comm yields a no-op DummyComm so
+        transient widgets do not open frontend (IOPub) comms, and the original
+        create_comm is restored on exit."""
+        _widget_mod.comm.create_comm = lambda *a, **k: self.sentinel
+        with suppress_widget_comms():
+            # inside the context, throwaway widgets get a no-op DummyComm
+            assert isinstance(_widget_mod.comm.create_comm(), DummyComm)
+        # the original create_comm is restored on exit
+        assert _widget_mod.comm.create_comm() is self.sentinel
+        assert not isinstance(_widget_mod.comm.create_comm(), DummyComm)
+
+    def test_suppress_widget_comms_restores_on_exception(self):
+        """The original create_comm is restored even if the block raises."""
+        _widget_mod.comm.create_comm = lambda *a, **k: self.sentinel
+        with pytest.raises(ValueError):
+            with suppress_widget_comms():
+                raise ValueError("boom")
+        assert _widget_mod.comm.create_comm() is self.sentinel
+        assert not isinstance(_widget_mod.comm.create_comm(), DummyComm)

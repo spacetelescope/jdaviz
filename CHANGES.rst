@@ -23,6 +23,9 @@ Bug Fixes
 - Fix aperture photometry plugin remaining visible in tray after all 
   image viewers are removed. [#4189]
 
+- Catch more IOPub messages to help avoid/fix "IOPub message rate exceeded" jupyter warning when
+  loading many datasets in a loop. [#4223]
+
 - Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
 
 Mosviz
