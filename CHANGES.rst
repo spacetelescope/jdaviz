@@ -1,4 +1,4 @@
-5.0.2 (unreleased)
+5.0.2 (2026-06-12)
 ==================
 
 Bug Fixes
@@ -27,9 +27,6 @@ Bug Fixes
   loading many datasets in a loop. [#4223]
 
 - Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
-
-Mosviz
-^^^^^^
 
 
 5.0.1 (2026-05-01)
