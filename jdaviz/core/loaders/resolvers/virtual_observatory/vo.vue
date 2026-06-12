@@ -26,6 +26,17 @@
     :custom_toolbar_enabled="custom_toolbar_enabled"
   >
     <v-form v-model="all_fields_filled">
+
+      <plugin-select
+        :items="producttype_choices"
+        :selected.sync="producttype_selected"
+        label="Data Product"
+        hint="Type of Data Products to Query"
+        api_hint="ldr.producttype ="
+        :api_hints_enabled="api_hints_enabled"
+        :disabled="false"
+      ></plugin-select>
+
       <j-plugin-section-header>Source Selection</j-plugin-section-header>
 
       <plugin-viewer-select
@@ -141,7 +152,7 @@
         :search="true"
         api_hint="ldr.resource ="
         :api_hints_enabled="api_hints_enabled"
-        hint="Select a SIA resource to query"
+        hint="Select a resource to query"
       ></plugin-select>
     </v-form>
 

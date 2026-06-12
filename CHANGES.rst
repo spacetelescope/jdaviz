@@ -19,6 +19,9 @@ New Features
 - Label default behavior now adjusts for added *or* removed data/viewers i.e. viewer -> viewer (1) ->
   viewer (2) -> remove viewer (2) -> default is again viewer(2) [#4192]
 
+- The Virtual Observatory loader now supports querying spectral products
+  and catalog targets. [#4060]
+
 - Add option to limit results to science products when retrieving files from an archive query
   results table. [#4194]
 
