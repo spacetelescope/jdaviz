@@ -88,6 +88,8 @@ Bug Fixes
 
 - Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
 
+- Fix treating input tables as queries and add support for exports from MAST portal. [#4234]
+
 Mosviz
 ^^^^^^
 

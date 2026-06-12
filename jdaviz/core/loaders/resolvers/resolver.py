@@ -564,9 +564,16 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # try to read into a table which could be a products list
             try:
                 with warnings.catch_warnings():
-                    warnings.simplefilter("ignore",
-                                          message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
-                    parsed_input = astropyTable.read(parsed_input, hdu=hdu)
+                    warnings.filterwarnings("ignore",
+                                            message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
+                    read_kwargs = {'hdu': hdu} if hdu is not None else {}
+                    try:
+                        parsed_input = astropyTable.read(parsed_input, **read_kwargs)
+                    except Exception:  # nosec
+                        # Fall back with comment='#' for formats like MAST search
+                        # exports that have '#'-prefixed comment lines at the top
+                        parsed_input = astropyTable.read(parsed_input, comment='#',
+                                                         **read_kwargs)
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, astropyTable):
@@ -576,7 +583,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _parsed_input_to_observation_table(self, parsed_input_table):
         if 'Dataset' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_ds in ('fileSetName', 'sci_data_set_name'):
+        for map_to_ds in ('fileSetName', 'sci_data_set_name', 'obs_id'):
             if map_to_ds in parsed_input_table.colnames:
                 parsed_input_table.rename_column(map_to_ds, 'Dataset')
                 return parsed_input_table
@@ -585,7 +592,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _parsed_input_to_file_table(self, parsed_input_table):
         if 'location' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
+        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'dataURL',
+                                'download', 'Filename'):
             if map_to_location in parsed_input_table.colnames:
                 parsed_input_table.rename_column(map_to_location, 'location')
                 return parsed_input_table
