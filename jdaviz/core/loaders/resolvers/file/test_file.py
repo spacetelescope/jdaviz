@@ -1,7 +1,5 @@
 import csv
 
-from astropy.table import Table as AstropyTable
-
 from jdaviz.core.loaders.resolvers.file.file import FileResolver
 
 
