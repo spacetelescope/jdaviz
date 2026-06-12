@@ -23,6 +23,8 @@ Bug Fixes
 - Fix aperture photometry plugin remaining visible in tray after all 
   image viewers are removed. [#4189]
 
+- Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
+
 Mosviz
 ^^^^^^
 
