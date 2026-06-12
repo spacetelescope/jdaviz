@@ -55,7 +55,16 @@ Other Changes and Additions
   of reusing the existing flux cube label, which previously caused a silent
   overwrite. [#4125]
 
-5.0.2 (unreleased)
+5.0.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Mosviz
+
+
+5.0.2 (2026-06-12)
 ==================
 
 Bug Fixes
