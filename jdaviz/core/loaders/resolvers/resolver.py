@@ -564,9 +564,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # try to read into a table which could be a products list
             try:
                 with warnings.catch_warnings():
-                    warnings.simplefilter("ignore",
-                                          message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
-                    parsed_input = astropyTable.read(parsed_input, hdu=hdu)
+                    warnings.filterwarnings("ignore",
+                                            message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
+                    read_kwargs = {'hdu': hdu} if hdu is not None else {}
+                    parsed_input = astropyTable.read(parsed_input, **read_kwargs)
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, astropyTable):
