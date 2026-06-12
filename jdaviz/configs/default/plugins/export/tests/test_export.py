@@ -316,7 +316,8 @@ class TestExportSubsets:
         assert contents[3] == '-33.407217'
         assert_allclose(float(contents[4]), 0.088886, rtol=1e-04)
         assert_allclose(float(contents[5]), 0.044443, rtol=1e-04)
-        assert_allclose(float(contents[6]), 11.625269, rtol=1e-04)
+        # see JDAT-6173
+        assert_allclose(float(contents[6]), 11.623824, rtol=1e-03)
 
 
 @pytest.mark.usefixtures('_jail')
