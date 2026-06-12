@@ -186,6 +186,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Linear".
     * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Custom".
+    * :meth:`set_layer_to_top`
     * ``volume_level`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. Set the volume for the selected sonified layer.
     * ``sonified_audible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -432,6 +433,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
     axes_visible_value = Bool().tag(sync=True)
     axes_visible_sync = Dict().tag(sync=True)
+
+    layer_is_top = Bool(False).tag(sync=True)
 
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -851,7 +854,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                        'image_contrast', 'image_bias',
                        'contour_visible', 'contour_mode',
                        'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels',
-                       'stretch_curve_visible', 'apply_RGB_presets']
+                       'stretch_curve_visible', 'apply_RGB_presets', 'set_layer_to_top']
         if self.config == 'deconfigged':
             expose += ['xatt', 'yatt', 'hist_visible', 'hist_color', 'hist_opacity',
                        'hist_xlog', 'hist_ylog', 'hist_n_bin', 'hist_x_min', 'hist_x_max',
@@ -975,10 +978,20 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             viewer = self.viewer.selected_obj
 
         if viewer is self.viewer.selected_obj and self._viewer_is_image_viewer():  # noqa
-            if viewer.active_image_layer is None:
+            # Use the same exclusion set as ``layer_is_top`` / ``set_layer_to_top`` so that
+            # the highlighted (top) layer is determined consistently: subsets, WCS-only/
+            # orientation layers, and associated child layers (DQ, uncertainty, etc.) are
+            # excluded from the comparison.
+            eligible_layers = self._eligible_top_layers(viewer)
+            if not eligible_layers:
                 self.active_layer = ""
-                return
-            self.active_layer = viewer.active_image_layer.layer.label
+            else:
+                top_layer = max(eligible_layers, key=lambda lyr: lyr.zorder)
+                self.active_layer = top_layer.layer.label
+
+        # Refresh the top-layer button state whenever the viewer's layer list changes
+        # (e.g. a layer is added, removed, or reordered via the data menu).
+        self._update_layer_is_top()
 
     def vue_unmix_state(self, names):
         if isinstance(names, str):
@@ -1051,6 +1064,99 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
+
+    def _assoc_child_labels(self):
+        # Labels of layers that are associated children (DQ, uncertainty, WCS-only) of
+        # another data layer.  These float above their parent via zorder + 0.1 and cannot
+        # be independently promoted, so they are excluded from top-layer determination.
+        return set(
+            child for data in self._app.data_collection
+            for child in self._app._get_assoc_data_children(data.label)
+        )
+
+    def _eligible_top_layers(self, viewer):
+        # Image layers eligible to be considered the 'top' layer in the viewer.
+        # Excludes subsets, WCS-only/orientation layers, and associated child layers,
+        # matching the logic used by ``set_layer_to_top`` / ``layer_is_top``.
+        child_labels = self._assoc_child_labels()
+        return [lyr for lyr in viewer.state.layers
+                if (hasattr(lyr, 'layer') and hasattr(lyr, 'zorder') and lyr.zorder is not None
+                    and not hasattr(lyr.layer, 'subset_state')
+                    and is_not_wcs_only(lyr.layer)
+                    and lyr.layer.label not in child_labels)]
+
+    @observe('layer_selected', 'viewer_selected', 'layer_items',
+             'layer_multiselect', 'viewer_multiselect')
+    def _update_layer_is_top(self, msg={}):
+        if (not hasattr(self, 'viewer') or self.viewer_multiselect or self.layer_multiselect
+                or not self.viewer.selected or not self.layer_selected):
+            self.layer_is_top = False
+            return
+        selected_item = next(
+            (item for item in self.layer_items if item.get('label') == self.layer_selected), None
+        )
+        if selected_item is None or selected_item.get('is_subset'):
+            self.layer_is_top = False
+            return
+        # When viewer_multiselect transitions True→False, this observer fires before
+        # ViewerSelect._multiselect_changed clears its cached_property.  Proactively
+        # clear it so selected_obj is always recomputed fresh here.
+        self.viewer._clear_cache('selected_obj')
+        try:
+            viewer = self.viewer.selected_obj
+        except Exception:
+            self.layer_is_top = False
+            return
+        if viewer is None:
+            self.layer_is_top = False
+            return
+        # Child layers (DQ, uncertainty, WCS-only) float above their parent via zorder + 0.1
+        # and cannot be independently promoted; treat them as already on top.
+        if self.layer_selected in self._assoc_child_labels():
+            self.layer_is_top = True
+            return
+        # Compare the selected layer's zorder against the running maximum across all
+        # eligible layers (subsets, child layers, and WCS-only/orientation layers excluded).
+        eligible_layers = self._eligible_top_layers(viewer)
+        max_zorder = max((lyr.zorder for lyr in eligible_layers), default=None)
+        selected_zorder = next(
+            (lyr.zorder for lyr in eligible_layers
+             if lyr.layer.label == self.layer_selected), None
+        )
+        self.layer_is_top = (selected_zorder is not None and selected_zorder == max_zorder)
+
+    def vue_set_layer_to_top(self, data):
+        self.set_layer_to_top()
+
+    def set_layer_to_top(self):
+        """Set the currently selected layer as the top layer in the image viewer.
+
+        The selected layer is also made visible, and its opacity is set to 1 if it
+        was zero, so that the change is actually reflected at the top of the viewer.
+        """
+        if self.viewer_multiselect or self.layer_multiselect:
+            raise ValueError("set_layer_to_top only works with a single viewer and layer selected")
+        viewer = self.viewer.selected_obj
+        layer_label = self.layer_selected
+        # Use the maximum zorder across ALL layers (including orientation/WCS-only and subsets)
+        # so the selected layer is placed strictly above every other layer. Using only image
+        # zorders would create a tie with the orientation layer (whose zorder DataMenu sets just
+        # above image layers), which can cause ambiguous sort order in DataMenu normalization.
+        all_zorders = [lyr.zorder for lyr in viewer.state.layers
+                       if hasattr(lyr, 'zorder') and lyr.zorder is not None]
+        if not all_zorders:
+            return
+        for lyr in viewer.state.layers:
+            if hasattr(lyr, 'layer') and lyr.layer.label == layer_label:
+                lyr.zorder = max(all_zorders) + 1
+                # ensure the layer is visible (and has non-zero opacity) so that
+                # promoting it to the top is actually reflected in the viewer
+                if hasattr(lyr, 'bitmap_visible'):
+                    lyr.bitmap_visible = True
+                if getattr(lyr, 'alpha', None) == 0:
+                    lyr.alpha = 1
+                break
+        self._update_layer_is_top()
 
     @observe('viewer_selected',
              'x_min_value', 'x_max_value',

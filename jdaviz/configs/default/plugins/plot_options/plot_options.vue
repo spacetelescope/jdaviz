@@ -683,6 +683,37 @@
         />
       </glue-state-sync-wrapper>
 
+      <!-- SET LAYER TO TOP -->
+      <div v-if="image_visible_sync.in_subscribed_states && !layer_multiselect && !viewer_multiselect && viewer_selected.length > 0">
+        <v-alert
+          v-if="!(layer_is_top && image_visible_value && image_opacity_value > 0)"
+          type='info'
+          class="ignore-api-hints"
+          style="margin-left: -12px; margin-right: -12px"
+        >
+          Changes to the currently selected layer may not be apparent in the viewer because it is underneath other layers.
+        </v-alert>
+        <v-row justify="end">
+          <j-tooltip :tooltipcontent="layer_selected + ' may not be visible in the viewer because it is not the top layer, click to bring to the top'">
+            <plugin-action-button
+              :results_isolated_to_plugin="false"
+              :api_hints_enabled="api_hints_enabled"
+              :disabled="layer_is_top && image_visible_value && image_opacity_value > 0"
+              @click="set_layer_to_top"
+            >
+              {{ api_hints_enabled ?
+                  'plg.set_layer_to_top()' :
+                  (image_visible_value && image_opacity_value > 0 ?
+                    'set layer to top' :
+                    (image_opacity_value > 0 ?
+                      'set layer to top and visible' :
+                      'set layer to top and opacity = 1'))
+              }}
+            </plugin-action-button>
+          </j-tooltip>
+        </v-row>
+      </div>
+
       <div v-if="image_visible_sync.in_subscribed_states && (image_visible_value || image_visible_sync['mixed'])">
         <glue-state-sync-wrapper v-if="image_color_mode_value === 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_colormap_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_colormap')">
           <v-select
