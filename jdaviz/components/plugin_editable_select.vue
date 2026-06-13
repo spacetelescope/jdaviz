@@ -1,9 +1,10 @@
 <template>
   <div>
-  <v-row>
+  <v-row :no-gutters="hide_hint">
     <v-select
       v-if="mode=='select'"
-      attach
+      style="width: 100%"
+      :attach="!hide_hint"
       :menu-props="{ left: true }"
       :items="items"
       v-model="selected"
@@ -14,7 +15,11 @@
       :rules="rules ? rules : []"
       item-text="label"
       item-value="label"
-      persistent-hint
+      :persistent-hint="!hide_hint"
+      :hide-details="hide_hint"
+      :dense="hide_hint"
+      :solo="hide_hint"
+      :flat="hide_hint"
     >
       <template slot="selection" slot-scope="data">
         <div class="single-line" style="width: 100%">
@@ -32,7 +37,7 @@
         <j-tooltip tooltipcontent="rename" v-if="!multiselect">
           <v-icon style="cursor: pointer" @click="modeRename">mdi-pencil</v-icon>
         </j-tooltip>
-        <j-tooltip tooltipcontent="remove" v-if="!multiselect">
+        <j-tooltip tooltipcontent="remove" v-if="!multiselect && !non_removable">
           <v-icon style="cursor: pointer" @click="modeRemove">mdi-delete</v-icon>
         </j-tooltip>
         <j-tooltip tooltipcontent="create new">
@@ -62,12 +67,17 @@
     </v-alert>
     <v-text-field
       v-else-if="['rename', 'add'].indexOf(mode) !== -1"
+      style="width: 100%"
       v-model="edit_value"
       @keyup="if ($event.key == 'Enter') {changeAccept()} else if ($event.key == 'Escape') {changeCancel()} else {$emit('update:edit_value', $event.target.value)}"
       :label="textFieldLabel"
       :class="textFieldClass"
       :hint="mode == 'rename' ? 'Rename '+label.toLowerCase() : 'Add '+label.toLowerCase()"
-      persistent-hint
+      :persistent-hint="!hide_hint"
+      :hide-details="hide_hint"
+      :dense="hide_hint"
+      :solo="hide_hint"
+      :flat="hide_hint"
     >
       <template v-slot:append>
         <j-tooltip v-if="items.length > 0" tooltipcontent="Cancel change">
@@ -93,7 +103,8 @@
 <script>
 module.exports = {
   props: ['mode', 'edit_value', 'items', 'selected', 'multiselect', 'label', 'hint', 'rules',
-          'api_hint', 'api_hint_add', 'api_hint_rename', 'api_hint_remove', 'api_hints_enabled'
+          'api_hint', 'api_hint_add', 'api_hint_rename', 'api_hint_remove', 'api_hints_enabled',
+          'non_removable', 'hide_hint'
   ],
   computed: {
     textFieldLabel() {

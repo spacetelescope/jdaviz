@@ -24,6 +24,8 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.scatter import BqplotScatterView
 from glue_jupyter.table import TableViewer
 
+from jdaviz.components.table_widget import JdavizTableWidget
+
 from astropy.utils import deprecated
 from astropy import units as u
 from astropy.nddata import (
@@ -1477,8 +1479,11 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
+                    ['jdaviz:table_add_column'],
                     ['jdaviz:viewer_clone']
                    ]
+
+    _widget_table_cls = JdavizTableWidget
 
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
@@ -1496,6 +1501,16 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Also update selection highlight marks when checked rows change
         self.widget_table.observe(self._on_checked_changed, names=['checked'])
         self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
+
+        # Inline column-header editing
+        self._update_non_removable_headers()
+        self.widget_table.observe(self._on_header_renamed, names=['header_renamed'])
+        self.widget_table.observe(self._on_header_deleted, names=['header_deleted'])
+
+        # Inline column-header editing
+        self._update_non_removable_headers()
+        self.widget_table.observe(self._on_header_renamed, names=['header_renamed'])
+        self.widget_table.observe(self._on_header_deleted, names=['header_deleted'])
 
         # Subscribe to RestoreToolbarMessage to clean up checkbox state
         # when toolbar is restored (e.g., by clicking X on custom toolbar)
@@ -1746,3 +1761,67 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Clear selection marks in image viewers when this table viewer is removed
         # (toolbar cleanup is handled generically by NestedJupyterToolbar)
         self._clear_selection_marks()
+
+    # ------------------------------------------------------------------
+    # Inline column-header editing helpers
+    # ------------------------------------------------------------------
+
+    def _iter_table_data(self):
+        """Yield each unique glue Data object visible in this viewer."""
+        seen = set()
+        for layer_artist in self.layers:
+            data = layer_artist.layer
+            if hasattr(data, 'data'):  # Subset
+                data = data.data
+            if id(data) not in seen:
+                seen.add(id(data))
+                yield data
+
+    def _role_labels(self):
+        """Return the set of column names that are non-removable role columns."""
+        role = set()
+        for data in self._iter_table_data():
+            meta = getattr(data, 'meta', {}) or {}
+            for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
+                        '_jdaviz_loader_x_col', '_jdaviz_loader_y_col'):
+                val = meta.get(key)
+                if val:
+                    role.add(val)
+            if '_jdaviz_loader_x_col' in meta:
+                role.add('X')
+            if '_jdaviz_loader_y_col' in meta:
+                role.add('Y')
+            if '_jdaviz_id_col' in meta:
+                role.add('ID')
+        return role
+
+    def _update_non_removable_headers(self):
+        """Sync non_removable_headers to the table widget."""
+        self.widget_table.non_removable_headers = sorted(self._role_labels())
+
+    def _on_header_renamed(self, change):
+        """Handle a column rename committed inline in the table header."""
+        data = change['new']
+        old_name = data.get('column', '')
+        new_name = data.get('newName', '')
+        if not old_name or not new_name or old_name == new_name:
+            return
+        for glue_data in self._iter_table_data():
+            if old_name in [c.label for c in glue_data.main_components]:
+                glue_data.id[old_name].label = new_name
+        self.redraw()
+        self._update_non_removable_headers()
+
+    def _on_header_deleted(self, change):
+        """Handle a column deletion triggered from the inline table header editor."""
+        label = change['new']
+        if not label:
+            return
+        for glue_data in self._iter_table_data():
+            if label in [c.label for c in glue_data.main_components]:
+                cid = glue_data.id[label]
+                self.state.editable_components = [
+                    c for c in self.state.editable_components if c is not cid
+                ]
+                glue_data.remove_component(cid)
+        self._update_non_removable_headers()

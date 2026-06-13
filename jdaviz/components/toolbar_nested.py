@@ -34,9 +34,13 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     suboptions_y = traitlets.Float().tag(sync=True)
     # string indicating the current tool override mode
     tool_override_mode = traitlets.Unicode("").tag(sync=True)
-    # list of custom widget items to display in the toolbar
-    # currently only supports dropdowns:
-    # (list of dicts with 'label', 'value', 'items', 'multiselect')
+    # list of custom widget items (dropdowns) to display in the toolbar.
+    # each dict may have:
+    #   label      : placeholder / label string
+    #   items      : list of dicts with 'label' and 'value' keys
+    #   type       : 'text' or 'select' (default: 'select')
+    #   multiselect: bool (default False)
+    #   selected   : initial selection (list for multiselect, scalar otherwise)
     custom_widget_items = traitlets.List([]).tag(sync=True)
     # currently selected values in custom widgets (list of values, one per widget)
     custom_widget_selected = traitlets.List([]).tag(sync=True)
