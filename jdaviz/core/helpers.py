@@ -542,7 +542,9 @@ class ConfigHelper(HubListener):
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
         as only JupyterLab has a mechanism to have multiple tabs.
         """
-        title = self._app.config if title is None else title
+        if title is None:
+            config = self._app.config
+            title = "jdaviz" if config == "deconfigged" else config
         if height is not None:
             if isinstance(height, int):
                 height = f"{height}px"
