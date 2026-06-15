@@ -696,7 +696,7 @@
           Changes to the currently selected layer may not be apparent in the viewer because it is underneath other layers.
         </v-alert>
         <v-row justify="end">
-          <j-tooltip :tooltipcontent="layer_selected + ' may not be visible in the viewer because it is not the top layer, click to bring to the top'">
+          <j-tooltip :tooltipcontent="(layer_is_top && image_visible_value && image_opacity_value > 0) ? layer_selected + ' is the top layer' : layer_selected + ' may not be visible in the viewer because it is not the top layer, click to bring to the top'">
             <plugin-action-button
               :results_isolated_to_plugin="false"
               :api_hints_enabled="api_hints_enabled"
