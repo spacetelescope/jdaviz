@@ -693,7 +693,16 @@
           class="ignore-api-hints"
           style="margin-left: -12px; margin-right: -12px"
         >
-          Changes to the currently selected layer may not be apparent in the viewer because it is underneath other layers.
+          {{ layer_is_top ?
+              (image_opacity_value <= 0 ?
+                "Changes will not be visible as the selected layer's opacity = 0" :
+                'Changes will not be visible as the selected layer is set to invisible.') :
+              (image_opacity_value <= 0 ?
+                "Changes will not be visible as the selected layer's opacity = 0 and is under other layers." :
+                (!image_visible_value ?
+                  'Changes will not be visible as the selected layer is set to invisible and is under other layers.' :
+                  'Changes may not be visible as the selected layer is under other layers.'))
+          }}
         </v-alert>
         <v-row justify="end">
           <j-tooltip :tooltipcontent="(layer_is_top && image_visible_value && image_opacity_value > 0) ? layer_selected + ' is the top layer' : layer_selected + ' may not be visible in the viewer because it is not the top layer, click to bring to the top'">
@@ -705,11 +714,15 @@
             >
               {{ api_hints_enabled ?
                   'plg.set_layer_to_top()' :
-                  (image_visible_value && image_opacity_value > 0 ?
-                    'set layer to top' :
-                    (image_opacity_value > 0 ?
-                      'set layer to top and visible' :
-                      'set layer to top and opacity = 1'))
+                  (layer_is_top ?
+                    (image_opacity_value <= 0 ?
+                      'Set layer opacity = 1' :
+                      'Set layer visible') :
+                    (image_opacity_value <= 0 ?
+                      'Move layer to top and set opacity = 1' :
+                      (!image_visible_value ?
+                        'Move layer to top and set visible' :
+                        'Move layer to top')))
               }}
             </plugin-action-button>
           </j-tooltip>
