@@ -34,6 +34,9 @@ Mosviz
 Bug Fixes
 ---------
 
+- HST products (as defined by ``OBSTYPE``) are now correctly identified as being
+  either images or 2D spectra. [#4217]
+
 Mosviz
 ^^^^^^
 
@@ -52,7 +55,16 @@ Other Changes and Additions
   of reusing the existing flux cube label, which previously caused a silent
   overwrite. [#4125]
 
-5.0.2 (unreleased)
+5.0.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Mosviz
+
+
+5.0.2 (2026-06-12)
 ==================
 
 Bug Fixes
@@ -77,9 +89,16 @@ Bug Fixes
 - Fix aperture photometry plugin remaining visible in tray after all
   image viewers are removed. [#4189]
 
+- Stop using SkyCoord.from_name() to try to resolve sources in the astroquery loader
+  that are already RA and Dec coordinates. [#4193]
+
+- Catch more IOPub messages to help avoid/fix "IOPub message rate exceeded" jupyter warning when
+  loading many datasets in a loop. [#4223]
+
+- Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
+
 Mosviz
 ^^^^^^
-
 
 5.0.1 (2026-05-01)
 ==================

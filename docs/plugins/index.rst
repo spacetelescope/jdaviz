@@ -73,12 +73,9 @@ Plugins provide specialized analysis capabilities tailored to different data typ
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: plugins
-   :enable-only: plugins
-   :plugin-panel-opened: false
-   :demo-repeat: true
-
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: true
+   :init-steps-json: [{"action":"show-sidebar","value":"plugins"},{"action":"disable-toolbar-except","value":"plugins"}]
 
 API Access
 ==========

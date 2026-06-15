@@ -217,10 +217,10 @@ def test_data_quality_plugin(helper_name, request):
 
 
 @pytest.mark.remote_data
-def test_data_quality_plugin_hst_wfc3(imviz_helper):
+def test_data_quality_plugin_hst_STIS(imviz_helper):
 
-    # load HST/WFC3-UVIS observations:
-    uri = "mast:HST/product/hst_17183_02_wfc3_uvis_g280_iexr02mt_flt.fits"
+    # load HST/STIS observations:
+    uri = "mast:HST/product/o3tt02010_sx2.fits"
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         imviz_helper.load_data(cached_uri(uri), cache=True, ext=('SCI', 'DQ'))
@@ -230,10 +230,12 @@ def test_data_quality_plugin_hst_wfc3(imviz_helper):
     dq_plugin = imviz_helper.plugins['Data Quality']._obj
 
     # mission+instrument+detector identified:
-    assert dq_plugin.flag_map_selected == 'HST/WFC3-UVIS'
+    assert dq_plugin.flag_map_selected == 'HST/STIS'
 
     flag_map_selected = dq_plugin.flag_map_definitions_selected
-    assert flag_map_selected[0]['description'] == 'Reed Solomon decoding error'
+    assert flag_map_selected[0]['description'] == ('Error in the Reed-Solomon decoding '
+                                                   '(an algorithm for error correction in '
+                                                   'digital communications).')
 
 
 @pytest.mark.remote_data

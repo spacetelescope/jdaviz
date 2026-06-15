@@ -1,7 +1,9 @@
 from unittest.mock import patch
 import pytest
 
-from specutils import SpectrumList
+import astropy.units as u
+from specutils import Spectrum, SpectrumList
+
 from jdaviz.core.loaders.importers.importer import BaseImporter
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.conftest import _create_spectrum1d_with_spectral_unit
@@ -373,3 +375,27 @@ class TestDataLabelOverwrite:
         new_data = deconfigged_helper._app.data_collection['viewer_test']
         # Verify it's actually different data (the object should be different)
         assert new_data is not original_data
+
+
+def test_add_to_data_collection_viewer_select_false(deconfigged_helper):
+    """Test that viewer_select=False adds data to the data collection but not to any viewer,
+    even when a viewer is selected in the importer."""
+    ldr = deconfigged_helper.loaders['object']
+    obj = Spectrum(flux=[1, 2, 3]*u.Jy, spectral_axis=[1, 2, 3]*u.nm)
+    ldr.object = obj
+    ldr.format = '1D Spectrum'
+
+    importer = ldr.importer._obj
+    label = importer.data_label_value
+
+    # select a viewer to confirm it is overridden by viewer_select=False
+    importer.viewer.create_new.selected = '1D Spectrum'
+
+    importer.add_to_data_collection(obj, viewer_select=False)
+
+    # data should be in the data collection but not in any viewer
+    assert label in deconfigged_helper._app.data_collection
+
+    for viewer in deconfigged_helper._app._viewer_store.values():
+        if hasattr(viewer, '_data_menu'):
+            assert label not in viewer._data_menu.data_labels_loaded

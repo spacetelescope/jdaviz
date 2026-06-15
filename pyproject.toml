@@ -1,7 +1,7 @@
 [project]
 name = "jdaviz"
 description = "Astronomical data analysis development leveraging the Jupyter platform"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 authors = [
     { name = "JDADF Developers"},
 ]
@@ -85,7 +85,8 @@ test = [
 ]
 docs = [
     "sphinx-astropy[confv2]>=1.9.1",
-    "sphinx_design"
+    "sphinx_design",
+    "sphinx-guidestar>=0.2.0,<0.3.0"
 ]
 roman = [
     "roman_datamodels>=0.26.0",
@@ -123,6 +124,7 @@ jdaviz = [
     "configs/*/*.yaml",
     "jdaviz_cli.ipynb",
     "jdaviz_cli_launcher.ipynb",
+    "ext/wireframe/static/*",
 ]
 "jdaviz.configs.imviz.tests" = [
     "data/*",

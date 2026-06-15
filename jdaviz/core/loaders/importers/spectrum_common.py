@@ -20,6 +20,7 @@ from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
 from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
 from jdaviz.utils import (standardize_metadata,
                           create_data_hash,
+                          hst_obstype,
                           PRIHDR_KEY,
                           SPECTRAL_AXIS_COMP_LABELS,
                           _get_celestial_wcs)
@@ -321,6 +322,18 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             True if the HDU is a valid flux HDU, False otherwise.
         """
         hdu = item.get('obj')
+
+        # Some HST products share file suffixes/structure between imaging and
+        # spectroscopic observations. The OBSTYPE header keyword is used to
+        # delineate between the two.
+        obstype = hst_obstype(self.input)
+        if obstype is not None and self.supported_flux_ndim == 2:
+            if obstype == 'imaging':
+                return False
+
+            if (len(getattr(hdu, 'shape', [])) == 2
+                    and hdu.header.get('EXTNAME', '').upper() in ('SCI', 'FLUX', 'DATA')):
+                return True
 
         # Check for Binary Table HDU with spectral columns (for 1D spectra only)
         if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):

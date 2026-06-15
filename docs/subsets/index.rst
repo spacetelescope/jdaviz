@@ -40,10 +40,10 @@ Subsets allow you to select regions of interest in your data for focused analysi
 UI Access
 =========
 
-.. wireframe-demo::
-   :demo: subsets
-   :enable-only: subsets
-   :demo-repeat: false
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"disable-toolbar-except","value":"subsets"}]
+   :steps-json: [{"action": "show-sidebar", "value": "subsets", "delay": 1500, "caption": "Open the subset tools"}]
 
 Creating Subsets
 ================

@@ -27,7 +27,7 @@ jobs:
     - name: Set up Python to build docs with sphinx
       uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
       with:
-        python-version: '3.11'
+        python-version: '3.14'
     - name: Install base dependencies
       run: |
         python -m pip install --upgrade pip
@@ -36,7 +36,7 @@ jobs:
       run: tox -e linkcheck
 
   ci_cron_tests_dev_roman:
-    name: Python 3.11 with latest dev versions of key dependencies and Roman
+    name: Python 3.14 with latest dev versions of key dependencies and Roman
     runs-on: ubuntu-latest
     if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Extra CI')))
     steps:
@@ -47,16 +47,16 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
       with:
-        python-version: '3.11'
+        python-version: '3.14'
     - name: Install base dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install tox
     - name: Test with tox
-      run: tox -e py311-test-devdeps-romandeps
+      run: tox -e py314-test-devdeps-romandeps
 
   ci_cron_tests_stable_strauss:
-    name: Python 3.12 with stable versions of dependencies and Strauss
+    name: Python 3.13 with stable versions of dependencies and Strauss
     runs-on: ubuntu-latest
     if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Extra CI')))
     steps:
@@ -67,11 +67,11 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
       with:
-        python-version: '3.12'
+        python-version: '3.13'
     - name: Install base dependencies
       run: |
         sudo apt-get install libportaudio2
         python -m pip install --upgrade pip
         python -m pip install tox
     - name: Test with tox
-      run: tox -e py312-test-straussdeps
+      run: tox -e py313-test-straussdeps

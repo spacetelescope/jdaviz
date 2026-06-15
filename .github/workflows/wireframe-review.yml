@@ -1,0 +1,22 @@
+name: Wireframe Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+      models: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: spacetelescope/guidestar/.github/actions/wireframe-review@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          docs-root: docs/
+          max-prompt-tokens: '8000'
+          source-root: jdaviz/
+          fail-on-error: 'true'
+          auto-apply: 'true'

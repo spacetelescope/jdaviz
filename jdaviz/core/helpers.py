@@ -31,7 +31,7 @@ from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.core.user_api import (DataApi, SpectralDataApi, SpatialDataApi,
                                   TemporalSpatialDataApi, SpectralSpatialDataApi)
-from jdaviz.utils import data_has_valid_wcs, CONFIGS_WITH_LOADERS
+from jdaviz.utils import data_has_valid_wcs, CONFIGS_WITH_LOADERS, suppress_widget_comms
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
@@ -225,11 +225,16 @@ class ConfigHelper(HubListener):
             If ignore_invalid_kwargs is False, any kwargs that do not match valid inputs
             will raise a ValueError.
         """
-        resolver = find_matching_resolver(self._app, inp,
-                                          resolver=loader,
-                                          format=format,
-                                          target=target,
-                                          **kwargs)
+        # Resolver matching constructs a transient widget-based resolver for every
+        # registered resolver to test validity. We can suppress their frontend
+        # comms avoids flooding Jupyter's IOPub message-rate limit (e.g. when
+        # loading many datasets in a loop).
+        with suppress_widget_comms():
+            resolver = find_matching_resolver(self._app, inp,
+                                              resolver=loader,
+                                              format=format,
+                                              target=target,
+                                              **kwargs)
 
         if 'show_in_viewer' in kwargs.keys():
             if 'viewer' in kwargs.keys():

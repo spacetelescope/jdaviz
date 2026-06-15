@@ -8,7 +8,7 @@ from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
                                            SpectrumInputExtensionsMixin,
                                            _spectrum_assign_component_type)
 from jdaviz.core.loaders.importers.image.image import _spatial_assign_component_type
-from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS
+from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS, hst_obstype
 from jdaviz.core.template_mixin import (AutoTextField,
                                         ViewerSelectCreateNew)
 from jdaviz.core.user_api import ImporterUserApi
@@ -129,6 +129,12 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         if self._app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
             return 'spectrum2d importer is only supported in specviz2d, generalized jdaviz.'
+
+        # Some HST products share file suffixes/structure between imaging and
+        # spectroscopic observations. The OBSTYPE header keyword is used to
+        # delineate between the two.
+        if hst_obstype(self.input) == 'imaging':
+            return 'HST imaging products (OBSTYPE=IMAGING) are not valid as a 2D spectrum.'
 
         if self.spectrum.flux.ndim != 2:
             return 'Spectrum flux must be 2D.'
