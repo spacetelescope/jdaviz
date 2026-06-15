@@ -8,7 +8,8 @@ from jdaviz.core.marks import PluginLine
 class TestMouseoverMultiple2DSpectra:
 
     @pytest.fixture(scope='class')
-    def spectrum_no_wavelength(self):
+    @classmethod
+    def spectrum_no_wavelength(cls):
         """
         Create a 2D spectrum with no wavelength mapping (no WCS, no spectral_axis).
         """
