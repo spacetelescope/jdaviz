@@ -682,19 +682,23 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 return
 
             if self.treat_table_as_query and file_table is not None:
-                self.observation_table._clear_table()
-                self.file_table._clear_table()
+                # When s_region is present the table is observation-level (e.g. a MAST
+                # search-results CSV with obs_id + dataURL + s_region). Fall through to
+                # the observation_table branch so footprint display works correctly.
+                if observation_table is None or 's_region' not in parsed_input_table.colnames:
+                    self.observation_table._clear_table()
+                    self.file_table._clear_table()
 
-                for row in file_table:
-                    self.file_table.add_item(row)
+                    for row in file_table:
+                        self.file_table.add_item(row)
 
-                # Technically input isn't complete yet but if we don't set this now
-                # the UI will appear bugged with the 'input is empty' message for astroquery
-                self.parsed_input_is_empty = False
-                self.parsed_input_is_query = True
-                self.observation_table_populated = False
-                self.file_table_populated = True
-                return
+                    # Technically input isn't complete yet but if we don't set this now
+                    # the UI will appear bugged with the 'input is empty' message for astroquery
+                    self.parsed_input_is_empty = False
+                    self.parsed_input_is_query = True
+                    self.observation_table_populated = False
+                    self.file_table_populated = True
+                    return
 
             if self.treat_table_as_query and observation_table is not None:
                 self.observation_table._clear_table()
