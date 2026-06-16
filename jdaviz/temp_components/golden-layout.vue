@@ -33,12 +33,16 @@ let lastLoadedExternalStateHash = ''
 let sizeObserver = null
 let resizeFrame = null
 let settleResizeFrames = []
+let settleResizeTimers = []
 let dragCleanupFrame = null
 let suppressCloseEvents = false
 let suppressCloseReleaseFrame = null
+let suppressStateEvents = false
+let userLayoutInteractionActive = false
 
 const GL_COMPONENT_TYPE = '__jdz_gl_component__'
 const STALE_DRAG_PROXY_SELECTOR = 'body > .lm_dragProxy'
+const SETTLED_RESIZE_DELAYS = [50, 250, 750]
 
 function getGlobalLayoutRegistry() {
   if (typeof window === 'undefined') {
@@ -93,6 +97,43 @@ function suppressCloses(callback) {
 function cancelCloseSuppression() {
   clearSuppressCloseReleaseFrame()
   suppressCloseEvents = false
+}
+
+function suppressStateEmits(callback) {
+  suppressStateEvents = true
+  try {
+    callback()
+  } catch (error) {
+    suppressStateEvents = false
+    throw error
+  }
+}
+
+function cancelStateSuppression() {
+  suppressStateEvents = false
+}
+
+function isLayoutEvent(event) {
+  return !!(
+    event
+    && event.target
+    && hostElement.value
+    && hostElement.value.contains(event.target)
+  )
+}
+
+function startUserLayoutInteraction(event) {
+  if (!isLayoutEvent(event)) {
+    return
+  }
+
+  userLayoutInteractionActive = true
+  cancelStateSuppression()
+}
+
+function finishUserLayoutInteraction() {
+  userLayoutInteractionActive = false
+  scheduleDragProxyCleanup()
 }
 
 function isStateCompatible(state, componentConfigIds = new Set()) {
@@ -234,14 +275,26 @@ function ensureLayout() {
   })
 
   gl.on('stateChanged', () => {
-    const saved = stripRuntimeLayoutState(gl.saveLayout())
-    lastEmittedStateHash = layoutComparisonHash(saved)
-    // Allow re-applying the same external saved state after local edits.
-    lastLoadedExternalStateHash = ''
-    emit('state', saved)
+    if (suppressStateEvents) {
+      return
+    }
+
+    emitCurrentLayoutState()
   })
 
   layoutInstance.value = gl
+}
+
+function emitCurrentLayoutState() {
+  if (!layoutInstance.value) {
+    return
+  }
+
+  const saved = stripRuntimeLayoutState(layoutInstance.value.saveLayout())
+  lastEmittedStateHash = layoutComparisonHash(saved)
+  // Ignore the currently loaded external state while the local edit is syncing back.
+  lastLoadedExternalStateHash = layoutComparisonHash(props.state)
+  emit('state', saved)
 }
 
 function scheduleRootResize() {
@@ -268,6 +321,10 @@ function scheduleSettledRootResize() {
     cancelAnimationFrame(frame)
   }
   settleResizeFrames = []
+  for (const timer of settleResizeTimers) {
+    clearTimeout(timer)
+  }
+  settleResizeTimers = []
 
   const scheduleFrame = (callback) => {
     const frame = requestAnimationFrame(() => {
@@ -275,6 +332,14 @@ function scheduleSettledRootResize() {
       callback()
     })
     settleResizeFrames.push(frame)
+  }
+
+  const scheduleTimer = (delay) => {
+    const timer = setTimeout(() => {
+      settleResizeTimers = settleResizeTimers.filter((value) => value !== timer)
+      updateRootSize()
+    }, delay)
+    settleResizeTimers.push(timer)
   }
 
   nextTick(() => {
@@ -285,6 +350,9 @@ function scheduleSettledRootResize() {
         updateRootSize()
       })
     })
+    for (const delay of SETTLED_RESIZE_DELAYS) {
+      scheduleTimer(delay)
+    }
   })
 }
 
@@ -545,6 +613,44 @@ function collectExistingComponentKeys(root) {
   return keys
 }
 
+function collectComponentConfigIds(root) {
+  const ids = new Set()
+
+  const walk = (item) => {
+    if (!item || typeof item !== 'object') {
+      return
+    }
+
+    if (item.type === 'component') {
+      const configId = normalizedConfigId(item)
+      if (configId) {
+        ids.add(configId)
+      }
+      return
+    }
+
+    const content = Array.isArray(item.content) ? item.content : []
+    for (const child of content) {
+      walk(child)
+    }
+  }
+
+  walk(root)
+  return ids
+}
+
+function sameSet(left, right) {
+  if (left.size !== right.size) {
+    return false
+  }
+  for (const value of left) {
+    if (!right.has(value)) {
+      return false
+    }
+  }
+  return true
+}
+
 function countLayoutStacks(item) {
   if (!item || typeof item !== 'object') {
     return 0
@@ -775,7 +881,7 @@ function forceSanitizeItemSizes(item) {
   }
 }
 
-function loadLayout(layoutConfig) {
+function loadLayout(layoutConfig, options = {}) {
   if (!layoutConfig) {
     return
   }
@@ -788,9 +894,19 @@ function loadLayout(layoutConfig) {
 
   const normalizedLayout = normalizeAndSanitizeLayout(layoutConfig)
 
-  suppressClosesUntilNextFrame(() => {
-    layoutInstance.value.loadLayout(normalizedLayout)
-  })
+  const runLoad = () => {
+    suppressClosesUntilNextFrame(() => {
+      layoutInstance.value.loadLayout(normalizedLayout)
+    })
+  }
+
+  if (options.emitState) {
+    cancelStateSuppression()
+    runLoad()
+    emitCurrentLayoutState()
+  } else {
+    suppressStateEmits(runLoad)
+  }
   scheduleSettledRootResize()
 }
 
@@ -802,6 +918,10 @@ function queueTemplateReload() {
   reloadQueued = true
   Promise.resolve().then(() => {
     reloadQueued = false
+    if (userLayoutInteractionActive) {
+      return
+    }
+
     const templateLayout = buildTemplateLayout()
     if (!templateLayout) {
       return
@@ -827,17 +947,22 @@ function queueTemplateReload() {
         .filter((value) => !!value),
     )
     let baseState = null
+    const hasExternalState = !!(externalState && externalStateHash && normalizedExternalState)
+    const externalStateIsCompatible = (
+      hasExternalState && isStateCompatible(normalizedExternalState, componentConfigIds)
+    )
 
     if (
-      externalState
-      && externalStateHash
+      hasExternalState
       && externalStateHash !== lastEmittedStateHash
       && externalStateHash !== lastLoadedExternalStateHash
-      && normalizedExternalState
-      && isStateCompatible(normalizedExternalState, componentConfigIds)
+      && externalStateIsCompatible
     ) {
       lastLoadedExternalStateHash = externalStateHash
       baseState = normalizedExternalState
+    } else if (hasExternalState && !externalStateIsCompatible) {
+      loadLayout(templateLayout)
+      return
     } else if (layoutInstance.value) {
       const liveState = normalizeLayoutForLoad(layoutInstance.value.saveLayout())
       if (isStateCompatible(liveState, componentConfigIds)) {
@@ -851,7 +976,9 @@ function queueTemplateReload() {
     }
 
     const reconciledState = reconcileLayoutState(baseState, templateLayout)
-    loadLayout(reconciledState)
+    const baseComponentIds = collectComponentConfigIds(baseState && baseState.root)
+    const reconciledComponentIds = collectComponentConfigIds(reconciledState && reconciledState.root)
+    loadLayout(reconciledState, { emitState: !sameSet(baseComponentIds, reconciledComponentIds) })
   })
 }
 
@@ -867,14 +994,20 @@ onMounted(() => {
 
   queueTemplateReload()
 
-  window.addEventListener('mouseup', scheduleDragProxyCleanup)
-  window.addEventListener('pointerup', scheduleDragProxyCleanup)
-  window.addEventListener('pointercancel', scheduleDragProxyCleanup)
-  window.addEventListener('touchend', scheduleDragProxyCleanup)
-  window.addEventListener('touchcancel', scheduleDragProxyCleanup)
-  window.addEventListener('dragend', scheduleDragProxyCleanup)
-  window.addEventListener('blur', scheduleDragProxyCleanup)
+  window.addEventListener('mouseup', finishUserLayoutInteraction)
+  window.addEventListener('pointerup', finishUserLayoutInteraction)
+  window.addEventListener('pointercancel', finishUserLayoutInteraction)
+  window.addEventListener('touchend', finishUserLayoutInteraction)
+  window.addEventListener('touchcancel', finishUserLayoutInteraction)
+  window.addEventListener('dragend', finishUserLayoutInteraction)
+  window.addEventListener('blur', finishUserLayoutInteraction)
   window.addEventListener('resize', scheduleRootResize)
+
+  if (hostElement.value) {
+    hostElement.value.addEventListener('pointerdown', startUserLayoutInteraction, true)
+    hostElement.value.addEventListener('mousedown', startUserLayoutInteraction, true)
+    hostElement.value.addEventListener('touchstart', startUserLayoutInteraction, true)
+  }
 })
 
 watch(
@@ -922,6 +1055,10 @@ onBeforeUnmount(() => {
     cancelAnimationFrame(frame)
   }
   settleResizeFrames = []
+  for (const timer of settleResizeTimers) {
+    clearTimeout(timer)
+  }
+  settleResizeTimers = []
 
   if (dragCleanupFrame !== null) {
     cancelAnimationFrame(dragCleanupFrame)
@@ -929,15 +1066,23 @@ onBeforeUnmount(() => {
   }
 
   cancelCloseSuppression()
+  cancelStateSuppression()
+  userLayoutInteractionActive = false
 
-  window.removeEventListener('mouseup', scheduleDragProxyCleanup)
-  window.removeEventListener('pointerup', scheduleDragProxyCleanup)
-  window.removeEventListener('pointercancel', scheduleDragProxyCleanup)
-  window.removeEventListener('touchend', scheduleDragProxyCleanup)
-  window.removeEventListener('touchcancel', scheduleDragProxyCleanup)
-  window.removeEventListener('dragend', scheduleDragProxyCleanup)
-  window.removeEventListener('blur', scheduleDragProxyCleanup)
+  window.removeEventListener('mouseup', finishUserLayoutInteraction)
+  window.removeEventListener('pointerup', finishUserLayoutInteraction)
+  window.removeEventListener('pointercancel', finishUserLayoutInteraction)
+  window.removeEventListener('touchend', finishUserLayoutInteraction)
+  window.removeEventListener('touchcancel', finishUserLayoutInteraction)
+  window.removeEventListener('dragend', finishUserLayoutInteraction)
+  window.removeEventListener('blur', finishUserLayoutInteraction)
   window.removeEventListener('resize', scheduleRootResize)
+
+  if (hostElement.value) {
+    hostElement.value.removeEventListener('pointerdown', startUserLayoutInteraction, true)
+    hostElement.value.removeEventListener('mousedown', startUserLayoutInteraction, true)
+    hostElement.value.removeEventListener('touchstart', startUserLayoutInteraction, true)
+  }
 
   if (sizeObserver) {
     sizeObserver.disconnect()
