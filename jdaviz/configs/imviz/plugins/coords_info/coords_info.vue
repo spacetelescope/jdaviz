@@ -1,5 +1,32 @@
 <template>
-  <div @mouseover="show_dataset_selected = true" @mouseleave="show_dataset_selected = false" style="min-width: 300px">
+  <!-- compact single-row mode (focus mode) -->
+  <div v-if="compact" style="display: flex; align-items: center; height: 42px; color: white;">
+    <v-tooltip bottom color="#205f76" :disabled="!icon">
+      <template v-slot:activator="{ on, attrs }">
+        <div v-bind="attrs" v-on="on" style="display: flex; align-items: center; cursor: default;">
+          <v-btn icon tile>
+            <j-layer-viewer-icon :icon="icon || dataset_icon" color="white" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+          </v-btn>
+          <span v-if="icon" style="white-space: nowrap; padding-right: 8px" :style="row1_unreliable ? 'color: #B8B8B8' : ''">
+            <b>{{ row1a_title }} </b>{{ row1a_text }}&nbsp;&nbsp;<b>{{ row1b_title }} </b>{{ row1b_text }}
+          </span>
+        </div>
+      </template>
+      <table v-if="icon">
+        <tr :style="row2_unreliable ? 'color: #B8B8B8' : ''">
+          <td width="42"><b>{{ row2_title }}</b></td>
+          <td>{{ row2_text }}</td>
+        </tr>
+        <tr :style="row3_unreliable ? 'color: #B8B8B8' : ''">
+          <td width="42"><b>{{ row3_title }}</b></td>
+          <td>{{ row3_text }}</td>
+        </tr>
+      </table>
+    </v-tooltip>
+  </div>
+
+  <!-- normal (non-compact) mode -->
+  <div v-else @mouseover="show_dataset_selected = true" @mouseleave="show_dataset_selected = false" style="min-width: 300px">
     <div v-if="icon" style="position: absolute; height: 100%">
       <v-toolbar-items>
         <v-btn icon tile>
@@ -37,7 +64,7 @@
         </span>
       </v-toolbar-items>
     </div>
-</div>
+  </div>
 </template>
 
 <script>

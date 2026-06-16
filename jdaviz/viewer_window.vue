@@ -8,7 +8,7 @@
       >
         <v-alert color="error">This viewer has been closed at the app-level and this instance is no longer connected or functional.</v-alert>
       </v-overlay>
-      <v-row dense style="background-color: #205f76; margin: 0px" :style="(focus_mode && coords_info_widget) ? 'height: 80px' : ''" class="jdaviz-viewer-toolbar">
+      <v-row dense style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
         <j-tooltip v-if="config !== 'deconfigged'" tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
           <v-btn
             text
@@ -37,7 +37,7 @@
           </j-tooltip>
         </v-toolbar-items>
         <j-play-pause-widget v-if="reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': id, 'method': 'next_row'})"></j-play-pause-widget>
-        <div v-if="focus_mode && coords_info_widget" style="position: relative; height: 80px; overflow: hidden; color: white;">
+        <div v-if="focus_mode && coords_info_widget" style="position: relative; height: 42px; overflow: hidden; color: white;">
           <jupyter-widget :widget="coords_info_widget"></jupyter-widget>
         </div>
         <v-spacer></v-spacer>
@@ -48,7 +48,7 @@
       </v-row>
     </div>
 
-    <v-card tile flat :style="'width: 100%; height: calc(100% - ' + (focus_mode && coords_info_widget ? '80px' : '42px') + '); overflow: hidden;'">
+    <v-card tile flat style="width: 100%; height: calc(100% - 42px); overflow: hidden;">
       <jupyter-widget :widget="data_menu_widget"></jupyter-widget>
       <jupyter-widget
         :widget="figure_widget"
