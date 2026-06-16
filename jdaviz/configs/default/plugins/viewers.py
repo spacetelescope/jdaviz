@@ -1499,7 +1499,7 @@ class ScatterViewer(JdavizViewerMixin, BqplotScatterView):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange', 'bqplot:yrange', 'bqplot:rectangle'],
                     [],
-                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
     _state_cls = ScatterViewerState
 
@@ -1515,7 +1515,7 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     [],
-                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
     _state_cls = HistogramViewerState
 
@@ -1529,7 +1529,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
-                    ['jdaviz:viewer_clone']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone']
                    ]
 
     def __init__(self, session, *args, **kwargs):

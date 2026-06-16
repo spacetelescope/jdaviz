@@ -473,6 +473,45 @@ class ViewerClone(Tool):
                                                      'rampviz']
 
 
+_ICON_FULLSCREEN = os.path.join(ICON_DIR, 'fullscreen.svg')
+_ICON_FULLSCREEN_EXIT = os.path.join(ICON_DIR, 'fullscreen-exit.svg')
+
+
+@viewer_tool
+class ViewerFocusToggle(Tool):
+    icon = _ICON_FULLSCREEN
+    tool_id = 'jdaviz:viewer_focus_toggle'
+    action_text = 'Toggle focus mode'
+    tool_tip = 'Expand this viewer to fill the app (focus mode)'
+
+    def __init__(self, viewer=None):
+        super().__init__(viewer)
+        if viewer is not None and hasattr(viewer, 'jdaviz_app'):
+            from glue_jupyter.common.toolbar_vuetify import read_icon
+            self._img_fullscreen = read_icon(_ICON_FULLSCREEN, 'svg+xml')
+            self._img_fullscreen_exit = read_icon(_ICON_FULLSCREEN_EXIT, 'svg+xml')
+            viewer.jdaviz_app.state.add_callback(
+                'focus_viewer', self._on_focus_viewer_changed
+            )
+
+    def _on_focus_viewer_changed(self, focus_viewer):
+        toolbar = getattr(self.viewer, 'toolbar', None)
+        if toolbar is None or self.tool_id not in getattr(toolbar, 'tools_data', {}):
+            return
+        in_focus = focus_viewer == getattr(self.viewer, 'reference', None)
+        toolbar.tools_data = {
+            **toolbar.tools_data,
+            self.tool_id: {
+                **toolbar.tools_data[self.tool_id],
+                'img': self._img_fullscreen_exit if in_focus else self._img_fullscreen,
+                'tooltip': 'Exit focus mode' if in_focus else 'Expand this viewer to fill the app (focus mode)',
+            }
+        }
+
+    def activate(self):
+        self.viewer.toggle_focus_mode()
+
+
 class _BaseTableSelectionTool(Tool):
     """
     Base class for table tools that enable row selection checkboxes and swap the toolbar.
