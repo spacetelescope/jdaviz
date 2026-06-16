@@ -3,11 +3,11 @@
     absolute
     offset-y
     left
-    v-if="dataset_items.length > 0 || subset_tools.length > 0"
+    v-if="dataset_items.length > 0 || (subset_tools.length > 0 && !focus_mode)"
     >
     <template v-slot:activator="{ on, attrs }">
       <j-tooltip
-        v-if="dataset_items.length > 0 || subset_tools.length > 0"
+        v-if="dataset_items.length > 0 || (subset_tools.length > 0 && !focus_mode)"
         tooltipcontent="Add data or subset to viewer"
       >
         <v-btn
@@ -36,14 +36,14 @@
                 'dm.add_data(\''+data.label+'\')'
                 :
                 data.label
-              }} 
+              }}
             </span>
           </j-tooltip>
         </v-list-item-content>
       </v-list-item>
-      <v-subheader v-if="subset_tools.length > 0"><span>Create Subset</span></v-subheader>
+      <v-subheader v-if="subset_tools.length > 0 && !focus_mode"><span>Create Subset</span></v-subheader>
       <v-list-item
-        v-if="subset_tools.length > 0"
+        v-if="subset_tools.length > 0 && !focus_mode"
       >
         <v-list-item-content style="display: inline-block">
           <j-tooltip
@@ -51,7 +51,7 @@
             span_style="display: inline-block"
             :tooltipcontent="api_hints_enabled ? '' : 'Create new '+tool.name+' subset'"
           >
-            <v-btn 
+            <v-btn
               icon
               @mouseover="() => {hover_api_hint = 'dm.create_subset(\''+tool.name+'\')'}"
               @mouseleave="() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
@@ -81,6 +81,6 @@ module.exports = {
         lock_hover_api_hint: false,
       }
     },
-  props: ['dataset_items', 'subset_tools', 'loaded_n_data', 'api_hints_enabled', 'icons'],
+  props: ['dataset_items', 'subset_tools', 'loaded_n_data', 'api_hints_enabled', 'icons', 'focus_mode'],
 };
 </script>

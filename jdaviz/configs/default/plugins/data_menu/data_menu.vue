@@ -155,6 +155,7 @@
                   :loaded_n_data="loaded_n_data"
                   :api_hints_enabled="api_hints_enabled"
                   :icons="icons"
+                  :focus_mode="focus_mode"
                   @add-data="(data_label) => {add_data_to_viewer({data_label: data_label})}"
                   @create-subset="(subset_type) => {create_subset({subset_type: subset_type}); data_menu_open = false}"
                 >
@@ -274,6 +275,7 @@
                   @remove-from-app="remove_from_app"
                 />
                 <j-tooltip
+                  v-if="!focus_mode"
                   :span_style="'display: inline-block; float: right; ' + (info_enabled ? '' : 'cursor: default;')"
                   :tooltipcontent="info_tooltip"
                 >
