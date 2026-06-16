@@ -149,6 +149,16 @@
             persistent-hint
           ></v-text-field>
         </j-flex-row>
+        <j-flex-row v-else-if="item.name === 'n_rows_selected' || item.name === 'Selected rows'" class="row-no-outside-padding">
+          <v-text-field
+            :label="item.name"
+            :value="item.value"
+            style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
+            :readonly="true"
+            :hint="item.name === 'Selected rows' ? 'Subset includes these rows from the table' : 'Number of rows in subset'"
+            persistent-hint
+          ></v-text-field>
+        </j-flex-row>
         <j-flex-row v-else class="row-no-outside-padding">
           <v-text-field
             :label="api_hints_enabled ? 'plg.update_subset(\'' + subset_selected + '\', subregion=' + index + ', ' + item.att + '=' + item.value + ')' : item.name"
