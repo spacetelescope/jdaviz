@@ -619,7 +619,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             elif isinstance(subset_state, ElementSubsetState):
                 n_rows_selected = len(subset_state.indices)
                 subset_type = "Table Selection"
-                subset_definition = [{"name": "selected rows", "att": "indices",
+                subset_definition = [{"name": "Selected rows", "att": "indices",
                                       "value": subset_state.indices},
                                       {"name": "n_selected_rows", "att": None,
                                        "value": n_rows_selected}]
