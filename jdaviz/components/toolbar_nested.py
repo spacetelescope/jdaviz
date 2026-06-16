@@ -70,6 +70,11 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             # Subscribe to restore toolbar message with dedicated handler
             self.viewer.hub.subscribe(self, RestoreToolbarMessage,
                                       handler=lambda msg: self.restore_tools(all_viewers=False))
+            # React to focus mode changes so tools show/hide accordingly
+            if hasattr(self.viewer, 'jdaviz_app'):
+                self.viewer.jdaviz_app.state.add_callback(
+                    'focus_viewer', lambda _: self._update_tool_visibilities()
+                )
 
     def _on_viewer_removed(self, msg):
         """Handle viewer removal - clean up toolbar overrides if this viewer is removed."""
@@ -206,8 +211,16 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError
         # the tool will always be visible
-        if hasattr(self.tools[tool_id], 'is_visible'):
-            return self.tools[tool_id].is_visible()
+        tool = self.tools[tool_id]
+        # in focus mode, only show tools marked keep_visible_in_focus_mode
+        if (hasattr(self.viewer, 'jdaviz_app')
+                and self.viewer.jdaviz_app.state.focus_viewer
+                and self.viewer.jdaviz_app.state.focus_viewer
+                == getattr(self.viewer, 'reference', None)
+                and not getattr(tool, 'keep_visible_in_focus_mode', False)):
+            return False
+        if hasattr(tool, 'is_visible'):
+            return tool.is_visible()
         return True
 
     def _disabled_msg(self, tool_id):

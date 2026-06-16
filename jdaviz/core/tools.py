@@ -156,6 +156,8 @@ def _get_skycoords_from_table(layer, rows=None):
 class _BaseZoomHistory:
     # Mixin for custom zoom tools to be able to save their previous zoom state
     # which is then used by the PrevZoom tool
+    keep_visible_in_focus_mode = True
+
     def save_prev_zoom(self):
         # Cannot use viewer.get_limits() here because viewers from
         # glue-jupyter does not have that method.
@@ -166,6 +168,7 @@ class _BaseZoomHistory:
 class _MatchedZoomMixin:
     match_axes = ('x', 'y')
     disable_matched_zoom_in_other_viewer = True
+    keep_visible_in_focus_mode = True
 
     def _is_matched_viewer(self, viewer):
         return True
@@ -483,6 +486,7 @@ class ViewerFocusToggle(Tool):
     tool_id = 'jdaviz:viewer_focus_toggle'
     action_text = 'Toggle focus mode'
     tool_tip = 'Expand this viewer to fill the app (focus mode)'
+    keep_visible_in_focus_mode = True
 
     def __init__(self, viewer=None):
         super().__init__(viewer)
