@@ -333,7 +333,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
         self.erase_spectral_lines(show_none=False)
         # Reset all show flags to True so they will be plotted.
         # Necessary if erase_spectral_lines() has previously been called
-        if show_all==True:
+        if show_all is True:
             self.spectral_lines["show"] = True
         if plot_units is None:
             plot_units = self.data()[0].spectral_axis.unit
@@ -348,11 +348,11 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
 
         marks = []
         for line_row, color in zip(lines_to_plot, colors):
-             # Plot only the lines with show=True
+            # Plot only the lines with show=True
             if "show" in lines_to_plot.colnames and not line_row["show"]:
                 continue
             marks.append(self._create_spectral_mark(line_row, plot_units, redshift,
-                                                            color, **kwargs))
+                                                    color, **kwargs))
         self.figure.marks = self.figure.marks + marks
         self._broadcast_plotted_lines()
         return
