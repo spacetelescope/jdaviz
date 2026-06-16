@@ -393,8 +393,10 @@ class JdavizViewerMixin(WithCache):
             expose = ['data_labels_loaded', 'data_labels_visible', 'data_menu']
         else:
             expose = []
-        if self.jdaviz_app.config == 'deconfigged':
-            expose += ['clone_viewer']
+        if self.jdaviz_app.config not in ('imviz', 'specviz',
+                                          'specviz2d', 'cubeviz',
+                                          'mosviz', 'rampviz'):
+            expose += ['clone_viewer', 'toggle_focus_mode']
         if isinstance(self, BqplotImageView):
             if isinstance(self, AstrowidgetsImageViewerMixin):
                 expose += ['save',
@@ -498,6 +500,24 @@ class JdavizViewerMixin(WithCache):
                 setattr(new_layer_state, k, v)
 
         return JdavizViewerWindow(new_viewer, app=self.jdaviz_app).user_api
+
+    def toggle_focus_mode(self, focus=None):
+        """
+        Toggle focus mode for this viewer.
+
+        Parameters
+        ----------
+        focus : bool or None, optional
+            If True, set focus to this viewer.  If False, unset focus if it is currently on this viewer.
+            If None (default), toggle focus on this viewer.
+        """
+        curr_focus = self.jdaviz_app.state.focus_viewer
+        if focus is None:
+            # set to this viewer if not already, otherwise None
+            new_focus = self.reference if curr_focus != self.reference else ''
+        else:
+            new_focus = self.reference if focus else ''
+        self.jdaviz_app.state.focus_viewer = new_focus
 
     def reset_limits(self):
         """
