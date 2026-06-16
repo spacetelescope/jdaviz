@@ -17,7 +17,7 @@ module.exports = {
   props: ['span_style', 'color', 'icon', 'icons', 'icon_size', 'linewidth', 'linestyle', 'prevent_invert_if_dark'],
   computed: {
     borderStyle() {
-      if (this.$props.linewidth > 0) { 
+      if (this.$props.linewidth > 0) {
         return 'border-bottom: '+this.$props.linewidth+'px '+this.$props.linestyle+' '+this.$props.color
       }
       return ''
@@ -36,6 +36,6 @@ module.exports = {
   padding-top: 3px;
   text-align: center;
   font-size: 12pt;
-  font-weight: bold; 
+  font-weight: bold;
 }
 </style>

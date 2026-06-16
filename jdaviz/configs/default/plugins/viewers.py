@@ -917,6 +917,9 @@ class JdavizViewerWindow(TemplateMixin):
     viewer_destroyed = Bool(False).tag(sync=True)
     focus_mode = Bool(False).tag(sync=True)
     coords_info_widget = Unicode("").tag(sync=True)
+    coords_info_has_data = Bool(False).tag(sync=True)
+    coords_info_icon = Unicode("").tag(sync=True)
+    coords_info_dataset_icon = Unicode("").tag(sync=True)
 
     def __init__(self, viewer, *args, reference="", name="", **kwargs):
         super().__init__(*args, **kwargs)
@@ -940,6 +943,11 @@ class JdavizViewerWindow(TemplateMixin):
         coords_info = self._app.session.application._tools.get('g-coords-info')
         if coords_info is not None:
             self.coords_info_widget = "IPY_MODEL_" + coords_info.model_id
+            self.coords_info_has_data = bool(coords_info.icon)
+            self.coords_info_icon = coords_info.icon
+            self.coords_info_dataset_icon = coords_info.dataset_icon
+            coords_info.observe(self._on_coords_info_icon_changed, names=['icon'])
+            coords_info.observe(self._on_coords_info_dataset_icon_changed, names=['dataset_icon'])
         self.focus_mode = self._app.state.focus_viewer == self.reference
         self._app.state.add_callback('focus_viewer', self._on_focus_viewer_changed)
 
@@ -950,6 +958,18 @@ class JdavizViewerWindow(TemplateMixin):
 
     def _on_focus_viewer_changed(self, focus_viewer):
         self.focus_mode = focus_viewer == self.reference
+
+    def _on_coords_info_icon_changed(self, change):
+        self.coords_info_has_data = bool(change['new'])
+        self.coords_info_icon = change['new']
+
+    def _on_coords_info_dataset_icon_changed(self, change):
+        self.coords_info_dataset_icon = change['new']
+
+    def vue_cycle_coords_dataset(self, *args):
+        coords_info = self._app.session.application._tools.get('g-coords-info')
+        if coords_info is not None:
+            coords_info.dataset.select_next()
 
     @property
     def user_api(self):

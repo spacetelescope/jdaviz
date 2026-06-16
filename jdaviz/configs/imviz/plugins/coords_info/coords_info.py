@@ -79,7 +79,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     )  # option for layer (auto, none, or specific layer)
     icon = Unicode("").tag(sync=True)  # currently exposed layer
 
-    compact = Bool(False).tag(sync=True)  # compact/single-row mode when in focus mode
+    focus = Bool(False).tag(sync=True)  # floating mode when in focus mode
 
     row1a_title = Unicode("").tag(sync=True)
     row1a_text = Unicode("").tag(sync=True)
@@ -118,9 +118,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._viewer_renamed)
 
         # compact mode when any viewer is in focus
-        self.compact = self._app.state.focus_viewer != ''
+        self.focus = self._app.state.focus_viewer != ''
         self._app.state.add_callback('focus_viewer',
-                                     lambda fv: setattr(self, 'compact', fv != ''))
+                                     lambda fv: setattr(self, 'focus', fv != ''))
         if self.config in ("cubeviz", 'deconfigged'):
             self.hub.subscribe(
                 self, GlobalDisplayUnitChanged, handler=self._on_global_display_unit_changed
