@@ -62,6 +62,7 @@ PHOTUTILS_GE_3 = minversion(photutils, '2.3.1.dev')
 PRIHDR_KEY = '_primary_header'
 COMMENTCARD_KEY = '_fits_comment_card'
 
+JDAVIZ_CONFIGS = ('mosviz', 'specviz', 'specviz2d', 'imviz', 'cubeviz', 'rampviz')
 CONFIGS_WITH_LOADERS = ('deconfigged', 'lcviz',
                         'specviz', 'specviz2d',
                         'imviz', 'cubeviz',
