@@ -29,17 +29,20 @@
           {{  api_hint_multiselect }} {{  multiselect ? 'True' : 'False' }}
         </span>
       </j-flex-row>
-      <div v-if="show_multiselect_toggle" style="position: absolute; width: 32px; right: 0px; margin-right: 12px; margin-top: -6px; z-index: 999">
-      <j-tooltip tipid='viewer-multiselect-toggle'>
-        <v-btn
-          icon
-          style="opacity: 0.7"
-          @click="$emit('update:multiselect', !multiselect)"
-        >
-          <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24" class="invert-if-dark"/>
-        </v-btn>
-      </j-tooltip>
-    </div>
+      <div v-if="show_multiselect_toggle" style="position: absolute; width: 32px; right: 0px; margin-right: 12px; margin-top: -2px; z-index: 999;">
+        <j-tooltip tipid='viewer-multiselect-toggle'>
+          <v-btn
+            icon
+            style="opacity: 0.7"
+            density="compact"
+            variant="text"
+            size="x-small"
+            @click="$emit('update:multiselect', !multiselect)"
+          >
+            <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24" class="invert-if-dark"/>
+          </v-btn>
+        </j-tooltip>
+      </div>
     <j-flex-row v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
       <v-select
         :menu-props="{ location: 'top start', maxHeight: 300 }"
