@@ -508,7 +508,8 @@ class ViewerFocusToggle(Tool):
             self.tool_id: {
                 **toolbar.tools_data[self.tool_id],
                 'img': self._img_fullscreen_exit if in_focus else self._img_fullscreen,
-                'tooltip': 'Exit focus mode' if in_focus else 'Expand this viewer to fill the app (focus mode)',
+                'tooltip': ('Exit focus mode' if in_focus
+                            else 'Expand this viewer to fill the app (focus mode)'),
             }
         }
 

@@ -508,7 +508,8 @@ class JdavizViewerMixin(WithCache):
         Parameters
         ----------
         focus : bool or None, optional
-            If True, set focus to this viewer.  If False, unset focus if it is currently on this viewer.
+            If True, set focus to this viewer.  If False, unset focus if it is currently
+            on this viewer.
             If None (default), toggle focus on this viewer.
         """
         curr_focus = self.jdaviz_app.state.focus_viewer
@@ -1499,7 +1500,8 @@ class ScatterViewer(JdavizViewerMixin, BqplotScatterView):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange', 'bqplot:yrange', 'bqplot:rectangle'],
                     [],
-                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
     _state_cls = ScatterViewerState
 
@@ -1515,7 +1517,8 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     [],
-                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
     _state_cls = HistogramViewerState
 
