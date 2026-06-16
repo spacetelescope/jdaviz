@@ -309,6 +309,20 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 self.tools_data[tool_id] = {**self.tools_data[tool_id],
                                             'has_suboptions': n_visible > 1}
 
+        # in focus mode, flatten the toolbar: all visible tools appear side-by-side
+        in_focus_mode = (
+            hasattr(self.viewer, 'jdaviz_app')
+            and self.viewer.jdaviz_app.state.focus_viewer
+            and self.viewer.jdaviz_app.state.focus_viewer
+            == getattr(self.viewer, 'reference', None)
+        )
+        if in_focus_mode:
+            for tool_id, info in self.tools_data.items():
+                if info['visible']:
+                    self.tools_data[tool_id] = {**info,
+                                                'primary': True,
+                                                'has_suboptions': False}
+
         # mutation to dictionary needs to be manually sent to update the UI
         self.send_state("tools_data")
         if needs_deactivate_active:
