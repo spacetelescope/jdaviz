@@ -168,7 +168,7 @@ class _BaseZoomHistory:
 class _MatchedZoomMixin:
     match_axes = ('x', 'y')
     disable_matched_zoom_in_other_viewer = True
-    keep_visible_in_focus_mode = True
+    keep_visible_in_focus_mode = False
 
     def _is_matched_viewer(self, viewer):
         return True
@@ -284,6 +284,7 @@ class PrevZoom(Tool, _BaseZoomHistory):
     tool_id = 'jdaviz:prevzoom'
     action_text = 'Previous zoom'
     tool_tip = 'Back to previous zoom level'
+    keep_visible_in_focus_mode = False
 
     def activate(self):
         if self.viewer._prev_limits is None:
@@ -326,6 +327,7 @@ class PanZoom(BqplotPanZoomMode, _BaseZoomHistory):
 class PanZoomX(BqplotPanZoomXMode, _BaseZoomHistory):
     icon = os.path.join(ICON_DIR, 'pan_x.svg')
     tool_id = 'jdaviz:panzoom_x'
+    keep_visible_in_focus_mode = False
 
     def activate(self):
         self.save_prev_zoom()
@@ -336,6 +338,7 @@ class PanZoomX(BqplotPanZoomXMode, _BaseZoomHistory):
 class PanZoomY(BqplotPanZoomYMode, _BaseZoomHistory):
     icon = os.path.join(ICON_DIR, 'pan_y.svg')
     tool_id = 'jdaviz:panzoom_y'
+    keep_visible_in_focus_mode = False
 
     def activate(self):
         self.save_prev_zoom()
