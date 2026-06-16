@@ -118,13 +118,16 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._viewer_renamed)
 
         # compact mode when any viewer is in focus
-        self.focus = self._app.state.focus_viewer != ''
         self._app.state.add_callback('focus_viewer',
-                                     lambda fv: setattr(self, 'focus', fv != ''))
+                                     self._focus_viewer_changed)
+        self._focus_viewer_changed()
         if self.config in ("cubeviz", 'deconfigged'):
             self.hub.subscribe(
                 self, GlobalDisplayUnitChanged, handler=self._on_global_display_unit_changed
             )
+
+    def _focus_viewer_changed(self, *args):
+        self.focus = self._app.state.focus_viewer != ''
 
     def _create_marks_for_viewer(self, viewer, id=None):
         if id is None:
