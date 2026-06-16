@@ -380,6 +380,10 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
         pytest.skip("no catalog available")
     else:
         ldr.load()
+    if ldr.importer.returned_no_results is True:
+        pytest.skip("no results")
+    else:
+        ldr.load()
     assert 'Scatter' in deconfigged_helper.viewers
     assert 'Catalog' in deconfigged_helper.viewers['Scatter'].data_menu.layer.choices
 
