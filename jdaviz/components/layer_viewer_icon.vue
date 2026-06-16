@@ -1,6 +1,6 @@
 <template>
   <span v-if="icon !== undefined">
-    <v-icon v-if="String(icon).startsWith('mdi-')" :size="icon_size || 16">
+    <v-icon v-if="String(icon).startsWith('mdi-')" :size="icon_size || 16" :color="color">
       {{icon}}
     </v-icon>
     <span v-else-if="icons && Object.keys(icons).indexOf(icon) !== -1">

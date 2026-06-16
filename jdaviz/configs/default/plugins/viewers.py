@@ -915,6 +915,8 @@ class JdavizViewerWindow(TemplateMixin):
     tool_override_mode = Unicode("").tag(sync=True)
 
     viewer_destroyed = Bool(False).tag(sync=True)
+    focus_mode = Bool(False).tag(sync=True)
+    coords_info_widget = Unicode("").tag(sync=True)
 
     def __init__(self, viewer, *args, reference="", name="", **kwargs):
         super().__init__(*args, **kwargs)
@@ -934,10 +936,20 @@ class JdavizViewerWindow(TemplateMixin):
             self.tool_override_mode = viewer.toolbar.tool_override_mode
             viewer.toolbar.observe(self._on_toolbar_override_change, names=['tool_override_mode'])
 
+        # Track focus mode by observing app.state.focus_viewer
+        coords_info = self._app.session.application._tools.get('g-coords-info')
+        if coords_info is not None:
+            self.coords_info_widget = "IPY_MODEL_" + coords_info.model_id
+        self.focus_mode = self._app.state.focus_viewer == self.reference
+        self._app.state.add_callback('focus_viewer', self._on_focus_viewer_changed)
+
         self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
 
     def _on_toolbar_override_change(self, change):
         self.tool_override_mode = change['new']
+
+    def _on_focus_viewer_changed(self, focus_viewer):
+        self.focus_mode = focus_viewer == self.reference
 
     @property
     def user_api(self):
