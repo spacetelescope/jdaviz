@@ -479,8 +479,27 @@ class ViewerClone(Tool):
                                                      'rampviz']
 
 
+_ICON_VIEWER_POPOUT = os.path.join(ICON_DIR, 'popout.svg')
 _ICON_FULLSCREEN = os.path.join(ICON_DIR, 'fullscreen.svg')
 _ICON_FULLSCREEN_EXIT = os.path.join(ICON_DIR, 'fullscreen-exit.svg')
+
+
+@viewer_tool
+class ViewerPopout(Tool):
+    icon = _ICON_VIEWER_POPOUT
+    tool_id = 'jdaviz:viewer_popout'
+    action_text = 'Pop out viewer'
+    tool_tip = 'Display this viewer in a detached window'
+    keep_visible_in_focus_mode = True
+
+    def activate(self):
+        viewer_item = self.viewer.jdaviz_app._viewer_item_by_id(self.viewer.reference_id)
+        if viewer_item is None:
+            return
+
+        viewer_window = viewer_item.get('widget')
+        if viewer_window is not None:
+            viewer_window.show(loc='popout')
 
 
 @viewer_tool

@@ -31,6 +31,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                      'bqplot:circannulus'],
                     ['jdaviz:spectrumperspaxel'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout',
                      'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 

@@ -44,9 +44,6 @@
         </j-tooltip>
         <v-spacer></v-spacer>
         <jupyter-widget class='jdaviz-nested-toolbar' :widget="toolbar_widget"></jupyter-widget>
-        <span v-if="tool_override_mode.length === 0" class='toolbar-popout-span' style="float: right; margin-top: 4px;">
-          <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
-        </span>
       </v-row>
     </div>
 
@@ -131,10 +128,3 @@ module.exports = {
   },
 }
 </script>
-
-<style scoped>
-.toolbar-popout-span i {
-  color: white !important;
-}
-
-</style>

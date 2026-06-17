@@ -21,6 +21,7 @@ class RampvizProfileView(JdavizProfileView, WithSliceIndicator):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['jdaviz:selectslice'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout',
                      'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
@@ -109,6 +110,7 @@ class RampvizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                      'bqplot:circannulus'],
                     ['jdaviz:rampperpixel'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout',
                      'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
