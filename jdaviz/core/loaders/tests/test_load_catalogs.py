@@ -373,17 +373,15 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
     ldr.importer.col_id = 'source_id'
     ldr.importer.col_other = ['parallax', 'pm', 'bp_rp', 'phot_rp_mean_mag']
     ldr.importer.viewer.create_new = 'Scatter'
-    print(ldr.importer.input)
+
     print(ldr.importer.input.keys())
+    print('returned no results', deconfigged_helper._get_loader('astroquery').returned_no_results)
 
     if len(ldr.importer.input) == 0:
         pytest.skip("no catalog available")
     else:
         ldr.load()
-    if ldr.importer.returned_no_results is True:
-        pytest.skip("no results")
-    else:
-        ldr.load()
+
     assert 'Scatter' in deconfigged_helper.viewers
     assert 'Catalog' in deconfigged_helper.viewers['Scatter'].data_menu.layer.choices
 
