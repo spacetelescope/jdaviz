@@ -395,6 +395,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
             # disable import if RA is selectedut Dec is not (or vice versa)
             if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
+                print("ra:", ra, "dec:", dec)
                 print('import disabled because ra OR dec is none')
                 import_disabled = True
 
