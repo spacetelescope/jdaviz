@@ -40,7 +40,7 @@
     <v-btn-toggle v-model="active_tool_id" :style="" class="transparent">
         <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" v-if="primary && visible && !should_hide_in_popout(id)" bottom>
             <template v-slot:activator="{ on }">
-                <v-btn v-on="on" icon :value="id" :disabled="disabled_msg.length > 0" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''} ${disabled_msg.length > 0 ? 'opacity: 0.5;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
+          <v-btn v-on="on" icon :value="id" :disabled="disabled_msg.length > 0" :style="get_tool_button_style(id, disabled_msg)" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
                     <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>
                     <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
                 </v-btn>
@@ -98,6 +98,26 @@
         }
         // Match legacy popout button behavior: hide when already in popout context.
         return !!(this.$el && this.$el.closest('.jupyter-widgets-popout-container'));
+      },
+      get_tool_button_style(id, disabled_msg) {
+        const viewerActionTools = [
+          'jdaviz:viewer_focus_toggle',
+          'jdaviz:viewer_clone',
+          'jdaviz:viewer_popout',
+        ];
+
+        let style = 'min-width: 40px !important;';
+        if (viewerActionTools.includes(id)) {
+          // top app-toolbar dark blue
+          style += ' background-color: rgba(0, 59, 77, 1);';
+        } else if (this.tool_override_mode.length > 0) {
+          style += ' background-color: #007ba1;';
+        }
+        if (disabled_msg.length > 0) {
+          style += ' opacity: 0.5;';
+        }
+
+        return style;
       },
       update_widget_selection(idx, val) {
         // Update the selection for a specific widget index
