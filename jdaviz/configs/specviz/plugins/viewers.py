@@ -244,7 +244,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
                             table_index=line["name_rest"],
                             colors=[color], **kwargs)
 
-    @deprecated(since="5.2", alternative="plot_spectral_lines", details="Use plot_spectral_lines instead")
+    @deprecated(since="5.2", alternative="plot_spectral_lines", details="Use plot_spectral_lines instead") # noqa
     def plot_spectral_line(self, line, global_redshift=None, plot_units=None, **kwargs):
         # Deprecated wrapper preserved for backward compatibility.
         return self.plot_spectral_lines(line=line, global_redshift=global_redshift,
@@ -330,7 +330,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
         # Check to see if colors were defined for each line
         if colors is None:
             colors = ["indigo"]
-            
+
         if "colors" in lines_to_plot.colnames:
             colors = lines_to_plot["colors"]
         elif len(colors) != len(lines_to_plot):
