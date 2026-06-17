@@ -157,10 +157,10 @@ class TestLineLists:
             specviz_helper.load_line_list(lt)
 
         # Load a line, and apply redshift globally
-        specviz_helper.plot_spectral_line("Halpha")
+        specviz_helper.plot_spectral_lines("Halpha")
         specviz_helper.set_redshift(0.01)
         # Load second line, redshift should also be applied to it
-        specviz_helper.plot_spectral_line("O III")
+        specviz_helper.plot_spectral_lines("O III")
 
         viewer_lines = [mark for mark in specviz_helper._app.get_viewer(
             specviz_helper._default_spectrum_viewer_reference_name).figure.marks
@@ -180,7 +180,7 @@ class TestLineLists:
             specviz_helper.load_line_list(lt)
 
         # Load a line, so we can apply redshift
-        specviz_helper.plot_spectral_line("Halpha")
+        specviz_helper.plot_spectral_lines("Halpha")
         global_redshift = 0.01
         specviz_helper.set_redshift(global_redshift)
         # Load remaining lines
