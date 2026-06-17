@@ -51,6 +51,7 @@
       @mousemove="onFigureMouseMove"
       @mouseleave="mouseOverFigure = false"
     >
+      <jupyter-widget :widget="popout_button" style="display: none;"></jupyter-widget>
       <jupyter-widget :widget="data_menu_widget"></jupyter-widget>
       <jupyter-widget
         :widget="figure_widget"
