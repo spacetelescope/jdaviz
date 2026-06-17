@@ -376,6 +376,8 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
 
     print(ldr.importer.input.keys())
     print('returned no results', deconfigged_helper._get_loader('astroquery').returned_no_results)
+    print("input ra:", ldr.importer.input.ra, "output ra:", ldr.importer.col_ra)
+    print("input dec:", ldr.importer.input.dec, "output dec:", ldr.importer.col_dec)
 
     if len(ldr.importer.input) == 0:
         pytest.skip("no catalog available")
