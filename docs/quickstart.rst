@@ -15,6 +15,9 @@ Launching From the Command Line
 .. note::
     This feature is currently in development for the new generalized version of jdaviz, so the following may change in an upcoming release.
 
+.. note::
+    The command-line tool below has only been tested on Linux and MacOS and WSL on Windows.
+
 ``jdaviz`` provides a command-line tool to start the standalone desktop application in a browser. To see the syntax and usage, from a terminal, type::
 
     jdaviz --help
