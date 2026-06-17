@@ -493,13 +493,11 @@ class ViewerPopout(Tool):
     keep_visible_in_focus_mode = True
 
     def activate(self):
-        viewer_item = self.viewer.jdaviz_app._viewer_item_by_id(self.viewer.reference_id)
-        if viewer_item is None:
-            return
+        from ipywidgets.widgets import widget_serialization
 
-        viewer_window = viewer_item.get('widget')
-        if viewer_window is not None:
-            viewer_window.show(loc='popout')
+        viewer_item = self.viewer.jdaviz_app._viewer_item_by_id(self.viewer.reference_id)
+        viewer_window = widget_serialization['from_json'](viewer_item['widget'], None)
+        viewer_window.show(loc='popout')
 
 
 @viewer_tool
