@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 from astropy import table
 from astropy import units as u
+from astropy.utils.decorators import deprecated
 from functools import cached_property
 from matplotlib.colors import cnames
 from specutils import Spectrum
@@ -243,12 +244,9 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
                             table_index=line["name_rest"],
                             colors=[color], **kwargs)
 
+    @deprecated(since="5.2", alternative="plot_spectral_lines", details="Use plot_spectral_lines instead")
     def plot_spectral_line(self, line, global_redshift=None, plot_units=None, **kwargs):
         # Deprecated wrapper preserved for backward compatibility.
-        warnings.warn(
-            "plot_spectral_line is deprecated; use plot_spectral_lines(line=...) instead",
-            DeprecationWarning, stacklevel=2
-        )
         return self.plot_spectral_lines(line=line, global_redshift=global_redshift,
                                         plot_units=plot_units, **kwargs)
 
@@ -280,22 +278,13 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
 
         # Get the redshift: prefer global_redshift, then the Line Lists
         # plugin's redshift (if available), then self.redshift, then 0
-        # for some reason, redshift needs to be initialized
-        redshift = 0
-        if global_redshift is None:
-            try:
-                ll_plugin = self.jdaviz_app.get_tray_item_from_name('g-line-list')
-                # plugin trait is `rs_redshift`; allow for None/empty
-                plugin_redshift = getattr(ll_plugin, 'rs_redshift', None)
-                if plugin_redshift is not None:
-                    redshift = float(plugin_redshift)
-                else:
-                    redshift = self.redshift if self.redshift is not None else 0
-            except Exception:
-                # If plugin not available or any error, fall back
-                redshift = self.redshift if self.redshift is not None else 0
-        else:
+        redshift = self.redshift if self.redshift is not None else 0
+        if global_redshift is not None:
             redshift = global_redshift
+        else:
+            ll_plugin = self.jdaviz_app.get_tray_item_from_name('g-line-list')
+            # plugin trait is `rs_redshift`; allow for None/empty
+            redshift = float(getattr(ll_plugin, 'rs_redshift', redshift))
 
         # Single-line behavior: old plot_spectral_line
         if line is not None:
@@ -341,6 +330,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
         # Check to see if colors were defined for each line
         if colors is None:
             colors = ["indigo"]
+            
         if "colors" in lines_to_plot.colnames:
             colors = lines_to_plot["colors"]
         elif len(colors) != len(lines_to_plot):
