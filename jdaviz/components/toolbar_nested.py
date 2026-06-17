@@ -73,7 +73,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             # React to focus mode changes so tools show/hide accordingly
             if hasattr(self.viewer, 'jdaviz_app'):
                 self.viewer.jdaviz_app.state.add_callback(
-                    'focus_viewer', lambda _: self._update_tool_visibilities()
+                    'focus_viewer', self._on_focus_viewer_changed
                 )
 
     def _on_viewer_removed(self, msg):
@@ -87,6 +87,18 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 msg.viewer_id == self.viewer.reference_id and
                 self.tool_override_mode):
             self.restore_tools(all_viewers=True)
+
+    def _on_focus_viewer_changed(self, focus_viewer):
+        """React to focus mode changes: deactivate any active tool that would be hidden."""
+        entering_focus = (
+            bool(focus_viewer)
+            and focus_viewer == getattr(self.viewer, 'reference', None)
+        )
+        if entering_focus and self.active_tool_id:
+            tool = self.tools.get(self.active_tool_id)
+            if tool is not None and not getattr(tool, 'keep_visible_in_focus_mode', False):
+                self.active_tool_id = None
+        self._update_tool_visibilities()
 
     def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[],
                        custom_widgets=None, custom_widgets_callback=None, active_tool=None):
