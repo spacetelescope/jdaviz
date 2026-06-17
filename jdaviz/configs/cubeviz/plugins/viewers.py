@@ -31,8 +31,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                      'bqplot:circannulus'],
                     ['jdaviz:spectrumperspaxel'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
-                     'jdaviz:viewer_popout',
-                     'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                     'jdaviz:viewer_popout']
                 ]
 
     default_class = None
@@ -200,7 +199,8 @@ class CubevizProfileView(Spectrum1DViewer, WithSliceIndicator):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:selectslice', 'jdaviz:selectline'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
 
     def __init__(self, *args, **kwargs):

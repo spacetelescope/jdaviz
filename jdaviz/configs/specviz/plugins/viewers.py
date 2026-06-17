@@ -39,8 +39,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
                     ['bqplot:xrange'],
                     ['jdaviz:selectslice'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
-                     'jdaviz:viewer_popout',
-                     'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                     'jdaviz:viewer_popout']
                 ]
 
     default_class = Spectrum
@@ -316,8 +315,7 @@ class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
                      'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
-                     'jdaviz:viewer_popout',
-                     'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                     'jdaviz:viewer_popout']
                 ]
 
     _state_cls = FreezableBqplotImageViewerState

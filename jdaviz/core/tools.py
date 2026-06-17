@@ -1132,63 +1132,6 @@ class StretchBounds(CheckableTool):
         self._time_last = time.time()
 
 
-class _BaseSidebarShortcut(Tool):
-    plugin_name = None  # define in subclass
-    viewer_attr = 'viewer'
-
-    def activate(self):
-
-        # This is a temporary patch to fix an issue when both jdaviz and lcviz
-        # are imported in the same session. This block of code should be removed
-        # before 5.0 and the bug from JDAT-5881 should be re-tested (the
-        # ticket for this is JDAT-5923).
-        if self.plugin_name in ['lcviz-plot-options', 'lcviz-export']:
-            try:
-                plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
-            except KeyError:
-                name = 'g-plot-options' if self.plugin_name == 'lcviz-plot-options' else 'export'
-                plugin = self.viewer.jdaviz_app.get_tray_item_from_name(name)
-        else:
-            plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
-
-        plugin.open_in_tray(scroll_to=True)
-        viewer_id = self.viewer.reference_id
-        viewer_select = getattr(plugin, self.viewer_attr)
-        if viewer_select.multiselect:
-            viewer_id = [viewer_id]
-        setattr(viewer_select, 'selected', viewer_id)
-
-
-@viewer_tool
-class SidebarShortcutPlotOptions(_BaseSidebarShortcut):
-    plugin_name = 'g-plot-options'
-
-    icon = os.path.join(ICON_DIR, 'cog.svg')
-    tool_id = 'jdaviz:sidebar_plot'
-    action_text = 'Plot Options'
-    tool_tip = 'Open plot options plugin in sidebar'
-
-
-@viewer_tool
-class SidebarShortcutExportPlot(_BaseSidebarShortcut):
-    plugin_name = 'export'
-
-    icon = os.path.join(ICON_DIR, 'image.svg')
-    tool_id = 'jdaviz:sidebar_export'
-    action_text = 'Export plot'
-    tool_tip = 'Open export plugin in sidebar'
-
-
-@viewer_tool
-class SidebarShortcutCompass(_BaseSidebarShortcut):
-    plugin_name = 'imviz-compass'
-
-    icon = os.path.join(ICON_DIR, 'compass.svg')
-    tool_id = 'jdaviz:sidebar_compass'
-    action_text = 'Compass'
-    tool_tip = 'Open compass plugin in sidebar'
-
-
 @viewer_tool
 class SinglePixelRegion(CheckableTool):
 

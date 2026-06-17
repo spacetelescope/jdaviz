@@ -1043,7 +1043,8 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
 
     default_class = NDDataArray
@@ -1501,8 +1502,7 @@ class ScatterViewer(JdavizViewerMixin, BqplotScatterView):
                     ['bqplot:xrange', 'bqplot:yrange', 'bqplot:rectangle'],
                     [],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
-                     'jdaviz:viewer_popout',
-                     'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                     'jdaviz:viewer_popout']
                 ]
     _state_cls = ScatterViewerState
 
@@ -1519,8 +1519,7 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
                     ['bqplot:xrange'],
                     [],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
-                     'jdaviz:viewer_popout',
-                     'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                     'jdaviz:viewer_popout']
                 ]
     _state_cls = HistogramViewerState
 
