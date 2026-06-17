@@ -44,6 +44,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
         self.viewer = viewer
+        self._default_mouse_mode_active = self._default_mouse_mode is not None
 
         # Store original values for reset functionality
         if isinstance(tools_nested, list):
@@ -362,6 +363,32 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             # then we're clicking on a non-checkable tool and want to default to the previous
             if event['old'] is not None:
                 self.active_tool_id = event['old']
+
+    @traitlets.observe('active_tool')
+    def _on_change_active_tool(self, change):
+        # Mirror BasicJupyterToolbar behavior, but guard against redundant
+        # deactivate/activate calls during toolbar override rebuilds.
+        # IMPORTANT: do not write back to active_tool_id here (that can create
+        # traitlet feedback loops with _on_change_v_model).
+        if change.old:
+            try:
+                change.old.deactivate()
+            except KeyError:
+                pass
+        else:
+            if self._default_mouse_mode and self._default_mouse_mode_active:
+                try:
+                    self._default_mouse_mode.deactivate()
+                except KeyError:
+                    pass
+                self._default_mouse_mode_active = False
+
+        if change.new:
+            change.new.activate()
+        else:
+            if self._default_mouse_mode is not None and not self._default_mouse_mode_active:
+                self._default_mouse_mode.activate()
+                self._default_mouse_mode_active = True
 
     def _select_tool(self, tool_id, menu_ind):
         for search_tool_id, info in self.tools_data.items():

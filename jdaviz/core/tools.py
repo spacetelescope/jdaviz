@@ -863,6 +863,7 @@ class SelectLine(CheckableTool, HubListener):
         super().__init__(viewer, **kwargs)
         self.line_marks = []
         self.line_names = []
+        self._mouse_callback_active = False
 
         self.viewer.session.hub.subscribe(self, SpectralMarksChangedMessage,
                                           handler=self._on_plotted_lines_changed)
@@ -870,11 +871,19 @@ class SelectLine(CheckableTool, HubListener):
     def activate(self):
         # ensure self.line_marks is populated
         self.viewer._broadcast_plotted_lines()
-        self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['click'])
+        if not self._mouse_callback_active:
+            self.viewer.add_event_callback(self.on_mouse_event,
+                                           events=['click'])
+            self._mouse_callback_active = True
 
     def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
+        if self._mouse_callback_active:
+            try:
+                self.viewer.remove_event_callback(self.on_mouse_event)
+            except KeyError:
+                # Can occur if toolbar state changes trigger redundant deactivation.
+                pass
+            self._mouse_callback_active = False
 
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks
