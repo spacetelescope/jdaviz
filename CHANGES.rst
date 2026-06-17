@@ -20,7 +20,7 @@ New Features
   viewer (2) -> remove viewer (2) -> default is again viewer(2) [#4192]
 
 - Add option to limit results to science products when retrieving files from an archive query
-  results table. [#4194]
+  results table. [#4194].
 
 Mosviz
 ^^^^^^
