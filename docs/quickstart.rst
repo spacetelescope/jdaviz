@@ -9,8 +9,8 @@ Once installed, ``jdaviz`` can be run either in a Jupyter notebook or as a stand
 Detailed workflows are given within the documentation, but some quick-start tips are given below.
 
 
-As a Standalone Application
-===========================
+Launching From the Command Line
+===============================
 
 .. note::
     This feature is currently in development for the new generalized version of jdaviz, so the following may change in an upcoming release.
