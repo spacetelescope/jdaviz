@@ -341,7 +341,9 @@ class CatalogImporter(BaseImporterToDataCollection):
         """
 
         ra = self.col_ra_selected
+        print("selected ra:", self.col_ra_selected)
         dec = self.col_dec_selected
+        print("selected dec:", self.col_dec_selected)
         x = self.col_x_selected
         y = self.col_y_selected
 
@@ -393,7 +395,7 @@ class CatalogImporter(BaseImporterToDataCollection):
             else:
                 import_disabled = False
 
-            # disable import if RA is selectedut Dec is not (or vice versa)
+            # disable import if RA is selected but Dec is not (or vice versa)
             if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
                 print("ra:", ra, "dec:", dec)
                 print('import disabled because ra OR dec is none')
