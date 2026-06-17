@@ -74,7 +74,7 @@ COORD_WORDS_TO_EXCLUDE = ['radius', 'radio', 'radial', 'extragalactic',
                           'infrared', 'fraction', 'gradient', 'ratio',
                           'integrated,' 'radian', 'random', 'parallax', 'range',
                           'decade', 'decadal', 'decrement', 'deconvolve',
-                          'err', 'bbox', 'min', 'max', 'error']
+                          'err', 'bbox', 'min', 'max', 'error', 'xp']
 
 
 @contextmanager
