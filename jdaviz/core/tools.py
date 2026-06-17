@@ -853,7 +853,38 @@ class TableApplyZoom(_BaseTableApplyTool):
 
 
 @viewer_tool
-class SelectLine(CheckableTool, HubListener):
+class SafeClickCallbackTool(CheckableTool):
+    """Base class for tools that register a click callback on activate."""
+
+    click_events = ['click']
+
+    def __init__(self, viewer, **kwargs):
+        super().__init__(viewer, **kwargs)
+        self._mouse_callback_active = False
+
+    def _before_activate(self):
+        """Optional hook for subclasses to prepare state before registration."""
+        return
+
+    def activate(self):
+        self._before_activate()
+        if not self._mouse_callback_active:
+            self.viewer.add_event_callback(self.on_mouse_event,
+                                           events=self.click_events)
+            self._mouse_callback_active = True
+
+    def deactivate(self):
+        if self._mouse_callback_active:
+            try:
+                self.viewer.remove_event_callback(self.on_mouse_event)
+            except KeyError:
+                # Can occur if state changes trigger redundant deactivation.
+                pass
+            self._mouse_callback_active = False
+
+
+@viewer_tool
+class SelectLine(SafeClickCallbackTool, HubListener):
     icon = os.path.join(ICON_DIR, 'line_select.svg')
     tool_id = 'jdaviz:selectline'
     action_text = 'Select/identify spectral line'
@@ -863,27 +894,13 @@ class SelectLine(CheckableTool, HubListener):
         super().__init__(viewer, **kwargs)
         self.line_marks = []
         self.line_names = []
-        self._mouse_callback_active = False
 
         self.viewer.session.hub.subscribe(self, SpectralMarksChangedMessage,
                                           handler=self._on_plotted_lines_changed)
 
-    def activate(self):
+    def _before_activate(self):
         # ensure self.line_marks is populated
         self.viewer._broadcast_plotted_lines()
-        if not self._mouse_callback_active:
-            self.viewer.add_event_callback(self.on_mouse_event,
-                                           events=['click'])
-            self._mouse_callback_active = True
-
-    def deactivate(self):
-        if self._mouse_callback_active:
-            try:
-                self.viewer.remove_event_callback(self.on_mouse_event)
-            except KeyError:
-                # Can occur if toolbar state changes trigger redundant deactivation.
-                pass
-            self._mouse_callback_active = False
 
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks
@@ -906,7 +923,7 @@ class SelectLine(CheckableTool, HubListener):
 
 
 @viewer_tool
-class SelectCatalogMark(CheckableTool, HubListener):
+class SelectCatalogMark(SafeClickCallbackTool, HubListener):
     icon = os.path.join(ICON_DIR, 'catalog_select.svg')
     tool_id = 'jdaviz:selectcatalog'
     action_text = 'Select/identify source from catalog'
@@ -916,13 +933,6 @@ class SelectCatalogMark(CheckableTool, HubListener):
         super().__init__(viewer, **kwargs)
         self.xs = []
         self.ys = []
-
-    def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
         msg = CatalogSelectClickEventMessage(data['domain']['x'], data['domain']['y'], sender=self)
@@ -934,7 +944,7 @@ class SelectCatalogMark(CheckableTool, HubListener):
 
 
 @viewer_tool
-class SelectTableRow(CheckableTool, HubListener):
+class SelectTableRow(SafeClickCallbackTool, HubListener):
     """Tool for selecting/toggling the closest table row from an image viewer click."""
     icon = os.path.join(ICON_DIR, 'catalog_select.svg')
     tool_id = 'jdaviz:select_table_row'
@@ -943,12 +953,6 @@ class SelectTableRow(CheckableTool, HubListener):
 
     # This will be set when the tool is activated via override_tools
     _table_viewer_id = None
-
-    def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_event, events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
         if self._table_viewer_id is None:
@@ -963,18 +967,11 @@ class SelectTableRow(CheckableTool, HubListener):
 
 
 @viewer_tool
-class SelectFootprintOverlay(CheckableTool, HubListener):
+class SelectFootprintOverlay(SafeClickCallbackTool, HubListener):
     icon = os.path.join(ICON_DIR, 'footprint_select.svg')
     tool_id = 'jdaviz:selectfootprint'
     action_text = 'Select/identify overlay'
     tool_tip = 'Select/identify overlay'
-
-    def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
         msg = FootprintSelectClickEventMessage(data, sender=self)
@@ -988,18 +985,11 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
 
 
 @viewer_tool
-class SkewerSelectRegion(CheckableTool, HubListener):
+class SkewerSelectRegion(SafeClickCallbackTool, HubListener):
     icon = os.path.join(ICON_DIR, 'skewer_select.svg')
     tool_id = 'jdaviz:skewerregion'
     action_text = 'Select all footprints that contain the click coordinate'
     tool_tip = 'Skewer selection: selects all footprints containing the click coordinate'
-
-    def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
         msg = FootprintOverlayClickMessage(data, mode="skewer", sender=self)
@@ -1011,18 +1001,11 @@ class SkewerSelectRegion(CheckableTool, HubListener):
 
 
 @viewer_tool
-class SelectRegionOverlay(CheckableTool, HubListener):
+class SelectRegionOverlay(SafeClickCallbackTool, HubListener):
     icon = os.path.join(ICON_DIR, 'footprint_select.svg')
     tool_id = 'jdaviz:selectregion'
     action_text = 'Select the footprint with the nearest edge'
     tool_tip = 'Nearest edge selection: select the footprint with the nearest edge to the click coordinate'  # noqa: E501
-
-    def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
         msg = FootprintOverlayClickMessage(data, mode="nearest", sender=self)
