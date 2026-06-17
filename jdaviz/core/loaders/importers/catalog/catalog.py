@@ -341,9 +341,7 @@ class CatalogImporter(BaseImporterToDataCollection):
         """
 
         ra = self.col_ra_selected
-        print("selected ra:", self.col_ra_selected)
         dec = self.col_dec_selected
-        print("selected dec:", self.col_dec_selected)
         x = self.col_x_selected
         y = self.col_y_selected
 
@@ -366,7 +364,6 @@ class CatalogImporter(BaseImporterToDataCollection):
                     self.col_dec_has_unit = True
                 # disable import if RA is selected but Dec is not (or vice versa)
                 if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
-                    print("import disabled because ra or dec is None")
                     import_disabled = True
                 return
 
@@ -390,21 +387,17 @@ class CatalogImporter(BaseImporterToDataCollection):
             # disable import if the same ra and dec columns are selected
             # and they are NOT a SkyCoord column (which contains both RA and Dec),
             if ra == dec and not isinstance(input[axis], SkyCoord):
-                print('import disabled because ra == dec')
                 import_disabled = True
             else:
                 import_disabled = False
 
             # disable import if RA is selected but Dec is not (or vice versa)
             if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
-                print("ra:", ra, "dec:", dec)
-                print('import disabled because ra OR dec is none')
                 import_disabled = True
 
         elif msg['name'] in ('col_x_selected', 'col_y_selected'):
             # disable import if RA is selected but Dec is not (or vice versa)
             if (x in ['---', ''] or x is None) != (y in ['---', ''] or y is None):
-                print('import disabled because x or y is none')
                 import_disabled = True
 
         # finally, set the import_disabled_msg traitlet based on what was determined
