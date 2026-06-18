@@ -250,7 +250,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     spinner = Unicode("").tag(sync=True)
 
     parsed_input_is_empty = Bool(True).tag(sync=True)
-    parsed_input_is_resolvable = Unicode("").tag(sync=True)
+    parsed_input_not_resolvable_message = Unicode("").tag(sync=True)
 
     # whether the current output could be interpreted as a list of data products
     parsed_input_is_query = Bool(False).tag(sync=True)
@@ -627,7 +627,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
-            self.parsed_input_is_resolvable = str(e)
+            self.parsed_input_not_resolvable_message = str(e)
             return
 
         if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
@@ -638,7 +638,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
-            self.parsed_input_is_resolvable = 'Parsed input is empty or None, cannot resolve.'
+            self.parsed_input_not_resolvable_message = 'Parsed input is empty or None, cannot resolve.'
             return
 
         # first attempt to parse the input as a table
@@ -664,7 +664,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             if is_query and not self.treat_table_as_query:
                 # Keep parsed_input_is_query True so the toggle switch stays visible.
                 # Set everything else in the meantime.
-                self.parsed_input_is_resolvable = ''
+                self.parsed_input_not_resolvable_message = ''
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = False
@@ -683,7 +683,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
                 # Technically input isn't complete yet but if we don't set this now
                 # the UI will appear bugged with the 'input is empty' message for astroquery
-                self.parsed_input_is_resolvable = ''
+                self.parsed_input_not_resolvable_message = ''
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = False
@@ -700,14 +700,14 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                                                           if h not in ['s_region']]
 
                 # See 'input is empty' comment above
-                self.parsed_input_is_resolvable = ''
+                self.parsed_input_not_resolvable_message = ''
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True
                 self.file_table_populated = False
                 return
 
-        self.parsed_input_is_resolvable = ""
+        self.parsed_input_not_resolvable_message = ""
         self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
         self.observation_table_populated = False

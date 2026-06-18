@@ -159,10 +159,10 @@
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input is empty.
             </v-alert>
-          </j-flex-row>
-          <j-flex-row v-if="parsed_input_is_resolvable">
+          </v-row>
+          <v-row v-if="parsed_input_not_resolvable_message">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
-                Input cannot be resolved: {{ parsed_input_is_resolvable }}
+                Input cannot be resolved: {{ parsed_input_not_resolvable_message }}
             </v-alert>
           </v-row>
           <v-row v-else-if="!parsed_input_is_query && format_items.length == 0 && valid_import_formats">
@@ -203,7 +203,7 @@ export default {
     }
   },
   props: ['title', 'popout_button', 'spinner',
-          'parsed_input_is_empty', 'parsed_input_is_resolvable',
+          'parsed_input_is_empty', 'parsed_input_not_resolvable_message',
           'parsed_input_is_query', 'treat_table_as_query',
           'can_filter_science', 'limit_to_science_products',
           'observation_table', 'observation_table_populated',

@@ -5,7 +5,7 @@
     :spinner="spinner"
     :spinner_success_message="spinner_success_message"
     :parsed_input_is_empty="parsed_input_is_empty"
-    :parsed_input_is_resolvable="parsed_input_is_resolvable"
+    :parsed_input_not_resolvable_message="parsed_input_not_resolvable_message"
     :parsed_input_is_query="parsed_input_is_query"
     v-model:treat_table_as_query="treat_table_as_query"
     :observation_table="observation_table"
