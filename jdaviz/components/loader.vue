@@ -90,12 +90,12 @@
             </div>
             
             <div v-if="treat_table_as_query && file_table_populated">
-              <span class="table-title">Files</span>
+              <span class="table-title">Products</span>
               <v-row>
                 <v-expansion-panels popout>
                   <v-expansion-panel>
                     <v-expansion-panel-header v-slot="{ open }">
-                      <span style="padding: 6px">File Download Options</span>
+                      <span style="padding: 6px">Product Download Options</span>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="plugin-expansion-panel-content">
                       <v-content>
