@@ -638,7 +638,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
-            self.parsed_input_not_resolvable_message = 'Parsed input is empty or None, cannot resolve.'
+            self.parsed_input_not_resolvable_message = 'Parsed input is empty or None, cannot resolve.' # noqa
             return
 
         # first attempt to parse the input as a table
