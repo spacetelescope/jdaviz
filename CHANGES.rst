@@ -4,6 +4,9 @@
 Bug Fixes
 ---------
 
+- Update docs to reflect new minimum version of Python (>=3.12). Recommend Python 3.13
+  to implicitly reflect testing environments. [#4240]
+
 Mosviz
 ^^^^^^
 
