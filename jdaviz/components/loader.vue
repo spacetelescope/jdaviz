@@ -125,8 +125,8 @@
 
               <span v-if="api_hints_enabled" class="api-hint">ldr.file_table</span>
 
-              <div style="position: relative;">
-                <jupyter-widget v-if="treat_table_as_query" :widget="file_table"></jupyter-widget>
+              <div v-if="treat_table_as_query" style="position: relative;">
+                <jupyter-widget :widget="file_table"></jupyter-widget>
                 <v-progress-linear
                   v-if="spinner.length > 0"
                   color="#c75d2c"
