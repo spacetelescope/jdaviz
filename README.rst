@@ -54,7 +54,7 @@ version conflicts with other packages you may have installed, for example:
 
 .. code-block:: bash
 
-   conda create -n jdaviz-env python=3.12
+   conda create -n jdaviz-env python=3.13
    conda activate jdaviz-env
 
 Installing the released version can be done using pip:

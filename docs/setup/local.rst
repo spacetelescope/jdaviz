@@ -91,7 +91,7 @@ the interface.
     :alt: Create environment with Anaconda Navigator
 
 Give a name to the environment (in this example we call it jdaviz_navigator) and
-select Python with a version greater than 3.11.
+select Python with a version greater than or equal to 3.12.
 
 .. image:: ../img/navigator_nameenv.png
     :alt: Name environment with Anaconda Navigator
