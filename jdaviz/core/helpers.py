@@ -31,7 +31,8 @@ from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.core.user_api import (DataApi, SpectralDataApi, SpatialDataApi,
                                   TemporalSpatialDataApi, SpectralSpatialDataApi)
-from jdaviz.utils import data_has_valid_wcs, CONFIGS_WITH_LOADERS, suppress_widget_comms
+from jdaviz.utils import (JDAVIZ_CONFIGS, data_has_valid_wcs, CONFIGS_WITH_LOADERS,
+                          suppress_widget_comms)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
@@ -542,7 +543,9 @@ class ConfigHelper(HubListener):
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
         as only JupyterLab has a mechanism to have multiple tabs.
         """
-        title = self._app.config if title is None else title
+        if title is None:
+            config = self._app.config
+            title = "jdaviz" if config not in JDAVIZ_CONFIGS else config
         if height is not None:
             if isinstance(height, int):
                 height = f"{height}px"
