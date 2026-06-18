@@ -2,7 +2,7 @@
 # Test UV locally to compare with current pip/tox setup
 # This helps validate UV before rolling it out in CI
 
-set -e
+set -eo pipefail
 
 echo "============================================"
 echo "UV Local Test Script"
@@ -31,7 +31,7 @@ mkdir -p "$TEST_DIR"
 # Time the dependency resolution
 echo ""
 echo "--- Timing UV Dependency Resolution ---"
-time_resolution_start=$(date +%s%N)
+time_resolution_start=$(date +%s)
 
 echo "Installing jdaviz with test dependencies..."
 uv venv "$TEST_DIR/venv"
@@ -40,11 +40,11 @@ source "$TEST_DIR/venv/bin/activate" 2>/dev/null || . "$TEST_DIR/venv/Scripts/ac
 # Install with UV
 uv pip install -e ".[test]"
 
-time_resolution_end=$(date +%s%N)
-time_resolution_ms=$(( (time_resolution_end - time_resolution_start) / 1000000 ))
+time_resolution_end=$(date +%s)
+time_resolution_s=$(( time_resolution_end - time_resolution_start ))
 
 echo ""
-echo "Resolution + Install Time: ${time_resolution_ms}ms"
+echo "Resolution + Install Time: ${time_resolution_s}s"
 echo ""
 
 # Verify installation
@@ -56,7 +56,7 @@ python -c "import pytest; print(f'pytest installed: {pytest.__version__}')"
 echo ""
 echo "--- Running Quick Test Suite ---"
 echo "Running a few quick tests to validate..."
-time pytest jdaviz/configs/default/plugins/viewers/image/tests/test_viewer_state.py::TestImageViewerState::test_init -xvs 2>&1 | head -50
+MPLBACKEND=agg JUPYTER_PLATFORM_DIRS=1 pytest jdaviz/tests/test_utils.py -xvs
 
 echo ""
 echo "============================================"

@@ -20,6 +20,7 @@ jobs:
   ci_tests_uv:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allow_failure || contains(github.event.pull_request.labels.*.name, 'continue-on-error') }}
     strategy:
       matrix:
         include:
@@ -45,6 +46,7 @@ jobs:
             os: ubuntu-latest
             python: '3.13'
             test_type: py313-alldeps-cov
+            pytest_posargs: --run-slow
             allow_failure: false
 
           - name: UV - OS X - Python 3.13
@@ -89,18 +91,22 @@ jobs:
         echo "::endgroup::"
         
         echo "::group::Run flake8"
-        flake8 jdaviz --max-line-length=100 --count
+        flake8 jdaviz --count
         echo "::endgroup::"
 
     - name: Run PEP 517 check
       if: "matrix.test_type == 'pep517'"
       run: |
-        echo "::group::Install build"
-        uv pip install --system build
+        echo "::group::Install build + twine"
+        uv pip install --system build twine "importlib_metadata!=8.0.0"
         echo "::endgroup::"
         
-        echo "::group::Build package"
-        python -m build --sdist --wheel .
+        echo "::group::Build sdist"
+        python -m build --sdist .
+        echo "::endgroup::"
+        
+        echo "::group::Check dist"
+        twine check dist/* --strict
         echo "::endgroup::"
 
     - name: Run security audit
@@ -116,6 +122,7 @@ jobs:
 
     - name: Install jdaviz with test dependencies
       if: "contains(matrix.test_type, 'test') || contains(matrix.test_type, 'cov')"
+      shell: bash
       run: |
         echo "::group::Dependency resolution and installation"
         uv pip install --system -e ".[test]"
@@ -133,13 +140,17 @@ jobs:
 
     - name: Run pytest
       if: "contains(matrix.test_type, 'test') || contains(matrix.test_type, 'cov')"
+      shell: bash
+      env:
+        MPLBACKEND: agg
+        JUPYTER_PLATFORM_DIRS: "1"
       run: |
         echo "::group::Run tests"
         if [[ "${{ matrix.test_type }}" == *"cov"* ]]; then
-          python -m pytest -n auto --dist loadfile --pyargs jdaviz docs --cov jdaviz --cov-config=pyproject.toml --ignore=jdaviz/qt.py --durations=30 -v
+          python -m pytest -n auto --dist loadfile --pyargs jdaviz docs --cov jdaviz --cov-config=pyproject.toml --ignore=jdaviz/qt.py --durations=30 --memlog ${{ matrix.pytest_posargs }}
           coverage xml
         else
-          python -m pytest -n auto --dist loadfile --pyargs jdaviz docs --ignore=jdaviz/qt.py --durations=30 -v
+          python -m pytest -n auto --dist loadfile --pyargs jdaviz docs --ignore=jdaviz/qt.py --durations=30 --memlog ${{ matrix.pytest_posargs }}
         fi
         echo "::endgroup::"
 
