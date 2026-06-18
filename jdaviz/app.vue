@@ -219,7 +219,7 @@
               </v-btn>
             </j-tooltip>
             <j-tooltip tipid="app-toolbar-popout" span_style="scale: 0.8; margin-left: -4px; margin-right: -4px">
-              <jupyter-widget v-if="!state.in_notebook || checkNotebookContext()" :widget="popout_button" :key="popout_button></jupyter-widget>
+              <jupyter-widget v-if="!state.in_notebook || checkNotebookContext()" :widget="popout_button" :key="popout_button"></jupyter-widget>
             </j-tooltip>
           </span>
         </div>
