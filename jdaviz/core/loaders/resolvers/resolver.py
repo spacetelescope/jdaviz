@@ -716,7 +716,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def missions_query(self):
         return MastMissions()
 
-    @with_spinner('spinner', 'querying products from selected footprints...')
+    @with_spinner('spinner', 'fetching product list...')
     def _get_product_list(self, mission, dataset):
         self.missions_query.mission = mission
         products = self.missions_query.get_product_list(dataset)
@@ -757,9 +757,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.file_table.set_all_items_from_table(file_table)
             self.file_table_populated = True
             num_products = len(file_table)
-            self.spinner_success_message = (
-                f"{num_products} products added to products table from selected footprints"
-            )
+            self.spinner_success_message = f"{num_products} products loaded"
         else:
             self._app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
                                                     sender=self, color="error"))
