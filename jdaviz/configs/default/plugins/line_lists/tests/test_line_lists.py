@@ -240,12 +240,12 @@ class TestLineLists:
         helper.plot_spectral_lines('O III 5007.0')
 
         # Verify that lines were plotted at the correct observed wavelength
-        try:
-            viewer_lines = [mark for mark in helper._app.get_viewer('1D Spectrum').figure.marks
-                            if isinstance(mark, SpectralLine)]
-        except AttributeError:
+        if hasattr(helper, '_default_spectrum_viewer_reference_name'):
             viewer_lines = [mark for mark in helper._app.get_viewer(
                             helper._default_spectrum_viewer_reference_name).figure.marks
+                            if isinstance(mark, SpectralLine)]
+        else:
+            viewer_lines = [mark for mark in helper._app.get_viewer('1D Spectrum').figure.marks
                             if isinstance(mark, SpectralLine)]
         assert np.all([line.redshift == 0.1 for line in viewer_lines])
 

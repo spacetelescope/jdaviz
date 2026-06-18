@@ -22,8 +22,9 @@ New Features
 - Add option to limit results to science products when retrieving files from an archive query
   results table. [#4194]
 
-- Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength.
-  Fix another issue where erase_spectral_lines() permanently set Show to False with new option to
+- Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#4224]
+
+- Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to
   reset all emission lines to show == True. [#4224]
 
 Mosviz
