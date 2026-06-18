@@ -28,62 +28,136 @@
     <v-form v-model="all_fields_filled">
       <j-plugin-section-header>Source Selection</j-plugin-section-header>
 
-      <plugin-viewer-select
-        :items="viewer_items"
-        :selected.sync="viewer_selected"
-        :show_if_single_entry="false"
-        label="Viewer"
-        api_hint="ldr.viewer ="
+      <plugin-select
+        :items="input_items"
+        :selected.sync="input_selected"
+        label="Input"
+        api_hint="ldr.input_select ="
         :api_hints_enabled="api_hints_enabled"
-        hint="Select a viewer to retrieve center coordinates, or Manual for manual coordinate entry."
-      />
+        hint="Select the source of cone-search coordinates"
+      ></plugin-select>
 
-      <v-row v-if="viewer_selected !== 'Manual'">
-        <v-switch
-          v-model="coord_follow_viewer_pan"
-          label="Follow Viewer Center"
-          hint="Automatically adjust coordinates as viewer pans and zooms"
-          persistent-hint
-        ></v-switch>
-      </v-row>
-
-      <v-row>
-        <div :style="!(viewer_selected !== 'Manual' && !coord_follow_viewer_pan) ? 'width: 100%' : 'width: calc(100% - 32px)'">
+      <!-- Source mode -->
+      <div v-if="input_selected === 'Source'">
+        <v-row>
           <v-text-field
             v-model="source"
             :label="api_hints_enabled ? 'ldr.source =' : 'Source/Coordinates'"
             :class="api_hints_enabled ? 'api-hint' : null"
             hint="Enter a source name or coordinates in degrees to center your query on"
-            :disabled="viewer_selected !== 'Manual'"
             :rules="[() => !!source || 'This field is required']"
             :error-messages="parsed_input_is_resolvable ? [parsed_input_is_resolvable] : []"
             persistent-hint>
           </v-text-field>
-        </div>
-        <div v-if="viewer_selected !== 'Manual' && !coord_follow_viewer_pan" style="line-height:64px; width:32px">
-          <j-tooltip :tipid="viewer_centered ? 'plugin-vo-autocenter-centered' : 'plugin-vo-autocenter-not-centered'">
-            <v-btn
-              id="autocenterbtn"
-              @click="center_on_data"
-              :disabled="viewer_centered"
-              icon>
-              <v-icon>
-                {{ viewer_centered ? 'mdi-crosshairs-gps' : 'mdi-crosshairs' }}
-              </v-icon>
-            </v-btn>
-          </j-tooltip>
-        </div>
-      </v-row>
+        </v-row>
 
-      <plugin-select
-        :items="coordframe_choices.map(i => i.label)"
-        :selected.sync="coordframe_selected"
-        label="Coordinate Frame"
-        api_hint="ldr.coordframe ="
-        :api_hints_enabled="api_hints_enabled"
-        hint="Astronomical Coordinate Frame of the provided Coordinates"
-        :disabled="viewer_selected !== 'Manual'"
-      ></plugin-select>
+        <plugin-select
+          :items="coordframe_choices.map(i => i.label)"
+          :selected.sync="coordframe_selected"
+          label="Coordinate Frame"
+          api_hint="ldr.coordframe ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Astronomical Coordinate Frame of the provided Coordinates"
+        ></plugin-select>
+      </div>
+
+      <!-- Viewer mode -->
+      <div v-if="input_selected === 'Viewer'">
+        <plugin-viewer-select
+          :items="viewer_items"
+          :selected.sync="viewer_selected"
+          :show_if_single_entry="false"
+          label="Viewer"
+          api_hint="ldr.viewer ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Select a viewer to retrieve center coordinates."
+        />
+
+        <v-row>
+          <v-switch
+            v-model="coord_follow_viewer_pan"
+            label="Follow Viewer Center"
+            hint="Automatically adjust coordinates as viewer pans and zooms"
+            persistent-hint
+          ></v-switch>
+        </v-row>
+
+        <v-row>
+          <div :style="!coord_follow_viewer_pan ? 'width: 100%' : 'width: calc(100% - 32px)'">
+            <v-text-field
+              v-model="source"
+              :label="api_hints_enabled ? 'ldr.source =' : 'Viewer Center'"
+              :class="api_hints_enabled ? 'api-hint' : null"
+              hint="Current viewer center coordinates"
+              :disabled="true"
+              persistent-hint>
+            </v-text-field>
+          </div>
+          <div v-if="!coord_follow_viewer_pan" style="line-height:64px; width:32px">
+            <j-tooltip :tipid="viewer_centered ? 'plugin-vo-autocenter-centered' : 'plugin-vo-autocenter-not-centered'">
+              <v-btn
+                id="autocenterbtn"
+                @click="center_on_data"
+                :disabled="viewer_centered"
+                icon>
+                <v-icon>
+                  {{ viewer_centered ? 'mdi-crosshairs-gps' : 'mdi-crosshairs' }}
+                </v-icon>
+              </v-btn>
+            </j-tooltip>
+          </div>
+        </v-row>
+
+        <plugin-select
+          :items="coordframe_choices.map(i => i.label)"
+          :selected.sync="coordframe_selected"
+          label="Coordinate Frame"
+          api_hint="ldr.coordframe ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Astronomical Coordinate Frame of the provided Coordinates"
+          :disabled="true"
+        ></plugin-select>
+      </div>
+
+      <!-- Catalog mode -->
+      <div v-if="input_selected === 'Catalog'">
+        <plugin-dataset-select
+          :items="catalog_items"
+          :selected.sync="catalog_selected"
+          label="Catalog"
+          api_hint="ldr.catalog ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Select a catalog from the data collection"
+        />
+
+        <plugin-select
+          :items="catalog_subset_items"
+          :selected.sync="catalog_subset_selected"
+          label="Subset"
+          api_hint="ldr.catalog_subset ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Optionally restrict query to a subset of catalog rows"
+        ></plugin-select>
+
+        <v-row>
+          <v-radio-group
+            v-model="catalog_col_type"
+            row
+            label="Column Type"
+            style="margin-top: 0"
+          >
+            <v-radio label="Sky Coordinates" value="sky_coords"></v-radio>
+            <v-radio label="Source Names" value="source_name"></v-radio>
+          </v-radio-group>
+        </v-row>
+
+        <v-row v-if="catalog_col_type === 'source_name'">
+          <v-alert type="warning" dense>
+            Source name resolution requires one HTTP request per catalog row (Sesame/CDS).
+            Large catalogs may take significant time.
+          </v-alert>
+        </v-row>
+      </div>
 
       <v-row justify="space-between">
         <div :style="{ width: '55%' }">
@@ -130,7 +204,6 @@
         hint="Select a spectral waveband to filter your surveys"
       ></plugin-select>
 
-
       <plugin-select
         :show_if_single_entry="true"
         :items="resource_items.map(i => i.label)"
@@ -146,6 +219,9 @@
     </v-form>
 
     <v-row class="row-no-outside-padding" justify="end">
+      <span v-if="query_progress" style="align-self: center; margin-right: 8px; font-size: 0.85em; color: gray;">
+        {{ query_progress }}
+      </span>
       <plugin-action-button
         :spinner="results_loading"
         :disabled="!all_fields_filled"

@@ -19,10 +19,13 @@ from jdaviz.core.events import (AddDataMessage,
                                 SnackbarMessage,
                                 FootprintOverlayClickMessage,
                                 LinkUpdatedMessage,
-                                ViewerAddedMessage)
+                                ViewerAddedMessage,
+                                ViewerRemovedMessage,
+                                SubsetRenameMessage)
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
+                                        DatasetSelect,
                                         Table,
                                         CustomToolbarToggleMixin,
                                         FootprintDisplayMixin,
@@ -39,7 +42,8 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
                           find_polygon_mark_with_skewer,
                           layer_is_image_data)
-from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
+from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMessage,
+                               SubsetCreateMessage, SubsetDeleteMessage)
 
 
 __all__ = ['BaseResolver', 'BaseConeSearchResolver', 'find_matching_resolver']
@@ -1043,6 +1047,19 @@ class BaseConeSearchResolver(BaseResolver):
     viewer_items = List([]).tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
 
+    input_items = List([]).tag(sync=True)
+    input_selected = Unicode("").tag(sync=True)
+
+    catalog_items = List([]).tag(sync=True)
+    catalog_selected = Unicode("").tag(sync=True)
+
+    catalog_subset_items = List([]).tag(sync=True)
+    catalog_subset_selected = Unicode("").tag(sync=True)
+
+    catalog_col_type = Unicode("sky_coords").tag(sync=True)
+
+    query_progress = Unicode("").tag(sync=True)
+
     source = Unicode("").tag(sync=True)
     coord_follow_viewer_pan = Bool(False).tag(sync=True)
     viewer_centered = Bool(False).tag(sync=True)
@@ -1062,10 +1079,76 @@ class BaseConeSearchResolver(BaseResolver):
         super().__init__(*args, **kwargs)
         self._output = None
 
+        # --- Input mode selector ---
+        self.input_select = SelectPluginComponent(
+            self,
+            items="input_items",
+            selected="input_selected",
+            manual_options=["Source", "Viewer", "Catalog"],
+            apply_filters_to_manual_options=True,
+            default_mode='first',
+        )
+        self.input_select.add_filter(
+            lambda item: item['label'] != 'Viewer' or any(
+                _is_image_viewer(v) for v in self._app._viewer_store.values()
+            )
+        )
+        self.input_select.add_filter(
+            lambda item: item['label'] != 'Catalog' or any(
+                d.meta.get('_importer') == 'CatalogImporter'
+                for d in self._app.data_collection
+            )
+        )
+
+        def _update_input_items(msg=None):
+            self.input_select._update_items()
+
+        self.hub.subscribe(self, ViewerAddedMessage, handler=_update_input_items)
+        self.hub.subscribe(self, ViewerRemovedMessage, handler=_update_input_items)
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=lambda msg: _update_input_items())
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=lambda msg: _update_input_items())
+
+        # --- Viewer select (no Manual option — gated by input_selected == 'Viewer') ---
         self.viewer = ViewerSelect(
-            self, "viewer_items", "viewer_selected", manual_options=["Manual"],
+            self, "viewer_items", "viewer_selected",
             filters=['is_image_viewer']
         )
+
+        # --- Catalog DatasetSelect ---
+        self.catalog = DatasetSelect(
+            self, 'catalog_items', 'catalog_selected',
+            filters=['is_catalog'],
+            default_text='Select catalog...',
+            default_mode='default_text',
+        )
+
+        # --- Catalog subset selector ---
+        self.catalog_subset = SelectPluginComponent(
+            self,
+            items="catalog_subset_items",
+            selected="catalog_subset_selected",
+            manual_options=["Entire Catalog"],
+            default_text="Entire Catalog",
+            default_mode='default_text',
+        )
+
+        def _update_catalog_subset_items(msg=None):
+            subset_names = [
+                sg.label for sg in self._app.data_collection.subset_groups
+            ]
+            self.catalog_subset.items = (
+                [{'label': 'Entire Catalog'}]
+                + [{'label': name} for name in subset_names]
+            )
+
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=lambda msg: _update_catalog_subset_items())
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=lambda msg: _update_catalog_subset_items())
+        self.hub.subscribe(self, SubsetRenameMessage,
+                           handler=lambda msg: _update_catalog_subset_items())
 
         self.coordframe = SelectPluginComponent(
             self, items="coordframe_choices", selected="coordframe_selected"
@@ -1082,6 +1165,16 @@ class BaseConeSearchResolver(BaseResolver):
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
+
+    @observe('catalog_selected')
+    def _on_catalog_selected(self, msg=None):
+        self.catalog_subset_selected = 'Entire Catalog'
+
+    @observe('input_selected')
+    def _on_input_selected(self, msg=None):
+        """When switching to Viewer mode, immediately center on the current viewer."""
+        if self.input_selected == 'Viewer':
+            self.vue_center_on_data()
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
@@ -1123,6 +1216,8 @@ class BaseConeSearchResolver(BaseResolver):
     @observe("coord_follow_viewer_pan", type="change")
     def _toggle_viewer_pan_tracking(self, _=None):
         """Detects when live viewer tracking toggle is clicked and centers on data if necessary"""
+        if self.input_selected != 'Viewer':
+            return
         # Center on data if we're enabling the toggle
         if self.coord_follow_viewer_pan:
             self.vue_center_on_data()
@@ -1137,9 +1232,8 @@ class BaseConeSearchResolver(BaseResolver):
         * UI entrypoint for the manual viewer center button
         * Callback method for user panning (sub'ed to zoom_center_x/zoom_center_y)
         """
-        # If plugin is in "Manual" mode, we should never
-        # autocenter and potentially wipe the user's data
-        if not self.viewer_selected or self.viewer_selected == "Manual":
+        # Only autocenter when in Viewer input mode
+        if self.input_selected != 'Viewer':
             return
 
         # If the user panned but tracking not enabled, don't recenter
@@ -1192,6 +1286,101 @@ class BaseConeSearchResolver(BaseResolver):
         self.coordframe_selected = frame
 
         self.viewer_centered = True
+
+    def _get_catalog_skycoords(self):
+        """
+        Returns a list of (SkyCoord, source_label) tuples from the selected catalog,
+        optionally filtered by the selected subset.
+        """
+        from astropy.coordinates.name_resolve import NameResolveError
+
+        dc = self._app.data_collection
+        data = next((d for d in dc if d.label == self.catalog_selected), None)
+        if data is None:
+            raise ValueError(f"Catalog '{self.catalog_selected}' not found in data collection.")
+
+        # Build row index array
+        n_rows = data.shape[0]
+        row_indices = list(range(n_rows))
+
+        # Apply subset mask if not using entire catalog
+        if self.catalog_subset_selected and self.catalog_subset_selected != 'Entire Catalog':
+            dc_idx = dc.index(data)
+            sg = next(
+                (sg for sg in dc.subset_groups if sg.label == self.catalog_subset_selected),
+                None
+            )
+            if sg is not None:
+                mask = sg.subsets[dc_idx].to_mask()
+                row_indices = [i for i in row_indices if mask[i]]
+
+        coords = []
+
+        if self.catalog_col_type == 'sky_coords':
+            ra_col = data.meta.get('_jdaviz_loader_ra_col')
+            dec_col = data.meta.get('_jdaviz_loader_dec_col')
+            if ra_col is None or dec_col is None:
+                raise ValueError(
+                    "Catalog does not have RA/Dec column metadata "
+                    "('_jdaviz_loader_ra_col' / '_jdaviz_loader_dec_col')."
+                )
+            comp_labels = [str(c) for c in data.component_ids()]
+            ra_data = data.get_component(data.component_ids()[comp_labels.index(ra_col)]).data
+            dec_data = data.get_component(data.component_ids()[comp_labels.index(dec_col)]).data
+            for i in row_indices:
+                sc = SkyCoord(float(ra_data[i]), float(dec_data[i]),
+                              unit='deg', frame=self.coordframe_selected)
+                coords.append((sc, f"{ra_data[i]:.6f} {dec_data[i]:.6f}"))
+
+        elif self.catalog_col_type == 'source_name':
+            # Auto-detect first string-dtype column
+            name_col = None
+            for cid in data.component_ids():
+                comp = data.get_component(cid)
+                if hasattr(comp, 'data') and comp.data.dtype.kind in ('U', 'S', 'O'):
+                    name_col = cid
+                    break
+            if name_col is None:
+                raise ValueError("No string-type column found in catalog for source name lookup.")
+            name_data = data.get_component(name_col).data
+            for i in row_indices:
+                name = str(name_data[i])
+                try:
+                    sc = SkyCoord.from_name(name, frame=self.coordframe_selected)
+                    coords.append((sc, name))
+                except NameResolveError as e:
+                    self.hub.broadcast(SnackbarMessage(
+                        f"Could not resolve source name '{name}': {e}",
+                        color='warning', sender=self
+                    ))
+        else:
+            raise ValueError(f"Unknown catalog_col_type: '{self.catalog_col_type}'")
+
+        return coords
+
+    def _query_catalog(self, single_coord_query_fn):
+        """
+        Loop over rows in the selected catalog, call single_coord_query_fn for each,
+        and stack the results into self._output with a 'source_index' column.
+        """
+        from astropy.table import vstack
+
+        coords = self._get_catalog_skycoords()
+        results = []
+        n = len(coords)
+        for i, (skycoord, label) in enumerate(coords):
+            self.query_progress = f"{i + 1} / {n}"
+            result = single_coord_query_fn(skycoord)
+            if result is not None and len(result) > 0:
+                result = result.copy()
+                result['source_index'] = i
+                results.append(result)
+        self.query_progress = ""
+        if results:
+            self._output = vstack(results)
+        else:
+            self._output = None
+        self._resolver_input_updated()
 
     def _check_is_valid(self):
         """
