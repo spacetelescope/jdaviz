@@ -45,6 +45,10 @@ New Features
 - Implement a "focus mode" that shows a simplified view of a single viewer.  Focus mode can
   be toggled on/off from the viewer toolbar or via the API. [#4242]
 
+- Parenting now includes a 'None' option to allow multi-extension FITS to be loaded as separate data entries. [#4248]
+
+- 'Auto' parenting can now associate with data already loaded into the app without needing to specify the data label. [#4248]
+
 Mosviz
 ^^^^^^
 
