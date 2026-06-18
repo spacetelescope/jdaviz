@@ -683,6 +683,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
                 # Technically input isn't complete yet but if we don't set this now
                 # the UI will appear bugged with the 'input is empty' message for astroquery
+                self.parsed_input_is_resolvable = ''
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = False
@@ -699,6 +700,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                                                           if h not in ['s_region']]
 
                 # See 'input is empty' comment above
+                self.parsed_input_is_resolvable = ''
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True

@@ -162,10 +162,10 @@
           </j-flex-row>
           <j-flex-row v-if="parsed_input_is_resolvable">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
-                Input cannot be resolved.
+                Input cannot be resolved: {{ parsed_input_is_resolvable }}
             </v-alert>
-          </j-flex-row>
-          <j-flex-row v-else-if="format_items.length == 0 && valid_import_formats">
+          </v-row>
+          <v-row v-else-if="!parsed_input_is_query && format_items.length == 0 && valid_import_formats">
               <v-alert type="warning" style="margin-right: -12px; width: 100%">
                   No compatible importer found. Supported input types include: {{ valid_import_formats }}.
               </v-alert>
