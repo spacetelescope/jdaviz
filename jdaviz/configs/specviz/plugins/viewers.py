@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 from astropy import table
 from astropy import units as u
+from astropy.utils.decorators import deprecated
 from functools import cached_property
 from matplotlib.colors import cnames
 from specutils import Spectrum
@@ -172,6 +173,10 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
 
         self._broadcast_plotted_lines()
 
+        # Plot redshifted lines that have show=True
+        if np.any(self.spectral_lines["show"]):
+            self.plot_spectral_lines(show_all=False)
+
         if return_table:
             return line_table
 
@@ -227,69 +232,120 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
             fig.marks = temp_marks
             self._broadcast_plotted_lines()
 
+    def _create_spectral_mark(self, line, plot_units, redshift, color, **kwargs):
+        """
+        Create and return a SpectralLine mark for a table row.
+        This centralizes construction to prevent duplicating SpectralLine(...) calls.
+        """
+        return SpectralLine(self,
+                            line['rest'].to_value(plot_units),
+                            redshift,
+                            name=line["linename"],
+                            table_index=line["name_rest"],
+                            colors=[color], **kwargs)
+
+    @deprecated(since="5.2", alternative="plot_spectral_lines")
     def plot_spectral_line(self, line, global_redshift=None, plot_units=None, **kwargs):
-        if isinstance(line, str):
-            # Try the full index first (for backend calls), otherwise name only
-            try:
-                line = self.spectral_lines.loc[line]
-            except KeyError:
-                line = self.spectral_lines.loc["linename", line]
+        # Deprecated wrapper preserved for backward compatibility.
+        return self.plot_spectral_lines(line=line, global_redshift=global_redshift,
+                                        plot_units=plot_units, **kwargs)
+
+    def plot_spectral_lines(self, line=None, global_redshift=None, colors=None,
+                            plot_units=None, show_all=True, **kwargs):
+        """Plot either a single spectral line or the set loaded in ``self.spectral_lines``.
+
+        If ``line`` is provided (a table row, a string index/linename, or a QTable), the
+        function will plot that specific line(s). If ``line`` is None, the function behaves
+        like the old ``plot_spectral_lines`` and draws all rows.
+
+        Examples:
+            Plot all lines:
+                plot_spectral_lines()
+
+            Plot a single line by name:
+                plot_spectral_lines(line='Halpha')
+                plot_spectral_lines('Halpha')
+
+            Plot all lines with custom redshift:
+                plot_spectral_lines(global_redshift=0.01)
+        """
+
+        # if line is a numeric type, treat it as global_redshift
+        if isinstance(line, (int, float)):
+            if global_redshift is None:
+                global_redshift = line
+            line = None
+
+        # Get the redshift: prefer global_redshift, then the Line Lists
+        # plugin's redshift (if available), then self.redshift, then 0
+        redshift = self.redshift if self.redshift is not None else 0
+        if global_redshift is not None:
+            redshift = global_redshift
+        else:
+            ll_plugin = self.jdaviz_app.get_tray_item_from_name('g-line-list')
+            # plugin trait is `rs_redshift`; allow for None/empty
+            redshift = float(getattr(ll_plugin, 'rs_redshift', redshift))
+
+        # Single-line behavior: old plot_spectral_line
+        if line is not None:
+            if isinstance(line, str):
+                # Try the full index first, otherwise name only
+                try:
+                    line = self.spectral_lines.loc[line]
+                except KeyError:
+                    # Look up by linename column
+                    linename_match = self.spectral_lines['linename'] == line
+                    if np.any(linename_match):
+                        line = self.spectral_lines[linename_match][0]
+                    else:
+                        raise KeyError(f"Line '{line}' not found in spectral_lines table")
+
+            # Erase this line if it already existed, to avoid duplication
+            self.erase_spectral_lines(name_rest=line["name_rest"])
+            self.spectral_lines.loc[line["name_rest"]]["show"] = True
+
+            if plot_units is None:
+                plot_units = self.data()[0].spectral_axis.unit
+
+            color = colors if colors is not None else line["colors"]
+
+            mark = self._create_spectral_mark(line, plot_units, redshift, color,
+                                              **kwargs)
+
+            # Add mark and broadcast
+            self.figure.marks = self.figure.marks + [mark]
+            self._broadcast_plotted_lines()
+            return
+
+        # If line is None, plot the whole table given to load_line_list
+        lines_to_plot = self.spectral_lines
+        self.erase_spectral_lines(show_none=False)
+        # Reset all show flags to True so they will be plotted.
+        # Necessary if erase_spectral_lines() has previously been called
+        if show_all is True:
+            self.spectral_lines["show"] = True
         if plot_units is None:
             plot_units = self.data()[0].spectral_axis.unit
 
-        if global_redshift is None:
-            redshift = self.redshift
-        else:
-            redshift = global_redshift
-
-        line_mark = SpectralLine(self,
-                                 line['rest'].to_value(plot_units),
-                                 redshift,
-                                 name=line["linename"],
-                                 table_index=line["name_rest"],
-                                 colors=[line["colors"]], **kwargs)
-
-        # Erase this line if it already existed, to avoid duplication
-        self.erase_spectral_lines(name_rest=line["name_rest"])
-
-        self.figure.marks = self.figure.marks + [line_mark]
-        line["show"] = True
-        self._broadcast_plotted_lines()
-
-    def plot_spectral_lines(self, colors=["blue"], global_redshift=None, **kwargs):
-        """
-        Plots a user-provided astropy table of spectral lines in the viewer.
-        """
-        fig = self.figure
-        self.erase_spectral_lines(show_none=False)
-
         # Check to see if colors were defined for each line
-        if "colors" in self.spectral_lines.columns:
-            colors = self.spectral_lines["colors"]
-        elif len(colors) != len(self.spectral_lines):
-            colors = colors*len(self.spectral_lines)
+        if colors is None:
+            colors = ["indigo"]
 
-        lines = self.spectral_lines
-        plot_units = self.data()[0].spectral_axis.unit
-
-        if global_redshift is None:
-            redshift = self.redshift
-        else:
-            redshift = global_redshift
+        if "colors" in lines_to_plot.colnames:
+            colors = lines_to_plot["colors"]
+        elif len(colors) != len(lines_to_plot):
+            colors = colors * len(lines_to_plot)
 
         marks = []
-        for line, color in zip(lines, colors):
-            if not line["show"]:
+        for line_row, color in zip(lines_to_plot, colors):
+            # Plot only the lines with show=True
+            if "show" in lines_to_plot.colnames and not line_row["show"]:
                 continue
-            line = SpectralLine(self,
-                                line['rest'].to_value(plot_units),
-                                redshift,
-                                name=line["linename"],
-                                table_index=line["name_rest"],
-                                colors=[color], **kwargs)
-            marks.append(line)
-        fig.marks = fig.marks + marks
+            marks.append(self._create_spectral_mark(line_row, plot_units, redshift,
+                                                    color, **kwargs))
+        self.figure.marks = self.figure.marks + marks
         self._broadcast_plotted_lines()
+        return
 
     def available_linelists(self):
         return get_available_linelists()

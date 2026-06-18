@@ -54,7 +54,7 @@ def test_pixel_column_detection(deconfigged_helper):
     """Test automatic detection of x/y columns with various naming
     conventions, and that non-pixel-coordinate columns are not misidentified as
     pixel-coordinate columns (e.g 'galaxy' which contains 'x' but should not be
-    identified as x pixel-coordinate)."""
+    identified as x pixel-coordinate). """
 
     x_variations = ['X', 'xpix', 'xpixel', 'pixel_x', 'x_coord', 'xsource']
     y_variations = ['Y', 'ypix', 'ypixel', 'pixel_y', 'y_coord', 'ysource']
@@ -127,6 +127,37 @@ def test_pixcoord_column_detection(deconfigged_helper):
     assert isinstance(importer.input['pix'][0], PixCoord)
     assert 'X' in importer.output.keys()
     assert 'Y' in importer.output.keys()
+
+
+def test_roman_catalog_detection(deconfigged_helper):
+    """
+    Test automatic detection of ra/dec columns when input catalog has multiple columns that could
+    be interpreted as coordinates (e.g., 'ra', 'ra_centroid', 'ra_err'), which will be the case
+    for Roman photometric catalogs. CatalogImporter should default to the first match,
+    but should exclude uncertainty or window columns like 'ra_min' or 'ra_err'.
+    """
+    ra = [149.0, 150.0, 151.0] * u.degree
+    dec = [1.9, 2.0, 2.1] * u.degree
+    x = [1, 2, 3]
+    y = [4, 5, 6]
+
+    tab = QTable({'ra_err': ra, 'dec_err': dec,
+                  'ra': ra, 'dec': dec,
+                  'ra_centroid': ra, 'dec_centroid': dec,
+                  'ra_min': ra, 'dec_min': dec,
+                  'x': x, 'y': y,
+                  'x_model': x, 'y_model': y})
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = tab
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+
+    # make sure the coordinate columns default to the first not-excluded match
+    assert importer.col_ra == 'ra'
+    assert importer.col_dec == 'dec'
+    assert importer.col_x == 'x'
+    assert importer.col_y == 'y'
 
 
 def test_catalog_importer_is_valid(deconfigged_helper):

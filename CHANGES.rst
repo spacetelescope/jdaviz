@@ -19,6 +19,9 @@ New Features
 - Label default behavior now adjusts for added *or* removed data/viewers i.e. viewer -> viewer (1) ->
   viewer (2) -> remove viewer (2) -> default is again viewer(2) [#4192]
 
+- Imported Catalogs default to the first ra/dec/x/y match if multiple options are available.
+  Increased the list of strings to exclude: now excludes bounding box and source position error columns. [#4216]
+
 - Add option to limit results to science products when retrieving files from an archive query
   results table. [#4194]
 
@@ -26,6 +29,11 @@ New Features
   top of the loader window when fetching files from selected footprints. Success
   messages auto-dismiss after 4 seconds and a progress indicator appears on the file
   table during loading. [#4203]
+  
+- Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#4224]
+
+- Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to
+  reset all emission lines to show == True. [#4224]
 
 Mosviz
 ^^^^^^
@@ -65,6 +73,9 @@ Other Changes and Additions
 
 Bug Fixes
 ---------
+
+- Update docs to reflect new minimum version of Python (>=3.12). Recommend Python 3.13
+  to implicitly reflect testing environments. [#4240]
 
 Mosviz
 
