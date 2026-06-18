@@ -12,10 +12,10 @@
       </div>
     </div>
 
-    <div v-if="!spinner.length && file_table_fetch_message && !success_dismissed" class="top-overlay success-overlay">
+    <div v-if="!spinner.length && spinner_success_message && !success_dismissed" class="top-overlay success-overlay">
       <div class="overlay-content">
         <v-icon small color="white" style="margin-right: 6px;">mdi-check-circle</v-icon>
-        {{ file_table_fetch_message }}
+        {{ spinner_success_message }}
       </div>
     </div>
 
@@ -205,7 +205,7 @@ module.exports = {
           'parsed_input_is_query', 'treat_table_as_query',
           'can_filter_science', 'limit_to_science_products',
           'observation_table', 'observation_table_populated',
-          'file_table', 'file_table_populated', 'file_table_fetch_message',
+          'file_table', 'file_table_populated', 'spinner_success_message',
           'file_cache', 'file_timeout',
           'target_items', 'target_selected',
           'format_items', 'format_selected',
@@ -213,7 +213,7 @@ module.exports = {
           'api_hints_enabled', 'valid_import_formats',
           'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled','image_data_loaded'],
   watch: {
-    file_table_fetch_message(newVal) {
+    spinner_success_message(newVal) {
       if (this.success_dismiss_timer) {
         clearTimeout(this.success_dismiss_timer);
         this.success_dismiss_timer = null;
