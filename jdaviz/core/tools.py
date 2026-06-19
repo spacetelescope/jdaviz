@@ -789,6 +789,69 @@ class TableApplyZoom(_BaseTableApplyTool):
 
 
 @viewer_tool
+class TableAddColumn(Tool):
+    icon = os.path.join(ICON_DIR, 'table-column-plus-after.svg')
+    tool_id = 'jdaviz:table_add_column'
+    action_text = 'Add column'
+    tool_tip = 'Add a new empty column to the table data'
+
+    def activate(self):
+        self.viewer.toolbar.override_tools(
+            ['jdaviz:table_apply_add_column'],
+            'Add Column',
+            custom_widgets=[{'type': 'text', 'label': 'Column name', 'selected': ''}],
+        )
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
+
+
+@viewer_tool
+class TableApplyAddColumn(Tool):
+    icon = os.path.join(ICON_DIR, 'check.svg')
+    tool_id = 'jdaviz:table_apply_add_column'
+    action_text = 'Apply add column'
+    tool_tip = 'Add a new column with the given name to all table data entries'
+
+    def activate(self):
+        from glue.core import Component
+
+        selected = self.viewer.toolbar.custom_widget_selected
+        column_name = (selected[0] if selected else '').strip()
+        if column_name:
+            new_component_ids = []
+            seen_data = set()
+            for layer_artist in self.viewer.layers:
+                data = layer_artist.layer
+                # For subsets, get the parent Data object
+                if hasattr(data, 'data'):
+                    data = data.data
+                if id(data) in seen_data:
+                    continue
+                seen_data.add(id(data))
+                n_rows = data.shape[0]
+                data.add_component(Component(np.full(n_rows, '', dtype=object)), column_name)
+                new_component_ids.append(data.id[column_name])
+
+            # Make the new columns editable in the table viewer
+            existing = list(self.viewer.state.editable_components)
+            self.viewer.state.editable_components = existing + new_component_ids
+
+        self.viewer.toolbar.restore_tools()
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
+
+
+@viewer_tool
 class SelectLine(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'line_select.svg')
     tool_id = 'jdaviz:selectline'

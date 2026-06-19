@@ -13,28 +13,43 @@
       </v-btn>
     </v-btn-toggle>
 
-    <!-- Custom widgets (e.g., viewer selector) -->
+    <!-- Custom widgets (dropdowns and text inputs) -->
     <span v-if="custom_widget_items.length > 0" style="display: inline-flex; align-items: center; vertical-align: top; height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
-      <v-select
-        v-for="(widget, idx) in custom_widget_items"
-        :key="idx"
-        :value="custom_widget_selected[idx]"
-        @input="(val) => update_widget_selection(idx, val)"
-        :items="widget.items"
-        :placeholder="widget.label"
-        :multiple="widget.multiselect"
-        :chips="widget.multiselect"
-        :small-chips="widget.multiselect"
-        deletable-chips
-        dense
-        solo
-        flat
-        hide-details
-        style="min-width: 120px; max-width: 250px;"
-        class="custom-toolbar-select"
-        item-text="label"
-        item-value="value"
-      ></v-select>
+      <template v-for="(widget, idx) in custom_widget_items">
+        <v-text-field
+          v-if="widget.type === 'text'"
+          :key="'text-' + idx"
+          :value="custom_widget_selected[idx]"
+          @input="(val) => update_widget_selection(idx, val)"
+          :placeholder="widget.label"
+          dense
+          solo
+          flat
+          hide-details
+          style="min-width: 160px; max-width: 260px;"
+          class="custom-toolbar-text-input"
+        ></v-text-field>
+        <v-select
+          v-else
+          :key="'select-' + idx"
+          :value="custom_widget_selected[idx]"
+          @input="(val) => update_widget_selection(idx, val)"
+          :items="widget.items"
+          :placeholder="widget.label"
+          :multiple="widget.multiselect"
+          :chips="widget.multiselect"
+          :small-chips="widget.multiselect"
+          deletable-chips
+          dense
+          solo
+          flat
+          hide-details
+          style="min-width: 120px; max-width: 250px;"
+          class="custom-toolbar-select"
+          item-text="label"
+          item-value="value"
+        ></v-select>
+      </template>
     </span>
 
     <v-btn-toggle v-model="active_tool_id" :style="" class="transparent">
@@ -181,6 +196,25 @@
   color: white !important;
 }
 .custom-toolbar-select >>> input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+.custom-toolbar-text-input {
+  background-color: #007ba1 !important;
+  border-radius: 4px !important;
+}
+.custom-toolbar-text-input >>> .v-input__slot {
+  min-height: 32px !important;
+  padding: 0 8px !important;
+  background-color: #007ba1 !important;
+}
+.custom-toolbar-text-input >>> .v-input__control {
+  min-height: 32px !important;
+}
+.custom-toolbar-text-input >>> input {
+  color: white !important;
+  font-size: 13px;
+}
+.custom-toolbar-text-input >>> input::placeholder {
   color: rgba(255, 255, 255, 0.7) !important;
 }
 </style>
