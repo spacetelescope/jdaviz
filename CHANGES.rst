@@ -25,6 +25,11 @@ New Features
 - Add option to limit results to science products when retrieving files from an archive query
   results table. [#4194]
 
+- Loader now displays inline loading status and success confirmation messages at the
+  top of the loader window when fetching files from selected footprints. Success
+  messages auto-dismiss after 4 seconds and a progress indicator appears on the file
+  table during loading. [#4203]
+  
 - Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#4224]
 
 - Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to

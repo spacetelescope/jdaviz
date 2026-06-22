@@ -3,6 +3,7 @@
     title="Astroquery"
     :popout_button="popout_button"
     :spinner="spinner"
+    :spinner_success_message="spinner_success_message"
     :parsed_input_is_empty="parsed_input_is_empty"
     :parsed_input_is_resolvable="parsed_input_is_resolvable"
     :parsed_input_is_query="parsed_input_is_query"

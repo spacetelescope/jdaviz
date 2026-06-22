@@ -3,12 +3,19 @@
     <!-- Top sticky overlay -->
     <div v-if="spinner.length > 0" class="top-overlay">
       <div class="overlay-content">
-        {{  spinner || "Loading..." }}
+        {{ spinner }}
         <v-progress-linear
             color="#c75d2c"
             indeterminate
             height="6"
           ></v-progress-linear>
+      </div>
+    </div>
+
+    <div v-if="!spinner.length && spinner_success_message && !success_dismissed" class="top-overlay success-overlay">
+      <div class="overlay-content">
+        <v-icon small color="white" style="margin-right: 6px;">mdi-check-circle</v-icon>
+        {{ spinner_success_message }}
       </div>
     </div>
 
@@ -81,6 +88,7 @@
 
               <jupyter-widget v-if="treat_table_as_query" :widget="observation_table"></jupyter-widget>
             </div>
+            
             <div v-if="treat_table_as_query && file_table_populated">
               <span class="table-title">Files</span>
               <v-row>
@@ -116,7 +124,17 @@
               </v-row>
 
               <span v-if="api_hints_enabled" class="api-hint">ldr.file_table</span>
-              <jupyter-widget v-if="treat_table_as_query" :widget="file_table"></jupyter-widget>
+
+              <div v-if="treat_table_as_query" style="position: relative;">
+                <jupyter-widget :widget="file_table"></jupyter-widget>
+                <v-progress-linear
+                  v-if="spinner.length > 0"
+                  color="#c75d2c"
+                  indeterminate
+                  height="6"
+                  style="position: absolute; top: 42px;"
+                ></v-progress-linear>
+              </div>
             </div>
           </div>
           <!-- end observation/file table -->
@@ -176,19 +194,44 @@
 
 <script>
 module.exports = {
+  data() {
+    return {
+      success_dismiss_timer: null,
+      success_dismissed: false
+    }
+  },
   props: ['title', 'popout_button', 'spinner',
           'parsed_input_is_empty', 'parsed_input_is_resolvable',
           'parsed_input_is_query', 'treat_table_as_query',
           'can_filter_science', 'limit_to_science_products',
           'observation_table', 'observation_table_populated',
-          'file_table', 'file_table_populated',
+          'file_table', 'file_table_populated', 'spinner_success_message',
           'file_cache', 'file_timeout',
           'target_items', 'target_selected',
           'format_items', 'format_selected',
           'importer_widget', 'server_is_remote', 'hide_resolver', 'hide_resolver_inputs',
           'api_hints_enabled', 'valid_import_formats',
           'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled','image_data_loaded'],
-
+  watch: {
+    spinner_success_message(newVal) {
+      if (this.success_dismiss_timer) {
+        clearTimeout(this.success_dismiss_timer);
+        this.success_dismiss_timer = null;
+      }
+      this.success_dismissed = false;
+      if (newVal) {
+        this.success_dismiss_timer = setTimeout(() => {
+          this.success_dismissed = true;
+        }, 4000);
+      }
+    },
+    spinner(newVal) {
+      // While loading, hide any prior success message
+      if (newVal && newVal.length > 0) {
+        this.success_dismissed = true;
+      }
+    }
+  }
 }
 </script>
 
@@ -205,10 +248,20 @@ module.exports = {
     padding: 0px;
   }
 
+  .top-overlay.success-overlay {
+    background: #4caf50;
+    border-bottom: 1px solid #45a049;
+  }
+
   .overlay-content {
     text-align: center;
     color: #666;
     font-size: 14px;
+  }
+
+  .success-overlay .overlay-content {
+    color: white;
+    font-weight: 500;
   }
 
   .table-title {
