@@ -519,6 +519,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Set viewer and layer display options.'
 
+        # ids of layer states whose ``visible`` attribute is already being watched
+        # to refresh the top-layer determination (see ``_watch_layer_visibility``)
+        self._visibility_watched = set()
+
         if self.config == 'deconfigged':
             self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/settings/plot_options.html'  # noqa
 
@@ -824,7 +828,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         # Add layer callback to image viewers to track active layer
         for viewer in self._app._viewer_store.values():
-            viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
+            viewer.state.add_callback('layers',
+                                      lambda msg, v=viewer: self._layers_changed(viewer=v))
+            self._watch_layer_visibility(viewer)
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
@@ -964,7 +970,20 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
     def _on_viewer_added(self, msg):
         viewer = self._app.get_viewer_by_id(msg.viewer_id)
-        viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
+        viewer.state.add_callback('layers',
+                                  lambda msg, v=viewer: self._layers_changed(viewer=v))
+        self._watch_layer_visibility(viewer)
+
+    def _watch_layer_visibility(self, viewer):
+        # Register a callback on each layer's ``visible`` attribute so that the
+        # highlighted (top) layer and the ``layer_is_top`` button state are refreshed
+        # whenever visibility changes without the layer list itself changing -- most
+        # notably when blinking cycles which image is shown.
+        for lyr in getattr(viewer.state, 'layers', []):
+            if id(lyr) in self._visibility_watched or not hasattr(lyr, 'visible'):
+                continue
+            lyr.add_callback('visible', lambda value, v=viewer: self._layers_changed(viewer=v))
+            self._visibility_watched.add(id(lyr))
 
     @observe('viewer_selected')
     def _layers_changed(self, msg=None, viewer=None):
@@ -976,6 +995,11 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         if viewer is None:
             viewer = self.viewer.selected_obj
+
+        # Ensure any newly-added layers have their visibility watched (e.g. blinking
+        # toggles visibility, which must refresh the top-layer determination below).
+        if viewer is not None:
+            self._watch_layer_visibility(viewer)
 
         if viewer is self.viewer.selected_obj and self._viewer_is_image_viewer():  # noqa
             # Use the same exclusion set as ``layer_is_top`` / ``set_layer_to_top`` so that
@@ -1077,10 +1101,14 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     def _eligible_top_layers(self, viewer):
         # Image layers eligible to be considered the 'top' layer in the viewer.
         # Excludes subsets, WCS-only/orientation layers, and associated child layers,
-        # matching the logic used by ``set_layer_to_top`` / ``layer_is_top``.
+        # matching the logic used by ``set_layer_to_top`` / ``layer_is_top``.  Hidden
+        # layers are also excluded so that the determination tracks what is actually
+        # displayed on top (e.g. blinking toggles layer ``visible`` to show one image
+        # at a time, which must update the highlighted/top layer accordingly).
         child_labels = self._assoc_child_labels()
         return [lyr for lyr in viewer.state.layers
                 if (hasattr(lyr, 'layer') and hasattr(lyr, 'zorder') and lyr.zorder is not None
+                    and getattr(lyr, 'visible', True)
                     and not hasattr(lyr.layer, 'subset_state')
                     and is_not_wcs_only(lyr.layer)
                     and lyr.layer.label not in child_labels)]
@@ -1150,7 +1178,12 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             if hasattr(lyr, 'layer') and lyr.layer.label == layer_label:
                 lyr.zorder = max(all_zorders) + 1
                 # ensure the layer is visible (and has non-zero opacity) so that
-                # promoting it to the top is actually reflected in the viewer
+                # promoting it to the top is actually reflected in the viewer.
+                # ``visible`` is the overall toggle (e.g. cleared by blinking),
+                # while ``bitmap_visible`` gates the image bitmap specifically; set
+                # both so a previously-blinked-out layer is actually shown.
+                if hasattr(lyr, 'visible'):
+                    lyr.visible = True
                 if hasattr(lyr, 'bitmap_visible'):
                     lyr.bitmap_visible = True
                 if getattr(lyr, 'alpha', None) == 0:

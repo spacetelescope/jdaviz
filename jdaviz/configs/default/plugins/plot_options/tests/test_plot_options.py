@@ -654,3 +654,49 @@ def test_set_layer_to_top_wcs_linked(imviz_helper):
     with pytest.raises(ValueError, match="single viewer"):
         po.set_layer_to_top()
     po.layer_multiselect = False
+
+
+def test_set_layer_to_top_with_blinking(imviz_helper):
+    """Blinking toggles layer visibility to show one image at a time.  The top-layer
+    determination (active layer highlight and ``layer_is_top`` button state) must follow
+    the visible layer rather than remaining stuck on the highest-zorder (but hidden) layer.
+    """
+    arr = np.ones((10, 10))
+    imviz_helper.load_data(arr, data_label='img_a')
+    imviz_helper.load_data(arr, data_label='img_b')
+    imviz_helper.load_data(arr, data_label='img_c')
+
+    po = imviz_helper.plugins['Plot Options']._obj
+    po.viewer_selected = 'imviz-0'
+    viewer = imviz_helper.default_viewer._obj.glue_viewer
+
+    # last loaded image ('img_c') is on top and visible by default
+    po.layer_selected = 'img_c'
+    assert po.layer_is_top is True
+    assert po.active_layer == 'img_c'
+
+    # blink to show a single (different) image
+    viewer.blink_once()
+    visible_labels = [lyr.layer.label for lyr in viewer.state.layers if lyr.visible]
+    assert len(visible_labels) == 1
+    visible_label = visible_labels[0]
+    assert visible_label != 'img_c'
+
+    # the highlighted/top layer follows the now-visible layer
+    assert po.active_layer == visible_label
+
+    # the previously-top (now hidden) layer is no longer considered on top
+    assert po.layer_is_top is False
+
+    # selecting the currently-visible layer reports it as the top layer
+    po.layer_selected = visible_label
+    assert po.layer_is_top is True
+
+    # promoting a blinked-out layer makes it visible and on top
+    po.layer_selected = 'img_c'
+    assert po.layer_is_top is False
+    po.set_layer_to_top()
+    img_c_layer = [lyr for lyr in viewer.state.layers if lyr.layer.label == 'img_c'][0]
+    assert img_c_layer.visible is True
+    assert po.layer_is_top is True
+    assert po.active_layer == 'img_c'
