@@ -23,25 +23,10 @@
       </v-chip>
     </v-row>
 
-    <img class='invert-in-dark' v-if="img_data" :src="`data:image/png;base64,${img_data}`" :style="'width: 100%; max-width: 400px; margin-top: 50px; transform: rotateY('+viewer_rotateY(flip_horizontal)+')'" />
+    <img class='invert-in-dark' v-if="img_data" :src="`data:image/png;base64,${img_data}`" :style="'width: 100%; max-width: 400px; margin-top: 50px'" />
 
   </j-tray-plugin>
 </template>
-
-<script>
-module.exports = {
-  methods: {
-    viewer_rotateY(flip_horizontal) {
-      if (flip_horizontal) {
-        return '180deg'
-      } else {
-        return '0deg'
-      }
-    }
-  }
-};
-</script>
-
 
 <style>
 .theme--dark .invert-in-dark {
