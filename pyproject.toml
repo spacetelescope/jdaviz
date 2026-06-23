@@ -170,7 +170,10 @@ filterwarnings = [
     "ignore:Specviz is deprecated and will be removed in version 5.2.*:DeprecationWarning",
     "ignore:Specviz2d is deprecated and will be removed in version 5.2.*:DeprecationWarning",
     "ignore:The TestRunner class will be deprecated in a future version.",
-    "ignore:The TestRunnerBase class will be deprecated in a future version."
+    "ignore:The TestRunnerBase class will be deprecated in a future version.",
+    # TODO: this will be handled by a future gwcs release, it was fixed in
+    #   https://github.com/spacetelescope/gwcs/pull/740
+    "ignore:Calling lu_factor with arguments of dtype=float64 (a.dtype.char = 'g') is deprecated in SciPy 1.18.0.*:DeprecationWarning"
 ]
 
 
