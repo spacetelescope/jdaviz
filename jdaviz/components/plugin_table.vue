@@ -49,12 +49,13 @@
         density="compact"
         :headers="headers_visible_sorted.map(item => {return {'title': item, 'key': item}})"
         :items="items"
-        :item-key="item_key"
+        :item-value="item_key"
         :show-select="show_rowselect"
-        :single-select="!multiselect"
-        v-model="selected_rows"
+        :select-strategy="multiselect ? 'page' : 'single'"
+        return-object
+        v-model:selected="selected_rows"
         :server-items-length="server_pagination ? server_items_length : -1"
-        :options.sync="table_options"
+        v-model:options="table_options"
         class="elevation-1 width-100"
       ></v-data-table>
     </j-flex-row>
