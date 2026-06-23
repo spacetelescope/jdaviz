@@ -173,7 +173,7 @@ filterwarnings = [
     "ignore:The TestRunnerBase class will be deprecated in a future version.",
     # TODO: this will be handled by a future gwcs release, it was fixed in
     #   https://github.com/spacetelescope/gwcs/pull/740
-    "ignore:Calling lu_factor with arguments of dtype=float64 (a.dtype.char = 'g') is deprecated in SciPy 1.18.0.*:DeprecationWarning"
+    "ignore:Calling lu_factor with arguments of dtype=float\\d+ \\(a.dtype.char = 'g'\\) is deprecated in SciPy 1.18.0.*:DeprecationWarning"
 ]
 
 
