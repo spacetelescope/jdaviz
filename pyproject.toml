@@ -15,7 +15,7 @@ dependencies = [
     "glue-jupyter @ git+https://github.com/glue-viz/glue-jupyter.git@refs/pull/519/head",
     "echo>=0.11.0",
     "ipykernel>=7.1.0",
-    "ipyvue>=3.0.0a6",
+    "ipyvue>=3.0.0a7",
     "ipyvuetify>=3.0.0a4",
     "ipywidgets>=8.0.6",
     "solara-ui[all] @ https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-1.57.6-py3-none-any.whl",
