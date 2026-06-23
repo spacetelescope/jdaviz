@@ -7,11 +7,11 @@ from astropy.utils.data import download_file
 
 
 @pytest.mark.remote_data
-def test_data_retrieval(cubeviz_helper):
+def test_data_retrieval(deconfigged_helper):
     """The purpose of this test is to check that both methods:
 
     - app.get_viewer('spectrum-viewer').data()
-    - cubeviz_helper.get_data()
+    - deconfigged_helper.get_data()
 
     return the same spectrum values.
     """
@@ -24,14 +24,14 @@ def test_data_retrieval(cubeviz_helper):
     fn = download_file(URL, cache=True)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        cubeviz_helper.load_data(fn)
+        deconfigged_helper.load(fn)
 
     # two ways of retrieving data from the viewer.
     # They should return the same spectral values
-    a1 = cubeviz_helper._app.get_viewer(spectrum_viewer_reference_name).data()
-    a2 = cubeviz_helper.datasets["Spectrum (sum)"].get_data()
+    a1 = deconfigged_helper._app.get_viewer(spectrum_viewer_reference_name).data()
+    a2 = deconfigged_helper.datasets["Spectrum (sum)"].get_data()
     # Test the old API as well
-    a3 = cubeviz_helper.get_data("Spectrum (sum)")
+    a3 = deconfigged_helper.get_data("Spectrum (sum)")
 
     test_value_1 = a1[0].data
     test_value_2 = a2.flux.value

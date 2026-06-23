@@ -6,6 +6,7 @@ from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion
 from specutils import Spectrum
 
+from jdaviz.conftest import deconfigged_helper
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 
 
@@ -20,7 +21,7 @@ def cubeviz_wcs_dict():
 
 
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-def test_basic_unit_conversions(cubeviz_helper, angle_unit):
+def test_basic_unit_conversions(deconfigged_helper, angle_unit):
     """
     Basic test for changing flux units for a cube loaded in Jy to
     all available flux units. Checks that the the conversion does
@@ -37,17 +38,17 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.ones((3, 4, 5), dtype=np.float32)
     cube = Spectrum(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
-    viewer = cubeviz_helper._app.get_viewer("spectrum-viewer")
+    deconfigged_helper.load(cube, data_label="test")
+    viewer = deconfigged_helper._app.get_viewer("spectrum-viewer")
 
     # get all available flux units for translation. Since cube is loaded
     # in Jy, this will be all items in 'spectral_and_photon_flux_density_units'
 
-    uc_plg = cubeviz_helper.plugins['Unit Conversion']
-    ap_plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
-    label_mouseover = cubeviz_helper._coords_info
+    uc_plg = deconfigged_helper.plugins['Unit Conversion']
+    ap_plg = deconfigged_helper.plugins["Aperture Photometry"]._obj
+    label_mouseover = deconfigged_helper._coords_info
 
-    cubeviz_helper.plugins['Subset Tools'].import_region(RectanglePixelRegion(PixCoord(1, 1), 1, 1))
+    deconfigged_helper.plugins['Subset Tools'].import_region(RectanglePixelRegion(PixCoord(1, 1), 1, 1))
     ap_plg.background_selected = "Subset 1"
 
     for flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
@@ -113,7 +114,7 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
             bg_ans = 2.328027206660126e-06
 
         uc_plg.flux_unit = flux_unit
-        assert cubeviz_helper._app._get_display_unit('spectral_y') == flux_unit
+        assert deconfigged_helper._app._get_display_unit('spectral_y') == flux_unit
 
         label_mouseover._viewer_mouse_event(viewer, {
             'event': 'mousemove', 'domain': {'x': 4.6245e-7, 'y': ans}})
@@ -125,7 +126,7 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
 @pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
                                                          (u.Jy, SPEC_PHOTON_FLUX_DENSITY_UNITS),
                                                          (u.nJy, SPEC_PHOTON_FLUX_DENSITY_UNITS + ['nJy'])])  # noqa
-def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
+def test_flux_unit_choices(deconfigged_helper, flux_unit, expected_choices):
     """
     Test that cubes loaded with various flux units have the expected default
     flux unit selection in the unit conversion plugin, and that the list of
@@ -136,9 +137,9 @@ def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
     flux = np.zeros((3, 4, 5), dtype=np.float32)
     # load cube in flux_unit, will become cube in flux_unit / pix2
     cube = Spectrum(flux=flux * flux_unit, wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube)
+    deconfigged_helper.load(cube)
 
-    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    uc_plg = deconfigged_helper.plugins['Unit Conversion']
 
     assert uc_plg.angle_unit.selected == 'pix2'  # will always be pix2
 
@@ -146,10 +147,9 @@ def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
     assert uc_plg.flux_unit.choices == expected_choices
 
 
-@pytest.mark.parametrize("helper_name", ["deconfigged_helper", "cubeviz_helper"])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-def test_unit_translation(helper_name, angle_unit, request):
-    helper = request.getfixturevalue(helper_name)
+def test_unit_translation(deconfigged_helper, angle_unit, request):
+    helper = deconfigged_helper
 
     # custom cube so PIXAR_SR is in metadata, and Flux units, and in MJy
     w, wcs_dict = cubeviz_wcs_dict()
@@ -178,10 +178,7 @@ def test_unit_translation(helper_name, angle_unit, request):
     assert helper.datasets[sum_dataset].get_data(use_display_units=True).unit == u.MJy
 
     # to have access to display units
-    if helper_name == "cubeviz_helper":
-        viewer_1d = helper._app.get_viewer(helper._default_spectrum_viewer_reference_name)
-    elif helper_name == "deconfigged_helper":
-        viewer_1d = helper._app.get_viewer('1D Spectrum')
+    viewer_1d = helper._app.get_viewer(helper._app.get_viewer_reference_names()[0])
 
     # change global y-units from Flux -> Surface Brightness
     uc_plg._obj.spectral_y_type_selected = 'Surface Brightness'
@@ -198,7 +195,7 @@ def test_unit_translation(helper_name, angle_unit, request):
 
 
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-def test_sb_unit_conversion(cubeviz_helper, angle_unit):
+def test_sb_unit_conversion(deconfigged_helper, angle_unit):
 
     angle_str = angle_unit.to_string()
 
@@ -207,9 +204,9 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    deconfigged_helper.load(cube, data_label="test")
 
-    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    uc_plg = deconfigged_helper.plugins['Unit Conversion']
     uc_plg.open_in_tray()
 
     # ensure that per solid angle cube defaults to Flux spectrum
@@ -221,8 +218,8 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
     assert angle_str in uc_plg.angle_unit.choices
 
     # to have access to display units
-    viewer_1d = cubeviz_helper._app.get_viewer(
-        cubeviz_helper._default_spectrum_viewer_reference_name)
+    viewer_1d = deconfigged_helper._app.get_viewer(
+        deconfigged_helper._app.get_viewer_reference_names()[0])
 
     uc_plg.spectral_y_type.selected = 'Surface Brightness'
 
@@ -230,9 +227,9 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
     uc_plg.flux_unit = 'Jy'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     assert y_display_unit == u.Jy / angle_unit
-    label_mouseover = cubeviz_helper._coords_info
-    flux_viewer = cubeviz_helper._app.get_viewer(
-        cubeviz_helper._default_flux_viewer_reference_name
+    label_mouseover = deconfigged_helper._coords_info
+    flux_viewer = deconfigged_helper._app.get_viewer(
+        deconfigged_helper._app.get_viewer_reference_names()[1]
     )
     label_mouseover._viewer_mouse_event(
         flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
@@ -282,37 +279,37 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
 
     assert y_display_unit == u.Jy
 
-    la = cubeviz_helper.plugins['Line Analysis']._obj
+    la = deconfigged_helper.plugins['Line Analysis']._obj
     assert la.dataset.get_selected_spectrum(use_display_units=True)
 
 
-def test_contour_unit_conversion(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
+def test_contour_unit_conversion(deconfigged_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
     # custom cube to have Surface Brightness units
-    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label="test")
+    deconfigged_helper.load(spectrum1d_cube_fluxunit_jy_per_steradian, data_label="test")
 
-    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    uc_plg = deconfigged_helper.plugins['Unit Conversion']
     uc_plg.open_in_tray()
 
-    po_plg = cubeviz_helper.plugins['Plot Options']
+    po_plg = deconfigged_helper.plugins['Plot Options']
     # Make sure that the contour values get updated
     po_plg.contour_visible = True
 
     assert uc_plg.spectral_y_type == 'Flux'
     assert uc_plg.flux_unit == 'Jy'
     assert uc_plg.sb_unit == "Jy / sr"
-    assert cubeviz_helper.viewers['flux-viewer']._obj.glue_viewer.layers[0].state.attribute_display_unit == "Jy / sr"  # noqa
-    assert np.allclose(po_plg.contour_max.value, 199)
+    assert deconfigged_helper.viewers['viewer']._obj.glue_viewer.layers[0].state.attribute_display_unit == "Jy / sr"  # noqa
+    assert np.allclose(po_plg.contour_max, 199)
 
     uc_plg.spectral_y_type = 'Surface Brightness'
     uc_plg.flux_unit = 'MJy'
 
     assert uc_plg.sb_unit == "MJy / sr"
-    assert cubeviz_helper.viewers['flux-viewer']._obj.glue_viewer.layers[0].state.attribute_display_unit == "MJy / sr"  # noqa
-    assert np.allclose(po_plg.contour_max.value, 1.99e-4)
+    assert deconfigged_helper.viewers['viewer']._obj.glue_viewer.layers[0].state.attribute_display_unit == "MJy / sr"  # noqa
+    assert np.allclose(po_plg.contour_max, 1.99e-4)
 
 
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
+def test_cubeviz_flux_sb_translation_counts(deconfigged_helper, angle_unit):
 
     """
     When a cube is loaded in counts, 'count' should be the only
@@ -328,9 +325,9 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum(flux=flux * (u.ct / angle_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    deconfigged_helper.load(cube, data_label="test")
 
-    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    uc_plg = deconfigged_helper.plugins['Unit Conversion']
     uc_plg.open_in_tray()
 
     # ensure that per solid angle cube defaults to Flux spectrum
@@ -343,8 +340,8 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
     assert angle_str in uc_plg.angle_unit.choices
 
     # to have access to display units
-    viewer_1d = cubeviz_helper._app.get_viewer(
-        cubeviz_helper._default_spectrum_viewer_reference_name)
+    viewer_1d = deconfigged_helper._app.get_viewer(
+        deconfigged_helper._app.get_viewer_reference_names()[0])
 
     # do a spectral y axis translation from Flux to Surface Brightness
     uc_plg.spectral_y_type.selected = 'Surface Brightness'
@@ -353,9 +350,9 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
     assert y_display_unit == u.ct / angle_unit
 
     # and test mouseover info
-    label_mouseover = cubeviz_helper._coords_info
-    flux_viewer = cubeviz_helper._app.get_viewer(
-        cubeviz_helper._default_flux_viewer_reference_name
+    label_mouseover = deconfigged_helper._coords_info
+    flux_viewer = deconfigged_helper._app.get_viewer(
+        deconfigged_helper._app.get_viewer_reference_names()[1]
     )
     label_mouseover._viewer_mouse_event(
         flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
@@ -370,7 +367,7 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
                          [('Jy', 'MJy', 'Flux', (5e-07, 6e-07, 1e-4, 1.05e-4)),
                           ('MJy', 'ph / (Angstrom s cm2)', 'Surface Brightness', (5e-07, 6e-07, 25153169.66070254, 31692993.772485193))  # noqa
                           ])
-def test_limits_on_unit_change(cubeviz_helper, start_unit, end_unit,
+def test_limits_on_unit_change(deconfigged_helper, start_unit, end_unit,
                                end_spectral_y_type, expected_limits):
     """
     Test that the limits are reset when changing units
@@ -380,10 +377,11 @@ def test_limits_on_unit_change(cubeviz_helper, start_unit, end_unit,
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum(flux=flux * u.Unit(start_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    deconfigged_helper.load(cube, data_label="test")
 
-    uc_plg = cubeviz_helper.plugins['Unit Conversion']
-    sv = cubeviz_helper.viewers['spectrum-viewer']
+    uc_plg = deconfigged_helper.plugins['Unit Conversion']
+    sv = deconfigged_helper._app.get_viewer(
+        deconfigged_helper._app.get_viewer_reference_names()[0])
     sv.set_limits(x_min=5e-7, x_max=6e-7, y_min=100, y_max=105)
 
     uc_plg.flux_unit = end_unit

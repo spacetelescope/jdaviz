@@ -61,7 +61,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     assert sl.value == slice_values[1]
 
     # Add test for unit conversion
-    uc_plugin = cubeviz_helper.plugins['Unit Conversion']._obj
+    uc_plugin = deconfigged_helper.plugins['Unit Conversion']._obj
     uc_plugin.spectral_unit.selected = 'Angstrom'
     assert sl.value_unit == 'Angstrom'
     sl.value = 4623.60028

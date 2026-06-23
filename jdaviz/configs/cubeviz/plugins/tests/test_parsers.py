@@ -8,42 +8,43 @@ from gwcs.wcs import WCS as GWCS
 from specutils import Spectrum, SpectralRegion
 from numpy.testing import assert_allclose, assert_array_equal
 
+from jdaviz.conftest import deconfigged_helper
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.utils import PRIHDR_KEY
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_fits_image_hdu_parse(image_cube_hdu_obj, cubeviz_helper):
-    cubeviz_helper.load_data(image_cube_hdu_obj)
+def test_fits_image_hdu_parse(image_cube_hdu_obj, deconfigged_helper):
+    deconfigged_helper.load(image_cube_hdu_obj)
 
-    assert len(cubeviz_helper._app.data_collection) == 4  # 3 cubes and extracted spectrum
-    assert cubeviz_helper._app.data_collection[0].label == "3D Spectrum [FLUX]"
+    assert len(deconfigged_helper._app.data_collection) == 4  # 3 cubes and extracted spectrum
+    assert deconfigged_helper._app.data_collection[0].label == "3D Spectrum [FLUX]"
 
     # first load should be successful; subsequent attempts should fail
     with pytest.raises(RuntimeError, match="Only one cube"):
-        cubeviz_helper.load_data(image_cube_hdu_obj)
+        deconfigged_helper.load(image_cube_hdu_obj)
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper):
+def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, deconfigged_helper):
     # Passing in data_label keyword as posarg.
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, 'has_microns')
+    deconfigged_helper.load(image_cube_hdu_obj_microns, 'has_microns')
 
-    assert len(cubeviz_helper._app.data_collection) == 4  # 3 cubes and extracted spectrum
-    assert cubeviz_helper._app.data_collection[0].label == 'has_microns[FLUX]'
+    assert len(deconfigged_helper._app.data_collection) == 4  # 3 cubes and extracted spectrum
+    assert deconfigged_helper._app.data_collection[0].label == 'has_microns[FLUX]'
 
-    flux_cube = cubeviz_helper._app.data_collection[0].get_object(Spectrum, statistic=None)
+    flux_cube = deconfigged_helper._app.data_collection[0].get_object(Spectrum, statistic=None)
     assert flux_cube.spectral_axis.unit == u.um
 
     # This tests the same data as test_fits_image_hdu_parse above.
-    cubeviz_helper._app.data_collection[0].meta['EXTNAME'] == 'FLUX'
-    cubeviz_helper._app.data_collection[1].meta['EXTNAME'] == 'MASK'
-    cubeviz_helper._app.data_collection[2].meta['EXTNAME'] == 'ERR'
+    deconfigged_helper._app.data_collection[0].meta['EXTNAME'] == 'FLUX'
+    deconfigged_helper._app.data_collection[1].meta['EXTNAME'] == 'MASK'
+    deconfigged_helper._app.data_collection[2].meta['EXTNAME'] == 'ERR'
     for i in range(3):
-        assert cubeviz_helper._app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
+        assert deconfigged_helper._app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
 
-    flux_viewer = cubeviz_helper._app.get_viewer('flux-viewer')
-    label_mouseover = cubeviz_helper._coords_info
+    flux_viewer = deconfigged_helper._app.get_viewer('flux-viewer')
+    label_mouseover = deconfigged_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
 
@@ -57,7 +58,7 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     # verify that scale factor embedded in unit is removed
     assert np.allclose(flux_cube.unit.scale, 1.0)
 
-    unc_viewer = cubeviz_helper._app.get_viewer('uncert-viewer')
+    unc_viewer = deconfigged_helper._app.get_viewer('uncert-viewer')
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=-1.0 y=00.0',  # Out of bounds
@@ -65,15 +66,15 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
                                          '205.4399401278 27.0034178806 (deg)')
 
 
-def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
-    cubeviz_helper._app.add_data(spectrum1d, "test")
+def test_spectrum1d_with_fake_fixed_units(spectrum1d, deconfigged_helper):
+    deconfigged_helper._app.add_data(spectrum1d, "test")
 
-    cubeviz_helper._app.add_data_to_viewer('spectrum-viewer', 'test')
-    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    cubeviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6600 * unit,
+    deconfigged_helper._app.add_data_to_viewer('spectrum-viewer', 'test')
+    unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6600 * unit,
                                                                         7400 * unit))
 
-    subsets = cubeviz_helper._app.get_subsets()
+    subsets = deconfigged_helper._app.get_subsets()
     reg = subsets.get('Subset 1')
 
     assert len(subsets) == 1
@@ -84,33 +85,34 @@ def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_helper):
+def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, deconfigged_helper):
     f = tmpdir.join("test_fits_image.fits")
     path = f.strpath
     image_cube_hdu_obj.writeto(path, overwrite=True)
-    cubeviz_helper.load_data(path)
+    deconfigged_helper.load(path)
 
-    assert len(cubeviz_helper._app.data_collection) == 4  # 3 cubes and auto-extracted spectrum
-    assert cubeviz_helper._app.data_collection[0].label == "test_fits_image"
+    assert len(deconfigged_helper._app.data_collection) == 4  # 3 cubes and auto-extracted spectrum
+    assert deconfigged_helper._app.data_collection[0].label == "test_fits_image"
 
     # This tests the same data as test_fits_image_hdu_parse above.
-    cubeviz_helper._app.data_collection[0].meta['EXTNAME'] == 'FLUX'
-    cubeviz_helper._app.data_collection[1].meta['EXTNAME'] == 'MASK'
-    cubeviz_helper._app.data_collection[2].meta['EXTNAME'] == 'ERR'
+    deconfigged_helper._app.data_collection[0].meta['EXTNAME'] == 'FLUX'
+    deconfigged_helper._app.data_collection[1].meta['EXTNAME'] == 'MASK'
+    deconfigged_helper._app.data_collection[2].meta['EXTNAME'] == 'ERR'
     for i in range(3):
-        assert cubeviz_helper._app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
+        assert deconfigged_helper._app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
 
-    flux_viewer = cubeviz_helper._app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
-    label_mouseover = cubeviz_helper._coords_info
+    flux_viewer = deconfigged_helper._app.get_viewer(deconfigged_helper._default_flux_viewer_reference_name)
+    label_mouseover = deconfigged_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     flux_unit_str = "erg / (Angstrom s cm2 pix2)"
     assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
                                          '205.4441642302 26.9996148973 (deg)')
+    
+    unc_viewer_name = deconfigged_helper._app.get_viewer_reference_names()[0]
+    unc_viewer = deconfigged_helper._app.get_viewer(unc_viewer_name)
 
-    unc_viewer_name = cubeviz_helper._default_uncert_viewer_reference_name
-    unc_viewer = cubeviz_helper._app.get_viewer(unc_viewer_name)
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=-1.0 y=00.0',  # Out of bounds
@@ -119,20 +121,20 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
+def test_spectrum3d_parse(image_cube_hdu_obj, deconfigged_helper):
     flux = image_cube_hdu_obj[1].data << u.Unit(image_cube_hdu_obj[1].header['BUNIT'])
     wcs = WCS(image_cube_hdu_obj[1].header, image_cube_hdu_obj, preserve_units=True)
     sc = Spectrum(flux=flux, wcs=wcs)
-    cubeviz_helper.load_data(sc)
+    deconfigged_helper.load(sc)
 
-    data = cubeviz_helper._app.data_collection[0]
-    assert len(cubeviz_helper._app.data_collection) == 2
+    data = deconfigged_helper._app.data_collection[0]
+    assert len(deconfigged_helper._app.data_collection) == 2
     assert data.label == "3D Spectrum [FLUX]"
     assert data.shape == flux.shape
 
     # Same as flux viewer data in test_fits_image_hdu_parse_from_file
-    flux_viewer = cubeviz_helper._app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
-    label_mouseover = cubeviz_helper._coords_info
+    flux_viewer = deconfigged_helper._app.get_viewer(deconfigged_helper._default_flux_viewer_reference_name)
+    label_mouseover = deconfigged_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     flux_unit_str = "erg / (Angstrom s cm2 pix2)"
@@ -141,8 +143,8 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
                                          '205.4441642302 26.9996148973 (deg)')
 
     # These viewers have no data.
-    unc_viewer_name = cubeviz_helper._default_uncert_viewer_reference_name
-    unc_viewer = cubeviz_helper._app.get_viewer(unc_viewer_name)
+    unc_viewer_name = deconfigged_helper._default_uncert_viewer_reference_name
+    unc_viewer = deconfigged_helper._app.get_viewer(unc_viewer_name)
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert label_mouseover.as_text() == ('', '', '')
@@ -185,12 +187,12 @@ def test_fits_image_hdu_parse_with_inverse_var(image_cube_hdu_obj, deconfigged_h
 
 
 @pytest.mark.parametrize("flux_unit", [u.nJy, u.DN, u.DN / u.s])
-def test_spectrum3d_no_wcs_parse(cubeviz_helper, flux_unit):
+def test_spectrum3d_no_wcs_parse(deconfigged_helper, flux_unit):
     sc = Spectrum(flux=np.ones(24).reshape((2, 3, 4)) * flux_unit, spectral_axis_index=2)  # x, y, z
-    cubeviz_helper.load_data(sc)
+    deconfigged_helper.load(sc)
     assert sc.spectral_axis.unit == u.pix
 
-    data = cubeviz_helper._app.data_collection[0]
+    data = deconfigged_helper._app.data_collection[0]
     flux = data.get_component('flux')
     assert data.label.endswith('[FLUX]')
     assert data.shape == (2, 3, 4)  # x, y, z
@@ -200,35 +202,35 @@ def test_spectrum3d_no_wcs_parse(cubeviz_helper, flux_unit):
 
 
 @pytest.mark.filterwarnings('ignore:The default extension selection')
-def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
-    cubeviz_helper.load_data(spectrum1d)
+def test_spectrum1d_parse(spectrum1d, deconfigged_helper):
+    deconfigged_helper.load(spectrum1d)
 
-    assert len(cubeviz_helper._app.data_collection) == 1
-    assert cubeviz_helper._app.data_collection[0].label.endswith('Spectrum')
-    assert cubeviz_helper._app.data_collection[0].meta['uncertainty_type'] == 'std'
+    assert len(deconfigged_helper._app.data_collection) == 1
+    assert deconfigged_helper._app.data_collection[0].label.endswith('Spectrum')
+    assert deconfigged_helper._app.data_collection[0].meta['uncertainty_type'] == 'std'
 
     # Coordinate display is only for spatial image, which is missing here.
-    label_mouseover = cubeviz_helper._coords_info
+    label_mouseover = deconfigged_helper._coords_info
     assert label_mouseover.as_text() == ('', '', '')
 
 
-def test_numpy_cube(cubeviz_helper):
+def test_numpy_cube(deconfigged_helper):
     arr = np.ones(24).reshape((4, 3, 2))  # x, y, z
 
     with pytest.raises(TypeError, match='Data type must be one of'):
-        cubeviz_helper.load_data(arr, data_type='foo')
+        deconfigged_helper.load(arr, data_type='foo')
 
-    cubeviz_helper.load_data(arr)
-    cubeviz_helper.load_data(arr, data_label='uncert_array', data_type='uncert',
+    deconfigged_helper.load(arr)
+    deconfigged_helper.load(arr, data_label='uncert_array', data_type='uncert',
                              override_cube_limit=True)
 
     with pytest.raises(RuntimeError, match='Only one cube'):
-        cubeviz_helper.load_data(arr, data_type='mask')
+        deconfigged_helper.load(arr, data_type='mask')
 
-    assert len(cubeviz_helper._app.data_collection) == 3  # flux cube, uncert cube, Spectrum (sum)
+    assert len(deconfigged_helper._app.data_collection) == 3  # flux cube, uncert cube, Spectrum (sum)
 
     # Check context of first cube.
-    data = cubeviz_helper._app.data_collection[0]
+    data = deconfigged_helper._app.data_collection[0]
     flux = data.get_component('flux')
     assert data.label == '3D Spectrum [FLUX]'
     assert data.shape == (4, 3, 2)  # x, y, z
@@ -236,7 +238,7 @@ def test_numpy_cube(cubeviz_helper):
     assert flux.units == 'ct / pix2'
 
     # Check context of second cube.
-    data = cubeviz_helper._app.data_collection[1]
+    data = deconfigged_helper._app.data_collection[1]
     flux = data.get_component('flux')
     assert data.label == 'uncert_array[FLUX]'
     assert data.shape == (4, 3, 2)  # x, y, z
@@ -244,43 +246,43 @@ def test_numpy_cube(cubeviz_helper):
     assert flux.units == 'ct / pix2'
 
 
-def test_loading_with_mask(cubeviz_helper):
+def test_loading_with_mask(deconfigged_helper):
     # This also tests that spaxel is converted to pix**2
     custom_spec = Spectrum(flux=[[[20, 1], [9, 1]], [[3, 1], [6, np.nan]]] * u.Unit("erg / Angstrom s cm**2 spaxel"),  # noqa
                            spectral_axis=[1, 2]*u.AA,
                            mask=[[[1, 0], [0, 0]], [[0, 0], [0, 0]]],
                            spectral_axis_index=2)
-    cubeviz_helper.load(custom_spec)
+    deconfigged_helper.load(custom_spec)
 
-    uc = cubeviz_helper.plugins['Unit Conversion']
+    uc = deconfigged_helper.plugins['Unit Conversion']
     uc.spectral_y_type = "Surface Brightness"
 
-    se = cubeviz_helper.plugins['3D Spectral Extraction']
+    se = deconfigged_helper.plugins['3D Spectral Extraction']
     se.function = "Mean"
     se.extract()
-    extracted = cubeviz_helper.datasets["Spectrum (mean)"].get_data()
+    extracted = deconfigged_helper.datasets["Spectrum (mean)"].get_data()
     assert_allclose(extracted.flux.value, [6, 1])
     assert extracted.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
 
 
 @pytest.mark.remote_data
-def test_manga_with_mask(cubeviz_helper):
+def test_manga_with_mask(deconfigged_helper):
     # Remote data test of loading and extracting an up-to-date (as of 11/19/2024) MaNGA cube
     # This also tests that spaxel is converted to pix**2
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        cubeviz_helper.load("https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz", format='3D Spectrum', cache=True)  # noqa
+        deconfigged_helper.load("https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz", format='3D Spectrum', cache=True)  # noqa
 
-    uc = cubeviz_helper.plugins['Unit Conversion']
+    uc = deconfigged_helper.plugins['Unit Conversion']
     uc.spectral_y_type = "Surface Brightness"
 
-    se = cubeviz_helper.plugins['3D Spectral Extraction']
+    se = deconfigged_helper.plugins['3D Spectral Extraction']
     for function, expected_value in [('Mean', 5.566169e-18),
                                      ('Sum', 1.553518e-14),
                                      ('Max', 1e20)]:
         se.function = function
         se.extract()
-        extracted_max = cubeviz_helper.datasets[f"Spectrum ({function.lower()})"].get_data().max()
+        extracted_max = deconfigged_helper.datasets[f"Spectrum ({function.lower()})"].get_data().max()
         assert_allclose(extracted_max.value, expected_value, rtol=5e-7)
         if function == "Sum":
             assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2")
@@ -288,9 +290,9 @@ def test_manga_with_mask(cubeviz_helper):
             assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
 
 
-def test_invalid_data_types(cubeviz_helper):
+def test_invalid_data_types(deconfigged_helper):
     with pytest.raises(ValueError, match=r"No valid loaders found for input.*"):
-        cubeviz_helper.load_data('does_not_exist.fits')
+        deconfigged_helper.load('does_not_exist.fits')
 
     with pytest.raises(ValueError, match='No valid loaders found for input.*'):
-        cubeviz_helper.load_data(WCS(naxis=3))
+        deconfigged_helper.load(WCS(naxis=3))
