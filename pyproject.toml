@@ -169,6 +169,9 @@ filterwarnings = [
     "ignore:Rampviz is deprecated and will be removed in version 5.2.*:DeprecationWarning",
     "ignore:Specviz is deprecated and will be removed in version 5.2.*:DeprecationWarning",
     "ignore:Specviz2d is deprecated and will be removed in version 5.2.*:DeprecationWarning",
+    # TODO: this will be handled by a future gwcs release, it was fixed in
+    #   https://github.com/spacetelescope/gwcs/pull/740
+    "ignore:Calling .*lu.* with arguments.*is deprecated in SciPy 1.18.0:DeprecationWarning"
 ]
 
 
