@@ -53,7 +53,7 @@
         :show-select="show_rowselect"
         :select-strategy="multiselect ? 'page' : 'single'"
         return-object
-        v-model:selected="selected_rows"
+        v-model="selected_rows"
         :server-items-length="server_pagination ? server_items_length : -1"
         v-model:options="table_options"
         class="elevation-1 width-100"
