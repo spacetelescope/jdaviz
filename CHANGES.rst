@@ -7,6 +7,8 @@ Bug Fixes
 - Update docs to reflect new minimum version of Python (>=3.12). Recommend Python 3.13
   to implicitly reflect testing environments. [#4240]
 
+- Fixed a bug in the compass plugin where the image would be flipped when WCS linked. [#4252]
+
 Mosviz
 ^^^^^^
 
