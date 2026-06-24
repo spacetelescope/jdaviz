@@ -227,7 +227,7 @@ class VOResolver(BaseConeSearchResolver):
                             else None
                         )
                     },
-                    format=("" if self.producttype_selected == "Catalogs" else "fits"),
+                    format=("" if self.producttype_selected == "Catalog" else "fits"),
                 )
             except DALQueryError as e:
                 # We've run into issues where the service assumes a FORMAT and injects it for us.
@@ -236,7 +236,7 @@ class VOResolver(BaseConeSearchResolver):
                     vo_results = vo_service.search(
                         coord,
                         **{
-                            "diameter" if self.producttype_selected == "Spectra" else "size": (
+                            "diameter" if self.producttype_selected == "Spectrum" else "size": (
                                 (self.radius * u.Unit(self.radius_unit.selected))
                                 if self.radius > 0.0
                                 else None
