@@ -28,7 +28,7 @@ VO_PROTOCOL = {"Image": {'protocol': 'sia', 'size_arg': 'size'},
 class VOResolver(BaseConeSearchResolver):
     template_file = __file__, "vo.vue"
 
-    producttype_selected = Unicode("Images").tag(sync=True)
+    producttype_selected = Unicode("Image").tag(sync=True)
     producttype_choices = List(list({"label": type} for type in VO_PROTOCOL.keys())).tag(sync=True)
 
     waveband_items = List().tag(sync=True)
