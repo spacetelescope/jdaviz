@@ -712,6 +712,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True
                 self.file_table_populated = False
+                self.parsed_input_not_resolvable_message = ''
                 return
 
             elif self.treat_table_as_query and observation_table is not None:
@@ -730,9 +731,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True
                 self.file_table_populated = False
+                self.parsed_input_is_resolvable = ''
                 return
 
-        self.parsed_input_not_resolvable_message = ""
+        self.parsed_input_not_resolvable_message = ''
         self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
         self.observation_table_populated = False
