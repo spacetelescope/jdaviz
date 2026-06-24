@@ -76,7 +76,7 @@ class VOResolver(BaseConeSearchResolver):
             ],
         )
 
-    @observe("waveband_selected",
+    @observe("producttype_selected", "waveband_selected",
              "source", "coordframe_selected",
              "radius", "radius_unit_selected",
              "resource_filter_coverage")
