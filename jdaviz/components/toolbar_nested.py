@@ -72,10 +72,9 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             self.viewer.hub.subscribe(self, RestoreToolbarMessage,
                                       handler=lambda msg: self.restore_tools(all_viewers=False))
             # React to focus mode changes so tools show/hide accordingly
-            if hasattr(self.viewer, 'jdaviz_app'):
-                self.viewer.jdaviz_app.state.add_callback(
-                    'focus_viewer', self._on_focus_viewer_changed
-                )
+            self.viewer.jdaviz_app.state.add_callback(
+                'focus_viewer', self._on_focus_viewer_changed
+            )
 
     def _on_viewer_removed(self, msg):
         """Handle viewer removal - clean up toolbar overrides if this viewer is removed."""
@@ -91,14 +90,13 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
 
     def _on_focus_viewer_changed(self, focus_viewer):
         """React to focus mode changes: deactivate any active tool that would be hidden."""
-        entering_focus = (
-            bool(focus_viewer)
-            and focus_viewer == getattr(self.viewer, 'reference', None)
-        )
-        if entering_focus and self.active_tool_id:
+        # if the active tool is going to be made not-visible by focus mode,
+        # deactivate it first
+        if focus_viewer == getattr(self.viewer, 'reference', None) and self.active_tool_id:
             tool = self.tools.get(self.active_tool_id)
             if tool is not None and not getattr(tool, 'keep_visible_in_focus_mode', False):
                 self.active_tool_id = None
+        # update all tool visibilities, as some may be focus-mode-dependent
         self._update_tool_visibilities()
 
     def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[],
@@ -322,14 +320,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 self.tools_data[tool_id] = {**self.tools_data[tool_id],
                                             'has_suboptions': n_visible > 1}
 
-        # in focus mode, flatten the toolbar: all visible tools appear side-by-side
-        in_focus_mode = (
-            hasattr(self.viewer, 'jdaviz_app')
-            and self.viewer.jdaviz_app.state.focus_viewer
-            and self.viewer.jdaviz_app.state.focus_viewer
-            == getattr(self.viewer, 'reference', None)
-        )
-        if in_focus_mode:
+        # in focus mode, flatten the toolbar (skip nesting)
+        if self.viewer.jdaviz_app.state.focus_viewer == getattr(self.viewer, 'reference', None):
             for tool_id, info in self.tools_data.items():
                 if info['visible']:
                     self.tools_data[tool_id] = {**info,
@@ -363,32 +355,6 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             # then we're clicking on a non-checkable tool and want to default to the previous
             if event['old'] is not None:
                 self.active_tool_id = event['old']
-
-    @traitlets.observe('active_tool')
-    def _on_change_active_tool(self, change):
-        # Mirror BasicJupyterToolbar behavior, but guard against redundant
-        # deactivate/activate calls during toolbar override rebuilds.
-        # IMPORTANT: do not write back to active_tool_id here (that can create
-        # traitlet feedback loops with _on_change_v_model).
-        if change.old:
-            try:
-                change.old.deactivate()
-            except KeyError:
-                pass
-        else:
-            if self._default_mouse_mode and self._default_mouse_mode_active:
-                try:
-                    self._default_mouse_mode.deactivate()
-                except KeyError:
-                    pass
-                self._default_mouse_mode_active = False
-
-        if change.new:
-            change.new.activate()
-        else:
-            if self._default_mouse_mode is not None and not self._default_mouse_mode_active:
-                self._default_mouse_mode.activate()
-                self._default_mouse_mode_active = True
 
     def _select_tool(self, tool_id, menu_ind):
         for search_tool_id, info in self.tools_data.items():

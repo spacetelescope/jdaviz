@@ -510,13 +510,10 @@ class ViewerFocusToggle(Tool):
 
     def __init__(self, viewer=None):
         super().__init__(viewer)
-        if viewer is not None and hasattr(viewer, 'jdaviz_app'):
-            from glue_jupyter.common.toolbar_vuetify import read_icon
-            self._img_fullscreen = read_icon(_ICON_FULLSCREEN, 'svg+xml')
-            self._img_fullscreen_exit = read_icon(_ICON_FULLSCREEN_EXIT, 'svg+xml')
-            viewer.jdaviz_app.state.add_callback(
-                'focus_viewer', self._on_focus_viewer_changed
-            )
+        from glue_jupyter.common.toolbar_vuetify import read_icon
+        self._img_fullscreen = read_icon(_ICON_FULLSCREEN, 'svg+xml')
+        self._img_fullscreen_exit = read_icon(_ICON_FULLSCREEN_EXIT, 'svg+xml')
+        viewer.jdaviz_app.state.add_callback('focus_viewer', self._on_focus_viewer_changed)
 
     def _on_focus_viewer_changed(self, focus_viewer):
         toolbar = getattr(self.viewer, 'toolbar', None)

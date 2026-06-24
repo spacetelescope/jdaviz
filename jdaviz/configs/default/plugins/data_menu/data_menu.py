@@ -187,14 +187,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.prevent_layer_items_recursion = False
 
         # track focus mode
-        self.focus_mode = (self._app.state.focus_viewer == getattr(viewer, 'reference', None)
-                           and bool(self._app.state.focus_viewer))
         self._app.state.add_callback('focus_viewer', self._on_focus_viewer_changed)
+        self._on_focus_viewer_changed()
 
-    def _on_focus_viewer_changed(self, focus_viewer):
-        self.focus_mode = bool(focus_viewer) and (
-            focus_viewer == getattr(self._viewer, 'reference', None)
-        )
+    def _on_focus_viewer_changed(self, *args):
+        self.focus_mode = (self.app.state.focus_viewer == getattr(self._viewer, 'reference', None))
 
     @property
     def user_api(self):

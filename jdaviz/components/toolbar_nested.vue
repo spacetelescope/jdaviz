@@ -106,11 +106,11 @@
     },
     methods: {
       should_hide_in_popout(id) {
-        if (id !== 'jdaviz:viewer_popout') {
-          return false;
+        if (id == 'jdaviz:viewer_popout') {
+          // hide when in popout context, show otherwise
+          return !!(this.$el && this.$el.closest('.jupyter-widgets-popout-container'));
         }
-        // Match legacy popout button behavior: hide when already in popout context.
-        return !!(this.$el && this.$el.closest('.jupyter-widgets-popout-container'));
+        return false
       },
       get_tool_button_style(id, disabled_msg) {
         const viewerActionTools = [

@@ -949,16 +949,16 @@ class JdavizViewerWindow(TemplateMixin):
             self.coords_info_dataset_icon = coords_info.dataset_icon
             coords_info.observe(self._on_coords_info_icon_changed, names=['icon'])
             coords_info.observe(self._on_coords_info_dataset_icon_changed, names=['dataset_icon'])
-        self.focus_mode = self._app.state.focus_viewer == self.reference
         self._app.state.add_callback('focus_viewer', self._on_focus_viewer_changed)
+        self._on_focus_viewer_changed()
 
         self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
 
     def _on_toolbar_override_change(self, change):
         self.tool_override_mode = change['new']
 
-    def _on_focus_viewer_changed(self, focus_viewer):
-        self.focus_mode = focus_viewer == self.reference
+    def _on_focus_viewer_changed(self, *args):
+        self.focus_mode = (self._app.state.focus_viewer == self.reference)
 
     def _on_coords_info_icon_changed(self, change):
         self.coords_info_has_data = bool(change['new'])
