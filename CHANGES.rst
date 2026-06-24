@@ -91,9 +91,12 @@ Bug Fixes
 
 - Fix treating input tables as queries and add support for exports from MAST portal. [#4234]
 
+- Fixed a bug with the astroquery/VO loaders where the loader would get stuck on a failed query. [#4257]
+
 
 Mosviz
 ------
+
 
 5.0.2 (2026-06-12)
 ==================
