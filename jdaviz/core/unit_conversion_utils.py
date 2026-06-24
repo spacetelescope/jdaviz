@@ -18,6 +18,7 @@ __all__ = ["all_flux_unit_conversion_equivs", "check_if_unit_is_per_solid_angle"
            "create_equivalent_flux_units_list",
            "create_equivalent_spectral_axis_units_list",
            "flux_conversion_general", "handle_squared_flux_unit_conversions",
+           "is_physical_flux_unit", "is_physical_spectral_unit",
            "supported_sq_angle_units", "spectral_axis_conversion",
            "units_to_strings", "flux_to_sb_unit", "to_flux_density_unit",
            "spectrum_ensure_flux_density_unit"]
@@ -247,6 +248,56 @@ def create_equivalent_angle_units_list(solid_angle_unit):
     return equivalent_angle_units
 
 
+def is_physical_flux_unit(flux_unit):
+    """
+    Return True if ``flux_unit`` is a physical spectral or photon flux density
+    unit that is supported for app-wide unit conversion (i.e., convertible to
+    units in ``SPEC_PHOTON_FLUX_DENSITY_UNITS`` via spectral density
+    equivalencies).  Non-physical units such as DN, counts, ADU, or
+    ``dimensionless_unscaled`` return False.
+
+    Parameters
+    ----------
+    flux_unit : `~astropy.units.Unit` or str
+
+    Returns
+    -------
+    bool
+    """
+    try:
+        unit = u.Unit(flux_unit)
+    except Exception:
+        return False
+    equiv = u.spectral_density(1 * u.m)
+    for phys_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+        if unit.is_equivalent(phys_unit, equiv):
+            return True
+    return False
+
+
+def is_physical_spectral_unit(spectral_unit):
+    """
+    Return True if ``spectral_unit`` is a physical spectral axis unit
+    (wavelength, frequency, or energy) that is supported for app-wide unit
+    conversion.  Pixel-based or dimensionless units return False.
+
+    Parameters
+    ----------
+    spectral_unit : `~astropy.units.Unit` or str
+
+    Returns
+    -------
+    bool
+    """
+    try:
+        unit = u.Unit(spectral_unit)
+    except Exception:
+        return False
+    if unit in (u.pix, u.dimensionless_unscaled):
+        return False
+    return unit.physical_type in ('length', 'frequency', 'energy', 'speed')
+
+
 def create_equivalent_flux_units_list(flux_unit):
     """
     Get all possible conversions for flux from flux_unit, to populate 'flux'
@@ -286,8 +337,20 @@ def create_equivalent_spectral_axis_units_list(spectral_axis_unit,
                                                exclude=[u.jupiterRad, u.earthRad,
                                                         u.solRad, u.lyr, u.AU,
                                                         u.pc, u.Bq, u.micron,
-                                                        u.lsec]):
-    """Get all possible conversions from current spectral_axis_unit."""
+                                                        u.lsec],
+                                               additional_units = [u.Angstrom,
+                                                                   u.nm, u.um,
+                                                                   u.micron,
+                                                                   u.Hz, u.eV,
+                                                                   u.erg]):
+    """
+    Get a formatted list of all possible conversions for spectral axis units
+    from spectral_axis_unit, to populate 'spectral axis' dropdown menu in the
+    unit conversion plugin. Units in 'exclude' will be excluded from the list,
+    and units in 'additional_units' will be added to the list, if they are
+    equivalent to the input spectral_axis_unit. The returned list will be sorted
+    alphabetically.
+    """
     if spectral_axis_unit in (u.pix, u.dimensionless_unscaled):
         return [spectral_axis_unit.to_string()]
 
