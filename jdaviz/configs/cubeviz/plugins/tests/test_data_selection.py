@@ -13,7 +13,7 @@ def test_data_selection(deconfigged_helper, spectrum1d_cube, tmpdir):
     app.add_data(spectrum1d_cube, 'cube1')
     app.add_data(spectrum1d_cube, 'cube2')
     app.add_data_to_viewer('flux-viewer', 'cube1')
-    fv = app.get_viewer('flux-viewer')
+    fv = app.get_viewer(app.get_viewer_reference_names()[0])
 
     assert len(app.state.data_items) == 2
     assert len(fv.data()) == 1
