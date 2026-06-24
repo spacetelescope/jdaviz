@@ -1,6 +1,6 @@
 <template>
   <v-btn :disabled="spinner || disabled"
-    text
+    variant="text"
     :color="buttonColor"
     :class="api_hints_enabled ? 'api-hint' : null"
     @click="$emit('click')"
@@ -19,19 +19,11 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['spinner', 'disabled', 'results_isolated_to_plugin', 'api_hints_enabled'],
   computed: {
     buttonColor() {
-      if (this.results_isolated_to_plugin) {
-        return this.$vuetify.theme.dark
-          ? this.$vuetify.theme.themes.dark.primary
-          : this.$vuetify.theme.themes.light.primary;
-      } else {
-        return this.$vuetify.theme.dark
-          ? this.$vuetify.theme.themes.dark.accent
-          : this.$vuetify.theme.themes.light.accent;
-      }
+      return this.results_isolated_to_plugin ? 'primary' : 'accent';
     }
   }
 };

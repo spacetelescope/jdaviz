@@ -13,7 +13,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['span_style', 'color', 'icon', 'icons', 'icon_size', 'linewidth', 'linestyle', 'prevent_invert_if_dark'],
   computed: {
     borderStyle() {

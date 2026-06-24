@@ -88,7 +88,9 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     assert_allclose(cb.x, po.stretch_histogram.figure.marks[0].x)
     assert_allclose(cb.y, 1)
     # remove version check once glue-jupyer >0.29.0 is pinned
-    if Version(glue_jupyter.__version__) <= Version('0.29.0'):  # Gray scale, linear
+    # Also temporarily check for pinned PR for Vue3
+    if (Version(glue_jupyter.__version__) <= Version('0.29.0') or
+            glue_jupyter.__version__ == '0.29.1.dev17+g98eeba2c8'):  # Gray scale, linear
         assert cb.colors == [
             '#050505', '#0f0f0f', '#191919', '#232323', '#2e2e2e',
             '#383838', '#424242', '#4c4c4c', '#575757', '#616161',

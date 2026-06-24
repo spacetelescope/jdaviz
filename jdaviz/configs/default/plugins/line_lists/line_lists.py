@@ -858,8 +858,7 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
         if not show:
             # then make sure to also disable the identify flag
             list_contents[listname]['lines'][line_ind]['identify'] = False
-        self.list_contents = {}
-        self.list_contents = list_contents
+        self.send_state('list_contents')
 
         if show:
             self.spectrum_viewer.plot_spectral_line(name_rest,
@@ -879,8 +878,7 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
                 else:
                     list_contents[this_listname]['lines'][i]['identify'] = False
 
-        self.list_contents = {}
-        self.list_contents = list_contents
+        self.send_state('list_contents')
         self.identify_label = name_rest if identify else ""
 
     def _process_identify_change(self, msg):

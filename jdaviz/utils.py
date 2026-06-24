@@ -62,6 +62,7 @@ PHOTUTILS_GE_3 = minversion(photutils, '2.3.1.dev')
 PRIHDR_KEY = '_primary_header'
 COMMENTCARD_KEY = '_fits_comment_card'
 
+JDAVIZ_CONFIGS = ('mosviz', 'specviz', 'specviz2d', 'imviz', 'cubeviz', 'rampviz')
 CONFIGS_WITH_LOADERS = ('deconfigged', 'lcviz',
                         'specviz', 'specviz2d',
                         'imviz', 'cubeviz',
@@ -73,7 +74,8 @@ SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
 COORD_WORDS_TO_EXCLUDE = ['radius', 'radio', 'radial', 'extragalactic',
                           'infrared', 'fraction', 'gradient', 'ratio',
                           'integrated,' 'radian', 'random', 'parallax', 'range',
-                          'decade', 'decadal', 'decrement', 'deconvolve']
+                          'decade', 'decadal', 'decrement', 'deconvolve',
+                          'err', 'bbox', 'min', 'max', 'error', 'xp']
 
 
 @contextmanager

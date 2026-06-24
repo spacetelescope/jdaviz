@@ -1,9 +1,9 @@
 <template>
   <v-container>
     <plugin-auto-label
-      :value.sync="line_list_label_value"
+      v-model:value="line_list_label_value"
       :default="line_list_label_default"
-      :auto.sync="line_list_label_auto"
+      v-model:auto="line_list_label_auto"
       :invalid_msg="line_list_label_invalid_msg"
       label="Line List Name"
       api_hint="ldr.importer.line_list_label ="

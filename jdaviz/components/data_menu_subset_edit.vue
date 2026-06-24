@@ -2,29 +2,27 @@
   <v-menu
     v-if="selected_n_subsets > 0"
     absolute
-    offset-y
-    bottom
-    left
+    location="bottom start"
   >
-    <template v-slot:activator="{ on, attrs }">
+    <template v-slot:activator="{ props }">
       <j-tooltip
         :span_style="'display: inline-block; float: right; ' + (subset_edit_enabled ? '' : 'cursor: default;')"
         :tooltipcontent="subset_edit_tooltip"
       >
         <v-btn
-          text
+          variant="text"
           class="invert-if-dark"
-          v-bind="attrs"
-          v-on="on"
+          v-bind="props"
+
           :disabled="!subset_edit_enabled"
         >
           Edit Subset
         </v-btn>
       </j-tooltip>
     </template>
-    <v-list dense style="width: 300px">
+    <v-list density="compact" style="width: 300px">
       <v-list-item v-if="subset_resize_in_viewer_enabled">
-        <v-list-item-content>
+        <div class="v-list-item-content">
           <j-tooltip :tooltipcontent="'Interactively resize '+subset_selected+' in the viewer'">
             <span
               style="cursor: pointer; width: 100%"
@@ -33,11 +31,11 @@
               Resize in Viewer
             </span>
           </j-tooltip>
-        </v-list-item-content>
+        </div>
       </v-list-item>
 
       <v-list-item>
-        <v-list-item-content>
+        <div class="v-list-item-content">
           <j-tooltip :tooltipcontent="'Open '+subset_selected+' in Subset Tools plugin'">
             <span
               style="cursor: pointer; width: 100%"
@@ -46,7 +44,7 @@
               Edit in plugin
             </span>
           </j-tooltip>
-        </v-list-item-content>
+        </div>
       </v-list-item>
 
       <v-divider></v-divider>
@@ -57,17 +55,17 @@
         @mouseover="() => {hover_mode=mode_item.glue_name}"
         @mouseleave="() => {if (hover_mode == mode_item.glue_name) {hover_mode=''}}"
       >
-        <v-list-item-icon style="margin-right: 4px">
+        <v-list-item-action style="margin-right: 4px">
           <img :src="mode_item.icon"/>
-        </v-list-item-icon>
-        <v-list-item-content>
+        </v-list-item-action>
+        <div class="v-list-item-content">
           <!--
           <data-menu-subset-edit-modify
             :mode_item="mode_item"
           />
          -->
          {{ mode_item.glue_name }}
-        </v-list-item-content>
+        </div>
         <v-list-item-action style="display: inline-block" v-if="hover_mode == mode_item.glue_name">
           <j-tooltip
               v-for="tool in subset_tools.slice().reverse()"
@@ -89,15 +87,15 @@
       </v-list-item>
       <hover-api-hint
         v-if="api_hints_enabled"
-        :hover_api_hint.sync="hover_api_hint"
-        :lock_hover_api_hint.sync="lock_hover_api_hint"
+        v-model:hover_api_hint="hover_api_hint"
+        v-model:lock_hover_api_hint="lock_hover_api_hint"
       />
     </v-list>
   </v-menu>
 </template>
 
 <script>
-module.exports = {
+export default {
   data: function () {
       return {
         hover_mode: '',

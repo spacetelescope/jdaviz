@@ -487,14 +487,6 @@ def _get_rotated_nddata_from_label(
         lat_axis = wcs.wcs.lat
         lon_axis = wcs.wcs.lng
 
-    if (
-        not has_east_left and target_wcs_east_left and
-        'imviz-compass' in [item['name'] for item in app.state.tray_items]
-    ):
-        # if an east/west flip is necessary, pass that along to the compass:
-        compass_plugin = app.get_tray_item_from_name('imviz-compass')
-        compass_plugin.flip_horizontal = not compass_plugin.flip_horizontal
-
     if cdelt_signs is None:
         cdelt_signs = [None, None]
         cdelt_signs[lon_axis] = (
