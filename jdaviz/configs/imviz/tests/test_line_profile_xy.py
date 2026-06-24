@@ -34,7 +34,7 @@ class TestLineProfileXYPixelLinked(BaseImviz_WCS_NoWCS):
 
         # Add data with unit
         ndd = NDData(np.ones((10, 10)), unit=u.nJy)
-        self.imviz.load_data(ndd, data_label='ndd', show_in_viewer=False)
+        self.imviz.load(ndd, data_label='ndd', format='Image', show_in_viewer=False)
 
         viewer_2 = self.imviz.create_image_viewer()
         self.imviz._app.add_data_to_viewer(viewer_2.reference_id, 'has_wcs[SCI,1]')
@@ -148,7 +148,7 @@ class TestLineProfileXYWCSLinked(BaseDeconfiggedImage_WCS_WCS):
 def test_line_profile_with_nan(imviz_helper):
     arr = np.ones((10, 10))
     arr[5, 5] = np.nan
-    imviz_helper.load_data(arr)
+    imviz_helper.load(arr, format='Image')
 
     lp_plugin = imviz_helper.plugins['Image Profiles (XY)']._obj
     lp_plugin.plugin_opened = True

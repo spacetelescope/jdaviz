@@ -94,7 +94,7 @@ class TestParseImage:
             parse_data(imviz_helper._app, np.zeros(2))
 
         # Passing in data_label keyword as posarg.
-        imviz_helper.load_data(np.zeros((2, 2)), 'some_array', show_in_viewer=False)
+        imviz_helper.load(np.zeros((2, 2)), 'some_array', show_in_viewer=False)
         data = imviz_helper._app.data_collection[0]
         comp = data.get_component('DATA')
         assert data.label == 'some_array'
@@ -108,16 +108,16 @@ class TestParseImage:
         slice_shape = (2, 3)
         arr = np.stack([np.zeros(slice_shape) + i for i in range(n_slices)])
         data_label = 'my_slices'
-        viewer = imviz_helper.viewers.get('imviz-0')
+        viewer = imviz_helper.viewers.get('Image')
 
         if not manual_loop:
             # We use higher level load_data() here to make sure linking does not crash.
-            imviz_helper.load_data(arr, data_label=data_label)
+            imviz_helper.load(arr, data_label=data_label, format='Image')
         else:
             # Manual loop with unique labels for each slice.
             with imviz_helper.batch_load():
                 for i in range(n_slices):
-                    imviz_helper.load_data(arr[i, :, :], data_label=f'{data_label}_{i}')
+                    imviz_helper.load(arr[i, :, :], data_label=f'{data_label}_{i}', format='Image')
                 # all set_data_visibility calls must be deferred
                 # no layers should be loaded into the viewer yet.
                 assert viewer.data_menu.data_labels_loaded == []
@@ -147,7 +147,7 @@ class TestParseImage:
         # When more than 16 slices are provided, only the first 16 are loaded
         # Note: warning about 16+ slices is emitted during importer creation but is
         # suppressed during the resolver's format probing phase (by design)
-        imviz_helper.load_data(np.ones((17, 5, 5)))
+        imviz_helper.load(np.ones((17, 5, 5)), format='Image')
 
         # Verify that only 16 slices are loaded (the limit)
         assert len(imviz_helper._app.data_collection) == 16
@@ -156,20 +156,20 @@ class TestParseImage:
 
     def test_parse_numpy_array_4d(self, imviz_helper):
         # Check logic is in higher level method.
-        imviz_helper.load_data(np.ones((1, 2, 5, 5)))
+        imviz_helper.load(np.ones((1, 2, 5, 5)))
         assert len(imviz_helper._app.data_collection) == 2
         assert imviz_helper._app.data_collection[0].shape == (5, 5)
         assert imviz_helper._app.data_collection[1].shape == (5, 5)
 
         with pytest.raises(ValueError, match='cannot load this array with ndim'):
-            imviz_helper.load_data(np.ones((2, 2, 5, 5)))
+            imviz_helper.load(np.ones((2, 2, 5, 5)), format='Image')
 
     def test_parse_nddata_simple(self, imviz_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this NDData with ndim=1'):
             parse_data(imviz_helper._app, NDData([1, 2, 3, 4]))
 
         ndd = NDData([[1, 2], [3, 4]])
-        imviz_helper.load_data(ndd, data_label='some_data', show_in_viewer=False)
+        imviz_helper.load(ndd, data_label='some_data', format='Image', show_in_viewer=False)
         data = imviz_helper._app.data_collection[0]
         comp = data.get_component('DATA')
         assert data.label == 'some_data[DATA]'
@@ -184,7 +184,7 @@ class TestParseImage:
          (NDData([[1, 2], [3, 4]], uncertainty=StdDevUncertainty([[0.1, 0.2], [0.3, 0.4]])),
           ['DATA', 'UNCERTAINTY'])])
     def test_parse_nddata_with_one_only(self, imviz_helper, ndd, attributes):
-        imviz_helper.load_data(ndd, data_label='some_data', show_in_viewer=False)
+        imviz_helper.load(ndd, data_label='some_data', format='Image', show_in_viewer=False)
         for i, attrib in enumerate(attributes):
             data = imviz_helper._app.data_collection[i]
             comp = data.get_component(attrib)
@@ -197,7 +197,7 @@ class TestParseImage:
         ndd = NDData([[1, 2], [3, 4]], mask=[[True, False], [False, False]],
                      uncertainty=StdDevUncertainty([[0.1, 0.2], [0.3, 0.4]]),
                      unit=u.MJy/u.sr, wcs=WCS(naxis=2), meta={'name': 'my_ndd'})
-        imviz_helper.load_data(ndd, data_label='some_data', show_in_viewer=False)
+        imviz_helper.load(ndd, data_label='some_data', format='Image', show_in_viewer=False)
         for i, attrib in enumerate(['DATA', 'MASK', 'UNCERTAINTY']):
             data = imviz_helper._app.data_collection[i]
             comp = data.get_component(attrib)
@@ -223,7 +223,7 @@ class TestParseImage:
         filename = str(tmp_path / f'myimage.{format}')
         imsave(filename, a)
 
-        imviz_helper.load_data(filename, show_in_viewer=False)
+        imviz_helper.load(filename, format='Image', show_in_viewer=False)
         data = imviz_helper._app.data_collection[0]
         assert data.label == 'myimage'
         assert data.shape == (10, 10)
@@ -240,7 +240,7 @@ class TestParseImage:
             hdu.writeto(fpath, overwrite=True)
 
         flist = ','.join(flist)
-        imviz_helper.load_data(flist, show_in_viewer=False)
+        imviz_helper.load(flist, format='Image', show_in_viewer=False)
 
         for i in range(2):
             data = imviz_helper._app.data_collection[i]
@@ -251,7 +251,7 @@ class TestParseImage:
             np.testing.assert_allclose(comp.data.mean(), i)
 
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
-            imviz_helper.load_data(flist, data_label='foo', show_in_viewer=False)
+            imviz_helper.load(flist, data_label='foo', format='Image', show_in_viewer=False)
 
     def test_parse_asdf_in_fits_4d(self, imviz_helper, tmp_path):
         hdulist = fits.HDUList([
@@ -268,7 +268,7 @@ class TestParseImage:
     def test_parse_jwst_nircam_level2(self, imviz_helper):
 
         # Default behavior: Science image
-        imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100, gwcs_to_fits_sip=False)
+        imviz_helper.load(self.jwst_asdf_url_1, format='Image', timeout=100, gwcs_to_fits_sip=False)
 
         data = imviz_helper._app.data_collection[0]
         comp = data.get_component('data')
@@ -350,9 +350,9 @@ class TestParseImage:
 
         # Request specific extension (name + ver, but ver is not used), use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-            imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, ext='DQ',
-                                   data_label='jw01072001001_01101_00001_nrcb1_cal',
-                                   show_in_viewer=False)
+            imviz_helper.load(self.jwst_asdf_url_1, format='Image', cache=True, ext='DQ',
+                              data_label='jw01072001001_01101_00001_nrcb1_cal',
+                              show_in_viewer=False)
         data = imviz_helper._app.data_collection[1]
         comp = data.get_component('dq')
         assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DQ,1]'
@@ -363,9 +363,9 @@ class TestParseImage:
         filename = download_file(self.jwst_asdf_url_1, cache=True)
         with fits.open(filename) as pf:
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                imviz_helper.load_data(pf, ext='SCI',
-                                       data_label='jw01072001001_01101_00001_nrcb1_cal',
-                                       show_in_viewer=False)
+                imviz_helper.load(pf, format='Image', ext='SCI',
+                                  data_label='jw01072001001_01101_00001_nrcb1_cal',
+                                  show_in_viewer=False)
             data = imviz_helper._app.data_collection[2]
             comp = data.get_component('data')  # SCI = DATA
             assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[SCI,1]'
@@ -375,7 +375,7 @@ class TestParseImage:
             # Load all extensions
             imviz_helper._app.data_collection.clear()
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                imviz_helper.load_data(pf, ext='*', show_in_viewer=False)
+                imviz_helper.load(pf, format='Image', ext='*', show_in_viewer=False)
             data = imviz_helper._app.data_collection
             assert len(data.labels) == 7
             assert data.labels[0].endswith('[SCI,1]')
@@ -392,7 +392,7 @@ class TestParseImage:
 
     @pytest.mark.remote_data
     def test_parse_jwst_niriss_grism(self, imviz_helper):
-        imviz_helper.load_data(self.jwst_asdf_url_2, cache=True, show_in_viewer=False)
+        imviz_helper.load(self.jwst_asdf_url_2, format='Image', cache=True, show_in_viewer=False)
         data = imviz_helper._app.data_collection[0]
         for label in ('SCI,1', 'data'):
             if label in data.component_ids():
@@ -411,7 +411,7 @@ class TestParseImage:
         filename = download_file(url, cache=True)
 
         # Default behavior: Load first image
-        imviz_helper.load_data(url, cache=True)
+        imviz_helper.load(url, cache=True)
         data = imviz_helper._app.data_collection[0]
         comp = data.get_component('SCI,1')
         expected_label = os.path.splitext(os.path.basename(url))[0] + '[SCI,1]'
@@ -466,7 +466,7 @@ class TestParseImage:
 
         # Request specific extension (name only), use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-            imviz_helper.load_data(filename, ext='CTX', data_label='jclj01010_drz',
+            imviz_helper.load(filename, format='Image', ext='CTX', data_label='jclj01010_drz',
                                    show_in_viewer=False)
         data = imviz_helper._app.data_collection[1]
         comp = data.get_component('CTX,1')
@@ -476,7 +476,7 @@ class TestParseImage:
 
         # Request specific extension and use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-            imviz_helper.load_data(filename, ext='WHT', data_label='jclj01010_drz',
+            imviz_helper.load(filename, format='Image', ext='WHT', data_label='jclj01010_drz',
                                    show_in_viewer=False)
         data = imviz_helper._app.data_collection[2]
         comp = data.get_component('WHT,1')
@@ -488,7 +488,7 @@ class TestParseImage:
         with fits.open(filename) as pf:
             # Default behavior: Load first image
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                imviz_helper.load_data(pf, show_in_viewer=False)
+                imviz_helper.load(pf, format='Image', show_in_viewer=False)
             data = imviz_helper._app.data_collection[3]
             assert data.label.startswith('Image') and data.label.endswith('[SCI,1]')
             assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
@@ -496,7 +496,7 @@ class TestParseImage:
 
             # Request specific extension (name only), use given label
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                imviz_helper.load_data(pf, ext='CTX', show_in_viewer=False)
+                imviz_helper.load(pf, format='Image', ext='CTX', show_in_viewer=False)
             data = imviz_helper._app.data_collection[4]
             assert data.label.startswith('Image') and data.label.endswith('[CTX,1]')
             assert data.meta['EXTNAME'] == 'CTX'
@@ -504,7 +504,7 @@ class TestParseImage:
 
             # Pass in HDU directly, use given label
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                imviz_helper.load_data(pf[2], data_label='foo', show_in_viewer=False)
+                imviz_helper.load(pf[2], format='Image', data_label='foo', show_in_viewer=False)
             data = imviz_helper._app.data_collection[5]
             assert data.label == 'foo[WHT,1]'
             assert data.meta['EXTNAME'] == 'WHT'
@@ -513,7 +513,7 @@ class TestParseImage:
             # Load all extensions
             imviz_helper._app.data_collection.clear()
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                imviz_helper.load_data(filename, ext='*', show_in_viewer=False)
+                imviz_helper.load(filename, format='Image', ext='*', show_in_viewer=False)
             data = imviz_helper._app.data_collection
             assert len(data.labels) == 3
             assert data.labels[0].endswith('[SCI,1]')
@@ -538,8 +538,8 @@ class TestParseImage:
         Test gwcs_to_fits_sip as an argument to load_data until it is
         fully deprecated.
         """
-        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True,
-                               gwcs_to_fits_sip=gwcs_to_fits_sip)
+        imviz_helper.load(self.jwst_asdf_url_1, format='Image', cache=True,
+                          gwcs_to_fits_sip=gwcs_to_fits_sip)
 
         data = imviz_helper._app.data_collection[0]
         assert isinstance(data.coords, expected_cls)
@@ -561,5 +561,5 @@ def test_load_image_imviz_without_format(imviz_helper, tmp_path):
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
 def test_roman_parser(imviz_helper, roman_imagemodel):
-    imviz_helper.load_data(roman_imagemodel, data_label='roman_wfi_image_model', ext='data')
+    imviz_helper.load(roman_imagemodel, data_label='roman_wfi_image_model', ext='data')
     assert len(imviz_helper._app.data_collection) == 1

@@ -23,10 +23,10 @@ from numpy.testing import assert_allclose
     [(None, 'imviz-1'),
      ('babylon-5', 'babylon-5')])
 def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
-    assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
+    assert imviz_helper._app.get_viewer_ids() == ['Image']
 
     viewer = imviz_helper.create_image_viewer(viewer_name=desired_name)
-    viewer_names = sorted(['imviz-0', actual_name])
+    viewer_names = sorted(['Image', actual_name])
     assert viewer.top_visible_data_label == ''
     assert isinstance(viewer, ImvizImageView)
     assert viewer is imviz_helper._app._viewer_store.get(actual_name), list(imviz_helper._app._viewer_store.keys())  # noqa
@@ -41,14 +41,14 @@ def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
     po.viewer = viewer_names
 
     imviz_helper.destroy_viewer(actual_name)
-    assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
-    assert po.viewer.selected == ['imviz-0']
-    assert po.viewer.labels == ['imviz-0']
+    assert imviz_helper._app.get_viewer_ids() == ['Image']
+    assert po.viewer.selected == ['Image']
+    assert po.viewer.labels == ['Image']
 
 
 def test_create_viewer_align_by_wcs(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
-    imviz_helper.load_data(data, data_label='my_data')
+    imviz_helper.load(data, data_label='my_data', format='Image')
 
     imviz_helper.create_image_viewer(viewer_name='new-viewer')
     dm = imviz_helper.viewers['new-viewer'].data_menu
@@ -64,7 +64,7 @@ def test_create_viewer_align_by_wcs(imviz_helper, image_2d_wcs):
 
 def test_align_by_wcs_create_viewer(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
-    imviz_helper.load_data(data, data_label='my_data')
+    imviz_helper.load(data, data_label='my_data', format='Image')
 
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
@@ -84,20 +84,20 @@ def test_get_viewer_created(imviz_helper):
 
 
 def test_destroy_viewer_invalid(imviz_helper):
-    assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
+    assert imviz_helper._app.get_viewer_ids() == ['Image']
 
     imviz_helper.destroy_viewer('foo')
-    assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
+    assert imviz_helper._app.get_viewer_ids() == ['Image']
 
     with pytest.raises(ValueError, match='cannot be destroyed'):
-        imviz_helper.destroy_viewer('imviz-0')
-    assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
+        imviz_helper.destroy_viewer('Image')
+    assert imviz_helper._app.get_viewer_ids() == ['Image']
 
 
 def test_destroy_viewer_with_subset(imviz_helper):
     """Regression test for https://github.com/spacetelescope/jdaviz/issues/1614"""
     arr = np.ones((10, 10))
-    imviz_helper.load_data(arr, data_label='my_array')
+    imviz_helper.load(arr, data_label='my_array', format='Image')
 
     # Create a second viewer.
     imviz_helper.create_image_viewer(viewer_name='second')
@@ -131,25 +131,25 @@ def test_mastviz_config():
 
     app = PrivateApplication(cc)
     im = Imviz(app)
-    im.load_data(np.ones((2, 2)), data_label='my_array')
+    im.load(np.ones((2, 2)), data_label='my_array', format='Image')
 
     assert im._app.get_viewer_ids() == ['mastviz-0']
     assert im._app.data_collection[0].shape == (2, 2)
 
 
-def test_zoom_center_radius_init(imviz_helper):
+def test_zoom_center_radius_init(imviz_helper, default_viewer):
     """Regression test for https://github.com/spacetelescope/jdaviz/issues/3217"""
     arr = np.ones((10, 10))
-    imviz_helper.load_data(arr, data_label='my_array')
-    assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_center_x > 0
-    assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_center_y > 0
-    assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_radius > 0
+    imviz_helper.load(arr, data_label='my_array', format='Image')
+    assert default_viewer._obj.glue_viewer.state.zoom_center_x > 0
+    assert default_viewer._obj.glue_viewer.state.zoom_center_y > 0
+    assert default_viewer._obj.glue_viewer.state.zoom_radius > 0
 
 
 def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
                                  sky_coord_only_source_catalog):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
-    imviz_helper.load_data(data, data_label='my_data')
+    imviz_helper.load(data, data_label='my_data', format='Image')
 
     # change alignment to WCS to enable catalog visibility
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
@@ -158,7 +158,7 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
     imviz_helper.load(sky_coord_only_source_catalog, format='Catalog',
                       data_label='my_catalog')
 
-    iv = imviz_helper.viewers['imviz-0']
+    iv = imviz_helper.viewers['Image']
     dm = iv.data_menu
     po = imviz_helper.plugins['Plot Options']
 
@@ -202,7 +202,7 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
     assert 'my_catalog' not in po.layer.choices
 
     # test loading/removing another image dataset, which involves linking
-    imviz_helper.load_data(data, data_label='my_data_2')
+    imviz_helper.load(data, data_label='my_data_2', format='Image')
     dm.layer.selected = ['my_data_2[DATA]']
     dm.remove_from_app()
 
@@ -213,8 +213,8 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
 
 
 def test_get_viewport_sky_region_wcs(imviz_helper, image_hdu_wcs):
-    imviz_helper.load(image_hdu_wcs)
-    viewer = imviz_helper.viewers['imviz-0']
+    imviz_helper.load(image_hdu_wcs, format='Image')
+    viewer = imviz_helper.viewers['Image']
     region = viewer.get_viewport_region()
 
     expected_vertices = SkyCoord(
@@ -234,8 +234,8 @@ def test_get_viewport_sky_region_gwcs(imviz_helper):
     data = np.ones(shape)
     ndd = NDData(data=data, wcs=create_example_gwcs(shape))
 
-    imviz_helper.load(ndd)
-    viewer = imviz_helper.viewers['imviz-0']
+    imviz_helper.load(ndd, format='Image')
+    viewer = imviz_helper.viewers['Image']
     region = viewer.get_viewport_region()
 
     expected_vertices = SkyCoord(
@@ -255,8 +255,8 @@ def test_get_viewport_sky_no_wcs(imviz_helper):
     data = np.ones(shape)
     ndd = NDData(data=data)
 
-    imviz_helper.load(ndd)
-    viewer = imviz_helper.viewers['imviz-0']
+    imviz_helper.load(ndd, format='Image')
+    viewer = imviz_helper.viewers['Image']
 
     with pytest.warns(UserWarning, match="does not have valid WCS"):
         viewer.get_viewport_region()
@@ -267,8 +267,8 @@ def test_get_viewport_pixel_region(imviz_helper):
     data = np.ones(shape)
     ndd = NDData(data=data, wcs=create_example_gwcs(shape))
 
-    imviz_helper.load(ndd)
-    viewer = imviz_helper.viewers['imviz-0']
+    imviz_helper.load(ndd, format='Image')
+    viewer = imviz_helper.viewers['Image']
 
     data_label = imviz_helper._app.data_collection[0].label
     region = viewer.get_viewport_region('pixel', data_label)
@@ -284,10 +284,10 @@ def test_get_viewport_pixel_region_bad_label(imviz_helper):
     shape = (10, 10)
     data = np.ones(shape)
     ndd = NDData(data=data)
-    imviz_helper.load(ndd, data_label='label 1')
+    imviz_helper.load(ndd, data_label='label 1', format='Image')
 
     with pytest.raises(ValueError, match="No data found with label xyz"):
-        viewer = imviz_helper.viewers['imviz-0']
+        viewer = imviz_helper.viewers['Image']
         viewer.get_viewport_region('pixel', 'xyz')
 
 
@@ -295,11 +295,11 @@ def test_get_viewport_pixel_region_no_label(imviz_helper):
     shape = (10, 10)
     data = np.ones(shape)
     ndd = NDData(data=data)
-    imviz_helper.load(ndd, data_label='label 1')
+    imviz_helper.load(ndd, data_label='label 1', format='Image')
 
     with pytest.raises(ValueError,
                        match="`get_viewport_region` requires a data label"):
-        viewer = imviz_helper.viewers['imviz-0']
+        viewer = imviz_helper.viewers['Image']
         viewer.get_viewport_region('pixel')
 
 
@@ -319,14 +319,15 @@ class TestDeleteData(BaseImviz_WCS_NoWCS):
 
 class TestRegionOverlay:
     @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_helper):
+    def setup_class(self, imviz_helper, default_viewer):
         np.random.seed(42)
         # Data with WCS
         hdu_wcs = _image_hdu_wcs(arr=np.arange(100).reshape((10, 10)))
-        imviz_helper.load_data(hdu_wcs)
+        imviz_helper.load(hdu_wcs, format='Image')
 
         self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
+        # Use provided default_viewer fixture
+        self.viewer = default_viewer._obj.glue_viewer
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)

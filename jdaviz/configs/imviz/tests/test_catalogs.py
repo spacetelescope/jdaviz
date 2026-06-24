@@ -47,7 +47,7 @@ class TestCatalogs:
         arr = np.ones((10, 10))
         ndd = NDData(arr, wcs=image_2d_wcs)
 
-        imviz_helper.load_data(ndd, data_label='no_results_data')
+        imviz_helper.load(ndd, data_label='no_results_data', format='Image')
 
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
         catalogs_plugin.plugin_opened = True
@@ -88,7 +88,7 @@ class TestCatalogs:
                             'CRPIX2': 745.0,
                             'CRVAL2': 1.54470013629,
                             'NAXIS2': 1489})
-        imviz_helper.load_data(hdu1, data_label='has_wcs')
+        imviz_helper.load(hdu1, data_label='has_wcs', format='Image')
 
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]
         catalogs_plugin._obj.plugin_opened = True
@@ -111,7 +111,7 @@ class TestCatalogs:
         #   query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, ...)
 
         # Zoom in so we have to filter sources outside the viewer bounds
-        viewer = imviz_helper._app.get_viewer('imviz-0')
+        viewer = imviz_helper._app.get_viewer('Image')
         viewer.state.x_min = 800
         viewer.state.x_max = 1200
         viewer.state.y_min = 800
@@ -177,10 +177,10 @@ class TestCatalogs:
         assert catalogs_plugin._obj.results_available
         assert catalogs_plugin._obj.number_of_results == catalogs_plugin.max_sources
 
-        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min == 279.0
-        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max == 1768.0
-        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min == -0.5
-        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max == 1488.5
+        assert imviz_helper.viewers['Image']._obj.glue_viewer.state.x_min == 279.0
+        assert imviz_helper.viewers['Image']._obj.glue_viewer.state.x_max == 1768.0
+        assert imviz_helper.viewers['Image']._obj.glue_viewer.state.y_min == -0.5
+        assert imviz_helper.viewers['Image']._obj.glue_viewer.state.y_max == 1488.5
 
         # Re-populate the table with a new search
         with pytest.warns(ResourceWarning):
@@ -194,13 +194,13 @@ class TestCatalogs:
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min, 1046.377555, atol=0.1)
+            imviz_helper.viewers['Image']._obj.glue_viewer.state.x_min, 1046.377555, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max, 1098.748805, atol=0.1)
+            imviz_helper.viewers['Image']._obj.glue_viewer.state.x_max, 1098.748805, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min, 699.110485, atol=0.1)
+            imviz_helper.viewers['Image']._obj.glue_viewer.state.y_min, 699.110485, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max, 751.481735, atol=0.1)
+            imviz_helper.viewers['Image']._obj.glue_viewer.state.y_max, 751.481735, atol=0.1)
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
@@ -259,7 +259,7 @@ def test_catalog_reingestion(imviz_helper, tmp_path):
                         'CRPIX2': 745.0,
                         'CRVAL2': 1.54470013629,
                         'NAXIS2': 1489})
-    imviz_helper.load_data(hdu1, data_label='has_wcs')
+    imviz_helper.load(hdu1, data_label='has_wcs', format='Image')
 
     catalog_plg = imviz_helper.plugins['Catalog Search']
     export_plg = imviz_helper.plugins['Export']
@@ -290,9 +290,9 @@ def test_catalog_reingestion(imviz_helper, tmp_path):
 
 
 @pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
-def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
+def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path, default_viewer):
     # Since we are not really displaying, need this to test zoom.
-    viewer = imviz_helper.default_viewer._obj.glue_viewer
+    viewer = default_viewer._obj.glue_viewer
     viewer.shape = (100, 100)
     viewer.state._set_axes_aspect_ratio(1)
 
@@ -302,7 +302,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     n_entries = len(tbl)
 
     ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd, data_label='data_with_wcs')
+    imviz_helper.load(ndd, data_label='data_with_wcs', format='Image')
     assert len(imviz_helper._app.data_collection) == 1
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
@@ -350,10 +350,10 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert not catalogs_plugin._obj.results_available
     assert len(imviz_helper._app.data_collection) == 1  # markers gone for good
 
-    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min == -0.5
-    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max == 9.5
-    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min == -0.5
-    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max == 9.5
+    assert imviz_helper.viewers['Image']._obj.glue_viewer.state.x_min == -0.5
+    assert imviz_helper.viewers['Image']._obj.glue_viewer.state.x_max == 9.5
+    assert imviz_helper.viewers['Image']._obj.glue_viewer.state.y_min == -0.5
+    assert imviz_helper.viewers['Image']._obj.glue_viewer.state.y_max == 9.5
     # Re-populate the table with a new search
     out_tbl = catalogs_plugin.search()
     assert len(out_tbl) > 0
@@ -364,25 +364,25 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # test the zooming using the default 'padding' of 2% of the viewer size
     # around selected points
     catalogs_plugin.zoom_to_selected()
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min,
+    assert_allclose(imviz_helper.viewers['Image']._obj.glue_viewer.state.x_min,
                     -0.01966, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max,
+    assert_allclose(imviz_helper.viewers['Image']._obj.glue_viewer.state.x_max,
                     0.02034, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min,
+    assert_allclose(imviz_helper.viewers['Image']._obj.glue_viewer.state.y_min,
                     0.980008, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max,
+    assert_allclose(imviz_helper.viewers['Image']._obj.glue_viewer.state.y_max,
                     1.020008, rtol=1e-4)
 
 
-def test_zoom_to_selected(imviz_helper, image_2d_wcs):
+def test_zoom_to_selected(imviz_helper, image_2d_wcs, default_viewer):
     # Since we are not really displaying, need this to test zoom.
-    viewer = imviz_helper.default_viewer._obj.glue_viewer
+    viewer = default_viewer._obj.glue_viewer
     viewer.shape = (100, 100)
     viewer.state._set_axes_aspect_ratio(1)
 
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load(ndd, data_label='data_with_wcs', format='Image')
 
     # sources at pixel coords ~(100, 100), ~(200, 200)
     sky_coord = SkyCoord(ra=[337.49056532, 337.46086081],
@@ -398,7 +398,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     catalogs_plugin.select_all()
 
     # check viewer limits before zoom
-    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.glue_viewer.get_limits()
+    xmin, xmax, ymin, ymax = default_viewer._obj.glue_viewer.get_limits()
     assert xmin == ymin == -0.5
     assert xmax == ymax == 499.5
 
@@ -447,7 +447,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
 def test_select_tool(imviz_helper, image_2d_wcs):
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load(ndd, data_label='data_with_wcs', format='Image')
 
     # write out catalog to file so we can read it back in
     # todo: if tables can be loaded directly at some point, do that
@@ -462,13 +462,13 @@ def test_select_tool(imviz_helper, image_2d_wcs):
     catalogs_plugin.import_catalog(tbl)
 
     # the tool isn't available in the default toolbar
-    toolbar = imviz_helper.viewers['imviz-0']._obj.glue_viewer.toolbar
+    toolbar = imviz_helper.viewers['Image']._obj.glue_viewer.toolbar
     assert 'jdaviz:selectcatalog' not in toolbar.tools
 
     catalogs_plugin._obj.toggle_custom_toolbar()
     assert 'jdaviz:selectcatalog' in toolbar.tools
     tool = toolbar.tools['jdaviz:selectcatalog']
-    mark = catalogs_plugin._obj._get_mark(imviz_helper.viewers['imviz-0']._obj.glue_viewer)
+    mark = catalogs_plugin._obj._get_mark(imviz_helper.viewers['Image']._obj.glue_viewer)
     assert tool.is_visible() is False
 
     catalogs_plugin.search(error_on_fail=True)
@@ -520,7 +520,7 @@ def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
     })
 
     ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd, data_label='data_with_wcs')
+    imviz_helper.load(ndd, data_label='data_with_wcs', format='Image')
     assert len(imviz_helper._app.data_collection) == 1
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
@@ -545,7 +545,7 @@ def test_select_catalog_table_rows(imviz_helper, image_2d_wcs):
 
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load(ndd, format='Image')
 
     sky_coord = SkyCoord(ra=[337.49, 337.46, 337.47, 337.48, 337.49, 337.50],
                          dec=[-20.81, -20.78, -20.79, -20.80, -20.77, -20.76],

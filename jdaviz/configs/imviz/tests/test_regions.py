@@ -170,7 +170,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
     def test_regions_annulus_from_load_data(self):
         # This file actually will load 2 annuli
         regfile = get_pkg_data_filename('data/ds9_annulus_01.reg')
-        self.imviz.load_data(regfile)
+        self.imviz.load(regfile)
         assert len(self.imviz._app.data_collection) == 2  # Make sure not loaded as data
 
         # Test data is set up such that 1 pixel is 1 arcsec.
@@ -208,12 +208,12 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         self.arr = np.ones((1024, 1024))
         self.raw_regions = Regions.read(self.region_file, format='ds9')
 
-    def test_ds9_load_all(self, imviz_helper):
+    def test_ds9_load_all(self, imviz_helper, default_viewer):
         with pytest.raises(ValueError, match="Cannot load regions without data"):
-            imviz_helper.load_data(self.region_file)
+            imviz_helper.load(self.region_file)
 
-        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
-        imviz_helper.load_data(self.arr, data_label='my_image')
+        self.viewer = default_viewer._obj.glue_viewer
+        imviz_helper.load(self.arr, data_label='my_image', format='image')
         bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
             self.region_file, return_bad_regions=True)
         assert len(bad_regions) == 1
@@ -229,9 +229,9 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         # The other 1 is MaskedSubset
         self.verify_region_loaded('MaskedSubset 1', count=1)
 
-    def test_ds9_load_two_good(self, imviz_helper):
-        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
-        imviz_helper.load_data(self.arr, data_label='my_image')
+    def test_ds9_load_two_good(self, imviz_helper, default_viewer):
+        self.viewer = default_viewer._obj.glue_viewer
+        imviz_helper.load(self.arr, data_label='my_image', format='image')
         bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
             self.region_file, max_num_regions=2, return_bad_regions=True)
         assert len(bad_regions) == 0
@@ -239,18 +239,18 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
         self.verify_region_loaded('MaskedSubset 1', count=0)
 
-    def test_ds9_load_one_bad(self, imviz_helper):
-        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
-        imviz_helper.load_data(self.arr, data_label='my_image')
+    def test_ds9_load_one_bad(self, imviz_helper, default_viewer):
+        self.viewer = default_viewer._obj.glue_viewer
+        imviz_helper.load(self.arr, data_label='my_image', format='image')
         bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
             self.raw_regions[6], return_bad_regions=True)
         assert len(bad_regions) == 1
         assert imviz_helper.plugins['Subset Tools'].get_regions() == {}
         self.verify_region_loaded('MaskedSubset 1', count=0)
 
-    def test_ds9_load_one_good_one_bad(self, imviz_helper):
-        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
-        imviz_helper.load_data(self.arr, data_label='my_image')
+    def test_ds9_load_one_good_one_bad(self, imviz_helper, default_viewer):
+        self.viewer = default_viewer._obj.glue_viewer
+        imviz_helper.load(self.arr, data_label='my_image', format='image')
         bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
             [self.raw_regions[3], self.raw_regions[6]], return_bad_regions=True)
         assert len(bad_regions) == 1

@@ -91,7 +91,7 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
     ]
     cubeviz_helper.plugins['Subset Tools'].import_region(regions, combination_mode='new')
 
-    extract_plugin = deconfigged_helper.plugins['3D Spectral Extraction']
+    extract_plugin = cubeviz_helper.plugins['3D Spectral Extraction']
     extract_plugin.function = "Sum"
     expected_uncert = 2
 
@@ -559,7 +559,7 @@ def test_spectral_extraction_unit_conv_one_spec(
     assert uc.flux_unit == "Jy"
     uc.flux_unit.selected = "MJy"
     assert spectrum_viewer.state.y_display_unit == "MJy"
-    spec_extr_plugin = deconfigged_helper.plugins['3D Spectral Extraction']
+    spec_extr_plugin = cubeviz_helper.plugins['3D Spectral Extraction']
     # Overwrite the one and only default extraction.
     collapsed = spec_extr_plugin.extract()
     # Actual values not in display unit but should not affect display unit.

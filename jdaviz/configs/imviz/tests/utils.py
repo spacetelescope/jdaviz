@@ -53,19 +53,20 @@ def _image_nddata_wcs(arr=np.ones((10, 10)), unit=u.Jy, name='SCI'):
 
 class BaseImviz_WCS_NoWCS:
     @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_helper):
+    def setup_class(self, imviz_helper, default_viewer):
         # Data with WCS
         hdu_wcs = _image_hdu_wcs(arr=np.arange(100).reshape((10, 10)))
-        imviz_helper.load_data(hdu_wcs, data_label='has_wcs')
+        imviz_helper.load(hdu_wcs, data_label='has_wcs')
 
         # Data without WCS
         hdu_nowcs = _image_hdu_nowcs(arr=np.arange(100).reshape((10, 10)))
-        imviz_helper.load_data(hdu_nowcs, data_label='no_wcs')
+        imviz_helper.load(hdu_nowcs, format='Image', data_label='no_wcs')
         imviz_helper._app.data_collection[1].coords = None
 
         self.wcs = WCS(hdu_wcs.header)
         self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
+        # default_viewer fixture attached the viewer wrapper to imviz_helper
+        self.viewer = default_viewer._obj.glue_viewer
         self.subset_plugin = self.imviz.plugins['Subset Tools']
         self.orientation_plugin = self.imviz.plugins['Orientation']
 
@@ -118,7 +119,7 @@ class BaseDeconfiggedImage_WCS_WCS:
 
 class BaseImviz_WCS_GWCS:
     @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_helper):
+    def setup_class(self, imviz_helper, default_viewer):
         arr = np.zeros((10, 8))  # (ny, nx)
         arr[0, 0] = 1  # Bright corner for sanity check
 
@@ -159,13 +160,13 @@ class BaseImviz_WCS_GWCS:
         # Load data into Imviz:
         # 1. Data with FITS WCS and unit.
         # 2. Data with GWCS (rotated w.r.t. FITS WCS) and no unit.
-        imviz_helper.load_data(NDData(arr, wcs=w_fits, unit='electron/s'), data_label='fits_wcs')
-        imviz_helper.load_data(NDData(arr, wcs=w_gwcs), data_label='gwcs')
+        imviz_helper.load(NDData(arr, wcs=w_fits, unit='electron/s'), data_label='fits_wcs', format='Image')
+        imviz_helper.load(NDData(arr, wcs=w_gwcs), data_label='gwcs', format='Image')
 
         self.wcs_1 = w_fits
         self.wcs_2 = w_gwcs
         self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
+        self.viewer = default_viewer._obj.glue_viewer
         self.subset_plugin = self.imviz.plugins['Subset Tools']
         self.orientation_plugin = self.imviz.plugins['Orientation']
 
@@ -176,7 +177,7 @@ class BaseImviz_WCS_GWCS:
 
 class BaseImviz_GWCS_GWCS:
     @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_helper):
+    def setup_class(self, imviz_helper, default_viewer):
         arr = np.zeros((10, 8))  # (ny, nx)
         arr[0, 0] = 1  # Bright corner for sanity check
 
@@ -211,13 +212,13 @@ class BaseImviz_GWCS_GWCS:
         w_gwcs_2.bounding_box = ((0, 8), (0, 10)) * u.pix  # x, y
 
         # Load data into Imviz
-        imviz_helper.load_data(NDData(arr, wcs=w_gwcs_1, unit='electron/s'), data_label='gwcs1')
-        imviz_helper.load_data(NDData(arr, wcs=w_gwcs_2), data_label='gwcs2')
+        imviz_helper.load(NDData(arr, wcs=w_gwcs_1, unit='electron/s'), data_label='gwcs1', format='Image')
+        imviz_helper.load(NDData(arr, wcs=w_gwcs_2), data_label='gwcs2', format='Image')
 
         self.wcs_1 = w_gwcs_1
         self.wcs_2 = w_gwcs_2
         self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
+        self.viewer = default_viewer._obj.glue_viewer
         self.subset_plugin = self.imviz.plugins['Subset Tools']
         self.orientation_plugin = self.imviz.plugins['Orientation']
 
