@@ -30,7 +30,7 @@
 
       <plugin-select
         :items="producttype_choices"
-        :selected.sync="producttype_selected"
+        v-model:selected="producttype_selected"
         label="Data Product"
         hint="Type of Data Products to Query"
         api_hint="ldr.producttype ="
