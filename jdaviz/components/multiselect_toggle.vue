@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-row>
+    <j-flex-row>
       <div style="width: calc(100% - 32px)">
       </div>
       <div style="width: 32px">
@@ -14,12 +14,12 @@
           </v-btn>
         </j-tooltip>
       </div>
-    </v-row>
+    </j-flex-row>
   </div>
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['multiselect', 'icon_checktoradial', 'icon_radialtocheck', 'tooltip']
 };
 </script>

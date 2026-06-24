@@ -12,7 +12,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     props: ['label', 'api_hint', 'api_hints_enabled'],
   };
 </script>

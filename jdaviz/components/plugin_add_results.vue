@@ -44,9 +44,9 @@
       ></plugin-viewer-create-new>
     </div>
 
-    <v-row v-if="show_viewer_switch !== false && add_to_viewer_items.length === 2">
+    <j-flex-row v-if="show_viewer_switch !== false && add_to_viewer_items.length === 2">
       <v-switch v-if="label_overwrite"
-        :input-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
+        :model-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
         :label="addToViewerText"
         :class="api_hints_enabled && add_results_api_hint ? 'api-hint hide-input' : 'hide-input'"
         :disabled="true"
@@ -54,20 +54,20 @@
         persistent-hint
       ></v-switch>
       <v-switch v-else
-        :input-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
-        @change="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
+        :model-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
+        @update:modelValue="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
         :label="addToViewerText"
         :class="api_hints_enabled && add_results_api_hint ? 'api-hint' : null"
         hint='Immediately plot results.  Data entry will be available to toggle in the data dropdown'
         persistent-hint
       ></v-switch>
-    </v-row>
+    </j-flex-row>
 
     <slot></slot>
 
     <!-- currently not exposed to users, uncomment this block and include in the
          user API for the AutoUpdate component to re-enable
-    <v-row v-if="auto_update_result !== undefined">
+    <j-flex-row v-if="auto_update_result !== undefined">
       <v-switch
         v-model="auto_update_result"
         @change="(e) => {$emit('update:auto_update_result', auto_update_result)}"
@@ -76,10 +76,10 @@
         persistent-hint
       >
       </v-switch>
-    </v-row>
+    </j-flex-row>
     -->
 
-    <v-row justify="end">
+    <j-flex-row justify="end">
       <j-tooltip :tooltipcontent="label_overwrite ? action_tooltip+' and replace existing entry' : action_tooltip">
         <plugin-action-button
           :spinner="action_spinner"
@@ -90,7 +90,7 @@
           {{ actionButtonText }}
         </plugin-action-button>
       </j-tooltip>
-    </v-row>
+    </j-flex-row>
   </div>
 </template>
 
@@ -101,7 +101,7 @@
 </style>
 
 <script>
-  module.exports = {
+  export default {
     props: ['add_results_api_hint',
             'label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
             'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint', 'show_viewer_switch',

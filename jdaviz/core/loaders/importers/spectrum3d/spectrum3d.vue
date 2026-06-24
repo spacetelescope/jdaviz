@@ -3,7 +3,7 @@
     <j-plugin-section-header>Flux Cube</j-plugin-section-header>
     <plugin-select
       :items="extension_items"
-      :selected.sync="extension_selected"
+      v-model:selected="extension_selected"
       :show_if_single_entry="true"
       :multiselect="multiselect"
       :nonmultiselect_allow_clear="true"
@@ -15,9 +15,9 @@
     />
     <div v-if="extension_selected.length > 0">
       <plugin-auto-label
-        :value.sync="data_label_value"
+        v-model:value="data_label_value"
         :default="data_label_default"
-        :auto.sync="data_label_auto"
+        v-model:auto="data_label_auto"
         :invalid_msg="data_label_invalid_msg"
         label="Data Label"
         api_hint="ldr.importer.data_label ="
@@ -27,12 +27,12 @@
 
       <plugin-viewer-create-new
         :items="viewer_items"
-        :selected.sync="viewer_selected"
+        v-model:selected="viewer_selected"
         :create_new_items="viewer_create_new_items"
-        :create_new_selected.sync="viewer_create_new_selected"
-        :new_label_value.sync="viewer_label_value"
+        v-model:create_new_selected="viewer_create_new_selected"
+        v-model:new_label_value="viewer_label_value"
         :new_label_default="viewer_label_default"
-        :new_label_auto.sync="viewer_label_auto"
+        v-model:new_label_auto="viewer_label_auto"
         :new_label_invalid_msg="viewer_label_invalid_msg"
         :multiselect="viewer_multiselect"
         :show_multiselect_toggle="false"
@@ -47,7 +47,7 @@
       <j-plugin-section-header>Uncertainty Cube</j-plugin-section-header>
       <plugin-select
         :items="unc_extension_items"
-        :selected.sync="unc_extension_selected"
+        v-model:selected="unc_extension_selected"
         :show_if_single_entry="true"
         :multiselect="multiselect"
         :nonmultiselect_allow_clear="true"
@@ -59,9 +59,9 @@
       />
       <div v-if="unc_extension_selected.length > 0">
         <plugin-auto-label
-          :value.sync="unc_data_label_value"
+          v-model:value="unc_data_label_value"
           :default="unc_data_label_default"
-          :auto.sync="unc_data_label_auto"
+          v-model:auto="unc_data_label_auto"
           :invalid_msg="unc_data_label_invalid_msg"
           label="Data Label for the Uncertainty Cube"
           api_hint="ldr.importer.unc_data_label ="
@@ -71,12 +71,12 @@
 
         <plugin-viewer-create-new
           :items="unc_viewer_items"
-          :selected.sync="unc_viewer_selected"
+          v-model:selected="unc_viewer_selected"
           :create_new_items="unc_viewer_create_new_items"
-          :create_new_selected.sync="unc_viewer_create_new_selected"
-          :new_label_value.sync="unc_viewer_label_value"
+          v-model:create_new_selected="unc_viewer_create_new_selected"
+          v-model:new_label_value="unc_viewer_label_value"
           :new_label_default="unc_viewer_label_default"
-          :new_label_auto.sync="unc_viewer_label_auto"
+          v-model:new_label_auto="unc_viewer_label_auto"
           :new_label_invalid_msg="unc_viewer_label_invalid_msg"
           :multiselect="unc_viewer_multiselect"
           :show_multiselect_toggle="false"
@@ -93,7 +93,7 @@
       <j-plugin-section-header>Mask Cube</j-plugin-section-header>
       <plugin-select
         :items="mask_extension_items"
-        :selected.sync="mask_extension_selected"
+        v-model:selected="mask_extension_selected"
         :show_if_single_entry="true"
         :multiselect="multiselect"
         :nonmultiselect_allow_clear="true"
@@ -105,9 +105,9 @@
       />
       <div v-if="mask_extension_selected.length > 0">
         <plugin-auto-label
-          :value.sync="mask_data_label_value"
+          v-model:value="mask_data_label_value"
           :default="mask_data_label_default"
-          :auto.sync="mask_data_label_auto"
+          v-model:auto="mask_data_label_auto"
           :invalid_msg="mask_data_label_invalid_msg"
           label="Data Label for the Mask Cube"
           api_hint="ldr.importer.mask_data_label ="
@@ -117,12 +117,12 @@
 
         <plugin-viewer-create-new
           :items="mask_viewer_items"
-          :selected.sync="mask_viewer_selected"
+          v-model:selected="mask_viewer_selected"
           :create_new_items="mask_viewer_create_new_items"
-          :create_new_selected.sync="mask_viewer_create_new_selected"
-          :new_label_value.sync="mask_viewer_label_value"
+          v-model:create_new_selected="mask_viewer_create_new_selected"
+          v-model:new_label_value="mask_viewer_label_value"
           :new_label_default="mask_viewer_label_default"
-          :new_label_auto.sync="mask_viewer_label_auto"
+          v-model:new_label_auto="mask_viewer_label_auto"
           :new_label_invalid_msg="mask_viewer_label_invalid_msg"
           :multiselect="mask_viewer_multiselect"
           :show_multiselect_toggle="false"
@@ -139,7 +139,7 @@
       <j-plugin-section-header>DQ (Data Quality) Cube</j-plugin-section-header>
       <plugin-select
         :items="dq_extension_items"
-        :selected.sync="dq_extension_selected"
+        v-model:selected="dq_extension_selected"
         :show_if_single_entry="true"
         :multiselect="multiselect"
         :nonmultiselect_allow_clear="true"
@@ -151,9 +151,9 @@
       />
       <div v-if="dq_extension_selected.length > 0">
         <plugin-auto-label
-          :value.sync="dq_data_label_value"
+          v-model:value="dq_data_label_value"
           :default="dq_data_label_default"
-          :auto.sync="dq_data_label_auto"
+          v-model:auto="dq_data_label_auto"
           :invalid_msg="dq_data_label_invalid_msg"
           label="Data Label for the DQ Cube"
           api_hint="ldr.importer.dq_data_label ="
@@ -162,7 +162,7 @@
         ></plugin-auto-label>
 
         <plugin-switch v-if="config == 'deconfigged'"
-          :value.sync="dq_add_to_flux_viewer"
+          v-model:value="dq_add_to_flux_viewer"
           label="Add to Flux Viewer"
           api_hint="ldr.importer.dq_add_to_flux_viewer ="
           :api_hints_enabled="api_hints_enabled"
@@ -171,12 +171,12 @@
 
         <plugin-viewer-create-new v-if="config === 'cubeviz'"
           :items="dq_viewer_items"
-          :selected.sync="dq_viewer_selected"
+          v-model:selected="dq_viewer_selected"
           :create_new_items="dq_viewer_create_new_items"
-          :create_new_selected.sync="dq_viewer_create_new_selected"
-          :new_label_value.sync="dq_viewer_label_value"
+          v-model:create_new_selected="dq_viewer_create_new_selected"
+          v-model:new_label_value="dq_viewer_label_value"
           :new_label_default="dq_viewer_label_default"
-          :new_label_auto.sync="dq_viewer_label_auto"
+          v-model:new_label_auto="dq_viewer_label_auto"
           :new_label_invalid_msg="dq_viewer_label_invalid_msg"
           :multiselect="dq_viewer_multiselect"
           :show_multiselect_toggle="false"
@@ -191,7 +191,7 @@
 
     <j-plugin-section-header>Extracted Spectrum</j-plugin-section-header>
     <plugin-switch
-      :value.sync="auto_extract"
+      v-model:value="auto_extract"
       label="Extract 1D Spectrum"
       api_hint="ldr.importer.auto_extract ="
       :api_hints_enabled="api_hints_enabled"
@@ -200,7 +200,7 @@
     <div v-if="auto_extract">
       <plugin-select
         :items="function_items.map(i => i.label)"
-        :selected.sync="function_selected"
+        v-model:selected="function_selected"
         label="Function"
         api_hint="ldr.importer.function ="
         :api_hints_enabled="api_hints_enabled"
@@ -208,9 +208,9 @@
       ></plugin-select>
 
       <plugin-auto-label
-        :value.sync="ext_data_label_value"
+        v-model:value="ext_data_label_value"
         :default="ext_data_label_default"
-        :auto.sync="ext_data_label_auto"
+        v-model:auto="ext_data_label_auto"
         :invalid_msg="ext_data_label_invalid_msg"
         label="Extracted 1D Spectrum Data Label"
         api_hint="ldr.importer.ext_data_label ="
@@ -220,12 +220,12 @@
 
       <plugin-viewer-create-new
         :items="ext_viewer_items"
-        :selected.sync="ext_viewer_selected"
+        v-model:selected="ext_viewer_selected"
         :create_new_items="ext_viewer_create_new_items"
-        :create_new_selected.sync="ext_viewer_create_new_selected"
-        :new_label_value.sync="ext_viewer_label_value"
+        v-model:create_new_selected="ext_viewer_create_new_selected"
+        v-model:new_label_value="ext_viewer_label_value"
         :new_label_default="ext_viewer_label_default"
-        :new_label_auto.sync="ext_viewer_label_auto"
+        v-model:new_label_auto="ext_viewer_label_auto"
         :new_label_invalid_msg="ext_viewer_label_invalid_msg"
         :multiselect="ext_viewer_multiselect"
         :show_multiselect_toggle="false"
