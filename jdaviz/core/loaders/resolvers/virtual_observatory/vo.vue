@@ -68,7 +68,6 @@
             hint="Enter a source name or coordinates in degrees to center your query on"
             :disabled="viewer_selected !== 'Manual'"
             :rules="[() => !!source || 'This field is required']"
-            :error-messages="parsed_input_not_resolvable_message ? [parsed_input_not_resolvable_message] : []"
             persistent-hint>
           </v-text-field>
         </div>
