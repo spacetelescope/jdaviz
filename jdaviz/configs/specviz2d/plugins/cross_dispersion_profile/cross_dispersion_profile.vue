@@ -2,23 +2,23 @@
   <j-tray-plugin
     plugin_key="Cross Dispersion Profile"
     :config="config"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link"
     :uses_active_status="uses_active_status"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button"
     :disabled_msg="disabled_msg"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
-    <v-row v-if="plot_available" style="padding: 0px">
-      <jupyter-widget :widget="plot_widget"/>
-    </v-row>
+    <j-flex-row v-if="plot_available" style="padding: 0px">
+      <jupyter-widget v-if="plot_widget" :widget="plot_widget" :key="plot_widget"/>
+    </j-flex-row>
 
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="false"
       label="Data"
       api_hint="plg.dataset ="
@@ -26,7 +26,7 @@
       hint="Select the data to compute the profile."
     />
 
-    <v-row>
+    <v-row class="vuetify2">
       <span v-if="api_hints_enabled" class="api-hint" style="font-size: 10px">
         plg.pixel =
       </span>
@@ -49,14 +49,14 @@
           style="width: 60px"
           label="Pixel"
           hide-details
-          dense
+          density="compact"
           single-line
         />
       </v-col>
     </v-row>
 
     <plugin-switch
-      :value.sync="use_full_width"
+      v-model:value="use_full_width"
       label="Use full cross-dispersion width."
       api_hint="plg.use_full_width = "
       :api_hints_enabled="api_hints_enabled"
@@ -64,7 +64,7 @@
     />
 
     <div v-if="!use_full_width">
-      <v-row>
+      <v-row class="vuetify2">
         <span v-if="api_hints_enabled" class="api-hint" style="font-size: 10px">
           plg.y_pixel =
         </span>
@@ -87,13 +87,13 @@
             style="width: 60px"
             label="Pixel"
             hide-details
-            dense
+            density="compact"
             single-line
           />
         </v-col>
     </v-row>
 
-      <v-row>
+      <v-row class="vuetify2">
         <span v-if="api_hints_enabled" class="api-hint" style="font-size: 10px">
           plg.width =
         </span>
@@ -116,7 +116,7 @@
             style="width: 60px"
             label="Pixel"
             hide-details
-            dense
+            density="compact"
             single-line
           />
         </v-col>

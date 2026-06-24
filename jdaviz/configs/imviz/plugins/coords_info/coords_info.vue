@@ -2,7 +2,7 @@
   <div @mouseover="show_dataset_selected = true" @mouseleave="show_dataset_selected = false" style="min-width: 300px">
     <div v-if="icon" style="position: absolute; height: 100%">
       <v-toolbar-items>
-        <v-btn icon tile>
+        <v-btn icon rounded="0">
           <j-layer-viewer-icon :icon="icon" color="white" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
         </v-btn>
         <span style="display: inline-block; white-space: nowrap; line-height: 14pt; margin: 0; position: absolute; margin-left: 48px">
@@ -28,7 +28,7 @@
     <div v-else style="position: absolute; height: 100%">
       <v-toolbar-items>
         <j-tooltip tipid='coords-info-cycle'>
-          <v-btn icon tile @click="next_layer()">
+          <v-btn icon rounded="0" @click="next_layer()">
             <j-layer-viewer-icon :icon="dataset_icon" color="white" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
           </v-btn>
         </j-tooltip>
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     data: function () {
       return {
         show_dataset_selected: false,

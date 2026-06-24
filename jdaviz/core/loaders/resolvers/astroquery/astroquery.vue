@@ -7,9 +7,9 @@
     :parsed_input_is_empty="parsed_input_is_empty"
     :parsed_input_is_resolvable="parsed_input_is_resolvable"
     :parsed_input_is_query="parsed_input_is_query"
-    :treat_table_as_query.sync="treat_table_as_query"
-    :limit_to_science_products.sync="limit_to_science_products"
-    :can_filter_science.sync="can_filter_science"
+    v-model:treat_table_as_query="treat_table_as_query"
+    v-model:limit_to_science_products="limit_to_science_products"
+    v-model:can_filter_science="can_filter_science"
     :observation_table="observation_table"
     :observation_table_populated="observation_table_populated"
     :file_table="file_table"
@@ -17,9 +17,9 @@
     :file_cache="file_cache"
     :file_timeout="file_timeout"
     :target_items="target_items"
-    :target_selected.sync="target_selected"
+    v-model:target_selected="target_selected"
     :format_items="format_items"
-    :format_selected.sync="format_selected"
+    v-model:format_selected="format_selected"
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
     :valid_import_formats="valid_import_formats"
@@ -36,7 +36,7 @@
 
       <plugin-viewer-select
         :items="viewer_items"
-        :selected.sync="viewer_selected"
+        v-model:selected="viewer_selected"
         :show_if_single_entry="false"
         label="Viewer"
         api_hint="ldr.viewer ="
@@ -44,16 +44,16 @@
         hint="Select a viewer to retrieve center coordinates, or Manual for manual coordinate entry."
       />
 
-      <v-row v-if="viewer_selected !== 'Manual'">
+      <j-flex-row v-if="viewer_selected !== 'Manual'">
         <v-switch
           v-model="coord_follow_viewer_pan"
           label="Follow Viewer Center"
           hint="Automatically adjust coordinates as viewer pans and zooms"
           persistent-hint
         ></v-switch>
-      </v-row>
+      </j-flex-row>
 
-      <v-row>
+      <j-flex-row>
         <div :style="!(viewer_selected !== 'Manual' && !coord_follow_viewer_pan) ? 'width: 100%' : 'width: calc(100% - 32px)'">
           <v-text-field
             v-model="source"
@@ -79,11 +79,11 @@
             </v-btn>
           </j-tooltip>
         </div>
-      </v-row>
+      </j-flex-row>
 
       <plugin-select
         :items="coordframe_choices.map(i => i.label)"
-        :selected.sync="coordframe_selected"
+        v-model:selected="coordframe_selected"
         label="Coordinate Frame"
         api_hint="ldr.coordframe ="
         :api_hints_enabled="api_hints_enabled"
@@ -91,7 +91,7 @@
         :disabled="viewer_selected !== 'Manual'"
       ></plugin-select>
 
-      <v-row justify="space-between">
+      <j-flex-row justify="space-between">
         <div :style="{ width: '55%' }">
           <v-text-field
             v-model.number="radius"
@@ -105,20 +105,20 @@
         <div :style="{ width: '40%' }">
           <plugin-select
             :items="radius_unit_items.map(i => i.label)"
-            :selected.sync="radius_unit_selected"
+            v-model:selected="radius_unit_selected"
             label="Unit"
             api_hint="ldr.radius_unit ="
             :api_hints_enabled="api_hints_enabled"
           ></plugin-select>
         </div>
-      </v-row>
+      </j-flex-row>
 
       <j-plugin-section-header>Telescope/Mission</j-plugin-section-header>
 
       <plugin-select
         :show_if_single_entry="true"
         :items="telescope_items.map(i => i.label)"
-        :selected.sync="telescope_selected"
+        v-model:selected="telescope_selected"
         label="Telescope"
         :search="true"
         api_hint="ldr.telescope ="
@@ -126,7 +126,7 @@
         hint="Select a telescope to search for data"
       ></plugin-select>
 
-      <v-row justify="space-between" style="margin-top: 12px">
+      <j-flex-row justify="space-between" style="margin-top: 12px">
         <v-text-field
           v-model.number='max_results'
           type="number"
@@ -136,12 +136,12 @@
           persistent-hint
           hint="Maximum number of results to return from the query"
         ></v-text-field>
-      </v-row>
+      </j-flex-row>
     </v-form>
 
 
 
-    <v-row class="row-no-outside-padding" justify="end" style="margin-top: 32px">
+    <j-flex-row class="row-no-outside-padding" justify="end" style="margin-top: 32px">
       <plugin-action-button
         :spinner="results_loading"
         :disabled="!all_fields_filled"
@@ -154,19 +154,19 @@
               'Query Archive'
           }}
       </plugin-action-button>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-if="returned_no_results">
+    <j-flex-row v-if="returned_no_results">
       <v-alert type="warning">
         The search returned no results. Please modify your query parameters and try again.
       </v-alert>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-if="returned_max_results">
+    <j-flex-row v-if="returned_max_results">
       <v-alert type="warning">
         The number of results returned has reached the maximum limit set ({{ max_results }}). Consider increasing the maximum results to ensure all data is retrieved.
       </v-alert>
-    </v-row>
+    </j-flex-row>
   </j-loader>
 </template>
 

@@ -18,59 +18,67 @@
       <v-select
         v-for="(widget, idx) in custom_widget_items"
         :key="idx"
-        :value="custom_widget_selected[idx]"
-        @input="(val) => update_widget_selection(idx, val)"
+        :model-value="custom_widget_selected[idx]"
+        @update:modelValue="(val) => update_widget_selection(idx, val)"
         :items="widget.items"
         :placeholder="widget.label"
         :multiple="widget.multiselect"
         :chips="widget.multiselect"
         :small-chips="widget.multiselect"
         deletable-chips
-        dense
+        density="compact"
         solo
         flat
         hide-details
         style="min-width: 120px; max-width: 250px;"
         class="custom-toolbar-select"
-        item-text="label"
+        item-title="label"
         item-value="value"
       ></v-select>
     </span>
 
     <v-btn-toggle v-model="active_tool_id" :style="" class="transparent">
-        <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" v-if="primary && visible" bottom>
-            <template v-slot:activator="{ on }">
-                <v-btn v-on="on" icon :value="id" :disabled="disabled_msg.length > 0" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''} ${disabled_msg.length > 0 ? 'opacity: 0.5;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
-                    <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>
-                    <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
-                </v-btn>
-            </template>
-            <span>{{ disabled_msg.length > 0 ? disabled_msg : tooltip }}{{has_suboptions ? " [click arrow for alt. tools]" : ""}}</span>
+      <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" :key="id">
+        <v-tooltip v-if="primary && visible" location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn v-bind="props" variant="text" density="comfortable" :value="id" :disabled="disabled_msg.length > 0" :style="`min-width: 40px !important; width: 40px !important; height: 40px !important; padding: 0px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''} ${disabled_msg.length > 0 ? 'opacity: 0.5;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
+              <img class="invert-if-dark toolbar-icon-img" :src="img" @click.ctrl.stop=""/>
+              <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ disabled_msg.length > 0 ? disabled_msg : tooltip }}{{has_suboptions ? " [click arrow for alt. tools]" : ""}}</span>
         </v-tooltip>
+      </template>
     </v-btn-toggle>
     <v-menu
       v-model="show_suboptions"
-      :position-x="suboptions_x"
-      :position-y="suboptions_y"
-      absolute
-      offset-y
-      dense
+      :activator="suboptions_target"
+      location="bottom start"
+      origin="top start"
+      :open-on-click="false"
+      :open-on-focus="false"
+      :open-on-hover="false"
       :close-on-click="close_on_click"
     >
       <v-list>
-        <v-tooltip
-          v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)"
-          v-if="menu_ind==suboptions_ind && visible"
-          :key="id"
-          left
-        >
-          <template v-slot:activator="{ on, attrs }">
-            <v-list-item v-bind="attrs" v-on="on" :input-value="primary" @click="() => select_primary([menu_ind, id])">
-              <v-list-item-title><img class='invert-if-dark' :src="img" width="20"/></v-list-item-title>
-            </v-list-item>
-          </template>
-          <span>{{ tooltip }}</span>
-        </v-tooltip>
+        <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)" :key="id">
+          <v-tooltip
+            v-if="menu_ind==suboptions_ind && visible"
+            location="start"
+          >
+            <template v-slot:activator="{ props }">
+              <v-list-item
+                v-bind="props"
+                :active="primary"
+                :class="{ 'suboptions-item-active': primary }"
+                @click="() => select_primary([menu_ind, id])"
+              >
+                <v-list-item-title><img class='invert-if-dark' :src="img" width="20"/></v-list-item-title>
+              </v-list-item>
+            </template>
+            <span>{{ tooltip }}</span>
+          </v-tooltip>
+        </template>
       </v-list>
     </v-menu>
   </div>
@@ -78,6 +86,11 @@
 
 <script>
   export default {
+    data() {
+      return {
+        suboptions_target: null,
+      }
+    },
     watch: {
       show_suboptions(value) {
         /* workaround for safari on MacOS, which triggers an extra click when using ctrl-click as right-click. The
@@ -106,16 +119,18 @@
         if (!has_suboptions) {
           return
         }
-        /* find the absolute position of the clicked button and position the overlaying
-           submenu directly below.  Note that scrolling while the menu is open will leave
-           the menu fixed on the window */
+        /* Find the clicked button and use it as the Vuetify menu activator. */
         this.show_suboptions = false
         this.suboptions_ind = menu_ind
         // e.path is not standard and not available in all browsers: https://stackoverflow.com/questions/39245488/event-path-is-undefined-running-in-firefox
-        const path = e.path || (e.composedPath && e.composedPath());
-        const bb = path.find(element => element.nodeName == 'BUTTON').getBoundingClientRect()
-        this.suboptions_x = bb.left
-        this.suboptions_y = bb.bottom
+        const path = e.path || (e.composedPath && e.composedPath()) || []
+        const buttonEl = path.find(element => element && element.nodeName === 'BUTTON')
+          || (e.currentTarget && e.currentTarget.closest && e.currentTarget.closest('button'))
+          || (e.target && e.target.closest && e.target.closest('button'));
+        if (!buttonEl) {
+          return
+        }
+        this.suboptions_target = buttonEl
         this.$nextTick(() => {
           this.show_suboptions = true
         })
@@ -124,7 +139,7 @@
   }
 </script>
 
-<style scoped>
+<style>
 .suboptions-carrot {
   transform: rotate(-45deg);
   bottom: 0px;
@@ -134,10 +149,16 @@
      regardless of light or dark theme */
   color: black !important;
 }
+.toolbar-icon-img {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
 .suboptions-carrot:hover {
   scale: 1.75;
 }
-.theme--dark .invert-if-dark {
+.theme--dark .invert-if-dark,
+.v-theme--dark .invert-if-dark {
   filter: invert(1) !important;
 }
 .custom-toolbar-select {

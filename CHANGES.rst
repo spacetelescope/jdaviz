@@ -68,6 +68,8 @@ Other Changes and Additions
   of reusing the existing flux cube label, which previously caused a silent
   overwrite. [#4125]
 
+- Updated all front end vuetify templates for Vue 3 compatibility. [#4053]
+
 5.0.3 (unreleased)
 ==================
 
