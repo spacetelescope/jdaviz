@@ -35,6 +35,9 @@ New Features
 - Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to
   reset all emission lines to show == True. [#4224]
 
+- The Virtual Observatory loader now supports querying spectral products
+  and catalog targets. [#4060]
+
 - Implement a "focus mode" that shows a simplified view of a single viewer.  Focus mode can
   be toggled on/off from the viewer toolbar or via the API. [#4242]
 
