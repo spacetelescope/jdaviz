@@ -133,8 +133,8 @@ def cubeviz_helper():
 
 @pytest.fixture
 def imviz_helper():
-    #return Imviz()
-    return App()
+    return Imviz()
+    # return App()
 
 
 @pytest.fixture

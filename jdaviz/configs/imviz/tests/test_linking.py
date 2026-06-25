@@ -42,11 +42,11 @@ class BaseLinkHandler:
         # until all test fixtures are moved from imviz > deconfigged, some have
         # a .imviz some have a .helper, so check both and use whichever is present
         helper = self.helper if hasattr(self, 'helper') else self.imviz
-        default_viewer = helper.default_viewer
-        return (default_viewer._obj.glue_viewer.state.x_min,
-                default_viewer._obj.glue_viewer.state.x_max,
-                default_viewer._obj.glue_viewer.state.y_min,
-                default_viewer._obj.glue_viewer.state.y_max)
+
+        return (helper.default_viewer._obj.glue_viewer.state.x_min,
+                helper.default_viewer._obj.glue_viewer.state.x_max,
+                helper.default_viewer._obj.glue_viewer.state.y_min,
+                helper.default_viewer._obj.glue_viewer.state.y_max)
 
 
 class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):

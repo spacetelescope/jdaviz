@@ -284,14 +284,14 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
 
 class TestAdvancedAperPhot:
     @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_helper, default_viewer):
+    def setup_class(self, imviz_helper):
         # Reference image
         fn_1 = get_pkg_data_filename('data/gauss100_fits_wcs.fits')
-        imviz_helper.load(fn_1)
+        imviz_helper.load_data(fn_1)
         # Different pixel scale
-        imviz_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
+        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
         # Different pixel scale + rotated
-        imviz_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
+        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
 
         # Link them by WCS
         imviz_helper.link_data(align_by='wcs')
@@ -306,8 +306,7 @@ class TestAdvancedAperPhot:
             combination_mode='new')
 
         self.imviz = imviz_helper
-        # Use provided default_viewer fixture
-        self.viewer = default_viewer._obj
+        self.viewer = imviz_helper.default_viewer._obj
         self.phot_plugin = imviz_helper.plugins["Aperture Photometry"]
 
     @pytest.mark.parametrize(('data_label', 'local_bkg'), [
@@ -360,8 +359,8 @@ def test_annulus_background(imviz_helper):
     bg_4gauss_3 = 45.416834
     bg_4gauss_4 = 4.939397
 
-    imviz_helper.load(gauss4, data_label='four_gaussians', format='Image')
-    imviz_helper.load(ones, data_label='ones', format='Image')
+    imviz_helper.load_data(gauss4, data_label='four_gaussians')
+    imviz_helper.load_data(ones, data_label='ones')
 
     phot_plugin = imviz_helper.plugins['Aperture Photometry']
     phot_plugin.dataset.selected = 'ones'
@@ -437,7 +436,7 @@ def test_fit_radial_profile_with_nan(imviz_helper):
     # Insert NaN
     gauss4[25, 150] = np.nan
 
-    imviz_helper.load(gauss4, data_label='four_gaussians', format='Image')
+    imviz_helper.load_data(gauss4, data_label='four_gaussians')
 
     # Mark an object of interest
     circle_1 = CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
@@ -590,7 +589,7 @@ def test_aper_phot_load_table_into_data_collection(imviz_helper, image_2d_wcs):
     """
     # Load data
     data = NDData(np.ones((10, 10)) * 100, wcs=image_2d_wcs)
-    imviz_helper.load(data, data_label='test_image', format='Image')
+    imviz_helper.load_data(data, data_label='test_image')
 
     # Create multiple apertures
     reg1 = CirclePixelRegion(center=PixCoord(x=3.5, y=3.5), radius=2.0)
