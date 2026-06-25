@@ -3,12 +3,12 @@ from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_slice_roman(rampviz_helper, roman_level_1_ramp):
-    _slice(rampviz_helper, roman_level_1_ramp)
+def test_slice_roman(deconfigged_helper, roman_level_1_ramp):
+    _slice(deconfigged_helper, roman_level_1_ramp)
 
 
-def test_slice_jwst(rampviz_helper, jwst_level_1b_ramp):
-    _slice(rampviz_helper, jwst_level_1b_ramp)
+def test_slice_jwst(deconfigged_helper, jwst_level_1b_ramp):
+    _slice(deconfigged_helper, jwst_level_1b_ramp)
 
 
 def _slice(helper, ramp_cube):
@@ -26,7 +26,7 @@ def _slice(helper, ramp_cube):
     sl.vue_play_start_stop()
     assert not sl.is_playing
 
-    helper.load_data(ramp_cube, data_label='test')
+    helper.load(ramp_cube, data_label='test')
     app.add_data_to_viewer("group-viewer", "test[DATA]")
     app.add_data_to_viewer("diff-viewer", "test[DATA]")
     app.add_data_to_viewer("integration-viewer", "test (median)")
@@ -76,16 +76,16 @@ def _slice(helper, ramp_cube):
 
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_indicator_settings_roman(rampviz_helper, roman_level_1_ramp):
-    _indicator_settings(rampviz_helper, roman_level_1_ramp)
+def test_indicator_settings_roman(deconfigged_helper, roman_level_1_ramp):
+    _indicator_settings(deconfigged_helper, roman_level_1_ramp)
 
 
-def test_indicator_settings_jwst(rampviz_helper, jwst_level_1b_ramp):
-    _indicator_settings(rampviz_helper, jwst_level_1b_ramp)
+def test_indicator_settings_jwst(deconfigged_helper, jwst_level_1b_ramp):
+    _indicator_settings(deconfigged_helper, jwst_level_1b_ramp)
 
 
 def _indicator_settings(helper, ramp):
-    helper.load_data(ramp, data_label='test')
+    helper.load(ramp, data_label='test')
     app = helper._app
     app.add_data_to_viewer("group-viewer", "test[DATA]")
     app.add_data_to_viewer("integration-viewer", "test (median)")
@@ -106,16 +106,16 @@ def _indicator_settings(helper, ramp):
 
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_init_slice_roman(rampviz_helper, roman_level_1_ramp):
-    _init_slice(rampviz_helper, roman_level_1_ramp)
+def test_init_slice_roman(deconfigged_helper, roman_level_1_ramp):
+    _init_slice(deconfigged_helper, roman_level_1_ramp)
 
 
-def test_init_slice_jwst(rampviz_helper, jwst_level_1b_ramp):
-    _init_slice(rampviz_helper, jwst_level_1b_ramp)
+def test_init_slice_jwst(deconfigged_helper, jwst_level_1b_ramp):
+    _init_slice(deconfigged_helper, jwst_level_1b_ramp)
 
 
 def _init_slice(helper, ramp):
-    helper.load_data(ramp, data_label='test')
+    helper.load(ramp, data_label='test')
 
     fv = helper._app.get_viewer('group-viewer')
     sl = helper.plugins['Ramp Slice']

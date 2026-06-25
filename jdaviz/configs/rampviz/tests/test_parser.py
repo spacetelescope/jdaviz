@@ -3,37 +3,37 @@ import pytest
 from jdaviz.utils import cached_uri
 
 
-def test_load_rectangular_ramp(rampviz_helper, jwst_level_1b_rectangular_ramp):
-    rampviz_helper.load(jwst_level_1b_rectangular_ramp)
+def test_load_rectangular_ramp(deconfigged_helper, jwst_level_1b_rectangular_ramp):
+    deconfigged_helper.load(jwst_level_1b_rectangular_ramp)
 
     # drop the integration axis
     original_cube_shape = jwst_level_1b_rectangular_ramp.shape[1:]
 
     # on ramp cube load (1), the parser loads a diff cube (2) and
     # the ramp extraction plugin produces a default extraction (3):
-    assert len(rampviz_helper._app.data_collection) == 3
+    assert len(deconfigged_helper._app.data_collection) == 3
 
-    parsed_cube_shape = rampviz_helper._app.data_collection[0].shape
+    parsed_cube_shape = deconfigged_helper._app.data_collection[0].shape
     assert parsed_cube_shape == (
         original_cube_shape[1], original_cube_shape[2], original_cube_shape[0]
     )
 
 
 def test_load_level_1_and_2(
-        rampviz_helper,
+        deconfigged_helper,
         jwst_level_1b_rectangular_ramp,
         jwst_level_2c_rate_image
 ):
     # load level 1 ramp and level 2 rate image
-    rampviz_helper.load(jwst_level_1b_rectangular_ramp)
-    rampviz_helper.load(jwst_level_2c_rate_image)
+    deconfigged_helper.load(jwst_level_1b_rectangular_ramp)
+    deconfigged_helper.load(jwst_level_2c_rate_image)
 
     # confirm that a "level-2" viewer is created, and that
     # the rate image is loaded into it
-    assert len(rampviz_helper.viewers) == 4
-    assert 'level-2' in rampviz_helper.viewers
+    assert len(deconfigged_helper.viewers) == 4
+    assert 'level-2' in deconfigged_helper.viewers
 
-    layers = rampviz_helper._app.get_viewer('level-2').layers
+    layers = deconfigged_helper._app.get_viewer('level-2').layers
     assert len(layers) == 1
 
 
@@ -43,7 +43,7 @@ def test_load_level_1_and_2(
     "mast:JWST/product/jw01181003001_08201_00003_mirimage_uncal.fits",
     "mast:JWST/product/jw03383196001_04201_00004_nis_uncal.fits"
 ])
-def test_load_example_notebook_data(rampviz_helper, url):
+def test_load_example_notebook_data(deconfigged_helper, url):
     try:
         import roman_datamodels  # noqa
     except ImportError:
@@ -52,11 +52,11 @@ def test_load_example_notebook_data(rampviz_helper, url):
         has_rdd = True
     uri = cached_uri(url)
     if 'mast' in uri:
-        ldr = rampviz_helper.loaders['url']
+        ldr = deconfigged_helper.loaders['url']
         ldr.cache = True
         ldr.url = uri
     else:
-        ldr = rampviz_helper.loaders['file']
+        ldr = deconfigged_helper.loaders['file']
         ldr.filepath = uri
 
     if url.endswith(".asdf") and not has_rdd:
