@@ -26,25 +26,25 @@ def test_fits_image_hdu_parse(image_cube_hdu_obj, deconfigged_helper):
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper):
+def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, deconfigged_helper):
     # Passing in data_label keyword as posarg.
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, 'has_microns')
+    deconfigged_helper.load(image_cube_hdu_obj_microns, 'has_microns')
 
-    assert len(cubeviz_helper._app.data_collection) == 4  # 3 cubes and extracted spectrum
-    assert cubeviz_helper._app.data_collection[0].label == 'has_microns[FLUX]'
+    assert len(deconfigged_helper._app.data_collection) == 4  # 3 cubes and extracted spectrum
+    assert deconfigged_helper._app.data_collection[0].label == 'has_microns[FLUX]'
 
-    flux_cube = cubeviz_helper._app.data_collection[0].get_object(Spectrum, statistic=None)
+    flux_cube = deconfigged_helper._app.data_collection[0].get_object(Spectrum, statistic=None)
     assert flux_cube.spectral_axis.unit == u.um
 
     # This tests the same data as test_fits_image_hdu_parse above.
-    cubeviz_helper._app.data_collection[0].meta['EXTNAME'] == 'FLUX'
-    cubeviz_helper._app.data_collection[1].meta['EXTNAME'] == 'MASK'
-    cubeviz_helper._app.data_collection[2].meta['EXTNAME'] == 'ERR'
+    deconfigged_helper._app.data_collection[0].meta['EXTNAME'] == 'FLUX'
+    deconfigged_helper._app.data_collection[1].meta['EXTNAME'] == 'MASK'
+    deconfigged_helper._app.data_collection[2].meta['EXTNAME'] == 'ERR'
     for i in range(3):
-        assert cubeviz_helper._app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
+        assert deconfigged_helper._app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
 
-    flux_viewer = cubeviz_helper._app.get_viewer('flux-viewer')
-    label_mouseover = cubeviz_helper._coords_info
+    flux_viewer = deconfigged_helper._app.get_viewer('flux-viewer')
+    label_mouseover = deconfigged_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
 
@@ -58,7 +58,7 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     # verify that scale factor embedded in unit is removed
     assert np.allclose(flux_cube.unit.scale, 1.0)
 
-    unc_viewer = cubeviz_helper._app.get_viewer('uncert-viewer')
+    unc_viewer = deconfigged_helper._app.get_viewer('uncert-viewer')
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=-1.0 y=00.0',  # Out of bounds
@@ -66,15 +66,15 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
                                          '205.4399401278 27.0034178806 (deg)')
 
 
-def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
-    cubeviz_helper._app.add_data(spectrum1d, "test")
+def test_spectrum1d_with_fake_fixed_units(spectrum1d, deconfigged_helper):
+    deconfigged_helper._app.add_data(spectrum1d, "test")
 
-    cubeviz_helper._app.add_data_to_viewer('spectrum-viewer', 'test')
-    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    cubeviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6600 * unit,
+    deconfigged_helper._app.add_data_to_viewer('spectrum-viewer', 'test')
+    unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6600 * unit,
                                                                         7400 * unit))
 
-    subsets = cubeviz_helper._app.get_subsets()
+    subsets = deconfigged_helper._app.get_subsets()
     reg = subsets.get('Subset 1')
 
     assert len(subsets) == 1

@@ -42,13 +42,13 @@ def test_export_movie_not_cubeviz(imviz_helper):
 
 
 @pytest.mark.skipif(not HAS_OPENCV, reason="opencv-python is not installed")
-def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
+def test_export_movie_cubeviz_exceptions(deconfigged_helper, spectrum1d_cube):
+    deconfigged_helper.load(spectrum1d_cube, data_label="test")
     # TODO: swap this out for deconfigged_helper, the following lines
     # are for deconfigged_helper only
     ## viewer_ref = deconfigged_helper._app.get_viewer_reference_names()[0]
     ## default_viewer = deconfigged_helper._app.get_viewer(viewer_ref)
-    default_viewer = cubeviz_helper.get_default_viewer()
+    default_viewer = deconfigged_helper.get_default_viewer()
     default_viewer._obj.glue_viewer.shape = (100, 100)
     deconfigged_helper._app.get_viewer("uncert-viewer").shape = (100, 100)
     plugin = deconfigged_helper.plugins["Export"]
@@ -79,8 +79,8 @@ def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
 
 
 @pytest.mark.skipif(not HAS_OPENCV, reason="opencv-python is not installed")
-def test_export_movie_cubeviz_empty(cubeviz_helper):
-    plugin = cubeviz_helper.plugins["Export"]
+def test_export_movie_cubeviz_empty(deconfigged_helper):
+    plugin = deconfigged_helper.plugins["Export"]
     assert plugin._obj.i_start == 0
     assert plugin._obj.i_end == 0
 
