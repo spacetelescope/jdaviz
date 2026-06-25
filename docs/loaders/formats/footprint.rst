@@ -39,7 +39,7 @@ Data Requirements
 
 The data should be spatial regions in sky coordinates:
 
-- **Region types**: Any region supported by the :ref:`regions <regions:index>` package (circles,
+- **Region types**: Any region supported by the `regions <https://astropy-regions.readthedocs.io/en/stable/>`_ package (circles,
   rectangles, polygons, etc.)
 - **Coordinate system**: Must have sky coordinates (not pixel coordinates) that
   can be converted to pixel coordinates using the image WCS
