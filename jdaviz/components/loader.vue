@@ -159,13 +159,13 @@
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input is empty.
             </v-alert>
-          </v-row>
-          <v-row v-if="parsed_input_not_resolvable_message">
+          </j-flex-row>
+          <j-flex-row v-if="parsed_input_not_resolvable_message">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input cannot be resolved: {{ parsed_input_not_resolvable_message }}
             </v-alert>
-          </v-row>
-          <v-row v-else-if="!parsed_input_is_query && format_items.length == 0 && valid_import_formats">
+          </j-flex-row>
+          <j-flex-row v-else-if="!parsed_input_is_query && format_items.length == 0 && valid_import_formats">
               <v-alert type="warning" style="margin-right: -12px; width: 100%">
                   No compatible importer found. Supported input types include: {{ valid_import_formats }}.
               </v-alert>
