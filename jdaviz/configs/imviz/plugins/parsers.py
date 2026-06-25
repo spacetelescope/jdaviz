@@ -1,5 +1,6 @@
 import os
 import asdf
+from PIL import Image
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -122,14 +123,10 @@ def parse_data(app, file_obj, ext=None, data_label=None,
             file_obj_lower = file_obj.lower()
 
         if file_obj_lower.endswith(('.jpg', '.jpeg', '.png')):
-            from skimage.io import imread
-            from skimage.color import rgb2gray, rgba2rgb
-            im = imread(file_obj)
-            if im.shape[2] == 4:
-                pf = rgb2gray(rgba2rgb(im))
-            else:  # Assume RGB
-                pf = rgb2gray(im)
-            pf = pf[::-1, :]  # Flip it
+            im = Image.open(file_obj)
+            # convert input (RGB or RGBA or other) to
+            # 32 bit float grayscale, normalize on [0, 1]:
+            pf = np.asarray(im.convert("F")) / 255
             _parse_image(app, pf, data_label, ext=ext, parent=parent)
 
         elif file_obj_lower.endswith('.asdf'):

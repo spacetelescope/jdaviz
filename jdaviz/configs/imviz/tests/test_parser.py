@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pytest
+from PIL import Image
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
@@ -12,7 +13,6 @@ from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
 from regions import CirclePixelRegion, EllipsePixelRegion, PixCoord, RectanglePixelRegion
-from skimage.io import imsave
 from stdatamodels import asdf_in_fits
 import photutils
 
@@ -221,7 +221,8 @@ class TestParseImage:
             a = np.zeros((10, 10, 3), dtype='uint8')
 
         filename = str(tmp_path / f'myimage.{format}')
-        imsave(filename, a)
+        im = Image.fromarray(a)
+        im.save(filename)
 
         imviz_helper.load_data(filename, show_in_viewer=False)
         data = imviz_helper._app.data_collection[0]
