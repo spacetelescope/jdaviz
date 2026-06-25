@@ -72,9 +72,10 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             self.viewer.hub.subscribe(self, RestoreToolbarMessage,
                                       handler=lambda msg: self.restore_tools(all_viewers=False))
             # React to focus mode changes so tools show/hide accordingly
-            self.viewer.jdaviz_app.state.add_callback(
-                'focus_viewer', self._on_focus_viewer_changed
-            )
+            if hasattr(self.viewer, 'jdaviz_app'):
+                self.viewer.jdaviz_app.state.add_callback(
+                    'focus_viewer', self._on_focus_viewer_changed
+                )
 
     def _on_viewer_removed(self, msg):
         """Handle viewer removal - clean up toolbar overrides if this viewer is removed."""
@@ -321,7 +322,13 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                                             'has_suboptions': n_visible > 1}
 
         # in focus mode, flatten the toolbar (skip nesting)
-        if self.viewer.jdaviz_app.state.focus_viewer == getattr(self.viewer, 'reference', None):
+        in_focus_mode = (
+            hasattr(self.viewer, 'jdaviz_app')
+            and self.viewer.jdaviz_app.state.focus_viewer
+            and self.viewer.jdaviz_app.state.focus_viewer
+            == getattr(self.viewer, 'reference', None)
+        )
+        if in_focus_mode:
             for tool_id, info in self.tools_data.items():
                 if info['visible']:
                     self.tools_data[tool_id] = {**info,
