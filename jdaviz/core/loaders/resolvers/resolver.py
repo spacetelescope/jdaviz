@@ -594,7 +594,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if 'location' in parsed_input_table.colnames:
             return parsed_input_table
         for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'dataURL',
-                                'download', 'Filename'):
+                                'download', 'Filename', 'access_url'):
             if map_to_location in parsed_input_table.colnames:
                 parsed_input_table.rename_column(map_to_location, 'location')
                 return parsed_input_table
