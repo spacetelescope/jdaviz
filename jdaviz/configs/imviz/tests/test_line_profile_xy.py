@@ -145,12 +145,12 @@ class TestLineProfileXYWCSLinked(BaseDeconfiggedImage_WCS_WCS):
         # assert lp_plugin.selected_y == 9
 
 
-def test_line_profile_with_nan(imviz_helper):
+def test_line_profile_with_nan(deconfigged_helper):
     arr = np.ones((10, 10))
     arr[5, 5] = np.nan
-    imviz_helper.load_data(arr)
+    deconfigged_helper.load(arr)
 
-    lp_plugin = imviz_helper.plugins['Image Profiles (XY)']._obj
+    lp_plugin = deconfigged_helper.plugins['Image Profiles (XY)']._obj
     lp_plugin.plugin_opened = True
     lp_plugin.selected_x = 5
     lp_plugin.selected_y = 5

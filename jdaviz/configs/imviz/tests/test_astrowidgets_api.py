@@ -340,31 +340,31 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 @pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
-def test_markers_gwcs_lonlat(imviz_helper):
+def test_markers_gwcs_lonlat(deconfigged_helper):
     """GWCS uses Lon/Lat for ICRS."""
     gw_file = get_pkg_data_filename('data/miri_i2d_lonlat_gwcs.asdf')
     with asdf.open(gw_file) as af:
         gw = af.tree['wcs']
     ndd = NDData(np.ones((10, 10), dtype=np.float32), wcs=gw, unit='MJy/sr')
-    imviz_helper.load(ndd, data_label='MIRI_i2d', format='Image')
-    assert imviz_helper._app.data_collection[0].label == 'MIRI_i2d[DATA]'
-    assert imviz_helper._app.data_collection[0].components == [
+    deconfigged_helper.load(ndd, data_label='MIRI_i2d', format='Image')
+    assert deconfigged_helper._app.data_collection[0].label == 'MIRI_i2d[DATA]'
+    assert deconfigged_helper._app.data_collection[0].components == [
         'Pixel Axis 0 [y]', 'Pixel Axis 1 [x]', 'Lat', 'Lon', 'DATA']
 
     # If you run this interactively, should appear slightly off-center.
     calib_cat = Table({'coord': [SkyCoord(80.6609, -69.4524, unit='deg')]})
-    imviz_helper.default_viewer.add_markers(calib_cat, use_skycoord=True, marker_name='my_sky')
-    assert imviz_helper._app.data_collection[1].label == 'my_sky'
+    deconfigged_helper.default_viewer.add_markers(calib_cat, use_skycoord=True, marker_name='my_sky')
+    assert deconfigged_helper._app.data_collection[1].label == 'my_sky'
 
-    viewer = imviz_helper._app.get_viewer('imviz-0')
+    viewer = deconfigged_helper._app.get_viewer('imviz-0')
     viewer.reset_markers()
 
     # change orientation and ensure catalogs can be plotted using new orientation
     # data collection entry
-    orientation = imviz_helper.plugins['Orientation']
+    orientation = deconfigged_helper.plugins['Orientation']
     orientation.align_by = "WCS"
 
-    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin = deconfigged_helper.plugins['Catalog Search']
     catalogs_plugin.catalog.selected = 'Gaia'
     catalogs_plugin.max_sources = 10
     catalogs_plugin.search(error_on_fail=True)

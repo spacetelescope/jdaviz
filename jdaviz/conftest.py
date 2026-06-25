@@ -134,28 +134,26 @@ def cubeviz_helper():
 @pytest.fixture
 def imviz_helper():
     return Imviz()
-    # return App()
 
 
 @pytest.fixture
-def default_viewer(imviz_helper):
+def default_viewer(deconfigged_helper):
     """Provide a convenient default viewer wrapper for tests.
 
     Returns the ViewerWindow user_api for the app's first viewer and also
-    attaches the wrapper object to ``imviz_helper.default_viewer`` so legacy
-    code that expects ``imviz_helper.default_viewer._obj.glue_viewer`` continues
+    attaches the wrapper object to ``[config]_helper.default_viewer`` so legacy
+    code that expects ``[config]_helper.default_viewer._obj.glue_viewer`` continues
     to work.
     """
     from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
 
-    app = imviz_helper._app
+    app = deconfigged_helper._app
     # get the first configured viewer reference name
-    ref = app.get_viewer_reference_names()[0]
+    ref = app.get_viewer_reference_names()[-1]
     viewer = app.get_viewer(ref)
 
     wrapper = JdavizViewerWindow(viewer, app=app)
-    # expose on the helper for tests that reference imviz_helper.default_viewer
-    imviz_helper.default_viewer = wrapper
+    deconfigged_helper.default_viewer = wrapper
     return wrapper.user_api
 
 

@@ -330,14 +330,14 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         assert not label_mouseover.row2_unreliable
 
 
-def test_imviz_no_data(imviz_helper):
-    refdata, iref = get_reference_image_data(imviz_helper._app)
+def test_imviz_no_data(deconfigged_helper):
+    refdata, iref = get_reference_image_data(deconfigged_helper._app)
     assert refdata is None
     assert iref == -1
 
-    imviz_helper.link_data()  # Just no-op, do not crash
-    links = imviz_helper._app.data_collection.external_links
+    deconfigged_helper.link_data()  # Just no-op, do not crash
+    links = deconfigged_helper._app.data_collection.external_links
     assert len(links) == 0
 
     with pytest.raises(ValueError, match='No reference data for link look-up'):
-        imviz_helper.default_viewer._obj.glue_viewer.get_alignment_method('foo')
+        deconfigged_helper.default_viewer._obj.glue_viewer.get_alignment_method('foo')

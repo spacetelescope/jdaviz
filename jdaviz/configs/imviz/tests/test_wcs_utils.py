@@ -165,11 +165,11 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         assert self.viewer.state.reference_data.label == base_wcs_layer_label
 
 
-def test_get_rotated_nddata_from_label_no_wcs(imviz_helper):
+def test_get_rotated_nddata_from_label_no_wcs(deconfigged_helper):
     a = np.zeros((2, 2), dtype=np.int8)
-    imviz_helper.load(a, data_label="no_wcs", format='Image')
+    deconfigged_helper.load(a, data_label="no_wcs", format='Image')
     with pytest.raises(ValueError, match=r".*has no WCS for rotation"):
-        wcs_utils._get_rotated_nddata_from_label(imviz_helper._app, "no_wcs", 0 * u.deg)
+        wcs_utils._get_rotated_nddata_from_label(deconfigged_helper._app, "no_wcs", 0 * u.deg)
 
 
 def test_compute_scale():

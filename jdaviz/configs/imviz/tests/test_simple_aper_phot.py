@@ -284,30 +284,30 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
 
 class TestAdvancedAperPhot:
     @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_helper):
+    def setup_class(self, deconfigged_helper):
         # Reference image
         fn_1 = get_pkg_data_filename('data/gauss100_fits_wcs.fits')
-        imviz_helper.load_data(fn_1)
+        deconfigged_helper.load(fn_1)
         # Different pixel scale
-        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
+        deconfigged_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
         # Different pixel scale + rotated
-        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
+        deconfigged_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
 
         # Link them by WCS
-        imviz_helper.link_data(align_by='wcs')
-        w = imviz_helper._app.data_collection[0].coords
+        deconfigged_helper.link_data(align_by='wcs')
+        w = deconfigged_helper._app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
-        imviz_helper.plugins['Subset Tools'].import_region([
+        deconfigged_helper.plugins['Subset Tools'].import_region([
             CirclePixelRegion(center=PixCoord(x=145.1, y=168.3), radius=5).to_sky(w),
             CirclePixelRegion(center=PixCoord(x=48.3, y=200.3), radius=5).to_sky(w),
             EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9, angle=2.356 * u.rad).to_sky(w),  # noqa: E501
             RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w)],
             combination_mode='new')
 
-        self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj
-        self.phot_plugin = imviz_helper.plugins["Aperture Photometry"]
+        self.imviz = deconfigged_helper
+        self.viewer = deconfigged_helper.default_viewer._obj
+        self.phot_plugin = deconfigged_helper.plugins["Aperture Photometry"]
 
     @pytest.mark.parametrize(('data_label', 'local_bkg'), [
         ('gauss100_fits_wcs[PRIMARY,1]', 5.0),
@@ -351,7 +351,7 @@ class TestAdvancedAperPhot:
         assert_allclose(float(self.phot_plugin.background_value), expected_bg * fac, rtol=0.1)
 
 
-def test_annulus_background(imviz_helper):
+def test_annulus_background(deconfigged_helper):
     gauss4 = make_4gaussians_image()  # The background has a mean of 5 with noise
     ones = np.ones(gauss4.shape)
     bg_4gauss_1 = 5.802287
@@ -359,10 +359,10 @@ def test_annulus_background(imviz_helper):
     bg_4gauss_3 = 45.416834
     bg_4gauss_4 = 4.939397
 
-    imviz_helper.load_data(gauss4, data_label='four_gaussians')
-    imviz_helper.load_data(ones, data_label='ones')
+    deconfigged_helper.load(gauss4, data_label='four_gaussians')
+    deconfigged_helper.load(ones, data_label='ones')
 
-    phot_plugin = imviz_helper.plugins['Aperture Photometry']
+    phot_plugin = deconfigged_helper.plugins['Aperture Photometry']
     phot_plugin.dataset.selected = 'ones'
 
     # Mark an object of interest
@@ -370,7 +370,7 @@ def test_annulus_background(imviz_helper):
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_1 = CircleAnnulusPixelRegion(
         PixCoord(x=150, y=25), inner_radius=7, outer_radius=17)
-    imviz_helper.plugins['Subset Tools'].import_region([circle_1, annulus_1],
+    deconfigged_helper.plugins['Subset Tools'].import_region([circle_1, annulus_1],
                                                        combination_mode='new')
 
     phot_plugin.aperture.selected = 'Subset 1'
@@ -388,7 +388,7 @@ def test_annulus_background(imviz_helper):
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_2 = CircleAnnulusPixelRegion(
         PixCoord(x=20.5, y=37.5), inner_radius=20.5, outer_radius=30.5)
-    imviz_helper.plugins['Subset Tools'].import_region([ellipse_1, annulus_2],
+    deconfigged_helper.plugins['Subset Tools'].import_region([ellipse_1, annulus_2],
                                                        combination_mode='new')
 
     # Subset 4 (annulus) should be available in both sets of choices, but invalid for selection as
@@ -421,7 +421,7 @@ def test_annulus_background(imviz_helper):
     assert_allclose(phot_plugin.background_value, bg_4gauss_2)
 
     # Edit the annulus and make sure background updates
-    subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = deconfigged_helper.plugins['Subset Tools']._obj
     subset_plugin.subset_selected = "Subset 4"
     subset_plugin._set_value_in_subset_definition(0, "X Center (pixels)", "value", 25.5)
     subset_plugin._set_value_in_subset_definition(0, "Y Center (pixels)", "value", 42.5)
@@ -431,19 +431,19 @@ def test_annulus_background(imviz_helper):
     assert_allclose(phot_plugin.background_value, bg_4gauss_4)
 
 
-def test_fit_radial_profile_with_nan(imviz_helper):
+def test_fit_radial_profile_with_nan(deconfigged_helper):
     gauss4 = make_4gaussians_image()  # The background has a mean of 5 with noise
     # Insert NaN
     gauss4[25, 150] = np.nan
 
-    imviz_helper.load_data(gauss4, data_label='four_gaussians')
+    deconfigged_helper.load(gauss4, data_label='four_gaussians')
 
     # Mark an object of interest
     circle_1 = CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
-    imviz_helper.plugins['Subset Tools'].import_region(
+    deconfigged_helper.plugins['Subset Tools'].import_region(
         [circle_1], combination_mode='new')
 
-    phot_plugin = imviz_helper.plugins['Aperture Photometry']
+    phot_plugin = deconfigged_helper.plugins['Aperture Photometry']
     phot_plugin.dataset.selected = 'four_gaussians'
     phot_plugin.aperture.selected = 'Subset 1'
     phot_plugin.current_plot_type = 'Radial Profile'
@@ -451,7 +451,7 @@ def test_fit_radial_profile_with_nan(imviz_helper):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # Fitter warnings do not matter, only want error.
         phot_plugin._obj.vue_do_aper_phot()
-    tbl = imviz_helper.plugins['Aperture Photometry'].export_table()
+    tbl = deconfigged_helper.plugins['Aperture Photometry'].export_table()
 
     assert phot_plugin._obj.result_failed_msg == ''
     assert_allclose(tbl['sum'][0], 8590.419296)
@@ -582,25 +582,25 @@ def test_aper_phot_basic(helper_name, image_2d_wcs, request):
     assert len(tbl) == 1
 
 
-def test_aper_phot_load_table_into_data_collection(imviz_helper, image_2d_wcs):
+def test_aper_phot_load_table_into_data_collection(deconfigged_helper, image_2d_wcs):
     """
     Test that aperture photometry table can be loaded back into the data collection
     using the 'Load into App' functionality.
     """
     # Load data
     data = NDData(np.ones((10, 10)) * 100, wcs=image_2d_wcs)
-    imviz_helper.load_data(data, data_label='test_image')
+    deconfigged_helper.load(data, data_label='test_image')
 
     # Create multiple apertures
     reg1 = CirclePixelRegion(center=PixCoord(x=3.5, y=3.5), radius=2.0)
-    imviz_helper.plugins['Subset Tools'].import_region(reg1)
+    deconfigged_helper.plugins['Subset Tools'].import_region(reg1)
 
     reg2 = CirclePixelRegion(center=PixCoord(x=6.5, y=6.5), radius=3.0)
-    imviz_helper.plugins['Subset Tools'].combination_mode = 'new'
-    imviz_helper.plugins['Subset Tools'].import_region(reg2)
+    deconfigged_helper.plugins['Subset Tools'].combination_mode = 'new'
+    deconfigged_helper.plugins['Subset Tools'].import_region(reg2)
 
     # Perform aperture photometry on both subsets
-    phot_plugin = imviz_helper.plugins['Aperture Photometry']
+    phot_plugin = deconfigged_helper.plugins['Aperture Photometry']
     phot_plugin.aperture.selected = 'Subset 1'
     phot_plugin.calculate_photometry()
 
