@@ -23,12 +23,12 @@ To start the application, from a terminal, type::
 
     jdaviz
 
-This will run the launcher. To then launch the modern generalized jdaviz from here,
+This will run the launcher. To then launch generalized jdaviz,
 click the Jdaviz logo in the center of the screen. Alternatively, you can still use
 the deprecated legacy functionality to select a file from the file picker, which will
 identify the best configuration according to the file type. You can also select the
 desired deprecated configuration by clicking one of the bottom buttons without specifying
-a file. A blank configuration will open and the IMPORT button will be available to select
+a file. A blank configuration will open and the ``IMPORT`` button will be available to select
 a file from the file picker.
 
 Jdaviz is now intended to be used in a flexible, generalized layout rather than the older "configs", but
@@ -45,7 +45,7 @@ may be useful if loading multiple files. Note that the file format is generally 
 of available data formats. Note that you will need to enclose multi-word formats in quotation marks, for example
 ``--file_format='1D Spectrum'``.
 
-To see a list of all options, from a terminal, type::
+To see a list of all options, from the terminal, type::
 
     jdaviz --help
 
