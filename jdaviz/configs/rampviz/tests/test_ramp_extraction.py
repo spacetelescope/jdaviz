@@ -14,7 +14,7 @@ def test_previews_jwst(rampviz_helper, jwst_level_1b_ramp):
 
 
 def _ramp_extraction_previews(_rampviz_helper, _ramp_file):
-    _rampviz_helper.load_data(_ramp_file)
+    _rampviz_helper.load(_ramp_file)
 
     # add subset:
     region = CirclePixelRegion(center=PixCoord(12.5, 15.5), radius=2)

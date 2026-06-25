@@ -176,7 +176,8 @@ def specviz2d_helper():
 
 @pytest.fixture
 def rampviz_helper():
-    return Rampviz()
+    #return Rampviz()
+    return App()
 
 
 @pytest.fixture

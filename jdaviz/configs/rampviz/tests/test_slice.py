@@ -26,7 +26,7 @@ def _slice(helper, ramp_cube):
     sl.vue_play_start_stop()
     assert not sl.is_playing
 
-    helper.load_data(ramp_cube, data_label='test')
+    helper.load(ramp_cube, data_label='test')
     app.add_data_to_viewer("group-viewer", "test[DATA]")
     app.add_data_to_viewer("diff-viewer", "test[DATA]")
     app.add_data_to_viewer("integration-viewer", "test (median)")
@@ -85,12 +85,12 @@ def test_indicator_settings_jwst(rampviz_helper, jwst_level_1b_ramp):
 
 
 def _indicator_settings(helper, ramp):
-    helper.load_data(ramp, data_label='test')
+    helper.load(ramp, data_label='test')
     app = helper._app
-    app.add_data_to_viewer("group-viewer", "test[DATA]")
-    app.add_data_to_viewer("integration-viewer", "test (median)")
+    app.add_data_to_viewer("3D Ramp", "test[DATA]")
+    app.add_data_to_viewer("Ramp Integration", "test (median)")
     sl = helper.plugins['Ramp Slice']._obj
-    sv = app.get_viewer('integration-viewer')
+    sv = app.get_viewer('Ramp Integration')
     indicator = sv.slice_indicator
 
     assert sl.show_indicator is True
@@ -115,9 +115,9 @@ def test_init_slice_jwst(rampviz_helper, jwst_level_1b_ramp):
 
 
 def _init_slice(helper, ramp):
-    helper.load_data(ramp, data_label='test')
+    helper.load(ramp, data_label='test')
 
-    fv = helper._app.get_viewer('group-viewer')
+    fv = helper._app.get_viewer('3D Ramp')
     sl = helper.plugins['Ramp Slice']
     slice_values = sl._obj.valid_selection_values_sorted
 

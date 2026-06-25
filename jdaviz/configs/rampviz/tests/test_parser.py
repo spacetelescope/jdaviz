@@ -4,7 +4,7 @@ from jdaviz.utils import cached_uri
 
 
 def test_load_rectangular_ramp(rampviz_helper, jwst_level_1b_rectangular_ramp):
-    rampviz_helper.load_data(jwst_level_1b_rectangular_ramp)
+    rampviz_helper.load(jwst_level_1b_rectangular_ramp)
 
     # drop the integration axis
     original_cube_shape = jwst_level_1b_rectangular_ramp.shape[1:]
@@ -25,8 +25,8 @@ def test_load_level_1_and_2(
         jwst_level_2c_rate_image
 ):
     # load level 1 ramp and level 2 rate image
-    rampviz_helper.load_data(jwst_level_1b_rectangular_ramp)
-    rampviz_helper.load_data(jwst_level_2c_rate_image)
+    rampviz_helper.load(jwst_level_1b_rectangular_ramp)
+    rampviz_helper.load(jwst_level_2c_rate_image)
 
     # confirm that a "level-2" viewer is created, and that
     # the rate image is loaded into it
