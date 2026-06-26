@@ -1120,16 +1120,16 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                 or not self.viewer.selected or not self.layer_selected):
             self.layer_is_top = False
             return
-        selected_item = next(
-            (item for item in self.layer_items if item.get('label') == self.layer_selected), None
-        )
-        if selected_item is None or selected_item.get('is_subset'):
+        if not self.layer.selected_item or self.layer.selected_item.get('is_subset'):
             self.layer_is_top = False
             return
-        # When viewer_multiselect transitions True→False, this observer fires before
-        # ViewerSelect._multiselect_changed clears its cached_property.  Proactively
-        # clear it so selected_obj is always recomputed fresh here.
-        self.viewer._clear_cache('selected_obj')
+        # When viewer_multiselect transitions True→False, this observer can fire before
+        # ViewerSelect._multiselect_changed clears its cached_property, leaving a stale
+        # selected_obj.  That is the only trigger for which the cache may be out of date,
+        # so only clear it in that case; for every other trigger (and manual calls with
+        # msg={}) selected_obj is already valid and a clear would just force a recompute.
+        if msg.get('name') == 'viewer_multiselect':
+            self.viewer._clear_cache('selected_obj')
         try:
             viewer = self.viewer.selected_obj
         except Exception:
