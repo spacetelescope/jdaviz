@@ -832,7 +832,8 @@ class TestParenting:
             assert deconfigged_helper._app._get_assoc_data_parent(label) is None
             assert deconfigged_helper._app._get_assoc_data_children(label) == []
 
-    def test_load_image_auto_parent_existing_in_dc(self, deconfigged_helper):
+    @pytest.mark.parametrize('rename', (False, True))
+    def test_load_image_auto_parent_existing_in_dc(self, deconfigged_helper, rename):
         # 'Auto' should associate a child extension loaded later with a matching
         # science extension that is already in the data collection (matched by hash)
         hdul = _make_multi_sci_hdul()
@@ -843,16 +844,23 @@ class TestParenting:
         ldr.importer.extension = 'SCI,2'
         ldr.load()
 
-        assert [d.label for d in deconfigged_helper._app.data_collection] == ['Image[SCI,2]']
-        assert deconfigged_helper._app._get_assoc_data_children('Image[SCI,2]') == []
+        primary_label = 'Image[SCI,2]'
+
+        assert [d.label for d in deconfigged_helper._app.data_collection] == [primary_label]
+        assert deconfigged_helper._app._get_assoc_data_children(primary_label) == []
+
+        # Now test with a rename in-between
+        if rename:
+            deconfigged_helper.viewers['Image'].data_menu.rename(primary_label, 'new name')
+            primary_label = 'new name'
 
         # then load only the matching error extension; it should auto-associate
         # with the already-loaded science extension
         ldr.importer.extension = 'ERR,2'
         ldr.load()
 
-        assert deconfigged_helper._app._get_assoc_data_parent('Image[ERR,2]') == 'Image[SCI,2]'
-        assert deconfigged_helper._app._get_assoc_data_children('Image[SCI,2]') == ['Image[ERR,2]']
+        assert deconfigged_helper._app._get_assoc_data_parent('Image[ERR,2]') == primary_label
+        assert deconfigged_helper._app._get_assoc_data_children(primary_label) == ['Image[ERR,2]']
 
 
 def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):
