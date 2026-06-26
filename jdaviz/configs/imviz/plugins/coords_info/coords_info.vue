@@ -1,5 +1,5 @@
 <template>
-  <div @mouseover="show_dataset_selected = true" @mouseleave="show_dataset_selected = false" style="min-width: 300px">
+  <div @mouseover="show_dataset_selected = true" @mouseleave="show_dataset_selected = false">
     <div v-if="icon" style="position: absolute; height: 100%">
       <v-toolbar-items>
         <v-btn icon tile>
@@ -25,7 +25,7 @@
         </span>
       </v-toolbar-items>
     </div>
-    <div v-else style="position: absolute; height: 100%">
+    <div v-else style="height: 100%">
       <v-toolbar-items>
         <j-tooltip tipid='coords-info-cycle'>
           <v-btn icon tile @click="next_layer()">
