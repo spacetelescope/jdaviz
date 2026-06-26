@@ -695,38 +695,39 @@
         >
           {{ layer_is_top ?
               (image_opacity_value <= 0 ?
-                "Changes will not be visible as the selected layer's opacity = 0" :
-                'Changes will not be visible as the selected layer is set to invisible.') :
+                "Changes to the selected layer (" + layer_selected + ") will not be visible because its opacity = 0." :
+                "Changes to the selected layer (" + layer_selected + ") will not be visible because it is set to invisible.") :
               (image_opacity_value <= 0 ?
-                "Changes will not be visible as the selected layer's opacity = 0 and is under other layers." :
+                "Changes to the selected layer (" + layer_selected + ") will not be visible because its opacity = 0 and it is not the top layer in the viewer (" + viewer_selected + ")." :
                 (!image_visible_value ?
-                  'Changes will not be visible as the selected layer is set to invisible and is under other layers.' :
-                  'Changes may not be visible as the selected layer is under other layers.'))
+                  "Changes to the selected layer (" + layer_selected + ") will not be visible because it is set to invisible and it is not the top layer in the viewer (" + viewer_selected + ")." :
+                  "Changes to the selected layer (" + layer_selected + ") may not be visible because it is not the top layer in the viewer (" + viewer_selected + ")."))
           }}
+          <v-row justify="end" style="margin-top: 4px">
+            <j-tooltip :tooltipcontent="(layer_is_top && image_visible_value && image_opacity_value > 0) ? layer_selected + ' is the top layer in ' + viewer_selected : 'Click to bring layer ' + layer_selected + ' to the top of viewer ' + viewer_selected + ' and make it visible'">
+              <plugin-action-button
+                class="set-layer-to-top-btn"
+                :results_isolated_to_plugin="false"
+                :api_hints_enabled="api_hints_enabled"
+                :disabled="layer_is_top && image_visible_value && image_opacity_value > 0"
+                @click="set_layer_to_top"
+              >
+                {{ api_hints_enabled ?
+                    'plg.set_layer_to_top()' :
+                    (layer_is_top ?
+                      (image_opacity_value <= 0 ?
+                        'Set ' + layer_selected + ' opacity = 1' :
+                        'Set ' + layer_selected + ' visible') :
+                      (image_opacity_value <= 0 ?
+                        'Move ' + layer_selected + ' to top and set opacity = 1' :
+                        (!image_visible_value ?
+                          'Move ' + layer_selected + ' to top and set visible' :
+                          'Move ' + layer_selected + ' to top')))
+                }}
+              </plugin-action-button>
+            </j-tooltip>
+          </v-row>
         </v-alert>
-        <v-row justify="end">
-          <j-tooltip :tooltipcontent="(layer_is_top && image_visible_value && image_opacity_value > 0) ? layer_selected + ' is the top layer' : layer_selected + ' may not be visible in the viewer because it is not the top layer, click to bring to the top'">
-            <plugin-action-button
-              :results_isolated_to_plugin="false"
-              :api_hints_enabled="api_hints_enabled"
-              :disabled="layer_is_top && image_visible_value && image_opacity_value > 0"
-              @click="set_layer_to_top"
-            >
-              {{ api_hints_enabled ?
-                  'plg.set_layer_to_top()' :
-                  (layer_is_top ?
-                    (image_opacity_value <= 0 ?
-                      'Set layer opacity = 1' :
-                      'Set layer visible') :
-                    (image_opacity_value <= 0 ?
-                      'Move layer to top and set opacity = 1' :
-                      (!image_visible_value ?
-                        'Move layer to top and set visible' :
-                        'Move layer to top')))
-              }}
-            </plugin-action-button>
-          </j-tooltip>
-        </v-row>
       </div>
 
       <div v-if="image_visible_sync.in_subscribed_states && (image_visible_value || image_visible_sync['mixed'])">
@@ -1134,5 +1135,24 @@ export default {
 
   .layer-tab-selected .strike:first-of-type {
     padding-top: 16px;
+  }
+
+  /* allow the "bring layer to top" button to wrap long layer names
+     instead of clipping them at the edge of the plugin panel */
+  .set-layer-to-top-btn {
+    height: auto;
+    min-height: 36px;
+    padding-top: 6px;
+    padding-bottom: 10px;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .set-layer-to-top-btn :deep(.v-btn__content) {
+    white-space: normal;
+    text-align: left;
+    justify-content: flex-start;
+    line-height: 1.3;
+    padding-bottom: 2px;
   }
 </style>
