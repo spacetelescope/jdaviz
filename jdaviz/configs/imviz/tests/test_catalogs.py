@@ -194,13 +194,17 @@ class TestCatalogs:
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
         assert_allclose(
-            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min, 1046.377555, atol=0.1)
+            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min,
+            1046.377555, atol=0.1)
         assert_allclose(
-            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max, 1098.748805, atol=0.1)
+            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max,
+            1098.748805, atol=0.1)
         assert_allclose(
-            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min, 699.110485, atol=0.1)
+            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min,
+            699.110485, atol=0.1)
         assert_allclose(
-            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max, 751.481735, atol=0.1)
+            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max,
+            751.481735, atol=0.1)
 
 
 def test_from_file_parsing(deconfigged_helper, tmp_path):

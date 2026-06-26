@@ -23,7 +23,7 @@ def test_plugin(deconfigged_helper, spectrum1d):
 
     # continuum should be created, plotted, and visible
     # TODO: get default viewer names
-    #sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
+    # sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
     sv = deconfigged_helper._app.get_viewer('1D Spectrum')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
@@ -35,8 +35,8 @@ def test_plugin(deconfigged_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
     assert 'Subset 1' in plugin.spectral_subset.labels
@@ -172,8 +172,8 @@ def test_user_api(deconfigged_helper, spectrum1d):
     deconfigged_helper.load(spectrum1d, data_label=label, format='1D Spectrum')
 
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
 
     la = deconfigged_helper.plugins['Line Analysis']
     la.keep_active = True
@@ -289,8 +289,8 @@ def test_continuum_surrounding_spectral_subset(deconfigged_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
     plugin = deconfigged_helper._app.get_tray_item_from_name('specviz-line-analysis')
@@ -318,8 +318,8 @@ def test_continuum_spectral_same_value(deconfigged_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
     plugin = deconfigged_helper._app.get_tray_item_from_name('specviz-line-analysis')
@@ -347,8 +347,8 @@ def test_continuum_surrounding_invalid_width(deconfigged_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
     plugin = deconfigged_helper._app.get_tray_item_from_name('specviz-line-analysis')
@@ -374,8 +374,8 @@ def test_continuum_subset_spectral_entire(deconfigged_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
     plugin = deconfigged_helper._app.get_tray_item_from_name('specviz-line-analysis')
@@ -403,13 +403,13 @@ def test_continuum_subset_spectral_subset2(deconfigged_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6200 * unit,
-                                                                        7000 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6200 * unit, 7000 * unit))
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
     deconfigged_helper.plugins['Subset Tools'].combination_mode = 'new'
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(7100 * unit,
-                                                                        7700 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        7100 * unit, 7700 * unit))
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
     plugin = deconfigged_helper._app.get_tray_item_from_name('specviz-line-analysis')
@@ -438,8 +438,8 @@ def test_continuum_surrounding_no_right(deconfigged_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        8000 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 8000 * unit))
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
     plugin = deconfigged_helper._app.get_tray_item_from_name('specviz-line-analysis')
@@ -468,8 +468,8 @@ def test_continuum_surrounding_no_left(deconfigged_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6000 * unit,
-                                                                        7500 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6000 * unit, 7500 * unit))
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
     plugin = deconfigged_helper._app.get_tray_item_from_name('specviz-line-analysis')
@@ -498,8 +498,8 @@ def test_subset_changed(deconfigged_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6000 * unit,
-                                                                        7500 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6000 * unit, 7500 * unit))
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
     plugin = deconfigged_helper._app.get_tray_item_from_name('specviz-line-analysis')
@@ -509,8 +509,8 @@ def test_subset_changed(deconfigged_helper, spectrum1d):
     plugin.continuum_subset_selected = 'Surrounding'
     plugin.width = 3
 
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7500 * unit),
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7500 * unit),
                                                          edit_subset='Subset 1')
     deconfigged_helper._app.state.drawer_content = 'plugins'
 
@@ -531,8 +531,8 @@ def test_invalid_subset(deconfigged_helper, spectrum1d):
     # NOTE: using a subset that overlaps the right_spectrum (reference) results in errors when
     # retrieving the subset (https://github.com/spacetelescope/jdaviz/issues/1868)
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(5000 * unit,
-                                                                        6000 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        5000 * unit, 6000 * unit))
 
     plugin = deconfigged_helper.plugins['Line Analysis']
     plugin.dataset = 'right_spectrum'

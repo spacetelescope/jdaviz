@@ -156,7 +156,7 @@ def test_catalog_in_image_viewer(deconfigged_helper, image_2d_wcs,
 
     # Load the source catalog into the data collection, and into the image viewer
     deconfigged_helper.load(sky_coord_only_source_catalog, format='Catalog',
-                      data_label='my_catalog')
+                            data_label='my_catalog')
 
     iv = deconfigged_helper.viewers['imviz-0']
     dm = iv.data_menu

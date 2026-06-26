@@ -150,7 +150,8 @@ def test_subset(
     assert_array_equal(collapsed_spec_2.uncertainty.array, expected_uncert)
 
 
-def test_extracted_file_in_export_plugin(deconfigged_helper, spectrum1d_cube_with_uncerts, tmp_path):
+def test_extracted_file_in_export_plugin(deconfigged_helper, spectrum1d_cube_with_uncerts,
+                                         tmp_path):
 
     deconfigged_helper.load(spectrum1d_cube_with_uncerts)
 

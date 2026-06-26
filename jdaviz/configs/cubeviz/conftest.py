@@ -20,10 +20,10 @@ SKIP_TEST_NODEIDS = [
     "plugins/sonify_data/tests/test_sonify_data.py::test_sonify_data",
 
     # spectral_extraction
-    "plugins/spectral_extraction/tests/test_spectral_extraction.py::test_version_after_nddata_update",
-    "plugins/spectral_extraction/tests/test_spectral_extraction.py::test_gauss_smooth_before_spec_extract",
-    "plugins/spectral_extraction/tests/test_spectral_extraction.py::test_default_spectral_extraction",
-    "plugins/spectral_extraction/tests/test_spectral_extraction.py::test_spectral_extraction_unit_conv_one_spec",
+    "plugins/spectral_extraction/tests/test_spectral_extraction.py::test_version_after_nddata_update", # noqa
+    "plugins/spectral_extraction/tests/test_spectral_extraction.py::test_gauss_smooth_before_spec_extract", # noqa
+    "plugins/spectral_extraction/tests/test_spectral_extraction.py::test_default_spectral_extraction", # noqa
+    "plugins/spectral_extraction/tests/test_spectral_extraction.py::test_spectral_extraction_unit_conv_one_spec", # noqa
 
     # plugin-level cubeviz tests
     "plugins/tests/test_cubeviz_aperphot.py::test_cubeviz_aperphot_generated_3d_gaussian_smooth",
@@ -75,5 +75,3 @@ def pytest_collection_modifyitems(config, items):
             if nid_frag in item.nodeid:
                 item.add_marker(skip_marker)
                 break
-
-

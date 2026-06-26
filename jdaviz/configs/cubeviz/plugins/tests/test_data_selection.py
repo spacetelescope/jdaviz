@@ -1,7 +1,5 @@
 import pytest
 
-from jdaviz.conftest import deconfigged_helper
-
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_data_selection(deconfigged_helper, spectrum1d_cube, tmpdir):

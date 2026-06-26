@@ -20,12 +20,8 @@ class TestLoadRegions(BaseRegionHandler):
         self.cubeviz = deconfigged_helper
         deconfigged_helper.load(image_cube_hdu_obj_microns, data_label='has_microns')
         # This is used in BaseRegionHandler
-        # TODO: swap out for deconfigged_helper; the following lines
-        # are for deconfigged_Helper only
-        #viewer_ref = deconfigged_helper._app.get_viewer_reference_names()[0]
-        #viewer = deconfigged_helper._app.get_viewer(viewer_ref)
-
-        viewer = deconfigged_helper.get_viewer(deconfigged_helper._default_flux_viewer_reference_name)
+        viewer = deconfigged_helper.get_viewer(
+            deconfigged_helper._default_flux_viewer_reference_name)
 
         self.viewer = viewer._obj.glue_viewer
         self.spectrum_viewer = deconfigged_helper._default_spectrum_viewer_reference_name

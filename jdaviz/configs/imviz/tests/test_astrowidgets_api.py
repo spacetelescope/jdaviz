@@ -353,7 +353,8 @@ def test_markers_gwcs_lonlat(deconfigged_helper):
 
     # If you run this interactively, should appear slightly off-center.
     calib_cat = Table({'coord': [SkyCoord(80.6609, -69.4524, unit='deg')]})
-    deconfigged_helper.default_viewer.add_markers(calib_cat, use_skycoord=True, marker_name='my_sky')
+    deconfigged_helper.default_viewer.add_markers(calib_cat,
+                                                  use_skycoord=True, marker_name='my_sky')
     assert deconfigged_helper._app.data_collection[1].label == 'my_sky'
 
     viewer = deconfigged_helper._app.get_viewer('imviz-0')

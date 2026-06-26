@@ -38,7 +38,8 @@ def test_user_api(deconfigged_helper, image_2d_wcs, tmp_path):
         for preset in (preset for preset in plugin.preset.choices if preset != 'From File...'):
             plugin.preset = preset
 
-            viewer_marks = _get_markers_from_viewer(deconfigged_helper.default_viewer._obj.glue_viewer)
+            viewer_marks = _get_markers_from_viewer(
+                deconfigged_helper.default_viewer._obj.glue_viewer)
             assert len(viewer_marks) == len(_all_apertures.get(preset))
 
         # regression test for user-set traitlets (specifically color) being reset

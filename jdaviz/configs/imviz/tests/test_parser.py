@@ -351,8 +351,8 @@ class TestParseImage:
         # Request specific extension (name + ver, but ver is not used), use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
             deconfigged_helper.load(self.jwst_asdf_url_1, cache=True, ext='DQ',
-                                   data_label='jw01072001001_01101_00001_nrcb1_cal',
-                                   show_in_viewer=False)
+                                    data_label='jw01072001001_01101_00001_nrcb1_cal',
+                                    show_in_viewer=False)
         data = deconfigged_helper._app.data_collection[1]
         comp = data.get_component('dq')
         assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DQ,1]'
@@ -364,8 +364,8 @@ class TestParseImage:
         with fits.open(filename) as pf:
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
                 deconfigged_helper.load(pf, ext='SCI',
-                                       data_label='jw01072001001_01101_00001_nrcb1_cal',
-                                       show_in_viewer=False)
+                                        data_label='jw01072001001_01101_00001_nrcb1_cal',
+                                        show_in_viewer=False)
             data = deconfigged_helper._app.data_collection[2]
             comp = data.get_component('data')  # SCI = DATA
             assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[SCI,1]'
@@ -467,7 +467,7 @@ class TestParseImage:
         # Request specific extension (name only), use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
             deconfigged_helper.load(filename, ext='CTX', data_label='jclj01010_drz',
-                                   show_in_viewer=False)
+                                    show_in_viewer=False)
         data = deconfigged_helper._app.data_collection[1]
         comp = data.get_component('CTX,1')
         assert data.label == 'jclj01010_drz[CTX,1]'
@@ -477,7 +477,7 @@ class TestParseImage:
         # Request specific extension and use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
             deconfigged_helper.load(filename, ext='WHT', data_label='jclj01010_drz',
-                                   show_in_viewer=False)
+                                    how_in_viewer=False)
         data = deconfigged_helper._app.data_collection[2]
         comp = data.get_component('WHT,1')
         assert data.label == 'jclj01010_drz[WHT,1]'
@@ -539,7 +539,7 @@ class TestParseImage:
         fully deprecated.
         """
         deconfigged_helper.load(self.jwst_asdf_url_1, cache=True,
-                               gwcs_to_fits_sip=gwcs_to_fits_sip)
+                                gwcs_to_fits_sip=gwcs_to_fits_sip)
 
         data = deconfigged_helper._app.data_collection[0]
         assert isinstance(data.coords, expected_cls)

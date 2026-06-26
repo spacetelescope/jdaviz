@@ -7,7 +7,6 @@ from astropy.utils.exceptions import AstropyUserWarning
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 
-from jdaviz.conftest import deconfigged_helper
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
                                                handle_squared_flux_unit_conversions)
@@ -113,7 +112,8 @@ def test_cubeviz_aperphot_cube_orig_flux(deconfigged_helper, image_cube_hdu_obj_
     assert "cannot be negative" in plg._obj.result_failed_msg
 
 
-def test_cubeviz_aperphot_generated_3d_gaussian_smooth(deconfigged_helper, image_cube_hdu_obj_microns):
+def test_cubeviz_aperphot_generated_3d_gaussian_smooth(deconfigged_helper,
+                                                       image_cube_hdu_obj_microns):
     deconfigged_helper.load(image_cube_hdu_obj_microns, data_label="test")
     flux_unit = u.Unit("erg*s^-1*cm^-2*Angstrom^-1*pix^-2")  # actually a sb
     solid_angle_unit = PIX2

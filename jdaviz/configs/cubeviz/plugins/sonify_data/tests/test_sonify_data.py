@@ -41,10 +41,6 @@ def test_sonify_data(deconfigged_helper, spectrum1d_cube_larger):
     assert sonify_plg.stream_active
 
     # Add sonified data to uncert-viewer
-    # TODO: these lines are for deconfigged_helper only
-    ## viewer_ref = deconfigged_helper._app.get_viewer_reference_names()[0]
-    ## uncert_viewer = deconfigged_helper._app.get_viewer(viewer_ref)
-    # get_viewer is only in cubeviz_helper
     uncert_viewer = deconfigged_helper._app.get_viewer("uncert_viewer")
     uncert_viewer.data_menu.add_data('Sonified data')
     assert 'Sonified data' in uncert_viewer.data_menu.data_labels_loaded

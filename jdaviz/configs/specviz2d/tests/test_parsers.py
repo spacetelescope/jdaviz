@@ -50,8 +50,9 @@ def test_2d_parser_jwst(deconfigged_helper):
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 def test_2d_parser_ext_hdulist(deconfigged_helper):
     # jw01538-o160_s00004_nirspec_f170lp-g235h-s1600a1-sub2048_s2d
-    deconfigged_helper.load('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits',  # noqa
-                          format='2D Spectrum', cache=True)
+    deconfigged_helper.load(
+        'https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits',
+        format='2D Spectrum', cache=True)
     dc_0 = deconfigged_helper._app.data_collection[0]
     assert dc_0.get_component('flux').shape == (29, 3416)
 

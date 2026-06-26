@@ -361,7 +361,8 @@ def test_get_spectral_regions_unit_conversion(deconfigged_helper, spectrum1d):
     # Convert the wavelength axis to micron
     new_spectral_axis = "um"
     deconfigged_helper.plugins['Unit Conversion'].spectral_unit = new_spectral_axis
-    spectral_axis_unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    spectral_axis_unit = u.Unit(
+        deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
     subset = SpectralRegion(0.6 * spectral_axis_unit, 0.7 * spectral_axis_unit)
     deconfigged_helper.plugins['Subset Tools'].import_region(subset)
 
@@ -395,7 +396,8 @@ def test_subset_default_thickness(deconfigged_helper, spectrum1d):
     sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
     sv.toolbar.active_tool = sv.toolbar.tools['bqplot:xrange']
 
-    spectral_axis_unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    spectral_axis_unit = u.Unit(
+        deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
     subset = SpectralRegion(2.5 * spectral_axis_unit,
                             3.5 * spectral_axis_unit)
     deconfigged_helper.plugins['Subset Tools'].import_region(subset)
@@ -568,7 +570,8 @@ def test_delete_data_with_subsets(deconfigged_helper, spectrum1d, spectrum1d_nm)
     deconfigged_helper.load(spectrum1d, 'my_spec_AA', format='1D Spectrum')
     deconfigged_helper.load(spectrum1d_nm, 'my_spec_nm', format='1D Spectrum')
 
-    spectral_axis_unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    spectral_axis_unit = u.Unit(
+        deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
 
     subset = SpectralRegion(6200 * spectral_axis_unit,
                             7000 * spectral_axis_unit)

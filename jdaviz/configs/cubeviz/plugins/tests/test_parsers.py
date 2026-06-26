@@ -8,7 +8,6 @@ from gwcs.wcs import WCS as GWCS
 from specutils import Spectrum, SpectralRegion
 from numpy.testing import assert_allclose, assert_array_equal
 
-from jdaviz.conftest import deconfigged_helper
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.utils import PRIHDR_KEY
 
@@ -71,8 +70,8 @@ def test_spectrum1d_with_fake_fixed_units(spectrum1d, deconfigged_helper):
 
     deconfigged_helper._app.add_data_to_viewer('spectrum-viewer', 'test')
     unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(6600 * unit,
-                                                                        7400 * unit))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6600 * unit, 7400 * unit))
 
     subsets = deconfigged_helper._app.get_subsets()
     reg = subsets.get('Subset 1')
@@ -101,7 +100,8 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, deconfigged_
     for i in range(3):
         assert deconfigged_helper._app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
 
-    flux_viewer = deconfigged_helper._app.get_viewer(deconfigged_helper._app.get_viewer_reference_names()[0])
+    flux_viewer = deconfigged_helper._app.get_viewer(
+        deconfigged_helper._app.get_viewer_reference_names()[0])
     label_mouseover = deconfigged_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
@@ -109,7 +109,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, deconfigged_
     assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
                                          '205.4441642302 26.9996148973 (deg)')
-    
+
     unc_viewer_name = deconfigged_helper._app.get_viewer_reference_names()[0]
     unc_viewer = deconfigged_helper._app.get_viewer(unc_viewer_name)
 
@@ -133,7 +133,8 @@ def test_spectrum3d_parse(image_cube_hdu_obj, deconfigged_helper):
     assert data.shape == flux.shape
 
     # Same as flux viewer data in test_fits_image_hdu_parse_from_file
-    flux_viewer = deconfigged_helper._app.get_viewer(deconfigged_helper._default_flux_viewer_reference_name)
+    flux_viewer = deconfigged_helper._app.get_viewer(
+        deconfigged_helper._default_flux_viewer_reference_name)
     label_mouseover = deconfigged_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
@@ -194,7 +195,7 @@ def test_spectrum3d_no_wcs_parse(deconfigged_helper, flux_unit):
 
     data = deconfigged_helper._app.data_collection[0]
     flux = data.get_component('flux')
-    #assert data.label.endswith('[FLUX]')
+    # assert data.label.endswith('[FLUX]')
     assert data.shape == (2, 3, 4)  # x, y, z
     assert isinstance(data.coords, GWCS)
     assert_array_equal(flux.data, 1)
@@ -221,12 +222,12 @@ def test_numpy_cube(deconfigged_helper):
         deconfigged_helper.load(arr, data_type='foo')
 
     deconfigged_helper.load(arr, data_label='uncert_array', data_type='uncert',
-                             override_cube_limit=True)
+                            override_cube_limit=True)
 
     with pytest.raises(RuntimeError, match='Only one cube'):
         deconfigged_helper.load(arr, data_type='mask')
 
-    assert len(deconfigged_helper._app.data_collection) == 3  # flux cube, uncert cube, Spectrum (sum)
+    assert len(deconfigged_helper._app.data_collection) == 3  # flux, uncert, Spectrum (sum)
 
     # Check context of first cube.
     data = deconfigged_helper._app.data_collection[0]
@@ -281,7 +282,8 @@ def test_manga_with_mask(deconfigged_helper):
                                      ('Max', 1e20)]:
         se.function = function
         se.extract()
-        extracted_max = deconfigged_helper.datasets[f"Spectrum ({function.lower()})"].get_data().max()
+        extracted_max = (deconfigged_helper.datasets[f"Spectrum ({function.lower()})"]
+                         .get_data().max())
         assert_allclose(extracted_max.value, expected_value, rtol=5e-7)
         if function == "Sum":
             assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2")

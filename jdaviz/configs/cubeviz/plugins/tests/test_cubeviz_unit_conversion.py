@@ -6,7 +6,6 @@ from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion
 from specutils import Spectrum
 
-from jdaviz.conftest import deconfigged_helper
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 
 
@@ -48,7 +47,8 @@ def test_basic_unit_conversions(deconfigged_helper, angle_unit):
     ap_plg = deconfigged_helper.plugins["Aperture Photometry"]._obj
     label_mouseover = deconfigged_helper._coords_info
 
-    deconfigged_helper.plugins['Subset Tools'].import_region(RectanglePixelRegion(PixCoord(1, 1), 1, 1))
+    deconfigged_helper.plugins['Subset Tools'].import_region(RectanglePixelRegion(
+        PixCoord(1, 1), 1, 1))
     ap_plg.background_selected = "Subset 1"
 
     for flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
@@ -340,7 +340,8 @@ def test_cubeviz_flux_sb_translation_counts(deconfigged_helper, angle_unit):
     assert angle_str in uc_plg.angle_unit.choices
 
     # to have access to display units
-    viewer_1d = deconfigged_helper._app.get_viewer(deconfigged_helper._default_spectrum_viewer_reference_name)
+    viewer_1d = deconfigged_helper._app.get_viewer(
+        deconfigged_helper._default_spectrum_viewer_reference_name)
 
     # do a spectral y axis translation from Flux to Surface Brightness
     uc_plg.spectral_y_type.selected = 'Surface Brightness'
