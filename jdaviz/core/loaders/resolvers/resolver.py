@@ -701,6 +701,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                                                           if h not in ['s_region']]
 
                 # See 'input is empty' comment above
+                self.parsed_input_not_resolvable_message = ''
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True

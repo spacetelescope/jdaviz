@@ -3,6 +3,7 @@
     :title="title"
     :popout_button="popout_button"
     :spinner="spinner"
+    :spinner_success_message="spinner_success_message"
     :parsed_input_not_resolvable_message="parsed_input_not_resolvable_message"
     :parsed_input_is_query="parsed_input_is_query"
     :treat_table_as_query.sync="treat_table_as_query"
