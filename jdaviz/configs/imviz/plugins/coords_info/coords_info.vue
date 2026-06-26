@@ -20,7 +20,7 @@
   </div>
 
   <!-- normal (non-focus) mode -->
-  <div v-else @mouseover="show_dataset_selected = true" @mouseleave="show_dataset_selected = false" style="min-width: 300px">
+  <div v-else @mouseover="show_dataset_selected = true" @mouseleave="show_dataset_selected = false">
     <div v-if="icon" style="position: absolute; height: 100%">
       <v-toolbar-items>
         <v-btn icon rounded="0">
@@ -46,7 +46,7 @@
         </span>
       </v-toolbar-items>
     </div>
-    <div v-else style="position: absolute; height: 100%">
+    <div v-else style="height: 100%">
       <v-toolbar-items>
         <j-tooltip tipid='coords-info-cycle'>
           <v-btn icon rounded="0" @click="next_layer()">

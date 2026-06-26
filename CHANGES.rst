@@ -87,7 +87,10 @@ Bug Fixes
 
 - Fixed a bug in the compass plugin where the image would be flipped when WCS linked. [#4252]
 
-Mosviz
+- Update the File Drop Resolver to parse input the same way as the File Resolver,
+  which fixes a bug where the resolver would not correctly parse some file types. [#4250]
+
+- Fix horizontal spacing of the app-level toolbar for small displays. [#4245]
 
 
 5.0.2 (2026-06-12)
@@ -123,8 +126,6 @@ Bug Fixes
 
 - Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
 
-Mosviz
-^^^^^^
 
 5.0.1 (2026-05-01)
 ==================
