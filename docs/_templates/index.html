@@ -922,6 +922,18 @@
             color: #1a1a1a;
         }
 
+        .jupyter-cell-footer {
+            padding: 10px 16px;
+            border-top: 1px solid var(--grid-border);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        html[data-theme="light"] .jupyter-cell-footer {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
         /* Content Border Wrapper */
         .content-border-wrapper {
             width: 99%;
@@ -1449,6 +1461,15 @@
 
             <!-- Command Line Content -->
             <div class="platform-tab-content" data-platform-content="commandline">
+                <div class="jupyter-cell-container">
+                    <div class="jupyter-cell-header">
+                        <span class="jupyter-cell-prompt">Command Line / Terminal</span>
+                    </div>
+                    <div class="jupyter-cell-code">$ jdaviz</div>
+                    <div class="jupyter-cell-footer">
+                        See <a href="{{ pathto('quickstart') }}#launching-from-the-command-line" target="_self" style="color: var(--pst-color-primary-highlight); text-decoration: underline;">additional command line arguments</a>
+                    </div>
+                </div>
             </div>
 
             <!-- Jdaviz@MAST Content -->
