@@ -4,6 +4,7 @@ from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
 CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
+
 @pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
 def test_slice_roman(deconfigged_helper, roman_level_1_ramp):
