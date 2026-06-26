@@ -87,6 +87,8 @@ Bug Fixes
 - Update the File Drop Resolver to parse input the same way as the File Resolver,
   which fixes a bug where the resolver would not correctly parse some file types. [#4250]
 
+- Fix horizontal spacing of the app-level toolbar for small displays. [#4245]
+
 - Fix treating input tables as queries and add support for exports from MAST portal. [#4234]
 
 
@@ -126,8 +128,6 @@ Bug Fixes
 
 - Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
 
-Mosviz
-^^^^^^
 
 5.0.1 (2026-05-01)
 ==================
