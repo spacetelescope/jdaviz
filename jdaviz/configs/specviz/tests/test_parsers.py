@@ -24,60 +24,60 @@ class TestSpecvizSpectrum1DParser:
     Test the main specviz_spectrum1d_parser function.
     """
     @pytest.mark.parametrize('label', [None, 'custom_label'])
-    def test_parse_single_spectrum1d(self, specviz_helper, spectrum1d, label):
+    def test_parse_single_spectrum1d(self, deconfigged_helper, spectrum1d, label):
         """
         Test parsing a single Spectrum1D object.
         """
-        specviz_spectrum1d_parser(specviz_helper._app, spectrum1d, data_label=label)
+        specviz_spectrum1d_parser(deconfigged_helper._app, spectrum1d, data_label=label)
 
-        assert len(specviz_helper._app.data_collection) == 1
+        assert len(deconfigged_helper._app.data_collection) == 1
         if label:
-            assert specviz_helper._app.data_collection[0].label == label
+            assert deconfigged_helper._app.data_collection[0].label == label
         else:
-            assert specviz_helper._app.data_collection[0].label == 'Spectrum'
+            assert deconfigged_helper._app.data_collection[0].label == 'Spectrum'
 
-    def test_parse_spectrum_list(self, specviz_helper, premade_spectrum_list):
+    def test_parse_spectrum_list(self, deconfigged_helper, premade_spectrum_list):
         """
         Test parsing a SpectrumList.
         """
-        specviz_spectrum1d_parser(specviz_helper._app,
+        specviz_spectrum1d_parser(deconfigged_helper._app,
                                   premade_spectrum_list,
                                   data_label=[f"spec{i}_label"
                                               for i in range(len(premade_spectrum_list))])
 
-        assert len(specviz_helper._app.data_collection) == len(premade_spectrum_list)
-        for i, data in enumerate(specviz_helper._app.data_collection):
+        assert len(deconfigged_helper._app.data_collection) == len(premade_spectrum_list)
+        for i, data in enumerate(deconfigged_helper._app.data_collection):
             assert data.label == f"spec{i}_label"
 
-    def test_parse_2d_flux_spectrum(self, specviz_helper, spectrum2d):
+    def test_parse_2d_flux_spectrum(self, deconfigged_helper, spectrum2d):
         """
         Test that 2D flux spectra are split automatically.
         """
-        specviz_spectrum1d_parser(specviz_helper._app, spectrum2d, data_label='spec2d_label')
+        specviz_spectrum1d_parser(deconfigged_helper._app, spectrum2d, data_label='spec2d_label')
 
-        assert len(specviz_helper._app.data_collection) == np.shape(spectrum2d)[0]
-        for i, data in enumerate(specviz_helper._app.data_collection):
+        assert len(deconfigged_helper._app.data_collection) == np.shape(spectrum2d)[0]
+        for i, data in enumerate(deconfigged_helper._app.data_collection):
             assert data.label == f"spec2d_label [{i}]"
 
-    def test_parse_spectrum_collection(self, specviz_helper, spectrum_collection):
+    def test_parse_spectrum_collection(self, deconfigged_helper, spectrum_collection):
         """
         Test parsing a SpectrumCollection.
         """
         msg = 'SpectrumCollection detected. Please provide a Spectrum or SpectrumList'
         with pytest.raises(TypeError, match=msg):
-            specviz_spectrum1d_parser(specviz_helper._app, spectrum_collection)
+            specviz_spectrum1d_parser(deconfigged_helper._app, spectrum_collection)
 
-    def test_parse_mismatched_label_length(self, specviz_helper, premade_spectrum_list):
+    def test_parse_mismatched_label_length(self, deconfigged_helper, premade_spectrum_list):
         """
         Test error when label list length doesn't match data length.
         """
         msg = "Length of data labels list (1) is different than length of list of data (5)"
         with pytest.raises(ValueError, match=re.escape(msg)):
-            specviz_spectrum1d_parser(specviz_helper._app,
+            specviz_spectrum1d_parser(deconfigged_helper._app,
                                       premade_spectrum_list,
                                       data_label=['oops'])
 
-    def test_parse_concat_by_file(self, specviz_helper):
+    def test_parse_concat_by_file(self, deconfigged_helper):
         """
         Test the concat_by_file functionality.
         """
@@ -93,19 +93,19 @@ class TestSpecvizSpectrum1DParser:
         )
         spec_list = SpectrumList([spec1, spec2])
 
-        specviz_spectrum1d_parser(specviz_helper._app,
+        specviz_spectrum1d_parser(deconfigged_helper._app,
                                   spec_list,
                                   data_label='test_concat',
                                   concat_by_file=True)
 
         # Should have 2 individual spectra + 1 combined
-        assert len(specviz_helper._app.data_collection) == 3
+        assert len(deconfigged_helper._app.data_collection) == 3
         labels = [
-            d.label for d in specviz_helper._app.data_collection
+            d.label for d in deconfigged_helper._app.data_collection
         ]
         assert any('Combined' in label for label in labels)
 
-    def test_parse_file_path(self, specviz_helper, tmp_path):
+    def test_parse_file_path(self, deconfigged_helper, tmp_path):
         """
         Test parsing from a file path.
         """
@@ -120,13 +120,13 @@ class TestSpecvizSpectrum1DParser:
         filepath = tmp_path / 'test_spectrum.fits'
         spec.write(str(filepath), overwrite=True)
 
-        specviz_spectrum1d_parser(specviz_helper._app,
+        specviz_spectrum1d_parser(deconfigged_helper._app,
                                   str(filepath),
                                   data_label='test_filepath')
 
-        assert len(specviz_helper._app.data_collection) == 1
+        assert len(deconfigged_helper._app.data_collection) == 1
 
-    def test_parse_metadata_standardization(self, specviz_helper):
+    def test_parse_metadata_standardization(self, deconfigged_helper):
         """
         Test that metadata is standardized.
         """
@@ -136,24 +136,24 @@ class TestSpecvizSpectrum1DParser:
             meta={'TELESCOPE': 'TEST', 'INSTRUMENT': 'FAKE'}
         )
 
-        specviz_spectrum1d_parser(specviz_helper._app, spec, data_label='test_meta')
+        specviz_spectrum1d_parser(deconfigged_helper._app, spec, data_label='test_meta')
 
-        loaded_spec = specviz_helper.datasets['test_meta'].get_data()
+        loaded_spec = deconfigged_helper.datasets['test_meta'].get_data()
         assert 'TELESCOPE' in loaded_spec.meta
 
-    def test_parse_show_in_viewer_false(self, specviz_helper, spectrum1d):
+    def test_parse_show_in_viewer_false(self, deconfigged_helper, spectrum1d):
         """
         Test that show_in_viewer=False doesn't add to viewer.
         """
-        specviz_spectrum1d_parser(specviz_helper._app,
+        specviz_spectrum1d_parser(deconfigged_helper._app,
                                   spectrum1d,
                                   data_label='hidden_spec',
                                   show_in_viewer=False)
 
-        assert len(specviz_helper._app.data_collection) == 1
+        assert len(deconfigged_helper._app.data_collection) == 1
 
-        viewer = specviz_helper._app.get_viewer(
-            specviz_helper._default_spectrum_viewer_reference_name
+        viewer = deconfigged_helper._app.get_viewer(
+            deconfigged_helper._default_spectrum_viewer_reference_name
         )
         # Check that no data is shown in viewer
         assert len(viewer.data()) == 0

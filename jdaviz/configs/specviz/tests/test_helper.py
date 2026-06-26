@@ -15,14 +15,14 @@ from jdaviz import Specviz
 
 class TestSpecvizHelper:
     @pytest.fixture(autouse=True)
-    def setup_class(self, specviz_helper, spectrum1d, multi_order_spectrum_list):
-        self.spec_app = specviz_helper
+    def setup_class(self, deconfigged_helper, spectrum1d, multi_order_spectrum_list):
+        self.spec_app = deconfigged_helper
         self.spec = spectrum1d
         self.spec_list = SpectrumList([spectrum1d] * 3)
         self.multi_order_spectrum_list = multi_order_spectrum_list
 
         self.label = "Test 1D Spectrum"
-        self.spec_app.load_data(spectrum1d, data_label=self.label)
+        self.spec_app.load(spectrum1d, data_label=self.label, format='1D Spectrum')
 
     def test_load_spectrum1d(self):
         # starts with a single loaded spectrum1d object:
@@ -56,7 +56,7 @@ class TestSpecvizHelper:
         spectrum_table.header['INSTRUME'] = 'Fake Instrument'
         fake_hdulist = fits.HDUList([primary_hdu, spectrum_table])
         self.label = "Test 1D Spectrum"
-        self.spec_app.load_data(fake_hdulist)
+        self.spec_app.load(fake_hdulist, data_label=self.label, format='1D Spectrum')
         data = self.spec_app.datasets[self.label].get_data()
         # HDUList should load as Spectrum
         assert isinstance(data, Spectrum)
@@ -69,7 +69,7 @@ class TestSpecvizHelper:
     def test_load_spectrum_list_with_kwargs(self, kwargs):
         # When loading via the ``data_label`` argument, the length of the
         # list must match the number of sources in the SpectrumList.
-        self.spec_app.load_data(self.spec_list, **kwargs)
+        self.spec_app.load(self.spec_list, **kwargs, format='1D Spectrum')
         assert len(self.spec_app._app.data_collection) == 4
         if 'load' in list(kwargs.keys())[0]:
             for i in (1, 2, 3):
@@ -78,19 +78,19 @@ class TestSpecvizHelper:
     def test_load_multi_order_spectrum_list(self):
         assert len(self.spec_app._app.data_collection) == 1
         # now load ten spectral orders from a SpectrumList:
-        self.spec_app.load_data(self.multi_order_spectrum_list, sources='*')
+        self.spec_app.load(self.multi_order_spectrum_list, sources='*', format='1D Spectrum')
         assert len(self.spec_app._app.data_collection) == 11
 
     def test_mismatched_label_length(self):
         # NOTE: will be removed after load_data deprecation is removed
         with pytest.raises(ValueError, match='Length'):
             labels = ["List test 1", "List test 2"]
-            self.spec_app.load_data(self.spec_list, data_label=labels)
+            self.spec_app.load(self.spec_list, data_label=labels, format='1D Spectrum')
 
     def test_load_spectrum_collection(self):
         with pytest.raises(ValueError):
             collection = SpectrumCollection([1]*u.AA)
-            self.spec_app.load_data(collection)
+            self.spec_app.load(collection, format='1D Spectrum')
 
     def test_get_spectra_no_viewer_reference(self):
         """
@@ -281,60 +281,60 @@ class TestSpecvizHelper:
                                  7800., atol=1e-5)
 
 
-def test_get_spectra_no_spectra(specviz_helper, spectrum1d):
+def test_get_spectra_no_spectra(deconfigged_helper, spectrum1d):
     with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
-        spectra = specviz_helper.get_spectra()
+        spectra = deconfigged_helper.get_spectra()
 
     assert spectra == {}
 
 
-def test_get_spectra_no_spectra_redshift_error(specviz_helper, spectrum1d):
-    spectra = specviz_helper.get_spectra(apply_slider_redshift=True)
+def test_get_spectra_no_spectra_redshift_error(deconfigged_helper, spectrum1d):
+    spectra = deconfigged_helper.get_spectra(apply_slider_redshift=True)
 
     assert spectra == {}
 
 
-def test_get_spectra_no_spectra_label(specviz_helper, spectrum1d):
+def test_get_spectra_no_spectra_label(deconfigged_helper, spectrum1d):
     label = "label"
     with pytest.raises(ValueError):
-        specviz_helper.get_spectra(data_label=label)
+        deconfigged_helper.get_spectra(data_label=label)
 
 
-def test_get_spectra_no_spectra_label_redshift_error(specviz_helper, spectrum1d):
+def test_get_spectra_no_spectra_label_redshift_error(deconfigged_helper, spectrum1d):
     label = "label"
     with pytest.raises(ValueError):
-        specviz_helper.get_spectra(data_label=label, apply_slider_redshift=True)
+        deconfigged_helper.get_spectra(data_label=label, apply_slider_redshift=True)
 
 
-def test_add_spectrum_after_subset(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label="test")
+def test_add_spectrum_after_subset(deconfigged_helper, spectrum1d):
+    deconfigged_helper.load(spectrum1d, data_label="test", format='1D Spectrum')
     subset = SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
                             7000 * spectrum1d.spectral_axis.unit)
-    specviz_helper.plugins['Subset Tools'].import_region(subset)
+    deconfigged_helper.plugins['Subset Tools'].import_region(subset)
 
-    new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
-    specviz_helper.load_data(new_spec, data_label="test2")
+    new_spec = deconfigged_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
+    deconfigged_helper.load(new_spec, data_label="test2", format='1D Spectrum')
 
 
-def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
+def test_get_spectral_regions_unit(deconfigged_helper, spectrum1d):
     # Ensure units we put in are the same as the units we get out
-    specviz_helper.load_data(spectrum1d)
+    deconfigged_helper.load(spectrum1d, data_label="test", format='1D Spectrum')
     subset = SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
                             7000 * spectrum1d.spectral_axis.unit)
-    specviz_helper.plugins['Subset Tools'].import_region(subset)
+    deconfigged_helper.plugins['Subset Tools'].import_region(subset)
 
-    subsets = specviz_helper.plugins['Subset Tools'].get_regions()
+    subsets = deconfigged_helper.plugins['Subset Tools'].get_regions()
     reg = subsets.get('Subset 1')
 
     assert spectrum1d.spectral_axis.unit == reg.lower.unit
     assert spectrum1d.spectral_axis.unit == reg.upper.unit
 
 
-def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
-    spec_viewer = specviz_helper._app.get_viewer('spectrum-viewer')
+def test_get_spectral_regions_unit_conversion(deconfigged_helper, spectrum1d):
+    spec_viewer = deconfigged_helper._app.get_viewer('spectrum-viewer')
 
     # Mouseover without data should not crash.
-    label_mouseover = specviz_helper._coords_info
+    label_mouseover = deconfigged_helper._coords_info
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
     assert label_mouseover.as_text() == ('', '', '')
@@ -342,7 +342,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
 
     # If the reference (visible) data changes via unit conversion,
     # check that the region's units convert too
-    specviz_helper.load_data(spectrum1d)  # Originally Angstrom
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')  # Originally Angstrom
 
     # Also check coordinates info panel.
     # x=0 -> 6000 A, x=1 -> 6222.222 A
@@ -360,18 +360,18 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
 
     # Convert the wavelength axis to micron
     new_spectral_axis = "um"
-    specviz_helper.plugins['Unit Conversion'].spectral_unit = new_spectral_axis
-    spectral_axis_unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Unit Conversion'].spectral_unit = new_spectral_axis
+    spectral_axis_unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
     subset = SpectralRegion(0.6 * spectral_axis_unit, 0.7 * spectral_axis_unit)
-    specviz_helper.plugins['Subset Tools'].import_region(subset)
+    deconfigged_helper.plugins['Subset Tools'].import_region(subset)
 
     # Retrieve the Subset
-    ss = specviz_helper.plugins['Subset Tools'].get_regions(use_display_units=False)
+    ss = deconfigged_helper.plugins['Subset Tools'].get_regions(use_display_units=False)
     reg = ss.get('Subset 1')
     assert reg.lower.unit == u.Angstrom
     assert reg.upper.unit == u.Angstrom
 
-    ss = specviz_helper.plugins['Subset Tools'].get_regions(use_display_units=True)
+    ss = deconfigged_helper.plugins['Subset Tools'].get_regions(use_display_units=True)
     reg = ss.get('Subset 1')
     assert reg.lower.unit == u.um
     assert reg.upper.unit == u.um
@@ -389,31 +389,31 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     assert label_mouseover.icon == ''
 
 
-def test_subset_default_thickness(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+def test_subset_default_thickness(deconfigged_helper, spectrum1d):
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
 
-    sv = specviz_helper._app.get_viewer('spectrum-viewer')
+    sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
     sv.toolbar.active_tool = sv.toolbar.tools['bqplot:xrange']
 
-    spectral_axis_unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    spectral_axis_unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
     subset = SpectralRegion(2.5 * spectral_axis_unit,
                             3.5 * spectral_axis_unit)
-    specviz_helper.plugins['Subset Tools'].import_region(subset)
+    deconfigged_helper.plugins['Subset Tools'].import_region(subset)
     # _on_layers_update is not triggered within CI
     sv._on_layers_update()
     assert sv.state.layers[-1].linewidth == 3
 
 
-def test_app_links(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
-    sv = specviz_helper._app.get_viewer('spectrum-viewer')
+def test_app_links(deconfigged_helper, spectrum1d):
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+    sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
     assert isinstance(sv.jdaviz_app, PrivateApplication)
     assert isinstance(sv.jdaviz_helper, Specviz)
 
 
 @pytest.mark.remote_data
 @pytest.mark.xfail(reason='Multiple file support not yet implemented in loaders')
-def test_load_spectrum_list_directory(tmpdir, specviz_helper):
+def test_load_spectrum_list_directory(tmpdir, deconfigged_helper):
     # niriss_parser_test_data.zip
     test_data = 'https://stsci.box.com/shared/static/7ndets0vjjsa97la2hvjvm6xvnu5b594.zip'
     fn = download_file(test_data, cache=True, timeout=30)
@@ -424,23 +424,23 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
     # Load two NIRISS x1d files from FITS. They have 19 and 20 EXTRACT1D
     # extensions per file, for a total of 39 spectra to load:
     with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
-        specviz_helper.load_data(data_path)
+        deconfigged_helper.load(data_path)
 
     # NOTE: the length was 3 before specutils 1.9 (https://github.com/astropy/specutils/pull/982)
     expected_len = 39
-    assert len(specviz_helper._app.data_collection) == expected_len
+    assert len(deconfigged_helper._app.data_collection) == expected_len
 
-    for data in specviz_helper._app.data_collection:
+    for data in deconfigged_helper._app.data_collection:
         assert data.main_components[:2] == ['flux', 'uncertainty']
 
-    dc_0 = specviz_helper._app.data_collection[0]
+    dc_0 = deconfigged_helper._app.data_collection[0]
     assert 'header' not in dc_0.meta
     assert dc_0.meta['SPORDER'] == 1
 
 
 @pytest.mark.remote_data
 @pytest.mark.xfail(reason='Multiple file support not yet implemented in loaders')
-def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
+def test_load_spectrum_list_directory_concat(tmpdir, deconfigged_helper):
     # niriss_parser_test_data.zip
     test_data = 'https://stsci.box.com/shared/static/7ndets0vjjsa97la2hvjvm6xvnu5b594.zip'
     fn = download_file(test_data, cache=True, timeout=30)
@@ -453,38 +453,38 @@ def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
     # spectra common to each file into one "Combined" spectrum to load per file.
     # Now the total is (19 EXTRACT 1D + 1 Combined) + (20 EXTRACT 1D + 1 Combined) = 41.
     with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
-        specviz_helper.load_data(data_path, concat_by_file=True)
-    assert len(specviz_helper._app.data_collection) == 41
+        deconfigged_helper.load(data_path, concat_by_file=True)
+    assert len(deconfigged_helper._app.data_collection) == 41
 
 
-def test_load_2d_flux(specviz_helper):
+def test_load_2d_flux(deconfigged_helper):
     # Test loading a spectrum with a 2D flux, which should be split into separate
     # 1D Spectrum objects to load in Specviz.
     spec = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                     flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
     # NOTE: this maps to specviz_helper.load(spec, data_label='test', extension='*')
-    specviz_helper.load_data(spec, data_label="test", sources='*')
+    deconfigged_helper.load(spec, data_label="test", sources='*', format='1D Spectrum')
 
-    assert len(specviz_helper._app.data_collection) == 4
-    assert specviz_helper._app.data_collection[0].label == "test_index-0"
+    assert len(deconfigged_helper._app.data_collection) == 4
+    assert deconfigged_helper._app.data_collection[0].label == "test_index-0"
 
     spec2 = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                      flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
-    # NOTE: this maps to specviz_helper.load(spec_list, data_label='second test', extension='*')
-    specviz_helper.load_data(spec_list, data_label="second test", sources='*')
+    # NOTE: this maps to deconfigged_helper.load(spec_list, data_label='second test', extension='*')
+    deconfigged_helper.load(spec_list, data_label="second test", sources='*', format='1D Spectrum')
 
-    assert len(specviz_helper._app.data_collection) == 6
-    assert specviz_helper._app.data_collection[-1].label == "second test_index-1"
+    assert len(deconfigged_helper._app.data_collection) == 6
+    assert deconfigged_helper._app.data_collection[-1].label == "second test_index-1"
 
 
-def test_plot_uncertainties(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+def test_plot_uncertainties(deconfigged_helper, spectrum1d):
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
 
-    specviz_viewer = specviz_helper._app.get_viewer('spectrum-viewer')
+    specviz_viewer = deconfigged_helper._app.get_viewer('spectrum-viewer')
 
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
 
@@ -509,21 +509,21 @@ def test_plot_uncertainties(specviz_helper, spectrum1d):
 
 # Some API might be going through deprecation, so ignore the warning.
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-def test_plugin_user_apis(specviz_helper):
-    for plugin_name, plugin_api in specviz_helper.plugins.items():
+def test_plugin_user_apis(deconfigged_helper):
+    for plugin_name, plugin_api in deconfigged_helper.plugins.items():
         plugin = plugin_api._obj
         for attr in plugin_api._expose:
             assert hasattr(plugin, attr)
 
 
-def test_data_label_as_posarg(specviz_helper, spectrum1d):
+def test_data_label_as_posarg(deconfigged_helper, spectrum1d):
     # Passing in data_label keyword as posarg.
-    specviz_helper.load_data(spectrum1d, 'my_spec')
-    assert specviz_helper._app.data_collection[0].label == 'my_spec'
+    deconfigged_helper.load(spectrum1d, 'my_spec')
+    assert deconfigged_helper._app.data_collection[0].label == 'my_spec'
 
 
-def test_spectra_partial_overlap(specviz_helper):
-    spec_viewer = specviz_helper._app.get_viewer('spectrum-viewer')
+def test_spectra_partial_overlap(deconfigged_helper):
+    spec_viewer = deconfigged_helper._app.get_viewer('spectrum-viewer')
 
     wave_1 = np.linspace(6000, 7000, 10) * u.AA
     flux_1 = ([1200] * wave_1.size) * u.nJy
@@ -533,12 +533,12 @@ def test_spectra_partial_overlap(specviz_helper):
     flux_2 = ([60] * wave_2.size) * u.nJy
     sp_2 = Spectrum(flux=flux_2, spectral_axis=wave_2)
 
-    specviz_helper.load_data(sp_1, data_label='left')
-    specviz_helper.load_data(sp_2, data_label='right')
+    deconfigged_helper.load(sp_1, data_label='left', format='1D Spectrum')
+    deconfigged_helper.load(sp_2, data_label='right', format='1D Spectrum')
 
     # Test mouseover outside of left but in range for right.
     # Should show right spectrum even when mouse is near left flux.
-    label_mouseover = specviz_helper._coords_info
+    label_mouseover = deconfigged_helper._coords_info
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 7022, 'y': 1000}})
     assert label_mouseover.as_text() == ('Cursor 7.02200e+03, 1.00000e+03',
@@ -547,7 +547,7 @@ def test_spectra_partial_overlap(specviz_helper):
     assert label_mouseover.icon == 'b'
 
 
-def test_spectra_incompatible_flux(specviz_helper):
+def test_spectra_incompatible_flux(deconfigged_helper):
     """https://github.com/spacetelescope/jdaviz/issues/2459"""
     wav = [1.1, 1.2, 1.3] * u.um
     sp1 = Spectrum(flux=[1, 1.1, 1] * (u.MJy / u.sr), spectral_axis=wav)
@@ -555,32 +555,32 @@ def test_spectra_incompatible_flux(specviz_helper):
     flux3 = ([1, 1.1, 1] * u.MJy).to(u.erg / u.s / u.cm / u.cm / u.AA, u.spectral_density(wav))
     sp3 = Spectrum(flux=flux3, spectral_axis=wav)
 
-    specviz_helper.load_data(sp2, data_label="2")  # OK
-    specviz_helper.load_data(sp1, data_label="1")  # Not OK
-    specviz_helper.load_data(sp3, data_label="3")  # OK
+    deconfigged_helper.load(sp2, data_label="2", format='1D Spectrum')  # OK
+    deconfigged_helper.load(sp1, data_label="1", format='1D Spectrum')  # Not OK
+    deconfigged_helper.load(sp3, data_label="3", format='1D Spectrum')  # OK
 
     # all 3 load into data-collection, but only two in the viewer (with snackbar error)
-    assert len(specviz_helper._app.data_collection.labels) == 3
-    assert len(specviz_helper.viewers['spectrum-viewer']._obj.glue_viewer.layers) == 2
+    assert len(deconfigged_helper._app.data_collection.labels) == 3
+    assert len(deconfigged_helper.viewers['spectrum-viewer']._obj.glue_viewer.layers) == 2
 
 
-def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
-    specviz_helper.load_data(spectrum1d, 'my_spec_AA')
-    specviz_helper.load_data(spectrum1d_nm, 'my_spec_nm')
+def test_delete_data_with_subsets(deconfigged_helper, spectrum1d, spectrum1d_nm):
+    deconfigged_helper.load(spectrum1d, 'my_spec_AA', format='1D Spectrum')
+    deconfigged_helper.load(spectrum1d_nm, 'my_spec_nm', format='1D Spectrum')
 
-    spectral_axis_unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    spectral_axis_unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
 
     subset = SpectralRegion(6200 * spectral_axis_unit,
                             7000 * spectral_axis_unit)
-    specviz_helper.plugins['Subset Tools'].import_region(subset)
+    deconfigged_helper.plugins['Subset Tools'].import_region(subset)
 
-    assert len(specviz_helper._app.data_collection.subset_groups) == 1
-    subset1 = specviz_helper._app.data_collection.subset_groups[0]
+    assert len(deconfigged_helper._app.data_collection.subset_groups) == 1
+    subset1 = deconfigged_helper._app.data_collection.subset_groups[0]
     assert subset1.subset_state.att.parent.label == "my_spec_AA"
     assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (6200, 7000))
 
-    specviz_helper._app.remove_data_from_viewer('spectrum-viewer', "my_spec_AA")
-    specviz_helper._app.data_item_remove("my_spec_AA")
+    deconfigged_helper._app.remove_data_from_viewer('spectrum-viewer', "my_spec_AA")
+    deconfigged_helper._app.data_item_remove("my_spec_AA")
 
     # Check that the reparenting and coordinate recalculations happened
     assert subset1.subset_state.att.parent.label == "my_spec_nm"
@@ -590,196 +590,196 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
 # TODO: Delete on full deprecation of load_data
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestLoadData:
-    def test_load_data_errors(self, specviz_helper, spectrum1d):
+    def test_load_data_errors(self, deconfigged_helper, spectrum1d):
         """
         Test that errors from load_data.
         """
         with pytest.raises(NotImplementedError, match='format is ignored'):
-            specviz_helper.load_data(spectrum1d, format='some_format')
+            deconfigged_helper.load(spectrum1d, format='some_format')
 
         with pytest.raises(ValueError, match='Cannot set both'):
-            specviz_helper.load_data(spectrum1d, load_as_list=True, concat_by_file=True)
+            deconfigged_helper.load(spectrum1d, load_as_list=True, concat_by_file=True)
 
-    def test_load_data_with_cache_timeout_local_path(self, specviz_helper, spectrum1d, tmpdir):
+    def test_load_data_with_cache_timeout_local_path(self, deconfigged_helper, spectrum1d, tmpdir):
         """
         Test load_data with cache, timeout, and local_path kwargs.
         """
-        specviz_helper.load_data(
+        deconfigged_helper.load(
             spectrum1d,
             data_label='test_cache',
             cache=True,
             timeout=30,
             local_path=tmpdir
         )
-        assert 'test_cache' in specviz_helper._app.data_collection.labels
-        assert len(specviz_helper._app.data_collection) == 1
+        assert 'test_cache' in deconfigged_helper._app.data_collection.labels
+        assert len(deconfigged_helper._app.data_collection) == 1
 
-    def test_load_data_with_sources_and_exposures(self, specviz_helper, premade_spectrum_list):
+    def test_load_data_with_sources_and_exposures(self, deconfigged_helper, premade_spectrum_list):
         """
         Test load_data with sources and exposures kwargs.
         """
-        specviz_helper.load_data(premade_spectrum_list, sources='*')
-        assert len(specviz_helper._app.data_collection) == 5
+        deconfigged_helper.load(premade_spectrum_list, sources='*')
+        assert len(deconfigged_helper._app.data_collection) == 5
 
-    def test_load_data_show_in_viewer_false(self, specviz_helper, spectrum1d):
+    def test_load_data_show_in_viewer_false(self, deconfigged_helper, spectrum1d):
         """
         Test load_data with show_in_viewer=False.
         """
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-            specviz_helper.load_data(
+            deconfigged_helper.load(
                 spectrum1d,
                 data_label='hidden_spec',
                 show_in_viewer=False
             )
-        assert 'hidden_spec' in specviz_helper._app.data_collection.labels
+        assert 'hidden_spec' in deconfigged_helper._app.data_collection.labels
 
-    def test_load_data_concat_by_file(self, specviz_helper, premade_spectrum_list):
+    def test_load_data_concat_by_file(self, deconfigged_helper, premade_spectrum_list):
         """
         Test load_data with concat_by_file=True.
         """
-        initial_count = len(specviz_helper._app.data_collection)
-        specviz_helper.load_data(
+        initial_count = len(deconfigged_helper._app.data_collection)
+        deconfigged_helper.load(
             premade_spectrum_list,
             data_label='concatenated',
             concat_by_file=True
         )
-        assert len(specviz_helper._app.data_collection) == initial_count + 1
+        assert len(deconfigged_helper._app.data_collection) == initial_count + 1
 
-    def test_load_data_with_load_as_list(self, specviz_helper, premade_spectrum_list):
+    def test_load_data_with_load_as_list(self, deconfigged_helper, premade_spectrum_list):
         """
         Test load_data with load_as_list=True.
         """
-        specviz_helper.load_data(
+        deconfigged_helper.load(
             premade_spectrum_list,
             data_label='as_list',
             load_as_list=True
         )
-        assert 'as_list_index-0' in specviz_helper._app.data_collection.labels
+        assert 'as_list_index-0' in deconfigged_helper._app.data_collection.labels
 
 
 # TODO: Delete on full deprecation of x_limits, y_limits, autoscale_x, autoscale_y
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.filterwarnings("ignore::astropy.utils.exceptions.AstropyDeprecationWarning")
 class TestDeprecatedLimits:
-    def test_x_limits(self, specviz_helper, spectrum1d):
+    def test_x_limits(self, deconfigged_helper, spectrum1d):
         """
         Test deprecated x_limits.
         """
-        specviz_helper.load_data(spectrum1d, data_label='test_spec')
-        sv = specviz_helper._app.get_viewer('spectrum-viewer')
+        deconfigged_helper.load(spectrum1d, data_label='test_spec')
+        sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
 
-        specviz_helper.x_limits()
+        deconfigged_helper.x_limits()
         assert sv.scale_x.min == 6000
         assert sv.scale_x.max == 8000
 
-        specviz_helper.x_limits(x_min=6000*u.AA, x_max=7000*u.AA)
+        deconfigged_helper.x_limits(x_min=6000*u.AA, x_max=7000*u.AA)
         assert sv.scale_x.min == 6000
         assert sv.scale_x.max == 7000
 
         region = SpectralRegion(6500 * u.AA, 6600 * u.AA)
-        specviz_helper.x_limits(x_min=region)
+        deconfigged_helper.x_limits(x_min=region)
         assert sv.scale_x.min == 6500
         assert sv.scale_x.max == 6600
 
-        specviz_helper.x_limits(x_min='auto', x_max='auto')
+        deconfigged_helper.x_limits(x_min='auto', x_max='auto')
         assert sv.scale_x.min == 6000
         assert sv.scale_x.max == 8000
 
-    def test_y_limits(self, specviz_helper, spectrum1d):
+    def test_y_limits(self, deconfigged_helper, spectrum1d):
         """
         Test deprecated y_limits.
         """
-        specviz_helper.load_data(spectrum1d, data_label='test_spec')
-        sv = specviz_helper._app.get_viewer('spectrum-viewer')
+        deconfigged_helper.load(spectrum1d, data_label='test_spec')
+        sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
 
-        specviz_helper.y_limits()
+        deconfigged_helper.y_limits()
         assert_allclose(sv.scale_y.min, 12, atol=1)
         assert_allclose(sv.scale_y.max, 16.5, atol=1)
 
-        specviz_helper.y_limits(y_min=0*u.Jy, y_max=20*u.Jy)
+        deconfigged_helper.y_limits(y_min=0*u.Jy, y_max=20*u.Jy)
         assert sv.scale_y.min == 0
         assert sv.scale_y.max == 20
 
         region = SpectralRegion(5 * u.Jy, 10 * u.Jy)
-        specviz_helper.y_limits(y_min=region)
+        deconfigged_helper.y_limits(y_min=region)
 
         assert sv.scale_y.min == 5
         assert sv.scale_y.max == 10
 
-        specviz_helper.y_limits(y_min='auto', y_max='auto')
+        deconfigged_helper.y_limits(y_min='auto', y_max='auto')
         assert_allclose(sv.scale_y.min, 12, atol=1)
         assert_allclose(sv.scale_y.max, 16.5, atol=1)
 
-    def test_autoscale_x_deprecated(self, specviz_helper, spectrum1d):
+    def test_autoscale_x_deprecated(self, deconfigged_helper, spectrum1d):
         """
         Test deprecated autoscale_x method.
         """
-        specviz_helper.load_data(spectrum1d, data_label='test_spec')
-        specviz_helper.autoscale_x()
+        deconfigged_helper.load(spectrum1d, data_label='test_spec')
+        deconfigged_helper.autoscale_x()
 
-        sv = specviz_helper._app.get_viewer('spectrum-viewer')
+        sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
         assert sv.scale_x.min == 6000
         assert sv.scale_x.max == 8000
 
-    def test_autoscale_y_deprecated(self, specviz_helper, spectrum1d):
+    def test_autoscale_y_deprecated(self, deconfigged_helper, spectrum1d):
         """
         Test deprecated autoscale_y method.
         """
-        specviz_helper.load_data(spectrum1d, data_label='test_spec')
-        specviz_helper.autoscale_y()
+        deconfigged_helper.load(spectrum1d, data_label='test_spec')
+        deconfigged_helper.autoscale_y()
 
-        sv = specviz_helper._app.get_viewer('spectrum-viewer')
+        sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
         assert_allclose(sv.scale_y.min, 12, atol=1)
         assert_allclose(sv.scale_y.max, 16.5, atol=1)
 
-    def test_flip_x(self, specviz_helper, spectrum1d):
+    def test_flip_x(self, deconfigged_helper, spectrum1d):
         """
         Test deprecated flip_x method.
         """
-        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+        deconfigged_helper.load(spectrum1d, data_label='test_spec')
 
-        sv = specviz_helper._app.get_viewer('spectrum-viewer')
+        sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
         original_min = sv.scale_x.min
         original_max = sv.scale_x.max
 
-        specviz_helper.flip_x()
+        deconfigged_helper.flip_x()
 
         assert sv.scale_x.min == original_max
         assert sv.scale_x.max == original_min
 
-    def test_flip_y(self, specviz_helper, spectrum1d):
+    def test_flip_y(self, deconfigged_helper, spectrum1d):
         """
         Test deprecated flip_y method.
         """
-        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+        deconfigged_helper.load(spectrum1d, data_label='test_spec')
 
-        sv = specviz_helper._app.get_viewer('spectrum-viewer')
+        sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
         original_min = sv.scale_y.min
         original_max = sv.scale_y.max
 
-        specviz_helper.flip_y()
+        deconfigged_helper.flip_y()
 
         assert sv.scale_y.min == original_max
         assert sv.scale_y.max == original_min
 
-    def test_set_spectrum_tick_format_x_axis(self, specviz_helper, spectrum1d):
+    def test_set_spectrum_tick_format_x_axis(self, deconfigged_helper, spectrum1d):
         """
         Test deprecated set_spectrum_tick_format for x-axis.
         """
-        specviz_helper.load_data(spectrum1d, data_label='test_spec')
-        specviz_helper.set_spectrum_tick_format('0.2f', axis=0)
+        deconfigged_helper.load(spectrum1d, data_label='test_spec')
+        deconfigged_helper.set_spectrum_tick_format('0.2f', axis=0)
 
-    def test_set_spectrum_tick_format_y_axis(self, specviz_helper, spectrum1d):
+    def test_set_spectrum_tick_format_y_axis(self, deconfigged_helper, spectrum1d):
         """
         Test deprecated set_spectrum_tick_format for y-axis.
         """
-        specviz_helper.load_data(spectrum1d, data_label='test_spec')
-        specviz_helper.set_spectrum_tick_format('0.1e', axis=1)
+        deconfigged_helper.load(spectrum1d, data_label='test_spec')
+        deconfigged_helper.set_spectrum_tick_format('0.1e', axis=1)
 
-    def test_set_spectrum_tick_format_invalid_axis(self, specviz_helper, spectrum1d):
+    def test_set_spectrum_tick_format_invalid_axis(self, deconfigged_helper, spectrum1d):
         """
         Test deprecated set_spectrum_tick_format with invalid axis.
         """
-        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+        deconfigged_helper.load(spectrum1d, data_label='test_spec')
         with pytest.warns(UserWarning, match='Please use either 0 or 1'):
-            specviz_helper.set_spectrum_tick_format('0.2f', axis=2)
+            deconfigged_helper.set_spectrum_tick_format('0.2f', axis=2)
