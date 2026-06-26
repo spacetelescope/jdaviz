@@ -4,10 +4,6 @@ import pytest
 
 CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
-# Skip module in CI if needed
-if os.environ.get("CI", "").lower() in ("1", "true", "yes"):
-    import pytest as _pytest
-    _pytest.skip("Temporarily skipped failing cubeviz aperphot tests in CI", allow_module_level=True)
 from astropy import units as u
 from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose

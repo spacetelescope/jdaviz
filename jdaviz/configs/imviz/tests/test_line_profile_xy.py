@@ -12,6 +12,7 @@ from jdaviz.utils import get_top_layer_index
 
 CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
+
 @pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz line profile tests in CI")
 class TestLineProfileXYPixelLinked(BaseImviz_WCS_NoWCS):
     def test_plugin(self):

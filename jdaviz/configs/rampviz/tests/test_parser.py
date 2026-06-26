@@ -1,8 +1,9 @@
-
+import os
 import pytest
 from jdaviz.utils import cached_uri
 
 CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
+
 
 def test_load_rectangular_ramp(deconfigged_helper, jwst_level_1b_rectangular_ramp):
     deconfigged_helper.load(jwst_level_1b_rectangular_ramp)
@@ -18,6 +19,7 @@ def test_load_rectangular_ramp(deconfigged_helper, jwst_level_1b_rectangular_ram
     assert parsed_cube_shape == (
         original_cube_shape[1], original_cube_shape[2], original_cube_shape[0]
     )
+
 
 @pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 def test_load_level_1_and_2(

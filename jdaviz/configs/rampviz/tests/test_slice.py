@@ -1,3 +1,4 @@
+import os
 import pytest
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
@@ -7,6 +8,7 @@ CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
 def test_slice_roman(deconfigged_helper, roman_level_1_ramp):
     _slice(deconfigged_helper, roman_level_1_ramp)
+
 
 @pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 def test_slice_jwst(deconfigged_helper, jwst_level_1b_ramp):
@@ -76,6 +78,7 @@ def _slice(helper, ramp_cube):
     assert not sl._player
     # NOTE: Hard to check sl.slice here because it is non-deterministic.
 
+
 @pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
 def test_indicator_settings_roman(deconfigged_helper, roman_level_1_ramp):
@@ -106,6 +109,7 @@ def _indicator_settings(helper, ramp):
 
     sl.show_value = False
     assert indicator.label.visible is False
+
 
 @pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")

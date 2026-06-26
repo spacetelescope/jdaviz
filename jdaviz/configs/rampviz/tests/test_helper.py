@@ -1,7 +1,9 @@
+import os
 import pytest
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
 CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
+
 
 @pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
@@ -19,6 +21,7 @@ def test_load_data_roman(deconfigged_helper, roman_level_1_ramp):
 
     assert viewer.axis_x.label == 'Group'
     assert viewer.axis_y.label == 'DN'
+
 
 @pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 def test_load_data_jwst(deconfigged_helper, jwst_level_1b_ramp):
