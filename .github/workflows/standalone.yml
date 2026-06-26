@@ -60,7 +60,7 @@ jobs:
       run: (cd standalone; pyinstaller ./jdaviz.spec)
 
     - name: Run jdaviz cmd in background
-      run: ./standalone/dist/jdaviz/jdaviz-cli --port 8765 &
+      run: ./standalone/dist/jdaviz/jdaviz-cli --port 8765 jdaviz_output.log 2>&1 &
 
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
@@ -74,6 +74,10 @@ jobs:
         resource: tcp:8765
         delay: 20000
         timeout: 60000
+
+    - name: Print Jdaviz logs on failure
+      if: failure()
+      run: cat jdaviz_output.log
 
     - name: Test standalone
       run: (cd standalone; touch pytest.ini; JUPYTER_PLATFORM_DIRS=1 pytest test_standalone.py --video=on)
