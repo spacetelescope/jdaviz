@@ -42,5 +42,3 @@ def pytest_collection_modifyitems(config, items):
             if nid_frag in item.nodeid:
                 item.add_marker(skip_marker)
                 break
-
-

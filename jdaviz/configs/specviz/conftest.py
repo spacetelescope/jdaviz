@@ -34,7 +34,7 @@ SKIP_TEST_NODEIDS = [
     "tests/test_helper.py::TestSpecvizHelper::test_get_spectra_no_data_label",
     "tests/test_helper.py::TestSpecvizHelper::test_get_spectra_label_redshift",
     "tests/test_helper.py::TestSpecvizHelper::test_get_spectra_label_redshift_warn",
-    "tests/test_helper.py::TestSpecvizHelper::test_get_spectra_with_spectral_subset",                                                                                                                                                   
+    "tests/test_helper.py::TestSpecvizHelper::test_get_spectra_with_spectral_subset",
     "tests/test_helper.py::test_get_spectra_no_spectra",
     "tests/test_helper.py::test_get_spectra_no_spectra_redshift_error",
     "tests/test_helper.py::test_get_spectra_no_spectra_label",
@@ -112,5 +112,3 @@ def pytest_collection_modifyitems(config, items):
             if nid_frag in item.nodeid:
                 item.add_marker(skip_marker)
                 break
-
-

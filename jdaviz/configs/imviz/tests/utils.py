@@ -162,7 +162,8 @@ class BaseImviz_WCS_GWCS:
         # Load data into Imviz:
         # 1. Data with FITS WCS and unit.
         # 2. Data with GWCS (rotated w.r.t. FITS WCS) and no unit.
-        deconfigged_helper.load(NDData(arr, wcs=w_fits, unit='electron/s'), data_label='fits_wcs', format='Image')
+        deconfigged_helper.load(NDData(arr, wcs=w_fits, unit='electron/s'),
+                                data_label='fits_wcs', format='Image')
         deconfigged_helper.load(NDData(arr, wcs=w_gwcs), data_label='gwcs', format='Image')
 
         self.wcs_1 = w_fits
@@ -214,7 +215,8 @@ class BaseImviz_GWCS_GWCS:
         w_gwcs_2.bounding_box = ((0, 8), (0, 10)) * u.pix  # x, y
 
         # Load data into Imviz
-        deconfigged_helper.load(NDData(arr, wcs=w_gwcs_1, unit='electron/s'), data_label='gwcs1', format='Image')
+        deconfigged_helper.load(NDData(arr, wcs=w_gwcs_1, unit='electron/s'),
+                                data_label='gwcs1', format='Image')
         deconfigged_helper.load(NDData(arr, wcs=w_gwcs_2), data_label='gwcs2', format='Image')
 
         self.wcs_1 = w_gwcs_1
