@@ -60,7 +60,7 @@ jobs:
       run: (cd standalone; pyinstaller ./jdaviz.spec)
 
     - name: Run jdaviz cmd in background
-      run: ./standalone/dist/jdaviz/jdaviz-cli imviz --port 8765 &
+      run: ./standalone/dist/jdaviz/jdaviz-cli --port 8765 &
 
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
