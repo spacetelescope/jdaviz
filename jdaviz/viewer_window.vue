@@ -36,7 +36,7 @@
         </v-toolbar-items>
         <j-play-pause-widget v-if="reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': id, 'method': 'next_row'})"></j-play-pause-widget>
         <j-tooltip v-if="focus_mode && coords_info_widget" tipid='coords-info-cycle'>
-          <v-btn icon tile @click="cycle_coords_dataset()" style="height: 100%; width: 42px;">
+          <v-btn variant="text" color="white" rounded="0" icon @click="cycle_coords_dataset()" style="height: 100%; width: 42px;">
             <j-layer-viewer-icon :icon="coords_info_has_data ? coords_info_icon : coords_info_dataset_icon" color="white" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
           </v-btn>
         </j-tooltip>

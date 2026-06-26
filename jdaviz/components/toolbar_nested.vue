@@ -41,7 +41,7 @@
       <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" :key="id">
         <v-tooltip v-if="primary && visible &&!should_hide_in_popout(id)" location="bottom">
           <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" variant="text" density="comfortable" :value="id" :disabled="disabled_msg.length > 0" :style="`min-width: 40px !important; width: 40px !important; height: 40px !important; padding: 0px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''} ${disabled_msg.length > 0 ? 'opacity: 0.5;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
+            <v-btn v-bind="props" variant="text" density="comfortable" :value="id" :disabled="disabled_msg.length > 0" :style="get_tool_button_style(id, disabled_msg)" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
               <img class="invert-if-dark toolbar-icon-img" :src="img" @click.ctrl.stop=""/>
               <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
             </v-btn>
@@ -119,7 +119,7 @@
           'jdaviz:viewer_popout',
         ];
 
-        let style = 'min-width: 40px !important;';
+        let style = 'min-width: 40px !important; width: 40px !important; height: 40px !important; padding: 0px !important;';
         if (viewerActionTools.includes(id)) {
           // top app-toolbar dark blue
           style += ' background-color: rgba(0, 59, 77, 1);';

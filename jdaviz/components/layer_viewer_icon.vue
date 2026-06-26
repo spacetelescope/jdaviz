@@ -28,14 +28,20 @@ export default {
 
 <style scoped>
 .layer-viewer-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  box-sizing: border-box;
   width: 20px;
+  min-width: 20px;
   height: 20px;
-  line-height: 10px;
-  margin-top: 4px;
+  line-height: 1;
+  margin-top: 0;
   margin-right: 2px;
-  padding-top: 3px;
+  padding-top: 0;
   text-align: center;
-  font-size: 12pt;
+  font-size: 12px;
   font-weight: bold;
 }
 </style>
