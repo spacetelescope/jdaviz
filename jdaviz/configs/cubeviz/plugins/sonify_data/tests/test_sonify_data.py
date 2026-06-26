@@ -1,5 +1,4 @@
 import os
-
 import astropy.units as u
 from numpy.testing import assert_allclose
 import pytest
@@ -8,8 +7,10 @@ from specutils import SpectralRegion
 pytest.importorskip("strauss")
 IN_GITHUB_ACTIONS = os.environ.get("CI", "false") == "true"
 
+CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
-@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test requires computer with audio output.")
+
+@pytest.mark.skipif(IN_GITHUB_ACTIONS or CI, reason="Test requires computer with audio output or skipped in CI")
 def test_sonify_data(deconfigged_helper, spectrum1d_cube_larger):
     deconfigged_helper.load(spectrum1d_cube_larger, data_label="test")
     sonify_plg = deconfigged_helper._app.get_tray_item_from_name('cubeviz-sonify-data')
