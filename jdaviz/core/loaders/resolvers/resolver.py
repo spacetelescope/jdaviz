@@ -713,6 +713,21 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.file_table_populated = False
                 return
 
+            elif self.treat_table_as_query and observation_table is not None:
+                # file_table is None but observation_table is not None
+                # (e.g. a table with Dataset + s_region but no URL-like column)
+                self.observation_table._clear_table()
+                self.file_table._clear_table()
+                for row in observation_table:
+                    self.observation_table.add_item(row)
+                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible  # noqa
+                                                          if h not in ['s_region']]
+                self.parsed_input_is_empty = False
+                self.parsed_input_is_query = True
+                self.observation_table_populated = True
+                self.file_table_populated = False
+                return
+
         self.parsed_input_is_resolvable = ""
         self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
