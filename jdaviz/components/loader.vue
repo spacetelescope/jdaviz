@@ -3,12 +3,19 @@
     <!-- Top sticky overlay -->
     <div v-if="spinner.length > 0" class="top-overlay">
       <div class="overlay-content">
-        {{  spinner || "Loading..." }}
+        {{ spinner }}
         <v-progress-linear
             color="#c75d2c"
             indeterminate
             height="6"
           ></v-progress-linear>
+      </div>
+    </div>
+
+    <div v-if="!spinner.length && spinner_success_message && !success_dismissed" class="top-overlay success-overlay">
+      <div class="overlay-content">
+        <v-icon small color="white" style="margin-right: 6px;">mdi-check-circle</v-icon>
+        {{ spinner_success_message }}
       </div>
     </div>
 
@@ -27,7 +34,7 @@
         <v-container>
           <v-alert v-if="image_data_loaded && is_wcs_linked !== undefined && treat_table_as_query && observation_table_populated && !is_wcs_linked"
                    type="warning" dense style="margin-bottom: 16px; margin-top: 8px">
-            <v-row no-gutters align="center">
+            <v-row class="vuetify2" no-gutters align="center">
               <v-col>
                 <strong>Images are not linked by WCS.</strong> Link images to view footprints properly.
               </v-col>
@@ -57,7 +64,7 @@
             <j-plugin-section-header>Query Results</j-plugin-section-header>
             <plugin-switch
               label="Treat Table as Query"
-              :value.sync="treat_table_as_query"
+              :value="treat_table_as_query"
               @update:value="$emit('update:treat_table_as_query', $event)"
               api_hint="ldr.treat_table_as_query ="
               :api_hints_enabled="api_hints_enabled"
@@ -79,44 +86,57 @@
               <span class="table-title">Observations</span>
               <span v-if="api_hints_enabled" class="api-hint">ldr.observation_table</span>
 
-              <jupyter-widget v-if="treat_table_as_query" :widget="observation_table"></jupyter-widget>
+              <jupyter-widget v-if="treat_table_as_query && observation_table" :widget="observation_table" :key="observation_table"></jupyter-widget>
             </div>
+
             <div v-if="treat_table_as_query && file_table_populated">
               <span class="table-title">Files</span>
-              <v-row>
+              <j-flex-row>
                 <v-expansion-panels popout>
                   <v-expansion-panel>
-                    <v-expansion-panel-header v-slot="{ open }">
+                    <v-expansion-panel-title v-slot="{ open }">
                       <span style="padding: 6px">File Download Options</span>
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content class="plugin-expansion-panel-content">
-                      <v-content>
-                        <v-row>
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text class="plugin-expansion-panel-content">
+                      <v-main>
+                        <j-flex-row>
                           <v-text-field
-                            v-model.number='file_timeout'
+                            :model-value="file_timeout"
+                            @update:modelValue="$emit('update:file_timeout', Number($event))"
                             type="number"
                             style="padding: 0px 8px"
                             suffix="s"
                             :label="api_hints_enabled ? 'ldr.file_timeout =' : 'Timeout (s)'"
                             :class="api_hints_enabled ? 'api-hint' : null"
                           ></v-text-field>
-                        </v-row>
+                        </j-flex-row>
 
                         <plugin-switch
-                          :value.sync="file_cache"
+                          :value="file_cache"
+                          @update:value="$emit('update:file_cache', $event)"
                           label="Cache File"
                           api_hint="ldr.file_cache = "
                           :api_hints_enabled="api_hints_enabled"
                           hint="Whether to attempt to read from the cache if this same URL has been previously fetched."
                         ></plugin-switch>
-                      </v-content>
-                    </v-expansion-panel-content>
+                      </v-main>
+                    </v-expansion-panel-text>
                   </v-expansion-panel>
                 </v-expansion-panels>
-              </v-row>
+              </j-flex-row>
 
               <span v-if="api_hints_enabled" class="api-hint">ldr.file_table</span>
-              <jupyter-widget v-if="treat_table_as_query" :widget="file_table"></jupyter-widget>
+
+              <div v-if="treat_table_as_query && file_table" style="position: relative;">
+                <jupyter-widget :widget="file_table" :key="file_table"></jupyter-widget>
+                <v-progress-linear
+                  v-if="spinner.length > 0"
+                  color="#c75d2c"
+                  indeterminate
+                  height="6"
+                  style="position: absolute; top: 42px;"
+                ></v-progress-linear>
+              </div>
             </div>
           </div>
           <!-- end observation/file table -->
@@ -124,41 +144,41 @@
           <!-- format (parser/importer) selection and UI -->
           <j-plugin-section-header>Importer</j-plugin-section-header>
 
-          <v-row v-if="target_items.length >= 2" style="padding-right: 16px">
+          <j-flex-row v-if="target_items.length>= 2" style="padding-right: 16px">
             <plugin-select-filter
               :items="target_items"
-              :selected.sync="target_selected"
+              :selected="target_selected"
               @update:selected="$emit('update:target_selected', $event)"
               tooltip_suffix="compatible formats"
               api_hint="ldr.target ="
               :api_hints_enabled="api_hints_enabled"
             />
-          </v-row>
+          </j-flex-row>
 
-          <v-row v-if="parsed_input_is_empty">
+          <j-flex-row v-if="parsed_input_is_empty">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input is empty.
             </v-alert>
-          </v-row>
-          <v-row v-if="parsed_input_is_resolvable">
+          </j-flex-row>
+          <j-flex-row v-if="parsed_input_not_resolvable_message">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
-                Input cannot be resolved.
+                Input cannot be resolved: {{ parsed_input_not_resolvable_message }}
             </v-alert>
-          </v-row>
-          <v-row v-else-if="format_items.length == 0 && valid_import_formats">
+          </j-flex-row>
+          <j-flex-row v-else-if="!parsed_input_is_query && format_items.length == 0 && valid_import_formats">
               <v-alert type="warning" style="margin-right: -12px; width: 100%">
                   No compatible importer found. Supported input types include: {{ valid_import_formats }}.
               </v-alert>
-          </v-row>
-          <v-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
+          </j-flex-row>
+          <j-flex-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
               <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">ldr.format = '{{ format_selected }}'</span>
               <span v-else><b>Format:</b> {{ format_selected }}</span>
-          </v-row>
+          </j-flex-row>
           <plugin-select
               v-if="format_items.length >= 2"
               :show_if_single_entry="false"
               :items="format_items.map(i => i.label)"
-              :selected.sync="format_selected"
+              :selected="format_selected"
               @update:selected="$emit('update:format_selected', $event)"
               label="Format"
               api_hint="ldr.format ="
@@ -166,7 +186,7 @@
               hint="Choose input format"
           ></plugin-select>
           <div v-if="format_selected.length > 0" style="margin-top: 16px; margin-left: -12px; margin-right: -12px">
-              <jupyter-widget :widget="importer_widget"></jupyter-widget>
+              <jupyter-widget v-if="importer_widget" :widget="importer_widget" :key="importer_widget"></jupyter-widget>
           </div>
         </v-container>
       </v-card-text>
@@ -175,20 +195,45 @@
 </template>
 
 <script>
-module.exports = {
+export default {
+  data() {
+    return {
+      success_dismiss_timer: null,
+      success_dismissed: false
+    }
+  },
   props: ['title', 'popout_button', 'spinner',
-          'parsed_input_is_empty', 'parsed_input_is_resolvable',
+          'parsed_input_is_empty', 'parsed_input_not_resolvable_message',
           'parsed_input_is_query', 'treat_table_as_query',
           'can_filter_science', 'limit_to_science_products',
           'observation_table', 'observation_table_populated',
-          'file_table', 'file_table_populated',
+          'file_table', 'file_table_populated', 'spinner_success_message',
           'file_cache', 'file_timeout',
           'target_items', 'target_selected',
           'format_items', 'format_selected',
           'importer_widget', 'server_is_remote', 'hide_resolver', 'hide_resolver_inputs',
           'api_hints_enabled', 'valid_import_formats',
           'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled','image_data_loaded'],
-
+  watch: {
+    spinner_success_message(newVal) {
+      if (this.success_dismiss_timer) {
+        clearTimeout(this.success_dismiss_timer);
+        this.success_dismiss_timer = null;
+      }
+      this.success_dismissed = false;
+      if (newVal) {
+        this.success_dismiss_timer = setTimeout(() => {
+          this.success_dismissed = true;
+        }, 4000);
+      }
+    },
+    spinner(newVal) {
+      // While loading, hide any prior success message
+      if (newVal && newVal.length > 0) {
+        this.success_dismissed = true;
+      }
+    }
+  }
 }
 </script>
 
@@ -205,10 +250,20 @@ module.exports = {
     padding: 0px;
   }
 
+  .top-overlay.success-overlay {
+    background: #4caf50;
+    border-bottom: 1px solid #45a049;
+  }
+
   .overlay-content {
     text-align: center;
     color: #666;
     font-size: 14px;
+  }
+
+  .success-overlay .overlay-content {
+    color: white;
+    font-weight: 500;
   }
 
   .table-title {

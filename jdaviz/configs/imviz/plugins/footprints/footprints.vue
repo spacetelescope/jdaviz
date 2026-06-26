@@ -2,21 +2,21 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Footprints"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#footprints'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <plugin-loaders-panel
       v-if="!server_is_remote"
-      :loader_panel_ind.sync="loader_panel_ind"
+      v-model:loader_panel_ind="loader_panel_ind"
       :loader_items="loader_items"
-      :loader_selected.sync="loader_selected"
+      v-model:loader_selected="loader_selected"
       :api_hints_enabled="api_hints_enabled"
     ></plugin-loaders-panel>
 
@@ -33,10 +33,10 @@
     </j-custom-toolbar-toggle>
 
     <plugin-editable-select
-      :mode.sync="overlay_mode"
-      :edit_value.sync="overlay_edit_value"
+      v-model:mode="overlay_mode"
+      v-model:edit_value="overlay_edit_value"
       :items="overlay_items"
-      :selected.sync="overlay_selected"
+      v-model:selected="overlay_selected"
       label="Overlay"
       api_hint="plg.overlay ="
       api_hint_add="plg.add_overlay"
@@ -53,11 +53,11 @@
       style="margin-left: -12px; margin-right: -12px"
     >
       cannot plot footprint when aligned by pixels (see Orientation plugin).
-      <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
+      <j-flex-row justify="end" style="margin-right: 2px; margin-top: 16px">
         <v-btn @click="link_by_wcs">
           link by WCS
         </v-btn>
-      </v-row>
+      </j-flex-row>
     </v-alert>
     <v-alert v-if="viewer_items.length===0" type='warning' style="margin-left: -12px; margin-right: -12px">
       no valid viewers (with necessary WCS information) to show footprint overlay.
@@ -68,7 +68,7 @@
 
       <plugin-viewer-select
         :items="viewer_items"
-        :selected.sync="viewer_selected"
+        v-model:selected="viewer_selected"
         :multiselect="true"
         label="Viewers"
         api_hint="plg.viewer ="
@@ -77,17 +77,17 @@
         hint="Select viewers to display this overlay"
       />
 
-      <v-row>
+      <j-flex-row>
         <plugin-switch
-          :value.sync="visible"
+          v-model:value="visible"
           label="Visible"
           api_hint="plg.visible = "
           :api_hints_enabled="api_hints_enabled"
           :use_eye_icon="true"
         />
-      </v-row>
+      </j-flex-row>
 
-      <v-row>
+      <j-flex-row>
         <plugin-color-picker
           label='Overlay Color'
           label_inline="true"
@@ -96,8 +96,8 @@
           :value="color"
           @color-update="throttledSetColor($event.hexa)"
         />
-      </v-row>
-      <v-row>
+      </j-flex-row>
+      <j-flex-row>
         <plugin-slider
           label="Fill Opacity"
           api_hint="plg.fill_opacity = "
@@ -105,9 +105,9 @@
           :wait="300"
           max="1"
           step="0.01"
-          :value.sync="fill_opacity"
+          v-model:value="fill_opacity"
         />
-      </v-row>
+      </j-flex-row>
 
       <j-plugin-section-header>Footprint Definition</j-plugin-section-header>
       <v-alert v-if="!has_pysiaf" type="warning" style="margin-left: -12px; margin-right: -12px">
@@ -117,7 +117,7 @@
 
       <plugin-select-filter
         :items="preset_obs_items"
-        :selected.sync="preset_obs_selected"
+        v-model:selected="preset_obs_selected"
         @update:selected="($event) => {preset_obs_selected = $event}"
         tooltip_suffix="footprints in preset list"
         api_hint="plg.preset_obs ="
@@ -126,12 +126,12 @@
 
       <plugin-file-import-select
         :items="preset_items"
-        :selected.sync="preset_selected"
+        v-model:selected="preset_selected"
         label="Preset"
         hint="Preset instrument or import from a file."
         api_hint="plg.preset ="
         :api_hints_enabled="api_hints_enabled"
-        :from_file.sync="from_file"
+        v-model:from_file="from_file"
         :from_file_message="from_file_message"
         :deprecate_from_file="true"
         dialog_title="Import Region"
@@ -143,7 +143,7 @@
       </plugin-file-import-select>
 
       <div v-if="preset_selected !== 'From File...' && preset_selected !== 'None'">
-        <v-row>
+        <j-flex-row>
           <span style="line-height: 36px; font-size: 12px; color: #666666; width: 100%">Center RA/Dec</span>
           <j-tooltip v-for="viewer_ref in viewer_selected" :tooltipcontent="'center RA/DEC on current zoom-limits of '+viewer_ref">
           <v-btn
@@ -157,9 +157,9 @@
             }}
           </v-btn>
           </j-tooltip>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             v-model.number="ra"
             type="number"
@@ -170,9 +170,9 @@
             hint="Right Ascension (degrees)"
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             v-model.number="dec"
             type="number"
@@ -183,9 +183,9 @@
             hint="Declination (degrees)"
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             v-model.number="pa"
             type="number"
@@ -196,9 +196,9 @@
                   to central vertical axis in North to East direction."
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             v-model.number="v2_offset"
             type="number"
@@ -209,9 +209,9 @@
                   center, as from a dither pattern."
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
 
-        <v-row>
+        <j-flex-row>
           <v-text-field
             v-model.number="v3_offset"
             type="number"
@@ -222,7 +222,7 @@
                   center, as from a dither pattern."
             persistent-hint
           ></v-text-field>
-        </v-row>
+        </j-flex-row>
       </div>
     </div>
 
@@ -230,7 +230,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     created() {
       this.throttledSetColor = _.throttle(
         (v) => { this.color = v },

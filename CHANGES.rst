@@ -19,8 +19,24 @@ New Features
 - Label default behavior now adjusts for added *or* removed data/viewers i.e. viewer -> viewer (1) ->
   viewer (2) -> remove viewer (2) -> default is again viewer(2) [#4192]
 
+- Imported Catalogs default to the first ra/dec/x/y match if multiple options are available.
+  Increased the list of strings to exclude: now excludes bounding box and source position error columns. [#4216]
+
 - Add option to limit results to science products when retrieving files from an archive query
   results table. [#4194]
+
+- Loader now displays inline loading status and success confirmation messages at the
+  top of the loader window when fetching files from selected footprints. Success
+  messages auto-dismiss after 4 seconds and a progress indicator appears on the file
+  table during loading. [#4203]
+  
+- Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#4224]
+
+- Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to
+  reset all emission lines to show == True. [#4224]
+
+- The Virtual Observatory loader now supports querying spectral products
+  and catalog targets. [#4060]
 
 Mosviz
 ^^^^^^
@@ -55,6 +71,8 @@ Other Changes and Additions
   of reusing the existing flux cube label, which previously caused a silent
   overwrite. [#4125]
 
+- Updated all front end vuetify templates for Vue 3 compatibility. [#4053]
+
 5.0.3 (unreleased)
 ==================
 
@@ -63,6 +81,11 @@ Bug Fixes
 
 - Update docs to reflect new minimum version of Python (>=3.12). Recommend Python 3.13
   to implicitly reflect testing environments. [#4240]
+
+- Fixed a bug in the compass plugin where the image would be flipped when WCS linked. [#4252]
+
+- Update the File Drop Resolver to parse input the same way as the File Resolver,
+  which fixes a bug where the resolver would not correctly parse some file types. [#4250]
 
 Mosviz
 

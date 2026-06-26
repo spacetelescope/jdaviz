@@ -1,31 +1,33 @@
 <template>
   <v-menu
     absolute
-    offset-y
-    left
+    location="bottom start"
     v-if="dataset_items.length > 0 || subset_tools.length > 0"
     >
-    <template v-slot:activator="{ on, attrs }">
+    <template v-slot:activator="{ props }">
       <j-tooltip
         v-if="dataset_items.length > 0 || subset_tools.length > 0"
         tooltipcontent="Add data or subset to viewer"
       >
         <v-btn
           icon
+          variant="text"
+          size="small"
+          density="default"
           :class="loaded_n_data > 0 ? 'invert-if-dark' : 'invert-if-dark pulse'"
-          v-bind="attrs"
-          v-on="on"
+          v-bind="props"
+
         >
           <v-icon>mdi-plus</v-icon>
         </v-btn>
       </j-tooltip>
     </template>
-    <v-list dense style="width: 300px; max-height: 300px; overflow-y: auto;">
+    <v-list density="compact" style="width: 300px; max-height: 300px; overflow-y: auto;">
       <v-subheader v-if="dataset_items.length > 0"><span>Load Data</span></v-subheader>
       <v-list-item
         v-for="data in dataset_items"
       >
-        <v-list-item-content>
+        <div class="v-list-item-content">
           <j-tooltip tooltipcontent="add data to viewer">
             <span
               style="cursor: pointer; width: 100%"
@@ -36,22 +38,22 @@
                 'dm.add_data(\''+data.label+'\')'
                 :
                 data.label
-              }} 
+              }}
             </span>
           </j-tooltip>
-        </v-list-item-content>
+        </div>
       </v-list-item>
       <v-subheader v-if="subset_tools.length > 0"><span>Create Subset</span></v-subheader>
       <v-list-item
         v-if="subset_tools.length > 0"
       >
-        <v-list-item-content style="display: inline-block">
+        <div class="v-list-item-content" style="display: inline-block">
           <j-tooltip
             v-for="tool in subset_tools"
             span_style="display: inline-block"
             :tooltipcontent="api_hints_enabled ? '' : 'Create new '+tool.name+' subset'"
           >
-            <v-btn 
+            <v-btn
               icon
               @mouseover="() => {hover_api_hint = 'dm.create_subset(\''+tool.name+'\')'}"
               @mouseleave="() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
@@ -60,12 +62,12 @@
               <img :src="tool.img" width="20" class="invert-if-dark"/>
             </v-btn>
           </j-tooltip>
-        </v-list-item-content>
+        </div>
       </v-list-item>
       <hover-api-hint
         v-if="api_hints_enabled"
-        :hover_api_hint.sync="hover_api_hint"
-        :lock_hover_api_hint.sync="lock_hover_api_hint"
+        v-model:hover_api_hint="hover_api_hint"
+        v-model:lock_hover_api_hint="lock_hover_api_hint"
         :icons="icons"
       />
     </v-list>
@@ -74,7 +76,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   data: function () {
       return {
         hover_api_hint: '',
