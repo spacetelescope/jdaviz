@@ -53,22 +53,22 @@ def _image_nddata_wcs(arr=np.ones((10, 10)), unit=u.Jy, name='SCI'):
 
 class BaseImviz_WCS_NoWCS:
     @pytest.fixture(autouse=True)
-    def setup_class(self, deconfigged_helper):
+    def setup_class(self, imviz_helper):
         # Data with WCS
         hdu_wcs = _image_hdu_wcs(arr=np.arange(100).reshape((10, 10)))
-        deconfigged_helper.load(hdu_wcs, format='Image', data_label='has_wcs')
+        imviz_helper.load(hdu_wcs, format='Image', data_label='has_wcs')
 
         # Data without WCS
         hdu_nowcs = _image_hdu_nowcs(arr=np.arange(100).reshape((10, 10)))
-        deconfigged_helper.load(hdu_nowcs, format='Image', data_label='no_wcs')
-        deconfigged_helper._app.data_collection[1].coords = None
+        imviz_helper.load(hdu_nowcs, format='Image', data_label='no_wcs')
+        imviz_helper._app.data_collection[1].coords = None
 
         self.wcs = WCS(hdu_wcs.header)
-        self.imviz = deconfigged_helper
+        self.imviz = imviz_helper
         # default_viewer fixture attached the viewer wrapper to deconfigged_helper
         # default_viewer is a new pytest fixture only when deconfigged_helper returns App()
         # (i.e., deconfigged)
-        self.viewer = deconfigged_helper.default_viewer._obj.glue_viewer
+        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
         self.subset_plugin = self.imviz.plugins['Subset Tools']
         self.orientation_plugin = self.imviz.plugins['Orientation']
 
@@ -79,11 +79,11 @@ class BaseImviz_WCS_NoWCS:
 
 class BaseDeconfiggedImage_WCS_WCS:
     @pytest.fixture(autouse=True)
-    def setup_class(self, deconfigged_helper):
+    def setup_class(self, imviz_helper):
         arr = np.ones((10, 10))
         # First data with WCS, same as the one in BaseImviz_WCS_NoWCS.
         hdu1 = _image_hdu_wcs(arr=arr)
-        deconfigged_helper.load(hdu1, format='Image', data_label='has_wcs_1')
+        imviz_helper.load(hdu1, format='Image', data_label='has_wcs_1')
 
         # Second data with WCS, similar to above but dithered by 1 pixel in X.
         hdu2 = fits.ImageHDU(arr, name='SCI')
@@ -99,11 +99,11 @@ class BaseDeconfiggedImage_WCS_WCS:
                             'CRPIX2': 1,
                             'CRVAL2': -20.833333059999998,
                             'NAXIS2': 10})
-        deconfigged_helper.load(hdu2, format='Image', data_label='has_wcs_2')
+        imviz_helper.load(hdu2, format='Image', data_label='has_wcs_2')
 
         self.wcs_1 = WCS(hdu1.header)
         self.wcs_2 = WCS(hdu2.header)
-        self.helper = deconfigged_helper
+        self.helper = imviz_helper
 
         # commonly accessed plugins
         self.subset_plugin = self.helper.plugins['Subset Tools']
@@ -112,7 +112,7 @@ class BaseDeconfiggedImage_WCS_WCS:
         # get glue viewer obj rather than viewer API so we can access certain
         # attributes in tests (shape, layers, etc.) that are not exposed in
         # the viewer API
-        self.viewer = deconfigged_helper.default_viewer._obj.glue_viewer
+        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)
@@ -121,7 +121,7 @@ class BaseDeconfiggedImage_WCS_WCS:
 
 class BaseImviz_WCS_GWCS:
     @pytest.fixture(autouse=True)
-    def setup_class(self, deconfigged_helper):
+    def setup_class(self, imviz_helper):
         arr = np.zeros((10, 8))  # (ny, nx)
         arr[0, 0] = 1  # Bright corner for sanity check
 
@@ -162,14 +162,14 @@ class BaseImviz_WCS_GWCS:
         # Load data into Imviz:
         # 1. Data with FITS WCS and unit.
         # 2. Data with GWCS (rotated w.r.t. FITS WCS) and no unit.
-        deconfigged_helper.load(NDData(arr, wcs=w_fits, unit='electron/s'),
+        imviz_helper.load(NDData(arr, wcs=w_fits, unit='electron/s'),
                                 data_label='fits_wcs', format='Image')
-        deconfigged_helper.load(NDData(arr, wcs=w_gwcs), data_label='gwcs', format='Image')
+        imviz_helper.load(NDData(arr, wcs=w_gwcs), data_label='gwcs', format='Image')
 
         self.wcs_1 = w_fits
         self.wcs_2 = w_gwcs
-        self.imviz = deconfigged_helper
-        self.viewer = deconfigged_helper.default_viewer._obj.glue_viewer
+        self.imviz = imviz_helper
+        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
         self.subset_plugin = self.imviz.plugins['Subset Tools']
         self.orientation_plugin = self.imviz.plugins['Orientation']
 
@@ -180,7 +180,7 @@ class BaseImviz_WCS_GWCS:
 
 class BaseImviz_GWCS_GWCS:
     @pytest.fixture(autouse=True)
-    def setup_class(self, deconfigged_helper):
+    def setup_class(self, imviz_helper):
         arr = np.zeros((10, 8))  # (ny, nx)
         arr[0, 0] = 1  # Bright corner for sanity check
 
@@ -215,14 +215,14 @@ class BaseImviz_GWCS_GWCS:
         w_gwcs_2.bounding_box = ((0, 8), (0, 10)) * u.pix  # x, y
 
         # Load data into Imviz
-        deconfigged_helper.load(NDData(arr, wcs=w_gwcs_1, unit='electron/s'),
+        imviz_helper.load(NDData(arr, wcs=w_gwcs_1, unit='electron/s'),
                                 data_label='gwcs1', format='Image')
-        deconfigged_helper.load(NDData(arr, wcs=w_gwcs_2), data_label='gwcs2', format='Image')
+        imviz_helper.load(NDData(arr, wcs=w_gwcs_2), data_label='gwcs2', format='Image')
 
         self.wcs_1 = w_gwcs_1
         self.wcs_2 = w_gwcs_2
-        self.imviz = deconfigged_helper
-        self.viewer = deconfigged_helper.default_viewer._obj.glue_viewer
+        self.imviz = imviz_helper
+        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
         self.subset_plugin = self.imviz.plugins['Subset Tools']
         self.orientation_plugin = self.imviz.plugins['Orientation']
 
