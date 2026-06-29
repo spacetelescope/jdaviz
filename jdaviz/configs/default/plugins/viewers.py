@@ -393,6 +393,7 @@ class JdavizViewerMixin(WithCache):
             expose = ['data_labels_loaded', 'data_labels_visible', 'data_menu']
         else:
             expose = []
+        # TODO: remove if-statement once configs removed
         if self.jdaviz_app.config not in ('imviz', 'specviz',
                                           'specviz2d', 'cubeviz',
                                           'mosviz', 'rampviz'):
