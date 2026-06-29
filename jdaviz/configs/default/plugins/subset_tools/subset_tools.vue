@@ -149,15 +149,10 @@
             persistent-hint
           ></v-text-field>
         </j-flex-row>
-        <j-flex-row v-else-if="item.name === 'n_rows_selected' || item.name === 'Selected rows'" class="row-no-outside-padding">
-          <v-text-field
-            :label="item.name"
-            :value="item.value"
-            style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
-            :readonly="true"
-            :hint="item.name === 'Selected rows' ? 'Subset includes these rows from the table' : 'Number of rows in subset'"
-            persistent-hint
-          ></v-text-field>
+        <j-flex-row v-else-if="item.name === 'Selected rows'" class="row-no-outside-padding">
+          <div style="white-space: pre-line;">
+            {{ item.value }}
+          </div>
         </j-flex-row>
         <j-flex-row v-else class="row-no-outside-padding">
           <v-text-field
