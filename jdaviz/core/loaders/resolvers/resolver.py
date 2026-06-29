@@ -632,10 +632,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
+            self.parsed_input_not_resolvable_message = str(e)
+
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
-            self.parsed_input_not_resolvable_message = str(e)
             return
 
         if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
@@ -643,10 +644,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
+            self.parsed_input_not_resolvable_message = 'Parsed input is empty or None, cannot resolve.'  # noqa
+
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
-            self.parsed_input_not_resolvable_message = 'Parsed input is empty or None, cannot resolve.' # noqa
             return
 
         # first attempt to parse the input as a table
@@ -677,6 +679,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.observation_table_populated = False
                 self.file_table_populated = False
                 self.parsed_input_not_resolvable_message = ''
+
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
                 self._update_format_items()
@@ -738,6 +741,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.observation_table_populated = False
         self.file_table_populated = False
         self.parsed_input_not_resolvable_message = ''
+        
         self._update_format_items()
 
     @cached_property
