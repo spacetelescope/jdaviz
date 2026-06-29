@@ -565,9 +565,16 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # try to read into a table which could be a products list
             try:
                 with warnings.catch_warnings():
-                    warnings.simplefilter("ignore",
-                                          message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
-                    parsed_input = astropyTable.read(parsed_input, hdu=hdu)
+                    warnings.filterwarnings("ignore",
+                                            message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
+                    read_kwargs = {'hdu': hdu} if hdu is not None else {}
+                    try:
+                        parsed_input = astropyTable.read(parsed_input, **read_kwargs)
+                    except Exception:  # nosec
+                        # Fall back with comment='#' for formats like MAST search
+                        # exports that have '#'-prefixed comment lines at the top
+                        parsed_input = astropyTable.read(parsed_input, comment='#',
+                                                         **read_kwargs)
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, astropyTable):
@@ -577,7 +584,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _parsed_input_to_observation_table(self, parsed_input_table):
         if 'Dataset' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_ds in ('fileSetName', 'sci_data_set_name'):
+        for map_to_ds in ('fileSetName', 'sci_data_set_name', 'obs_id'):
             if map_to_ds in parsed_input_table.colnames:
                 parsed_input_table.rename_column(map_to_ds, 'Dataset')
                 return parsed_input_table
@@ -586,7 +593,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _parsed_input_to_file_table(self, parsed_input_table):
         if 'location' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'download', 'Filename', 'access_url'):  # noqa: E501
+        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'dataURL',
+                                'download', 'Filename', 'access_url'):
             if map_to_location in parsed_input_table.colnames:
                 parsed_input_table.rename_column(map_to_location, 'location')
                 return parsed_input_table
@@ -678,22 +686,39 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
 
-                for row in file_table:
-                    self.file_table.add_item(row)
+                # When s_region is present the table is observation-level (e.g. a MAST
+                # search-results CSV with obs_id + dataURL + s_region). Fall through to
+                # the observation_table branch so footprint display works correctly.
+                if observation_table is None or 's_region' not in parsed_input_table.colnames:
+                    for row in file_table:
+                        self.file_table.add_item(row)
 
-                # Technically input isn't complete yet but if we don't set this now
-                # the UI will appear bugged with the 'input is empty' message for astroquery
-                self.parsed_input_not_resolvable_message = ''
+                    # Technically input isn't complete yet but if we don't set this now
+                    # the UI will appear bugged with the 'input is empty' message for astroquery
+                    self.parsed_input_not_resolvable_message = ''
+                    self.parsed_input_is_empty = False
+                    self.parsed_input_is_query = True
+                    self.observation_table_populated = False
+                    self.file_table_populated = True
+                    return
+
+                for row in observation_table:
+                    self.observation_table.add_item(row)
+                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible  # noqa
+                                                          if h not in ['s_region']]
+
+                # See 'input is empty' comment above
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
-                self.observation_table_populated = False
-                self.file_table_populated = True
+                self.observation_table_populated = True
+                self.file_table_populated = False
                 return
 
-            if self.treat_table_as_query and observation_table is not None:
+            elif self.treat_table_as_query and observation_table is not None:
+                # file_table is None but observation_table is not None
+                # (e.g. a table with Dataset + s_region but no URL-like column)
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
-
                 for row in observation_table:
                     self.observation_table.add_item(row)
                 self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible  # noqa

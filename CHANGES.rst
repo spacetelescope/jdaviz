@@ -89,6 +89,11 @@ Bug Fixes
 
 - Fix horizontal spacing of the app-level toolbar for small displays. [#4245]
 
+- Fix treating input tables as queries and add support for exports from MAST portal. [#4234]
+
+
+Mosviz
+------
 
 5.0.2 (2026-06-12)
 ==================
