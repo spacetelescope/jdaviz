@@ -4,7 +4,7 @@ import time
 import threading
 import warnings
 from collections import deque
-from comm import DummyComm
+from comm import create_comm
 from contextlib import contextmanager
 import ipywidgets.widgets.widget as _widget_mod
 from urllib.parse import urlparse
@@ -101,7 +101,7 @@ def suppress_widget_comms():
     """
 
     original_create_comm = _widget_mod.comm.create_comm
-    _widget_mod.comm.create_comm = lambda *args, **kwargs: DummyComm(*args, **kwargs)
+    _widget_mod.comm.create_comm = lambda *args, **kwargs: create_comm(*args, **kwargs)
     try:
         yield
     finally:
