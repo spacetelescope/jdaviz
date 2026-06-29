@@ -105,7 +105,7 @@ class BaseDeconfiggedImage_WCS_WCS:
         self.wcs_2 = WCS(hdu2.header)
         self.helper = deconfigged_helper
 
-        # commonly accessed plugins
+        # commonly accessed plugin
         self.subset_plugin = self.helper.plugins['Subset Tools']
         self.orientation_plugin = self.helper.plugins['Orientation']
 
