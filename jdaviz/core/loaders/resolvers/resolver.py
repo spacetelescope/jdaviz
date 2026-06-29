@@ -551,14 +551,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore",
                                             message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
-                    read_kwargs = {'hdu': hdu} if hdu is not None else {}
                     try:
-                        parsed_input = astropyTable.read(parsed_input, **read_kwargs)
+                        parsed_input = astropyTable.read(parsed_input)
                     except Exception:  # nosec
                         # Fall back with comment='#' for formats like MAST search
                         # exports that have '#'-prefixed comment lines at the top
-                        parsed_input = astropyTable.read(parsed_input, comment='#',
-                                                         **read_kwargs)
+                        parsed_input = astropyTable.read(parsed_input, comment='#')
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, astropyTable):
