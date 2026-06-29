@@ -18,7 +18,7 @@ defaults:
 jobs:
   build_binary_not_osx:
     runs-on: ${{ matrix.os }}
-    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
+    # if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-latest]
@@ -45,7 +45,7 @@ jobs:
       uses: pyvista/setup-headless-display-action@v4
 
     - name: Install jdaviz
-      run: pip install .[test,qt]
+      run: pip install -U ".[test,qt]"
 
     - name: Install pyinstaller
       # see https://github.com/erocarrera/pefile/issues/420 for performance issues on
@@ -60,8 +60,12 @@ jobs:
       run: (cd standalone; pyinstaller ./jdaviz.spec)
 
     - name: Run jdaviz cmd in background
-      run: ./standalone/dist/jdaviz/jdaviz-cli --port 8765 jdaviz_output.log 2>&1 &
-
+      env:
+        ASTROPY_ALLOW_INTERNET: "False"
+      run: |
+        # Start the app in the background so it immediately returns
+        ./standalone/dist/jdaviz/jdaviz-cli --port 8765 &
+        
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
 
@@ -74,10 +78,6 @@ jobs:
         resource: tcp:8765
         delay: 20000
         timeout: 60000
-
-    - name: Print Jdaviz logs on failure
-      if: failure()
-      run: cat jdaviz_output.log
 
     - name: Test standalone
       run: (cd standalone; touch pytest.ini; JUPYTER_PLATFORM_DIRS=1 pytest test_standalone.py --video=on)
@@ -100,7 +100,7 @@ jobs:
   # Do not want to deal with OSX certs in pull request builds.
   build_binary_osx:
     runs-on: ${{ matrix.os }}
-    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
+    # if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
         os: [macos-14]
@@ -122,7 +122,7 @@ jobs:
         python-version: "3.12"
 
     - name: Install jdaviz
-      run: pip install .[test,qt]
+      run: pip install U ".[test,qt]"
 
     - name: Install pyinstaller
       run: pip install "pyinstaller"
@@ -171,6 +171,8 @@ jobs:
 
     - name: Run jdaviz cmd in background
       if: ${{ matrix.os == 'macos-14' }}
+      env:
+        ASTROPY_ALLOW_INTERNET: "False"
       run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli --port=8765 &
 
     - name: Install playwright
