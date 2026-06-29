@@ -140,7 +140,8 @@
               <v-alert type="warning" style="margin-right: -12px; width: 100%">
                   No compatible importer found. Supported input types include: {{ valid_import_formats }}.
               </v-alert>
-          </v-row>
+          </j-flex-row>
+
           <v-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
               <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">ldr.format = '{{ format_selected }}'</span>
               <span v-else><b>Format:</b> {{ format_selected }}</span>
