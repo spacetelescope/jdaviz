@@ -672,11 +672,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             if is_query and not self.treat_table_as_query:
                 # Keep parsed_input_is_query True so the toggle switch stays visible.
                 # Set everything else in the meantime.
-                self.parsed_input_not_resolvable_message = ''
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = False
                 self.file_table_populated = False
+                self.parsed_input_not_resolvable_message = ''
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
                 self._update_format_items()
@@ -695,11 +695,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
                     # Technically input isn't complete yet but if we don't set this now
                     # the UI will appear bugged with the 'input is empty' message for astroquery
-                    self.parsed_input_not_resolvable_message = ''
                     self.parsed_input_is_empty = False
                     self.parsed_input_is_query = True
                     self.observation_table_populated = False
                     self.file_table_populated = True
+                    self.parsed_input_not_resolvable_message = ''
                     return
 
                 for row in observation_table:
@@ -726,19 +726,18 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                                                           if h not in ['s_region']]
 
                 # See 'input is empty' comment above
-                self.parsed_input_not_resolvable_message = ''
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True
                 self.file_table_populated = False
-                self.parsed_input_is_resolvable = ''
+                self.parsed_input_not_resolvable_message = ''
                 return
 
-        self.parsed_input_not_resolvable_message = ''
         self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
         self.observation_table_populated = False
         self.file_table_populated = False
+        self.parsed_input_not_resolvable_message = ''
         self._update_format_items()
 
     @cached_property
