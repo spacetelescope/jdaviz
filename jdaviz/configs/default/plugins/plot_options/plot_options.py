@@ -1098,14 +1098,17 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             for child in self._app._get_assoc_data_children(data.label)
         )
 
-    def _eligible_top_layers(self, viewer):
+    def _eligible_top_layers(self, viewer, child_labels=None):
         # Image layers eligible to be considered the 'top' layer in the viewer.
         # Excludes subsets, WCS-only/orientation layers, and associated child layers,
         # matching the logic used by ``set_layer_to_top`` / ``layer_is_top``.  Hidden
         # layers are also excluded so that the determination tracks what is actually
         # displayed on top (e.g. blinking toggles layer ``visible`` to show one image
         # at a time, which must update the highlighted/top layer accordingly).
-        child_labels = self._assoc_child_labels()
+        # ``child_labels`` may be passed in by callers that have already computed it
+        # to avoid recomputing the associated-child set more than once per update.
+        if child_labels is None:
+            child_labels = self._assoc_child_labels()
         return [lyr for lyr in viewer.state.layers
                 if (hasattr(lyr, 'layer') and hasattr(lyr, 'zorder') and lyr.zorder is not None
                     and getattr(lyr, 'visible', True)
@@ -1132,7 +1135,11 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             self.viewer._clear_cache('selected_obj')
         try:
             viewer = self.viewer.selected_obj
-        except Exception:
+        except KeyError:
+            # During transient states (e.g. a viewer/data removal or a multiselect
+            # transition) ``selected`` can momentarily reference a viewer that is no
+            # longer in ``items``; ViewerSelect._get_selected_item then raises KeyError
+            # on the unguarded ``item['id']`` lookup.  Treat that as "no top layer".
             self.layer_is_top = False
             return
         if viewer is None:
@@ -1140,12 +1147,13 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             return
         # Child layers (DQ, uncertainty, WCS-only) float above their parent via zorder + 0.1
         # and cannot be independently promoted; treat them as already on top.
-        if self.layer_selected in self._assoc_child_labels():
+        child_labels = self._assoc_child_labels()
+        if self.layer_selected in child_labels:
             self.layer_is_top = True
             return
         # Compare the selected layer's zorder against the running maximum across all
         # eligible layers (subsets, child layers, and WCS-only/orientation layers excluded).
-        eligible_layers = self._eligible_top_layers(viewer)
+        eligible_layers = self._eligible_top_layers(viewer, child_labels=child_labels)
         max_zorder = max((lyr.zorder for lyr in eligible_layers), default=None)
         selected_zorder = next(
             (lyr.zorder for lyr in eligible_layers
