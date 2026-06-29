@@ -1,6 +1,5 @@
 import warnings
 
-import os
 import numpy as np
 import pytest
 from astropy import units as u
@@ -16,7 +15,6 @@ from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_U
 from jdaviz.utils import cached_uri
 
 GWCS_LT_0_26_2 = not minversion(gwcs, "0.26.2.dev")
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
@@ -317,26 +315,25 @@ def test_write_momentmap(deconfigged_helper, spectrum1d_cube, tmp_path):
     assert label in export_plugin.data_collection.labels
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz catalog test in CI")
 @pytest.mark.remote_data
-def test_momentmap_nirspec_prism(deconfigged_helper):
+def test_momentmap_nirspec_prism(cubeviz_helper):
     uri = "mast:jwst/product/jw02732-o003_t002_nirspec_prism-clear_s3d.fits"
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        deconfigged_helper.load_data(cached_uri(uri), cache=True)
-    uc = deconfigged_helper.plugins["Unit Conversion"]
+        cubeviz_helper.load_data(cached_uri(uri), cache=True)
+    uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True
     uc.spectral_y_type.selected = 'Surface Brightness'
-    mm = deconfigged_helper.plugins['Moment Maps']._obj
+    mm = cubeviz_helper.plugins['Moment Maps']._obj
     mm.open_in_tray()  # plugin has to be open for unit change to take hold
     mm._set_data_units()
     mm.calculate_moment()
     assert isinstance(mm.moment.wcs, WCS)
 
     sky_moment = mm.moment.wcs.pixel_to_world(50, 30)
-    sky_cube = deconfigged_helper._app.data_collection[0].coords.pixel_to_world(50, 30, 0)[0]  # noqa: E501
+    sky_cube = cubeviz_helper._app.data_collection[0].coords.pixel_to_world(50, 30, 0)[0]  # noqa: E501
     assert_allclose((sky_moment.ra.deg, sky_moment.dec.deg),
                     (sky_cube.ra.deg, sky_cube.dec.deg))
 

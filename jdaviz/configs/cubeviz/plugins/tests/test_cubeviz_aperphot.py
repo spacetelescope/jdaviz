@@ -1,8 +1,6 @@
-import os
 import numpy as np
 import pytest
 
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
 from astropy import units as u
 from astropy.table import Table
@@ -116,29 +114,28 @@ def test_cubeviz_aperphot_cube_orig_flux(deconfigged_helper, image_cube_hdu_obj_
     assert "cannot be negative" in plg._obj.result_failed_msg
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz aperphot test in CI")
-def test_cubeviz_aperphot_generated_3d_gaussian_smooth(deconfigged_helper,
+def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper,
                                                        image_cube_hdu_obj_microns):
-    deconfigged_helper.load(image_cube_hdu_obj_microns, data_label="test")
+    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
     flux_unit = u.Unit("erg*s^-1*cm^-2*Angstrom^-1*pix^-2")  # actually a sb
     solid_angle_unit = PIX2
 
-    gauss_plg = deconfigged_helper.plugins["Gaussian Smooth"]._obj
+    gauss_plg = cubeviz_helper.plugins["Gaussian Smooth"]._obj
     gauss_plg.mode_selected = "Spatial"
     with pytest.warns(AstropyUserWarning, match="The following attributes were set on the data"):
         _ = gauss_plg.smooth()
 
     # Need this to make it available for photometry data drop-down.
-    deconfigged_helper._app.add_data_to_viewer("uncert-viewer", "test spatial-smooth stddev-1.0")
+    cubeviz_helper._app.add_data_to_viewer("uncert-viewer", "test[FLUX] spatial-smooth stddev-1.0")
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
-    deconfigged_helper.plugins['Subset Tools'].import_region(aper)
+    cubeviz_helper.plugins['Subset Tools'].import_region(aper)
 
-    plg = deconfigged_helper.plugins["Aperture Photometry"]
-    plg.dataset.selected = "test spatial-smooth stddev-1.0"
+    plg = cubeviz_helper.plugins["Aperture Photometry"]
+    plg.dataset.selected = "test[FLUX] spatial-smooth stddev-1.0"
     plg.aperture.selected = "Subset 1"
     plg._obj.vue_do_aper_phot()
-    row = deconfigged_helper.plugins['Aperture Photometry'].export_table()[0]
+    row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
 
     # Basically, we should recover the input rectangle here.
     assert_allclose(row["xcenter"], 1 * u.pix)

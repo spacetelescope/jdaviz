@@ -1,8 +1,6 @@
 import os
 import pytest
 
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
-
 from jdaviz.configs.default.plugins.export.export import HAS_OPENCV
 
 
@@ -25,11 +23,10 @@ def test_export_movie(deconfigged_helper, spectrum1d_cube, tmp_path):
         os.chdir(orig_path)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz export_plots test in CI")
 @pytest.mark.skipif(HAS_OPENCV, reason="opencv-python is installed")
-def test_no_opencv(deconfigged_helper, spectrum1d_cube):
-    deconfigged_helper.load(spectrum1d_cube, data_label="test")
-    plugin = deconfigged_helper.plugins["Export"]
+def test_no_opencv(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
+    plugin = cubeviz_helper.plugins["Export"]
     assert 'mp4' in plugin.viewer_format.choices
     assert not plugin._obj.movie_enabled
     plugin.viewer_format = 'mp4'
@@ -44,13 +41,11 @@ def test_export_movie_not_cubeviz(imviz_helper):
 
 
 @pytest.mark.skipif(not HAS_OPENCV, reason="opencv-python is not installed")
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz export_plots test in CI")
-def test_export_movie_cubeviz_exceptions(deconfigged_helper, spectrum1d_cube):
-    deconfigged_helper.load(spectrum1d_cube, data_label="test")
-    default_viewer = deconfigged_helper.get_default_viewer()
-    default_viewer._obj.glue_viewer.shape = (100, 100)
-    deconfigged_helper._app.get_viewer("uncert-viewer").shape = (100, 100)
-    plugin = deconfigged_helper.plugins["Export"]
+def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
+    cubeviz_helper.default_viewer._obj.glue_viewer.shape = (100, 100)
+    cubeviz_helper._app.get_viewer("uncert-viewer").shape = (100, 100)
+    plugin = cubeviz_helper.plugins["Export"]
     assert plugin._obj.i_start == 0
     assert plugin._obj.i_end == 1
 
@@ -78,9 +73,8 @@ def test_export_movie_cubeviz_exceptions(deconfigged_helper, spectrum1d_cube):
 
 
 @pytest.mark.skipif(not HAS_OPENCV, reason="opencv-python is not installed")
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz export_plots test in CI")
-def test_export_movie_cubeviz_empty(deconfigged_helper):
-    plugin = deconfigged_helper.plugins["Export"]
+def test_export_movie_cubeviz_empty(cubeviz_helper):
+    plugin = cubeviz_helper.plugins["Export"]
     assert plugin._obj.i_start == 0
     assert plugin._obj.i_end == 0
 

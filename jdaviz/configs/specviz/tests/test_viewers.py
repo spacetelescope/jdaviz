@@ -1,11 +1,8 @@
-import os
 import astropy.units as u
 import numpy as np
 import pytest
 import warnings
 from specutils import Spectrum
-
-CI = os.environ.get("CI", "").lower() == "true"
 
 
 @pytest.mark.parametrize(
@@ -16,8 +13,7 @@ CI = os.environ.get("CI", "").lower() == "true"
      (u.dimensionless_unscaled, 'Counts'),
      (u.erg / (u.s * u.cm ** 2), 'Flux'),
      (u.erg / u.s, 'Luminosity')])
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer axis labels test in CI")
-def test_spectrum_viewer_axis_labels(deconfigged_helper, input_unit, y_axis_label):
+def test_spectrum_viewer_axis_labels(specviz_helper, input_unit, y_axis_label):
 
     flux = np.arange(1, 10) * input_unit
     spectral_axis = np.arange(1, 10) * u.um
@@ -26,36 +22,34 @@ def test_spectrum_viewer_axis_labels(deconfigged_helper, input_unit, y_axis_labe
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*contains multiple slashes, which is discouraged by the FITS standard.*")  # noqa
-        deconfigged_helper.load(spec, format='1D Spectrum')
+        specviz_helper.load_data(spec, data_label='test')
 
-    label = deconfigged_helper._spectrum_viewer.figure.axes[1].label
+    label = specviz_helper._spectrum_viewer.figure.axes[1].label
 
     assert (y_axis_label in label)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer test in CI")
-def test_spectrum_viewer_keep_unit_when_removed(deconfigged_helper, spectrum1d):
-    deconfigged_helper.load(spectrum1d, data_label="Test", format="1D Spectrum")
-    uc = deconfigged_helper.plugins["Unit Conversion"]
+def test_spectrum_viewer_keep_unit_when_removed(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d, data_label="Test")
+    uc = specviz_helper.plugins["Unit Conversion"]
     assert uc.flux_unit == "Jy"
     uc.flux_unit = "MJy"
-    deconfigged_helper._app.remove_data_from_viewer('spectrum-viewer', "Test")
-    deconfigged_helper._app.add_data_to_viewer('spectrum-viewer', "Test")
+    specviz_helper._app.remove_data_from_viewer('spectrum-viewer', "Test")
+    specviz_helper._app.add_data_to_viewer('spectrum-viewer', "Test")
     # Actual values not in display unit but should not affect display unit.
-    spec = deconfigged_helper.get_spectra(data_label="Test", apply_slider_redshift=False)
+    spec = specviz_helper.get_spectra(data_label="Test", apply_slider_redshift=False)
     assert spec.flux.unit == u.Jy
     assert uc.flux_unit.selected == "MJy"
-    assert deconfigged_helper._app._get_display_unit('spectral_y') == "MJy"
+    assert specviz_helper._app._get_display_unit('spectral_y') == "MJy"
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer test in CI")
-def test_limits_on_unit_change(deconfigged_helper, spectrum1d):
+def test_limits_on_unit_change(specviz_helper, spectrum1d):
     """
     Test that the x-limits are reset when changing units
     """
-    deconfigged_helper.load(spectrum1d, data_label="Test", format='1D Spectrum')
-    uc = deconfigged_helper.plugins["Unit Conversion"]
-    sv = deconfigged_helper.viewers['spectrum-viewer']
+    specviz_helper.load_data(spectrum1d, data_label="Test")
+    uc = specviz_helper.plugins["Unit Conversion"]
+    sv = specviz_helper.viewers['spectrum-viewer']
 
     assert uc.spectral_unit == "Angstrom"
     assert np.allclose(sv._obj.glue_viewer.get_limits(),
@@ -76,11 +70,10 @@ def test_limits_on_unit_change(deconfigged_helper, spectrum1d):
 class TestResetLimitsTwoTests:
     """See https://github.com/spacetelescope/lcviz/pull/93"""
 
-    @pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer reset test in CI")
-    def test_reset_limits_01(self, deconfigged_helper, spectrum1d):
+    def test_reset_limits_01(self, specviz_helper, spectrum1d):
         """This should run first."""
-        deconfigged_helper.load(spectrum1d, format='1D Spectrum')
-        sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
+        specviz_helper.load_data(spectrum1d, data_label="Test")
+        sv = specviz_helper._app.get_viewer('spectrum-viewer')
 
         orig_xlims = (sv.state.x_min, sv.state.x_max)
         orig_ylims = (sv.state.y_min, sv.state.y_max)
@@ -97,11 +90,10 @@ class TestResetLimitsTwoTests:
         sv.state._reset_y_limits()
         assert sv.state.y_min == orig_ylims[0]
 
-    @pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer reset test in CI")
-    def test_reset_limits_02(self, deconfigged_helper, spectrum1d_nm):
+    def test_reset_limits_02(self, specviz_helper, spectrum1d_nm):
         """This should run second and see if first polutes it."""
-        deconfigged_helper.load(spectrum1d_nm, format='1D Spectrum')
-        sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
+        specviz_helper.load_data(spectrum1d_nm, data_label="Test")
+        sv = specviz_helper._app.get_viewer('spectrum-viewer')
 
         orig_xlims = (sv.state.x_min, sv.state.x_max)
         orig_ylims = (sv.state.y_min, sv.state.y_max)

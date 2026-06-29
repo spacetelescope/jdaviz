@@ -284,30 +284,30 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
 
 class TestAdvancedAperPhot:
     @pytest.fixture(autouse=True)
-    def setup_class(self, deconfigged_helper):
+    def setup_class(self, imviz_helper):
         # Reference image
         fn_1 = get_pkg_data_filename('data/gauss100_fits_wcs.fits')
-        deconfigged_helper.load(fn_1)
+        imviz_helper.load_data(fn_1)
         # Different pixel scale
-        deconfigged_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
+        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
         # Different pixel scale + rotated
-        deconfigged_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
+        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
 
         # Link them by WCS
-        deconfigged_helper.link_data(align_by='wcs')
-        w = deconfigged_helper._app.data_collection[0].coords
+        imviz_helper.link_data(align_by='wcs')
+        w = imviz_helper._app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
-        deconfigged_helper.plugins['Subset Tools'].import_region([
+        imviz_helper.plugins['Subset Tools'].import_region([
             CirclePixelRegion(center=PixCoord(x=145.1, y=168.3), radius=5).to_sky(w),
             CirclePixelRegion(center=PixCoord(x=48.3, y=200.3), radius=5).to_sky(w),
             EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9, angle=2.356 * u.rad).to_sky(w),  # noqa: E501
             RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w)],
             combination_mode='new')
 
-        self.imviz = deconfigged_helper
-        self.viewer = deconfigged_helper.default_viewer._obj
-        self.phot_plugin = deconfigged_helper.plugins["Aperture Photometry"]
+        self.imviz = imviz_helper
+        self.viewer = imviz_helper.default_viewer._obj
+        self.phot_plugin = imviz_helper.plugins["Aperture Photometry"]
 
     @pytest.mark.parametrize(('data_label', 'local_bkg'), [
         ('gauss100_fits_wcs[PRIMARY,1]', 5.0),
@@ -359,8 +359,8 @@ def test_annulus_background(deconfigged_helper):
     bg_4gauss_3 = 45.416834
     bg_4gauss_4 = 4.939397
 
-    deconfigged_helper.load(gauss4, data_label='four_gaussians')
-    deconfigged_helper.load(ones, data_label='ones')
+    deconfigged_helper.load(gauss4, data_label='four_gaussians', format='Image')
+    deconfigged_helper.load(ones, data_label='ones', format='Image')
 
     phot_plugin = deconfigged_helper.plugins['Aperture Photometry']
     phot_plugin.dataset.selected = 'ones'
@@ -436,7 +436,7 @@ def test_fit_radial_profile_with_nan(deconfigged_helper):
     # Insert NaN
     gauss4[25, 150] = np.nan
 
-    deconfigged_helper.load(gauss4, data_label='four_gaussians')
+    deconfigged_helper.load(gauss4, data_label='four_gaussians', format='Image')
 
     # Mark an object of interest
     circle_1 = CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)

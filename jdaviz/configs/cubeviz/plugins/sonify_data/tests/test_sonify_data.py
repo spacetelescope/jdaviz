@@ -7,13 +7,11 @@ from specutils import SpectralRegion
 pytest.importorskip("strauss")
 IN_GITHUB_ACTIONS = os.environ.get("CI", "false") == "true"
 
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
-
-@pytest.mark.skipif(IN_GITHUB_ACTIONS or CI, reason="Test requires computer with audio output or skipped in CI") # noqa
-def test_sonify_data(deconfigged_helper, spectrum1d_cube_larger):
-    deconfigged_helper.load(spectrum1d_cube_larger, data_label="test")
-    sonify_plg = deconfigged_helper._app.get_tray_item_from_name('cubeviz-sonify-data')
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test requires computer with audio output or skipped in CI") # noqa
+def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
+    cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
+    sonify_plg = cubeviz_helper._app.get_tray_item_from_name('cubeviz-sonify-data')
     assert sonify_plg.stream_active
 
     # Create sonified data cube
@@ -27,7 +25,7 @@ def test_sonify_data(deconfigged_helper, spectrum1d_cube_larger):
 
     # Test using spectral subset for setting sonification bounds
     spec_region = SpectralRegion(4.62360028e-07*u.m, 4.62920561e-07*u.m)
-    subset_plugin = deconfigged_helper.plugins['Subset Tools']._obj
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
     subset_plugin.import_region(spec_region)
     sonify_plg.spectral_subset_selected = 'Subset 1'
     sonify_plg.vue_sonify_cube()
@@ -42,7 +40,7 @@ def test_sonify_data(deconfigged_helper, spectrum1d_cube_larger):
     assert sonify_plg.stream_active
 
     # Add sonified data to uncert-viewer
-    uncert_viewer = deconfigged_helper._app.get_viewer("uncert_viewer")
+    uncert_viewer = cubeviz_helper.viewers['uncert-viewer']
     uncert_viewer.data_menu.add_data('Sonified data')
     assert 'Sonified data' in uncert_viewer.data_menu.data_labels_loaded
 
@@ -58,9 +56,9 @@ def test_sonify_data(deconfigged_helper, spectrum1d_cube_larger):
 
 
 @pytest.mark.skipif(not IN_GITHUB_ACTIONS, reason="Plugin disabled only in CI")
-def test_sonify_data_disabled(deconfigged_helper, spectrum1d_cube_larger):
-    deconfigged_helper.load_data(spectrum1d_cube_larger, data_label="test")
-    sonify_plg = deconfigged_helper._app.get_tray_item_from_name('cubeviz-sonify-data')
+def test_sonify_data_disabled(cubeviz_helper, spectrum1d_cube_larger):
+    cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
+    sonify_plg = cubeviz_helper._app.get_tray_item_from_name('cubeviz-sonify-data')
     assert sonify_plg.disabled_msg
     with pytest.raises(ValueError, match='Unable to sonify cube'):
         sonify_plg.vue_sonify_cube()

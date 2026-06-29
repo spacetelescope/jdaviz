@@ -1,19 +1,15 @@
-import os
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion
 
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
+def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts):
+    cubeviz_helper.load_data(spectrum1d_cube_with_uncerts, data_label='test')
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz tools test in CI")
-def test_spectrum_at_spaxel_no_alt(deconfigged_helper, spectrum1d_cube_with_uncerts):
-    deconfigged_helper.load(spectrum1d_cube_with_uncerts, data_label='test')
-
-    flux_viewer = deconfigged_helper._app.get_viewer("flux-viewer")
-    uncert_viewer = deconfigged_helper._app.get_viewer("uncert-viewer")
-    spectrum_viewer = deconfigged_helper._app.get_viewer("spectrum-viewer")
+    flux_viewer = cubeviz_helper._app.get_viewer("flux-viewer")
+    uncert_viewer = cubeviz_helper._app.get_viewer("uncert-viewer")
+    spectrum_viewer = cubeviz_helper._app.get_viewer("spectrum-viewer")
 
     # Set the active tool to spectrumperspaxel
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
@@ -42,7 +38,7 @@ def test_spectrum_at_spaxel_no_alt(deconfigged_helper, spectrum1d_cube_with_unce
         x_min=4.623e-07, x_max=4.6232e-07, y_min=42, y_max=88)  # Zoom in X and Y
 
     # Check that a new subset was created
-    subsets = deconfigged_helper._app.get_subsets()
+    subsets = cubeviz_helper._app.get_subsets()
     reg = subsets.get('Subset 1')[0]['region']
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)
@@ -65,7 +61,7 @@ def test_spectrum_at_spaxel_no_alt(deconfigged_helper, spectrum1d_cube_with_unce
     assert len(flux_viewer.native_marks) == 3
 
     # Check in uncertainty viewer as well. Set mouseover here
-    deconfigged_helper._coords_info.dataset.selected = 'none'
+    cubeviz_helper._coords_info.dataset.selected = 'none'
     uncert_viewer.toolbar.active_tool = uncert_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
     uncert_viewer.toolbar.active_tool.on_mouse_move(
         {'event': 'mousemove', 'domain': {'x': x, 'y': y}, 'altKey': False})
@@ -73,7 +69,7 @@ def test_spectrum_at_spaxel_no_alt(deconfigged_helper, spectrum1d_cube_with_unce
     assert uncert_viewer.toolbar.active_tool._mark.visible is True
 
     # Select specific data
-    deconfigged_helper._coords_info.dataset.selected = 'test[FLUX]'
+    cubeviz_helper._coords_info.dataset.selected = 'test[FLUX]'
     uncert_viewer.toolbar.active_tool = uncert_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
     uncert_viewer.toolbar.active_tool.on_mouse_move(
         {'event': 'mousemove', 'domain': {'x': x, 'y': y}, 'altKey': False})
@@ -82,8 +78,7 @@ def test_spectrum_at_spaxel_no_alt(deconfigged_helper, spectrum1d_cube_with_unce
 
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz tools test in CI")
-def test_spectrum_at_spaxel_altkey_true(deconfigged_helper, spectrum1d_cube,
+def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube,
                                         spectrum1d_cube_sb_unit, cube_type):
 
     # test is parameterize to test a cube that is in Jy / sr (Surface Brightness)
@@ -97,11 +92,11 @@ def test_spectrum_at_spaxel_altkey_true(deconfigged_helper, spectrum1d_cube,
         cube = spectrum1d_cube
         cube_unit = 'Jy / pix2'
 
-    deconfigged_helper.load(cube, data_label='test')
+    cubeviz_helper.load(cube, data_label='test')
 
-    flux_viewer = deconfigged_helper._app.get_viewer("flux-viewer")
-    uncert_viewer = deconfigged_helper._app.get_viewer("uncert-viewer")
-    spectrum_viewer = deconfigged_helper._app.get_viewer("spectrum-viewer")
+    flux_viewer = cubeviz_helper._app.get_viewer("flux-viewer")
+    uncert_viewer = cubeviz_helper._app.get_viewer("uncert-viewer")
+    spectrum_viewer = cubeviz_helper._app.get_viewer("spectrum-viewer")
 
     # Set the active tool to spectrumperspaxel
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
@@ -110,10 +105,10 @@ def test_spectrum_at_spaxel_altkey_true(deconfigged_helper, spectrum1d_cube,
     assert len(spectrum_viewer.data()) == 1
 
     # Check coordinate info panel
-    sl = deconfigged_helper.plugins['Spectral Slice']
+    sl = cubeviz_helper.plugins['Spectral Slice']
     sl.value = sl._obj.valid_indicator_values_sorted[1]
     assert flux_viewer.slice == 1
-    label_mouseover = deconfigged_helper._coords_info
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 2, 'y': 1}})
     assert label_mouseover.as_text() == (f'Pixel x=02.0 y=01.0 Value +1.40000e+01 {cube_unit}',
@@ -138,7 +133,7 @@ def test_spectrum_at_spaxel_altkey_true(deconfigged_helper, spectrum1d_cube,
     assert len(spectrum_viewer.data()) == 2
 
     # Check that subset was created
-    subsets = deconfigged_helper._app.get_subsets()
+    subsets = cubeviz_helper._app.get_subsets()
     reg = subsets.get('Subset 1')[0]['region']
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)
@@ -151,7 +146,7 @@ def test_spectrum_at_spaxel_altkey_true(deconfigged_helper, spectrum1d_cube,
     assert len(flux_viewer.native_marks) == 4
     assert len(spectrum_viewer.data()) == 3
 
-    subsets = deconfigged_helper._app.get_subsets()
+    subsets = cubeviz_helper._app.get_subsets()
     reg2 = subsets.get('Subset 2')[0]['region']
     assert len(subsets) == 2
     assert isinstance(reg2, RectanglePixelRegion)
@@ -175,15 +170,14 @@ def test_spectrum_at_spaxel_altkey_true(deconfigged_helper, spectrum1d_cube,
     t_linkedpan.deactivate()
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz tools test in CI")
-def test_spectrum_at_spaxel_with_2d(deconfigged_helper):
+def test_spectrum_at_spaxel_with_2d(cubeviz_helper):
     # Use cube with single slice
     x = np.array([[[1, 2, 3], [4, 5, 6]]])
 
-    deconfigged_helper.load(x, data_label='test', format='Image')
+    cubeviz_helper.load_data(x, data_label='test')
 
-    flux_viewer = deconfigged_helper._app.get_viewer("flux-viewer")
-    spectrum_viewer = deconfigged_helper._app.get_viewer("spectrum-viewer")
+    flux_viewer = cubeviz_helper._app.get_viewer("flux-viewer")
+    spectrum_viewer = cubeviz_helper._app.get_viewer("spectrum-viewer")
 
     # Set the active tool to spectrumperspaxel
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']

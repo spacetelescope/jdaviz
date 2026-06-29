@@ -1,15 +1,11 @@
 import warnings
-import os
 import pytest
-
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
 from jdaviz.configs.cubeviz.plugins.slice.slice import SpectralSlice
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz slice test in CI")
-def test_slice(deconfigged_helper, spectrum1d_cube):
-    app = deconfigged_helper._app
+def test_slice(cubeviz_helper, spectrum1d_cube):
+    app = cubeviz_helper._app
     sl = SpectralSlice(app=app)
 
     # No data yet
@@ -23,11 +19,11 @@ def test_slice(deconfigged_helper, spectrum1d_cube):
     sl.vue_play_start_stop()
     assert not sl.is_playing
 
-    deconfigged_helper.load(spectrum1d_cube, data_label='test')
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     app.add_data_to_viewer("flux-viewer", "test[FLUX]")
     app.add_data_to_viewer("uncert-viewer", "test[FLUX]")
     app.add_data_to_viewer("spectrum-viewer", "Spectrum (sum)")
-    sv = deconfigged_helper.viewers['spectrum-viewer']._obj.glue_viewer
+    sv = cubeviz_helper.viewers['spectrum-viewer']._obj.glue_viewer
 
     # sample cube only has 2 slices with wavelengths [4.62280007e-07 4.62360028e-07] m
     assert len(sv.slice_values) == 2
@@ -36,11 +32,11 @@ def test_slice(deconfigged_helper, spectrum1d_cube):
     assert len(slice_values) == 2
 
     assert sl.value == slice_values[1]
-    assert deconfigged_helper._app.get_viewer("flux-viewer").slice == 1
-    assert deconfigged_helper._app.get_viewer("flux-viewer").state.slices[0] == 1
-    assert deconfigged_helper._app.get_viewer("uncert-viewer").state.slices[0] == 1
+    assert cubeviz_helper._app.get_viewer("flux-viewer").slice == 1
+    assert cubeviz_helper._app.get_viewer("flux-viewer").state.slices[0] == 1
+    assert cubeviz_helper._app.get_viewer("uncert-viewer").state.slices[0] == 1
     sl.value = slice_values[0]
-    assert deconfigged_helper._app.get_viewer("flux-viewer").slice == 0
+    assert cubeviz_helper._app.get_viewer("flux-viewer").slice == 0
     assert sl.value == slice_values[0]
 
     sl.value = slice_values[1]
@@ -64,7 +60,7 @@ def test_slice(deconfigged_helper, spectrum1d_cube):
     assert sl.value == slice_values[1]
 
     # Add test for unit conversion
-    uc_plugin = deconfigged_helper.plugins['Unit Conversion']._obj
+    uc_plugin = cubeviz_helper.plugins['Unit Conversion']._obj
     uc_plugin.spectral_unit.selected = 'Angstrom'
     assert sl.value_unit == 'Angstrom'
     sl.value = 4623.60028
@@ -96,13 +92,12 @@ def test_slice(deconfigged_helper, spectrum1d_cube):
     # NOTE: Hard to check sl.slice here because it is non-deterministic.
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz slice test in CI")
-def test_indicator_settings(deconfigged_helper, spectrum1d_cube):
-    deconfigged_helper.load(spectrum1d_cube, data_label='test')
-    app = deconfigged_helper._app
+def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    app = cubeviz_helper._app
     app.add_data_to_viewer("flux-viewer", "test[FLUX]")
     app.add_data_to_viewer("spectrum-viewer", "Spectrum (sum)")
-    sl = deconfigged_helper.plugins['Spectral Slice']._obj
+    sl = cubeviz_helper.plugins['Spectral Slice']._obj
     sv = app.get_viewer('spectrum-viewer')
     indicator = sv.slice_indicator
 
@@ -119,12 +114,11 @@ def test_indicator_settings(deconfigged_helper, spectrum1d_cube):
 
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing cubeviz slice test in CI")
-def test_init_slice(deconfigged_helper, spectrum1d_cube):
-    deconfigged_helper.load(spectrum1d_cube, data_label='test')
+def test_init_slice(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
 
-    fv = deconfigged_helper._app.get_viewer('flux-viewer')
-    sl = deconfigged_helper.plugins['Spectral Slice']._obj
+    fv = cubeviz_helper._app.get_viewer('flux-viewer')
+    sl = cubeviz_helper.plugins['Spectral Slice']
     slice_values = sl._obj.valid_selection_values_sorted
 
     assert sl.value == slice_values[1]
@@ -132,7 +126,7 @@ def test_init_slice(deconfigged_helper, spectrum1d_cube):
     assert fv.state.slices == (1, 0, 0)
 
     # make sure adding new data doesn't revert slice to 0
-    mm = deconfigged_helper.plugins['Moment Maps']
+    mm = cubeviz_helper.plugins['Moment Maps']
     mm.calculate_moment(add_data=True)
 
     assert sl.value == slice_values[1]

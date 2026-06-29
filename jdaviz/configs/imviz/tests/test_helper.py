@@ -1,8 +1,5 @@
-import os
 import numpy as np
 import pytest
-
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
 
 # Some API might be going through deprecation, so ignore the warning.
@@ -14,20 +11,19 @@ def test_plugin_user_apis(deconfigged_helper):
             assert hasattr(plugin, attr)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz helper test in CI")
-def test_create_new_viewer(deconfigged_helper, image_2d_wcs):
+def test_create_new_viewer(imviz_helper, image_2d_wcs):
     # starts with one (default) viewer
-    assert len(deconfigged_helper._app.get_viewer_ids()) == 1
+    assert len(imviz_helper._app.get_viewer_ids()) == 1
     arr = np.ones((10, 10))
 
     data_label = 'image-data'
     viewer_name = 'user-created-viewer'
-    deconfigged_helper.load(arr, data_label=data_label, show_in_viewer=False)
-    deconfigged_helper.create_image_viewer(viewer_name=viewer_name)
+    imviz_helper.load_data(arr, data_label=data_label, show_in_viewer=False)
+    imviz_helper.create_image_viewer(viewer_name=viewer_name)
 
     # Test both the old and new API
-    returned_data = deconfigged_helper.datasets[data_label].get_data()
-    returned_data_old_api = deconfigged_helper.get_data(data_label)
+    returned_data = imviz_helper.datasets[data_label].get_data()
+    returned_data_old_api = imviz_helper.get_data(data_label)
 
     assert len(returned_data.shape) == 2
     assert len(returned_data_old_api.shape) == 2
@@ -35,21 +31,20 @@ def test_create_new_viewer(deconfigged_helper, image_2d_wcs):
     assert np.array_equal(returned_data, returned_data_old_api)
 
     # new image viewer created
-    assert len(deconfigged_helper._app.get_viewer_ids()) == 2
+    assert len(imviz_helper._app.get_viewer_ids()) == 2
 
     # there should be no data in the new viewer
-    assert len(deconfigged_helper._app.get_viewer(viewer_name).data()) == 0
+    assert len(imviz_helper._app.get_viewer(viewer_name).data()) == 0
 
     # then add data, and check that data were added to the new viewer
-    deconfigged_helper._app.add_data_to_viewer(viewer_name, data_label)
-    assert len(deconfigged_helper._app.get_viewer(viewer_name).data()) == 1
+    imviz_helper._app.add_data_to_viewer(viewer_name, data_label)
+    assert len(imviz_helper._app.get_viewer(viewer_name).data()) == 1
 
     # remove data from the new viewer, check that it was removed
-    deconfigged_helper._app.remove_data_from_viewer(viewer_name, data_label)
-    assert len(deconfigged_helper._app.get_viewer(viewer_name).data()) == 0
+    imviz_helper._app.remove_data_from_viewer(viewer_name, data_label)
+    assert len(imviz_helper._app.get_viewer(viewer_name).data()) == 0
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz helper test in CI")
-def test_temporary_imviz_current_app(deconfigged_helper):
+def test_temporary_imviz_current_app(imviz_helper):
     from jdaviz.configs.imviz.helper import _current_app
-    assert _current_app == deconfigged_helper
+    assert _current_app == imviz_helper

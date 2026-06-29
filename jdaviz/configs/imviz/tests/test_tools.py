@@ -1,8 +1,6 @@
-import os
 import numpy as np
 import pytest
 
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 from numpy.testing import assert_allclose
@@ -10,7 +8,6 @@ from numpy.testing import assert_allclose
 from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, create_example_gwcs
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz tools test in CI")
 class TestPanZoomTools(BaseDeconfiggedImage_WCS_WCS):
     def test_panzoom_tools(self):
         v = self.viewer
@@ -83,10 +80,9 @@ class TestPanZoomTools(BaseDeconfiggedImage_WCS_WCS):
 
 
 @pytest.mark.parametrize("align_by", ["Pixels", "WCS"])
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz tools test in CI")
-def test_panzoom_click_center_linking(deconfigged_helper, align_by):
+def test_panzoom_click_center_linking(imviz_helper, align_by):
     """https://github.com/spacetelescope/jdaviz/issues/2749"""
-    v = deconfigged_helper.default_viewer._obj.glue_viewer
+    v = imviz_helper.default_viewer._obj.glue_viewer
 
     # Since we are not really displaying, need this to test pan/zoom.
     v.shape = (100, 100)
@@ -97,10 +93,10 @@ def test_panzoom_click_center_linking(deconfigged_helper, align_by):
     arr_small = np.ones((20, 15), dtype=int)
     w_small = create_example_gwcs(arr_small.shape)
 
-    deconfigged_helper.load(NDData(arr_big, wcs=w_big), data_label="big")
-    deconfigged_helper.load(NDData(arr_small, wcs=w_small), data_label="small")
+    imviz_helper.load_data(NDData(arr_big, wcs=w_big), data_label="big", format='Image')
+    imviz_helper.load_data(NDData(arr_small, wcs=w_small), data_label="small", format='Image')
 
-    lc_plugin = deconfigged_helper.plugins['Orientation']
+    lc_plugin = imviz_helper.plugins['Orientation']
     lc_plugin.align_by = align_by
 
     coo = SkyCoord(ra=197.89262754541807, dec=-1.3644568140486624, unit="deg")
@@ -123,50 +119,47 @@ def test_panzoom_click_center_linking(deconfigged_helper, align_by):
     assert_allclose(cur_cen.dec.deg, real_cen.dec.deg)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz tools test in CI")
-def test_blink(deconfigged_helper):
-    viewer = deconfigged_helper.default_viewer._obj.glue_viewer
+def test_blink(imviz_helper):
+    viewer = imviz_helper.default_viewer._obj.glue_viewer
 
     for i in range(3):
-        deconfigged_helper.load(NDData(np.zeros((2, 2)) + i), data_label=f'image_{i}')
+        imviz_helper.load_data(NDData(np.zeros((2, 2)) + i), data_label=f'image_{i}')
 
-    label_mouseover = deconfigged_helper._coords_info
+    label_mouseover = imviz_helper._coords_info
     viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b', 'domain': {'x': 0, 'y': 0}})
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +0.00000e+00', '', '')
-    assert viewer.top_visible_data_label == 'image_0'
+    assert viewer.top_visible_data_label == 'image_0[DATA]'
 
     # Blink forward and update coordinates info panel.
     viewer.blink_once()
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00', '', '')
-    assert viewer.top_visible_data_label == 'image_1'
+    assert viewer.top_visible_data_label == 'image_1[DATA]'
 
     # Blink backward.
     viewer.blink_once(reversed=True)
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +0.00000e+00', '', '')
-    assert viewer.top_visible_data_label == 'image_0'
+    assert viewer.top_visible_data_label == 'image_0[DATA]'
 
     # Blink backward again.
     viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'B', 'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +2.00000e+00', '', '')
-    assert viewer.top_visible_data_label == 'image_2'
+    assert viewer.top_visible_data_label == 'image_2[DATA]'
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz tools test in CI")
-def test_compass_open_while_load(deconfigged_helper):
-    plg = deconfigged_helper.plugins['Compass']
+def test_compass_open_while_load(imviz_helper):
+    plg = imviz_helper.plugins['Compass']
     plg._obj.plugin_opened = True
 
     # Should not crash even if Compass is open in tray.
-    deconfigged_helper.load(NDData(np.ones((2, 2))))
-    assert len(deconfigged_helper._app.data_collection) == 1
+    imviz_helper.load(NDData(np.ones((2, 2))))
+    assert len(imviz_helper._app.data_collection) == 1
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz tools test in CI")
-def test_tool_visibility(deconfigged_helper):
-    deconfigged_helper.load(NDData(np.ones((2, 2))))
-    tb = deconfigged_helper.default_viewer._obj.glue_viewer.toolbar
+def test_tool_visibility(imviz_helper):
+    imviz_helper.load(NDData(np.ones((2, 2))))
+    tb = imviz_helper.default_viewer._obj.glue_viewer.toolbar
 
     assert not tb.tools_data['jdaviz:boxzoommatch']['visible']
 
@@ -174,9 +167,9 @@ def test_tool_visibility(deconfigged_helper):
     # activate boxzoom to ensure it remains primary
     tb.active_tool_id = 'jdaviz:boxzoom'
 
-    deconfigged_helper.create_image_viewer()
-    data_label = deconfigged_helper._app.data_collection[0].label
-    deconfigged_helper._app.set_data_visibility('imviz-1', data_label, True)
+    imviz_helper.create_image_viewer()
+    data_label = imviz_helper._app.data_collection[0].label
+    imviz_helper._app.set_data_visibility('imviz-1', data_label, True)
 
     assert tb.tools_data['jdaviz:boxzoommatch']['visible']
     assert tb.active_tool_id == 'jdaviz:boxzoom'
@@ -189,6 +182,6 @@ def test_tool_visibility(deconfigged_helper):
     # now set the tool to the matched box zoom to ensure it deactivates itself when removing
     # a viewer
     tb.active_tool_id = 'jdaviz:boxzoommatch'
-    deconfigged_helper.destroy_viewer('imviz-1')
+    imviz_helper.destroy_viewer('imviz-1')
     assert not tb.tools_data['jdaviz:boxzoommatch']['visible']
     assert tb.active_tool_id is None

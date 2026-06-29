@@ -1,4 +1,3 @@
-import os
 import gwcs
 import numpy as np
 import pytest
@@ -12,8 +11,6 @@ from numpy.testing import assert_allclose
 from jdaviz.configs.imviz import wcs_utils
 from jdaviz.configs.imviz.plugins.orientation.orientation import base_wcs_layer_label
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_GWCS, create_example_gwcs
-
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
 
 def test_simple_fits_wcs():
@@ -113,7 +110,6 @@ def test_simple_gwcs():
 
 
 # TODO: Add more tests.
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz wcs_utils test in CI")
 class TestWCSOnly(BaseImviz_WCS_GWCS):
 
     # TODO: Replace private API calls with more public ones when available.

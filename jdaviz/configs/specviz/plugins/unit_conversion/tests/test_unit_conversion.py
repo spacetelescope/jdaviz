@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import pytest
 from astropy import units as u
@@ -7,21 +6,18 @@ from specutils import Spectrum
 
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 
-CI = os.environ.get("CI", "").lower() == "true"
-
 
 # On failure, should not crash; essentially a no-op.
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer tools test in CI")
 @pytest.mark.parametrize(
     ('new_spectral_axis', 'new_flux', 'expected_spectral_axis', 'expected_flux'),
     [("fail", "erg / (s cm2 Angstrom)", "Angstrom", "erg / (s cm2 Angstrom)"),
      ("None", "fail", "Angstrom", "Jy"),
      ("micron", "fail", "micron", "Jy")])
-def test_value_error_exception(deconfigged_helper, spectrum1d, new_spectral_axis, new_flux,
+def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, new_flux,
                                expected_spectral_axis, expected_flux):
-    deconfigged_helper.load(spectrum1d, data_label="Test 1D Spectrum", format='1D Spectrum')
-    viewer = deconfigged_helper._app.get_viewer('spectrum-viewer')
-    plg = deconfigged_helper.plugins["Unit Conversion"]
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
+    plg = specviz_helper.plugins["Unit Conversion"]
 
     try:
         plg.spectral_unit = new_spectral_axis
@@ -34,7 +30,7 @@ def test_value_error_exception(deconfigged_helper, spectrum1d, new_spectral_axis
         if "reverting selection to" not in repr(e):
             raise
 
-    assert len(deconfigged_helper._app.data_collection) == 1
+    assert len(specviz_helper._app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit(expected_spectral_axis)
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(expected_flux)
 
@@ -48,71 +44,67 @@ def test_initialize_specviz_sb(deconfigged_helper, spectrum1d):
     assert plg._obj.angle_unit == "sr"
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer tools test in CI")
 @pytest.mark.parametrize('uncert', (False, True))
-def test_conv_wave_only(deconfigged_helper, spectrum1d, uncert):
+def test_conv_wave_only(specviz_helper, spectrum1d, uncert):
     if uncert is False:
         spectrum1d.uncertainty = None
-    deconfigged_helper.load(spectrum1d, data_label="Test 1D Spectrum", format='1D Spectrum')
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
-    viewer = deconfigged_helper._app.get_viewer('spectrum-viewer')
-    plg = deconfigged_helper.plugins["Unit Conversion"]
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
+    plg = specviz_helper.plugins["Unit Conversion"]
     new_spectral_axis = "micron"
     plg.spectral_unit = new_spectral_axis
 
-    assert len(deconfigged_helper._app.data_collection) == 1
+    assert len(specviz_helper._app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit(new_spectral_axis)
     assert u.Unit(viewer.state.y_display_unit) == u.Unit('Jy')
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer tools test in CI")
 @pytest.mark.parametrize('uncert', (False, True))
-def test_conv_flux_only(deconfigged_helper, spectrum1d, uncert):
+def test_conv_flux_only(specviz_helper, spectrum1d, uncert):
     if uncert is False:
         spectrum1d.uncertainty = None
-    deconfigged_helper.load(spectrum1d, data_label="Test 1D Spectrum", format='1D Spectrum')
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
-    viewer = deconfigged_helper._app.get_viewer('spectrum-viewer')
-    plg = deconfigged_helper.plugins["Unit Conversion"]
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
+    plg = specviz_helper.plugins["Unit Conversion"]
     new_flux = "erg / (s cm2 Angstrom)"
     plg._obj.flux_unit_selected = new_flux
 
-    assert len(deconfigged_helper._app.data_collection) == 1
+    assert len(specviz_helper._app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit('Angstrom')
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer tools test in CI")
 @pytest.mark.parametrize('uncert', (False, True))
-def test_conv_wave_flux(deconfigged_helper, spectrum1d, uncert):
+def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
     if uncert is False:
         spectrum1d.uncertainty = None
-    deconfigged_helper.load(spectrum1d, data_label="Test 1D Spectrum", format='1D Spectrum')
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
-    viewer = deconfigged_helper._app.get_viewer('spectrum-viewer')
-    plg = deconfigged_helper.plugins["Unit Conversion"]
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
+    plg = specviz_helper.plugins["Unit Conversion"]
     new_spectral_axis = "micron"
     new_flux = "erg / (s cm2 Angstrom)"
     plg.spectral_unit = new_spectral_axis
     plg._obj.flux_unit_selected = new_flux
 
-    assert len(deconfigged_helper._app.data_collection) == 1
+    assert len(specviz_helper._app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit(new_spectral_axis)
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer tools test in CI")
-def test_conv_no_data(deconfigged_helper, spectrum1d):
+def test_conv_no_data(specviz_helper, spectrum1d):
     """plugin unit selections won't have valid choices yet, preventing
     attempting to set display units."""
     # spectrum not load is in Flux units, sb_unit and flux_unit
     # should be enabled, spectral_y_type should not be
-    plg = deconfigged_helper.plugins["Unit Conversion"]
+    plg = specviz_helper.plugins["Unit Conversion"]
     with pytest.raises(ValueError, match="could not find match in valid x display units"):
         plg.spectral_unit = "micron"
-    assert len(deconfigged_helper._app.data_collection) == 0
+    assert len(specviz_helper._app.data_collection) == 0
 
-    deconfigged_helper.load(spectrum1d, data_label="Test 1D Spectrum", format='1D Spectrum')
+    specviz_helper.load(spectrum1d, data_label="Test 1D Spectrum", format='1D Spectrum')
 
     # make sure we don't expose translations in Specviz
     assert hasattr(plg, 'flux_unit')
@@ -120,8 +112,7 @@ def test_conv_no_data(deconfigged_helper, spectrum1d):
     assert not hasattr(plg, 'spectral_y_type')
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz viewer tools test in CI")
-def test_non_stddev_uncertainty(deconfigged_helper):
+def test_non_stddev_uncertainty(specviz_helper):
     flux = np.ones(10) * u.Jy
     stddev = 0.1
     var = stddev ** 2
@@ -133,13 +124,13 @@ def test_non_stddev_uncertainty(deconfigged_helper):
         spectral_axis=wavelength
     )
 
-    deconfigged_helper.load(spec, format='1D Spectrum')
+    specviz_helper.load_data(spec)
 
-    po = deconfigged_helper.plugins['Plot Options']
+    po = specviz_helper.plugins['Plot Options']
     po.uncertainty_visible = True
 
     # check that the stddev uncertainties are drawn:
-    viewer = deconfigged_helper._app.get_viewer('spectrum-viewer')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
     np.testing.assert_allclose(
         np.abs(viewer.figure.marks[-1].y - viewer.figure.marks[-1].y.mean(0)),
         stddev

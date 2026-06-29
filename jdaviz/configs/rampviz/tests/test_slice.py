@@ -1,19 +1,15 @@
-import os
 import pytest
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
-
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_slice_roman(deconfigged_helper, roman_level_1_ramp):
-    _slice(deconfigged_helper, roman_level_1_ramp)
+def test_slice_roman(rampviz_helper, roman_level_1_ramp):
+    _slice(rampviz_helper, roman_level_1_ramp)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
-def test_slice_jwst(deconfigged_helper, jwst_level_1b_ramp):
-    _slice(deconfigged_helper, jwst_level_1b_ramp)
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
+def test_slice_jwst(rampviz_helper, jwst_level_1b_ramp):
+    _slice(rampviz_helper, jwst_level_1b_ramp)
 
 
 def _slice(helper, ramp_cube):
@@ -32,8 +28,8 @@ def _slice(helper, ramp_cube):
     assert not sl.is_playing
 
     helper.load(ramp_cube, data_label='test')
-    app.add_data_to_viewer("group-viewer", "test[DATA]")
-    app.add_data_to_viewer("diff-viewer", "test[DATA]")
+    app.add_data_to_viewer("group-viewer", "test")
+    app.add_data_to_viewer("diff-viewer", "test")
     app.add_data_to_viewer("integration-viewer", "test (median)")
     sv = helper.viewers['integration-viewer']._obj.glue_viewer
 
@@ -80,21 +76,20 @@ def _slice(helper, ramp_cube):
     # NOTE: Hard to check sl.slice here because it is non-deterministic.
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_indicator_settings_roman(deconfigged_helper, roman_level_1_ramp):
-    _indicator_settings(deconfigged_helper, roman_level_1_ramp)
+def test_indicator_settings_roman(rampviz_helper, roman_level_1_ramp):
+    _indicator_settings(rampviz_helper, roman_level_1_ramp)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
-def test_indicator_settings_jwst(deconfigged_helper, jwst_level_1b_ramp):
-    _indicator_settings(deconfigged_helper, jwst_level_1b_ramp)
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
+def test_indicator_settings_jwst(rampviz_helper, jwst_level_1b_ramp):
+    _indicator_settings(rampviz_helper, jwst_level_1b_ramp)
 
 
 def _indicator_settings(helper, ramp):
     helper.load(ramp, data_label='test')
     app = helper._app
-    app.add_data_to_viewer("group-viewer", "test[DATA]")
+    app.add_data_to_viewer("group-viewer", "test")
     app.add_data_to_viewer("integration-viewer", "test (median)")
     sl = helper.plugins['Ramp Slice']._obj
     sv = app.get_viewer('integration-viewer')
@@ -112,15 +107,14 @@ def _indicator_settings(helper, ramp):
     assert indicator.label.visible is False
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_init_slice_roman(deconfigged_helper, roman_level_1_ramp):
-    _init_slice(deconfigged_helper, roman_level_1_ramp)
+def test_init_slice_roman(rampviz_helper, roman_level_1_ramp):
+    _init_slice(rampviz_helper, roman_level_1_ramp)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
-def test_init_slice_jwst(deconfigged_helper, jwst_level_1b_ramp):
-    _init_slice(deconfigged_helper, jwst_level_1b_ramp)
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
+def test_init_slice_jwst(rampviz_helper, jwst_level_1b_ramp):
+    _init_slice(rampviz_helper, jwst_level_1b_ramp)
 
 
 def _init_slice(helper, ramp):

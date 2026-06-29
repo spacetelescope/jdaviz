@@ -1,4 +1,3 @@
-import os
 import gwcs
 import pytest
 import specreduce
@@ -22,24 +21,22 @@ from jdaviz.core.marks import Lines
 
 GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
 SPECREDUCE_LT_1_8_0 = Version(specreduce.__version__) < Version('1.8.0')
-CI = os.environ.get("CI", "False").lower() == "true"
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz2d test in CI")
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
-def test_plugin(deconfigged_helper):
+def test_plugin(specviz2d_helper):
     # TODO: Change back to smaller number (30?) when ITSD is convinced it is them and not us.
     #       Help desk ticket INC0183598, J. Quick.
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits',
                        cache=True, timeout=100)
 
-    deconfigged_helper.load(spectrum_2d=fn, format='2D Spectrum')
+    specviz2d_helper.load_data(spectrum_2d=fn)
 
-    pext = deconfigged_helper._app.get_tray_item_from_name('spectral-extraction-2d')
+    pext = specviz2d_helper._app.get_tray_item_from_name('spectral-extraction-2d')
 
     # test trace marks - won't be created until after opening the plugin
-    sp2dv = deconfigged_helper._app.get_viewer('spectrum-2d-viewer')
+    sp2dv = specviz2d_helper._app.get_viewer('spectrum-2d-viewer')
     assert len(sp2dv.figure.marks) == 3
 
     pext.keep_active = True
@@ -160,13 +157,13 @@ def test_plugin(deconfigged_helper):
     assert len(pext.ext_specreduce_err) > 0
     pext.bg_results_label = 'should not be created'
     pext.vue_create_bg_img()
-    assert 'should not be created' not in [d.label for d in deconfigged_helper._app.data_collection]
+    assert 'should not be created' not in [d.label for d in specviz2d_helper._app.data_collection]
 
     with pytest.raises(ValueError):
         pext.export_extract(invalid_kwarg=5)
 
     # test importing traces
-    img = deconfigged_helper.datasets['Spectrum 2D'].get_data()
+    img = specviz2d_helper.datasets['Spectrum 2D'].get_data()
     flat_trace = tracing.FlatTrace(img, trace_pos=25)
     fit_trace = tracing.FitTrace(img)
 
@@ -176,21 +173,20 @@ def test_plugin(deconfigged_helper):
         assert isinstance(exported_trace, type(imported_trace))
 
     array_trace = tracing.ArrayTrace(img, np.arange(len(img.spectral_axis)))
-    deconfigged_helper.load(array_trace, data_label='array_trace')
+    specviz2d_helper.load(array_trace, data_label='array_trace')
     pext.trace_trace.selected = 'array_trace'
     exported_trace = pext.export_trace(add_data=False)
     assert isinstance(exported_trace, tracing.ArrayTrace)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz2d test in CI")
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
-def test_user_api(deconfigged_helper):
+def test_user_api(specviz2d_helper):
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
 
-    deconfigged_helper.load(spectrum_2d=fn, format='2D Spectrum')
+    specviz2d_helper.load_data(spectrum_2d=fn)
 
-    pext = deconfigged_helper.plugins['2D Spectral Extraction']
+    pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
     pext.keep_active = True
 
     # test that setting a string to an AddResults object redirects to the label
@@ -209,12 +205,11 @@ def test_user_api(deconfigged_helper):
 
 @pytest.mark.remote_data
 @pytest.mark.skipif(GWCS_LT_0_18_1, reason='Needs GWCS 0.18.1 or later')
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz2d test in CI")
 @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
-def test_background_extraction_and_display(deconfigged_helper):
+def test_background_extraction_and_display(specviz2d_helper):
     uri = 'mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
-    deconfigged_helper.load(spectrum_2d=cached_uri(uri), format='2D Spectrum', cache=True)
-    pext = deconfigged_helper._app.get_tray_item_from_name('spectral-extraction-2d')
+    specviz2d_helper.load(spectrum_2d=cached_uri(uri), format='2D Spectrum', cache=True)
+    pext = specviz2d_helper._app.get_tray_item_from_name('spectral-extraction-2d')
 
     # check that the background extraction method and parameters are as expected
     assert pext.bg_type_selected == 'TwoSided'
@@ -223,10 +218,10 @@ def test_background_extraction_and_display(deconfigged_helper):
     # test extracting background and background subtracted images and adding
     # them to the viewer
     pext.export_bg_sub(add_data=True)
-    assert deconfigged_helper._app.data_collection[2].label == 'background-subtracted'
+    assert specviz2d_helper._app.data_collection[2].label == 'background-subtracted'
 
     pext.export_bg_img(add_data=True)
-    assert deconfigged_helper._app.data_collection[3].label == 'background'
+    assert specviz2d_helper._app.data_collection[3].label == 'background'
 
 
 @pytest.mark.filterwarnings('ignore')

@@ -1,6 +1,4 @@
-import os
 import numpy as np
-import pytest
 from astropy.coordinates import Angle
 from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
@@ -9,10 +7,7 @@ from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePi
 
 from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, BaseImviz_WCS_GWCS
 
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
-
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz delete_data test in CI")
 class TestDeleteData(BaseDeconfiggedImage_WCS_WCS):
 
     def test_reparent_str(self):
@@ -85,7 +80,6 @@ class TestDeleteData(BaseDeconfiggedImage_WCS_WCS):
         assert_allclose(subset2.subset_state.roi.ymax, 2)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz delete_data test in CI")
 class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
     """Regression test for https://jira.stsci.edu/browse/JDAT-3958"""
 

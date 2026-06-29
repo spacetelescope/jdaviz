@@ -65,9 +65,6 @@ class BaseImviz_WCS_NoWCS:
 
         self.wcs = WCS(hdu_wcs.header)
         self.imviz = imviz_helper
-        # default_viewer fixture attached the viewer wrapper to deconfigged_helper
-        # default_viewer is a new pytest fixture only when deconfigged_helper returns App()
-        # (i.e., deconfigged)
         self.viewer = imviz_helper.default_viewer._obj.glue_viewer
         self.subset_plugin = self.imviz.plugins['Subset Tools']
         self.orientation_plugin = self.imviz.plugins['Orientation']
@@ -105,7 +102,7 @@ class BaseDeconfiggedImage_WCS_WCS:
         self.wcs_2 = WCS(hdu2.header)
         self.helper = deconfigged_helper
 
-        # commonly accessed plugin
+        # commonly accessed plugins
         self.subset_plugin = self.helper.plugins['Subset Tools']
         self.orientation_plugin = self.helper.plugins['Orientation']
 
@@ -162,9 +159,8 @@ class BaseImviz_WCS_GWCS:
         # Load data into Imviz:
         # 1. Data with FITS WCS and unit.
         # 2. Data with GWCS (rotated w.r.t. FITS WCS) and no unit.
-        imviz_helper.load(NDData(arr, wcs=w_fits, unit='electron/s'),
-                          data_label='fits_wcs', format='Image')
-        imviz_helper.load(NDData(arr, wcs=w_gwcs), data_label='gwcs', format='Image')
+        imviz_helper.load_data(NDData(arr, wcs=w_fits, unit='electron/s'), data_label='fits_wcs')
+        imviz_helper.load_data(NDData(arr, wcs=w_gwcs), data_label='gwcs')
 
         self.wcs_1 = w_fits
         self.wcs_2 = w_gwcs
@@ -215,9 +211,8 @@ class BaseImviz_GWCS_GWCS:
         w_gwcs_2.bounding_box = ((0, 8), (0, 10)) * u.pix  # x, y
 
         # Load data into Imviz
-        imviz_helper.load(NDData(arr, wcs=w_gwcs_1, unit='electron/s'),
-                          data_label='gwcs1', format='Image')
-        imviz_helper.load(NDData(arr, wcs=w_gwcs_2), data_label='gwcs2', format='Image')
+        imviz_helper.load_data(NDData(arr, wcs=w_gwcs_1, unit='electron/s'), data_label='gwcs1')
+        imviz_helper.load_data(NDData(arr, wcs=w_gwcs_2), data_label='gwcs2')
 
         self.wcs_1 = w_gwcs_1
         self.wcs_2 = w_gwcs_2

@@ -1,5 +1,3 @@
-import os
-import pytest
 import numpy as np
 from astropy import units as u
 from astropy.nddata import NDData
@@ -10,10 +8,6 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseDeconfigge
 from jdaviz.utils import get_top_layer_index
 
 
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
-
-
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz line profile tests in CI")
 class TestLineProfileXYPixelLinked(BaseImviz_WCS_NoWCS):
     def test_plugin(self):
         """Go through plugin logic but does not check plot contents."""
@@ -85,7 +79,6 @@ class TestLineProfileXYPixelLinked(BaseImviz_WCS_NoWCS):
         # assert lp_plugin.selected_y == 9
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz line profile tests in CI")
 class TestLineProfileXYWCSLinked(BaseDeconfiggedImage_WCS_WCS):
     def test_plugin(self):
 
@@ -152,13 +145,12 @@ class TestLineProfileXYWCSLinked(BaseDeconfiggedImage_WCS_WCS):
         # assert lp_plugin.selected_y == 9
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz line profile tests in CI")
-def test_line_profile_with_nan(deconfigged_helper):
+def test_line_profile_with_nan(imviz_helper):
     arr = np.ones((10, 10))
     arr[5, 5] = np.nan
-    deconfigged_helper.load(arr)
+    imviz_helper.load_data(arr)
 
-    lp_plugin = deconfigged_helper.plugins['Image Profiles (XY)']._obj
+    lp_plugin = imviz_helper.plugins['Image Profiles (XY)']._obj
     lp_plugin.plugin_opened = True
     lp_plugin.selected_x = 5
     lp_plugin.selected_y = 5

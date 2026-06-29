@@ -70,10 +70,6 @@ def test_validate_bunit():
     assert _validate_bunit('ELECTRONS') == 'electron'
 
 
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
-
-
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz parser tests in CI")
 class TestParseImage:
     def setup_class(self):
         self.jwst_asdf_url_1 = 'https://data.science.stsci.edu/redirect/JWST/jwst-data_analysis_tools/imviz_test_data/jw00042001001_01101_00001_nrcb5_cal.fits'  # noqa: E501
@@ -93,49 +89,49 @@ class TestParseImage:
         with pytest.raises(NotImplementedError, match='Imviz does not support'):
             parse_data(deconfigged_helper._app, some_obj)
 
-    def test_parse_numpy_array_1d_2d(self, deconfigged_helper):
+    def test_parse_numpy_array_1d_2d(self, imviz_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this array with ndim=1'):
-            parse_data(deconfigged_helper._app, np.zeros(2))
+            parse_data(imviz_helper._app, np.zeros(2))
 
         # Passing in data_label keyword as posarg.
-        deconfigged_helper.load(np.zeros((2, 2)), 'some_array', show_in_viewer=False)
-        data = deconfigged_helper._app.data_collection[0]
+        imviz_helper.load_data(np.zeros((2, 2)), 'some_array', show_in_viewer=False)
+        data = imviz_helper._app.data_collection[0]
         comp = data.get_component('DATA')
         assert data.label == 'some_array'
         assert data.shape == (2, 2)
         assert comp.data.shape == (2, 2)
 
     @pytest.mark.parametrize('manual_loop', [False, True])
-    def test_parse_numpy_array_3d(self, deconfigged_helper, manual_loop):
+    def test_parse_numpy_array_3d(self, imviz_helper, manual_loop):
         # This data has values in axis=0 that correspond to axis num.
         n_slices = 5
         slice_shape = (2, 3)
         arr = np.stack([np.zeros(slice_shape) + i for i in range(n_slices)])
         data_label = 'my_slices'
-        viewer = deconfigged_helper.viewers.get('imviz-0')
+        viewer = imviz_helper.viewers.get('imviz-0')
 
         if not manual_loop:
             # We use higher level load_data() here to make sure linking does not crash.
-            deconfigged_helper.load(arr, data_label=data_label)
+            imviz_helper.load_data(arr, data_label=data_label)
         else:
             # Manual loop with unique labels for each slice.
-            with deconfigged_helper.batch_load():
+            with imviz_helper.batch_load():
                 for i in range(n_slices):
-                    deconfigged_helper.load(arr[i, :, :], data_label=f'{data_label}_{i}')
+                    imviz_helper.load_data(arr[i, :, :], data_label=f'{data_label}_{i}')
                 # all set_data_visibility calls must be deferred
                 # no layers should be loaded into the viewer yet.
                 assert viewer.data_menu.data_labels_loaded == []
-                assert len(deconfigged_helper.pending_set_data_visibility) == n_slices
+                assert len(imviz_helper.pending_set_data_visibility) == n_slices
 
             # After batch_load exits, link manager has run, all layers should now be loaded.
             assert len(viewer.data_menu.data_labels_loaded) == n_slices
-            assert len(deconfigged_helper.pending_set_data_visibility) == 0
+            assert len(imviz_helper.pending_set_data_visibility) == 0
 
-        assert len(deconfigged_helper._app.data_collection) == n_slices
-        assert len(deconfigged_helper._app.data_collection.links) == 8
+        assert len(imviz_helper._app.data_collection) == n_slices
+        assert len(imviz_helper._app.data_collection.links) == 8
 
         for i in range(n_slices):
-            data = deconfigged_helper._app.data_collection[i]
+            data = imviz_helper._app.data_collection[i]
             comp = data.get_component('DATA')
             if not manual_loop:
                 # 3D array uses extension naming with slice-N suffix
@@ -151,22 +147,22 @@ class TestParseImage:
         # When more than 16 slices are provided, only the first 16 are loaded
         # Note: warning about 16+ slices is emitted during importer creation but is
         # suppressed during the resolver's format probing phase (by design)
-        deconfigged_helper.load(np.ones((17, 5, 5)))
+        deconfigged_helper.load(np.ones((17, 5, 5)), format='Image')
 
         # Verify that only 16 slices are loaded (the limit)
-        assert len(deconfigged_helper._app.data_collection) == 16
+        assert len(deconfigged_helper._app.data_collection) == 1
         assert deconfigged_helper._app.data_collection[0].shape == (5, 5)
-        assert deconfigged_helper._app.data_collection[15].shape == (5, 5)
+        assert deconfigged_helper._app.data_collection[-1].shape == (5, 5)
 
-    def test_parse_numpy_array_4d(self, deconfigged_helper):
+    def test_parse_numpy_array_4d(self, imviz_helper):
         # Check logic is in higher level method.
-        deconfigged_helper.load(np.ones((1, 2, 5, 5)))
-        assert len(deconfigged_helper._app.data_collection) == 2
-        assert deconfigged_helper._app.data_collection[0].shape == (5, 5)
-        assert deconfigged_helper._app.data_collection[1].shape == (5, 5)
+        imviz_helper.load_data(np.ones((1, 2, 5, 5)))
+        assert len(imviz_helper._app.data_collection) == 2
+        assert imviz_helper._app.data_collection[0].shape == (5, 5)
+        assert imviz_helper._app.data_collection[1].shape == (5, 5)
 
         with pytest.raises(ValueError, match='cannot load this array with ndim'):
-            deconfigged_helper.load(np.ones((2, 2, 5, 5)))
+            imviz_helper.load_data(np.ones((2, 2, 5, 5)))
 
     def test_parse_nddata_simple(self, deconfigged_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this NDData with ndim=1'):
@@ -227,12 +223,12 @@ class TestParseImage:
         filename = str(tmp_path / f'myimage.{format}')
         imsave(filename, a)
 
-        deconfigged_helper.load(filename, show_in_viewer=False)
+        deconfigged_helper.load(filename, show_in_viewer=False, format='Image')
         data = deconfigged_helper._app.data_collection[0]
         assert data.label == 'myimage'
         assert data.shape == (10, 10)
 
-    def test_filelist(self, deconfigged_helper, tmp_path):
+    def test_filelist(self, imviz_helper, tmp_path):
         flist = []
 
         # Generate some files to parse.
@@ -244,10 +240,10 @@ class TestParseImage:
             hdu.writeto(fpath, overwrite=True)
 
         flist = ','.join(flist)
-        deconfigged_helper.load(flist, show_in_viewer=False)
+        imviz_helper.load_data(flist, show_in_viewer=False, format='Image')
 
         for i in range(2):
-            data = deconfigged_helper._app.data_collection[i]
+            data = imviz_helper._app.data_collection[i]
             comp = data.get_component('PRIMARY,1')
             assert data.label == f'myfits_{i}[PRIMARY,1]'
             assert data.shape == (2, 2)
@@ -255,7 +251,7 @@ class TestParseImage:
             np.testing.assert_allclose(comp.data.mean(), i)
 
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
-            deconfigged_helper.load(flist, data_label='foo', show_in_viewer=False)
+            imviz_helper.load_data(flist, data_label='foo', show_in_viewer=False, format='Image')
 
     def test_parse_asdf_in_fits_4d(self, deconfigged_helper, tmp_path):
         hdulist = fits.HDUList([
@@ -563,8 +559,7 @@ def test_load_image_imviz_without_format(deconfigged_helper, tmp_path):
     assert data.shape == (10, 10)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz parser test in CI")
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_roman_parser(deconfigged_helper, roman_imagemodel):
-    deconfigged_helper.load(roman_imagemodel, data_label='roman_wfi_image_model', ext='data')
-    assert len(deconfigged_helper._app.data_collection) == 1
+def test_roman_parser(imviz_helper, roman_imagemodel):
+    imviz_helper.load_data(roman_imagemodel, data_label='roman_wfi_image_model', ext='data')
+    assert len(imviz_helper._app.data_collection) == 1

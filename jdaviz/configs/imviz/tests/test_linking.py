@@ -1,4 +1,3 @@
-import os
 import warnings
 import numpy as np
 import pytest
@@ -12,9 +11,6 @@ from regions import PixCoord, CirclePixelRegion, PolygonPixelRegion
 from jdaviz.configs.imviz.helper import get_reference_image_data
 from jdaviz.configs.imviz.tests.utils import (
     BaseDeconfiggedImage_WCS_WCS, BaseImviz_WCS_NoWCS, BaseImviz_WCS_GWCS, BaseImviz_GWCS_GWCS)
-
-
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
 
 class BaseLinkHandler:
@@ -53,7 +49,6 @@ class BaseLinkHandler:
                 helper.default_viewer._obj.glue_viewer.state.y_max)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz linking tests in CI")
 class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
     def test_wcslink_fallback_pixels(self):
@@ -74,7 +69,6 @@ class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
         )
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz linking tests in CI")
 class TestLink_WCS_FakeWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
     def test_badwcs_no_crash(self):
@@ -102,7 +96,6 @@ class TestLink_WCS_FakeWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
                                              '337.5202808000 -20.8333330600 (deg)')
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz linking tests in CI")
 class TestLink_WCS_WCS(BaseDeconfiggedImage_WCS_WCS, BaseLinkHandler):
 
     def test_wcslink_affine_with_extras(self):
@@ -303,7 +296,6 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         viewer2.state.reset_limits()
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz linking tests in CI")
 class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
 
     def test_pixel_linking(self):
@@ -338,15 +330,14 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         assert not label_mouseover.row2_unreliable
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz linking test in CI")
-def test_imviz_no_data(deconfigged_helper):
-    refdata, iref = get_reference_image_data(deconfigged_helper._app)
+def test_imviz_no_data(imviz_helper):
+    refdata, iref = get_reference_image_data(imviz_helper._app)
     assert refdata is None
     assert iref == -1
 
-    deconfigged_helper.link_data()  # Just no-op, do not crash
-    links = deconfigged_helper._app.data_collection.external_links
+    imviz_helper.link_data()  # Just no-op, do not crash
+    links = imviz_helper._app.data_collection.external_links
     assert len(links) == 0
 
     with pytest.raises(ValueError, match='No reference data for link look-up'):
-        deconfigged_helper.default_viewer._obj.glue_viewer.get_alignment_method('foo')
+        imviz_helper.default_viewer._obj.glue_viewer.get_alignment_method('foo')

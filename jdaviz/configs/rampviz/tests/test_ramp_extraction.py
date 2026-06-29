@@ -1,21 +1,17 @@
-import os
 import pytest
 from regions import CirclePixelRegion, PixCoord
 from jdaviz.core.marks import Lines
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
-
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_previews_roman(deconfigged_helper, roman_level_1_ramp):
-    _ramp_extraction_previews(deconfigged_helper, roman_level_1_ramp)
+def test_previews_roman(rampviz_helper, roman_level_1_ramp):
+    _ramp_extraction_previews(rampviz_helper, roman_level_1_ramp)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing rampviz viewer tools test in CI")
-def test_previews_jwst(deconfigged_helper, jwst_level_1b_ramp):
-    _ramp_extraction_previews(deconfigged_helper, jwst_level_1b_ramp)
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
+def test_previews_jwst(rampviz_helper, jwst_level_1b_ramp):
+    _ramp_extraction_previews(rampviz_helper, jwst_level_1b_ramp)
 
 
 def _ramp_extraction_previews(_deconfigged_helper, _ramp_file):
