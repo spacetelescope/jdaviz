@@ -619,8 +619,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             elif isinstance(subset_state, ElementSubsetState):
                 n_rows_selected = len(subset_state.indices)
                 subset_type = "Table Selection"
+                val_str = f'Selected {n_rows_selected} rows from table:\n {subset_state.indices}'
                 subset_definition = [{"name": "Selected rows", "att": "indices",
-                                      "value": f'Selected {n_rows_selected} rows from table:\n {subset_state.indices}'},]
+                                      "value": val_str},]
 
             if len(subset_definition) > 0:
                 # Note: .append() does not work for List traitlet.
