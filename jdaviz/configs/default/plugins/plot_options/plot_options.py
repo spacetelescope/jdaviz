@@ -1127,21 +1127,17 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             self.layer_is_top = False
             return
         # When viewer_multiselect transitions True→False, this observer can fire before
-        # ViewerSelect._multiselect_changed clears its cached_property, leaving a stale
-        # selected_obj.  That is the only trigger for which the cache may be out of date,
-        # so only clear it in that case; for every other trigger (and manual calls with
-        # msg={}) selected_obj is already valid and a clear would just force a recompute.
+        # ViewerSelect._multiselect_changed clears its caches, leaving stale cached
+        # properties.  selected_obj derives its id from the separate ``selected_item``
+        # cache, which still holds the multiselect-aggregated value (where ``id`` is a
+        # list), so clearing only ``selected_obj`` is not enough -- recomputing it would
+        # then pass a list into get_viewer_by_id and raise.  Clear the full cache (as
+        # _multiselect_changed itself does) so every dependent property is recomputed
+        # fresh.  This is the only trigger for which the cache may be out of date; for
+        # every other trigger (and manual calls with msg={}) the cache is already valid.
         if msg.get('name') == 'viewer_multiselect':
-            self.viewer._clear_cache('selected_obj')
-        try:
-            viewer = self.viewer.selected_obj
-        except KeyError:
-            # During transient states (e.g. a viewer/data removal or a multiselect
-            # transition) ``selected`` can momentarily reference a viewer that is no
-            # longer in ``items``; ViewerSelect._get_selected_item then raises KeyError
-            # on the unguarded ``item['id']`` lookup.  Treat that as "no top layer".
-            self.layer_is_top = False
-            return
+            self.viewer._clear_cache()
+        viewer = self.viewer.selected_obj
         if viewer is None:
             self.layer_is_top = False
             return
