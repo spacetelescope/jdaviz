@@ -3,7 +3,7 @@
     :title="title"
     :popout_button="popout_button"
     :spinner="spinner"
-    :parsed_input_is_resolvable="parsed_input_is_resolvable"
+    :parsed_input_not_resolvable_message="parsed_input_not_resolvable_message"
     :parsed_input_is_query="parsed_input_is_query"
     :treat_table_as_query.sync="treat_table_as_query"
     :observation_table="observation_table"
@@ -33,7 +33,7 @@
           style="padding: 0px 8px"
           :label="api_hints_enabled ? 'ldr.url =' : ''"
           :class="api_hints_enabled ? 'api-hint' : null"
-          :error-messages="parsed_input_is_resolvable ? [parsed_input_is_resolvable] : []"
+          :error-messages="parsed_input_not_resolvable_message ? [parsed_input_not_resolvable_message] : []"
         ></v-text-field>
       </v-row>
 

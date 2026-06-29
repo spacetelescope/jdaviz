@@ -124,21 +124,24 @@
             />
           </v-row>
 
+          <v-row v-if="parsed_input_not_resolvable_message">
+            <v-alert type="warning" style="margin-right: -12px; width: 100%">
+                Input cannot be resolved: {{ parsed_input_not_resolvable_message }}
+            </v-alert>
+          </v-row>
+
           <v-row v-if="parsed_input_is_empty">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input is empty.
             </v-alert>
           </v-row>
-          <v-row v-if="parsed_input_is_resolvable">
-            <v-alert type="warning" style="margin-right: -12px; width: 100%">
-                Input cannot be resolved.
-            </v-alert>
-          </v-row>
-          <v-row v-else-if="format_items.length == 0 && valid_import_formats">
+
+          <v-row v-else-if="!parsed_input_is_query && format_items.length == 0 && valid_import_formats">
               <v-alert type="warning" style="margin-right: -12px; width: 100%">
                   No compatible importer found. Supported input types include: {{ valid_import_formats }}.
               </v-alert>
           </v-row>
+
           <v-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
               <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">ldr.format = '{{ format_selected }}'</span>
               <span v-else><b>Format:</b> {{ format_selected }}</span>
@@ -166,7 +169,7 @@
 <script>
 module.exports = {
   props: ['title', 'popout_button', 'spinner',
-          'parsed_input_is_empty', 'parsed_input_is_resolvable',
+          'parsed_input_is_empty', 'parsed_input_not_resolvable_message',
           'parsed_input_is_query', 'treat_table_as_query',
           'observation_table', 'observation_table_populated',
           'file_table', 'file_table_populated',
