@@ -79,11 +79,11 @@ class BaseImviz_WCS_NoWCS:
 
 class BaseDeconfiggedImage_WCS_WCS:
     @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_helper):
+    def setup_class(self, deconfigged_helper):
         arr = np.ones((10, 10))
         # First data with WCS, same as the one in BaseImviz_WCS_NoWCS.
         hdu1 = _image_hdu_wcs(arr=arr)
-        imviz_helper.load(hdu1, format='Image', data_label='has_wcs_1')
+        deconfigged_helper.load(hdu1, format='Image', data_label='has_wcs_1')
 
         # Second data with WCS, similar to above but dithered by 1 pixel in X.
         hdu2 = fits.ImageHDU(arr, name='SCI')
@@ -99,11 +99,11 @@ class BaseDeconfiggedImage_WCS_WCS:
                             'CRPIX2': 1,
                             'CRVAL2': -20.833333059999998,
                             'NAXIS2': 10})
-        imviz_helper.load(hdu2, format='Image', data_label='has_wcs_2')
+        deconfigged_helper.load(hdu2, format='Image', data_label='has_wcs_2')
 
         self.wcs_1 = WCS(hdu1.header)
         self.wcs_2 = WCS(hdu2.header)
-        self.helper = imviz_helper
+        self.helper = deconfigged_helper
 
         # commonly accessed plugins
         self.subset_plugin = self.helper.plugins['Subset Tools']
@@ -112,7 +112,7 @@ class BaseDeconfiggedImage_WCS_WCS:
         # get glue viewer obj rather than viewer API so we can access certain
         # attributes in tests (shape, layers, etc.) that are not exposed in
         # the viewer API
-        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
+        self.viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)
