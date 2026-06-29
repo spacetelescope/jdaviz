@@ -9,8 +9,11 @@ Bug Fixes
 
 - Fixed a bug in the compass plugin where the image would be flipped when WCS linked. [#4252]
 
+- Fix treating input tables as queries and add support for exports from MAST portal. [#4234]
+
+
 Mosviz
-^^^^^^
+------
 
 5.0.2 (2026-06-12)
 ==================
