@@ -741,7 +741,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.observation_table_populated = False
         self.file_table_populated = False
         self.parsed_input_not_resolvable_message = ''
-        
+
         self._update_format_items()
 
     @cached_property
