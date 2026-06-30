@@ -269,7 +269,7 @@ class TestParseImage:
 
         # Default behavior: Science image
         imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100,
-                                gwcs_to_fits_sip=False)
+                               gwcs_to_fits_sip=False)
 
         data = imviz_helper._app.data_collection[0]
         comp = data.get_component('data')
@@ -469,7 +469,7 @@ class TestParseImage:
         # Request specific extension (name only), use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
             imviz_helper.load_data(filename, ext='CTX', data_label='jclj01010_drz',
-                                    show_in_viewer=False)
+                                   show_in_viewer=False)
         data = imviz_helper._app.data_collection[1]
         comp = data.get_component('CTX,1')
         assert data.label == 'jclj01010_drz[CTX,1]'
@@ -479,7 +479,7 @@ class TestParseImage:
         # Request specific extension and use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
             imviz_helper.load_data(filename, ext='WHT', data_label='jclj01010_drz',
-                                    show_in_viewer=False)
+                                   show_in_viewer=False)
         data = imviz_helper._app.data_collection[2]
         comp = data.get_component('WHT,1')
         assert data.label == 'jclj01010_drz[WHT,1]'
