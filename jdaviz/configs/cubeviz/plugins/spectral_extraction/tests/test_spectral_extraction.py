@@ -675,8 +675,7 @@ def test_spectral_extraction_flux_unit_conversions(deconfigged_helper,
                                               with_uncerts=True)
     deconfigged_helper.load(sb_cube)
 
-    spectrum_viewer = deconfigged_helper._app.get_viewer(
-        deconfigged_helper._default_spectrum_viewer_reference_name)
+    spectrum_viewer = deconfigged_helper._app.get_viewer('Image')
 
     uc = deconfigged_helper.plugins["Unit Conversion"]
     se = deconfigged_helper.plugins['3D Spectral Extraction']
