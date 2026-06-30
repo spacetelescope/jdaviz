@@ -265,13 +265,13 @@ class TestParseImage:
             parse_data(deconfigged_helper._app, filename)
 
     @pytest.mark.remote_data
-    def test_parse_jwst_nircam_level2(self, deconfigged_helper):
+    def test_parse_jwst_nircam_level2(self, imviz_helper):
 
         # Default behavior: Science image
-        deconfigged_helper.load(self.jwst_asdf_url_1, timeout=100,
-                                gwcs_to_fits_sip=False, format='Image')
+        imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100,
+                                gwcs_to_fits_sip=False)
 
-        data = deconfigged_helper._app.data_collection[0]
+        data = imviz_helper._app.data_collection[0]
         comp = data.get_component('data')
         expected_label = os.path.splitext(os.path.basename(self.jwst_asdf_url_1))[0] + '[SCI,1]'
         assert data.label == expected_label
@@ -283,12 +283,12 @@ class TestParseImage:
         # --- Since download is expensive, we attach GWCS-specific tests here. ---
 
         # Ensure region supports GWCS. Also see test_regions.py
-        deconfigged_helper.plugins['Subset Tools'].import_region([
+        imviz_helper.plugins['Subset Tools'].import_region([
             CirclePixelRegion(center=PixCoord(x=970.95, y=1116.05), radius=5.95),
             RectanglePixelRegion(center=PixCoord(x=995.0, y=1082.5), width=26, height=11)
         ], combination_mode="new")
 
-        subsets = deconfigged_helper.plugins['Subset Tools'].get_regions()
+        subsets = imviz_helper.plugins['Subset Tools'].get_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
         # check that retrieved subsets-as-regions from subset plugin match what was loaded.
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
@@ -296,12 +296,12 @@ class TestParseImage:
         assert isinstance(subsets['Subset 2'], RectanglePixelRegion)
         assert subsets['Subset 2'].center == PixCoord(995.0, 1082.5)
         # ensure agreement between app.get_subsets and subset_tools.get_regions
-        ss = deconfigged_helper._app.get_subsets()
+        ss = imviz_helper._app.get_subsets()
         assert ss['Subset 1'][0]['region'] == subsets['Subset 1']
         assert ss['Subset 2'][0]['region'] == subsets['Subset 2']
 
         # Test simple aperture photometry plugin.
-        phot_plugin = deconfigged_helper._app.get_tray_item_from_name('imviz-aper-phot-simple')
+        phot_plugin = imviz_helper._app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin.data_selected = 'contents[DATA]'
         phot_plugin.aperture_selected = 'Subset 1'
         assert phot_plugin.aperture.selected_validity.get('is_aperture')
@@ -315,7 +315,7 @@ class TestParseImage:
         assert_allclose(phot_plugin.counts_factor, 0.0036385915646798953)
         assert_allclose(phot_plugin.flux_scaling, 0.003631)
         phot_plugin.vue_do_aper_phot()
-        tbl = deconfigged_helper.plugins['Aperture Photometry'].export_table()
+        tbl = imviz_helper.plugins['Aperture Photometry'].export_table()
         assert_quantity_allclose(tbl[0]['xcenter'], 970.95 * u.pix)
         assert_quantity_allclose(tbl[0]['ycenter'], 1116.05 * u.pix)
         sky = tbl[0]['sky_center']
@@ -351,10 +351,10 @@ class TestParseImage:
 
         # Request specific extension (name + ver, but ver is not used), use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-            deconfigged_helper.load(self.jwst_asdf_url_1, cache=True, ext='DQ',
-                                    data_label='jw01072001001_01101_00001_nrcb1_cal',
-                                    show_in_viewer=False)
-        data = deconfigged_helper._app.data_collection[1]
+            imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, ext='DQ',
+                                   data_label='jw01072001001_01101_00001_nrcb1_cal',
+                                   show_in_viewer=False)
+        data = imviz_helper._app.data_collection[1]
         comp = data.get_component('dq')
         assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DQ,1]'
         assert data.meta['aperture']['name'] == 'NRCB5_FULL'
@@ -364,20 +364,20 @@ class TestParseImage:
         filename = download_file(self.jwst_asdf_url_1, cache=True)
         with fits.open(filename) as pf:
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                deconfigged_helper.load(pf, ext='SCI',
-                                        data_label='jw01072001001_01101_00001_nrcb1_cal',
-                                        show_in_viewer=False)
-            data = deconfigged_helper._app.data_collection[2]
+                imviz_helper.load_data(pf, ext='SCI',
+                                       data_label='jw01072001001_01101_00001_nrcb1_cal',
+                                       show_in_viewer=False)
+            data = imviz_helper._app.data_collection[2]
             comp = data.get_component('data')  # SCI = DATA
             assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[SCI,1]'
             assert isinstance(data.coords, GWCS)
             assert comp.units == 'MJy/sr'
 
             # Load all extensions
-            deconfigged_helper._app.data_collection.clear()
+            imviz_helper._app.data_collection.clear()
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                deconfigged_helper.load(pf, ext='*', show_in_viewer=False)
-            data = deconfigged_helper._app.data_collection
+                imviz_helper.load_data(pf, ext='*', show_in_viewer=False)
+            data = imviz_helper._app.data_collection
             assert len(data.labels) == 7
             assert data.labels[0].endswith('[SCI,1]')
             assert data.labels[1].endswith('[ERR,1]')
@@ -389,7 +389,7 @@ class TestParseImage:
 
         # Invalid ASDF attribute (extension)
         with pytest.raises(KeyError, match='does_not_exist'):
-            parse_data(deconfigged_helper._app, filename, ext='DOES_NOT_EXIST', data_label='foo')
+            parse_data(imviz_helper._app, filename, ext='DOES_NOT_EXIST', data_label='foo')
 
     @pytest.mark.remote_data
     def test_parse_jwst_niriss_grism(self, deconfigged_helper):
@@ -408,13 +408,13 @@ class TestParseImage:
         assert comp.data.shape == (2048, 2048)
 
     @pytest.mark.remote_data
-    def test_parse_hst_drz(self, deconfigged_helper):
+    def test_parse_hst_drz(self, imviz_helper):
         url = 'https://mast.stsci.edu/api/v0.1/Download/file?bundle_name=MAST_2021-04-21T1828.sh&uri=mast:HST/product/jclj01010_drz.fits'  # noqa: E501
         filename = download_file(url, cache=True)
 
         # Default behavior: Load first image
-        deconfigged_helper.load(url, cache=True, format='Image')
-        data = deconfigged_helper._app.data_collection[0]
+        imviz_helper.load_data(url, cache=True)
+        data = imviz_helper._app.data_collection[0]
         comp = data.get_component('SCI,1')
         expected_label = os.path.splitext(os.path.basename(url))[0] + '[SCI,1]'
         assert data.label == expected_label
@@ -430,16 +430,16 @@ class TestParseImage:
         # --- Since download is expensive, we attach FITS WCS-specific tests here. ---
 
         # Test simple aperture photometry plugin.
-        deconfigged_helper.plugins['Subset Tools'].import_region(
+        imviz_helper.plugins['Subset Tools'].import_region(
             EllipsePixelRegion(center=PixCoord(x=1488.5, y=2576), width=47, height=70))  # Galaxy
-        phot_plugin = deconfigged_helper._app.get_tray_item_from_name('imviz-aper-phot-simple')
+        phot_plugin = imviz_helper._app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin.data_selected = 'contents[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 1'
         assert phot_plugin.aperture.selected_validity.get('is_aperture')
         phot_plugin.background_value = 0.0014  # Manual entry: Median on whole array
         assert_allclose(phot_plugin.pixel_area, 0.0025)  # Not used but still auto-populated
         phot_plugin.vue_do_aper_phot()
-        tbl = deconfigged_helper.plugins['Aperture Photometry'].export_table()
+        tbl = imviz_helper.plugins['Aperture Photometry'].export_table()
         assert_quantity_allclose(tbl[0]['xcenter'], 1488.5 * u.pix, atol=2 * u.pix)
         assert_quantity_allclose(tbl[0]['ycenter'], 2576 * u.pix, atol=2 * u.pix)
         sky = tbl[0]['sky_center']
@@ -468,9 +468,9 @@ class TestParseImage:
 
         # Request specific extension (name only), use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-            deconfigged_helper.load(filename, ext='CTX', data_label='jclj01010_drz',
+            imviz_helper.load_data(filename, ext='CTX', data_label='jclj01010_drz',
                                     show_in_viewer=False)
-        data = deconfigged_helper._app.data_collection[1]
+        data = imviz_helper._app.data_collection[1]
         comp = data.get_component('CTX,1')
         assert data.label == 'jclj01010_drz[CTX,1]'
         assert data.meta['EXTNAME'] == 'CTX'
@@ -478,9 +478,9 @@ class TestParseImage:
 
         # Request specific extension and use given label
         with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-            deconfigged_helper.load(filename, ext='WHT', data_label='jclj01010_drz',
-                                    how_in_viewer=False)
-        data = deconfigged_helper._app.data_collection[2]
+            imviz_helper.load_data(filename, ext='WHT', data_label='jclj01010_drz',
+                                    show_in_viewer=False)
+        data = imviz_helper._app.data_collection[2]
         comp = data.get_component('WHT,1')
         assert data.label == 'jclj01010_drz[WHT,1]'
         assert data.meta['EXTNAME'] == 'WHT'
@@ -490,33 +490,33 @@ class TestParseImage:
         with fits.open(filename) as pf:
             # Default behavior: Load first image
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                deconfigged_helper.load(pf, show_in_viewer=False)
-            data = deconfigged_helper._app.data_collection[3]
+                imviz_helper.load_data(pf, show_in_viewer=False)
+            data = imviz_helper._app.data_collection[3]
             assert data.label.startswith('Image') and data.label.endswith('[SCI,1]')
             assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
             assert 'SCI,1' in data.components
 
             # Request specific extension (name only), use given label
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                deconfigged_helper.load(pf, ext='CTX', show_in_viewer=False)
-            data = deconfigged_helper._app.data_collection[4]
+                imviz_helper.load_data(pf, ext='CTX', show_in_viewer=False)
+            data = imviz_helper._app.data_collection[4]
             assert data.label.startswith('Image') and data.label.endswith('[CTX,1]')
             assert data.meta['EXTNAME'] == 'CTX'
             assert 'CTX,1' in data.components
 
             # Pass in HDU directly, use given label
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                deconfigged_helper.load(pf[2], data_label='foo', show_in_viewer=False)
-            data = deconfigged_helper._app.data_collection[5]
+                imviz_helper.load_data(pf[2], data_label='foo', show_in_viewer=False)
+            data = imviz_helper._app.data_collection[5]
             assert data.label == 'foo[WHT,1]'
             assert data.meta['EXTNAME'] == 'WHT'
             assert 'WHT,1' in data.components
 
             # Load all extensions
-            deconfigged_helper._app.data_collection.clear()
+            imviz_helper._app.data_collection.clear()
             with pytest.warns(DeprecationWarning, match='show_in_viewer'):
-                deconfigged_helper.load(filename, ext='*', show_in_viewer=False)
-            data = deconfigged_helper._app.data_collection
+                imviz_helper.load_data(filename, ext='*', show_in_viewer=False)
+            data = imviz_helper._app.data_collection
             assert len(data.labels) == 3
             assert data.labels[0].endswith('[SCI,1]')
             assert data.labels[1].endswith('[WHT,1]')
@@ -524,11 +524,11 @@ class TestParseImage:
 
         # Cannot load non-image extension
         with pytest.raises(ValueError, match='Imviz cannot load this HDU'):
-            parse_data(deconfigged_helper._app, filename, ext='HDRTAB')
+            parse_data(imviz_helper._app, filename, ext='HDRTAB')
 
         # Invalid FITS extension
         with pytest.raises(KeyError, match='not found'):
-            parse_data(deconfigged_helper._app, filename, ext='DOES_NOT_EXIST', data_label='foo')
+            parse_data(imviz_helper._app, filename, ext='DOES_NOT_EXIST', data_label='foo')
 
     @pytest.mark.remote_data
     @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
