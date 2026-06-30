@@ -186,7 +186,7 @@ def test_user_api(specviz2d_helper):
 
     specviz2d_helper.load_data(spectrum_2d=fn)
 
-    pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
+    pext = specviz2d_helper.plugins['2D Spectral Extraction']
     pext.keep_active = True
 
     # test that setting a string to an AddResults object redirects to the label
@@ -208,7 +208,7 @@ def test_user_api(specviz2d_helper):
 @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
 def test_background_extraction_and_display(specviz2d_helper):
     uri = 'mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
-    specviz2d_helper.load(spectrum_2d=cached_uri(uri), format='2D Spectrum', cache=True)
+    specviz2d_helper.load_data(spectrum_2d=cached_uri(uri), format='2D Spectrum', cache=True)
     pext = specviz2d_helper._app.get_tray_item_from_name('spectral-extraction-2d')
 
     # check that the background extraction method and parameters are as expected

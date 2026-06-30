@@ -268,7 +268,7 @@ class TestParseImage:
     def test_parse_jwst_nircam_level2(self, deconfigged_helper):
 
         # Default behavior: Science image
-        deconfigged_helper.load(self.jwst_asdf_url_1, timeout=100, gwcs_to_fits_sip=False)
+        deconfigged_helper.load(self.jwst_asdf_url_1, timeout=100, gwcs_to_fits_sip=False, format='Image')
 
         data = deconfigged_helper._app.data_collection[0]
         comp = data.get_component('data')
@@ -392,7 +392,7 @@ class TestParseImage:
 
     @pytest.mark.remote_data
     def test_parse_jwst_niriss_grism(self, deconfigged_helper):
-        deconfigged_helper.load(self.jwst_asdf_url_2, cache=True, show_in_viewer=False)
+        deconfigged_helper.load(self.jwst_asdf_url_2, cache=True, show_in_viewer=False, format='Image')
         data = deconfigged_helper._app.data_collection[0]
         for label in ('SCI,1', 'data'):
             if label in data.component_ids():
@@ -411,7 +411,7 @@ class TestParseImage:
         filename = download_file(url, cache=True)
 
         # Default behavior: Load first image
-        deconfigged_helper.load(url, cache=True)
+        deconfigged_helper.load(url, cache=True, format='Image')
         data = deconfigged_helper._app.data_collection[0]
         comp = data.get_component('SCI,1')
         expected_label = os.path.splitext(os.path.basename(url))[0] + '[SCI,1]'
@@ -539,7 +539,7 @@ class TestParseImage:
         fully deprecated.
         """
         deconfigged_helper.load(self.jwst_asdf_url_1, cache=True,
-                                gwcs_to_fits_sip=gwcs_to_fits_sip)
+                                gwcs_to_fits_sip=gwcs_to_fits_sip, format='Image')
 
         data = deconfigged_helper._app.data_collection[0]
         assert isinstance(data.coords, expected_cls)
