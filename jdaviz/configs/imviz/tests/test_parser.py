@@ -268,7 +268,8 @@ class TestParseImage:
     def test_parse_jwst_nircam_level2(self, deconfigged_helper):
 
         # Default behavior: Science image
-        deconfigged_helper.load(self.jwst_asdf_url_1, timeout=100, gwcs_to_fits_sip=False, format='Image')
+        deconfigged_helper.load(self.jwst_asdf_url_1, timeout=100,
+                                gwcs_to_fits_sip=False, format='Image')
 
         data = deconfigged_helper._app.data_collection[0]
         comp = data.get_component('data')
@@ -392,7 +393,8 @@ class TestParseImage:
 
     @pytest.mark.remote_data
     def test_parse_jwst_niriss_grism(self, deconfigged_helper):
-        deconfigged_helper.load(self.jwst_asdf_url_2, cache=True, show_in_viewer=False, format='Image')
+        deconfigged_helper.load(self.jwst_asdf_url_2, cache=True,
+                                show_in_viewer=False, format='Image')
         data = deconfigged_helper._app.data_collection[0]
         for label in ('SCI,1', 'data'):
             if label in data.component_ids():
