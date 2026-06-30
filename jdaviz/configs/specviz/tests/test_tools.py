@@ -46,7 +46,7 @@ def test_xrangezoom_matchx(specviz_helper, spectrum1d):
     Test XRangeZoomMatchX tool with horizontal zoom interaction.
     """
     specviz_helper.load_data(spectrum1d, data_label='test')
-    viewer = specviz_helper._app.get_viewer('1D Spectrum')
+    viewer = specviz_helper._app.get_viewer('spectrum-viewer')
 
     # Activate x-range zoom tool
     tool = viewer.toolbar.tools['jdaviz:xrangezoom_matchx']
