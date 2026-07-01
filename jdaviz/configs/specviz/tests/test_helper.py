@@ -598,7 +598,7 @@ def test_delete_data_with_subsets(deconfigged_helper, spectrum1d, spectrum1d_nm)
     assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (6200, 7000))
 
     deconfigged_helper._app.remove_data_from_viewer('1D Spectrum', "my_spec_AA")
-    deconfigged_helper._app.data_item_remove("my_spec_AA")
+    deconfigged_helper._app.remove_from_app("my_spec_AA")
 
     # Check that the reparenting and coordinate recalculations happened
     assert subset1.subset_state.att.parent.label == "my_spec_nm"
