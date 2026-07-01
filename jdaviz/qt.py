@@ -104,7 +104,7 @@ def run_qt(url, app_name="Jdaviz"):
     app.setApplicationDisplayName(app_name)
     app.setApplicationName(app_name)
     web.setWindowTitle(app_name)
-    app.setWindowIcon(QtGui.QIcon(str(HERE / "data/icons/imviz_icon.svg")))
+    app.setWindowIcon(QtGui.QIcon(str(HERE / "data/icons/jdaviz_logo.svg")))
     if sys.platform.startswith("darwin"):
         # Set app name, if PyObjC is installed
         # Python 2 has PyObjC preinstalled
