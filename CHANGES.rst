@@ -18,6 +18,8 @@ Bug Fixes
 
 - Fix horizontal spacing of the app-level toolbar for small displays. [#4245]
 
+- Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264]
+
 - Safely handle case where meta.wcs may be None. [#4272]
 
 5.0.2 (2026-06-12)
@@ -42,7 +44,7 @@ Bug Fixes
 
 - Fix bug related to loading catalogs where units are determined from coordinate string. [#4199]
 
-- Fix aperture photometry plugin remaining visible in tray after all 
+- Fix aperture photometry plugin remaining visible in tray after all
   image viewers are removed. [#4189]
 
 - Catch more IOPub messages to help avoid/fix "IOPub message rate exceeded" jupyter warning when
