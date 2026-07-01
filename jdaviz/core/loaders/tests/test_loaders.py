@@ -875,11 +875,13 @@ class TestParenting:
 
         # This should raise 'Data labels {unavailable} not able to be loaded...'
         # if parent child association doesn't work correctly (i.e. the previous behavior)
+        # TODO: Remove this if we decide to prevent users from removing child data from viewers
         dcf_helper.viewers['Image'].data_menu.add_data('Image[ERR,2]')
 
     # TODO: Remove skip once this behavior is fixed
     @pytest.mark.skip
-    def test_load_unload_parenting_behavior(self):
+    @pytest.mark.parametrize('remove_from', ('viewer', 'app'))
+    def test_load_unload_parenting_behavior(self, remove_from):
         ldr = self.ldr
         dcf_helper = self.dcf_helper
 
@@ -887,13 +889,23 @@ class TestParenting:
         ldr.importer.extension = ['SCI,1', 'ERR,1']
         ldr.load()
 
-        dm = dcf_helper.viewers['Image'].data_menu
-        dm.layer = ['Image[ERR,1]']
-        dm.remove_from_app()
-
+        # Get ready for the next round
         ldr.importer.extension = 'ERR,1'
         ldr.importer.parent = 'None'
-        ldr.load()
+
+        dm = dcf_helper.viewers['Image'].data_menu
+        dm.layer = ['Image[ERR,1]']
+
+        if remove_from == 'viewer':
+            # Remove from viewer and use data_menu.add_data
+            # TODO: remove this and the parametrization if we decide to
+            #  prevent users from removing child data from viewers (keep remove_from_app though)
+            dm.remove_from_viewer()
+            dm.add_data('Image[ERR,1]')
+        else:
+            # Remove from app and load again
+            dm.remove_from_app()
+            ldr.load()
 
         assert dcf_helper._app._get_assoc_data_parent('Image[ERR,1]') is None
         assert dcf_helper._app._get_assoc_data_children('Image[SCI,1]') == []
