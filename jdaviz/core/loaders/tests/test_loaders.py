@@ -878,7 +878,7 @@ class TestParenting:
         dcf_helper.viewers['Image'].data_menu.add_data('Image[ERR,2]')
 
     # TODO: Remove skip once this behavior is fixed
-    @pytest.skip
+    @pytest.mark.skip
     def test_load_unload_parenting_behavior(self):
         ldr = self.ldr
         dcf_helper = self.dcf_helper
