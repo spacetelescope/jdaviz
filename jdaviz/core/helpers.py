@@ -31,7 +31,7 @@ from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.core.user_api import (DataApi, SpectralDataApi, SpatialDataApi,
                                   TemporalSpatialDataApi, SpectralSpatialDataApi)
-from jdaviz.utils import (JDAVIZ_CONFIGS, data_has_valid_wcs, CONFIGS_WITH_LOADERS,
+from jdaviz.utils import (data_has_valid_wcs, CONFIGS_WITH_LOADERS,
                           suppress_widget_comms)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
@@ -486,7 +486,7 @@ class ConfigHelper(HubListener):
                                              model_label=model_label,
                                              x=x, y=y)
 
-    def show(self, loc="inline", title=None, height=None,
+    def show(self, loc="inline", title="jdaviz", height=None,
              tray=None):  # pragma: no cover
         """Display the Jdaviz application.
 
@@ -525,8 +525,7 @@ class ConfigHelper(HubListener):
                 * ``popout:tab`` (Opens Jdaviz in a new, detached tab in your browser)
 
         title : str, optional
-            The title of the sidecar tab.  Defaults to the name of the
-            application; e.g., "specviz".
+            The title of the sidecar tab.  Defaults to "jdaviz".
 
             NOTE: Only applicable to a "sidecar" display.
 
@@ -543,9 +542,6 @@ class ConfigHelper(HubListener):
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
         as only JupyterLab has a mechanism to have multiple tabs.
         """
-        if title is None:
-            config = self._app.config
-            title = "jdaviz" if config not in JDAVIZ_CONFIGS else config
         if height is not None:
             if isinstance(height, int):
                 height = f"{height}px"
