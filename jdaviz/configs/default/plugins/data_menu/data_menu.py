@@ -699,10 +699,17 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         *data_labels : str
             The label(s) of the dataset to add to the viewer.
         """
+        available = self.dataset.choices
+
+        for label in data_labels:
+            parent_label = self.app._get_assoc_data_parent(label)
+            available += self.app._get_assoc_data_children(parent_label)
+
         unavailable = [data_label for data_label in data_labels
-                       if data_label not in self.dataset.choices]
+                       if data_label not in available]
         if len(unavailable):
-            raise ValueError(f"Data labels {unavailable} not able to be loaded into '{self.viewer_id}'.  Must be one of: {self.dataset.choices}")  # noqa
+            raise ValueError(f"Data labels {unavailable} not able to be loaded into '{self.viewer_id}'. Must be one of: {available}")  # noqa
+
         for data_label in data_labels:
             self._app.add_data_to_viewer(self.viewer_id, data_label)
 
