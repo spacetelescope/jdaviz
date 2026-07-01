@@ -38,6 +38,10 @@ New Features
 - The Virtual Observatory loader now supports querying spectral products
   and catalog targets. [#4060]
 
+- Parenting now includes a 'None' option to allow multi-extension FITS to be loaded as separate data entries. [#4248]
+
+- 'Auto' parenting can now associate with data already loaded into the app without needing to specify the data label. [#4248]
+
 Mosviz
 ^^^^^^
 
