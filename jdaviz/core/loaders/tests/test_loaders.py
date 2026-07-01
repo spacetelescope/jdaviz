@@ -801,73 +801,91 @@ def test_loaders_extension_select(imviz_helper):
 
 class TestParenting:
 
-    def test_load_image_parent_default_auto(self, deconfigged_helper):
+    @pytest.fixture(autouse=True)
+    def _setup(self, deconfigged_helper):
+        self.dcf_helper = deconfigged_helper
+        self.ldr = deconfigged_helper.loaders['object']
+        self.ldr.object = _make_multi_sci_hdul()
+
+    def test_load_image_parent_default_auto(self):
         # the default parent selection should be 'Auto'
-        ldr = deconfigged_helper.loaders['object']
-        ldr.object = _make_multi_sci_hdul()
-        assert ldr.importer.parent.selected == 'Auto'
-        assert 'Auto' in ldr.importer.parent.choices
-        assert 'None' in ldr.importer.parent.choices
+        assert self.ldr.importer.parent.selected == 'Auto'
+        assert 'Auto' in self.ldr.importer.parent.choices
+        assert 'None' in self.ldr.importer.parent.choices
 
-        ldr.importer.extension = ['SCI,1', 'ERR,1', 'SCI,2', 'ERR,2']
-        ldr.load()
+        self.ldr.importer.extension = ['SCI,1', 'ERR,1', 'SCI,2', 'ERR,2']
+        self.ldr.load()
 
-        assert len(deconfigged_helper._app.data_collection) == 4
-        assert len(deconfigged_helper.viewers['Image'].data_menu.data_labels_loaded) == 4
-        assert deconfigged_helper._app._get_assoc_data_parent('Image[ERR,1]') == 'Image[SCI,1]'
-        assert deconfigged_helper._app._get_assoc_data_children('Image[SCI,1]') == ['Image[ERR,1]']
+        assert len(self.dcf_helper._app.data_collection) == 4
+        assert len(self.dcf_helper.viewers['Image'].data_menu.data_labels_loaded) == 4
+        assert self.dcf_helper._app._get_assoc_data_parent('Image[ERR,1]') == 'Image[SCI,1]'
+        assert self.dcf_helper._app._get_assoc_data_children('Image[SCI,1]') == ['Image[ERR,1]']
 
-        assert deconfigged_helper._app._get_assoc_data_parent('Image[ERR,2]') == 'Image[SCI,2]'
-        assert deconfigged_helper._app._get_assoc_data_children('Image[SCI,2]') == ['Image[ERR,2]']
+        assert self.dcf_helper._app._get_assoc_data_parent('Image[ERR,2]') == 'Image[SCI,2]'
+        assert self.dcf_helper._app._get_assoc_data_children('Image[SCI,2]') == ['Image[ERR,2]']
 
-    def test_load_image_parent_none(self, deconfigged_helper):
+    def test_load_image_parent_none(self):
         # 'None' should prevent any parenting, even with multiple extensions
-        ldr = deconfigged_helper.loaders['object']
-        ldr.object = _make_multi_sci_hdul()
-        ldr.importer.extension = ['SCI,1', 'ERR,1', 'SCI,2', 'ERR,2']
-        ldr.importer.parent = 'None'
-        ldr.load()
+        self.ldr.importer.extension = ['SCI,1', 'ERR,1', 'SCI,2', 'ERR,2']
+        self.ldr.importer.parent = 'None'
+        self.ldr.load()
 
-        assert len(deconfigged_helper._app.data_collection) == 4
-        assert len(deconfigged_helper.viewers['Image'].data_menu.data_labels_loaded) == 4
+        assert len(self.dcf_helper._app.data_collection) == 4
+        assert len(self.dcf_helper.viewers['Image'].data_menu.data_labels_loaded) == 4
         for label in ('Image[SCI,1]', 'Image[ERR,1]', 'Image[SCI,2]', 'Image[ERR,2]'):
-            assert deconfigged_helper._app._get_assoc_data_parent(label) is None
-            assert deconfigged_helper._app._get_assoc_data_children(label) == []
+            assert self.dcf_helper._app._get_assoc_data_parent(label) is None
+            assert self.dcf_helper._app._get_assoc_data_children(label) == []
 
     @pytest.mark.parametrize('rename', (False, True))
-    def test_load_image_auto_parent_existing_in_dc(self, deconfigged_helper, rename):
-        # 'Auto' should associate a child extension loaded later with a matching
-        # science extension that is already in the data collection (matched by hash)
-        hdul = _make_multi_sci_hdul()
-
+    def test_load_image_auto_parent_existing_in_dc(self, rename):
+        """
+        'Auto' should associate a child extension loaded later with a matching
+        science extension that is already in the data collection (matched by hash)
+        """
         # first load only the science extension
-        ldr = deconfigged_helper.loaders['object']
-        ldr.object = hdul
-        ldr.importer.extension = 'SCI,2'
-        ldr.load()
+        self.ldr.importer.extension = 'SCI,2'
+        self.ldr.load()
 
         primary_label = 'Image[SCI,2]'
 
-        assert [d.label for d in deconfigged_helper._app.data_collection] == [primary_label]
-        assert deconfigged_helper._app._get_assoc_data_children(primary_label) == []
+        assert [d.label for d in self.dcf_helper._app.data_collection] == [primary_label]
+        assert self.dcf_helper._app._get_assoc_data_children(primary_label) == []
 
         # Now test with a rename in-between
         if rename:
-            deconfigged_helper.viewers['Image'].data_menu.rename(primary_label, 'new name')
+            self.dcf_helper.viewers['Image'].data_menu.rename(primary_label, 'new name')
             primary_label = 'new name'
 
         # then load only the matching error extension; it should auto-associate
         # with the already-loaded science extension
-        ldr.importer.extension = 'ERR,2'
-        ldr.load()
+        self.ldr.importer.extension = 'ERR,2'
+        self.ldr.load()
 
-        assert len(deconfigged_helper.viewers['Image'].data_menu.data_labels_loaded) == 2
-        assert deconfigged_helper._app._get_assoc_data_parent('Image[ERR,2]') == primary_label
-        assert deconfigged_helper._app._get_assoc_data_children(primary_label) == ['Image[ERR,2]']
+        assert len(self.dcf_helper.viewers['Image'].data_menu.data_labels_loaded) == 2
+        assert self.dcf_helper._app._get_assoc_data_parent('Image[ERR,2]') == primary_label
+        assert self.dcf_helper._app._get_assoc_data_children(primary_label) == ['Image[ERR,2]']
 
         # This should raise 'Data labels {unavailable} not able to be loaded...'
         # if parent child association doesn't work correctly (i.e. the previous behavior)
-        deconfigged_helper.viewers['Image'].data_menu.add_data('Image[ERR,2]')
+        self.dcf_helper.viewers['Image'].data_menu.add_data('Image[ERR,2]')
+
+    # TODO: Remove skip once this behavior is fixed
+    @pytest.skip
+    def test_load_unload_parenting_behavior(self, deconfigged_helper):
+        # Default parent selection is 'auto'
+        self.ldr.importer.extension = ['SCI,1', 'ERR,1']
+        self.ldr.load()
+
+        dm = self.dcf_helper.viewers['Image'].data_menu
+        dm.layer = ['Image[ERR,1]']
+        dm.remove_from_app()
+
+        self.ldr.importer.extension = 'ERR,1'
+        self.ldr.importer.parent = 'None'
+        self.ldr.load()
+
+        assert self.dcf_helper._app._get_assoc_data_parent('Image[ERR,1]') is None
+        assert self.dcf_helper._app._get_assoc_data_children('Image[SCI,1]') == []
 
 
 def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):
