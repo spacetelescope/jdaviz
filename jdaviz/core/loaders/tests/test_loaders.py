@@ -873,15 +873,35 @@ class TestParenting:
         assert dcf_helper._app._get_assoc_data_parent('Image[ERR,2]') == primary_label
         assert dcf_helper._app._get_assoc_data_children(primary_label) == ['Image[ERR,2]']
 
-        # This should raise 'Data labels {unavailable} not able to be loaded...'
-        # if parent child association doesn't work correctly (i.e. the previous behavior)
-        # TODO: Remove this if we decide to prevent users from removing child data from viewers
-        dcf_helper.viewers['Image'].data_menu.add_data('Image[ERR,2]')
+    def test_multi_viewer_parent_data(self):
+        dcf_helper = self.dcf_helper
+        ldr = self.ldr
 
-    # TODO: Remove skip once this behavior is fixed
+        # Default parent selection is 'auto'
+        ldr.importer.extension = 'SCI,1'
+        ldr.load()
+
+        # Load a second viewer with the same data - Image (1)
+        vc = dcf_helper.new_viewers['Image']
+        vc.dataset = 'Image[SCI,1]'
+        vc()
+
+        assert len(dcf_helper.viewers['Image'].data_menu.data_labels_loaded) == 1
+        assert len(dcf_helper.viewers['Image (1)'].data_menu.data_labels_loaded) == 1
+
+        # Parent should be 'Auto'
+        ldr.importer.extension = 'ERR,1'
+        ldr.load()
+
+        assert dcf_helper._app._get_assoc_data_parent('Image[ERR,1]') == 'Image[SCI,1]'
+        assert dcf_helper._app._get_assoc_data_children('Image[SCI,1]') == ['Image[ERR,1]']
+
+        assert len(dcf_helper.viewers['Image'].data_menu.data_labels_loaded) == 2
+        assert len(dcf_helper.viewers['Image (1)'].data_menu.data_labels_loaded) == 2
+
+        # TODO: Remove skip once this behavior is fixed
     @pytest.mark.skip
-    @pytest.mark.parametrize('remove_from', ('viewer', 'app'))
-    def test_load_unload_parenting_behavior(self, remove_from):
+    def test_load_unload_parenting_behavior(self):
         ldr = self.ldr
         dcf_helper = self.dcf_helper
 
@@ -895,17 +915,9 @@ class TestParenting:
 
         dm = dcf_helper.viewers['Image'].data_menu
         dm.layer = ['Image[ERR,1]']
-
-        if remove_from == 'viewer':
-            # Remove from viewer and use data_menu.add_data
-            # TODO: remove this and the parametrization if we decide to
-            #  prevent users from removing child data from viewers (keep remove_from_app though)
-            dm.remove_from_viewer()
-            dm.add_data('Image[ERR,1]')
-        else:
-            # Remove from app and load again
-            dm.remove_from_app()
-            ldr.load()
+        # Remove from app and load again
+        dm.remove_from_app()
+        ldr.load()
 
         assert dcf_helper._app._get_assoc_data_parent('Image[ERR,1]') is None
         assert dcf_helper._app._get_assoc_data_children('Image[SCI,1]') == []

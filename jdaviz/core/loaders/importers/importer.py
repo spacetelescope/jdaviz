@@ -417,6 +417,10 @@ class BaseImporterToDataCollection(BaseImporter):
 
         # Determine which viewer(s) to add the data to.
         viewer_select = viewer_select if viewer_select is not None else self.viewer
+        if parent is not None:
+            viewer_select.selected = [viewer for viewer, viewer_api in
+                                      self._app._jdaviz_helper.viewers.items()
+                                      if parent in viewer_api.data_menu.data_labels_loaded]
 
         if viewer_select is False:
             # return without adding to viewers or broadcasting snackbar message that
@@ -463,7 +467,10 @@ class BaseImporterToDataCollection(BaseImporter):
             for viewer_label in viewer_select.selected:
                 viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
                 try:
-                    viewer.data_menu.add_data(data_label)
+                    if parent is not None:
+                        self._app.add_data_to_viewer(viewer_label, data_label)
+                    else:
+                        viewer.data_menu.add_data(data_label)
                 except Exception as e:
                     failed_viewers.append(viewer_label)
                     exceptions.append(str(e))
