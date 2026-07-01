@@ -156,6 +156,8 @@ def _get_skycoords_from_table(layer, rows=None):
 class _BaseZoomHistory:
     # Mixin for custom zoom tools to be able to save their previous zoom state
     # which is then used by the PrevZoom tool
+    keep_visible_in_focus_mode = True
+
     def save_prev_zoom(self):
         # Cannot use viewer.get_limits() here because viewers from
         # glue-jupyter does not have that method.
@@ -166,6 +168,7 @@ class _BaseZoomHistory:
 class _MatchedZoomMixin:
     match_axes = ('x', 'y')
     disable_matched_zoom_in_other_viewer = True
+    keep_visible_in_focus_mode = False
 
     def _is_matched_viewer(self, viewer):
         return True
@@ -281,6 +284,7 @@ class PrevZoom(Tool, _BaseZoomHistory):
     tool_id = 'jdaviz:prevzoom'
     action_text = 'Previous zoom'
     tool_tip = 'Back to previous zoom level'
+    keep_visible_in_focus_mode = False
 
     def activate(self):
         if self.viewer._prev_limits is None:
@@ -323,6 +327,7 @@ class PanZoom(BqplotPanZoomMode, _BaseZoomHistory):
 class PanZoomX(BqplotPanZoomXMode, _BaseZoomHistory):
     icon = os.path.join(ICON_DIR, 'pan_x.svg')
     tool_id = 'jdaviz:panzoom_x'
+    keep_visible_in_focus_mode = False
 
     def activate(self):
         self.save_prev_zoom()
@@ -333,6 +338,7 @@ class PanZoomX(BqplotPanZoomXMode, _BaseZoomHistory):
 class PanZoomY(BqplotPanZoomYMode, _BaseZoomHistory):
     icon = os.path.join(ICON_DIR, 'pan_y.svg')
     tool_id = 'jdaviz:panzoom_y'
+    keep_visible_in_focus_mode = False
 
     def activate(self):
         self.save_prev_zoom()
@@ -471,6 +477,61 @@ class ViewerClone(Tool):
         return self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
                                                      'cubeviz', 'mosviz',
                                                      'rampviz']
+
+
+_ICON_VIEWER_POPOUT = os.path.join(ICON_DIR, 'popout.svg')
+_ICON_FULLSCREEN = os.path.join(ICON_DIR, 'fullscreen.svg')
+_ICON_FULLSCREEN_EXIT = os.path.join(ICON_DIR, 'fullscreen-exit.svg')
+
+
+@viewer_tool
+class ViewerPopout(Tool):
+    icon = _ICON_VIEWER_POPOUT
+    tool_id = 'jdaviz:viewer_popout'
+    action_text = 'Pop out viewer'
+    tool_tip = 'Display this viewer in a detached window'
+    keep_visible_in_focus_mode = True
+
+    def activate(self):
+        from ipywidgets.widgets import widget_serialization
+
+        viewer_item = self.viewer.jdaviz_app._viewer_item_by_id(self.viewer.reference_id)
+        viewer_window = widget_serialization['from_json'](viewer_item['widget'], None)
+        viewer_window.show(loc='popout')
+
+
+@viewer_tool
+class ViewerFocusToggle(Tool):
+    icon = _ICON_FULLSCREEN
+    tool_id = 'jdaviz:viewer_focus_toggle'
+    action_text = 'Toggle focus mode'
+    tool_tip = 'Expand this viewer to fill the app (focus mode)'
+    keep_visible_in_focus_mode = True
+
+    def __init__(self, viewer=None):
+        super().__init__(viewer)
+        from glue_jupyter.common.toolbar_vuetify import read_icon
+        self._img_fullscreen = read_icon(_ICON_FULLSCREEN, 'svg+xml')
+        self._img_fullscreen_exit = read_icon(_ICON_FULLSCREEN_EXIT, 'svg+xml')
+        viewer.jdaviz_app.state.add_callback('focus_viewer', self._on_focus_viewer_changed)
+
+    def _on_focus_viewer_changed(self, focus_viewer):
+        toolbar = getattr(self.viewer, 'toolbar', None)
+        if toolbar is None or self.tool_id not in getattr(toolbar, 'tools_data', {}):
+            return
+        in_focus = focus_viewer == getattr(self.viewer, 'reference', None)
+        toolbar.tools_data = {
+            **toolbar.tools_data,
+            self.tool_id: {
+                **toolbar.tools_data[self.tool_id],
+                'img': self._img_fullscreen_exit if in_focus else self._img_fullscreen,
+                'tooltip': ('Exit focus mode' if in_focus
+                            else 'Expand this viewer to fill the app (focus mode)'),
+            }
+        }
+
+    def activate(self):
+        self.viewer.toggle_focus_mode()
 
 
 class _BaseTableSelectionTool(Tool):
@@ -789,7 +850,38 @@ class TableApplyZoom(_BaseTableApplyTool):
 
 
 @viewer_tool
-class SelectLine(CheckableTool, HubListener):
+class SafeClickCallbackTool(CheckableTool):
+    """Base class for tools that register a click callback on activate."""
+
+    click_events = ['click']
+
+    def __init__(self, viewer, **kwargs):
+        super().__init__(viewer, **kwargs)
+        self._mouse_callback_active = False
+
+    def _before_activate(self):
+        """Optional hook for subclasses to prepare state before registration."""
+        return
+
+    def activate(self):
+        self._before_activate()
+        if not self._mouse_callback_active:
+            self.viewer.add_event_callback(self.on_mouse_event,
+                                           events=self.click_events)
+            self._mouse_callback_active = True
+
+    def deactivate(self):
+        if self._mouse_callback_active:
+            try:
+                self.viewer.remove_event_callback(self.on_mouse_event)
+            except KeyError:
+                # Can occur if state changes trigger redundant deactivation.
+                pass
+            self._mouse_callback_active = False
+
+
+@viewer_tool
+class SelectLine(SafeClickCallbackTool, HubListener):
     icon = os.path.join(ICON_DIR, 'line_select.svg')
     tool_id = 'jdaviz:selectline'
     action_text = 'Select/identify spectral line'
@@ -803,14 +895,9 @@ class SelectLine(CheckableTool, HubListener):
         self.viewer.session.hub.subscribe(self, SpectralMarksChangedMessage,
                                           handler=self._on_plotted_lines_changed)
 
-    def activate(self):
+    def _before_activate(self):
         # ensure self.line_marks is populated
         self.viewer._broadcast_plotted_lines()
-        self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks
@@ -833,7 +920,7 @@ class SelectLine(CheckableTool, HubListener):
 
 
 @viewer_tool
-class SelectCatalogMark(CheckableTool, HubListener):
+class SelectCatalogMark(SafeClickCallbackTool, HubListener):
     icon = os.path.join(ICON_DIR, 'catalog_select.svg')
     tool_id = 'jdaviz:selectcatalog'
     action_text = 'Select/identify source from catalog'
@@ -843,13 +930,6 @@ class SelectCatalogMark(CheckableTool, HubListener):
         super().__init__(viewer, **kwargs)
         self.xs = []
         self.ys = []
-
-    def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
         msg = CatalogSelectClickEventMessage(data['domain']['x'], data['domain']['y'], sender=self)
@@ -861,7 +941,7 @@ class SelectCatalogMark(CheckableTool, HubListener):
 
 
 @viewer_tool
-class SelectTableRow(CheckableTool, HubListener):
+class SelectTableRow(SafeClickCallbackTool, HubListener):
     """Tool for selecting/toggling the closest table row from an image viewer click."""
     icon = os.path.join(ICON_DIR, 'catalog_select.svg')
     tool_id = 'jdaviz:select_table_row'
@@ -870,12 +950,6 @@ class SelectTableRow(CheckableTool, HubListener):
 
     # This will be set when the tool is activated via override_tools
     _table_viewer_id = None
-
-    def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_event, events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
         if self._table_viewer_id is None:
@@ -890,18 +964,11 @@ class SelectTableRow(CheckableTool, HubListener):
 
 
 @viewer_tool
-class SelectFootprintOverlay(CheckableTool, HubListener):
+class SelectFootprintOverlay(SafeClickCallbackTool, HubListener):
     icon = os.path.join(ICON_DIR, 'footprint_select.svg')
     tool_id = 'jdaviz:selectfootprint'
     action_text = 'Select/identify overlay'
     tool_tip = 'Select/identify overlay'
-
-    def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
         msg = FootprintSelectClickEventMessage(data, sender=self)
@@ -915,18 +982,11 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
 
 
 @viewer_tool
-class SkewerSelectRegion(CheckableTool, HubListener):
+class SkewerSelectRegion(SafeClickCallbackTool, HubListener):
     icon = os.path.join(ICON_DIR, 'skewer_select.svg')
     tool_id = 'jdaviz:skewerregion'
     action_text = 'Select all footprints that contain the click coordinate'
     tool_tip = 'Skewer selection: selects all footprints containing the click coordinate'
-
-    def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
         msg = FootprintOverlayClickMessage(data, mode="skewer", sender=self)
@@ -938,18 +998,11 @@ class SkewerSelectRegion(CheckableTool, HubListener):
 
 
 @viewer_tool
-class SelectRegionOverlay(CheckableTool, HubListener):
+class SelectRegionOverlay(SafeClickCallbackTool, HubListener):
     icon = os.path.join(ICON_DIR, 'footprint_select.svg')
     tool_id = 'jdaviz:selectregion'
     action_text = 'Select the footprint with the nearest edge'
     tool_tip = 'Nearest edge selection: select the footprint with the nearest edge to the click coordinate'  # noqa: E501
-
-    def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['click'])
-
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
         msg = FootprintOverlayClickMessage(data, mode="nearest", sender=self)
@@ -1064,63 +1117,6 @@ class StretchBounds(CheckableTool):
             setattr(self.viewer._plugin, att_names, event_x)
 
         self._time_last = time.time()
-
-
-class _BaseSidebarShortcut(Tool):
-    plugin_name = None  # define in subclass
-    viewer_attr = 'viewer'
-
-    def activate(self):
-
-        # This is a temporary patch to fix an issue when both jdaviz and lcviz
-        # are imported in the same session. This block of code should be removed
-        # before 5.0 and the bug from JDAT-5881 should be re-tested (the
-        # ticket for this is JDAT-5923).
-        if self.plugin_name in ['lcviz-plot-options', 'lcviz-export']:
-            try:
-                plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
-            except KeyError:
-                name = 'g-plot-options' if self.plugin_name == 'lcviz-plot-options' else 'export'
-                plugin = self.viewer.jdaviz_app.get_tray_item_from_name(name)
-        else:
-            plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
-
-        plugin.open_in_tray(scroll_to=True)
-        viewer_id = self.viewer.reference_id
-        viewer_select = getattr(plugin, self.viewer_attr)
-        if viewer_select.multiselect:
-            viewer_id = [viewer_id]
-        setattr(viewer_select, 'selected', viewer_id)
-
-
-@viewer_tool
-class SidebarShortcutPlotOptions(_BaseSidebarShortcut):
-    plugin_name = 'g-plot-options'
-
-    icon = os.path.join(ICON_DIR, 'cog.svg')
-    tool_id = 'jdaviz:sidebar_plot'
-    action_text = 'Plot Options'
-    tool_tip = 'Open plot options plugin in sidebar'
-
-
-@viewer_tool
-class SidebarShortcutExportPlot(_BaseSidebarShortcut):
-    plugin_name = 'export'
-
-    icon = os.path.join(ICON_DIR, 'image.svg')
-    tool_id = 'jdaviz:sidebar_export'
-    action_text = 'Export plot'
-    tool_tip = 'Open export plugin in sidebar'
-
-
-@viewer_tool
-class SidebarShortcutCompass(_BaseSidebarShortcut):
-    plugin_name = 'imviz-compass'
-
-    icon = os.path.join(ICON_DIR, 'compass.svg')
-    tool_id = 'jdaviz:sidebar_compass'
-    action_text = 'Compass'
-    tool_tip = 'Open compass plugin in sidebar'
 
 
 @viewer_tool

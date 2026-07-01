@@ -393,8 +393,11 @@ class JdavizViewerMixin(WithCache):
             expose = ['data_labels_loaded', 'data_labels_visible', 'data_menu']
         else:
             expose = []
-        if self.jdaviz_app.config == 'deconfigged':
-            expose += ['clone_viewer']
+        # TODO: remove if-statement once configs removed
+        if self.jdaviz_app.config not in ('imviz', 'specviz',
+                                          'specviz2d', 'cubeviz',
+                                          'mosviz', 'rampviz'):
+            expose += ['clone_viewer', 'toggle_focus_mode']
         if isinstance(self, BqplotImageView):
             if isinstance(self, AstrowidgetsImageViewerMixin):
                 expose += ['save',
@@ -498,6 +501,25 @@ class JdavizViewerMixin(WithCache):
                 setattr(new_layer_state, k, v)
 
         return JdavizViewerWindow(new_viewer, app=self.jdaviz_app).user_api
+
+    def toggle_focus_mode(self, focus=None):
+        """
+        Toggle focus mode for this viewer.
+
+        Parameters
+        ----------
+        focus : bool or None, optional
+            If True, set focus to this viewer.  If False, unset focus if it is currently
+            on this viewer.
+            If None (default), toggle focus on this viewer.
+        """
+        curr_focus = self.jdaviz_app.state.focus_viewer
+        if focus is None:
+            # set to this viewer if not already, otherwise None
+            new_focus = self.reference if curr_focus != self.reference else ''
+        else:
+            new_focus = self.reference if focus else ''
+        self.jdaviz_app.state.focus_viewer = new_focus
 
     def reset_limits(self):
         """
@@ -895,6 +917,11 @@ class JdavizViewerWindow(TemplateMixin):
     tool_override_mode = Unicode("").tag(sync=True)
 
     viewer_destroyed = Bool(False).tag(sync=True)
+    focus_mode = Bool(False).tag(sync=True)
+    coords_info_widget = Unicode("").tag(sync=True)
+    coords_info_has_data = Bool(False).tag(sync=True)
+    coords_info_icon = Unicode("").tag(sync=True)
+    coords_info_dataset_icon = Unicode("").tag(sync=True)
 
     def __init__(self, viewer, *args, reference="", name="", **kwargs):
         super().__init__(*args, **kwargs)
@@ -914,10 +941,37 @@ class JdavizViewerWindow(TemplateMixin):
             self.tool_override_mode = viewer.toolbar.tool_override_mode
             viewer.toolbar.observe(self._on_toolbar_override_change, names=['tool_override_mode'])
 
+        # Track focus mode by observing app.state.focus_viewer
+        coords_info = self._app.session.application._tools.get('g-coords-info')
+        if coords_info is not None:
+            self.coords_info_widget = "IPY_MODEL_" + coords_info.model_id
+            self.coords_info_has_data = bool(coords_info.icon)
+            self.coords_info_icon = coords_info.icon
+            self.coords_info_dataset_icon = coords_info.dataset_icon
+            coords_info.observe(self._on_coords_info_icon_changed, names=['icon'])
+            coords_info.observe(self._on_coords_info_dataset_icon_changed, names=['dataset_icon'])
+        self._app.state.add_callback('focus_viewer', self._on_focus_viewer_changed)
+        self._on_focus_viewer_changed()
+
         self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
 
     def _on_toolbar_override_change(self, change):
         self.tool_override_mode = change['new']
+
+    def _on_focus_viewer_changed(self, *args):
+        self.focus_mode = (self._app.state.focus_viewer == self.reference)
+
+    def _on_coords_info_icon_changed(self, change):
+        self.coords_info_has_data = bool(change['new'])
+        self.coords_info_icon = change['new']
+
+    def _on_coords_info_dataset_icon_changed(self, change):
+        self.coords_info_dataset_icon = change['new']
+
+    def vue_cycle_coords_dataset(self, *args):
+        coords_info = self._app.session.application._tools.get('g-coords-info')
+        if coords_info is not None:
+            coords_info.dataset.select_next()
 
     @property
     def user_api(self):
@@ -990,7 +1044,8 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
 
     default_class = NDDataArray
@@ -1447,7 +1502,8 @@ class ScatterViewer(JdavizViewerMixin, BqplotScatterView):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange', 'bqplot:yrange', 'bqplot:rectangle'],
                     [],
-                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
     _state_cls = ScatterViewerState
 
@@ -1463,7 +1519,8 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     [],
-                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
     _state_cls = HistogramViewerState
 
@@ -1477,7 +1534,8 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
-                    ['jdaviz:viewer_clone']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                    ]
 
     def __init__(self, session, *args, **kwargs):

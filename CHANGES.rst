@@ -29,7 +29,7 @@ New Features
   top of the loader window when fetching files from selected footprints. Success
   messages auto-dismiss after 4 seconds and a progress indicator appears on the file
   table during loading. [#4203]
-  
+
 - Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#4224]
 
 - Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to
@@ -37,6 +37,9 @@ New Features
 
 - The Virtual Observatory loader now supports querying spectral products
   and catalog targets. [#4060]
+
+- Implement a "focus mode" that shows a simplified view of a single viewer.  Focus mode can
+  be toggled on/off from the viewer toolbar or via the API. [#4242]
 
 Mosviz
 ^^^^^^

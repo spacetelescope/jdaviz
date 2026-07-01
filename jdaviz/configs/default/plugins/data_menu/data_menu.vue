@@ -151,6 +151,7 @@
                   :loaded_n_data="loaded_n_data"
                   :api_hints_enabled="api_hints_enabled"
                   :icons="icons"
+                  :focus_mode="focus_mode"
                   @add-data="(data_label) => {add_data_to_viewer({data_label: data_label})}"
                   @create-subset="(subset_type) => {create_subset({subset_type: subset_type}); data_menu_open = false}"
                 >
@@ -263,6 +264,7 @@
             <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
               <div class="v-list-item-content" style="display: flex; justify-content: flex-end; align-items: center; gap: 4px; width: 100%; min-width: 0;">
                 <j-tooltip
+                  v-if="!focus_mode"
                   :span_style="'display: inline-block; float: right; ' + (info_enabled ? '' : 'cursor: default;')"
                   :tooltipcontent="info_tooltip"
                 >

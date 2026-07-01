@@ -393,6 +393,10 @@ class ApplicationState(State):
     viewer_items = ListCallbackProperty(
         docstring="List (flat) of viewer objects")
 
+    focus_viewer = CallbackProperty(
+        '', docstring="The viewer that is currently in focus mode - or an empty string "
+                      "to show the entire app.")
+
     style_widget = CallbackProperty(
         '', docstring="Jupyter widget that won't be displayed but can apply css to the app"
     )
