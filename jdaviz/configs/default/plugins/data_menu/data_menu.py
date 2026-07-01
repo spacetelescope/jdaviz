@@ -694,6 +694,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         available = self.dataset.choices
 
         for label in data_labels:
+            # Check if incoming labels are children of parent data
             parent_label = self.app._get_assoc_data_parent(label)
             available += self.app._get_assoc_data_children(parent_label)
 
