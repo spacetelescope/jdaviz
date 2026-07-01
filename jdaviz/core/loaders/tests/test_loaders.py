@@ -813,6 +813,7 @@ class TestParenting:
         ldr.load()
 
         assert len(deconfigged_helper._app.data_collection) == 4
+        assert len(deconfigged_helper.viewers['Image'].data_menu.data_labels_loaded) == 4
         assert deconfigged_helper._app._get_assoc_data_parent('Image[ERR,1]') == 'Image[SCI,1]'
         assert deconfigged_helper._app._get_assoc_data_children('Image[SCI,1]') == ['Image[ERR,1]']
 
@@ -828,6 +829,7 @@ class TestParenting:
         ldr.load()
 
         assert len(deconfigged_helper._app.data_collection) == 4
+        assert len(deconfigged_helper.viewers['Image'].data_menu.data_labels_loaded) == 4
         for label in ('Image[SCI,1]', 'Image[ERR,1]', 'Image[SCI,2]', 'Image[ERR,2]'):
             assert deconfigged_helper._app._get_assoc_data_parent(label) is None
             assert deconfigged_helper._app._get_assoc_data_children(label) == []
@@ -859,8 +861,13 @@ class TestParenting:
         ldr.importer.extension = 'ERR,2'
         ldr.load()
 
+        assert len(deconfigged_helper.viewers['Image'].data_menu.data_labels_loaded) == 2
         assert deconfigged_helper._app._get_assoc_data_parent('Image[ERR,2]') == primary_label
         assert deconfigged_helper._app._get_assoc_data_children(primary_label) == ['Image[ERR,2]']
+
+        # This should raise 'Data labels {unavailable} not able to be loaded...'
+        # if parent child association doesn't work correctly (i.e. the previous behavior)
+        deconfigged_helper.viewers['Image'].data_menu.add_data('Image[ERR,2]')
 
 
 def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):
