@@ -13,9 +13,7 @@ Bug Fixes
 
 - Fixed a bug with the astroquery/VO loaders where the loader would get stuck on a failed query. [#4257]
 
-
-Mosviz
-------
+- Fix horizontal spacing of the app-level toolbar for small displays. [#4245]
 
 
 5.0.2 (2026-06-12)
