@@ -509,51 +509,43 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     mark.labels = [lbl.strip() for lbl in mark.labels]
                 restores.append(restore)
 
+            # avoid circular import:
+            from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+
             if filetype == "mp4":
                 self.save_movie(viewer, filename, filetype,
                                 width=f"{self.image_width}px" if self.image_custom_size else None,
                                 height=f"{self.image_height}px" if self.image_custom_size else None)
 
-            elif embed_avm and filetype in ('jpg', 'png'):
+            elif (
+                    isinstance(self.viewer.selected_obj, ImvizImageView) and
+                    embed_avm and filetype in ('jpg', 'png')
+            ):
                 # export screenshot to JPG with AVM by:
                 #   (1) export a temporary PNG
                 #   (2) convert temporary PNG to a temporary JPG with PIL
                 #   (3) use pyAVM to embed AVM into a final copy of the temporary JPG
 
-                try:
-                    # export as PNG, even if final filetype will be JPG
-                    # note: following `replace` assumes lower case extensions
-                    tmp_filename = Path(
-                        str(Path(filename)).replace('.jpg', '.png')
-                    )
-                    print(tmp_filename)
+                # export as PNG, even if final filetype will be JPG
+                # note: following `replace` assumes lower case extensions
+                tmp_filename = Path(
+                    str(Path(filename)).replace('.jpg', '.png')
+                )
 
-                    # wait for PNG to be available before continuing
-                    while viewer.figure._upload_png_callback is not None:
-                        time.sleep(0.05)
+                self.save_figure(
+                    viewer, tmp_filename, 'png', show_dialog=show_dialog,
+                    width=f"{self.image_width}px" if self.image_custom_size else None,
+                    height=f"{self.image_height}px" if self.image_custom_size else None
+                )
 
-                    self.save_figure(
-                        viewer, tmp_filename, 'png', show_dialog=show_dialog,
-                        width=f"{self.image_width}px" if self.image_custom_size else None,
-                        height=f"{self.image_height}px" if self.image_custom_size else None
-                    )
+                # wait for PNG to be available before continuing
+                while viewer.figure._upload_png_callback is not None:
+                    time.sleep(0.05)
 
-                    # wait for PNG to be available before continuing
-                    while viewer.figure._upload_png_callback is not None:
-                        time.sleep(0.05)
-
-                    # now convert to JPG with AVM
-                    png_embed_avm(self.app._jdaviz_helper, viewer, tmp_filename, format=filetype)
-
-                except Exception as e:
-                    print(f"Could not complete {filetype} export, raised: {e}")
-
-                finally:
-                    # remove temporary png file, even if there are exceptions
-                    os.remove(tmp_filename)
+                # now convert to JPG with AVM
+                png_embed_avm(self.app._jdaviz_helper, viewer, tmp_filename, format=filetype)
 
             else:
-
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
                                  width=f"{self.image_width}px" if self.image_custom_size else None,
                                  height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa

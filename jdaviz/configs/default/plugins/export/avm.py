@@ -22,7 +22,6 @@ def png_embed_avm(viz, viewer, png_filename, format='jpg'):
         Write out the image with embedded AVM as type ``format``
     """
     # open temporary PNG
-    print(f"{png_filename=}")
     img = Image.open(png_filename)
     png_shape = img.size
 
@@ -61,26 +60,24 @@ def png_embed_avm(viz, viewer, png_filename, format='jpg'):
     png_avm.Creator = 'jdaviz'
     png_avm.Rights = ''
     png_avm.Credit = ''
-    # png_avm.ID = viewer.reference
-    # png_avm.MetadataDate = datetime.now().strftime("%Y-%m-%dT%H:%M")
+    png_avm.MetadataDate = datetime.now().strftime("%Y-%m-%dT%H:%M")
 
     dest_path = str(png_filename).replace('.png', f'.{format}')
     dest_path_tmp = str(png_filename).replace('.png', f'_tmp.{format}')
 
-    # try:
-    if True:
+    try:
         # write out temporary file
-
         if format == 'jpg':
             # drop alpha channel for JPG files
             img.convert('RGB').save(dest_path_tmp)
+
+            # embed AVM into final jpg/png
+            png_avm.embed(dest_path_tmp, dest_path, verify=True)
+
         elif format == 'png':
-            # PNG supports alpha channel, no conversion necessary
             img.save(dest_path_tmp)
+            png_avm.embed(dest_path_tmp, dest_path, verify=True)
 
-        # embed AVM into final JPG
-        png_avm.embed(dest_path_tmp, dest_path, verify=True)
-
-    # finally:
+    finally:
         # ensure tmp file gets removed
         os.remove(dest_path_tmp)
