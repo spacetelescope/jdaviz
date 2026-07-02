@@ -1,5 +1,4 @@
 import os
-
 import astropy.units as u
 from numpy.testing import assert_allclose
 import pytest
@@ -9,7 +8,7 @@ pytest.importorskip("strauss")
 IN_GITHUB_ACTIONS = os.environ.get("CI", "false") == "true"
 
 
-@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test requires computer with audio output.")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test requires computer with audio output or skipped in CI") # noqa
 def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
     cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
     sonify_plg = cubeviz_helper._app.get_tray_item_from_name('cubeviz-sonify-data')

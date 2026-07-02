@@ -213,7 +213,7 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
 
 
 def test_get_viewport_sky_region_wcs(imviz_helper, image_hdu_wcs):
-    imviz_helper.load(image_hdu_wcs)
+    imviz_helper.load_data(image_hdu_wcs)
     viewer = imviz_helper.viewers['imviz-0']
     region = viewer.get_viewport_region()
 
@@ -234,7 +234,7 @@ def test_get_viewport_sky_region_gwcs(imviz_helper):
     data = np.ones(shape)
     ndd = NDData(data=data, wcs=create_example_gwcs(shape))
 
-    imviz_helper.load(ndd)
+    imviz_helper.load_data(ndd)
     viewer = imviz_helper.viewers['imviz-0']
     region = viewer.get_viewport_region()
 
@@ -255,7 +255,7 @@ def test_get_viewport_sky_no_wcs(imviz_helper):
     data = np.ones(shape)
     ndd = NDData(data=data)
 
-    imviz_helper.load(ndd)
+    imviz_helper.load_data(ndd)
     viewer = imviz_helper.viewers['imviz-0']
 
     with pytest.warns(UserWarning, match="does not have valid WCS"):
@@ -267,7 +267,7 @@ def test_get_viewport_pixel_region(imviz_helper):
     data = np.ones(shape)
     ndd = NDData(data=data, wcs=create_example_gwcs(shape))
 
-    imviz_helper.load(ndd)
+    imviz_helper.load_data(ndd)
     viewer = imviz_helper.viewers['imviz-0']
 
     data_label = imviz_helper._app.data_collection[0].label
@@ -284,7 +284,7 @@ def test_get_viewport_pixel_region_bad_label(imviz_helper):
     shape = (10, 10)
     data = np.ones(shape)
     ndd = NDData(data=data)
-    imviz_helper.load(ndd, data_label='label 1')
+    imviz_helper.load_data(ndd, data_label='label 1')
 
     with pytest.raises(ValueError, match="No data found with label xyz"):
         viewer = imviz_helper.viewers['imviz-0']
@@ -295,7 +295,7 @@ def test_get_viewport_pixel_region_no_label(imviz_helper):
     shape = (10, 10)
     data = np.ones(shape)
     ndd = NDData(data=data)
-    imviz_helper.load(ndd, data_label='label 1')
+    imviz_helper.load_data(ndd, data_label='label 1')
 
     with pytest.raises(ValueError,
                        match="`get_viewport_region` requires a data label"):

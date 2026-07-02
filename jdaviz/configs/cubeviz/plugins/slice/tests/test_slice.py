@@ -1,5 +1,4 @@
 import warnings
-
 import pytest
 
 from jdaviz.configs.cubeviz.plugins.slice.slice import SpectralSlice
