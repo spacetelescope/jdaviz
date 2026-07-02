@@ -38,6 +38,8 @@ New Features
 - The Virtual Observatory loader now supports querying spectral products
   and catalog targets. [#4060]
 
+- Export image viewer screenshots to JPG with Astronomy Visualization Metadata (AVM). [#4065]
+
 Mosviz
 ^^^^^^
 
