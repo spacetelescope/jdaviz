@@ -9,6 +9,9 @@ Bug Fixes
 
 - Fixed a bug in the compass plugin where the image would be flipped when WCS linked. [#4252]
 
+- Update the File Drop Resolver to parse input the same way as the File Resolver,
+  which fixes a bug where the resolver would not correctly parse some file types. [#4250]
+
 - Fix treating input tables as queries and add support for exports from MAST portal. [#4234]
 
 - Fixed a bug with the astroquery/VO loaders where the loader would get stuck on a failed query. [#4257]

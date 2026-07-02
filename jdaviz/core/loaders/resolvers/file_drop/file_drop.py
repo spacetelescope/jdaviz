@@ -107,11 +107,14 @@ class FileDropResolver(BaseResolver):
             return os.path.splitext(self._file_info['name'])[0]
         return None
 
-    def _parsed_input_to_table(self, parsed_input):
+    def _parsed_input_to_table(self, parsed_input, hdu=None):
         # support loading in from file drop resolver
         for format in ('csv', 'ascii', 'fits', 'votable'):
             try:
-                parsed_input = astropyTable.read(parsed_input, format=format)
+                if format == 'fits' and hdu is not None:
+                    parsed_input = astropyTable.read(parsed_input, format=format, hdu=hdu)
+                else:
+                    parsed_input = astropyTable.read(parsed_input, format=format)
                 return parsed_input
             except Exception:  # nosec
                 pass
