@@ -93,7 +93,9 @@ Bug Fixes
 
 - Fixed a bug with the astroquery/VO loaders where the loader would get stuck on a failed query. [#4257]
 
-- Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264] 
+- Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264]
+
+- Fixed main widget not displaying in standalone build. [#4271]
 
 
 Mosviz
