@@ -631,7 +631,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                 try:
                     from stdatamodels import asdf_in_fits
                     tree = asdf_in_fits.open(hdulist).tree
-                    if 'meta' in tree and 'wcs' in tree['meta']:
+                    if 'meta' in tree and tree['meta'].get('wcs', None) is not None:
                         wcs = tree["meta"]["wcs"]
                         if isinstance(wcs, (list, tuple)):
                             wcs = wcs[0]
