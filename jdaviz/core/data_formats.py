@@ -138,7 +138,8 @@ def _get_wcs(filename, header):
     # the 'meta' key doesn't exist, yielding a KeyError:
     except KeyError:
         # fall back on using astropy WCS:
-        wcs = WCS(header)
+        wcs = None
+    # Catches both model.meta wcs is None and KeyError
     if wcs is None:
         # fall back on using astropy WCS:
         wcs = WCS(header)
