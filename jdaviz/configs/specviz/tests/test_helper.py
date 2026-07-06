@@ -419,6 +419,7 @@ def test_subset_default_thickness(deconfigged_helper, spectrum1d):
     assert sv.state.layers[-1].linewidth == 3
 
 
+@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_app_links(deconfigged_helper, spectrum1d):
     deconfigged_helper.load(spectrum1d, format='1D Spectrum')
     sv = deconfigged_helper._app.get_viewer('1D Spectrum')
