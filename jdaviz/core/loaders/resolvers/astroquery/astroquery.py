@@ -71,8 +71,10 @@ class AstroqueryResolver(BaseConeSearchResolver):
         return LoaderUserApi(
             self,
             expose=[
-                "viewer", "coordframe", "radius", "radius_unit",
+                "input_select", "viewer", "coordframe", "radius", "radius_unit",
                 "source",
+                "catalog", "catalog_subset", "catalog_col_type", "catalog_name_col",
+                "query_progress",
                 "telescope",
                 "max_results",
                 "query_archive",
@@ -100,22 +102,21 @@ class AstroqueryResolver(BaseConeSearchResolver):
             self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self, traceback=e))
             return None
 
-    @with_spinner(spinner_traitlet="results_loading")
-    def query_archive(self):
-        output = None
+    def _query_single_coord(self, skycoord_center):
+        """
+        Query the selected archive for a single ``SkyCoord`` center.
 
-        skycoord_center = self._source_to_skycoord()
-
+        Returns an astropy Table (or None on failure / unsupported telescope).
+        """
         radius = self.radius * u.Unit(self.radius_unit.selected)
 
-        # Only query the selected archive when name resolution succeeded.
-        if skycoord_center is not None and self.telescope.selected in ('JWST', 'HST'):
+        if self.telescope.selected in ('JWST', 'HST'):
             from astroquery.mast import MastMissions
 
             mission = MastMissions(mission=self.telescope.selected)
             output = mission.query_region(skycoord_center, radius=radius.value)
 
-        elif skycoord_center is not None and self.telescope.selected == 'SDSS':
+        elif self.telescope.selected == 'SDSS':
             from astroquery.sdss import SDSS
 
             r_max = 3 * u.arcmin
@@ -138,13 +139,30 @@ class AstroqueryResolver(BaseConeSearchResolver):
                                                    sender=self,
                                                    traceback=e))
                 output = None  # will force returned_max_results = False, returned_no_results = True
-        elif skycoord_center is not None and self.telescope.selected == 'Gaia':
+        elif self.telescope.selected == 'Gaia':
             from astroquery.gaia import Gaia
 
             Gaia.ROW_LIMIT = self.max_results
             output = Gaia.query_object(skycoord_center, radius=radius)
-        elif skycoord_center is not None:
+        else:
             raise NotImplementedError(f"Querying for {self.telescope.selected} is not supported.")
+
+        return output
+
+    @with_spinner(spinner_traitlet="results_loading")
+    def query_archive(self):
+        # Catalog mode: loop over all (selected) catalog rows and stack results.
+        if self.input_selected == 'Catalog':
+            self._query_catalog(self._query_single_coord)
+            return
+
+        # Source / Viewer mode: single coordinate.
+        output = None
+        skycoord_center = self._source_to_skycoord()
+
+        # Only query the selected archive when name resolution succeeded.
+        if skycoord_center is not None:
+            output = self._query_single_coord(skycoord_center)
 
         if output is not None and len(output) > self.max_results:
             output = output[:self.max_results]
