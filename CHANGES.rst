@@ -18,6 +18,11 @@ Bug Fixes
 
 - Fix horizontal spacing of the app-level toolbar for small displays. [#4245]
 
+- Fixed main widget not displaying in standalone build. [#4271]
+
+Mosviz
+------
+
 
 5.0.2 (2026-06-12)
 ==================
