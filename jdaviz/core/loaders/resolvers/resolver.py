@@ -1386,7 +1386,7 @@ class BaseConeSearchResolver(BaseResolver):
         err_strings = [e for (_, _, e) in coords if e]
         if len(set(err_strings)) == 1:
             self.hub.broadcast(SnackbarMessage(
-                f"Repeated failures occurred during name resolution: {err_strings[0]}",
+                f"Single reason failure occurred during name resolution: {err_strings[0]}",
                 color='warning', sender=self))
 
         return coords
@@ -1487,11 +1487,13 @@ class BaseConeSearchResolver(BaseResolver):
 
         self._resolver_input_updated()
 
-        if len(self._source_name_query_failures):
+        if self._source_name_query_failures:
+            # Full per-name errors remain in ``self._source_name_query_failures``
+            # for a developer to inspect if needed.
             self.hub.broadcast(SnackbarMessage(
                 f"Could not resolve {len(self._source_name_query_failures)}/{len(coords)} "
-                f"source names. Please examine the sources in the "
-                f"{self._catalog_source_index_colname} column and try again.",
+                f"source names from the '{self.catalog_name_col_selected}' column. "
+                f"Check the source names in your catalog.",
                 color='warning', sender=self))
 
     def _check_is_valid(self):
