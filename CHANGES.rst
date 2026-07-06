@@ -29,7 +29,7 @@ New Features
   top of the loader window when fetching files from selected footprints. Success
   messages auto-dismiss after 4 seconds and a progress indicator appears on the file
   table during loading. [#4203]
-  
+
 - Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#4224]
 
 - Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to
@@ -93,8 +93,9 @@ Bug Fixes
 
 - Fixed a bug with the astroquery/VO loaders where the loader would get stuck on a failed query. [#4257]
 
-- Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264] 
+- Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264]
 
+- Safely handle case where meta.wcs may be None. [#4272]
 
 Mosviz
 ------
