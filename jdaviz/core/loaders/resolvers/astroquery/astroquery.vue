@@ -49,7 +49,7 @@
             v-model="source"
             :label="api_hints_enabled ? 'ldr.source =' : 'Source/Coordinates'"
             :class="api_hints_enabled ? 'api-hint' : null"
-            hint="Enter a source name or coordinates in degrees to center your query on"
+            hint="Enter a source name or coordinates in degrees to center your query on."
             :rules="[() => !!source || 'This field is required']"
             persistent-hint>
           </v-text-field>
@@ -61,7 +61,7 @@
           label="Coordinate Frame"
           api_hint="ldr.coordframe ="
           :api_hints_enabled="api_hints_enabled"
-          hint="Astronomical Coordinate Frame of the provided Coordinates"
+          hint="Astronomical Coordinate Frame of the provided Coordinates."
         ></plugin-select>
       </div>
 
@@ -89,7 +89,7 @@
             <span class="text-medium-emphasis" style="font-size: 0.875rem; margin-top: -6px; padding-left: 8px">{{ source }}</span>
           </div>
           <div class="text-medium-emphasis" style="font-size: 0.75rem; margin-top: 2px">
-            Automatically adjust coordinates as viewer pans and zooms
+            Automatically adjust coordinates as viewer pans and zooms.
           </div>
         </div>
 
@@ -99,7 +99,7 @@
           label="Coordinate Frame"
           api_hint="ldr.coordframe ="
           :api_hints_enabled="api_hints_enabled"
-          hint="Astronomical Coordinate Frame of the provided Coordinates"
+          hint="Astronomical Coordinate Frame of the provided Coordinates."
           :disabled="true"
         ></plugin-select>
       </div>
@@ -159,7 +159,7 @@
           label="Coordinate Frame"
           api_hint="ldr.coordframe ="
           :api_hints_enabled="api_hints_enabled"
-          hint="Astronomical Coordinate Frame of the catalog coordinates"
+          hint="Astronomical Coordinate Frame of the catalog coordinates."
         ></plugin-select>
       </div>
 
@@ -184,7 +184,7 @@
       </j-flex-row>
       <j-flex-row>
         <span class="v-messages" style="width: 100%; padding: 0 12px; margin-top: -12px">
-          Angular radius around source coordinates, within which to query for data (Default 1 degree)
+          Angular radius around source coordinates, within which to query for data.
         </span>
       </j-flex-row>
 
@@ -198,7 +198,7 @@
         :search="true"
         api_hint="ldr.telescope ="
         :api_hints_enabled="api_hints_enabled"
-        hint="Select a telescope to search for data"
+        hint="Select a telescope to search for data."
       ></plugin-select>
 
       <j-flex-row justify="space-between" style="margin-top: 12px">
@@ -209,7 +209,7 @@
           :label="api_hints_enabled ? 'ldr.max_results =' : 'Max Results'"
           :class="api_hints_enabled ? 'api-hint' : null"
           persistent-hint
-          hint="Maximum number of results to return from the query"
+          hint="Maximum number of results to return from the query."
         ></v-text-field>
       </j-flex-row>
     </v-form>
