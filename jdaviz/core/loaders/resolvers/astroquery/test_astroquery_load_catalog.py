@@ -85,7 +85,7 @@ class TestCatalogConeSearch:
         np.testing.assert_allclose(skycoords.ra.deg, self.sky_catalog['ra'].value)
         np.testing.assert_allclose(skycoords.dec.deg, self.sky_catalog['dec'].value)
         # sky_coords mode labels are the formatted RA/Dec and never carry an error
-        assert coords[0][1] == '337.502930 -20.814830'
+        assert coords[0][1] == '337.502930000000 -20.814830000000'
         assert all(err is None for _, _, err in coords)
 
     def test_query_catalog_stacks_results(self):
