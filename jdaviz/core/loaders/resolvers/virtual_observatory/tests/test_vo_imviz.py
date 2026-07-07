@@ -4,6 +4,10 @@ import numpy as np
 import pytest
 import warnings
 
+from astropy.coordinates import SkyCoord
+from astropy.table import QTable, Table
+import astropy.units as u
+
 from pyvo.io.vosi.endpoint import parse_capabilities
 from pyvo.utils.xml.exceptions import UnknownElementWarning
 
@@ -41,12 +45,14 @@ class TestVODeconfiggedImageLocal(BaseDeconfiggedImage_WCS_WCS):
         self.helper.new_viewers['Image']()
         self.helper._app.remove_data_from_viewer("Image", "has_wcs_2")
 
-        # Check default viewer is "Manual"
+        # Default input mode is "Source", so no viewer auto-centering yet
         vo_ldr = self.helper.loaders["virtual observatory"]._obj
-        assert vo_ldr.viewer.selected == "Manual"
+        assert vo_ldr.input_selected == "Source"
         assert vo_ldr.source == ""
 
-        # Switch to first viewer and verify coordinates have switched
+        # Switch to Viewer input mode and select the first viewer.
+        # Verify coordinates have switched to the viewer center
+        vo_ldr.input_select.selected = "Viewer"
         vo_ldr.viewer.selected = "Image"
         ra_str, dec_str = vo_ldr.source.split()
         np.testing.assert_allclose(
@@ -116,6 +122,8 @@ def test_link_type_autocoord(imviz_helper):
     imviz_helper.load_data(hdu2, data_label="has_wcs_2")
 
     vo_ldr = imviz_helper.loaders["virtual observatory"]._obj
+    # Use Viewer mode so that link-type changes trigger auto-centering
+    vo_ldr.input_select.selected = "Viewer"
     vo_ldr.viewer.selected = "imviz-0"
     vo_ldr.center_on_data()
     ra_str, dec_str = vo_ldr.source.split()
@@ -130,6 +138,38 @@ def test_link_type_autocoord(imviz_helper):
     # Truth values may need to be reevaluated
     np.testing.assert_allclose(float(ra_str), 239.18585, atol=30)
     np.testing.assert_allclose(float(dec_str), -9.905948925234416, atol=30)
+
+
+def test_vo_catalog_query_routes_to_query_catalog(deconfigged_helper):
+    """In Catalog input mode, the VO loader's query_archive should loop over the
+    catalog rows, stacking per-source results with a source_index column."""
+    catalog = QTable()
+    catalog['RA'] = [10.0, 20.0, 30.0] * u.deg
+    catalog['Dec'] = [-5.0, 0.0, 5.0] * u.deg
+    deconfigged_helper.load(catalog, format='Catalog')
+    label = [d.label for d in deconfigged_helper._app.data_collection
+             if d.meta.get('_importer') == 'CatalogImporter'][-1]
+
+    vo_ldr = deconfigged_helper.loaders["virtual observatory"]._obj
+    vo_ldr.input_select.selected = 'Catalog'
+    vo_ldr.catalog.selected = label
+
+    calls = []
+
+    # Override _query_single_coord to avoid network call
+    def _fake_single(coord):
+        calls.append(coord)
+        return Table({'access_url': ['a', 'b']})
+
+    vo_ldr._query_single_coord = _fake_single
+    vo_ldr.query_archive()
+
+    # one query per catalog source, results stacked with source_index
+    assert len(calls) == 3
+    assert isinstance(calls[0], SkyCoord)
+    assert len(vo_ldr._output) == 6
+    assert vo_ldr._catalog_source_index_colname in vo_ldr._output.colnames
+    assert sorted(set(vo_ldr._output[vo_ldr._catalog_source_index_colname])) == [0, 1, 2]
 
 
 class TestVOXMLInjectionWarning:
@@ -229,7 +269,7 @@ class TestVOImvizRemote:
 
         # Sets common args for Remote Testing
         vo_ldr.producttype = "Image"
-        vo_ldr.viewer.selected = "Manual"
+        vo_ldr.input_select = "Source"
         vo_ldr.source = "M51"
         vo_ldr.radius = 1
         vo_ldr.radius_unit.selected = "deg"
