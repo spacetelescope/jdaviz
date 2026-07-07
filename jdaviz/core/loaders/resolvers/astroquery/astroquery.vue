@@ -77,40 +77,21 @@
           hint="Select a viewer to retrieve center coordinates."
         />
 
-        <j-flex-row>
-          <v-switch
-            v-model="coord_follow_viewer_pan"
-            label="Follow Viewer Center"
-            hint="Automatically adjust coordinates as viewer pans and zooms"
-            persistent-hint
-          ></v-switch>
-        </j-flex-row>
-
-        <j-flex-row>
-          <div :style="!coord_follow_viewer_pan ? 'width: 100%' : 'width: calc(100% - 32px)'">
-            <v-text-field
-              v-model="source"
-              :label="api_hints_enabled ? 'ldr.source =' : 'Viewer Center'"
-              :class="api_hints_enabled ? 'api-hint' : null"
-              hint="Current viewer center coordinates"
-              :disabled="true"
-              persistent-hint>
-            </v-text-field>
+        <div style="display: flex; flex-direction: column; gap: 2px; padding-top: 4px; padding-bottom: 4px">
+          <div style="display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 8px">
+            <v-switch
+              v-model="coord_follow_viewer_pan"
+              hide-details
+              density="compact"
+            ></v-switch>
+            <span style="font-size: 1rem; font-weight: 500; padding-left: 8px">Follow Viewer Center</span>
+            <div></div>
+            <span class="text-medium-emphasis" style="font-size: 0.875rem; margin-top: -6px; padding-left: 8px">{{ source }}</span>
           </div>
-          <div v-if="!coord_follow_viewer_pan" style="line-height:64px; width:32px">
-            <j-tooltip :tipid="viewer_centered ? 'plugin-vo-autocenter-centered' : 'plugin-vo-autocenter-not-centered'">
-              <v-btn
-                id="autocenterbtn"
-                @click="center_on_data"
-                :disabled="viewer_centered"
-                icon>
-                <v-icon>
-                  {{ viewer_centered ? 'mdi-crosshairs-gps' : 'mdi-crosshairs' }}
-                </v-icon>
-              </v-btn>
-            </j-tooltip>
+          <div class="text-medium-emphasis" style="font-size: 0.75rem; margin-top: 2px">
+            Automatically adjust coordinates as viewer pans and zooms
           </div>
-        </j-flex-row>
+        </div>
 
         <plugin-select
           :items="coordframe_choices.map(i => i.label)"
