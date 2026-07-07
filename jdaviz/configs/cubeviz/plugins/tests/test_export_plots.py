@@ -24,9 +24,9 @@ def test_export_movie(deconfigged_helper, spectrum1d_cube, tmp_path):
 
 
 @pytest.mark.skipif(HAS_OPENCV, reason="opencv-python is installed")
-def test_no_opencv(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
-    plugin = cubeviz_helper.plugins["Export"]
+def test_no_opencv(deconfigged_helper, spectrum1d_cube):
+    deconfigged_helper.load(spectrum1d_cube, data_label="test", format='3D Spectrum')
+    plugin = deconfigged_helper.plugins["Export"]
     assert 'mp4' in plugin.viewer_format.choices
     assert not plugin._obj.movie_enabled
     plugin.viewer_format = 'mp4'
@@ -72,6 +72,7 @@ def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
         plugin.export()
 
 
+# deprecate? plugin not available with no loaded data in deconfigged
 @pytest.mark.skipif(not HAS_OPENCV, reason="opencv-python is not installed")
 def test_export_movie_cubeviz_empty(cubeviz_helper):
     plugin = cubeviz_helper.plugins["Export"]

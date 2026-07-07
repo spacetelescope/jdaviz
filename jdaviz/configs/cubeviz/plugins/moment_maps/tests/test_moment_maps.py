@@ -316,24 +316,24 @@ def test_write_momentmap(deconfigged_helper, spectrum1d_cube, tmp_path):
 
 
 @pytest.mark.remote_data
-def test_momentmap_nirspec_prism(cubeviz_helper):
+def test_momentmap_nirspec_prism(deconfigged_helper):
     uri = "mast:jwst/product/jw02732-o003_t002_nirspec_prism-clear_s3d.fits"
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        cubeviz_helper.load_data(cached_uri(uri), cache=True)
-    uc = cubeviz_helper.plugins["Unit Conversion"]
+        deconfigged_helper.load(cached_uri(uri), cache=True, format='3D Spectrum')
+    uc = deconfigged_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True
     uc.spectral_y_type.selected = 'Surface Brightness'
-    mm = cubeviz_helper.plugins['Moment Maps']._obj
+    mm = deconfigged_helper.plugins['Moment Maps']._obj
     mm.open_in_tray()  # plugin has to be open for unit change to take hold
     mm._set_data_units()
     mm.calculate_moment()
     assert isinstance(mm.moment.wcs, WCS)
 
     sky_moment = mm.moment.wcs.pixel_to_world(50, 30)
-    sky_cube = cubeviz_helper._app.data_collection[0].coords.pixel_to_world(50, 30, 0)[0]  # noqa: E501
+    sky_cube = deconfigged_helper._app.data_collection[0].coords.pixel_to_world(50, 30, 0)[0]  # noqa: E501
     assert_allclose((sky_moment.ra.deg, sky_moment.dec.deg),
                     (sky_cube.ra.deg, sky_cube.dec.deg))
 

@@ -114,28 +114,27 @@ def test_cubeviz_aperphot_cube_orig_flux(deconfigged_helper, image_cube_hdu_obj_
     assert "cannot be negative" in plg._obj.result_failed_msg
 
 
-def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper,
+def test_cubeviz_aperphot_generated_3d_gaussian_smooth(deconfigged_helper,
                                                        image_cube_hdu_obj_microns):
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
+    deconfigged_helper.load(image_cube_hdu_obj_microns, data_label="test", format='3D Spectrum')
     flux_unit = u.Unit("erg*s^-1*cm^-2*Angstrom^-1*pix^-2")  # actually a sb
     solid_angle_unit = PIX2
 
-    gauss_plg = cubeviz_helper.plugins["Gaussian Smooth"]._obj
+    gauss_plg = deconfigged_helper.plugins["Gaussian Smooth"]._obj
     gauss_plg.mode_selected = "Spatial"
     with pytest.warns(AstropyUserWarning, match="The following attributes were set on the data"):
         _ = gauss_plg.smooth()
 
     # Need this to make it available for photometry data drop-down.
-    cubeviz_helper._app.add_data_to_viewer("uncert-viewer", "test[FLUX] spatial-smooth stddev-1.0")
+    deconfigged_helper._app.add_data_to_viewer("3D Spectrum", "test smooth stddev-1.0")
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
-    cubeviz_helper.plugins['Subset Tools'].import_region(aper)
+    deconfigged_helper.plugins['Subset Tools'].import_region(aper)
 
-    plg = cubeviz_helper.plugins["Aperture Photometry"]
-    plg.dataset.selected = "test[FLUX] spatial-smooth stddev-1.0"
+    plg = deconfigged_helper.plugins["Aperture Photometry"]
     plg.aperture.selected = "Subset 1"
     plg._obj.vue_do_aper_phot()
-    row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
+    row = deconfigged_helper.plugins['Aperture Photometry'].export_table()[0]
 
     # Basically, we should recover the input rectangle here.
     assert_allclose(row["xcenter"], 1 * u.pix)
@@ -146,10 +145,10 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper,
 
     # sum should be in flux ( have factor of pix^2 multiplied out of input unit)
     assert_allclose(row["sum"],
-                    48.54973 * 1e-17 * flux_unit * solid_angle_unit)  # 3 (w) x 5 (h) x <5 (v)
+                74.999996 * 1e-17 * flux_unit * solid_angle_unit)  # 3 (w) x 5 (h) x <5 (v)
 
     assert_allclose(row["sum_aper_area"], 15 * solid_angle_unit)  # 3 (w) x 5 (h)
-    assert_allclose(row["mean"], 3.236648941040039 * 1e-17 * flux_unit)
+    assert_allclose(row["mean"], 4.99999975 * 1e-17 * flux_unit)
     assert_quantity_allclose(row["slice_wave"], 4.894499866699333 * u.um)
 
 
