@@ -57,7 +57,6 @@
             :class="api_hints_enabled ? 'api-hint' : null"
             hint="Enter a source name or coordinates in degrees to center your query on"
             :rules="[() => !!source || 'This field is required']"
-            :error-messages="parsed_input_is_resolvable ? [parsed_input_is_resolvable] : []"
             persistent-hint>
           </v-text-field>
         </j-flex-row>
