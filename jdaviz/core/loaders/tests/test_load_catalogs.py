@@ -402,6 +402,7 @@ def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
     deconfigged_helper.load(hdu1, format='Image', data_label='has_wcs')
 
     ldr = deconfigged_helper.loaders['astroquery']
+    ldr.input_select = 'Viewer'
     ldr.viewer = list(deconfigged_helper.viewers.keys())[0]
     ldr.telescope = 'SDSS'
     ldr.max_results = 10
