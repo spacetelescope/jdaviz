@@ -175,9 +175,7 @@
             v-model.number="radius"
             type="number"
             :label="api_hints_enabled ? 'ldr.radius =' : 'Radius'"
-            :class="api_hints_enabled ? 'api-hint' : null"
-            hint="Angular radius around source coordinates, within which to query for data (Default 1 degree)"
-            persistent-hint>
+            :class="api_hints_enabled ? 'api-hint' : null">
           </v-text-field>
         </div>
         <div :style="{ width: '40%' }">
@@ -189,6 +187,11 @@
             :api_hints_enabled="api_hints_enabled"
           ></plugin-select>
         </div>
+      </j-flex-row>
+      <j-flex-row>
+        <span class="v-messages" style="width: 100%; padding: 0 12px; margin-top: -12px">
+          Angular radius around source coordinates, within which to query for data (Default 1 degree)
+        </span>
       </j-flex-row>
 
       <j-plugin-section-header>Survey Collections</j-plugin-section-header>
