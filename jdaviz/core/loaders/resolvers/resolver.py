@@ -1343,7 +1343,7 @@ class BaseConeSearchResolver(BaseResolver):
         frame = skycoord_center.frame.name.lower()
 
         # Show center value in plugin
-        self.source = f"{ra_deg} {dec_deg}"
+        self.source = f"{ra_deg:.8f} {dec_deg:.8f}"
         self.coordframe_selected = frame
 
         self.viewer_centered = True
@@ -1426,7 +1426,7 @@ class BaseConeSearchResolver(BaseResolver):
         for i in row_indices:
             sc = SkyCoord(float(ra_data[i]), float(dec_data[i]),
                           unit='deg', frame=self.coordframe_selected)
-            coords.append((sc, f"{ra_data[i]:.6f} {dec_data[i]:.6f}", None))
+            coords.append((sc, f"{ra_data[i]:.12f} {dec_data[i]:.12f}", None))
         return coords
 
     def _query_catalog(self, single_coord_query_fn):
