@@ -57,6 +57,8 @@ Bug Fixes
 
 - Fixed main widget not displaying in standalone build. [#4271]
 
+- Fixed a Vue3 button issue that triggers backend calls twice. [#4276]
+
 Mosviz
 ^^^^^^
 
