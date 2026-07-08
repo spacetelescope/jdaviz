@@ -56,6 +56,8 @@ Bug Fixes
 - HST products (as defined by ``OBSTYPE``) are now correctly identified as being
   either images or 2D spectra. [#4217]
 
+- Fixed main widget not displaying in standalone build. [#4271]
+
 Mosviz
 ^^^^^^
 
@@ -91,6 +93,16 @@ Bug Fixes
   which fixes a bug where the resolver would not correctly parse some file types. [#4250]
 
 - Fix horizontal spacing of the app-level toolbar for small displays. [#4245]
+
+- Fix treating input tables as queries and add support for exports from MAST portal. [#4234]
+
+- Fixed a bug with the astroquery/VO loaders where the loader would get stuck on a failed query. [#4257]
+
+- Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264]
+
+
+Mosviz
+------
 
 
 5.0.2 (2026-06-12)
