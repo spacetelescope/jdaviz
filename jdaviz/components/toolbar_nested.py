@@ -92,8 +92,12 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     def _on_focus_viewer_changed(self, focus_viewer):
         """React to focus mode changes: deactivate any active tool that would be hidden."""
         # if the active tool is going to be made not-visible by focus mode,
-        # deactivate it first
-        if focus_viewer == getattr(self.viewer, 'reference', None) and self.active_tool_id:
+        # deactivate it first (only when entering focus mode, not exiting)
+        entering_focus = (
+            bool(focus_viewer)
+            and focus_viewer == getattr(self.viewer, 'reference', None)
+        )
+        if entering_focus and self.active_tool_id:
             tool = self.tools.get(self.active_tool_id)
             if tool is not None and not getattr(tool, 'keep_visible_in_focus_mode', False):
                 self.active_tool_id = None
@@ -350,6 +354,32 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             if self.tools_data[tool_id]['primary'] and self.tools_data[tool_id]['visible']:
                 self.active_tool_id = tool_id
                 break
+
+    @traitlets.observe('active_tool')
+    def _on_change_active_tool(self, change):
+        # Mirror BasicJupyterToolbar behavior, but guard against redundant
+        # deactivate/activate calls during toolbar override rebuilds.
+        # IMPORTANT: do not write back to active_tool_id here (that can create
+        # traitlet feedback loops with _on_change_v_model).
+        if change.old:
+            try:
+                change.old.deactivate()
+            except KeyError:
+                pass
+        else:
+            if self._default_mouse_mode and self._default_mouse_mode_active:
+                try:
+                    self._default_mouse_mode.deactivate()
+                except KeyError:
+                    pass
+                self._default_mouse_mode_active = False
+
+        if change.new:
+            change.new.activate()
+        else:
+            if self._default_mouse_mode is not None and not self._default_mouse_mode_active:
+                self._default_mouse_mode.activate()
+                self._default_mouse_mode_active = True
 
     @traitlets.observe('active_tool_id')
     def _on_change_v_model(self, event):
