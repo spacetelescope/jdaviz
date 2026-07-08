@@ -38,6 +38,8 @@ New Features
 - The Virtual Observatory loader now supports querying spectral products
   and catalog targets. [#4060]
 
+- Add "set layer to top" button in plot options. [#4218]
+
 Mosviz
 ^^^^^^
 
