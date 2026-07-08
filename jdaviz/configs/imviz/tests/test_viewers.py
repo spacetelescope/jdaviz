@@ -213,7 +213,7 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs,
 
 
 def test_get_viewport_sky_region_wcs(imviz_helper, image_hdu_wcs):
-    imviz_helper.load_data(image_hdu_wcs)
+    imviz_helper.load(image_hdu_wcs)
     viewer = imviz_helper.viewers['imviz-0']
     region = viewer.get_viewport_region()
 

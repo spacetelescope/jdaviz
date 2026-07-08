@@ -64,11 +64,11 @@ class TestCatalogs:
     # NOTE: We mark "slow" so it only runs on the dev job that is allowed to fail.
     @pytest.mark.skip(reason="now raising: File does not appear to be a VOTABLE")
     @pytest.mark.slow
-    def test_plugin_image_with_result(self, deconfigged_helper, tmp_path):
+    def test_plugin_image_with_result(self, imviz_helper, tmp_path):
         arr = np.ones((1489, 2048))
 
         # Since we are not really displaying, need this to test zoom.
-        viewer = deconfigged_helper.default_viewer._obj.glue_viewer
+        viewer = imviz_helper.default_viewer._obj.glue_viewer
         viewer.shape = (100, 100)
         viewer.state._set_axes_aspect_ratio(1)
 
@@ -88,9 +88,9 @@ class TestCatalogs:
                             'CRPIX2': 745.0,
                             'CRVAL2': 1.54470013629,
                             'NAXIS2': 1489})
-        deconfigged_helper.load(hdu1, data_label='has_wcs')
+        imviz_helper.load_data(hdu1, data_label='has_wcs')
 
-        catalogs_plugin = deconfigged_helper.plugins["Catalog Search"]
+        catalogs_plugin = imviz_helper.plugins["Catalog Search"]
         catalogs_plugin._obj.plugin_opened = True
 
         # test SDSS catalog
@@ -111,7 +111,7 @@ class TestCatalogs:
         #   query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, ...)
 
         # Zoom in so we have to filter sources outside the viewer bounds
-        viewer = deconfigged_helper._app.get_viewer('imviz-0')
+        viewer = imviz_helper._app.get_viewer('imviz-0')
         viewer.state.x_min = 800
         viewer.state.x_max = 1200
         viewer.state.y_min = 800
@@ -143,7 +143,7 @@ class TestCatalogs:
         assert not catalogs_plugin._obj.results_available
 
         # test loading from file
-        table = deconfigged_helper._app._catalog_source_table
+        table = imviz_helper._app._catalog_source_table
         qtable = QTable({'sky_centroid': SkyCoord(table['ra'], table['dec'], unit='deg'),
                          'label': table['objid']})
         tmp_file = tmp_path / 'test.ecsv'
@@ -177,10 +177,10 @@ class TestCatalogs:
         assert catalogs_plugin._obj.results_available
         assert catalogs_plugin._obj.number_of_results == catalogs_plugin.max_sources
 
-        assert deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min == 279.0
-        assert deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max == 1768.0
-        assert deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min == -0.5
-        assert deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max == 1488.5
+        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min == 279.0
+        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max == 1768.0
+        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min == -0.5
+        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max == 1488.5
 
         # Re-populate the table with a new search
         with pytest.warns(ResourceWarning):
@@ -194,16 +194,16 @@ class TestCatalogs:
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
         assert_allclose(
-            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min,
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min,
             1046.377555, atol=0.1)
         assert_allclose(
-            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max,
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max,
             1098.748805, atol=0.1)
         assert_allclose(
-            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min,
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min,
             699.110485, atol=0.1)
         assert_allclose(
-            deconfigged_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max,
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max,
             751.481735, atol=0.1)
 
 

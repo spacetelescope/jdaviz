@@ -194,7 +194,6 @@ def test_spectrum3d_no_wcs_parse(deconfigged_helper, flux_unit):
 
     data = deconfigged_helper._app.data_collection[0]
     flux = data.get_component('flux')
-    # assert data.label.endswith('[FLUX]')
     assert data.shape == (2, 3, 4)  # x, y, z
     assert isinstance(data.coords, GWCS)
     assert_array_equal(flux.data, 1)
