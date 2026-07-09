@@ -149,6 +149,11 @@
             persistent-hint
           ></v-text-field>
         </j-flex-row>
+        <j-flex-row v-else-if="item.name === 'Selected rows'" class="row-no-outside-padding">
+          <div style="white-space: pre-line;">
+            {{ item.value }}
+          </div>
+        </j-flex-row>
         <j-flex-row v-else class="row-no-outside-padding">
           <v-text-field
             :label="api_hints_enabled ? 'plg.update_subset(\'' + subset_selected + '\', subregion=' + index + ', ' + item.att + '=' + item.value + ')' : item.name"

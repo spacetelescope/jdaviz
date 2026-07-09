@@ -29,7 +29,7 @@ New Features
   top of the loader window when fetching files from selected footprints. Success
   messages auto-dismiss after 4 seconds and a progress indicator appears on the file
   table during loading. [#4203]
-  
+
 - Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#4224]
 
 - Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to
@@ -39,6 +39,8 @@ New Features
   and catalog targets. [#4060]
 
 - Add "set layer to top" button in plot options. [#4218]
+
+- Show basic table subset information in the Subset Tools plugin. [#4266]
 
 Mosviz
 ^^^^^^
