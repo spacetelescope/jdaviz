@@ -123,29 +123,29 @@ def test_blink(imviz_helper):
     viewer = imviz_helper.default_viewer._obj.glue_viewer
 
     for i in range(3):
-        imviz_helper.load_data(NDData(np.zeros((2, 2)) + i), data_label=f'image_{i}')
+        imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}')
 
     label_mouseover = imviz_helper._coords_info
     viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b', 'domain': {'x': 0, 'y': 0}})
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +0.00000e+00', '', '')
-    assert viewer.top_visible_data_label == 'image_0[DATA]'
+    assert viewer.top_visible_data_label == 'image_0'
 
     # Blink forward and update coordinates info panel.
     viewer.blink_once()
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00', '', '')
-    assert viewer.top_visible_data_label == 'image_1[DATA]'
+    assert viewer.top_visible_data_label == 'image_1'
 
     # Blink backward.
     viewer.blink_once(reversed=True)
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +0.00000e+00', '', '')
-    assert viewer.top_visible_data_label == 'image_0[DATA]'
+    assert viewer.top_visible_data_label == 'image_0'
 
     # Blink backward again.
     viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'B', 'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +2.00000e+00', '', '')
-    assert viewer.top_visible_data_label == 'image_2[DATA]'
+    assert viewer.top_visible_data_label == 'image_2'
 
 
 def test_compass_open_while_load(imviz_helper):
