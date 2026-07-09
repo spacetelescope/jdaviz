@@ -716,3 +716,169 @@ class TestTableViewerToolsPixelLinked:
 
         # Restore and check marks are cleared
         toolbar.restore_tools()
+
+
+class TestTableViewerViewerDataColumns:
+    """
+    Test ``add_viewer_data_columns``: one read-only "Data: <viewer>" column per
+    viewer, whose cells list the data to show in that viewer. On row click, each
+    viewer is cleared and repopulated with exactly the data in its column.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, deconfigged_helper, image_2d_wcs, spectrum1d,
+                     sky_coord_only_source_catalog):
+        """Set up deconfigged app with images, spectra, dedicated viewers, and a Table."""
+        # images
+        arr = np.arange(10000).reshape((100, 100))
+        deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
+        deconfigged_helper.load(NDData(arr + 1, wcs=image_2d_wcs), data_label='img_b')
+        # spectra
+        deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec_a')
+        deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec_b')
+
+        # catalog -> Table viewer (5 rows)
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = sky_coord_only_source_catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Table'
+        ldr.load()
+
+        self.app = deconfigged_helper
+        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+
+        # resolve the actual data-collection labels (loading may apply a suffix)
+        dc_labels = list(deconfigged_helper._app.data_collection.labels)
+        self.img_a = next(lbl for lbl in dc_labels if lbl.startswith('img_a'))
+        self.img_b = next(lbl for lbl in dc_labels if lbl.startswith('img_b'))
+        self.spec_a = next(lbl for lbl in dc_labels if lbl.startswith('spec_a'))
+        self.spec_b = next(lbl for lbl in dc_labels if lbl.startswith('spec_b'))
+
+        # dedicated target viewers seeded with img_a / spec_a
+        vc = deconfigged_helper.new_viewers['Image']
+        vc.dataset = self.img_a
+        vc.viewer_label = 'Image (2)'
+        vc()
+        self.image_viewer = deconfigged_helper._app.get_viewer('Image (2)')
+
+        vc = deconfigged_helper.new_viewers['1D Spectrum']
+        vc.dataset = self.spec_a
+        vc.viewer_label = '1D Spectrum (2)'
+        vc()
+        self.spec_viewer = deconfigged_helper._app.get_viewer('1D Spectrum (2)')
+
+        self.image_ref = self.image_viewer.reference
+        self.spec_ref = self.spec_viewer.reference
+        self.image_col = f'Data: {self.image_ref}'
+        self.spec_col = f'Data: {self.spec_ref}'
+
+    def _visible(self, viewer):
+        return {layer.layer.label for layer in viewer.layers if layer.visible}
+
+    def test_columns_created_and_readonly(self):
+        """One 'Data: <viewer>' column is created per viewer, read-only and registered."""
+        tv = self.table_viewer
+        viewer_data = {
+            self.image_ref: [[self.img_b], [], [], [], []],
+            self.spec_ref: [[self.spec_a], [], [], [], []],
+        }
+        names = tv.add_viewer_data_columns(viewer_data)
+        assert names == [self.image_col, self.spec_col]
+
+        comps = [c.label for c in tv.widget_table.data.components]
+        assert self.image_col in comps
+        assert self.spec_col in comps
+        assert tv._viewer_data_columns == {self.image_col: self.image_ref,
+                                           self.spec_col: self.spec_ref}
+
+        editable = [x.label for x in list(tv.state.editable_components)]
+        assert self.image_col not in editable
+        assert self.spec_col not in editable
+
+    def test_click_replaces_viewer_contents(self):
+        """Clicking a row clears each viewer and shows exactly the data in its column."""
+        tv = self.table_viewer
+        viewer_data = {
+            self.image_ref: [[self.img_b],
+                             [self.img_a, self.img_b],
+                             [],
+                             [self.img_a],
+                             []],
+            self.spec_ref: [[self.spec_a],
+                            [self.spec_b],
+                            [self.spec_a, self.spec_b],
+                            [],
+                            []],
+        }
+        tv.add_viewer_data_columns(viewer_data)
+
+        # row 0: image shows only img_b (img_a hidden); spectrum shows only spec_a
+        tv.widget_table.highlighted = 0
+        assert self._visible(self.image_viewer) == {self.img_b}
+        assert self._visible(self.spec_viewer) == {self.spec_a}
+
+        # row 1: image shows both images; spectrum swaps to spec_b
+        tv.widget_table.highlighted = 1
+        assert self._visible(self.image_viewer) == {self.img_a, self.img_b}
+        assert self._visible(self.spec_viewer) == {self.spec_b}
+
+        # row 2: image column empty -> image cleared; spectrum shows both
+        tv.widget_table.highlighted = 2
+        assert self._visible(self.image_viewer) == set()
+        assert self._visible(self.spec_viewer) == {self.spec_a, self.spec_b}
+
+    def test_columns_update_on_data_rename(self):
+        """Renaming a referenced dataset updates every 'Data: <viewer>' column."""
+        tv = self.table_viewer
+        viewer_data = {
+            self.image_ref: [[self.img_a], [self.img_a, self.img_b], [], [], []],
+        }
+        tv.add_viewer_data_columns(viewer_data)
+
+        self.app._app.rename_data(self.img_a, 'img_a_renamed')
+
+        values = list(tv.widget_table.data.get_component(self.image_col).data)
+        assert values[0] == ['img_a_renamed']
+        assert values[1] == ['img_a_renamed', self.img_b]
+
+        # clicking still resolves and shows the renamed dataset
+        tv.widget_table.highlighted = 0
+        assert 'img_a_renamed' in self._visible(self.image_viewer)
+
+    def test_length_mismatch_raises(self):
+        """A per-viewer list that does not match the number of rows raises."""
+        tv = self.table_viewer
+        with pytest.raises(ValueError, match="must have one entry per row"):
+            tv.add_viewer_data_columns({self.image_ref: [[self.img_b]]})
+
+    def test_invalid_viewer_raises(self):
+        """An unknown viewer reference raises a ValueError."""
+        tv = self.table_viewer
+        with pytest.raises(ValueError, match="Could not find viewer"):
+            tv.add_viewer_data_columns({'no_such_viewer': [[], [], [], [], []]})
+
+    def test_viewer_by_object(self):
+        """Viewer keys may be viewer objects, not just reference strings."""
+        tv = self.table_viewer
+        viewer_data = {self.image_viewer: [[self.img_b], [], [], [], []]}
+        names = tv.add_viewer_data_columns(viewer_data)
+        assert names == [self.image_col]
+
+        tv.widget_table.highlighted = 0
+        assert self._visible(self.image_viewer) == {self.img_b}
+
+    def test_click_resets_zoom_limits(self):
+        """Clicking a row resets the viewer zoom limits so the new data fits in view."""
+        tv = self.table_viewer
+        tv.add_viewer_data_columns({self.image_ref: [[self.img_b], [], [], [], []]})
+
+        # zoom to an off-data region first
+        self.image_viewer.state.x_min = -500
+        self.image_viewer.state.x_max = -400
+
+        tv.widget_table.highlighted = 0
+
+        # the limits were reset (no longer the artificial off-data values)
+        assert self.image_viewer.state.x_min != -500
+        assert self.image_viewer.state.x_max != -400
+        assert self.img_b in self._visible(self.image_viewer)
