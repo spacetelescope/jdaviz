@@ -25,6 +25,7 @@ module.exports = {
   props: ['spinner', 'disabled_msg', 'api_hints_enabled', 'api_hint',
           'data_label_overwrite', 'data_label_is_prefix',
           'data_label_suffices', 'data_label_overwrite_by_index'],
+  emits: ['click'],
   computed: {
     isDisabled() {
       // Ensure Vue tracks changes to disabled_msg

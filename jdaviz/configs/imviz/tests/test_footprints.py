@@ -38,7 +38,8 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         for preset in (preset for preset in plugin.preset.choices if preset != 'From File...'):
             plugin.preset = preset
 
-            viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+            viewer_marks = _get_markers_from_viewer(
+                imviz_helper.default_viewer._obj.glue_viewer)
             assert len(viewer_marks) == len(_all_apertures.get(preset))
 
         # regression test for user-set traitlets (specifically color) being reset
@@ -334,14 +335,14 @@ def test_footprint_select(imviz_helper):
         assert fp.overlay.selected == "layer1"
 
 
-def test_footprint_loaders(imviz_helper, image_2d_wcs):
+def test_footprint_loaders(deconfigged_helper, image_2d_wcs):
     arr = np.ones((10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
     # load the image twice to test linking
-    imviz_helper.load_data(ndd)
-    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+    deconfigged_helper.load(ndd)
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
 
-    plg = imviz_helper.plugins['Footprints']
+    plg = deconfigged_helper.plugins['Footprints']
     ldr = plg.loaders['object']
     ldr.object = 'POLYGON ICRS 5.023 4.992 5.024 4.991 5.029 4.995 5.026 4.998'
     ldr.importer.footprint_label = 'imported from STCS'
@@ -350,14 +351,14 @@ def test_footprint_loaders(imviz_helper, image_2d_wcs):
     assert 'imported from STCS' in plg.overlay.choices
 
 
-def test_footprint_enable_disable_api(imviz_helper, image_2d_wcs):
+def test_footprint_enable_disable_api(deconfigged_helper, image_2d_wcs):
     """Test enable/disable footprint selection tools API on Footprints plugin."""
     arr = np.ones((10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
-    imviz_helper.load_data(ndd)
+    deconfigged_helper.load(ndd)
+    deconfigged_helper.load(ndd)
 
-    plugin = imviz_helper.plugins['Footprints']
+    plugin = deconfigged_helper.plugins['Footprints']
     plugin._obj.vue_link_by_wcs()
 
     with plugin.as_active():

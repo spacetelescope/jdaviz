@@ -13,7 +13,8 @@
         :key="typeof widget === 'string' ? widget : index"
       ></jupyter-widget>
     </div>
-    <v-app-bar color="toolbar" theme="dark" :density="state_settings.dense_toolbar ? 'compact' : 'default'" flat absolute :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
+
+    <v-app-bar v-if="!state_focus_viewer" color="toolbar" theme="dark" :density="state_settings.dense_toolbar ? 'compact' : 'default'" flat absolute :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
 
       <v-toolbar-items v-if="config === 'deconfigged'">
         <j-tooltip v-if="(!state_settings.server_is_remote || state_settings.remote_enable_importers)" tipid="app-toolbar-loaders">
@@ -231,7 +232,10 @@
       :class="checkNotebookContext() ? '' : 'jdaviz__content--not-in-notebook'"
     >
       <v-container class="fill-height pa-0" fluid>
-        <splitpanes>
+        <div v-if="state_focus_viewer && focused_viewer_item" style="width: 100%; height: 100%;">
+          <jupyter-widget :widget="focused_viewer_item.widget" style="width: 100%; height: 100%;"></jupyter-widget>
+        </div>
+        <splitpanes v-else>
           <pane size="25" min-size="25" v-if="config === 'deconfigged' && state_drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 320px">
             <v-card v-if="state_drawer_content === 'loaders'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
               <v-tabs fixed-tabs theme="dark" bg-color="viewer_toolbar" v-model="state_add_subtab">
@@ -478,6 +482,22 @@ export default {
     };
   },
   computed: {
+    focused_viewer_item() {
+      if (!this.state_focus_viewer) return null;
+      const findViewer = (stackItems) => {
+        for (const stack of stackItems) {
+          for (const viewer of stack.viewers) {
+            if (viewer.reference === this.state_focus_viewer) return viewer;
+          }
+          if (stack.children && stack.children.length > 0) {
+            const found = findViewer(stack.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      return findViewer(this.state_stack_items);
+    },
     loader_items_filtered() {
       // Determine which loaders to disable
       var disabled_loaders = this.state_settings.disabled_loaders;

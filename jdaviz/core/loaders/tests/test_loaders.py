@@ -747,16 +747,23 @@ def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper._app.data_collection.external_links) == 4
 
 
+def _make_multi_sci_hdul():
+    sci1 = np.ones((2, 2), dtype=np.float32)
+    err1 = np.full((2, 2), 2, dtype=np.float32)
+    sci2 = np.full((2, 2), 3, dtype=np.float32)
+    err2 = np.full((2, 2), 4, dtype=np.float32)
+    return fits.HDUList([fits.PrimaryHDU(),
+                         fits.ImageHDU(sci1, name='SCI', ver=1),
+                         fits.ImageHDU(err1, name='ERR', ver=1),
+                         fits.ImageHDU(sci2, name='SCI', ver=2),
+                         fits.ImageHDU(err2, name='ERR', ver=2)
+                         ])
+
+
 def test_load_image_mult_sci_extension(imviz_helper):
     # test loading an image with multiple SCI extensions and
     # ensure that automatic parenting logic is handled correctly
-    arr = np.zeros((2, 2), dtype=np.float32)
-    hdul = fits.HDUList([fits.PrimaryHDU(),
-                        fits.ImageHDU(arr, name='SCI', ver=1),
-                        fits.ImageHDU(arr, name='ERR', ver=1),
-                        fits.ImageHDU(arr, name='SCI', ver=2),
-                        fits.ImageHDU(arr, name='ERR', ver=2)
-                         ])
+    hdul = _make_multi_sci_hdul()
 
     # imviz_helper._load(hdul, extension=('SCI,1', 'SCI,2', 'ERR,2'))
     imviz_helper.load_data(hdul, ext=('SCI,1', 'SCI,2', 'ERR,2'))
@@ -771,13 +778,7 @@ def test_load_image_mult_sci_extension(imviz_helper):
 
 def test_loaders_extension_select(imviz_helper):
     # tests internal logic of SelectFileExtensionComponent
-    arr = np.zeros((2, 2), dtype=np.float32)
-    hdul = fits.HDUList([fits.PrimaryHDU(),
-                        fits.ImageHDU(arr, name='SCI', ver=1),
-                        fits.ImageHDU(arr, name='ERR', ver=1),
-                        fits.ImageHDU(arr, name='SCI', ver=2),
-                        fits.ImageHDU(arr, name='ERR', ver=2)
-                         ])
+    hdul = _make_multi_sci_hdul()
 
     ldr = imviz_helper.loaders['object']
     ldr.object = hdul
@@ -796,6 +797,118 @@ def test_loaders_extension_select(imviz_helper):
     # case of providing index
     ldr.importer.extension = [1, 3]
     assert ldr.importer.extension.selected == ['1: [SCI,1]', '3: [SCI,2]']
+
+
+class TestParenting:
+
+    @pytest.fixture(autouse=True)
+    def _setup(self, deconfigged_helper):
+        self.dcf_helper = deconfigged_helper
+        self.ldr = deconfigged_helper.loaders['object']
+        self.ldr.object = _make_multi_sci_hdul()
+
+    def test_load_image_parent_default_auto(self):
+        ldr = self.ldr
+        dcf_helper = self.dcf_helper
+
+        # the default parent selection should be 'Auto'
+        assert ldr.importer.parent.selected == 'Auto'
+        assert 'Auto' in ldr.importer.parent.choices
+        assert 'None' in ldr.importer.parent.choices
+
+        ldr.importer.extension = ['SCI,1', 'ERR,1', 'SCI,2', 'ERR,2']
+        ldr.load()
+
+        assert len(dcf_helper._app.data_collection) == 4
+        assert len(dcf_helper.viewers['Image'].data_menu.data_labels_loaded) == 4
+        assert dcf_helper._app._get_assoc_data_parent('Image[ERR,1]') == 'Image[SCI,1]'
+        assert dcf_helper._app._get_assoc_data_children('Image[SCI,1]') == ['Image[ERR,1]']
+
+        assert dcf_helper._app._get_assoc_data_parent('Image[ERR,2]') == 'Image[SCI,2]'
+        assert dcf_helper._app._get_assoc_data_children('Image[SCI,2]') == ['Image[ERR,2]']
+
+    def test_load_image_parent_none(self):
+        """'None' should prevent any parenting, even with multiple extensions"""
+        ldr = self.ldr
+        dcf_helper = self.dcf_helper
+        ldr.importer.extension = ['SCI,1', 'ERR,1', 'SCI,2', 'ERR,2']
+        ldr.importer.parent = 'None'
+        ldr.load()
+
+        assert len(dcf_helper._app.data_collection) == 4
+        assert len(dcf_helper.viewers['Image'].data_menu.data_labels_loaded) == 4
+        for label in ('Image[SCI,1]', 'Image[ERR,1]', 'Image[SCI,2]', 'Image[ERR,2]'):
+            assert dcf_helper._app._get_assoc_data_parent(label) is None
+            assert dcf_helper._app._get_assoc_data_children(label) == []
+
+    @pytest.mark.parametrize('rename', (False, True))
+    def test_load_image_auto_parent_existing_in_dc(self, rename):
+        """
+        'Auto' should associate a child extension loaded later with a matching
+        science extension that is already in the data collection (matched by hash)
+        """
+        ldr = self.ldr
+        dcf_helper = self.dcf_helper
+
+        # first load only the science extension
+        ldr.importer.extension = 'SCI,2'
+        ldr.load()
+
+        primary_label = 'Image[SCI,2]'
+
+        assert [d.label for d in dcf_helper._app.data_collection] == [primary_label]
+        assert dcf_helper._app._get_assoc_data_children(primary_label) == []
+
+        # Now test with a rename in-between
+        if rename:
+            dcf_helper.viewers['Image'].data_menu.rename(primary_label, 'new name')
+            primary_label = 'new name'
+
+        # then load only the matching error extension; it should auto-associate
+        # with the already-loaded science extension
+        ldr.importer.extension = 'ERR,2'
+        ldr.load()
+
+        assert len(dcf_helper.viewers['Image'].data_menu.data_labels_loaded) == 2
+        assert dcf_helper._app._get_assoc_data_parent('Image[ERR,2]') == primary_label
+        assert dcf_helper._app._get_assoc_data_children(primary_label) == ['Image[ERR,2]']
+
+        # This should raise 'Data labels {unavailable} not able to be loaded...'
+        # if parent child association doesn't work correctly (i.e. the previous behavior)
+        # TODO: Remove this if we decide to prevent users from removing child data from viewers
+        dcf_helper.viewers['Image'].data_menu.add_data('Image[ERR,2]')
+
+    # TODO: Remove skip once this behavior is fixed
+    @pytest.mark.skip
+    @pytest.mark.parametrize('remove_from', ('viewer', 'app'))
+    def test_load_unload_parenting_behavior(self, remove_from):
+        ldr = self.ldr
+        dcf_helper = self.dcf_helper
+
+        # Default parent selection is 'auto'
+        ldr.importer.extension = ['SCI,1', 'ERR,1']
+        ldr.load()
+
+        # Get ready for the next round
+        ldr.importer.extension = 'ERR,1'
+        ldr.importer.parent = 'None'
+
+        dm = dcf_helper.viewers['Image'].data_menu
+        dm.layer = ['Image[ERR,1]']
+
+        if remove_from == 'viewer':
+            # Remove from viewer and use data_menu.add_data
+            # TODO: remove this and the parametrization if we decide to
+            #  prevent users from removing child data from viewers (keep remove_from_app though)
+            dm.remove_from_viewer()
+            dm.add_data('Image[ERR,1]')
+        else:
+            # Remove from app and load again
+            dm.remove_from_app()
+            ldr.load()
+
+        assert dcf_helper._app._get_assoc_data_parent('Image[ERR,1]') is None
+        assert dcf_helper._app._get_assoc_data_children('Image[SCI,1]') == []
 
 
 def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):

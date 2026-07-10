@@ -29,7 +29,7 @@ New Features
   top of the loader window when fetching files from selected footprints. Success
   messages auto-dismiss after 4 seconds and a progress indicator appears on the file
   table during loading. [#4203]
-  
+
 - Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#4224]
 
 - Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to
@@ -37,6 +37,17 @@ New Features
 
 - The Virtual Observatory loader now supports querying spectral products
   and catalog targets. [#4060]
+
+- Add "set layer to top" button in plot options. [#4218]
+
+- Show basic table subset information in the Subset Tools plugin. [#4266]
+
+- Implement a "focus mode" that shows a simplified view of a single viewer.  Focus mode can
+  be toggled on/off from the viewer toolbar or via the API. [#4242]
+
+- Parenting now includes a 'None' option to allow multi-extension FITS to be loaded as separate data entries. [#4248]
+
+- 'Auto' parenting can now associate with data already loaded into the app without needing to specify the data label. [#4248]
 
 Mosviz
 ^^^^^^
@@ -54,6 +65,8 @@ Bug Fixes
   either images or 2D spectra. [#4217]
 
 - Fixed main widget not displaying in standalone build. [#4271]
+
+- Fixed a Vue3 button issue that triggers backend calls twice. [#4276, #4277]
 
 Mosviz
 ^^^^^^
@@ -97,6 +110,7 @@ Bug Fixes
 
 - Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264]
 
+- Safely handle case where meta.wcs may be None. [#4272]
 
 Mosviz
 ------

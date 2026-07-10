@@ -19,7 +19,7 @@
       label="Parent Dataset"
       api_hint="ldr.importer.parent ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Advanced: manually select a dataset to associate as the parent of the new data entry, 'Auto' will automatically associate non-science extensions with the science extension."
+      hint="Select a dataset to associate as the parent of the new data entry. 'Auto' associates non-science extensions with the matching science extension; 'None' imports the data without any association."
     ></plugin-dataset-select>
     <plugin-auto-label
       v-model:value="data_label_value"

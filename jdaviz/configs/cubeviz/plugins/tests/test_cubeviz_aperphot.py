@@ -1,5 +1,7 @@
 import numpy as np
 import pytest
+
+
 from astropy import units as u
 from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
@@ -15,20 +17,12 @@ from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
 FLUX_UNITS = ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']
 
 
-@pytest.mark.parametrize('helper_str', ('cubeviz_helper', 'deconfigged_helper'))
-def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj_microns):
-    helper = request.getfixturevalue(helper_str)
-    if helper_str == 'cubeviz_helper':
-        helper.load_data(image_cube_hdu_obj_microns, data_label="test")
-        flux_label = 'test[FLUX]'
-        unc_viewer = 'uncert-viewer'
-        match_str = r'No data item found with label.*'
-
-    elif helper_str == 'deconfigged_helper':
-        helper.load(image_cube_hdu_obj_microns, format='3D Spectrum', data_label="test")
-        flux_label = 'test'
-        unc_viewer = '3D Spectrum (1)'
-        match_str = r'Could not identify viewer with reference.*'
+def test_cubeviz_aperphot_cube_orig_flux(deconfigged_helper, image_cube_hdu_obj_microns):
+    helper = deconfigged_helper
+    helper.load(image_cube_hdu_obj_microns, format='3D Spectrum', data_label="test")
+    flux_label = 'test'
+    unc_viewer = '3D Spectrum (1)'
+    match_str = r'Could not identify viewer with reference.*'
 
     flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1*pix^-2")
     solid_angle_unit = PIX2
@@ -120,7 +114,8 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
     assert "cannot be negative" in plg._obj.result_failed_msg
 
 
-def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cube_hdu_obj_microns):
+def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper,
+                                                       image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
     flux_unit = u.Unit("erg*s^-1*cm^-2*Angstrom^-1*pix^-2")  # actually a sb
     solid_angle_unit = PIX2
@@ -159,7 +154,7 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
 
 
 @pytest.mark.parametrize("cube_unit", [u.MJy / u.sr, u.MJy, u.MJy / PIX2])
-def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
+def test_cubeviz_aperphot_cube_sr_and_pix2(deconfigged_helper,
                                            spectrum1d_cube_custom_fluxunit,
                                            cube_unit):
     # tests aperture photometry outputs between different inputs of flux (which
@@ -168,15 +163,15 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
     # set so the output values between units will be the same
 
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=cube_unit)
-    cubeviz_helper.load_data(cube, data_label="test")
+    deconfigged_helper.load(cube, data_label="test")
 
     aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
     bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
-    cubeviz_helper.plugins['Subset Tools'].import_region(
+    deconfigged_helper.plugins['Subset Tools'].import_region(
         [aper, bg], combination_mode='new')
 
-    plg = cubeviz_helper.plugins["Aperture Photometry"]
-    plg.dataset.selected = "test[FLUX]"
+    plg = deconfigged_helper.plugins["Aperture Photometry"]
+    plg.dataset.selected = "test"
     plg.aperture.selected = "Subset 1"
     plg.background.selected = "Subset 2"
 
@@ -203,7 +198,7 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
         cube_unit = u.MJy / solid_angle_unit  # cube unit in app is now per pix2
 
     plg._obj.vue_do_aper_phot()
-    row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
+    row = deconfigged_helper.plugins['Aperture Photometry'].export_table()[0]
 
     # Basically, we should recover the input rectangle here, minus background.
     assert_allclose(row["xcenter"], 3 * u.pix)
@@ -225,21 +220,21 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
     assert_quantity_allclose(row["slice_wave"], 0.46236 * u.um)
 
 
-def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper,
+def test_cubeviz_aperphot_cube_orig_flux_mjysr(deconfigged_helper,
                                                spectrum1d_cube_custom_fluxunit):
     # this test is essentially the same as test_cubeviz_aperphot_cube_sr_and_pix2
     # but for a single surface brightness unit and without changing the pixel
     # area to make outputs the same. it was requested in review to keep both tests
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / u.sr)
-    cubeviz_helper.load_data(cube, data_label="test")
+    deconfigged_helper.load(cube, data_label="test")
 
     aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
     bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
-    cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg],
-                                                         combination_mode='new')
+    deconfigged_helper.plugins['Subset Tools'].import_region([aper, bg],
+                                                             combination_mode='new')
 
-    plg = cubeviz_helper.plugins["Aperture Photometry"]
-    plg.dataset.selected = "test[FLUX]"
+    plg = deconfigged_helper.plugins["Aperture Photometry"]
+    plg.dataset.selected = "test"
     plg.aperture.selected = "Subset 1"
     plg.background.selected = "Subset 2"
 
@@ -248,7 +243,7 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper,
     assert_allclose(plg.flux_scaling, 0.003631)
 
     plg._obj.vue_do_aper_phot()
-    row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
+    row = deconfigged_helper.plugins['Aperture Photometry'].export_table()[0]
 
     # Basically, we should recover the input rectangle here, minus background.
     assert_allclose(row["xcenter"], 3 * u.pix)
@@ -298,7 +293,7 @@ def _compare_table_units(orig_tab, new_tab, orig_flux_unit=None,
 @pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in FLUX_UNITS])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
 @pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in FLUX_UNITS])
-def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
+def test_cubeviz_aperphot_unit_conversions(deconfigged_helper,
                                            spectrum1d_cube_custom_fluxunit,
                                            flux_unit, angle_unit, new_flux_unit):
     """
@@ -326,19 +321,19 @@ def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
     # load cube with specified unit
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=cube_unit, shape=(5, 5, 4),
                                            with_uncerts=True)
-    cubeviz_helper.load_data(cube, data_label="test")
+    deconfigged_helper.load(cube, data_label="test")
 
     # get plugins
-    st = cubeviz_helper.plugins['Subset Tools']
-    ap = cubeviz_helper.plugins['Aperture Photometry']
-    uc = cubeviz_helper.plugins['Unit Conversion']
+    st = deconfigged_helper.plugins['Subset Tools']
+    ap = deconfigged_helper.plugins['Aperture Photometry']
+    uc = deconfigged_helper.plugins['Unit Conversion']
 
     # load aperture
     aper = RectanglePixelRegion(center=PixCoord(x=2, y=3), width=1, height=1)
     st.import_region(aper, combination_mode='new')
 
     # select dataset and aperture in plugin
-    ap.dataset.selected = "test[FLUX]"
+    ap.dataset.selected = "test"
     ap.aperture.selected = "Subset 1"
 
     # equivalencies for unit conversion, we only need u.spectral_density because

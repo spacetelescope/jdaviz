@@ -225,7 +225,7 @@ def test_background_extraction_and_display(specviz2d_helper):
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_horne_extract_self_profile(specviz2d_helper):
+def test_horne_extract_self_profile(deconfigged_helper):
 
     spec2d = np.zeros((40, 100))
     spec2dvar = np.ones((40, 100))
@@ -243,8 +243,8 @@ def test_horne_extract_self_profile(specviz2d_helper):
                           flux=spec2d*u.Jy,
                           uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
 
-    specviz2d_helper.load(objectspec, format='2D Spectrum')
-    pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
+    deconfigged_helper.load(objectspec, format='2D Spectrum')
+    pext = deconfigged_helper.plugins['2D Spectral Extraction']._obj
 
     trace_fit = tracing.FitTrace(objectspec,
                                  trace_model=models.Polynomial1D(degree=1),
@@ -301,7 +301,7 @@ def test_horne_extract_self_profile(specviz2d_helper):
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
-def test_boxcar_uncertainty_propagation_via_plugin(specviz2d_helper):
+def test_boxcar_uncertainty_propagation_via_plugin(deconfigged_helper):
     """
     This is an identical test to the test for uncertainty propogation in
     boxcar extraction in specreduce, and is meant to make sure going through
@@ -318,8 +318,8 @@ def test_boxcar_uncertainty_propagation_via_plugin(specviz2d_helper):
         spectral_axis=np.arange(ncols) * u.pix,
     )
 
-    specviz2d_helper.load(img, format='2D Spectrum')
-    pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
+    deconfigged_helper.load(img, format='2D Spectrum')
+    pext = deconfigged_helper.plugins['2D Spectral Extraction']._obj
 
     pext.trace_type_selected = 'Flat'
     pext.trace_pixel = nrows // 2

@@ -1,10 +1,6 @@
-import pytest
-
 from jdaviz.core.loaders.resolvers.url.url import URLResolver
 
 
-# Ignore more strict 404 handling in python 3.14 for now
-@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_url_resolver_is_valid(deconfigged_helper):
     """Test _check_is_valid for URLResolver: success and failure cases."""
     resolver = URLResolver(app=deconfigged_helper._app)

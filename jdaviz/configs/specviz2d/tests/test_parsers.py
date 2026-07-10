@@ -17,20 +17,20 @@ from jdaviz.configs.imviz.tests.utils import create_example_gwcs
                           ' used to avoid an error when handling 3D WCS with 2D data.'
                           'The temporary fix will be removed once an upstream solution'
                           'is implemented.')
-def test_2d_parser_jwst(specviz2d_helper):
+def test_2d_parser_jwst(deconfigged_helper):
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
 
-    specviz2d_helper.load_data(spectrum_2d=fn)
-    assert len(specviz2d_helper._app.data_collection) == 2
+    deconfigged_helper.load(spectrum_2d=fn, format='2D Spectrum')
+    assert len(deconfigged_helper._app.data_collection) == 2
 
-    dc_0 = specviz2d_helper._app.data_collection[0]
+    dc_0 = deconfigged_helper._app.data_collection[0]
     assert dc_0.label == 'Spectrum 2D'
     assert PRIHDR_KEY not in dc_0.meta
     assert 'header' not in dc_0.meta
     assert dc_0.meta['DETECTOR'] == 'MIRIMAGE'
     assert dc_0.get_component('flux').units == 'MJy / sr'
 
-    dc_1 = specviz2d_helper._app.data_collection[1]
+    dc_1 = deconfigged_helper._app.data_collection[1]
     assert dc_1.label == 'Spectrum 1D'
     assert 'header' not in dc_1.meta
 
@@ -38,8 +38,8 @@ def test_2d_parser_jwst(specviz2d_helper):
     assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
     # Also check the coordinates info panel.
-    viewer_2d = specviz2d_helper._app.get_viewer('spectrum-2d-viewer')
-    label_mouseover = specviz2d_helper._coords_info
+    viewer_2d = deconfigged_helper._app.get_viewer('spectrum-2d-viewer')
+    label_mouseover = deconfigged_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 350, 'y': 30}})
     assert label_mouseover.as_text() == ('Pixel x=0350.0 y=0030.0 Value +3.22142e+04 MJy / sr',
@@ -48,11 +48,12 @@ def test_2d_parser_jwst(specviz2d_helper):
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
-def test_2d_parser_ext_hdulist(specviz2d_helper):
+def test_2d_parser_ext_hdulist(deconfigged_helper):
     # jw01538-o160_s00004_nirspec_f170lp-g235h-s1600a1-sub2048_s2d
-    specviz2d_helper.load('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits',  # noqa
-                          format='2D Spectrum', cache=True)
-    dc_0 = specviz2d_helper._app.data_collection[0]
+    deconfigged_helper.load(
+        'https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits',
+        format='2D Spectrum', cache=True)
+    dc_0 = deconfigged_helper._app.data_collection[0]
     assert dc_0.get_component('flux').shape == (29, 3416)
 
 
