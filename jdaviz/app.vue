@@ -13,7 +13,6 @@
         :key="typeof widget === 'string' ? widget : index"
       ></jupyter-widget>
     </div>
-
     <v-app-bar v-if="!state_focus_viewer" color="toolbar" theme="dark" :density="state_settings.dense_toolbar ? 'compact' : 'default'" flat absolute :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
 
       <v-toolbar-items v-if="config === 'deconfigged'">
