@@ -657,7 +657,7 @@ def test_spectral_extraction_scientific_validation(
 @pytest.mark.slow
 @pytest.mark.parametrize("flux_angle_unit", [(u.Unit(x), u.sr) for x in FLUX_UNITS]  # noqa
                          + [(u.Unit(x), PIX2) for x in FLUX_UNITS])  # noqa
-def test_spectral_extraction_flux_unit_conversions(deconfigged_helper,
+def test_spectral_extraction_flux_unit_conversions(cubeviz_helper,
                                                    spectrum1d_cube_custom_fluxunit,
                                                    flux_angle_unit):
     """
@@ -673,12 +673,13 @@ def test_spectral_extraction_flux_unit_conversions(deconfigged_helper,
     sb_cube = spectrum1d_cube_custom_fluxunit(fluxunit=flux_unit / angle_unit,
                                               shape=(5, 4, 4),
                                               with_uncerts=True)
-    deconfigged_helper.load(sb_cube, format='3D Spectrum')
+    cubeviz_helper.load(sb_cube)
 
-    spectrum_viewer = deconfigged_helper.viewers['3D Spectrum']._obj
+    spectrum_viewer = cubeviz_helper._app.get_viewer(
+        cubeviz_helper._default_spectrum_viewer_reference_name)
 
-    uc = deconfigged_helper.plugins["Unit Conversion"]
-    se = deconfigged_helper.plugins['3D Spectral Extraction']
+    uc = cubeviz_helper.plugins["Unit Conversion"]
+    se = cubeviz_helper.plugins['3D Spectral Extraction']
     se.keep_active = True  # keep active for access to preview markers
 
     # equivalencies for unit conversion, for comparison of outputs
@@ -687,6 +688,7 @@ def test_spectral_extraction_flux_unit_conversions(deconfigged_helper,
 
     for new_flux_unit in FLUX_UNITS:
         if new_flux_unit != flux_unit:
+
             uc.flux_unit.selected = flux_unit.to_string()
             uc.spectral_y_type.selected = 'Flux'
 
