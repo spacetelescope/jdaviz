@@ -18,6 +18,7 @@ Bug Fixes
 
 - Fix horizontal spacing of the app-level toolbar for small displays. [#4245]
 
+- Safely handle case where meta.wcs may be None. [#4272]
 
 5.0.2 (2026-06-12)
 ==================

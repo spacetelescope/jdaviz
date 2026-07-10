@@ -359,7 +359,9 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
         # WCS-only layers have pixel scales in meta:
         pixel_scales = u.Quantity(data.meta['_pixel_scales'])
 
-    elif 'wcsinfo' in data.meta and 'wcs' in data.meta and 'ra_ref' in data.meta['wcsinfo']:
+    elif (data.meta.get('wcsinfo', None) is not None
+          and data.meta.get('wcs', None) is not None
+          and 'ra_ref' in data.meta['wcsinfo']):
         # GWCS doesn't yet have a pixel scale attr, so approximate
         # its behavior using the pixel scale method from jwst:
         pixel_scales = (2 * [compute_scale(
