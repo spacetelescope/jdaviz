@@ -157,12 +157,20 @@ class PresetURLResolver(URLResolver):
         # which would attempt an eager download and leak SSL sockets.
         # Format detection happens lazily when first needed
         # (via load() or open_in_tray()).
+        # The _resolver_input_updated override below ensures no download
+        # happens until _ensure_format_detection() is called explicitly.
         with self.defer_resolver_input_updated():
             self.url = url
 
         if title is not None:
             self.title = title
         self.hide_resolver_inputs = True
+
+    def _resolver_input_updated(self, msg={}):
+        """Skip format detection until explicitly requested via _ensure_format_detection."""
+        if not self._format_detection_done:
+            return
+        super()._resolver_input_updated(msg=msg)
 
     def _ensure_format_detection(self):
         """Trigger format detection if not yet done."""
