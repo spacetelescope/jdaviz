@@ -2,11 +2,11 @@
   <v-menu
     absolute
     location="bottom start"
-    v-if="dataset_items.length > 0 || subset_tools.length > 0"
+    v-if="dataset_items.length > 0 || (subset_tools.length > 0 && !focus_mode)"
     >
     <template v-slot:activator="{ props }">
       <j-tooltip
-        v-if="dataset_items.length > 0 || subset_tools.length > 0"
+        v-if="dataset_items.length > 0 || (subset_tools.length > 0 && !focus_mode)"
         tooltipcontent="Add data or subset to viewer"
       >
         <v-btn
@@ -43,9 +43,9 @@
           </j-tooltip>
         </div>
       </v-list-item>
-      <v-subheader v-if="subset_tools.length > 0"><span>Create Subset</span></v-subheader>
+      <v-subheader v-if="subset_tools.length > 0 && !focus_mode"><span>Create Subset</span></v-subheader>
       <v-list-item
-        v-if="subset_tools.length > 0"
+        v-if="subset_tools.length > 0 && !focus_mode"
       >
         <div class="v-list-item-content" style="display: inline-block">
           <j-tooltip
@@ -83,6 +83,6 @@ export default {
         lock_hover_api_hint: false,
       }
     },
-  props: ['dataset_items', 'subset_tools', 'loaded_n_data', 'api_hints_enabled', 'icons'],
+  props: ['dataset_items', 'subset_tools', 'loaded_n_data', 'api_hints_enabled', 'icons', 'focus_mode'],
 };
 </script>

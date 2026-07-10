@@ -1,6 +1,6 @@
 <template>
   <span v-if="icon !== undefined">
-    <v-icon v-if="String(icon).startsWith('mdi-')" :size="icon_size || 16">
+    <v-icon v-if="String(icon).startsWith('mdi-')" :size="icon_size || 16" :color="color">
       {{icon}}
     </v-icon>
     <span v-else-if="icons && Object.keys(icons).indexOf(icon) !== -1">
@@ -17,7 +17,7 @@ export default {
   props: ['span_style', 'color', 'icon', 'icons', 'icon_size', 'linewidth', 'linestyle', 'prevent_invert_if_dark'],
   computed: {
     borderStyle() {
-      if (this.$props.linewidth > 0) { 
+      if (this.$props.linewidth > 0) {
         return 'border-bottom: '+this.$props.linewidth+'px '+this.$props.linestyle+' '+this.$props.color
       }
       return ''
@@ -28,14 +28,20 @@ export default {
 
 <style scoped>
 .layer-viewer-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  box-sizing: border-box;
   width: 20px;
+  min-width: 20px;
   height: 20px;
-  line-height: 10px;
-  margin-top: 4px;
+  line-height: 1;
+  margin-top: 0;
   margin-right: 2px;
-  padding-top: 3px;
+  padding-top: 0;
   text-align: center;
-  font-size: 12pt;
-  font-weight: bold; 
+  font-size: 12px;
+  font-weight: bold;
 }
 </style>

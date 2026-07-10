@@ -69,6 +69,7 @@ class BlinkOnce(CheckableTool):
     action_text = 'Go to next image'
     tool_tip = ('Click on the viewer or press "b" to display the next image, '
                 'or right-click or press "B" to display the previous')
+    keep_visible_in_focus_mode = True
 
     def activate(self):
         self.viewer.add_event_callback(self.on_click, events=['click', 'contextmenu'])
@@ -106,6 +107,7 @@ class ContrastBias(CheckableTool):
     tool_id = 'jdaviz:contrastbias'
     action_text = 'Adjust contrast/bias'
     tool_tip = 'Click and drag to adjust contrast and bias, double-click to reset'
+    keep_visible_in_focus_mode = True
 
     def __init__(self, viewer, **kwargs):
         super().__init__(viewer, **kwargs)

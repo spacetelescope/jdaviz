@@ -42,6 +42,9 @@ New Features
 
 - Show basic table subset information in the Subset Tools plugin. [#4266]
 
+- Implement a "focus mode" that shows a simplified view of a single viewer.  Focus mode can
+  be toggled on/off from the viewer toolbar or via the API. [#4242]
+
 Mosviz
 ^^^^^^
 
