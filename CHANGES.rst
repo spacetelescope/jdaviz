@@ -38,6 +38,10 @@ New Features
 - The Virtual Observatory loader now supports querying spectral products
   and catalog targets. [#4060]
 
+- Add "set layer to top" button in plot options. [#4218]
+
+- Show basic table subset information in the Subset Tools plugin. [#4266]
+
 - Implement a "focus mode" that shows a simplified view of a single viewer.  Focus mode can
   be toggled on/off from the viewer toolbar or via the API. [#4242]
 
@@ -57,6 +61,8 @@ Bug Fixes
   either images or 2D spectra. [#4217]
 
 - Fixed main widget not displaying in standalone build. [#4271]
+
+- Fixed a Vue3 button issue that triggers backend calls twice. [#4276]
 
 Mosviz
 ^^^^^^
