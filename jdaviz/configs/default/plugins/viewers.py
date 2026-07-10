@@ -33,6 +33,7 @@ from specutils import Spectrum
 
 from traitlets import Bool, Unicode
 
+from jdaviz.components.table_widget import JdavizTableWidget
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
@@ -1534,12 +1535,23 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
+                    ['jdaviz:table_add_column'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
                      'jdaviz:viewer_popout']
                    ]
 
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
+
+        # Replace the default TableGlue widget with JdavizTableWidget, which
+        # adds inline column-header rename/delete UX.  All TableViewer methods
+        # reference self.widget_table at call-time, so a simple reassignment
+        # here is sufficient — no glue-jupyter changes required.
+        self.widget_table = JdavizTableWidget(
+            data=None,
+            apply_filter=self.apply_filter,
+            state=self.state,
+        )
 
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True
@@ -1554,6 +1566,13 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Also update selection highlight marks when checked rows change
         self.widget_table.observe(self._on_checked_changed, names=['checked'])
         self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
+
+        # Inline column-header editing
+        self._update_non_removable_headers()
+        self.widget_table.observe(self._on_header_renamed, names=['header_renamed'])
+        self.widget_table.observe(self._on_header_deleted, names=['header_deleted'])
+        # Re-sync role labels whenever the underlying data changes
+        self.widget_table.observe(self._on_table_data_changed, names=['data'])
 
         # Subscribe to RestoreToolbarMessage to clean up checkbox state
         # when toolbar is restored (e.g., by clicking X on custom toolbar)
@@ -1654,7 +1673,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             # Add new column
             tab.data.add_component(data, column_name)
 
-    def add_column(self, column_name, data=None):
+    def add_column(self, column_name, data=None, fill_value=None):
         """
         Add a new data column to the table.
 
@@ -1664,8 +1683,12 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             The name of the column to add.
         data : list-like, optional
             The data for the column. Must be the same length as the number of
-            rows in the table. If None, the column will be filled with None-type
-            values.
+            rows in the table. If None, the column will be filled with
+            ``fill_value``.
+        fill_value : scalar, optional
+            Value to use when ``data`` is None.  Defaults to ``None`` (stored
+            as object-dtype None values). Pass ``np.nan`` for NaN-filled float
+            columns or any string/number to pre-fill with a constant.
 
         Raises
         ------
@@ -1673,20 +1696,23 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             If column_name is not provided, not a string, or if data length does
             not match number of rows in the table.
         """
+        import numpy as np  # local for safety
 
         # make sure column name is not in table already
         if column_name in [c.label for c in self.widget_table.data.components]:
             raise ValueError(f"Column '{column_name}' already exists in the table. Use update_column to update it instead.")  # noqa: E501
 
+        if data is None and fill_value is not None:
+            nrows = self.widget_table.data.shape[0]
+            data = np.full(nrows, fill_value)
+
         self._add_or_update_column(column_name, data)
 
-        # and make the user-added column editable
-
-        # we already know column_name can safely be cast to a string from check
-        # in _add_or_update_column
+        # make the new column editable
         column_name = str(column_name)
         cid = self.layers[0].layer.data.id[column_name]
         self.state.editable_components = list(self.state.editable_components) + [cid]
+        self._update_non_removable_headers()
 
     def update_column(self, column_name, data):
         """
@@ -1804,3 +1830,93 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Clear selection marks in image viewers when this table viewer is removed
         # (toolbar cleanup is handled generically by NestedJupyterToolbar)
         self._clear_selection_marks()
+
+    # ------------------------------------------------------------------
+    # Inline column-header editing helpers
+    # ------------------------------------------------------------------
+
+    def _on_table_data_changed(self, change):
+        """Re-sync role-based non-removable headers whenever table data is set.
+
+        Reads meta directly from change['new'] rather than via _iter_table_data(),
+        because this observer fires while TableLayerArtist is still being
+        constructed — before the layer has been appended to self.layers.
+        """
+        data = change['new']
+        if data is None:
+            self.widget_table.non_removable_headers = []
+            return
+        role = set()
+        meta = getattr(data, 'meta', {}) or {}
+        for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
+                    '_jdaviz_loader_x_col', '_jdaviz_loader_y_col'):
+            val = meta.get(key)
+            if val:
+                role.add(val)
+        if '_jdaviz_loader_x_col' in meta:
+            role.add('X')
+        if '_jdaviz_loader_y_col' in meta:
+            role.add('Y')
+        if '_jdaviz_id_col' in meta:
+            role.add('ID')
+        self.widget_table.non_removable_headers = sorted(role)
+
+    def _iter_table_data(self):
+        """Yield each unique glue Data object visible in this viewer."""
+        seen = set()
+        for layer_artist in self.layers:
+            data = layer_artist.layer
+            if hasattr(data, 'data'):  # Subset
+                data = data.data
+            if id(data) not in seen:
+                seen.add(id(data))
+                yield data
+
+    def _role_labels(self):
+        """Return the set of column names that are non-removable role columns."""
+        role = set()
+        for data in self._iter_table_data():
+            meta = getattr(data, 'meta', {}) or {}
+            for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
+                        '_jdaviz_loader_x_col', '_jdaviz_loader_y_col'):
+                val = meta.get(key)
+                if val:
+                    role.add(val)
+            if '_jdaviz_loader_x_col' in meta:
+                role.add('X')
+            if '_jdaviz_loader_y_col' in meta:
+                role.add('Y')
+            if '_jdaviz_id_col' in meta:
+                role.add('ID')
+        return role
+
+    def _update_non_removable_headers(self):
+        """Sync non_removable_headers to the table widget."""
+        self.widget_table.non_removable_headers = sorted(self._role_labels())
+
+    def _on_header_renamed(self, change):
+        """Handle a column rename committed inline in the table header."""
+        data = change['new']
+        old_name = data.get('column', '')
+        new_name = data.get('newName', '')
+        if not old_name or not new_name or old_name == new_name:
+            return
+        for glue_data in self._iter_table_data():
+            if old_name in [c.label for c in glue_data.main_components]:
+                glue_data.id[old_name].label = new_name
+        self.redraw()
+        self._update_non_removable_headers()
+
+    def _on_header_deleted(self, change):
+        """Handle a column deletion triggered from the inline table header editor."""
+        label = change['new']
+        if not label:
+            return
+        for glue_data in self._iter_table_data():
+            if label in [c.label for c in glue_data.main_components]:
+                cid = glue_data.id[label]
+                self.state.editable_components = [
+                    c for c in self.state.editable_components if c is not cid
+                ]
+                glue_data.remove_component(cid)
+        self._update_non_removable_headers()
