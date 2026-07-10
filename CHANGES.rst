@@ -106,6 +106,7 @@ Bug Fixes
 
 - Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264]
 
+- Safely handle case where meta.wcs may be None. [#4272]
 
 Mosviz
 ------

@@ -617,7 +617,7 @@ def _jwst2data(hdu, hdulist, try_gwcs_to_fits_sip=False):
                 bunit = ''
 
             # This is instance of gwcs.WCS, not astropy.wcs.WCS
-            if 'wcs' in dm_meta:
+            if dm_meta.get('wcs', None) is not None:
                 gwcs = dm_meta['wcs']
 
                 if try_gwcs_to_fits_sip:
