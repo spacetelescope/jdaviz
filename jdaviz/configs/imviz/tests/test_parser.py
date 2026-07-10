@@ -79,15 +79,15 @@ class TestParseImage:
         with pytest.raises(ValueError, match='app is None'):
             _parse_image(None, None, None, False)
 
-    def test_hdulist_no_image(self, imviz_helper):
+    def test_hdulist_no_image(self, deconfigged_helper):
         hdulist = fits.HDUList([fits.PrimaryHDU()])
         with pytest.raises(ValueError, match='does not have any FITS image'):
-            parse_data(imviz_helper._app, hdulist)
+            parse_data(deconfigged_helper._app, hdulist)
 
     @pytest.mark.parametrize('some_obj', (WCS(), [[1, 2], [3, 4]]))
-    def test_invalid_file_obj(self, imviz_helper, some_obj):
+    def test_invalid_file_obj(self, deconfigged_helper, some_obj):
         with pytest.raises(NotImplementedError, match='Imviz does not support'):
-            parse_data(imviz_helper._app, some_obj)
+            parse_data(deconfigged_helper._app, some_obj)
 
     def test_parse_numpy_array_1d_2d(self, imviz_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this array with ndim=1'):
@@ -143,16 +143,16 @@ class TestParseImage:
             assert_array_equal(comp.data, i)
 
     @pytest.mark.filterwarnings('ignore:.*path should be string, bytes, os.PathLike or integer, not ndarray.*:DeprecationWarning')  # noqa
-    def test_parse_numpy_array_3d_too_many(self, imviz_helper):
+    def test_parse_numpy_array_3d_too_many(self, deconfigged_helper):
         # When more than 16 slices are provided, only the first 16 are loaded
         # Note: warning about 16+ slices is emitted during importer creation but is
         # suppressed during the resolver's format probing phase (by design)
-        imviz_helper.load_data(np.ones((17, 5, 5)))
+        deconfigged_helper.load(np.ones((17, 5, 5)), format='Image')
 
         # Verify that only 16 slices are loaded (the limit)
-        assert len(imviz_helper._app.data_collection) == 16
-        assert imviz_helper._app.data_collection[0].shape == (5, 5)
-        assert imviz_helper._app.data_collection[15].shape == (5, 5)
+        assert len(deconfigged_helper._app.data_collection) == 1
+        assert deconfigged_helper._app.data_collection[0].shape == (5, 5)
+        assert deconfigged_helper._app.data_collection[-1].shape == (5, 5)
 
     def test_parse_numpy_array_4d(self, imviz_helper):
         # Check logic is in higher level method.
@@ -164,18 +164,18 @@ class TestParseImage:
         with pytest.raises(ValueError, match='cannot load this array with ndim'):
             imviz_helper.load_data(np.ones((2, 2, 5, 5)))
 
-    def test_parse_nddata_simple(self, imviz_helper):
+    def test_parse_nddata_simple(self, deconfigged_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this NDData with ndim=1'):
-            parse_data(imviz_helper._app, NDData([1, 2, 3, 4]))
+            parse_data(deconfigged_helper._app, NDData([1, 2, 3, 4]))
 
         ndd = NDData([[1, 2], [3, 4]])
-        imviz_helper.load_data(ndd, data_label='some_data', show_in_viewer=False)
-        data = imviz_helper._app.data_collection[0]
+        deconfigged_helper.load(ndd, data_label='some_data', show_in_viewer=False)
+        data = deconfigged_helper._app.data_collection[0]
         comp = data.get_component('DATA')
         assert data.label == 'some_data[DATA]'
         assert data.shape == (2, 2)
         assert comp.data.shape == (2, 2)
-        assert len(imviz_helper._app.data_collection) == 1
+        assert len(deconfigged_helper._app.data_collection) == 1
 
     @pytest.mark.parametrize(
         ('ndd', 'attributes'),
@@ -183,23 +183,23 @@ class TestParseImage:
           ['DATA', 'MASK']),
          (NDData([[1, 2], [3, 4]], uncertainty=StdDevUncertainty([[0.1, 0.2], [0.3, 0.4]])),
           ['DATA', 'UNCERTAINTY'])])
-    def test_parse_nddata_with_one_only(self, imviz_helper, ndd, attributes):
-        imviz_helper.load_data(ndd, data_label='some_data', show_in_viewer=False)
+    def test_parse_nddata_with_one_only(self, deconfigged_helper, ndd, attributes):
+        deconfigged_helper.load(ndd, data_label='some_data', show_in_viewer=False)
         for i, attrib in enumerate(attributes):
-            data = imviz_helper._app.data_collection[i]
+            data = deconfigged_helper._app.data_collection[i]
             comp = data.get_component(attrib)
             assert data.label == f'some_data[{attrib}]'
             assert data.shape == (2, 2)
             assert comp.data.shape == (2, 2)
-        assert len(imviz_helper._app.data_collection) == 2
+        assert len(deconfigged_helper._app.data_collection) == 2
 
-    def test_parse_nddata_with_everything(self, imviz_helper):
+    def test_parse_nddata_with_everything(self, deconfigged_helper):
         ndd = NDData([[1, 2], [3, 4]], mask=[[True, False], [False, False]],
                      uncertainty=StdDevUncertainty([[0.1, 0.2], [0.3, 0.4]]),
                      unit=u.MJy/u.sr, wcs=WCS(naxis=2), meta={'name': 'my_ndd'})
-        imviz_helper.load_data(ndd, data_label='some_data', show_in_viewer=False)
+        deconfigged_helper.load(ndd, data_label='some_data', show_in_viewer=False)
         for i, attrib in enumerate(['DATA', 'MASK', 'UNCERTAINTY']):
-            data = imviz_helper._app.data_collection[i]
+            data = deconfigged_helper._app.data_collection[i]
             comp = data.get_component(attrib)
             assert data.label == f'some_data[{attrib}]'
             assert data.shape == (2, 2)
@@ -210,11 +210,11 @@ class TestParseImage:
                 assert comp.units == ''
             else:
                 assert comp.units == 'MJy / sr'
-        assert len(imviz_helper._app.data_collection) == 3
+        assert len(deconfigged_helper._app.data_collection) == 3
 
     @pytest.mark.filterwarnings('ignore:.* is a low contrast image')
     @pytest.mark.parametrize('format', ('jpg', 'png'))
-    def test_parse_rgba(self, imviz_helper, tmp_path, format):
+    def test_parse_rgba(self, deconfigged_helper, tmp_path, format):
         if format == 'png':  # Cross-test PNG with RGBA
             a = np.zeros((10, 10, 4), dtype='uint8')
         else:  # Cross-test JPG with RGB only
@@ -223,8 +223,8 @@ class TestParseImage:
         filename = str(tmp_path / f'myimage.{format}')
         imsave(filename, a)
 
-        imviz_helper.load_data(filename, show_in_viewer=False)
-        data = imviz_helper._app.data_collection[0]
+        deconfigged_helper.load(filename, show_in_viewer=False, format='Image')
+        data = deconfigged_helper._app.data_collection[0]
         assert data.label == 'myimage'
         assert data.shape == (10, 10)
 
@@ -240,7 +240,7 @@ class TestParseImage:
             hdu.writeto(fpath, overwrite=True)
 
         flist = ','.join(flist)
-        imviz_helper.load_data(flist, show_in_viewer=False)
+        imviz_helper.load_data(flist, show_in_viewer=False, format='Image')
 
         for i in range(2):
             data = imviz_helper._app.data_collection[i]
@@ -251,9 +251,9 @@ class TestParseImage:
             np.testing.assert_allclose(comp.data.mean(), i)
 
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
-            imviz_helper.load_data(flist, data_label='foo', show_in_viewer=False)
+            imviz_helper.load_data(flist, data_label='foo', show_in_viewer=False, format='Image')
 
-    def test_parse_asdf_in_fits_4d(self, imviz_helper, tmp_path):
+    def test_parse_asdf_in_fits_4d(self, deconfigged_helper, tmp_path):
         hdulist = fits.HDUList([
             fits.PrimaryHDU(),
             fits.ImageHDU(np.zeros((1, 2, 5, 5)), name='SCI')])
@@ -262,13 +262,14 @@ class TestParseImage:
         asdf_in_fits.write(filename, tree, hdulist=hdulist, overwrite=True)
 
         with pytest.raises(ValueError, match='Imviz cannot load this HDU'):
-            parse_data(imviz_helper._app, filename)
+            parse_data(deconfigged_helper._app, filename)
 
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_helper):
 
         # Default behavior: Science image
-        imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100, gwcs_to_fits_sip=False)
+        imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100,
+                               gwcs_to_fits_sip=False)
 
         data = imviz_helper._app.data_collection[0]
         comp = data.get_component('data')
@@ -391,9 +392,10 @@ class TestParseImage:
             parse_data(imviz_helper._app, filename, ext='DOES_NOT_EXIST', data_label='foo')
 
     @pytest.mark.remote_data
-    def test_parse_jwst_niriss_grism(self, imviz_helper):
-        imviz_helper.load_data(self.jwst_asdf_url_2, cache=True, show_in_viewer=False)
-        data = imviz_helper._app.data_collection[0]
+    def test_parse_jwst_niriss_grism(self, deconfigged_helper):
+        deconfigged_helper.load(self.jwst_asdf_url_2, cache=True,
+                                show_in_viewer=False, format='Image')
+        data = deconfigged_helper._app.data_collection[0]
         for label in ('SCI,1', 'data'):
             if label in data.component_ids():
                 comp = data.get_component(label)
@@ -533,28 +535,28 @@ class TestParseImage:
     @pytest.mark.parametrize(
         ('gwcs_to_fits_sip', 'expected_cls'),
         ((True, WCS), (False, GWCS),), ids=('True-WCS', 'False-GWCS'))
-    def test_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
+    def test_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, deconfigged_helper):
         """
         Test gwcs_to_fits_sip as an argument to load_data until it is
         fully deprecated.
         """
-        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True,
-                               gwcs_to_fits_sip=gwcs_to_fits_sip)
+        deconfigged_helper.load(self.jwst_asdf_url_1, cache=True,
+                                gwcs_to_fits_sip=gwcs_to_fits_sip, format='Image')
 
-        data = imviz_helper._app.data_collection[0]
+        data = deconfigged_helper._app.data_collection[0]
         assert isinstance(data.coords, expected_cls)
 
 
-def test_load_image_imviz_without_format(imviz_helper, tmp_path):
+def test_load_image_imviz_without_format(deconfigged_helper, tmp_path):
     """Test loading an image into Imviz without explicitly specifying format."""
 
     hdu = fits.PrimaryHDU(np.zeros((10, 10)) + 42)
     fpath = tmp_path / 'test_image.fits'
     hdu.writeto(fpath, overwrite=True)
 
-    imviz_helper.load(str(fpath))
+    deconfigged_helper.load(str(fpath))
 
-    data = imviz_helper._app.data_collection[0]
+    data = deconfigged_helper._app.data_collection[0]
     assert data.label == 'test_image[PRIMARY,1]'
     assert data.shape == (10, 10)
 

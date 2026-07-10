@@ -9,6 +9,7 @@ def test_previews_roman(rampviz_helper, roman_level_1_ramp):
     _ramp_extraction_previews(rampviz_helper, roman_level_1_ramp)
 
 
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
 def test_previews_jwst(rampviz_helper, jwst_level_1b_ramp):
     _ramp_extraction_previews(rampviz_helper, jwst_level_1b_ramp)
 

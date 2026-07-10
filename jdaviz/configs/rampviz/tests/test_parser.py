@@ -1,4 +1,3 @@
-
 import pytest
 from jdaviz.utils import cached_uri
 
@@ -43,7 +42,7 @@ def test_load_level_1_and_2(
     "mast:JWST/product/jw01181003001_08201_00003_mirimage_uncal.fits",
     "mast:JWST/product/jw03383196001_04201_00004_nis_uncal.fits"
 ])
-def test_load_example_notebook_data(rampviz_helper, url):
+def test_load_example_notebook_data(deconfigged_helper, url):
     try:
         import roman_datamodels  # noqa
     except ImportError:
@@ -52,11 +51,11 @@ def test_load_example_notebook_data(rampviz_helper, url):
         has_rdd = True
     uri = cached_uri(url)
     if 'mast' in uri:
-        ldr = rampviz_helper.loaders['url']
+        ldr = deconfigged_helper.loaders['url']
         ldr.cache = True
         ldr.url = uri
     else:
-        ldr = rampviz_helper.loaders['file']
+        ldr = deconfigged_helper.loaders['file']
         ldr.filepath = uri
 
     if url.endswith(".asdf") and not has_rdd:
