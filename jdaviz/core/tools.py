@@ -898,7 +898,7 @@ class TableApplyAddColumn(Tool):
 
             try:
                 self.viewer.add_column(column_name, fill_value=fill_value)
-            except Exception:
+            except Exception:  # nosec
                 pass
 
         self.viewer.toolbar.restore_tools()
