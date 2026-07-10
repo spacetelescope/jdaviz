@@ -932,7 +932,14 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         if local_path not in (os.curdir, None):
             warnings.warn(local_path_msg, UserWarning)
 
-        return download_file(possible_uri, cache=cache, timeout=timeout)
+        from urllib.error import HTTPError as UrllibHTTPError
+        try:
+            return download_file(possible_uri, cache=cache, timeout=timeout)
+        except UrllibHTTPError as e:
+            # Explicitly close the HTTP response body to prevent ResourceWarning
+            # in Python 3.14+ where unclosed HTTPError responses trigger warnings.
+            e.close()
+            raise
 
     elif parsed_uri.scheme == '':
         raise ValueError(f"The input file '{possible_uri}' cannot be parsed as a "
