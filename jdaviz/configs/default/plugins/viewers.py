@@ -1528,6 +1528,29 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
     _native_mark_classnames = ('Bars', 'BarsGL')
 
 
+def _role_labels_from_meta(meta):
+    """Return the list of non-removable column names encoded in a glue Data meta dict.
+
+    Two kinds of columns are protected:
+    - The actual column names recorded by the loader (values of the ``_jdaviz_loader_*``
+      keys), e.g. ``'SkyCoord_RA'`` or ``'xcentroid'``.
+    - Fixed derived-column names (``'X'``, ``'Y'``, ``'ID'``) that jdaviz creates
+      whenever the corresponding loader key is present, regardless of what the
+      original column was called.
+    """
+    pairs = {'_jdaviz_loader_ra_col': None,
+             '_jdaviz_loader_dec_col': None,
+             '_jdaviz_loader_x_col': 'X',
+             '_jdaviz_loader_y_col': 'Y',
+             '_jdaviz_id_col': 'ID'}
+    return [
+        name
+        for meta_key, derived_name in pairs.items()
+        for name in (meta.get(meta_key), derived_name if meta_key in meta else None)
+        if name
+    ]
+
+
 @viewer_registry("table-viewer", label="table")
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
@@ -1544,9 +1567,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         super().__init__(session, *args, **kwargs)
 
         # Replace the default TableGlue widget with JdavizTableWidget, which
-        # adds inline column-header rename/delete UX.  All TableViewer methods
-        # reference self.widget_table at call-time, so a simple reassignment
-        # here is sufficient — no glue-jupyter changes required.
+        # adds inline column-header rename/delete UX.
         self.widget_table = JdavizTableWidget(
             data=None,
             apply_filter=self.apply_filter,
@@ -1696,8 +1717,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             If column_name is not provided, not a string, or if data length does
             not match number of rows in the table.
         """
-        import numpy as np  # local for safety
-
         # make sure column name is not in table already
         if column_name in [c.label for c in self.widget_table.data.components]:
             raise ValueError(f"Column '{column_name}' already exists in the table. Use update_column to update it instead.")  # noqa: E501
@@ -1708,7 +1727,10 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         self._add_or_update_column(column_name, data)
 
-        # make the new column editable
+        # and make the new column editable
+
+        # we already know column_name can safely be cast to a string from check
+        # in _add_or_update_column
         column_name = str(column_name)
         cid = self.layers[0].layer.data.id[column_name]
         self.state.editable_components = list(self.state.editable_components) + [cid]
@@ -1831,12 +1853,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # (toolbar cleanup is handled generically by NestedJupyterToolbar)
         self._clear_selection_marks()
 
-    # ------------------------------------------------------------------
-    # Inline column-header editing helpers
-    # ------------------------------------------------------------------
-
     def _on_table_data_changed(self, change):
-        """Re-sync role-based non-removable headers whenever table data is set.
+        """
+        Re-sync role-based non-removable headers whenever table data is set.
 
         Reads meta directly from change['new'] rather than via _iter_table_data(),
         because this observer fires while TableLayerArtist is still being
@@ -1846,20 +1865,8 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         if data is None:
             self.widget_table.non_removable_headers = []
             return
-        role = set()
         meta = getattr(data, 'meta', {}) or {}
-        for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
-                    '_jdaviz_loader_x_col', '_jdaviz_loader_y_col'):
-            val = meta.get(key)
-            if val:
-                role.add(val)
-        if '_jdaviz_loader_x_col' in meta:
-            role.add('X')
-        if '_jdaviz_loader_y_col' in meta:
-            role.add('Y')
-        if '_jdaviz_id_col' in meta:
-            role.add('ID')
-        self.widget_table.non_removable_headers = sorted(role)
+        self.widget_table.non_removable_headers = _role_labels_from_meta(meta)
 
     def _iter_table_data(self):
         """Yield each unique glue Data object visible in this viewer."""
@@ -1873,26 +1880,16 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                 yield data
 
     def _role_labels(self):
-        """Return the set of column names that are non-removable role columns."""
-        role = set()
+        """Return the list of column names that are non-removable role columns."""
+        role = []
         for data in self._iter_table_data():
             meta = getattr(data, 'meta', {}) or {}
-            for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
-                        '_jdaviz_loader_x_col', '_jdaviz_loader_y_col'):
-                val = meta.get(key)
-                if val:
-                    role.add(val)
-            if '_jdaviz_loader_x_col' in meta:
-                role.add('X')
-            if '_jdaviz_loader_y_col' in meta:
-                role.add('Y')
-            if '_jdaviz_id_col' in meta:
-                role.add('ID')
+            role.extend(_role_labels_from_meta(meta))
         return role
 
     def _update_non_removable_headers(self):
         """Sync non_removable_headers to the table widget."""
-        self.widget_table.non_removable_headers = sorted(self._role_labels())
+        self.widget_table.non_removable_headers = self._role_labels()
 
     def _on_header_renamed(self, change):
         """Handle a column rename committed inline in the table header."""
