@@ -25,6 +25,9 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Set up uv
+      uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+
     - name: Build pytestargs from labels
       id: build-pytestargs
       run: |
@@ -38,17 +41,14 @@ jobs:
         # Export as step output so later steps can reference it.
         echo "pytestargs=$pytestargs" >> $GITHUB_OUTPUT
 
-    - name: Install python-build and twine
-      run: python -m pip install build "twine>=3.3" "importlib_metadata!=8.0.0"
-
     - name: Build package
-      run: python -m build --sdist --wheel .
+      run: uv build --sdist --wheel .
 
     - name: List result
       run: ls -l dist
 
     - name: Check dist
-      run: python -m twine check --strict dist/*
+      run: uvx twine check --strict dist/*
 
     - name: Get components for cache key
       id: date
@@ -84,8 +84,8 @@ jobs:
       run: |
         cd ..
         echo "pytest args ${{ steps.build-pytestargs.outputs.pytestargs }}"
-        python -m venv testenv
-        testenv/bin/pip install pytest pytest-astropy pytest-tornasync pytest-xdist jdaviz/dist/*.whl
+        uv venv testenv
+        uv pip install --python testenv pytest pytest-astropy pytest-tornasync pytest-xdist jdaviz/dist/*.whl
         testenv/bin/pytest -p no:warnings -n auto --dist load --astropy-header --remote-data ${{ steps.build-pytestargs.outputs.pytestargs }} --pyargs jdaviz
 
     # NOTE: Do not run this part for PR testing.

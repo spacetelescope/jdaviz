@@ -19,11 +19,10 @@ TEST_HELP = """
 Note: running tests is no longer done using 'python setup.py test'. Instead
 you will need to run:
 
-    tox -e test
+    pixi run -e test-py313 test
 
-If you don't already have tox installed, you can install it with:
-
-    pip install tox
+If you don't already have pixi installed, see https://pixi.sh (do NOT use
+'pip install pixi', which is an unrelated package).
 
 If you only want to run part of the test suite, you can also use pytest
 directly with::
@@ -43,7 +42,11 @@ if 'test' in sys.argv:
 DOCS_HELP = """
 Note: building the documentation is no longer done using
 'python setup.py build_docs'. Instead you will need to
-build the documentation with Sphinx directly using::
+build the documentation with pixi::
+
+    pixi run -e docs docs
+
+or with Sphinx directly using::
 
     pip install -e .[docs]
     cd docs

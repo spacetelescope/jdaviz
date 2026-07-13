@@ -16,6 +16,11 @@ permissions:
 jobs:
   # Github Actions supports ubuntu, windows, and macos virtual environments:
   # https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners
+  #
+  # NOTE: The tox `-predeps` factor enabled pip pre-releases (release
+  # candidates). Because RC testing is inherently unlocked/unreproducible, it is
+  # run with uv directly (`uv run --prerelease allow`) rather than through the
+  # pixi lock used by the stable environments.
   ci_tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
@@ -27,29 +32,26 @@ jobs:
           - name: RC testing on Linux with remote data
             os: ubuntu-latest
             python: '3.13'
-            toxenv: py313-test-predeps
-            toxposargs: --remote-data
+            posargs: --remote-data
 
           - name: RC testing on OSX
             os: macos-latest
             python: '3.14'
-            toxenv: py314-test-predeps
 
           - name: RC testing on Windows
             os: windows-latest
             python: '3.12'
-            toxenv: py312-test-predeps
 
     steps:
     - name: Checkout code
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - name: Set up python ${{ matrix.python }} on ${{ matrix.os }}
-      uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
-      with:
-        python-version: ${{ matrix.python }}
-    - name: Install base dependencies
-      run: python -m pip install --upgrade pip tox
-    - name: Test/run with tox
-      run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
+    - name: Set up uv
+      uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+    - name: Test/run release candidates with uv
+      shell: bash
+      run: >
+        uv run --python ${{ matrix.python }} --prerelease allow --extra test
+        pytest -n auto --dist loadfile --pyargs jdaviz docs
+        --ignore=jdaviz/qt.py --durations=30 --memlog ${{ matrix.posargs }}

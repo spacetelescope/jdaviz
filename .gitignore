@@ -71,3 +71,8 @@ pip-wheel-metadata
 # Environments
 /env*
 /*venv
+
+# Pixi / uv
+.pixi
+uv.lock
+.venv-devdeps

@@ -24,16 +24,15 @@ jobs:
     if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Extra CI')))
     steps:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-    - name: Set up Python to build docs with sphinx
+      with:
+        fetch-depth: 0
+    - name: Set up pixi and install the docs environment
       uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
       with:
-        python-version: '3.14'
-    - name: Install base dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install tox
-    - name: Check links in docs using tox
-      run: tox -e linkcheck
+        environments: docs
+        cache: true
+    - name: Check links in docs using pixi
+      run: pixi run -e docs linkcheck
 
   ci_cron_tests_dev_roman:
     name: Python 3.14 with latest dev versions of key dependencies and Roman
@@ -44,16 +43,13 @@ jobs:
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - name: Set up python
-      uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
-      with:
-        python-version: '3.14'
-    - name: Install base dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install tox
-    - name: Test with tox
-      run: tox -e py314-test-devdeps-romandeps
+    - name: Set up uv
+      uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+    - name: Test against dev dependencies with Roman using uv
+      env:
+        PYTHON_VERSION: '3.14'
+        EXTRAS: roman
+      run: .github/scripts/run-devdeps.sh
 
   ci_cron_tests_stable_strauss:
     name: Python 3.13 with stable versions of dependencies and Strauss
@@ -64,14 +60,12 @@ jobs:
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - name: Set up python
-      uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
+    - name: Set up pixi and install the strauss environment
+      # libportaudio (the strauss system dependency) is provided from
+      # conda-forge by the strauss environment, so no apt install is needed.
+      uses: prefix-dev/setup-pixi@a09b6247153796b190642a2b53fac4241043cf6f  # v0.10.0
       with:
-        python-version: '3.13'
-    - name: Install base dependencies
-      run: |
-        sudo apt-get install libportaudio2
-        python -m pip install --upgrade pip
-        python -m pip install tox
-    - name: Test with tox
-      run: tox -e py313-test-straussdeps
+        environments: strauss
+        cache: true
+    - name: Test with pixi
+      run: pixi run -e strauss test
