@@ -1,3 +1,5 @@
+# Modified copy of glue_jupyter/table/table.vue (TableGlue / TableBase).
+# Jdaviz additions: header rename/delete traitlets, Vuetify 3 _get_headers() override.
 import traitlets
 from glue_jupyter.table.viewer import TableGlue
 

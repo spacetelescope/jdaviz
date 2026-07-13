@@ -1,3 +1,6 @@
+<!-- Modified copy of glue_jupyter/table/table.vue.
+     Jdaviz additions: Vuetify 3 API updates, column-header rename/delete UI.
+     When syncing with upstream, only the marked jdaviz sections below are intentionally different. -->
 <template>
   <div class="glue-table-container">
     <!-- Cell display/edit bar (always visible) -->
@@ -118,7 +121,7 @@
 module.exports = {
   data: function() {
     return {
-      selectedCell: null,
+      selectedCell: null,  // { row: number, column: string, editable: boolean }
       editValue: '',
       hoverHeader: null,
       editingHeader: null,
@@ -191,6 +194,7 @@ module.exports = {
     selectCell(row, column, currentValue, editable) {
       this.selectedCell = { row: row, column: column, editable: editable };
       this.editValue = currentValue !== null && currentValue !== undefined ? String(currentValue) : '';
+      // Focus the edit input after Vue updates the DOM (only if editable)
       if (editable) {
         this.$nextTick(() => {
           if (this.$refs.editInput) {
@@ -208,21 +212,26 @@ module.exports = {
         const currentColumn = this.selectedCell.column;
         const currentRow = this.selectedCell.row;
         const isEditable = this.selectedCell.editable;
+        // Commit the edit
         this.cell_edited({
           row: currentRow,
           column: currentColumn,
           value: this.editValue
         });
+        // Move to the next row in the same column
         const nextRow = currentRow + 1;
         if (nextRow < this.total_length) {
+          // Find the current value for the next cell
           const nextItem = this.items.find(item => item.__row__ === nextRow);
           if (nextItem) {
             this.selectCell(nextRow, currentColumn, nextItem[currentColumn], isEditable);
           } else {
+            // Next row might not be in current page, just clear selection
             this.selectedCell = null;
             this.editValue = '';
           }
         } else {
+          // No more rows, clear selection
           this.selectedCell = null;
           this.editValue = '';
         }
@@ -238,7 +247,7 @@ module.exports = {
 </script>
 
 <style id="jdaviz_table_widget">
-/* ---- Base table styles (mirrors glue_table) ---- */
+/* Jdaviz additions are at the bottom of this block. */
 .glue-table-container {
   display: flex;
   flex-direction: column;
