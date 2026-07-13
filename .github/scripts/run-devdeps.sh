@@ -103,5 +103,18 @@ uv pip install --python .venv-devdeps --prerelease allow --upgrade \
 uv pip install --python .venv-devdeps --no-deps --upgrade \
   "${GIT_MAIN[@]}"
 
-.venv-devdeps/bin/pytest -n auto --dist loadfile --pyargs jdaviz docs \
-  --ignore=jdaviz/qt.py --durations=30 --memlog "$@"
+# Run pytest from an isolated temporary directory so that the source-tree
+# `jdaviz/` package is NOT discovered. `--pyargs jdaviz` imports the *installed*
+# copy from site-packages, but pytest's rootdir-based conftest collection would
+# otherwise also pick up ./jdaviz/conftest.py from the source tree, and the two
+# `jdaviz.conftest` modules at different paths trigger an ImportPathMismatchError.
+# This mirrors the old tox `changedir = .tmp/{envname}` behavior.
+REPO_ROOT="$(pwd)"
+PYTEST="${REPO_ROOT}/.venv-devdeps/bin/pytest"
+JDAVIZ_INSTALLED="$("${REPO_ROOT}/.venv-devdeps/bin/python" -c 'import jdaviz, os; print(os.path.dirname(jdaviz.__file__))')"
+
+RUN_DIR="$(mktemp -d)"
+cd "${RUN_DIR}"
+
+"${PYTEST}" -n auto --dist loadfile --pyargs jdaviz "${REPO_ROOT}/docs" \
+  --ignore="${JDAVIZ_INSTALLED}/qt.py" --durations=30 --memlog "$@"
