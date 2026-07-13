@@ -120,7 +120,15 @@ jobs:
       uses: prefix-dev/setup-pixi@a09b6247153796b190642a2b53fac4241043cf6f  # v0.10.0
       with:
         environments: ${{ matrix.environment }}
-        # Use the committed pixi.lock for a reproducible, cached install.
+        # Pin pixi to the version that generated the committed pixi.lock.
+        pixi-version: v0.72.2
+        # Install exactly what the committed pixi.lock specifies (reproducible)
+        # and cache it. We use `frozen` rather than the stricter `locked`
+        # because jdaviz pins some deps to mutable git PR refs and multi-wheel
+        # sources, which can make the strict up-to-date check spuriously fail on
+        # CI even when the lock is valid. `frozen` installs straight from the
+        # lock without re-checking it against the manifest.
+        frozen: true
         cache: true
     - name: Get IP address for MAST debugging
       if: "contains(matrix.posargs, '--remote-data')"

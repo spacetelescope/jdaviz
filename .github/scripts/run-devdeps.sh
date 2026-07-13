@@ -49,7 +49,13 @@ GIT_MAIN=(
   "git+https://github.com/spacetelescope/stdatamodels.git"
   "git+https://github.com/glue-viz/echo.git"
   "git+https://github.com/glue-viz/glue.git"
-  "git+https://github.com/glue-viz/bqplot-image-gl.git"
+  # NOTE: bqplot-image-gl is intentionally NOT built from git here. Its git
+  # main build-system.requires pins jupyterlab>=3.6,<4, which drags in an old
+  # jupyter-ydoc / y-py that has no Python 3.13 wheels and unbuildable sdists,
+  # so `uv`/`pip` cannot build it on 3.13 (upstream breakage). It is still
+  # installed as a normal PyPI wheel via glue-jupyter; only its git-main build
+  # is skipped. Re-add the line below once the upstream build is fixed:
+  #   "git+https://github.com/glue-viz/bqplot-image-gl.git"
   "git+https://github.com/glue-viz/glue-jupyter.git"
   "git+https://github.com/glue-viz/glue-astronomy.git"
   "git+https://github.com/widgetti/solara.git"
