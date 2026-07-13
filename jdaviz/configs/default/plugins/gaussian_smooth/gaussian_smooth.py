@@ -45,22 +45,6 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        '''
-        if self.config == "cubeviz":
-            self.docs_description = 'Smooth data cube spatially or spectrally with a Gaussian kernel.'  # noqa
-            self.show_modes = True
-            self.dataset._viewers = [
-                self._default_flux_viewer_reference_name,
-                self._default_spectrum_viewer_reference_name
-            ]
-            # clear the cache in case the spectrum-viewer selection was already cached
-            self.dataset._clear_cache()
-        elif self.config in ("mosviz", "specviz2d"):
-            # only allow smoothing 1d spectra
-            self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
-            self.dataset._clear_cache()
-        '''
-
         self.dataset.add_filter('not_from_this_plugin', 'is_spectrum_or_flux_cube')
 
         self.mode = SelectPluginComponent(self,
@@ -181,8 +165,6 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         # deprecate for deconfigged
 
         if self.mode_selected == 'Spatial':
-            # if self.config != 'cubeviz':
-            # raise NotImplementedError("spatial smoothing only supported for Cubeviz")
             # TODO: in vuetify >2.3, timeout should be set to -1 to keep open
             #  indefinitely
             snackbar_message = SnackbarMessage(

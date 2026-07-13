@@ -37,7 +37,7 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.ones((3, 4, 5), dtype=np.float32)
     cube = Spectrum(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
     viewer = cubeviz_helper._app.get_viewer('spectrum-viewer')
 
     # get all available flux units for translation. Since cube is loaded

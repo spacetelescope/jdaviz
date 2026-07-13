@@ -8,7 +8,7 @@ pytest.importorskip("strauss")
 IN_GITHUB_ACTIONS = os.environ.get("CI", "false") == "true"
 
 
-@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test requires computer with audio output or skipped in CI") # noqa
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test requires computer with audio output") # noqa
 def test_sonify_data(deconfigged_helper, spectrum1d_cube_larger):
     deconfigged_helper.load(spectrum1d_cube_larger, data_label="test", format="3D Spectrum")
     sonify_plg = deconfigged_helper._app.get_tray_item_from_name('Sonify Data')
@@ -41,7 +41,7 @@ def test_sonify_data(deconfigged_helper, spectrum1d_cube_larger):
 
     # Add sonified data to uncert-viewer
     uncert_viewer = deconfigged_helper.viewers['3D Spectrum']
-    # uncert_viewer.data_menu.add_data('Sonified data')
+    uncert_viewer.data_menu.add_data('Sonified data')
     assert 'Sonified data' in uncert_viewer.data_menu.data_labels_loaded
 
     event_data = {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}}
