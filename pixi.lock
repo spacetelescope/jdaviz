@@ -9348,7 +9348,7 @@ packages:
   - bqplot>=0.12.45,<0.13
   - glue-core>=1.24.0
   - glue-jupyter @ git+https://github.com/glue-viz/glue-jupyter.git@refs/pull/519/head
-  - echo>=0.11.0
+  - echo>=0.15.0
   - ipykernel>=7.1.0
   - ipyvue>=3.0.0a7
   - ipyvuetify>=3.0.0a4
