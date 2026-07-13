@@ -105,6 +105,87 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+# ---------------------------------------------------------------------------
+# Pixi + uv configuration (proof of concept replacing conda/pip + tox in CI).
+#
+# Pixi manages the environments and task running (the role tox/conda played),
+# while all PyPI packages (everything in [project.dependencies] and the
+# optional-dependency groups below) are resolved and installed by uv, which
+# Pixi uses under the hood for `pypi-dependencies`.
+#
+# Only a couple of things come from conda-forge: the Python interpreter and the
+# portaudio system library needed by the strauss audio dependency. Fast,
+# environment-independent checks (flake8, bandit, sdist build) run with uv
+# standalone in CI instead of Pixi.
+#
+# Common commands:
+#   pixi run -e test-py313 test       # run the test suite on Python 3.13
+#   pixi run -e test-all test-cov     # all optional deps + coverage
+#   pixi run -e docs docs             # build the HTML docs
+#
+# Fast, standalone jobs that do not need the full environment are run directly
+# with uv (see the CI workflows):
+#   uvx flake8 jdaviz --count
+#   uvx bandit -r jdaviz -c .bandit.yaml
+#   uv build --sdist && uvx twine check dist/* --strict
+# ---------------------------------------------------------------------------
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+
+# Install jdaviz itself as an editable PyPI dependency (installed by uv). Pixi
+# automatically maps everything in [project.dependencies] and the
+# [project.optional-dependencies] groups to uv-installed pypi-dependencies /
+# features, so nothing else needs to be repeated here.
+[tool.pixi.pypi-dependencies]
+jdaviz = { path = ".", editable = true }
+
+# --- Python interpreter versions (conda-forge) -----------------------------
+[tool.pixi.feature.py312.dependencies]
+python = "3.12.*"
+
+[tool.pixi.feature.py313.dependencies]
+python = "3.13.*"
+
+[tool.pixi.feature.py314.dependencies]
+python = "3.14.*"
+
+# --- Developer tooling ------------------------------------------------------
+# NOTE: flake8 (codestyle), bandit (security audit) and building the sdist do
+# not need the full jdaviz environment. Because Pixi always includes the
+# project's dependencies in every environment, running them through Pixi would
+# needlessly install the entire stack. In CI those fast jobs are run with uv
+# standalone instead (`uvx flake8`, `uvx bandit`, `uv build`, `uvx twine`).
+
+# portaudio (providing libportaudio) is a system dependency of strauss; supply
+# it from conda-forge for the environments that pull strauss in (the `all` and
+# `strauss` extras).
+[tool.pixi.feature.all.dependencies]
+portaudio = "*"
+
+[tool.pixi.feature.strauss.dependencies]
+portaudio = "*"
+
+# --- Tasks -----------------------------------------------------------------
+[tool.pixi.feature.test.tasks]
+test = "pytest -n auto --dist loadfile --pyargs jdaviz docs --ignore=jdaviz/qt.py --durations=30 --memlog"
+test-cov = "pytest -n auto --dist loadfile --pyargs jdaviz docs --cov jdaviz --cov-config=pyproject.toml --ignore=jdaviz/qt.py --durations=30 --memlog && coverage xml -o coverage.xml"
+
+[tool.pixi.feature.docs.tasks]
+docs = "sphinx-build -b html docs docs/_build/html"
+linkcheck = "sphinx-build -W -b linkcheck docs docs/_build/html"
+
+# --- Environments (combinations of the features above) ---------------------
+[tool.pixi.environments]
+default = { features = ["py313", "test"] }
+test-py312 = { features = ["py312", "test"] }
+test-py313 = { features = ["py313", "test"] }
+test-py314 = { features = ["py314", "test"] }
+test-all = { features = ["py313", "test", "all"] }
+roman = { features = ["py312", "test", "roman"] }
+strauss = { features = ["py313", "test", "strauss"] }
+docs = { features = ["py313", "docs"] }
+
 [tool.setuptools]
 zip-safe = false
 include-package-data = true
