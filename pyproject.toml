@@ -176,8 +176,13 @@ docs = "sphinx-build -b html docs docs/_build/html"
 linkcheck = "sphinx-build -W -b linkcheck docs docs/_build/html"
 
 # --- Environments (combinations of the features above) ---------------------
+# NOTE: the `test` task is intentionally NOT part of the `default` environment.
+# Because it is defined in several environments, running `pixi run test` (with
+# no `-e`) is ambiguous, so pixi presents an interactive picker to choose the
+# environment (test-py312 / test-py313 / test-py314 / test-all / roman /
+# strauss). Use `pixi run -e <env> test` to skip the picker (as CI does).
 [tool.pixi.environments]
-default = { features = ["py313", "test"] }
+default = { features = ["py313"] }
 test-py312 = { features = ["py312", "test"] }
 test-py313 = { features = ["py313", "test"] }
 test-py314 = { features = ["py314", "test"] }
