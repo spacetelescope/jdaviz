@@ -181,8 +181,8 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         # deprecate for deconfigged
 
         if self.mode_selected == 'Spatial':
-            #if self.config != 'cubeviz':
-                #raise NotImplementedError("spatial smoothing only supported for Cubeviz")
+            # if self.config != 'cubeviz':
+            # raise NotImplementedError("spatial smoothing only supported for Cubeviz")
             # TODO: in vuetify >2.3, timeout should be set to -1 to keep open
             #  indefinitely
             snackbar_message = SnackbarMessage(
