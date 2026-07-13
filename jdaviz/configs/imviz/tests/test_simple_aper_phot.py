@@ -293,7 +293,7 @@ class TestAdvancedAperPhot:
         deconfigged_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'),
                                 format='Image')
         # Different pixel scale + rotated
-        deconfigged_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'), # noqa: E501
+        deconfigged_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'),  # noqa: E501
                                 format='Image')
 
         # Link them by WCS

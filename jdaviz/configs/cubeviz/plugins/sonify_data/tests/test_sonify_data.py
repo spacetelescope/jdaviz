@@ -41,7 +41,7 @@ def test_sonify_data(deconfigged_helper, spectrum1d_cube_larger):
 
     # Add sonified data to uncert-viewer
     uncert_viewer = deconfigged_helper.viewers['3D Spectrum']
-    #uncert_viewer.data_menu.add_data('Sonified data')
+    # uncert_viewer.data_menu.add_data('Sonified data')
     assert 'Sonified data' in uncert_viewer.data_menu.data_labels_loaded
 
     event_data = {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}}

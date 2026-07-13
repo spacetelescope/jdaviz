@@ -90,8 +90,7 @@ def test_moment_calculation(deconfigged_helper, spectrum1d_cube,
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
         deconfigged_helper.load(cube, data_label='test')
 
-    flux_viewer_ref = deconfigged_helper._app.get_viewer_reference_names()[0]
-    flux_viewer = deconfigged_helper._app.get_viewer(flux_viewer_ref)
+    flux_viewer = deconfigged_helper._app.get_viewer('3D Spectrum')
 
     # Since we are not really displaying, need this to trigger GUI stuff.
     flux_viewer.shape = (100, 100)
@@ -132,7 +131,7 @@ def test_moment_calculation(deconfigged_helper, spectrum1d_cube,
                                          "204.9998877673 27.0001000000 (deg)")
 
     # Make sure adding it to viewer does not crash.
-    deconfigged_helper._app.add_data_to_viewer(flux_viewer_ref, 'moment 0')
+    deconfigged_helper._app.add_data_to_viewer('3D Spectrum', 'moment 0')
 
     result = dc[-1].get_object(cls=CCDData)
     assert result.shape == (2, 4)  # Cube shape is (2, 2, 4), moment transposes
@@ -177,8 +176,7 @@ def test_moment_velocity_calculation(deconfigged_helper, spectrum1d_cube):
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
         deconfigged_helper.load(spectrum1d_cube, data_label='test')
 
-    cube_viewer_ref = deconfigged_helper._app.get_viewer_reference_names()[0]
-    uncert_viewer = deconfigged_helper._app.get_viewer(cube_viewer_ref)
+    uncert_viewer = deconfigged_helper._app.get_viewer('3D Spectrum')
 
     # Since we are not really displaying, need this to trigger GUI stuff.
     uncert_viewer.shape = (100, 100)
@@ -189,7 +187,7 @@ def test_moment_velocity_calculation(deconfigged_helper, spectrum1d_cube):
 
     # Test moment 1 in velocity
     mm.n_moment = 1
-    mm.add_results.viewer = cube_viewer_ref
+    mm.add_results.viewer = '3D Spectrum'
     assert mm._obj.results_label == 'moment 1'
     mm.output_unit = "Velocity"
 
@@ -321,7 +319,7 @@ def test_momentmap_nirspec_prism(deconfigged_helper):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        deconfigged_helper.load(cached_uri(uri), cache=True, format='3D Spectrum')
+        deconfigged_helper.load(cached_uri(uri), format='3D Spectrum')
     uc = deconfigged_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True
@@ -432,8 +430,7 @@ def test_moment_zero_unit_flux_conversions(deconfigged_helper,
     mm = deconfigged_helper.plugins['Moment Maps']._obj
 
     # and flux viewer for mouseover info
-    flux_viewer_ref = deconfigged_helper._app.get_viewer_reference_names()[0]
-    flux_viewer = deconfigged_helper._app.get_viewer(flux_viewer_ref)
+    flux_viewer = deconfigged_helper._app.get_viewer('3D Spectrum')
     label_mouseover = deconfigged_helper._coords_info
 
     # convert to new flux unit
@@ -447,7 +444,7 @@ def test_moment_zero_unit_flux_conversions(deconfigged_helper,
 
     # calculate moment with new output label and plot in flux viewer
     mm.add_results.label = new_flux_unit_str
-    mm.add_results.viewer.selected = flux_viewer_ref
+    mm.add_results.viewer.selected = '3D Spectrum'
     mm.calculate_moment()
 
     assert mm.moment.unit == new_mm_unit

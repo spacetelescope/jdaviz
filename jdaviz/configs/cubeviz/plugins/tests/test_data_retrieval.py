@@ -5,8 +5,6 @@ import numpy as np
 
 from astropy.utils.data import download_file
 
-from jdaviz.conftest import deconfigged_helper
-
 
 @pytest.mark.remote_data
 def test_data_retrieval(deconfigged_helper):
@@ -25,7 +23,7 @@ def test_data_retrieval(deconfigged_helper):
     fn = download_file(URL, cache=True)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        deconfigged_helper.load(fn, format="3D Spectrum")
+        deconfigged_helper.load(fn, data_label = "Spectrum", format="3D Spectrum")
 
     # two ways of retrieving data from the viewer.
     # They should return the same spectral values

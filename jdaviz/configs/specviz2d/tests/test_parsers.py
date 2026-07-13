@@ -236,7 +236,8 @@ def test_1d_parser(specviz2d_helper, spectrum1d):
 def test_2d_1d_parser(deconfigged_helper, mos_spectrum2d, spectrum1d):
     deconfigged_helper.load(mos_spectrum2d, format='2D Spectrum')
     deconfigged_helper.load(spectrum1d, format='1D Spectrum')
-    assert deconfigged_helper._app.data_collection.labels == ['2D Spectrum', '2D Spectrum (auto-ext)', '1D Spectrum']
+    assert (deconfigged_helper._app.data_collection.labels ==
+            ['2D Spectrum', '2D Spectrum (auto-ext)', '1D Spectrum'])
 
     spec2d_viewer = deconfigged_helper._app.get_viewer('2D Spectrum')
     assert spec2d_viewer.figure.axes[0].label == "x: pixels"  # -0.5, 14.5

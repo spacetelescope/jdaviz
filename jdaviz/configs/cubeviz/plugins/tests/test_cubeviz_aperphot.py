@@ -145,7 +145,7 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(deconfigged_helper,
 
     # sum should be in flux ( have factor of pix^2 multiplied out of input unit)
     assert_allclose(row["sum"],
-                74.999996 * 1e-17 * flux_unit * solid_angle_unit)  # 3 (w) x 5 (h) x <5 (v)
+                    74.999996 * 1e-17 * flux_unit * solid_angle_unit)  # 3 (w) x 5 (h) x <5 (v)
 
     assert_allclose(row["sum_aper_area"], 15 * solid_angle_unit)  # 3 (w) x 5 (h)
     assert_allclose(row["mean"], 4.99999975 * 1e-17 * flux_unit)

@@ -248,8 +248,8 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 def test_catalog_reingestion(deconfigged_helper, tmp_path):
     # load data that we know has Gaia sources
     arr = np.ones((1489, 2048))
-    viewer = deconfigged_helper._app.get_viewer('Image')._obj
-    viewer.shape = (100, 100)
+    viewer = deconfigged_helper._app.get_viewer('Image')
+    #viewer.shape = (100, 100)
     hdu1 = fits.ImageHDU(arr, name='SCI')
     hdu1.header.update({'CTYPE1': 'RA---TAN',
                         'CUNIT1': 'deg',

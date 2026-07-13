@@ -289,7 +289,8 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
 
 def test_contour_unit_conversion(deconfigged_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
     # custom cube to have Surface Brightness units
-    deconfigged_helper.load(spectrum1d_cube_fluxunit_jy_per_steradian, data_label="test", format='3D Spectrum')
+    deconfigged_helper.load(spectrum1d_cube_fluxunit_jy_per_steradian,
+                            data_label="test", format='3D Spectrum')
 
     uc_plg = deconfigged_helper.plugins['Unit Conversion']
     uc_plg.open_in_tray()

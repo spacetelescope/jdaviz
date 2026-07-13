@@ -1,3 +1,4 @@
+import os
 import asdf
 import numpy as np
 import pytest
@@ -76,6 +77,7 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 
         with pytest.raises(AttributeError, match='does not have a valid WCS'):
             self.viewer.offset_by(dsky, dsky)
+
 
 class TestCenter(BaseDeconfiggedImage_WCS_WCS):
 
@@ -344,14 +346,14 @@ def test_markers_gwcs_lonlat(deconfigged_helper):
         gw = af.tree['wcs']
     ndd = NDData(np.ones((10, 10), dtype=np.float32), wcs=gw, unit='MJy/sr')
     deconfigged_helper.load(ndd, data_label='MIRI_i2d', format='Image')
-    assert deconfigged_helper._app.data_collection[0].label == 'MIRI_i2d'
+    assert deconfigged_helper._app.data_collection[0].label == 'MIRI_i2d[DATA]'
     assert deconfigged_helper._app.data_collection[0].components == [
         'Pixel Axis 0 [y]', 'Pixel Axis 1 [x]', 'Lat', 'Lon', 'DATA']
 
     # If you run this interactively, should appear slightly off-center.
     calib_cat = Table({'coord': [SkyCoord(80.6609, -69.4524, unit='deg')]})
     deconfigged_helper._app.get_viewer('Image').add_markers(calib_cat,
-                                            use_skycoord=True, marker_name='my_sky')
+                                                            use_skycoord=True, marker_name='my_sky')
     assert deconfigged_helper._app.data_collection[1].label == 'my_sky'
 
     viewer = deconfigged_helper._app.get_viewer('Image')

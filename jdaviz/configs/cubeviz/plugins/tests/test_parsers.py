@@ -26,7 +26,8 @@ def test_fits_image_hdu_parse(image_cube_hdu_obj, cubeviz_helper):
 @pytest.mark.filterwarnings('ignore')
 def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, deconfigged_helper):
     # Passing in data_label keyword as posarg.
-    deconfigged_helper.load(image_cube_hdu_obj_microns, format='3D Spectrum', data_label='has_microns')
+    deconfigged_helper.load(image_cube_hdu_obj_microns,
+                            format='3D Spectrum', data_label='has_microns')
 
     assert len(deconfigged_helper._app.data_collection) == 4  # 3 cubes and extracted spectrum
     assert deconfigged_helper._app.data_collection[0].label == 'has_microns'
@@ -186,42 +187,6 @@ def test_fits_image_hdu_parse_with_inverse_var(image_cube_hdu_obj, deconfigged_h
     assert_allclose(unc_data.flux, expected_stddev_value * bunit * unc_data.unit)
 
 
-@pytest.mark.filterwarnings('ignore')
-@pytest.mark.parametrize(
-    ('unc_extname', 'expected_stddev_value'),
-    [('IVAR', 0.5), ('VAR', 2.0)]
-)
-def test_fits_image_hdu_parse_with_inverse_var(image_cube_hdu_obj, deconfigged_helper,
-                                               unc_extname, expected_stddev_value):
-    """
-    Test loading cubes that contain IVAR (inverse variance) and VAR (variance)
-    uncertainty extensions. Both should be converted to standard deviation
-    internally for consistency.
-    """
-
-    # use existing test fixture, but change ERR ext to requested uncertainty type
-    hdul = image_cube_hdu_obj.copy()
-    hdul[2].name = unc_extname
-    hdul[2].header['EXTNAME'] = unc_extname
-
-    # with values initially set t\o 4.0, when converted from IVAR to stddev,
-    # we should get 0.5 and when converted from VAR to stddev, we should get 2.0
-    hdul[2].data = np.full_like(hdul[2].data, 4.0)
-
-    deconfigged_helper.load(hdul, format='3D Spectrum')
-
-    # data collection should contain flux, mask, uncert, and extracted spectrum
-    assert len(deconfigged_helper._app.data_collection) == 4
-
-    # now check the actual values of the uncertainty after conversion to stddev
-    unc_data = deconfigged_helper.datasets['3D Spectrum [UNC]'].get_data()
-
-    # the BUNIT keyword in the header is applying a factor of
-    # '1E-17 erg*s^-1*cm^-2*Angstrom^-1' so account for that in the expected value here
-    bunit = 1E-17
-    assert_allclose(unc_data.flux, expected_stddev_value * bunit * unc_data.unit)
-
-
 @pytest.mark.parametrize("flux_unit", [u.nJy, u.DN, u.DN / u.s])
 def test_spectrum3d_no_wcs_parse(deconfigged_helper, flux_unit):
     sc = Spectrum(flux=np.ones(24).reshape((2, 3, 4)) * flux_unit, spectral_axis_index=2)  # x, y, z
@@ -253,14 +218,14 @@ def test_numpy_cube(cubeviz_helper):
     arr = np.ones(24).reshape((4, 3, 2))  # x, y, z
 
     with pytest.raises(TypeError, match='Data type must be one of'):
-        cubeviz_helper.load_data(arr,data_type='foo')
+        cubeviz_helper.load_data(arr, data_type='foo')
 
     cubeviz_helper.load_data(arr)
     cubeviz_helper.load_data(arr, data_label='uncert_array', data_type='uncert',
                              override_cube_limit=True)
 
     with pytest.raises(RuntimeError, match='Only one cube'):
-       cubeviz_helper.load_data(arr, data_type='mask')
+        cubeviz_helper.load_data(arr, data_type='mask')
 
     assert len(cubeviz_helper._app.data_collection) == 3  # flux cube, uncert cube, Spectrum (sum)
 

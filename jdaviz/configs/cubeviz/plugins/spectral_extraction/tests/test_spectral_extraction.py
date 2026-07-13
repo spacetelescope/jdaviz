@@ -560,8 +560,6 @@ def test_spectral_extraction_unit_conv_one_spec(
 ):
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
     spectrum_viewer = cubeviz_helper._app.get_viewer(
-    cubeviz_helper.load(spectrum1d_cube_fluxunit_jy_per_steradian)
-    spectrum_viewer = cubeviz_helper._app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
     uc = cubeviz_helper.plugins["Unit Conversion"]
     assert uc.flux_unit == "Jy"
@@ -590,7 +588,7 @@ def test_spectral_extraction_unit_conv_one_spec(
     )
 )
 def test_spectral_extraction_scientific_validation(
-        deconfigged_helper, start_slice,
+        cubeviz_helper, start_slice,
         aperture, expected_rtol, uri, calspec_url
 ):
     """
@@ -624,18 +622,18 @@ def test_spectral_extraction_scientific_validation(
     # load observations into Cubeviz
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        deconfigged_helper.load(cached_uri(uri), format='3D Spectrum')
+        cubeviz_helper.load(cached_uri(uri))
 
     # add a subset with an aperture centered on each source
-    subset_plugin = deconfigged_helper.plugins['Subset Tools']
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
     subset_plugin.import_region(CircularROI(*aperture))
 
     # set the slice to the blue end of MIRI CH1
-    slice_plugin = deconfigged_helper.plugins['Spectral Slice']
+    slice_plugin = cubeviz_helper.plugins['Spectral Slice']
     slice_plugin.value = start_slice
 
     # run a conical spectral extraction
-    spectral_extraction = deconfigged_helper.plugins['3D Spectral Extraction']
+    spectral_extraction = cubeviz_helper.plugins['3D Spectral Extraction']
     spectral_extraction.aperture = 'Subset 1'
     spectral_extraction.wavelength_dependent = True
     spectral_extraction._obj.results_label = 'conical-extraction'
@@ -648,7 +646,7 @@ def test_spectral_extraction_scientific_validation(
     )
 
     # load model spectrum:
-    deconfigged_helper.load(resampled_spectrum, data_label='calspec model', format='3D Spectrum')
+    cubeviz_helper.specviz.load(resampled_spectrum, data_label='calspec model')
 
     # compute the relative residual, take the median absolute deviation:
     median_abs_relative_dev = abs(np.median(
