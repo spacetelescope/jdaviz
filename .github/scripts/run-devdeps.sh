@@ -39,28 +39,34 @@ NIGHTLY=(
   "bqplot>=0.12,<0.13"
 )
 
-# git main branches for the astropy / glue ecosystem packages.
+# git main branches for the astropy / glue ecosystem packages, written as
+# `name @ git+url`. These are layered on top of the base install with
+# `--no-deps` (see below) rather than resolved together with jdaviz.
 GIT_MAIN=(
-  "git+https://github.com/astropy/regions.git"
-  "git+https://github.com/astropy/specutils.git"
-  "git+https://github.com/spacetelescope/gwcs.git"
-  "git+https://github.com/asdf-format/asdf.git"
-  "git+https://github.com/astropy/asdf-astropy.git"
-  "git+https://github.com/spacetelescope/stdatamodels.git"
-  "git+https://github.com/glue-viz/echo.git"
-  "git+https://github.com/glue-viz/glue.git"
+  "regions @ git+https://github.com/astropy/regions.git"
+  "specutils @ git+https://github.com/astropy/specutils.git"
+  "gwcs @ git+https://github.com/spacetelescope/gwcs.git"
+  "asdf @ git+https://github.com/asdf-format/asdf.git"
+  "asdf-astropy @ git+https://github.com/astropy/asdf-astropy.git"
+  "stdatamodels @ git+https://github.com/spacetelescope/stdatamodels.git"
+  "echo @ git+https://github.com/glue-viz/echo.git"
+  "glue-core @ git+https://github.com/glue-viz/glue.git"
   # NOTE: bqplot-image-gl is intentionally NOT built from git here. Its git
   # main build-system.requires pins jupyterlab>=3.6,<4, which drags in an old
   # jupyter-ydoc / y-py that has no Python 3.13 wheels and unbuildable sdists,
   # so `uv`/`pip` cannot build it on 3.13 (upstream breakage). It is still
   # installed as a normal PyPI wheel via glue-jupyter; only its git-main build
   # is skipped. Re-add the line below once the upstream build is fixed:
-  #   "git+https://github.com/glue-viz/bqplot-image-gl.git"
-  "git+https://github.com/glue-viz/glue-jupyter.git"
-  "git+https://github.com/glue-viz/glue-astronomy.git"
-  "git+https://github.com/widgetti/solara.git"
-  "git+https://github.com/astropy/specreduce.git"
-  "git+https://github.com/radio-astro-tools/spectral-cube.git"
+  #   "bqplot-image-gl @ git+https://github.com/glue-viz/bqplot-image-gl.git"
+  "glue-jupyter @ git+https://github.com/glue-viz/glue-jupyter.git"
+  "glue-astronomy @ git+https://github.com/glue-viz/glue-astronomy.git"
+  # NOTE: solara is intentionally NOT overridden to git main. The solara repo is
+  # a monorepo whose root builds `solara-ui` (name mismatch for `solara`), and
+  # jdaviz already pins solara/solara-ui/solara-server to 2.0.0a0 alpha wheels,
+  # so it is bleeding-edge already. Overriding only `solara` would also be
+  # inconsistent with the pinned solara-ui / solara-server.
+  "specreduce @ git+https://github.com/astropy/specreduce.git"
+  "spectral-cube @ git+https://github.com/radio-astro-tools/spectral-cube.git"
 )
 
 project_spec=".[test]"
@@ -70,10 +76,31 @@ fi
 
 uv venv --python "${PYTHON_VERSION}" .venv-devdeps
 
+# The install is done in two stages, which reproduces how the old tox+pip
+# devdeps job behaved. uv (unlike pip) performs a single strict resolution and
+# refuses to build an inconsistent environment; jdaviz currently pins deps that
+# are *ahead* of some packages' git main (e.g. it needs ipyvuetify>=3.0.0a4 via
+# glue-jupyter PR #519, while glue-jupyter main still requires ipyvuetify<2), so
+# a one-shot resolve is unsatisfiable. pip only "worked" by installing the
+# pieces incrementally and tolerating the resulting conflict.
+#
+# Stage 1: a consistent base -- jdaviz + its test extra, with the core
+# scientific stack bumped to nightly/dev wheels (resolved normally).
+# --index-strategy unsafe-best-match makes uv consider all of the extra index
+# URLs (like pip does); without it uv only looks at the first index that
+# contains a package, so dev wheels split across the astropy/liberfa/nightly
+# indexes (e.g. pyerfa) are not found.
 uv pip install --python .venv-devdeps --prerelease allow --upgrade \
+  --index-strategy unsafe-best-match \
   "${DEV_INDEXES[@]}" \
   "${project_spec}" \
-  "${NIGHTLY[@]}" \
+  "${NIGHTLY[@]}"
+
+# Stage 2: layer the git-main dev versions on top WITHOUT their dependencies.
+# --no-deps is the uv equivalent of pip's tolerant/incremental install: it swaps
+# in the dev versions of these packages without re-resolving (and therefore
+# without failing on) their intentionally-conflicting requirements.
+uv pip install --python .venv-devdeps --no-deps --upgrade \
   "${GIT_MAIN[@]}"
 
 .venv-devdeps/bin/pytest -n auto --dist loadfile --pyargs jdaviz docs \
