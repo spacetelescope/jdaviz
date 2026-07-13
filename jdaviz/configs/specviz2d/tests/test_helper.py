@@ -24,8 +24,8 @@ def test_helper(specviz2d_helper, mos_spectrum2d):
 
 # Some API might be going through deprecation, so ignore the warning.
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-def test_plugin_user_apis(specviz2d_helper):
-    for plugin_name, plugin_api in specviz2d_helper.plugins.items():
+def test_plugin_user_apis(deconfigged_helper):
+    for plugin_name, plugin_api in deconfigged_helper.plugins.items():
         plugin = plugin_api._obj
         for attr in plugin_api._expose:
             assert hasattr(plugin, attr)

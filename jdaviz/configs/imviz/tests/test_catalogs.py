@@ -43,13 +43,13 @@ class TestCatalogs:
         assert not catalogs_plugin.results_available
 
     # testing that variables update correctly when the image/data provided does not have results
-    def test_plugin_image_no_result(self, imviz_helper, image_2d_wcs):
+    def test_plugin_image_no_result(self, deconfigged_helper, image_2d_wcs):
         arr = np.ones((10, 10))
         ndd = NDData(arr, wcs=image_2d_wcs)
 
-        imviz_helper.load_data(ndd, data_label='no_results_data')
+        deconfigged_helper.load(ndd, data_label='no_results_data')
 
-        catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
+        catalogs_plugin = deconfigged_helper.plugins["Catalog Search"]._obj
         catalogs_plugin.plugin_opened = True
         catalogs_plugin.vue_do_search()
 
@@ -129,7 +129,7 @@ class TestCatalogs:
         coords = viewer.state.reference_data.coords
         table_calc_ra = coords.pixel_to_world(float(last_row['x_coord']), float(last_row['y_coord'])).ra.value  # noqa
         assert_allclose(last_ra, table_calc_ra, rtol=0.00001)
-        assert_allclose(last_ra, imviz_helper._app._catalog_source_table[-1]['ra'], atol=0.0001)  # noqa
+        assert_allclose(last_ra, deconfigged_helper._app._catalog_source_table[-1]['ra'], atol=0.0001)  # noqa
 
         # testing that every variable updates accordingly when markers are cleared
         catalogs_plugin.clear_table()
@@ -194,13 +194,17 @@ class TestCatalogs:
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min, 1046.377555, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min,
+            1046.377555, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max, 1098.748805, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max,
+            1098.748805, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min, 699.110485, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min,
+            699.110485, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max, 751.481735, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max,
+            751.481735, atol=0.1)
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
@@ -302,7 +306,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     n_entries = len(tbl)
 
     ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd, data_label='data_with_wcs')
+    imviz_helper.load(ndd, data_label='data_with_wcs')
     assert len(imviz_helper._app.data_collection) == 1
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
@@ -506,7 +510,7 @@ def test_select_tool(imviz_helper, image_2d_wcs):
     assert 'jdaviz:selectcatalog' not in toolbar.tools
 
 
-def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
+def test_offline_ecsv_catalog_with_extra_columns(deconfigged_helper, image_2d_wcs):
     # Create a table with additional columns
     sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],
                    dec=[-20.83305528, -20.83222194, -20.83083304], unit='deg')
@@ -520,10 +524,10 @@ def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
     })
 
     ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd, data_label='data_with_wcs')
-    assert len(imviz_helper._app.data_collection) == 1
+    deconfigged_helper.load(ndd, data_label='data_with_wcs')
+    assert len(deconfigged_helper._app.data_collection) == 1
 
-    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin = deconfigged_helper.plugins['Catalog Search']
     catalogs_plugin.import_catalog(tbl)
     catalogs_plugin.search(error_on_fail=True)
 
@@ -540,12 +544,12 @@ def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
         assert float(item['sharpness']) == tbl['sharpness'][idx]
 
 
-def test_select_catalog_table_rows(imviz_helper, image_2d_wcs):
+def test_select_catalog_table_rows(deconfigged_helper, image_2d_wcs):
     """Test the ``select_rows`` functionality on table in plugin."""
 
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
+    deconfigged_helper.load(ndd)
 
     sky_coord = SkyCoord(ra=[337.49, 337.46, 337.47, 337.48, 337.49, 337.50],
                          dec=[-20.81, -20.78, -20.79, -20.80, -20.77, -20.76],
@@ -554,7 +558,7 @@ def test_select_catalog_table_rows(imviz_helper, image_2d_wcs):
                 'label': ['Source_1', 'Source_2', 'Source_3', 'Source_4',
                           'Source_5', 'Source_6']})
 
-    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin = deconfigged_helper.plugins['Catalog Search']
     plugin_table = catalogs_plugin.table._obj
 
     # load catalog

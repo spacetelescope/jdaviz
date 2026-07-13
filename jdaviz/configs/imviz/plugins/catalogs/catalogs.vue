@@ -3,11 +3,11 @@
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#catalog-search'"
     :uses_active_status="uses_active_status"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     @plugin-ping="plugin_ping($event)"
     :keep_active_sync="keep_active"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    v-model:scroll_to="scroll_to">
 
     <v-alert type="warning">
       This plugin will be deprecated in a future version of Jdaviz. Please see
@@ -17,7 +17,7 @@
 
     <plugin-viewer-select
        :items="viewer_items"
-       :selected.sync="viewer_selected"
+       v-model:selected="viewer_selected"
        label="Viewer"
        :show_if_single_entry="false"
        hint="Select a viewer to search."
@@ -25,12 +25,12 @@
 
     <plugin-file-import-select
       :items="catalog_items"
-      :selected.sync="catalog_selected"
+      v-model:selected="catalog_selected"
       label="Catalog"
       hint="Select a catalog to search."
       api_hint="plg.catalog ="
       :api_hints_enabled="api_hints_enabled"
-      :from_file.sync="from_file"
+      v-model:from_file="from_file"
       :from_file_message="from_file_message"
       dialog_title="Import Catalog"
       dialog_hint="Select a file containing a catalog"
@@ -40,13 +40,13 @@
       <g-file-import id="file-uploader"></g-file-import>
     </plugin-file-import-select>
 
-    <v-row v-if="catalog_selected === 'Gaia'">
+    <j-flex-row v-if="catalog_selected === 'Gaia'">
       <j-docs-link>
         See the <j-external-link link='https://astroquery.readthedocs.io/en/latest/gaia/gaia.html' linktext='astropy.gaia docs'></j-external-link> for details on the query defaults.
       </j-docs-link>
-    </v-row>
+    </j-flex-row>
 
-    <v-row v-if="catalog_selected && catalog_selected.endsWith('.ecsv')">
+    <j-flex-row v-if="catalog_selected && catalog_selected.endsWith('.ecsv')">
       <v-select
         v-model="selected_columns"
         :items="column_names"
@@ -54,9 +54,9 @@
         multiple
         hint="Select columns to display in the table."
       />
-    </v-row>
+    </j-flex-row>
 
-    <v-row>
+    <j-flex-row>
       <v-text-field
         v-model.number="max_sources"
         type="number"
@@ -71,9 +71,9 @@
         :label="api_hints_enabled ? 'plg.max_sources =' : 'Max Sources'"
         :class="api_hints_enabled ? 'api-hint' : null"
       ></v-text-field>
-    </v-row>
+    </j-flex-row>
 
-    <v-row class="row-no-outside-padding">
+    <v-row class="row-no-outside-padding vuetify2">
        <v-col>
          <plugin-action-button
             :results_isolated_to_plugin="true"
@@ -90,10 +90,10 @@
        </v-col>
     </v-row>
 
-    <v-row>
+    <j-flex-row>
        <p class="font-weight-bold">Results:</p>
        <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
-    </v-row>
+    </j-flex-row>
 
     <j-custom-toolbar-toggle
       v-if="number_of_results > 0"
@@ -104,8 +104,8 @@
       <v-icon>mdi-crosshairs-gps</v-icon>
     </j-custom-toolbar-toggle>
 
-    <jupyter-widget :widget="table_selected_widget"></jupyter-widget>
-    <v-row v-if="row_selected_count > 0">
+    <jupyter-widget v-if="table_selected_widget" :widget="table_selected_widget" :key="table_selected_widget"></jupyter-widget>
+    <v-row class="vuetify2" v-if="row_selected_count > 0">
         <v-col>
          <plugin-action-button
             :results_isolated_to_plugin="true"
@@ -121,7 +121,7 @@
         </v-col>
     </v-row>
 
-    <jupyter-widget :widget="table_widget"></jupyter-widget>
+    <jupyter-widget v-if="table_widget" :widget="table_widget" :key="table_widget"></jupyter-widget>
 
   </j-tray-plugin>
 </template>

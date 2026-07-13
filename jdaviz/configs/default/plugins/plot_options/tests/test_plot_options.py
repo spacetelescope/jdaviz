@@ -8,6 +8,8 @@ import matplotlib
 from numpy.testing import assert_allclose
 from packaging.version import Version
 from photutils.datasets import make_4gaussians_image
+from regions import CirclePixelRegion, PixCoord
+from jdaviz.configs.imviz.tests.utils import _image_hdu_wcs
 
 from jdaviz.configs.default.plugins.plot_options.plot_options import SplineStretch
 
@@ -88,7 +90,9 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     assert_allclose(cb.x, po.stretch_histogram.figure.marks[0].x)
     assert_allclose(cb.y, 1)
     # remove version check once glue-jupyer >0.29.0 is pinned
-    if Version(glue_jupyter.__version__) <= Version('0.29.0'):  # Gray scale, linear
+    # Also temporarily check for pinned PR for Vue3
+    if (Version(glue_jupyter.__version__) <= Version('0.29.0') or
+            glue_jupyter.__version__ == '0.29.1.dev17+g98eeba2c8'):  # Gray scale, linear
         assert cb.colors == [
             '#050505', '#0f0f0f', '#191919', '#232323', '#2e2e2e',
             '#383838', '#424242', '#4c4c4c', '#575757', '#616161',
@@ -540,3 +544,159 @@ def test_table_viewer_plot_options(deconfigged_helper):
     # Layer options should be empty/excluded when only table viewer is selected
     # (layers are excluded via the not_in_table_viewer filter)
     assert len(po.layer.choices) == 0
+
+
+def test_set_layer_to_top_wcs_linked(imviz_helper):
+    """Test set_layer_to_top with WCS-linked images, orientation layer, and subsets.
+
+    Scenarios covered:
+    - default top layer is the last loaded image
+    - set_layer_to_top promotes a non-top image layer
+    - after promotion, the previous top layer is no longer on top
+    - subset layers always yield layer_is_top = False (cannot be reordered)
+    - switching from a subset selection back to an image layer works correctly
+    - set_layer_to_top raises ValueError when multiselect is active
+    """
+
+    arr = np.ones((10, 10))
+
+    # Load three images with identical WCS (linked by WCS adds an orientation layer)
+    imviz_helper.load_data(_image_hdu_wcs(arr), data_label='img_a')
+    imviz_helper.load_data(_image_hdu_wcs(arr), data_label='img_b')
+    imviz_helper.load_data(_image_hdu_wcs(arr), data_label='img_c')
+
+    # Link by WCS; this installs an orientation/WCS-only layer in the viewer
+    imviz_helper.link_data(align_by='wcs')
+
+    po = imviz_helper.plugins['Plot Options']._obj
+    subset_plugin = imviz_helper.plugins['Subset Tools']
+
+    # Set viewer shape so that spatial region import works correctly
+    viewer = imviz_helper.default_viewer._obj.glue_viewer
+    viewer.shape = (100, 100)
+    viewer.state._set_axes_aspect_ratio(1)
+
+    po.viewer_selected = 'imviz-0'
+
+    # After loading, the last image loaded ('img_c') is on top by default
+    po.layer_selected = 'img_c[SCI,1]'
+    assert po.layer_is_top is True
+
+    # Earlier images are not on top
+    po.layer_selected = 'img_b[SCI,1]'
+    assert po.layer_is_top is False
+
+    po.layer_selected = 'img_a[SCI,1]'
+    assert po.layer_is_top is False
+
+    # Promote img_a to the top
+    po.set_layer_to_top()
+    assert po.layer_is_top is True
+
+    # img_b and img_c are no longer the top image layer
+    po.layer_selected = 'img_b[SCI,1]'
+    assert po.layer_is_top is False
+
+    po.layer_selected = 'img_c[SCI,1]'
+    assert po.layer_is_top is False
+
+    # Create a circular subset
+    subset_plugin.import_region(
+        [CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2)],
+        combination_mode='new'
+    )
+
+    # Subset layers always return layer_is_top = False; the button is disabled
+    # for subsets since they cannot be independently reordered as image layers
+    po.layer_selected = 'Subset 1'
+    assert po.layer_is_top is False
+
+    # Create a second subset to verify the behaviour is consistent
+    subset_plugin.import_region(
+        [CirclePixelRegion(center=PixCoord(x=3, y=3), radius=1)],
+        combination_mode='new'
+    )
+    po.layer_selected = 'Subset 2'
+    assert po.layer_is_top is False
+
+    # Switch back from a subset to an image layer and promote it
+    # img_a is still on top; selecting img_c gives layer_is_top = False
+    po.layer_selected = 'img_c[SCI,1]'
+    assert po.layer_is_top is False
+
+    po.set_layer_to_top()
+    assert po.layer_is_top is True
+
+    # img_a is no longer on top after img_c was promoted
+    po.layer_selected = 'img_a[SCI,1]'
+    assert po.layer_is_top is False
+
+    # Promote img_b to the top
+    po.layer_selected = 'img_b[SCI,1]'
+    assert po.layer_is_top is False
+
+    po.set_layer_to_top()
+    assert po.layer_is_top is True
+
+    # img_c is no longer the top image layer
+    po.layer_selected = 'img_c[SCI,1]'
+    assert po.layer_is_top is False
+
+    # set_layer_to_top raises when viewer multiselect is active
+    po.layer_selected = 'img_a[SCI,1]'
+    po.viewer_multiselect = True
+    with pytest.raises(ValueError, match="single viewer"):
+        po.set_layer_to_top()
+    po.viewer_multiselect = False
+
+    # set_layer_to_top raises when layer multiselect is active
+    po.layer_multiselect = True
+    with pytest.raises(ValueError, match="single viewer"):
+        po.set_layer_to_top()
+    po.layer_multiselect = False
+
+
+def test_set_layer_to_top_with_blinking(imviz_helper):
+    """Blinking toggles layer visibility to show one image at a time.  The top-layer
+    determination (active layer highlight and ``layer_is_top`` button state) must follow
+    the visible layer rather than remaining stuck on the highest-zorder (but hidden) layer.
+    """
+    arr = np.ones((10, 10))
+    imviz_helper.load_data(arr, data_label='img_a')
+    imviz_helper.load_data(arr, data_label='img_b')
+    imviz_helper.load_data(arr, data_label='img_c')
+
+    po = imviz_helper.plugins['Plot Options']._obj
+    po.viewer_selected = 'imviz-0'
+    viewer = imviz_helper.default_viewer._obj.glue_viewer
+
+    # last loaded image ('img_c') is on top and visible by default
+    po.layer_selected = 'img_c'
+    assert po.layer_is_top is True
+    assert po.active_layer == 'img_c'
+
+    # blink to show a single (different) image
+    viewer.blink_once()
+    visible_labels = [lyr.layer.label for lyr in viewer.state.layers if lyr.visible]
+    assert len(visible_labels) == 1
+    visible_label = visible_labels[0]
+    assert visible_label != 'img_c'
+
+    # the highlighted/top layer follows the now-visible layer
+    assert po.active_layer == visible_label
+
+    # the previously-top (now hidden) layer is no longer considered on top
+    assert po.layer_is_top is False
+
+    # selecting the currently-visible layer reports it as the top layer
+    po.layer_selected = visible_label
+    assert po.layer_is_top is True
+
+    # promoting a blinked-out layer makes it visible and on top
+    po.layer_selected = 'img_c'
+    assert po.layer_is_top is False
+    po.set_layer_to_top()
+    img_c_layer = [lyr for lyr in viewer.state.layers if lyr.layer.label == 'img_c'][0]
+    assert img_c_layer.visible is True
+    assert po.layer_is_top is True
+    assert po.active_layer == 'img_c'

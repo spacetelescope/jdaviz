@@ -2,40 +2,40 @@
   <j-tray-plugin
     :config="config"
     :plugin_key="plugin_key || '3D Spectral Extraction'"
-    :api_hints_enabled.sync="api_hints_enabled"
+    v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keep_active.sync="keep_active"
+    v-model:keep_active="keep_active"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to"
+    v-model:scroll_to="scroll_to"
     :disabled_msg="disabled_msg">
 
-    <v-row>
+    <j-flex-row>
       <v-expansion-panels popout>
         <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Settings</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <v-row>
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
+            <j-flex-row>
               <plugin-switch
-                :value.sync="show_live_preview"
+                v-model:value="show_live_preview"
                 label="Show live-extraction"
                 api_hint="plg.show_live_preview = "
                 :api_hints_enabled="api_hints_enabled"
                 hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
               />
-            </v-row>
-          </v-expansion-panel-content>
+            </j-flex-row>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </j-flex-row>
 
     <plugin-dataset-select
       :items="dataset_items"
-      :selected.sync="dataset_selected"
+      v-model:selected="dataset_selected"
       :show_if_single_entry="api_hints_enabled"
       label="Data"
       api_hint="plg.dataset ="
@@ -49,7 +49,7 @@
 
       <plugin-subset-select
         :items="aperture_items"
-        :selected.sync="aperture_selected"
+        v-model:selected="aperture_selected"
         :show_if_single_entry="true"
         label="Spatial aperture"
         api_hint="plg.aperture ="
@@ -58,31 +58,31 @@
       />
 
       <div v-if="wavelength_dependent_available">
-        <v-row v-if="aperture_selected !== 'Entire Cube' && !aperture_selected_validity.is_aperture">
+        <j-flex-row v-if="aperture_selected !== 'Entire Cube' && !aperture_selected_validity.is_aperture">
           <span class="v-messages v-messages__message text--secondary">
               Aperture: '{{aperture_selected}}' does not support wavelength dependence (cone support): {{aperture_selected_validity.aperture_message}}.
           </span>
-        </v-row>
+        </j-flex-row>
 
         <div v-if="aperture_selected_validity.is_aperture">
-          <v-row>
+          <j-flex-row>
             <plugin-switch
-              :value.sync="wavelength_dependent"
+              v-model:value="wavelength_dependent"
               label="Wavelength dependent"
               api_hint="plg.wavelength_dependent = "
               :api_hints_enabled="api_hints_enabled"
               hint="Vary aperture linearly with wavelength"
             />
-          </v-row>
+          </j-flex-row>
           <div v-if="wavelength_dependent">
-            <v-row justify="end">
+            <j-flex-row justify="end">
               <j-tooltip tooltipcontent="Adopt the current slice as the reference wavelength">
                 <plugin-action-button :results_isolated_to_plugin="true" @click="adopt_slice_as_reference">
                   Adopt Current Slice
                 </plugin-action-button>
               </j-tooltip>
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <v-text-field
                 v-model.number="reference_spectral_value"
                 type="number"
@@ -92,14 +92,14 @@
                 hint="Wavelength at which the aperture matches the selected subset."
                 persistent-hint
               ></v-text-field>
-            </v-row>
-            <v-row justify="end">
+            </j-flex-row>
+            <j-flex-row justify="end">
               <j-tooltip tooltipcontent="Select the slice nearest the reference wavelength">
                 <plugin-action-button :results_isolated_to_plugin="true" @click="goto_reference_spectral_value">
                   Slice to Wavelength
                 </plugin-action-button>
               </j-tooltip>
-            </v-row>
+            </j-flex-row>
           </div>
         </div>
       </div>
@@ -109,7 +109,7 @@
       <j-plugin-section-header :active="active_step==='bg'">Background</j-plugin-section-header>
       <plugin-subset-select
         :items="bg_items"
-        :selected.sync="bg_selected"
+        v-model:selected="bg_selected"
         :show_if_single_entry="true"
         label="Background"
         api_hint="plg.background ="
@@ -117,32 +117,32 @@
         hint="Select a spatial region to use for background subtraction."
       />
 
-      <v-row v-if="aperture_selected === bg_selected">
+      <j-flex-row v-if="aperture_selected === bg_selected">
         <span class="v-messages v-messages__message text--secondary" style="color: red !important">
             Background and aperture cannot be set to the same subset
         </span>
-      </v-row>
+      </j-flex-row>
 
-      <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture">
+      <j-flex-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             Background: '{{bg_selected}}' does not support wavelength dependence (cone support): {{bg_selected_validity.aperture_message}}.
         </span>
-      </v-row>
+      </j-flex-row>
 
       <div v-if="aperture_selected_validity.is_aperture
                  && bg_selected_validity.is_aperture
                  && wavelength_dependent">
-        <v-row>
+        <j-flex-row>
           <plugin-switch
-            :value.sync="bg_wavelength_dependent"
+            v-model:value="bg_wavelength_dependent"
             label="Wavelength dependent"
             api_hint="bg_wavelength_dependent ="
             :api_hints_enabled="api_hints_enabled"
             hint="Vary background linearly with wavelength"
           />
-        </v-row>
+        </j-flex-row>
         <div v-if="bg_wavelength_dependent">
-          <v-row>
+          <j-flex-row>
             <v-text-field
               v-model.number="reference_spectral_value"
               type="number"
@@ -153,35 +153,35 @@
               persistent-hint
               disabled
             ></v-text-field>
-          </v-row>
+          </j-flex-row>
         </div>
       </div>
 
-      <v-row v-if="bg_selected !== 'None' && bg_export_available">
+      <j-flex-row v-if="bg_selected !== 'None' && bg_export_available">
         <v-expansion-panels accordion>
           <v-expansion-panel>
-            <v-expansion-panel-header v-slot="{ open }">
+            <v-expansion-panel-title v-slot="{ open }">
               <span style="padding: 6px; text-transform: capitalize;">Export Background {{resulting_product_name}}</span>
-            </v-expansion-panel-header>
-            <v-expansion-panel-content class="plugin-expansion-panel-content">
-              <v-row v-if="function_selected === 'Sum'">
+            </v-expansion-panel-title>
+            <v-expansion-panel-text class="plugin-expansion-panel-content">
+              <j-flex-row v-if="function_selected === 'Sum'">
                 <plugin-switch
-                  :value.sync="bg_spec_per_spaxel"
+                  v-model:value="bg_spec_per_spaxel"
                   label="Normalize per-spaxel"
                   api_hint="bg_spec_per_spaxel ="
                   :api_hints_enabled="api_hints_enabled"
                   :hint="'Whether to normalize the background per spaxel (not shown in preview). Otherwise, the '+resulting_product_name+' will be scaled by the ratio between the areas of the extraction aperture to the background aperture.'"
                 />
-              </v-row>
+              </j-flex-row>
               <plugin-add-results
-                :label.sync="bg_spec_results_label"
+                v-model:label="bg_spec_results_label"
                 :label_default="bg_spec_results_label_default"
-                :label_auto.sync="bg_spec_results_label_auto"
+                v-model:label_auto="bg_spec_results_label_auto"
                 :label_invalid_msg="bg_spec_results_label_invalid_msg"
                 :label_overwrite="bg_spec_results_label_overwrite"
                 :label_hint="'Label for the background '+resulting_product_name+'.'"
                 :add_to_viewer_items="bg_spec_add_to_viewer_items"
-                :add_to_viewer_selected.sync="bg_spec_add_to_viewer_selected"
+                v-model:add_to_viewer_selected="bg_spec_add_to_viewer_selected"
                 action_label="Export"
                 :action_tooltip="'Create background '+resulting_product_name"
                 add_results_api_hint='plg.bg_spec_results'
@@ -189,83 +189,83 @@
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_spec"
               ></plugin-add-results>
-            </v-expansion-panel-content>
+            </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
-      </v-row>
+      </j-flex-row>
 
     </div>
 
     <div @mouseover="() => active_step='extract'">
       <j-plugin-section-header :active="active_step==='extract'">Extract</j-plugin-section-header>
 
-      <v-row v-if="aperture_selected !== 'None' && !aperture_selected_validity.is_aperture">
+      <j-flex-row v-if="aperture_selected !== 'None' && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             Aperture: '{{aperture_selected}}' does not support subpixel: {{aperture_selected_validity.aperture_message}}.
         </span>
-      </v-row>
-      <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture">
+      </j-flex-row>
+      <j-flex-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             Background: '{{bg_selected}}' does not support subpixel: {{bg_selected_validity.aperture_message}}.
         </span>
-      </v-row>
+      </j-flex-row>
 
 
       <div v-if="((aperture_selected === 'Entire Cube' && bg_selected !== 'None') || aperture_selected_validity.is_aperture)
                  && (bg_selected === 'None' || bg_selected_validity.is_aperture)">
         <plugin-select
           :items="aperture_method_items.map(i => i.label)"
-          :selected.sync="aperture_method_selected"
+          v-model:selected="aperture_method_selected"
           label="Aperture masking method"
           api_hint="plg.aperture_method ="
           :api_hints_enabled="api_hints_enabled"
           :hint="'Extract '+resulting_product_name+' using an aperture masking method in place of the subset mask.'"
         />
-        <v-row>
+        <j-flex-row>
           <j-docs-link>
               See the <j-external-link link='https://photutils.readthedocs.io/en/stable/user_guide/aperture.html#aperture-and-pixel-overlap'
               linktext='photutils docs'></j-external-link> for more details on aperture masking methods.
           </j-docs-link>
-        </v-row>
+        </j-flex-row>
       </div>
 
       <plugin-select
         v-if="function_items.length > 1"
         :items="function_items.map(i => i.label)"
-        :selected.sync="function_selected"
+        v-model:selected="function_selected"
         label="Function"
         api_hint="plg.function ="
         :api_hints_enabled="api_hints_enabled"
         :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
       />
-      <v-row v-if="conflicting_aperture_and_function">
+      <j-flex-row v-if="conflicting_aperture_and_function">
         <span class="v-messages v-messages__message text--secondary" style="color: red !important">
           {{conflicting_aperture_error_message}}
         </span>
-      </v-row>
+      </j-flex-row>
 
       <plugin-previews-temp-disabled
-        :previews_temp_disabled.sync="previews_temp_disabled"
+        v-model:previews_temp_disabled="previews_temp_disabled"
         :previews_last_time="previews_last_time"
-        :show_live_preview.sync="show_live_preview"
+        v-model:show_live_preview="show_live_preview"
       />
 
       <plugin-add-results
-        :label.sync="results_label"
+        v-model:label="results_label"
         :label_default="results_label_default"
-        :label_auto.sync="results_label_auto"
+        v-model:label_auto="results_label_auto"
         :label_invalid_msg="results_label_invalid_msg"
         :label_overwrite="results_label_overwrite"
         :label_hint="'Label for the extracted '+resulting_product_name+'.'"
         :add_to_viewer_items="add_to_viewer_items"
-        :add_to_viewer_selected.sync="add_to_viewer_selected"
+        v-model:add_to_viewer_selected="add_to_viewer_selected"
         :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
-        :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
-        :add_to_viewer_label_value.sync="add_to_viewer_label_value"
+        v-model:add_to_viewer_create_new_selected="add_to_viewer_create_new_selected"
+        v-model:add_to_viewer_label_value="add_to_viewer_label_value"
         :add_to_viewer_label_default="add_to_viewer_label_default"
-        :add_to_viewer_label_auto.sync="add_to_viewer_label_auto"
+        v-model:add_to_viewer_label_auto="add_to_viewer_label_auto"
         :add_to_viewer_label_invalid_msg="add_to_viewer_label_invalid_msg"
-        :auto_update_result.sync="auto_update_result"
+        v-model:auto_update_result="auto_update_result"
         action_label="Extract"
         action_tooltip="Run spectral extraction with error and mask propagation"
         :action_spinner="spinner"

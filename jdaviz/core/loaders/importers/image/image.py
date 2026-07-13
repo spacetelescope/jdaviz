@@ -90,7 +90,7 @@ class ImageImporter(BaseImporterToDataCollection):
         super().__init__(*args, **kwargs)
 
         self.parent = DatasetSelect(self, 'parent_items', 'parent_selected',
-                                    multiselect=None, manual_options=['Auto'])
+                                    multiselect=None, manual_options=['Auto', 'None'])
         self.parent.add_filter('is_image', 'not_from_plugin')
         self.parent.selected = 'Auto'
 
@@ -134,7 +134,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'ver': hdu.ver,
                                 'name_ver': f"{hdu.name},{hdu.ver}",
                                 'index': index,
-                                'data_hash': create_data_hash(hdu),
+                                'data_hash': create_data_hash(getattr(hdu, 'data', None)),
                                 'obj': hdu}
                                for index, hdu in enumerate(input)]
             elif input_is_roman_asdf:
@@ -412,6 +412,71 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             return [{}] * len(self.output)
 
+    def _data_label_for_ext(self, base_data_label, ext_item):
+        """
+        Determine the data label for some extension of the file.
+        """
+        if self.data_label_is_prefix:
+            # If data_label is a prefix, we need to append the extension
+            # to the data label.
+            return self._get_label_with_extension(base_data_label,
+                                                  ext_item.get('name'),
+                                                  ver=ext_item.get('ver', None))
+
+        # If data_label is not a prefix, we use it as is.
+        return base_data_label
+
+    @staticmethod
+    def _find_sci_parent_ext(ext_item, candidate_ext_items):
+        """
+        Return the SCI/DATA extension (matching ver) that should act as the
+        parent of ``ext_item``, or None if no suitable science parent exists.
+        """
+        for other_ext_item in candidate_ext_items:
+            if other_ext_item is ext_item:
+                # an extension can't be its own parent
+                continue
+
+            if (other_ext_item.get('name').lower() in ('sci', 'data')
+                    and other_ext_item.get('ver', None) == ext_item.get('ver', None)):
+                return other_ext_item
+
+        return None
+
+    def _determine_parent_label(self, parent_selected, ext_item, base_data_label,
+                                selected_ext_items, all_ext_items, dc_hash_to_label):
+        """
+        Determine the parent data label to associate with the extension being
+        imported based on the ``Parent Dataset`` selection.
+
+        * ``'None'``: never associate, even with multiple extensions.
+        * a specific dataset label: associate with that dataset.
+        * ``'Auto'``: associate other extensions (e.g. ERR, DQ) with the
+          matching science (SCI/DATA, matching ver) extension. The science parent
+          may either be part of the current import or already present in the data
+          collection (matched by data hash), so that extensions loaded later still
+          associate with a previously-loaded science extension.
+        """
+        if parent_selected == 'None':
+            return None
+        elif parent_selected != 'Auto':
+            return parent_selected
+
+        parent_ext = self._find_sci_parent_ext(ext_item, all_ext_items)
+        # Data coming from a plugin is never auto-associated
+        if (getattr(self.input, 'meta', {}).get('plugin', None) is not None or
+                parent_ext is None):
+            return None
+
+        # If the science parent is part of the current import, use its new label
+        if any(parent_ext is sel_ext for sel_ext in selected_ext_items):
+            return self._data_label_for_ext(base_data_label, parent_ext)
+
+        # Otherwise associate with a matching science parent already in the
+        # data collection (matched by data hash from the extension dropdown)
+        parent_hash = parent_ext.get('data_hash')
+        return dc_hash_to_label.get(parent_hash, None)
+
     def __call__(self):
 
         base_data_label = self.data_label_value
@@ -420,6 +485,19 @@ class ImageImporter(BaseImporterToDataCollection):
         ext_items = self.ext_items
 
         parent_selected = self.parent.selected
+
+        # Grab all extensions available in the extension dropdown.
+        # Used to find a parent even when said parent isn't part of the current selection.
+        if self.input_has_extensions:
+            all_ext_items = self.extension.items
+        else:
+            all_ext_items = ext_items
+
+        # Map data hash -> label for data already in the data collection so that
+        # 'Auto' can associate new children with a previously loaded parent.
+        dc_hash_to_label = {data.meta.get('_data_hash'): data.label
+                            for data in self._app.data_collection}
+
         for output, ext_item in zip(outputs, ext_items):
             if output is None:
                 # needed for NDData where one of the "extensions" might
@@ -428,40 +506,12 @@ class ImageImporter(BaseImporterToDataCollection):
                 continue
 
             # Determine data label
-            if self.data_label_is_prefix:
-                # If data_label is a prefix, we need to append the extension
-                # to the data label.
-                data_label = self._get_label_with_extension(base_data_label,
-                                                            ext_item.get('name'),
-                                                            ver=ext_item.get('ver', None))
-            else:
-                # If data_label is not a prefix, we use it as is.
-                data_label = base_data_label
+            data_label = self._data_label_for_ext(base_data_label, ext_item)
 
             # Determine parent
-            if (parent_selected == 'Auto' and
-                    len(ext_items) > 1 and
-                    getattr(self.input, 'meta', {}).get('plugin', None) is None):
-                # If parent is set to 'Auto', use SCI/DATA extension
-                # as parent of any other selected extensions with same ver (if applicable)
-                for other_ext_item in ext_items:
-                    if (other_ext_item.get('name') in ('SCI', 'sci', 'DATA', 'data')
-                            and other_ext_item.get('ver', None) == ext_item.get('ver', None)):
-                        parent_ext_item = other_ext_item
-                        break
-                else:
-                    # No SCI/DATA extension found, so default to no parent
-                    parent_ext_item = None
-                    parent_data_label = None
-                if parent_ext_item is not None:
-                    # assume self.data_label_is_prefix is True
-                    parent_data_label = self._get_label_with_extension(base_data_label,
-                                                                       parent_ext_item.get('name'),
-                                                                       ver=parent_ext_item.get('ver', None))  # noqa
-            elif parent_selected == 'Auto':
-                parent_data_label = None
-            else:
-                parent_data_label = parent_selected
+            parent_data_label = self._determine_parent_label(parent_selected, ext_item,
+                                                             base_data_label, ext_items,
+                                                             all_ext_items, dc_hash_to_label)
 
             if self.gwcs_to_fits_sip:
                 output = self._glue_data_wcs_to_fits(output)
@@ -617,7 +667,7 @@ def _jwst2data(hdu, hdulist, try_gwcs_to_fits_sip=False):
                 bunit = ''
 
             # This is instance of gwcs.WCS, not astropy.wcs.WCS
-            if 'wcs' in dm_meta:
+            if dm_meta.get('wcs', None) is not None:
                 gwcs = dm_meta['wcs']
 
                 if try_gwcs_to_fits_sip:

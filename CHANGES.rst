@@ -29,11 +29,25 @@ New Features
   top of the loader window when fetching files from selected footprints. Success
   messages auto-dismiss after 4 seconds and a progress indicator appears on the file
   table during loading. [#4203]
-  
+
 - Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#4224]
 
 - Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to
   reset all emission lines to show == True. [#4224]
+
+- The Virtual Observatory loader now supports querying spectral products
+  and catalog targets. [#4060]
+
+- Add "set layer to top" button in plot options. [#4218]
+
+- Show basic table subset information in the Subset Tools plugin. [#4266]
+
+- Implement a "focus mode" that shows a simplified view of a single viewer.  Focus mode can
+  be toggled on/off from the viewer toolbar or via the API. [#4242]
+
+- Parenting now includes a 'None' option to allow multi-extension FITS to be loaded as separate data entries. [#4248]
+
+- 'Auto' parenting can now associate with data already loaded into the app without needing to specify the data label. [#4248]
 
 Mosviz
 ^^^^^^
@@ -49,6 +63,10 @@ Bug Fixes
 
 - HST products (as defined by ``OBSTYPE``) are now correctly identified as being
   either images or 2D spectra. [#4217]
+
+- Fixed main widget not displaying in standalone build. [#4271]
+
+- Fixed a Vue3 button issue that triggers backend calls twice. [#4276, #4277]
 
 Mosviz
 ^^^^^^
@@ -68,6 +86,8 @@ Other Changes and Additions
   of reusing the existing flux cube label, which previously caused a silent
   overwrite. [#4125]
 
+- Updated all front end vuetify templates for Vue 3 compatibility. [#4053]
+
 5.0.3 (unreleased)
 ==================
 
@@ -79,7 +99,21 @@ Bug Fixes
 
 - Fixed a bug in the compass plugin where the image would be flipped when WCS linked. [#4252]
 
+- Update the File Drop Resolver to parse input the same way as the File Resolver,
+  which fixes a bug where the resolver would not correctly parse some file types. [#4250]
+
+- Fix horizontal spacing of the app-level toolbar for small displays. [#4245]
+
+- Fix treating input tables as queries and add support for exports from MAST portal. [#4234]
+
+- Fixed a bug with the astroquery/VO loaders where the loader would get stuck on a failed query. [#4257]
+
+- Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264]
+
+- Safely handle case where meta.wcs may be None. [#4272]
+
 Mosviz
+------
 
 
 5.0.2 (2026-06-12)
@@ -115,8 +149,6 @@ Bug Fixes
 
 - Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
 
-Mosviz
-^^^^^^
 
 5.0.1 (2026-05-01)
 ==================

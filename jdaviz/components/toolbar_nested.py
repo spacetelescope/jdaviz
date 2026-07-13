@@ -44,6 +44,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
         self.viewer = viewer
+        self._default_mouse_mode_active = self._default_mouse_mode is not None
 
         # Store original values for reset functionality
         if isinstance(tools_nested, list):
@@ -70,6 +71,11 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             # Subscribe to restore toolbar message with dedicated handler
             self.viewer.hub.subscribe(self, RestoreToolbarMessage,
                                       handler=lambda msg: self.restore_tools(all_viewers=False))
+            # React to focus mode changes so tools show/hide accordingly
+            if hasattr(self.viewer, 'jdaviz_app'):
+                self.viewer.jdaviz_app.state.add_callback(
+                    'focus_viewer', self._on_focus_viewer_changed
+                )
 
     def _on_viewer_removed(self, msg):
         """Handle viewer removal - clean up toolbar overrides if this viewer is removed."""
@@ -82,6 +88,21 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 msg.viewer_id == self.viewer.reference_id and
                 self.tool_override_mode):
             self.restore_tools(all_viewers=True)
+
+    def _on_focus_viewer_changed(self, focus_viewer):
+        """React to focus mode changes: deactivate any active tool that would be hidden."""
+        # if the active tool is going to be made not-visible by focus mode,
+        # deactivate it first (only when entering focus mode, not exiting)
+        entering_focus = (
+            bool(focus_viewer)
+            and focus_viewer == getattr(self.viewer, 'reference', None)
+        )
+        if entering_focus and self.active_tool_id:
+            tool = self.tools.get(self.active_tool_id)
+            if tool is not None and not getattr(tool, 'keep_visible_in_focus_mode', False):
+                self.active_tool_id = None
+        # update all tool visibilities, as some may be focus-mode-dependent
+        self._update_tool_visibilities()
 
     def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[],
                        custom_widgets=None, custom_widgets_callback=None, active_tool=None):
@@ -206,8 +227,16 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError
         # the tool will always be visible
-        if hasattr(self.tools[tool_id], 'is_visible'):
-            return self.tools[tool_id].is_visible()
+        tool = self.tools[tool_id]
+        # in focus mode, only show tools marked keep_visible_in_focus_mode
+        if (hasattr(self.viewer, 'jdaviz_app')
+                and self.viewer.jdaviz_app.state.focus_viewer
+                and self.viewer.jdaviz_app.state.focus_viewer
+                == getattr(self.viewer, 'reference', None)
+                and not getattr(tool, 'keep_visible_in_focus_mode', False)):
+            return False
+        if hasattr(tool, 'is_visible'):
+            return tool.is_visible()
         return True
 
     def _disabled_msg(self, tool_id):
@@ -296,6 +325,20 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 self.tools_data[tool_id] = {**self.tools_data[tool_id],
                                             'has_suboptions': n_visible > 1}
 
+        # in focus mode, flatten the toolbar (skip nesting)
+        in_focus_mode = (
+            hasattr(self.viewer, 'jdaviz_app')
+            and self.viewer.jdaviz_app.state.focus_viewer
+            and self.viewer.jdaviz_app.state.focus_viewer
+            == getattr(self.viewer, 'reference', None)
+        )
+        if in_focus_mode:
+            for tool_id, info in self.tools_data.items():
+                if info['visible']:
+                    self.tools_data[tool_id] = {**info,
+                                                'primary': True,
+                                                'has_suboptions': False}
+
         # mutation to dictionary needs to be manually sent to update the UI
         self.send_state("tools_data")
         if needs_deactivate_active:
@@ -311,6 +354,32 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             if self.tools_data[tool_id]['primary'] and self.tools_data[tool_id]['visible']:
                 self.active_tool_id = tool_id
                 break
+
+    @traitlets.observe('active_tool')
+    def _on_change_active_tool(self, change):
+        # Mirror BasicJupyterToolbar behavior, but guard against redundant
+        # deactivate/activate calls during toolbar override rebuilds.
+        # IMPORTANT: do not write back to active_tool_id here (that can create
+        # traitlet feedback loops with _on_change_v_model).
+        if change.old:
+            try:
+                change.old.deactivate()
+            except KeyError:
+                pass
+        else:
+            if self._default_mouse_mode and self._default_mouse_mode_active:
+                try:
+                    self._default_mouse_mode.deactivate()
+                except KeyError:
+                    pass
+                self._default_mouse_mode_active = False
+
+        if change.new:
+            change.new.activate()
+        else:
+            if self._default_mouse_mode is not None and not self._default_mouse_mode_active:
+                self._default_mouse_mode.activate()
+                self._default_mouse_mode_active = True
 
     @traitlets.observe('active_tool_id')
     def _on_change_v_model(self, event):

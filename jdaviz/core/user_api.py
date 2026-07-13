@@ -391,7 +391,7 @@ class LoaderUserApi(UserApiWrapper):
     def __setattr__(self, attr, value):
         result = super().__setattr__(attr, value)
         if attr not in _internal_attrs:
-            resolver_err = getattr(self._obj, 'parsed_input_is_resolvable', '')
+            resolver_err = getattr(self._obj, 'parsed_input_not_resolvable_message', '')
             if resolver_err:
                 raise ValueError(resolver_err)
         return result

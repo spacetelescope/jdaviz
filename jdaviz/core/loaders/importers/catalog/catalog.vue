@@ -4,7 +4,7 @@
     <plugin-select v-if="extension_items.length"
       :items="extension_items"
       :exists_in_dc="existing_data_in_dc"
-      :selected.sync="extension_selected"
+      v-model:selected="extension_selected"
       :show_if_single_entry="true"
       :multiselect="extension_multiselect"
       label="Extension"
@@ -27,7 +27,7 @@
 
       <plugin-select
         :items="col_ra_items.map(i => i.label)"
-        :selected.sync="col_ra_selected"
+        v-model:selected="col_ra_selected"
         label="RA"
         hint="Column corresponding to RA coordinate."
         api_hint="ldr.importer.col_ra ="
@@ -36,7 +36,7 @@
 
       <plugin-select v-if="!col_ra_has_unit"
         :items="col_ra_unit_items.map(i => i.label)"
-        :selected.sync="col_ra_unit_selected"
+        v-model:selected="col_ra_unit_selected"
         label="RA Unit"
         hint="Unit for RA coordinate."
         api_hint="ldr.importer.col_ra_unit ="
@@ -45,7 +45,7 @@
 
       <plugin-select
         :items="col_dec_items.map(i => i.label)"
-        :selected.sync="col_dec_selected"
+        v-model:selected="col_dec_selected"
         label="Dec"
         hint="Column corresponding to Dec. coordinate."
         api_hint="ldr.importer.col_dec ="
@@ -54,7 +54,7 @@
 
       <plugin-select v-if="!col_dec_has_unit"
         :items="col_dec_unit_items.map(i => i.label)"
-        :selected.sync="col_dec_unit_selected"
+        v-model:selected="col_dec_unit_selected"
         label="Dec Unit"
         hint="Unit for Dec. coordinate"
         api_hint="ldr.importer.col_dec_unit ="
@@ -63,7 +63,7 @@
 
       <plugin-select
         :items="col_x_items.map(i => i.label)"
-        :selected.sync="col_x_selected"
+        v-model:selected="col_x_selected"
         label="X Column"
         hint="Column corresponding to X coordinate."
         api_hint="ldr.importer.col_x ="
@@ -72,7 +72,7 @@
 
       <plugin-select
         :items="col_y_items.map(i => i.label)"
-        :selected.sync="col_y_selected"
+        v-model:selected="col_y_selected"
         label="Y Column"
         hint="Column corresponding to Y coordinate."
         api_hint="ldr.importer.col_y ="
@@ -82,7 +82,7 @@
       <j-plugin-section-header>Select Source ID Column</j-plugin-section-header>
       <plugin-select
         :items="col_id_items.map(i => i.label)"
-        :selected.sync="col_id_selected"
+        v-model:selected="col_id_selected"
         label="Source ID Column"
         hint="Select column to use as source IDs (displayed on mouseover for image/scatter viewers)."
         api_hint="ldr.importer.col_id ="
@@ -92,7 +92,7 @@
       <j-plugin-section-header>Select Additional Columns</j-plugin-section-header>
       <plugin-select
         :items="col_other_items.map(i => i.label)"
-        :selected.sync="col_other_selected"
+        v-model:selected="col_other_selected"
         :multiselect="col_other_multiselect"
         label="Other Columns"
         hint="Select additional columns to load."
@@ -100,10 +100,10 @@
         :api_hints_enabled="api_hints_enabled"
       />
 
-    <plugin-auto-label
-      :value.sync="data_label_value"
+      <plugin-auto-label
+      v-model:value="data_label_value"
       :default="data_label_default"
-      :auto.sync="data_label_auto"
+      v-model:auto="data_label_auto"
       :invalid_msg="data_label_invalid_msg"
       label="Catalog label"
       api_hint="ldr.importer.label ="
@@ -111,34 +111,34 @@
       hint="Label to assign to the catalog."
     ></plugin-auto-label>
 
-    <plugin-viewer-create-new
-      :items="viewer_items"
-      :selected.sync="viewer_selected"
-      :create_new_items="viewer_create_new_items"
-      :create_new_selected.sync="viewer_create_new_selected"
-      :new_label_value.sync="viewer_label_value"
-      :new_label_default="viewer_label_default"
-      :new_label_auto.sync="viewer_label_auto"
-      :new_label_invalid_msg="viewer_label_invalid_msg"
-      :multiselect="viewer_multiselect"
-      :show_multiselect_toggle="false"
-      label="Viewer"
-      api_hint='ldr.importer.viewer = '
-      :api_hints_enabled="api_hints_enabled"
-      :show_if_single_entry="true"
-      hint="Select the viewer to use for the new data entry."
-    ></plugin-viewer-create-new>
+      <plugin-viewer-create-new
+        :items="viewer_items"
+        v-model:selected="viewer_selected"
+        :create_new_items="viewer_create_new_items"
+        v-model:create_new_selected="viewer_create_new_selected"
+        v-model:new_label_value="viewer_label_value"
+        :new_label_default="viewer_label_default"
+        v-model:new_label_auto="viewer_label_auto"
+        :new_label_invalid_msg="viewer_label_invalid_msg"
+        :multiselect="viewer_multiselect"
+        :show_multiselect_toggle="false"
+        label="Viewer"
+        api_hint='ldr.importer.viewer = '
+        :api_hints_enabled="api_hints_enabled"
+        :show_if_single_entry="true"
+        hint="Select the viewer to use for the new data entry."
+      ></plugin-viewer-create-new>
 
-    <loader-import-button
-      :spinner="import_spinner"
-      :disabled_msg="import_disabled_msg"
-      :api_hints_enabled="api_hints_enabled"
-      api_hint="ldr.load()"
-      :data_label_overwrite="data_label_overwrite"
-      @click="import_clicked">
-    </loader-import-button>
+      <loader-import-button
+        :spinner="import_spinner"
+        :disabled_msg="import_disabled_msg"
+        :api_hints_enabled="api_hints_enabled"
+        api_hint="ldr.load()"
+        :data_label_overwrite="data_label_overwrite"
+        @click="import_clicked">
+      </loader-import-button>
 
-  </div>
+    </div>
 
   </v-container>
 </template>

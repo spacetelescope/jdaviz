@@ -1,10 +1,10 @@
 <template>
-  <v-row>
+  <j-flex-row>
     <v-form ref="form" style="width: 100%">
       <v-text-field
         ref="textField"
-        :value="displayValue"
-        @keyup="if(auto) {if ($event.srcElement._value === displayValue) {return}; $emit('update:auto', false)}; $emit('update:value', $event.srcElement._value)"
+        :model-value="displayValue"
+        @update:modelValue="updateValue"
         @mouseenter="showIcon = true"
         @mouseleave="showIcon = false"
         :label="api_hints_enabled && api_hint ? api_hint : label"
@@ -16,19 +16,19 @@
         <template v-slot:prepend-inner>
           <slot></slot>
         </template>
-        <template v-slot:append>
+        <template v-slot:append-inner>
           <j-tooltip v-if="!auto || showIcon" :tooltipcontent="auto ? 'Using default (click to use custom)' : 'Using custom (click to use default)'">
-            <v-btn icon small @click="() => {$emit('update:auto', !auto)}" style="padding-bottom: 4px" @mouseenter="showIcon = true" @mouseleave="showIcon = false">
+            <v-btn icon density="compact" variant="text" @click="() => {$emit('update:auto', !auto)}" style="padding-bottom: 4px" @mouseenter="showIcon = true" @mouseleave="showIcon = false">
               <v-icon :color="auto ? 'accent' : ''" style="transform: rotate(180deg);">mdi-label</v-icon>
             </v-btn>
           </j-tooltip>
         </template>
       </v-text-field>
     </v-form>
-  </v-row>
+  </j-flex-row>
 </template>
 <script>
-module.exports = {
+export default {
   props: ['value', 'default', 'auto', 'label', 'hint', 'invalid_msg', 'api_hint', 'api_hints_enabled'],
   data: function() {
       return {
@@ -48,6 +48,17 @@ module.exports = {
        },
        invalid_msg() {
           this.$refs.form.validate();
+       }
+  },
+  methods: {
+       updateValue(value) {
+          if(this.$props.auto && value === this.displayValue) {
+            return;
+          }
+          if(this.$props.auto) {
+            this.$emit('update:auto', false);
+          }
+          this.$emit('update:value', value);
        }
   }
 };

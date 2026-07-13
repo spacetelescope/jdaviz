@@ -5,9 +5,9 @@
     :spinner="spinner"
     :spinner_success_message="spinner_success_message"
     :parsed_input_is_empty="parsed_input_is_empty"
-    :parsed_input_is_resolvable="parsed_input_is_resolvable"
+    :parsed_input_not_resolvable_message="parsed_input_not_resolvable_message"
     :parsed_input_is_query="parsed_input_is_query"
-    :treat_table_as_query.sync="treat_table_as_query"
+    v-model:treat_table_as_query="treat_table_as_query"
     :observation_table="observation_table"
     :observation_table_populated="observation_table_populated"
     :file_table="file_table"
@@ -15,9 +15,9 @@
     :file_cache="file_cache"
     :file_timeout="file_timeout"
     :target_items="target_items"
-    :target_selected.sync="target_selected"
+    v-model:target_selected="target_selected"
     :format_items="format_items"
-    :format_selected.sync="format_selected"
+    v-model:format_selected="format_selected"
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
     :server_is_remote="server_is_remote"
@@ -41,7 +41,7 @@
         :disabled="true"
         label="ldr.object ="
         class="api-hint"
-        :error-messages="parsed_input_is_resolvable ? [parsed_input_is_resolvable] : []"
+        :error-messages="parsed_input_not_resolvable_message ? [parsed_input_not_resolvable_message] : []"
       ></v-text-field>
     </div>
   </j-loader>

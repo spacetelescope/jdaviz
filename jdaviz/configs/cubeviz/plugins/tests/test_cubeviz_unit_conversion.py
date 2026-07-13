@@ -37,7 +37,7 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.ones((3, 4, 5), dtype=np.float32)
     cube = Spectrum(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
     viewer = cubeviz_helper._app.get_viewer("spectrum-viewer")
 
     # get all available flux units for translation. Since cube is loaded
@@ -47,7 +47,8 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
     ap_plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     label_mouseover = cubeviz_helper._coords_info
 
-    cubeviz_helper.plugins['Subset Tools'].import_region(RectanglePixelRegion(PixCoord(1, 1), 1, 1))
+    cubeviz_helper.plugins['Subset Tools'].import_region(RectanglePixelRegion(
+        PixCoord(1, 1), 1, 1))
     ap_plg.background_selected = "Subset 1"
 
     for flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
@@ -136,7 +137,7 @@ def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
     flux = np.zeros((3, 4, 5), dtype=np.float32)
     # load cube in flux_unit, will become cube in flux_unit / pix2
     cube = Spectrum(flux=flux * flux_unit, wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube)
+    cubeviz_helper.load(cube)
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
 
@@ -328,7 +329,7 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum(flux=flux * (u.ct / angle_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
     uc_plg.open_in_tray()

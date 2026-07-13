@@ -11,8 +11,6 @@ from astropy.io import fits
 from astropy.time import Time
 from echo import (CallbackProperty, DictCallbackProperty,
                   ListCallbackProperty, delay_callback)
-from ipygoldenlayout import GoldenLayout
-from ipysplitpanes import SplitPanes
 import numpy as np
 from glue.config import data_translator, settings as glue_settings
 from glue.core import HubListener
@@ -33,7 +31,7 @@ from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipypopout import PopoutButton
-from ipyvuetify import VuetifyTemplate
+from ipyvuetify import VuetifyTemplate, theme as vuetify_theme
 from ipywidgets import widget_serialization
 from traitlets import Dict, Bool, List, Unicode, Any
 from specutils import Spectrum, SpectralRegion
@@ -68,9 +66,6 @@ from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                viewer_flux_conversion_equivalencies)
 
 __all__ = ['PrivateApplication', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
-
-SplitPanes()
-GoldenLayout()
 
 enable_spaxel_unit()
 
@@ -153,6 +148,14 @@ glue_settings.DATA_ALPHA = 1
 glue_settings.UNIT_CONVERTER = 'custom-jdaviz'
 
 custom_components = {'j-tooltip': 'components/tooltip.vue',
+                     'splitpanes': 'temp_components/splitpanes.vue',
+                     'pane': 'temp_components/pane.vue',
+                     'golden-layout': 'temp_components/golden-layout.vue',
+                     'gl-row': 'temp_components/gl-row.vue',
+                     'gl-col': 'temp_components/gl-col.vue',
+                     'gl-stack': 'temp_components/gl-stack.vue',
+                     'gl-component': 'temp_components/gl-component.vue',
+                     'j-flex-row': 'components/flex_row.vue',
                      'j-external-link': 'components/external_link.vue',
                      'j-docs-link': 'components/docs_link.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
@@ -211,6 +214,40 @@ for name, path in custom_components.items():
 
 ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
+
+vuetify_theme.themes.light.primary = "#00617E"
+vuetify_theme.themes.light.secondary = "#007DA4"
+vuetify_theme.themes.light.error = '#FF5252'
+vuetify_theme.themes.light.info = '#2196F3'
+vuetify_theme.themes.light.success = '#4CAF50'
+vuetify_theme.themes.light.warning = '#FFC107'
+vuetify_theme.themes.light.custom_theme_colors = {
+    'toolbar': "#003B4D",
+    'accent': "#C75109",
+    'turquoise': "#007BA1",
+    'lightblue': "#E3F2FD",
+    'spinner': "#163C4C",
+    'gray': '#F8F8F8',
+    'active': '#C75109',
+    'viewer_toolbar': '#205f76',
+}
+
+vuetify_theme.themes.dark.primary = "#53CBFF"
+vuetify_theme.themes.dark.secondary = "#007DA4"
+vuetify_theme.themes.dark.error = '#FF5252'
+vuetify_theme.themes.dark.info = '#2196F3'
+vuetify_theme.themes.dark.success = '#4CAF50'
+vuetify_theme.themes.dark.warning = '#FFC107'
+vuetify_theme.themes.dark.custom_theme_colors = {
+    'toolbar': "#153A4B",
+    'accent': "#FF9D42",
+    'turquoise': "#007BA1",
+    'lightblue': "#E3F2FD",
+    'spinner': "#ACE1FF",
+    'gray': '#141414',
+    'active': '#C75109',
+    'viewer_toolbar': '#205f76',
+}
 
 style_registry.add((__file__, 'main_styles.vue'))
 
@@ -355,6 +392,10 @@ class ApplicationState(State):
                   "Golden Layout viewer area.")
     viewer_items = ListCallbackProperty(
         docstring="List (flat) of viewer objects")
+
+    focus_viewer = CallbackProperty(
+        '', docstring="The viewer that is currently in focus mode - or an empty string "
+                      "to show the entire app.")
 
     style_widget = CallbackProperty(
         '', docstring="Jupyter widget that won't be displayed but can apply css to the app"

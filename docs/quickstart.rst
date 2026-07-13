@@ -9,17 +9,27 @@ Once installed, ``jdaviz`` can be run either in a Jupyter notebook or as a stand
 Detailed workflows are given within the documentation, but some quick-start tips are given below.
 
 
-As a Standalone Application
-===========================
+Launching From the Command Line
+===============================
 
 .. note::
     This feature is currently in development for the new generalized version of jdaviz, so the following may change in an upcoming release.
 
-``jdaviz`` provides a command-line tool to start the standalone desktop application in a browser. To see the syntax and usage, from a terminal, type::
+.. note::
+    The command-line tool below has only been tested on Linux and MacOS and WSL on Windows.
 
-    jdaviz --help
+Jdaviz provides a command-line tool to start the standalone desktop application in a browser.
+To start the application, from a terminal, type::
 
-.. jdavizclihelp::
+    jdaviz
+
+This will run the launcher. To then launch generalized jdaviz,
+click the Jdaviz logo in the center of the screen. Alternatively, you can still use
+the deprecated legacy functionality to select a file from the file picker, which will
+identify the best configuration according to the file type. You can also select the
+desired deprecated configuration by clicking one of the bottom buttons without specifying
+a file. A blank configuration will open and the ``IMPORT`` button will be available to select
+a file from the file picker.
 
 Jdaviz is now intended to be used in a flexible, generalized layout rather than the older "configs", but
 these deprecated configurations are still available from the command line. For compatibility with the older
@@ -35,14 +45,11 @@ may be useful if loading multiple files. Note that the file format is generally 
 of available data formats. Note that you will need to enclose multi-word formats in quotation marks, for example
 ``--file_format='1D Spectrum'``.
 
-Currently, running the command ``jdaviz`` without any additional input will still run a launcher. To launch the
-modern generalized ``jdaviz`` from here, click the Jdaviz logo in the top right.
-Alternatively, you can still use the deprecated legacy functionality to select a file from the
-file picker, which will identify the best configuration according to the file type. You can also
-select the desired deprecated configuration by clicking one of the bottom buttons without specifying
-a file. A blank configuration will open and the IMPORT button will be available to select
-a file from the file picker.
+To see a list of all options, from the terminal, type::
 
+    jdaviz --help
+
+.. jdavizclihelp::
 
 
 In a Jupyter Notebook
