@@ -8,16 +8,27 @@ from astropy.table import QTable
 __all__ = ['crossmatch_pair', 'crossmatch_catalogs', 'apply_review_decisions']
 
 
-def _get_skycoord(table):
-    """Best-effort SkyCoord extraction, mirroring Catalogs._file_parser conventions."""
-    if 'sky_centroid' in table.colnames:
+def _get_skycoord(table, ra_col=None, dec_col=None):
+    """Best-effort SkyCoord extraction, mirroring Catalogs._file_parser conventions.
+
+    If ``ra_col``/``dec_col`` are provided, they are used directly (supporting
+    catalogs whose position columns are named e.g. ``ra_gaia``/``dec_roman``).
+    Otherwise a ``sky_centroid`` column or a few common RA/Dec column names are
+    auto-detected.
+    """
+    if ra_col is not None and dec_col is not None:
+        missing = [c for c in (ra_col, dec_col) if c not in table.colnames]
+        if missing:
+            raise ValueError(f'Catalog is missing requested column(s): {missing}.')
+    elif 'sky_centroid' in table.colnames:
         return SkyCoord(table['sky_centroid'])
-    ra_candidates = ['Right Ascension (degrees)', 'ra', 'RA']
-    dec_candidates = ['Declination (degrees)', 'dec', 'DEC']
-    ra_col = next((c for c in ra_candidates if c in table.colnames), None)
-    dec_col = next((c for c in dec_candidates if c in table.colnames), None)
-    if ra_col is None or dec_col is None:
-        raise ValueError('Catalog needs sky_centroid or RA/Dec columns.')
+    else:
+        ra_candidates = ['Right Ascension (degrees)', 'ra', 'RA']
+        dec_candidates = ['Declination (degrees)', 'dec', 'DEC']
+        ra_col = next((c for c in ra_candidates if c in table.colnames), None)
+        dec_col = next((c for c in dec_candidates if c in table.colnames), None)
+        if ra_col is None or dec_col is None:
+            raise ValueError('Catalog needs sky_centroid or RA/Dec columns.')
     # u.Quantity respects an existing unit and assumes deg only when unitless
     ra = u.Quantity(table[ra_col], u.deg)
     dec = u.Quantity(table[dec_col], u.deg)
@@ -38,7 +49,7 @@ def _get_object_id(table, name, id_columns, row_idx):
 
 
 def crossmatch_pair(base_coords, other_coords, tolerance=1 * u.arcsec,
-                    review_factor=2.0):
+                    review_radius=None):
     """Positionally match `other` onto `base`.
 
     Returns a dict with three index arrays describing, for each base source:
@@ -46,7 +57,16 @@ def crossmatch_pair(base_coords, other_coords, tolerance=1 * u.arcsec,
       - sep       : separation to that neighbor (arcsec, NaN if none)
       - status    : 'matched' | 'review' | 'unmatched'
     plus `collisions`: set of base indices that share a best-match `other` source.
+
+    A nearest neighbor within ``tolerance`` is auto-accepted ('matched'); one in
+    the ``tolerance < sep <= review_radius`` band is flagged for manual review.
+    ``review_radius`` defaults to ``2 * tolerance`` and must be >= ``tolerance``.
     """
+    if review_radius is None:
+        review_radius = 2 * tolerance
+    if review_radius < tolerance:
+        raise ValueError('review_radius must be >= tolerance.')
+
     n_base = len(base_coords)
     match_idx = np.full(n_base, -1, dtype=int)
     sep_arcsec = np.full(n_base, np.nan)
@@ -57,7 +77,7 @@ def crossmatch_pair(base_coords, other_coords, tolerance=1 * u.arcsec,
 
     idx, sep2d, _ = base_coords.match_to_catalog_sky(other_coords)
     within = sep2d <= tolerance
-    review = (sep2d > tolerance) & (sep2d <= review_factor * tolerance)
+    review = (sep2d > tolerance) & (sep2d <= review_radius)
 
     match_idx[within | review] = idx[within | review]
     sep_arcsec[within | review] = sep2d[within | review].to_value(u.arcsec)
@@ -76,8 +96,8 @@ def crossmatch_pair(base_coords, other_coords, tolerance=1 * u.arcsec,
     return dict(match_idx=match_idx, sep=sep_arcsec, status=status, collisions=collisions)
 
 
-def crossmatch_catalogs(catalogs, tolerance=1 * u.arcsec, review_factor=2.0,
-                        id_columns=None, mode='id_then_sky', join='outer'):
+def crossmatch_catalogs(catalogs, tolerance=1 * u.arcsec, review_radius=None,
+                        id_columns=None, coord_columns=None, mode='sky', join='outer'):
     """Cross-match N catalogs. The first catalog is treated as the base.
     Each subsequent catalog is matched against the running merged set.
     This generalizes to N catalogs and keeps every step a well-understood
@@ -86,7 +106,7 @@ def crossmatch_catalogs(catalogs, tolerance=1 * u.arcsec, review_factor=2.0,
     Ambiguous matches (those needing user confirmation) are returned in a separate
     review table rather than silently accepted or rejected. These include:
         - a nearest neighbor whose separation is in a "grey zone"
-        (``tolerance < sep <= review_factor * tolerance``),
+        (``tolerance < sep <= review_radius``),
         - many-to-one collisions: two base sources whose best match is the same
           other-catalog source.
 
@@ -96,15 +116,22 @@ def crossmatch_catalogs(catalogs, tolerance=1 * u.arcsec, review_factor=2.0,
         Ordered; first is the base. Each table must yield a SkyCoord.
     tolerance : Quantity (angle)
         Hard positional match radius.
-    review_factor : float
-        Matches with tolerance < sep <= review_factor*tolerance are flagged for review.
+    review_radius : Quantity (angle) or None
+        Nearest neighbors with ``tolerance < sep <= review_radius`` are flagged for
+        manual review. Defaults to ``2 * tolerance`` and must be >= ``tolerance``.
     id_columns : dict or None
         {catalog_name: id_column_name} for exact id matching.
-    mode : {'id', 'sky', 'id_then_sky'}
+    coord_columns : dict or None
+        {catalog_name: (ra_column, dec_column)} to specify the sky-position columns
+        explicitly (e.g. ``('ra_gaia', 'dec_gaia')``). Catalogs not listed fall back
+        to auto-detection of a ``sky_centroid`` or common RA/Dec column names.
+    mode : {'sky', 'id', 'id_then_sky'}
+        Default ``'sky'``. Cross-matching strategy:
+        - ``sky`` -- :meth:`~astropy.coordinates.SkyCoord.match_to_catalog_sky`
+          plus a separation tolerance (recommended default, since source ids are
+          rarely shared across catalogs from different instruments).
         - ``id`` -- exact join on a shared source-id column (fast,
         unambiguous when ids are global).
-        - ``sky`` -- :meth:`~astropy.coordinates.SkyCoord.match_to_catalog_sky`
-          plus a separation tolerance.
         - ``id_then_sky`` -- use ids where present, fall back to sky for the rest.
     join : {'outer', 'left'}
         'outer' (default) additionally appends those unmatched sources as new rows with
@@ -130,8 +157,14 @@ def crossmatch_catalogs(catalogs, tolerance=1 * u.arcsec, review_factor=2.0,
     if join not in ('left', 'outer'):
         raise ValueError("join must be 'left' or 'outer'")
     id_columns = id_columns or {}
+    coord_columns = coord_columns or {}
+    if review_radius is None:
+        review_radius = 2 * tolerance
+    if review_radius < tolerance:
+        raise ValueError('review_radius must be >= tolerance.')
     base_name, base_tbl = catalogs[0]
-    base_coords = _get_skycoord(base_tbl)
+    base_ra_col, base_dec_col = coord_columns.get(base_name, (None, None))
+    base_coords = _get_skycoord(base_tbl, base_ra_col, base_dec_col)
     n_base = len(base_tbl)
     other_names = [name for name, _ in catalogs[1:]]
 
@@ -152,7 +185,8 @@ def crossmatch_catalogs(catalogs, tolerance=1 * u.arcsec, review_factor=2.0,
     coords_by_cat = {}
 
     for name, tbl in catalogs[1:]:
-        other_coords = _get_skycoord(tbl)
+        ra_col, dec_col = coord_columns.get(name, (None, None))
+        other_coords = _get_skycoord(tbl, ra_col, dec_col)
         coords_by_cat[name] = other_coords
         match_idx = np.full(n_base, -1, dtype=int)
         sep = np.full(n_base, np.nan)
@@ -179,7 +213,7 @@ def crossmatch_catalogs(catalogs, tolerance=1 * u.arcsec, review_factor=2.0,
                 avail = [j for j in range(len(tbl)) if j not in used_other]
                 if avail:
                     res = crossmatch_pair(base_coords[todo], other_coords[avail],
-                                          tolerance=tolerance, review_factor=review_factor)
+                                          tolerance=tolerance, review_radius=review_radius)
                     for k, i in enumerate(todo):
                         if res['match_idx'][k] >= 0:
                             j = avail[res['match_idx'][k]]

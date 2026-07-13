@@ -6,7 +6,7 @@ from astropy.table import QTable
 from numpy.testing import assert_allclose
 
 from jdaviz.core.crossmatch import (crossmatch_pair, crossmatch_catalogs,
-                                    apply_review_decisions)
+                                    apply_review_decisions, _get_skycoord)
 
 
 def _make_catalogs():
@@ -64,7 +64,7 @@ def test_crossmatch_catalogs_outer_join():
     merged, review = crossmatch_catalogs(
         catalogs,
         tolerance=1 * u.arcsec,
-        review_factor=2.0,
+        review_radius=2 * u.arcsec,
         id_columns={'A': 'source_id', 'B': 'source_id'},
         mode='id_then_sky',
     )
@@ -105,7 +105,7 @@ def test_crossmatch_catalogs_left_join():
     merged, _ = crossmatch_catalogs(
         catalogs,
         tolerance=1 * u.arcsec,
-        review_factor=2.0,
+        review_radius=2 * u.arcsec,
         id_columns={'A': 'source_id', 'B': 'source_id'},
         mode='id_then_sky',
         join='left',
@@ -126,7 +126,7 @@ def test_apply_review_decisions_reject():
     merged, review = crossmatch_catalogs(
         catalogs,
         tolerance=1 * u.arcsec,
-        review_factor=2.0,
+        review_radius=2 * u.arcsec,
         id_columns={'A': 'source_id', 'B': 'source_id'},
         mode='id_then_sky',
     )
@@ -152,7 +152,7 @@ def test_apply_review_decisions_accept_keeps_match():
     merged, _ = crossmatch_catalogs(
         catalogs,
         tolerance=1 * u.arcsec,
-        review_factor=2.0,
+        review_radius=2 * u.arcsec,
         id_columns={'A': 'source_id', 'B': 'source_id'},
         mode='id_then_sky',
     )
@@ -173,7 +173,7 @@ def test_crossmatch_pair_matched_review_and_collision():
     other = SkyCoord(ra=[150.0, 150.00025] * u.deg,
                      dec=[2.0, 2.0] * u.deg)
 
-    res = crossmatch_pair(base, other, tolerance=1 * u.arcsec, review_factor=2.0)
+    res = crossmatch_pair(base, other, tolerance=1 * u.arcsec, review_radius=2 * u.arcsec)
 
     # base[0] cleanly matches other[0] and is not part of any collision
     assert res['match_idx'][0] == 0
@@ -196,3 +196,163 @@ def test_crossmatch_pair_empty_other():
     assert res['match_idx'][0] == -1
     assert res['status'][0] == 'unmatched'
     assert res['collisions'] == set()
+
+
+# --- _get_skycoord --------------------------------------------------------
+
+def test_get_skycoord_sky_centroid():
+    tbl = QTable({'sky_centroid': SkyCoord([150.0, 151.0] * u.deg, [2.0, 3.0] * u.deg)})
+    sc = _get_skycoord(tbl)
+    assert_allclose(sc.ra.deg, [150.0, 151.0])
+    assert_allclose(sc.dec.deg, [2.0, 3.0])
+
+
+def test_get_skycoord_common_radec_names():
+    tbl = QTable({'ra': [150.0] * u.deg, 'dec': [2.0] * u.deg})
+    sc = _get_skycoord(tbl)
+    assert_allclose(sc.ra.deg, [150.0])
+
+
+def test_get_skycoord_explicit_columns():
+    # position columns with instrument-specific names (e.g. ra_gaia/dec_roman)
+    tbl = QTable({'ra_gaia': [150.0, 150.5] * u.deg, 'dec_roman': [2.0, 2.5] * u.deg})
+    sc = _get_skycoord(tbl, 'ra_gaia', 'dec_roman')
+    assert_allclose(sc.ra.deg, [150.0, 150.5])
+    assert_allclose(sc.dec.deg, [2.0, 2.5])
+
+
+def test_get_skycoord_explicit_missing_column_raises():
+    tbl = QTable({'ra_gaia': [150.0] * u.deg, 'dec_gaia': [2.0] * u.deg})
+    with pytest.raises(ValueError, match='missing requested column'):
+        _get_skycoord(tbl, 'ra_gaia', 'dec_nope')
+
+
+def test_get_skycoord_no_coords_raises():
+    tbl = QTable({'flux': [1.0, 2.0]})
+    with pytest.raises(ValueError, match='sky_centroid or RA/Dec'):
+        _get_skycoord(tbl)
+
+
+# --- review_radius --------------------------------------------------------
+
+def test_review_radius_flags_grey_zone():
+    base = SkyCoord(ra=[150.0] * u.deg, dec=[2.0] * u.deg)
+    other = SkyCoord(ra=[150.0 + 1.5 / 3600.0] * u.deg, dec=[2.0] * u.deg)  # ~1.5"
+
+    # a 1.5" neighbor falls in the tolerance..review_radius band -> review
+    res = crossmatch_pair(base, other, tolerance=1 * u.arcsec, review_radius=2 * u.arcsec)
+    assert res['status'][0] == 'review'
+    assert res['match_idx'][0] == 0
+
+    # shrinking review_radius to == tolerance leaves nothing to review -> unmatched
+    res2 = crossmatch_pair(base, other, tolerance=1 * u.arcsec, review_radius=1 * u.arcsec)
+    assert res2['status'][0] == 'unmatched'
+    assert res2['match_idx'][0] == -1
+
+
+def test_review_radius_defaults_to_twice_tolerance():
+    base = SkyCoord(ra=[150.0] * u.deg, dec=[2.0] * u.deg)
+    other = SkyCoord(ra=[150.0 + 1.5 / 3600.0] * u.deg, dec=[2.0] * u.deg)
+    # no review_radius -> defaults to 2 * tolerance, so the 1.5" source is review
+    res = crossmatch_pair(base, other, tolerance=1 * u.arcsec)
+    assert res['status'][0] == 'review'
+
+
+def test_review_radius_less_than_tolerance_raises():
+    base = SkyCoord(ra=[150.0] * u.deg, dec=[2.0] * u.deg)
+    with pytest.raises(ValueError, match='review_radius must be >= tolerance'):
+        crossmatch_pair(base, base, tolerance=2 * u.arcsec, review_radius=1 * u.arcsec)
+
+    catalogs = [('A', QTable({'ra': [150.0] * u.deg, 'dec': [2.0] * u.deg})),
+                ('B', QTable({'ra': [150.0] * u.deg, 'dec': [2.0] * u.deg}))]
+    with pytest.raises(ValueError, match='review_radius must be >= tolerance'):
+        crossmatch_catalogs(catalogs, tolerance=2 * u.arcsec, review_radius=1 * u.arcsec)
+
+
+# --- modes ----------------------------------------------------------------
+
+def test_default_mode_is_sky():
+    # ids would pair base 'S0' with the *far* other source, but the default (sky)
+    # mode ignores ids and matches the nearby source instead.
+    base = QTable({'source_id': ['S0'], 'ra': [150.0] * u.deg, 'dec': [2.0] * u.deg})
+    other = QTable({'source_id': ['S0', 'S1'],
+                    'ra': [150.1, 150.0] * u.deg,   # S0 far, S1 coincident with base
+                    'dec': [2.0, 2.0] * u.deg})
+    merged, _ = crossmatch_catalogs(
+        [('base', base), ('other', other)],
+        id_columns={'base': 'source_id', 'other': 'source_id'},
+        join='left',
+    )
+    assert merged['other_idx'][0] == 1        # nearby source, not the id-matched far one
+    assert merged['other_status'][0] == 'matched'
+
+
+def test_mode_id_only():
+    base = QTable({'source_id': ['S0', 'S1'],
+                   'ra': [150.0, 150.001] * u.deg, 'dec': [2.0, 2.0] * u.deg})
+    other = QTable({'source_id': ['S1', 'S9'],
+                    'ra': [150.0005, 150.05] * u.deg, 'dec': [2.0, 2.0] * u.deg})
+    merged, _ = crossmatch_catalogs(
+        [('base', base), ('other', other)],
+        id_columns={'base': 'source_id', 'other': 'source_id'},
+        mode='id', join='left',
+    )
+    # only S1 shares an id; the id-less base source is not matched positionally
+    assert merged['other_idx'][0] == -1
+    assert merged['other_status'][0] == 'unmatched'
+    assert merged['other_idx'][1] == 0
+    assert merged['other_status'][1] == 'matched'
+
+
+def test_coord_columns_custom_names():
+    base = QTable({'ra_gaia': [150.0, 150.01] * u.deg,
+                   'dec_gaia': [2.0, 2.01] * u.deg})
+    other = QTable({'ra_roman': [150.00001, 150.01001] * u.deg,
+                    'dec_roman': [2.00001, 2.01001] * u.deg})
+    merged, _ = crossmatch_catalogs(
+        [('base', base), ('other', other)],
+        coord_columns={'base': ('ra_gaia', 'dec_gaia'),
+                       'other': ('ra_roman', 'dec_roman')},
+        join='left',
+    )
+    assert list(merged['other_status']) == ['matched', 'matched']
+
+
+# --- structure / edge cases ----------------------------------------------
+
+def test_crossmatch_single_catalog():
+    base = QTable({'ra': [150.0, 150.01] * u.deg, 'dec': [2.0, 2.01] * u.deg})
+    merged, review = crossmatch_catalogs([('A', base)])
+    assert len(merged) == 2
+    assert list(merged['base_idx']) == [0, 1]
+    assert int(np.sum(merged['match_count'])) == 2
+    assert len(review) == 0
+
+
+def test_outer_join_appended_rows():
+    catalogs = _make_catalogs()
+    merged, _ = crossmatch_catalogs(
+        catalogs, tolerance=1 * u.arcsec, review_radius=2 * u.arcsec,
+        id_columns={'A': 'source_id', 'B': 'source_id'}, mode='id_then_sky',
+    )
+    appended = merged[8:]  # B's three extra sources
+    assert len(appended) == 3
+    # appended rows carry the originating catalog's ids, matched there and 'absent' elsewhere
+    assert list(appended['object_id']) == ['B900', 'B901', 'B902']
+    assert list(appended['B_status']) == ['matched'] * 3
+    assert list(appended['C_status']) == ['absent'] * 3
+    assert list(appended['A_idx']) == [-1] * 3
+    assert np.all(appended['match_count'] == 1)
+    assert not np.any(appended['needs_review'])
+
+
+def test_crossmatch_catalogs_collision_flags_review():
+    # two nearby base sources whose single best match is the same other source
+    base = QTable({'ra': [150.0, 150.00005] * u.deg, 'dec': [2.0, 2.0] * u.deg})
+    other = QTable({'ra': [150.000025] * u.deg, 'dec': [2.0] * u.deg})
+    merged, review = crossmatch_catalogs([('A', base), ('B', other)],
+                                         tolerance=1 * u.arcsec, join='left')
+    assert list(merged['B_status']) == ['review', 'review']
+    assert int(np.sum(merged['needs_review'])) == 2
+    assert len(review) == 2
+
