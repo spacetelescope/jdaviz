@@ -13,28 +13,48 @@
       </v-btn>
     </v-btn-toggle>
 
-    <!-- Custom widgets (e.g., viewer selector) -->
+    <!-- Custom widgets (dropdowns and sliders) -->
     <span v-if="custom_widget_items.length > 0" style="display: inline-flex; align-items: center; vertical-align: top; height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
-      <v-select
-        v-for="(widget, idx) in custom_widget_items"
-        :key="idx"
-        :model-value="custom_widget_selected[idx]"
-        @update:modelValue="(val) => update_widget_selection(idx, val)"
-        :items="widget.items"
-        :placeholder="widget.label"
-        :multiple="widget.multiselect"
-        :chips="widget.multiselect"
-        :small-chips="widget.multiselect"
-        deletable-chips
-        density="compact"
-        solo
-        flat
-        hide-details
-        style="min-width: 120px; max-width: 250px;"
-        class="custom-toolbar-select"
-        item-title="label"
-        item-value="value"
-      ></v-select>
+      <template v-for="(widget, idx) in custom_widget_items" :key="idx">
+        <!-- Slider widget -->
+        <j-tooltip v-if="widget.type === 'slider'" :tooltipcontent="widget.label" span_style="display: flex; align-items: center;">
+          <span style="color: white; font-size: 12px; margin-right: 4px; white-space: nowrap;">{{ widget.label }}</span>
+          <v-slider
+            :model-value="custom_widget_selected[idx]"
+            @update:modelValue="(val) => update_widget_selection(idx, val)"
+            :min="widget.min !== undefined ? widget.min : 0"
+            :max="widget.max !== undefined ? widget.max : 1"
+            :step="widget.step !== undefined ? widget.step : 0.01"
+            density="compact"
+            hide-details
+            style="min-width: 140px; max-width: 220px; margin: 0 4px;"
+            class="custom-toolbar-slider"
+            color="white"
+            track-color="rgba(255,255,255,0.4)"
+          ></v-slider>
+          <span style="color: white; font-size: 12px; min-width: 32px; text-align: right;">{{ typeof custom_widget_selected[idx] === 'number' ? custom_widget_selected[idx].toFixed(2) : custom_widget_selected[idx] }}</span>
+        </j-tooltip>
+        <!-- Select/dropdown widget -->
+        <v-select
+          v-else
+          :model-value="custom_widget_selected[idx]"
+          @update:modelValue="(val) => update_widget_selection(idx, val)"
+          :items="widget.items"
+          :placeholder="widget.label"
+          :multiple="widget.multiselect"
+          :chips="widget.multiselect"
+          :small-chips="widget.multiselect"
+          deletable-chips
+          density="compact"
+          solo
+          flat
+          hide-details
+          style="min-width: 120px; max-width: 250px;"
+          class="custom-toolbar-select"
+          item-title="label"
+          item-value="value"
+        ></v-select>
+      </template>
     </span>
 
     <v-btn-toggle v-model="active_tool_id" :style="" class="transparent">
@@ -230,5 +250,15 @@
 }
 .custom-toolbar-select >>> input::placeholder {
   color: rgba(255, 255, 255, 0.7) !important;
+}
+.custom-toolbar-slider .v-slider-track__background,
+.custom-toolbar-slider .v-slider-track__fill {
+  opacity: 1 !important;
+}
+.custom-toolbar-slider .v-slider-thumb__surface {
+  background-color: white !important;
+}
+.custom-toolbar-slider .v-input__control {
+  min-height: 32px !important;
 }
 </style>

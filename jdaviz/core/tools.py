@@ -1168,3 +1168,152 @@ class SinglePixelRegion(CheckableTool):
             return roi
 
         return reg
+
+
+# ---------------------------------------------------------------------------
+# Focus-mode image layer tools
+# ---------------------------------------------------------------------------
+
+class _BaseImageFocusTool(Tool):
+    """
+    Base class for image-viewer tools that show a toolbar-override widget.
+
+    Always visible; ``keep_visible_in_focus_mode = True`` ensures they are
+    retained when the viewer enters focus mode.
+    """
+    keep_visible_in_focus_mode = True
+    _override_title = ''
+
+    def _get_top_layer_state(self):
+        """Return the state of the current top visible image layer, or None."""
+        i = get_top_layer_index(self.viewer)
+        if i is None:
+            return None
+        return self.viewer.state.layers[i]
+
+    def _build_custom_widgets(self):
+        raise NotImplementedError  # pragma: no cover
+
+    def _on_selection_changed(self, new_selected):
+        raise NotImplementedError  # pragma: no cover
+
+    def activate(self):
+        custom_widgets = self._build_custom_widgets()
+        self.viewer.toolbar.override_tools(
+            [],                              # no extra tool buttons – just close
+            self._override_title,
+            custom_widgets=custom_widgets,
+            custom_widgets_callback=self._build_custom_widgets,
+            selection_callback=self._on_selection_changed,
+        )
+
+
+@viewer_tool
+class ImageColormapTool(_BaseImageFocusTool):
+    """Select the colormap for the top visible image layer."""
+    # placeholder icon – replace with a dedicated colormap icon later
+    icon = os.path.join(ICON_DIR, 'image.svg')
+    tool_id = 'jdaviz:image_colormap'
+    action_text = 'Select colormap'
+    tool_tip = 'Select the colormap for the top visible image layer'
+    _override_title = 'Colormap'
+
+    def _build_custom_widgets(self):
+        from jdaviz.utils import glue_colormaps
+        items = [{'label': name, 'value': name} for name, _ in glue_colormaps.members]
+        # Determine the current colormap name for the top layer
+        current = glue_colormaps.members[0][0]
+        layer_state = self._get_top_layer_state()
+        if layer_state is not None and layer_state.cmap is not None:
+            try:
+                current = glue_colormaps.name_from_cmap(layer_state.cmap)
+            except ValueError:
+                pass
+        return [{'type': 'select', 'label': 'Colormap', 'items': items,
+                 'selected': current, 'multiselect': False}]
+
+    def _on_selection_changed(self, new_selected):
+        if not new_selected:
+            return
+        from jdaviz.utils import glue_colormaps
+        cmap_name = new_selected[0]
+        try:
+            cmap = glue_colormaps[cmap_name]
+        except KeyError:
+            return
+        layer_state = self._get_top_layer_state()
+        if layer_state is not None:
+            layer_state.cmap = cmap
+
+
+@viewer_tool
+class ImageStretchTool(_BaseImageFocusTool):
+    """Select the stretch function for the top visible image layer."""
+    # placeholder icon – replace with a dedicated stretch icon later
+    icon = os.path.join(ICON_DIR, 'stretch_bounds.svg')
+    tool_id = 'jdaviz:image_stretch'
+    action_text = 'Select stretch'
+    tool_tip = 'Select the stretch function for the top visible image layer'
+    _override_title = 'Stretch'
+
+    def _build_custom_widgets(self):
+        from glue.config import stretches as glue_stretches
+        items = [
+            {'label': glue_stretches.display_func(key), 'value': key}
+            for key in glue_stretches.members
+        ]
+        # Determine the current stretch for the top layer
+        keys = list(glue_stretches.members.keys())
+        current = keys[0] if keys else 'linear'
+        layer_state = self._get_top_layer_state()
+        if layer_state is not None and hasattr(layer_state, 'stretch'):
+            try:
+                current = layer_state.stretch
+            except Exception:
+                pass
+        return [{'type': 'select', 'label': 'Stretch', 'items': items,
+                 'selected': current, 'multiselect': False}]
+
+    def _on_selection_changed(self, new_selected):
+        if not new_selected:
+            return
+        stretch_key = new_selected[0]
+        layer_state = self._get_top_layer_state()
+        if layer_state is not None and hasattr(layer_state, 'stretch'):
+            try:
+                layer_state.stretch = stretch_key
+            except Exception:
+                pass
+
+
+@viewer_tool
+class ImageOpacityTool(_BaseImageFocusTool):
+    """Set the opacity of the top visible image layer via a slider."""
+    # placeholder icon – replace with a dedicated opacity icon later
+    icon = os.path.join(ICON_DIR, 'tune.svg')
+    tool_id = 'jdaviz:image_opacity'
+    action_text = 'Set opacity'
+    tool_tip = 'Adjust the opacity of the top visible image layer'
+    _override_title = 'Opacity'
+
+    def _build_custom_widgets(self):
+        layer_state = self._get_top_layer_state()
+        current = 1.0
+        if layer_state is not None and hasattr(layer_state, 'alpha'):
+            try:
+                current = float(layer_state.alpha)
+            except Exception:
+                pass
+        return [{'type': 'slider', 'label': 'Opacity',
+                 'min': 0.0, 'max': 1.0, 'step': 0.02,
+                 'selected': current}]
+
+    def _on_selection_changed(self, new_selected):
+        if not new_selected:
+            return
+        layer_state = self._get_top_layer_state()
+        if layer_state is not None:
+            try:
+                layer_state.alpha = float(new_selected[0])
+            except Exception:
+                pass

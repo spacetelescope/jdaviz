@@ -35,11 +35,13 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     # string indicating the current tool override mode
     tool_override_mode = traitlets.Unicode("").tag(sync=True)
     # list of custom widget items to display in the toolbar
-    # currently only supports dropdowns:
-    # (list of dicts with 'label', 'value', 'items', 'multiselect')
+    # each dict has 'label', 'type' ('select' or 'slider'), 'selected', and
+    # type-specific keys: 'items'/'multiselect' for 'select'; 'min'/'max'/'step' for 'slider'
     custom_widget_items = traitlets.List([]).tag(sync=True)
     # currently selected values in custom widgets (list of values, one per widget)
     custom_widget_selected = traitlets.List([]).tag(sync=True)
+    # optional callback invoked when custom_widget_selected changes in override mode
+    _selection_callback = None
 
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
@@ -105,7 +107,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self._update_tool_visibilities()
 
     def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[],
-                       custom_widgets=None, custom_widgets_callback=None, active_tool=None):
+                       custom_widgets=None, custom_widgets_callback=None, active_tool=None,
+                       selection_callback=None):
         """
         Rebuild the toolbar with passed values.
 
@@ -120,16 +123,21 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         custom_widgets : list, optional
             List of dicts defining custom widgets to display. Each dict should have:
             - 'label': tooltip/label for the widget
-            - 'items': list of dicts with 'label' and 'value' keys
+            - 'type': 'select' (default) or 'slider'
+            - For 'select': 'items' (list of dicts with 'label'/'value'), 'multiselect' (bool)
+            - For 'slider': 'min', 'max', 'step' (floats)
             - 'selected': initial selected value(s)
-            - 'multiselect': bool, whether to allow multi-select (default False)
         custom_widgets_callback : callable, optional
             A callback function that returns custom_widgets. If provided, this will be
-            called on viewer add/remove to refresh the widget items dynamically.  Currently
-            only supports dropdowns.
+            called on viewer add/remove to refresh the widget items dynamically.
         active_tool : str, optional
             Tool ID to activate after building the toolbar. If not provided,
             the default tool selection logic will be used.
+        selection_callback : callable, optional
+            A callback ``f(new_selected)`` called whenever ``custom_widget_selected``
+            changes while this override is active.  ``new_selected`` is the full list
+            of per-widget selected values.  Cleared automatically when the toolbar is
+            restored.
         """
         # Store the override mode
         self.tool_override_mode = tool_override_mode
@@ -137,8 +145,11 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         # Store callback for refreshing custom widgets
         self._custom_widgets_callback = custom_widgets_callback
 
-        # Clear current toolbar (this also clears custom widgets)
+        # Clear current toolbar (this also clears custom widgets and callbacks)
         self._clear_toolbar()
+
+        # Store selection callback AFTER clearing (clear resets it)
+        self._selection_callback = selection_callback
 
         # Set custom widgets AFTER clearing
         if custom_widgets is not None:
@@ -211,6 +222,12 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         """
         self.restore_tools()
 
+    @traitlets.observe('custom_widget_selected')
+    def _on_custom_widget_selected_change(self, change):
+        """Call selection_callback whenever custom_widget_selected changes in override mode."""
+        if self._selection_callback is not None and self.tool_override_mode:
+            self._selection_callback(change['new'])
+
     def _clear_toolbar(self):
         """
         Clear all current tools from the toolbar.
@@ -219,10 +236,11 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self.tools.clear()
         self.tools_data = {}
         self.active_tool_id = None
-        # Clear custom widgets and callback
+        # Clear custom widgets and callbacks
         self.custom_widget_items = []
         self.custom_widget_selected = []
         self._custom_widgets_callback = None
+        self._selection_callback = None
 
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError
