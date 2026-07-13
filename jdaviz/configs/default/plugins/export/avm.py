@@ -78,6 +78,14 @@ def png_embed_avm(viz, viewer, png_filename, format='jpg'):
             img.save(dest_path_tmp)
             png_avm.embed(dest_path_tmp, dest_path, verify=True)
 
+    except Exception as err:
+        raise ValueError(
+            f"While saving screenshot, encountered: {err}"
+        )
+
     finally:
+        if format == 'jpg':
+            os.remove(png_filename)
+
         # ensure tmp file gets removed
         os.remove(dest_path_tmp)
