@@ -120,7 +120,7 @@ def test_dq_display_without_telescop_metadata(helper_name, request, multi_extens
 @pytest.mark.parametrize('helper_name', ['imviz_helper', 'deconfigged_helper'])
 def test_data_quality_plugin(helper_name, request):
     helper = request.getfixturevalue(helper_name)
-    uri = "mast:JWST/product/jw01895001004_07101_00001_nrca3_cal.fits"
+    uri = "mast:JWST/product/jw05398278001_02201_00010_nrcb2_cal.fits"
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -170,7 +170,7 @@ def test_data_quality_plugin(helper_name, request):
     # check that mouseover shows dq values on bad pixels (flag == 0):
     label_mouseover = helper._coords_info
     label_mouseover._viewer_mouse_event(viewer,
-                                        {'event': 'mousemove', 'domain': {'x': 1366, 'y': 708}})
+                                        {'event': 'mousemove', 'domain': {'x': 189, 'y': 4}})
 
     # DQ features are labeled in the first line:
     label_mouseover_text = label_mouseover.as_text()[0]
@@ -183,20 +183,20 @@ def test_data_quality_plugin(helper_name, request):
     flux_label_idx = label_mouseover_text.index(expected_flux_label)
     associated_dq_layer = dq_plugin.get_dq_layers(viewer)[0]
     dq_data = associated_dq_layer.layer.get_data(associated_dq_layer.state.attribute)
-    dq_val = dq_data[708, 1366]
+    dq_val = dq_data[4, 189]
     assert label_mouseover_text[flux_label_idx + len(expected_flux_label) + 1:] == f'(DQ: {dq_val:.0f})'  # noqa: E501
 
     # check that a flagged pixel that is not marked with the bit 0 has a flux in mouseover label:
     label_mouseover._viewer_mouse_event(viewer,
-                                        {'event': 'mousemove', 'domain': {'x': 1371, 'y': 715}})
+                                        {'event': 'mousemove', 'domain': {'x': 2026, 'y': 2043}})
     label_mouseover_text = label_mouseover.as_text()[0]
-    dq_val = dq_data[715, 1371]
+    dq_val = dq_data[2043, 2026]
     assert label_mouseover_text.split('+')[1].endswith(f'(DQ: {dq_val:.0f})')
 
     # check that a pixel without a DQ flag has no DQ mouseover label:
     label_mouseover._viewer_mouse_event(viewer,
-                                        {'event': 'mousemove', 'domain': {'x': 1361, 'y': 684}})
-    dq_val = dq_data[684, 1361]
+                                        {'event': 'mousemove', 'domain': {'x': 10, 'y': 4}})
+    dq_val = dq_data[4, 10]
     assert np.isnan(dq_val)
     label_mouseover_text = label_mouseover.as_text()[0]
     assert 'DQ' not in label_mouseover_text
