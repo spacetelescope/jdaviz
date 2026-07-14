@@ -29,7 +29,7 @@ from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
-from glue_jupyter.state_traitlets_helpers import GlueState
+from echo.vue import autoconnect_callbacks_to_vue
 from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate, theme as vuetify_theme
 from ipywidgets import widget_serialization
@@ -409,8 +409,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
     """
     _metadata = Dict({"mount_id": "content"}).tag(sync=True)
 
-    state = GlueState().tag(sync=True)
-
     template_file = __file__, "app.vue"
 
     existing_data_in_dc = List([]).tag(sync=True)
@@ -470,6 +468,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
+
+        # Connect ApplicationState callback properties to Vue traitlets
+        self._autoconnect_state()
 
         # If true, link data on load. If false, do not link data to speed up
         # data loading
@@ -3823,9 +3824,22 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         return self._get_state_item_from_name(self.state.new_viewer_items,
                                               name, return_widget)
 
+    def _autoconnect_state(self):
+        # Create bidirectional connections between all CallbackProperty
+        # attributes on self.state (the ApplicationState) and traitlets on
+        # this widget, so that changes to e.g. self.state.drawer_content
+        # automatically sync to Vue and vice versa. Property types are
+        # inferred from the descriptors (ListCallbackProperty -> list,
+        # DictCallbackProperty -> dict, etc.). Non-CallbackProperty
+        # attributes like snackbar_queue are ignored automatically.
+        autoconnect_callbacks_to_vue(self.state, self,
+                                     infer_properties_from='python',
+                                     prefix='state_')
+
     def _reset_state(self):
         """ Resets the application state """
         self.state = ApplicationState()
+        self._autoconnect_state()
         self._application_handler._tools = {}
 
     def get_configuration(self, path=None, section=None):

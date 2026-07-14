@@ -35,10 +35,10 @@ def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, ne
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(expected_flux)
 
 
-def test_initialize_specviz_sb(specviz_helper, spectrum1d):
+def test_initialize_specviz_sb(deconfigged_helper, spectrum1d):
     spec_sb = Spectrum(spectrum1d.flux/u.sr, spectrum1d.spectral_axis)
-    specviz_helper.load_data(spec_sb, data_label="Test 1D Spectrum")
-    plg = specviz_helper.plugins["Unit Conversion"]
+    deconfigged_helper.load(spec_sb, data_label="Test 1D Spectrum", format='1D Spectrum')
+    plg = deconfigged_helper.plugins["Unit Conversion"]
     assert plg._obj.flux_unit == "Jy"
     assert plg._obj.spectral_y_type == "Surface Brightness"
     assert plg._obj.angle_unit == "sr"
@@ -104,7 +104,7 @@ def test_conv_no_data(specviz_helper, spectrum1d):
         plg.spectral_unit = "micron"
     assert len(specviz_helper._app.data_collection) == 0
 
-    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load(spectrum1d, data_label="Test 1D Spectrum", format='1D Spectrum')
 
     # make sure we don't expose translations in Specviz
     assert hasattr(plg, 'flux_unit')
@@ -140,7 +140,7 @@ def test_non_stddev_uncertainty(specviz_helper):
 @pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
                                                          (u.Jy, SPEC_PHOTON_FLUX_DENSITY_UNITS),
                                                          (u.nJy, SPEC_PHOTON_FLUX_DENSITY_UNITS + ['nJy'])])  # noqa
-def test_flux_unit_choices(specviz_helper, flux_unit, expected_choices):
+def test_flux_unit_choices(deconfigged_helper, flux_unit, expected_choices):
     """
     Test that cubes loaded with various flux units have the expected default
     flux unit selection in the unit conversion plugin, and that the list of
@@ -148,9 +148,9 @@ def test_flux_unit_choices(specviz_helper, flux_unit, expected_choices):
     """
 
     spec = Spectrum([1, 2, 3] * flux_unit, [4, 5, 6] * u.um)
-    specviz_helper.load_data(spec)
+    deconfigged_helper.load(spec, format='1D Spectrum')
 
-    uc_plg = specviz_helper.plugins['Unit Conversion']
+    uc_plg = deconfigged_helper.plugins['Unit Conversion']
 
     assert uc_plg.flux_unit.selected == flux_unit.to_string()
     assert uc_plg.flux_unit.choices == expected_choices

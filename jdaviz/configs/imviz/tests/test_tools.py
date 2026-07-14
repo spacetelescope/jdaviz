@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 from numpy.testing import assert_allclose
@@ -92,8 +93,8 @@ def test_panzoom_click_center_linking(imviz_helper, align_by):
     arr_small = np.ones((20, 15), dtype=int)
     w_small = create_example_gwcs(arr_small.shape)
 
-    imviz_helper.load_data(NDData(arr_big, wcs=w_big), data_label="big")
-    imviz_helper.load_data(NDData(arr_small, wcs=w_small), data_label="small")
+    imviz_helper.load_data(NDData(arr_big, wcs=w_big), data_label="big", format='Image')
+    imviz_helper.load_data(NDData(arr_small, wcs=w_small), data_label="small", format='Image')
 
     lc_plugin = imviz_helper.plugins['Orientation']
     lc_plugin.align_by = align_by
@@ -152,12 +153,12 @@ def test_compass_open_while_load(imviz_helper):
     plg._obj.plugin_opened = True
 
     # Should not crash even if Compass is open in tray.
-    imviz_helper.load_data(np.ones((2, 2)))
+    imviz_helper.load(NDData(np.ones((2, 2))))
     assert len(imviz_helper._app.data_collection) == 1
 
 
 def test_tool_visibility(imviz_helper):
-    imviz_helper.load_data(np.ones((2, 2)))
+    imviz_helper.load(NDData(np.ones((2, 2))))
     tb = imviz_helper.default_viewer._obj.glue_viewer.toolbar
 
     assert not tb.tools_data['jdaviz:boxzoommatch']['visible']

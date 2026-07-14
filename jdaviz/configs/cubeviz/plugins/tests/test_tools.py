@@ -92,7 +92,7 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube,
         cube = spectrum1d_cube
         cube_unit = 'Jy / pix2'
 
-    cubeviz_helper.load_data(cube, data_label='test')
+    cubeviz_helper.load(cube, data_label='test')
 
     flux_viewer = cubeviz_helper._app.get_viewer("flux-viewer")
     uncert_viewer = cubeviz_helper._app.get_viewer("uncert-viewer")

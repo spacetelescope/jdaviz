@@ -23,6 +23,7 @@ class TestSpecvizSpectrum1DParser:
     """
     Test the main specviz_spectrum1d_parser function.
     """
+
     @pytest.mark.parametrize('label', [None, 'custom_label'])
     def test_parse_single_spectrum1d(self, specviz_helper, spectrum1d, label):
         """
