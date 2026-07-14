@@ -49,6 +49,8 @@ New Features
 
 - 'Auto' parenting can now associate with data already loaded into the app without needing to specify the data label. [#4248]
 
+- Add window docker icons for standalone app [#4289]
+
 Mosviz
 ^^^^^^
 
