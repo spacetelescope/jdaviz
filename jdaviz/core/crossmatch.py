@@ -5,7 +5,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable
 
-__all__ = ['crossmatch_pair', 'crossmatch_catalogs', 'apply_review_decisions']
+__all__ = ['crossmatch_pair', 'crossmatch_catalogs', 'apply_review_decisions',
+           'catalogs_from_data_collection', 'crossmatch_loaded_catalogs']
 
 
 def _get_skycoord(table, ra_col=None, dec_col=None):
@@ -299,3 +300,93 @@ def apply_review_decisions(merged, decisions):
     status_cols = [c for c in out.colnames if c.endswith('_status')]
     out['needs_review'] = np.any([out[c] == 'review' for c in status_cols], axis=0)
     return out
+
+
+def catalogs_from_data_collection(app, data_labels, names=None):
+    """Assemble cross-match inputs from catalogs already loaded into the app.
+
+    Reads each catalog's glue ``Data`` back into a QTable (via the glue-astronomy
+    translator, ``data.get_object(cls=QTable)``) and pulls the standardized
+    sky-position and id column names from the Catalog importer's metadata
+    (``_jdaviz_loader_ra_col`` / ``_jdaviz_loader_dec_col`` / ``_jdaviz_id_col``).
+    This lets :func:`crossmatch_catalogs` run on data that has already gone through
+    the loader, regardless of the original column names (e.g. ``ra_gaia``/``dec_roman``).
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        A Jdaviz application instance (i.e. ``plugin.app`` inside a plugin, or
+        ``helper._app`` from a config helper).
+    data_labels : list of str
+        Data-collection labels of the loaded catalogs. The first is treated as
+        the base by :func:`crossmatch_catalogs`.
+    names : list of str or None
+        Display names to use for each catalog (defaults to ``data_labels``).
+
+    Returns
+    -------
+    catalogs : list of (name, QTable)
+        Ready to pass to :func:`crossmatch_catalogs`.
+    coord_columns : dict
+        ``{name: (ra_column, dec_column)}`` from the importer metadata.
+    id_columns : dict
+        ``{name: id_column}`` from the importer metadata.
+
+    Raises
+    ------
+    ValueError
+        If ``names`` length mismatches, or a label is not a catalog loaded via
+        the Catalog importer.
+    """
+    dc = app.data_collection
+    if names is None:
+        names = list(data_labels)
+    if len(names) != len(data_labels):
+        raise ValueError('names must be the same length as data_labels.')
+
+    catalogs, coord_columns, id_columns = [], {}, {}
+    for label, name in zip(data_labels, names):
+        data = dc[label]
+        meta = getattr(data, 'meta', {}) or {}
+        if meta.get('_importer') != 'CatalogImporter':
+            raise ValueError(f"Data '{label}' is not a catalog loaded via the "
+                             "Catalog importer.")
+        catalogs.append((name, data.get_object(cls=QTable)))
+
+        ra_col = meta.get('_jdaviz_loader_ra_col')
+        dec_col = meta.get('_jdaviz_loader_dec_col')
+        if ra_col and dec_col:
+            coord_columns[name] = (ra_col, dec_col)
+        id_col = meta.get('_jdaviz_id_col')
+        if id_col:
+            id_columns[name] = id_col
+
+    return catalogs, coord_columns, id_columns
+
+
+def crossmatch_loaded_catalogs(app, data_labels, names=None, use_ids=False, **kwargs):
+    """Cross-match catalogs already loaded into the app.
+
+    Convenience wrapper around :func:`catalogs_from_data_collection` +
+    :func:`crossmatch_catalogs`. Positional (sky) matching is used by default;
+    pass ``use_ids=True`` to additionally match on the catalogs' id columns
+    (``mode='id_then_sky'``). Any :func:`crossmatch_catalogs` keyword (e.g.
+    ``tolerance``, ``review_radius``, ``join``, ``mode``) may be supplied and
+    takes precedence.
+
+    Note: matching by id is only meaningful when the id columns are globally
+    consistent across catalogs; ids from different instruments are usually not,
+    which is why sky matching is the default.
+
+    Returns
+    -------
+    merged, review : QTable, QTable
+        See :func:`crossmatch_catalogs`.
+    """
+    catalogs, coord_columns, id_columns = catalogs_from_data_collection(
+        app, data_labels, names)
+    kwargs.setdefault('coord_columns', coord_columns)
+    if use_ids:
+        kwargs.setdefault('id_columns', id_columns)
+        kwargs.setdefault('mode', 'id_then_sky')
+    return crossmatch_catalogs(catalogs, **kwargs)

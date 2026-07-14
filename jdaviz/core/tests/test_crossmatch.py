@@ -6,7 +6,9 @@ from astropy.table import QTable
 from numpy.testing import assert_allclose
 
 from jdaviz.core.crossmatch import (crossmatch_pair, crossmatch_catalogs,
-                                    apply_review_decisions, _get_skycoord)
+                                    apply_review_decisions, _get_skycoord,
+                                    catalogs_from_data_collection,
+                                    crossmatch_loaded_catalogs)
 
 
 def _make_catalogs():
@@ -356,3 +358,86 @@ def test_crossmatch_catalogs_collision_flags_review():
     assert int(np.sum(merged['needs_review'])) == 2
     assert len(review) == 2
 
+
+# --- loaded-catalog helpers (integration with the Catalog loader) ---------
+
+def _load_catalog(helper, table, ra_col='ra', dec_col='dec', id_col=None):
+    """Load ``table`` as a catalog and return its new data-collection label."""
+    dc = helper._app.data_collection
+    before = set(dc.labels)
+
+    ldr = helper.loaders['object']
+    ldr.object = table
+    ldr.format = 'Catalog'
+    ldr.importer.viewer.create_new = 'Table'
+    ldr.importer.col_ra.selected = ra_col
+    ldr.importer.col_dec.selected = dec_col
+    if id_col is not None:
+        ldr.importer.col_id.selected = id_col
+    ldr.load()
+
+    new = list(set(dc.labels) - before)
+    assert len(new) == 1
+    return new[0]
+
+
+def test_catalogs_from_data_collection_and_crossmatch(deconfigged_helper):
+    rng = np.random.default_rng(7)
+    ra = 150.0 + rng.uniform(-0.01, 0.01, 6)
+    dec = 2.0 + rng.uniform(-0.01, 0.01, 6)
+
+    # instrument-specific position column names, as the reviewer described
+    cat_a = QTable({'ra_gaia': ra * u.deg, 'dec_gaia': dec * u.deg,
+                    'source_id': [f'A{i}' for i in range(6)]})
+    jit = 0.3 / 3600.0
+    cat_b = QTable({'ra_roman': (ra + rng.uniform(-jit, jit, 6)) * u.deg,
+                    'dec_roman': (dec + rng.uniform(-jit, jit, 6)) * u.deg})
+
+    label_a = _load_catalog(deconfigged_helper, cat_a,
+                            ra_col='ra_gaia', dec_col='dec_gaia', id_col='source_id')
+    label_b = _load_catalog(deconfigged_helper, cat_b,
+                            ra_col='ra_roman', dec_col='dec_roman')
+
+    catalogs, coord_columns, id_columns = catalogs_from_data_collection(
+        deconfigged_helper._app, [label_a, label_b], names=['A', 'B'])
+
+    # coordinate columns are recovered from the importer metadata
+    assert coord_columns['A'] == ('ra_gaia', 'dec_gaia')
+    assert coord_columns['B'] == ('ra_roman', 'dec_roman')
+    assert id_columns['A'] == 'source_id'
+
+    merged, review = crossmatch_catalogs(catalogs, coord_columns=coord_columns)
+    # all 6 base sources match their jittered counterparts positionally
+    assert list(merged['B_status'][:6]) == ['matched'] * 6
+    assert len(review) == 0
+
+
+def test_crossmatch_loaded_catalogs_convenience(deconfigged_helper):
+    rng = np.random.default_rng(11)
+    ra = 150.0 + rng.uniform(-0.01, 0.01, 5)
+    dec = 2.0 + rng.uniform(-0.01, 0.01, 5)
+    cat_a = QTable({'ra': ra * u.deg, 'dec': dec * u.deg})
+    jit = 0.3 / 3600.0
+    cat_b = QTable({'ra': (ra + rng.uniform(-jit, jit, 5)) * u.deg,
+                    'dec': (dec + rng.uniform(-jit, jit, 5)) * u.deg})
+
+    label_a = _load_catalog(deconfigged_helper, cat_a)
+    label_b = _load_catalog(deconfigged_helper, cat_b)
+
+    # positional matching by default (no ids needed)
+    merged, review = crossmatch_loaded_catalogs(
+        deconfigged_helper._app, [label_a, label_b], names=['A', 'B'])
+    assert list(merged['B_status'][:5]) == ['matched'] * 5
+    assert len(review) == 0
+
+
+def test_catalogs_from_data_collection_non_catalog_raises(deconfigged_helper,
+                                                          image_2d_wcs):
+    from astropy.nddata import NDData
+    dc = deconfigged_helper._app.data_collection
+    before = set(dc.labels)
+    deconfigged_helper.load(NDData(np.ones((4, 4)), wcs=image_2d_wcs))
+    label = list(set(dc.labels) - before)[0]
+
+    with pytest.raises(ValueError, match='not a catalog'):
+        catalogs_from_data_collection(deconfigged_helper._app, [label])
