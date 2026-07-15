@@ -122,20 +122,21 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, deconfigged_
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_spectrum3d_parse(image_cube_hdu_obj, deconfigged_helper):
+def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     flux = image_cube_hdu_obj[1].data << u.Unit(image_cube_hdu_obj[1].header['BUNIT'])
     wcs = WCS(image_cube_hdu_obj[1].header, image_cube_hdu_obj, preserve_units=True)
     sc = Spectrum(flux=flux, wcs=wcs)
-    deconfigged_helper.load(sc, format='3D Spectrum')
+    cubeviz_helper.load_data(sc)
 
-    data = deconfigged_helper._app.data_collection[0]
-    assert len(deconfigged_helper._app.data_collection) == 2
-    assert data.label == "3D Spectrum"
+    data = cubeviz_helper._app.data_collection[0]
+    assert len(cubeviz_helper._app.data_collection) == 2
+    assert data.label == "3D Spectrum [FLUX]"
     assert data.shape == flux.shape
 
     # Same as flux viewer data in test_fits_image_hdu_parse_from_file
-    flux_viewer = deconfigged_helper._app.get_viewer('3D Spectrum')
-    label_mouseover = deconfigged_helper._coords_info
+    flux_viewer = cubeviz_helper._app.get_viewer(
+        cubeviz_helper._default_flux_viewer_reference_name)
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     flux_unit_str = "erg / (Angstrom s cm2 pix2)"
@@ -144,11 +145,11 @@ def test_spectrum3d_parse(image_cube_hdu_obj, deconfigged_helper):
                                          '205.4441642302 26.9996148973 (deg)')
 
     # These viewers have no data.
-    unc_viewer = deconfigged_helper._app.get_viewer('3D Spectrum (1)')
+    unc_viewer_name = cubeviz_helper._default_uncert_viewer_reference_name
+    unc_viewer = cubeviz_helper._app.get_viewer(unc_viewer_name)
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
-    # not sure if this what is intended behavior for deconfigged?
-    # assert label_mouseover.as_text() == ('', '', '')
+    assert label_mouseover.as_text() == ('', '', '')
 
 
 @pytest.mark.filterwarnings('ignore')
