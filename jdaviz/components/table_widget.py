@@ -1,5 +1,5 @@
-# Modified copy of glue_jupyter/table/table.vue (TableGlue / TableBase).
-# Jdaviz additions: header rename/delete traitlets, Vuetify 3 _get_headers() override.
+# Jdaviz additions to glue_jupyter.table.viewer.TableGlue:
+# inline column-header rename/delete traitlets and vue_* handlers.
 import traitlets
 from glue_jupyter.table.viewer import TableGlue
 
@@ -17,11 +17,11 @@ class JdavizTableWidget(TableGlue):
 
     # ---- inline column-header editing traitlets ----
 
-    # Set by vue_commit_header_edit when the user accepts a rename.
+    # Set by vue_rename_colum when the user accepts a rename.
     # Observed by JdavizTableViewer._on_header_renamed.
     header_renamed = traitlets.Dict({'column': '', 'newName': ''}).tag(sync=True)
 
-    # Set by vue_delete_header when the user confirms a deletion.
+    # Set by vue_remove_column when the user confirms a deletion.
     # Observed by JdavizTableViewer._on_header_deleted.
     header_deleted = traitlets.Unicode('').tag(sync=True)
 
@@ -34,22 +34,36 @@ class JdavizTableWidget(TableGlue):
 
     # ---- vue_* handlers (called from the Vue frontend) ----
 
-    def _get_headers(self):
-        """Override to add Vuetify 3 required `title` and `key` fields."""
-        headers = super()._get_headers()
-        for h in headers:
-            # Vuetify 3 uses 'title' (not 'text') and 'key' (not 'value')
-            h['title'] = h.get('text', '')
-            h['key'] = h.get('value', '')
-        return headers
+    def vue_rename_colum(self, data):
+        """User accepted a column rename in the header text-input.
 
-    def vue_commit_header_edit(self, data):
-        """User accepted a column rename in the header text-input."""
-        self.header_renamed = {
-            'column': data.get('column', ''),
-            'newName': data.get('newName', ''),
-        }
+        Directly renames the component in the current glue Data object, then
+        sets ``header_renamed`` so external observers (e.g. the viewer's
+        role-label bookkeeping) can react.
+        """
+        old_name = data.get('column', '')
+        new_name = data.get('newName', '').strip()
+        if not old_name or not new_name or old_name == new_name:
+            return
+        if self.data is not None and old_name in [c.label for c in self.data.main_components]:
+            self.data.id[old_name].label = new_name
+            self._update_columns()
+        self.header_renamed = {'column': old_name, 'newName': new_name}
 
-    def vue_delete_header(self, data):
-        """User confirmed a column deletion via the remove-confirm badge."""
-        self.header_deleted = data.get('column', '')
+    def vue_remove_column(self, data):
+        """User confirmed a column deletion via the remove-confirm badge.
+
+        Directly removes the component from the current glue Data object, then
+        sets ``header_deleted`` so external observers can react.
+        """
+        label = data.get('column', '')
+        if not label or self.data is None:
+            return
+        if label in [c.label for c in self.data.main_components]:
+            cid = self.data.id[label]
+            self.state.editable_components = [
+                c for c in self.state.editable_components if c is not cid
+            ]
+            self.data.remove_component(cid)
+            self._update()
+        self.header_deleted = label
