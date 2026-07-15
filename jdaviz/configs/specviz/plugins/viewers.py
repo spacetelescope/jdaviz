@@ -19,7 +19,7 @@ from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
-from jdaviz.core.unit_conversion_utils import (spectral_axis_conversion,
+from jdaviz.core.unit_conversion_utils import (spectral_unit_conversion,
                                                flux_conversion_general,
                                                all_flux_unit_conversion_equivs)
 from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS
@@ -75,7 +75,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
                 return True
 
             try:
-                spectral_axis_conversion([1], data_xunit, viewer_xunit)
+                spectral_unit_conversion([1], data_xunit, viewer_xunit)
             except u.UnitConversionError:
                 return False
             equivs = all_flux_unit_conversion_equivs(cube_wave=[1]*u.Unit(viewer_xunit))

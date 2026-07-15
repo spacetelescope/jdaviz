@@ -58,6 +58,9 @@ New Features
 - Add ability to query VO and Astroquery from catalog/using viewer coordinates as the source. The former source selection
   choice 'Manual' is also now 'Source'. [#4275]
 
+- Improvements to spectral axis unit conversion logic to support workflows and
+  avoid errors in mixed unit viewers in deconfigged. [#4292]
+
 Mosviz
 ^^^^^^
 
