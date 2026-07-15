@@ -49,6 +49,8 @@ New Features
 
 - 'Auto' parenting can now associate with data already loaded into the app without needing to specify the data label. [#4248]
 
+- New image viewer tools for editing the colormap, stretch function, and opacity of the top-layer. [#4290]
+
 Mosviz
 ^^^^^^
 
