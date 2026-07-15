@@ -61,7 +61,7 @@ from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, 
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                combine_flux_and_angle_units,
                                                flux_conversion_general,
-                                               spectral_axis_conversion,
+                                               spectral_unit_conversion,
                                                supported_sq_angle_units,
                                                viewer_flux_conversion_equivalencies)
 
@@ -137,7 +137,7 @@ class UnitConverterWithSpectral:
                                            target_units, viewer_equivs,
                                            with_unit=False)
         else:  # spectral axis
-            return spectral_axis_conversion(values, original_units, target_units)
+            return spectral_unit_conversion(values, original_units, target_units)
 
 
 # Set default opacity for data layers to 1 instead of 0.8 in
@@ -913,7 +913,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                         msg = SnackbarMessage(text=msg_text,
                                               color='info', sender=self)
                         self.hub.broadcast(msg)
+
                         link = LinkSameWithUnits(new_comp, existing_comp)
+
                         new_links.append(link)
                         # only need one link for the new component, reparenting will handle
                         # if that data entry is deleted

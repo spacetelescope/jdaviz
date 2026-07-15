@@ -4800,7 +4800,7 @@ class DatasetSelect(SelectPluginComponent):
         If the spectral axis unit of data is pixels, and the
         display unit is not pixels (or vice versa), no conversion is done to allow
         for mixed pixel/world unit viewing (this logic is handled by
-        spectral_axis_conversion, which is called from this method when converting
+        spectral_unit_conversion, which is called from this method when converting
         the spectral axis).
         """
         # retrieves the 1d spectrum

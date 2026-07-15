@@ -51,6 +51,8 @@ New Features
 
 - Add window docker icons for standalone app [#4289]
 
+- Improvements to spectral axis unit conversion logic to support workflows and avoid errors in mixed unit viewers in deconfigged. [#4292]
+
 Mosviz
 ^^^^^^
 

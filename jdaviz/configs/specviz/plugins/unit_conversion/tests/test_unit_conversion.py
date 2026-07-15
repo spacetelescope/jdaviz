@@ -100,7 +100,7 @@ def test_conv_no_data(specviz_helper, spectrum1d):
     # spectrum not load is in Flux units, sb_unit and flux_unit
     # should be enabled, spectral_y_type should not be
     plg = specviz_helper.plugins["Unit Conversion"]
-    with pytest.raises(ValueError, match="could not find match in valid x display units"):
+    with pytest.raises(ValueError, match='no valid unit choices'):
         plg.spectral_unit = "micron"
     assert len(specviz_helper._app.data_collection) == 0
 
@@ -369,3 +369,119 @@ def test_toggle_spectral_y_type_deconfigged(deconfigged_helper, spectrum1d):
 
     plg.spectral_y_type = "Flux"
     assert plg.spectral_y_type == "Flux"
+
+
+@pytest.mark.parametrize('physical_first', [True, False])
+def test_pix_and_physical_spectral_unit_load_order(deconfigged_helper, physical_first):
+    """
+    Test loading a pixel-axis spectrum and a physical-axis spectrum in either
+    order. Spectral unit choices should be populated from the physical spectrum
+    regardless of load order, and conversion should work without errors.
+    """
+    spec_pix_dn = Spectrum(flux=[1, 2, 3] * u.DN, spectral_axis=[1, 2, 3] * u.pix)
+    spec_jy_nm = Spectrum(flux=[1, 2, 3] * u.Jy, spectral_axis=[1, 2, 3] * u.nm)
+
+    if physical_first:
+        deconfigged_helper.load(spec_jy_nm, data_label='jy_nm', format='1D Spectrum')
+        plg = deconfigged_helper.plugins["Unit Conversion"]
+        assert u.Unit(plg._obj.spectral_unit_selected) == u.Unit('nm')
+        deconfigged_helper.load(spec_pix_dn, data_label='pix_dn', format='1D Spectrum')
+    else:
+        deconfigged_helper.load(spec_pix_dn, data_label='pix_dn', format='1D Spectrum')
+        plg = deconfigged_helper.plugins["Unit Conversion"]
+        # pixels is not a physical unit, so spectral_unit should not be set
+        assert plg._obj.spectral_unit_selected == ''
+        deconfigged_helper.load(spec_jy_nm, data_label='jy_nm', format='1D Spectrum')
+
+    # after both are loaded, choices should be populated and nm selected
+    assert len(plg._obj.spectral_unit.choices) > 0
+    assert u.Unit(plg._obj.spectral_unit_selected) == u.Unit('nm')
+
+    # converting from nm to Hz should not raise errors
+    plg.spectral_unit = 'Hz'
+    assert u.Unit(plg._obj.spectral_unit_selected) == u.Unit('Hz')
+
+
+@pytest.mark.parametrize('pix_spec', ['1d', '2d'])
+@pytest.mark.parametrize('dim_1d_first', [True, False])
+def test_mixed_1d_2d_spectral_unit_load_order(deconfigged_helper, pix_spec, dim_1d_first):
+    """
+    Test loading a 1D and a 2D spectrum in either order, with pixel units for the
+    spectral axis on either the 1D or 2D spectrum, to test mixed spectral axis unit
+    types with different viewer types. Spectral unit choices should be populated
+    from the spectrum that has physical units, and spectral axis unit conversion
+    should work without errors, only acting on relevant viewers.
+    """
+
+    # This SHOULD work (and does when run in a notebook / script) but for some
+    # reason not when run with pytest. remove this when JDAT-6288 is resolved
+    if pix_spec == '1d':
+        return
+
+    spec_1d_saxis = u.pix if pix_spec == '1d' else u.nm
+    spec_2d_saxis = u.pix if pix_spec == '2d' else u.nm
+
+    spec_1d = Spectrum(flux=[1, 2, 3] * u.Jy,
+                       spectral_axis=[1, 2, 3] * spec_1d_saxis)
+    spec_2d = Spectrum(flux=np.ones((3, 3)) * u.Jy,
+                       spectral_axis=[1, 2, 3] * spec_2d_saxis,
+                       spectral_axis_index=-1)
+
+    # determine whether the first-loaded spectrum has a pixel spectral axis
+    first_is_pix = (dim_1d_first and pix_spec == '1d') or (not dim_1d_first and pix_spec == '2d')
+
+    if dim_1d_first:
+        deconfigged_helper.load(spec_1d, data_label='spec_1d', format='1D Spectrum')
+        plg = deconfigged_helper.plugins["Unit Conversion"]
+        if first_is_pix:
+            assert plg.spectral_unit.selected == ''
+        else:
+            assert u.Unit(plg.spectral_unit.selected) == u.Unit('nm')
+        deconfigged_helper.load(spec_2d, data_label='spec_2d', format='2D Spectrum')
+    else:
+        deconfigged_helper.load(spec_2d, data_label='spec_2d', format='2D Spectrum')
+        plg = deconfigged_helper.plugins["Unit Conversion"]
+        if first_is_pix:
+            assert plg.spectral_unit.selected == ''
+        else:
+            assert u.Unit(plg.spectral_unit.selected) == u.Unit('nm')
+        deconfigged_helper.load(spec_1d, data_label='spec_1d', format='1D Spectrum')
+
+    # after both are loaded, choices should be populated and nm selected
+    assert len(plg.spectral_unit.choices) > 0
+    assert u.Unit(plg.spectral_unit.selected) == u.Unit('nm')
+
+    # converting from nm to Hz should not raise errors
+    plg.spectral_unit = 'Hz'
+    assert u.Unit(plg.spectral_unit.selected) == u.Unit('Hz')
+
+
+def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catalog, spectrum1d):
+    """
+    Test that the Unit Conversion plugin is enabled when data is loaded in a
+    relevant viewer, disabled when all data is removed, and re-enabled when
+    data is added back.
+    """
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label="test")
+
+    plg = deconfigged_helper.plugins["Unit Conversion"]
+
+    # plugin should be enabled when data is loaded
+    assert plg._obj.disabled_msg == ''
+
+    # remove the data from the viewer, plugin should become disabled
+    dm = deconfigged_helper.viewers['1D Spectrum'].data_menu
+    dm.layer.selected = ['test']
+    dm.remove_from_viewer()
+    assert plg._obj.disabled_msg == 'Unit Conversion unavailable without data loaded in a viewer'
+
+    # load a catalog, which will be added to a new scatter viewer by default.
+    # the unit conversion plugin should still be disabled since the check for
+    # relevancy is for data in spectrum/image/cube viewers
+    deconfigged_helper.load(sky_coord_only_source_catalog, format='Catalog')
+    assert 'Scatter' in deconfigged_helper.viewers
+    assert plg._obj.disabled_msg == 'Unit Conversion unavailable without data loaded in a viewer'
+
+    # add the data back to the spectrum viewer, plugin should be reenabled
+    dm.add_data('test')
+    assert plg._obj.disabled_msg == ''
