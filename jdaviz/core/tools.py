@@ -1269,7 +1269,7 @@ class ImageStretchTool(_BaseImageFocusTool):
         if layer_state is not None and hasattr(layer_state, 'stretch'):
             try:
                 current = layer_state.stretch
-            except Exception:
+            except Exception:  # nosec
                 pass
         return [{'type': 'select', 'label': 'Stretch', 'items': items,
                  'selected': current, 'multiselect': False}]
@@ -1282,7 +1282,7 @@ class ImageStretchTool(_BaseImageFocusTool):
         if layer_state is not None and hasattr(layer_state, 'stretch'):
             try:
                 layer_state.stretch = stretch_key
-            except Exception:
+            except Exception:  # nosec
                 pass
 
 
@@ -1302,7 +1302,7 @@ class ImageOpacityTool(_BaseImageFocusTool):
         if layer_state is not None and hasattr(layer_state, 'alpha'):
             try:
                 current = float(layer_state.alpha)
-            except Exception:
+            except Exception:  # nosec
                 pass
         return [{'type': 'slider', 'label': 'Opacity',
                  'min': 0.0, 'max': 1.0, 'step': 0.02,
@@ -1315,5 +1315,5 @@ class ImageOpacityTool(_BaseImageFocusTool):
         if layer_state is not None:
             try:
                 layer_state.alpha = float(new_selected[0])
-            except Exception:
+            except Exception:  # nosec
                 pass
