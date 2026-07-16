@@ -1183,6 +1183,11 @@ class _BaseImageFocusTool(Tool):
     """
     keep_visible_in_focus_mode = True
     _override_title = ''
+    # Echo property name to observe on the top layer state (e.g. 'alpha', 'cmap', 'stretch').
+    # Subclasses must set this so external changes (e.g. plot options) update the widget.
+    _layer_state_property = ''
+    # Tracks which layer state instance we currently have a callback on.
+    _current_observed_layer = None
 
     def _get_top_layer_state(self):
         """Return the state of the current top visible image layer, or None."""
@@ -1197,6 +1202,56 @@ class _BaseImageFocusTool(Tool):
     def _on_selection_changed(self, new_selected):
         raise NotImplementedError  # pragma: no cover
 
+    def _on_layer_state_change(self, *args):
+        """
+        Called by the echo framework when the observed layer-state property
+        changes externally (e.g. via plot options).  Updates the toolbar widget.
+
+        Any potential feedback loop (this → _selection_callback → layer_state →
+        echo again) terminates naturally: the second assignment to
+        ``custom_widget_selected`` carries the same value, so traitlets' equality
+        check suppresses the observer and no further calls occur.
+        """
+        toolbar = getattr(self.viewer, 'toolbar', None)
+        if toolbar is None or toolbar.tool_override_mode != self._override_title:
+            return
+        new_widgets = self._build_custom_widgets()
+        toolbar.custom_widget_selected = [w.get('selected') for w in new_widgets]
+
+    def _register_layer_observer(self):
+        """
+        Remove any previous layer-state callback and add one on the current
+        top layer.  Called on activate and after every top-layer change.
+        """
+        prop = self._layer_state_property
+        if not prop:
+            return
+        # Remove observer from the previously observed layer (if any)
+        if self._current_observed_layer is not None:
+            try:
+                self._current_observed_layer.remove_callback(
+                    prop, self._on_layer_state_change)
+            except Exception:  # nosec
+                pass
+        layer_state = self._get_top_layer_state()
+        self._current_observed_layer = layer_state
+        if layer_state is not None:
+            try:
+                layer_state.add_callback(prop, self._on_layer_state_change)
+            except Exception:  # nosec
+                pass
+
+    def _unregister_layer_observer(self):
+        """Remove the layer-state callback.  Called when the override closes."""
+        prop = self._layer_state_property
+        if prop and self._current_observed_layer is not None:
+            try:
+                self._current_observed_layer.remove_callback(
+                    prop, self._on_layer_state_change)
+            except Exception:  # nosec
+                pass
+        self._current_observed_layer = None
+
     def activate(self):
         custom_widgets = self._build_custom_widgets()
         self.viewer.toolbar.override_tools(
@@ -1206,6 +1261,13 @@ class _BaseImageFocusTool(Tool):
             custom_widgets_callback=self._build_custom_widgets,
             selection_callback=self._on_selection_changed,
         )
+        # Register echo callback on the current top layer so external changes
+        # (e.g. from plot options) update the widget in real time.
+        self._register_layer_observer()
+        # Let the toolbar call cleanup when the override closes and re-register
+        # when the top layer changes (triggered by _refresh_custom_widgets).
+        self.viewer.toolbar._pre_restore_callback = self._unregister_layer_observer
+        self.viewer.toolbar._post_refresh_callback = self._register_layer_observer
 
 
 @viewer_tool
@@ -1217,6 +1279,7 @@ class ImageColormapTool(_BaseImageFocusTool):
     action_text = 'Select colormap'
     tool_tip = 'Select the colormap for the top visible image layer'
     _override_title = 'Colormap'
+    _layer_state_property = 'cmap'
 
     def _build_custom_widgets(self):
         from jdaviz.utils import glue_colormaps
@@ -1230,7 +1293,7 @@ class ImageColormapTool(_BaseImageFocusTool):
             except ValueError:
                 pass
         return [{'type': 'select', 'label': 'Colormap', 'items': items,
-                 'selected': current, 'multiselect': False}]
+                 'selected': current, 'multiselect': False, 'sync_to_state': True}]
 
     def _on_selection_changed(self, new_selected):
         if not new_selected:
@@ -1255,6 +1318,7 @@ class ImageStretchTool(_BaseImageFocusTool):
     action_text = 'Select stretch'
     tool_tip = 'Select the stretch function for the top visible image layer'
     _override_title = 'Stretch'
+    _layer_state_property = 'stretch'
 
     def _build_custom_widgets(self):
         from glue.config import stretches as glue_stretches
@@ -1272,7 +1336,7 @@ class ImageStretchTool(_BaseImageFocusTool):
             except Exception:  # nosec
                 pass
         return [{'type': 'select', 'label': 'Stretch', 'items': items,
-                 'selected': current, 'multiselect': False}]
+                 'selected': current, 'multiselect': False, 'sync_to_state': True}]
 
     def _on_selection_changed(self, new_selected):
         if not new_selected:
@@ -1295,6 +1359,7 @@ class ImageOpacityTool(_BaseImageFocusTool):
     action_text = 'Set opacity'
     tool_tip = 'Adjust the opacity of the top visible image layer'
     _override_title = 'Opacity'
+    _layer_state_property = 'alpha'
 
     def _build_custom_widgets(self):
         layer_state = self._get_top_layer_state()

@@ -11,7 +11,8 @@ from glue_jupyter.common.toolbar_vuetify import BasicJupyterToolbar, read_icon
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 SpectralMarksChangedMessage, CatalogResultsChangedMessage,
-                                FootprintMarkVisibilityChangedMessage, RestoreToolbarMessage)
+                                FootprintMarkVisibilityChangedMessage, RestoreToolbarMessage,
+                                ViewerVisibleLayersChangedMessage)
 
 __all__ = ['NestedJupyterToolbar']
 
@@ -42,6 +43,10 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     custom_widget_selected = traitlets.List([]).tag(sync=True)
     # optional callback invoked when custom_widget_selected changes in override mode
     _selection_callback = None
+    # called before _clear_toolbar so tools can remove layer-state observers
+    _pre_clear_callback = None
+    # called after _refresh_custom_widgets so tools can re-register on the new top layer
+    _post_refresh_callback = None
 
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
@@ -63,7 +68,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         if hasattr(self.viewer, 'hub'):
             for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage,
                         SpectralMarksChangedMessage, CatalogResultsChangedMessage,
-                        FootprintMarkVisibilityChangedMessage):
+                        FootprintMarkVisibilityChangedMessage,
+                        ViewerVisibleLayersChangedMessage):
                 self.viewer.hub.subscribe(self, msg,
                                           handler=lambda _: self._update_tool_visibilities())
             # ViewerRemovedMessage needs special handling - both update visibilities
@@ -232,6 +238,12 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         """
         Clear all current tools from the toolbar.
         """
+        # Let any active tool clean up layer-state observers before we wipe state
+        if self._pre_clear_callback is not None:
+            try:
+                self._pre_clear_callback()
+            except Exception:  # nosec
+                pass
         # Clear the tools and tools_data dictionaries
         self.tools.clear()
         self.tools_data = {}
@@ -241,6 +253,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self.custom_widget_selected = []
         self._custom_widgets_callback = None
         self._selection_callback = None
+        self._pre_clear_callback = None
+        self._post_refresh_callback = None
 
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError
@@ -272,9 +286,14 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         if new_widgets is None:
             return
 
-        # Preserve current selections where possible
+        # Preserve current selections where possible, unless the widget declares
+        # sync_to_state=True (meaning its value should always track external state,
+        # e.g. the current top image layer's colormap or stretch).
         for i, widget in enumerate(new_widgets):
             if i < len(self.custom_widget_selected):
+                if widget.get('sync_to_state', False):
+                    # Always use the fresh value from the callback
+                    continue
                 current_selected = self.custom_widget_selected[i]
                 new_values = [item['value'] for item in widget.get('items', [])]
                 if widget.get('multiselect', False):
@@ -288,6 +307,12 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
 
         self.custom_widget_items = new_widgets
         self.custom_widget_selected = [w.get('selected', []) for w in new_widgets]
+        # Let tools re-register their layer-state observers on the (possibly new) top layer
+        if self._post_refresh_callback is not None:
+            try:
+                self._post_refresh_callback()
+            except Exception:  # nosec
+                pass
 
     def _update_tool_visibilities(self):
         # Refresh custom widgets if callback is provided (e.g., for viewer changes)
