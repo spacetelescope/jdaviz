@@ -53,6 +53,7 @@
           class="custom-toolbar-select"
           item-title="label"
           item-value="value"
+          :menu-props="{ persistent: true }"
         ></v-select>
       </template>
     </span>
