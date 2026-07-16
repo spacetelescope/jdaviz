@@ -17,8 +17,8 @@
     <span v-if="custom_widget_items.length > 0" style="display: inline-flex; align-items: center; vertical-align: top; height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
       <template v-for="(widget, idx) in custom_widget_items" :key="idx">
         <!-- Slider widget -->
-        <j-tooltip v-if="widget.type === 'slider'" :tooltipcontent="widget.label" span_style="display: flex; align-items: center;">
-          <span style="color: white; font-size: 12px; margin-right: 4px; white-space: nowrap;">{{ widget.label }}</span>
+        <j-tooltip v-if="widget.type === 'slider'" :tooltipcontent="widget.label" span_style="display: flex; align-items: center; height: 42px;">
+          <span style="color: white; font-size: 12px; margin-right: 4px; white-space: nowrap; align-self: center;">{{ widget.label }}</span>
           <v-slider
             :model-value="custom_widget_selected[idx]"
             @update:modelValue="(val) => update_widget_selection(idx, val)"
@@ -27,12 +27,12 @@
             :step="widget.step !== undefined ? widget.step : 0.01"
             density="compact"
             hide-details
-            style="min-width: 140px; max-width: 220px; margin: 0 4px;"
+            style="min-width: 140px; max-width: 220px; margin: 0 4px; align-self: center;"
             class="custom-toolbar-slider"
             color="white"
             track-color="rgba(255,255,255,0.4)"
           ></v-slider>
-          <span style="color: white; font-size: 12px; min-width: 32px; text-align: right;">{{ typeof custom_widget_selected[idx] === 'number' ? custom_widget_selected[idx].toFixed(2) : custom_widget_selected[idx] }}</span>
+          <span style="color: white; font-size: 12px; min-width: 32px; text-align: right; align-self: center;">{{ typeof custom_widget_selected[idx] === 'number' ? custom_widget_selected[idx].toFixed(2) : custom_widget_selected[idx] }}</span>
         </j-tooltip>
         <!-- Select/dropdown widget -->
         <v-select
@@ -259,6 +259,8 @@
   background-color: white !important;
 }
 .custom-toolbar-slider .v-input__control {
-  min-height: 32px !important;
+  min-height: unset !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 </style>
