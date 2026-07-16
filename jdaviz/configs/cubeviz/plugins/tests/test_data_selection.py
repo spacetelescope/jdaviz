@@ -1,8 +1,6 @@
 import pytest
 
 
-# is this meant to be deprecated for deconfigged?
-# there's no viewer spawned in deconfigged_helper so nowhere to add data
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_data_selection(cubeviz_helper, spectrum1d_cube, tmpdir):
     app = cubeviz_helper._app

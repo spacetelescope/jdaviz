@@ -232,7 +232,6 @@ def test_1d_parser(specviz2d_helper, spectrum1d):
     assert dc_0.meta['uncertainty_type'] == 'std'
 
 
-# should this be deprecated since deconfigged loads 1d and 2d separately?
 def test_2d_1d_parser(specviz2d_helper, mos_spectrum2d, spectrum1d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d, spectrum_1d=spectrum1d)
     assert specviz2d_helper._app.data_collection.labels == ['Spectrum 2D', 'Spectrum 1D']

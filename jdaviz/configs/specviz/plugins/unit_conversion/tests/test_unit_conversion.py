@@ -94,8 +94,6 @@ def test_conv_wave_flux(deconfigged_helper, spectrum1d, uncert):
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
 
 
-# should this be deprecated since plugin is not available
-# before loading data in deconfigged?
 def test_conv_no_data(specviz_helper, spectrum1d):
     """plugin unit selections won't have valid choices yet, preventing
     attempting to set display units."""

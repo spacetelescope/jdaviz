@@ -34,7 +34,6 @@ from astropy.table import Table, QTable
 @pytest.mark.remote_data
 class TestCatalogs:
     # testing that the plugin search does not crash when no data/image is provided
-    # should this be deprecated in deconfigged? plugin does crash
     def test_plugin_no_image(self, imviz_helper):
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
         catalogs_plugin.plugin_opened = True
@@ -208,7 +207,6 @@ class TestCatalogs:
             751.481735, atol=0.1)
 
 
-# should this be deprecated? plugin not available in deconfigged
 def test_from_file_parsing(imviz_helper, tmp_path):
     catalogs_plugin = imviz_helper.plugins["Catalog Search"]
 

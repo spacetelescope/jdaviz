@@ -18,7 +18,6 @@ from jdaviz.conftest import _image_hdu_wcs
 from numpy.testing import assert_allclose
 
 
-# should this be deprecated since deconfigged doesn't spawn viewers without data?
 @pytest.mark.parametrize(
     ('desired_name', 'actual_name'),
     [(None, 'imviz-1'),
@@ -79,7 +78,6 @@ def test_align_by_wcs_create_viewer(deconfigged_helper, image_2d_wcs):
     assert dm.orientation.selected == 'Default orientation'
 
 
-# should this be deprecated since deconfigged_helper doesn't spawn viewers automatically?
 def test_get_viewer_created(imviz_helper):
     # This viewer has no reference but has ID.
     viewer1 = imviz_helper.create_image_viewer()
@@ -87,7 +85,6 @@ def test_get_viewer_created(imviz_helper):
     assert viewer1 is viewer2
 
 
-# should this be deprecated since deconfigged_helper doesn't spawn viewers automatically?
 def test_destroy_viewer_invalid(imviz_helper):
     assert imviz_helper._app.get_viewer_ids() == ['imviz-0']
 
