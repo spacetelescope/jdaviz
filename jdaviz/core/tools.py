@@ -1190,11 +1190,21 @@ class _BaseImageFocusTool(Tool):
     _current_observed_layer = None
 
     def _get_top_layer_state(self):
-        """Return the state of the current top visible image layer, or None."""
-        i = get_top_layer_index(self.viewer)
-        if i is None:
+        """Return the top visible image layer state by z-order, or None.
+
+        Uses ``zorder`` (matching plot_options) rather than list position so
+        that drag-and-drop reordering in the data menu is reflected correctly.
+        """
+        from jdaviz.utils import layer_is_image_data
+        from glue.core.subset_group import GroupedSubset
+        eligible = [
+            lyr for lyr in self.viewer.state.layers
+            if (lyr.visible and layer_is_image_data(lyr.layer)
+                    and not isinstance(lyr.layer, GroupedSubset))
+        ]
+        if not eligible:
             return None
-        return self.viewer.state.layers[i]
+        return max(eligible, key=lambda lyr: lyr.zorder)
 
     def _build_custom_widgets(self):
         raise NotImplementedError  # pragma: no cover
@@ -1252,6 +1262,43 @@ class _BaseImageFocusTool(Tool):
                 pass
         self._current_observed_layer = None
 
+    def _register_zorder_callbacks(self):
+        """Add a zorder callback on every current layer state."""
+        for lyr in self.viewer.state.layers:
+            try:
+                lyr.add_callback('zorder', self._on_zorder_changed)
+            except Exception:  # nosec
+                pass
+
+    def _unregister_zorder_callbacks(self):
+        """Remove the zorder callback from every current layer state."""
+        for lyr in self.viewer.state.layers:
+            try:
+                lyr.remove_callback('zorder', self._on_zorder_changed)
+            except Exception:  # nosec
+                pass
+
+    def _on_zorder_changed(self, *args):
+        """Called when any layer's zorder changes (drag-and-drop in data menu)."""
+        self._on_top_layer_changed()
+
+    def _on_top_layer_changed(self, *args):
+        """
+        Called when the layers list changes or any layer's zorder changes.
+        Re-registers all observers so the widget always tracks the current top layer.
+        """
+        toolbar = getattr(self.viewer, 'toolbar', None)
+        if toolbar is None or toolbar.tool_override_mode != self._override_title:
+            return
+        # Refresh zorder callbacks in case layers were added/removed
+        self._unregister_zorder_callbacks()
+        self._register_zorder_callbacks()
+        # Re-register the main property observer on the new top layer
+        self._register_layer_observer()
+        # Update the widget to reflect the new top layer's current value
+        new_widgets = self._build_custom_widgets()
+        toolbar.custom_widget_selected = [w.get('selected') for w in new_widgets]
+
     def activate(self):
         custom_widgets = self._build_custom_widgets()
         self.viewer.toolbar.override_tools(
@@ -1264,9 +1311,29 @@ class _BaseImageFocusTool(Tool):
         # Register echo callback on the current top layer so external changes
         # (e.g. from plot options) update the widget in real time.
         self._register_layer_observer()
-        # Let the toolbar call cleanup when the override closes and re-register
-        # when the top layer changes (triggered by _refresh_custom_widgets).
-        self.viewer.toolbar._pre_clear_callback = self._unregister_layer_observer
+        # Register zorder callbacks so drag-and-drop reordering in the data
+        # menu is detected immediately.
+        self._register_zorder_callbacks()
+        # Also watch the viewer's layer list so that data add/remove is caught.
+        if hasattr(self.viewer, 'state'):
+            try:
+                self.viewer.state.add_callback('layers', self._on_top_layer_changed)
+            except Exception:  # nosec
+                pass
+
+        # Combined cleanup: remove all registered callbacks.
+        def _cleanup():
+            self._unregister_layer_observer()
+            self._unregister_zorder_callbacks()
+            if hasattr(self.viewer, 'state'):
+                try:
+                    self.viewer.state.remove_callback('layers', self._on_top_layer_changed)
+                except Exception:  # nosec
+                    pass
+
+        self.viewer.toolbar._pre_clear_callback = _cleanup
+        # _post_refresh_callback re-registers the echo observer after any
+        # _refresh_custom_widgets call (e.g. triggered by hub messages).
         self.viewer.toolbar._post_refresh_callback = self._register_layer_observer
 
 
