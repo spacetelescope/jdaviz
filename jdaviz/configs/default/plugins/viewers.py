@@ -33,6 +33,9 @@ from specutils import Spectrum
 
 from traitlets import Bool, Unicode
 
+# table_viewer: temporary until glue-jupyter PR is merged; see that file for revert instructions.
+from jdaviz.components.table_viewer import JdavizTableGlue  # noqa: E402
+
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
@@ -1564,6 +1567,13 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
+
+        # table_viewer: replace default TableGlue with local override until upstream PR is merged
+        self.widget_table = JdavizTableGlue(
+            data=None,
+            apply_filter=self.apply_filter,
+            state=self.state,
+        )
 
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True
