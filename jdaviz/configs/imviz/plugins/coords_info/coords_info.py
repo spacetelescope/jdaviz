@@ -261,6 +261,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._viewer_mouse_clear_event(viewer, data)
             return
 
+        # Don't process mousemove while a toolbar override is active — the Python-side
+        # traitlet updates that would result cause viewer_window.vue to re-render,
+        # which closes the dropdown.
+        if any(getattr(getattr(v, 'toolbar', None), 'tool_override_mode', '') != ''
+               for v in self._app._viewer_store.values()):
+            return
+
         if len(self._app.data_collection) < 1:
             self._viewer_mouse_clear_event(viewer)
             return

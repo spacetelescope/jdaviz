@@ -76,6 +76,13 @@ class JdavizViewerMixin(WithCache):
     _prev_limits = None
     _native_mark_classnames = ('Lines', 'LinesGL', 'FRBImage', 'Contour')
 
+    def _on_mouse_interaction(self, interaction, data, buffers):
+        """Override to block all Python-side mousemove dispatch when a toolbar override is active."""
+        if (data.get('event') == 'mousemove'
+                and getattr(getattr(self, 'toolbar', None), 'tool_override_mode', '') != ''):
+            return
+        super()._on_mouse_interaction(interaction, data, buffers)
+
     def __init__(self, *args, **kwargs):
         # NOTE: anything here most likely won't be called by viewers because of inheritance order
         super().__init__(*args, **kwargs)
@@ -957,6 +964,9 @@ class JdavizViewerWindow(TemplateMixin):
 
     def _on_toolbar_override_change(self, change):
         self.tool_override_mode = change['new']
+
+    def _on_toolbar_dropdown_active_changed(self, change):
+        pass  # kept as no-op stub so existing observers don't break
 
     def _on_focus_viewer_changed(self, *args):
         self.focus_mode = (self._app.state.focus_viewer == self.reference)

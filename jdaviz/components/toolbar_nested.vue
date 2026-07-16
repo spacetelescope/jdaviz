@@ -53,7 +53,6 @@
           class="custom-toolbar-select"
           item-title="label"
           item-value="value"
-          :menu-props="{ persistent: true }"
         ></v-select>
       </template>
     </span>
@@ -122,6 +121,34 @@
           }, 100)
         } else {
           this.close_on_click = false;
+        }
+      },
+      tool_override_mode(newVal) {
+        // Mirror into a JS global so viewer_window.vue can block mousemove
+        // re-renders with zero latency (no Python round-trip needed).
+        window._jdaviz_override_mode = !!newVal;
+
+        // bqplot_image_gl calls element.focus() inside its mousemove handler,
+        // which causes the v-select input to blur and Vuetify to close the
+        // dropdown.  focus() lives on HTMLElement.prototype (NOT Element.prototype),
+        // so that is the correct prototype to patch.
+        if (newVal && !window._jdaviz_orig_focus) {
+          window._jdaviz_orig_focus = HTMLElement.prototype.focus;
+          HTMLElement.prototype.focus = function(options) {
+            if (!window._jdaviz_override_mode) {
+              return window._jdaviz_orig_focus.call(this, options);
+            }
+            // Allow focus within the toolbar itself or the floating overlay (dropdown list)
+            const toolbar = document.querySelector('.jdaviz-nested-toolbar');
+            const overlay = document.querySelector('.v-overlay-container');
+            if ((toolbar && toolbar.contains(this)) || (overlay && overlay.contains(this))) {
+              return window._jdaviz_orig_focus.call(this, options);
+            }
+            // Suppress all other focus() calls (e.g. bqplot_image_gl canvas focus)
+          };
+        } else if (!newVal && window._jdaviz_orig_focus) {
+          HTMLElement.prototype.focus = window._jdaviz_orig_focus;
+          delete window._jdaviz_orig_focus;
         }
       }
     },
@@ -234,12 +261,7 @@
   min-height: 28px !important;
   padding: 0 !important;
 }
-.custom-toolbar-select >>> .v-select__selection {
-  color: white !important;
-  font-size: 12px;
-  margin: 2px 4px 2px 0 !important;
-}
-/* Vuetify 3: selected text node and input element */
+/* Vuetify 3: selected text and input field */
 .custom-toolbar-select .v-select__selection-text,
 .custom-toolbar-select .v-field__input,
 .custom-toolbar-select .v-field__input input,
