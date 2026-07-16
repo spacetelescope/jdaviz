@@ -27,7 +27,7 @@
             :step="widget.step !== undefined ? widget.step : 0.01"
             density="compact"
             hide-details
-            style="min-width: 140px; max-width: 220px; margin: 0 4px; align-self: center;"
+            style="min-width: 140px; max-width: 220px; margin: 16px 4px 0 4px; align-self: flex-start;"
             class="custom-toolbar-slider"
             color="white"
             track-color="rgba(255,255,255,0.4)"
@@ -291,7 +291,7 @@
 }
 .custom-toolbar-slider .v-input__control {
   min-height: unset !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
 }
 </style>
