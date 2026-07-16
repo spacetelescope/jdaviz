@@ -132,9 +132,9 @@ def show_widget(widget, loc, title, height=None):  # pragma: no cover
     # Here we check for a CI environment variable - if true, we skip calls to `display`.
     # This no-op is not specific to loc='sidecar' so that tests aren't broken when calling
     # `jd.show()` within a sidecar context in the notebook.
-    if os.getenv('CI') == 'true':
+    if os.getenv('JDAVIZ_SKIP_DISPLAY') == 'true':
         logging.debug(
-            'environment variable "CI = true" was found, jdaviz will '
+            'environment variable "JDAVIZ_SKIP_DISPLAY = true" was found, jdaviz will '
             'skip all show/display commands.'
         )
         return
