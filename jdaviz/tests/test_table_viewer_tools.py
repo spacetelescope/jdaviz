@@ -720,9 +720,10 @@ class TestTableViewerToolsPixelLinked:
 
 class TestTableViewerViewerDataColumns:
     """
-    Test ``add_viewer_data_columns``: one read-only "Data: <viewer>" column per
-    viewer, whose cells list the data to show in that viewer. On row click, each
-    viewer is cleared and repopulated with exactly the data in its column.
+    Test ``helper.set_viewer_data_columns``: one read-only "Data: <viewer>" column
+    per viewer stored on the catalog itself. On row click (in any table viewer
+    showing the catalog), each viewer is cleared and repopulated with exactly the
+    data in its column. Handled app-level by the CatalogRowLinkManager.
     """
 
     @pytest.fixture(autouse=True)
@@ -747,12 +748,15 @@ class TestTableViewerViewerDataColumns:
         self.app = deconfigged_helper
         self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
 
+        dc = deconfigged_helper._app.data_collection
         # resolve the actual data-collection labels (loading may apply a suffix)
-        dc_labels = list(deconfigged_helper._app.data_collection.labels)
+        dc_labels = list(dc.labels)
         self.img_a = next(lbl for lbl in dc_labels if lbl.startswith('img_a'))
         self.img_b = next(lbl for lbl in dc_labels if lbl.startswith('img_b'))
         self.spec_a = next(lbl for lbl in dc_labels if lbl.startswith('spec_a'))
         self.spec_b = next(lbl for lbl in dc_labels if lbl.startswith('spec_b'))
+        self.catalog_label = next(d.label for d in dc
+                                  if (d.meta or {}).get('_importer') == 'CatalogImporter')
 
         # dedicated target viewers seeded with img_a / spec_a
         vc = deconfigged_helper.new_viewers['Image']
@@ -772,32 +776,39 @@ class TestTableViewerViewerDataColumns:
         self.image_col = f'Data: {self.image_ref}'
         self.spec_col = f'Data: {self.spec_ref}'
 
+    @property
+    def catalog_data(self):
+        return self.app._app.data_collection[self.catalog_label]
+
     def _visible(self, viewer):
         return {layer.layer.label for layer in viewer.layers if layer.visible}
 
-    def test_columns_created_and_readonly(self):
-        """One 'Data: <viewer>' column is created per viewer, read-only and registered."""
-        tv = self.table_viewer
+    def test_columns_created_on_catalog_and_readonly(self):
+        """A 'Data: <viewer>' column is added to the catalog (and shown in the table)."""
         viewer_data = {
             self.image_ref: [[self.img_b], [], [], [], []],
             self.spec_ref: [[self.spec_a], [], [], [], []],
         }
-        names = tv.add_viewer_data_columns(viewer_data)
+        names = self.app.set_viewer_data_columns(self.catalog_label, viewer_data)
         assert names == [self.image_col, self.spec_col]
 
-        comps = [c.label for c in tv.widget_table.data.components]
+        data = self.catalog_data
+        comps = [c.label for c in data.components]
         assert self.image_col in comps
         assert self.spec_col in comps
-        assert tv._viewer_data_columns == {self.image_col: self.image_ref,
-                                           self.spec_col: self.spec_ref}
-
-        editable = [x.label for x in list(tv.state.editable_components)]
+        # the marker meta records the column -> viewer mapping on the catalog itself
+        assert data.meta['_viewer_data_columns'] == {self.image_col: self.image_ref,
+                                                     self.spec_col: self.spec_ref}
+        # the columns are visible in the table viewer (same shared Data)
+        tv_comps = [c.label for c in self.table_viewer.widget_table.data.components]
+        assert self.image_col in tv_comps and self.spec_col in tv_comps
+        # read-only: not registered as an editable component in the table viewer
+        editable = [x.label for x in list(self.table_viewer.state.editable_components)]
         assert self.image_col not in editable
         assert self.spec_col not in editable
 
     def test_click_replaces_viewer_contents(self):
         """Clicking a row clears each viewer and shows exactly the data in its column."""
-        tv = self.table_viewer
         viewer_data = {
             self.image_ref: [[self.img_b],
                              [self.img_a, self.img_b],
@@ -810,73 +821,102 @@ class TestTableViewerViewerDataColumns:
                             [],
                             []],
         }
-        tv.add_viewer_data_columns(viewer_data)
+        self.app.set_viewer_data_columns(self.catalog_label, viewer_data)
 
         # row 0: image shows only img_b (img_a hidden); spectrum shows only spec_a
-        tv.widget_table.highlighted = 0
+        self.table_viewer.widget_table.highlighted = 0
         assert self._visible(self.image_viewer) == {self.img_b}
         assert self._visible(self.spec_viewer) == {self.spec_a}
 
         # row 1: image shows both images; spectrum swaps to spec_b
-        tv.widget_table.highlighted = 1
+        self.table_viewer.widget_table.highlighted = 1
         assert self._visible(self.image_viewer) == {self.img_a, self.img_b}
         assert self._visible(self.spec_viewer) == {self.spec_b}
 
         # row 2: image column empty -> image cleared; spectrum shows both
-        tv.widget_table.highlighted = 2
+        self.table_viewer.widget_table.highlighted = 2
         assert self._visible(self.image_viewer) == set()
         assert self._visible(self.spec_viewer) == {self.spec_a, self.spec_b}
 
+    def test_columns_shared_across_table_viewers(self):
+        """The columns live on the catalog, so a second table viewer shares them
+        (no duplication) and clicking in it drives the same behavior."""
+        self.app.set_viewer_data_columns(
+            self.catalog_label,
+            {self.image_ref: [[self.img_b], [self.img_a], [], [], []]})
+
+        # a second table viewer showing the same catalog
+        vc = self.app.new_viewers['Table']
+        vc.dataset = self.catalog_label
+        vc.viewer_label = 'Table (2)'
+        vc()
+        table2 = self.app._app.get_viewer('Table (2)')
+
+        # the column exists exactly once on the shared catalog Data
+        comps = [c.label for c in self.catalog_data.components]
+        assert comps.count(self.image_col) == 1
+        # and is visible in the second table viewer too
+        assert self.image_col in [c.label for c in table2.widget_table.data.components]
+
+        # clicking in the second table viewer drives the image viewer
+        table2.widget_table.highlighted = 0
+        assert self._visible(self.image_viewer) == {self.img_b}
+        table2.widget_table.highlighted = 1
+        assert self._visible(self.image_viewer) == {self.img_a}
+
     def test_columns_update_on_data_rename(self):
         """Renaming a referenced dataset updates every 'Data: <viewer>' column."""
-        tv = self.table_viewer
-        viewer_data = {
-            self.image_ref: [[self.img_a], [self.img_a, self.img_b], [], [], []],
-        }
-        tv.add_viewer_data_columns(viewer_data)
+        self.app.set_viewer_data_columns(
+            self.catalog_label,
+            {self.image_ref: [[self.img_a], [self.img_a, self.img_b], [], [], []]})
 
         self.app._app.rename_data(self.img_a, 'img_a_renamed')
 
-        values = list(tv.widget_table.data.get_component(self.image_col).data)
+        values = list(self.catalog_data.get_component(self.image_col).data)
         assert values[0] == ['img_a_renamed']
         assert values[1] == ['img_a_renamed', self.img_b]
 
         # clicking still resolves and shows the renamed dataset
-        tv.widget_table.highlighted = 0
+        self.table_viewer.widget_table.highlighted = 0
         assert 'img_a_renamed' in self._visible(self.image_viewer)
 
     def test_length_mismatch_raises(self):
         """A per-viewer list that does not match the number of rows raises."""
-        tv = self.table_viewer
         with pytest.raises(ValueError, match="must have one entry per row"):
-            tv.add_viewer_data_columns({self.image_ref: [[self.img_b]]})
+            self.app.set_viewer_data_columns(self.catalog_label,
+                                             {self.image_ref: [[self.img_b]]})
 
     def test_invalid_viewer_raises(self):
         """An unknown viewer reference raises a ValueError."""
-        tv = self.table_viewer
         with pytest.raises(ValueError, match="Could not find viewer"):
-            tv.add_viewer_data_columns({'no_such_viewer': [[], [], [], [], []]})
+            self.app.set_viewer_data_columns(self.catalog_label,
+                                             {'no_such_viewer': [[], [], [], [], []]})
+
+    def test_non_catalog_raises(self):
+        """Setting columns on non-catalog data raises a ValueError."""
+        with pytest.raises(ValueError, match="is not a catalog"):
+            self.app.set_viewer_data_columns(self.img_a,
+                                             {self.image_ref: [[]] * 5})
 
     def test_viewer_by_object(self):
         """Viewer keys may be viewer objects, not just reference strings."""
-        tv = self.table_viewer
         viewer_data = {self.image_viewer: [[self.img_b], [], [], [], []]}
-        names = tv.add_viewer_data_columns(viewer_data)
+        names = self.app.set_viewer_data_columns(self.catalog_label, viewer_data)
         assert names == [self.image_col]
 
-        tv.widget_table.highlighted = 0
+        self.table_viewer.widget_table.highlighted = 0
         assert self._visible(self.image_viewer) == {self.img_b}
 
     def test_click_resets_zoom_limits(self):
         """Clicking a row resets the viewer zoom limits so the new data fits in view."""
-        tv = self.table_viewer
-        tv.add_viewer_data_columns({self.image_ref: [[self.img_b], [], [], [], []]})
+        self.app.set_viewer_data_columns(
+            self.catalog_label, {self.image_ref: [[self.img_b], [], [], [], []]})
 
         # zoom to an off-data region first
         self.image_viewer.state.x_min = -500
         self.image_viewer.state.x_max = -400
 
-        tv.widget_table.highlighted = 0
+        self.table_viewer.widget_table.highlighted = 0
 
         # the limits were reset (no longer the artificial off-data values)
         assert self.image_viewer.state.x_min != -500

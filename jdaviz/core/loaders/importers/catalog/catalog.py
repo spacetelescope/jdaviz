@@ -13,6 +13,8 @@ from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import create_data_hash, COORD_WORDS_TO_EXCLUDE
 
+from .row_link import get_catalog_row_link_manager
+
 __all__ = ['CatalogImporter']
 
 
@@ -560,6 +562,12 @@ class CatalogImporter(BaseImporterToDataCollection):
                 output_table[col] = table[col]
 
         return output_table
+
+    def __call__(self):
+        super().__call__()
+        # ensure the app-level manager that links catalog rows to viewer contents
+        # exists (and is subscribed) as soon as a catalog has been imported
+        get_catalog_row_link_manager(self._app)
 
 
 def _validate_fits_tablehdu(item):

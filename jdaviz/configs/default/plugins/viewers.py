@@ -42,7 +42,6 @@ from jdaviz.core.events import (SnackbarMessage,
                                 ViewerRemovedMessage,
                                 ViewerVisibleLayersChangedMessage,
                                 RestoreToolbarMessage,
-                                DataRenamedMessage,
                                 TableSelectRowClickMessage)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.marks import (LineUncertainties, ScatterMask,
@@ -1512,13 +1511,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=self._on_viewer_removed)
 
-        # Per-viewer data columns: one read-only "Data: <viewer>" column per viewer,
-        # each cell listing the data to show in that viewer. On row click, every
-        # viewer is cleared and repopulated from its column. See add_viewer_data_columns.
-        self._viewer_data_columns = {}
-        self.widget_table.observe(self._on_viewer_data_row_selected, names=['highlighted'])
-        self.hub.subscribe(self, DataRenamedMessage, handler=self._on_data_renamed)
-
     def _on_table_select_row_click(self, msg):
         """Handle click from image viewer to select/toggle closest table row."""
         # Only respond if this message is for this table viewer
@@ -1667,167 +1659,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             raise ValueError(f"Column '{column_name}' does not exist in the table. Use add_column to add it first.")  # noqa: E501
 
         self._add_or_update_column(column_name, data)
-
-    def add_viewer_data_columns(self, viewer_data, column_prefix='Data: '):
-        """
-        Add one read-only column per viewer, named ``"<column_prefix><viewer>"``,
-        whose cells list the data to show in that viewer.
-
-        When a row is clicked, each viewer is cleared and repopulated with exactly
-        the data listed in its own column for that row.  The columns are kept in
-        sync when a referenced dataset is renamed.
-
-        Parameters
-        ----------
-        viewer_data : dict
-            Mapping of viewer reference (``str``) or viewer instance to the per-row
-            data for that viewer.  Each value is a list with one entry per table row;
-            each entry is a data-collection label (``str``), a list of labels, or
-            ``None``/empty for "no data in that viewer for that row".
-        column_prefix : str
-            Prefix used to build each column name (default ``"Data: "``).
-
-        Returns
-        -------
-        list
-            The (stringified) names of the registered columns.
-
-        Raises
-        ------
-        ValueError
-            If a viewer reference cannot be resolved, or if any per-viewer list does
-            not have exactly one entry per row in the table.
-        """
-        nrows = self.widget_table.data.size
-
-        # dicts preserve insertion order, so columns follow viewer_data order
-        columns = {}
-        for viewer, rows in viewer_data.items():
-            viewer_obj = self._resolve_target_viewer(viewer)
-            if viewer_obj is None:
-                raise ValueError(f"Could not find viewer '{viewer}'.")
-            viewer_ref = getattr(viewer_obj, 'reference', None) or viewer
-
-            rows = [self._normalize_cell(v) for v in rows]
-            if len(rows) != nrows:
-                raise ValueError(f"Data for viewer '{viewer_ref}' must have one entry "
-                                 "per row in the table.")
-
-            # read-only column (not registered as an editable component)
-            column_name = f"{column_prefix}{viewer_ref}"
-            self._set_object_column(column_name, rows)
-            columns[column_name] = viewer_ref
-
-        self._viewer_data_columns = columns
-        return list(columns.keys())
-
-    @staticmethod
-    def _normalize_cell(value):
-        """Normalize a cell value into a list (``None``/empty -> ``[]``)."""
-        if value is None:
-            return []
-        if isinstance(value, str):
-            return [value] if value else []
-        try:
-            return list(value)
-        except TypeError:
-            return [value]
-
-    def _as_object_array(self, values):
-        """Build an object-dtype array holding one (list) value per row."""
-        arr = np.empty(len(values), dtype=object)
-        for i, value in enumerate(values):
-            arr[i] = value
-        return arr
-
-    def _set_object_column(self, column_name, values):
-        """Add or update a column that stores a (list) value per row."""
-        column_name = str(column_name)
-        arr = self._as_object_array(values)
-        tab = self.widget_table
-        if column_name in [c.label for c in tab.data.components]:
-            tab.data.update_components({tab.data.get_component(column_name): arr})
-        else:
-            tab.data.add_component(arr, column_name)
-
-    def _resolve_target_viewer(self, target_viewer):
-        """Return a viewer object from a reference/id string or a viewer instance."""
-        if target_viewer is None:
-            return None
-        if not isinstance(target_viewer, str):
-            # assume a viewer object was passed
-            return target_viewer
-        try:
-            return self.jdaviz_app.get_viewer(target_viewer)
-        except Exception:  # nosec
-            return None
-
-    def _column_values(self, column_name):
-        """Return the values of a column as a list."""
-        return list(self.widget_table.data.get_component(column_name).data)
-
-    def _cell_as_list(self, column_name, row):
-        """Return the (list) value of a cell, robust to missing columns/rows."""
-        if column_name is None:
-            return []
-        try:
-            value = self.widget_table.data.get_component(column_name).data[row]
-        except (KeyError, IndexError):
-            return []
-        return self._normalize_cell(value)
-
-    def _on_viewer_data_row_selected(self, change):
-        """Clear and repopulate each viewer from its column for the clicked row."""
-        if not self._viewer_data_columns:
-            return
-        row = change['new']
-        if row is None or row < 0:
-            return
-        dc_labels = self.jdaviz_app.data_collection.labels
-        for column_name, viewer_ref in self._viewer_data_columns.items():
-            viewer_obj = self._resolve_target_viewer(viewer_ref)
-            if viewer_obj is None:
-                continue
-            labels = [lbl for lbl in self._cell_as_list(column_name, row)
-                      if lbl and lbl in dc_labels]
-            self._set_viewer_contents(viewer_obj, labels)
-
-    def _set_viewer_contents(self, viewer_obj, labels):
-        """Show exactly ``labels`` in ``viewer_obj``, hiding anything else."""
-        if len(labels):
-            # add/show the first label and hide all other (non-target) layers
-            self.jdaviz_app.add_data_to_viewer(viewer_obj.reference, labels[0],
-                                               clear_other_data=True)
-            # add/show the remaining target labels without hiding the ones above
-            for label in labels[1:]:
-                self.jdaviz_app.add_data_to_viewer(viewer_obj.reference, label)
-            # reset the zoom limits so the newly-shown data fits in view
-            if hasattr(viewer_obj, 'reset_limits'):
-                viewer_obj.reset_limits()
-        else:
-            # no data for this viewer in this row: hide everything currently shown
-            for layer in viewer_obj.layers:
-                if layer.visible:
-                    layer.visible = False
-
-    def _on_data_renamed(self, msg):
-        """Keep the viewer-data columns in sync when a referenced dataset is renamed."""
-        for column_name in getattr(self, '_viewer_data_columns', {}):
-            try:
-                values = self._column_values(column_name)
-            except KeyError:
-                continue
-            changed = False
-            new_values = []
-            for cell in values:
-                cell_list = self._normalize_cell(cell)
-                if msg.old_label in cell_list:
-                    cell_list = [msg.new_label if v == msg.old_label else v
-                                 for v in cell_list]
-                    changed = True
-                new_values.append(cell_list)
-            if changed:
-                self._set_object_column(column_name, new_values)
 
     def _on_checked_changed(self, change):
         """Update highlight marks in image viewers when checked rows change."""

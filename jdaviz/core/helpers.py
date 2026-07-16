@@ -195,6 +195,39 @@ class ConfigHelper(HubListener):
                        for item in self._app.state.new_viewer_items if item['is_relevant']}
         return new_viewers
 
+    def set_viewer_data_columns(self, data_label, viewer_data, column_prefix='Data: '):
+        """
+        Add or update read-only ``"<column_prefix><viewer>"`` columns on a loaded
+        catalog, one per viewer, listing the data to show in that viewer.
+
+        When a row is clicked in any table viewer showing the catalog, each listed
+        viewer is cleared and repopulated with exactly the data in its column for
+        that row. The columns live on the catalog itself, so they are shared across
+        every table viewer showing it and are kept in sync when data is renamed.
+
+        Parameters
+        ----------
+        data_label : str
+            Label of a catalog (loaded via the Catalog importer) in the data
+            collection.
+        viewer_data : dict
+            Mapping of viewer reference (``str``) or viewer instance to the per-row
+            data for that viewer. Each value is a list with one entry per catalog
+            row; each entry is a data-collection label (``str``), a list of labels,
+            or ``None``/empty for "no data in that viewer for that row".
+        column_prefix : str
+            Prefix used to build each column name (default ``"Data: "``).
+
+        Returns
+        -------
+        list
+            The names of the registered columns.
+        """
+        from jdaviz.core.loaders.importers.catalog.row_link import (
+            get_catalog_row_link_manager)
+        manager = get_catalog_row_link_manager(self._app)
+        return manager.set_viewer_data_columns(data_label, viewer_data, column_prefix)
+
     def _load(self,
               inp=None,
               loader=None,
