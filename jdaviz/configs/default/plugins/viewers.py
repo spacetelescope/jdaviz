@@ -1591,6 +1591,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         # Inline column-header editing: re-sync role labels when data changes
         self.widget_table.observe(self._on_table_data_changed, names=['data'])
+        self.widget_table.add_column_renamed_callback(self._sync_role_meta_on_rename)
 
         # Subscribe to RestoreToolbarMessage to clean up checkbox state
         # when toolbar is restored (e.g., by clicking X on custom toolbar)
@@ -1851,6 +1852,18 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # (toolbar cleanup is handled generically by NestedJupyterToolbar)
         self._clear_selection_marks()
 
+    def _sync_role_meta_on_rename(self, old_name, new_name):
+        """Update role-metadata entries across all layers when a column is renamed."""
+        for glue_data in self._iter_table_data():
+            meta = getattr(glue_data, 'meta', None)
+            if meta:
+                for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
+                            '_jdaviz_loader_x_col', '_jdaviz_loader_y_col',
+                            '_jdaviz_id_col'):
+                    if meta.get(key) == old_name:
+                        meta[key] = new_name
+        self._update_component_permissions()
+
     def _on_table_data_changed(self, change):
         """
         Sync renameable/removable_components whenever table data is set.
@@ -1921,6 +1934,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                 found = True
         if not found:
             raise ValueError(f"Column '{old_name}' not found in the table.")
+        self._sync_role_meta_on_rename(old_name, new_name)
         self.redraw()
 
     def remove_column(self, column_name):
