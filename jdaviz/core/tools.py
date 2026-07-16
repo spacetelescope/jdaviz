@@ -1266,7 +1266,7 @@ class _BaseImageFocusTool(Tool):
         self._register_layer_observer()
         # Let the toolbar call cleanup when the override closes and re-register
         # when the top layer changes (triggered by _refresh_custom_widgets).
-        self.viewer.toolbar._pre_restore_callback = self._unregister_layer_observer
+        self.viewer.toolbar._pre_clear_callback = self._unregister_layer_observer
         self.viewer.toolbar._post_refresh_callback = self._register_layer_observer
 
 
