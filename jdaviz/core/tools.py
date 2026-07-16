@@ -505,7 +505,7 @@ class ViewerFocusToggle(Tool):
     icon = _ICON_FULLSCREEN
     tool_id = 'jdaviz:viewer_focus_toggle'
     action_text = 'Toggle focus mode'
-    tool_tip = 'Expand this viewer to fill the app (focus mode)'
+    tool_tip = 'Expand this viewer to fill the app (toggle focus mode)'
     keep_visible_in_focus_mode = True
 
     def __init__(self, viewer=None):
