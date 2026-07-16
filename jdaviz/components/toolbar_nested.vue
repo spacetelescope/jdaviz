@@ -239,6 +239,14 @@
   font-size: 12px;
   margin: 2px 4px 2px 0 !important;
 }
+/* Vuetify 3: selected text node and input element */
+.custom-toolbar-select .v-select__selection-text,
+.custom-toolbar-select .v-field__input,
+.custom-toolbar-select .v-field__input input,
+.custom-toolbar-select input {
+  color: white !important;
+  font-size: 12px !important;
+}
 .custom-toolbar-select >>> .v-chip {
   height: 22px !important;
   margin: 2px !important;
