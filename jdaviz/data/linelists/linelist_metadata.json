@@ -1,4 +1,10 @@
 {
+  "Master List": {
+    "units": "Angstrom",
+    "medium": "vacuum",
+    "filename_base": "emission_lines",
+    "Citations/Notes": "See individual files for citations and notes."
+  },
   "Common Stellar": {
     "units": "Angstrom",
     "filename_base": "Common_stellar",
