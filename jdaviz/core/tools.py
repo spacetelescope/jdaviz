@@ -1200,7 +1200,7 @@ class _BaseImageFocusTool(Tool):
         eligible = [
             lyr for lyr in self.viewer.state.layers
             if (lyr.visible and layer_is_image_data(lyr.layer)
-                    and not isinstance(lyr.layer, GroupedSubset))
+                and not isinstance(lyr.layer, GroupedSubset))
         ]
         if not eligible:
             return None
