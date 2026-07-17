@@ -1,0 +1,2080 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: line_name, datatype: string}
+# - {name: rest_wavelength, datatype: float64}
+# - {name: wavelength_unit, datatype: string}
+# - {name: source_list, datatype: string}
+# - {name: extra_info, datatype: string}
+# meta: !!omap
+# - {description: Consolidated emission line database}
+# - core_columns: [line_name, rest_wavelength, wavelength_unit, source_list]
+# - {note: 'Use wavelength_unit alongside rest_wavelength to reconstruct a Quantity, e.g. row[''rest_wavelength''] * u.Unit(row[''wavelength_unit'']).
+#     extra_info is a JSON string of any per-source-file metadata.'}
+# schema: astropy-2.0
+line_name rest_wavelength wavelength_unit source_list extra_info
+[SiVI] 1.96341 um Atomic-ISO.csv "{""transition"": ""2P1/2-2P3/2"", ""error"": 0.0001, ""ep"": 166.77, ""ip"": 205.05}"
+[SiVII] 2.48334 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 0.0001, ""ep"": 205.05, ""ip"": 246.52}"
+[SiIX] 2.5846 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.0005, ""ep"": 303.17, ""ip"": 351.1}"
+[AlV] 2.905 um Atomic-ISO.csv "{""transition"": ""2P1/2-2P3/2"", ""error"": 0.002, ""ep"": 120.0, ""ip"": 153.83}"
+[CoII] 2.9846 um Atomic-ISO.csv "{""transition"": ""a5F5-a3F4"", ""error"": 0.0001, ""ep"": 7.86, ""ip"": 17.08}"
+[MgVIII] 3.02795 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.00025, ""ep"": 224.95, ""ip"": 265.96}"
+[NiI] 3.12 um Atomic-ISO.csv "{""transition"": ""a1D2-a3D3"", ""error"": 0.0001, ""ep"": 0.0, ""ip"": 7.64}"
+[KVII] 3.1908 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.001, ""ep"": 99.4, ""ip"": 117.56}"
+[CaIV] 3.207 um Atomic-ISO.csv "{""transition"": ""2P1/2-2P3/2"", ""error"": 0.001, ""ep"": 50.91, ""ip"": 67.27}"
+[AlVI] 3.66 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 0.001, ""ep"": 153.83, ""ip"": 190.48}"
+[AlVIII] 3.69 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.014, ""ep"": 241.44, ""ip"": 284.6}"
+[SiIX] 3.9357 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.0004, ""ep"": 303.17, ""ip"": 351.1}"
+[NiI] 3.9524 um Atomic-ISO.csv "{""transition"": ""a1D2-a3D2"", ""error"": 0.0001, ""ep"": 0.0, ""ip"": 7.64}"
+[FeII] 4.0764 um Atomic-ISO.csv "{""transition"": ""a4F5/2-a6D7/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[FeII] 4.082 um Atomic-ISO.csv "{""transition"": ""a4F3/2-a6D5/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[CaVII] 4.087 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.005, ""ep"": 108.78, ""ip"": 127.2}"
+[FeII] 4.1151 um Atomic-ISO.csv "{""transition"": ""a4F7/2-a6D9/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[CaV] 4.1585 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 0.0017, ""ep"": 67.27, ""ip"": 84.5}"
+[FeII] 4.4349 um Atomic-ISO.csv "{""transition"": ""a4F3/2-a6D3/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[MgIV] 4.488 um Atomic-ISO.csv "{""transition"": ""2P1/2-2P3/2"", ""error"": 0.004, ""ep"": 80.14, ""ip"": 109.24}"
+[ArVI] 4.528 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.005, ""ep"": 75.02, ""ip"": 91.01}"
+[FeII] 4.6077 um Atomic-ISO.csv "{""transition"": ""a4F5/2-a6D5/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[KIII] 4.6166 um Atomic-ISO.csv "{""transition"": ""2P1/2-2P3/2"", ""error"": 0.0021, ""ep"": 31.63, ""ip"": 45.8}"
+[FeII] 4.672 um Atomic-ISO.csv "{""transition"": ""a4F3/2-a6D1/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[NaVII] 4.675 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.022, ""ep"": 172.15, ""ip"": 208.44}"
+[FeII] 4.8892 um Atomic-ISO.csv "{""transition"": ""a4F7/2-a6D7/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[FeII] 5.0624 um Atomic-ISO.csv "{""transition"": ""a4F5/2-a6D3/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[FeII] 5.3403 um Atomic-ISO.csv "{""transition"": ""a4F9/2-a6D9/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[MgVII] 5.5 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.03, ""ep"": 186.51, ""ip"": 224.95}"
+[KVI] 5.575 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.004, ""ep"": 82.66, ""ip"": 99.4}"
+[MgV] 5.608 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 0.006, ""ep"": 109.24, ""ip"": 141.27}"
+[FeII] 5.674 um Atomic-ISO.csv "{""transition"": ""a4F7/2-a6D5/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[AlVIII] 5.85 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.04, ""ep"": 241.44, ""ip"": 284.6}"
+[NiI] 5.8933 um Atomic-ISO.csv "{""transition"": ""a1D2-a3D1"", ""error"": 0.0001, ""ep"": 0.0, ""ip"": 7.64}"
+[KIV] 5.983 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 0.004, ""ep"": 45.8, ""ip"": 60.91}"
+[CaVII] 6.154 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.008, ""ep"": 108.78, ""ip"": 127.2}"
+[SiVII] 6.515 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.018, ""ep"": 205.05, ""ip"": 246.52}"
+[NiII] 6.636 um Atomic-ISO.csv "{""transition"": ""2D3/2-2D5/2"", ""error"": 0.0003, ""ep"": 7.64, ""ip"": 18.17}"
+[ClV] 6.704 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.009, ""ep"": 53.46, ""ip"": 67.82}"
+[FeII] 6.7214 um Atomic-ISO.csv "{""transition"": ""a4F9/2-a6D7/2"", ""error"": 0.0001, ""ep"": 7.9, ""ip"": 16.19}"
+[ArII] 6.985274 um Atomic-ISO.csv "{""transition"": ""2P1/2-2P3/2"", ""error"": 3e-06, ""ep"": 15.76, ""ip"": 27.63}"
+[NaIII] 7.319 um Atomic-ISO.csv "{""transition"": ""2P1/2-2P3/2"", ""error"": 0.005, ""ep"": 47.29, ""ip"": 71.62}"
+[NiI] 7.5067 um Atomic-ISO.csv "{""transition"": ""a3F3-a3F4"", ""error"": 0.0002, ""ep"": 0.0, ""ip"": 7.64}"
+[NeVI] 7.642 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.006, ""ep"": 126.21, ""ip"": 157.93}"
+[ArV] 7.899 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.006, ""ep"": 59.81, ""ip"": 75.02}"
+[NaVI] 8.61 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.09, ""ep"": 138.39, ""ip"": 172.15}"
+[KVI] 8.823 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.008, ""ep"": 82.66, ""ip"": 99.4}"
+[ArIII] 8.99103 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 8e-05, ""ep"": 27.63, ""ip"": 40.74}"
+[MgVII] 9.03 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.08, ""ep"": 186.51, ""ip"": 224.95}"
+[NaIV] 9.048 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 0.005, ""ep"": 71.62, ""ip"": 98.91}"
+[AlVI] 9.116 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.008, ""ep"": 153.83, ""ip"": 190.48}"
+[SIV] 10.5105 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.0001, ""ep"": 34.79, ""ip"": 47.22}"
+[CoII] 10.521 um Atomic-ISO.csv "{""transition"": ""a3F3-a3F4"", ""error"": 0.001, ""ep"": 7.86, ""ip"": 17.08}"
+[NiII] 10.6822 um Atomic-ISO.csv "{""transition"": ""4F7/2-4F9/2"", ""error"": 0.0008, ""ep"": 7.64, ""ip"": 18.17}"
+[NiI] 11.3075 um Atomic-ISO.csv "{""transition"": ""a3F2-a3F3"", ""error"": 0.0002, ""ep"": 0.0, ""ip"": 7.64}"
+[ClI] 11.333347 um Atomic-ISO.csv "{""transition"": ""2P1/2-2P3/2"", ""error"": 1.5e-05, ""ep"": 0.0, ""ip"": 12.97}"
+[CaV] 11.482 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.019, ""ep"": 67.27, ""ip"": 84.5}"
+[ClIV] 11.741 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.007, ""ep"": 39.61, ""ip"": 53.46}"
+[CoIII] 11.89 um Atomic-ISO.csv "{""transition"": ""a4F7/2-a4F9/2"", ""error"": 0.01, ""ep"": 17.08, ""ip"": 33.5}"
+[NiI] 12.001 um Atomic-ISO.csv "{""transition"": ""a3D1-a3D2"", ""error"": 0.0003, ""ep"": 0.0, ""ip"": 7.64}"
+[CoI] 12.255 um Atomic-ISO.csv "{""transition"": ""a4F7/2-a4F9/2"", ""error"": 0.002, ""ep"": 0.0, ""ip"": 7.86}"
+[NiII] 12.7288 um Atomic-ISO.csv "{""transition"": ""4F5/2-4F7/2"", ""error"": 0.0012, ""ep"": 7.64, ""ip"": 18.17}"
+[NeII] 12.81355 um Atomic-ISO.csv "{""transition"": ""2P1/2-2P3/2"", ""error"": 2e-05, ""ep"": 21.56, ""ip"": 40.96}"
+[ArV] 13.1 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.02, ""ep"": 59.81, ""ip"": 75.02}"
+[FV] 13.432 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.009, ""ep"": 87.14, ""ip"": 114.24}"
+[MgV] 13.54 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.04, ""ep"": 109.24, ""ip"": 141.27}"
+[NeV] 14.32 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.03, ""ep"": 97.12, ""ip"": 126.21}"
+[NaVI] 14.33 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.2, ""ep"": 138.39, ""ip"": 172.15}"
+[ClII] 14.3678 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 0.0008, ""ep"": 12.97, ""ip"": 23.81}"
+[CoII] 14.74 um Atomic-ISO.csv "{""transition"": ""a5F4-a5F5"", ""error"": 0.002, ""ep"": 7.86, ""ip"": 17.08}"
+[NiI] 14.8142 um Atomic-ISO.csv "{""transition"": ""a3D2-a3D3"", ""error"": 0.0003, ""ep"": 0.0, ""ip"": 7.64}"
+[CoI] 15.155 um Atomic-ISO.csv "{""transition"": ""b4F7/2-b4F9/2"", ""error"": 0.002, ""ep"": 0.0, ""ip"": 7.86}"
+[KIV] 15.39 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.03, ""ep"": 45.8, ""ip"": 60.91}"
+[CoII] 15.46 um Atomic-ISO.csv "{""transition"": ""a3F2-a3F3"", ""error"": 0.002, ""ep"": 7.86, ""ip"": 17.08}"
+[NeIII] 15.555 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 0.005, ""ep"": 40.96, ""ip"": 63.45}"
+[CoIII] 16.39 um Atomic-ISO.csv "{""transition"": ""a4F5/2-a4F7/2"", ""error"": 0.03, ""ep"": 17.08, ""ip"": 33.5}"
+[CoI] 16.925 um Atomic-ISO.csv "{""transition"": ""a4F5/2-a4F7/2"", ""error"": 0.003, ""ep"": 0.0, ""ip"": 7.86}"
+[PIII] 17.885 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.005, ""ep"": 19.77, ""ip"": 30.2}"
+[FeII] 17.9363 um Atomic-ISO.csv "{""transition"": ""a4F7/2-a4F9/2"", ""error"": 0.001, ""ep"": 7.9, ""ip"": 16.19}"
+[NiII] 18.2405 um Atomic-ISO.csv "{""transition"": ""4F3/2-4F5/2"", ""error"": 0.002, ""ep"": 7.64, ""ip"": 18.17}"
+[CoI] 18.264 um Atomic-ISO.csv "{""transition"": ""b4F5/2-b4F7/2"", ""error"": 0.003, ""ep"": 0.0, ""ip"": 7.86}"
+[SIII] 18.7129 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.0004, ""ep"": 23.34, ""ip"": 34.79, ""reference"": 5.0}"
+[CoII] 18.804 um Atomic-ISO.csv "{""transition"": ""a5F3-a5F4"", ""error"": 0.004, ""ep"": 7.86, ""ip"": 17.08}"
+[ClIV] 20.354 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.021, ""ep"": 39.61, ""ip"": 53.46}"
+[NaIV] 21.29 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.06, ""ep"": 71.62, ""ip"": 98.91}"
+[ArIII] 21.842 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.006, ""ep"": 27.63, ""ip"": 40.74}"
+[FeIII] 22.93 um Atomic-ISO.csv "{""transition"": ""5D3-5D4"", ""error"": 0.03, ""ep"": 16.19, ""ip"": 30.65}"
+[FeI] 24.0423 um Atomic-ISO.csv "{""transition"": ""a5D3-a5D4"", ""error"": 0.0001, ""ep"": 0.0, ""ip"": 7.9}"
+[CoIII] 24.07 um Atomic-ISO.csv "{""transition"": ""a4F3/2-a4F5/2"", ""error"": 0.06, ""ep"": 17.08, ""ip"": 33.5}"
+[NeV] 24.3 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.02, ""ep"": 97.12, ""ip"": 126.21}"
+[FeII] 24.5186 um Atomic-ISO.csv "{""transition"": ""a4F5/2-a4F7/2"", ""error"": 0.002, ""ep"": 7.9, ""ip"": 16.19}"
+[FI] 24.7475 um Atomic-ISO.csv "{""transition"": ""2P1/2-2P3/2"", ""error"": 0.0015, ""ep"": 0.0, ""ip"": 17.42}"
+[CoI] 24.845 um Atomic-ISO.csv "{""transition"": ""a4F3/2-a4F5/2"", ""error"": 0.006, ""ep"": 0.0, ""ip"": 7.86}"
+[SI] 25.249 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 0.0003, ""ep"": 0.0, ""ip"": 10.36}"
+[CoII] 25.681 um Atomic-ISO.csv "{""transition"": ""a5F2-a5F3"", ""error"": 0.007, ""ep"": 7.86, ""ip"": 17.08}"
+[FIV] 25.83 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.04, ""ep"": 62.71, ""ip"": 87.14}"
+[OIV] 25.913 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.013, ""ep"": 54.93, ""ip"": 77.41}"
+[CoI] 25.93 um Atomic-ISO.csv "{""transition"": ""b4F3/2-b4F5/2"", ""error"": 0.007, ""ep"": 0.0, ""ip"": 7.86}"
+[FeII] 25.9882 um Atomic-ISO.csv "{""transition"": ""a6D7/2-a6D9/2"", ""error"": 0.0005, ""ep"": 7.9, ""ip"": 16.19}"
+[FII] 29.33 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 0.04, ""ep"": 17.42, ""ip"": 34.97}"
+[PII] 32.87 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.03, ""ep"": 10.48, ""ip"": 19.77}"
+[FeIII] 33.04 um Atomic-ISO.csv "{""transition"": ""5D2-5D3"", ""error"": 0.07, ""ep"": 16.19, ""ip"": 30.65}"
+[ClII] 33.281 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.008, ""ep"": 12.97, ""ip"": 23.81}"
+[SIII] 33.48 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.002, ""ep"": 23.34, ""ip"": 34.79, ""reference"": 5.0}"
+[FeI] 34.7133 um Atomic-ISO.csv "{""transition"": ""a5D2-a5D3"", ""error"": 0.0002, ""ep"": 0.0, ""ip"": 7.9}"
+[SiII] 34.814 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.002, ""ep"": 8.15, ""ip"": 16.35}"
+[FeII] 35.3491 um Atomic-ISO.csv "{""transition"": ""a6D5/2-a6D7/2"", ""error"": 0.001, ""ep"": 7.9, ""ip"": 16.19}"
+[FeII] 35.7768 um Atomic-ISO.csv "{""transition"": ""a4F3/2-a4F5/2"", ""error"": 0.004, ""ep"": 7.9, ""ip"": 16.19}"
+[NeIII] 36.009 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.004, ""ep"": 40.96, ""ip"": 63.45}"
+[CoII] 39.274 um Atomic-ISO.csv "{""transition"": ""a5F1-a5F2"", ""error"": 0.015, ""ep"": 7.86, ""ip"": 17.08}"
+[FIV] 44.07 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.21, ""ep"": 62.71, ""ip"": 87.14}"
+[FeII] 51.3005 um Atomic-ISO.csv "{""transition"": ""a6D3/2-a6D5/2"", ""error"": 0.002, ""ep"": 7.9, ""ip"": 16.19}"
+[FeIII] 51.68 um Atomic-ISO.csv "{""transition"": ""5D1-5D2"", ""error"": 0.2, ""ep"": 16.19, ""ip"": 30.65}"
+[OIII] 51.8145 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.0005, ""ep"": 35.12, ""ip"": 54.93, ""reference"": 5.0, ""notes"": ""3""}"
+[FeI] 54.3109 um Atomic-ISO.csv "{""transition"": ""a5D1-a5D2"", ""error"": 0.0004, ""ep"": 0.0, ""ip"": 7.9}"
+[SI] 56.311 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.01, ""ep"": 0.0, ""ip"": 10.36}"
+[NIII] 57.317 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.002, ""ep"": 29.6, ""ip"": 47.45, ""reference"": 5.0, ""notes"": ""3""}"
+[PII] 60.64 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.07, ""ep"": 10.48, ""ip"": 19.77}"
+[OI] 63.183705 um Atomic-ISO.csv "{""transition"": ""3P1-3P2"", ""error"": 2e-06, ""ep"": 0.0, ""ip"": 13.62, ""reference"": 2.0, ""notes"": ""2""}"
+[FII] 67.2 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 0.3, ""ep"": 17.42, ""ip"": 34.97}"
+[SiI] 68.474 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 0.005, ""ep"": 0.0, ""ip"": 8.15, ""reference"": 4.0}"
+[FeII] 87.382 um Atomic-ISO.csv "{""transition"": ""a6D1/2-a6D3/2"", ""error"": 0.006, ""ep"": 7.9, ""ip"": 16.19}"
+[OIII] 88.356 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.0023, ""ep"": 35.12, ""ip"": 54.93, ""reference"": 5.0, ""notes"": ""3""}"
+[AlI] 89.237 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.008, ""ep"": 0.0, ""ip"": 5.99}"
+[FeIII] 105.37 um Atomic-ISO.csv "{""transition"": ""5D0-5D1"", ""error"": 0.6, ""ep"": 16.19, ""ip"": 30.65}"
+[FeI] 111.183 um Atomic-ISO.csv "{""transition"": ""a5D0-a5D1"", ""error"": 0.002, ""ep"": 0.0, ""ip"": 7.9}"
+[NII] 121.89806 um Atomic-ISO.csv "{""transition"": ""3P2-3P1"", ""error"": 7e-05, ""ep"": 14.53, ""ip"": 29.6, ""reference"": 1.0, ""notes"": ""1""}"
+[SiI] 129.68173 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 3e-05, ""ep"": 0.0, ""ip"": 8.15, ""reference"": 4.0}"
+[OI] 145.525439 um Atomic-ISO.csv "{""transition"": ""3P0-3P1"", ""error"": 7e-06, ""ep"": 0.0, ""ip"": 13.62, ""reference"": 2.0}"
+[CII] 157.7409 um Atomic-ISO.csv "{""transition"": ""2P3/2-2P1/2"", ""error"": 0.0001, ""ep"": 11.26, ""ip"": 24.38, ""reference"": 3.0}"
+[NII] 205.1782 um Atomic-ISO.csv "{""transition"": ""3P1-3P0"", ""error"": 0.0001, ""ep"": 14.53, ""ip"": 29.6, ""reference"": 1.0, ""notes"": ""1""}"
+"CIV 12-9" 1.0546 um Atomic-Ionic.csv {}
+"CIV 8-7" 1.1908 um Atomic-Ionic.csv {}
+"CIV 16-11" 1.3068 um Atomic-Ionic.csv {}
+"CIV 17-12" 1.6351 um Atomic-Ionic.csv {}
+"CIV 2D-2P" 1.6637 um Atomic-Ionic.csv {}
+"CIV 9-8" 1.7368 um Atomic-Ionic.csv {}
+"CIV 2D-2P" 2.0802 um Atomic-Ionic.csv {}
+"CIV 15-12" 2.2782 um Atomic-Ionic.csv {}
+"CIV 17-13" 2.3182 um Atomic-Ionic.csv {}
+"CIV 13-11" 2.4264 um Atomic-Ionic.csv {}
+"CIV 10-9" 2.4285 um Atomic-Ionic.csv {}
+"CIII 3D-3P" 0.9721 um Atomic-Ionic.csv {}
+"CIII 3P-3S" 1.19946 um Atomic-Ionic.csv {}
+"CIII 15-9" 1.2806 um Atomic-Ionic.csv {}
+"CIII 1P-1S" 2.10806 um Atomic-Ionic.csv {}
+"CIII 8-7" 2.1143 um Atomic-Ionic.csv {}
+"CIII 3P-3S" 2.32473 um Atomic-Ionic.csv {}
+"CII 4D-4P" 0.987 um Atomic-Ionic.csv {}
+"NIII 2P3/2-2S1/2" 2.0995 um Atomic-Ionic.csv {}
+"NIII 2P3/2-2S1/2" 2.2471 um Atomic-Ionic.csv {}
+"NIII 2P1/2-2D1/2" 2.2513 um Atomic-Ionic.csv {}
+"NIV 1P-1S" 1.1867 um Atomic-Ionic.csv {}
+"NaI 2P-2S" 2.2083 um Atomic-Ionic.csv {}
+"NaI 2D-2P" 2.345 um Atomic-Ionic.csv {}
+"MgI 1P-1S" 2.28494 um Atomic-Ionic.csv {}
+"AlI y2D-2P" 1.677 um Atomic-Ionic.csv {}
+"CaI 3D-3P" 1.615965 um Atomic-Ionic.csv {}
+"CaI 3P-3S" 2.2604 um Atomic-Ionic.csv {}
+"FeI Many" 1.58 um Atomic-Ionic.csv {}
+"[SiVI] 2P1/2-2P3/2" 1.965 um Atomic-Ionic_FineStructure.csv {}
+"[SiVII] 3P1-3P2" 2.48334 um Atomic-Ionic_FineStructure.csv {}
+"[SiIX] 3P2-3P1" 2.5842 um Atomic-Ionic_FineStructure.csv {}
+"[AlV] 2P1/2-2P3/2" 2.9052 um Atomic-Ionic_FineStructure.csv {}
+"[CoII] a5F5-a3F4" 2.984634 um Atomic-Ionic_FineStructure.csv {}
+"[MgVIII] 2P3/2-2P1/2" 3.02795 um Atomic-Ionic_FineStructure.csv {}
+"[NiI] a1D2-a3D3" 3.119979 um Atomic-Ionic_FineStructure.csv {}
+"[KVII] 2P3/2-2P1/2" 3.19053 um Atomic-Ionic_FineStructure.csv {}
+"[CaIV] 2P1/2-2P3/2" 3.20671 um Atomic-Ionic_FineStructure.csv {}
+"[AlVI] 3P1-3P2" 3.66 um Atomic-Ionic_FineStructure.csv {}
+"[AlVIII] 3P2-3P1" 3.69 um Atomic-Ionic_FineStructure.csv {}
+"[SiIX] 3P1-3P0" 3.9357 um Atomic-Ionic_FineStructure.csv {}
+"[NiI] a1D2-a3D2" 3.95238 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F5/2-a6D7/2" 4.076319 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F3/2-a6D5/2" 4.081957 um Atomic-Ionic_FineStructure.csv {}
+"[CaVII] 3P2-3P1" 4.0875 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F7/2-a6D9/2" 4.114994 um Atomic-Ionic_FineStructure.csv {}
+"[CaV] 3P1-3P2" 4.1585 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F3/2-a6D3/2" 4.434833 um Atomic-Ionic_FineStructure.csv {}
+"[MgIV] 2P1/2-2P3/2" 4.4867 um Atomic-Ionic_FineStructure.csv {}
+"[ArVI] 2P3/2-2P1/2" 4.5295 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F5/2-a6D5/2" 4.607662 um Atomic-Ionic_FineStructure.csv {}
+"[KIII] 2P1/2-2P3/2" 4.618 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F3/2-a6D1/2" 4.671941 um Atomic-Ionic_FineStructure.csv {}
+"[NaVII] 2P3/2-2P1/2" 4.6847 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F7/2-a6D7/2" 4.889139 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F5/2-a6D3/2" 5.062345 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F9/2-a6D9/2" 5.340169 um Atomic-Ionic_FineStructure.csv {}
+"[MgVII] 3P2-3P1" 5.5033 um Atomic-Ionic_FineStructure.csv {}
+"[KVI] 3P2-3P1" 5.57548 um Atomic-Ionic_FineStructure.csv {}
+"[MgV] 3P1-3P2" 5.6098 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F7/2-a6D5/2" 5.673907 um Atomic-Ionic_FineStructure.csv {}
+"[NiI] a1D2-a3D1" 5.89327 um Atomic-Ionic_FineStructure.csv {}
+"[KIV] 3P1-3P2" 5.982 um Atomic-Ionic_FineStructure.csv {}
+"[CaVII] 3P1-3P0" 6.154 um Atomic-Ionic_FineStructure.csv {}
+"[SiVII] 3P0-3P1" 6.4923 um Atomic-Ionic_FineStructure.csv {}
+"[NiII] 2D3/2-2D5/2" 6.636 um Atomic-Ionic_FineStructure.csv {}
+"[ClV] 2P3/2-2P1/2" 6.70667 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F9/2-a6D7/2" 6.721277 um Atomic-Ionic_FineStructure.csv {}
+"[ArII] 2P1/2-2P3/2" 6.985274 um Atomic-Ionic_FineStructure.csv {}
+"[NaIII] 2P1/2-2P3/2" 7.3178 um Atomic-Ionic_FineStructure.csv {}
+"[NiI] a3F3-a3F4" 7.50658 um Atomic-Ionic_FineStructure.csv {}
+"[NeVI] 2P3/2-2P1/2" 7.6524 um Atomic-Ionic_FineStructure.csv {}
+"[FeVII] 3F4-3F3" 7.8145 um Atomic-Ionic_FineStructure.csv {}
+"[ArV] 3P2-3P1" 7.90158 um Atomic-Ionic_FineStructure.csv {}
+"[NaVI] 3P2-3P1" 8.6106 um Atomic-Ionic_FineStructure.csv {}
+"[KVI] 3P1-3P0" 8.823 um Atomic-Ionic_FineStructure.csv {}
+"[ArIII] 3P1-3P2" 8.99138 um Atomic-Ionic_FineStructure.csv {}
+"[MgVII] 3P1-3P0" 9.03 um Atomic-Ionic_FineStructure.csv {}
+"[NaIV] 3P1-3P2" 9.039 um Atomic-Ionic_FineStructure.csv {}
+"[AlVI] 3P0-3P1" 9.12 um Atomic-Ionic_FineStructure.csv {}
+"[FeVII] 3F3-3F2" 9.5267 um Atomic-Ionic_FineStructure.csv {}
+"[SIV] 2P3/2-2P1/2" 10.51049 um Atomic-Ionic_FineStructure.csv {}
+"[CoII] a3F3-a3F4" 10.52272 um Atomic-Ionic_FineStructure.csv {}
+"[NiII] 4F7/2-4F9/2" 10.6822 um Atomic-Ionic_FineStructure.csv {}
+"[NiI] a3F2-a3F3" 11.30728 um Atomic-Ionic_FineStructure.csv {}
+"[ClI] 2P1/2-2P3/2" 11.33335 um Atomic-Ionic_FineStructure.csv {}
+"[CaV] 3P0-3P1" 11.482 um Atomic-Ionic_FineStructure.csv {}
+"[ClIV] 3P2-3P1" 11.759 um Atomic-Ionic_FineStructure.csv {}
+"[CoIII] a4F7/2-a4F9/2" 11.888 um Atomic-Ionic_FineStructure.csv {}
+"[NiI] a3D1-a3D2" 12.0009 um Atomic-Ionic_FineStructure.csv {}
+"[CoI] a4F7/2-a4F9/2" 12.2549 um Atomic-Ionic_FineStructure.csv {}
+"[NiII] 4F5/2-4F7/2" 12.7288 um Atomic-Ionic_FineStructure.csv {}
+"[NeII] 2P1/2-2P3/2" 12.81354 um Atomic-Ionic_FineStructure.csv {}
+"[ArV] 3P1-3P0" 13.10219 um Atomic-Ionic_FineStructure.csv {}
+"[FV] 2P3/2-2P1/2" 13.4 um Atomic-Ionic_FineStructure.csv {}
+"[MgV] 3P0-3P1" 13.521 um Atomic-Ionic_FineStructure.csv {}
+"[NeV] 3P2-3P1" 14.32168 um Atomic-Ionic_FineStructure.csv {}
+"[ClII] 3P1-3P2" 14.3678 um Atomic-Ionic_FineStructure.csv {}
+"[NaVI] 3P1-3P0" 14.3964 um Atomic-Ionic_FineStructure.csv {}
+"[CoII] a5F4-a5F5" 14.73852 um Atomic-Ionic_FineStructure.csv {}
+"[NiI] a3D2-a3D3" 14.81421 um Atomic-Ionic_FineStructure.csv {}
+"[CoI] b4F7/2-b4F9/2" 15.15494 um Atomic-Ionic_FineStructure.csv {}
+"[KIV] 3P0-3P1" 15.396 um Atomic-Ionic_FineStructure.csv {}
+"[CoII] a3F2-a3F3" 15.45898 um Atomic-Ionic_FineStructure.csv {}
+"[NeIII] 3P1-3P2" 15.55505 um Atomic-Ionic_FineStructure.csv {}
+"[CoIII] a4F5/2-a4F7/2" 16.391 um Atomic-Ionic_FineStructure.csv {}
+"[CoI] a4F5/2-a4F7/2" 16.92471 um Atomic-Ionic_FineStructure.csv {}
+"[PIII] 2P3/2-2P1/2" 17.8846 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F7/2-a4F9/2" 17.93602 um Atomic-Ionic_FineStructure.csv {}
+"[NiII] 4F3/2-4F5/2" 18.2405 um Atomic-Ionic_FineStructure.csv {}
+"[CoI] b4F5/2-b4F7/2" 18.26451 um Atomic-Ionic_FineStructure.csv {}
+"[SIII] 3P2-3P1" 18.71303 um Atomic-Ionic_FineStructure.csv {}
+"[CoII] a5F3-a5F4" 18.80403 um Atomic-Ionic_FineStructure.csv {}
+"[ClIV] 3P1-3P0" 20.3 um Atomic-Ionic_FineStructure.csv {}
+"[NaIV] 3P0-3P1" 21.29 um Atomic-Ionic_FineStructure.csv {}
+"[ArIII] 3P0-3P1" 21.8291 um Atomic-Ionic_FineStructure.csv {}
+"[FeIII] 5D3-5D4" 22.925 um Atomic-Ionic_FineStructure.csv {}
+"[FeI] a5D3-a5D4" 24.04233 um Atomic-Ionic_FineStructure.csv {}
+"[CoIII] a4F3/2-a4F5/2" 24.07 um Atomic-Ionic_FineStructure.csv {}
+"[NeV] 3P1-3P0" 24.3175 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a4F5/2-a4F7/2" 24.51919 um Atomic-Ionic_FineStructure.csv {}
+"[FI] 2P1/2-2P3/2" 24.75 um Atomic-Ionic_FineStructure.csv {}
+"[CoI] a4F3/2-a4F5/2" 24.84713 um Atomic-Ionic_FineStructure.csv {}
+"[SI] 3P1-3P2" 25.249 um Atomic-Ionic_FineStructure.csv {}
+"[CoII] a5F2-a5F3" 25.68891 um Atomic-Ionic_FineStructure.csv {}
+"[FIV] 3P2-3P1" 25.76 um Atomic-Ionic_FineStructure.csv {}
+"[OIV] 2P3/2-2P1/2" 25.8903 um Atomic-Ionic_FineStructure.csv {}
+"[CoI] b4F3/2-b4F5/2" 25.93045 um Atomic-Ionic_FineStructure.csv {}
+"[FeII] a6D7/2-a6D9/2" 25.98839 um Atomic-Ionic_FineStructure.csv {}
+2-0 2.2935 um CO-band-heads.csv "{""frequency"": 4360.1}"
+2-0 2.3448 um CO-band-heads.csv "{""frequency"": 4264.7}"
+3-1 2.3227 um CO-band-heads.csv "{""frequency"": 4305.4}"
+3-1 2.3739 um CO-band-heads.csv "{""frequency"": 4212.4}"
+4-2 2.3535 um CO-band-heads.csv "{""frequency"": 4250.8}"
+4-2 2.4037 um CO-band-heads.csv "{""frequency"": 4160.3}"
+5-3 2.3829 um CO-band-heads.csv "{""frequency"": 4196.5}"
+5-3 2.4341 um CO-band-heads.csv "{""frequency"": 4108.3}"
+6-4 2.4142 um CO-band-heads.csv "{""frequency"": 4142.2}"
+6-4 2.4652 um CO-band-heads.csv "{""frequency"": 4056.4}"
+7-5 2.4461 um CO-band-heads.csv "{""frequency"": 4088.2}"
+7-5 2.4971 um CO-band-heads.csv "{""frequency"": 4004.7}"
+8-6 2.4787 um CO-band-heads.csv "{""frequency"": 4034.3}"
+9-7 2.5122 um CO-band-heads.csv "{""frequency"": 3980.5}"
+3-0 1.5582 um CO-band-heads.csv "{""frequency"": 6417.8}"
+4-1 1.578 um CO-band-heads.csv "{""frequency"": 6337.2}"
+5-2 1.5982 um CO-band-heads.csv "{""frequency"": 6257.2}"
+6-3 1.6187 um CO-band-heads.csv "{""frequency"": 6177.7}"
+7-4 1.6397 um CO-band-heads.csv "{""frequency"": 6098.8}"
+8-5 1.661 um CO-band-heads.csv "{""frequency"": 6020.5}"
+"CO 2-0" 2.2935 um CO.csv {}
+"CO 3-1" 2.3227 um CO.csv {}
+"CO 4-2" 2.3525 um CO.csv {}
+"CO 5-3" 2.3829 um CO.csv {}
+"CO 6-4" 2.4142 um CO.csv {}
+"CO 7-5" 2.4461 um CO.csv {}
+"CO 8-6" 2.4787 um CO.csv {}
+"CO 9-7" 2.5122 um CO.csv {}
+"CO 3-0" 1.5582 um CO.csv {}
+"CO 4-1" 1.578 um CO.csv {}
+"CO 5-2" 1.5982 um CO.csv {}
+"CO 6-3" 1.6187 um CO.csv {}
+"CO 7-4" 1.6397 um CO.csv {}
+"CO 8-5" 1.661 um CO.csv {}
+"CO 1-0R(22)" 4.501 um CO.csv {}
+"CO 1-0R(21)" 4.5071 um CO.csv {}
+"CO 1-0R(20)" 4.5132 um CO.csv {}
+"CO 1-0R(19)" 4.5195 um CO.csv {}
+"CO 1-0R(18)" 4.5259 um CO.csv {}
+"CO 1-0R(17)" 4.5324 um CO.csv {}
+"CO 1-0R(16)" 4.5389 um CO.csv {}
+"CO 1-0R(15)" 4.5456 um CO.csv {}
+"CO 1-0R(14)" 4.5547 um CO.csv {}
+"CO 1-0R(13)" 4.5592 um CO.csv {}
+"CO 1-0R(12)" 4.5662 um CO.csv {}
+"CO 1-0R(11)" 4.5732 um CO.csv {}
+"CO 1-0R(10)" 4.5804 um CO.csv {}
+"CO 1-0R(9)" 4.5876 um CO.csv {}
+"CO 1-0R(8)" 4.595 um CO.csv {}
+"CO 1-0R(7)" 4.6024 um CO.csv {}
+"CO 1-0R(6)" 4.61 um CO.csv {}
+"CO 1-0R(5)" 4.6177 um CO.csv {}
+"CO 1-0R(4)" 4.6254 um CO.csv {}
+"CO 1-0R(3)" 4.6333 um CO.csv {}
+"CO 1-0R(2)" 4.6412 um CO.csv {}
+"CO 1-0R(1)" 4.6493 um CO.csv {}
+"CO 1-0R(0)" 4.6575 um CO.csv {}
+"CO 1-0P(1)" 4.6742 um CO.csv {}
+"CO 1-0P(2)" 4.6826 um CO.csv {}
+"CO 1-0P(3)" 4.6912 um CO.csv {}
+"CO 1-0P (4)" 4.7002 um CO.csv {}
+"CO 1-0P (5)" 4.7088 um CO.csv {}
+"CO 1-0P (6)" 4.7177 um CO.csv {}
+"CO 1-0P (7)" 4.7267 um CO.csv {}
+"CO 1-0P (8)" 4.7359 um CO.csv {}
+"CO 1-0P (9)" 4.7451 um CO.csv {}
+"CO 2-0R(0)" 2.345305 um CO.csv {}
+"CO 2-0R(1)" 2.343269 um CO.csv {}
+"CO 2-0R(2)" 2.341275 um CO.csv {}
+"CO 2-0R(3)" 2.339323 um CO.csv {}
+"CO 2-0R(4)" 2.337413 um CO.csv {}
+"CO 2-0P(1)" 2.3495 um CO.csv {}
+"CO 2-0P(2)" 2.35167 um CO.csv {}
+"CO 2-0P(3)" 2.35387 um CO.csv {}
+"CO 2-0P(4)" 2.35612 um CO.csv {}
+"CO 2-0P(5)" 2.35841 um CO.csv {}
+"Ne VIII" 770.409 Angstrom Common_Galactic_700A-2000A.csv {}
+"Ne VIII" 780.324 Angstrom Common_Galactic_700A-2000A.csv {}
+"Ly e" 937.814 Angstrom Common_Galactic_700A-2000A.csv {}
+"Ly d" 949.742 Angstrom Common_Galactic_700A-2000A.csv {}
+"C III" 977.03 Angstrom Common_Galactic_700A-2000A.csv {}
+"N III" 989.79 Angstrom Common_Galactic_700A-2000A.csv {}
+"N III" 991.514 Angstrom Common_Galactic_700A-2000A.csv {}
+"N III" 991.579 Angstrom Common_Galactic_700A-2000A.csv {}
+"Ly b" 1025.722 Angstrom Common_Galactic_700A-2000A.csv {}
+"O VI" 1031.912 Angstrom Common_Galactic_700A-2000A.csv {}
+"O VI" 1037.613 Angstrom Common_Galactic_700A-2000A.csv {}
+"Ar I" 1066.66 Angstrom Common_Galactic_700A-2000A.csv {}
+"Ly a" 1215.67 Angstrom Common_Galactic_700A-2000A.csv {}
+"N V" 1238.821 Angstrom Common_Galactic_700A-2000A.csv {}
+"N V" 1242.804 Angstrom Common_Galactic_700A-2000A.csv {}
+"Si II" 1260.422 Angstrom Common_Galactic_700A-2000A.csv {}
+"Si II" 1264.73 Angstrom Common_Galactic_700A-2000A.csv {}
+"O I" 1302.168 Angstrom Common_Galactic_700A-2000A.csv {}
+"C II" 1334.532 Angstrom Common_Galactic_700A-2000A.csv {}
+"C II" 1335.708 Angstrom Common_Galactic_700A-2000A.csv {}
+"Si IV" 1393.755 Angstrom Common_Galactic_700A-2000A.csv {}
+"O IV]" 1397.232 Angstrom Common_Galactic_700A-2000A.csv {}
+"O IV]" 1399.78 Angstrom Common_Galactic_700A-2000A.csv {}
+"Si IV" 1402.77 Angstrom Common_Galactic_700A-2000A.csv {}
+"N IV]" 1486.496 Angstrom Common_Galactic_700A-2000A.csv {}
+"C IV" 1548.187 Angstrom Common_Galactic_700A-2000A.csv {}
+"C IV" 1550.772 Angstrom Common_Galactic_700A-2000A.csv {}
+"He II" 1640.42 Angstrom Common_Galactic_700A-2000A.csv {}
+"O III]" 1660.809 Angstrom Common_Galactic_700A-2000A.csv {}
+"O III]" 1666.15 Angstrom Common_Galactic_700A-2000A.csv {}
+"N III]" 1746.823 Angstrom Common_Galactic_700A-2000A.csv {}
+"N III]" 1748.656 Angstrom Common_Galactic_700A-2000A.csv {}
+"Al III" 1854.716 Angstrom Common_Galactic_700A-2000A.csv {}
+"Al III" 1862.79 Angstrom Common_Galactic_700A-2000A.csv {}
+"Si III]" 1892.03 Angstrom Common_Galactic_700A-2000A.csv {}
+"C III]" 1908.734 Angstrom Common_Galactic_700A-2000A.csv {}
+"N II]" 2142.78 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[O III]" 2320.951 Angstrom Common_Galactic_2000A-11000A.csv {}
+"C II]" 2323.5 Angstrom Common_Galactic_2000A-11000A.csv {}
+"C II]" 2324.69 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe XI]" 2648.71 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He II" 2733.289 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Mg V]" 2782.7 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Mg II]" 2795.528 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Mg II]" 2802.705 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe IV]" 2829.36 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe IV]" 2835.74 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar IV]" 2853.67 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar IV]" 2868.21 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Mg V]" 2928.0 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 2945.106 Angstrom Common_Galactic_2000A-11000A.csv {}
+"O III" 3132.794 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 3187.745 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He II" 3203.1 Angstrom Common_Galactic_2000A-11000A.csv {}
+"O III" 3312.329 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ne V]" 3345.821 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ne V]" 3425.881 Angstrom Common_Galactic_2000A-11000A.csv {}
+"O III" 3444.052 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[N I]" 3466.497 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[N I]" 3466.543 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 3487.727 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VII]" 3586.32 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VI]" 3662.5 Angstrom Common_Galactic_2000A-11000A.csv {}
+H19 3686.831 Angstrom Common_Galactic_2000A-11000A.csv {}
+H18 3691.551 Angstrom Common_Galactic_2000A-11000A.csv {}
+H17 3697.157 Angstrom Common_Galactic_2000A-11000A.csv {}
+H16 3703.859 Angstrom Common_Galactic_2000A-11000A.csv {}
+H15 3711.977 Angstrom Common_Galactic_2000A-11000A.csv {}
+H14 3721.945 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[O II]" 3726.032 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[O II]" 3728.815 Angstrom Common_Galactic_2000A-11000A.csv {}
+H13 3734.369 Angstrom Common_Galactic_2000A-11000A.csv {}
+H12 3750.158 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VII]" 3758.92 Angstrom Common_Galactic_2000A-11000A.csv {}
+H11 3770.637 Angstrom Common_Galactic_2000A-11000A.csv {}
+H10 3797.904 Angstrom Common_Galactic_2000A-11000A.csv {}
+H9 3835.391 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe V]" 3839.27 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ne III]" 3868.76 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 3888.647 Angstrom Common_Galactic_2000A-11000A.csv {}
+H8 3889.064 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe V]" 3891.28 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe V]" 3911.33 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ne III]" 3967.47 Angstrom Common_Galactic_2000A-11000A.csv {}
+H 3970.079 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 4026.19 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S II]" 4068.6 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe V]" 4071.24 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S II]" 4076.349 Angstrom Common_Galactic_2000A-11000A.csv {}
+"H e" 4101.742 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 4143.761 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4178.862 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe V]" 4180.6 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4233.172 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe V]" 4227.19 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe II]" 4287.394 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4303.176 Angstrom Common_Galactic_2000A-11000A.csv {}
+"O II" 4317.139 Angstrom Common_Galactic_2000A-11000A.csv {}
+"H g" 4340.471 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[O III]" 4363.21 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar XIV]" 4412.3 Angstrom Common_Galactic_2000A-11000A.csv {}
+"O II" 4414.899 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4416.83 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe II]" 4452.098 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 4471.479 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4489.183 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4491.405 Angstrom Common_Galactic_2000A-11000A.csv {}
+"N III" 4510.91 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4522.634 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4555.893 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4582.835 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4583.837 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4629.339 Angstrom Common_Galactic_2000A-11000A.csv {}
+"N III" 4634.14 Angstrom Common_Galactic_2000A-11000A.csv {}
+"N III" 4640.64 Angstrom Common_Galactic_2000A-11000A.csv {}
+"N III" 4641.85 Angstrom Common_Galactic_2000A-11000A.csv {}
+"C III" 4647.42 Angstrom Common_Galactic_2000A-11000A.csv {}
+"C III" 4650.25 Angstrom Common_Galactic_2000A-11000A.csv {}
+"C III" 4651.47 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe III]" 4658.05 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He II" 4685.71 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar IV]" 4711.26 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar IV]" 4740.12 Angstrom Common_Galactic_2000A-11000A.csv {}
+"H b" 4861.333 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VII]" 4893.37 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe IV]" 4903.07 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 4923.927 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[O III]" 4958.911 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[O III]" 5006.843 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 5018.44 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe III]" 5084.77 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VI]" 5145.75 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VII]" 5158.89 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 5169.033 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VI]" 5176.04 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 5197.577 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[N I]" 5200.257 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 5234.625 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe IV]" 5236.06 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe III]" 5270.4 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 5276.002 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VII]" 5276.38 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe XIV]" 5302.86 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ca V]" 5309.11 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 5316.615 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 5316.784 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VI]" 5335.18 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VI]" 5424.22 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Cl III]" 5517.709 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Cl III]" 5537.873 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VI]" 5637.6 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VI]" 5677.0 Angstrom Common_Galactic_2000A-11000A.csv {}
+"C III" 5695.92 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VII]" 5720.7 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[N II]" 5754.59 Angstrom Common_Galactic_2000A-11000A.csv {}
+"C IV" 5801.33 Angstrom Common_Galactic_2000A-11000A.csv {}
+"C IV" 5811.98 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 5875.624 Angstrom Common_Galactic_2000A-11000A.csv {}
+"O I" 6046.44 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe VII]" 6087.0 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[O I]" 6300.304 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S III]" 6312.06 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Si II" 6347.1 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[O I]" 6363.776 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 6369.462 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe X]" 6374.51 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Fe II" 6516.081 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[N II]" 6548.05 Angstrom Common_Galactic_2000A-11000A.csv {}
+"H a" 6562.819 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[N II]" 6583.46 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S II]" 6716.44 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S II]" 6730.81 Angstrom Common_Galactic_2000A-11000A.csv {}
+"O I" 7002.23 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar V]" 7005.87 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 7065.196 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar III]" 7135.79 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe II]" 7155.157 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar IV]" 7170.62 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe II]" 7172.0 Angstrom Common_Galactic_2000A-11000A.csv {}
+"C II" 7236.42 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar IV]" 7237.26 Angstrom Common_Galactic_2000A-11000A.csv {}
+"O I" 7254.448 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar IV]" 7262.76 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 7281.349 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[O II]" 7319.99 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[O II]" 7330.73 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ni II]" 7377.83 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ni II]" 7411.16 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe II]" 7452.538 Angstrom Common_Galactic_2000A-11000A.csv {}
+"N I" 7468.31 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S XII]" 7611.0 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ar III]" 7751.06 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 7816.136 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Ar I" 7868.194 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ni III]" 7889.9 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe XI]" 7891.8 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He II" 8236.79 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa20 8392.397 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa19 8413.318 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa18 8437.956 Angstrom Common_Galactic_2000A-11000A.csv {}
+"O I" 8446.359 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa17 8467.254 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Ca II" 8498.02 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa16 8502.483 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Ca II" 8542.09 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa15 8545.383 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Cl II]" 8578.7 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa14 8598.392 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe II]" 8616.95 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Ca II" 8662.14 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa13 8665.019 Angstrom Common_Galactic_2000A-11000A.csv {}
+"N I" 8680.282 Angstrom Common_Galactic_2000A-11000A.csv {}
+"N I" 8703.247 Angstrom Common_Galactic_2000A-11000A.csv {}
+"N I" 8711.703 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa12 8750.472 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa11 8862.782 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe II]" 8891.91 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa10 9014.909 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S III]" 9068.6 Angstrom Common_Galactic_2000A-11000A.csv {}
+Pa9 9229.014 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S III]" 9531.1 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Pa ae" 9545.969 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[C I]" 9824.13 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[C I]" 9850.26 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S VIII]" 9913.0 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 10027.73 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 10031.16 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Pa d" 10049.368 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S II]" 10286.73 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S II]" 10320.49 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[S II]" 10336.41 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Fe XIII]" 10746.8 Angstrom Common_Galactic_2000A-11000A.csv {}
+"He I" 10830.34 Angstrom Common_Galactic_2000A-11000A.csv {}
+"Pa g" 10938.086 Angstrom Common_Galactic_2000A-11000A.csv {}
+"[Ne V]" 3426.0 Angstrom Common_nebular.csv {}
+OIII 3444.0 Angstrom Common_nebular.csv {}
+"[O II]" 3727.0 Angstrom Common_nebular.csv {}
+"[O II]" 3729.0 Angstrom Common_nebular.csv {}
+"O III" 3760.0 Angstrom Common_nebular.csv {}
+H10 3797.0 Angstrom Common_nebular.csv {}
+H9 3835.0 Angstrom Common_nebular.csv {}
+"[Ne III]" 3868.0 Angstrom Common_nebular.csv {}
+H8 3889.0 Angstrom Common_nebular.csv {}
+"He II" 3923.0 Angstrom Common_nebular.csv {}
+He 3970.0 Angstrom Common_nebular.csv {}
+"He I" 4026.0 Angstrom Common_nebular.csv {}
+"[S II]" 4068.0 Angstrom Common_nebular.csv {}
+"N III" 4097.0 Angstrom Common_nebular.csv {}
+Hd 4101.748 Angstrom Common_nebular.csv {}
+"He I" 4143.0 Angstrom Common_nebular.csv {}
+"[K V]" 4163.0 Angstrom Common_nebular.csv {}
+"He II" 4199.0 Angstrom Common_nebular.csv {}
+"[Fe V]" 4227.0 Angstrom Common_nebular.csv {}
+"C II" 4267.0 Angstrom Common_nebular.csv {}
+Hg 4340.475 Angstrom Common_nebular.csv {}
+"[O III]" 4363.0 Angstrom Common_nebular.csv {}
+"He I" 4471.0 Angstrom Common_nebular.csv {}
+"He II" 4541.0 Angstrom Common_nebular.csv {}
+"[Fe [III+ III]]" 4607.0 Angstrom Common_nebular.csv {}
+"N III" 4640.0 Angstrom Common_nebular.csv {}
+"He II" 4686.0 Angstrom Common_nebular.csv {}
+"He I + [Ar IV]" 4712.0 Angstrom Common_nebular.csv {}
+"[Ar IV]" 4740.0 Angstrom Common_nebular.csv {}
+Hb 4861.342 Angstrom Common_nebular.csv {}
+"[O III]" 4959.0 Angstrom Common_nebular.csv {}
+"[O III]" 5007.0 Angstrom Common_nebular.csv {}
+"He II" 5411.0 Angstrom Common_nebular.csv {}
+"[CI III]" 5517.0 Angstrom Common_nebular.csv {}
+"[CI III]" 5537.0 Angstrom Common_nebular.csv {}
+"[N II]" 5755.0 Angstrom Common_nebular.csv {}
+"He I" 5876.0 Angstrom Common_nebular.csv {}
+"[K IV]" 6101.0 Angstrom Common_nebular.csv {}
+"[O I]" 6300.0 Angstrom Common_nebular.csv {}
+"[S III]" 6319.0 Angstrom Common_nebular.csv {}
+"[Mn V]" 6393.0 Angstrom Common_nebular.csv {}
+"[He II]" 6406.0 Angstrom Common_nebular.csv {}
+"[Ar V]" 6435.0 Angstrom Common_nebular.csv {}
+"[N II]" 6548.0 Angstrom Common_nebular.csv {}
+Ha 6563.0 Angstrom Common_nebular.csv {}
+"[N II]" 6584.0 Angstrom Common_nebular.csv {}
+"He I" 6678.0 Angstrom Common_nebular.csv {}
+"[S II]" 6719.0 Angstrom Common_nebular.csv {}
+"[S II]" 6730.0 Angstrom Common_nebular.csv {}
+"He I" 7065.0 Angstrom Common_nebular.csv {}
+"Ar III" 7136.0 Angstrom Common_nebular.csv {}
+La 1215.67 Angstrom Common_stellar.csv {}
+"N V" 1238.81 Angstrom Common_stellar.csv {}
+"N V" 1242.8 Angstrom Common_stellar.csv {}
+"Si IV" 1393.76 Angstrom Common_stellar.csv {}
+"Si IV" 1402.77 Angstrom Common_stellar.csv {}
+"C IV" 1548.2 Angstrom Common_stellar.csv {}
+"C IV" 1550.77 Angstrom Common_stellar.csv {}
+"He II" 1640.5 Angstrom Common_stellar.csv {}
+"Al III" 1854.72 Angstrom Common_stellar.csv {}
+"C III]" 1909.0 Angstrom Common_stellar.csv {}
+"Mg II" 2795.5 Angstrom Common_stellar.csv {}
+"Mg II" 2802.7 Angstrom Common_stellar.csv {}
+"Mg I" 2851.6 Angstrom Common_stellar.csv {}
+"Si I" 2881.1 Angstrom Common_stellar.csv {}
+"[Ne V]" 3425.8 Angstrom Common_stellar.csv {}
+"Fe I" 3581.21 Angstrom Common_stellar.csv {}
+H21 3679.0 Angstrom Common_stellar.csv {}
+H14 3721.94 Angstrom Common_stellar.csv {}
+"[O II]" 3726.0 Angstrom Common_stellar.csv {}
+"[O II]" 3728.8 Angstrom Common_stellar.csv {}
+H13 3734.37 Angstrom Common_stellar.csv {}
+"Fe I" 3734.87 Angstrom Common_stellar.csv {}
+H12 3750.15 Angstrom Common_stellar.csv {}
+H11 3770.63 Angstrom Common_stellar.csv {}
+H10 3797.9 Angstrom Common_stellar.csv {}
+"Fe I" 3820.44 Angstrom Common_stellar.csv {}
+H9 3835.39 Angstrom Common_stellar.csv {}
+"[Ne III]" 3868.7 Angstrom Common_stellar.csv {}
+H8 3889.05 Angstrom Common_stellar.csv {}
+"Ca II - K line" 3933.68 Angstrom Common_stellar.csv {}
+"[Ne III]" 3967.5 Angstrom Common_stellar.csv {}
+"Ca II - H line" 3968.49 Angstrom Common_stellar.csv {}
+"He - (H7)" 3970.08 Angstrom Common_stellar.csv {}
+"Fe I" 4045.82 Angstrom Common_stellar.csv {}
+"[S II]" 4068.6 Angstrom Common_stellar.csv {}
+"[S II]" 4076.2 Angstrom Common_stellar.csv {}
+"Hd - (H6)" 4101.75 Angstrom Common_stellar.csv {}
+"Ca I" 4226.74 Angstrom Common_stellar.csv {}
+"CH - G band (atmo.)" 4300.0 Angstrom Common_stellar.csv {}
+"Hg - (H5)" 4340.48 Angstrom Common_stellar.csv {}
+Hg 4358.3 Angstrom Common_stellar.csv {}
+"[O III]" 4363.2 Angstrom Common_stellar.csv {}
+"Fe I" 4383.56 Angstrom Common_stellar.csv {}
+"He I" 4388.0 Angstrom Common_stellar.csv {}
+"He I" 4471.6 Angstrom Common_stellar.csv {}
+"He II" 4541.6 Angstrom Common_stellar.csv {}
+"He II" 4685.7 Angstrom Common_stellar.csv {}
+"He I" 4713.3 Angstrom Common_stellar.csv {}
+"Hb - (H4)" 4861.34 Angstrom Common_stellar.csv {}
+"Fe I" 4891.5 Angstrom Common_stellar.csv {}
+"Fe I" 4920.51 Angstrom Common_stellar.csv {}
+"He I" 4922.0 Angstrom Common_stellar.csv {}
+"Fe I" 4957.61 Angstrom Common_stellar.csv {}
+"[O III]" 4958.9 Angstrom Common_stellar.csv {}
+"[O III]" 5006.8 Angstrom Common_stellar.csv {}
+"He I" 5015.0 Angstrom Common_stellar.csv {}
+"He I" 5048.0 Angstrom Common_stellar.csv {}
+"Mg I - b4" 5167.327 Angstrom Common_stellar.csv {}
+"Mg I - b2" 5172.698 Angstrom Common_stellar.csv {}
+"Mg I - b1" 5183.619 Angstrom Common_stellar.csv {}
+"[N I]" 5198.5 Angstrom Common_stellar.csv {}
+"[N I]" 5200.7 Angstrom Common_stellar.csv {}
+"Fe I" 5250.22 Angstrom Common_stellar.csv {}
+"Fe I" 5269.55 Angstrom Common_stellar.csv {}
+"Fe I" 5328.05 Angstrom Common_stellar.csv {}
+"He II" 5411.5 Angstrom Common_stellar.csv {}
+Hg 5460.7 Angstrom Common_stellar.csv {}
+"Mg I" 5528.42 Angstrom Common_stellar.csv {}
+"[O I]" 5577.5 Angstrom Common_stellar.csv {}
+Hg 5769.6 Angstrom Common_stellar.csv {}
+Hg 5790.7 Angstrom Common_stellar.csv {}
+"He I" 5875.65 Angstrom Common_stellar.csv {}
+"Na I - D2" 5889.973 Angstrom Common_stellar.csv {}
+"Na I - D1" 5895.94 Angstrom Common_stellar.csv {}
+"Ca I" 6102.73 Angstrom Common_stellar.csv {}
+"Ca I" 6122.23 Angstrom Common_stellar.csv {}
+"Ca I" 6162.18 Angstrom Common_stellar.csv {}
+"O2 - C band (atmo.)" 6388.0 Angstrom Common_stellar.csv {}
+"[O I]" 6300.3 Angstrom Common_stellar.csv {}
+"Fe I" 6302.5 Angstrom Common_stellar.csv {}
+"[O I]" 6363.8 Angstrom Common_stellar.csv {}
+"[N II]" 6548.1 Angstrom Common_stellar.csv {}
+"Ha - (H3)" 6562.808 Angstrom Common_stellar.csv {}
+"[N II]" 6583.4 Angstrom Common_stellar.csv {}
+"He I" 6678.0 Angstrom Common_stellar.csv {}
+"[S II]" 6716.4 Angstrom Common_stellar.csv {}
+"[S II]" 6730.8 Angstrom Common_stellar.csv {}
+"O2 - B band (atmo.)" 6884.0 Angstrom Common_stellar.csv {}
+"He I" 7065.0 Angstrom Common_stellar.csv {}
+"O2 - A band (atmo.)" 7621.0 Angstrom Common_stellar.csv {}
+"Ca II" 8498.062 Angstrom Common_stellar.csv {}
+"Ca II" 8542.144 Angstrom Common_stellar.csv {}
+"Ca II" 8662.17 Angstrom Common_stellar.csv {}
+Pd 10049.27 Angstrom Common_stellar.csv {}
+Pg 10938.1 Angstrom Common_stellar.csv {}
+"HI 11-3" 0.8865217 um H-He.csv "{""Error"": 1.9, ""Reference"": 1}"
+"HI 10-3" 0.9017385 um H-He.csv "{""Error"": 1.9, ""Reference"": 1}"
+"HI 9-3" 0.9231547 um H-He.csv "{""Error"": 2.0, ""Reference"": 1}"
+"HI 8-3" 0.954859 um H-He.csv "{""Error"": 2.1, ""Reference"": 1}"
+"HI 7-3" 1.0052128 um H-He.csv "{""Error"": 2.3, ""Reference"": 1}"
+"HI 6-3" 1.094109 um H-He.csv "{""Error"": 2.6, ""Reference"": 1}"
+"HI 5-3" 1.282159 um H-He.csv "{""Error"": 3.3, ""Reference"": 1}"
+"HI 11-4" 1.6811111 um H-He.csv "{""Error"": 2.2, ""Reference"": 1}"
+"HI 10-4" 1.736685 um H-He.csv "{""Error"": 2.3, ""Reference"": 1}"
+"HI 9-4" 1.8179084 um H-He.csv "{""Error"": 2.5, ""Reference"": 1}"
+"HI 4-3" 1.875613 um H-He.csv "{""Error"": 5.9, ""Reference"": 1}"
+"HI 8-4" 1.9450871 um H-He.csv "{""Error"": 2.8, ""Reference"": 1}"
+"HI 7-4" 2.16612 um H-He.csv "{""Error"": 3.2, ""Reference"": 1}"
+"HI 6-4" 2.625867 um H-He.csv "{""Error"": 4.3, ""Reference"": 1}"
+"HI 11-5" 2.8729959 um H-He.csv "{""Error"": 2.6, ""Reference"": 1}"
+"HI 10-5" 3.0392022 um H-He.csv "{""Error"": 2.8, ""Reference"": 1}"
+"HI 9-5" 3.296992 um H-He.csv "{""Error"": 3.2, ""Reference"": 1}"
+"HI 8-5" 3.740556 um H-He.csv "{""Error"": 3.8, ""Reference"": 1}"
+"HI 5-4" 4.052262 um H-He.csv "{""Error"": 8.0, ""Reference"": 1}"
+"HI 7-5" 4.653778 um H-He.csv "{""Error"": 5.2, ""Reference"": 1}"
+"HI 11-6" 4.672509 um H-He.csv "{""Error"": 3.2, ""Reference"": 1}"
+"HI 10-6" 5.128657 um H-He.csv "{""Error"": 3.6, ""Reference"": 1}"
+"HI 9-6" 5.908213 um H-He.csv "{""Error"": 4.4, ""Reference"": 1}"
+"HI 6-5" 7.459858 um H-He.csv "{""Error"": 1.0, ""Reference"": 1}"
+"HI 8-6" 7.502493 um H-He.csv "{""Error"": 6.1, ""Reference"": 1}"
+"HI 11-7" 7.508105 um H-He.csv "{""Error"": 4.0, ""Reference"": 1}"
+"HI 10-7" 8.760064 um H-He.csv "{""Error"": 4.9, ""Reference"": 1}"
+"HI 9-7" 11.308695 um H-He.csv "{""Error"": 7.0, ""Reference"": 1}"
+"HI 7-6" 12.371898 um H-He.csv "{""Error"": 1.2, ""Reference"": 1}"
+"HI 11-8" 12.387168 um H-He.csv "{""Error"": 5.5, ""Reference"": 1}"
+"HI 10-8" 16.209104 um H-He.csv "{""Error"": 7.9, ""Reference"": 1}"
+"HI 8-7" 19.061898 um H-He.csv "{""Error"": 1.5, ""Reference"": 1}"
+"HI 11-9" 22.340457 um H-He.csv "{""Error"": 8.8, ""Reference"": 1}"
+"HI 9-8" 27.803379 um H-He.csv "{""Error"": 1.7, ""Reference"": 1}"
+"HeI 3S-3" 0.97053 um H-He.csv "{""Error"": 7.0, ""Reference"": 1}"
+"HeI 3D-3" 1.0314 um H-He.csv "{""Error"": 7.1, ""Reference"": 1}"
+"HeI 3P-3" 1.08321 um H-He.csv "{""Error"": 3.3, ""Reference"": 1}"
+"HeI 3F-3" 1.091599 um H-He.csv "{""Error"": 1.0, ""Reference"": 1}"
+"HeI 3D-3" 1.19723 um H-He.csv "{""Error"": 1.0, ""Reference"": 1}"
+"HeI 3P-3" 1.25308 um H-He.csv "{""Error"": 1.0, ""Reference"": 1}"
+"HeI 3F-3" 1.27884 um H-He.csv "{""Error"": 1.0, ""Reference"": 1}"
+"HeI 3D-3" 1.7007 um H-He.csv "{""Error"": 1.0, ""Reference"": 1}"
+"HeI 1P-1" 2.05869046 um H-He.csv "{""Error"": 3.5, ""Reference"": 1}"
+"HeI 3S-3" 2.1126 um H-He.csv "{""Error"": 1.0, ""Reference"": 1}"
+"HeI 11-5" 0.7179501 um H-He.csv "{""Error"": 2.6, ""Reference"": 1}"
+"HeI 10-5" 0.7594844 um H-He.csv "{""Error"": 2.9, ""Reference"": 1}"
+"HeI 9-5" 0.823905 um H-He.csv "{""Error"": 3.2, ""Reference"": 1}"
+"HeI 19-6" 0.9111036 um H-He.csv "{""Error"": 2.2, ""Reference"": 1}"
+"HeI 18-6" 0.9227763 um H-He.csv "{""Error"": 2.3, ""Reference"": 1}"
+"HeI 8-5" 0.93475 um H-He.csv "{""Error"": 3.8, ""Reference"": 1}"
+"HeI 17-6" 0.9369604 um H-He.csv "{""Error"": 2.3, ""Reference"": 1}"
+"HeI 16-6" 0.9544676 um H-He.csv "{""Error"": 2.4, ""Reference"": 1}"
+"HeI 15-6" 0.9764828 um H-He.csv "{""Error"": 2.5, ""Reference"": 1}"
+"HeI 14-6" 1.0048008 um H-He.csv "{""Error"": 2.6, ""Reference"": 1}"
+"HeI 5-4" 1.012639 um H-He.csv "{""Error"": 8.1, ""Reference"": 1}"
+"HeI 13-6" 1.0422669 um H-He.csv "{""Error"": 2.7, ""Reference"": 1}"
+"HeI 12-6" 1.0936607 um H-He.csv "{""Error"": 2.9, ""Reference"": 1}"
+"HeI 7-5" 1.16296 um H-He.csv "{""Error"": 5.2, ""Reference"": 1}"
+"HeI 11-6" 1.167644 um H-He.csv "{""Error"": 3.2, ""Reference"": 1}"
+"HeI 10-6" 1.281634 um H-He.csv "{""Error"": 3.6, ""Reference"": 1}"
+"HeI 19-7" 1.291787 um H-He.csv "{""Error"": 2.4, ""Reference"": 1}"
+"HeI 18-7" 1.3153781 um H-He.csv "{""Error"": 2.5, ""Reference"": 1}"
+"HeI 17-7" 1.3443888 um H-He.csv "{""Error"": 2.5, ""Reference"": 1}"
+"HeI 16-7" 1.3807273 um H-He.csv "{""Error"": 2.6, ""Reference"": 1}"
+"HeI 15-7" 1.4272765 um H-He.csv "{""Error"": 2.8, ""Reference"": 1}"
+"HeI 9-6" 1.476442 um H-He.csv "{""Error"": 4.4, ""Reference"": 1}"
+"HeI 14-7" 1.4885966 um H-He.csv "{""Error"": 2.9, ""Reference"": 1}"
+"HeI 13-7" 1.57233 um H-He.csv "{""Error"": 3.2, ""Reference"": 1}"
+"HeI 16-6" 1.692299 um H-He.csv "{""Error"": 3.5, ""Reference"": 1}"
+"HeI 19-8" 1.772448 um H-He.csv "{""Error"": 2.6, ""Reference"": 1}"
+"HeI 18-8" 1.8171652 um H-He.csv "{""Error"": 2.7, ""Reference"": 1}"
+"HeI 6-5" 1.864187 um H-He.csv "{""Error"": 1.0, ""Reference"": 1}"
+"HeI 17-8" 1.8730012 um H-He.csv "{""Error"": 2.8, ""Reference"": 1}"
+"HeI 8-6" 1.874847 um H-He.csv "{""Error"": 6.1, ""Reference"": 1}"
+"HeI 11-7" 1.876252 um H-He.csv "{""Error"": 4.0, ""Reference"": 1}"
+"HeI 16-8" 1.944292 um H-He.csv "{""Error"": 3.0, ""Reference"": 1}"
+"HeI 15-8" 2.037884 um H-He.csv "{""Error"": 3.1, ""Reference"": 1}"
+"HeI 14-8" 2.165234 um H-He.csv "{""Error"": 3.4, ""Reference"": 1}"
+"HeI 10-7" 2.189113 um H-He.csv "{""Error"": 5.0, ""Reference"": 1}"
+"HeI 13-8" 2.347038 um H-He.csv "{""Error"": 3.8, ""Reference"": 1}"
+"HeI 19-9" 2.3794543 um H-He.csv "{""Error"": 2.8, ""Reference"": 1}"
+"HeI 18-9" 2.460747 um H-He.csv "{""Error"": 3.0, ""Reference"": 1}"
+"HeI 17-9" 2.564264 um H-He.csv "{""Error"": 3.1, ""Reference"": 1}"
+"HeI 12-8" 2.624794 um H-He.csv "{""Error"": 4.4, ""Reference"": 1}"
+"HeI 16-9" 2.699791 um H-He.csv "{""Error"": 3.4, ""Reference"": 1}"
+"HeI 9-7" 2.826008 um H-He.csv "{""Error"": 7.0, ""Reference"": 1}"
+"HeI 15-9" 2.883688 um H-He.csv "{""Error"": 3.7, ""Reference"": 1}"
+"HeI 7-6" 3.091693 um H-He.csv "{""Error"": 1.2, ""Reference"": 1}"
+"HeI 11-8" 3.095518 um H-He.csv "{""Error"": 5.5, ""Reference"": 1}"
+"HeI 14-9" 3.145477 um H-He.csv "{""Error"": 4.1, ""Reference"": 1}"
+"HeI 19-1" 3.151448 um H-He.csv "{""Error"": 3.1, ""Reference"": 1}"
+"HeI 18-1" 3.295645 um H-He.csv "{""Error"": 3.3, ""Reference"": 1}"
+"HeI 17-1" 3.484011 um H-He.csv "{""Error"": 3.6, ""Reference"": 1}"
+"HeI 13-9" 3.544315 um H-He.csv "{""Error"": 4.8, ""Reference"": 1}"
+"HeI 16-1" 3.739029 um H-He.csv "{""Error"": 3.9, ""Reference"": 1}"
+"HeI 10-8" 4.050609 um H-He.csv "{""Error"": 7.9, ""Reference"": 1}"
+"HeI 15-1" 4.101248 um H-He.csv "{""Error"": 4.4, ""Reference"": 1}"
+"HeI 19-1" 4.146914 um H-He.csv "{""Error"": 3.5, ""Reference"": 1}"
+"HeI 12-9" 4.218424 um H-He.csv "{""Error"": 6.1, ""Reference"": 1}"
+"HeI 18-1" 4.400258 um H-He.csv "{""Error"": 3.8, ""Reference"": 1}"
+"HeI 14-1" 4.651879 um H-He.csv "{""Error"": 5.2, ""Reference"": 1}"
+"HeI 17-1" 4.742613 um H-He.csv "{""Error"": 4.2, ""Reference"": 1}"
+"HeI 8-7" 4.763508 um H-He.csv "{""Error"": 1.5, ""Reference"": 1}"
+"HeI 16-1" 5.227997 um H-He.csv "{""Error"": 4.7, ""Reference"": 1}"
+"HeI 19-1" 5.458256 um H-He.csv "{""Error"": 4.0, ""Reference"": 1}"
+"HeI 13-1" 5.580604 um H-He.csv "{""Error"": 6.6, ""Reference"": 1}"
+"HeI 11-9" 5.582821 um H-He.csv "{""Error"": 8.8, ""Reference"": 1}"
+"HeI 18-1" 5.905803 um H-He.csv "{""Error"": 4.4, ""Reference"": 1}"
+"HeI 15-1" 5.964559 um H-He.csv "{""Error"": 5.6, ""Reference"": 1}"
+"HeI 17-1" 6.539376 um H-He.csv "{""Error"": 5.0, ""Reference"": 1}"
+"HeI 9-8" 6.947984 um H-He.csv "{""Error"": 1.7, ""Reference"": 1}"
+"HeI 19-1" 7.204835 um H-He.csv "{""Error"": 7.2, ""Reference"": 1}"
+"HeI 19-1" 7.23997 um H-He.csv "{""Error"": 4.6, ""Reference"": 1}"
+"HeI 12-1" 7.456816 um H-He.csv "{""Error"": 9.8, ""Reference"": 1}"
+"HeI 16-1" 7.499433 um H-He.csv "{""Error"": 6.0, ""Reference"": 1}"
+"HeI 18-1" 8.049041 um H-He.csv "{""Error"": 5.3, ""Reference"": 1}"
+"HeI 15-1" 9.113895 um H-He.csv "{""Error"": 7.7, ""Reference"": 1}"
+"HeI 17-1" 9.273581 um H-He.csv "{""Error"": 6.4, ""Reference"": 1}"
+"HeI 13-1" 9.706769 um H-He.csv "{""Error"": 1.1, ""Reference"": 1}"
+"HeI 10-9" 9.713475 um H-He.csv "{""Error"": 1.9, ""Reference"": 1}"
+"HeI 19-1" 9.770653 um H-He.csv "{""Error"": 5.6, ""Reference"": 1}"
+"HeI 18-1" 11.304084 um H-He.csv "{""Error"": 6.8, ""Reference"": 1}"
+"HeI 16-1" 11.330566 um H-He.csv "{""Error"": 8.3, ""Reference"": 1}"
+"HeI 14-1" 12.366855 um H-He.csv "{""Error"": 1.2, ""Reference"": 1}"
+"HeI 11-1" 13.128335 um H-He.csv "{""Error"": 2.2, ""Reference"": 1}"
+"HeI 19-1" 13.608028 um H-He.csv "{""Error"": 7.2, ""Reference"": 1}"
+"HeI 17-1" 13.877629 um H-He.csv "{""Error"": 8.9, ""Reference"": 1}"
+"HeI 15-1" 15.47125 um H-He.csv "{""Error"": 1.3, ""Reference"": 1}"
+"HeI 18-1" 16.777867 um H-He.csv "{""Error"": 9.4, ""Reference"": 1}"
+"HeI 12-1" 17.260917 um H-He.csv "{""Error"": 2.4, ""Reference"": 1}"
+"HeI 16-1" 19.05413 um H-He.csv "{""Error"": 1.4, ""Reference"": 1}"
+"HeI 19-1" 20.054063 um H-He.csv "{""Error"": 1.0, ""Reference"": 1}"
+"HeI 13-1" 22.179576 um H-He.csv "{""Error"": 2.7, ""Reference"": 1}"
+"HeI 17-1" 23.149671 um H-He.csv "{""Error"": 1.5, ""Reference"": 1}"
+"HeI 18-1" 27.792051 um H-He.csv "{""Error"": 1.6, ""Reference"": 1}"
+"HeI 14-1" 27.952665 um H-He.csv "{""Error"": 3.0, ""Reference"": 1}"
+"HI 4-3" 1.8756 um H-Paschen-Brackett.csv {}
+"HI 5-3" 1.2822 um H-Paschen-Brackett.csv {}
+"HI 6-3" 1.0941 um H-Paschen-Brackett.csv {}
+"HI 7-3" 1.0052 um H-Paschen-Brackett.csv {}
+"HI 5-4" 4.05225 um H-Paschen-Brackett.csv {}
+"HI 6-4" 2.6259 um H-Paschen-Brackett.csv {}
+"HI 7-4" 2.1661 um H-Paschen-Brackett.csv {}
+"HI 8-4" 1.9451 um H-Paschen-Brackett.csv {}
+"HI 9-4" 1.8181 um H-Paschen-Brackett.csv {}
+"HI 10-4" 1.7367 um H-Paschen-Brackett.csv {}
+"HI 11-4" 1.6811 um H-Paschen-Brackett.csv {}
+"HI 12-4" 1.6412 um H-Paschen-Brackett.csv {}
+"HI 13-4" 1.6114 um H-Paschen-Brackett.csv {}
+"HI 14-4" 1.5885 um H-Paschen-Brackett.csv {}
+"HI 15-4" 1.5705 um H-Paschen-Brackett.csv {}
+"HI 16-4" 1.5561 um H-Paschen-Brackett.csv {}
+"HI 17-4" 1.5443 um H-Paschen-Brackett.csv {}
+"HI 18-4" 1.5346 um H-Paschen-Brackett.csv {}
+"HI 19-4" 1.5265 um H-Paschen-Brackett.csv {}
+"HI 20-4" 1.5196 um H-Paschen-Brackett.csv {}
+"HI series limit" 1.459 um H-Paschen-Brackett.csv {}
+"1-0 S(0)" 2.2235 um H2-alt.csv "{""Freq"": 4497.41, ""g(J)"": 5, ""Eupper(K)"": 6471.0, ""A(10e-7s)"": 2.53, ""LTE1000"": 0.27, ""LTE2000"": ""0.21"", ""LTE3000"": 0.19, ""LTE4000"": 0.19}"
+"1-0 S(1)" 2.1218 um H2-alt.csv "{""Freq"": 4712.91, ""g(J)"": 21, ""Eupper(K)"": 6956.0, ""A(10e-7s)"": 3.47, ""LTE1000"": 1.0, ""LTE2000"": ""1.00"", ""LTE3000"": 1.0, ""LTE4000"": 1.0}"
+"1-0 S(2)" 2.0338 um H2-alt.csv "{""Freq"": 4917.01, ""g(J)"": 9, ""Eupper(K)"": 7584.0, ""A(10e-7s)"": 3.98, ""LTE1000"": 0.27, ""LTE2000"": ""0.37"", ""LTE3000"": 0.42, ""LTE4000"": 0.44}"
+"1-0 S(3)" 1.9576 um H2-alt.csv "{""Freq"": 5108.4, ""g(J)"": 33, ""Eupper(K)"": 8365.0, ""A(10e-7s)"": 4.21, ""LTE1000"": 0.51, ""LTE2000"": ""1.02"", ""LTE3000"": 1.29, ""LTE4000"": 1.45}"
+"1-0 S(4)" 1.892 um H2-alt.csv "{""Freq"": 5282.52, ""g(J)"": 13, ""Eupper(K)"": 9286.0, ""A(10e-7s)"": 4.19, ""LTE1000"": 0.082, ""LTE2000"": ""0.26"", ""LTE3000"": 0.39, ""LTE4000"": 0.47}"
+"1-0 S(5)" 1.8358 um H2-alt.csv "{""Freq"": 5447.25, ""g(J)"": 45, ""Eupper(K)"": 10341.0, ""A(10e-7s)"": 3.96, ""LTE1000"": 0.096, ""LTE2000"": ""0.52"", ""LTE3000"": 0.91, ""LTE4000"": 1.21}"
+"1-0 S(6)" 1.788 um H2-alt.csv "{""Freq"": 5592.9, ""g(J)"": 17, ""Eupper(K)"": 11522.0, ""A(10e-7s)"": 3.54, ""LTE1000"": 0.01, ""LTE2000"": ""0.10"", ""LTE3000"": 0.21, ""LTE4000"": 0.31}"
+"1-0 S(7)" 1.748 um H2-alt.csv "{""Freq"": 5720.8, ""g(J)"": 57, ""Eupper(K)"": 12817.0, ""A(10e-7s)"": 2.98, ""LTE1000"": 0.008, ""LTE2000"": ""0.15"", ""LTE3000"": 0.4, ""LTE4000"": 0.65}"
+"1-0 S(8)" 1.7147 um H2-alt.csv "{""Freq"": 5831.9, ""g(J)"": 21, ""Eupper(K)"": 14221.0, ""A(10e-7s)"": 2.34, ""LTE1000"": 0.001, ""LTE2000"": ""0.022"", ""LTE3000"": 0.074, ""LTE4000"": 0.14}"
+"1-0 S(9)" 1.6877 um H2-alt.csv "{""Freq"": 5925.1, ""g(J)"": 69, ""Eupper(K)"": 15722.0, ""A(10e-7s)"": 1.68, ""LTE1000"": 0.025, ""LTE2000"": ""0.11"", ""LTE3000"": 0.22}"
+"1-0 S(10)" 1.6665 um H2-alt.csv "{""Freq"": 6000.0, ""g(J)"": 25, ""Eupper(K)"": 17311.0, ""A(10e-7s)"": 1.05, ""LTE1000"": 0.003, ""LTE2000"": ""0.015"", ""LTE3000"": 0.034}"
+"1-0 S(11)" 1.6504 um H2-alt.csv "{""Freq"": 6059.0, ""g(J)"": 81, ""Eupper(K)"": 18979.0, ""A(10e-7s)"": 0.53, ""LTE1000"": 0.002, ""LTE2000"": ""0.014"", ""LTE3000"": 0.037}"
+"1-0 Q(1)" 2.4066 um H2-alt.csv "{""Freq"": 4155.25, ""g(J)"": 9, ""Eupper(K)"": 6149.0, ""A(10e-7s)"": 4.29, ""LTE1000"": 1.05, ""LTE2000"": ""0.70"", ""LTE3000"": 0.61, ""LTE4000"": 0.57}"
+"1-0 Q(2)" 2.4134 um H2-alt.csv "{""Freq"": 4143.47, ""g(J)"": 5, ""Eupper(K)"": 6471.0, ""A(10e-7s)"": 3.03, ""LTE1000"": 0.3, ""LTE2000"": ""0.23"", ""LTE3000"": 0.22, ""LTE4000"": 0.21}"
+"1-0 Q(3)" 2.4237 um H2-alt.csv "{""Freq"": 4125.87, ""g(J)"": 21, ""Eupper(K)"": 6956.0, ""A(10e-7s)"": 2.78, ""LTE1000"": 0.7, ""LTE2000"": ""0.70"", ""LTE3000"": 0.7, ""LTE4000"": 0.7}"
+"1-0 Q(4)" 2.4375 um H2-alt.csv "{""Freq"": 412.57, ""g(J)"": 9, ""Eupper(K)"": 7586.0, ""A(10e-7s)"": 2.65, ""LTE1000"": 0.15, ""LTE2000"": ""0.21"", ""LTE3000"": 0.23, ""LTE4000"": 0.24}"
+"1-0 Q(5)" 2.4548 um H2-alt.csv "{""Freq"": 4073.72, ""g(J)"": 33, ""Eupper(K)"": 8365.0, ""A(10e-7s)"": 2.55, ""LTE1000"": 0.24, ""LTE2000"": ""0.49"", ""LTE3000"": 0.62, ""LTE4000"": 0.7}"
+"1-0 Q(6)" 2.4756 um H2-alt.csv "{""Freq"": 4039.5, ""g(J)"": 13, ""Eupper(K)"": 9286.0, ""A(10e-7s)"": 2.45, ""LTE1000"": 0.036, ""LTE2000"": ""0.12"", ""LTE3000"": 0.17, ""LTE4000"": 0.21}"
+"1-0 Q(7)" 2.5001 um H2-alt.csv "{""Freq"": 3999.9, ""g(J)"": 45, ""Eupper(K)"": 10341.0, ""A(10e-7s)"": 2.34, ""LTE1000"": 0.042, ""LTE2000"": ""0.11 0.40 0.53""}"
+"3-2 S(0)" 2.5014 um H2-alt.csv "{""Freq"": 3997.73, ""g(J)"": 5, ""Eupper(K)"": 17387.0, ""A(10e-7s)"": 3.88, ""LTE1000"": 0.001, ""LTE2000"": ""0.007"", ""LTE3000"": 0.016}"
+"3-2 S(1)" 2.3864 um H2-alt.csv "{""Freq"": 4190.33, ""g(J)"": 21, ""Eupper(K)"": 17818.0, ""A(10e-7s)"": 5.14, ""LTE1000"": 0.006, ""LTE2000"": ""0.035"", ""LTE3000"": 0.087}"
+"3-2 S(2)" 2.287 um H2-alt.csv "{""Freq"": 4372.49, ""g(J)"": 9, ""Eupper(K)"": 18386.0, ""A(10e-7s)"": 5.63, ""LTE1000"": 0.002, ""LTE2000"": ""0.014"", ""LTE3000"": 0.037}"
+"3-2 S(3)" 2.2014 um H2-alt.csv "{""Freq"": 4542.57, ""g(J)"": 33, ""Eupper(K)"": 19086.0, ""A(10e-7s)"": 5.63, ""LTE1000"": 0.006, ""LTE2000"": ""0.043"", ""LTE3000"": 0.12}"
+"3-2 S(4)" 2.128 um H2-alt.csv "{""Freq"": 4699.32, ""g(J)"": 13, ""Eupper(K)"": 19912.0, ""A(10e-7s)"": 5.22, ""LTE1000"": 0.001, ""LTE2000"": ""0.012"", ""LTE3000"": 0.036}"
+"3-2 S(5)" 2.0656 um H2-alt.csv "{""Freq"": 4841.3, ""g(J)"": 45, ""Eupper(K)"": 20856.0, ""A(10e-7s)"": 4.5, ""LTE1000"": 0.003, ""LTE2000"": ""0.023"", ""LTE3000"": 0.088}"
+"3-2 S(6)" 2.013 um H2-alt.csv "{""Freq"": 4967.7, ""g(J)"": 17, ""Eupper(K)"": 21911.0, ""A(10e-7s)"": 3.57, ""LTE1000"": 0.006, ""LTE2000"": ""0.021""}"
+"3-2 S(7)" 1.9692 um H2-alt.csv "{""Freq"": 5078.1, ""g(J)"": 57, ""Eupper(K)"": 23069.0, ""A(10e-7s)"": 2.54, ""LTE1000"": 0.001, ""LTE2000"": ""0.010"", ""LTE3000"": 0.038}"
+"4-3 S(3)" 2.3446 um H2-alt.csv "{""Freq"": 4265.4, ""g(J)"": 21}"
+"4-3 S(4)" 2.2668 um H2-alt.csv "{""Freq"": 4411.5, ""g(J)"": 9}"
+"4-3 S(5)" 2.201 um H2-alt.csv "{""Freq"": 4543.5, ""g(J)"": 33}"
+"5-4 S(5)" 2.3555 um H2-alt.csv "{""Freq"": 4245.4, ""g(J)"": 45}"
+"5-4 S(7)" 2.251 um H2-alt.csv "{""Freq"": 4442.5, ""g(J)"": 57}"
+"2-0 S(0)" 1.2383 um H2-alt.csv "{""Freq"": 8075.3, ""g(J)"": 5, ""Eupper(K)"": 12095.0, ""A(10e-7s)"": 1.27, ""LTE1000"": 0.001, ""LTE2000"": ""0.012"", ""LTE3000"": 0.028, ""LTE4000"": 0.043}"
+"2-0 S(1)" 1.1622 um H2-alt.csv "{""Freq"": 8604.2, ""g(J)"": 21, ""Eupper(K)"": 12550.0, ""A(10e-7s)"": 1.9, ""LTE1000"": 0.004, ""LTE2000"": ""0.061"", ""LTE3000"": 0.15, ""LTE4000"": 0.23}"
+"2-0 S(2)" 1.1382 um H2-alt.csv "{""Freq"": 8785.5, ""g(J)"": 9, ""Eupper(K)"": 13150.0, ""A(10e-7s)"": 2.38, ""LTE1000"": 0.001, ""LTE2000"": ""0.025"", ""LTE3000"": 0.07, ""LTE4000"": 0.12}"
+"2-0 S(3)" 1.1175 um H2-alt.csv "{""Freq"": 8948.6, ""g(J)"": 33, ""Eupper(K)"": 13890.0, ""A(10e-7s)"": 2.77, ""LTE1000"": 0.002, ""LTE2000"": ""0.074"", ""LTE3000"": 0.24, ""LTE4000"": 0.43}"
+"2-0 S(4)" 1.0998 um H2-alt.csv "{""Freq"": 9092.4, ""g(J)"": 13, ""Eupper(K)"": 14764.0, ""A(10e-7s)"": 3.07, ""LTE1000"": 0.021, ""LTE2000"": ""0.078"", ""LTE3000"": 0.15}"
+"2-0 S(5)" 1.0851 um H2-alt.csv "{""Freq"": 9215.5, ""g(J)"": 45, ""Eupper(K)"": 15763.0, ""A(10e-7s)"": 3.28, ""LTE1000"": 0.001, ""LTE2000"": ""0.048"", ""LTE3000"": 0.21, ""LTE4000"": 0.44}"
+"2-9 Q(1)" 1.2383 um H2-alt.csv "{""Freq"": 8075.3, ""g(J)"": 9, ""Eupper(K)"": 11789.0, ""A(10e-7s)"": 1.94, ""LTE1000"": 0.003, ""LTE2000"": ""0.037"", ""LTE3000"": 0.082, ""LTE4000"": 0.12}"
+"2-0 Q(2)" 1.2419 um H2-alt.csv "{""Freq"": 8051.9, ""g(J)"": 5, ""Eupper(K)"": 12095.0, ""A(10e-7s)"": 1.38, ""LTE1000"": 0.001, ""LTE2000"": ""0.012"", ""LTE3000"": 0.029, ""LTE4000"": 0.045}"
+"2-0 Q(3)" 1.2473 um H2-alt.csv "{""Freq"": 8017.2, ""g(J)"": 21, ""Eupper(K)"": 12550.0, ""A(10e-7s)"": 1.29, ""LTE1000"": 0.002, ""LTE2000"": ""0.039"", ""LTE3000"": 0.098, ""LTE4000"": 0.24}"
+"2-0 Q(4)" 1.2545 um H2-alt.csv "{""Freq"": 7971.1, ""g(J)"": 9, ""Eupper(K)"": 13150.0, ""A(10e-7s)"": 1.27, ""LTE1000"": 0.001, ""LTE2000"": ""0.012"", ""LTE3000"": 0.033, ""LTE4000"": 0.056}"
+"2-0 Q(5)" 1.2636 um H2-alt.csv "{""Freq"": 7913.3, ""g(J)"": 33, ""Eupper(K)"": 13890.0, ""A(10e-7s)"": 1.23, ""LTE1000"": 0.001, ""LTE2000"": ""0.024"", ""LTE3000"": 0.093, ""LTE4000"": 0.17}"
+"2-0 O(2)" 1.2932 um H2-alt.csv "{""Freq"": 7732.6, ""g(J)"": 1, ""Eupper(K)"": 11635.0, ""A(10e-7s)"": 3.47, ""LTE1000"": 0.001, ""LTE2000"": ""0.008"", ""LTE3000"": 0.016, ""LTE4000"": 0.024}"
+"2-0 O(3)" 1.3354 um H2-alt.csv "{""Freq"": 7488.3, ""g(J)"": 9, ""Eupper(K)"": 11789.0, ""A(10e-7s)"": 1.61, ""LTE1000"": 0.003, ""LTE2000"": ""0.028"", ""LTE3000"": 0.063, ""LTE4000"": 0.094}"
+"2-0 O(4)" 1.3817 um H2-alt.csv "{""Freq"": 7237.5, ""g(J)"": 5, ""Eupper(K)"": 12095.0, ""A(10e-7s)"": 1.03, ""LTE1000"": 0.001, ""LTE2000"": ""0.008"", ""LTE3000"": 0.02, ""LTE4000"": 0.03}"
+"2-0 O(5)" 1.4322 um H2-alt.csv "{""Freq"": 6982.5, ""g(J)"": 21, ""Eupper(K)"": 12550.0, ""A(10e-7s)"": 0.698, ""LTE1000"": 0.001, ""LTE2000"": ""0.018"", ""LTE3000"": 0.046, ""LTE4000"": 0.074}"
+"H2 0- 0 S( 0)" 28.21883 um H2-ISO.csv {}
+"H2 10- 9 O(13)" 26.082 um H2-ISO.csv {}
+"H2 6- 5 O(17)" 25.52151 um H2-ISO.csv {}
+"H2 7- 6 O(16)" 24.5971 um H2-ISO.csv {}
+"H2 9- 8 O(14)" 24.08191 um H2-ISO.csv {}
+"H2 8- 7 O(15)" 23.90557 um H2-ISO.csv {}
+"H2 11-10 O(11)" 22.42215 um H2-ISO.csv {}
+"H2 5- 4 O(17)" 20.74786 um H2-ISO.csv {}
+"H2 12-12 S( 8)" 20.4227 um H2-ISO.csv {}
+"H2 12-12 S( 7)" 20.05775 um H2-ISO.csv {}
+"H2 10- 9 O(12)" 19.9813 um H2-ISO.csv {}
+"H2 6- 5 O(16)" 19.80825 um H2-ISO.csv {}
+"H2 7- 6 O(15)" 19.08432 um H2-ISO.csv {}
+"H2 9- 8 O(13)" 18.83303 um H2-ISO.csv {}
+"H2 8- 7 O(14)" 18.66975 um H2-ISO.csv {}
+"H2 4- 3 O(17)" 18.10926 um H2-ISO.csv {}
+"H2 1- 1 S( 1)" 17.93257 um H2-ISO.csv {}
+"H2 0- 0 S( 1)" 17.03484 um H2-ISO.csv {}
+"H2 5- 4 O(16)" 16.72464 um H2-ISO.csv {}
+"H2 10- 9 O(11)" 16.0895 um H2-ISO.csv {}
+"H2 3- 2 O(17)" 16.0282 um H2-ISO.csv {}
+"H2 6- 5 O(15)" 15.97421 um H2-ISO.csv {}
+"H2 7- 6 O(14)" 15.43849 um H2-ISO.csv {}
+"H2 9- 8 O(12)" 15.32788 um H2-ISO.csv {}
+"H2 4- 4 S( 2)" 15.2697 um H2-ISO.csv {}
+"H2 8- 7 O(13)" 15.17973 um H2-ISO.csv {}
+"H2 9- 9 S( 4)" 14.819 um H2-ISO.csv {}
+"H2 4- 3 O(16)" 14.80127 um H2-ISO.csv {}
+"H2 7- 7 S( 3)" 14.75801 um H2-ISO.csv {}
+"H2 10-10 S( 5)" 14.61957 um H2-ISO.csv {}
+"H2 11-11 S( 7)" 14.60623 um H2-ISO.csv {}
+"H2 3- 3 S( 2)" 14.4059 um H2-ISO.csv {}
+"H2 2- 1 O(17)" 14.35944 um H2-ISO.csv {}
+"H2 11-11 S( 8)" 13.94101 um H2-ISO.csv {}
+"H2 5- 4 O(15)" 13.82794 um H2-ISO.csv {}
+"H2 6- 6 S( 3)" 13.69782 um H2-ISO.csv {}
+"H2 11-11 S(10)" 13.69379 um H2-ISO.csv {}
+"H2 11-11 S( 9)" 13.63339 um H2-ISO.csv {}
+"H2 2- 2 S( 2)" 13.6324 um H2-ISO.csv {}
+"H2 8- 8 S( 4)" 13.39973 um H2-ISO.csv {}
+"H2 6- 5 O(14)" 13.25215 um H2-ISO.csv {}
+"H2 3- 2 O(16)" 13.21774 um H2-ISO.csv {}
+"H2 10-10 S( 6)" 13.13138 um H2-ISO.csv {}
+"H2 1- 0 O(17)" 13.00182 um H2-ISO.csv {}
+"H2 1- 1 S( 2)" 12.92756 um H2-ISO.csv {}
+"H2 9- 9 S( 5)" 12.87086 um H2-ISO.csv {}
+"H2 7- 6 O(13)" 12.86072 um H2-ISO.csv {}
+"H2 9- 8 O(11)" 12.83281 um H2-ISO.csv {}
+"H2 5- 5 S( 3)" 12.80432 um H2-ISO.csv {}
+"H2 8- 7 O(12)" 12.69662 um H2-ISO.csv {}
+"H2 4- 3 O(15)" 12.3666 um H2-ISO.csv {}
+"H2 7- 7 S( 4)" 12.29775 um H2-ISO.csv {}
+"H2 0- 0 S( 2)" 12.27861 um H2-ISO.csv {}
+"H2 10-10 S( 7)" 12.07715 um H2-ISO.csv {}
+"H2 4- 4 S( 3)" 12.03121 um H2-ISO.csv {}
+"H2 2- 1 O(16)" 11.9688 um H2-ISO.csv {}
+"H2 12-11 Q(10)" 11.91844 um H2-ISO.csv {}
+"H2 5- 4 O(14)" 11.67092 um H2-ISO.csv {}
+"H2 8- 8 S( 5)" 11.60781 um H2-ISO.csv {}
+"H2 9- 9 S( 6)" 11.49928 um H2-ISO.csv {}
+"H2 10- 9 O( 9)" 11.42151 um H2-ISO.csv {}
+"H2 6- 6 S( 4)" 11.40307 um H2-ISO.csv {}
+"H2 3- 3 S( 3)" 11.34751 um H2-ISO.csv {}
+"H2 10-10 S( 8)" 11.3341 um H2-ISO.csv {}
+"H2 6- 5 O(13)" 11.23326 um H2-ISO.csv {}
+"H2 3- 2 O(15)" 11.15171 um H2-ISO.csv {}
+"H2 9- 8 O(10)" 10.97393 um H2-ISO.csv {}
+"H2 7- 6 O(12)" 10.9478 um H2-ISO.csv {}
+"H2 1- 0 O(16)" 10.93425 um H2-ISO.csv {}
+"H2 8- 7 O(11)" 10.84535 um H2-ISO.csv {}
+"H2 10-10 S( 9)" 10.83232 um H2-ISO.csv {}
+"H2 2- 2 S( 3)" 10.73515 um H2-ISO.csv {}
+"H2 5- 5 S( 4)" 10.65125 um H2-ISO.csv {}
+"H2 7- 7 S( 5)" 10.63459 um H2-ISO.csv {}
+"H2 10-10 S(12)" 10.5374 um H2-ISO.csv {}
+"H2 10-10 S(10)" 10.53524 um H2-ISO.csv {}
+"H2 4- 3 O(14)" 10.52344 um H2-ISO.csv {}
+"H2 9- 9 S( 7)" 10.50547 um H2-ISO.csv {}
+"H2 10-10 S(11)" 10.43191 um H2-ISO.csv {}
+"H2 12-11 Q( 9)" 10.36689 um H2-ISO.csv {}
+"H2 8- 8 S( 6)" 10.33786 um H2-ISO.csv {}
+"H2 1- 1 S( 3)" 10.17771 um H2-ISO.csv {}
+"H2 2- 1 O(15)" 10.17765 um H2-ISO.csv {}
+"H2 5- 4 O(13)" 10.01621 um H2-ISO.csv {}
+"H2 4- 4 S( 4)" 10.00254 um H2-ISO.csv {}
+"H2 10- 9 O( 8)" 9.92065 um H2-ISO.csv {}
+"H2 6- 6 S( 5)" 9.8489 um H2-ISO.csv {}
+"H2 9- 9 S( 8)" 9.7758 um H2-ISO.csv {}
+"H2 6- 5 O(12)" 9.68355 um H2-ISO.csv {}
+"H2 0- 0 S( 3)" 9.66492 um H2-ISO.csv {}
+"H2 3- 2 O(14)" 9.56912 um H2-ISO.csv {}
+"H2 9- 8 O( 9)" 9.54149 um H2-ISO.csv {}
+"H2 7- 6 O(11)" 9.47594 um H2-ISO.csv {}
+"H2 7- 7 S( 6)" 9.45085 um H2-ISO.csv {}
+"H2 3- 3 S( 4)" 9.43065 um H2-ISO.csv {}
+"H2 11-10 O( 6)" 9.42199 um H2-ISO.csv {}
+"H2 8- 7 O(10)" 9.41643 um H2-ISO.csv {}
+"H2 11-10 Q(12)" 9.4161 um H2-ISO.csv {}
+"H2 8- 8 S( 7)" 9.40813 um H2-ISO.csv {}
+"H2 1- 0 O(15)" 9.36073 um H2-ISO.csv {}
+"H2 9- 9 S( 9)" 9.24191 um H2-ISO.csv {}
+"H2 5- 5 S( 5)" 9.19116 um H2-ISO.csv {}
+"H2 4- 3 O(13)" 9.09126 um H2-ISO.csv {}
+"H2 2- 2 S( 4)" 8.91849 um H2-ISO.csv {}
+"H2 9- 9 S(10)" 8.86191 um H2-ISO.csv {}
+"H2 2- 1 O(14)" 8.78641 um H2-ISO.csv {}
+"H2 10- 9 O( 7)" 8.74576 um H2-ISO.csv {}
+"H2 6- 6 S( 6)" 8.73968 um H2-ISO.csv {}
+"H2 5- 4 O(12)" 8.71423 um H2-ISO.csv {}
+"H2 8- 8 S( 8)" 8.71414 um H2-ISO.csv {}
+"H2 4- 4 S( 5)" 8.62557 um H2-ISO.csv {}
+"H2 9- 9 S(11)" 8.61118 um H2-ISO.csv {}
+"H2 7- 7 S( 7)" 8.57863 um H2-ISO.csv {}
+"H2 12-10 O(12)" 8.54125 um H2-ISO.csv {}
+"H2 13-12 S( 5)" 8.54036 um H2-ISO.csv {}
+"H2 11-10 Q(11)" 8.47831 um H2-ISO.csv {}
+"H2 9- 9 S(12)" 8.47808 um H2-ISO.csv {}
+"H2 9- 9 S(13)" 8.46289 um H2-ISO.csv {}
+"H2 6- 5 O(11)" 8.46116 um H2-ISO.csv {}
+"H2 1- 1 S( 4)" 8.45292 um H2-ISO.csv {}
+"H2 13-11 O( 9)" 8.43653 um H2-ISO.csv {}
+"H2 13-12 S( 1)" 8.42202 um H2-ISO.csv {}
+"H2 11-10 O( 5)" 8.41011 um H2-ISO.csv {}
+"H2 9- 8 O( 8)" 8.40908 um H2-ISO.csv {}
+"H2 3- 2 O(13)" 8.32145 um H2-ISO.csv {}
+"H2 7- 6 O(10)" 8.31173 um H2-ISO.csv {}
+"H2 8- 7 O( 9)" 8.2841 um H2-ISO.csv {}
+"H2 13-12 S( 4)" 8.23995 um H2-ISO.csv {}
+"H2 13-12 S( 2)" 8.21533 um H2-ISO.csv {}
+"H2 10- 9 Q(14)" 8.20242 um H2-ISO.csv {}
+"H2 8- 8 S( 9)" 8.1921 um H2-ISO.csv {}
+"H2 13-12 S( 3)" 8.14802 um H2-ISO.csv {}
+"H2 5- 5 S( 6)" 8.14723 um H2-ISO.csv {}
+"H2 3- 3 S( 5)" 8.12854 um H2-ISO.csv {}
+"H2 1- 0 O(14)" 8.12263 um H2-ISO.csv {}
+"H2 0- 0 S( 4)" 8.02505 um H2-ISO.csv {}
+"H2 4- 3 O(12)" 7.95264 um H2-ISO.csv {}
+"H2 7- 7 S( 8)" 7.92101 um H2-ISO.csv {}
+"H2 6- 6 S( 7)" 7.91904 um H2-ISO.csv {}
+"H2 11-10 Q(10)" 7.80672 um H2-ISO.csv {}
+"H2 10- 9 O( 6)" 7.80635 um H2-ISO.csv {}
+"H2 8- 8 S(10)" 7.80166 um H2-ISO.csv {}
+"H2 2- 2 S( 5)" 7.68371 um H2-ISO.csv {}
+"H2 2- 1 O(13)" 7.67748 um H2-ISO.csv {}
+"H2 5- 4 O(11)" 7.66793 um H2-ISO.csv {}
+"H2 4- 4 S( 6)" 7.63987 um H2-ISO.csv {}
+"H2 11-10 O( 4)" 7.59882 um H2-ISO.csv {}
+"H2 14-12 O( 4)" 7.58211 um H2-ISO.csv {}
+"H2 8- 8 S(11)" 7.51711 um H2-ISO.csv {}
+"H2 11- 9 O(14)" 7.5066 um H2-ISO.csv {}
+"H2 9- 8 O( 7)" 7.49616 um H2-ISO.csv {}
+"H2 6- 5 O(10)" 7.47591 um H2-ISO.csv {}
+"H2 10- 9 Q(13)" 7.45155 um H2-ISO.csv {}
+"H2 7- 7 S( 9)" 7.41846 um H2-ISO.csv {}
+"H2 5- 5 S( 7)" 7.37296 um H2-ISO.csv {}
+"H2 7- 6 O( 9)" 7.37106 um H2-ISO.csv {}
+"H2 8- 7 O( 8)" 7.36855 um H2-ISO.csv {}
+"H2 8- 8 S(12)" 7.32289 um H2-ISO.csv {}
+"H2 3- 2 O(12)" 7.31632 um H2-ISO.csv {}
+"H2 11-10 Q( 9)" 7.3038 um H2-ISO.csv {}
+"H2 6- 6 S( 8)" 7.29655 um H2-ISO.csv {}
+"H2 1- 1 S( 5)" 7.28006 um H2-ISO.csv {}
+"H2 8- 8 S(13)" 7.21139 um H2-ISO.csv {}
+"H2 3- 3 S( 6)" 7.19533 um H2-ISO.csv {}
+"H2 13-11 O( 8)" 7.18623 um H2-ISO.csv {}
+"H2 1- 0 O(13)" 7.12548 um H2-ISO.csv {}
+"H2 12-10 O(11)" 7.0892 um H2-ISO.csv {}
+"H2 10- 9 O( 5)" 7.04322 um H2-ISO.csv {}
+"H2 10- 8 O(16)" 7.03407 um H2-ISO.csv {}
+"H2 7- 7 S(10)" 7.03273 um H2-ISO.csv {}
+"H2 4- 3 O(11)" 7.02962 um H2-ISO.csv {}
+"H2 11-10 O( 3)" 6.94033 um H2-ISO.csv {}
+"H2 14-12 O( 3)" 6.92886 um H2-ISO.csv {}
+"H2 0- 0 S( 5)" 6.90952 um H2-ISO.csv {}
+"H2 4- 4 S( 7)" 6.90758 um H2-ISO.csv {}
+"H2 6- 6 S( 9)" 6.81644 um H2-ISO.csv {}
+"H2 5- 4 O(10)" 6.81239 um H2-ISO.csv {}
+"H2 2- 2 S( 6)" 6.79806 um H2-ISO.csv {}
+"H2 5- 5 S( 8)" 6.7836 um H2-ISO.csv {}
+"H2 2- 1 O(12)" 6.77608 um H2-ISO.csv {}
+"H2 9- 8 O( 6)" 6.74901 um H2-ISO.csv {}
+"H2 7- 7 S(11)" 6.73869 um H2-ISO.csv {}
+"H2 6- 5 O( 9)" 6.6681 um H2-ISO.csv {}
+"H2 8- 7 O( 7)" 6.61668 um H2-ISO.csv {}
+"H2 7- 6 O( 8)" 6.59838 um H2-ISO.csv {}
+"H2 7- 7 S(12)" 6.51991 um H2-ISO.csv {}
+"H2 3- 3 S( 7)" 6.50086 um H2-ISO.csv {}
+"H2 3- 2 O(11)" 6.4927 um H2-ISO.csv {}
+"H2 14-12 O( 2)" 6.46328 um H2-ISO.csv {}
+"H2 6- 6 S(10)" 6.44265 um H2-ISO.csv {}
+"H2 1- 1 S( 6)" 6.43835 um H2-ISO.csv {}
+"H2 12-11 S( 8)" 6.42531 um H2-ISO.csv {}
+"H2 10- 9 O( 4)" 6.41592 um H2-ISO.csv {}
+"H2 11-10 O( 2)" 6.40152 um H2-ISO.csv {}
+"H2 11- 9 O(13)" 6.39842 um H2-ISO.csv {}
+"H2 7- 7 S(13)" 6.36635 um H2-ISO.csv {}
+"H2 4- 4 S( 8)" 6.34892 um H2-ISO.csv {}
+"H2 13-11 O( 7)" 6.32694 um H2-ISO.csv {}
+"H2 5- 5 S( 9)" 6.32677 um H2-ISO.csv {}
+"H2 1- 0 O(12)" 6.30828 um H2-ISO.csv {}
+"H2 9- 8 Q(14)" 6.27053 um H2-ISO.csv {}
+"H2 4- 3 O(10)" 6.26916 um H2-ISO.csv {}
+"H2 12-11 S( 1)" 6.21316 um H2-ISO.csv {}
+"H2 6- 6 S(11)" 6.15108 um H2-ISO.csv {}
+"H2 10- 9 Q(10)" 6.13914 um H2-ISO.csv {}
+"H2 2- 2 S( 7)" 6.13835 um H2-ISO.csv {}
+"H2 12-10 O(10)" 6.13372 um H2-ISO.csv {}
+"H2 9- 8 O( 5)" 6.13039 um H2-ISO.csv {}
+"H2 0- 0 S( 6)" 6.10857 um H2-ISO.csv {}
+"H2 5- 4 O( 9)" 6.10291 um H2-ISO.csv {}
+"H2 10- 8 O(15)" 6.06954 um H2-ISO.csv {}
+"H2 12-11 S( 7)" 6.06337 um H2-ISO.csv {}
+"H2 2- 1 O(11)" 6.03194 um H2-ISO.csv {}
+"H2 12-11 S( 2)" 6.00227 um H2-ISO.csv {}
+"H2 6- 5 O( 8)" 5.99676 um H2-ISO.csv {}
+"H2 8- 7 O( 6)" 5.99182 um H2-ISO.csv {}
+"H2 3- 3 S( 8)" 5.96982 um H2-ISO.csv {}
+"H2 5- 5 S(10)" 5.96851 um H2-ISO.csv {}
+"H2 7- 6 O( 7)" 5.95554 um H2-ISO.csv {}
+"H2 6- 6 S(12)" 5.92552 um H2-ISO.csv {}
+"H2 9- 7 O(17)" 5.91713 um H2-ISO.csv {}
+"H2 4- 4 S( 9)" 5.91458 um H2-ISO.csv {}
+"H2 9- 8 Q(13)" 5.90925 um H2-ISO.csv {}
+"H2 10- 9 O( 3)" 5.89588 um H2-ISO.csv {}
+"H2 10- 9 Q( 9)" 5.87009 um H2-ISO.csv {}
+"H2 12-11 S( 6)" 5.86704 um H2-ISO.csv {}
+"H2 12-11 S( 3)" 5.8598 um H2-ISO.csv {}
+"H2 1- 1 S( 7)" 5.81092 um H2-ISO.csv {}
+"H2 3- 2 O(10)" 5.80845 um H2-ISO.csv {}
+"H2 14-12 S( 1)" 5.80036 um H2-ISO.csv {}
+"H2 12-11 S( 4)" 5.78514 um H2-ISO.csv {}
+"H2 12-11 S( 5)" 5.78321 um H2-ISO.csv {}
+"H2 6- 6 S(13)" 5.75527 um H2-ISO.csv {}
+"H2 13-11 O( 6)" 5.69839 um H2-ISO.csv {}
+"H2 5- 5 S(11)" 5.68602 um H2-ISO.csv {}
+"H2 4- 3 O( 9)" 5.63432 um H2-ISO.csv {}
+"H2 2- 2 S( 8)" 5.63331 um H2-ISO.csv {}
+"H2 1- 0 O(11)" 5.62935 um H2-ISO.csv {}
+"H2 9- 8 Q(12)" 5.61536 um H2-ISO.csv {}
+"H2 9- 8 O( 4)" 5.61372 um H2-ISO.csv {}
+"H2 11- 9 O(12)" 5.61351 um H2-ISO.csv {}
+"H2 4- 4 S(10)" 5.57255 um H2-ISO.csv {}
+"H2 3- 3 S( 9)" 5.55564 um H2-ISO.csv {}
+"H2 8- 7 Q(15)" 5.54015 um H2-ISO.csv {}
+"H2 0- 0 S( 7)" 5.51118 um H2-ISO.csv {}
+"H2 5- 4 O( 8)" 5.5079 um H2-ISO.csv {}
+"H2 10- 9 Q( 7)" 5.47218 um H2-ISO.csv {}
+"H2 8- 7 O( 5)" 5.46773 um H2-ISO.csv {}
+"H2 5- 5 S(12)" 5.46376 um H2-ISO.csv {}
+"H2 10- 9 O( 2)" 5.46232 um H2-ISO.csv {}
+"H2 12-10 O( 9)" 5.449 um H2-ISO.csv {}
+"H2 6- 5 O( 7)" 5.43289 um H2-ISO.csv {}
+"H2 7- 6 O( 6)" 5.41544 um H2-ISO.csv {}
+"H2 2- 1 O(10)" 5.40991 um H2-ISO.csv {}
+"H2 9- 8 Q(11)" 5.37265 um H2-ISO.csv {}
+"H2 10- 8 O(14)" 5.36218 um H2-ISO.csv {}
+"H2 1- 1 S( 8)" 5.33014 um H2-ISO.csv {}
+"H2 10- 9 Q( 6)" 5.3259 um H2-ISO.csv {}
+"H2 4- 4 S(11)" 5.30128 um H2-ISO.csv {}
+"H2 5- 5 S(13)" 5.29119 um H2-ISO.csv {}
+"H2 8- 7 Q(14)" 5.25982 um H2-ISO.csv {}
+"H2 9- 7 O(16)" 5.25785 um H2-ISO.csv {}
+"H2 2- 2 S( 9)" 5.23885 um H2-ISO.csv {}
+"H2 3- 2 O( 9)" 5.23355 um H2-ISO.csv {}
+"H2 3- 3 S(10)" 5.22811 um H2-ISO.csv {}
+"H2 13-11 O( 5)" 5.22019 um H2-ISO.csv {}
+"H2 10- 9 Q( 5)" 5.20735 um H2-ISO.csv {}
+"H2 9- 8 O( 3)" 5.17942 um H2-ISO.csv {}
+"H2 9- 8 Q(10)" 5.17014 um H2-ISO.csv {}
+"H2 10- 9 Q( 4)" 5.11295 um H2-ISO.csv {}
+"H2 4- 3 O( 8)" 5.09871 um H2-ISO.csv {}
+"H2 4- 4 S(12)" 5.08601 um H2-ISO.csv {}
+"H2 1- 0 O(10)" 5.05898 um H2-ISO.csv {}
+"H2 0- 0 S( 8)" 5.05312 um H2-ISO.csv {}
+"H2 10- 9 Q( 3)" 5.04008 um H2-ISO.csv {}
+"H2 8- 7 Q(13)" 5.02747 um H2-ISO.csv {}
+"H2 8- 7 O( 4)" 5.02511 um H2-ISO.csv {}
+"H2 11- 9 O(11)" 5.02342 um H2-ISO.csv {}
+"H2 5- 4 O( 7)" 5.00439 um H2-ISO.csv {}
+"H2 9- 8 Q( 9)" 5.00015 um H2-ISO.csv {}
+"H2 10- 9 Q( 2)" 4.9869 um H2-ISO.csv {}
+"H2 11-10 S(10)" 4.97214 um H2-ISO.csv {}
+"H2 3- 3 S(11)" 4.9669 um H2-ISO.csv {}
+"H2 7- 6 O( 5)" 4.95822 um H2-ISO.csv {}
+"H2 6- 5 O( 6)" 4.95535 um H2-ISO.csv {}
+"H2 1- 1 S( 9)" 4.95419 um H2-ISO.csv {}
+"H2 10- 9 Q( 1)" 4.95211 um H2-ISO.csv {}
+"H2 12-10 O( 8)" 4.93005 um H2-ISO.csv {}
+"H2 13-11 Q( 6)" 4.92782 um H2-ISO.csv {}
+"H2 2- 2 S(10)" 4.92631 um H2-ISO.csv {}
+"H2 4- 4 S(13)" 4.91665 um H2-ISO.csv {}
+"H2 2- 1 O( 9)" 4.88464 um H2-ISO.csv {}
+"H2 11-10 S( 2)" 4.86582 um H2-ISO.csv {}
+"H2 9- 8 Q( 8)" 4.85717 um H2-ISO.csv {}
+"H2 13-11 O( 4)" 4.84772 um H2-ISO.csv {}
+"H2 8- 7 Q(12)" 4.83234 um H2-ISO.csv {}
+"H2 10- 8 O(13)" 4.81772 um H2-ISO.csv {}
+"H2 9- 8 O( 2)" 4.81281 um H2-ISO.csv {}
+"H2 7- 6 Q(15)" 4.77384 um H2-ISO.csv {}
+"H2 8- 6 O(17)" 4.75976 um H2-ISO.csv {}
+"H2 3- 3 S(12)" 4.75806 um H2-ISO.csv {}
+"H2 11-10 S( 9)" 4.75592 um H2-ISO.csv {}
+"H2 3- 2 O( 8)" 4.74609 um H2-ISO.csv {}
+"H2 9- 7 O(15)" 4.73805 um H2-ISO.csv {}
+"H2 9- 8 Q( 7)" 4.73717 um H2-ISO.csv {}
+"H2 11-10 S( 3)" 4.72002 um H2-ISO.csv {}
+"H2 12-10 Q(10)" 4.71702 um H2-ISO.csv {}
+"H2 0- 0 S( 9)" 4.69466 um H2-ISO.csv {}
+"H2 2- 2 S(11)" 4.67629 um H2-ISO.csv {}
+"H2 8- 7 Q(11)" 4.66692 um H2-ISO.csv {}
+"H2 1- 1 S(10)" 4.65585 um H2-ISO.csv {}
+"H2 8- 7 O( 3)" 4.64944 um H2-ISO.csv {}
+"H2 4- 3 O( 7)" 4.64306 um H2-ISO.csv {}
+"H2 9- 8 Q( 6)" 4.63712 um H2-ISO.csv {}
+"H2 13-11 Q( 5)" 4.63178 um H2-ISO.csv {}
+"H2 11-10 S( 8)" 4.62269 um H2-ISO.csv {}
+"H2 11-10 S( 4)" 4.61609 um H2-ISO.csv {}
+"H2 3- 3 S(13)" 4.59207 um H2-ISO.csv {}
+"H2 7- 6 Q(14)" 4.58401 um H2-ISO.csv {}
+"H2 1- 0 O( 9)" 4.57544 um H2-ISO.csv {}
+"H2 5- 4 O( 6)" 4.57532 um H2-ISO.csv {}
+"H2 7- 6 O( 4)" 4.56898 um H2-ISO.csv {}
+"H2 11- 9 O(10)" 4.56094 um H2-ISO.csv {}
+"H2 9- 8 Q( 5)" 4.55476 um H2-ISO.csv {}
+"H2 13-11 O( 3)" 4.55428 um H2-ISO.csv {}
+"H2 11-10 S( 5)" 4.55262 um H2-ISO.csv {}
+"H2 11-10 S( 7)" 4.55133 um H2-ISO.csv {}
+"H2 6- 5 O( 5)" 4.54835 um H2-ISO.csv {}
+"H2 10- 9 S( 0)" 4.54357 um H2-ISO.csv {}
+"H2 11-10 S( 6)" 4.53008 um H2-ISO.csv {}
+"H2 8- 7 Q(10)" 4.52584 um H2-ISO.csv {}
+"H2 12-10 O( 7)" 4.52167 um H2-ISO.csv {}
+"H2 9- 8 Q( 4)" 4.48836 um H2-ISO.csv {}
+"H2 2- 2 S(12)" 4.47524 um H2-ISO.csv {}
+"H2 2- 1 O( 8)" 4.43739 um H2-ISO.csv {}
+"H2 9- 8 Q( 3)" 4.43663 um H2-ISO.csv {}
+"H2 7- 6 Q(13)" 4.42179 um H2-ISO.csv {}
+"H2 13-11 Q( 4)" 4.4184 um H2-ISO.csv {}
+"H2 1- 1 S(11)" 4.41667 um H2-ISO.csv {}
+"H2 0- 0 S(10)" 4.40997 um H2-ISO.csv {}
+"H2 8- 7 Q( 9)" 4.40521 um H2-ISO.csv {}
+"H2 9- 8 Q( 2)" 4.39861 um H2-ISO.csv {}
+"H2 10- 8 O(12)" 4.38347 um H2-ISO.csv {}
+"H2 9- 8 Q( 1)" 4.37362 um H2-ISO.csv {}
+"H2 8- 6 O(16)" 4.33321 um H2-ISO.csv {}
+"H2 3- 2 O( 7)" 4.32972 um H2-ISO.csv {}
+"H2 8- 7 O( 2)" 4.32953 um H2-ISO.csv {}
+"H2 13-11 O( 2)" 4.32307 um H2-ISO.csv {}
+"H2 9- 7 O(14)" 4.31694 um H2-ISO.csv {}
+"H2 2- 2 S(13)" 4.31347 um H2-ISO.csv {}
+"H2 8- 7 Q( 8)" 4.30211 um H2-ISO.csv {}
+"H2 12-10 Q( 9)" 4.28493 um H2-ISO.csv {}
+"H2 7- 6 Q(12)" 4.28202 um H2-ISO.csv {}
+"H2 13-11 Q( 3)" 4.26498 um H2-ISO.csv {}
+"H2 4- 3 O( 6)" 4.25292 um H2-ISO.csv {}
+"H2 7- 6 O( 3)" 4.23626 um H2-ISO.csv {}
+"H2 6- 5 Q(15)" 4.23093 um H2-ISO.csv {}
+"H2 1- 1 S(12)" 4.22373 um H2-ISO.csv {}
+"H2 8- 7 Q( 7)" 4.2144 um H2-ISO.csv {}
+"H2 5- 4 O( 5)" 4.20769 um H2-ISO.csv {}
+"H2 6- 5 O( 4)" 4.1998 um H2-ISO.csv {}
+"H2 12-10 O( 6)" 4.19213 um H2-ISO.csv {}
+"H2 11- 9 O( 9)" 4.1875 um H2-ISO.csv {}
+"H2 0- 0 S(11)" 4.1815 um H2-ISO.csv {}
+"H2 10- 9 S(12)" 4.16899 um H2-ISO.csv {}
+"H2 1- 0 O( 8)" 4.16239 um H2-ISO.csv {}
+"H2 7- 6 Q(11)" 4.16096 um H2-ISO.csv {}
+"H2 13-11 Q( 2)" 4.15837 um H2-ISO.csv {}
+"H2 8- 7 Q( 6)" 4.1404 um H2-ISO.csv {}
+"H2 6- 5 Q(14)" 4.09465 um H2-ISO.csv {}
+"H2 13-11 Q( 1)" 4.09084 um H2-ISO.csv {}
+"H2 13-11 S( 5)" 4.08427 um H2-ISO.csv {}
+"H2 8- 7 Q( 5)" 4.07887 um H2-ISO.csv {}
+"H2 14-11 O( 5)" 4.0778 um H2-ISO.csv {}
+"H2 1- 1 S(13)" 4.06766 um H2-ISO.csv {}
+"H2 7- 6 Q(10)" 4.05584 um H2-ISO.csv {}
+"H2 2- 1 O( 7)" 4.05403 um H2-ISO.csv {}
+"H2 8- 7 Q( 4)" 4.02885 um H2-ISO.csv {}
+"H2 10- 8 O(11)" 4.02771 um H2-ISO.csv {}
+"H2 10- 9 S( 3)" 4.02471 um H2-ISO.csv {}
+"H2 7- 5 O(17)" 4.0216 um H2-ISO.csv {}
+"H2 9- 8 S( 0)" 4.01835 um H2-ISO.csv {}
+"H2 0- 0 S(12)" 3.99692 um H2-ISO.csv {}
+"H2 10- 9 S(11)" 3.99475 um H2-ISO.csv {}
+"H2 8- 7 Q( 3)" 3.98961 um H2-ISO.csv {}
+"H2 11- 9 Q(12)" 3.98141 um H2-ISO.csv {}
+"H2 12-10 Q( 8)" 3.9799 um H2-ISO.csv {}
+"H2 8- 6 O(15)" 3.97921 um H2-ISO.csv {}
+"H2 6- 5 Q(13)" 3.97465 um H2-ISO.csv {}
+"H2 3- 2 O( 6)" 3.97199 um H2-ISO.csv {}
+"H2 9- 7 O(13)" 3.96817 um H2-ISO.csv {}
+"H2 7- 6 Q( 9)" 3.96457 um H2-ISO.csv {}
+"H2 8- 7 Q( 2)" 3.96061 um H2-ISO.csv {}
+"H2 7- 6 O( 2)" 3.95108 um H2-ISO.csv {}
+"H2 8- 7 Q( 1)" 3.94148 um H2-ISO.csv {}
+"H2 13-11 S( 4)" 3.94062 um H2-ISO.csv {}
+"H2 12-10 O( 5)" 3.9219 um H2-ISO.csv {}
+"H2 10- 9 S( 4)" 3.91784 um H2-ISO.csv {}
+"H2 4- 3 O( 5)" 3.91725 um H2-ISO.csv {}
+"H2 13-10 O( 9)" 3.9147 um H2-ISO.csv {}
+"H2 13-11 S( 0)" 3.91259 um H2-ISO.csv {}
+"H2 6- 5 O( 3)" 3.90028 um H2-ISO.csv {}
+"H2 5- 4 O( 4)" 3.89141 um H2-ISO.csv {}
+"H2 7- 6 Q( 8)" 3.88556 um H2-ISO.csv {}
+"H2 11- 9 O( 8)" 3.87939 um H2-ISO.csv {}
+"H2 10- 9 S(10)" 3.87884 um H2-ISO.csv {}
+"H2 6- 5 Q(12)" 3.86872 um H2-ISO.csv {}
+"H2 13-11 S( 3)" 3.86394 um H2-ISO.csv {}
+"H2 13-11 S( 1)" 3.85591 um H2-ISO.csv {}
+"H2 0- 0 S(13)" 3.84723 um H2-ISO.csv {}
+"H2 10- 9 S( 5)" 3.83969 um H2-ISO.csv {}
+"H2 9- 8 S( 1)" 3.83189 um H2-ISO.csv {}
+"H2 5- 4 Q(15)" 3.82686 um H2-ISO.csv {}
+"H2 7- 6 Q( 7)" 3.81761 um H2-ISO.csv {}
+"H2 12- 9 O(12)" 3.81614 um H2-ISO.csv {}
+"H2 1- 0 O( 7)" 3.8074 um H2-ISO.csv {}
+"H2 10- 9 S( 9)" 3.80704 um H2-ISO.csv {}
+"H2 10- 9 S( 6)" 3.78909 um H2-ISO.csv {}
+"H2 14-11 O( 4)" 3.78363 um H2-ISO.csv {}
+"H2 6- 5 Q(11)" 3.77514 um H2-ISO.csv {}
+"H2 10- 9 S( 8)" 3.77099 um H2-ISO.csv {}
+"H2 10- 9 S( 7)" 3.76586 um H2-ISO.csv {}
+"H2 7- 6 Q( 6)" 3.75978 um H2-ISO.csv {}
+"H2 12-10 Q( 7)" 3.75487 um H2-ISO.csv {}
+"H2 10- 8 O(10)" 3.73025 um H2-ISO.csv {}
+"H2 0- 0 S(14)" 3.72558 um H2-ISO.csv {}
+"H2 2- 1 O( 6)" 3.7237 um H2-ISO.csv {}
+"H2 7- 5 O(16)" 3.72254 um H2-ISO.csv {}
+"H2 5- 4 Q(14)" 3.72152 um H2-ISO.csv {}
+"H2 7- 6 Q( 5)" 3.71133 um H2-ISO.csv {}
+"H2 12-10 O( 4)" 3.69825 um H2-ISO.csv {}
+"H2 6- 5 Q(10)" 3.69257 um H2-ISO.csv {}
+"H2 8- 6 O(14)" 3.68037 um H2-ISO.csv {}
+"H2 9- 8 S( 2)" 3.67637 um H2-ISO.csv {}
+"H2 9- 7 O(12)" 3.67404 um H2-ISO.csv {}
+"H2 7- 6 Q( 4)" 3.67171 um H2-ISO.csv {}
+"H2 11- 9 Q(11)" 3.67085 um H2-ISO.csv {}
+"H2 3- 2 O( 5)" 3.66324 um H2-ISO.csv {}
+"H2 6- 5 O( 2)" 3.6423 um H2-ISO.csv {}
+"H2 7- 6 Q( 3)" 3.64047 um H2-ISO.csv {}
+"H2 4- 3 O( 4)" 3.62739 um H2-ISO.csv {}
+"H2 5- 4 Q(13)" 3.62703 um H2-ISO.csv {}
+"H2 0- 0 S(15)" 3.62636 um H2-ISO.csv {}
+"H2 8- 7 S( 0)" 3.6253 um H2-ISO.csv {}
+"H2 11- 9 O( 7)" 3.62123 um H2-ISO.csv {}
+"H2 6- 5 Q( 9)" 3.61997 um H2-ISO.csv {}
+"H2 5- 4 O( 3)" 3.61851 um H2-ISO.csv {}
+"H2 7- 6 Q( 2)" 3.61731 um H2-ISO.csv {}
+"H2 7- 6 Q( 1)" 3.60199 um H2-ISO.csv {}
+"H2 12-10 Q( 6)" 3.58434 um H2-ISO.csv {}
+"H2 14-11 O( 3)" 3.56636 um H2-ISO.csv {}
+"H2 6- 5 Q( 8)" 3.55647 um H2-ISO.csv {}
+"H2 10- 8 Q(14)" 3.55377 um H2-ISO.csv {}
+"H2 0- 0 S(16)" 3.54456 um H2-ISO.csv {}
+"H2 5- 4 Q(12)" 3.54232 um H2-ISO.csv {}
+"H2 13-10 O( 8)" 3.52425 um H2-ISO.csv {}
+"H2 4- 3 Q(15)" 3.51798 um H2-ISO.csv {}
+"H2 6- 4 O(17)" 3.51429 um H2-ISO.csv {}
+"H2 12-10 O( 3)" 3.51258 um H2-ISO.csv {}
+"H2 6- 5 Q( 7)" 3.50142 um H2-ISO.csv {}
+"H2 1- 0 O( 6)" 3.50081 um H2-ISO.csv {}
+"H2 9- 8 S(13)" 3.4796 um H2-ISO.csv {}
+"H2 10- 8 O( 9)" 3.47768 um H2-ISO.csv {}
+"H2 0- 0 S(17)" 3.47505 um H2-ISO.csv {}
+"H2 14-11 Q( 3)" 3.4706 um H2-ISO.csv {}
+"H2 5- 4 Q(11)" 3.46654 um H2-ISO.csv {}
+"H2 7- 5 O(15)" 3.46316 um H2-ISO.csv {}
+"H2 8- 7 S( 1)" 3.45682 um H2-ISO.csv {}
+"H2 6- 5 Q( 6)" 3.45426 um H2-ISO.csv {}
+"H2 12-10 Q( 5)" 3.45353 um H2-ISO.csv {}
+"H2 9- 8 S( 4)" 3.44496 um H2-ISO.csv {}
+"H2 2- 1 O( 5)" 3.43787 um H2-ISO.csv {}
+"H2 11- 9 Q(10)" 3.43661 um H2-ISO.csv {}
+"H2 4- 3 Q(14)" 3.42884 um H2-ISO.csv {}
+"H2 8- 6 O(13)" 3.4243 um H2-ISO.csv {}
+"H2 9- 7 O(11)" 3.42232 um H2-ISO.csv {}
+"H2 11- 8 O(14)" 3.41656 um H2-ISO.csv {}
+"H2 6- 5 Q( 5)" 3.41455 um H2-ISO.csv {}
+"H2 0- 0 S(18)" 3.41196 um H2-ISO.csv {}
+"H2 14-11 O( 2)" 3.40693 um H2-ISO.csv {}
+"H2 11- 9 O( 6)" 3.40256 um H2-ISO.csv {}
+"H2 5- 4 Q(10)" 3.39898 um H2-ISO.csv {}
+"H2 3- 2 O( 4)" 3.39589 um H2-ISO.csv {}
+"H2 12- 9 O(11)" 3.38377 um H2-ISO.csv {}
+"H2 5- 4 O( 2)" 3.38259 um H2-ISO.csv {}
+"H2 6- 5 Q( 4)" 3.38194 um H2-ISO.csv {}
+"H2 9- 8 S(12)" 3.37799 um H2-ISO.csv {}
+"H2 4- 3 O( 3)" 3.37646 um H2-ISO.csv {}
+"H2 9- 8 S( 5)" 3.36422 um H2-ISO.csv {}
+"H2 12-10 O( 2)" 3.35886 um H2-ISO.csv {}
+"H2 6- 5 Q( 3)" 3.35617 um H2-ISO.csv {}
+"H2 12-10 Q( 4)" 3.35342 um H2-ISO.csv {}
+"H2 14-11 Q( 2)" 3.35016 um H2-ISO.csv {}
+"H2 4- 3 Q(13)" 3.34863 um H2-ISO.csv {}
+"H2 5- 4 Q( 9)" 3.33905 um H2-ISO.csv {}
+"H2 6- 5 Q( 2)" 3.33701 um H2-ISO.csv {}
+"H2 12-10 S( 8)" 3.3308 um H2-ISO.csv {}
+"H2 6- 5 Q( 1)" 3.32432 um H2-ISO.csv {}
+"H2 7- 6 S( 0)" 3.31603 um H2-ISO.csv {}
+"H2 8- 7 S( 2)" 3.3146 um H2-ISO.csv {}
+"H2 9- 8 S(11)" 3.30845 um H2-ISO.csv {}
+"H2 9- 8 S( 6)" 3.30455 um H2-ISO.csv {}
+"H2 10- 8 Q(13)" 3.29569 um H2-ISO.csv {}
+"H2 6- 4 O(16)" 3.28933 um H2-ISO.csv {}
+"H2 5- 4 Q( 8)" 3.28625 um H2-ISO.csv {}
+"H2 12-10 Q( 3)" 3.27832 um H2-ISO.csv {}
+"H2 4- 3 Q(12)" 3.27659 um H2-ISO.csv {}
+"H2 14-11 Q( 1)" 3.27576 um H2-ISO.csv {}
+"H2 9- 8 S(10)" 3.26519 um H2-ISO.csv {}
+"H2 9- 8 S( 7)" 3.26493 um H2-ISO.csv {}
+"H2 10- 8 O( 8)" 3.26072 um H2-ISO.csv {}
+"H2 11- 9 Q( 9)" 3.25447 um H2-ISO.csv {}
+"H2 3- 2 Q(15)" 3.25268 um H2-ISO.csv {}
+"H2 9- 8 S( 8)" 3.24492 um H2-ISO.csv {}
+"H2 9- 8 S( 9)" 3.24468 um H2-ISO.csv {}
+"H2 5- 4 Q( 7)" 3.24018 um H2-ISO.csv {}
+"H2 7- 5 O(14)" 3.23631 um H2-ISO.csv {}
+"H2 1- 0 O( 5)" 3.23499 um H2-ISO.csv {}
+"H2 13-10 O( 7)" 3.23304 um H2-ISO.csv {}
+"H2 12-10 Q( 2)" 3.22458 um H2-ISO.csv {}
+"H2 11- 9 O( 5)" 3.21605 um H2-ISO.csv {}
+"H2 4- 3 Q(11)" 3.21204 um H2-ISO.csv {}
+"H2 9- 7 O(10)" 3.20432 um H2-ISO.csv {}
+"H2 10- 7 O(16)" 3.20403 um H2-ISO.csv {}
+"H2 8- 6 O(12)" 3.20209 um H2-ISO.csv {}
+"H2 5- 4 Q( 6)" 3.20051 um H2-ISO.csv {}
+"H2 8- 7 S( 3)" 3.19565 um H2-ISO.csv {}
+"H2 14-11 S( 1)" 3.1948 um H2-ISO.csv {}
+"H2 12-10 Q( 1)" 3.18989 um H2-ISO.csv {}
+"H2 2- 1 O( 4)" 3.18981 um H2-ISO.csv {}
+"H2 14-11 S( 0)" 3.18879 um H2-ISO.csv {}
+"H2 3- 2 Q(14)" 3.17791 um H2-ISO.csv {}
+"H2 5- 4 Q( 5)" 3.16697 um H2-ISO.csv {}
+"H2 3- 2 O( 3)" 3.16383 um H2-ISO.csv {}
+"H2 12-10 S( 7)" 3.16279 um H2-ISO.csv {}
+"H2 7- 6 S( 1)" 3.16199 um H2-ISO.csv {}
+"H2 5- 3 O(17)" 3.15925 um H2-ISO.csv {}
+"H2 4- 3 O( 2)" 3.15889 um H2-ISO.csv {}
+"H2 4- 3 Q(10)" 3.15439 um H2-ISO.csv {}
+"H2 5- 4 Q( 4)" 3.13934 um H2-ISO.csv {}
+"H2 5- 4 Q( 3)" 3.11743 um H2-ISO.csv {}
+"H2 3- 2 Q(13)" 3.11038 um H2-ISO.csv {}
+"H2 11- 9 Q( 8)" 3.10997 um H2-ISO.csv {}
+"H2 4- 3 Q( 9)" 3.10316 um H2-ISO.csv {}
+"H2 5- 4 Q( 2)" 3.10111 um H2-ISO.csv {}
+"H2 8- 7 S( 4)" 3.09753 um H2-ISO.csv {}
+"H2 10- 8 Q(12)" 3.0955 um H2-ISO.csv {}
+"H2 5- 4 Q( 1)" 3.09028 um H2-ISO.csv {}
+"H2 6- 4 O(15)" 3.08726 um H2-ISO.csv {}
+"H2 10- 8 O( 7)" 3.07279 um H2-ISO.csv {}
+"H2 11- 8 O(13)" 3.07206 um H2-ISO.csv {}
+"H2 12- 9 O(10)" 3.06821 um H2-ISO.csv {}
+"H2 6- 5 S( 0)" 3.06276 um H2-ISO.csv {}
+"H2 4- 3 Q( 8)" 3.05791 um H2-ISO.csv {}
+"H2 11- 9 O( 4)" 3.05641 um H2-ISO.csv {}
+"H2 12-10 S( 6)" 3.05422 um H2-ISO.csv {}
+"H2 12-10 S( 0)" 3.05278 um H2-ISO.csv {}
+"H2 3- 2 Q(12)" 3.0492 um H2-ISO.csv {}
+"H2 9- 7 Q(15)" 3.03748 um H2-ISO.csv {}
+"H2 7- 5 O(13)" 3.03628 um H2-ISO.csv {}
+"H2 7- 6 S( 2)" 3.03091 um H2-ISO.csv {}
+"H2 2- 1 Q(15)" 3.02951 um H2-ISO.csv {}
+"H2 4- 3 Q( 7)" 3.01833 um H2-ISO.csv {}
+"H2 9- 7 O( 9)" 3.01378 um H2-ISO.csv {}
+"H2 13-10 O( 6)" 3.00787 um H2-ISO.csv {}
+"H2 8- 6 O(11)" 3.00721 um H2-ISO.csv {}
+"H2 1- 0 O( 4)" 3.00387 um H2-ISO.csv {}
+"H2 12-10 S( 1)" 2.9955 um H2-ISO.csv {}
+"H2 11- 9 Q( 7)" 2.99406 um H2-ISO.csv {}
+"H2 3- 2 Q(11)" 2.99387 um H2-ISO.csv {}
+"H2 12-10 S( 5)" 2.98755 um H2-ISO.csv {}
+"H2 4- 3 Q( 6)" 2.98412 um H2-ISO.csv {}
+"H2 2- 1 O( 3)" 2.97406 um H2-ISO.csv {}
+"H2 5- 3 O(16)" 2.97381 um H2-ISO.csv {}
+"H2 2- 1 Q(14)" 2.96504 um H2-ISO.csv {}
+"H2 8- 7 S(13)" 2.96229 um H2-ISO.csv {}
+"H2 3- 2 O( 2)" 2.96211 um H2-ISO.csv {}
+"H2 12-10 S( 2)" 2.95926 um H2-ISO.csv {}
+"H2 13-10 Q( 7)" 2.95641 um H2-ISO.csv {}
+"H2 8- 7 S( 6)" 2.95635 um H2-ISO.csv {}
+"H2 4- 3 Q( 5)" 2.9551 um H2-ISO.csv {}
+"H2 12-10 S( 4)" 2.95288 um H2-ISO.csv {}
+"H2 12-10 S( 3)" 2.94452 um H2-ISO.csv {}
+"H2 3- 2 Q(10)" 2.94401 um H2-ISO.csv {}
+"H2 10- 8 Q(11)" 2.93602 um H2-ISO.csv {}
+"H2 4- 3 Q( 4)" 2.93109 um H2-ISO.csv {}
+"H2 6- 5 S( 1)" 2.92073 um H2-ISO.csv {}
+"H2 7- 6 S( 3)" 2.92014 um H2-ISO.csv {}
+"H2 11- 9 O( 3)" 2.91975 um H2-ISO.csv {}
+"H2 4- 3 Q( 3)" 2.912 um H2-ISO.csv {}
+"H2 8- 7 S(12)" 2.91123 um H2-ISO.csv {}
+"H2 8- 7 S( 7)" 2.91059 um H2-ISO.csv {}
+"H2 10- 8 O( 6)" 2.90908 um H2-ISO.csv {}
+"H2 2- 1 Q(13)" 2.90617 um H2-ISO.csv {}
+"H2 6- 4 O(14)" 2.90557 um H2-ISO.csv {}
+"H2 11- 9 Q( 6)" 2.90079 um H2-ISO.csv {}
+"H2 3- 2 Q( 9)" 2.89939 um H2-ISO.csv {}
+"H2 4- 3 Q( 2)" 2.89774 um H2-ISO.csv {}
+"H2 10- 7 O(15)" 2.89639 um H2-ISO.csv {}
+"H2 4- 3 Q( 1)" 2.88826 um H2-ISO.csv {}
+"H2 4- 2 O(17)" 2.88481 um H2-ISO.csv {}
+"H2 8- 7 S( 8)" 2.88019 um H2-ISO.csv {}
+"H2 8- 7 S(11)" 2.87932 um H2-ISO.csv {}
+"H2 8- 7 S( 9)" 2.86473 um H2-ISO.csv {}
+"H2 8- 7 S(10)" 2.86425 um H2-ISO.csv {}
+"H2 9- 7 Q(14)" 2.86044 um H2-ISO.csv {}
+"H2 3- 2 Q( 8)" 2.85977 um H2-ISO.csv {}
+"H2 7- 5 O(12)" 2.85856 um H2-ISO.csv {}
+"H2 2- 1 Q(12)" 2.8525 um H2-ISO.csv {}
+"H2 5- 4 S( 0)" 2.84904 um H2-ISO.csv {}
+"H2 9- 7 O( 8)" 2.84606 um H2-ISO.csv {}
+"H2 1- 0 Q(15)" 2.83551 um H2-ISO.csv {}
+"H2 8- 6 O(10)" 2.83482 um H2-ISO.csv {}
+"H2 13-10 O( 5)" 2.82988 um H2-ISO.csv {}
+"H2 7- 6 S( 4)" 2.82751 um H2-ISO.csv {}
+"H2 11- 9 Q( 5)" 2.8261 um H2-ISO.csv {}
+"H2 12- 9 O( 9)" 2.82586 um H2-ISO.csv {}
+"H2 3- 2 Q( 7)" 2.82498 um H2-ISO.csv {}
+"H2 11- 8 O(12)" 2.80722 um H2-ISO.csv {}
+"H2 10- 8 Q(10)" 2.80656 um H2-ISO.csv {}
+"H2 5- 3 O(15)" 2.80449 um H2-ISO.csv {}
+"H2 2- 1 Q(11)" 2.80375 um H2-ISO.csv {}
+"H2 11- 9 O( 2)" 2.80317 um H2-ISO.csv {}
+"H2 1- 0 O( 3)" 2.80251 um H2-ISO.csv {}
+"H2 6- 5 S( 2)" 2.79916 um H2-ISO.csv {}
+"H2 3- 2 Q( 6)" 2.79485 um H2-ISO.csv {}
+"H2 9- 6 O(17)" 2.78696 um H2-ISO.csv {}
+"H2 2- 1 O( 2)" 2.78616 um H2-ISO.csv {}
+"H2 1- 0 Q(14)" 2.77878 um H2-ISO.csv {}
+"H2 13-10 Q( 6)" 2.77853 um H2-ISO.csv {}
+"H2 3- 2 Q( 5)" 2.76926 um H2-ISO.csv {}
+"H2 11- 9 Q( 4)" 2.76719 um H2-ISO.csv {}
+"H2 10- 8 O( 5)" 2.76601 um H2-ISO.csv {}
+"H2 2- 1 Q(10)" 2.75967 um H2-ISO.csv {}
+"H2 7- 6 S( 5)" 2.7512 um H2-ISO.csv {}
+"H2 3- 2 Q( 4)" 2.74808 um H2-ISO.csv {}
+"H2 11- 9 S(10)" 2.74718 um H2-ISO.csv {}
+"H2 6- 4 O(13)" 2.74176 um H2-ISO.csv {}
+"H2 3- 2 Q( 3)" 2.73124 um H2-ISO.csv {}
+"H2 1- 0 Q(13)" 2.72661 um H2-ISO.csv {}
+"H2 4- 2 O(16)" 2.72257 um H2-ISO.csv {}
+"H2 11- 9 Q( 3)" 2.72206 um H2-ISO.csv {}
+"H2 2- 1 Q( 9)" 2.7201 um H2-ISO.csv {}
+"H2 3- 2 Q( 2)" 2.71866 um H2-ISO.csv {}
+"H2 5- 4 S( 1)" 2.71727 um H2-ISO.csv {}
+"H2 9- 7 Q(13)" 2.71641 um H2-ISO.csv {}
+"H2 3- 2 Q( 1)" 2.7103 um H2-ISO.csv {}
+"H2 10- 8 Q( 9)" 2.70016 um H2-ISO.csv {}
+"H2 7- 5 O(11)" 2.69963 um H2-ISO.csv {}
+"H2 9- 7 O( 7)" 2.69772 um H2-ISO.csv {}
+"H2 6- 5 S( 3)" 2.69569 um H2-ISO.csv {}
+"H2 11- 9 Q( 2)" 2.6893 um H2-ISO.csv {}
+"H2 13-10 O( 4)" 2.68761 um H2-ISO.csv {}
+"H2 2- 1 Q( 8)" 2.68486 um H2-ISO.csv {}
+"H2 8- 6 O( 9)" 2.68134 um H2-ISO.csv {}
+"H2 1- 0 Q(12)" 2.67877 um H2-ISO.csv {}
+"H2 11- 9 Q( 1)" 2.66795 um H2-ISO.csv {}
+"H2 12- 9 Q(10)" 2.66747 um H2-ISO.csv {}
+"H2 4- 3 S( 0)" 2.66434 um H2-ISO.csv {}
+"H2 10- 7 O(14)" 2.65525 um H2-ISO.csv {}
+"H2 2- 1 Q( 7)" 2.65383 um H2-ISO.csv {}
+"H2 3- 1 O(17)" 2.65196 um H2-ISO.csv {}
+"H2 5- 3 O(14)" 2.65022 um H2-ISO.csv {}
+"H2 13-10 Q( 5)" 2.64755 um H2-ISO.csv {}
+"H2 7- 6 S( 7)" 2.64192 um H2-ISO.csv {}
+"H2 10- 8 O( 4)" 2.64089 um H2-ISO.csv {}
+"H2 1- 0 Q(11)" 2.63512 um H2-ISO.csv {}
+"H2 12- 9 O( 8)" 2.63303 um H2-ISO.csv {}
+"H2 11- 9 S( 9)" 2.6273 um H2-ISO.csv {}
+"H2 2- 1 Q( 6)" 2.6269 um H2-ISO.csv {}
+"H2 1- 0 O( 2)" 2.62688 um H2-ISO.csv {}
+"H2 10- 8 Q( 8)" 2.6121 um H2-ISO.csv {}
+"H2 7- 6 S(13)" 2.60941 um H2-ISO.csv {}
+"H2 6- 5 S( 4)" 2.60835 um H2-ISO.csv {}
+"H2 7- 6 S( 8)" 2.60682 um H2-ISO.csv {}
+"H2 5- 4 S( 2)" 2.60398 um H2-ISO.csv {}
+"H2 2- 1 Q( 5)" 2.60397 um H2-ISO.csv {}
+"H2 9- 7 Q(12)" 2.59725 um H2-ISO.csv {}
+"H2 11- 8 O(11)" 2.59609 um H2-ISO.csv {}
+"H2 1- 0 Q(10)" 2.59551 um H2-ISO.csv {}
+"H2 6- 4 O(12)" 2.59357 um H2-ISO.csv {}
+"H2 2- 1 Q( 4)" 2.58496 um H2-ISO.csv {}
+"H2 7- 6 S(12)" 2.58457 um H2-ISO.csv {}
+"H2 7- 6 S( 9)" 2.58376 um H2-ISO.csv {}
+"H2 4- 2 O(15)" 2.57532 um H2-ISO.csv {}
+"H2 13-10 O( 3)" 2.57378 um H2-ISO.csv {}
+"H2 7- 6 S(11)" 2.57251 um H2-ISO.csv {}
+"H2 7- 6 S(10)" 2.57234 um H2-ISO.csv {}
+"H2 2- 1 Q( 3)" 2.56983 um H2-ISO.csv {}
+"H2 9- 7 O( 6)" 2.56613 um H2-ISO.csv {}
+"H2 8- 6 Q(15)" 2.56426 um H2-ISO.csv {}
+"H2 9- 6 O(16)" 2.56245 um H2-ISO.csv {}
+"H2 1- 0 Q( 9)" 2.55985 um H2-ISO.csv {}
+"H2 2- 1 Q( 2)" 2.55851 um H2-ISO.csv {}
+"H2 7- 5 O(10)" 2.55672 um H2-ISO.csv {}
+"H2 11- 9 S( 0)" 2.55487 um H2-ISO.csv {}
+"H2 2- 1 Q( 1)" 2.55099 um H2-ISO.csv {}
+"H2 13-10 Q( 4)" 2.55023 um H2-ISO.csv {}
+"H2 8- 6 O( 8)" 2.54404 um H2-ISO.csv {}
+"H2 11- 9 S( 8)" 2.54273 um H2-ISO.csv {}
+"H2 4- 3 S( 1)" 2.54151 um H2-ISO.csv {}
+"H2 10- 8 Q( 7)" 2.53911 um H2-ISO.csv {}
+"H2 6- 5 S( 5)" 2.53551 um H2-ISO.csv {}
+"H2 10- 8 O( 3)" 2.53161 um H2-ISO.csv {}
+"H2 1- 0 Q( 8)" 2.52802 um H2-ISO.csv {}
+"H2 3- 1 O(16)" 2.51116 um H2-ISO.csv {}
+"H2 5- 3 O(13)" 2.50961 um H2-ISO.csv {}
+"H2 5- 4 S( 3)" 2.50704 um H2-ISO.csv {}
+"H2 11- 9 S( 1)" 2.50192 um H2-ISO.csv {}
+"H2 3- 2 S( 0)" 2.50148 um H2-ISO.csv {}
+"H2 1- 0 Q( 7)" 2.49995 um H2-ISO.csv {}
+"H 0-0S(0)" 28.221 um H2.csv {}
+"H 0-0S(1)" 17.035 um H2.csv {}
+"H 0-0S(2)" 12.279 um H2.csv {}
+"H 0-0S(3)" 9.664 um H2.csv {}
+"H 0-0S(4)" 8.025 um H2.csv {}
+"H 0-0S(5)" 6.909 um H2.csv {}
+"H 0-0S(6)" 6.108 um H2.csv {}
+"H 0-0S(7)" 5.511 um H2.csv {}
+"H 0-0S(8)" 5.052 um H2.csv {}
+"H 0-0S(9)" 4.694 um H2.csv {}
+"H 0-0S(10" 4.409 um H2.csv {}
+"H 0-0S(11" 4.181 um H2.csv {}
+"H 0-0S(12" 3.994 um H2.csv {}
+"H 0-0S(13" 3.846 um H2.csv {}
+"H 0-0S(14" 3.724 um H2.csv {}
+"H 0-0S(15" 3.625 um H2.csv {}
+"H 0-0S(16" 3.547 um H2.csv {}
+"H 0-0S(17" 3.485 um H2.csv {}
+"H 0-0S(18" 3.438 um H2.csv {}
+"H 0-0S(19" 3.404 um H2.csv {}
+"H 0-0S(20" 3.38 um H2.csv {}
+"H 0-0S(21" 3.369 um H2.csv {}
+"H 0-0S(22" 3.366 um H2.csv {}
+"H 0-0S(23" 3.372 um H2.csv {}
+"H 1-0S(0)" 2.223 um H2.csv {}
+"H 1-0S(1)" 2.121 um H2.csv {}
+"H 1-0S(2)" 2.033 um H2.csv {}
+"H 1-0S(3)" 1.957 um H2.csv {}
+"H 1-0S(4)" 1.892 um H2.csv {}
+"H 1-0S(5)" 1.835 um H2.csv {}
+"H 1-0S(6)" 1.788 um H2.csv {}
+"H 1-0S(7)" 1.748 um H2.csv {}
+"H 1-0S(8)" 1.714 um H2.csv {}
+"H 1-0S(9)" 1.687 um H2.csv {}
+"H 1-0S(10" 1.666 um H2.csv {}
+"H 1-0S(11" 1.65 um H2.csv {}
+"H 1-0Q(1)" 2.406 um H2.csv {}
+"H 1-0Q(2)" 2.413 um H2.csv {}
+"H 1-0Q(3)" 2.423 um H2.csv {}
+"H 1-0Q(4)" 2.437 um H2.csv {}
+"H 1-0Q(5)" 2.454 um H2.csv {}
+"H 1-0Q(6)" 2.475 um H2.csv {}
+"H 1-0Q(7)" 2.5 um H2.csv {}
+"H 1-0O(2)" 2.626 um H2.csv {}
+"H 1-0O(3)" 2.802 um H2.csv {}
+"H 1-0O(4)" 3.003 um H2.csv {}
+"H 1-0O(5)" 3.235 um H2.csv {}
+"H 1-0O(6)" 3.5 um H2.csv {}
+"H 1-0O(7)" 3.807 um H2.csv {}
+"H 1-0O(8)" 4.162 um H2.csv {}
+"H 2-1S(0)" 2.355 um H2.csv {}
+"H 2-1S(1)" 2.247 um H2.csv {}
+"H 2-1S(2)" 2.154 um H2.csv {}
+"H 2-1S(3)" 2.073 um H2.csv {}
+"H 2-1S(4)" 2.004 um H2.csv {}
+"H 2-1S(5)" 1.944 um H2.csv {}
+"H 2-1O(2)" 2.786 um H2.csv {}
+"H 2-1O(3)" 2.974 um H2.csv {}
+"H 2-1O(4)" 3.189 um H2.csv {}
+"H 2-1O(5)" 3.437 um H2.csv {}
+"H 2-1O(6)" 3.723 um H2.csv {}
+"H 2-1O(7)" 4.054 um H2.csv {}
+"H 3-2S(0)" 2.501 um H2.csv {}
+"H 3-2S(1)" 2.386 um H2.csv {}
+"H 3-2S(2)" 2.287 um H2.csv {}
+"H 3-2S(3)" 2.201 um H2.csv {}
+"H 3-2S(4)" 2.128 um H2.csv {}
+"H 3-2S(5)" 2.065 um H2.csv {}
+"H 3-2S(6)" 2.013 um H2.csv {}
+"H 3-2S(7)" 1.969 um H2.csv {}
+"H 3-2O(2)" 2.962 um H2.csv {}
+"H 3-2O(3)" 3.163 um H2.csv {}
+"H 3-2O(4)" 3.395 um H2.csv {}
+"H 3-2O(5)" 3.663 um H2.csv {}
+"H 3-2O(6)" 3.972 um H2.csv {}
+"H 4-3S(3)" 2.344 um H2.csv {}
+"H 4-3S(4)" 2.266 um H2.csv {}
+"H 4-3S(5)" 2.201 um H2.csv {}
+"H 5-4S(5)" 2.355 um H2.csv {}
+"H 5-4S(7)" 2.251 um H2.csv {}
+"H 2-0S(0)" 1.238 um H2.csv {}
+"H 2-0S(1)" 1.162 um H2.csv {}
+"H 2-0S(2)" 1.138 um H2.csv {}
+"H 2-0S(3)" 1.117 um H2.csv {}
+"H 2-0S(4)" 1.099 um H2.csv {}
+"H 2-0S(5)" 1.085 um H2.csv {}
+"H 2-0Q(1)" 1.238 um H2.csv {}
+"H 2-0Q(2)" 1.241 um H2.csv {}
+"H 2-0Q(3)" 1.247 um H2.csv {}
+"H 2-0Q(4)" 1.254 um H2.csv {}
+"H 2-0Q(5)" 1.263 um H2.csv {}
+"H 2-0O(2)" 1.293 um H2.csv {}
+"H 2-0O(3)" 1.335 um H2.csv {}
+"H 2-0O(4)" 1.381 um H2.csv {}
+"H 2-0O(5)" 1.432 um H2.csv {}
+HeI 1.0031 um HeI-HeII.csv "{""transition"": ""7F-3D 3Fo-3D""}"
+HeI 1.0034 um HeI-HeII.csv "{""transition"": ""7F-3D 1Fo-1D""}"
+HeII 1.0049 um HeI-HeII.csv "{""transition"": ""14-6""}"
+HeII 1.0133 um HeI-HeII.csv "{""transition"": ""5-4""}"
+HeI 1.0314 um HeI-HeII.csv "{""transition"": ""6D-3P 3dD-3Po""}"
+HeII 1.0422 um HeI-HeII.csv "{""transition"": ""13-6""}"
+HeI 1.0668 um HeI-HeII.csv "{""transition"": ""6S-3P 3S-3Po""}"
+HeI 1.0832 um HeI-HeII.csv "{""transition"": ""2P-2S 3Po-3S GU=3""}"
+HeI 1.0832 um HeI-HeII.csv "{""transition"": ""2P-2S 3Po-3P GU=1""}"
+HeI 1.0833 um HeI-HeII.csv "{""transition"": ""2P-2S 3Po-3S GU=5""}"
+HeI 1.0833 um HeI-HeII.csv "{""transition"": ""2P-2S 3Po-3S GU=9""}"
+HeI 1.0905 um HeI-HeII.csv "{""transition"": ""6P-3D 1Po-1d""}"
+HeI 1.0916 um HeI-HeII.csv "{""transition"": ""6F-3D 3Fo-3D""}"
+HeI 1.092 um HeI-HeII.csv "{""transition"": ""6F-3D 1Fo-1D""}"
+HeII 1.0938 um HeI-HeII.csv "{""transition"": ""12-6""}"
+HeI 1.0997 um HeI-HeII.csv "{""transition"": ""6P-3D 3Po-3D""}"
+HeI 1.1016 um HeI-HeII.csv "{""transition"": ""5P-3S 1Po-1S""}"
+HeI 1.1048 um HeI-HeII.csv "{""transition"": ""6D-3P 1D-1Po""}"
+HeII 1.1164 um HeI-HeII.csv "{""transition"": ""7LIMIT""}"
+HeI 1.1229 um HeI-HeII.csv "{""transition"": ""6S-3P 1S-1Po""}"
+HeII 1.1628 um HeI-HeII.csv "{""transition"": ""7-5""}"
+HeII 1.1677 um HeI-HeII.csv "{""transition"": ""11-6""}"
+HeI 1.1972 um HeI-HeII.csv "{""transition"": ""5D-3P 3D-3Po""}"
+HeII 1.2256 um HeI-HeII.csv "{""transition"": ""21-7""}"
+HeII 1.2418 um HeI-HeII.csv "{""transition"": ""22-7""}"
+HeI 1.2531 um HeI-HeII.csv "{""transition"": ""4P-3S 3Po-3S""}"
+HeII 1.2719 um HeI-HeII.csv "{""transition"": ""20-7""}"
+HeI 1.2759 um HeI-HeII.csv "{""transition"": ""5P-3D 1Po-1D""}"
+HeI 1.2789 um HeI-HeII.csv "{""transition"": ""5F-3D 3Fo-3D""}"
+HeII 1.2817 um HeI-HeII.csv "{""transition"": ""10-6""}"
+HeI 1.285 um HeI-HeII.csv "{""transition"": ""5S-3P 3S-3Po""}"
+HeII 1.2914 um HeI-HeII.csv "{""transition"": ""19-7""}"
+HeI 1.2971 um HeI-HeII.csv "{""transition"": ""5D-3P 1D-1Po""}"
+HeI 1.2976 um HeI-HeII.csv "{""transition"": ""5F-3D 1Fo-1D""}"
+HeI 1.2988 um HeI-HeII.csv "{""transition"": ""5P-3D 3Po-3D""}"
+HeII 1.315 um HeI-HeII.csv "{""transition"": ""18-7""}"
+HeI 1.3415 um HeI-HeII.csv "{""transition"": ""5S-3P 1S-1Po""}"
+HeII 1.3442 um HeI-HeII.csv "{""transition"": ""17-7""}"
+HeII 1.4273 um HeI-HeII.csv "{""transition"": ""15-7""}"
+HeII 1.4578 um HeI-HeII.csv "{""transition"": ""8LIMIT""}"
+HeII 1.4765 um HeI-HeII.csv "{""transition"": ""9-6""}"
+HeII 1.4882 um HeI-HeII.csv "{""transition"": ""14-7""}"
+HeI 1.5088 um HeI-HeII.csv "{""transition"": ""4P-3S 1Po-1S""}"
+HeII 1.5719 um HeI-HeII.csv "{""transition"": ""13-7""}"
+HeII 1.6241 um HeI-HeII.csv "{""transition"": ""25-8""}"
+HeII 1.64 um HeI-HeII.csv "{""transition"": ""24-8""}"
+HeII 1.6584 um HeI-HeII.csv "{""transition"": ""23-8""}"
+HeII 1.6799 um HeI-HeII.csv "{""transition"": ""22-8""}"
+HeII 1.6926 um HeI-HeII.csv "{""transition"": ""12-7""}"
+HeI 1.7007 um HeI-HeII.csv "{""transition"": ""4D-3P 3D-3Po""}"
+HeII 1.7053 um HeI-HeII.csv "{""transition"": ""21-8""}"
+HeII 1.7355 um HeI-HeII.csv "{""transition"": ""20-8""}"
+HeII 1.7717 um HeI-HeII.csv "{""transition"": ""19-8""}"
+HeII 1.8167 um HeI-HeII.csv "{""transition"": ""18-8""}"
+HeII 1.845 um HeI-HeII.csv "{""transition"": ""9LIMIT""}"
+HeI 1.8561 um HeI-HeII.csv "{""transition"": ""4P-3D 1Po-1D""}"
+HeII 1.8639 um HeI-HeII.csv "{""transition"": ""6-5""}"
+HeI 1.8691 um HeI-HeII.csv "{""transition"": ""4F-3D 3Fo-3D""}"
+HeI 1.8702 um HeI-HeII.csv "{""transition"": ""4F-3D 1Fo-1d""}"
+HeII 1.8725 um HeI-HeII.csv "{""transition"": ""17-8""}"
+HeII 1.8753 um HeI-HeII.csv "{""transition"": ""8-6""}"
+HeII 1.877 um HeI-HeII.csv "{""transition"": ""11-7""}"
+HeI 1.9068 um HeI-HeII.csv "{""transition"": ""8S-4P 3S-3Po""}"
+HeI 1.9094 um HeI-HeII.csv "{""transition"": ""4D-3P 1D-1Po""}"
+HeI 1.9548 um HeI-HeII.csv "{""transition"": ""4P-3D 3Po-3D""}"
+HeII 2.0379 um HeI-HeII.csv "{""transition"": ""15-8""}"
+HeI 2.043 um HeI-HeII.csv "{""transition"": ""6P-4S 3Po-3S""}"
+HeI 2.0587 um HeI-HeII.csv "{""transition"": ""2P-2S 1Po-1S""}"
+HeI 2.1126 um HeI-HeII.csv "{""transition"": ""4S-3P 3S-3Po""}"
+HeI 2.1132 um HeI-HeII.csv "{""transition"": ""3pP-4sS""}"
+HeI 2.1138 um HeI-HeII.csv "{""transition"": ""4S-3P 1S-1Po""}"
+HeII 2.1195 um HeI-HeII.csv "{""transition"": ""25-9""}"
+HeII 2.1469 um HeI-HeII.csv "{""transition"": ""24-9""}"
+HeI 2.15 um HeI-HeII.csv "{""transition"": ""7S-4P 3S-3Po""}"
+HeI 2.1614 um HeI-HeII.csv "{""transition"": ""7F-4D 3Fo-3D""}"
+HeI 2.1617 um HeI-HeII.csv "{""transition"": ""4dD-7fF""}"
+HeI 2.1623 um HeI-HeII.csv "{""transition"": ""7F-4D 1Fo-1D""}"
+HeII 2.1653 um HeI-HeII.csv "{""transition"": ""14-8""}"
+HeI 2.166 um HeI-HeII.csv "{""transition"": ""4-7""}"
+HeII 2.1786 um HeI-HeII.csv "{""transition"": ""23-9""}"
+HeI 2.1847 um HeI-HeII.csv "{""transition"": ""7D-4P 1D-1Po""}"
+HeII 2.1891 um HeI-HeII.csv "{""transition"": ""10-7""}"
+HeII 2.2155 um HeI-HeII.csv "{""transition"": ""22-9""}"
+HeI 2.229 um HeI-HeII.csv "{""transition"": ""7S-4P 1S-1Po""}"
+HeII 2.2601 um HeI-HeII.csv "{""transition"": ""21-9""}"
+HeII 2.2778 um HeI-HeII.csv "{""transition"": ""10LIMIT""}"
+HeI 2.3069 um HeI-HeII.csv "{""transition"": ""6P-4S 1Po-1S""}"
+HeII 2.314 um HeI-HeII.csv "{""transition"": ""20-9""}"
+HeII 2.348 um HeI-HeII.csv "{""transition"": ""13-8""}"
+HeII 2.3788 um HeI-HeII.csv "{""transition"": ""19-9""}"
+HeII 2.4606 um HeI-HeII.csv "{""transition"": ""18-9""}"
+HeI 2.4734 um HeI-HeII.csv "{""transition"": ""6D-4P 3D-3Po""}"
+PAH3.25 3.25 um PAH.csv {}
+PAH3.3 3.3 um PAH.csv {}
+PAH3.4 3.4 um PAH.csv {}
+PAH3.5 3.5 um PAH.csv {}
+PAH3.8 3.75 um PAH.csv {}
+PAH5.3 5.27 um PAH.csv {}
+PAH5.7 5.7 um PAH.csv {}
+PAH6.2 6.22 um PAH.csv {}
+PAH6.7 6.69 um PAH.csv {}
+PAH7.4 7.42 um PAH.csv {}
+PAH7.6 7.6 um PAH.csv {}
+PAH7.9 7.85 um PAH.csv {}
+PAH8.3 8.33 um PAH.csv {}
+PAH8.6 8.61 um PAH.csv {}
+PAH10.7 10.68 um PAH.csv {}
+PAH11.2 11.23 um PAH.csv {}
+PAH11.3 11.33 um PAH.csv {}
+PAH12.0 11.99 um PAH.csv {}
+PAH12.6 12.62 um PAH.csv {}
+PAH12.7 12.69 um PAH.csv {}
+PAH13.5 13.48 um PAH.csv {}
+PAH14.0 14.04 um PAH.csv {}
+PAH14.2 14.19 um PAH.csv {}
+PAH15.9 15.9 um PAH.csv {}
+PAH16.5 16.45 um PAH.csv {}
+PAH17.0 17.04 um PAH.csv {}
+PAH17.4 17.375 um PAH.csv {}
+PAH17.9 17.87 um PAH.csv {}
+PAH18.9 18.92 um PAH.csv {}
+PAH33.1 33.1 um PAH.csv {}
+"Mg II 2799" 2799.49 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[O II] 3725" 3726.032 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[O II] 3727" 3728.815 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[Ne III] 3868" 3868.76 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+H 3889.049 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[Ne III] 3970" 3970.0 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+H 4101.734 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+H 4340.464 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[O III] 4363" 4363.209 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"He II 4685" 4685.68 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+H 4861.325 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[O III] 4959" 4958.911 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[O III] 5007" 5006.843 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"He II 5411" 5411.52 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[O I] 5577" 5577.339 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[N II] 5755" 5754.59 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"He I 5876" 5875.68 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[O I] 6300" 6300.304 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[S III] 6312" 6312.06 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[O I] 6363" 6363.776 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[N II] 6548" 6548.05 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+H 6562.801 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[N II] 6583" 6583.45 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[S II] 6716" 6716.44 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[S II] 6730" 6730.82 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+"[Ar III] 7135" 7135.79 Angstrom SDSS-IV.csv "{""Type"": ""Emission""}"
+H 3889.049 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+"K (Ca II 3933)" 3933.7 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+"H (Ca II 3968)" 3968.5 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+H 3970.072 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+H 4101.734 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+"G (Ca I 4307)" 4307.74 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+H 4340.464 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+H 4861.325 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+"Mg I 5175" 5175.0 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+"D2 (Na I 5889)" 5889.95 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+"D1 (Na I 5895)" 5895.92 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+H 6562.801 Angstrom SDSS-IV.csv "{""Type"": ""Absorption""}"
+"O VI" 1033.82 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 1.0}"
+Ly 1215.24 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 9.0}"
+"N V" 1240.81 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 3.0}"
+"O I" 1305.53 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"C II" 1335.31 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"Si IV" 1397.61 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"Si IV + O I" 1399.8 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 1.0}"
+"C IV" 1549.48 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 8.0}"
+"He II" 1640.4 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"O III" 1665.85 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"Al III" 1857.4 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"C III" 1908.73 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 7.0}"
+"C II" 2326.0 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"Ne IV" 2439.5 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"Mg II" 2799.11 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 1.0, ""Weight-Quasar"": 8.0}"
+"Ne V" 3346.79 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"Ne VI" 3426.85 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"O II" 3727.09 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 5.0, ""Weight-Quasar"": 1.0}"
+"O II" 3729.87 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"He I" 3889.0 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"S II" 4072.3 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+H 4102.89 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 2.0}"
+H 4341.68 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 1.0, ""Weight-Quasar"": 3.0}"
+"O III" 4364.43 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+H 4862.68 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 2.0, ""Weight-Quasar"": 4.0}"
+"O III" 4932.6 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"O III" 4960.29 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 2.0, ""Weight-Quasar"": 2.0}"
+"O III" 5008.24 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 3.0, ""Weight-Quasar"": 2.0}"
+"O I" 6302.04 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"O I" 6365.53 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"N I" 6529.03 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"N II" 6549.86 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 3.0, ""Weight-Quasar"": 0.0}"
+H 6564.61 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 8.0, ""Weight-Quasar"": 8.0}"
+"N II" 6585.27 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 3.0, ""Weight-Quasar"": 0.0}"
+"S II" 6718.29 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 3.0, ""Weight-Quasar"": 0.0}"
+"S II" 6732.67 Angstrom SDSS.csv "{""Type"": ""Emission"", ""Weight-Galaxy"": 3.0, ""Weight-Quasar"": 0.0}"
+K 3934.77 Angstrom SDSS.csv "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1.0, ""Weight-Quasar"": 0.0}"
+H 3969.58 Angstrom SDSS.csv "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1.0, ""Weight-Quasar"": 0.0}"
+G 4305.61 Angstrom SDSS.csv "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1.0, ""Weight-Quasar"": 0.0}"
+Mg 5176.7 Angstrom SDSS.csv "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1.0, ""Weight-Quasar"": 0.0}"
+Na 5895.6 Angstrom SDSS.csv "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1.0, ""Weight-Quasar"": 0.0}"
+CaII 8500.36 Angstrom SDSS.csv "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1.0, ""Weight-Quasar"": 0.0}"
+CaII 8544.44 Angstrom SDSS.csv "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1.0, ""Weight-Quasar"": 0.0}"
+CaII 8664.52 Angstrom SDSS.csv "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1.0, ""Weight-Quasar"": 0.0}"
+Sky 5578.5 Angstrom SDSS.csv "{""Type"": ""Sky"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+Sky 5894.6 Angstrom SDSS.csv "{""Type"": ""Sky"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+Sky 6301.7 Angstrom SDSS.csv "{""Type"": ""Sky"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+Sky 7246.0 Angstrom SDSS.csv "{""Type"": ""Sky"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}"
+"C I" 1157.19 Angstrom UV_linelist_vacuum.csv {}
+"N IV" 1168.6 Angstrom UV_linelist_vacuum.csv {}
+"C IV" 1168.87 Angstrom UV_linelist_vacuum.csv {}
+"C IV" 1168.99 Angstrom UV_linelist_vacuum.csv {}
+"N IV" 1169.06 Angstrom UV_linelist_vacuum.csv {}
+"N IV" 1169.48 Angstrom UV_linelist_vacuum.csv {}
+"C III" 1175.53 Angstrom UV_linelist_vacuum.csv {}
+"N III" 1183.03 Angstrom UV_linelist_vacuum.csv {}
+"N III" 1184.54 Angstrom UV_linelist_vacuum.csv {}
+"Mn II" 1199.39 Angstrom UV_linelist_vacuum.csv {}
+"N I" 1199.55 Angstrom UV_linelist_vacuum.csv {}
+"N I" 1200.22 Angstrom UV_linelist_vacuum.csv {}
+"N I" 1200.71 Angstrom UV_linelist_vacuum.csv {}
+"Si III" 1206.5 Angstrom UV_linelist_vacuum.csv {}
+"H I" 1215.67 Angstrom UV_linelist_vacuum.csv {}
+"N V" 1238.82 Angstrom UV_linelist_vacuum.csv {}
+"N V" 1242.8 Angstrom UV_linelist_vacuum.csv {}
+"C III" 1247.38 Angstrom UV_linelist_vacuum.csv {}
+"S II" 1250.58 Angstrom UV_linelist_vacuum.csv {}
+"S II" 1253.81 Angstrom UV_linelist_vacuum.csv {}
+"Si II" 1260.42 Angstrom UV_linelist_vacuum.csv {}
+"C I" 1277.24 Angstrom UV_linelist_vacuum.csv {}
+"Si III" 1294.54 Angstrom UV_linelist_vacuum.csv {}
+"C III" 1296.33 Angstrom UV_linelist_vacuum.csv {}
+"Si III" 1296.74 Angstrom UV_linelist_vacuum.csv {}
+"Si III" 1298.93 Angstrom UV_linelist_vacuum.csv {}
+"O I" 1302.17 Angstrom UV_linelist_vacuum.csv {}
+"Si II" 1304.37 Angstrom UV_linelist_vacuum.csv {}
+"Ni II" 1317.22 Angstrom UV_linelist_vacuum.csv {}
+"C II" 1323.93 Angstrom UV_linelist_vacuum.csv {}
+"N III" 1324.35 Angstrom UV_linelist_vacuum.csv {}
+"C I" 1328.83 Angstrom UV_linelist_vacuum.csv {}
+"C II" 1334.53 Angstrom UV_linelist_vacuum.csv {}
+"C II*" 1335.71 Angstrom UV_linelist_vacuum.csv {}
+"O IV" 1341.64 Angstrom UV_linelist_vacuum.csv {}
+"Fe V" 1345.61 Angstrom UV_linelist_vacuum.csv {}
+"Fe V" 1362.86 Angstrom UV_linelist_vacuum.csv {}
+"Fe V" 1363.08 Angstrom UV_linelist_vacuum.csv {}
+"Fe V" 1364.82 Angstrom UV_linelist_vacuum.csv {}
+"O V" 1371.3 Angstrom UV_linelist_vacuum.csv {}
+"Si IV" 1393.76 Angstrom UV_linelist_vacuum.csv {}
+"Si IV" 1402.77 Angstrom UV_linelist_vacuum.csv {}
+"Si III" 1417.24 Angstrom UV_linelist_vacuum.csv {}
+"C III" 1426.45 Angstrom UV_linelist_vacuum.csv {}
+"Fe V" 1427.27 Angstrom UV_linelist_vacuum.csv {}
+"C III" 1427.85 Angstrom UV_linelist_vacuum.csv {}
+"Fe V" 1430.44 Angstrom UV_linelist_vacuum.csv {}
+"Ni II" 1454.84 Angstrom UV_linelist_vacuum.csv {}
+"Co II" 1466.21 Angstrom UV_linelist_vacuum.csv {}
+"Ni II" 1467.26 Angstrom UV_linelist_vacuum.csv {}
+"Ni II" 1467.76 Angstrom UV_linelist_vacuum.csv {}
+"C III" 1478.0 Angstrom UV_linelist_vacuum.csv {}
+"N IV]" 1486.5 Angstrom UV_linelist_vacuum.csv {}
+"S V" 1501.76 Angstrom UV_linelist_vacuum.csv {}
+"Si II" 1526.71 Angstrom UV_linelist_vacuum.csv {}
+"Fe IV" 1530.04 Angstrom UV_linelist_vacuum.csv {}
+"Si II*" 1533.43 Angstrom UV_linelist_vacuum.csv {}
+"C IV" 1548.19 Angstrom UV_linelist_vacuum.csv {}
+"C IV" 1550.77 Angstrom UV_linelist_vacuum.csv {}
+"C I" 1560.31 Angstrom UV_linelist_vacuum.csv {}
+"C I*" 1560.68 Angstrom UV_linelist_vacuum.csv {}
+"Fe II" 1608.45 Angstrom UV_linelist_vacuum.csv {}
+"Fe II" 1611.2 Angstrom UV_linelist_vacuum.csv {}
+"C III" 1620.4 Angstrom UV_linelist_vacuum.csv {}
+"He II" 1640.42 Angstrom UV_linelist_vacuum.csv {}
+"C I" 1656.93 Angstrom UV_linelist_vacuum.csv {}
+"C I*" 1657.38 Angstrom UV_linelist_vacuum.csv {}
+"C I*" 1657.91 Angstrom UV_linelist_vacuum.csv {}
+"O III]" 1660.81 Angstrom UV_linelist_vacuum.csv {}
+"Fe V" 1662.32 Angstrom UV_linelist_vacuum.csv {}
+"O III]" 1666.15 Angstrom UV_linelist_vacuum.csv {}
+"Al II" 1670.79 Angstrom UV_linelist_vacuum.csv {}
+"Ni II" 1709.6 Angstrom UV_linelist_vacuum.csv {}
+"Fe IV" 1717.9 Angstrom UV_linelist_vacuum.csv {}
+"N IV" 1718.55 Angstrom UV_linelist_vacuum.csv {}
+"Ni II" 1741.55 Angstrom UV_linelist_vacuum.csv {}
+"Ni II" 1751.91 Angstrom UV_linelist_vacuum.csv {}
+"Si II" 1808.01 Angstrom UV_linelist_vacuum.csv {}
+"Si I" 1845.52 Angstrom UV_linelist_vacuum.csv {}
+"Al III" 1854.72 Angstrom UV_linelist_vacuum.csv {}
+"Al III" 1862.79 Angstrom UV_linelist_vacuum.csv {}
+"Si III]" 1883.0 Angstrom UV_linelist_vacuum.csv {}
+"Si III]" 1892.03 Angstrom UV_linelist_vacuum.csv {}
+"Fe II" 1901.77 Angstrom UV_linelist_vacuum.csv {}
+"C III]" 1906.68 Angstrom UV_linelist_vacuum.csv {}
+"C III]" 1908.73 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1922.79 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1923.01 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1923.88 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1924.53 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1926.04 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1926.3 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1930.39 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1931.51 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1932.82 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1949.67 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1950.33 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1951.01 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1952.65 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1953.33 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1954.61 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1958.59 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1960.32 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1962.72 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1964.15 Angstrom UV_linelist_vacuum.csv {}
+"Fe III" 1966.41 Angstrom UV_linelist_vacuum.csv {}
+"Zn II" 2026.14 Angstrom UV_linelist_vacuum.csv {}
+"Cr II" 2026.27 Angstrom UV_linelist_vacuum.csv {}
+"Mg I" 2026.48 Angstrom UV_linelist_vacuum.csv {}
+"Cr II" 2056.25 Angstrom UV_linelist_vacuum.csv {}
+"N II]" 2140.0 Angstrom UV_linelist_vacuum.csv {}
+"C III" 2163.61 Angstrom UV_linelist_vacuum.csv {}
+"Fe II" 2249.88 Angstrom UV_linelist_vacuum.csv {}
+"Fe II" 2260.78 Angstrom UV_linelist_vacuum.csv {}
+"C III" 2297.58 Angstrom UV_linelist_vacuum.csv {}
+"[O III]" 2321.66 Angstrom UV_linelist_vacuum.csv {}
+"C II]" 2326.0 Angstrom UV_linelist_vacuum.csv {}
+"[O III]" 2331.0 Angstrom UV_linelist_vacuum.csv {}
+"Fe II" 2344.21 Angstrom UV_linelist_vacuum.csv {}
+"Fe II" 2374.46 Angstrom UV_linelist_vacuum.csv {}
+"Fe II" 2382.76 Angstrom UV_linelist_vacuum.csv {}
+"[O II]" 2470.97 Angstrom UV_linelist_vacuum.csv {}
+"[O II]" 2471.09 Angstrom UV_linelist_vacuum.csv {}
+"Mn II" 2576.88 Angstrom UV_linelist_vacuum.csv {}
+"Fe II" 2586.65 Angstrom UV_linelist_vacuum.csv {}
+"Mn II" 2594.5 Angstrom UV_linelist_vacuum.csv {}
+"Fe II" 2600.17 Angstrom UV_linelist_vacuum.csv {}
+"Mn II" 2606.46 Angstrom UV_linelist_vacuum.csv {}
+"Mg II" 2796.35 Angstrom UV_linelist_vacuum.csv {}
+"Mg II" 2803.53 Angstrom UV_linelist_vacuum.csv {}
+"Mg I" 2852.96 Angstrom UV_linelist_vacuum.csv {}
