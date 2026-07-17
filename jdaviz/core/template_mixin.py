@@ -4561,6 +4561,9 @@ class ViewerSelect(SelectPluginComponent):
         def reference_has_wcs(viewer):
             return getattr(viewer.state.reference_data, 'coords', None) is not None
 
+        def is_not_table_viewer(viewer):
+            return not hasattr(viewer, 'widget_table')
+
         return super()._is_valid_item(viewer, locals())
 
     @observe('filters')

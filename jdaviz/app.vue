@@ -35,7 +35,7 @@
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-info">
-          <v-btn icon @click="() => {if (state_drawer_content === 'info') {state_drawer_content = ''} else {state_drawer_content = 'info'}}" :class="{active : state_drawer_content === 'info'}" :disabled="!state_tray_items[state_tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant">
+          <v-btn icon @click="() => {if (state_drawer_content === 'info') {state_drawer_content = ''} else {state_drawer_content = 'info'; state_info_subtab = state_tray_items[state_tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant ? 0 : 2}}" :class="{active : state_drawer_content === 'info'}" :disabled="!state_tray_items[state_tray_items.map(ti => ti.label).indexOf('Logger')].is_relevant">
             <img :src="state_icons['information-outline']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
@@ -308,8 +308,8 @@
             </v-card>
             <v-card v-if="state_drawer_content === 'info'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
               <v-tabs fixed-tabs theme="dark" bg-color="viewer_toolbar" v-model="state_info_subtab">
-                <v-tab>Metadata</v-tab>
-                <v-tab>Markers</v-tab>
+                <v-tab :disabled="!state_tray_items[state_tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant">Metadata</v-tab>
+                <v-tab :disabled="!state_tray_items[state_tray_items.map(ti => ti.label).indexOf('Markers')].is_relevant">Markers</v-tab>
                 <v-tab>Logger</v-tab>
               </v-tabs>
               <v-window v-model="state_info_subtab" style="overflow-y: auto">
