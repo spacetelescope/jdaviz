@@ -393,6 +393,15 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                         **self.tools_data[tool_id], 'img': img
                     }
 
+        # Allow tools to supply a dynamic tooltip.
+        for tool_id, tool in self.tools.items():
+            if tool_id in self.tools_data and hasattr(tool, 'get_tooltip'):
+                tooltip = tool.get_tooltip()
+                if tooltip is not None:
+                    self.tools_data[tool_id] = {
+                        **self.tools_data[tool_id], 'tooltip': tooltip
+                    }
+
         # mutation to dictionary needs to be manually sent to update the UI
         self.send_state("tools_data")
         if needs_deactivate_active:

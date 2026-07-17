@@ -1171,6 +1171,20 @@ class SinglePixelRegion(CheckableTool):
         return reg
 
 
+def _count_visible_image_layers(viewer):
+    """Return the number of visible, non-subset image layers in *viewer*."""
+    from jdaviz.utils import layer_is_image_data
+    from glue.core.subset_group import GroupedSubset
+    try:
+        return sum(
+            1 for lyr in viewer.state.layers
+            if lyr.visible and layer_is_image_data(lyr.layer)
+            and not isinstance(lyr.layer, GroupedSubset)
+        )
+    except Exception:  # nosec
+        return 0
+
+
 # ---------------------------------------------------------------------------
 # Focus-mode image layer tools
 # ---------------------------------------------------------------------------
@@ -1184,11 +1198,34 @@ class _BaseImageFocusTool(Tool):
     """
     keep_visible_in_focus_mode = True
     _override_title = ''
-    # Echo property name to observe on the top layer state (e.g. 'alpha', 'cmap', 'stretch').
-    # Subclasses must set this so external changes (e.g. plot options) update the widget.
+    # Echo property name to observe on the top layer state.
     _layer_state_property = ''
     # Tracks which layer state instance we currently have a callback on.
     _current_observed_layer = None
+    # Tooltip template with a ``{layer_ref}`` placeholder that resolves to
+    # "the image layer" (single layer) or "the top visible image layer"
+    # (multiple layers).  Subclasses should set this instead of ``tool_tip``.
+    _tool_tip_template = ''
+
+    def _n_visible_image_layers(self):
+        """Count visible, non-subset image layers in the viewer."""
+        return _count_visible_image_layers(self.viewer)
+
+    def get_tooltip(self):
+        """Hook for ``NestedJupyterToolbar._update_tool_visibilities``.
+
+        Returns a tooltip that says "the image layer" when there is only one
+        visible image layer and "the top visible image layer" when there are
+        multiple, or *None* to keep the existing tooltip.
+        """
+        if not self._tool_tip_template:
+            return None
+        try:
+            n = self._n_visible_image_layers()
+        except Exception:  # nosec
+            return None
+        layer_ref = 'the image layer' if n <= 1 else 'the top visible image layer'
+        return self._tool_tip_template.format(layer_ref=layer_ref)
 
     def _get_top_layer_state(self):
         """Return the top visible image layer state by z-order, or None.
@@ -1346,6 +1383,7 @@ class ImageColormapTool(_BaseImageFocusTool):
     tool_id = 'jdaviz:image_colormap'
     action_text = 'Select colormap'
     tool_tip = 'Select the colormap for the top visible image layer'
+    _tool_tip_template = 'Select the colormap for {layer_ref}'
     _override_title = 'Colormap'
     _layer_state_property = 'cmap'
 
@@ -1384,6 +1422,7 @@ class ImageStretchTool(_BaseImageFocusTool):
     tool_id = 'jdaviz:image_stretch'
     action_text = 'Select stretch'
     tool_tip = 'Select the stretch function for the top visible image layer'
+    _tool_tip_template = 'Select the stretch function for {layer_ref}'
     _override_title = 'Stretch'
     _layer_state_property = 'stretch'
 
@@ -1522,6 +1561,7 @@ class ImageOpacityTool(_BaseImageFocusTool):
     tool_id = 'jdaviz:image_opacity'
     action_text = 'Set opacity'
     tool_tip = 'Adjust the opacity of the top visible image layer'
+    _tool_tip_template = 'Adjust the opacity of {layer_ref}'
     _override_title = 'Opacity'
     _layer_state_property = 'alpha'
 
