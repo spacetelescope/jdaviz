@@ -17,6 +17,7 @@ from glue_jupyter.bqplot.common.tools import (CheckableTool,
                                               BqplotEllipseMode, BqplotCircularAnnulusMode,
                                               BqplotXRangeMode, BqplotYRangeMode,
                                               BqplotSelectionTool)
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import (LineIdentifyMessage, SpectralMarksChangedMessage,
@@ -1341,7 +1342,7 @@ class _BaseImageFocusTool(Tool):
 class ImageColormapTool(_BaseImageFocusTool):
     """Select the colormap for the top visible image layer."""
     # placeholder icon – replace with a dedicated colormap icon later
-    icon = os.path.join(ICON_DIR, 'image.svg')
+    icon = os.path.join(ICON_DIR, 'colormap.svg')
     tool_id = 'jdaviz:image_colormap'
     action_text = 'Select colormap'
     tool_tip = 'Select the colormap for the top visible image layer'
@@ -1379,13 +1380,109 @@ class ImageColormapTool(_BaseImageFocusTool):
 @viewer_tool
 class ImageStretchTool(_BaseImageFocusTool):
     """Select the stretch function for the top visible image layer."""
-    # placeholder icon – replace with a dedicated stretch icon later
     icon = os.path.join(ICON_DIR, 'stretch_bounds.svg')
     tool_id = 'jdaviz:image_stretch'
     action_text = 'Select stretch'
     tool_tip = 'Select the stretch function for the top visible image layer'
     _override_title = 'Stretch'
     _layer_state_property = 'stretch'
+
+    # Per-stretch icons; keys are glue stretch IDs.  Stretches with no entry
+    # fall back to the generic stretch_bounds icon set as ``icon``.
+    _stretch_icon_paths = {
+        'linear': os.path.join(ICON_DIR, 'lin.svg'),
+        'log':    os.path.join(ICON_DIR, 'log.svg'),
+        'arcsinh': os.path.join(ICON_DIR, 'asinh.svg'),
+        'spline': os.path.join(ICON_DIR, 'spln.svg'),
+        'sqrt':   os.path.join(ICON_DIR, 'sqrt.svg'),
+    }
+    # Tracks which layer the always-on stretch observer is registered on
+    # (separate from _current_observed_layer which is only active during override).
+    _icon_observed_layer = None
+
+    def __init__(self, viewer):
+        super().__init__(viewer)
+        # Pre-load all stretch-specific icon data URIs.
+        self._stretch_imgs = {}
+        for key, path in self._stretch_icon_paths.items():
+            try:
+                self._stretch_imgs[key] = read_icon(path, 'svg+xml')
+            except Exception:  # nosec
+                pass
+        self._default_img = read_icon(self.icon, 'svg+xml')
+
+        # Register an always-on echo callback on the current top layer's
+        # stretch so the icon updates even when the override is not active.
+        self._register_icon_stretch_observer()
+
+        # Watch for layer-list changes so we re-register on the new top layer.
+        if hasattr(viewer, 'state'):
+            try:
+                viewer.state.add_callback('layers', self._refresh_icon_state)
+            except Exception:  # nosec
+                pass
+
+    # ------------------------------------------------------------------
+    # Dynamic icon helpers
+    # ------------------------------------------------------------------
+
+    def _get_img_for_stretch(self, stretch_key):
+        """Return the pre-loaded icon data URI for *stretch_key*."""
+        return self._stretch_imgs.get(stretch_key, self._default_img)
+
+    def get_img(self):
+        """Hook called by ``NestedJupyterToolbar._update_tool_visibilities``.
+
+        Returns the icon that reflects the current top layer's stretch, or
+        *None* to keep the existing icon.
+        """
+        layer_state = self._get_top_layer_state()
+        if layer_state is None or not hasattr(layer_state, 'stretch'):
+            return None
+        try:
+            return self._get_img_for_stretch(layer_state.stretch)
+        except Exception:  # nosec
+            return None
+
+    def _update_toolbar_icon(self):
+        """Push the current stretch icon into ``tools_data`` so the Vue toolbar updates."""
+        toolbar = getattr(self.viewer, 'toolbar', None)
+        if toolbar is None or self.tool_id not in getattr(toolbar, 'tools_data', {}):
+            return
+        img = self.get_img()
+        if img is None:
+            return
+        toolbar.tools_data = {
+            **toolbar.tools_data,
+            self.tool_id: {**toolbar.tools_data[self.tool_id], 'img': img},
+        }
+
+    def _register_icon_stretch_observer(self):
+        """Register (or re-register) an always-on echo callback on the current
+        top layer's *stretch* property."""
+        if self._icon_observed_layer is not None:
+            try:
+                self._icon_observed_layer.remove_callback(
+                    'stretch', self._on_icon_stretch_changed)
+            except Exception:  # nosec
+                pass
+        layer_state = self._get_top_layer_state()
+        self._icon_observed_layer = layer_state
+        if layer_state is not None and hasattr(layer_state, 'stretch'):
+            try:
+                layer_state.add_callback('stretch', self._on_icon_stretch_changed)
+            except Exception:  # nosec
+                pass
+
+    def _on_icon_stretch_changed(self, *args):
+        """Echo callback: top layer's stretch changed → update the toolbar icon."""
+        self._update_toolbar_icon()
+
+    def _refresh_icon_state(self, *args):
+        """Called when ``viewer.state.layers`` changes: re-registers the stretch
+        observer on the new top layer and refreshes the icon."""
+        self._register_icon_stretch_observer()
+        self._update_toolbar_icon()
 
     def _build_custom_widgets(self):
         from glue.config import stretches as glue_stretches
@@ -1421,7 +1518,7 @@ class ImageStretchTool(_BaseImageFocusTool):
 class ImageOpacityTool(_BaseImageFocusTool):
     """Set the opacity of the top visible image layer via a slider."""
     # placeholder icon – replace with a dedicated opacity icon later
-    icon = os.path.join(ICON_DIR, 'tune.svg')
+    icon = os.path.join(ICON_DIR, 'opacity.svg')
     tool_id = 'jdaviz:image_opacity'
     action_text = 'Set opacity'
     tool_tip = 'Adjust the opacity of the top visible image layer'

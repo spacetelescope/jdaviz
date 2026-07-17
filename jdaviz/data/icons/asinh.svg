@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 38.2 46.1">
+  <!-- Generator: Adobe Illustrator 30.5.1, SVG Export Plug-In . SVG Version: 2.1.4 Build 3)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: none;
+        stroke: #231f20;
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+
+      .st1 {
+        font-size: 20px;
+      }
+
+      .st1, .st2 {
+        fill: #231f20;
+        font-family: Roboto-Bold, Roboto;
+        font-weight: 700;
+      }
+
+      .st2 {
+        font-size: 18px;
+      }
+    </style>
+  </defs>
+  <text class="st1" transform="translate(0 40.7)"><tspan x="0" y="0">sinh</tspan></text>
+  <line class="st0" x1=".9" y1="20.9" x2="37.3" y2="20.9"/>
+  <text class="st2" transform="translate(13.3 15.4)"><tspan x="0" y="0">1</tspan></text>
+</svg>

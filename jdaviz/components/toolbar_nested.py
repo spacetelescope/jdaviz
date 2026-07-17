@@ -382,6 +382,17 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                                                 'primary': True,
                                                 'has_suboptions': False}
 
+        # Allow tools to supply a dynamic icon that reflects viewer state.
+        # Tools that implement get_img() have their icon refreshed here on
+        # every visibility update (layer add/remove, visibility toggle, etc.).
+        for tool_id, tool in self.tools.items():
+            if tool_id in self.tools_data and hasattr(tool, 'get_img'):
+                img = tool.get_img()
+                if img is not None:
+                    self.tools_data[tool_id] = {
+                        **self.tools_data[tool_id], 'img': img
+                    }
+
         # mutation to dictionary needs to be manually sent to update the UI
         self.send_state("tools_data")
         if needs_deactivate_active:
