@@ -1,5 +1,6 @@
 import inspect
 import os
+import logging
 import re
 import threading
 import time
@@ -123,6 +124,19 @@ def show_widget(widget, loc, title, height=None):  # pragma: no cover
     from IPython import get_ipython
     from IPython.display import display
     import ipywidgets as widgets
+
+    # Displaying jdaviz in a sidecar can leave the frontend {'execution_state': 'busy'},
+    # which causes timeout failures in notebook ci with `spacetelescope/notebook-ci-actions`, since
+    # `nbval` listens for {'execution_state': 'idle'} before advancing to the next cell.
+    # Here we check for a CI environment variable - if true, we skip calls to `display`.
+    # This no-op is not specific to loc='sidecar' so that tests aren't broken when calling
+    # `jd.show()` within a sidecar context in the notebook.
+    if os.getenv('JDAVIZ_SKIP_DISPLAY') == 'true':
+        logging.debug(
+            'environment variable "JDAVIZ_SKIP_DISPLAY = true" was found, jdaviz will '
+            'skip all show/display commands.'
+        )
+        return
 
     # Check if the user is running Jdaviz in the correct environments.
     # If not, provide a friendly msg to guide them!
