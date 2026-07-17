@@ -35,7 +35,7 @@
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-info">
-          <v-btn icon @click="() => {if (state_drawer_content === 'info') {state_drawer_content = ''} else {state_drawer_content = 'info'; state_info_subtab = state_tray_items[state_tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant ? 0 : 2}}" :class="{active : state_drawer_content === 'info'}" :disabled="!state_tray_items[state_tray_items.map(ti => ti.label).indexOf('Logger')].is_relevant">
+          <v-btn icon @click="() => {if (state_drawer_content === 'info') {state_drawer_content = ''} else {state_drawer_content = 'info'; if ((state_info_subtab === 0 && !state_tray_items[state_tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant) || (state_info_subtab === 1 && !state_tray_items[state_tray_items.map(ti => ti.label).indexOf('Markers')].is_relevant)) {state_info_subtab = 2}}}" :class="{active : state_drawer_content === 'info'}" :disabled="!state_tray_items[state_tray_items.map(ti => ti.label).indexOf('Logger')].is_relevant">
             <img :src="state_icons['information-outline']" width="24" class="color-to-white"/>
           </v-btn>
         </j-tooltip>
