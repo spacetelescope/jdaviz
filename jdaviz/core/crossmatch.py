@@ -374,6 +374,10 @@ def crossmatch_loaded_catalogs(app, data_labels, names=None, use_ids=False, **kw
     ``tolerance``, ``review_radius``, ``join``, ``mode``) may be supplied and
     takes precedence.
 
+    The id columns discovered from the loader metadata are always forwarded so
+    the ``object_id`` output column is populated from real catalog ids rather
+    than generated UUIDs, even when ``use_ids=False`` (i.e. sky-only matching).
+
     Note: matching by id is only meaningful when the id columns are globally
     consistent across catalogs; ids from different instruments are usually not,
     which is why sky matching is the default.
@@ -386,7 +390,11 @@ def crossmatch_loaded_catalogs(app, data_labels, names=None, use_ids=False, **kw
     catalogs, coord_columns, id_columns = catalogs_from_data_collection(
         app, data_labels, names)
     kwargs.setdefault('coord_columns', coord_columns)
+    # id columns from the loader metadata are always forwarded so the ``object_id``
+    # output column is populated from real catalog ids (not UUIDs), regardless of
+    # whether we actually *match* on ids. ``use_ids`` only controls the match mode.
+    # A user-supplied ``id_columns`` kwarg still takes precedence via setdefault.
+    kwargs.setdefault('id_columns', id_columns)
     if use_ids:
-        kwargs.setdefault('id_columns', id_columns)
         kwargs.setdefault('mode', 'id_then_sky')
     return crossmatch_catalogs(catalogs, **kwargs)
