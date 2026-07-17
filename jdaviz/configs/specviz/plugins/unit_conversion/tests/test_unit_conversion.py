@@ -104,7 +104,7 @@ def test_conv_no_data(specviz_helper, spectrum1d):
         plg.spectral_unit = "micron"
     assert len(specviz_helper._app.data_collection) == 0
 
-    specviz_helper.load(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load(spectrum1d, data_label="Test 1D Spectrum", format='1D Spectrum')
 
     # make sure we don't expose translations in Specviz
     assert hasattr(plg, 'flux_unit')

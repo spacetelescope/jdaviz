@@ -56,9 +56,9 @@ def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
 
 
 @pytest.mark.skipif(not IN_GITHUB_ACTIONS, reason="Plugin disabled only in CI")
-def test_sonify_data_disabled(deconfigged_helper, spectrum1d_cube_larger):
-    deconfigged_helper.load(spectrum1d_cube_larger, data_label="test", format="3D Spectrum")
-    sonify_plg = deconfigged_helper._app.get_tray_item_from_name('Sonify Data')
+def test_sonify_data_disabled(cubeviz_helper, spectrum1d_cube_larger):
+    cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
+    sonify_plg = cubeviz_helper._app.get_tray_item_from_name('Sonify Data')
     assert sonify_plg.disabled_msg
     with pytest.raises(ValueError, match='Unable to sonify cube'):
         sonify_plg.vue_sonify_cube()

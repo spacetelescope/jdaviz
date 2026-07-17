@@ -30,8 +30,9 @@ def test_load_level_1_and_2(
     # confirm that a "level-2" viewer is created, and that
     # the rate image is loaded into it
     assert len(deconfigged_helper.viewers) == 4
-    # this is not a default name in deconfigged - remove?
-    # assert 'level-2' in deconfigged_helper.viewers
+    print("the following viewers were loaded:")
+    print(deconfigged_helper.viewers)
+    assert 'Image' in deconfigged_helper.viewers
 
     layers = deconfigged_helper._app.get_viewer('3D Ramp').layers
     assert len(layers) == 1

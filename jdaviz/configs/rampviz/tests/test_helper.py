@@ -11,7 +11,7 @@ def test_load_data_roman(deconfigged_helper, roman_level_1_ramp):
     assert len(deconfigged_helper._app.data_collection) == 3
 
     # each viewer should have one loaded data entry:
-    for refname in '3D Ramp, 3D Ramp Diff, Ramp Integration'.split(', '):
+    for refname in ['3D Ramp', '3D Ramp Diff', 'Ramp Integration']:
         viewer = deconfigged_helper._app.get_viewer(refname)
         assert len(viewer.state.layers) == 1
 
@@ -27,7 +27,7 @@ def test_load_data_jwst(deconfigged_helper, jwst_level_1b_ramp):
     assert len(deconfigged_helper._app.data_collection) == 3
 
     # each viewer should have one loaded data entry:
-    for refname in '3D Ramp, 3D Ramp Diff, Ramp Integration'.split(', '):
+    for refname in ['3D Ramp', '3D Ramp Diff', 'Ramp Integration']:
         viewer = deconfigged_helper._app.get_viewer(refname)
         assert len(viewer.state.layers) == 1
 

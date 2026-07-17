@@ -8,9 +8,9 @@ def test_slice(deconfigged_helper, spectrum1d_cube):
     app = deconfigged_helper._app
     sl = SpectralSlice(app=app)
 
-    # No data yet
-    assert len(sl.slice_selection_viewers) == 0  # flux-viewer, uncert-viewer
-    assert len(sl.slice_indicator_viewers) == 0  # spectrum-viewer
+    # No data yet, so make sure all the lists are empty
+    assert len(sl.slice_selection_viewers) == 0
+    assert len(sl.slice_indicator_viewers) == 0
     assert len(sl.valid_indicator_values_sorted) == 0
     assert len(sl.valid_selection_values_sorted) == 0
 
@@ -24,6 +24,13 @@ def test_slice(deconfigged_helper, spectrum1d_cube):
     app.add_data_to_viewer("3D Spectrum", "test")
     app.add_data_to_viewer("1D Spectrum", "test (sum)")
     sv = deconfigged_helper.viewers['3D Spectrum']._obj.glue_viewer
+
+    # data loaded, so object should have 2 slice selection viewers
+    # and 1 slice indicator viewer
+    assert len(sl.slice_selection_viewers) == 1 # one flux viewer
+    assert len(sl.slice_indicator_viewers) == 1 # 3D Spectrum
+    assert len(sl.valid_indicator_values_sorted) == 2
+    assert len(sl.valid_selection_values_sorted) == 2
 
     # sample cube only has 2 slices with wavelengths [4.62280007e-07 4.62360028e-07] m
     assert len(sv.slice_values) == 2
@@ -41,6 +48,7 @@ def test_slice(deconfigged_helper, spectrum1d_cube):
 
     sl.value = slice_values[1]
     assert sl.value == slice_values[1]
+
 
     # test setting a static 2d image to the "watched" flux viewer to make sure it disconnects
     mm = app.get_tray_item_from_name('Moment Maps')
