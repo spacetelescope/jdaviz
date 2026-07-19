@@ -43,7 +43,7 @@ dependencies = [
     "pyvo>=1.5.3",
     "s3fs>=2024.10.0",
     "joblib>=1.3.0",
-    "spherical-geometry",
+    "spherical-geometry", "roman-datamodels>=1.0.0,<2",
 ]
 license-files = ["LICENSE.rst", "licenses/IPYFILECHOOSER_LICENSE.rst", "licenses/IMEXAM_LICENSE.txt", "licenses/GINGA_LICENSE.txt", "licenses/TEMPLATE_LICENCE.rst"]
 dynamic = [
@@ -190,6 +190,11 @@ test-all = { features = ["py313", "test", "all"] }
 roman = { features = ["py312", "test", "roman"] }
 strauss = { features = ["py313", "test", "strauss"] }
 docs = { features = ["py313", "docs"] }
+
+[tool.pixi.dependencies]
+jupyter = ">=1.1.1,<2"
+pytest = ">=9.1.1,<10"
+pytest-xdist = ">=3.8.0,<4"
 
 [tool.setuptools]
 zip-safe = false
