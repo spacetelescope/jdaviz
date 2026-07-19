@@ -56,7 +56,11 @@ jobs:
       env:
         MPLBACKEND: agg
         JUPYTER_PLATFORM_DIRS: '1'
+      # boto3/botocore: RC astroquery may (like dev) use the MAST S3 cloud path
+      # unconditionally in Observations.download_file and raise without them,
+      # breaking remote-data tests that expect the "Failed query for URI" error.
       run: >
         uv run --python ${{ matrix.python }} --prerelease allow --extra test
+        --with boto3 --with botocore
         pytest -n auto --dist loadfile --pyargs jdaviz docs
         --ignore=jdaviz/qt.py --durations=30 --memlog ${{ matrix.posargs }}

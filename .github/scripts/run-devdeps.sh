@@ -107,7 +107,17 @@ uv pip install --python .venv-devdeps --prerelease allow --upgrade \
   --index-strategy unsafe-best-match \
   "${DEV_INDEXES[@]}" \
   --editable "${project_spec}" \
-  "${NIGHTLY[@]}"
+  "${NIGHTLY[@]}" \
+  boto3 botocore
+
+# boto3/botocore are required by the remote-data tests against *dev* astroquery.
+# Dev astroquery's Observations.download_file now uses the MAST S3 public dataset
+# (cloud) path unconditionally, where stable (<=0.4.11) only did so after an
+# explicit enable_cloud_dataset(). Without boto3/botocore it raises "Please
+# install the boto3 and botocore packages ..." before it can return an ERROR
+# status, which breaks tests that expect jdaviz's "Failed query for URI" message
+# (e.g. test_uri_to_download_nonexistent_mast_file, test_resolver_url). botocore
+# already comes in transitively via s3fs; boto3 is the one genuinely-new package.
 
 # Stage 2: layer the git-main dev versions on top WITHOUT their dependencies.
 # --no-deps is the uv equivalent of pip's tolerant/incremental install: it swaps
