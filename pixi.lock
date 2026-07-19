@@ -182,9 +182,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.15-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/03/c4/816d3a19dd705b64d8e25f0b5f5c93408bdfdfb9cd8261852fe2b73d6226/gwcs-1.0.3-py3-none-any.whl
@@ -193,11 +193,11 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/bd/c038d7cc38edc1aa5bf91ab8068b63d4308c66c4c8bb3cbba7dfbc049f9c/pyparsing-3.3.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/95/450765b971a3bed9d7cf003c3833c1976482eb83b0241b6dbb840a25b43b/cachebox-5.2.3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/15/ff/63ad96f98eb58a742b1a20d80f21da88924405910149950b912368150468/wrapt-2.2.2-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/2c/0622f20ff02b2ef32558733443805dc82fd4c275be01b2d19d14676f3a1b/cryptography-49.0.0-cp311-abi3-manylinux_2_28_x86_64.whl
@@ -238,6 +238,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/c6/979176efdaa3d239e36d503d5af63a0a773b36662ed8f52e5b6a6d9fd40e/propcache-0.5.2-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -269,7 +270,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b6/36/853cad240ec63e21a37a512ee19c896b655ce1772d803a3dd80fccfe63fe/freetype_py-2.5.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b7/46/f5af3402b579fd5e11573ce652019a67074317e18c1935cc0b4ba9b35552/secretstorage-3.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bd/98/ef2b6fe2903e377cbe870c3b2800d62552f1e3dbe81ce49e1923c53d1c5c/h5py-3.16.0-cp313-cp313-manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -464,9 +464,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zeromq-4.3.5-h84953be_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/03/c4/816d3a19dd705b64d8e25f0b5f5c93408bdfdfb9cd8261852fe2b73d6226/gwcs-1.0.3-py3-none-any.whl
@@ -477,9 +477,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/bd/c038d7cc38edc1aa5bf91ab8068b63d4308c66c4c8bb3cbba7dfbc049f9c/pyparsing-3.3.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/54/522c22134112a40a115841fb2363b2b482ea113cd1e6c4f629bd6b279b2c/regions-0.12-cp311-abi3-macosx_10_9_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -527,6 +527,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/d5/acae572b0930bc176e15e6dc1b0d77e201144e0fb624c4c2640cf6158bdf/vispy-0.16.2-cp313-cp313-macosx_10_13_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -549,7 +550,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/66/24c28877219abf6263d909b1592c97ff82c59f13a59acbed11fc87c0654f/pyarrow-25.0.0-cp313-cp313-macosx_12_0_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -741,9 +741,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zeromq-4.3.5-h10816f8_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/73/0291a64843270f4efb86cdcf2ee0f2048631b65ec6b405398b2b4dbf11bf/scipy-1.18.0-cp313-cp313-macosx_12_0_arm64.whl
@@ -758,9 +758,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/11/4a/31a363370478b63c6289a34743f2ba2d3ae1bd8223e004d18ab28fb92385/pyerfa-2.0.1.5-cp39-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/22/2a/5e5e750890ada51017d18d0d4c30da696e5b5bd3180947729927628fc3cb/tqdm-4.68.4-py3-none-any.whl
@@ -802,6 +802,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/76/b10633424d40681b4e892ffd08ca5226322b2426e62d4ab71eae484c3a32/websockets-16.1-cp313-cp313-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/4f/5a9eb0375e81413953febf8af7b012a6b6357f53438a15c4f5ad86c6bbb5/matplotlib-3.11.0-cp313-cp313-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -832,7 +833,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl
@@ -1016,9 +1016,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zeromq-4.3.5-h3a581c9_11.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-h534d264_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/03/c4/816d3a19dd705b64d8e25f0b5f5c93408bdfdfb9cd8261852fe2b73d6226/gwcs-1.0.3-py3-none-any.whl
@@ -1029,11 +1029,11 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/bd/c038d7cc38edc1aa5bf91ab8068b63d4308c66c4c8bb3cbba7dfbc049f9c/pyparsing-3.3.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/0b/0098c214843213759692cc638fce7de5c289200a830e5035d1791d7a2338/contourpy-1.3.3-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/18/e0/f06028aea741bbecb2a7e9648f4643235279a770c7ffaf70bd4860c73661/lz4-4.4.5-cp313-cp313-win_amd64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/fd/3f0f10dba4dabad3bf53102be007abf55481067952bde0fdddff439e7c61/propcache-0.5.2-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -1076,6 +1076,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -1105,7 +1106,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b4/11/97233cf23ad5411ac6f13b1d6ee3888f90ace4f974d9bf9db887aa428912/pyerfa-2.0.1.5-cp39-abi3-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b7/d2/ae881ee28d014f38e0ccbfd974a06a919ba9af34f1f74bf42b5301891d63/scipy-1.18.0-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/be/8a/be60e3bbcf513cc5a50f4a3e88e1dcecebb79c1ad607a7222877becaa101/kiwisolver-1.5.0-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -1303,9 +1303,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.15-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl
@@ -1317,11 +1317,11 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/bd/c038d7cc38edc1aa5bf91ab8068b63d4308c66c4c8bb3cbba7dfbc049f9c/pyparsing-3.3.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/95/450765b971a3bed9d7cf003c3833c1976482eb83b0241b6dbb840a25b43b/cachebox-5.2.3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/15/ff/63ad96f98eb58a742b1a20d80f21da88924405910149950b912368150468/wrapt-2.2.2-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/2c/0622f20ff02b2ef32558733443805dc82fd4c275be01b2d19d14676f3a1b/cryptography-49.0.0-cp311-abi3-manylinux_2_28_x86_64.whl
@@ -1377,6 +1377,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/c6/979176efdaa3d239e36d503d5af63a0a773b36662ed8f52e5b6a6d9fd40e/propcache-0.5.2-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/3f/95338030883d8c8b91223b4e21744b04d11b161a3ef117295d8241f50ab4/accessible_pygments-0.0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -1412,7 +1413,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b7/46/f5af3402b579fd5e11573ce652019a67074317e18c1935cc0b4ba9b35552/secretstorage-3.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b8/dd/d95843947392524418aa9fc4e8d205e82b4261ab2d2fab4abce7a14ee7c0/sphinx_gallery-0.21.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bd/98/ef2b6fe2903e377cbe870c3b2800d62552f1e3dbe81ce49e1923c53d1c5c/h5py-3.16.0-cp313-cp313-manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -1611,9 +1611,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zeromq-4.3.5-h84953be_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl
@@ -1627,9 +1627,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/bd/c038d7cc38edc1aa5bf91ab8068b63d4308c66c4c8bb3cbba7dfbc049f9c/pyparsing-3.3.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/54/522c22134112a40a115841fb2363b2b482ea113cd1e6c4f629bd6b279b2c/regions-0.12-cp311-abi3-macosx_10_9_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -1692,6 +1692,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/d5/acae572b0930bc176e15e6dc1b0d77e201144e0fb624c4c2640cf6158bdf/vispy-0.16.2-cp313-cp313-macosx_10_13_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/8d/3f/95338030883d8c8b91223b4e21744b04d11b161a3ef117295d8241f50ab4/accessible_pygments-0.0.5-py3-none-any.whl
@@ -1718,7 +1719,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b8/dd/d95843947392524418aa9fc4e8d205e82b4261ab2d2fab4abce7a14ee7c0/sphinx_gallery-0.21.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/66/24c28877219abf6263d909b1592c97ff82c59f13a59acbed11fc87c0654f/pyarrow-25.0.0-cp313-cp313-macosx_12_0_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -1914,9 +1914,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zeromq-4.3.5-h10816f8_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl
@@ -1934,9 +1934,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/11/4a/31a363370478b63c6289a34743f2ba2d3ae1bd8223e004d18ab28fb92385/pyerfa-2.0.1.5-cp39-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/22/2a/5e5e750890ada51017d18d0d4c30da696e5b5bd3180947729927628fc3cb/tqdm-4.68.4-py3-none-any.whl
@@ -1993,6 +1993,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/76/b10633424d40681b4e892ffd08ca5226322b2426e62d4ab71eae484c3a32/websockets-16.1-cp313-cp313-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/4f/5a9eb0375e81413953febf8af7b012a6b6357f53438a15c4f5ad86c6bbb5/matplotlib-3.11.0-cp313-cp313-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/3f/95338030883d8c8b91223b4e21744b04d11b161a3ef117295d8241f50ab4/accessible_pygments-0.0.5-py3-none-any.whl
@@ -2027,7 +2028,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b8/dd/d95843947392524418aa9fc4e8d205e82b4261ab2d2fab4abce7a14ee7c0/sphinx_gallery-0.21.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/a4/66c1fd4f8fab88faf71cee04a945f9806ba0fef753f2cfc8be6353f64508/sphinxext_opengraph-0.13.0-py3-none-any.whl
@@ -2215,9 +2215,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zeromq-4.3.5-h3a581c9_11.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-h534d264_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl
@@ -2231,11 +2231,11 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/bd/c038d7cc38edc1aa5bf91ab8068b63d4308c66c4c8bb3cbba7dfbc049f9c/pyparsing-3.3.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/0b/0098c214843213759692cc638fce7de5c289200a830e5035d1791d7a2338/contourpy-1.3.3-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/18/e0/f06028aea741bbecb2a7e9648f4643235279a770c7ffaf70bd4860c73661/lz4-4.4.5-cp313-cp313-win_amd64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/fd/3f0f10dba4dabad3bf53102be007abf55481067952bde0fdddff439e7c61/propcache-0.5.2-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -2293,6 +2293,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/3f/95338030883d8c8b91223b4e21744b04d11b161a3ef117295d8241f50ab4/accessible_pygments-0.0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -2326,7 +2327,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b7/d2/ae881ee28d014f38e0ccbfd974a06a919ba9af34f1f74bf42b5301891d63/scipy-1.18.0-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b8/dd/d95843947392524418aa9fc4e8d205e82b4261ab2d2fab4abce7a14ee7c0/sphinx_gallery-0.21.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/be/8a/be60e3bbcf513cc5a50f4a3e88e1dcecebb79c1ad607a7222877becaa101/kiwisolver-1.5.0-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -2530,9 +2530,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.15-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/00/a9/753806f5292b40aeab1d269e408e3a7e85be3c0d88828fb78ab4a34d6626/hypothesis-6.156.6-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -2545,10 +2545,10 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/15/5574111ae50dd6e879456888c0eadd4c5a869959775854e18e18a6b345f3/propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/2c/0622f20ff02b2ef32558733443805dc82fd4c275be01b2d19d14676f3a1b/cryptography-49.0.0-cp311-abi3-manylinux_2_28_x86_64.whl
@@ -2599,6 +2599,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -2630,7 +2631,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b8/a9/6e73d68500f80773f65f0654ea932019d6694329a0eb0ed0533de38df376/numpy-2.5.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/37/e781683abac55dde9771e086b790e554811a71ed0b2b8a1e789b7430dd44/shapely-2.1.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -2823,9 +2823,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zeromq-4.3.5-h84953be_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -2837,9 +2837,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/87/48361531f70b1f87928b045df868a9fd4e253d9ae087fa4cf3f7113be363/watchdog-6.0.0-cp312-cp312-macosx_10_13_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/ac/016e4f6de37d806f7cc8f13add0a46c9a7cfc41a5ddc2bc831d7954cf1ce/lz4-4.4.5-cp312-cp312-macosx_10_13_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/54/522c22134112a40a115841fb2363b2b482ea113cd1e6c4f629bd6b279b2c/regions-0.12-cp311-abi3-macosx_10_9_x86_64.whl
@@ -2890,6 +2890,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/5e/2a2e64d977d084e49d37c187c26c056daaff41965be7300cd5dbde6f8b07/websockets-16.1-cp312-cp312-macosx_10_13_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/45/9f009005b9c796f4a40424484ac7e70847bc088456fd940a937f96bb4b6d/hypothesis-6.156.6-cp312-cp312-macosx_10_12_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -2915,7 +2916,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b8/2f/e42c992d2afda3108ea1c02acecc991b9f31d05c14adc2a7cee9ee211fc4/watchfiles-1.2.0-cp312-cp312-macosx_10_12_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/be/45/adfee365d9ea3d853550b2e735f9d66366701c65db7855cd07621732ccfc/contourpy-1.3.3-cp312-cp312-macosx_10_13_x86_64.whl
@@ -3111,9 +3111,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zeromq-4.3.5-h10816f8_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/2f/4d852bb8a9c73a68b18eca9b5b085285282122166e158f4d2a477639bfee/hypothesis-6.156.6-cp312-cp312-macosx_11_0_arm64.whl
@@ -3129,9 +3129,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/11/4a/31a363370478b63c6289a34743f2ba2d3ae1bd8223e004d18ab28fb92385/pyerfa-2.0.1.5-cp39-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/22/2a/5e5e750890ada51017d18d0d4c30da696e5b5bd3180947729927628fc3cb/tqdm-4.68.4-py3-none-any.whl
@@ -3178,6 +3178,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/df/0fadac6e5bd31b6f34a1a8dbd4db6a7606e70715387c27368586455b7fc9/lz4-4.4.5-cp312-cp312-macosx_11_0_arm64.whl
@@ -3210,7 +3211,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -3397,9 +3397,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zeromq-4.3.5-h3a581c9_11.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-h534d264_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -3412,9 +3412,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/19/e8/6026ed58a64563186a9ee3f29f41261fd1828f527dd93d33b60feca63352/contourpy-1.3.3-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/e6/9d42569c0102645cc8cea5d8c7d8a1e9d4ada2cb7f05f75e554b8aa2202a/watchfiles-1.2.0-cp312-cp312-win_amd64.whl
@@ -3464,6 +3464,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -3493,7 +3494,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b8/af/38e51a553dd66eb064cdf193841f16f077585d4d28394c2fa6235cb41765/frozenlist-1.8.0-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/c5/fc1b368f303087d20e8c9bf3d6ceb186263cfac0ade735cd938538bea839/pandas-3.0.3-cp312-cp312-win_amd64.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -3698,9 +3698,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.15-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -3711,11 +3711,11 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/95/450765b971a3bed9d7cf003c3833c1976482eb83b0241b6dbb840a25b43b/cachebox-5.2.3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/15/ff/63ad96f98eb58a742b1a20d80f21da88924405910149950b912368150468/wrapt-2.2.2-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/5e/caf3abbdbb22629626160ffc9c017eb995b7cb11c0be46b974834cef1792/coverage-7.15.1-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/0a/478e441fd049002cf308520c0d62dd8333e7c6cc8d997f0dda07b9fbcc46/sounddevice-0.5.5-py3-none-any.whl
@@ -3766,6 +3766,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/c6/979176efdaa3d239e36d503d5af63a0a773b36662ed8f52e5b6a6d9fd40e/propcache-0.5.2-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -3800,7 +3801,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b7/46/f5af3402b579fd5e11573ce652019a67074317e18c1935cc0b4ba9b35552/secretstorage-3.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b8/3b/e8964210b5e216e5041593b7d33e97ee65967f17c282e8510d19c666dab4/audioop_lts-0.2.2-cp313-abi3-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bd/98/ef2b6fe2903e377cbe870c3b2800d62552f1e3dbe81ce49e1923c53d1c5c/h5py-3.16.0-cp313-cp313-manylinux_2_28_x86_64.whl
@@ -4002,9 +4002,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zeromq-4.3.5-h84953be_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -4017,9 +4017,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/54/522c22134112a40a115841fb2363b2b482ea113cd1e6c4f629bd6b279b2c/regions-0.12-cp311-abi3-macosx_10_9_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -4076,6 +4076,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/d5/acae572b0930bc176e15e6dc1b0d77e201144e0fb624c4c2640cf6158bdf/vispy-0.16.2-cp313-cp313-macosx_10_13_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -4100,7 +4101,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/66/24c28877219abf6263d909b1592c97ff82c59f13a59acbed11fc87c0654f/pyarrow-25.0.0-cp313-cp313-macosx_12_0_x86_64.whl
@@ -4301,9 +4301,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zeromq-4.3.5-h10816f8_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -4320,9 +4320,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/11/4a/31a363370478b63c6289a34743f2ba2d3ae1bd8223e004d18ab28fb92385/pyerfa-2.0.1.5-cp39-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/83/ea581e364ce7b0d41456fb79d6ee0ad482beda61faf0cab20cbd4c63a541/audioop_lts-0.2.2-cp313-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -4375,6 +4375,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/76/b10633424d40681b4e892ffd08ca5226322b2426e62d4ab71eae484c3a32/websockets-16.1-cp313-cp313-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/4f/5a9eb0375e81413953febf8af7b012a6b6357f53438a15c4f5ad86c6bbb5/matplotlib-3.11.0-cp313-cp313-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -4407,7 +4408,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -4598,9 +4598,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zeromq-4.3.5-h3a581c9_11.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-h534d264_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -4613,12 +4613,12 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/16/fc/becbb9d2c4206d242b9b1e1e8e24a42f7926c0200dd3c788b9fab4bb96d5/coverage-7.15.1-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/18/0b/0098c214843213759692cc638fce7de5c289200a830e5035d1791d7a2338/contourpy-1.3.3-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/18/e0/f06028aea741bbecb2a7e9648f4643235279a770c7ffaf70bd4860c73661/lz4-4.4.5-cp313-cp313-win_amd64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/fd/3f0f10dba4dabad3bf53102be007abf55481067952bde0fdddff439e7c61/propcache-0.5.2-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -4669,6 +4669,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -4700,7 +4701,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b4/11/97233cf23ad5411ac6f13b1d6ee3888f90ace4f974d9bf9db887aa428912/pyerfa-2.0.1.5-cp39-abi3-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b7/d2/ae881ee28d014f38e0ccbfd974a06a919ba9af34f1f74bf42b5301891d63/scipy-1.18.0-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/be/8a/be60e3bbcf513cc5a50f4a3e88e1dcecebb79c1ad607a7222877becaa101/kiwisolver-1.5.0-cp313-cp313-win_amd64.whl
@@ -4908,9 +4908,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.15-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -4921,12 +4921,12 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/95/450765b971a3bed9d7cf003c3833c1976482eb83b0241b6dbb840a25b43b/cachebox-5.2.3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/15/ff/63ad96f98eb58a742b1a20d80f21da88924405910149950b912368150468/wrapt-2.2.2-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/17/fe/d5c67665f866b8859d02aa1a859f101a1b2fd348cb61746a3e16fd98fb20/pyside6_addons-6.9.3-cp39-abi3-manylinux_2_28_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/5e/caf3abbdbb22629626160ffc9c017eb995b7cb11c0be46b974834cef1792/coverage-7.15.1-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/0a/478e441fd049002cf308520c0d62dd8333e7c6cc8d997f0dda07b9fbcc46/sounddevice-0.5.5-py3-none-any.whl
@@ -4981,6 +4981,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/c6/979176efdaa3d239e36d503d5af63a0a773b36662ed8f52e5b6a6d9fd40e/propcache-0.5.2-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -5016,7 +5017,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b7/46/f5af3402b579fd5e11573ce652019a67074317e18c1935cc0b4ba9b35552/secretstorage-3.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b8/3b/e8964210b5e216e5041593b7d33e97ee65967f17c282e8510d19c666dab4/audioop_lts-0.2.2-cp313-abi3-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bd/98/ef2b6fe2903e377cbe870c3b2800d62552f1e3dbe81ce49e1923c53d1c5c/h5py-3.16.0-cp313-cp313-manylinux_2_28_x86_64.whl
@@ -5220,9 +5220,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zeromq-4.3.5-h84953be_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -5235,10 +5235,10 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/f3/f2b63df0251e7cd3172ea28e32ede52739de9566bcefcd0178681538ac81/shiboken6-6.11.1-cp310-abi3-macosx_13_0_universal2.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/54/522c22134112a40a115841fb2363b2b482ea113cd1e6c4f629bd6b279b2c/regions-0.12-cp311-abi3-macosx_10_9_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -5299,6 +5299,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/d5/acae572b0930bc176e15e6dc1b0d77e201144e0fb624c4c2640cf6158bdf/vispy-0.16.2-cp313-cp313-macosx_10_13_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -5325,7 +5326,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/da/10d9197e7370eb4fed8df5fc547b7548dec88e5c5949e2d450db4ae96feb/pyside6_essentials-6.11.1-cp310-abi3-macosx_13_0_universal2.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/66/24c28877219abf6263d909b1592c97ff82c59f13a59acbed11fc87c0654f/pyarrow-25.0.0-cp313-cp313-macosx_12_0_x86_64.whl
@@ -5527,9 +5527,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zeromq-4.3.5-h10816f8_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -5546,10 +5546,10 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/11/4a/31a363370478b63c6289a34743f2ba2d3ae1bd8223e004d18ab28fb92385/pyerfa-2.0.1.5-cp39-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/f3/f2b63df0251e7cd3172ea28e32ede52739de9566bcefcd0178681538ac81/shiboken6-6.11.1-cp310-abi3-macosx_13_0_universal2.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/83/ea581e364ce7b0d41456fb79d6ee0ad482beda61faf0cab20cbd4c63a541/audioop_lts-0.2.2-cp313-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -5605,6 +5605,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/76/b10633424d40681b4e892ffd08ca5226322b2426e62d4ab71eae484c3a32/websockets-16.1-cp313-cp313-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/4f/5a9eb0375e81413953febf8af7b012a6b6357f53438a15c4f5ad86c6bbb5/matplotlib-3.11.0-cp313-cp313-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -5640,7 +5641,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/da/10d9197e7370eb4fed8df5fc547b7548dec88e5c5949e2d450db4ae96feb/pyside6_essentials-6.11.1-cp310-abi3-macosx_13_0_universal2.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -5832,9 +5832,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zeromq-4.3.5-h3a581c9_11.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-h534d264_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -5847,12 +5847,12 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/16/fc/becbb9d2c4206d242b9b1e1e8e24a42f7926c0200dd3c788b9fab4bb96d5/coverage-7.15.1-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/18/0b/0098c214843213759692cc638fce7de5c289200a830e5035d1791d7a2338/contourpy-1.3.3-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/18/e0/f06028aea741bbecb2a7e9648f4643235279a770c7ffaf70bd4860c73661/lz4-4.4.5-cp313-cp313-win_amd64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/fd/3f0f10dba4dabad3bf53102be007abf55481067952bde0fdddff439e7c61/propcache-0.5.2-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -5909,6 +5909,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -5941,7 +5942,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b4/11/97233cf23ad5411ac6f13b1d6ee3888f90ace4f974d9bf9db887aa428912/pyerfa-2.0.1.5-cp39-abi3-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b7/d2/ae881ee28d014f38e0ccbfd974a06a919ba9af34f1f74bf42b5301891d63/scipy-1.18.0-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/be/8a/be60e3bbcf513cc5a50f4a3e88e1dcecebb79c1ad607a7222877becaa101/kiwisolver-1.5.0-cp313-cp313-win_amd64.whl
@@ -6150,9 +6150,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.15-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/00/a9/753806f5292b40aeab1d269e408e3a7e85be3c0d88828fb78ab4a34d6626/hypothesis-6.156.6-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -6165,10 +6165,10 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/15/5574111ae50dd6e879456888c0eadd4c5a869959775854e18e18a6b345f3/propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/2c/0622f20ff02b2ef32558733443805dc82fd4c275be01b2d19d14676f3a1b/cryptography-49.0.0-cp311-abi3-manylinux_2_28_x86_64.whl
@@ -6219,6 +6219,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -6250,7 +6251,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b8/a9/6e73d68500f80773f65f0654ea932019d6694329a0eb0ed0533de38df376/numpy-2.5.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/37/e781683abac55dde9771e086b790e554811a71ed0b2b8a1e789b7430dd44/shapely-2.1.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -6443,9 +6443,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zeromq-4.3.5-h84953be_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -6457,9 +6457,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/87/48361531f70b1f87928b045df868a9fd4e253d9ae087fa4cf3f7113be363/watchdog-6.0.0-cp312-cp312-macosx_10_13_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1b/ac/016e4f6de37d806f7cc8f13add0a46c9a7cfc41a5ddc2bc831d7954cf1ce/lz4-4.4.5-cp312-cp312-macosx_10_13_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/54/522c22134112a40a115841fb2363b2b482ea113cd1e6c4f629bd6b279b2c/regions-0.12-cp311-abi3-macosx_10_9_x86_64.whl
@@ -6510,6 +6510,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/5e/2a2e64d977d084e49d37c187c26c056daaff41965be7300cd5dbde6f8b07/websockets-16.1-cp312-cp312-macosx_10_13_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/45/9f009005b9c796f4a40424484ac7e70847bc088456fd940a937f96bb4b6d/hypothesis-6.156.6-cp312-cp312-macosx_10_12_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -6535,7 +6536,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b8/2f/e42c992d2afda3108ea1c02acecc991b9f31d05c14adc2a7cee9ee211fc4/watchfiles-1.2.0-cp312-cp312-macosx_10_12_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/be/45/adfee365d9ea3d853550b2e735f9d66366701c65db7855cd07621732ccfc/contourpy-1.3.3-cp312-cp312-macosx_10_13_x86_64.whl
@@ -6731,9 +6731,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zeromq-4.3.5-h10816f8_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/2f/4d852bb8a9c73a68b18eca9b5b085285282122166e158f4d2a477639bfee/hypothesis-6.156.6-cp312-cp312-macosx_11_0_arm64.whl
@@ -6749,9 +6749,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/11/4a/31a363370478b63c6289a34743f2ba2d3ae1bd8223e004d18ab28fb92385/pyerfa-2.0.1.5-cp39-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/22/2a/5e5e750890ada51017d18d0d4c30da696e5b5bd3180947729927628fc3cb/tqdm-4.68.4-py3-none-any.whl
@@ -6798,6 +6798,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/df/0fadac6e5bd31b6f34a1a8dbd4db6a7606e70715387c27368586455b7fc9/lz4-4.4.5-cp312-cp312-macosx_11_0_arm64.whl
@@ -6830,7 +6831,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -7017,9 +7017,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zeromq-4.3.5-h3a581c9_11.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-h534d264_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -7032,9 +7032,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/19/e8/6026ed58a64563186a9ee3f29f41261fd1828f527dd93d33b60feca63352/contourpy-1.3.3-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/e6/9d42569c0102645cc8cea5d8c7d8a1e9d4ada2cb7f05f75e554b8aa2202a/watchfiles-1.2.0-cp312-cp312-win_amd64.whl
@@ -7084,6 +7084,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -7113,7 +7114,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b8/af/38e51a553dd66eb064cdf193841f16f077585d4d28394c2fa6235cb41765/frozenlist-1.8.0-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/c5/fc1b368f303087d20e8c9bf3d6ceb186263cfac0ade735cd938538bea839/pandas-3.0.3-cp312-cp312-win_amd64.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -7316,9 +7316,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.15-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -7329,11 +7329,11 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/95/450765b971a3bed9d7cf003c3833c1976482eb83b0241b6dbb840a25b43b/cachebox-5.2.3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/15/ff/63ad96f98eb58a742b1a20d80f21da88924405910149950b912368150468/wrapt-2.2.2-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/5e/caf3abbdbb22629626160ffc9c017eb995b7cb11c0be46b974834cef1792/coverage-7.15.1-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -7379,6 +7379,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/c6/979176efdaa3d239e36d503d5af63a0a773b36662ed8f52e5b6a6d9fd40e/propcache-0.5.2-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -7412,7 +7413,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b6/36/853cad240ec63e21a37a512ee19c896b655ce1772d803a3dd80fccfe63fe/freetype_py-2.5.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b7/46/f5af3402b579fd5e11573ce652019a67074317e18c1935cc0b4ba9b35552/secretstorage-3.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bd/98/ef2b6fe2903e377cbe870c3b2800d62552f1e3dbe81ce49e1923c53d1c5c/h5py-3.16.0-cp313-cp313-manylinux_2_28_x86_64.whl
@@ -7610,9 +7610,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zeromq-4.3.5-h84953be_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -7625,9 +7625,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/54/522c22134112a40a115841fb2363b2b482ea113cd1e6c4f629bd6b279b2c/regions-0.12-cp311-abi3-macosx_10_9_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -7679,6 +7679,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/d5/acae572b0930bc176e15e6dc1b0d77e201144e0fb624c4c2640cf6158bdf/vispy-0.16.2-cp313-cp313-macosx_10_13_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -7703,7 +7704,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/66/24c28877219abf6263d909b1592c97ff82c59f13a59acbed11fc87c0654f/pyarrow-25.0.0-cp313-cp313-macosx_12_0_x86_64.whl
@@ -7899,9 +7899,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zeromq-4.3.5-h10816f8_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -7918,9 +7918,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/11/4a/31a363370478b63c6289a34743f2ba2d3ae1bd8223e004d18ab28fb92385/pyerfa-2.0.1.5-cp39-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/22/2a/5e5e750890ada51017d18d0d4c30da696e5b5bd3180947729927628fc3cb/tqdm-4.68.4-py3-none-any.whl
@@ -7967,6 +7967,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8b/76/b10633424d40681b4e892ffd08ca5226322b2426e62d4ab71eae484c3a32/websockets-16.1-cp313-cp313-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/4f/5a9eb0375e81413953febf8af7b012a6b6357f53438a15c4f5ad86c6bbb5/matplotlib-3.11.0-cp313-cp313-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
@@ -7999,7 +8000,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -8186,9 +8186,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zeromq-4.3.5-h3a581c9_11.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-h534d264_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -8201,12 +8201,12 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/16/fc/becbb9d2c4206d242b9b1e1e8e24a42f7926c0200dd3c788b9fab4bb96d5/coverage-7.15.1-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/18/0b/0098c214843213759692cc638fce7de5c289200a830e5035d1791d7a2338/contourpy-1.3.3-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/18/e0/f06028aea741bbecb2a7e9648f4643235279a770c7ffaf70bd4860c73661/lz4-4.4.5-cp313-cp313-win_amd64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1c/fd/3f0f10dba4dabad3bf53102be007abf55481067952bde0fdddff439e7c61/propcache-0.5.2-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -8252,6 +8252,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -8283,7 +8284,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b4/11/97233cf23ad5411ac6f13b1d6ee3888f90ace4f974d9bf9db887aa428912/pyerfa-2.0.1.5-cp39-abi3-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b7/d2/ae881ee28d014f38e0ccbfd974a06a919ba9af34f1f74bf42b5301891d63/scipy-1.18.0-cp313-cp313-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/be/8a/be60e3bbcf513cc5a50f4a3e88e1dcecebb79c1ad607a7222877becaa101/kiwisolver-1.5.0-cp313-cp313-win_amd64.whl
@@ -8485,9 +8485,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.15-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -8499,9 +8499,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/20/2c/0622f20ff02b2ef32558733443805dc82fd4c275be01b2d19d14676f3a1b/cryptography-49.0.0-cp311-abi3-manylinux_2_28_x86_64.whl
@@ -8555,6 +8555,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/cb/4948be52ee1da6927831ab59e10d4c29baa2a714f599f1f0d1bc747f5777/shapely-2.1.2-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -8584,7 +8585,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b7/46/f5af3402b579fd5e11573ce652019a67074317e18c1935cc0b4ba9b35552/secretstorage-3.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/cb/121699a669b7e262ac45797824b53f7f84c6b6db271249661ea8e97af9c5/vispy-0.16.2-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -8779,9 +8779,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zeromq-4.3.5-h84953be_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -8792,9 +8792,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/54/522c22134112a40a115841fb2363b2b482ea113cd1e6c4f629bd6b279b2c/regions-0.12-cp311-abi3-macosx_10_9_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -8846,6 +8846,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -8872,7 +8873,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b5/06/c5a52f419b5d8972f8d46a7577476090d8e3263ff589ce40b5ca4968d5be/propcache-0.5.2-cp314-cp314-macosx_10_15_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b8/8b/72c0e80aad08e09867ce14a621bce689a733552f20cdf2ef96d4b052da10/cachebox-5.2.3-cp314-cp314-macosx_10_12_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -9068,9 +9068,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zeromq-4.3.5-h10816f8_11.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl
@@ -9083,11 +9083,11 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/11/4a/31a363370478b63c6289a34743f2ba2d3ae1bd8223e004d18ab28fb92385/pyerfa-2.0.1.5-cp39-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/d2/ee14d715889f216baf47301d9f469e08fff6995552aaf67e897b282865f6/coverage-7.15.1-cp314-cp314-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/b9/f6ab8918fc15429f79cb04afa9f9913546212d7fb5e5196132a2af46676b/shapely-2.1.2-cp314-cp314-macosx_11_0_arm64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/e4/147d4395b57eb2fc56542cded4842fcf1f5deedeb3b549891d0eefd5baad/vispy-0.16.2-cp314-cp314-macosx_11_0_arm64.whl
@@ -9136,6 +9136,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/c0/fdf9d3ee103ce66a55f0532835ad5e154226c5222423c6636ba049dc42fc/traittypes-0.2.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/5f/cd19b53e571853dfd12033f0fb3674e64b8397ff73857e1e09f17943409c/asdf_wcs_schemas-0.5.0-py3-none-any.whl
@@ -9163,7 +9164,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b6/cb/bfead8f437741ce51e14b3c7d404e3a1f6b409c440bad9b8f3945d4c40a7/lz4-4.4.5-cp314-cp314-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ba/b1/5297bb6a7df4782f7605bffc43b31f5044070935fbbcaa6c705a07e6ac65/yarl-1.24.2-cp314-cp314-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
@@ -9355,9 +9355,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zeromq-4.3.5-h3a581c9_11.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-h534d264_6.conda
       - pypi: ./
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+      - pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
       - pypi: git+https://github.com/glue-viz/glue-jupyter.git?rev=refs%2Fpull%2F519%2Fhead#98eeba2c8dbd83f1339b67adc0e05111c9a49072
       - pypi: git+https://github.com/widgetti/ipypopout.git?rev=refs%2Fpull%2F19%2Fhead#482f59545623577dcf18a340723c8339d835c36b
       - pypi: https://files.pythonhosted.org/packages/02/45/8ad39ebd6c0f2a88c5357071f7bdd53f692248144541419eb4d96c1b76dd/vispy-0.16.2-cp314-cp314-win_amd64.whl
@@ -9371,10 +9371,10 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/10/db/3bde86b77504c01f8cc174ccce13029aa5e26daaae9fcdc08826f1f0c7a5/pytest_astropy_header-0.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/27/fb8d7338b4d551900fa3e580acbe7a0cf655d940e164cb5c00ec31961094/orderly_set-5.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/12/b3/88c0ef22878c86035f058df0ac6c171319ffd0aa52a406455ed3a3847566/ipympl-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/14/2f/967ba146e6d58cf6a652da73885f52fc68001525b4197effc174321d70b4/jmespath-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/2c/8332080fd293f8337779a440b3a143f85e374311705d243439a3349b81ad/lz4-4.4.5-cp314-cp314-win_amd64.whl
-      - pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/1a/f7/3a9e6389a7cfaeff76c56e40c2dabcb13110e21e82f837228c834ebe748c/matplotlib-3.11.0-cp314-cp314-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1e/77/dc8c558f7593132cf8fefec57c4f60c83b16941c574ac5f619abb3ae7933/dill-0.4.1-py3-none-any.whl
@@ -9420,6 +9420,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/ca/153406ca7ff41ea3ecf8c3b5c0db07364461e867fb197b1723bf0be2652d/ipyvolume-0.6.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8c/75/2c8a0411bbe76429f3ae738ef9a00107201bf6146d9534350014ce369d98/hypothesis-6.156.6-cp314-cp314-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/8c/7b/1fc1c09cc0756cf25861a3be10565915953876da48bb228fb9a672b20a42/cachetools-7.1.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8d/5b/0671dc91c0c79340c3fe202f0549c7d3681eb7640fe34ab68a5f090a7c7f/scikit_image-0.26.0-cp314-cp314-win_amd64.whl
@@ -9450,7 +9451,6 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b4/11/97233cf23ad5411ac6f13b1d6ee3888f90ace4f974d9bf9db887aa428912/pyerfa-2.0.1.5-cp39-abi3-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/006c73511d3354e212f430f5da54bed2bacf876b534a6d3fb8d6c41c3b31/bqplot_linlog-0.2.1-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/85/26eacf3df6b7a441a4bdb233805ea2cb695a104ce8e18336248430ade73f/specreduce-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/3a/9f0b7bd81edf6a16831f1c0a0ce0cf625d55c45ff335e585c33106a83b08/pytest_arraydiff-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bf/4b/afc1fef8a43bafb139f57f73bbd70df82807af5934321e8112ae50668827/botocore-1.43.0-py3-none-any.whl
@@ -15311,12 +15311,12 @@ packages:
   - glue-jupyter @ git+https://github.com/glue-viz/glue-jupyter.git@refs/pull/519/head
   - echo>=0.15.0
   - ipykernel>=7.1.0
-  - ipyvue>=3.0.0a7
-  - ipyvuetify>=3.0.0a4
+  - ipyvue>=3.0.0a9
+  - ipyvuetify>=3.0.0a6
   - ipywidgets>=8.0.6
-  - solara-ui[all] @ https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
-  - solara-server[dev,starlette] @ https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
-  - solara @ https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
+  - solara-ui[all] @ https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
+  - solara-server[dev,starlette] @ https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
+  - solara @ https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
   - pyyaml>=5.4.1
   - specutils>=2.0.0
   - specreduce>=1.6.0
@@ -15358,12 +15358,12 @@ packages:
   - qtpy ; extra == 'qt'
   - pyside6 ; extra == 'qt'
   requires_python: '>=3.12'
-- pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a0-py3-none-any.whl
+- pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-meta/solara-2.0.0a2-py3-none-any.whl
   name: solara
-  version: 2.0.0a0
+  version: 2.0.0a2
   requires_dist:
-  - solara-server[dev,starlette]==2.0.0a0
-  - solara-ui[all]==2.0.0a0
+  - solara-server[dev,starlette]==2.0.0a2
+  - solara-ui[all]==2.0.0a2
   - altair ; extra == 'all'
   - bqplot ; extra == 'all'
   - bqplot-image-gl ; extra == 'all'
@@ -15387,14 +15387,14 @@ packages:
   - pre-commit ; extra == 'all'
   - pytest ; extra == 'all'
   - pytest-cov ; extra == 'all'
-  - pytest-ipywidgets[all]==2.0.0a0 ; extra == 'all'
+  - pytest-ipywidgets[all]==2.0.0a2 ; extra == 'all'
   - pytest-mock ; extra == 'all'
   - pytest-playwright ; extra == 'all'
   - pytest-timeout ; extra == 'all'
   - pytest-tornasync ; extra == 'all'
   - python-dotenv ; extra == 'all'
   - ruff ; extra == 'all'
-  - solara-assets==2.0.0a0 ; extra == 'all'
+  - solara-assets==2.0.0a2 ; extra == 'all'
   - tiktoken ; python_full_version >= '3.9' and extra == 'all'
   - types-markdown ; extra == 'all'
   - types-pyyaml ; extra == 'all'
@@ -15403,7 +15403,7 @@ packages:
   - vaex-hdf5 ; python_full_version < '3.11' and extra == 'all'
   - vaex-jupyter ; python_full_version < '3.11' and extra == 'all'
   - vega-datasets ; extra == 'all'
-  - solara-assets==2.0.0a0 ; extra == 'assets'
+  - solara-assets==2.0.0a2 ; extra == 'assets'
   - bqplot ; extra == 'dev'
   - bqplot-image-gl ; extra == 'dev'
   - bump2version ; extra == 'dev'
@@ -15446,11 +15446,11 @@ packages:
   - vaex-core ; python_full_version < '3.11' and extra == 'documentation'
   - vaex-hdf5 ; python_full_version < '3.11' and extra == 'documentation'
   - vega-datasets ; extra == 'documentation'
-  - pytest-ipywidgets[all]==2.0.0a0 ; extra == 'pytest'
+  - pytest-ipywidgets[all]==2.0.0a2 ; extra == 'pytest'
   requires_python: '>=3.8'
-- pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a0-py3-none-any.whl
+- pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara-server/solara_server-2.0.0a2-py3-none-any.whl
   name: solara-server
-  version: 2.0.0a0
+  version: 2.0.0a2
   requires_dist:
   - click>=7.1.0
   - filelock
@@ -15475,13 +15475,13 @@ packages:
   - uvicorn ; extra == 'starlette'
   - websockets ; extra == 'starlette'
   requires_python: '>=3.8'
-- pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a0-py3-none-any.whl
+- pypi: direct+https://nbg1.your-objectstorage.com/ipyvue3-packages/packages/solara/solara_ui-2.0.0a2-py3-none-any.whl
   name: solara-ui
-  version: 2.0.0a0
+  version: 2.0.0a2
   requires_dist:
   - humanize
-  - ipyvue>=3.0.0a6
-  - ipyvuetify>=3.0.0a4
+  - ipyvue>=3.0.0a9
+  - ipyvuetify>=3.0.0a5
   - ipywidgets>=7.7
   - reacton>=1.9
   - requests
@@ -16120,6 +16120,14 @@ packages:
   - nbval>=0.11.0 ; extra == 'test'
   - pytest>=9.0.2 ; extra == 'test'
   requires_python: '>=3.9'
+- pypi: https://files.pythonhosted.org/packages/13/23/ebf6c66527213cbf8e311b910ff0fb8ad0fe134ff58c1f912b5219554b1e/ipyvue-3.0.0a9-py2.py3-none-any.whl
+  name: ipyvue
+  version: 3.0.0a9
+  sha256: baa86fba0d232b9387f6ca046497bcaeef01281990cfe9a4998cdcec243528ff
+  requires_dist:
+  - ipywidgets>=7.0.0
+  - solara[pytest] ; extra == 'test'
+  - pre-commit ; extra == 'dev'
 - pypi: https://files.pythonhosted.org/packages/13/43/7eb55a7fe590af6080ed9c35850a2b688624b3738b7ceb35242d4c1a3b61/glue_astronomy-0.15.0-py3-none-any.whl
   name: glue-astronomy
   version: 0.15.0
@@ -16258,14 +16266,6 @@ packages:
   - sphinx-bootstrap-theme ; extra == 'docs'
   - flake8 ; extra == 'flake8'
   requires_python: '>=3.9'
-- pypi: https://files.pythonhosted.org/packages/19/ac/f71d914a8a939d3d1c776d873c402c4356faa59a377857c0a6ed871119bc/ipyvue-3.0.0a8-py2.py3-none-any.whl
-  name: ipyvue
-  version: 3.0.0a8
-  sha256: 655fbae85b95f78db11e6d599f155a49ea8419e58c171607dcd9d9f2593b1ac1
-  requires_dist:
-  - ipywidgets>=7.0.0
-  - solara[pytest] ; extra == 'test'
-  - pre-commit ; extra == 'dev'
 - pypi: https://files.pythonhosted.org/packages/19/e8/6026ed58a64563186a9ee3f29f41261fd1828f527dd93d33b60feca63352/contourpy-1.3.3-cp312-cp312-win_amd64.whl
   name: contourpy
   version: 1.3.3
@@ -20440,6 +20440,28 @@ packages:
   version: 0.5.2
   sha256: 4db0ba63d693afd40d249bd93f842b5f144f8fcbb83de05660373bcf30517b1d
   requires_python: '>=3.10'
+- pypi: https://files.pythonhosted.org/packages/8b/d6/4281ff221dadceef7f024d0a2d48b0abb566d1611064babe3a1e4e6354fb/ipyvuetify-3.0.0a6-py2.py3-none-any.whl
+  name: ipyvuetify
+  version: 3.0.0a6
+  sha256: 18dee5f0619e5c33a56aaa628d0518ab324091758044f3c5604e8f1910eeb2d1
+  requires_dist:
+  - ipyvue>=3.0.0a9
+  - nox ; extra == 'dev'
+  - pre-commit ; extra == 'dev'
+  - mypy ; extra == 'dev'
+  - pytest ; extra == 'test'
+  - pytest-playwright<0.6 ; extra == 'test'
+  - pixelmatch>=0.3.0,<0.4 ; extra == 'test'
+  - nbformat<5.10 ; extra == 'test'
+  - jupyterlab<4 ; extra == 'test'
+  - solara[pytest] ; extra == 'test'
+  - starlette<1 ; extra == 'test'
+  - sphinx<7 ; extra == 'doc'
+  - jupyter-sphinx ; extra == 'doc'
+  - ipykernel ; extra == 'doc'
+  - pydata-sphinx-theme ; extra == 'doc'
+  - sphinx-design ; extra == 'doc'
+  requires_python: '>=3.6'
 - pypi: https://files.pythonhosted.org/packages/8c/45/9f009005b9c796f4a40424484ac7e70847bc088456fd940a937f96bb4b6d/hypothesis-6.156.6-cp312-cp312-macosx_10_12_x86_64.whl
   name: hypothesis
   version: 6.156.6
@@ -22497,28 +22519,6 @@ packages:
   - sphinx-gallery ; extra == 'test'
   - imageio ; extra == 'test'
   requires_python: '>=3.9'
-- pypi: https://files.pythonhosted.org/packages/ba/67/da09a28bbd86c03dd10416bcdd7750de170256bb82bfaf7a226c18c654b7/ipyvuetify-3.0.0a4-py2.py3-none-any.whl
-  name: ipyvuetify
-  version: 3.0.0a4
-  sha256: 8ed0776212850deffad80e069b0250a89da1064ee194feab030ae7f46b071ca2
-  requires_dist:
-  - ipyvue>=3.0.0a6
-  - nox ; extra == 'dev'
-  - pre-commit ; extra == 'dev'
-  - mypy ; extra == 'dev'
-  - pytest ; extra == 'test'
-  - pytest-playwright<0.6 ; extra == 'test'
-  - pixelmatch>=0.3.0,<0.4 ; extra == 'test'
-  - nbformat<5.10 ; extra == 'test'
-  - jupyterlab<4 ; extra == 'test'
-  - solara[pytest] ; extra == 'test'
-  - starlette<1 ; extra == 'test'
-  - sphinx<7 ; extra == 'doc'
-  - jupyter-sphinx ; extra == 'doc'
-  - ipykernel ; extra == 'doc'
-  - pydata-sphinx-theme ; extra == 'doc'
-  - sphinx-design ; extra == 'doc'
-  requires_python: '>=3.6'
 - pypi: https://files.pythonhosted.org/packages/ba/b1/5297bb6a7df4782f7605bffc43b31f5044070935fbbcaa6c705a07e6ac65/yarl-1.24.2-cp314-cp314-macosx_11_0_arm64.whl
   name: yarl
   version: 1.24.2
