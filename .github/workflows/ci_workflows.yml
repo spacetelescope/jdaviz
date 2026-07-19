@@ -17,8 +17,39 @@ permissions:
   contents: read
 
 jobs:
+  # Lightweight checks that do not need the full jdaviz environment are run
+  # directly with uv (no conda, no full dependency install).
+  code_checks:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Code style checks
+            command: uvx flake8 jdaviz --count
+
+          - name: Security audit
+            command: uvx bandit -r jdaviz -c .bandit.yaml
+
+          - name: PEP 517
+            command: uv build --sdist && uvx twine check dist/* --strict
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      with:
+        fetch-depth: 0
+    - name: Set up uv
+      uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+    - name: Run check
+      run: ${{ matrix.command }}
+
   # Github Actions supports ubuntu, windows, and macos virtual environments:
   # https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners
+  #
+  # Environments and tasks are defined under [tool.pixi.*] in pyproject.toml.
+  # Pixi provides the Python interpreter (conda-forge) and uses uv under the
+  # hood to install every PyPI dependency.
   ci_tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
@@ -26,121 +57,92 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Code style checks
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: codestyle
-            allow_failure: false
-
-          - name: PEP 517
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: pep517
-            allow_failure: false
-
-          - name: Security audit
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: securityaudit
-            allow_failure: false
-
           - name: Python 3.13 with coverage checking and all deps
             os: ubuntu-latest
-            python: '3.13'
-            toxenv: py313-test-alldeps-cov
-            toxposargs: --run-slow
+            environment: test-all
+            task: test-cov
+            posargs: --run-slow
             allow_failure: false
 
           - name: Python 3.13 with only remote data, coverage checking, and all deps
             os: ubuntu-latest
-            python: '3.13'
-            toxenv: py313-test-alldeps-cov
-            toxposargs: --remote-data --run-slow -m remote_data
+            environment: test-all
+            task: test-cov
+            posargs: --remote-data --run-slow -m remote_data
             allow_failure: true
 
           - name: OS X - Python 3.13
             os: macos-latest
-            python: '3.13'
-            toxenv: py313-test
+            environment: test-py313
+            task: test
             allow_failure: false
 
           - name: Windows - Python 3.13
             os: windows-latest
-            python: '3.13'
-            toxenv: py313-test
+            environment: test-py313
+            task: test
             allow_failure: false
 
           - name: Linux - Python 3.14
             os: ubuntu-latest
-            python: '3.14'
-            toxenv: py314-test
+            environment: test-py314
+            task: test
             allow_failure: false
-
-          # This also runs on cron but we want to make sure new changes
-          # won't break this job at the PR stage.
-          - name: Python 3.13 with latest dev versions of key dependencies
-            os: ubuntu-latest
-            python: '3.13'
-            toxenv: py313-test-devdeps
-            toxposargs: --run-slow
-            allow_failure: true
-
-          - name: Python 3.13 with only remote data and dev deps
-            os: ubuntu-latest
-            python: '3.13'
-            toxenv: py313-test-devdeps
-            toxposargs: --remote-data --run-slow -m remote_data
-            allow_failure: true
 
           - name: Python 3.12 with stable versions of dependencies and Roman
             os: ubuntu-latest
-            python: '3.12'
-            toxenv: py312-test-romandeps
+            environment: roman
+            task: test
             allow_failure: true
 
     steps:
-    - name: Build toxposargs from labels
-      id: build-toxposargs
+    - name: Build posargs from labels
+      id: build-posargs
       shell: bash
       env:
         LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
       run: |
-        toxposargs="${{ matrix.toxposargs }}"
+        posargs="${{ matrix.posargs }}"
 
         # Add --skip-remote-failures if 'skip-remote-failures' label is present
         if echo "$LABELS" | grep -q 'skip-remote-failures'; then
-          toxposargs="$toxposargs --skip-remote-failures"
+          posargs="$posargs --skip-remote-failures"
         fi
 
         # Export as step output so later steps can reference it.
-        echo "toxposargs=$toxposargs" >> $GITHUB_OUTPUT
+        echo "posargs=$posargs" >> $GITHUB_OUTPUT
 
     - name: Checkout code
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 0
-    - name: Set up python ${{ matrix.python }} on ${{ matrix.os }}
-      uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
+    - name: Set up pixi and install the ${{ matrix.environment }} environment
+      uses: prefix-dev/setup-pixi@a09b6247153796b190642a2b53fac4241043cf6f  # v0.10.0
       with:
-        python-version: ${{ matrix.python }}
-    - name: Install base dependencies
-      run: python -m pip install --upgrade pip tox
-    - name: Install extra dependencies for strauss
-      if: "contains(matrix.toxenv, 'alldeps')"
-      run: sudo apt-get install libportaudio2
+        environments: ${{ matrix.environment }}
+        # Pin pixi to the version that generated the committed pixi.lock.
+        pixi-version: v0.72.2
+        # Install exactly what the committed pixi.lock specifies (reproducible)
+        # and cache it. We use `frozen` rather than the stricter `locked`
+        # because jdaviz pins some deps to mutable git PR refs and multi-wheel
+        # sources, which can make the strict up-to-date check spuriously fail on
+        # CI even when the lock is valid. `frozen` installs straight from the
+        # lock without re-checking it against the manifest.
+        frozen: true
+        cache: true
     - name: Get IP address for MAST debugging
-      if: "contains(matrix.toxposargs, '--remote-data')"
+      if: "contains(matrix.posargs, '--remote-data')"
       run: curl https://api.ipify.org
     - name: Get components for cache key
       id: date
-      if: "contains(matrix.toxposargs, '--remote-data')"
+      if: "contains(matrix.posargs, '--remote-data')"
       shell: bash
       run: |
         echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
         echo "week=$(date +'%V')" >> $GITHUB_OUTPUT
         echo "day=$(date +'%j')" >> $GITHUB_OUTPUT
     - name: Restore MAST cache
-      if: "contains(matrix.toxposargs, '--remote-data')"
+      if: "contains(matrix.posargs, '--remote-data')"
       id: cache-restore
       uses: actions/cache/restore@v6
       with:
@@ -151,33 +153,78 @@ jobs:
           mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-
           mast-cache-${{ steps.date.outputs.year }}-
           mast-cache-
-    - name: Move cache to tox working directory
-      if: "contains(matrix.toxposargs, '--remote-data')"
-      shell: bash
-      run: |
-        # Create cache directories for all possible tox environments
-        # tox runs from .tmp/{envname}, so we need to place cache files there
-        mkdir -p ".tmp/${{ matrix.toxenv }}"
 
-        # Check if any fits files exist and move them to the tox working directory
-        if ls ./*.fits 1> /dev/null 2>&1; then
-          mv ./*.fits ".tmp/${{ matrix.toxenv }}/"
-          echo "Cache files moved to .tmp/${{ matrix.toxenv }}/"
-          echo "Files in tox working directory:"
-          ls -la ".tmp/${{ matrix.toxenv }}/"*.fits
-        else
-          echo "No .fits files found in cache - tests will download files as needed"
-        fi
-    - name: Test/run with tox
-      run: tox -e ${{ matrix.toxenv }} -- ${{ steps.build-toxposargs.outputs.toxposargs }}
+    - name: Test/run with pixi
+      # pixi runs tasks from the repository root; any restored *.fits cache
+      # files are already in the working directory where the tests expect them.
+      run: pixi run -e ${{ matrix.environment }} ${{ matrix.task }} -- ${{ steps.build-posargs.outputs.posargs }}
 
     - name: Upload coverage to artifacts
-      if: "contains(matrix.toxenv, '-cov')"
+      if: "matrix.task == 'test-cov'"
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
-        name: coverage_${{ matrix.toxenv }}.xml
+        name: coverage_${{ matrix.environment }}.xml
         path: coverage.xml
         if-no-files-found: error
+
+
+  # Tests against the latest development versions (nightly wheels + git main) of
+  # key dependencies. These are inherently unlocked, so they are run with uv
+  # directly rather than pixi (see .github/scripts/run-devdeps.sh). This also
+  # runs on cron, but we run it at the PR stage to catch breakage early.
+  devdeps_tests:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Python 3.13 with latest dev versions of key dependencies
+            posargs: --run-slow
+
+          - name: Python 3.13 with only remote data and dev deps
+            posargs: --remote-data --run-slow -m remote_data
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      with:
+        fetch-depth: 0
+    - name: Set up uv
+      uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+    - name: Get IP address for MAST debugging
+      if: "contains(matrix.posargs, '--remote-data')"
+      run: curl https://api.ipify.org
+    - name: Get components for cache key
+      id: date
+      if: "contains(matrix.posargs, '--remote-data')"
+      shell: bash
+      run: |
+        echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
+        echo "week=$(date +'%V')" >> $GITHUB_OUTPUT
+        echo "day=$(date +'%j')" >> $GITHUB_OUTPUT
+    - name: Restore MAST cache
+      # The remote-data tests use cached_uri(), which returns a locally cached
+      # *.fits file when it exists in the working directory (the run-devdeps.sh
+      # pytest cwd is the repo root) and otherwise falls back to downloading from
+      # MAST. Restoring the shared MAST cache here mirrors the ci_tests job and
+      # avoids live downloads (which also fail against dev astroquery's cloud
+      # code path when boto3/botocore are absent).
+      if: "contains(matrix.posargs, '--remote-data')"
+      id: cache-restore
+      uses: actions/cache/restore@v5
+      with:
+        path: ./
+        key: use-restore-keys-below-to-match-in-priority-order
+        restore-keys: |
+          mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-
+          mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-
+          mast-cache-${{ steps.date.outputs.year }}-
+          mast-cache-
+    - name: Run tests against dev dependencies
+      env:
+        PYTHON_VERSION: '3.13'
+      run: .github/scripts/run-devdeps.sh ${{ matrix.posargs }}
 
 
   upload-codecov:
