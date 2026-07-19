@@ -192,6 +192,35 @@ jobs:
         fetch-depth: 0
     - name: Set up uv
       uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+    - name: Get IP address for MAST debugging
+      if: "contains(matrix.posargs, '--remote-data')"
+      run: curl https://api.ipify.org
+    - name: Get components for cache key
+      id: date
+      if: "contains(matrix.posargs, '--remote-data')"
+      shell: bash
+      run: |
+        echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
+        echo "week=$(date +'%V')" >> $GITHUB_OUTPUT
+        echo "day=$(date +'%j')" >> $GITHUB_OUTPUT
+    - name: Restore MAST cache
+      # The remote-data tests use cached_uri(), which returns a locally cached
+      # *.fits file when it exists in the working directory (the run-devdeps.sh
+      # pytest cwd is the repo root) and otherwise falls back to downloading from
+      # MAST. Restoring the shared MAST cache here mirrors the ci_tests job and
+      # avoids live downloads (which also fail against dev astroquery's cloud
+      # code path when boto3/botocore are absent).
+      if: "contains(matrix.posargs, '--remote-data')"
+      id: cache-restore
+      uses: actions/cache/restore@v5
+      with:
+        path: ./
+        key: use-restore-keys-below-to-match-in-priority-order
+        restore-keys: |
+          mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-
+          mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-
+          mast-cache-${{ steps.date.outputs.year }}-
+          mast-cache-
     - name: Run tests against dev dependencies
       env:
         PYTHON_VERSION: '3.13'

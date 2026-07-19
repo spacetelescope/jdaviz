@@ -196,6 +196,18 @@ jupyter = ">=1.1.1,<2"
 pytest = ">=9.1.1,<10"
 pytest-xdist = ">=3.8.0,<4"
 
+# Environment variables applied to every Pixi environment (the old tox
+# `[testenv] setenv`). MPLBACKEND=agg forces a non-interactive matplotlib
+# backend so headless CI (tests + docs builds) never tries to open a GUI, and
+# JUPYTER_PLATFORM_DIRS=1 opts in to the new jupyter_core path layout to silence
+# its migration DeprecationWarning (which filterwarnings=error would otherwise
+# escalate). The uv-based devdeps/predeps jobs, which do not go through Pixi,
+# set these separately (see .github/scripts/run-devdeps.sh and
+# predeps_workflows.yml).
+[tool.pixi.activation.env]
+MPLBACKEND = "agg"
+JUPYTER_PLATFORM_DIRS = "1"
+
 [tool.setuptools]
 zip-safe = false
 include-package-data = true

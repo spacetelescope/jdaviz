@@ -17,6 +17,13 @@
 # Any arguments passed to this script are forwarded to pytest.
 set -euo pipefail
 
+# Match the old tox `[testenv] setenv`: force a non-interactive matplotlib
+# backend so headless CI never tries to open a GUI, and opt in to the new
+# jupyter_core path layout to silence its migration DeprecationWarning (which
+# filterwarnings=error would otherwise escalate to a test failure).
+export MPLBACKEND="${MPLBACKEND:-agg}"
+export JUPYTER_PLATFORM_DIRS="${JUPYTER_PLATFORM_DIRS:-1}"
+
 PYTHON_VERSION="${PYTHON_VERSION:-3.13}"
 EXTRAS="${EXTRAS:-}"
 
@@ -84,8 +91,14 @@ uv venv --python "${PYTHON_VERSION}" .venv-devdeps
 # a one-shot resolve is unsatisfiable. pip only "worked" by installing the
 # pieces incrementally and tolerating the resulting conflict.
 #
-# Stage 1: a consistent base -- jdaviz + its test extra, with the core
-# scientific stack bumped to nightly/dev wheels (resolved normally).
+# Stage 1: a consistent base -- jdaviz (installed EDITABLE) + its test extra,
+# with the core scientific stack bumped to nightly/dev wheels (resolved
+# normally). The editable install matches the pixi environments
+# (`jdaviz = { path = ".", editable = true }`) so that this job behaves like the
+# rest of CI: `--pyargs jdaviz` then resolves to the source tree that pytest
+# also collects from repo root (avoiding the conftest ImportPathMismatchError a
+# non-editable/site-packages install would cause), and remote-data tests can
+# find MAST cache files that `cached_uri()` looks for in the working directory.
 # --index-strategy unsafe-best-match makes uv consider all of the extra index
 # URLs (like pip does); without it uv only looks at the first index that
 # contains a package, so dev wheels split across the astropy/liberfa/nightly
@@ -93,7 +106,7 @@ uv venv --python "${PYTHON_VERSION}" .venv-devdeps
 uv pip install --python .venv-devdeps --prerelease allow --upgrade \
   --index-strategy unsafe-best-match \
   "${DEV_INDEXES[@]}" \
-  "${project_spec}" \
+  --editable "${project_spec}" \
   "${NIGHTLY[@]}"
 
 # Stage 2: layer the git-main dev versions on top WITHOUT their dependencies.
@@ -103,18 +116,10 @@ uv pip install --python .venv-devdeps --prerelease allow --upgrade \
 uv pip install --python .venv-devdeps --no-deps --upgrade \
   "${GIT_MAIN[@]}"
 
-# Run pytest from an isolated temporary directory so that the source-tree
-# `jdaviz/` package is NOT discovered. `--pyargs jdaviz` imports the *installed*
-# copy from site-packages, but pytest's rootdir-based conftest collection would
-# otherwise also pick up ./jdaviz/conftest.py from the source tree, and the two
-# `jdaviz.conftest` modules at different paths trigger an ImportPathMismatchError.
-# This mirrors the old tox `changedir = .tmp/{envname}` behavior.
-REPO_ROOT="$(pwd)"
-PYTEST="${REPO_ROOT}/.venv-devdeps/bin/pytest"
-JDAVIZ_INSTALLED="$("${REPO_ROOT}/.venv-devdeps/bin/python" -c 'import jdaviz, os; print(os.path.dirname(jdaviz.__file__))')"
-
-RUN_DIR="$(mktemp -d)"
-cd "${RUN_DIR}"
-
-"${PYTEST}" -n auto --dist loadfile --pyargs jdaviz "${REPO_ROOT}/docs" \
-  --ignore="${JDAVIZ_INSTALLED}/qt.py" --durations=30 --memlog "$@"
+# Run pytest from the repository root, exactly like the pixi `test` task. Because
+# jdaviz is installed editable (above), `--pyargs jdaviz` resolves to the source
+# tree that pytest's rootdir-based conftest discovery also collects, so there is
+# no ImportPathMismatchError, and any MAST *.fits cache files restored into the
+# working directory are picked up by `cached_uri()` in the remote-data tests.
+.venv-devdeps/bin/pytest -n auto --dist loadfile --pyargs jdaviz docs \
+  --ignore=jdaviz/qt.py --durations=30 --memlog "$@"
