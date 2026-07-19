@@ -51,6 +51,11 @@ jobs:
       uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
     - name: Test/run release candidates with uv
       shell: bash
+      # MPLBACKEND=agg and JUPYTER_PLATFORM_DIRS=1 match the old tox
+      # `[testenv] setenv` (headless matplotlib + new jupyter_core path layout).
+      env:
+        MPLBACKEND: agg
+        JUPYTER_PLATFORM_DIRS: '1'
       run: >
         uv run --python ${{ matrix.python }} --prerelease allow --extra test
         pytest -n auto --dist loadfile --pyargs jdaviz docs
