@@ -1430,10 +1430,11 @@ class ImageStretchTool(_BaseImageFocusTool):
     # fall back to the generic stretch_bounds icon set as ``icon``.
     _stretch_icon_paths = {
         'linear': os.path.join(ICON_DIR, 'lin.svg'),
-        'log':    os.path.join(ICON_DIR, 'log.svg'),
+        'log': os.path.join(ICON_DIR, 'log.svg'),
         'arcsinh': os.path.join(ICON_DIR, 'asinh.svg'),
         'spline': os.path.join(ICON_DIR, 'spln.svg'),
-        'sqrt':   os.path.join(ICON_DIR, 'sqrt.svg'),
+        'sqrt': os.path.join(ICON_DIR, 'sqrt.svg'),
+        'DQ': os.path.join(ICON_DIR, 'dq.svg'),
     }
     # Tracks which layer the always-on stretch observer is registered on
     # (separate from _current_observed_layer which is only active during override).
