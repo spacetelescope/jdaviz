@@ -12,6 +12,22 @@ __all__ = ['CatalogRowLinkManager', 'get_catalog_row_link_manager']
 _META_KEY = '_viewer_data_columns'
 
 
+def _as_list(value):
+    """Normalize a single cell value to a list.
+
+    ``None`` -> ``[]``, a string -> ``[value]`` (or ``[]`` if empty), any other
+    iterable -> ``list(value)``, and anything else -> ``[value]``.
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value] if value else []
+    try:
+        return list(value)
+    except TypeError:
+        return [value]
+
+
 def get_catalog_row_link_manager(app):
     """Return the app's :class:`CatalogRowLinkManager`, creating it on first use.
 
@@ -198,7 +214,7 @@ class CatalogRowLinkManager(HubListener):
             value = data.get_component(column_name).data[row]
         except (KeyError, IndexError):
             return []
-        return list(value) if value is not None else []
+        return _as_list(value)
 
     def _set_viewer_contents(self, viewer_obj, labels):
         """Show exactly ``labels`` in ``viewer_obj``, hiding anything else."""
@@ -226,7 +242,7 @@ class CatalogRowLinkManager(HubListener):
         changed = False
         new_values = []
         for cell in values:
-            cell_list = list(cell) if cell is not None else []
+            cell_list = _as_list(cell)
             if old_label in cell_list:
                 cell_list = [new_label if v == old_label else v for v in cell_list]
                 changed = True
@@ -238,21 +254,11 @@ class CatalogRowLinkManager(HubListener):
     def _as_object_array(values):
         """Normalize each value to a list and pack them into an object-dtype array.
 
-        Each entry becomes a list (``None`` -> ``[]``, a string -> ``[value]`` (or
-        ``[]`` if empty), any other iterable -> ``list(value)``, else ``[value]``).
         Object dtype is required so the table can hold a list per row.
         """
         arr = np.empty(len(values), dtype=object)
         for i, value in enumerate(values):
-            if value is None:
-                arr[i] = []
-            elif isinstance(value, str):
-                arr[i] = [value] if value else []
-            else:
-                try:
-                    arr[i] = list(value)
-                except TypeError:
-                    arr[i] = [value]
+            arr[i] = _as_list(value)
         return arr
 
     def _set_object_column(self, data, column_name, values):
