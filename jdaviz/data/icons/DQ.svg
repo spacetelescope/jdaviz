@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 35.2 29.3">
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 40.4 26.8">
   <!-- Generator: Adobe Illustrator 30.6.0, SVG Export Plug-In . SVG Version: 2.1.4 Build 109)  -->
   <defs>
     <style>
-      .st0, .st1 {
-        isolation: isolate;
+      .st0 {
+        fill: #231f20;
       }
 
       .st1 {
-        fill: #231f20;
-        font-family: Roboto-Bold, Roboto;
-        font-size: 26px;
-        font-weight: 700;
+        isolation: isolate;
       }
     </style>
   </defs>
-  <g class="st0">
-    <text class="st1" transform="translate(0 22.2)"><tspan x="0" y="0">DQ</tspan></text>
+  <g class="st1">
+    <g class="st1">
+      <path class="st0" d="M0,23.1V.3h7.8c2.8,0,5.1.9,6.9,2.7,1.8,1.8,2.7,4.1,2.7,6.8v3.8c0,2.8-.9,5.1-2.7,6.8-1.8,1.8-4.1,2.6-6.9,2.6H0ZM4.6,3.8v15.7h3c1.6,0,2.9-.6,3.8-1.7.9-1.1,1.4-2.5,1.4-4.3v-3.8c0-1.8-.5-3.2-1.4-4.3-.9-1.1-2.2-1.7-3.8-1.7h-3Z"/>
+      <path class="st0" d="M39.3,13.8c0,1.4-.2,2.7-.7,3.8-.4,1.2-1.1,2.2-1.9,3.1l3.8,3.7-3,2.4-4.1-4c-.6.2-1.1.4-1.8.5-.6.1-1.2.2-1.9.2-2.8,0-5.1-.9-6.8-2.7-1.8-1.8-2.6-4.1-2.6-6.9v-4.1c0-2.8.9-5.1,2.6-6.9,1.7-1.8,4-2.7,6.8-2.7s5.1.9,6.9,2.7c1.8,1.8,2.7,4.1,2.7,6.9v4.1ZM34.7,9.6c0-1.8-.4-3.2-1.3-4.4-.9-1.1-2.1-1.7-3.7-1.7s-2.8.6-3.6,1.7c-.9,1.1-1.3,2.6-1.3,4.4v4.1c0,1.8.4,3.3,1.3,4.4.9,1.1,2.1,1.7,3.6,1.7s2.8-.6,3.7-1.7,1.3-2.6,1.3-4.4v-4.1Z"/>
+    </g>
   </g>
 </svg>
