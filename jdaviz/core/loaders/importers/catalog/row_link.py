@@ -50,7 +50,7 @@ class CatalogRowLinkManager(HubListener):
 
         # attach to any table viewers that already exist
         for viewer in list(app._viewer_store.values()):
-            self._attach(viewer)
+            self._setup_table_active_row_callbacks(viewer)
 
     def set_viewer_data_columns(self, data_label, viewer_data, column_prefix='Data: '):
         """Add/update per-viewer ``"<column_prefix><viewer>"`` columns on a catalog.
@@ -106,7 +106,7 @@ class CatalogRowLinkManager(HubListener):
         return list(columns.keys())
 
     def _on_viewer_added(self, msg):
-        self._attach(self.app.get_viewer_by_id(msg.viewer_id))
+        self._setup_table_active_row_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
     def _on_viewer_removed(self, msg):
         entry = self._observed.pop(msg.viewer_id, None)
@@ -127,8 +127,11 @@ class CatalogRowLinkManager(HubListener):
             for column_name in columns:
                 self._rename_in_column(data, column_name, msg.old_label, msg.new_label)
 
-    def _attach(self, viewer):
-        """Observe row highlighting on a table viewer (no-op for other viewers)."""
+    def _setup_table_active_row_callbacks(self, viewer):
+        """Observe active-row (highlighted) changes on a table viewer.
+
+        No-op for non-table viewers and for table viewers we already observe.
+        """
         if viewer is None or not hasattr(viewer, 'widget_table'):
             return
         vid = viewer.reference_id
@@ -142,27 +145,46 @@ class CatalogRowLinkManager(HubListener):
         self._observed[vid] = (viewer, callback)
 
     def _on_highlighted(self, viewer, change):
-        """Repopulate the listed viewers from the highlighted row's columns."""
-        row = change['new']
-        if row is None or row < 0:
+        """Repopulate the listed viewers from the newly active (highlighted) row."""
+        active_row = change['new']
+        if active_row is None or active_row < 0:
             return
-        data = self._catalog_data_for_viewer(viewer)
-        if data is None:
+
+        # skip unless this table viewer is showing a catalog we manage (i.e. one
+        # that set_viewer_data_columns has been called on); otherwise there is
+        # nothing to link
+        catalog_data = self._catalog_data_for_viewer(viewer)
+        if catalog_data is None:
             return
-        columns = (getattr(data, 'meta', {}) or {}).get(_META_KEY)
-        if not columns:
+
+        # column_to_viewer maps each "Data: <viewer>" column name -> the reference
+        # of the viewer it drives (stored on the catalog's meta)
+        column_to_viewer = (getattr(catalog_data, 'meta', {}) or {}).get(_META_KEY)
+        if not column_to_viewer:
             return
-        dc_labels = self.app.data_collection.labels
-        for column_name, viewer_ref in columns.items():
-            target = self.app.get_viewer(viewer_ref)
-            if target is None:
+
+        # labels currently in the data collection, used to skip any referenced
+        # dataset that no longer exists
+        available_labels = self.app.data_collection.labels
+        for column_name, viewer_ref in column_to_viewer.items():
+            target_viewer = self.app.get_viewer(viewer_ref)
+            if target_viewer is None:
                 continue
-            labels = [lbl for lbl in self._cell_as_list(data, column_name, row)
-                      if lbl and lbl in dc_labels]
-            self._set_viewer_contents(target, labels)
+            # the data labels this viewer should show for the active row
+            labels = [
+                label
+                for label in self._cell_as_list(catalog_data, column_name, active_row)
+                if label and label in available_labels
+            ]
+            self._set_viewer_contents(target_viewer, labels)
 
     def _catalog_data_for_viewer(self, viewer):
-        """Return the catalog ``Data`` (with the marker meta) shown in ``viewer``."""
+        """Return the managed catalog ``Data`` shown in ``viewer``, or ``None``.
+
+        A catalog becomes "managed" once :meth:`set_viewer_data_columns` stores the
+        ``_viewer_data_columns`` marker (``_META_KEY``) in its ``Data.meta``; here we
+        look through the viewer's layers for the first dataset carrying that marker.
+        """
         for layer in getattr(viewer, 'layers', []):
             data = getattr(getattr(layer, 'layer', None), 'data', None)
             if data is not None and _META_KEY in (getattr(data, 'meta', {}) or {}):
