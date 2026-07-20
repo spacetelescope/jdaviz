@@ -1185,22 +1185,13 @@ def _count_visible_image_layers(viewer):
         return 0
 
 
-# ---------------------------------------------------------------------------
-# Focus-mode image layer tools
-# ---------------------------------------------------------------------------
-
-class _BaseImageFocusTool(Tool):
+class _BaseTopImageLyrLool(Tool):
     """
     Base class for image-viewer tools that show a toolbar-override widget.
-
-    Always visible; ``keep_visible_in_focus_mode = True`` ensures they are
-    retained when the viewer enters focus mode.
     """
     keep_visible_in_focus_mode = True
     _override_title = ''
-    # Echo property name to observe on the top layer state.
     _layer_state_property = ''
-    # Tracks which layer state instance we currently have a callback on.
     _current_observed_layer = None
     # Tooltip template with a ``{layer_ref}`` placeholder that resolves to
     # "the image layer" (single layer) or "the top visible image layer"
@@ -1230,8 +1221,7 @@ class _BaseImageFocusTool(Tool):
     def _get_top_layer_state(self):
         """Return the top visible image layer state by z-order, or None.
 
-        Uses ``zorder`` (matching plot_options) rather than list position so
-        that drag-and-drop reordering in the data menu is reflected correctly.
+        Uses ``zorder`` to match drag-and-drop reordering.
         """
         from jdaviz.utils import layer_is_image_data
         from glue.core.subset_group import GroupedSubset
@@ -1347,10 +1337,9 @@ class _BaseImageFocusTool(Tool):
             selection_callback=self._on_selection_changed,
         )
         # Register echo callback on the current top layer so external changes
-        # (e.g. from plot options) update the widget in real time.
+        # (e.g. from plot options or API) update the widget in real time.
         self._register_layer_observer()
-        # Register zorder callbacks so drag-and-drop reordering in the data
-        # menu is detected immediately.
+        # Register zorder callbacks including drag-and-drop reordering.
         self._register_zorder_callbacks()
         # Also watch the viewer's layer list so that data add/remove is caught.
         if hasattr(self.viewer, 'state'):
@@ -1376,7 +1365,7 @@ class _BaseImageFocusTool(Tool):
 
 
 @viewer_tool
-class ImageColormapTool(_BaseImageFocusTool):
+class ImageColormapTool(_BaseTopImageLyrLool):
     """Select the colormap for the top visible image layer."""
     # placeholder icon – replace with a dedicated colormap icon later
     icon = os.path.join(ICON_DIR, 'colormap.svg')
@@ -1416,7 +1405,7 @@ class ImageColormapTool(_BaseImageFocusTool):
 
 
 @viewer_tool
-class ImageStretchTool(_BaseImageFocusTool):
+class ImageStretchTool(_BaseTopImageLyrLool):
     """Select the stretch function for the top visible image layer."""
     icon = os.path.join(ICON_DIR, 'stretch_bounds.svg')
     tool_id = 'jdaviz:image_stretch'
@@ -1555,7 +1544,7 @@ class ImageStretchTool(_BaseImageFocusTool):
 
 
 @viewer_tool
-class ImageOpacityTool(_BaseImageFocusTool):
+class ImageOpacityTool(_BaseTopImageLyrLool):
     """Set the opacity of the top visible image layer via a slider."""
     # placeholder icon – replace with a dedicated opacity icon later
     icon = os.path.join(ICON_DIR, 'opacity.svg')

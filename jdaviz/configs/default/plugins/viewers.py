@@ -966,7 +966,7 @@ class JdavizViewerWindow(TemplateMixin):
         self.tool_override_mode = change['new']
 
     def _on_toolbar_dropdown_active_changed(self, change):
-        pass  # kept as no-op stub so existing observers don't break
+        pass  # no-op, can be defined by subclasses
 
     def _on_focus_viewer_changed(self, *args):
         self.focus_mode = (self._app.state.focus_viewer == self.reference)
