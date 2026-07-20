@@ -108,7 +108,7 @@ class ContrastBias(CheckableTool):
     action_text = 'Adjust contrast/bias'
     tool_tip = 'Click and drag to adjust contrast and bias, double-click to reset'
     keep_visible_in_focus_mode = True
-    _tool_tip_template = 'Click and drag to adjust contrast and bias of {layer_ref}, double-click to reset'
+    _tool_tip_template = 'Click and drag to adjust contrast and bias of {layer_ref}, double-click to reset'  # noqa
 
     def get_tooltip(self):
         n = _count_visible_image_layers(self.viewer)
