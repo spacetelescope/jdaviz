@@ -8,6 +8,7 @@ from traitlets import Bool, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
+from astropy.coordinates import SkyCoord
 from astropy.coordinates.builtin_frames import __all__ as all_astropy_frames
 from astropy.table import Table as astropyTable
 from astroquery.mast import MastMissions
@@ -1210,9 +1211,14 @@ class BaseConeSearchResolver(BaseResolver):
             return
 
         # Obtain center point of the current image and convert into sky coordinates
-        skycoord_center = ref_data.coords.pixel_to_world(
-            viewer.state.zoom_center_x, viewer.state.zoom_center_y
-        )
+        if self._app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
+            skycoord_center = SkyCoord(
+                viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
+            )
+        else:
+            skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
+                viewer.state.zoom_center_x, viewer.state.zoom_center_y
+            )
 
         # Extract SkyCoord values as strings for plugin display
         ra_deg = skycoord_center.ra.deg
