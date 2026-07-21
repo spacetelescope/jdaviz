@@ -63,7 +63,7 @@
         v-model="align_by_selected"
         @change="delete_subsets($event)"
         persistent-hint
-        row>
+        inline>
         <v-radio
           v-for="item in align_by_items"
           :key="item.label"

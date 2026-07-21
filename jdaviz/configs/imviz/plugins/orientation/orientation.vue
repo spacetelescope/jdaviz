@@ -17,7 +17,7 @@
           v-if="!wcs_linking_available"
           type='warning'
           class="ignore-api-hints"
-          style="margin-left: -12px; margin-right: -12px"
+          style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px"
         >
           Please add at least one data with valid WCS to align by sky (WCS).
         </v-alert>
@@ -26,7 +26,7 @@
           v-if="wcs_linking_available && !need_clear_astrowidget_markers && !need_clear_subsets"
           type='warning'
           class="ignore-api-hints"
-          style="margin-left: -12px; margin-right: -12px"
+          style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px"
         >
           Switching alignment will reset zoom.
         </v-alert>
@@ -34,12 +34,12 @@
         <v-alert
           v-if="plugin_markers_exist && !need_clear_astrowidget_markers && !need_clear_subsets"
           type='warning'
-          style="margin-left: -12px; margin-right: -12px"
+          style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px"
         >
           Marker positions may not be pixel-perfect when changing alignment/linking options.
         </v-alert>
 
-        <v-alert v-if="need_clear_astrowidget_markers" type='warning' style="margin-left: -12px; margin-right: -12px">
+        <v-alert v-if="need_clear_astrowidget_markers" type='warning' style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px">
           Astrowidget markers must be cleared before changing alignment/linking options.
           <j-flex-row justify="end" style="margin-right: 2px; margin-top: 16px">
             <v-btn @click="reset_astrowidget_markers">Clear Markers</v-btn>
@@ -47,7 +47,7 @@
         </v-alert>
 
 
-        <v-alert v-if="need_clear_subsets" type='warning' style="margin-left: -12px; margin-right: -12px">
+        <v-alert v-if="need_clear_subsets" type='warning' style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px">
           Existing subsets must be deleted before changing alignment/linking options.
           <j-flex-row justify="end" style="margin-right: 2px; margin-top: 16px">
             <v-btn @click="delete_subsets">

@@ -44,7 +44,6 @@
       <v-list-item>
         <div class="v-list-item-content">
           <j-tooltip
-            :span_style="'display: inline-block; float: right; ' + (delete_app_enabled ? '' : 'cursor: default;')"
             :tooltipcontent="delete_app_tooltip"
           >
             <span
