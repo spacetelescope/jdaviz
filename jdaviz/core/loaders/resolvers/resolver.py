@@ -3,7 +3,7 @@ import re
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
-from traitlets import Bool, Float, Instance, List, Unicode, observe, default
+from traitlets import Bool, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -1045,7 +1045,7 @@ class BaseConeSearchResolver(BaseResolver):
     viewer_centered = Bool(False).tag(sync=True)
     coordframe_choices = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
-    radius = Float(1).tag(sync=True)
+    radius = FloatHandleEmpty(1).tag(sync=True)
     radius_unit_items = List().tag(sync=True)
     radius_unit_selected = Unicode("deg").tag(sync=True)
 
@@ -1158,13 +1158,15 @@ class BaseConeSearchResolver(BaseResolver):
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
+        ref_data = viewer.state.reference_data
 
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
         if (
-            len(self._app._jdaviz_helper.datasets) < 1
-            or viewer.state.reference_data is None
-            or viewer.state.reference_data.coords is None
+
+            len(self.app._jdaviz_helper.datasets) < 1
+            or ref_data is None
+            or ref_data.coords is None
         ):
             self.source = ""
             return
