@@ -16,7 +16,8 @@ codesign_identity = os.environ.get("DEVELOPER_ID_APPLICATION")
 # for all the widgets
 datas = [
     (Path(sys.prefix) / "share" / "jupyter", "./share/jupyter"),
-    (Path(sys.prefix) / "etc" / "jupyter", "./etc/jupyter")] + \
+    (Path(sys.prefix) / "etc" / "jupyter", "./etc/jupyter"),
+    (Path(sys.prefix) / "share" / "solara", "./share/solara")] + \
     copy_metadata('echo') 
 
 block_cipher = None
