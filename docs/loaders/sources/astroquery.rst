@@ -73,10 +73,9 @@ can be taken two ways, controlled by ``ldr.catalog_col_type``:
   was loaded.
 - ``"source_name"``: resolve a column of source names row-by-row via
   ``SkyCoord.from_name`` (one network request per row — slow for large
-  catalogs). Select the column with ``ldr.catalog_name_col``. The name column
-  must have been retained when the catalog was loaded (via the importer's
-  "other columns" option, e.g. ``load(..., col_other=['name'])``), since the
-  catalog importer keeps only coordinate columns by default.
+  catalogs). Select the column with ``ldr.catalog_name_col``. If not provided,
+  the default choice is the user specified source ID column. If the source ID column
+  is not a string, the default will be the first string column in the catalog.
 
 The stacked results include a ``source_index`` column identifying which queried
 source each returned row corresponds to. ``ldr.max_results`` caps the total
