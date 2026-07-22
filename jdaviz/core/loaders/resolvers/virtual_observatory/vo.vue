@@ -55,7 +55,7 @@
             v-model="source"
             :label="api_hints_enabled ? 'ldr.source =' : 'Source/Coordinates'"
             :class="api_hints_enabled ? 'api-hint' : null"
-            hint="Enter a source name or coordinates in degrees to center your query on."
+            hint="Enter a source name or coordinate pair in degrees to center your query on."
             :rules="[() => !!source || 'This field is required']"
             persistent-hint>
           </v-text-field>
