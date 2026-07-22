@@ -1151,7 +1151,7 @@ class BaseConeSearchResolver(BaseResolver):
         for message in (ViewerAddedMessage, ViewerRemovedMessage,
                         DataCollectionAddMessage, DataCollectionDeleteMessage):
             self.hub.subscribe(self, message,
-                               handler=lambda lambda_msg=None: self.search_input_select._update_items())
+                               handler=lambda lambda_msg=None: self.search_input_select._update_items())  # noqa
 
         self.viewer = ViewerSelect(
             self, "viewer_items", "viewer_selected", filters=['is_image_viewer']
