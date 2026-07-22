@@ -1087,7 +1087,7 @@ class BaseConeSearchResolver(BaseResolver):
     input_items = List([]).tag(sync=True)
     # Can be "Source" (manual entry), "Viewer" (viewer center),
     # or "Catalog" (loop over rows of a loaded source-catalog).
-    input_selected = Unicode("").tag(sync=True)
+    search_input_selected = Unicode("").tag(sync=True)
 
     # Used only for catalog input
     catalog_items = List([]).tag(sync=True)
@@ -1129,20 +1129,20 @@ class BaseConeSearchResolver(BaseResolver):
 
         # "Viewer" is only offered when at least one image viewer exists and
         # "Catalog" only when at least one catalog is loaded in the data collection.
-        self.input_select = SelectPluginComponent(
+        self.search_input_select = SelectPluginComponent(
             self,
             items='input_items',
-            selected='input_selected',
+            selected='search_input_selected',
             manual_options=['Source', 'Viewer', 'Catalog'],
             apply_filters_to_manual_options=True,
             default_mode='first',
         )
-        self.input_select.add_filter(
+        self.search_input_select.add_filter(
             lambda item: item['label'] != 'Viewer' or any(
                 _is_image_viewer(v) for v in self._app._viewer_store.values()
             )
         )
-        self.input_select.add_filter(
+        self.search_input_select.add_filter(
             lambda item: item['label'] != 'Catalog' or any(
                 d.meta.get('_importer') == 'CatalogImporter'
                 for d in self._app.data_collection
@@ -1151,7 +1151,7 @@ class BaseConeSearchResolver(BaseResolver):
         for message in (ViewerAddedMessage, ViewerRemovedMessage,
                         DataCollectionAddMessage, DataCollectionDeleteMessage):
             self.hub.subscribe(self, message,
-                               handler=lambda lambda_msg=None: self.input_select._update_items())
+                               handler=lambda lambda_msg=None: self.search_input_select._update_items())
 
         self.viewer = ViewerSelect(
             self, "viewer_items", "viewer_selected", filters=['is_image_viewer']
@@ -1230,10 +1230,10 @@ class BaseConeSearchResolver(BaseResolver):
             # Otherwise default to first choice if any are valid
             self.catalog_name_col.selected = self.catalog_name_col.choices[0]
 
-    @observe('input_selected')
-    def _on_input_selected(self, msg=None):
+    @observe('search_input_selected')
+    def _on_search_input_selected(self, msg=None):
         """When switching to Viewer mode, immediately center on the current viewer."""
-        if self.input_selected == 'Viewer':
+        if self.search_input_selected == 'Viewer':
             self.vue_center_on_data()
 
     @observe("viewer_selected", type="change")
@@ -1276,7 +1276,7 @@ class BaseConeSearchResolver(BaseResolver):
     @observe("coord_follow_viewer_pan", type="change")
     def _toggle_viewer_pan_tracking(self, _=None):
         """Detects when live viewer tracking toggle is clicked and centers on data if necessary"""
-        if self.input_selected != 'Viewer':
+        if self.search_input_selected != 'Viewer':
             return
         # Center on data if we're enabling the toggle
         if self.coord_follow_viewer_pan:
@@ -1293,7 +1293,7 @@ class BaseConeSearchResolver(BaseResolver):
         * Callback method for user panning (sub'ed to zoom_center_x/zoom_center_y)
         """
         # Only auto center when in Viewer input mode
-        if self.input_selected != 'Viewer':
+        if self.search_input_selected != 'Viewer':
             return
 
         # If the user panned but tracking not enabled, don't recenter

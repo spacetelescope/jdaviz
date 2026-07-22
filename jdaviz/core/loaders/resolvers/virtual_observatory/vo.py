@@ -69,7 +69,7 @@ class VOResolver(BaseConeSearchResolver):
         return LoaderUserApi(
             self,
             expose=[
-                "producttype", "input_select", "viewer", "coordframe",
+                "producttype", "search_input_select", "viewer", "coordframe",
                 "radius", "radius_unit",
                 "source",
                 "catalog", "catalog_subset", "catalog_col_type", "catalog_name_col",
@@ -106,7 +106,7 @@ class VOResolver(BaseConeSearchResolver):
                 "Source is required for registry querying when coverage filtering is enabled. "
                 + (
                     "Please enter your coordinates above "
-                    if self.input_selected != 'Viewer'
+                    if self.search_input_selected != 'Viewer'
                     else f"Load data into viewer {self.viewer} first before querying "
                 )
                 + "or disable coverage filtering."
@@ -286,7 +286,7 @@ class VOResolver(BaseConeSearchResolver):
         row and the results are stacked (see ``_query_catalog``).
         """
         # Catalog mode: loop over all (selected) catalog rows and stack results.
-        if self.input_selected == 'Catalog':
+        if self.search_input_selected == 'Catalog':
             self._query_catalog(self._query_single_coord)
             return
 
