@@ -190,11 +190,13 @@ class VOResolver(BaseConeSearchResolver):
         direct coordinates, then falls back to name resolution.
         Returns None (and broadcasts a snackbar) if resolution fails.
         """
+        # Strip parentheses from source if present
+        stripped_source = self.source.strip('()')
         try:
-            return SkyCoord(self.source, unit=u.deg, frame=self.coordframe_selected)
+            return SkyCoord(stripped_source, unit=u.deg, frame=self.coordframe_selected)
         except Exception:
             try:
-                return SkyCoord.from_name(self.source, frame=self.coordframe_selected)
+                return SkyCoord.from_name(stripped_source, frame=self.coordframe_selected)
             except Exception as e:
                 self.hub.broadcast(
                     SnackbarMessage(
