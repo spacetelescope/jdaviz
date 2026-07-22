@@ -71,7 +71,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
         return LoaderUserApi(
             self,
             expose=[
-                "input_select", "viewer", "coordframe", "radius", "radius_unit",
+                "search_input_select", "viewer", "coordframe", "radius", "radius_unit",
                 "source",
                 "catalog", "catalog_subset", "catalog_col_type", "catalog_name_col",
                 "query_progress",
@@ -152,7 +152,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
     @with_spinner(spinner_traitlet="results_loading")
     def query_archive(self):
         # Catalog mode: loop over all (selected) catalog rows and stack results.
-        if self.input_selected == 'Catalog':
+        if self.search_input_selected == 'Catalog':
             self._query_catalog(self._query_single_coord)
             return
 
