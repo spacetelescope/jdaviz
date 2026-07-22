@@ -34,16 +34,16 @@
       <j-plugin-section-header>Source Selection</j-plugin-section-header>
 
       <plugin-select
-        :items="input_items.map(i => i.label)"
-        v-model:selected="input_selected"
+        :items="search_input_items.map(i => i.label)"
+        v-model:selected="search_input_selected"
         label="Input"
-        api_hint="ldr.input_select ="
+        api_hint="ldr.search_input_select ="
         :api_hints_enabled="api_hints_enabled"
         hint="Select the source of cone-search coordinates."
       ></plugin-select>
 
       <!-- Source mode -->
-      <div v-if="input_selected === 'Source'">
+      <div v-if="search_input_selected === 'Source'">
         <j-flex-row>
           <v-text-field
             v-model="source"

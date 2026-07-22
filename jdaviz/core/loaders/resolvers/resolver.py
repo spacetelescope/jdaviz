@@ -1084,7 +1084,7 @@ class BaseConeSearchResolver(BaseResolver):
     viewer_items = List([]).tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
 
-    input_items = List([]).tag(sync=True)
+    search_input_items = List([]).tag(sync=True)
     # Can be "Source" (manual entry), "Viewer" (viewer center),
     # or "Catalog" (loop over rows of a loaded source-catalog).
     search_input_selected = Unicode("").tag(sync=True)
@@ -1131,7 +1131,7 @@ class BaseConeSearchResolver(BaseResolver):
         # "Catalog" only when at least one catalog is loaded in the data collection.
         self.search_input_select = SelectPluginComponent(
             self,
-            items='input_items',
+            items='search_input_items',
             selected='search_input_selected',
             manual_options=['Source', 'Viewer', 'Catalog'],
             apply_filters_to_manual_options=True,
