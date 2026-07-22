@@ -139,15 +139,15 @@
               :disabled="catalog_name_col_items.length === 0"
             ></v-radio>
           </v-radio-group>
-          <v-alert
-              v-if="catalog_name_col_items.length === 0"
-              type="info"
-              dense
-              style="margin-top: -20px; margin-bottom: 0"
-          >
-            No source name columns found.
-          </v-alert>
         </j-flex-row>
+        <v-alert
+          v-if="catalog_name_col_items.length === 0"
+          type="info"
+          dense
+          style="margin-top: -20px; margin-bottom: 0"
+        >
+          No source name columns found.
+        </v-alert>
 
         <plugin-select
           v-if="catalog_col_type === 'source_name'"
