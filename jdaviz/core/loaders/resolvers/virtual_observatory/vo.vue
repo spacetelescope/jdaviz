@@ -136,13 +136,18 @@
             v-model="catalog_col_type"
             row
             label="Coordinates from"
-            style="margin-top: 0; margin-bottom: 0"
+            style="margin-top: 15px"
           >
-            <v-radio label="RA/Dec Columns" value="sky_coords"></v-radio>
+            <v-radio
+                label="RA/Dec Columns"
+                value="sky_coords"
+                style="margin-top: -8px"
+            ></v-radio>
             <v-radio
               label="Source Names"
               value="source_name"
               :disabled="catalog_name_col_items.length === 0"
+              style="margin-top: -8px"
             ></v-radio>
           </v-radio-group>
         </j-flex-row>
@@ -150,7 +155,7 @@
           v-if="catalog_name_col_items.length === 0"
           type="info"
           dense
-          style="margin-top: -20px; margin-bottom: 0"
+          style="margin-top: -20px; margin-bottom: 8px"
         >
           No source name columns found.
         </v-alert>
