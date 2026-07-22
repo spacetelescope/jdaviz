@@ -443,6 +443,7 @@ class TestExportPluginPlots:
         # just check that it doesn't crash, since we can't download
         export_plugin.export()
 
+    @pytest.mark.usefixtures('_jail')
     def test_figure_export(self, imviz_helper):
 
         data = NDData(np.ones((500, 500)) * u.nJy)
@@ -451,11 +452,17 @@ class TestExportPluginPlots:
 
         export_plugin = imviz_helper.plugins['Export']._obj
 
-        export_plugin.export(filename=None)
+        export_plugin.filename_value = 'test_export_plugin_plot'
+
+        # when `embed_avm` is true (default), ``png_embed_avm`` will
+        # wait until the PNG upload callback has completed. that callback is
+        # never completed when running tests in headless CI envs, so we turn off
+        # AVM embedding here for testing:
+        export_plugin.export(filename=None, overwrite=True, embed_avm=False)
 
         # attempt to save a figure back to back
         try:
-            export_plugin.export(filename='img.png')
+            export_plugin.export(filename='img.png', embed_avm=False)
         except ValueError as e:
             assert str(e) == "previous png export is still in progress. Wait to complete before making another call to save_figure"  # noqa: E501
 

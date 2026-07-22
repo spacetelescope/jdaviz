@@ -49,6 +49,8 @@ New Features
 
 - 'Auto' parenting can now associate with data already loaded into the app without needing to specify the data label. [#4248]
 
+- Export image viewer screenshots to JPG with Astronomy Visualization Metadata (AVM). [#4065]
+
 Mosviz
 ^^^^^^
 
