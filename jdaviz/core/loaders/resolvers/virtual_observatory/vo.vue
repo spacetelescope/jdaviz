@@ -72,7 +72,7 @@
       </div>
 
       <!-- Viewer mode -->
-      <div v-if="input_selected === 'Viewer'">
+      <div v-if="search_input_selected === 'Viewer'">
         <plugin-viewer-select
           :items="viewer_items"
           v-model:selected="viewer_selected"
@@ -111,7 +111,7 @@
       </div>
 
       <!-- Catalog mode -->
-      <div v-if="input_selected === 'Catalog'">
+      <div v-if="search_input_selected === 'Catalog'">
         <plugin-dataset-select
           :items="catalog_items"
           v-model:selected="catalog_selected"
