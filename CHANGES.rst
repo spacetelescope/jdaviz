@@ -51,7 +51,8 @@ New Features
 
 - Add window docker icons for standalone app [#4289]
 
-- Add ability to query VO and Astroquery from catalog/using viewer coordinates as the source. [#4275]
+- Add ability to query VO and Astroquery from catalog/using viewer coordinates as the source. The former source selection
+  choice 'Manual' is also now 'Source'. [#4275]
 
 Mosviz
 ^^^^^^
