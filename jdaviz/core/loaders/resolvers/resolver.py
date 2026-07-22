@@ -1220,11 +1220,15 @@ class BaseConeSearchResolver(BaseResolver):
             str(cid) for cid in data.main_components
             if data.get_component(cid).data.dtype.kind in ('U', 'S', 'O')
         ]
+
         # Default to id column if one is selected and is valid
         # according to 'choices'
         id_col = data.meta.get('_jdaviz_id_col', None)
         if id_col in self.catalog_name_col.choices:
             self.catalog_name_col.selected = id_col
+        elif len(self.catalog_name_col.choices):
+            # Otherwise default to first choice if any are valid
+            self.catalog_name_col.selected = self.catalog_name_col.choices[0]
 
     @observe('input_selected')
     def _on_input_selected(self, msg=None):
