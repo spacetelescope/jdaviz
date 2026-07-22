@@ -1159,9 +1159,7 @@ class BaseConeSearchResolver(BaseResolver):
 
         self.catalog = DatasetSelect(
             self, 'catalog_items', 'catalog_selected',
-            filters=['is_catalog'],
-            default_text='Select catalog...',
-            default_mode='default_text',
+            filters=['is_catalog']
         )
 
         self.catalog_subset = SelectPluginComponent(
@@ -1169,8 +1167,6 @@ class BaseConeSearchResolver(BaseResolver):
             items="catalog_subset_items",
             selected="catalog_subset_selected",
             manual_options=["Entire Catalog"],
-            default_text="Entire Catalog",
-            default_mode='default_text',
         )
 
         # Column of source names to resolve (only used when
