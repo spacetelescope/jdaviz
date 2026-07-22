@@ -1207,11 +1207,7 @@ class BaseConeSearchResolver(BaseResolver):
     def _on_catalog_selected(self, msg=None):
         """Reset subset selection and refresh name-column choices on catalog change."""
         self.catalog_subset_selected = 'Entire Catalog'
-        self._update_catalog_name_col_items()
 
-    def _update_catalog_name_col_items(self, msg=None):
-        """Populate the source-name column dropdown with the selected catalog's
-        string columns (the candidates for name-based resolution)."""
         if not hasattr(self, 'catalog_name_col'):
             return
 
@@ -1224,6 +1220,11 @@ class BaseConeSearchResolver(BaseResolver):
             str(cid) for cid in data.main_components
             if data.get_component(cid).data.dtype.kind in ('U', 'S', 'O')
         ]
+        # Default to id column if one is selected and is valid
+        # according to 'choices'
+        id_col = data.meta.get('_jdaviz_id_col', None)
+        if id_col in self.catalog_name_col.choices:
+            self.catalog_name_col.selected = id_col
 
     @observe('input_selected')
     def _on_input_selected(self, msg=None):
@@ -1362,10 +1363,10 @@ class BaseConeSearchResolver(BaseResolver):
 
     def _resolve_catalog_source_names(self, data, row_indices):
         """Resolve the selected source-name column to SkyCoords via name lookup."""
-        name_col = self.catalog_name_col_selected
-        if not name_col:
-            raise ValueError("Select a source-name column to run a name-based cone search.")
-        name_data = data[data.id[name_col]]
+        if not self.catalog_name_col_selected:
+            self.catalog_name_col_selected = data.meta.get('_jdaviz_id_col')
+            # raise ValueError("Select a source-name column to run a name-based cone search.")
+        name_data = data[data.id[self.catalog_name_col_selected]]
 
         coords = []
         for i in row_indices:
