@@ -116,9 +116,10 @@
           :items="catalog_items"
           v-model:selected="catalog_selected"
           label="Catalog"
+          :show_if_single_entry="true"
           api_hint="ldr.catalog ="
           :api_hints_enabled="api_hints_enabled"
-          hint="Select a loaded catalog; the resource is queried once per catalog row."
+          hint="Select a loaded catalog. The resource is queried once per catalog row."
         />
 
         <plugin-select
