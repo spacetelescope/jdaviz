@@ -57,7 +57,7 @@
       </template>
     </span>
 
-    <v-btn-toggle v-model="active_tool_id" :style="" class="transparent">
+    <v-btn-toggle v-model="active_tool_id" style="overflow-x: hidden" class="transparent">
       <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" :key="id">
         <v-tooltip v-if="primary && visible &&!should_hide_in_popout(id)" location="bottom">
           <template v-slot:activator="{ props }">

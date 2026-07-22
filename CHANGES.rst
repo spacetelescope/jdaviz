@@ -90,7 +90,16 @@ Other Changes and Additions
 
 - Updated all front end vuetify templates for Vue 3 compatibility. [#4053]
 
-5.0.3 (unreleased)
+5.0.4 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Mosviz
+^^^^^^
+
+5.0.3 (2026-07-21)
 ==================
 
 Bug Fixes
@@ -113,10 +122,6 @@ Bug Fixes
 - Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264]
 
 - Safely handle case where meta.wcs may be None. [#4272]
-
-Mosviz
-------
-
 
 5.0.2 (2026-06-12)
 ==================
