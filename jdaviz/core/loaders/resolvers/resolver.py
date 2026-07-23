@@ -1368,8 +1368,7 @@ class BaseConeSearchResolver(BaseResolver):
     def _resolve_catalog_source_names(self, data, row_indices):
         """Resolve the selected source-name column to SkyCoords via name lookup."""
         if not self.catalog_name_col_selected:
-            self.catalog_name_col_selected = data.meta.get('_jdaviz_id_col')
-            # raise ValueError("Select a source-name column to run a name-based cone search.")
+            raise ValueError("Select a source-name column to run a name-based cone search.")
         name_data = data[data.id[self.catalog_name_col_selected]]
 
         coords = []
