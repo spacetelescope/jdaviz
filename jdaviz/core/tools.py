@@ -850,6 +850,68 @@ class TableApplyZoom(_BaseTableApplyTool):
 
 
 @viewer_tool
+class TableAddColumn(Tool):
+    icon = os.path.join(ICON_DIR, 'table-column-plus-after.svg')
+    tool_id = 'jdaviz:table_add_column'
+    action_text = 'Add column'
+    tool_tip = 'Add a new empty column to the table data'
+
+    def activate(self):
+        self.viewer.toolbar.override_tools(
+            ['jdaviz:table_apply_add_column'],
+            'Add Column',
+            custom_widgets=[
+                {'type': 'text', 'label': 'Column name', 'selected': ''},
+                {'type': 'text', 'label': 'Fill value (default: nan)', 'selected': ''},
+            ],
+        )
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
+
+
+@viewer_tool
+class TableApplyAddColumn(Tool):
+    icon = os.path.join(ICON_DIR, 'check.svg')
+    tool_id = 'jdaviz:table_apply_add_column'
+    action_text = 'Apply add column'
+    tool_tip = 'Add a new column with the given name to all table data entries'
+
+    def activate(self):
+        selected = self.viewer.toolbar.custom_widget_selected
+        column_name = (selected[0] if len(selected) > 0 else '').strip()
+        fill_str = (selected[1] if len(selected) > 1 else '').strip()
+
+        if column_name:
+            # Parse fill value: empty → nan, numeric → float, else string
+            if fill_str == '':
+                fill_value = np.nan
+            else:
+                try:
+                    fill_value = float(fill_str)
+                except ValueError:
+                    fill_value = fill_str
+
+            try:
+                self.viewer.add_column(column_name, fill_value=fill_value)
+            except Exception:  # nosec
+                pass
+
+        self.viewer.toolbar.restore_tools()
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
+
+
+@viewer_tool
 class SafeClickCallbackTool(CheckableTool):
     """Base class for tools that register a click callback on activate."""
 

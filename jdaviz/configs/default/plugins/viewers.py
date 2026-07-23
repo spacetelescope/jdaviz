@@ -33,6 +33,9 @@ from specutils import Spectrum
 
 from traitlets import Bool, Unicode
 
+# table_viewer: temporary until glue-jupyter PR is merged; see that file for revert instructions.
+from jdaviz.components.table_viewer import JdavizTableGlue  # noqa: E402
+
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
@@ -1527,6 +1530,29 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
     _native_mark_classnames = ('Bars', 'BarsGL')
 
 
+def _role_labels_from_meta(meta):
+    """Return the list of non-removable column names encoded in a glue Data meta dict.
+
+    Two kinds of columns are protected:
+    - The actual column names recorded by the loader (values of the ``_jdaviz_loader_*``
+      keys), e.g. ``'SkyCoord_RA'`` or ``'xcentroid'``.
+    - Fixed derived-column names (``'X'``, ``'Y'``, ``'ID'``) that jdaviz creates
+      whenever the corresponding loader key is present, regardless of what the
+      original column was called.
+    """
+    pairs = {'_jdaviz_loader_ra_col': None,
+             '_jdaviz_loader_dec_col': None,
+             '_jdaviz_loader_x_col': 'X',
+             '_jdaviz_loader_y_col': 'Y',
+             '_jdaviz_id_col': 'ID'}
+    return [
+        name
+        for meta_key, derived_name in pairs.items()
+        for name in (meta.get(meta_key), derived_name if meta_key in meta else None)
+        if name
+    ]
+
+
 @viewer_registry("table-viewer", label="table")
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
@@ -1534,12 +1560,20 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
+                    ['jdaviz:table_add_column'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
                      'jdaviz:viewer_popout']
                    ]
 
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
+
+        # table_viewer: replace default TableGlue with local override until upstream PR is merged
+        self.widget_table = JdavizTableGlue(
+            data=None,
+            apply_filter=self.apply_filter,
+            state=self.state,
+        )
 
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True
@@ -1554,6 +1588,10 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Also update selection highlight marks when checked rows change
         self.widget_table.observe(self._on_checked_changed, names=['checked'])
         self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
+
+        # Inline column-header editing: re-sync role labels when data changes
+        self.widget_table.observe(self._on_table_data_changed, names=['data'])
+        self.widget_table.add_column_renamed_callback(self._sync_role_meta_on_rename)
 
         # Subscribe to RestoreToolbarMessage to clean up checkbox state
         # when toolbar is restored (e.g., by clicking X on custom toolbar)
@@ -1654,7 +1692,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             # Add new column
             tab.data.add_component(data, column_name)
 
-    def add_column(self, column_name, data=None):
+    def add_column(self, column_name, data=None, fill_value=None):
         """
         Add a new data column to the table.
 
@@ -1664,8 +1702,12 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             The name of the column to add.
         data : list-like, optional
             The data for the column. Must be the same length as the number of
-            rows in the table. If None, the column will be filled with None-type
-            values.
+            rows in the table. If None, the column will be filled with
+            ``fill_value``.
+        fill_value : scalar, optional
+            Value to use when ``data`` is None.  Defaults to ``None`` (stored
+            as object-dtype None values). Pass ``np.nan`` for NaN-filled float
+            columns or any string/number to pre-fill with a constant.
 
         Raises
         ------
@@ -1673,20 +1715,25 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             If column_name is not provided, not a string, or if data length does
             not match number of rows in the table.
         """
-
         # make sure column name is not in table already
         if column_name in [c.label for c in self.widget_table.data.components]:
             raise ValueError(f"Column '{column_name}' already exists in the table. Use update_column to update it instead.")  # noqa: E501
 
+        if data is None and fill_value is not None:
+            nrows = self.widget_table.data.shape[0]
+            data = np.full(nrows, fill_value)
+
         self._add_or_update_column(column_name, data)
 
-        # and make the user-added column editable
+        # and make the new column editable
 
         # we already know column_name can safely be cast to a string from check
         # in _add_or_update_column
         column_name = str(column_name)
         cid = self.layers[0].layer.data.id[column_name]
         self.state.editable_components = list(self.state.editable_components) + [cid]
+        self.state.renameable_components = list(self.state.renameable_components) + [cid]
+        self.state.removable_components = list(self.state.removable_components) + [cid]
 
     def update_column(self, column_name, data):
         """
@@ -1804,3 +1851,120 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Clear selection marks in image viewers when this table viewer is removed
         # (toolbar cleanup is handled generically by NestedJupyterToolbar)
         self._clear_selection_marks()
+
+    def _sync_role_meta_on_rename(self, old_name, new_name):
+        """Update role-metadata entries across all layers when a column is renamed."""
+        for glue_data in self._iter_table_data():
+            meta = getattr(glue_data, 'meta', None)
+            if meta:
+                for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
+                            '_jdaviz_loader_x_col', '_jdaviz_loader_y_col',
+                            '_jdaviz_id_col'):
+                    if meta.get(key) == old_name:
+                        meta[key] = new_name
+        self._update_component_permissions()
+
+    def _on_table_data_changed(self, change):
+        """
+        Sync renameable/removable_components whenever table data is set.
+
+        Reads from change['new'] rather than via _iter_table_data() because this
+        observer fires before the layer is appended to self.layers.
+        """
+        data = change['new']
+        if data is None:
+            self.state.renameable_components = []
+            self.state.removable_components = []
+            return
+        meta = getattr(data, 'meta', {}) or {}
+        role_labels = set(_role_labels_from_meta(meta))
+        self.state.renameable_components = list(data.main_components)
+        self.state.removable_components = [
+            cid for cid in data.main_components if cid.label not in role_labels
+        ]
+
+    def _iter_table_data(self):
+        """Yield each unique glue Data object visible in this viewer."""
+        seen = set()
+        for layer_artist in self.layers:
+            data = layer_artist.layer
+            if hasattr(data, 'data'):  # Subset
+                data = data.data
+            if id(data) not in seen:
+                seen.add(id(data))
+                yield data
+
+    def _update_component_permissions(self):
+        """Sync renameable/removable_components to state based on role assignments."""
+        renameable = []
+        removable = []
+        for data in self._iter_table_data():
+            meta = getattr(data, 'meta', {}) or {}
+            role_labels = set(_role_labels_from_meta(meta))
+            for cid in data.main_components:
+                renameable.append(cid)
+                if cid.label not in role_labels:
+                    removable.append(cid)
+        self.state.renameable_components = renameable
+        self.state.removable_components = removable
+
+    def rename_column(self, old_name, new_name):
+        """
+        Rename an existing column across all table data entries.
+
+        Parameters
+        ----------
+        old_name : str
+            Current name of the column.
+        new_name : str
+            New name for the column.
+
+        Raises
+        ------
+        ValueError
+            If ``old_name`` is not found in the table.
+        """
+        new_name = str(new_name).strip()
+        if not new_name:
+            raise ValueError("new_name must be a non-empty string.")
+        found = False
+        for glue_data in self._iter_table_data():
+            if old_name in [c.label for c in glue_data.main_components]:
+                glue_data.id[old_name].label = new_name
+                found = True
+        if not found:
+            raise ValueError(f"Column '{old_name}' not found in the table.")
+        self._sync_role_meta_on_rename(old_name, new_name)
+        self.redraw()
+
+    def remove_column(self, column_name):
+        """
+        Remove an existing column from all table data entries.
+
+        Parameters
+        ----------
+        column_name : str
+            Name of the column to remove.
+
+        Raises
+        ------
+        ValueError
+            If ``column_name`` is not found in the table.
+        """
+        found = False
+        for glue_data in self._iter_table_data():
+            if column_name in [c.label for c in glue_data.main_components]:
+                cid = glue_data.id[column_name]
+                self.state.editable_components = [
+                    c for c in self.state.editable_components if c is not cid
+                ]
+                self.state.renameable_components = [
+                    c for c in self.state.renameable_components if c is not cid
+                ]
+                self.state.removable_components = [
+                    c for c in self.state.removable_components if c is not cid
+                ]
+                glue_data.remove_component(cid)
+                found = True
+        if not found:
+            raise ValueError(f"Column '{column_name}' not found in the table.")

@@ -13,28 +13,41 @@
       </v-btn>
     </v-btn-toggle>
 
-    <!-- Custom widgets (e.g., viewer selector) -->
+    <!-- Custom widgets (dropdowns and text inputs) -->
     <span v-if="custom_widget_items.length > 0" style="display: inline-flex; align-items: center; vertical-align: top; height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
-      <v-select
-        v-for="(widget, idx) in custom_widget_items"
-        :key="idx"
-        :model-value="custom_widget_selected[idx]"
-        @update:modelValue="(val) => update_widget_selection(idx, val)"
-        :items="widget.items"
-        :placeholder="widget.label"
-        :multiple="widget.multiselect"
-        :chips="widget.multiselect"
-        :small-chips="widget.multiselect"
-        deletable-chips
-        density="compact"
-        solo
-        flat
-        hide-details
-        style="min-width: 120px; max-width: 250px;"
-        class="custom-toolbar-select"
-        item-title="label"
-        item-value="value"
-      ></v-select>
+      <template v-for="(widget, idx) in custom_widget_items" :key="idx">
+        <v-text-field
+          v-if="widget.type === 'text'"
+          :model-value="custom_widget_selected[idx]"
+          @update:modelValue="(val) => update_widget_selection(idx, val)"
+          :placeholder="widget.label"
+          density="compact"
+          solo
+          flat
+          hide-details
+          style="min-width: 140px; max-width: 240px;"
+          class="custom-toolbar-text-input"
+        ></v-text-field>
+        <v-select
+          v-else
+          :model-value="custom_widget_selected[idx]"
+          @update:modelValue="(val) => update_widget_selection(idx, val)"
+          :items="widget.items"
+          :placeholder="widget.label"
+          :multiple="widget.multiselect"
+          :chips="widget.multiselect"
+          :small-chips="widget.multiselect"
+          deletable-chips
+          density="compact"
+          solo
+          flat
+          hide-details
+          style="min-width: 120px; max-width: 250px;"
+          class="custom-toolbar-select"
+          item-title="label"
+          item-value="value"
+        ></v-select>
+      </template>
     </span>
 
     <v-btn-toggle v-model="active_tool_id" style="overflow-x: hidden" class="transparent">
