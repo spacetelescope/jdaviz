@@ -940,6 +940,7 @@ def test_load_image_align_by_and_astroquery_loader(deconfigged_helper, image_ndd
     ldr.load()
 
     astroquery_loader = deconfigged_helper.loaders['astroquery']
+    astroquery_loader.search_input_select = 'Viewer'
     astroquery_loader.viewer = 'Image'
 
     deconfigged_helper.plugins['Orientation'].align_by = align_by
