@@ -32,7 +32,7 @@ class TestCatalogConeSearch:
         catalog = self.sky_catalog if catalog is None else catalog
         kwargs = {'col_other': col_other} if col_other else {}
         label = self._load_catalog(catalog, **kwargs)
-        self.ldr.input_select.selected = 'Catalog'
+        self.ldr.search_input_select.selected = 'Catalog'
         self.ldr.catalog.selected = label
         self.ldr.catalog_col_type = col_type
         if name_col is not None:
@@ -71,12 +71,12 @@ class TestCatalogConeSearch:
 
     def test_get_catalog_skycoords(self):
         # Catalog mode is hidden until a catalog is loaded
-        assert 'Catalog' not in self.ldr.input_select.labels
+        assert 'Catalog' not in self.ldr.search_input_select.labels
         # Source is the default
-        assert self.ldr.input_selected == 'Source'
+        assert self.ldr.search_input_selected == 'Source'
 
         self._enter_catalog_mode()
-        assert 'Catalog' in self.ldr.input_select.labels
+        assert 'Catalog' in self.ldr.search_input_select.labels
 
         coords = self.ldr._get_catalog_skycoords()
         # each entry is (SkyCoord, source_label, error_string)
