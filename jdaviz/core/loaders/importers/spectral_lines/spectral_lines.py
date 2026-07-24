@@ -213,6 +213,7 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
     @staticmethod
     def _get_supported_viewers():
         return [
+            {'label': 'Scatter', 'reference': 'scatter-viewer'},
             {'label': 'Table', 'reference': 'table-viewer'},
             {'label': 'Histogram', 'reference': 'histogram-viewer'},
         ]
