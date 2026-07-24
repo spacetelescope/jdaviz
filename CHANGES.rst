@@ -49,6 +49,8 @@ New Features
 
 - 'Auto' parenting can now associate with data already loaded into the app without needing to specify the data label. [#4248]
 
+- Add window docker icons for standalone app [#4289]
+
 - New image viewer tools for editing the colormap, stretch function, and opacity of the top-layer. [#4290]
 
 Mosviz
@@ -95,6 +97,8 @@ Other Changes and Additions
 
 Bug Fixes
 ---------
+
+- fix case where file drop loader would not show importer options. [#4303]
 
 Mosviz
 ^^^^^^

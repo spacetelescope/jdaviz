@@ -16,11 +16,13 @@ codesign_identity = os.environ.get("DEVELOPER_ID_APPLICATION")
 # for all the widgets
 datas = [
     (Path(sys.prefix) / "share" / "jupyter", "./share/jupyter"),
-    (Path(sys.prefix) / "etc" / "jupyter", "./etc/jupyter")] + \
+    (Path(sys.prefix) / "etc" / "jupyter", "./etc/jupyter"),
+    (Path(sys.prefix) / "share" / "solara", "./share/solara")] + \
     copy_metadata('echo') 
 
 block_cipher = None
 
+icon_file = '../assets/app.ico' if sys.platform == 'win32' else '../assets/app.icns' 
 
 a = Analysis(
     ["jdaviz-cli-entrypoint.py"],
@@ -58,6 +60,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=codesign_identity,
     entitlements_file="entitlements.plist",
+    icon=icon_file if sys.platform.startswith('win') else None, # Windows
 )
 coll = COLLECT(
     exe,
@@ -74,7 +77,7 @@ app = BUNDLE(
     exe,
     coll,
     name="jdaviz.app",
-    icon=None,
+    icon=icon_file if sys.platform.startswith('darwin') else None,
     entitlements_file="entitlements.plist",
     bundle_identifier="edu.stsci.jdaviz",
     version=jdaviz.__version__,
