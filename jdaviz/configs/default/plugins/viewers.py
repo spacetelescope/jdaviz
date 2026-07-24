@@ -35,6 +35,7 @@ from traitlets import Bool, Unicode
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
+from jdaviz.core.aida_api import AIDAMixin
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
 from jdaviz.core.events import (SnackbarMessage,
@@ -410,6 +411,12 @@ class JdavizViewerMixin(WithCache):
             else:
                 # cubeviz image viewers don't inherit from AstrowidgetsImageViewerMixin yet,
                 # but also shouldn't expose set_limits because of equal aspect ratio concerns
+                expose += []
+
+            if isinstance(self, AIDAMixin):
+                expose += ['set_viewport', 'get_viewport']
+            else:
+                # cubeviz image viewers don't inherit from AIDAMixin yet,
                 expose += []
         elif isinstance(self, TableViewer):
             expose += []
