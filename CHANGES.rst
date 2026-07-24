@@ -98,6 +98,8 @@ Bug Fixes
 
 - fix case where file drop loader would not show importer options. [#4303]
 
+- Fix image importer support for Roman L3 mosaic files. [#4309]
+
 Mosviz
 ^^^^^^
 
