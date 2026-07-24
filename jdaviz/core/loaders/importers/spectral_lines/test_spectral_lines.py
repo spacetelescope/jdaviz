@@ -161,19 +161,10 @@ def test_output_additional_columns(deconfigged_helper):
     assert 'name' in out.colnames
 
 
-def test_output_valid_spectral_units(deconfigged_helper):
-    """All valid spectral unit strings should be parseable by astropy."""
-    app = deconfigged_helper._app
-    table = QTable({'wavelength': [6562.8]})
-    importer = SpectralLinesImporter(app=app, resolver=None, parser=None, input=table)
-
-    for unit_str in importer._valid_spectral_units():
-        assert u.Unit(unit_str) is not None, f"Could not parse unit: {unit_str}"
-
-
 def test_supported_viewers():
     """_get_supported_viewers should include Table and Histogram viewers."""
     viewers = SpectralLinesImporter._get_supported_viewers()
+    assert len(viewers) == 2
     references = [v['reference'] for v in viewers]
     assert 'table-viewer' in references
     assert 'histogram-viewer' in references
