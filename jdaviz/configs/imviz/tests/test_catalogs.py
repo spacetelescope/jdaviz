@@ -243,11 +243,9 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 @pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
-def test_catalog_reingestion(imviz_helper, tmp_path):
+def test_catalog_reingestion(deconfigged_helper, tmp_path):
     # load data that we know has Gaia sources
     arr = np.ones((1489, 2048))
-    viewer = imviz_helper.default_viewer._obj
-    viewer.shape = (100, 100)
     hdu1 = fits.ImageHDU(arr, name='SCI')
     hdu1.header.update({'CTYPE1': 'RA---TAN',
                         'CUNIT1': 'deg',
@@ -263,10 +261,10 @@ def test_catalog_reingestion(imviz_helper, tmp_path):
                         'CRPIX2': 745.0,
                         'CRVAL2': 1.54470013629,
                         'NAXIS2': 1489})
-    imviz_helper.load_data(hdu1, data_label='has_wcs')
+    deconfigged_helper.load(hdu1, data_label='has_wcs', format='Image')
 
-    catalog_plg = imviz_helper.plugins['Catalog Search']
-    export_plg = imviz_helper.plugins['Export']
+    catalog_plg = deconfigged_helper.plugins['Catalog Search']
+    export_plg = deconfigged_helper.plugins['Export']
 
     # search Gaia to get exportable data
     catalog_plg.catalog = 'Gaia'
@@ -294,9 +292,11 @@ def test_catalog_reingestion(imviz_helper, tmp_path):
 
 
 @pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
-def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
+def test_offline_ecsv_catalog(deconfigged_helper, image_2d_wcs, tmp_path):
+    ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(ndd, data_label='data_with_wcs', format='Image')
     # Since we are not really displaying, need this to test zoom.
-    viewer = imviz_helper.default_viewer._obj.glue_viewer
+    viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
     viewer.shape = (100, 100)
     viewer.state._set_axes_aspect_ratio(1)
 
@@ -305,11 +305,9 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     tbl = QTable({'sky_centroid': sky})  # Table has no "Label" column
     n_entries = len(tbl)
 
-    ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
-    imviz_helper.load(ndd, data_label='data_with_wcs')
-    assert len(imviz_helper._app.data_collection) == 1
+    assert len(deconfigged_helper._app.data_collection) == 1
 
-    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin = deconfigged_helper.plugins['Catalog Search']
     catalogs_plugin.import_catalog(tbl)
     out_tbl = catalogs_plugin.search(error_on_fail=True)
     assert tbl.colnames == ["sky_centroid"]  # Ensure input table not overwritten by plugin
@@ -318,13 +316,13 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # Assert that Object ID is set to index + 1 when the label column is absent
     for idx, item in enumerate(catalogs_plugin.table._obj.items):
         assert item['Object ID'] == str(idx + 1)
-    assert len(imviz_helper._app.data_collection) == 2  # image + markers
+    assert len(deconfigged_helper._app.data_collection) == 2  # image + markers
 
     catalogs_plugin.table.select_rows(0)
     assert len(catalogs_plugin.table._obj.selected_rows) == 1
 
     # Test that exported table only has original input column.
-    export_plugin = imviz_helper.plugins['Export']
+    export_plugin = deconfigged_helper.plugins['Export']
     export_plugin.plugin_table = 'Catalog Search: table'
     outfilename = tmp_path / "mycat.ecsv"
     export_plugin.export(filename=str(outfilename), show_dialog=False, overwrite=True)
@@ -348,16 +346,16 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     out_tbl = catalogs_plugin.search()
     assert len([out_tbl]) == n_entries
     assert catalogs_plugin._obj.number_of_results == n_entries
-    assert len(imviz_helper._app.data_collection) == 2  # image + markers
+    assert len(deconfigged_helper._app.data_collection) == 2  # image + markers
 
     catalogs_plugin.clear_table()
     assert not catalogs_plugin._obj.results_available
-    assert len(imviz_helper._app.data_collection) == 1  # markers gone for good
+    assert len(deconfigged_helper._app.data_collection) == 1  # markers gone for good
 
-    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min == -0.5
-    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max == 9.5
-    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min == -0.5
-    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max == 9.5
+    assert deconfigged_helper.viewers['Image']._obj.glue_viewer.state.x_min == -0.5
+    assert deconfigged_helper.viewers['Image']._obj.glue_viewer.state.x_max == 9.5
+    assert deconfigged_helper.viewers['Image']._obj.glue_viewer.state.y_min == -0.5
+    assert deconfigged_helper.viewers['Image']._obj.glue_viewer.state.y_max == 9.5
     # Re-populate the table with a new search
     out_tbl = catalogs_plugin.search()
     assert len(out_tbl) > 0
@@ -368,25 +366,26 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # test the zooming using the default 'padding' of 2% of the viewer size
     # around selected points
     catalogs_plugin.zoom_to_selected()
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min,
+    assert_allclose(deconfigged_helper.viewers['Image']._obj.glue_viewer.state.x_min,
                     -0.01966, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max,
+    assert_allclose(deconfigged_helper.viewers['Image']._obj.glue_viewer.state.x_max,
                     0.02034, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min,
+    assert_allclose(deconfigged_helper.viewers['Image']._obj.glue_viewer.state.y_min,
                     0.980008, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max,
+    assert_allclose(deconfigged_helper.viewers['Image']._obj.glue_viewer.state.y_max,
                     1.020008, rtol=1e-4)
 
 
-def test_zoom_to_selected(imviz_helper, image_2d_wcs):
-    # Since we are not really displaying, need this to test zoom.
-    viewer = imviz_helper.default_viewer._obj.glue_viewer
-    viewer.shape = (100, 100)
-    viewer.state._set_axes_aspect_ratio(1)
-
+def test_zoom_to_selected(deconfigged_helper, image_2d_wcs):
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
+    deconfigged_helper.load(ndd, format='Image')
+
+    # Since we are not really displaying, need this to test zoom.
+    viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+
+    viewer.shape = (100, 100)
+    viewer.state._set_axes_aspect_ratio(1)
 
     # sources at pixel coords ~(100, 100), ~(200, 200)
     sky_coord = SkyCoord(ra=[337.49056532, 337.46086081],
@@ -394,7 +393,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     tbl = Table({'sky_centroid': [sky_coord],
                  'label': ['Source_1', 'Source_2']})
 
-    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin = deconfigged_helper.plugins['Catalog Search']
     catalogs_plugin.import_catalog(tbl)
     catalogs_plugin.search()
 
@@ -402,7 +401,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     catalogs_plugin.select_all()
 
     # check viewer limits before zoom
-    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.glue_viewer.get_limits()
+    xmin, xmax, ymin, ymax = viewer.get_limits()
     assert xmin == ymin == -0.5
     assert xmax == ymax == 499.5
 
@@ -411,7 +410,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
 
     # make sure the viewer bounds reflect the zoom, which, in pixel coords,
     # should be centered at roughly pixel coords (150, 150)
-    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.glue_viewer.get_limits()
+    xmin, xmax, ymin, ymax = viewer.get_limits()
 
     assert_allclose((xmin + xmax) / 2, 150., atol=0.1)
     assert_allclose((ymin + ymax) / 2, 150., atol=0.1)
@@ -431,7 +430,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     catalogs_plugin.zoom_to_selected(padding=0.05)
 
     # check that zoom window is centered correctly on the source at 100, 100
-    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.glue_viewer.get_limits()
+    xmin, xmax, ymin, ymax = viewer.get_limits()
     assert_allclose((xmin + xmax) / 2, 100., atol=0.1)
     assert_allclose((ymin + ymax) / 2, 100., atol=0.1)
 
@@ -448,10 +447,10 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
         catalogs_plugin.zoom_to_selected(padding=5)
 
 
-def test_select_tool(imviz_helper, image_2d_wcs):
+def test_select_tool(deconfigged_helper, image_2d_wcs):
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
+    deconfigged_helper.load(ndd, format='Image')
 
     # write out catalog to file so we can read it back in
     # todo: if tables can be loaded directly at some point, do that
@@ -462,17 +461,18 @@ def test_select_tool(imviz_helper, image_2d_wcs):
     tbl = Table({'sky_centroid': [sky_coord],
                  'label': ['Source_1', 'Source_2']})
 
-    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin = deconfigged_helper.plugins['Catalog Search']
     catalogs_plugin.import_catalog(tbl)
 
     # the tool isn't available in the default toolbar
-    toolbar = imviz_helper.viewers['imviz-0']._obj.glue_viewer.toolbar
+    viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+    toolbar = viewer.toolbar
     assert 'jdaviz:selectcatalog' not in toolbar.tools
 
     catalogs_plugin._obj.toggle_custom_toolbar()
     assert 'jdaviz:selectcatalog' in toolbar.tools
     tool = toolbar.tools['jdaviz:selectcatalog']
-    mark = catalogs_plugin._obj._get_mark(imviz_helper.viewers['imviz-0']._obj.glue_viewer)
+    mark = catalogs_plugin._obj._get_mark(viewer) # noqa
     assert tool.is_visible() is False
 
     catalogs_plugin.search(error_on_fail=True)

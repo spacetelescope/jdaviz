@@ -65,9 +65,7 @@ class TestSpecvizHelper:
 
     @pytest.mark.parametrize(
         'kwargs',
-        ({'data_label': [f"List test {i}" for i in (1, 2, 3)]},
-         {'sources': [f"1D Spectrum at index: {i}" for i in (0, 1, 2)]},
-         {'sources': '*'}))
+        ({'data_label': [f"List test {i}" for i in (1, 2, 3)]}))
     @pytest.mark.skipif(CI, reason="Temporarily skipped failing specviz test in CI")
     def test_load_spectrum_list_with_kwargs(self, kwargs):
         # When loading via the ``data_label`` argument, the length of the

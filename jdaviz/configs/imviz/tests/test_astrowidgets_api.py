@@ -1,5 +1,4 @@
 import os
-
 import asdf
 import numpy as np
 import pytest
@@ -12,8 +11,6 @@ from astropy.visualization import AsinhStretch, LinearStretch, LogStretch, SqrtS
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseDeconfiggedImage_WCS_WCS
-
-CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")
 
 
 # TODO: Remove skip when https://github.com/bqplot/bqplot/pull/1397/files#r726500097 is resolved.
@@ -28,7 +25,6 @@ class TestSave(BaseImviz_WCS_NoWCS):
         assert os.path.isfile(f'{filename}.png')
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz astrowidgets_api test in CI")
 class TestCenterOffset(BaseImviz_WCS_NoWCS):
 
     def test_center_offset_pixel(self):
@@ -83,7 +79,6 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
             self.viewer.offset_by(dsky, dsky)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz astrowidgets_api test in CI")
 class TestCenter(BaseDeconfiggedImage_WCS_WCS):
 
     def test_center_on_pix(self):
@@ -111,7 +106,6 @@ class TestCenter(BaseDeconfiggedImage_WCS_WCS):
         assert_allclose(self.viewer.get_limits(), limits_dithered_data, rtol=rtol)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz astrowidgets_api test in CI")
 class TestZoom(BaseImviz_WCS_NoWCS):
 
     @pytest.mark.parametrize('val', (0, -0.1, 'foo', [1, 2]))
@@ -164,7 +158,6 @@ class TestZoom(BaseImviz_WCS_NoWCS):
             self.assert_zoom_results(10, -0.5, 9.5, -0.5, 9.5, 0)
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz astrowidgets_api test in CI")
 class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
 
     def test_colormap_options(self):
@@ -253,7 +246,6 @@ class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
         self.viewer.blink_once()
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz astrowidgets_api test in CI")
 class TestMarkers(BaseImviz_WCS_NoWCS):
 
     def test_invalid_markers(self):
@@ -344,36 +336,35 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
             self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
 
 
-@pytest.mark.skipif(CI, reason="Temporarily skipped failing imviz catalog test in CI")
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 @pytest.mark.filterwarnings("ignore:The Catalogs plugin is deprecated*:astropy.utils.exceptions.AstropyDeprecationWarning")  # noqa
-def test_markers_gwcs_lonlat(imviz_helper):
+def test_markers_gwcs_lonlat(deconfigged_helper):
     """GWCS uses Lon/Lat for ICRS."""
     gw_file = get_pkg_data_filename('data/miri_i2d_lonlat_gwcs.asdf')
     with asdf.open(gw_file) as af:
         gw = af.tree['wcs']
     ndd = NDData(np.ones((10, 10), dtype=np.float32), wcs=gw, unit='MJy/sr')
-    imviz_helper.load(ndd, data_label='MIRI_i2d', format='Image')
-    assert imviz_helper._app.data_collection[0].label == 'MIRI_i2d[DATA]'
-    assert imviz_helper._app.data_collection[0].components == [
+    deconfigged_helper.load(ndd, data_label='MIRI_i2d', format='Image')
+    assert deconfigged_helper._app.data_collection[0].label == 'MIRI_i2d[DATA]'
+    assert deconfigged_helper._app.data_collection[0].components == [
         'Pixel Axis 0 [y]', 'Pixel Axis 1 [x]', 'Lat', 'Lon', 'DATA']
 
     # If you run this interactively, should appear slightly off-center.
     calib_cat = Table({'coord': [SkyCoord(80.6609, -69.4524, unit='deg')]})
-    imviz_helper.default_viewer.add_markers(calib_cat,
-                                            use_skycoord=True, marker_name='my_sky')
-    assert imviz_helper._app.data_collection[1].label == 'my_sky'
+    deconfigged_helper._app.get_viewer('Image').add_markers(calib_cat,
+                                                            use_skycoord=True, marker_name='my_sky')
+    assert deconfigged_helper._app.data_collection[1].label == 'my_sky'
 
-    viewer = imviz_helper._app.get_viewer('imviz-0')
+    viewer = deconfigged_helper._app.get_viewer('Image')
     viewer.reset_markers()
 
     # change orientation and ensure catalogs can be plotted using new orientation
     # data collection entry
-    orientation = imviz_helper.plugins['Orientation']
+    orientation = deconfigged_helper.plugins['Orientation']
     orientation.align_by = "WCS"
 
-    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin = deconfigged_helper.plugins['Catalog Search']
     catalogs_plugin.catalog.selected = 'Gaia'
     catalogs_plugin.max_sources = 10
     catalogs_plugin.search(error_on_fail=True)

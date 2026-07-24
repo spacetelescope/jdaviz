@@ -27,15 +27,15 @@ calspec_url = "https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_ca
 FLUX_UNITS = ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']
 
 
-def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
+def test_version_after_nddata_update(deconfigged_helper, spectrum1d_cube_with_uncerts):
     # Also test that plugin is disabled before data is loaded.
-    plg = cubeviz_helper.plugins['3D Spectral Extraction']
-    assert plg._obj.disabled_msg != ''
+    with pytest.raises(KeyError):
+        plg = deconfigged_helper.plugins['Spectral Extraction']
 
-    cubeviz_helper.load(spectrum1d_cube_with_uncerts)
+    deconfigged_helper.load(spectrum1d_cube_with_uncerts)
 
-    spectral_cube = cubeviz_helper._app.data_collection[0].get_object(NDDataArray)
-    uncert_cube = cubeviz_helper._app.data_collection[1].get_object(StdDevUncertainty)
+    spectral_cube = deconfigged_helper._app.data_collection[0].get_object(NDDataArray)
+    uncert_cube = deconfigged_helper._app.data_collection[1].get_object(StdDevUncertainty)
     spectral_cube.uncertainty = uncert_cube
 
     # Collapse the spectral cube using the astropy.nddata machinery.
@@ -48,6 +48,7 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     collapsed_cube_nddata = collapsed_cube_nddata * (u.pix ** 2)
 
     # Collapse the spectral cube using the methods in jdaviz:
+    plg = deconfigged_helper.plugins['Spectral Extraction']
     collapsed_cube_s1d = plg.extract(add_data=False)  # returns Spectrum
 
     assert plg._obj.disabled_msg == ''
@@ -60,7 +61,7 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     )
 
 
-def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_uncerts):
+def test_gauss_smooth_before_spec_extract(deconfigged_helper, spectrum1d_cube_with_uncerts):
     # Test if gaussian smooth plugin is run before spec extract
     # that spec extract yields results of correct cube data
     # give uniform unit uncertainties for spec extract test
@@ -68,20 +69,20 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
         np.ones_like(spectrum1d_cube_with_uncerts.data)
     )
 
-    cubeviz_helper.load(spectrum1d_cube_with_uncerts)
-    gs_plugin = cubeviz_helper.plugins['Gaussian Smooth']._obj
+    deconfigged_helper.load(spectrum1d_cube_with_uncerts, format='3D Spectrum')
+    gs_plugin = deconfigged_helper.plugins['Gaussian Smooth']._obj
 
-    gs_plugin.dataset_selected = f'{cubeviz_helper._app.data_collection[0].label}'
+    gs_plugin.dataset_selected = f'{deconfigged_helper._app.data_collection[0].label}'
     gs_plugin.mode_selected = 'Spatial'
     gs_plugin.stddev = 3
 
     with pytest.warns(
             AstropyUserWarning,
-            match='The following attributes were set on the data object, but will be ignored'):
+            match=('The following attributes were set on the data object, but will be ignored by the function: uncertainty, meta, unit, wcs')): # noqa
         gs_plugin.vue_apply()
 
-    gs_data_label = cubeviz_helper._app.data_collection[3].label
-    cubeviz_helper._app.add_data_to_viewer('flux-viewer', gs_data_label)
+    gs_data_label = deconfigged_helper._app.data_collection[3].label
+    deconfigged_helper._app.add_data_to_viewer('3D Spectrum', gs_data_label)
 
     # create a subset with a single pixel:
     regions = [
@@ -90,9 +91,9 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
         # two-pixel region:
         CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)
     ]
-    cubeviz_helper.plugins['Subset Tools'].import_region(regions, combination_mode='new')
+    deconfigged_helper.plugins['Subset Tools'].import_region(regions, combination_mode='new')
 
-    extract_plugin = cubeviz_helper.plugins['3D Spectral Extraction']
+    extract_plugin = deconfigged_helper.plugins['3D Spectral Extraction']
     extract_plugin.function = "Sum"
     expected_uncert = 2
 
@@ -426,7 +427,7 @@ def test_autoupdate_results(deconfigged_helper, spectrum1d_cube_largest):
     extract_plg.add_results._obj.auto_update_result = True
     _ = extract_plg.extract()
 
-    #    orig_med_flux = np.median(cubeviz_helper.get_data('extracted').flux)
+    # orig_med_flux = np.median(cubeviz_helper.get_data('extracted').flux)
 
     # replace Subset 1 with a larger subset, resulting fluxes should increase
     deconfigged_helper.plugins['Subset Tools'].combination_mode = 'replace'
@@ -528,33 +529,36 @@ def test_spectral_extraction_with_correct_sum_units(deconfigged_helper,
     assert collapsed.uncertainty.unit == u.Jy
 
 
-def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
+def test_default_spectral_extraction(deconfigged_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
     # spacetelescope/jdaviz#3086 reported that the default cube
     # spectral extraction in cubeviz did not match the spectral extraction
     # for a spatial subset that captures all data-containing spaxels. this
     # regression tests make sure that doesn't happen anymore by accounting
     # for non-science pixels in the sums:
-    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
+    deconfigged_helper.load(spectrum1d_cube_fluxunit_jy_per_steradian,
+                            data_label='test', format='3D Spectrum')
 
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']
+    subset_plugin = deconfigged_helper.plugins['Subset Tools']
 
     subset_plugin.import_region(CircularROI(1.5, 2, 5))
 
     # the first and second spectra correspond to the default extraction
     # and the subset extraction. the fluxes in these extractions should agree:
-    extracted_spectra = list(
-        cubeviz_helper.specviz.get_spectra(apply_slider_redshift=False).values()
-    )
+    extracted_spec_default = deconfigged_helper._app._jdaviz_helper.get_data(
+        data_label='test (sum)', apply_slider_redshift=False)
+
+    extracted_spec_subset = deconfigged_helper._app._jdaviz_helper.get_data(
+        data_label='Spectrum (Subset 1, sum)', apply_slider_redshift=False)
 
     assert_quantity_allclose(
-        extracted_spectra[0].flux, extracted_spectra[1].flux
+        extracted_spec_default.flux, extracted_spec_subset.flux
     )
 
 
 def test_spectral_extraction_unit_conv_one_spec(
         cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
 ):
-    cubeviz_helper.load(spectrum1d_cube_fluxunit_jy_per_steradian)
+    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
     spectrum_viewer = cubeviz_helper._app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
     uc = cubeviz_helper.plugins["Unit Conversion"]

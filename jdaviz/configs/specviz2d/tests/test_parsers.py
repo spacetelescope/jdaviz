@@ -58,17 +58,17 @@ def test_2d_parser_ext_hdulist(deconfigged_helper):
 
 
 @pytest.mark.remote_data
-def test_hlsp_goods_s2d(specviz2d_helper):
+def test_hlsp_goods_s2d(deconfigged_helper):
     uri='mast:HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst/hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits'  # noqa
-    specviz2d_helper.load(cached_uri(uri))
+    deconfigged_helper.load(cached_uri(uri), format='2D Spectrum')
 
     # ensure uncalibrated 2d spectrum extraction works
-    assert len(specviz2d_helper._app.data_collection) == 2
+    assert len(deconfigged_helper._app.data_collection) == 2
 
     # links: (glue.core.link_helpers.LinkSameWithUnits, glue.core.link_helpers.LinkSameWithUnits)
-    assert len(specviz2d_helper._app.data_collection.external_links) == 2
+    assert len(deconfigged_helper._app.data_collection.external_links) == 2
 
-    dc_0 = specviz2d_helper._app.data_collection[0]
+    dc_0 = deconfigged_helper._app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
 
 
@@ -256,6 +256,6 @@ def test_2d_1d_parser(specviz2d_helper, mos_spectrum2d, spectrum1d):
     assert s2.lower.unit == s2.upper.unit == u.AA
 
 
-def test_parser_no_data(specviz2d_helper):
-    with pytest.raises(ValueError, match='Must provide spectrum_2d or spectrum_1d'):
-        specviz2d_helper.load_data()
+def test_parser_no_data(deconfigged_helper):
+    with pytest.raises(ValueError, match='Input must not be None'):
+        deconfigged_helper.load()

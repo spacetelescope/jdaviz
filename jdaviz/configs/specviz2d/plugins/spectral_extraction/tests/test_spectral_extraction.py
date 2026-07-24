@@ -181,12 +181,12 @@ def test_plugin(specviz2d_helper):
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
-def test_user_api(specviz2d_helper):
+def test_user_api(deconfigged_helper):
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
 
-    specviz2d_helper.load_data(spectrum_2d=fn)
+    deconfigged_helper.load(fn, format='2D Spectrum')
 
-    pext = specviz2d_helper.plugins['2D Spectral Extraction']
+    pext = deconfigged_helper.plugins['Spectral Extraction']
     pext.keep_active = True
 
     # test that setting a string to an AddResults object redirects to the label
@@ -206,10 +206,10 @@ def test_user_api(specviz2d_helper):
 @pytest.mark.remote_data
 @pytest.mark.skipif(GWCS_LT_0_18_1, reason='Needs GWCS 0.18.1 or later')
 @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
-def test_background_extraction_and_display(specviz2d_helper):
+def test_background_extraction_and_display(deconfigged_helper):
     uri = 'mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
-    specviz2d_helper.load_data(spectrum_2d=cached_uri(uri), cache=True)
-    pext = specviz2d_helper._app.get_tray_item_from_name('spectral-extraction-2d')
+    deconfigged_helper.load(cached_uri(uri), format='2D Spectrum')
+    pext = deconfigged_helper._app.get_tray_item_from_name('2D Spectral Extraction')
 
     # check that the background extraction method and parameters are as expected
     assert pext.bg_type_selected == 'TwoSided'
@@ -218,10 +218,10 @@ def test_background_extraction_and_display(specviz2d_helper):
     # test extracting background and background subtracted images and adding
     # them to the viewer
     pext.export_bg_sub(add_data=True)
-    assert specviz2d_helper._app.data_collection[2].label == 'background-subtracted'
+    assert deconfigged_helper._app.data_collection[2].label == 'background-subtracted'
 
     pext.export_bg_img(add_data=True)
-    assert specviz2d_helper._app.data_collection[3].label == 'background'
+    assert deconfigged_helper._app.data_collection[3].label == 'background'
 
 
 @pytest.mark.filterwarnings('ignore')
