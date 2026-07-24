@@ -69,8 +69,11 @@ class VOResolver(BaseConeSearchResolver):
         return LoaderUserApi(
             self,
             expose=[
-                "producttype", "viewer", "coordframe", "radius", "radius_unit",
+                "producttype", "search_input_select", "viewer", "coordframe",
+                "radius", "radius_unit",
                 "source",
+                "catalog", "catalog_subset", "catalog_col_type", "catalog_name_col",
+                "query_progress",
                 "resource_filter_coverage", "waveband", "resource",
                 "query_archive"
             ],
@@ -103,7 +106,7 @@ class VOResolver(BaseConeSearchResolver):
                 "Source is required for registry querying when coverage filtering is enabled. "
                 + (
                     "Please enter your coordinates above "
-                    if self.viewer == "Manual"
+                    if self.search_input_selected != 'Viewer'
                     else f"Load data into viewer {self.viewer} first before querying "
                 )
                 + "or disable coverage filtering."
@@ -181,42 +184,41 @@ class VOResolver(BaseConeSearchResolver):
             )
             raise
 
-    @with_spinner(spinner_traitlet="results_loading")
-    def query_archive(self):
+    def _source_to_skycoord(self):
         """
-        Once a specific VO resource is selected, query it with the user-specified source target.
-        User input for source is first attempted to be parsed as a SkyCoord coordinate. If not,
-        then attempts to parse as a target name.
+        Resolve ``self.source`` into a ``SkyCoord``. First attempts to parse as
+        direct coordinates, then falls back to name resolution.
+        Returns None (and broadcasts a snackbar) if resolution fails.
+        """
+        # Strip parentheses from source if present
+        stripped_source = self.source.strip('()')
+        try:
+            return SkyCoord(stripped_source, unit=u.deg, frame=self.coordframe_selected)
+        except Exception:
+            try:
+                return SkyCoord.from_name(stripped_source, frame=self.coordframe_selected)
+            except Exception as e:
+                self.hub.broadcast(
+                    SnackbarMessage(
+                        f"Unable to resolve source coordinates: {self.source}",
+                        sender=self,
+                        color="error",
+                        traceback=e
+                    )
+                )
+                return None
+
+    def _query_single_coord(self, coord):
+        """
+        Query the selected VO resource for a single ``SkyCoord`` center.
+
+        Returns an astropy Table (or None on failure / no results).
         """
         try:
-            # Query service
-            # Service is indexed via short name (resource_selected), which is the suggested way
-            # according to PyVO docs. Though disclaimer that collisions COULD occur. If so,
-            # consider indexing on the full IVOID, which is guaranteed unique.
             vo_service = self._full_registry_results[
                 self.resource_selected
             ].get_service(service_type=VO_PROTOCOL[self.producttype_selected]['protocol'])
-            try:
-                # First parse user-provided source as direct coordinates
-                coord = SkyCoord(
-                    self.source, unit=u.deg, frame=self.coordframe_selected
-                )
-            except Exception:
-                try:
-                    # If that didn't work, try parsing it as an object name
-                    coord = SkyCoord.from_name(
-                        self.source, frame=self.coordframe_selected
-                    )
-                except Exception as e:
-                    self.hub.broadcast(
-                        SnackbarMessage(
-                            f"Unable to resolve source coordinates: {self.source}",
-                            sender=self,
-                            color="error",
-                            traceback=e
-                        )
-                    )
-            # Once coordinate lookup is complete, search service using these coords.
+            # search service using these coords.
             try:
                 vo_results = vo_service.search(
                     coord,
@@ -252,22 +254,18 @@ class VOResolver(BaseConeSearchResolver):
                             color="error",
                         )
                     )
+                    return None
             if len(vo_results) == 0:
                 self.hub.broadcast(
                     SnackbarMessage(
-                        f"No observations returned at coords {coord} from VO resource: {vo_service.baseurl}",  # noqa: E501
+                        f"No observations returned at coords {coord} from VO resource: "
+                        f"{vo_service.baseurl}",
                         sender=self,
                         color="error",
                     )
                 )
-            else:
-                self.hub.broadcast(
-                    SnackbarMessage(
-                        f"{len(vo_results)} {self.producttype_selected} results found!",
-                        sender=self,
-                        color="success",
-                    )
-                )
+                return None
+            return vo_results.to_table()
         except Exception as e:
             self.hub.broadcast(
                 SnackbarMessage(
@@ -277,15 +275,33 @@ class VOResolver(BaseConeSearchResolver):
                     traceback=e
                 )
             )
-        try:
-            self._output = vo_results.to_table()
-        except Exception as e:
+            return None
+
+    @with_spinner(spinner_traitlet="results_loading")
+    def query_archive(self):
+        """
+        Once a specific VO resource is selected, query it with the user-specified source target.
+        User input for source is first attempted to be parsed as a SkyCoord coordinate. If not,
+        then attempts to parse as a target name.
+
+        In "Catalog" input mode, the selected resource is queried once per catalog
+        row and the results are stacked (see ``_query_catalog``).
+        """
+        # Catalog mode: loop over all (selected) catalog rows and stack results.
+        if self.search_input_selected == 'Catalog':
+            self._query_catalog(self._query_single_coord)
+            return
+
+        # Source / Viewer mode: single coordinate.
+        coord = self._source_to_skycoord()
+        self._output = self._query_single_coord(coord) if coord is not None else []
+
+        if self._output is not None and len(self._output) > 0:
             self.hub.broadcast(
                 SnackbarMessage(
-                    f"Unable to populate table for source {self.source}: {e}",
+                    f"{len(self._output)} {self.producttype_selected} results found!",
                     sender=self,
-                    color="error",
-                    traceback=e
+                    color="success",
                 )
             )
         self._resolver_input_updated()

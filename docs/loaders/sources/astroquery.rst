@@ -52,6 +52,46 @@ API Access
     ldr.query_archive()
 
 
+Input Modes
+===========
+
+The archive can be pointed at coordinates in one of three ways via the
+``Input`` selector (``ldr.input_select``):
+
+- **Source**: enter a source name or ``"[RA] [Dec]"`` coordinates manually.
+- **Viewer**: use the center of a selected image viewer (optionally following
+  pans/zooms).
+- **Catalog**: run the cone search once for *every* row of a loaded
+  source catalog and stack the results. This mode only appears once a catalog
+  has been loaded into the app.
+
+In ``Catalog`` mode, select the catalog with ``ldr.catalog`` and optionally
+restrict the query to a subset of rows with ``ldr.catalog_subset``. Coordinates
+can be taken two ways, controlled by ``ldr.catalog_col_type``:
+
+- ``"sky_coords"`` (default): use the RA/Dec columns assigned when the catalog
+  was loaded.
+- ``"source_name"``: resolve a column of source names row-by-row via
+  ``SkyCoord.from_name`` (one network request per row — slow for large
+  catalogs). Select the column with ``ldr.catalog_name_col``. If not provided,
+  the default choice is the user specified source ID column. If the source ID column
+  is not a string, the default will be the first string column in the catalog.
+
+The stacked results include a ``source_index`` column identifying which queried
+source each returned row corresponds to. ``ldr.max_results`` caps the total
+number of stacked rows and also stops the per-source loop early once that many
+results have been collected, so it bounds how much querying is done rather than
+truncating the final table.
+
+.. code-block:: python
+
+    ldr = jd.loaders['astroquery']
+    ldr.input_select = 'Catalog'
+    ldr.catalog = 'my_catalog'
+    ldr.telescope = 'JWST'
+    ldr.query_archive()
+
+
 Since there are many options and the exposed options depend on previous selections, the best way to write a script to write a workflow loading from astroquery is to enable :ref:`userapi-api_hints`,
 and interactively do a search in the UI and reproduce in a notebook cell:
 
