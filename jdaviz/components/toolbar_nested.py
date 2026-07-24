@@ -11,7 +11,8 @@ from glue_jupyter.common.toolbar_vuetify import BasicJupyterToolbar, read_icon
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 SpectralMarksChangedMessage, CatalogResultsChangedMessage,
-                                FootprintMarkVisibilityChangedMessage, RestoreToolbarMessage)
+                                FootprintMarkVisibilityChangedMessage, RestoreToolbarMessage,
+                                ViewerVisibleLayersChangedMessage)
 
 __all__ = ['NestedJupyterToolbar']
 
@@ -35,11 +36,17 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     # string indicating the current tool override mode
     tool_override_mode = traitlets.Unicode("").tag(sync=True)
     # list of custom widget items to display in the toolbar
-    # currently only supports dropdowns:
-    # (list of dicts with 'label', 'value', 'items', 'multiselect')
+    # each dict has 'label', 'type' ('select' or 'slider'), 'selected', and
+    # type-specific keys: 'items'/'multiselect' for 'select'; 'min'/'max'/'step' for 'slider'
     custom_widget_items = traitlets.List([]).tag(sync=True)
     # currently selected values in custom widgets (list of values, one per widget)
     custom_widget_selected = traitlets.List([]).tag(sync=True)
+    # optional callback invoked when custom_widget_selected changes in override mode
+    _selection_callback = None
+    # called before _clear_toolbar so tools can remove layer-state observers
+    _pre_clear_callback = None
+    # called after _refresh_custom_widgets so tools can re-register on the new top layer
+    _post_refresh_callback = None
 
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
@@ -61,7 +68,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         if hasattr(self.viewer, 'hub'):
             for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage,
                         SpectralMarksChangedMessage, CatalogResultsChangedMessage,
-                        FootprintMarkVisibilityChangedMessage):
+                        FootprintMarkVisibilityChangedMessage,
+                        ViewerVisibleLayersChangedMessage):
                 self.viewer.hub.subscribe(self, msg,
                                           handler=lambda _: self._update_tool_visibilities())
             # ViewerRemovedMessage needs special handling - both update visibilities
@@ -105,7 +113,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self._update_tool_visibilities()
 
     def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[],
-                       custom_widgets=None, custom_widgets_callback=None, active_tool=None):
+                       custom_widgets=None, custom_widgets_callback=None, active_tool=None,
+                       selection_callback=None):
         """
         Rebuild the toolbar with passed values.
 
@@ -120,16 +129,21 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         custom_widgets : list, optional
             List of dicts defining custom widgets to display. Each dict should have:
             - 'label': tooltip/label for the widget
-            - 'items': list of dicts with 'label' and 'value' keys
+            - 'type': 'select' (default) or 'slider'
+            - For 'select': 'items' (list of dicts with 'label'/'value'), 'multiselect' (bool)
+            - For 'slider': 'min', 'max', 'step' (floats)
             - 'selected': initial selected value(s)
-            - 'multiselect': bool, whether to allow multi-select (default False)
         custom_widgets_callback : callable, optional
             A callback function that returns custom_widgets. If provided, this will be
-            called on viewer add/remove to refresh the widget items dynamically.  Currently
-            only supports dropdowns.
+            called on viewer add/remove to refresh the widget items dynamically.
         active_tool : str, optional
             Tool ID to activate after building the toolbar. If not provided,
             the default tool selection logic will be used.
+        selection_callback : callable, optional
+            A callback ``f(new_selected)`` called whenever ``custom_widget_selected``
+            changes while this override is active.  ``new_selected`` is the full list
+            of per-widget selected values.  Cleared automatically when the toolbar is
+            restored.
         """
         # Store the override mode
         self.tool_override_mode = tool_override_mode
@@ -137,8 +151,11 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         # Store callback for refreshing custom widgets
         self._custom_widgets_callback = custom_widgets_callback
 
-        # Clear current toolbar (this also clears custom widgets)
+        # Clear current toolbar (this also clears custom widgets and callbacks)
         self._clear_toolbar()
+
+        # Store selection callback AFTER clearing (clear resets it)
+        self._selection_callback = selection_callback
 
         # Set custom widgets AFTER clearing
         if custom_widgets is not None:
@@ -211,18 +228,33 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         """
         self.restore_tools()
 
+    @traitlets.observe('custom_widget_selected')
+    def _on_custom_widget_selected_change(self, change):
+        """Call selection_callback whenever custom_widget_selected changes in override mode."""
+        if self._selection_callback is not None and self.tool_override_mode:
+            self._selection_callback(change['new'])
+
     def _clear_toolbar(self):
         """
         Clear all current tools from the toolbar.
         """
+        # Let any active tool clean up layer-state observers before we wipe state
+        if self._pre_clear_callback is not None:
+            try:
+                self._pre_clear_callback()
+            except Exception:  # nosec
+                pass
         # Clear the tools and tools_data dictionaries
         self.tools.clear()
         self.tools_data = {}
         self.active_tool_id = None
-        # Clear custom widgets and callback
+        # Clear custom widgets and callbacks
         self.custom_widget_items = []
         self.custom_widget_selected = []
         self._custom_widgets_callback = None
+        self._selection_callback = None
+        self._pre_clear_callback = None
+        self._post_refresh_callback = None
 
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError
@@ -254,9 +286,14 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         if new_widgets is None:
             return
 
-        # Preserve current selections where possible
+        # Preserve current selections where possible, unless the widget declares
+        # sync_to_state=True (meaning its value should always track external state,
+        # e.g. the current top image layer's colormap or stretch).
         for i, widget in enumerate(new_widgets):
             if i < len(self.custom_widget_selected):
+                if widget.get('sync_to_state', False):
+                    # Always use the fresh value from the callback
+                    continue
                 current_selected = self.custom_widget_selected[i]
                 new_values = [item['value'] for item in widget.get('items', [])]
                 if widget.get('multiselect', False):
@@ -270,6 +307,12 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
 
         self.custom_widget_items = new_widgets
         self.custom_widget_selected = [w.get('selected', []) for w in new_widgets]
+        # Let tools re-register their layer-state observers on the (possibly new) top layer
+        if self._post_refresh_callback is not None:
+            try:
+                self._post_refresh_callback()
+            except Exception:  # nosec
+                pass
 
     def _update_tool_visibilities(self):
         # Refresh custom widgets if callback is provided (e.g., for viewer changes)
@@ -338,6 +381,26 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                     self.tools_data[tool_id] = {**info,
                                                 'primary': True,
                                                 'has_suboptions': False}
+
+        # Allow tools to supply a dynamic icon that reflects viewer state.
+        # Tools that implement get_img() have their icon refreshed here on
+        # every visibility update (layer add/remove, visibility toggle, etc.).
+        for tool_id, tool in self.tools.items():
+            if tool_id in self.tools_data and hasattr(tool, 'get_img'):
+                img = tool.get_img()
+                if img is not None:
+                    self.tools_data[tool_id] = {
+                        **self.tools_data[tool_id], 'img': img
+                    }
+
+        # Allow tools to supply a dynamic tooltip.
+        for tool_id, tool in self.tools.items():
+            if tool_id in self.tools_data and hasattr(tool, 'get_tooltip'):
+                tooltip = tool.get_tooltip()
+                if tooltip is not None:
+                    self.tools_data[tool_id] = {
+                        **self.tools_data[tool_id], 'tooltip': tooltip
+                    }
 
         # mutation to dictionary needs to be manually sent to update the UI
         self.send_state("tools_data")

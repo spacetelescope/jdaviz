@@ -370,6 +370,8 @@ class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
                     ['jdaviz:panzoom_matchx', 'jdaviz:panzoomx_matchx',
                      'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
+                    ['jdaviz:blinkonce', 'jdaviz:contrastbias', 'jdaviz:image_colormap',
+                     'jdaviz:image_stretch', 'jdaviz:image_opacity'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
                      'jdaviz:viewer_popout']
                 ]

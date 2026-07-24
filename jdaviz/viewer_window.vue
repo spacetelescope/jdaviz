@@ -47,7 +47,7 @@
 
     <v-card tile flat style="width: 100%; height: calc(100% - 42px); overflow: hidden;"
       @mousemove="onFigureMouseMove"
-      @mouseleave="mouseOverFigure = false"
+      @mouseleave="onFigureMouseLeave"
     >
       <jupyter-widget :widget="popout_button" style="display: none;"></jupyter-widget>
       <jupyter-widget v-if="data_menu_widget" :widget="data_menu_widget" :key="data_menu_widget"></jupyter-widget>
@@ -99,10 +99,21 @@ export default {
   },
   methods: {
     onFigureMouseMove(e) {
+      // Suppress all mousemove re-renders while a toolbar override is active.
+      // window._jdaviz_override_mode is set synchronously by toolbar_nested.vue
+      // (zero latency); this.tool_override_mode is the async traitlet fallback.
+      if (window._jdaviz_override_mode || this.tool_override_mode) return;
       this.mouseOverFigure = true;
       const rect = this.$refs.top.getBoundingClientRect();
       this.mouseX = e.clientX - rect.left;
       this.mouseY = e.clientY - rect.top;
+    },
+    onFigureMouseLeave() {
+      // Also suppress mouseleave: this fires when the mouse moves from the
+      // figure card into the dropdown overlay (which is outside the card DOM),
+      // and would otherwise trigger a viewer_window.vue re-render.
+      if (window._jdaviz_override_mode || this.tool_override_mode) return;
+      this.mouseOverFigure = false;
     },
     ensureFullHeightChain() {
       const popoutSelector = ".jupyter-widgets-popout-container";
