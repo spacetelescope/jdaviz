@@ -1329,10 +1329,14 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         return regions_no_dups
 
     def _get_range_subset_bounds(self, subset_state,
-                                 simplify_spectral=True, use_display_units=False):
-        # TODO: Use global display units
-        # units = dc[0].data.coords.spectral_axis.unit
+                                 simplify_spectral=True,
+                                 use_display_units=False):
+        
+
         if not hasattr(subset_state.att, "parent"):  # e.g., Cubeviz
+            # TODO: this may need to be generalized for deconfigged, this is
+            # accessing A spectral viewer but there could be several with different
+            # units. not sure what the implications of this are.
             viewer = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
             data = viewer.data()
             if data and len(data) > 0 and isinstance(data[0], Spectrum):
@@ -1689,11 +1693,30 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
         if axis == 'spectral_y':
-            return uc.spectral_y_unit
-        try:
-            return getattr(uc, f'{axis}_unit_selected')
-        except AttributeError:
-            raise ValueError(f"could not find display unit for axis='{axis}'")
+            unit = uc.spectral_y_unit
+        else:
+            try:
+                unit = getattr(uc, f'{axis}_unit_selected')
+            except AttributeError:
+                raise ValueError(f"could not find display unit for axis='{axis}'")
+
+        # If the UC plugin traitlet is empty (e.g. only non-physical-unit data
+        # has been loaded so far and the plugin was never initialized), fall back
+        # to the native unit reported by the viewer itself.
+        if not unit:
+            try:
+                if axis in ('spectral',):
+                    sv_name = self._jdaviz_helper._default_spectrum_viewer_reference_name
+                    sv = self.get_viewer(sv_name)
+                    unit = sv.state.x_display_unit or ''
+                elif axis in ('flux', 'sb', 'spectral_y'):
+                    sv_name = self._jdaviz_helper._default_spectrum_viewer_reference_name
+                    sv = self.get_viewer(sv_name)
+                    unit = sv.state.y_display_unit or ''
+            except Exception:
+                pass
+
+        return unit
 
     def simplify_spectral_subset(self, subset_name, att, overwrite=False):
         """

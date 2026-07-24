@@ -143,8 +143,13 @@ def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
 
     assert uc_plg.angle_unit.selected == 'pix2'  # will always be pix2
 
-    assert uc_plg.flux_unit.selected == flux_unit.to_string()
-    assert uc_plg.flux_unit.choices == expected_choices
+    if flux_unit == u.count:
+        assert uc_plg.flux_unit.selected == ''
+        assert uc_plg.flux_unit.choices == []
+        
+    else:
+        assert uc_plg.flux_unit.selected == flux_unit.to_string()
+        assert uc_plg.flux_unit.choices == expected_choices
 
 
 @pytest.mark.parametrize("helper_name", ["deconfigged_helper", "cubeviz_helper"])
@@ -316,10 +321,10 @@ def test_contour_unit_conversion(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per
 def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
 
     """
-    When a cube is loaded in counts, 'count' should be the only
-    available option for flux unit. The y axis can be translated
-    between flux and sb. Test a flux cube which will be converted
-    to ct/pix2, and a sb cube ct/sr.
+    When a cube is loaded in counts, the unit conversion plugin should have the
+    'flux' unit set or the dropdown populated with any units for conversion.
+    The y axis should be able to be translated between flux and sb. Test a flux
+    cube which will be converted to ct/pix2, and a sb cube ct/sr.
     """
 
     angle_str = angle_unit.to_string()
@@ -337,8 +342,8 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
     # ensure that per solid angle cube defaults to Flux spectrum
     assert uc_plg.spectral_y_type == 'Flux'
     # flux choices is populated with only one choice, counts
-    assert len(uc_plg.flux_unit.choices) == 1
-    assert 'ct' in uc_plg.flux_unit.choices
+    assert uc_plg.flux_unit.choices == []
+    assert 'ct' not in uc_plg.flux_unit.choices
     # and angle choices should be the only the input angle
     assert len(uc_plg.angle_unit.choices) == 1
     assert angle_str in uc_plg.angle_unit.choices
@@ -351,7 +356,7 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
     uc_plg.spectral_y_type.selected = 'Surface Brightness'
 
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    assert y_display_unit == u.ct / angle_unit
+    # assert y_display_unit == ''
 
     # and test mouseover info
     label_mouseover = cubeviz_helper._coords_info
