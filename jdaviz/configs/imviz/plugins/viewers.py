@@ -11,6 +11,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.imviz import wcs_utils
 from jdaviz.configs.default import aida
+from jdaviz.core.aida_api import AIDAMixin
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.marks import RegionOverlay
@@ -25,7 +26,7 @@ __all__ = ['ImvizImageView']
 
 
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
-class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewerMixin):
+class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewerMixin, AIDAMixin):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
