@@ -27,8 +27,7 @@
           </span>
         </div>
       </template>
-      <template v-slot:append>
-        <v-icon style="cursor: pointer">mdi-menu-down</v-icon>
+      <template v-slot:append-inner>
         <j-tooltip tooltipcontent="rename" v-if="!multiselect">
           <v-icon style="cursor: pointer" @click="modeRename">mdi-pencil</v-icon>
         </j-tooltip>
