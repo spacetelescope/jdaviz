@@ -123,7 +123,7 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
         input_table = self.input
         colnames = input_table.colnames
 
-        # Priority 1: column already has a recognised spectral unit
+        # column already has a recognised spectral unit
         for i, col in enumerate(colnames):
             col_data = input_table[col]
             if hasattr(col_data, 'unit') and col_data.unit is not None:
@@ -132,7 +132,7 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
                     return_cols = colnames if i == 0 else (colnames[i:] + colnames[:i])
                     return [return_cols[0]] + ['---'] + list(return_cols[1:])
 
-        # Priority 2: pattern-match column names
+        # if no unit match was found, pattern-match column names
         for pattern in _SPECTRAL_LOC_PATTERNS:
             for i, col in enumerate(colnames):
                 tokens = re.split(r'[\s_\-\.]+', col.lower().strip())
