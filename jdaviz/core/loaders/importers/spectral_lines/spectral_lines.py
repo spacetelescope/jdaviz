@@ -202,7 +202,6 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
                 physical_type = str(u.Unit(col_data.unit).physical_type)
                 has_units = physical_type in _SPECTRAL_PHYSICAL_TYPES
 
-
         self.spectral_loc_has_unit = has_units
         self.import_disabled_msg = ''
 
