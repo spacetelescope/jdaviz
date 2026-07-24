@@ -32,13 +32,14 @@ def test_spectral_lines_importer_is_valid(deconfigged_helper):
 
 @pytest.mark.parametrize('col_name', [
     'wavelength', 'Wavelength', 'WAVELENGTH',
-    'wave', 'wav', 'wl', 'lambda', 'lam',
-    'restwave', 'rest_wave', 'frequency', 'freq', 'nu', 'restfreq', 'rest_freq'
+    'wave', 'Wav', 'wl', 'lambda', 'lam',
+    'restwave', 'rest_wave', 'frequency', 'FREQ', 'nu', 'rest-freq', 'rest freq'
 ])
 def test_wavelength_column_detection(deconfigged_helper, col_name):
     """
     Wavelength and frequency-like column names should be automatically detected for
-    'spectral_loc'.
+    'spectral_loc'. Added some variation in capitalization / spacing to ensure
+    flexibility.
     """
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({col_name: [6562.8, 4861.3], 'flux': [1.0, 0.5]})
@@ -48,7 +49,11 @@ def test_wavelength_column_detection(deconfigged_helper, col_name):
 
 
 def test_spectral_unit_column_detection(deconfigged_helper):
-    """A column with spectral units should be detected even with a generic name."""
+    """
+    Columns from a Q table that already have spectral units should be detected,
+    even if the column name doesn't indicate that it is a frequency or
+    wavelength column.
+    """
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'pos': [6562.8, 4861.3] * u.AA, 'name': ['Ha', 'Hb']})
     ldr.format = 'Spectral Lines'
@@ -57,7 +62,10 @@ def test_spectral_unit_column_detection(deconfigged_helper):
 
 
 def test_spectral_loc_excludes_non_numeric_columns(deconfigged_helper):
-    """Non-numeric columns should not appear in spectral_loc choices."""
+    """
+    Non-numeric columns should be filtered out of spectral_loc choices,
+    otherwise an error is raised when they are cast to a float.
+    """
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'wavelength': [6562.8, 4861.3],
                          'name': ['Ha', 'Hb'],       # string – not numeric
@@ -79,10 +87,6 @@ def test_no_spectral_column_detected(deconfigged_helper):
     importer = ldr.importer
     assert importer.spectral_loc == '---'
 
-
-# ---------------------------------------------------------------------------
-# spectral_loc_has_unit observer
-# ---------------------------------------------------------------------------
 
 def test_spectral_loc_has_unit_true(deconfigged_helper):
     """spectral_loc_has_unit should be True when column has recognised spectral units."""
@@ -113,10 +117,6 @@ def test_spectral_loc_no_selection_disables_import(deconfigged_helper):
     importer.spectral_loc_selected = '---'
     assert importer.import_disabled_msg != ''
 
-
-# ---------------------------------------------------------------------------
-# output property
-# ---------------------------------------------------------------------------
 
 def test_output_with_units_already_present(deconfigged_helper):
     """When the spectral column has units, they should pass through unchanged."""
@@ -170,10 +170,6 @@ def test_output_valid_spectral_units(deconfigged_helper):
     for unit_str in importer._valid_spectral_units():
         assert u.Unit(unit_str) is not None, f"Could not parse unit: {unit_str}"
 
-
-# ---------------------------------------------------------------------------
-# supported viewers
-# ---------------------------------------------------------------------------
 
 def test_supported_viewers():
     """_get_supported_viewers should include Table and Histogram viewers."""
