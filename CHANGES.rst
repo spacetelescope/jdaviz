@@ -51,6 +51,8 @@ New Features
 
 - Add window docker icons for standalone app [#4289]
 
+- Add importer for line lists. [#4305]
+
 Mosviz
 ^^^^^^
 

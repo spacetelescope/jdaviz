@@ -88,7 +88,8 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     imviz_helper.load(data)
 
     # load catalog, all columns
-    imviz_helper.load(catalog_obj, col_other=['col1', 'col2', 'col3'])
+    imviz_helper.load(catalog_obj, col_other=['col1', 'col2', 'col3'],
+                      format='Catalog')
 
     # check for the table in the data collection
     dc = imviz_helper._app.data_collection
@@ -113,7 +114,7 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     catalog_obj = _make_catalog_string_coord_columns()
 
     # load catalog
-    imviz_helper.load(catalog_obj)
+    imviz_helper.load(catalog_obj, format='Catalog')
 
     dc = imviz_helper._app.data_collection
     assert len(dc) == 1
@@ -157,7 +158,7 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
         catalog = catalog_obj
 
     # load catalog
-    imviz_helper.load(catalog)
+    imviz_helper.load(catalog, format='Catalog')
 
     dc = imviz_helper._app.data_collection
     assert len(dc) == 1
@@ -248,7 +249,7 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     # load catalog
-    imviz_helper.load(catalog)
+    imviz_helper.load(catalog, format='Catalog')
 
     # ensure that it is in the data collection with the correct label "Catalog"
     dc = imviz_helper._app.data_collection
@@ -287,19 +288,19 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     assert ldr.importer._obj.col_ra_has_unit == with_units
 
     # load it again, make sure label incremented by 1
-    imviz_helper.load(catalog)
+    imviz_helper.load(catalog, format='Catalog')
     assert len(dc) == 4  # image, orientation layer, and 2 catalogs
     assert 'Catalog (1)' in imviz_helper._app.data_collection.labels
 
     # load with custom label and check label
-    imviz_helper.load(catalog, data_label='my_catalog')
+    imviz_helper.load(catalog, data_label='my_catalog', format='Catalog')
     assert len(dc) == 5  # image, orientation layer, and 3 catalogs
     assert 'my_catalog' in imviz_helper._app.data_collection.labels
 
     # test other loader API options. switch RA and Dec col just to test
     # non-default column selection
     imviz_helper.load(catalog, data_label='with_flux', col_other='flux',
-                      col_ra='Dec', col_dec='RA')
+                      col_ra='Dec', col_dec='RA', format='Catalog')
     assert len(dc) == 6  # image, orientation layer, and 4 catalogs
     assert 'flux' in dc['with_flux'].get_object(QTable).colnames
     qtab = imviz_helper._app.data_collection[-1].get_object(QTable)
@@ -328,7 +329,7 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
         catalog = catalog_obj
 
     # load catalog
-    imviz_helper.load(catalog)
+    imviz_helper.load(catalog, format='Catalog')
 
     dc = imviz_helper._app.data_collection
     assert len(dc) == 1
@@ -365,9 +366,10 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
         raise
     except requests.exceptions.RequestException as exc:
         pytest.skip(f"Transient remote archive failure: {exc}")
-    assert 'Catalog' in ldr.format.choices
-    ldr.format = 'Catalog'
 
+    assert 'Catalog' in ldr.format.choices
+
+    ldr.format = 'Catalog'
     ldr.importer.col_ra = 'ra'
     ldr.importer.col_dec = 'dec'
     ldr.importer.col_id = 'source_id'
@@ -631,7 +633,7 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     table_x_y_only = orig_catalog['X', 'Y', 'Obj_ID']
 
     imviz_helper.load(table_ra_dec_only,
-                      data_label='catalog0')
+                      data_label='catalog0', format='Catalog')
 
     # since we're pixel linked and catalog has only world coordinates,
     # visibility should be off by default
@@ -645,7 +647,7 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
 
     # but if we load the catalog with X, Y, it should be visible
     imviz_helper.load(table_x_y_only,
-                      data_label='catalog1')
+                      data_label='catalog1', format='Catalog')
     assert dm.data_labels_visible == ['catalog1', 'Image[DATA]']
 
     assert po.layer.choices == ['Image[DATA]', 'catalog1']  # catalog layer is now an option
@@ -656,7 +658,7 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     # load catalog with RA, Dec only again. Its default visibility should
     # now be on since we're WCS linked
     imviz_helper.load(table_ra_dec_only,
-                      data_label='catalog2')
+                      data_label='catalog2', format='Catalog')
 
     # the pixel-only 'catalog1' should now be hidden
     assert dm.data_labels_visible == ['catalog2', 'Image[DATA]']
@@ -664,7 +666,7 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     # loading a pixel-coordinate-only catalog should now be hidden by default
     # since were WCS linked
     imviz_helper.load(table_x_y_only,
-                      data_label='catalog3')
+                      data_label='catalog3', format='Catalog')
     assert 'catalog3' not in dm.data_labels_visible
 
 
