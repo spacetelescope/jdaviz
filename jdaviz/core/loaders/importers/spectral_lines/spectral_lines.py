@@ -29,14 +29,9 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
     """
     Importer for spectral line list tables.
 
-    Accepts an astropy ``Table`` or ``QTable`` (e.g. read from a CSV file),
-    lets the user designate a spectral location column along with its unit and
-    the wavelength medium (vacuum or air), and adds the result to the data
-    collection.
-
-    .. note::
-        This importer is under active development and is only available when
-        ``app.state.dev_loaders`` is ``True``.
+    Accepts an astropy ``Table`` or ``QTable``, and lets the user designate a
+    spectral location column along with its unit and the wavelength medium
+    (vacuum or air).
     """
 
     template_file = __file__, "./spectral_lines.vue"
@@ -130,15 +125,12 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
 
         # Priority 1: column already has a recognised spectral unit
         for i, col in enumerate(colnames):
-            try:
-                col_data = input_table[col]
-                if hasattr(col_data, 'unit') and col_data.unit is not None:
-                    physical_type = str(u.Unit(col_data.unit).physical_type)
-                    if physical_type in _SPECTRAL_PHYSICAL_TYPES:
-                        return_cols = colnames if i == 0 else (colnames[i:] + colnames[:i])
-                        return [return_cols[0]] + ['---'] + list(return_cols[1:])
-            except Exception:
-                pass
+            col_data = input_table[col]
+            if hasattr(col_data, 'unit') and col_data.unit is not None:
+                physical_type = str(u.Unit(col_data.unit).physical_type)
+                if physical_type in _SPECTRAL_PHYSICAL_TYPES:
+                    return_cols = colnames if i == 0 else (colnames[i:] + colnames[:i])
+                    return [return_cols[0]] + ['---'] + list(return_cols[1:])
 
         # Priority 2: pattern-match column names
         for pattern in _SPECTRAL_LOC_PATTERNS:
@@ -166,12 +158,12 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
         try:
             input_table[label].astype(float)
             return True
-        except Exception:
+        except (AttributeError, ValueError):
             return False
 
     @staticmethod
     def _valid_spectral_units():
-        """Return valid spectral unit choices (parseable by ``astropy.units``)."""
+        """Return valid spectral unit choices."""
         return [
             'Angstrom', 'nm', 'um', 'mm', 'm',
             'Hz', 'kHz', 'MHz', 'GHz', 'THz',
@@ -182,12 +174,11 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
     @observe('spectral_loc_selected')
     def _on_spectral_loc_selected(self, msg):
         """
-        React to a change in the selected spectral location column.
-
-        * Determines whether the column already has valid spectral units and
-          sets ``spectral_loc_has_unit`` accordingly (controlling the unit
-          dropdown visibility).
-        * Sets ``import_disabled_msg`` when no valid column is selected.
+        React to a change in the selected spectral location column. Determines
+        whether the column already has valid spectral units and sets
+        ``spectral_loc_has_unit`` accordingly (controlling the unit dropdown
+        visibility), and sets ``import_disabled_msg`` when no valid column is
+        selected.
         """
         col = self.spectral_loc_selected
 
@@ -208,11 +199,9 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
         if col in input_table.colnames:
             col_data = input_table[col]
             if hasattr(col_data, 'unit') and col_data.unit is not None:
-                try:
-                    physical_type = str(u.Unit(col_data.unit).physical_type)
-                    has_units = physical_type in _SPECTRAL_PHYSICAL_TYPES
-                except Exception:
-                    pass
+                physical_type = str(u.Unit(col_data.unit).physical_type)
+                has_units = physical_type in _SPECTRAL_PHYSICAL_TYPES
+
 
         self.spectral_loc_has_unit = has_units
         self.import_disabled_msg = ''
@@ -247,15 +236,7 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
     @property
     def output(self):
         """
-        Build the output ``QTable`` ready for the data collection.
-
-        The spectral location column is included first and has spectral units
-        assigned if the source column was unitless.  Additional selected columns
-        follow.  The table's ``meta`` dict carries:
-
-        * ``_jdaviz_loader_spectral_loc_col`` – name of the spectral location
-          column in the output table.
-        * ``_jdaviz_loader_medium`` – ``'Vacuum'`` or ``'Air'``.
+        Build the output ``QTable`` to add to the data collection.
         """
         input_table = self.input
         if not isinstance(input_table, (Table, QTable)):
