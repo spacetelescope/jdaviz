@@ -4892,7 +4892,8 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 2
 
         def is_catalog(data):
-            return data.meta.get('_importer', '') == 'CatalogImporter'
+            return data.meta.get('_importer', '') in ['SpectralLinesImporter', 
+                                                      'CatalogImporter']
 
         def is_catalog_or_image_not_spectrum(data):
             return is_catalog(data) or is_image_not_spectrum(data)

@@ -47,6 +47,13 @@ def test_wavelength_column_detection(deconfigged_helper, col_name):
     importer = ldr.importer
     assert importer.spectral_loc == col_name
 
+    # load into a Table viewer and verify the data appears there
+    importer.viewer.create_new = 'Table'
+    importer()
+
+    tv = deconfigged_helper.viewers['Table']
+    assert len(tv._obj.glue_viewer.layers) == 1
+
 
 def test_spectral_unit_column_detection(deconfigged_helper):
     """
