@@ -45,7 +45,7 @@ jobs:
       uses: pyvista/setup-headless-display-action@v4
 
     - name: Install jdaviz
-      run: pip install -U ".[test,qt]"
+      run: pip install ".[test,qt]"
 
     - name: Install pyinstaller
       # see https://github.com/erocarrera/pefile/issues/420 for performance issues on
@@ -122,7 +122,7 @@ jobs:
         python-version: "3.12"
 
     - name: Install jdaviz
-      run: pip install U ".[test,qt]"
+      run: pip install ".[test,qt]"
 
     - name: Install pyinstaller
       run: pip install "pyinstaller"

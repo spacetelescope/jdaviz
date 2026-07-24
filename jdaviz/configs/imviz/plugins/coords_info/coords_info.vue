@@ -4,17 +4,19 @@
     <div v-if="icon" style="display: flex; align-items: center; gap: 6px;">
       <j-layer-viewer-icon :icon="icon" color="white" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
       <table style="line-height: 18px; font-size: 12px;">
-        <tr :style="row1_unreliable ? 'color: #B8B8B8' : ''">
-          <td colspan="4"><b>{{ row1a_title }} </b>{{ row1a_text }}&nbsp;&nbsp;<b>{{ row1b_title }} </b>{{ row1b_text }}</td>
-        </tr>
-        <tr :style="row2_unreliable ? 'color: #B8B8B8' : ''">
-          <td width="42"><b>{{ row2_title }}</b></td>
-          <td>{{ row2_text }}</td>
-        </tr>
-        <tr :style="row3_unreliable ? 'color: #B8B8B8' : ''">
-          <td width="42"><b>{{ row3_title }}</b></td>
-          <td>{{ row3_text }}</td>
-        </tr>
+        <tbody>
+          <tr :style="row1_unreliable ? 'color: #B8B8B8' : ''">
+            <td colspan="4"><b>{{ row1a_title }} </b>{{ row1a_text }}&nbsp;&nbsp;<b>{{ row1b_title }} </b>{{ row1b_text }}</td>
+          </tr>
+          <tr :style="row2_unreliable ? 'color: #B8B8B8' : ''">
+            <td width="42"><b>{{ row2_title }}</b></td>
+            <td>{{ row2_text }}</td>
+          </tr>
+          <tr :style="row3_unreliable ? 'color: #B8B8B8' : ''">
+            <td width="42"><b>{{ row3_title }}</b></td>
+            <td>{{ row3_text }}</td>
+          </tr>
+        </tbody>
       </table>
     </div>
   </div>
