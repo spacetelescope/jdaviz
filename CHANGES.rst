@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- fix case where file drop loader would not show importer options. [#4303]
+
 Cubeviz
 ^^^^^^^
 
