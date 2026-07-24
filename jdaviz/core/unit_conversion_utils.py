@@ -18,9 +18,10 @@ __all__ = ["all_flux_unit_conversion_equivs", "check_if_unit_is_per_solid_angle"
            "create_equivalent_flux_units_list",
            "create_equivalent_spectral_axis_units_list",
            "flux_conversion_general", "handle_squared_flux_unit_conversions",
-           "supported_sq_angle_units", "spectral_axis_conversion",
+           "is_physical_flux_unit", "is_physical_spectral_unit",
+           "supported_sq_angle_units", "spectral_unit_conversion",
            "units_to_strings", "flux_to_sb_unit", "to_flux_density_unit",
-           "spectrum_ensure_flux_density_unit"]
+           "spectrum_ensure_flux_density_unit", "viewer_flux_conversion_equivalencies"]
 
 
 def all_flux_unit_conversion_equivs(pixar_sr=None, cube_wave=None):
@@ -71,13 +72,13 @@ def viewer_flux_conversion_equivalencies(values, spec):
     of pixel scale factor are used if there are more than 2 values in
     meta['_pixel_scale_factor'].
 
-    Parameters:
+    Parameters
     ----------
     values : array-like
         The values to be converted, which may represent flux or surface brightness.
     spec : Spectrum
 
-    Returns:
+    Returns
     -------
     equivs : list
         A list of unit equivalencies for flux and surface brightness conversions.
@@ -247,6 +248,56 @@ def create_equivalent_angle_units_list(solid_angle_unit):
     return equivalent_angle_units
 
 
+def is_physical_flux_unit(flux_unit):
+    """
+    Return True if ``flux_unit`` is a physical spectral or photon flux density
+    unit that is supported for app-wide unit conversion (i.e., convertible to
+    units in ``SPEC_PHOTON_FLUX_DENSITY_UNITS`` via spectral density
+    equivalencies).  Non-physical units such as DN, counts, ADU, or
+    ``dimensionless_unscaled`` return False.
+
+    Parameters
+    ----------
+    flux_unit : `~astropy.units.Unit` or str
+
+    Returns
+    -------
+    bool
+    """
+    try:
+        unit = u.Unit(flux_unit)
+    except Exception:
+        return False
+    equiv = u.spectral_density(1 * u.m)
+    for phys_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+        if unit.is_equivalent(phys_unit, equiv):
+            return True
+    return False
+
+
+def is_physical_spectral_unit(spectral_unit):
+    """
+    Return True if ``spectral_unit`` is a physical spectral axis unit
+    (wavelength, frequency, or energy) that is supported for app-wide unit
+    conversion.  Pixel-based or dimensionless units return False.
+
+    Parameters
+    ----------
+    spectral_unit : `~astropy.units.Unit` or str
+
+    Returns
+    -------
+    bool
+    """
+    try:
+        unit = u.Unit(spectral_unit)
+    except Exception:
+        return False
+    if unit in (u.pix, u.dimensionless_unscaled):
+        return False
+    return unit.physical_type in ('length', 'frequency', 'energy', 'speed')
+
+
 def create_equivalent_flux_units_list(flux_unit):
     """
     Get all possible conversions for flux from flux_unit, to populate 'flux'
@@ -286,10 +337,38 @@ def create_equivalent_spectral_axis_units_list(spectral_axis_unit,
                                                exclude=[u.jupiterRad, u.earthRad,
                                                         u.solRad, u.lyr, u.AU,
                                                         u.pc, u.Bq, u.micron,
-                                                        u.lsec]):
-    """Get all possible conversions from current spectral_axis_unit."""
-    if spectral_axis_unit in (u.pix, u.dimensionless_unscaled):
-        return [spectral_axis_unit.to_string()]
+                                                        u.lsec],
+                                               additional_units=[u.Angstrom,
+                                                                 u.nm, u.um,
+                                                                 u.micron,
+                                                                 u.Hz, u.eV,
+                                                                 u.erg]):
+    """
+    Get all possible unit conversions for a given ``spectral_axis_unit``, to
+    populate the spectral axis dropdown menu in the Unit Conversion plugin.
+
+    If ``spectral_axis_unit`` is pixel or dimensionless, an empty list is
+    returned, indicating that no equivalent units are available for conversion.
+
+    Parameters
+    ----------
+    spectral_axis_unit : `~astropy.units.Unit`
+        The current spectral axis unit to find equivalencies for.
+    exclude : list of `~astropy.units.Unit`, optional
+        Units to exclude from the returned list.
+    additional_units : list of `~astropy.units.Unit`, optional
+        Units to always include at the front of the returned list (if
+        equivalent to ``spectral_axis_unit``).
+
+    Returns
+    -------
+    equivalent_units : list of str
+        String representations of equivalent spectral axis units, sorted
+        alphabetically with ``additional_units`` listed first.
+    """
+
+    if not is_physical_spectral_unit(spectral_axis_unit):
+        return []
 
     # Get unit equivalencies.
     try:
@@ -298,21 +377,16 @@ def create_equivalent_spectral_axis_units_list(spectral_axis_unit,
     except u.core.UnitConversionError:
         return []
 
-    # Get local units.
-    locally_defined_spectral_axis_units = ['Angstrom', 'nm',
-                                           'um', 'Hz', 'erg']
-    local_units = [u.Unit(unit) for unit in locally_defined_spectral_axis_units]
-
     # Remove overlap units.
     curr_spectral_axis_unit_equivalencies = list(set(curr_spectral_axis_unit_equivalencies)
-                                                 - set(local_units + exclude))
+                                                 - set(additional_units + exclude))
 
     # Convert equivalencies into readable versions of the units and sorted alphabetically.
     spectral_axis_unit_equivalencies_titles = sorted(units_to_strings(
         curr_spectral_axis_unit_equivalencies))
 
     # Concatenate both lists with the local units coming first.
-    return sorted(units_to_strings(local_units)) + spectral_axis_unit_equivalencies_titles
+    return sorted(units_to_strings(additional_units)) + spectral_axis_unit_equivalencies_titles
 
 
 def _check_if_unit_is_from_moment_map(unit):
@@ -512,12 +586,12 @@ def handle_squared_flux_unit_conversions(value, original_unit=None,
     return converted
 
 
-def spectral_axis_conversion(values, original_units, target_units, with_unit=False):
+def spectral_unit_conversion(values, original_units, target_units, with_unit=False):
     """
     Attempt to convert ``original_units``, and ``target_units``, which
     are spectral axis quantities, between different units. The conversion
-    is skipped if only one of the units is 'pix' to allow for mixed
-    pixel/world unit viewing.
+    is skipped (without warning or error) if either of the units are pixel or
+    dimensionless, to support mixed-unit viewing.
 
     Parameters
     ----------
@@ -538,20 +612,20 @@ def spectral_axis_conversion(values, original_units, target_units, with_unit=Fal
         pixel and world coordinates (to support mixed-unit viewing).
     """
 
-    # do not convert values if one of the units is pixel and the other is not.
-    original_unit = u.Unit(original_units)
-    target_unit = u.Unit(target_units)
+    orig = u.Unit(original_units)
+    targ = u.Unit(target_units)
 
-    if u.pix in (original_unit, target_unit) and original_unit != target_unit:
+    # do not convert values if one of the units is pixel/dimensionless and the other is not.
+    if not np.all([is_physical_spectral_unit(x) for x in (orig, targ)]) and orig != targ:
         if with_unit:
-            return values * original_units
+            return values * orig
         return values
 
     eqv = u.spectral() + u.pixel_scale(1*u.pix)
-    converted_values = (values * original_unit).to_value(target_unit, equivalencies=eqv)
+    converted_values = (values * orig).to_value(targ, equivalencies=eqv)
 
     if with_unit:
-        converted_values = converted_values * target_unit
+        converted_values = converted_values * targ
 
     return converted_values
 

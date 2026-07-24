@@ -36,7 +36,7 @@ from jdaviz.utils import (JDAVIZ_CONFIGS, data_has_valid_wcs, CONFIGS_WITH_LOADE
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
-                                               spectral_axis_conversion)
+                                               spectral_unit_conversion)
 
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper', 'CubeConfigHelper']
@@ -625,15 +625,15 @@ class ConfigHelper(HubListener):
         If the spectral axis unit of data is pixels, and the
         display unit is not pixels (or vice versa), no conversion is done to allow
         for mixed pixel/world unit viewing (this logic is handled by
-        spectral_axis_conversion, which is called from this method when converting
+        spectral_unit_conversion, which is called from this method when converting
         the spectral axis).
 
         """
         if use_display_units:
             if isinstance(data, Spectrum):
+
                 spectral_unit = self._app._get_display_unit('spectral')
-                if not spectral_unit:
-                    return data
+
                 if self._app.config == 'specviz' and self._app._get_display_unit('sb'):
                     y_unit = self._app._get_display_unit('sb')
                 else:
@@ -693,8 +693,8 @@ class ConfigHelper(HubListener):
                                                     eqv, with_unit=False) * u.Unit(y_unit)
 
                 # convert spectral axis to display units
-                if data.spectral_axis.unit != spectral_unit:
-                    new_spec = (spectral_axis_conversion(data.spectral_axis.value,
+                if spectral_unit != '' and data.spectral_axis.unit != spectral_unit:
+                    new_spec = (spectral_unit_conversion(data.spectral_axis.value,
                                                          data.spectral_axis.unit,
                                                          spectral_unit, with_unit=True))
                 else:
@@ -707,6 +707,7 @@ class ConfigHelper(HubListener):
                                 spectral_axis_index=data.spectral_axis_index)
             else:  # pragma: nocover
                 raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
+
         return data
 
     def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,

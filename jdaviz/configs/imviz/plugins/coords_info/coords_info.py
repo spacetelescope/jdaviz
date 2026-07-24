@@ -21,7 +21,8 @@ from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
-                                               flux_conversion_general)
+                                               flux_conversion_general,
+                                               spectral_unit_conversion)
 
 __all__ = ['CoordsInfo']
 
@@ -554,11 +555,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                                                               'pixel_to_world'):
             # use WCS to expose the wavelength for a 2d spectrum shown in pixel space
             try:
-                wave, pixel = image.coords.pixel_to_world(x, y)
+                wave, _ = image.coords.pixel_to_world(x, y)
                 if wave is not None:
-                    equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
-                    wave = wave.to(self._app._get_display_unit('spectral'),
-                                   equivalencies=equivalencies)
+                    wave = spectral_unit_conversion(wave.value,
+                                                    wave.unit,
+                                                    self._app._get_display_unit('spectral'),
+                                                    with_unit=True)
+
                     self._dict['spectral_axis'] = wave.value
                     self._dict['spectral_axis:unit'] = wave.unit.to_string()
             except Exception:  # WCS might not be valid  # pragma: no cover
@@ -737,7 +740,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 if coords_status and hasattr(getattr(image, 'coords', None), 'pixel_to_world'):
                     # should already have wave computed from setting the coords-info
                     matched_viewer = self._app.get_viewer(matched_marker_id.split(':matched')[0])
-                    wave_matched = wave.to_value(matched_viewer.state.x_display_unit)
+                    wave_matched = spectral_unit_conversion(wave.value,
+                                                            wave.unit,
+                                                            matched_viewer.state.x_display_unit)  # noqa
                     self.marks[matched_marker_id].update_xy([wave_matched, wave_matched], [0, 1])
                     self.marks[matched_marker_id].visible = True
                 else:
@@ -805,6 +810,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     self._app._get_object_cache[cache_key] = sp
 
                 # Calculations have to happen in the frame of viewer display units.
+                # We can just use to_value here rather than spectral_unit_conversion
+                # because we are converting to the viewer display unit, which should be
+                # compatible with the data unit and doesn't need the safeguards there.
+                # TODO: Revisit this and see what happens with viewers in units
+                # of pixels, I don't - think that scenario is covered by tests
                 disp_wave = sp.spectral_axis.to_value(viewer.state.x_display_unit, u.spectral())
 
                 # temporarily here, may be removed after upstream units handling

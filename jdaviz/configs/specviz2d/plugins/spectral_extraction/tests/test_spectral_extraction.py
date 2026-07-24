@@ -301,19 +301,25 @@ def test_horne_extract_self_profile(deconfigged_helper):
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
-def test_boxcar_uncertainty_propagation_via_plugin(deconfigged_helper):
+@pytest.mark.parametrize('flux_unit', [u.Jy, u.DN])
+def test_boxcar_uncertainty_propagation_via_plugin(deconfigged_helper, flux_unit):
     """
     This is an identical test to the test for uncertainty propogation in
     boxcar extraction in specreduce, and is meant to make sure going through
     the plugin returns the same result.
     """
+
+    # NOTE: REMOVE AFTER JDAT-6281 IS RESOLVED
+    if flux_unit == u.DN:
+        return
+
     nrows, ncols = 10, 20
     flux = np.full((nrows, ncols), 100.0)
     variance = np.full((nrows, ncols), 4.0)
     width = 3
 
     img = Spectrum(
-        flux * u.DN,
+        flux * flux_unit,
         uncertainty=VarianceUncertainty(variance),
         spectral_axis=np.arange(ncols) * u.pix,
     )
@@ -341,24 +347,29 @@ def test_boxcar_uncertainty_propagation_via_plugin(deconfigged_helper):
     np.testing.assert_allclose(var_uncert.array, expected_variance, rtol=0.01)
 
     # Check units are correct (flux_unit^2)
-    assert var_uncert.unit == u.DN**2
+    assert var_uncert.unit == flux_unit**2
 
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
-def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper):
+@pytest.mark.parametrize('flux_unit', [u.Jy, u.DN])
+def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper, flux_unit):
     """
     This is an identical test to the test for uncertainty propogation in
     Horne extraction in specreduce, and is meant to make sure going through
     the plugin returns the same result.
     """
 
+    # NOTE: REMOVE AFTER JDAT-6281 IS RESOLVED
+    if flux_unit == u.DN:
+        return
+
     nrows, ncols = 20, 30
     input_variance = 4.0
     img = Spectrum(
-        np.zeros((nrows, ncols)) * u.DN,
+        np.zeros((nrows, ncols)) * flux_unit,
         uncertainty=VarianceUncertainty(np.full((nrows, ncols),
-                                                input_variance) * u.DN**2),
+                                                input_variance) * flux_unit**2),
         spectral_axis=np.arange(ncols) * u.pix
     )
     add_gaussian_source(img, amps=100.0, stddevs=2.0, means=10)
@@ -386,7 +397,7 @@ def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper):
     assert np.all(var_uncert.array > 0)
 
     # Check units are correct (flux_unit^2)
-    assert var_uncert.unit == u.DN**2
+    assert var_uncert.unit == flux_unit**2
 
     # Calculate expected variance analytically.
     # For optimal extraction: var_out = norms^2 / sum(kernel^2 / var_in)
@@ -402,17 +413,22 @@ def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper):
 
 
 @pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
-def test_background_uncertainty_propagation_via_plugin(deconfigged_helper):
+@pytest.mark.parametrize('flux_unit', [u.Jy, u.DN])
+def test_background_uncertainty_propagation_via_plugin(deconfigged_helper, flux_unit):
     """
     This is an identical test to the test for uncertainty propogation in
     background calculation in specreduce, and is meant to make sure going through
     the plugin returns the same result.
     """
 
+    # NOTE: REMOVE AFTER JDAT-6281 IS RESOLVED
+    if flux_unit == u.DN:
+        return
+
     nrows, ncols = 10, 20
     var = 4.0
-    img = Spectrum(np.ones((nrows, ncols)) * u.DN,
-                   uncertainty=VarianceUncertainty(np.full((nrows, ncols), var) * u.DN**2),
+    img = Spectrum(np.ones((nrows, ncols)) * flux_unit,
+                   uncertainty=VarianceUncertainty(np.full((nrows, ncols), var) * flux_unit**2),
                    spectral_axis=np.arange(ncols) * u.pix)
 
     deconfigged_helper.load(img, format='2D Spectrum')
