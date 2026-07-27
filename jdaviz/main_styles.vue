@@ -229,6 +229,15 @@ a:active {
   border-color: hsla(0,0%,100%,.35) !important;
 }
 
+.theme--dark .highlightedRow,
+.v-theme--dark .highlightedRow {
+  /* glue-jupyter's table row highlight (.highlightedRow) defaults to a light
+     blue (#E3F2FD) which is nearly invisible in dark mode. Override it with a
+     medium gray sitting between the dark table background and the white font so
+     the highlighted row is legible in dark mode. */
+  background-color: #616161 !important;
+}
+
 .no-hint .v-text-field__details {
   display: none !important;
 }
