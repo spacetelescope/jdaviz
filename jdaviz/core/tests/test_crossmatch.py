@@ -187,7 +187,7 @@ def test_crossmatch_pair_matched_review_and_collision():
     assert res['match_idx'][2] == 1
     assert res['status'][1] == 'review'
     assert res['status'][2] == 'review'
-    assert res['collisions'] == {1, 2}
+    assert res['collisions'] == [1, 2]
 
 
 def test_crossmatch_pair_empty_other():
