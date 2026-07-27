@@ -77,6 +77,8 @@ New Features
 
 - Add menubar to standalone application. This includes Window (resizing/zooming application), Help (Documentation, Help desk), and Cache (manually empty jdaviz cache directory). [#4315]
 
+- Introducing selected methods from the Astronomy Image Display API (AIDA) to image viewers.  [#4310]
+
 Mosviz
 ^^^^^^
 
