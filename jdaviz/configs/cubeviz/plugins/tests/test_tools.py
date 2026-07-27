@@ -4,12 +4,12 @@ from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion
 
 
-def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts):
-    cubeviz_helper.load_data(spectrum1d_cube_with_uncerts, data_label='test')
+def test_spectrum_at_spaxel_no_alt(deconfigged_helper, spectrum1d_cube_with_uncerts):
+    deconfigged_helper.load(spectrum1d_cube_with_uncerts, data_label='test', format='3D Spectrum')
 
-    flux_viewer = cubeviz_helper._app.get_viewer("flux-viewer")
-    uncert_viewer = cubeviz_helper._app.get_viewer("uncert-viewer")
-    spectrum_viewer = cubeviz_helper._app.get_viewer("spectrum-viewer")
+    flux_viewer = deconfigged_helper._app.get_viewer("3D Spectrum")
+    uncert_viewer = deconfigged_helper._app.get_viewer("3D Spectrum (1)")
+    spectrum_viewer = deconfigged_helper._app.get_viewer("1D Spectrum")
 
     # Set the active tool to spectrumperspaxel
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
@@ -38,7 +38,7 @@ def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts)
         x_min=4.623e-07, x_max=4.6232e-07, y_min=42, y_max=88)  # Zoom in X and Y
 
     # Check that a new subset was created
-    subsets = cubeviz_helper._app.get_subsets()
+    subsets = deconfigged_helper._app.get_subsets()
     reg = subsets.get('Subset 1')[0]['region']
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)
@@ -61,7 +61,7 @@ def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts)
     assert len(flux_viewer.native_marks) == 3
 
     # Check in uncertainty viewer as well. Set mouseover here
-    cubeviz_helper._coords_info.dataset.selected = 'none'
+    deconfigged_helper._coords_info.dataset.selected = 'none'
     uncert_viewer.toolbar.active_tool = uncert_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
     uncert_viewer.toolbar.active_tool.on_mouse_move(
         {'event': 'mousemove', 'domain': {'x': x, 'y': y}, 'altKey': False})
@@ -69,7 +69,7 @@ def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts)
     assert uncert_viewer.toolbar.active_tool._mark.visible is True
 
     # Select specific data
-    cubeviz_helper._coords_info.dataset.selected = 'test[FLUX]'
+    deconfigged_helper._coords_info.dataset.selected = 'test'
     uncert_viewer.toolbar.active_tool = uncert_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
     uncert_viewer.toolbar.active_tool.on_mouse_move(
         {'event': 'mousemove', 'domain': {'x': x, 'y': y}, 'altKey': False})
@@ -170,14 +170,14 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube,
     t_linkedpan.deactivate()
 
 
-def test_spectrum_at_spaxel_with_2d(cubeviz_helper):
+def test_spectrum_at_spaxel_with_2d(deconfigged_helper):
     # Use cube with single slice
     x = np.array([[[1, 2, 3], [4, 5, 6]]])
 
-    cubeviz_helper.load_data(x, data_label='test')
+    deconfigged_helper.load(x, data_label='test', format='3D Spectrum')
 
-    flux_viewer = cubeviz_helper._app.get_viewer("flux-viewer")
-    spectrum_viewer = cubeviz_helper._app.get_viewer("spectrum-viewer")
+    flux_viewer = deconfigged_helper._app.get_viewer("3D Spectrum")
+    spectrum_viewer = deconfigged_helper._app.get_viewer("1D Spectrum")
 
     # Set the active tool to spectrumperspaxel
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
