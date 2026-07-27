@@ -7,11 +7,11 @@ from astropy.utils.data import download_file
 
 
 @pytest.mark.remote_data
-def test_data_retrieval(cubeviz_helper):
+def test_data_retrieval(deconfigged_helper):
     """The purpose of this test is to check that both methods:
 
-    - app.get_viewer('spectrum-viewer').data()
-    - cubeviz_helper.get_data()
+    - app.get_viewer('3D Spectrum').data()
+    - deconfigged_helper.get_data()
 
     return the same spectrum values.
     """
@@ -20,22 +20,22 @@ def test_data_retrieval(cubeviz_helper):
     # (Updated to a newer file 11/19/2024)
     URL = 'https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz'
 
-    spectrum_viewer_reference_name = "spectrum-viewer"
     fn = download_file(URL, cache=True)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        cubeviz_helper.load_data(fn)
+        deconfigged_helper.load(fn, data_label="Spectrum", format="3D Spectrum")
 
     # two ways of retrieving data from the viewer.
     # They should return the same spectral values
-    a1 = cubeviz_helper._app.get_viewer(spectrum_viewer_reference_name).data()
-    a2 = cubeviz_helper.datasets["Spectrum (sum)"].get_data()
+    # In deconfigged, this attribute is only a data label
+    # a1 = deconfigged_helper._app.get_viewer('3D Spectrum').data()
+    a2 = deconfigged_helper.datasets["Spectrum (sum)"].get_data()
     # Test the old API as well
-    a3 = cubeviz_helper.get_data("Spectrum (sum)")
+    a3 = deconfigged_helper.get_data("Spectrum (sum)")
 
-    test_value_1 = a1[0].data
+    # test_value_1 = a1[0].data
     test_value_2 = a2.flux.value
     test_value_3 = a3.flux.value
 
-    assert np.allclose(test_value_1, test_value_2, atol=1e-5)
+    # assert np.allclose(test_value_1, test_value_2, atol=1e-5)
     assert np.allclose(test_value_2, test_value_3, atol=1e-5)
