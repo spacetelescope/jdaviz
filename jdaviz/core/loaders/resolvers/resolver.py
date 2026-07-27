@@ -1129,7 +1129,7 @@ class BaseConeSearchResolver(BaseResolver):
 
         # "Viewer" is only offered when at least one image viewer exists and
         # "Catalog" only when at least one catalog is loaded in the data collection.
-        self.search_input_select = SelectPluginComponent(
+        self.search_input = SelectPluginComponent(
             self,
             items='search_input_items',
             selected='search_input_selected',
@@ -1137,12 +1137,12 @@ class BaseConeSearchResolver(BaseResolver):
             apply_filters_to_manual_options=True,
             default_mode='first',
         )
-        self.search_input_select.add_filter(
+        self.search_input.add_filter(
             lambda item: item['label'] != 'Viewer' or any(
                 _is_image_viewer(v) for v in self._app._viewer_store.values()
             )
         )
-        self.search_input_select.add_filter(
+        self.search_input.add_filter(
             lambda item: item['label'] != 'Catalog' or any(
                 d.meta.get('_importer') == 'CatalogImporter'
                 for d in self._app.data_collection
@@ -1151,7 +1151,7 @@ class BaseConeSearchResolver(BaseResolver):
         for message in (ViewerAddedMessage, ViewerRemovedMessage,
                         DataCollectionAddMessage, DataCollectionDeleteMessage):
             self.hub.subscribe(self, message,
-                               handler=lambda lambda_msg=None: self.search_input_select._update_items())  # noqa
+                               handler=lambda lambda_msg=None: self.search_input._update_items())  # noqa
 
         self.viewer = ViewerSelect(
             self, "viewer_items", "viewer_selected", filters=['is_image_viewer']

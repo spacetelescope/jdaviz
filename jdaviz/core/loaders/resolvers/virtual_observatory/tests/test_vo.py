@@ -52,7 +52,7 @@ class TestVODeconfiggedImageLocal(BaseDeconfiggedImage_WCS_WCS):
 
         # Switch to Viewer input mode and select the first viewer.
         # Verify coordinates have switched to the viewer center
-        vo_ldr.search_input_select.selected = "Viewer"
+        vo_ldr.search_input.selected = "Viewer"
         vo_ldr.viewer.selected = "Image"
         ra_str, dec_str = vo_ldr.source.split()
         np.testing.assert_allclose(
@@ -123,7 +123,7 @@ def test_link_type_autocoord(imviz_helper):
 
     vo_ldr = imviz_helper.loaders["virtual observatory"]._obj
     # Use Viewer mode so that link-type changes trigger auto-centering
-    vo_ldr.search_input_select.selected = "Viewer"
+    vo_ldr.search_input.selected = "Viewer"
     vo_ldr.viewer.selected = "imviz-0"
     vo_ldr.center_on_data()
     ra_str, dec_str = vo_ldr.source.split()
@@ -151,7 +151,7 @@ def test_vo_catalog_query_routes_to_query_catalog(deconfigged_helper):
              if d.meta.get('_importer') == 'CatalogImporter'][-1]
 
     vo_ldr = deconfigged_helper.loaders["virtual observatory"]._obj
-    vo_ldr.search_input_select.selected = 'Catalog'
+    vo_ldr.search_input.selected = 'Catalog'
     vo_ldr.catalog.selected = label
 
     calls = []
@@ -269,7 +269,7 @@ class TestVOImvizRemote:
 
         # Sets common args for Remote Testing
         vo_ldr.producttype = "Image"
-        vo_ldr.search_input_select = "Source"
+        vo_ldr.search_input = "Source"
         vo_ldr.source = "M51"
         vo_ldr.radius = 1
         vo_ldr.radius_unit.selected = "deg"
