@@ -55,6 +55,9 @@ New Features
 
 - Add ability to crossmatch catalogs within a user defined range. [#4228]
 
+- Add ability to query VO and Astroquery from catalog/using viewer coordinates as the source. The former source selection
+  choice 'Manual' is also now 'Source'. [#4275]
+
 Mosviz
 ^^^^^^
 
