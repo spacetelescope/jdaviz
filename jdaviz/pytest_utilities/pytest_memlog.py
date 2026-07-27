@@ -428,8 +428,6 @@ def memlog_runtest_logreport(report):
     This runs on both workers and master. On master (xdist), it receives
     the serialized user_properties from workers.
     """
-    global _memlog_records
-
     if report.when != 'teardown':
         return
 
