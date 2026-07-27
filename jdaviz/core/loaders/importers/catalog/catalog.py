@@ -1,4 +1,4 @@
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import ICRS, SkyCoord
 from astropy.io.fits import BinTableHDU, HDUList, TableHDU
 from astropy.table import Table, QTable, vstack
 import astropy.units as u
@@ -35,6 +35,15 @@ class CatalogImporter(BaseImporterToDataCollection):
     col_dec_has_unit = Bool().tag(sync=True)  # if input already has units
     col_dec_unit_items = List().tag(sync=True)
     col_dec_unit_selected = Unicode().tag(sync=True)
+
+    # For coordinate frame and equinox specification. Will be converted to ICRS
+    # and J2000 for consistency, but this gives the user the ability to load
+    # data in other frames
+    coord_frame_items = List().tag(sync=True)
+    coord_frame_selected = Unicode().tag(sync=True)
+
+    coord_equinox_items = List().tag(sync=True)
+    coord_equinox_selected = Unicode().tag(sync=True)
 
     # for catalogs with source positions in pixel coordinates
     col_x_items = List().tag(sync=True)
@@ -112,6 +121,21 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                   items='col_dec_unit_items',
                                                   selected='col_dec_unit_selected',
                                                   manual_options=self._valid_coord_units('dec'))
+
+        self.coord_frame = SelectPluginComponent(self,
+                                                 items='coord_frame_items',
+                                                 selected='coord_frame_selected',
+                                                 manual_options=['icrs', 'fk5',
+                                                                 'fk4', 'galactic',
+                                                                 'ecliptic'])
+
+        self.coord_equinox = SelectPluginComponent(self,
+                                                   items='coord_equinox_items',
+                                                   selected='coord_equinox_selected',
+                                                   manual_options=['J2000.0',
+                                                                   'J1950.0',
+                                                                   'B1950.0',
+                                                                   'B1900.0'])
 
         # dropdown for source ID column
         self.col_id = SelectPluginComponent(self,
@@ -421,7 +445,11 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other']
+        # for fixed frames, dont expose coord_equinox
+        _frames_without_equinox = ('icrs', 'galactic')
+        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other', 'coord_frame']
+        if self.coord_frame_selected not in _frames_without_equinox:
+            expose += ['coord_equinox']
         if self.input_has_extensions:
             expose += ['extension']
         return ImporterUserApi(self, expose=expose)
@@ -496,6 +524,28 @@ class CatalogImporter(BaseImporterToDataCollection):
                 ra = ra.astype(float) * u.Unit(self.col_ra_unit_selected)
             if getattr(dec, 'unit') is None:
                 dec = dec.astype(float) * u.Unit(self.col_dec_unit_selected)
+
+            # apply selection of coordinate frame if not already in ICRS
+            # if the coordinates are in a different frame, they will be transformed
+            # to ICRS, which is the internal frame used in jdaviz for consistency
+
+            _frame_name_map = {'ecliptic': 'barycentrictrueecliptic'}
+            if self.coord_frame_selected not in ['', 'icrs']:
+                frame = _frame_name_map.get(self.coord_frame_selected,
+                                            self.coord_frame_selected)
+                kwargs = {'frame': frame}
+                # ICRS and galactic are fixed frames so don't expose this choice
+                # of 'equinox' for those frames
+                if self.coord_equinox_selected not in ['', 'J2000'] and self.coord_frame_selected != 'galactic':  # noqa
+                    kwargs['equinox'] = self.coord_equinox_selected
+
+                # transform to ICRS / J2000for consistency
+                # TODO: until we are able to support different coordinate frames
+                # in the app
+                sc_temp = SkyCoord(ra, dec, **kwargs)
+                sc_temp = sc_temp.transform_to(ICRS())
+                ra = sc_temp.icrs.ra
+                dec = sc_temp.icrs.dec
 
             output_table[col_ra_selected] = ra
             output_table[col_dec_selected] = dec
