@@ -89,10 +89,9 @@ def crossmatch_pair(base_coords, other_coords, tolerance=1 * u.arcsec,
     claimed = match_idx[match_idx >= 0]
     _, counts = np.unique(claimed, return_counts=True)
     dup_targets = set(np.unique(claimed)[counts > 1].tolist())
-    collisions = {i for i in range(n_base)
-                  if match_idx[i] in dup_targets}
-    for i in collisions:
-        status[i] = 'review'
+    collisions = [i for i in range(n_base)
+                  if match_idx[i] in dup_targets]
+    status[collisions] = 'review'
 
     return dict(match_idx=match_idx, sep=sep_arcsec, status=status, collisions=collisions)
 
