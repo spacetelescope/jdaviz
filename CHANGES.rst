@@ -51,6 +51,8 @@ New Features
 
 - Add window docker icons for standalone app [#4289]
 
+- New image viewer tools for editing the colormap, stretch function, and opacity of the top-layer. [#4290]
+
 Mosviz
 ^^^^^^
 
