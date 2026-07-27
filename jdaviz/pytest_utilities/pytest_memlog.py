@@ -211,11 +211,17 @@ def _extract_memlog_properties(props):
             else:
                 values[name] = int(value)
 
+    # Compute diffs from before/after rather than trusting a serialized diff
+    # value (large signed diffs can overflow execnet's struct.pack when sent
+    # from workers to the controller under xdist).
+    for prefix in ('uss', 'rss', 'swap'):
+        values[f'{prefix}_diff'] = values[f'{prefix}_after'] - values[f'{prefix}_before']
+
     # Check if we have any memory data
     has_memory_data = any(
-        values[k] != 0 for k in ['uss_before', 'uss_after', 'uss_diff',
-                                 'rss_before', 'rss_after', 'rss_diff',
-                                 'swap_before', 'swap_after', 'swap_diff'])
+        values[k] != 0 for k in ['uss_before', 'uss_after',
+                                 'rss_before', 'rss_after',
+                                 'swap_before', 'swap_after'])
 
     return values if has_memory_data else {}
 
@@ -389,14 +395,15 @@ def memlog_runtest_makereport(item, call, report):
         return
 
     # Attach to user_properties - these get serialized to master in xdist
+    # NOTE: Only store before/after (always non-negative). The diff is
+    # computed on the controller side in memlog_runtest_logreport to avoid
+    # execnet struct.pack overflow when serializing large signed ints.
     for prefix in ('uss', 'rss', 'swap'):
         before = int(mem_before[prefix])
         after = int(mem_after[prefix])
-        diff = after - before
 
         report.user_properties.append((f'{prefix}_before', before))
         report.user_properties.append((f'{prefix}_after', after))
-        report.user_properties.append((f'{prefix}_diff', diff))
 
     # Get worker_id from config (xdist sets this)
     worker_id = getattr(item.config, 'workerinput', {}).get('workerid', 'master')
