@@ -69,7 +69,7 @@ class VOResolver(BaseConeSearchResolver):
         return LoaderUserApi(
             self,
             expose=[
-                "producttype", "search_input_select", "viewer", "coordframe",
+                "producttype", "search_input", "viewer", "coordframe",
                 "radius", "radius_unit",
                 "source",
                 "catalog", "catalog_subset", "catalog_col_type", "catalog_name_col",

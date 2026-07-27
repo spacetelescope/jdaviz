@@ -71,7 +71,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
         return LoaderUserApi(
             self,
             expose=[
-                "search_input_select", "viewer", "coordframe", "radius", "radius_unit",
+                "search_input", "viewer", "coordframe", "radius", "radius_unit",
                 "source",
                 "catalog", "catalog_subset", "catalog_col_type", "catalog_name_col",
                 "query_progress",
