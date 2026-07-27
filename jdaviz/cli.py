@@ -97,12 +97,8 @@ def run_solara(host, port, theme, browser, production: bool = True):
         qt.run_qt(server.base_url)
     else:
         import webbrowser
-        try:
-            controller = webbrowser.get(None if browser == 'default' else browser)
-            controller.open(server.base_url)
-        except webbrowser.Error:
-            print(f"Could not locate a runnable browser. Open {server.base_url} manually "
-                  "to access the application.")
+        controller = webbrowser.get(None if browser == 'default' else browser)
+        controller.open(server.base_url)
         server.join()
 
 
