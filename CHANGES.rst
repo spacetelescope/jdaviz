@@ -53,6 +53,8 @@ New Features
 
 - New image viewer tools for editing the colormap, stretch function, and opacity of the top-layer. [#4290]
 
+- Add ability to crossmatch catalogs within a user defined tolerance. [#4228]
+
 Mosviz
 ^^^^^^
 
