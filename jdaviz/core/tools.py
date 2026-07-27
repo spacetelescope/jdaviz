@@ -17,6 +17,7 @@ from glue_jupyter.bqplot.common.tools import (CheckableTool,
                                               BqplotEllipseMode, BqplotCircularAnnulusMode,
                                               BqplotXRangeMode, BqplotYRangeMode,
                                               BqplotSelectionTool)
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import (LineIdentifyMessage, SpectralMarksChangedMessage,
@@ -505,7 +506,7 @@ class ViewerFocusToggle(Tool):
     icon = _ICON_FULLSCREEN
     tool_id = 'jdaviz:viewer_focus_toggle'
     action_text = 'Toggle focus mode'
-    tool_tip = 'Expand this viewer to fill the app (focus mode)'
+    tool_tip = 'Expand this viewer to fill the app (toggle focus mode)'
     keep_visible_in_focus_mode = True
 
     def __init__(self, viewer=None):
@@ -1168,3 +1169,410 @@ class SinglePixelRegion(CheckableTool):
             return roi
 
         return reg
+
+
+def _count_visible_image_layers(viewer):
+    """Return the number of visible, non-subset image layers in *viewer*."""
+    from jdaviz.utils import layer_is_image_data
+    from glue.core.subset_group import GroupedSubset
+    try:
+        return sum(
+            1 for lyr in viewer.state.layers
+            if lyr.visible and layer_is_image_data(lyr.layer)
+            and not isinstance(lyr.layer, GroupedSubset)
+        )
+    except Exception:  # nosec
+        return 0
+
+
+class _BaseTopImageLyrLool(Tool):
+    """
+    Base class for image-viewer tools that show a toolbar-override widget.
+    """
+    keep_visible_in_focus_mode = True
+    _override_title = ''
+    _layer_state_property = ''
+    _current_observed_layer = None
+    # Tooltip template with a ``{layer_ref}`` placeholder that resolves to
+    # "the image layer" (single layer) or "the top visible image layer"
+    # (multiple layers).  Subclasses should set this instead of ``tool_tip``.
+    _tool_tip_template = ''
+
+    def _n_visible_image_layers(self):
+        """Count visible, non-subset image layers in the viewer."""
+        return _count_visible_image_layers(self.viewer)
+
+    def get_tooltip(self):
+        """Hook for ``NestedJupyterToolbar._update_tool_visibilities``.
+
+        Returns a tooltip that says "the image layer" when there is only one
+        visible image layer and "the top visible image layer" when there are
+        multiple, or *None* to keep the existing tooltip.
+        """
+        if not self._tool_tip_template:
+            return None
+        try:
+            n = self._n_visible_image_layers()
+        except Exception:  # nosec
+            return None
+        layer_ref = 'the image layer' if n <= 1 else 'the top visible image layer'
+        return self._tool_tip_template.format(layer_ref=layer_ref)
+
+    def _get_top_layer_state(self):
+        """Return the top visible image layer state by z-order, or None.
+
+        Uses ``zorder`` to match drag-and-drop reordering.
+        """
+        from jdaviz.utils import layer_is_image_data
+        from glue.core.subset_group import GroupedSubset
+        eligible = [
+            lyr for lyr in self.viewer.state.layers
+            if (lyr.visible and layer_is_image_data(lyr.layer)
+                and not isinstance(lyr.layer, GroupedSubset))
+        ]
+        if not eligible:
+            return None
+        return max(eligible, key=lambda lyr: lyr.zorder)
+
+    def _build_custom_widgets(self):
+        raise NotImplementedError  # pragma: no cover
+
+    def _on_selection_changed(self, new_selected):
+        raise NotImplementedError  # pragma: no cover
+
+    def _on_layer_state_change(self, *args):
+        """
+        Called by the echo framework when the observed layer-state property
+        changes externally (e.g. via plot options).  Updates the toolbar widget.
+
+        Any potential feedback loop (this → _selection_callback → layer_state →
+        echo again) terminates naturally: the second assignment to
+        ``custom_widget_selected`` carries the same value, so traitlets' equality
+        check suppresses the observer and no further calls occur.
+        """
+        toolbar = getattr(self.viewer, 'toolbar', None)
+        if toolbar is None or toolbar.tool_override_mode != self._override_title:
+            return
+        new_widgets = self._build_custom_widgets()
+        toolbar.custom_widget_selected = [w.get('selected') for w in new_widgets]
+
+    def _register_layer_observer(self):
+        """
+        Remove any previous layer-state callback and add one on the current
+        top layer.  Called on activate and after every top-layer change.
+        """
+        prop = self._layer_state_property
+        if not prop:
+            return
+        # Remove observer from the previously observed layer (if any)
+        if self._current_observed_layer is not None:
+            try:
+                self._current_observed_layer.remove_callback(
+                    prop, self._on_layer_state_change)
+            except Exception:  # nosec
+                pass
+        layer_state = self._get_top_layer_state()
+        self._current_observed_layer = layer_state
+        if layer_state is not None:
+            try:
+                layer_state.add_callback(prop, self._on_layer_state_change)
+            except Exception:  # nosec
+                pass
+
+    def _unregister_layer_observer(self):
+        """Remove the layer-state callback.  Called when the override closes."""
+        prop = self._layer_state_property
+        if prop and self._current_observed_layer is not None:
+            try:
+                self._current_observed_layer.remove_callback(
+                    prop, self._on_layer_state_change)
+            except Exception:  # nosec
+                pass
+        self._current_observed_layer = None
+
+    def _register_zorder_callbacks(self):
+        """Add a zorder callback on every current layer state."""
+        for lyr in self.viewer.state.layers:
+            try:
+                lyr.add_callback('zorder', self._on_zorder_changed)
+            except Exception:  # nosec
+                pass
+
+    def _unregister_zorder_callbacks(self):
+        """Remove the zorder callback from every current layer state."""
+        for lyr in self.viewer.state.layers:
+            try:
+                lyr.remove_callback('zorder', self._on_zorder_changed)
+            except Exception:  # nosec
+                pass
+
+    def _on_zorder_changed(self, *args):
+        """Called when any layer's zorder changes (drag-and-drop in data menu)."""
+        self._on_top_layer_changed()
+
+    def _on_top_layer_changed(self, *args):
+        """
+        Called when the layers list changes or any layer's zorder changes.
+        Re-registers all observers so the widget always tracks the current top layer.
+        """
+        toolbar = getattr(self.viewer, 'toolbar', None)
+        if toolbar is None or toolbar.tool_override_mode != self._override_title:
+            return
+        # Refresh zorder callbacks in case layers were added/removed
+        self._unregister_zorder_callbacks()
+        self._register_zorder_callbacks()
+        # Re-register the main property observer on the new top layer
+        self._register_layer_observer()
+        # Update the widget to reflect the new top layer's current value
+        new_widgets = self._build_custom_widgets()
+        toolbar.custom_widget_selected = [w.get('selected') for w in new_widgets]
+
+    def activate(self):
+        custom_widgets = self._build_custom_widgets()
+        self.viewer.toolbar.override_tools(
+            [],                              # no extra tool buttons – just close
+            self._override_title,
+            custom_widgets=custom_widgets,
+            custom_widgets_callback=self._build_custom_widgets,
+            selection_callback=self._on_selection_changed,
+        )
+        # Register echo callback on the current top layer so external changes
+        # (e.g. from plot options or API) update the widget in real time.
+        self._register_layer_observer()
+        # Register zorder callbacks including drag-and-drop reordering.
+        self._register_zorder_callbacks()
+        # Also watch the viewer's layer list so that data add/remove is caught.
+        if hasattr(self.viewer, 'state'):
+            try:
+                self.viewer.state.add_callback('layers', self._on_top_layer_changed)
+            except Exception:  # nosec
+                pass
+
+        # Combined cleanup: remove all registered callbacks.
+        def _cleanup():
+            self._unregister_layer_observer()
+            self._unregister_zorder_callbacks()
+            if hasattr(self.viewer, 'state'):
+                try:
+                    self.viewer.state.remove_callback('layers', self._on_top_layer_changed)
+                except Exception:  # nosec
+                    pass
+
+        self.viewer.toolbar._pre_clear_callback = _cleanup
+        # _post_refresh_callback re-registers the echo observer after any
+        # _refresh_custom_widgets call (e.g. triggered by hub messages).
+        self.viewer.toolbar._post_refresh_callback = self._register_layer_observer
+
+
+@viewer_tool
+class ImageColormapTool(_BaseTopImageLyrLool):
+    """Select the colormap for the top visible image layer."""
+    # placeholder icon – replace with a dedicated colormap icon later
+    icon = os.path.join(ICON_DIR, 'colormap.svg')
+    tool_id = 'jdaviz:image_colormap'
+    action_text = 'Select colormap'
+    tool_tip = 'Select the colormap for the top visible image layer'
+    _tool_tip_template = 'Select the colormap for {layer_ref}'
+    _override_title = 'Colormap'
+    _layer_state_property = 'cmap'
+
+    def _build_custom_widgets(self):
+        from jdaviz.utils import glue_colormaps
+        items = [{'label': name, 'value': name} for name, _ in glue_colormaps.members]
+        # Determine the current colormap name for the top layer
+        current = glue_colormaps.members[0][0]
+        layer_state = self._get_top_layer_state()
+        if layer_state is not None and layer_state.cmap is not None:
+            try:
+                current = glue_colormaps.name_from_cmap(layer_state.cmap)
+            except ValueError:
+                pass
+        return [{'type': 'select', 'label': 'Colormap', 'items': items,
+                 'selected': current, 'multiselect': False, 'sync_to_state': True}]
+
+    def _on_selection_changed(self, new_selected):
+        if not new_selected:
+            return
+        from jdaviz.utils import glue_colormaps
+        cmap_name = new_selected[0]
+        try:
+            cmap = glue_colormaps[cmap_name]
+        except KeyError:
+            return
+        layer_state = self._get_top_layer_state()
+        if layer_state is not None:
+            layer_state.cmap = cmap
+
+
+@viewer_tool
+class ImageStretchTool(_BaseTopImageLyrLool):
+    """Select the stretch function for the top visible image layer."""
+    icon = os.path.join(ICON_DIR, 'stretch_bounds.svg')
+    tool_id = 'jdaviz:image_stretch'
+    action_text = 'Select stretch'
+    tool_tip = 'Select the stretch function for the top visible image layer'
+    _tool_tip_template = 'Select the stretch function for {layer_ref}'
+    _override_title = 'Stretch'
+    _layer_state_property = 'stretch'
+
+    # Per-stretch icons; keys are glue stretch IDs.  Stretches with no entry
+    # fall back to the generic stretch_bounds icon set as ``icon``.
+    _stretch_icon_paths = {
+        'linear': os.path.join(ICON_DIR, 'lin.svg'),
+        'log': os.path.join(ICON_DIR, 'log.svg'),
+        'arcsinh': os.path.join(ICON_DIR, 'asinh.svg'),
+        'spline': os.path.join(ICON_DIR, 'spln.svg'),
+        'sqrt': os.path.join(ICON_DIR, 'sqrt.svg'),
+        'DQ': os.path.join(ICON_DIR, 'dq.svg'),
+    }
+    # Tracks which layer the always-on stretch observer is registered on
+    # (separate from _current_observed_layer which is only active during override).
+    _icon_observed_layer = None
+
+    def __init__(self, viewer):
+        super().__init__(viewer)
+        # Pre-load all stretch-specific icon data URIs.
+        self._stretch_imgs = {}
+        for key, path in self._stretch_icon_paths.items():
+            try:
+                self._stretch_imgs[key] = read_icon(path, 'svg+xml')
+            except Exception:  # nosec
+                pass
+        self._default_img = read_icon(self.icon, 'svg+xml')
+
+        # Register an always-on echo callback on the current top layer's
+        # stretch so the icon updates even when the override is not active.
+        self._register_icon_stretch_observer()
+
+        # Watch for layer-list changes so we re-register on the new top layer.
+        if hasattr(viewer, 'state'):
+            try:
+                viewer.state.add_callback('layers', self._refresh_icon_state)
+            except Exception:  # nosec
+                pass
+
+    # ------------------------------------------------------------------
+    # Dynamic icon helpers
+    # ------------------------------------------------------------------
+
+    def _get_img_for_stretch(self, stretch_key):
+        """Return the pre-loaded icon data URI for *stretch_key*."""
+        return self._stretch_imgs.get(stretch_key, self._default_img)
+
+    def get_img(self):
+        """Hook called by ``NestedJupyterToolbar._update_tool_visibilities``.
+
+        Returns the icon that reflects the current top layer's stretch, or
+        *None* to keep the existing icon.
+        """
+        layer_state = self._get_top_layer_state()
+        if layer_state is None or not hasattr(layer_state, 'stretch'):
+            return None
+        try:
+            return self._get_img_for_stretch(layer_state.stretch)
+        except Exception:  # nosec
+            return None
+
+    def _update_toolbar_icon(self):
+        """Push the current stretch icon into ``tools_data`` so the Vue toolbar updates."""
+        toolbar = getattr(self.viewer, 'toolbar', None)
+        if toolbar is None or self.tool_id not in getattr(toolbar, 'tools_data', {}):
+            return
+        img = self.get_img()
+        if img is None:
+            return
+        toolbar.tools_data = {
+            **toolbar.tools_data,
+            self.tool_id: {**toolbar.tools_data[self.tool_id], 'img': img},
+        }
+
+    def _register_icon_stretch_observer(self):
+        """Register (or re-register) an always-on echo callback on the current
+        top layer's *stretch* property."""
+        if self._icon_observed_layer is not None:
+            try:
+                self._icon_observed_layer.remove_callback(
+                    'stretch', self._on_icon_stretch_changed)
+            except Exception:  # nosec
+                pass
+        layer_state = self._get_top_layer_state()
+        self._icon_observed_layer = layer_state
+        if layer_state is not None and hasattr(layer_state, 'stretch'):
+            try:
+                layer_state.add_callback('stretch', self._on_icon_stretch_changed)
+            except Exception:  # nosec
+                pass
+
+    def _on_icon_stretch_changed(self, *args):
+        """Echo callback: top layer's stretch changed → update the toolbar icon."""
+        self._update_toolbar_icon()
+
+    def _refresh_icon_state(self, *args):
+        """Called when ``viewer.state.layers`` changes: re-registers the stretch
+        observer on the new top layer and refreshes the icon."""
+        self._register_icon_stretch_observer()
+        self._update_toolbar_icon()
+
+    def _build_custom_widgets(self):
+        from glue.config import stretches as glue_stretches
+        items = [
+            {'label': glue_stretches.display_func(key), 'value': key}
+            for key in glue_stretches.members
+        ]
+        # Determine the current stretch for the top layer
+        keys = list(glue_stretches.members.keys())
+        current = keys[0] if keys else 'linear'
+        layer_state = self._get_top_layer_state()
+        if layer_state is not None and hasattr(layer_state, 'stretch'):
+            try:
+                current = layer_state.stretch
+            except Exception:  # nosec
+                pass
+        return [{'type': 'select', 'label': 'Stretch', 'items': items,
+                 'selected': current, 'multiselect': False, 'sync_to_state': True}]
+
+    def _on_selection_changed(self, new_selected):
+        if not new_selected:
+            return
+        stretch_key = new_selected[0]
+        layer_state = self._get_top_layer_state()
+        if layer_state is not None and hasattr(layer_state, 'stretch'):
+            try:
+                layer_state.stretch = stretch_key
+            except Exception:  # nosec
+                pass
+
+
+@viewer_tool
+class ImageOpacityTool(_BaseTopImageLyrLool):
+    """Set the opacity of the top visible image layer via a slider."""
+    # placeholder icon – replace with a dedicated opacity icon later
+    icon = os.path.join(ICON_DIR, 'opacity.svg')
+    tool_id = 'jdaviz:image_opacity'
+    action_text = 'Set opacity'
+    tool_tip = 'Adjust the opacity of the top visible image layer'
+    _tool_tip_template = 'Adjust the opacity of {layer_ref}'
+    _override_title = 'Opacity'
+    _layer_state_property = 'alpha'
+
+    def _build_custom_widgets(self):
+        layer_state = self._get_top_layer_state()
+        current = 1.0
+        if layer_state is not None and hasattr(layer_state, 'alpha'):
+            try:
+                current = float(layer_state.alpha)
+            except Exception:  # nosec
+                pass
+        return [{'type': 'slider', 'label': 'Opacity',
+                 'min': 0.0, 'max': 1.0, 'step': 0.02,
+                 'selected': current}]
+
+    def _on_selection_changed(self, new_selected):
+        if not new_selected:
+            return
+        layer_state = self._get_top_layer_state()
+        if layer_state is not None:
+            try:
+                layer_state.alpha = float(new_selected[0])
+            except Exception:  # nosec
+                pass

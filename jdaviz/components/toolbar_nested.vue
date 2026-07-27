@@ -8,33 +8,53 @@
       <v-btn @click="restore_tools" style="background-color: #007ba1; color: white; border-bottom-right-radius: 0; border-top-right-radius: 0; margin-right: -6px; padding-top: 3px">
         <j-tooltip :tooltipcontent="`exit '${tool_override_mode}' mode and restore original toolbar`" span_style="height: inherit; display: inherit; pointer-events: cursor;">
           <v-icon style="margin-left: 4px;">mdi-close</v-icon>
-          <span style="color: white; margin-top: 3px; margin-left: 12px">{{ tool_override_mode }}</span>
+          <span style="color: white; margin-top: 0px; margin-left: 12px">{{ tool_override_mode }}</span>
         </j-tooltip>
       </v-btn>
     </v-btn-toggle>
 
-    <!-- Custom widgets (e.g., viewer selector) -->
+    <!-- Custom widgets (dropdowns and sliders) -->
     <span v-if="custom_widget_items.length > 0" style="display: inline-flex; align-items: center; vertical-align: top; height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
-      <v-select
-        v-for="(widget, idx) in custom_widget_items"
-        :key="idx"
-        :model-value="custom_widget_selected[idx]"
-        @update:modelValue="(val) => update_widget_selection(idx, val)"
-        :items="widget.items"
-        :placeholder="widget.label"
-        :multiple="widget.multiselect"
-        :chips="widget.multiselect"
-        :small-chips="widget.multiselect"
-        deletable-chips
-        density="compact"
-        solo
-        flat
-        hide-details
-        style="min-width: 120px; max-width: 250px;"
-        class="custom-toolbar-select"
-        item-title="label"
-        item-value="value"
-      ></v-select>
+      <template v-for="(widget, idx) in custom_widget_items" :key="idx">
+        <!-- Slider widget -->
+        <j-tooltip v-if="widget.type === 'slider'" :tooltipcontent="widget.label" span_style="display: flex; align-items: center; height: 42px;">
+          <span style="color: white; font-size: 12px; margin-right: 4px; white-space: nowrap; align-self: center;">{{ widget.label }}</span>
+          <v-slider
+            :model-value="custom_widget_selected[idx]"
+            @update:modelValue="(val) => update_widget_selection(idx, val)"
+            :min="widget.min !== undefined ? widget.min : 0"
+            :max="widget.max !== undefined ? widget.max : 1"
+            :step="widget.step !== undefined ? widget.step : 0.01"
+            density="compact"
+            hide-details
+            style="min-width: 140px; max-width: 220px; margin: 16px 4px 0 4px; align-self: flex-start;"
+            class="custom-toolbar-slider"
+            color="white"
+            track-color="rgba(255,255,255,0.4)"
+          ></v-slider>
+          <span style="color: white; font-size: 12px; min-width: 32px; text-align: right; align-self: center;">{{ typeof custom_widget_selected[idx] === 'number' ? custom_widget_selected[idx].toFixed(2) : custom_widget_selected[idx] }}</span>
+        </j-tooltip>
+        <!-- Select/dropdown widget -->
+        <v-select
+          v-else
+          :model-value="custom_widget_selected[idx]"
+          @update:modelValue="(val) => update_widget_selection(idx, val)"
+          :items="widget.items"
+          :placeholder="widget.label"
+          :multiple="widget.multiselect"
+          :chips="widget.multiselect"
+          :small-chips="widget.multiselect"
+          deletable-chips
+          density="compact"
+          solo
+          flat
+          hide-details
+          style="min-width: 120px; max-width: 250px;"
+          class="custom-toolbar-select"
+          item-title="label"
+          item-value="value"
+        ></v-select>
+      </template>
     </span>
 
     <v-btn-toggle v-model="active_tool_id" style="overflow-x: hidden" class="transparent">
@@ -101,6 +121,34 @@
           }, 100)
         } else {
           this.close_on_click = false;
+        }
+      },
+      tool_override_mode(newVal) {
+        // Mirror into a JS global so viewer_window.vue can block mousemove
+        // re-renders with zero latency (no Python round-trip needed).
+        window._jdaviz_override_mode = !!newVal;
+
+        // bqplot_image_gl calls element.focus() inside its mousemove handler,
+        // which causes the v-select input to blur and Vuetify to close the
+        // dropdown.  focus() lives on HTMLElement.prototype (NOT Element.prototype),
+        // so that is the correct prototype to patch.
+        if (newVal && !window._jdaviz_orig_focus) {
+          window._jdaviz_orig_focus = HTMLElement.prototype.focus;
+          HTMLElement.prototype.focus = function(options) {
+            if (!window._jdaviz_override_mode) {
+              return window._jdaviz_orig_focus.call(this, options);
+            }
+            // Allow focus within the toolbar itself or the floating overlay (dropdown list)
+            const toolbar = document.querySelector('.jdaviz-nested-toolbar');
+            const overlay = document.querySelector('.v-overlay-container');
+            if ((toolbar && toolbar.contains(this)) || (overlay && overlay.contains(this))) {
+              return window._jdaviz_orig_focus.call(this, options);
+            }
+            // Suppress all other focus() calls (e.g. bqplot_image_gl canvas focus)
+          };
+        } else if (!newVal && window._jdaviz_orig_focus) {
+          HTMLElement.prototype.focus = window._jdaviz_orig_focus;
+          delete window._jdaviz_orig_focus;
         }
       }
     },
@@ -213,10 +261,13 @@
   min-height: 28px !important;
   padding: 0 !important;
 }
-.custom-toolbar-select >>> .v-select__selection {
+/* Vuetify 3: selected text and input field */
+.custom-toolbar-select .v-select__selection-text,
+.custom-toolbar-select .v-field__input,
+.custom-toolbar-select .v-field__input input,
+.custom-toolbar-select input {
   color: white !important;
-  font-size: 12px;
-  margin: 2px 4px 2px 0 !important;
+  font-size: 12px !important;
 }
 .custom-toolbar-select >>> .v-chip {
   height: 22px !important;
@@ -230,5 +281,17 @@
 }
 .custom-toolbar-select >>> input::placeholder {
   color: rgba(255, 255, 255, 0.7) !important;
+}
+.custom-toolbar-slider .v-slider-track__background,
+.custom-toolbar-slider .v-slider-track__fill {
+  opacity: 1 !important;
+}
+.custom-toolbar-slider .v-slider-thumb__surface {
+  background-color: white !important;
+}
+.custom-toolbar-slider .v-input__control {
+  min-height: unset !important;
+  display: flex !important;
+  align-items: center !important;
 }
 </style>

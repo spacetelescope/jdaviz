@@ -33,7 +33,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                     ['jdaviz:panzoommatch', 'jdaviz:imagepanzoom'],
                     ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse',
                      'bqplot:circannulus'],
-                    ['jdaviz:blinkonce', 'jdaviz:contrastbias'],
+                    ['jdaviz:blinkonce', 'jdaviz:contrastbias', 'jdaviz:image_colormap',
+                     'jdaviz:image_stretch', 'jdaviz:image_opacity'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
                      'jdaviz:viewer_popout']]
 
