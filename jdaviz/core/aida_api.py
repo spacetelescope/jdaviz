@@ -17,21 +17,12 @@ class AIDAMixin:
     Jdaviz *image* viewer. This does not provide a fully functional viewer,
     but rather should be used as mixin into an existing viewer subclass.
 
-    A child class that uses this must run :meth:`init_aida_api`
-    within its ``__init__``.
-
     References
     ----------
     .. [1] https://github.com/astropy/astro-image-display-api/
 
     """
     RESERVED_MARKER_SET_NAMES = ['all']
-
-    def init_aida_api(self):
-        """
-        Initialize the AIDA API for the viewer.
-        """
-        pass
 
     def _get_image_glue_data(self, image_label):
         if image_label is None:

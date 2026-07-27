@@ -425,9 +425,6 @@ class JdavizViewerMixin(WithCache):
 
             if isinstance(self, AIDAMixin):
                 expose += ['set_viewport', 'get_viewport']
-            else:
-                # cubeviz image viewers don't inherit from AIDAMixin yet,
-                expose += []
         elif isinstance(self, TableViewer):
             expose += []
         else:

@@ -3,7 +3,6 @@ import re
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from astropy.wcs import WCS
 from astropy.tests.helper import assert_quantity_allclose
 
 
@@ -19,26 +18,17 @@ def assert_angle_close(angle1, angle2, atol=1 * u.arcsec):
     assert_quantity_allclose(difference, desired=0*u.arcsec, atol=atol)
 
 
-def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
-    imviz_helper.load_data(image_hdu_wcs)
-    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+def test_get_viewport_sky(deconfigged_helper, image_hdu_wcs):
+    deconfigged_helper.load(image_hdu_wcs, format='Image')
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
 
-    viewer = imviz_helper._app.get_viewer('imviz-0')
+    viewer = deconfigged_helper.viewers['Image']
     viewport = viewer.get_viewport('sky')
 
     expected_center = SkyCoord(ra=337.51894337, dec=-20.83208305, unit='deg')
     expected_fov = 0.00277778 * u.deg
-    expected_image_label = imviz_helper._app.data_collection[0].label
+    expected_image_label = deconfigged_helper._app.data_collection[0].label
 
-    # by default, the viewer y-axis is the narrower axis, which is used to
-    # define the FOV parameter. Use the WCS to find what the actual
-    # viewport dimensions are in the x-axis, which maps onto RA in this case:
-    wcs = WCS(image_hdu_wcs.header)
-    dec_unit = u.Unit(wcs.wcs.cunit[1])
-    delta_dec = abs(wcs.wcs.cdelt[1]) * dec_unit
-    expected_fov = (
-        abs(viewer.state.y_max - viewer.state.y_min) * delta_dec
-    )
     assert_coordinate_close(viewport['center'], expected_center)
     assert_angle_close(viewport['fov'], expected_fov)
 
@@ -48,10 +38,10 @@ def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
     assert viewport['image_label'] == expected_image_label
 
 
-def test_set_viewport_sky(imviz_helper, image_hdu_wcs):
-    imviz_helper.load_data(image_hdu_wcs)
-    imviz_helper.plugins['Orientation'].align_by = 'WCS'
-    viewer = imviz_helper._app.get_viewer('imviz-0')
+def test_set_viewport_sky(deconfigged_helper, image_hdu_wcs):
+    deconfigged_helper.load(image_hdu_wcs, format='Image')
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+    viewer = deconfigged_helper.viewers['Image']
 
     # change only the center:
     new_viewport_settings = dict(
@@ -70,10 +60,10 @@ def test_set_viewport_sky(imviz_helper, image_hdu_wcs):
         viewer.set_viewport(center=u.Quantity([0, 1]))
 
 
-def test_set_viewport_sky_rotation(imviz_helper, image_hdu_wcs):
-    imviz_helper.load_data(image_hdu_wcs)
-    imviz_helper.plugins['Orientation'].align_by = 'WCS'
-    viewer = imviz_helper._app.get_viewer('imviz-0')
+def test_set_viewport_sky_rotation(deconfigged_helper, image_hdu_wcs):
+    deconfigged_helper.load(image_hdu_wcs, format='Image')
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+    viewer = deconfigged_helper.viewers['Image']
 
     # change only the center:
     new_viewport_settings = dict(
@@ -89,14 +79,14 @@ def test_set_viewport_sky_rotation(imviz_helper, image_hdu_wcs):
     )
 
 
-def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
+def test_get_viewport_external_update(deconfigged_helper, image_hdu_wcs):
     # arrange
-    imviz_helper.load_data(image_hdu_wcs)
-    imviz_helper.plugins['Orientation'].align_by = 'WCS'
-    viewer = imviz_helper._app.get_viewer('imviz-0')
+    deconfigged_helper.load(image_hdu_wcs, format='Image')
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+    viewer = deconfigged_helper.viewers['Image']
 
     # act: update the rotation of imviz external to aida
-    orientation = imviz_helper._app._jdaviz_helper.plugins.get('Orientation', None)
+    orientation = deconfigged_helper._app._jdaviz_helper.plugins.get('Orientation', None)
     orientation.add_orientation(
         east_left=True,
         set_on_create=True,
@@ -113,11 +103,11 @@ def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
     )
 
 
-def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
-    imviz_helper.load_data(image_hdu_wcs)
-    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+def test_set_viewport_pixel(deconfigged_helper, image_hdu_wcs):
+    deconfigged_helper.load(image_hdu_wcs, format='Image')
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
 
-    viewer = imviz_helper._app.get_viewer('imviz-0')
+    viewer = deconfigged_helper.viewers['Image']
 
     # change only the center:
     new_viewport_settings = dict(
@@ -133,9 +123,9 @@ def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
     np.testing.assert_allclose(new_viewport['fov'], new_viewport_settings['fov'], atol=1e-4)
 
 
-def test_set_rotation_not_aligned(imviz_helper, image_hdu_wcs):
-    imviz_helper.load_data(image_hdu_wcs)
-    viewer = imviz_helper._app.get_viewer('imviz-0')
+def test_set_rotation_not_aligned(deconfigged_helper, image_hdu_wcs):
+    deconfigged_helper.load(image_hdu_wcs, format='Image')
+    viewer = deconfigged_helper.viewers['Image']
 
     # change only the center:
     new_viewport_settings = dict(
@@ -145,9 +135,9 @@ def test_set_rotation_not_aligned(imviz_helper, image_hdu_wcs):
         viewer.set_viewport(**new_viewport_settings)
 
 
-def test_get_fov_no_wcs(imviz_helper, image_hdu_nowcs):
-    imviz_helper.load_data(image_hdu_nowcs)
-    viewer = imviz_helper._app.get_viewer('imviz-0')
+def test_get_fov_no_wcs(deconfigged_helper, image_hdu_nowcs):
+    deconfigged_helper.load(image_hdu_nowcs, format='Image')
+    viewer = deconfigged_helper.viewers['Image']
 
     with pytest.raises(ValueError, match=re.escape("The image must have valid WCS to return `fov` in `sky`.")):  # noqa
         viewer.get_viewport()
