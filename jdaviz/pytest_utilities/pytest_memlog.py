@@ -23,17 +23,17 @@ Run pytest with the --memlog option to enable memory logging:
     pytest --memlog 10 --memlog-max-worker  # Show worker with highest peak memory
 """
 import re
+import warnings
 
 import numpy as np
 import psutil
-import pytest
 
 
 # ============================================================================
 # Module-level storage and dtype
 # ============================================================================
 _memlog_dtype = np.dtype([('worker_id', 'U20'),
-                          ('nodeid', 'U256'),
+                          ('nodeid', 'U1024'),
                           ('uss_before', 'u8'),
                           ('uss_after', 'u8'),
                           ('uss_diff', 'i8'),
@@ -56,7 +56,8 @@ _full_header_with_worker = _full_header + f'{"worker":>8}  test'
 _after_header_no_worker = _after_header + 'test'
 _after_header_with_worker = _after_header + f'{"worker":>8}  test'
 
-_memlog_records = np.array([], dtype=_memlog_dtype)
+# Raw (worker_id, nodeid, ...) tuples accumulated during the run
+_memlog_records = []
 _memlog_enabled_flag = False
 _default_top_n = 20
 
@@ -72,12 +73,20 @@ def _get_memory_bytes():
     -------
     numpy.void
         A structured array record with rss, swap, and uss fields in bytes.
+        Returns zeros if memory info cannot be retrieved (e.g. transient
+        psutil.Error on some CI/sandboxed platforms), so a memlog failure
+        never causes the real test's setup/teardown to error out.
     """
-    p = psutil.Process()
-    rss = p.memory_info().rss
-    mf = p.memory_full_info()
-    swap = getattr(mf, 'swap', 0) or 0
-    uss = p.memory_full_info().uss
+    rss = swap = uss = 0
+    try:
+        p = psutil.Process()
+        mf = p.memory_full_info()
+        rss = mf.rss
+        swap = getattr(mf, 'swap', 0) or 0
+        uss = mf.uss
+    except (psutil.Error, OSError) as e:
+        warnings.warn(f'memlog: failed to read process memory info: {e}',
+                      stacklevel=2)
 
     mem_array = np.array([(rss, swap, uss)],
                          dtype=[('rss', 'u8'), ('swap', 'u8'), ('uss', 'u8')])
@@ -363,15 +372,17 @@ def memlog_runtest_teardown(item, _):
     item._mem_after = _get_memory_bytes()
 
 
-@pytest.hookimpl(hookwrapper=True)
 def memlog_runtest_makereport(item, call, report):
     """
     Attach memory measurements to report user_properties.
 
-    This runs during report creation when we still have access to the item.
-    The user_properties are serialized and sent to master in xdist. We track
-    USS, RSS, and Swap for each test, though the analysis focuses on
-    USS + Swap as the primary memory allocation metric.
+    This is a plain helper function, called directly from conftest.py's own
+    ``pytest_runtest_makereport`` hookwrapper (after ``outcome.get_result()``)
+    -- it is not itself registered as a pytest hook. It runs during report
+    creation when we still have access to the item. The user_properties are
+    serialized and sent to master in xdist. We track USS, RSS, and Swap for
+    each test, though the analysis focuses on USS + Swap as the primary
+    memory allocation metric.
 
     Parameters
     ----------
@@ -444,8 +455,9 @@ def memlog_runtest_logreport(report):
                      mem_props['swap_after'],
                      mem_props['swap_diff'])
 
-    record = np.array([record_values], dtype=_memlog_dtype)
-    _memlog_records = np.append(_memlog_records, record)
+    # Store as a raw tuple; the structured array is built once, lazily,
+    # via _get_memlog_records_array()
+    _memlog_records.append(record_values)
 
 
 def _display_max_worker_report(terminalreporter, records, top_n):
@@ -687,6 +699,20 @@ def _display_final_usage(terminalreporter, records):
                                                         include_worker=True))
 
 
+def _get_memlog_records_array():
+    """
+    Build the structured array of all collected memlog records.
+
+    Returns
+    -------
+    numpy.ndarray
+        Structured array of memlog records (may be empty).
+    """
+    if not _memlog_records:
+        return np.array([], dtype=_memlog_dtype)
+    return np.array(_memlog_records, dtype=_memlog_dtype)
+
+
 def memlog_terminal_summary(terminalreporter, config=None):
     """
     Terminal summary hook that prints memlog summary.
@@ -697,7 +723,9 @@ def memlog_terminal_summary(terminalreporter, config=None):
     if not getattr(config, '_memlog_enabled', False):
         return
 
-    if len(_memlog_records) == 0:
+    records = _get_memlog_records_array()
+
+    if len(records) == 0:
         terminalreporter.write_line('memlog: no records collected.')
         return
 
@@ -710,28 +738,24 @@ def memlog_terminal_summary(terminalreporter, config=None):
     elif not isinstance(top_n, int):
         top_n = 20
 
-    if len(_memlog_records) == 0:
-        terminalreporter.write_line('memlog: no records collected.')
-        return
-
     sort_method = getattr(config, '_memlog_sort', 'diff')
 
     # If max worker is requested, find and report on the worker with
     # the highest peak memory allocation
     if getattr(config, '_memlog_max_worker', False):
-        _display_max_worker_report(terminalreporter, _memlog_records, top_n)
+        _display_max_worker_report(terminalreporter, records, top_n)
 
     else:
         # Group by worker_id if sorting by worker
         if sort_method == 'worker':
-            _display_worker_grouped_report(terminalreporter, _memlog_records, top_n)
+            _display_worker_grouped_report(terminalreporter, records, top_n)
         else:
-            _display_standard_report(terminalreporter, _memlog_records, sort_method, top_n)
+            _display_standard_report(terminalreporter, records, sort_method, top_n)
 
     # Display peak memory usage across all tests
-    _display_peak_usage(terminalreporter, _memlog_records)
+    _display_peak_usage(terminalreporter, records)
 
     # Display final memory usage of last test in each worker
-    _display_final_usage(terminalreporter, _memlog_records)
+    _display_final_usage(terminalreporter, records)
 
     terminalreporter.write_sep('-', 'end of memlog summary')
