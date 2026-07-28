@@ -72,10 +72,10 @@ def _get_memory_bytes():
     Returns
     -------
     numpy.void
-        A structured array record with rss, swap, and uss fields in bytes.
-        Returns zeros if memory info cannot be retrieved (e.g. transient
-        psutil.Error on some CI/sandboxed platforms), so a memlog failure
-        never causes the real test's setup/teardown to error out.
+        A structured array with rss, swap, and uss fields in bytes.
+        Returns zeros if memory info can't be retrieved (e.g. transient
+        psutil.Error), to avoid a situation where a memlog failure
+        causes the real test's setup/teardown to error out.
     """
     rss = swap = uss = 0
     try:
@@ -220,9 +220,9 @@ def _extract_memlog_properties(props):
             else:
                 values[name] = int(value)
 
-    # Compute diffs from before/after rather than trusting a serialized diff
-    # value (large signed diffs can overflow execnet's struct.pack when sent
-    # from workers to the controller under xdist).
+    # Compute diffs from before/after rather than a serialized diff
+    # value since large signed diffs can overflow execnet's struct.pack when sent
+    # from workers to the controller under xdist.
     for prefix in ('uss', 'rss', 'swap'):
         values[f'{prefix}_diff'] = values[f'{prefix}_after'] - values[f'{prefix}_before']
 
@@ -376,13 +376,12 @@ def memlog_runtest_makereport(item, call, report):
     """
     Attach memory measurements to report user_properties.
 
-    This is a plain helper function, called directly from conftest.py's own
-    ``pytest_runtest_makereport`` hookwrapper (after ``outcome.get_result()``)
-    -- it is not itself registered as a pytest hook. It runs during report
-    creation when we still have access to the item. The user_properties are
-    serialized and sent to master in xdist. We track USS, RSS, and Swap for
-    each test, though the analysis focuses on USS + Swap as the primary
-    memory allocation metric.
+    This is a plain helper function (rather than a pytest hook),
+    called directly from conftest.py's own ``pytest_runtest_makereport``
+    hook wrapper (after ``outcome.get_result()``) that runs during report creation.
+    The user_properties are serialized and sent to master in xdist.
+    We track USS, RSS, and Swap for each test, though the analysis
+    focuses on USS + Swap as the primary memory allocation metric.
 
     Parameters
     ----------
@@ -405,7 +404,7 @@ def memlog_runtest_makereport(item, call, report):
     if mem_before is None or mem_after is None:
         return
 
-    # Attach to user_properties - these get serialized to master in xdist
+    # Attach to user_properties. These get serialized to master in xdist.
     # NOTE: Only store before/after (always non-negative). The diff is
     # computed on the controller side in memlog_runtest_logreport to avoid
     # execnet struct.pack overflow when serializing large signed ints.
@@ -453,8 +452,7 @@ def memlog_runtest_logreport(report):
                      mem_props['swap_after'],
                      mem_props['swap_diff'])
 
-    # Store as a raw tuple; the structured array is built once, lazily,
-    # via _get_memlog_records_array()
+    # Store as a raw tuple and build the structured array lazily via _get_memlog_records_array()
     _memlog_records.append(record_values)
 
 
