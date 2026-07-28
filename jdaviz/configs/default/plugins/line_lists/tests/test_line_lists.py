@@ -116,7 +116,7 @@ class TestLineLists:
         # Load a sample of line lists to verify functionality (loading all can be expensive)
         sample_size = min(5, len(available_linelists))
         sample_linelists = available_linelists[:sample_size]
-        
+
         for linelist in sample_linelists:
             specviz_helper.plugins['Line Lists']._obj.vue_list_selected(linelist)
             specviz_helper.plugins['Line Lists']._obj.vue_load_list(linelist)
