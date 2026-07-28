@@ -326,7 +326,8 @@ intersphinx_mapping.update({  # noqa: F405
 # Options for linkcheck
 linkcheck_ignore = [
     'https://github.com/spacetelescope/jdaviz/settings/branches',
-    'https://pypi.org/project/jdaviz/#files'
+    'https://pypi.org/project/jdaviz/#files',
+    '../index.html'  # warning raised by docs/cubeviz/displaycubes.rst
 ]
 
 
