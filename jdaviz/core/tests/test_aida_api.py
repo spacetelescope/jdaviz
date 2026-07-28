@@ -141,3 +141,32 @@ def test_get_fov_no_wcs(deconfigged_helper, image_hdu_nowcs):
 
     with pytest.raises(ValueError, match=re.escape("The image must have valid WCS to return `fov` in `sky`.")):  # noqa
         viewer.get_viewport()
+
+
+def test_get_viewport_no_wcs(deconfigged_helper):
+    image_no_wcs = np.random.normal(size=(50, 50))
+    deconfigged_helper.load(image_no_wcs, loader='object', format='Image')
+
+    viewer = deconfigged_helper.viewers['Image']
+    viewport = viewer.get_viewport()
+
+    assert viewport['center'] == (24.5, 24.5)
+    assert viewport['fov'] == 50.0
+    assert viewport['rotation'] is None
+    assert viewport['projection'] is None
+    assert viewport['image_label'] == 'Image'
+
+
+def test_set_viewport_no_wcs(deconfigged_helper):
+    image_no_wcs = np.random.normal(size=(50, 50))
+    deconfigged_helper.load(image_no_wcs, loader='object', format='Image')
+
+    viewer = deconfigged_helper.viewers['Image']
+    viewer.set_viewport(center=(0, 0), fov=10)
+    viewport = viewer.get_viewport()
+
+    assert viewport['center'] == (0, 0)
+    assert viewport['fov'] == 10
+    assert viewport['rotation'] is None
+    assert viewport['projection'] is None
+    assert viewport['image_label'] == 'Image'
