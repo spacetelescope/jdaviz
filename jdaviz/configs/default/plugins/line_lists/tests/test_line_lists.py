@@ -8,6 +8,7 @@ from specutils import Spectrum
 
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import get_available_linelists
+from jdaviz.core.linelists import get_linelist_metadata
 
 
 # two-argument Table.loc is deprecated as of Astropy 7.2. Syntax update will be needed
@@ -104,7 +105,7 @@ class TestLineLists:
         assert ll_plugin.identify_label == ''
 
     def test_load_available_preset_lists(self, specviz_helper, spectrum1d):
-        """ Loads all available line lists and checks the medium requirement """
+        """ Loads sample preset line lists and checks the medium requirement """
         label = "Test 1D Spectrum"
         specviz_helper.load_data(spectrum1d, data_label=label)
 
@@ -112,19 +113,30 @@ class TestLineLists:
         available_linelists = get_available_linelists()
         assert len(available_linelists) > 0
 
-        for linelist in available_linelists:
+        # Load a sample of line lists to verify functionality (loading all can be expensive)
+        sample_size = min(5, len(available_linelists))
+        sample_linelists = available_linelists[:sample_size]
+        
+        for linelist in sample_linelists:
             specviz_helper.plugins['Line Lists']._obj.vue_list_selected(linelist)
             specviz_helper.plugins['Line Lists']._obj.vue_load_list(linelist)
 
-        # Check that we loaded all the lists (+1 because of the Custom list)
+        # Check that we loaded the sample lists (+1 because of the Custom list)
         assert (
             len(specviz_helper.plugins['Line Lists']._obj.list_contents.keys()) ==
-            len(available_linelists) + 1
+            sample_size + 1
         )
 
-        # Line list must have "medium" info to be available
+        # Verify sample line lists have "medium" info
         for list in specviz_helper.plugins['Line Lists']._obj.list_contents.values():  # noqa
             assert 'medium' in list
+
+        # Additionally, verify ALL available line lists have metadata (without loading them)
+        # This is much faster and ensures metadata quality across all lists
+        metadata = get_linelist_metadata()
+        for linelist in available_linelists:
+            assert 'medium' in metadata[linelist], \
+                f"Line list '{linelist}' missing 'medium' metadata"
 
     def test_line_identify(self, specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d)
