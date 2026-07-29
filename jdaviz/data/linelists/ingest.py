@@ -52,7 +52,7 @@ HYDROGEN_PATTERNS = [
     re.compile(r'^Pa\s*\d'),                   # Pa9, Pa10 ...
     re.compile(r'^Pa\s*[a-z]'),                # Pa d, Pa g, Pa ae
     re.compile(r'^P[dg]\b'),                   # Pd, Pg (Paschen delta/gamma shorthand)
-    re.compile(r'^H(alpha|beta|gamma|delta|epsilon|zeta|eta|theta)\b'),  # transliterated Greek Balmer
+    re.compile(r'^H(alpha|beta|gamma|delta|epsilon|zeta|eta|theta)\b'),  # noqa
     re.compile(r'^H\s?[a-z]\b'),                # Ha/Hb/Hd/He/Hg
     re.compile(r'^H\d{1,2}\b'),                  # H8-H21 numbered Balmer
     re.compile(r'^HI\b'),                        # "HI series limit" safety net
@@ -115,7 +115,7 @@ def _clean_value(v):
         v = v.encode("ascii", errors="ignore").decode("ascii")
         v = " ".join(v.split())  # collapse internal tabs/newlines/repeated spaces, strip ends
         if v.count("(") > v.count(")"):
-            v = v + ")" * (v.count("(") - v.count(")"))  # fix truncated closing parens (seen in H2.csv)
+            v = v + ")" * (v.count("(") - v.count(")"))  # fix truncated )'s
         if v == "":
             return None
     return v
@@ -130,7 +130,7 @@ def read_one_file(filename, file_schema):
     wave_col = file_schema["rest_wavelength_col"]
     unit_str = file_schema["wavelength_unit"]
     extra_cols = file_schema.get("extra_cols", [])
-    element_override = file_schema.get("element_override")  # for files whose names don't encode species
+    element_override = file_schema.get("element_override")
     science_case = file_schema.get("science_case", "")  # e.g. galactic, stellar, nebular, molecular
 
     # validate wavelength column exists and sanity-check the range
@@ -158,7 +158,7 @@ def read_one_file(filename, file_schema):
         # use "0" (not "") for unresolved elements so the column round-trips as a
         # plain (unmasked) string column -- avoids ECSV masked-column ambiguity
         # and the default astropy fill_value of "N/A" for missing entries
-        elements.append(element_override if element_override else (extract_element(str(name)) or "0"))
+        elements.append(element_override if element_override else (extract_element(str(name)) or "0")) # noqa
 
     tbl = Table()
     tbl["line_name"] = names
