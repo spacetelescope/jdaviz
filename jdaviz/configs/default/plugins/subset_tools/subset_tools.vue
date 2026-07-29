@@ -14,6 +14,7 @@
       :loader_items="loader_items"
       v-model:loader_selected="loader_selected"
       :api_hints_enabled="api_hints_enabled"
+      style="margin-bottom: 12px"
     ></plugin-loaders-panel>
 
     <j-flex-row v-if="api_hints_enabled && config === 'imviz'">
