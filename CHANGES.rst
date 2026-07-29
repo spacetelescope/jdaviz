@@ -58,6 +58,8 @@ New Features
 - Add ability to query VO and Astroquery from catalog/using viewer coordinates as the source. The former source selection
   choice 'Manual' is also now 'Source'. [#4275]
 
+- Add importer for line lists. [#4305]
+
 - Table viewer UI to add/rename/remove columns. [#4282]
 
 Mosviz
@@ -108,6 +110,8 @@ Bug Fixes
 - fix case where file drop loader would not show importer options. [#4303]
 
 - Fix image importer support for Roman L3 mosaic files. [#4309]
+
+- Fix issue where snackbar is attached to the notebook rather than to the app. [#4313]
 
 Mosviz
 ^^^^^^
