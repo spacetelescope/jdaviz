@@ -60,6 +60,8 @@ New Features
 
 - Add importer for line lists. [#4305]
 
+- Add consolidated emission line list and ability to query database in API. [#4314]
+
 Mosviz
 ^^^^^^
 
