@@ -115,7 +115,7 @@ class ImageImporter(BaseImporterToDataCollection):
             input = fits.HDUList([input])
 
         input_is_roman_imagemodel = (
-            HAS_ROMAN_DATAMODELS and isinstance(input, rdd.ImageModel)
+            HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.ImageModel, rdd.MosaicModel))
         )
         input_is_roman_asdf = isinstance(input, asdf.AsdfFile) and 'roman' in input
 

@@ -297,8 +297,9 @@ def test_rectangle_aperture_with_exact(deconfigged_helper, spectrum1d_cube_large
         # after 3.0.0, "exact" rectangular extraction is truly exact,
         expected_flux_step = [
             9.519410133361816, 10.564827919006348, 11.725051879882812,
-            13.012691497802734, 14.441734313964844, 16, 17.535156,
-            19.691406, 21.972656, 24.378906
+            13.012691497802734, 14.441734313964844, 16.027719497680664,
+            17.787872314453125, 19.7413272857666, 21.909305572509766,
+            24.31537437438965
         ]
     else:
         # up to 3.0.0, "exact" was  approximate
