@@ -107,6 +107,8 @@ Bug Fixes
 
 - Fix image importer support for Roman L3 mosaic files. [#4309]
 
+- Fix issue where snackbar is attached to the notebook rather than to the app. [#4313]
+
 Mosviz
 ^^^^^^
 
