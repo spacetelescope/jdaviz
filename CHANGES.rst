@@ -58,6 +58,8 @@ New Features
 - Add ability to query VO and Astroquery from catalog/using viewer coordinates as the source. The former source selection
   choice 'Manual' is also now 'Source'. [#4275]
 
+- Add importer for line lists. [#4305]
+
 - Add ability to view data in multiple viewers with row click in table viewer. [#4279]
 
 Mosviz
