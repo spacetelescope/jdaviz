@@ -110,7 +110,7 @@ def load_preset_linelist(name):
     # For backwards compatibility with older CSV-based lists, ensure the
     # expected column names exist before proceeding.
     if 'Rest Value' not in linetable.colnames or 'Line Name' not in linetable.colnames:
-        raise KeyError(f"Unexpected linelist format for {fname}; expected 'Line Name' and 'Rest Value' columns")
+        raise KeyError(f"Unexpected linelist format for {fname}; expected 'Line Name' and 'Rest Value' columns") # noqa
 
     # Add column with list name reference
     linetable['listname'] = name

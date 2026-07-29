@@ -322,7 +322,7 @@ def to_jdaviz_line_list(db_subset, unit="Angstrom"):
 
 
 def append_file(filename, rest_wavelength_col, wavelength_unit, extra_cols=None,
-                 db_file=DB_FILE, schema_file=SCHEMA_FILE):
+                db_file=DB_FILE, schema_file=SCHEMA_FILE):
     """
     Append a new source CSV file to the existing database (and record it
     in schema.yaml so future rebuilds stay reproducible).
@@ -366,8 +366,8 @@ def append_file(filename, rest_wavelength_col, wavelength_unit, extra_cols=None,
     new_tbl["extra_info"] = extras
 
     existing = Table.read(db_file, format="ascii.ecsv")
-    
-    std_cols = [c for c in existing.colnames if c.startswith("rest_wavelength_") and c != "rest_wavelength"]
+
+    std_cols = [c for c in existing.colnames if c.startswith("rest_wavelength_") and c != "rest_wavelength"] # noqa
     if std_cols:
         std_col = std_cols[0]
         target_unit = u.Unit(std_col.replace("rest_wavelength_", ""))
@@ -388,5 +388,6 @@ def append_file(filename, rest_wavelength_col, wavelength_unit, extra_cols=None,
     with open(schema_file, "w") as f:
         yaml.safe_dump(schema, f, sort_keys=False)
 
-    print(f"Appended {len(new_tbl)} rows from {filename}. Database now has {len(merged)} rows total.")
+    print(f"Appended {len(new_tbl)} rows from {filename}."
+          f" Database now has {len(merged)} rows total.")
     return merged
