@@ -46,7 +46,6 @@
     <v-slide-x-transition appear>
       <v-data-table
         dense
-        hide-default-header
         :headers="[...headers]"
         :items="items"
         :footer-props="{'items-per-page-options': [10,20,50,100]}"
