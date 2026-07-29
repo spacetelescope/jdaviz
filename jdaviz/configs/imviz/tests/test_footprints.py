@@ -18,14 +18,14 @@ def _get_markers_from_viewer(viewer):
     return [m for m in viewer.figure.marks if isinstance(m, FootprintOverlay)]
 
 
-def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
+def test_user_api(deconfigged_helper, image_2d_wcs, tmp_path):
     arr = np.ones((10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
     # load the image twice to test linking
-    imviz_helper.load_data(ndd, data_label='data1')
-    imviz_helper.load_data(ndd, data_label='data2')
+    deconfigged_helper.load(ndd, data_label='data1', format='Image')
+    deconfigged_helper.load(ndd, data_label='data2', format='Image')
 
-    plugin = imviz_helper.plugins['Footprints']
+    plugin = deconfigged_helper.plugins['Footprints']
     default_color = plugin.color
     default_opacity = plugin.fill_opacity
     plugin.color = '#333333'
@@ -37,9 +37,9 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         # test that each of the supported instruments/presets work
         for preset in (preset for preset in plugin.preset.choices if preset != 'From File...'):
             plugin.preset = preset
+            viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
 
-            viewer_marks = _get_markers_from_viewer(
-                imviz_helper.default_viewer._obj.glue_viewer)
+            viewer_marks = _get_markers_from_viewer(viewer)
             assert len(viewer_marks) == len(_all_apertures.get(preset))
 
         # regression test for user-set traitlets (specifically color) being reset
@@ -51,7 +51,7 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         plugin.color = '#ffffff'
         plugin.fill_opacity = 0.5
 
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+        viewer_marks = _get_markers_from_viewer(viewer)
         assert viewer_marks[0].visible is True
         assert viewer_marks[0].colors == ['#ffffff']
         assert viewer_marks[0].fill_opacities == [0.5]
@@ -80,7 +80,7 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         assert plugin.color == '#ffffff'
 
         # test toggling visibility of markers
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+        viewer_marks = _get_markers_from_viewer(viewer)
         assert viewer_marks[0].visible is True
         plugin.visible = False
         assert viewer_marks[0].visible is False
@@ -98,12 +98,12 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         reg = plugin.overlay_regions
         plugin.import_region(reg)
         assert plugin.preset.selected == 'From File...'
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+        viewer_marks = _get_markers_from_viewer(viewer)
         assert len(viewer_marks) == len(reg)
         # test that importing a different region updates the marks and also that
         # a single region is supported
         plugin.import_region(reg[0])
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+        viewer_marks = _get_markers_from_viewer(viewer)
         assert len(viewer_marks) == 1
         # clearing the file should default to the PREVIOUS preset (last from the for-loop above)
         plugin._obj.vue_file_import_cancel()
@@ -112,32 +112,32 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         # test that importing a proper STC-S string works
         stc_s = 'POLYGON ICRS 5.023 4.992 5.024 4.991 5.029 4.995 5.026 4.998'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+        viewer_marks = _get_markers_from_viewer(viewer)
         assert len(viewer_marks) == 1
 
         stc_s = 'POLYGON 5.023 4.992 5.024 4.991 5.029 4.995 5.026 4.998'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+        viewer_marks = _get_markers_from_viewer(viewer)
         assert len(viewer_marks) == 1
 
         stc_s = 'CIRCLE ICRS 5.029 4.992 0.000314'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+        viewer_marks = _get_markers_from_viewer(viewer)
         assert len(viewer_marks) == 1
 
         stc_s = 'CIRCLE 5.029 4.992 0.000314'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+        viewer_marks = _get_markers_from_viewer(viewer)
         assert len(viewer_marks) == 1
 
         stc_s = 'ELLIPSE ICRS 5.029 4.992 0.0003143 0.00027 45.0'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+        viewer_marks = _get_markers_from_viewer(viewer)
         assert len(viewer_marks) == 1
 
         stc_s = 'ELLIPSE 5.029 4.992 0.0003143 0.00027 45.0'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+        viewer_marks = _get_markers_from_viewer(viewer)
         assert len(viewer_marks) == 1
 
         tmp_file = str(tmp_path / 'test_region.reg')
@@ -195,11 +195,11 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
 
     # with the plugin no longer active, marks should not be visible
     assert plugin._obj.is_active is False
-    viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+    viewer_marks = _get_markers_from_viewer(viewer)
     assert viewer_marks[0].visible is False
 
 
-def test_api_after_linking(imviz_helper):
+def test_api_after_linking(deconfigged_helper):
     # custom image to enable visual test in a notebook
     arr = np.ones((300, 300))
     image_2d_wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
@@ -207,13 +207,12 @@ def test_api_after_linking(imviz_helper):
                         'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
                         'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
 
-    viewer = imviz_helper._app.get_viewer_by_id('imviz-0')
-
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd, data_label='data1')
-    imviz_helper.load_data(ndd, data_label='data2')
+    deconfigged_helper.load(ndd, data_label='data1', format='Image')
+    deconfigged_helper.load(ndd, data_label='data2', format='Image')
+    viewer = deconfigged_helper._app.get_viewer_by_id('Image')
 
-    plugin = imviz_helper.plugins['Footprints']
+    plugin = deconfigged_helper.plugins['Footprints']
     with plugin.as_active():
 
         pointing = {'name': ['pt'], 'ra': [337.51], 'dec': [-20.77], 'pa': [0]}
@@ -229,7 +228,7 @@ def test_api_after_linking(imviz_helper):
         assert no_marks_displayed is True
 
         # link by wcs and retest
-        imviz_helper.link_data(align_by='wcs')
+        deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
 
         viewer_marks = _get_markers_from_viewer(viewer)
         # distinguish default from custom overlay with color
@@ -240,7 +239,7 @@ def test_api_after_linking(imviz_helper):
         assert marks_displayed is True
 
 
-def test_footprint_updates_on_rotation(imviz_helper):
+def test_footprint_updates_on_rotation(deconfigged_helper):
     image_2d_wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg',
                         'CRPIX1': 1, 'CRVAL1': 337.5202808,
                         'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg',
@@ -251,10 +250,10 @@ def test_footprint_updates_on_rotation(imviz_helper):
     arr = np.random.normal(size=(10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
 
-    imviz_helper.load_data(ndd)
-    imviz_helper.link_data(align_by='wcs')
+    deconfigged_helper.load(ndd, format='Image')
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
 
-    footprints = imviz_helper.plugins['Footprints']
+    footprints = deconfigged_helper.plugins['Footprints']
     footprints.keep_active = True
 
     # this is near the pixel origin:
@@ -288,34 +287,37 @@ def test_footprint_updates_on_rotation(imviz_helper):
     assert not miri_region.contains(rectangle_center, image_2d_wcs)
     assert miri_region.contains(opposite_corner, image_2d_wcs)
 
-    marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+    viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+    marks = _get_markers_from_viewer(viewer)
 
     # check that the rectangle region appears near the bottom of the viewer:
     assert np.concatenate([marks[0].y, marks[1].y]).min() < -3
 
     # now rotate to north-up east-left:
-    orientation = imviz_helper.plugins['Orientation']
+    orientation = deconfigged_helper.plugins['Orientation']
     orientation.set_north_up_east_left()
 
     # If all footprint orientations have been updated, the lowest
     # mark should still be centered low. If the footprint
     # orientations aren't updated, both footprints will be
     # at the top of the viewer, and this test will fail.
-    marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
+    marks = _get_markers_from_viewer(viewer)
     assert np.concatenate([marks[0].y, marks[1].y]).min() < -3
 
 
-def test_footprint_select(imviz_helper):
+def test_footprint_select(deconfigged_helper):
     wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
                'CRPIX1': 1, 'CRVAL1': 9.423508457380343,
                'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
                'CRPIX2': 1, 'CRVAL2': -33.71313112382379})
     arr = np.arange(40000).reshape(200, 200)
     ndd = NDData(arr, wcs=wcs)
-    imviz_helper.load_data(ndd)
-    fp = imviz_helper.plugins["Footprints"]
+    deconfigged_helper.load(ndd, format='Image')
+    fp = deconfigged_helper.plugins["Footprints"]
     fp._obj.toggle_custom_toolbar()
-    toolbar = imviz_helper.viewers['imviz-0']._obj.glue_viewer.toolbar
+    viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+
+    toolbar = viewer.toolbar
     tool = toolbar.tools['jdaviz:selectfootprint']
     assert tool.is_visible() is False
 

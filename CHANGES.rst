@@ -49,6 +49,15 @@ New Features
 
 - 'Auto' parenting can now associate with data already loaded into the app without needing to specify the data label. [#4248]
 
+- Add window docker icons for standalone app [#4289]
+
+- New image viewer tools for editing the colormap, stretch function, and opacity of the top-layer. [#4290]
+
+- Add ability to crossmatch catalogs within a user defined range. [#4228]
+
+- Add ability to query VO and Astroquery from catalog/using viewer coordinates as the source. The former source selection
+  choice 'Manual' is also now 'Source'. [#4275]
+
 - Table viewer UI to add/rename/remove columns. [#4282]
 
 Mosviz
@@ -90,7 +99,20 @@ Other Changes and Additions
 
 - Updated all front end vuetify templates for Vue 3 compatibility. [#4053]
 
-5.0.3 (unreleased)
+5.0.4 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- fix case where file drop loader would not show importer options. [#4303]
+
+- Fix image importer support for Roman L3 mosaic files. [#4309]
+
+Mosviz
+^^^^^^
+
+5.0.3 (2026-07-21)
 ==================
 
 Bug Fixes
@@ -113,10 +135,6 @@ Bug Fixes
 - Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264]
 
 - Safely handle case where meta.wcs may be None. [#4272]
-
-Mosviz
-------
-
 
 5.0.2 (2026-06-12)
 ==================

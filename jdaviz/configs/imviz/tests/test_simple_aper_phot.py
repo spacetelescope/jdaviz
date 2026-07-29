@@ -23,6 +23,7 @@ from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, BaseI
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.unit_conversion_utils import flux_conversion_general
 
+
 photutils.future_column_names = True
 if minversion(photutils, '2.3.1.dev'):
     SEMIMAJOR_AXIS = 'semimajor_axis'
@@ -284,30 +285,32 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
 
 class TestAdvancedAperPhot:
     @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_helper):
+    def setup_class(self, deconfigged_helper):
         # Reference image
         fn_1 = get_pkg_data_filename('data/gauss100_fits_wcs.fits')
-        imviz_helper.load_data(fn_1)
+        deconfigged_helper.load(fn_1, format='Image')
         # Different pixel scale
-        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
+        deconfigged_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'),
+                                format='Image')
         # Different pixel scale + rotated
-        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
+        deconfigged_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'),  # noqa: E501
+                                format='Image')
 
         # Link them by WCS
-        imviz_helper.link_data(align_by='wcs')
-        w = imviz_helper._app.data_collection[0].coords
+        deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+        w = deconfigged_helper._app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
-        imviz_helper.plugins['Subset Tools'].import_region([
+        deconfigged_helper.plugins['Subset Tools'].import_region([
             CirclePixelRegion(center=PixCoord(x=145.1, y=168.3), radius=5).to_sky(w),
             CirclePixelRegion(center=PixCoord(x=48.3, y=200.3), radius=5).to_sky(w),
             EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9, angle=2.356 * u.rad).to_sky(w),  # noqa: E501
             RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w)],
             combination_mode='new')
 
-        self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj
-        self.phot_plugin = imviz_helper.plugins["Aperture Photometry"]
+        self.imviz = deconfigged_helper
+        self.viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+        self.phot_plugin = deconfigged_helper.plugins["Aperture Photometry"]
 
     @pytest.mark.parametrize(('data_label', 'local_bkg'), [
         ('gauss100_fits_wcs[PRIMARY,1]', 5.0),

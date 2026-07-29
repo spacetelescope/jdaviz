@@ -173,6 +173,18 @@ def roman_level_1_ramp():
     return data_model
 
 
+@pytest.fixture
+def roman_level_3_mosaic():
+    from roman_datamodels.datamodels import MosaicModel
+
+    rng = np.random.default_rng(seed=42)
+
+    shape = (5000, 5000)
+    data_model = MosaicModel.create_fake_data(shape=shape)
+    data_model.data = rng.uniform(size=shape)
+    return data_model
+
+
 def _make_jwst_ramp(shape=(1, 10, 25, 25)):
     from stdatamodels.jwst.datamodels import Level1bModel
 

@@ -43,7 +43,9 @@ class AID:
         if center is None:
             return
 
-        imviz_aligned_by_wcs = self._app._align_by == 'wcs'
+        orientation = self._app._jdaviz_helper.plugins.get('Orientation', None)
+        imviz_aligned_by_wcs = orientation and orientation.align_by == 'WCS'
+
         if isinstance(center, SkyCoord):
             if imviz_aligned_by_wcs:
                 center = center.ra.degree, center.dec.degree
@@ -91,7 +93,7 @@ class AID:
 
         orientation = self._app._jdaviz_helper.plugins.get('Orientation', None)
 
-        if orientation.align_by != 'WCS':
+        if not orientation or orientation.align_by != 'WCS':
             raise ValueError("The viewer must be aligned by WCS to use `set_rotation`.")
 
         if isinstance(rotation, (u.Quantity, Angle)):
@@ -171,8 +173,9 @@ class AID:
             state.y_max - state.y_min
         )
 
-        if sky_or_pixel == 'pixel':
+        if sky_or_pixel == 'pixel' or (sky_or_pixel is None and wcs is None):
             return pixel_fov
+
         if not any(c.strip() for c in wcs.wcs.ctype):
             raise ValueError("The image must have valid WCS to return `fov` in `sky`.")
 
@@ -205,16 +208,17 @@ class AID:
         center_x = self.viewer.state.zoom_center_x
         center_y = self.viewer.state.zoom_center_y
 
-        if self._app._align_by == 'wcs':
+        orientation = self._app._jdaviz_helper.plugins.get('Orientation', None)
+
+        if orientation and orientation.align_by == 'WCS':
             reference_data = self.viewer.state.reference_data
         else:
             reference_data, image_label = self._get_image_glue_data(image_label)
 
         reference_wcs = reference_data.coords
-
-        # # if the image data have WCS, get the center sky coordinate:
-        if sky_or_pixel in ('sky', None):
-            if self._app._align_by == 'wcs':
+        if reference_wcs and sky_or_pixel == 'sky':
+            # # if the image data have WCS, get the center sky coordinate:
+            if orientation.align_by == 'WCS':
                 center = self.viewer._get_center_skycoord()
             else:
                 center = reference_wcs.pixel_to_world(center_x, center_y)
@@ -225,6 +229,10 @@ class AID:
 
     def _get_current_rotation(self):
         reference_data = self.viewer.state.reference_data
+
+        if not reference_data.coords:
+            return None
+
         degn = get_compass_info(
             reference_data.coords, reference_data.shape
         )[-3]
@@ -240,7 +248,9 @@ class AID:
         at https://docs.astropy.org/en/stable/wcs/supported_projections.html
         """
 
-        if not self._app._jdaviz_helper.plugins['Orientation'].align_by == 'WCS':
+        orientation = self._app._jdaviz_helper.plugins.get('Orientation', None)
+
+        if not orientation or orientation.align_by != 'WCS':
             return None
 
         ref_data = self.viewer.state.reference_data

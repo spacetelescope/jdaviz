@@ -88,7 +88,7 @@ Once the query is complete, the table of results will be populated with the arch
 
 .. note::
 
-    Currently only `Simple Image Access specification (SIA) 1.0 <https://www.ivoa.net/documents/WD/SIA/sia-20040524.html#:~:text=Simple%20Image%20Access%20Specification%20Version,Image%20Generation>`_
+    Currently only `Simple Image Access specification (SIA) 1.0 <https://www.ivoa.net/documents/WD/SIA/sia-20040524.html>`_
     services are implemented. VO services which offer only SIA2 endpoints are not supported.
 
 .. _imviz-virtual-observatory:
