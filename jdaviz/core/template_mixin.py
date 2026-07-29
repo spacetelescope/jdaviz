@@ -5843,7 +5843,8 @@ class PlotOptionsSyncState(BasePluginComponent):
         # Clear layer watch callbacks from previously tracked viewers
         for viewer in self._layer_watch_viewers:
             try:
-                viewer.widget_table.unobserve(self._on_table_viewer_layers_changed, names=['data'])
+                viewer.widget_table.unobserve(self._on_table_viewer_layers_changed,
+                                              names=['data', 'headers'])
             except (ValueError, AttributeError):
                 pass
         self._layer_watch_viewers = []
@@ -5861,7 +5862,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             for viewer in self.subscribed_viewers:
                 if viewer is not None and hasattr(viewer, 'widget_table'):
                     viewer.widget_table.observe(self._on_table_viewer_layers_changed,
-                                                names=['data'])
+                                                names=['data', 'headers'])
                     self._layer_watch_viewers.append(viewer)
 
         in_subscribed_states = False
