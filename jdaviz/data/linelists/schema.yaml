@@ -128,6 +128,14 @@ extra_info_columns_by_file:
     wavelength_unit: Angstrom
     science_case: galactic
     extra_cols: []
+  lyman_lines.dat:
+    rest_wavelength_col: rest_wavelength
+    wavelength_unit: Angstrom
+    science_case: galactic
+    extra_cols:
+    - line_name
+    - source_list
+    - extra_info
 wavelength_sanity_bounds:
   um:
   - 0.01
