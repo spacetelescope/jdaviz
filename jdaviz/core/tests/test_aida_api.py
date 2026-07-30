@@ -125,7 +125,7 @@ def test_set_rotation_not_aligned(deconfigged_helper, image_hdu_wcs):
     deconfigged_helper.load(image_hdu_wcs, format='Image')
     viewer = deconfigged_helper.viewers['Image']
 
-    # change only the center:
+    # change only the rotation:
     new_viewport_settings = dict(
         rotation=90 * u.deg
     )
