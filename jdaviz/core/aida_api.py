@@ -139,8 +139,8 @@ class AIDAMixin:
             an `~astropy.coordinates.Angle` or floats interpreted
             as angles in units of degrees.
 
-        **kwargs:
-            The method accepts **kwargs for AIDA compatibility with other backends [1].
+        kwargs:
+            The method accepts kwargs for AIDA compatibility with other backends [1].
 
         References
         ----------
@@ -270,19 +270,19 @@ class AIDAMixin:
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """
         sky_or_pixel : str, optional
-            If 'sky', the center will be returned as a `SkyCoord` object.
+            If 'sky', the center will be returned as a `astropy.coordinates.SkyCoord` object.
             If 'pixel', the center will be returned as a tuple of pixel coordinates.
-            If `None`, the default behavior is to return the center as a `SkyCoord` if
-            possible, or as a tuple of floats if the image is in pixel coordinates and has
-            no WCS information.
+            If `None`, the default behavior is to return the center as a
+            `astropy.coordinates.SkyCoord` if possible, or as a tuple of floats if the image
+            is in pixel coordinates and has no WCS information.
 
         image_label : str, optional
             The label of the image to get the viewport for. If not given and there is only one
             image loaded, the viewport for that image is returned. If there are multiple images
             and no label is provided, an error is raised.
 
-        **kwargs:
-            The method accepts **kwargs for AIDA compatibility with other backends [1].
+        kwargs:
+            The method accepts kwargs for AIDA compatibility with other backends [1].
 
         Returns
         -------
