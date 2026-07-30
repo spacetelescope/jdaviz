@@ -79,7 +79,6 @@ def test_set_viewport_sky_rotation(deconfigged_helper, image_hdu_wcs):
 
 
 def test_get_viewport_external_update(deconfigged_helper, image_hdu_wcs):
-    # arrange
     deconfigged_helper.load(image_hdu_wcs, format='Image')
     deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
     viewer = deconfigged_helper.viewers['Image']
