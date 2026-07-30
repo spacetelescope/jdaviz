@@ -128,7 +128,7 @@ class AIDAMixin:
             Center the viewer on this coordinate.
 
         fov : `~astropy.units.Quantity` or tuple of floats
-            Set the width of the viewport to span `field_of_view`.
+            Set the width of the viewport to span field_of_view.
 
             Set the viewport with respect to the image
             with the data label: ``image_label``.
