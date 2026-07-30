@@ -65,7 +65,7 @@ def test_set_viewport_sky_rotation(deconfigged_helper, image_hdu_wcs):
     deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
     viewer = deconfigged_helper.viewers['Image']
 
-    # change only the center:
+    # change only the rotation:
     new_viewport_settings = dict(
         rotation=90 * u.deg
     )
