@@ -107,7 +107,7 @@ def test_set_viewport_pixel(deconfigged_helper, image_hdu_wcs):
 
     viewer = deconfigged_helper.viewers['Image']
 
-    # change only the center:
+    # set the center and fov:
     new_viewport_settings = dict(
         center=[5, 5],
         fov=10
