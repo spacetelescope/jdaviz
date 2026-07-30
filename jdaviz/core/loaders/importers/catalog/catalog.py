@@ -446,12 +446,13 @@ class CatalogImporter(BaseImporterToDataCollection):
     @property
     def user_api(self):
         # for fixed frames, dont expose coord_equinox
-        _frames_without_equinox = ('icrs', 'galactic')
-        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other', 'coord_frame']
-        if self.coord_frame_selected not in _frames_without_equinox:
-            expose += ['coord_equinox']
+
+        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other',
+                  'coord_frame', 'coord_equinox']
+
         if self.input_has_extensions:
             expose += ['extension']
+
         return ImporterUserApi(self, expose=expose)
 
     @property
