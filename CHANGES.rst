@@ -61,6 +61,10 @@ New Features
 - Improvements to spectral axis unit conversion logic to support workflows and
   avoid errors in mixed unit viewers in deconfigged. [#4292]
 
+- Add importer for line lists. [#4305]
+
+- Add ability to view data in multiple viewers with row click in table viewer. [#4279]
+
 Mosviz
 ^^^^^^
 
@@ -109,6 +113,8 @@ Bug Fixes
 - fix case where file drop loader would not show importer options. [#4303]
 
 - Fix image importer support for Roman L3 mosaic files. [#4309]
+
+- Fix issue where snackbar is attached to the notebook rather than to the app. [#4313]
 
 Mosviz
 ^^^^^^

@@ -1,7 +1,7 @@
 <template>
   <v-app
     id="web-app"
-    :style="checkNotebookContext() ? 'display: inline; --jdaviz-notebook-max-height: ' + state_settings.context.notebook.max_height : 'display: flex'"
+    :style="(checkNotebookContext() ? 'display: inline; --jdaviz-notebook-max-height: ' + state_settings.context.notebook.max_height : 'display: flex') + '; position: relative'"
     :class="'jdaviz ' + config + (checkNotebookContext() ? ' jdaviz-notebook-context' : '')"
     ref="mainapp"
   >
@@ -449,6 +449,7 @@
       location="top right"
       transition="slide-x-transition"
       absolute
+      attach
       style="margin-right: 95px; margin-top: -2px"
     >
       {{ state_snackbar.text }}
