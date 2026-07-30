@@ -117,7 +117,6 @@ def test_set_viewport_pixel(deconfigged_helper, image_hdu_wcs):
 
     np.testing.assert_allclose(new_viewport['center'], new_viewport_settings['center'])
 
-    # todo: investigate why this tolerance needs to be larger than expected:
     np.testing.assert_allclose(new_viewport['fov'], new_viewport_settings['fov'], atol=1e-4)
 
 
