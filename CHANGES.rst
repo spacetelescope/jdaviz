@@ -62,6 +62,8 @@ New Features
 
 - Add ability to view data in multiple viewers with row click in table viewer. [#4279]
 
+- Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
+
 Mosviz
 ^^^^^^
 
