@@ -83,7 +83,7 @@ def test_get_viewport_external_update(deconfigged_helper, image_hdu_wcs):
     deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
     viewer = deconfigged_helper.viewers['Image']
 
-    # act: update the rotation of imviz external to aida
+    # update the image viewer rotation using Orientation plugin
     orientation = deconfigged_helper._app._jdaviz_helper.plugins.get('Orientation', None)
     orientation.add_orientation(
         east_left=True,
