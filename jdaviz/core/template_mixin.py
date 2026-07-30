@@ -6020,7 +6020,7 @@ class PlotOptionsSyncState(BasePluginComponent):
                     # was just set to False above, so we only need to check the other gate
                     # (e.g. ``contour_visible`` when hiding the bitmap) -- this preserves
                     # the contour-only use-case.
-                    other = ('contour_visible' 
+                    other = ('contour_visible'
                              if glue_name == 'bitmap_visible' else 'bitmap_visible')
                     if glue_state.visible and not getattr(glue_state, other, False):
                         setattr(glue_state, 'visible', False)
