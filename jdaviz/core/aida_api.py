@@ -139,6 +139,12 @@ class AIDAMixin:
             an `~astropy.coordinates.Angle` or floats interpreted
             as angles in units of degrees.
 
+        **kwargs:
+            The method accepts **kwargs for AIDA compatibility with other backends [1].
+
+        References
+        ----------
+        .. [1] https://github.com/astropy/astro-image-display-api/
         """
         with ignore_callback(
             self.state,
@@ -275,6 +281,9 @@ class AIDAMixin:
             image loaded, the viewport for that image is returned. If there are multiple images
             and no label is provided, an error is raised.
 
+        **kwargs:
+            The method accepts **kwargs for AIDA compatibility with other backends [1].
+
         Returns
         -------
         dict
@@ -285,6 +294,10 @@ class AIDAMixin:
             - 'rotation' is an `~astropy.coordinates.Angle`
             - 'projection' is a string representing the projection of the viewer
             - 'image_label' is a string representing the label of the image.
+
+        References
+        ----------
+        .. [1] https://github.com/astropy/astro-image-display-api/
         """
         image, image_label = self._get_image_glue_data(image_label)
 
