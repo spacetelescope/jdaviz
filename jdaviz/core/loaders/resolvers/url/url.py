@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 import os
 from functools import cached_property
 from pathlib import Path
+import astropy
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import loader_resolver_registry
@@ -133,9 +134,7 @@ class URLResolver(BaseResolver):
         url_file_extension = Path(self.url.strip()).suffix.lower()  # like '.fits'
         if self.url_scheme == 's3':
 
-            # do not show file path for s3 data since it does not download
-            if os.environ.get("JDAVIZ_START_DIR", ""):
-                self.download_path_msg = ''
+            self.download_path_msg = 'Data is streaming from s3'
 
             if url_file_extension in ['.fits', '.fit']:
                 return get_cloud_fits(self.url.strip(), fsspec_filesystem=self.fsspec_filesystem)
@@ -146,17 +145,21 @@ class URLResolver(BaseResolver):
         target_url = download_uri_to_path(self.url.strip(), cache=self.cache,
                                     local_path=self.local_path, timeout=self.timeout)
 
-        # only show file path when in standalone or browser and is downloaded from mast
-        if os.environ.get("JDAVIZ_START_DIR", ""):  
+        # Set download persistent hint message
+        if self.url_scheme.lower() == 'mast':
+            self.download_path_msg = f"File stored at: {os.path.abspath(target_url)}"
 
-            if self.url_scheme.lower() == 'mast':
-                self.download_path_msg = f"File at: {os.path.abspath(target_url)}"
+        elif self.url_scheme.lower() in ('http', 'https', 'ftp'):
+            self.download_path_msg = f'File stored in astropy download cache at: {astropy.config.get_cache_dir()}'
 
-            else:
-                # since download_path_msg goes to a persistent hint in .vue file, 
-                # create empty message for non mast files
-                self.download_path_msg = ''
+        elif self.url_scheme.lower() == 's3':
+            self.download_path_msg = f'File stored in s3 download cache at: ({self.local_path}/s3_downloads)'
 
+        else:
+            # since download_path_msg goes to a persistent hint in .vue file, 
+            # create empty message for anything else
+            self.download_path_msg = ''
+        
         return target_url
 
     def parse_input(self):

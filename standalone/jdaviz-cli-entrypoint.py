@@ -38,6 +38,8 @@ if __name__ == "__main__":
             writable_cache_dir.mkdir(exist_ok=True)
             os.environ['JDAVIZ_CACHE_DIR'] = str(writable_cache_dir)
 
+        os.environ['ASTROPY_CACHE_DIR'] = str(user_home / ".cache" / "astropy")
+
         # Change Python's working directory to a writable directory
         # This prevents Jdaviz from defaulting download_uri_to_path to the read-only _MEIPASS path
         os.chdir(user_home)
