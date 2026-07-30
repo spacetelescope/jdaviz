@@ -43,7 +43,7 @@ def test_set_viewport_sky(deconfigged_helper, image_hdu_wcs):
     deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
     viewer = deconfigged_helper.viewers['Image']
 
-    # change only the center:
+    # change the center and fov:
     new_viewport_settings = dict(
         center=SkyCoord(ra=337.5, dec=-20.8, unit='deg'),
         fov=0.01 * u.deg,
