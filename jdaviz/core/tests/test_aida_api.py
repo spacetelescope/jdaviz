@@ -53,7 +53,6 @@ def test_set_viewport_sky(deconfigged_helper, image_hdu_wcs):
 
     assert_coordinate_close(new_viewport['center'], new_viewport_settings['center'])
 
-    # todo: investigate why this tolerance needs to be larger than expected:
     assert_angle_close(new_viewport['fov'], new_viewport_settings['fov'], atol=1 * u.arcsec)
 
     with pytest.raises(ValueError, match='The AID API supports `center` arguments as'):
