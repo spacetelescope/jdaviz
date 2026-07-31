@@ -64,6 +64,8 @@ New Features
 
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 
+- Table viewer UI to add/rename/remove columns. [#4282]
+
 Mosviz
 ^^^^^^
 
@@ -82,6 +84,8 @@ Bug Fixes
 - Fixed main widget not displaying in standalone build. [#4271]
 
 - Fixed a Vue3 button issue that triggers backend calls twice. [#4276, #4277]
+
+- Fixed closing a viewer not deleting the associated backend objects. [#4317]
 
 Mosviz
 ^^^^^^
