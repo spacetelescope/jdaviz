@@ -14,10 +14,8 @@ Examples
 """
 
 import json
-import yaml
 import numpy as np
-import pandas as pd
-from astropy.table import Table, vstack
+from astropy.table import Table
 from astropy import units as u
 from pathlib import Path
 
@@ -30,6 +28,11 @@ SCHEMA_FILE = str(_DIR / "schema.yaml")
 def load_db(db_file=DB_FILE):
     """Load the consolidated database as an astropy Table."""
     return Table.read(db_file, format="ascii.ecsv")
+
+
+def get_extra_info(row):
+    """Parse a row's extra_info JSON string into a plain Python dict."""
+    return json.loads(row["extra_info"]) if row["extra_info"] else {}
 
 
 def get_lines(db, name_contains=None, source=None, wave_min=None, wave_max=None, unit="Angstrom",

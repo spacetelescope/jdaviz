@@ -1,9 +1,7 @@
 from importlib import resources
 import json
-from pathlib import Path
 
 from astropy.table import QTable
-import astropy.units as u
 
 __all__ = ['get_linelist_metadata', 'get_available_linelists', 'load_preset_linelist']
 
