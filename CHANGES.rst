@@ -81,6 +81,8 @@ Bug Fixes
 
 - Fixed a Vue3 button issue that triggers backend calls twice. [#4276, #4277]
 
+- Fixed closing a viewer not deleting the associated backend objects. [#4317]
+
 Mosviz
 ^^^^^^
 
