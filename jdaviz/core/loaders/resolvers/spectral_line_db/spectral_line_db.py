@@ -95,11 +95,16 @@ class SpectralLineDatabaseResolver(BaseResolver):
             return None
         staged_names = [r["line_name"] for r in self.staged_lines]
         names = np.array([str(n) for n in self._db["line_name"]])
-        mask = np.isin(names, staged_names)
-        lines_to_load = self._db[mask]
-        if len(lines_to_load) == 0:
+        # Use the first DB occurrence per staged name so the output has
+        # exactly len(staged_lines) rows even when the DB contains duplicates.
+        indices = []
+        for name in staged_names:
+            idx_arr = np.where(names == name)[0]
+            if len(idx_arr):
+                indices.append(int(idx_arr[0]))
+        if not indices:
             return None
-        return to_jdaviz_line_list(lines_to_load)
+        return to_jdaviz_line_list(self._db[indices])
 
     def search(self):
         """Run a database query using the current filter values.
