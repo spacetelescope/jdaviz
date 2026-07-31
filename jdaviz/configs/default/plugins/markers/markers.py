@@ -560,7 +560,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
             except ValueError as err:  # pragma: no cover
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
-
             x, y = row_info['axes_x'], row_info['axes_y']
             self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
 
