@@ -62,6 +62,8 @@ New Features
 
 - Add ability to view data in multiple viewers with row click in table viewer. [#4279]
 
+- Table viewer UI to add/rename/remove columns. [#4282]
+
 Mosviz
 ^^^^^^
 
