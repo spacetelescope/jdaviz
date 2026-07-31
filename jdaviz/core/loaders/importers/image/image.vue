@@ -74,7 +74,17 @@
       </v-radio-group>
     </j-flex-row>
 
+    <v-alert
+      v-if="parenting_msg.length > 0"
+      type="info"
+      density="compact"
+      style="margin-top: 8px; margin-bottom: 0px"
+    >
+      {{ parenting_msg }}
+    </v-alert>
+
     <plugin-viewer-create-new
+      v-if="!hide_viewer_select"
       :items="viewer_items"
       v-model:selected="viewer_selected"
       :create_new_items="viewer_create_new_items"
