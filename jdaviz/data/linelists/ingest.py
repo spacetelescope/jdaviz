@@ -169,7 +169,7 @@ def read_one_file(filename, file_schema):
     tbl["source_list"] = sources
     tbl["element"] = elements
     tbl["extra_info"] = extras
-    tbl["science_case"] = [science_case] * len(names)
+    tbl["science_case"] = np.array(science_case, dtype=object)
 
     tbl["rest_wavelength"].unit = None
     tbl.meta["source_file_units"] = {filename: unit_str}
@@ -210,7 +210,7 @@ def deduplicate_line_names(master, angstrom_col):
     For every line_name that appears more than once in *master*, append
     λ{wavelength_in_angstrom_rounded_to_nearest_integer} so that each row
     has a unique label.  E.g. '[O III]' at 4959 Å and 5007 Å become
-    '[O III]λ4959' and '[O III]λ5008'.
+    '[O III] 4959' and '[O III] 5008'.
 
     Parameters
     ----------
@@ -234,17 +234,29 @@ def deduplicate_line_names(master, angstrom_col):
     if not duplicated:
         return master
 
-    # Build as a plain Python list first so there is no fixed-width numpy
-    # truncation; we re-create the numpy array with the required dtype at the end.
     new_names = list(names)
     for i, (name, wave) in enumerate(zip(names, waves_aa)):
         if name in duplicated:
             new_names[i] = f"{name} {int(round(wave))}"
 
     master["line_name"] = np.array(new_names, dtype=object).astype(str)
-    n_affected = int((counts[counts > 1] - 0).sum())  # total rows that were renamed
+
+    # if lines are still duplicated because they have more than one
+    # science case, combine them into one row
+    unique_2nd, counts_2nd = np.unique(master['line_name'], return_counts=True)
+    duplicated_2nd = set(unique_2nd[counts_2nd > 1])
+
+    for i, name in enumerate(duplicated_2nd):
+        all_dupes = np.where(master["line_name"] == name)[0]
+        all_science_cases = np.array(master[all_dupes]["science_case"])
+        master["science_case"][i] = list(all_science_cases)
+
+    _, idx = np.unique(master["line_name"], return_index=True)
+    master = master[np.sort(idx)]
+
+    n_affected = int((counts_2nd[counts_2nd > 1] - 0).sum())  # total rows that were renamed
     print(f"Disambiguated {len(duplicated)} non-unique name(s) "
-          f"affecting {n_affected} row(s) by appending λ<wavelength_Å>.")
+          f"affecting {n_affected} row(s) by appending _<wavelength>.")
     return master
 
 
