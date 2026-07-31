@@ -135,16 +135,20 @@
                     v-if="api_hints_enabled"
                     class="api-hint"
                     style="font-size: 0.75em; margin-right: 4px; white-space: nowrap"
-                  >ldr.stage_line({{ row.index }})</span>
+                  >
+                    {{ staged_line_names.has(row.line_name)
+                        ? "ldr.unstage_line('" + row.line_name + "')"
+                        : "ldr.stage_line('" + row.line_name + "')" }}
+                  </span>
                   <v-btn
                     icon
                     x-small
                     variant="text"
-                    :disabled="row.already_staged"
-                    @click="stage_line({index: row.index})"
+                    :color="staged_line_names.has(row.line_name) ? 'error' : 'primary'"
+                    @click="staged_line_names.has(row.line_name) ? unstage_line(row) : stage_line(row)"
                   >
                     <v-icon>
-                      {{ row.already_staged ? 'mdi-check-circle' : 'mdi-plus-circle' }}
+                      {{ staged_line_names.has(row.line_name) ? 'mdi-minus-circle' : 'mdi-plus-circle' }}
                     </v-icon>
                   </v-btn>
                 </td>
@@ -182,13 +186,13 @@
                     v-if="api_hints_enabled"
                     class="api-hint"
                     style="font-size: 0.75em; margin-right: 4px; white-space: nowrap"
-                  >ldr.unstage_line({{ i }})</span>
+                  >ldr.unstage_line('{{ row.line_name }}')</span>
                   <v-btn
                     icon
                     x-small
                     variant="text"
                     color="error"
-                    @click="unstage_line({index: i})"
+                    @click="unstage_line(row)"
                   >
                     <v-icon>mdi-minus-circle</v-icon>
                   </v-btn>
@@ -213,3 +217,13 @@
 
   </j-loader>
 </template>
+
+<script>
+export default {
+  computed: {
+    staged_line_names() {
+      return new Set(this.staged_lines.map(r => r.line_name));
+    }
+  }
+};
+</script>
