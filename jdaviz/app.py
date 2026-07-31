@@ -3923,6 +3923,25 @@ class PrivateApplication(VuetifyTemplate, HubListener):
     def _add_assoc_data_as_parent(self, data_label):
         self._data_associations[data_label] = {'parent': None, 'children': []}
 
+    def _remove_assoc_data(self, data_label):
+        """
+        Drop ``data_label`` from the association list, detaching it from its parent
+        and orphaning (rather than deleting) any of its children.
+        """
+        assoc = self._data_associations.pop(data_label, None)
+        if assoc is None:
+            return
+
+        parent_label = assoc.get('parent')
+        if parent_label in self._data_associations:
+            children = self._data_associations[parent_label]['children']
+            self._data_associations[parent_label]['children'] = [child for child in children
+                                                                 if child != data_label]
+
+        for child_label in assoc.get('children', []):
+            if child_label in self._data_associations:
+                self._data_associations[child_label]['parent'] = None
+
     def _set_assoc_data_as_child(self, data_label, new_parent_label):
         for data_item in self.state.data_items:
             if data_item['name'] == data_label:
