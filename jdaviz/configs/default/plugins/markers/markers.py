@@ -549,11 +549,18 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                                    k.startswith('pixel_') else v
                                    for k, v in row_info.items()
                                    if k in self.table.headers_avail}
+
+                # explicitly set value:unit to None (not '') if flux has no units
+                # (this happens for Roman asdf image files)
+                if not row_item_to_add.get('value:unit'):
+                    row_item_to_add['value:unit'] = None
+
                 self.table.add_item(row_item_to_add)
                 self.hub.broadcast(MarkersPluginUpdate(table_length=len(self.table), sender=self))
 
             except ValueError as err:  # pragma: no cover
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
+
             x, y = row_info['axes_x'], row_info['axes_y']
             self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
 
