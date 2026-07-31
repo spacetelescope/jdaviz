@@ -256,13 +256,13 @@ function ensureLayout() {
     }
 
     container.on('resize', handleResize)
-    container.on('close', handleClose)
+    container.on('beforeComponentRelease', handleClose)
     nextTick(() => handleResize())
 
     return {
       __cleanup() {
         container.off('resize', handleResize)
-        container.off('close', handleClose)
+        container.off('beforeComponentRelease', handleClose)
         node.setTarget(null)
       },
     }
