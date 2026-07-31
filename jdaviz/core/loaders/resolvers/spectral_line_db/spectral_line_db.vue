@@ -208,9 +208,14 @@
 </template>
 
 <style>
+.spectral-line-db-table {
+  display: inline-table;
+  width: 100%;
+}
 .spectral-line-db-table .v-data-table__wrapper > table {
   width: 100%;
 }
+
 </style>
 
 <script>
