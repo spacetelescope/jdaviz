@@ -8,3 +8,12 @@
     height: 100vh;
     max-height: 100vh;
 }
+
+/* Icon buttons (e.g. data-menu clipboard, subset selection-mode menu) default to
+   Vuetify's "elevated" variant, which renders a filled circle at rest. Neutralize
+   that background/shadow so the circle only appears on hover via the button overlay. */
+.v-btn--icon.v-btn--variant-elevated,
+.v-btn--icon.v-btn--variant-flat {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
