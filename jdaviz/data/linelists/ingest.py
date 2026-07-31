@@ -22,11 +22,13 @@ import json
 import yaml
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from astropy.table import Table, vstack
 from astropy import units as u
 
-SCHEMA_FILE = "schema.yaml"
-OUTPUT_FILE = "emission_lines.ecsv"
+_HERE = Path(__file__).resolve().parent
+SCHEMA_FILE = _HERE / "schema.yaml"
+OUTPUT_FILE = _HERE / "emission_lines.ecsv"
 
 
 def load_schema(schema_file=SCHEMA_FILE):
@@ -124,7 +126,7 @@ def _clean_value(v):
 def read_one_file(filename, file_schema):
     """Read a single raw CSV into a normalized astropy Table with core
     columns + a JSON 'extra_info' column."""
-    df = pd.read_csv(filename, skipinitialspace=True)
+    df = pd.read_csv(_HERE / filename, skipinitialspace=True)
     df.columns = [c.strip() for c in df.columns]
 
     wave_col = file_schema["rest_wavelength_col"]
@@ -203,6 +205,49 @@ def add_standard_unit_column(master, target_unit="Angstrom"):
     return master, col_name
 
 
+def deduplicate_line_names(master, angstrom_col):
+    """
+    For every line_name that appears more than once in *master*, append
+    λ{wavelength_in_angstrom_rounded_to_nearest_integer} so that each row
+    has a unique label.  E.g. '[O III]' at 4959 Å and 5007 Å become
+    '[O III]λ4959' and '[O III]λ5008'.
+
+    Parameters
+    ----------
+    master : astropy.table.Table
+        The merged table (must already contain `angstrom_col`).
+    angstrom_col : str
+        Name of the column that holds wavelengths in Angstrom.
+
+    Returns
+    -------
+    master : astropy.table.Table
+        Same table with `line_name` values updated in-place for duplicates.
+    """
+    names = np.array(master["line_name"])
+    waves_aa = np.array(master[angstrom_col], dtype=float)
+
+    # find names that appear more than once
+    unique, counts = np.unique(names, return_counts=True)
+    duplicated = set(unique[counts > 1])
+
+    if not duplicated:
+        return master
+
+    # Build as a plain Python list first so there is no fixed-width numpy
+    # truncation; we re-create the numpy array with the required dtype at the end.
+    new_names = list(names)
+    for i, (name, wave) in enumerate(zip(names, waves_aa)):
+        if name in duplicated:
+            new_names[i] = f"{name} {int(round(wave))}"
+
+    master["line_name"] = np.array(new_names, dtype=object).astype(str)
+    n_affected = int((counts[counts > 1] - 0).sum())  # total rows that were renamed
+    print(f"Disambiguated {len(duplicated)} non-unique name(s) "
+          f"affecting {n_affected} row(s) by appending λ<wavelength_Å>.")
+    return master
+
+
 def build_database(schema_file=SCHEMA_FILE, output_file=OUTPUT_FILE, standard_unit="Angstrom"):
     schema = load_schema(schema_file)
     file_configs = schema["extra_info_columns_by_file"]
@@ -217,6 +262,8 @@ def build_database(schema_file=SCHEMA_FILE, output_file=OUTPUT_FILE, standard_un
     master = vstack(tables, metadata_conflicts="silent")
 
     master, std_col = add_standard_unit_column(master, target_unit=standard_unit)
+
+    master = deduplicate_line_names(master, std_col)
 
     master.meta = {
         "description": "Consolidated emission line database",
