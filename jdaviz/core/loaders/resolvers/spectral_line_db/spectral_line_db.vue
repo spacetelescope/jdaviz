@@ -31,10 +31,8 @@
     @toggle-custom-toolbar="toggle_custom_toolbar"
   >
 
-    <!-- ── Search controls ─────────────────────────────────────────── -->
     <j-plugin-section-header>Query Database</j-plugin-section-header>
 
-    <!-- Spectral range + unit (mirrors astroquery radius+unit layout) -->
     <j-flex-row justify="space-between">
       <div style="width: 35%">
         <v-text-field
@@ -68,7 +66,6 @@
       </div>
     </j-flex-row>
 
-    <!-- Element / molecule dropdown -->
     <plugin-select
       :items="element_items"
       v-model:selected="element_selected"
@@ -80,7 +77,6 @@
       hint="Filter by element or molecule tag"
     ></plugin-select>
 
-    <!-- Line name substring search -->
     <j-flex-row>
       <v-text-field
         v-model="name_contains"
@@ -93,7 +89,6 @@
       ></v-text-field>
     </j-flex-row>
 
-    <!-- Search button -->
     <j-flex-row class="row-no-outside-padding" justify="end" style="margin-top: 8px">
       <span
         v-if="search_status"
@@ -111,95 +106,89 @@
       </plugin-action-button>
     </j-flex-row>
 
-    <!-- ── Search results ──────────────────────────────────────────── -->
     <div v-if="search_results.length > 0" style="margin-top: 8px">
       <j-plugin-section-header>Search Results</j-plugin-section-header>
       <div style="max-height: 240px; overflow-y: auto; margin: 0 -12px">
-        <v-simple-table dense>
-          <template v-slot:default>
-            <thead style="position: sticky; top: 0; z-index: 1">
-              <th class="text-left">Line</th>
-              <th class="text-left">λ<sub>rest</sub></th>
-              <th class="text-left">Unit</th>
-              <th class="text-left">Element</th>
-              <th></th>
-            </thead>
-            <tbody>
-              <tr v-for="(row, i) in search_results" :key="i">
-                <td style="font-size: 0.85em">{{ row.line_name }}</td>
-                <td style="font-size: 0.85em">{{ row.rest_wavelength.toFixed(4) }}</td>
-                <td style="font-size: 0.85em">{{ row.wavelength_unit }}</td>
-                <td style="font-size: 0.85em">{{ row.element }}</td>
-                <td style="text-align: right; padding-right: 4px">
-                  <span
-                    v-if="api_hints_enabled"
-                    class="api-hint"
-                    style="font-size: 0.75em; margin-right: 4px; white-space: nowrap"
-                  >
-                    {{ staged_line_names.has(row.line_name)
-                        ? "ldr.unstage_line('" + row.line_name + "')"
-                        : "ldr.stage_line('" + row.line_name + "')" }}
-                  </span>
-                  <v-btn
-                    icon
-                    x-small
-                    variant="text"
-                    :color="staged_line_names.has(row.line_name) ? 'error' : 'primary'"
-                    @click="staged_line_names.has(row.line_name) ? unstage_line(row) : stage_line(row)"
-                  >
-                    <v-icon>
-                      {{ staged_line_names.has(row.line_name) ? 'mdi-minus-circle' : 'mdi-plus-circle' }}
-                    </v-icon>
-                  </v-btn>
-                </td>
-              </tr>
-            </tbody>
-          </template>
+        <v-simple-table dense class="spectral-line-db-table">
+          <thead>
+            <th class="text-left">Line</th>
+            <th class="text-left">λ<sub>rest</sub></th>
+            <th class="text-left">Unit</th>
+            <th class="text-left">Element</th>
+            <th></th>
+          </thead>
+          <tbody>
+            <tr v-for="(row, i) in search_results" :key="i">
+              <td style="font-size: 0.85em">{{ row.line_name }}</td>
+              <td style="font-size: 0.85em">{{ row.rest_wavelength.toFixed(4) }}</td>
+              <td style="font-size: 0.85em">{{ row.wavelength_unit }}</td>
+              <td style="font-size: 0.85em">{{ row.element }}</td>
+              <td style="text-align: right; padding-right: 4px">
+                <span
+                  v-if="api_hints_enabled"
+                  class="api-hint"
+                  style="font-size: 0.75em; margin-right: 4px; white-space: nowrap"
+                >
+                  {{ staged_line_names.has(row.line_name)
+                      ? "ldr.unstage_line('" + row.line_name + "')"
+                      : "ldr.stage_line('" + row.line_name + "')" }}
+                </span>
+                <v-btn
+                  icon
+                  x-small
+                  variant="text"
+                  :color="staged_line_names.has(row.line_name) ? 'error' : 'primary'"
+                  @click="staged_line_names.has(row.line_name) ? unstage_line(row) : stage_line(row)"
+                >
+                  <v-icon>
+                    {{ staged_line_names.has(row.line_name) ? 'mdi-minus-circle' : 'mdi-plus-circle' }}
+                  </v-icon>
+                </v-btn>
+              </td>
+            </tr>
+          </tbody>
         </v-simple-table>
       </div>
     </div>
 
-    <!-- ── Staged lines ────────────────────────────────────────────── -->
     <div v-if="staged_lines.length > 0" style="margin-top: 12px">
       <j-plugin-section-header style="flex: 1">
         Staged Lines ({{ staged_lines.length }})
       </j-plugin-section-header>
 
       <div style="max-height: 240px; overflow-y: auto; margin: 0 -12px">
-        <v-simple-table dense>
-          <template v-slot:default>
-            <thead>
-              <th class="text-left">Line</th>
-              <th class="text-left">λ<sub>rest</sub></th>
-              <th class="text-left">Unit</th>
-              <th class="text-left">Element</th>
-              <th></th>
-            </thead>
-            <tbody>
-              <tr v-for="(row, i) in staged_lines" :key="i">
-                <td style="font-size: 0.85em">{{ row.line_name }}</td>
-                <td style="font-size: 0.85em">{{ row.rest_wavelength.toFixed(4) }}</td>
-                <td style="font-size: 0.85em">{{ row.wavelength_unit }}</td>
-                <td style="font-size: 0.85em">{{ row.element }}</td>
-                <td style="text-align: right; padding-right: 4px">
-                  <span
-                    v-if="api_hints_enabled"
-                    class="api-hint"
-                    style="font-size: 0.75em; margin-right: 4px; white-space: nowrap"
-                  >ldr.unstage_line('{{ row.line_name }}')</span>
-                  <v-btn
-                    icon
-                    x-small
-                    variant="text"
-                    color="error"
-                    @click="unstage_line(row)"
-                  >
-                    <v-icon>mdi-minus-circle</v-icon>
-                  </v-btn>
-                </td>
-              </tr>
-            </tbody>
-          </template>
+        <v-simple-table dense class="spectral-line-db-table">
+          <thead>
+            <th class="text-left">Line</th>
+            <th class="text-left">λ<sub>rest</sub></th>
+            <th class="text-left">Unit</th>
+            <th class="text-left">Element</th>
+            <th></th>
+          </thead>
+          <tbody>
+            <tr v-for="(row, i) in staged_lines" :key="i">
+              <td style="font-size: 0.85em">{{ row.line_name }}</td>
+              <td style="font-size: 0.85em">{{ row.rest_wavelength.toFixed(4) }}</td>
+              <td style="font-size: 0.85em">{{ row.wavelength_unit }}</td>
+              <td style="font-size: 0.85em">{{ row.element }}</td>
+              <td style="text-align: right; padding-right: 4px">
+                <span
+                  v-if="api_hints_enabled"
+                  class="api-hint"
+                  style="font-size: 0.75em; margin-right: 4px; white-space: nowrap"
+                >ldr.unstage_line('{{ row.line_name }}')</span>
+                <v-btn
+                  icon
+                  x-small
+                  variant="text"
+                  color="error"
+                  @click="unstage_line(row)"
+                >
+                  <v-icon>mdi-minus-circle</v-icon>
+                </v-btn>
+              </td>
+            </tr>
+          </tbody>
         </v-simple-table>
       </div>
       <j-flex-row justify="end" no-gutters>
@@ -217,6 +206,12 @@
 
   </j-loader>
 </template>
+
+<style>
+.spectral-line-db-table .v-data-table__wrapper > table {
+  width: 100%;
+}
+</style>
 
 <script>
 export default {

@@ -1,9 +1,11 @@
 from traitlets import Bool, List, Unicode
+import numpy as np
 
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.template_mixin import SelectPluginComponent, UnitSelectPluginComponent
 from jdaviz.core.user_api import LoaderUserApi
+from jdaviz.data.linelists.query_helpers import to_jdaviz_line_list, load_db, list_elements
 
 __all__ = ['SpectralLineDatabaseResolver']
 
@@ -34,7 +36,7 @@ class SpectralLineDatabaseResolver(BaseResolver):
 
     title = Unicode("Spectral Line Database").tag(sync=True)
 
-    # ---- Search parameters ----
+    # search parameters
     wavelength_min = Unicode("").tag(sync=True)
     wavelength_max = Unicode("").tag(sync=True)
     wavelength_unit_items = List().tag(sync=True)
@@ -43,16 +45,13 @@ class SpectralLineDatabaseResolver(BaseResolver):
     element_selected = Unicode("(any)").tag(sync=True)
     name_contains = Unicode("", allow_none=True).tag(sync=True)
 
-    # ---- Primary staging API ----
-    # (staged_lines is the source of truth; mutated via stage_line/unstage_line/clear_staged)
-
-    # ---- Search results (read-only via API) ----
-    search_results = List([]).tag(sync=True)
+    # search results
+    search_results = List([]).tag(sync=True)  # read-only
     search_results_loading = Bool(False).tag(sync=True)
     search_status = Unicode("").tag(sync=True)
 
-    # ---- Staged lines display (read-only via API) ----
-    staged_lines = List([]).tag(sync=True)
+    # staged lines
+    staged_lines = List([]).tag(sync=True)  # read-only
 
     def __init__(self, *args, **kwargs):
         self._db = None
@@ -69,8 +68,6 @@ class SpectralLineDatabaseResolver(BaseResolver):
 
         self._load_db()
 
-    # ---- User API ----
-
     @property
     def user_api(self):
         return LoaderUserApi(
@@ -84,49 +81,40 @@ class SpectralLineDatabaseResolver(BaseResolver):
             readonly=['search_results', 'staged_lines'],
         )
 
-    # ---- BaseResolver interface ----
-
     @property
     def input(self):
-        # This resolver has no external input; it is driven entirely by the UI.
         return None
 
     def _check_is_valid(self):
         if self._db is None:
-            return "Could not load the spectral lines database."
+            return "No spectral lines database loaded."
         return ""
 
     def parse_input(self):
         if not self.staged_lines or self._db is None:
             return None
-        import numpy as np
-        from jdaviz.data.linelists.query_helpers import to_jdaviz_line_list
         staged_names = [r["line_name"] for r in self.staged_lines]
         names = np.array([str(n) for n in self._db["line_name"]])
         mask = np.isin(names, staged_names)
-        subset = self._db[mask]
-        if len(subset) == 0:
+        lines_to_load = self._db[mask]
+        if len(lines_to_load) == 0:
             return None
-        return to_jdaviz_line_list(subset)
-
-    # ---- load_lines observer ----
-
-    # (removed: staged_lines is now mutated directly by stage_line/unstage_line/clear_staged)
-
-    # ---- Public API methods ----
+        return to_jdaviz_line_list(lines_to_load)
 
     def search(self):
-        """Run a database query using the current filter traitlet values.
+        """Run a database query using the current filter values.
 
-        Populates ``search_results`` with matching lines. Each entry is a dict
-        with keys ``line_name``, ``rest_wavelength``, ``wavelength_unit``,
-        and ``element``.
+        Populates ``search_results`` with matching lines.
 
-        Equivalent to clicking the Search button in the UI.
+        Returns
+        -------
+        search_results: list of dict
+            Each dict has keys ``line_name``, ``rest_wavelength``,
+            ``wavelength_unit``, and ``element``.
         """
         if self._db is None:
             self.search_status = "Database not loaded."
-            return
+            return []
 
         self.search_results_loading = True
         try:
@@ -181,6 +169,8 @@ class SpectralLineDatabaseResolver(BaseResolver):
             self.search_results = []
         finally:
             self.search_results_loading = False
+
+        return self.search_results
 
     def stage_line(self, *args):
         """Stage one or more lines.
@@ -248,8 +238,6 @@ class SpectralLineDatabaseResolver(BaseResolver):
             self.staged_lines = []
             self._resolver_input_updated()
 
-    # ---- Vue-callable wrappers (template uses the name without the vue_ prefix) ----
-
     def vue_search(self, _=None):
         self.search()
 
@@ -264,11 +252,8 @@ class SpectralLineDatabaseResolver(BaseResolver):
     def vue_clear_staged(self, _=None):
         self.clear_staged()
 
-    # ---- Internal helpers ----
-
     def _load_db(self):
         try:
-            from jdaviz.data.linelists.query_helpers import load_db, list_elements
             self._db = load_db()
             elements = list_elements(self._db)
             unparsed = "(unparsed)" in elements
@@ -285,7 +270,6 @@ class SpectralLineDatabaseResolver(BaseResolver):
         """Return a search-result dict for *name* from the DB, or None if not found."""
         if self._db is None:
             return None
-        import numpy as np
         names = np.array([str(n) for n in self._db["line_name"]])
         idx_arr = np.where(names == name)[0]
         if len(idx_arr) == 0:
