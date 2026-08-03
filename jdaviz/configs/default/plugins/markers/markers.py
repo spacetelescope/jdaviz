@@ -549,6 +549,12 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                                    k.startswith('pixel_') else v
                                    for k, v in row_info.items()
                                    if k in self.table.headers_avail}
+
+                # explicitly set value:unit to None (not '') if flux has no units
+                # (this happens for Roman asdf image files)
+                if not row_item_to_add.get('value:unit'):
+                    row_item_to_add['value:unit'] = None
+
                 self.table.add_item(row_item_to_add)
                 self.hub.broadcast(MarkersPluginUpdate(table_length=len(self.table), sender=self))
 
