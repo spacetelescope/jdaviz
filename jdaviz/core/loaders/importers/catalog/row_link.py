@@ -67,14 +67,11 @@ class CatalogRowLinkManager(HubListener):
         app.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
                           handler=self._on_viewer_layers_changed)
 
-        # Pass 1: attach checked observers to any table viewers that already exist
+        # attach checked observers to any table viewers that already exist
         for viewer in list(app._viewer_store.values()):
             self._setup_table_active_row_callbacks(viewer)
 
-        # Pass 2: auto-create Data: columns for existing non-table viewers now
-        # that all table viewer observers are registered.  This handles the
-        # image-first → catalog workflow where the image viewer existed before
-        # the manager was created.
+        # create any data-association columns needed for existing non-table viewers
         for viewer in list(app._viewer_store.values()):
             self._auto_create_column_for_viewer(viewer)
 
@@ -209,12 +206,6 @@ class CatalogRowLinkManager(HubListener):
                 if label and label in available_labels
             ]
             self._set_viewer_contents(target_viewer, labels)
-
-    # ------------------------------------------------------------------
-    # Two-way sync: auto-create columns when viewers are added or when a
-    # catalog is loaded into a table viewer, and update the active row
-    # when a viewer's visible layers change.
-    # ------------------------------------------------------------------
 
     def _any_catalog_for_viewer(self, viewer):
         """Return the catalog ``Data`` in a table viewer, or ``None``.

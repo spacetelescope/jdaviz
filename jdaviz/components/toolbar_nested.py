@@ -455,9 +455,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         elif (event['new'] in self.tools
               and not isinstance(self.tools[event['new']], CheckableTool)
               and not self.tool_override_mode):
-            # then we're clicking on a non-checkable tool and want to default to the previous;
-            # but skip this when override mode is active — the tool's activate() switched to
-            # override mode and re-activating the old default tool would be incorrect
+            # then we're clicking on a non-checkable tool and want to default to the previous tool
+            # except when in override mode (as the default likely does not exist)
             if event['old'] is not None:
                 self.active_tool_id = event['old']
 

@@ -1598,7 +1598,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
                                   names=['checked'])
-        # Re-check tool visibility when data changes (e.g. row-link columns added)
+        # check tool visibility when data changes (e.g. row-link columns added)
         self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
                                   names=['data'])
         # Also update selection highlight marks when checked rows change
@@ -1623,8 +1623,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=self._on_viewer_removed)
 
-        # Build the toolbar with the correct default-tool priority (overrides the
-        # empty-priority toolbar created by IPyWidgetView.__init__ → initialize_toolbar)
+        # Build the toolbar with the correct default-tool priority
         self.initialize_toolbar(default_tool_priority=default_tool_priority)
 
     def _on_table_select_row_click(self, msg):
@@ -1857,8 +1856,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def _on_restore_toolbar(self, msg={}):
         """Clean up checkbox state when toolbar is restored."""
-        # Clear selection marks; selection_enabled is managed by the default tool
-        # (TableRowSelect) which re-activates after restore.
         self._clear_selection_marks()
 
     def _on_viewer_removed(self, msg):
