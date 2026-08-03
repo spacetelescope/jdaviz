@@ -174,14 +174,6 @@ def to_jdaviz_line_list(db_subset, unit="Angstrom"):
         With exactly two columns: 'linename' (str) and 'rest' (Quantity),
         ready to pass to viz.load_line_list().
 
-    Examples
-    --------
-    >>> from query_helpers import load_db, get_lines, to_jdaviz_line_list
-    >>> import jdaviz as jd
-    >>> db = load_db()
-    >>> small = get_lines(db, wave_min=6000, wave_max=7000)
-    >>> line_list = to_jdaviz_line_list(small)
-    >>> jd.load_line_list(line_list)   # in jdaviz
     """
     from astropy.table import QTable
 
