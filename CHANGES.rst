@@ -122,6 +122,8 @@ Bug Fixes
 
 - Fix issue where snackbar is attached to the notebook rather than to the app. [#4313]
 
+- Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
+
 Mosviz
 ^^^^^^
 
