@@ -543,16 +543,20 @@ class ImageImporter(BaseImporterToDataCollection):
         ext_items = self.ext_items if (self.input_has_extensions
                                        or isinstance(self.input, NDData)) else [{}]
         parents = self._parent_labels_for_selection(self.data_label_value, ext_items)
-        children = [self._data_label_for_ext(self.data_label_value, ext_item)
-                    for ext_item, parent in zip(ext_items, parents)
-                    if parent is not None]
+        labels = [self._data_label_for_ext(self.data_label_value, ext_item)
+                  for ext_item in ext_items]
+        # no need to advertise where a child will land when its parent is part of the
+        # same import, since the viewer selection then applies to that parent anyways
+        children = [label for label, parent in zip(labels, parents)
+                    if parent is not None and parent not in labels]
 
         if not len(children):
             self.parenting_msg = ''
             self.hide_viewer_select = False
             return
 
-        unique_parents = sorted(set(parent for parent in parents if parent is not None))
+        unique_parents = sorted(set(parent for label, parent in zip(labels, parents)
+                                    if parent is not None and parent not in labels))
         viewers = [label for label, viewer in self._app._jdaviz_helper.viewers.items()
                    if len(set(unique_parents) & set(viewer.data_menu.data_labels_loaded))]
         target = f"the viewer(s) containing {', '.join(unique_parents)}"

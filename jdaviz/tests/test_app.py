@@ -10,6 +10,7 @@ from ipywidgets.widgets import widget_serialization
 from jdaviz import Specviz, Specviz2d
 from jdaviz.core.config import get_configuration
 from jdaviz.app import PrivateApplication
+from jdaviz.utils import alpha_index
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
 from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
                                                viewer_flux_conversion_equivalencies)
@@ -239,6 +240,84 @@ def test_data_associations(imviz_helper):
     with pytest.raises(ValueError):
         # ensure the parent actually exists:
         imviz_helper.load_data(data_child, data_label='child_data', parent='absent parent')
+
+
+def test_data_associations_removal(deconfigged_helper):
+    """
+    Test that removing parented data properly cleans up associations and state items.
+    """
+    shape = (10, 10)
+    app = deconfigged_helper._app
+
+    deconfigged_helper.load(np.ones(shape, dtype=float),
+                            data_label='parent_data', format='Image')
+    deconfigged_helper.load(np.zeros(shape, dtype=int),
+                            data_label='child_data', parent='parent_data', format='Image')
+    deconfigged_helper.load(np.zeros(shape, dtype=int),
+                            data_label='other_child', parent='parent_data', format='Image')
+
+    parent_item = next(di for di in app.state.data_items if di['name'] == 'parent_data')
+    other_child_id = next(di['id'] for di in app.state.data_items if di['name'] == 'other_child')
+    assert other_child_id in parent_item['children']
+
+    # removing a child detaches it from the parent
+    app.data_item_remove('other_child')
+    assert app._get_assoc_data_children('parent_data') == ['child_data']
+    assert 'other_child' not in app._data_associations
+    assert other_child_id not in parent_item['children']
+    assert 'other_child' not in app.state.layer_icons
+
+    parent_icon = app.state.layer_icons['parent_data']
+
+    # removing the parent orphans (rather than deletes) the remaining child
+    app.data_item_remove('parent_data')
+    assert 'parent_data' not in app._data_associations
+    assert 'child_data' in app.data_collection.labels
+    assert app._get_assoc_data_parent('child_data') is None
+    assert app._get_assoc_data_children('child_data') == []
+
+    child_item = next(di for di in app.state.data_items if di['name'] == 'child_data')
+    assert child_item['parent'] is None
+
+    # the orphan is no longer displayed as a sublayer of the removed parent, and
+    # takes over the root icon freed up by that parent
+    assert 'parent_data' not in app.state.layer_icons
+    child_icon = app.state.layer_icons['child_data']
+    assert child_icon == alpha_index(0) == parent_icon
+
+    # re-loading the parent does not resurrect the stale association
+    deconfigged_helper.load(np.ones(shape, dtype=float),
+                            data_label='parent_data', format='Image')
+    assert app._get_assoc_data_parent('child_data') is None
+    assert app._get_assoc_data_children('parent_data') == []
+
+
+@pytest.mark.parametrize('parented', (True, False))
+def test_layer_icons_after_removal(deconfigged_helper, parented):
+    """Re-loading an entry after removing data must not reuse an icon that is
+    still in use by another layer."""
+    app = deconfigged_helper._app
+
+    parent = 'A' if parented else 'None'
+    deconfigged_helper.load(np.random.random((4, 4)),
+                            format='Image', data_label='A')
+    deconfigged_helper.load(np.random.random((4, 4)),
+                            format='Image', data_label='B', parent=parent)
+    deconfigged_helper.load(np.random.random((4, 4)),
+                            format='Image', data_label='C', parent=parent)
+
+    assert dict(app.state.layer_icons) == ({'A': 'a', 'B': 'a1', 'C': 'a2'} if parented
+                                           else {'A': 'a', 'B': 'b', 'C': 'c'})
+
+    app.data_item_remove('B')
+    assert dict(app.state.layer_icons) == ({'A': 'a', 'C': 'a2'} if parented
+                                           else {'A': 'a', 'C': 'c'})
+
+    # the icon freed up by 'B' must not be reused, otherwise it would collide with 'C'
+    deconfigged_helper.load(np.random.random((4, 4)),
+                            format='Image', data_label='B', parent=parent)
+    assert dict(app.state.layer_icons) == ({'A': 'a', 'C': 'a2', 'B': 'a3'} if parented
+                                           else {'A': 'a', 'C': 'c', 'B': 'd'})
 
 
 def test_to_unit(cubeviz_helper):

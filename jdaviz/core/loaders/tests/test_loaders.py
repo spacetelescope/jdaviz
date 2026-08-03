@@ -848,6 +848,30 @@ class TestParenting:
             self._assert_unparented(('Image[SCI,1]', 'Image[ERR,1]',
                                      'Image[SCI,2]', 'Image[ERR,2]'))
 
+    def test_reload_after_removal_reparents(self):
+        """Check that removing every entry from the app and reloading does not
+        cause any unforeseen association/labeling/icon issues."""
+        app = self.dcf_helper._app
+        expected_icons = {'Image[SCI,1]': 'a', 'Image[ERR,1]': 'a1',
+                          'Image[SCI,2]': 'b', 'Image[ERR,2]': 'b1'}
+
+        for _ in range(2):
+            self.ldr.object = _make_multi_sci_hdul()
+            self.ldr.importer.extension = ['SCI,1', 'ERR,1', 'SCI,2', 'ERR,2']
+            self.ldr.importer.parent = 'Auto'
+            self.ldr.load()
+
+            self._assert_parented('Image[SCI,1]', ['Image[ERR,1]'])
+            self._assert_parented('Image[SCI,2]', ['Image[ERR,2]'])
+            assert dict(app.state.layer_icons) == expected_icons
+
+            for label in [data.label for data in app.data_collection]:
+                app.data_item_remove(label)
+
+            # stale entries would otherwise be reused on the next load
+            assert app._data_associations == {}
+            assert dict(app.state.layer_icons) == {}
+
     def test_auto_parent_existing_in_dc_after_rename(self):
         """
         'Auto' should associate a child extension loaded later with a matching
@@ -971,10 +995,11 @@ class TestParenting:
         # was set above to exercise the parent-choices check)
         ldr.importer.data_label.auto = True
 
-        # mixed selection -> viewer selection still applies to the science extension
+        # mixed selection -> no message since the parent is loaded alongside its child,
+        # so the viewer selection applies (via the science extension) either way
         ldr.importer.parent = 'Auto'
         ldr.importer.extension = ['SCI,1', 'ERR,1']
-        assert 'Image[ERR,1]' in importer_obj.parenting_msg
+        assert importer_obj.parenting_msg == ''
         assert importer_obj.hide_viewer_select is False
 
         # only a child -> viewer selection is hidden and the message names the
