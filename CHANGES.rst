@@ -12,6 +12,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
+
 Mosviz
 ^^^^^^
 
