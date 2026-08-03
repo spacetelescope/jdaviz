@@ -29,6 +29,8 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.table import Table, QTable
+from astropy.coordinates import ICRS
+import astropy.units as u
 
 
 @pytest.mark.remote_data
@@ -598,3 +600,60 @@ def test_select_catalog_table_rows(deconfigged_helper, image_2d_wcs):
     # test select_none
     catalogs_plugin.select_none()
     assert len(plugin_table.selected_rows) == 0
+
+
+@pytest.mark.parametrize('frame_selected, equinox_selected', [
+    pytest.param('icrs', 'J2000.0', id='icrs'),
+    pytest.param('fk5', 'B1950.0', id='fk5'),
+    pytest.param('fk4', 'B1950.0', id='fk4'),
+    pytest.param('galactic', 'J2000.0', id='galactic'),
+    pytest.param('ecliptic', 'J2000.0', id='ecliptic'),
+])
+def test_catalog_loader_coord_frame(deconfigged_helper, frame_selected, equinox_selected):
+    """
+    Test coordinate frame / equinox selection in the Catalog loader for all
+    supported frames: icrs, fk5, fk4, galactic, ecliptic.
+    """
+    ra_input = np.array([83.6287, 299.8681, 187.7059])
+    dec_input = np.array([-5.4230, 40.7339, 12.3911])
+
+    input_table = QTable({
+        'ra': ra_input * u.deg,
+        'dec': dec_input * u.deg,
+    })
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = input_table
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+
+    importer.coord_frame.selected = frame_selected
+    importer.coord_equinox.selected = equinox_selected
+
+    importer()
+
+    dc = deconfigged_helper._app.data_collection
+    assert 'Catalog' in dc.labels
+
+    loaded = dc['Catalog'].get_object(QTable)
+    ra_col = dc['Catalog'].meta['_jdaviz_loader_ra_col']
+    dec_col = dc['Catalog'].meta['_jdaviz_loader_dec_col']
+
+    ra_loaded = loaded[ra_col].to(u.deg).value
+    dec_loaded = loaded[dec_col].to(u.deg).value
+
+    # if 'ecliptic' is set, use 'barycentrictrueecliptic' for the frame name
+    _frame_name_map = {'ecliptic': 'barycentrictrueecliptic'}
+
+    if frame_selected == 'icrs':
+        assert_allclose(ra_loaded, ra_input)
+        assert_allclose(dec_loaded, dec_input)
+    else:
+        frame = _frame_name_map.get(frame_selected, frame_selected)
+        kwargs = {'frame': frame}
+        if equinox_selected not in ['', 'J2000'] and frame_selected != 'galactic':
+            kwargs['equinox'] = equinox_selected
+        sc_input = SkyCoord(ra_input * u.deg, dec_input * u.deg, **kwargs)
+        sc_icrs = sc_input.transform_to(ICRS())
+        assert_allclose(ra_loaded, sc_icrs.ra.deg)
+        assert_allclose(dec_loaded, sc_icrs.dec.deg)

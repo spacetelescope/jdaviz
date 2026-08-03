@@ -36,7 +36,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     # string indicating the current tool override mode
     tool_override_mode = traitlets.Unicode("").tag(sync=True)
     # list of custom widget items to display in the toolbar
-    # each dict has 'label', 'type' ('select' or 'slider'), 'selected', and
+    # each dict has 'label', 'type' ('select', 'text', or 'slider'), 'selected', and
     # type-specific keys: 'items'/'multiselect' for 'select'; 'min'/'max'/'step' for 'slider'
     custom_widget_items = traitlets.List([]).tag(sync=True)
     # currently selected values in custom widgets (list of values, one per widget)
@@ -129,8 +129,9 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         custom_widgets : list, optional
             List of dicts defining custom widgets to display. Each dict should have:
             - 'label': tooltip/label for the widget
-            - 'type': 'select' (default) or 'slider'
+            - 'type': 'select' (default), 'text', or 'slider'
             - For 'select': 'items' (list of dicts with 'label'/'value'), 'multiselect' (bool)
+            - For 'text': no extra keys required (uses 'label' as placeholder)
             - For 'slider': 'min', 'max', 'step' (floats)
             - 'selected': initial selected value(s)
         custom_widgets_callback : callable, optional

@@ -12,7 +12,8 @@ from jdaviz.configs.default.plugins.viewers import JdavizProfileView
 from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_units_and_equivs import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 from jdaviz.core.events import (GlobalDisplayUnitChanged, AddDataMessage,
-                                RemoveDataMessage, SliceValueUpdatedMessage)
+                                RemoveDataMessage, SliceValueUpdatedMessage,
+                                ViewerRemovedMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
                                         SelectPluginComponent, PluginUserApi)
@@ -20,7 +21,8 @@ from jdaviz.core.unit_conversion_utils import (create_equivalent_spectral_axis_u
                                                create_equivalent_flux_units_list,
                                                check_if_unit_is_per_solid_angle,
                                                create_equivalent_angle_units_list,
-                                               flux_to_sb_unit)
+                                               flux_to_sb_unit,
+                                               is_physical_spectral_unit)
 
 __all__ = ['UnitConversion']
 
@@ -122,6 +124,8 @@ class UnitConversion(PluginTemplateMixin):
                                    handler=self._on_add_data_to_viewer)
         self.session.hub.subscribe(self, RemoveDataMessage,
                                    handler=self._on_remove_data_from_viewer)
+        self.session.hub.subscribe(self, ViewerRemovedMessage,
+                                   handler=self._on_viewer_removed)
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
@@ -130,14 +134,20 @@ class UnitConversion(PluginTemplateMixin):
         self.spectral_unit = UnitSelectPluginComponent(self,
                                                        items='spectral_unit_items',
                                                        selected='spectral_unit_selected')
-        self.spectral_unit.choices = create_equivalent_spectral_axis_units_list(u.Hz)
+        # initialize spectral axis unit choices to empty list, will be populated
+        # when data is loaded, if data has equivalent units. otherwise (e.g data
+        # is in pixels) it will remain empty and user will not be able to select
+        # a unit until data with equivalent units is loaded
+        self.spectral_unit.choices = []
 
         self.has_flux = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz', 'deconfigged')
         self.flux_unit = UnitSelectPluginComponent(self,
                                                    items='flux_unit_items',
                                                    selected='flux_unit_selected')
-        # NOTE: will switch to count only if first data loaded into viewer in in counts
         # initialize flux choices to empty list, will be populated when data is loaded
+        # if data has equivalent units, otherwise (e.g data is in DN) it will
+        # remain empty and user will not be able to select a unit until data
+        # with equivalent units is loaded
         self.flux_unit.choices = []
 
         self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz',
@@ -203,15 +213,41 @@ class UnitConversion(PluginTemplateMixin):
                 for viewer in self._app._viewer_store.values() if isinstance(viewer, BqplotImageView)  # noqa
                 for layer in viewer.layers]
 
-    def _on_remove_data_from_viewer(self, msg):
-        viewer = msg.viewer
-        if viewer.reference == 'spectrum-viewer' and not len(viewer.layers):
-            self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer' # noqa
+    def _no_data_in_relevant_viewers(self):
+        """Return True if no spectrum/image/cube viewer has any data loaded."""
+        return not any(
+            len(v.layers) for v in self._app._viewer_store.values()
+            if isinstance(v, (JdavizProfileView, BqplotImageView))
+        )
 
-        elif viewer.reference == 'spectrum-viewer' and len(viewer.layers):
-            xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
-            viewer.state.x_display_unit = xunit
-            viewer.set_plot_axes()
+    def _on_remove_data_from_viewer(self, msg):
+
+        viewer = msg.viewer
+
+        if self._no_data_in_relevant_viewers():
+            self.disabled_msg = 'Unit Conversion unavailable without data loaded in a viewer'
+            return
+
+        # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
+        # access. this may need to be generalized for deconfigged and removed
+        # once the configs are deprecated
+        if self.config in ('specviz', 'specviz2d'):
+
+            # if no layers remain in spectrum viewer, disable the unit conversion plugin.
+            if viewer.reference == 'spectrum-viewer' and not len(viewer.layers):
+                self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer' # noqa
+
+            # if layers do remain in the viewer, re-validate and re-apply the
+            # current spectral x unit to the viewer state and refresh plot axes.
+            elif viewer.reference == 'spectrum-viewer' and len(viewer.layers):
+                xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
+                viewer.state.x_display_unit = xunit
+                viewer.set_plot_axes()
+
+    def _on_viewer_removed(self, msg):
+
+        if self._no_data_in_relevant_viewers():
+            self.disabled_msg = 'Unit Conversion unavailable without data loaded in a viewer'
 
     def _on_add_data_to_viewer(self, msg):
 
@@ -225,9 +261,24 @@ class UnitConversion(PluginTemplateMixin):
                 self.pixar_sr_exists = False
 
         viewer = msg.viewer
-        # If we were disabled due to having no data loaded, undo that
-        if viewer.reference == 'spectrum-viewer':
+
+        # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
+        # access. this may need to be generalized for deconfigged and removed
+        # once the configs are deprecated.
+        # If we disabled the unit conversion plugin due to no data in the
+        # spectrum viewer, re-enable it.
+        if self.config in ('specviz', 'specviz2d') and viewer.reference == 'spectrum-viewer':
             self.disabled_msg = ''
+
+        # if we disabled the unit conversion plugin due to no data in any
+        # image/spectrum/cube, viewer, but data is being added to one of those
+        # viewers, re-enable the plugin
+        if self.disabled_msg:
+            if isinstance(viewer, (JdavizProfileView, BqplotImageView)):
+                self.disabled_msg = ''
+
+        # this was added to avoid triggering unit logic when plugin data is being
+        # added to the viewer.
         if isinstance(msg.data, glue_core_data):
             data_obj = None
 
@@ -245,6 +296,7 @@ class UnitConversion(PluginTemplateMixin):
                     xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
                     viewer.state.x_display_unit = xunit
                     viewer.set_plot_axes()
+
         if len(self.spectral_y_unit) and hasattr(viewer.state, 'y_display_unit'):
             if viewer.state.y_display_unit != self.spectral_y_unit:
                 self._handle_spectral_y_unit()
@@ -260,10 +312,14 @@ class UnitConversion(PluginTemplateMixin):
             # if the viewer is spectral and the data is Spectrum, get flux/sb/spectral
             # axis units from the Spectrum object
             if isinstance(data_obj, Spectrum) and isinstance(viewer, Spectrum1DViewer):
+                spectral_axis_unit = data_obj.spectral_axis.unit
+                if is_physical_spectral_unit(spectral_axis_unit):
+                    self.spectral_unit.choices = create_equivalent_spectral_axis_units_list(
+                        spectral_axis_unit)
                 self.spectral_unit._addl_unit_strings = viewer.state.__class__.x_display_unit.get_choices(viewer.state)  # noqa
                 if not len(self.spectral_unit_selected):
                     try:
-                        self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
+                        self.spectral_unit.selected = str(spectral_axis_unit)
                     except ValueError:
                         self.spectral_unit.selected = ''
 
@@ -402,10 +458,18 @@ class UnitConversion(PluginTemplateMixin):
 
         if axis == 'spectral':
             for sv in self.spectrum_1d_viewers:
+                if not (is_physical_spectral_unit(self.spectral_unit.selected)
+                        and is_physical_spectral_unit(sv.state.x_display_unit)):
+                    continue
                 xunit = _valid_glue_display_unit(self.spectral_unit.selected, sv, 'x')
                 sv.state.x_display_unit = xunit
                 sv.set_plot_axes()
             for s2dv in self.spectrum_2d_viewers:
+                if not hasattr(s2dv.state, 'x_display_unit'):
+                    continue
+                if not (is_physical_spectral_unit(self.spectral_unit.selected)
+                        and is_physical_spectral_unit(s2dv.state.x_display_unit)):
+                    continue
                 xunit = _valid_glue_display_unit(self.spectral_unit.selected, s2dv, 'x')
 
         elif axis == 'flux':

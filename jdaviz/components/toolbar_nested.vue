@@ -13,11 +13,24 @@
       </v-btn>
     </v-btn-toggle>
 
-    <!-- Custom widgets (dropdowns and sliders) -->
+    <!-- Custom widgets (dropdowns, text inputs, and sliders) -->
     <span v-if="custom_widget_items.length > 0" style="display: inline-flex; align-items: center; vertical-align: top; height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
       <template v-for="(widget, idx) in custom_widget_items" :key="idx">
+        <!-- Text input widget -->
+        <v-text-field
+          v-if="widget.type === 'text'"
+          :model-value="custom_widget_selected[idx]"
+          @update:modelValue="(val) => update_widget_selection(idx, val)"
+          :placeholder="widget.label"
+          density="compact"
+          solo
+          flat
+          hide-details
+          style="min-width: 140px; max-width: 240px;"
+          class="custom-toolbar-text-input"
+        ></v-text-field>
         <!-- Slider widget -->
-        <j-tooltip v-if="widget.type === 'slider'" :tooltipcontent="widget.label" span_style="display: flex; align-items: center; height: 42px;">
+        <j-tooltip v-else-if="widget.type === 'slider'" :tooltipcontent="widget.label" span_style="display: flex; align-items: center; height: 42px;">
           <span style="color: white; font-size: 12px; margin-right: 4px; white-space: nowrap; align-self: center;">{{ widget.label }}</span>
           <v-slider
             :model-value="custom_widget_selected[idx]"

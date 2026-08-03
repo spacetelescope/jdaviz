@@ -10,7 +10,7 @@ from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCPro
 from jdaviz.utils import get_reference_image_data
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_conversion_general,
-                                               spectral_axis_conversion)
+                                               spectral_unit_conversion)
 
 __all__ = ['FreezableState', 'FreezableProfileViewerState', 'FreezableBqplotImageViewerState']
 
@@ -68,7 +68,7 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
             self._reset_x_limits()
             return
 
-        x_lims_new = spectral_axis_conversion([self.x_min, self.x_max],
+        x_lims_new = spectral_unit_conversion([self.x_min, self.x_max],
                                               old_unit, new_unit)
 
         self.x_min = np.nanmin(x_lims_new)
