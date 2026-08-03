@@ -103,7 +103,7 @@ class CatalogRowLinkManager(HubListener):
             per-viewer list does not have one entry per catalog row.
         """
         data = self.app.data_collection[data_label]
-        if (getattr(data, 'meta', {}) or {}).get('_importer') != 'CatalogImporter':
+        if data.meta.get('_importer') != 'CatalogImporter':
             raise ValueError(f"Data '{data_label}' is not a catalog.")
 
         nrows = data.size
@@ -148,7 +148,7 @@ class CatalogRowLinkManager(HubListener):
         # the renamed dataset may be *referenced* by any catalog's columns, so
         # update every catalog that carries the marker meta
         for data in self.app.data_collection:
-            columns = (getattr(data, 'meta', {}) or {}).get(_META_KEY)
+            columns = data.meta.get(_META_KEY)
             if not columns:
                 continue
             for column_name in columns:
@@ -188,7 +188,7 @@ class CatalogRowLinkManager(HubListener):
 
         # column_to_viewer maps each "Data: <viewer>" column name -> the reference
         # of the viewer it drives (stored on the catalog's meta)
-        column_to_viewer = (getattr(catalog_data, 'meta', {}) or {}).get(_META_KEY)
+        column_to_viewer = catalog_data.meta[_META_KEY]
         if not column_to_viewer:
             return
 
@@ -200,24 +200,12 @@ class CatalogRowLinkManager(HubListener):
             if target_viewer is None:
                 continue
             # the data labels this viewer should show for the active row
-            labels = [
-                label
-                for label in self._cell_as_list(catalog_data, column_name, active_row)
-                if label and label in available_labels
-            ]
+            try:
+                raw = catalog_data.get_component(column_name).data[active_row]
+            except (KeyError, IndexError):
+                raw = []
+            labels = [lbl for lbl in _as_list(raw) if lbl and lbl in available_labels]
             self._set_viewer_contents(target_viewer, labels)
-
-    def _any_catalog_for_viewer(self, viewer):
-        """Return the catalog ``Data`` in a table viewer, or ``None``.
-
-        Unlike :meth:`_catalog_data_for_viewer` this also returns catalogs that
-        have not yet had any viewer-data columns registered.
-        """
-        for layer in getattr(viewer, 'layers', []):
-            data = getattr(getattr(layer, 'layer', None), 'data', None)
-            if data is not None and (getattr(data, 'meta', {}) or {}).get('_importer') == 'CatalogImporter':  # noqa
-                return data
-        return None
 
     def _ensure_viewer_column(self, catalog, viewer_ref, column_name=None):
         """Ensure a ``Data: <viewer_ref>`` column exists on ``catalog``.
@@ -244,12 +232,12 @@ class CatalogRowLinkManager(HubListener):
         """
         if viewer is None or hasattr(viewer, 'widget_table'):
             return
-        viewer_ref = getattr(viewer, 'reference', None) or getattr(viewer, 'reference_id', None)
+        viewer_ref = self._viewer_ref(viewer)
         if not viewer_ref:
             return
         column_name = f'Data: {viewer_ref}'
         for tv_id, (tv, _cb) in list(self._observed.items()):
-            catalog = self._any_catalog_for_viewer(tv)
+            catalog = self._catalog_data_for_viewer(tv, require_managed=False)
             if catalog is None:
                 continue
             self._ensure_viewer_column(catalog, viewer_ref, column_name)
@@ -271,7 +259,7 @@ class CatalogRowLinkManager(HubListener):
         for viewer in list(self.app._viewer_store.values()):
             if hasattr(viewer, 'widget_table'):
                 continue
-            viewer_ref = getattr(viewer, 'reference', None) or getattr(viewer, 'reference_id', None)  # noqa
+            viewer_ref = self._viewer_ref(viewer)
             if not viewer_ref:
                 continue
             self._ensure_viewer_column(catalog, viewer_ref)
@@ -294,7 +282,7 @@ class CatalogRowLinkManager(HubListener):
             catalog = self._catalog_data_for_viewer(tv)
             if catalog is None:
                 continue
-            columns = (getattr(catalog, 'meta', {}) or {}).get(_META_KEY)
+            columns = catalog.meta[_META_KEY]
             if not columns or column_name not in columns:
                 continue
             active_rows = tv.widget_table.checked
@@ -323,27 +311,47 @@ class CatalogRowLinkManager(HubListener):
                 visible.append(label)
         return visible
 
-    def _catalog_data_for_viewer(self, viewer):
-        """Return the managed catalog ``Data`` shown in ``viewer``, or ``None``.
+    def _catalog_data_for_viewer(self, viewer, require_managed=True):
+        """Return the catalog ``Data`` shown in ``viewer``, or ``None``.
 
-        A catalog becomes "managed" once :meth:`set_viewer_data_columns` stores the
-        ``_viewer_data_columns`` marker (``_META_KEY``) in its ``Data.meta``; here we
-        look through the viewer's layers for the first dataset carrying that marker.
+        Parameters
+        ----------
+        require_managed : bool
+            If ``True`` (default) only return a catalog that has been registered
+            via :meth:`set_viewer_data_columns` (carries ``_META_KEY`` in its
+            meta).  If ``False``, return any catalog loaded by the Catalog
+            importer, including freshly imported ones with no link columns yet.
         """
+        if require_managed:
+            return self._first_layer_data(viewer, lambda d: _META_KEY in d.meta)
+        return self._first_layer_data(
+            viewer, lambda d: d.meta.get('_importer') == 'CatalogImporter'
+        )
+
+    @staticmethod
+    def _first_layer_data(viewer, predicate):
+        """Return the first layer's ``Data`` object that satisfies *predicate*, or ``None``."""
         for layer in getattr(viewer, 'layers', []):
             data = getattr(getattr(layer, 'layer', None), 'data', None)
-            if data is not None and _META_KEY in (getattr(data, 'meta', {}) or {}):
+            if data is not None and predicate(data):
                 return data
         return None
 
     @staticmethod
-    def _cell_as_list(data, column_name, row):
-        """Return the (list) value of a cell, robust to missing columns/rows."""
-        try:
-            value = data.get_component(column_name).data[row]
-        except (KeyError, IndexError):
-            return []
-        return _as_list(value)
+    def _viewer_ref(viewer):
+        """Return the canonical reference string for *viewer*."""
+        return getattr(viewer, 'reference', None) or getattr(viewer, 'reference_id', None)
+
+    def _set_object_column(self, data, column_name, values):
+        """Add or update a column on ``data`` that stores a (list) value per row."""
+        column_name = str(column_name)
+        arr = np.empty(len(values), dtype=object)
+        for i, v in enumerate(values):
+            arr[i] = _as_list(v)
+        if column_name in [c.label for c in data.components]:
+            data.update_components({data.get_component(column_name): arr})
+        else:
+            data.add_component(arr, column_name)
 
     def _set_viewer_contents(self, viewer_obj, labels):
         """Show exactly ``labels`` in ``viewer_obj``, hiding anything else."""
@@ -378,23 +386,3 @@ class CatalogRowLinkManager(HubListener):
             new_values.append(cell_list)
         if changed:
             self._set_object_column(data, column_name, new_values)
-
-    @staticmethod
-    def _as_object_array(values):
-        """Normalize each value to a list and pack them into an object-dtype array.
-
-        Object dtype is required so the table can hold a list per row.
-        """
-        arr = np.empty(len(values), dtype=object)
-        for i, value in enumerate(values):
-            arr[i] = _as_list(value)
-        return arr
-
-    def _set_object_column(self, data, column_name, values):
-        """Add or update a column on ``data`` that stores a (list) value per row."""
-        column_name = str(column_name)
-        arr = self._as_object_array(values)
-        if column_name in [c.label for c in data.components]:
-            data.update_components({data.get_component(column_name): arr})
-        else:
-            data.add_component(arr, column_name)
