@@ -63,6 +63,8 @@ New Features
 
 - Add importer for line lists. [#4305]
 
+- Add consolidated emission line list and ability to query database in API. [#4314]
+
 - Add ability to view data in multiple viewers with row click in table viewer. [#4279]
 
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]

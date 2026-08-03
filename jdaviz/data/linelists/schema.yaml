@@ -1,0 +1,137 @@
+core_columns:
+- line_name
+- rest_wavelength
+- wavelength_unit
+- source_list
+extra_info_columns_by_file:
+  Atomic-ISO.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols:
+    - transition
+    - error
+    - ep
+    - ip
+    - reference
+    - notes
+  Atomic-Ionic.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols:
+    - Error
+    - Reference
+  Atomic-Ionic_FineStructure.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols:
+    - Error
+    - Reference
+  CO-band-heads.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: molecular
+    extra_cols:
+    - frequency
+    element_override: CO
+  CO.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: molecular
+    extra_cols: []
+  Common_Galactic_700A-2000A.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: Angstrom
+    science_case: galactic
+    extra_cols: []
+  Common_Galactic_2000A-11000A.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: Angstrom
+    science_case: galactic
+    extra_cols: []
+  Common_nebular.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: Angstrom
+    science_case: nebular
+    extra_cols: []
+  Common_stellar.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: Angstrom
+    science_case: stellar
+    extra_cols: []
+  H-He.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols:
+    - Error
+    - Reference
+  H-Paschen-Brackett.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols: []
+  H2-alt.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: molecular
+    extra_cols:
+    - Freq
+    - g(J)
+    - Eupper(K)
+    - A(10e-7s)
+    - LTE1000
+    - LTE2000
+    - LTE3000
+    - LTE4000
+    element_override: H2
+  H2-ISO.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: molecular
+    extra_cols: []
+  H2.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: molecular
+    extra_cols: []
+    element_override: H2
+  HeI-HeII.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols:
+    - transition
+  PAH.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: molecular
+    extra_cols: []
+  SDSS-IV.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: Angstrom
+    science_case: galactic
+    extra_cols:
+    - Type
+  SDSS.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: Angstrom
+    science_case: galactic
+    extra_cols:
+    - Type
+    - Weight-Galaxy
+    - Weight-Quasar
+  UV_linelist_vacuum.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: Angstrom
+    science_case: galactic
+    extra_cols: []
+wavelength_sanity_bounds:
+  um:
+  - 0.01
+  - 250
+  Angstrom:
+  - 50
+  - 300000
