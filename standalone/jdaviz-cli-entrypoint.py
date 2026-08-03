@@ -26,19 +26,17 @@ if __name__ == "__main__":
 
         # Define a safe user-writable path (e.g., user's home folder)
         user_home = Path.home() 
-        user_downloads = user_home / "Downloads"
 
-        # if the Downloads directory is found, set the JDAVIZ_CACHE_DIR to put mast downloaded data in Downloads
-        if user_downloads.is_dir():
-            os.environ['JDAVIZ_CACHE_DIR'] = str(user_downloads)
+        # create jdaviz_cache directory to save downloaded files
+        jdaviz_cache = user_home / ".cache" / "jdaviz"
+        jdaviz_cache.mkdir(exist_ok=True)
+        os.environ['JDAVIZ_CACHE_DIR'] = str(jdaviz_cache)
 
-        # if Downloads is not easily discoverable, create a directory in the home directory to save the data. 
-        else:
-            writable_cache_dir = user_home / "jdaviz_downloads"
-            writable_cache_dir.mkdir(exist_ok=True)
-            os.environ['JDAVIZ_CACHE_DIR'] = str(writable_cache_dir)
-
-        os.environ['ASTROPY_CACHE_DIR'] = str(user_home / ".cache" / "astropy")
+        # create astropy_cache directory to save downloaded files 
+        # (backup in case it had been deleted or astropy not installed)
+        astropy_cache = user_home / ".cache" / "astropy"
+        astropy_cache.mkdir(exist_ok=True)
+        os.environ['ASTROPY_CACHE_DIR'] = str(astropy_cache)
 
         # Change Python's working directory to a writable directory
         # This prevents Jdaviz from defaulting download_uri_to_path to the read-only _MEIPASS path
