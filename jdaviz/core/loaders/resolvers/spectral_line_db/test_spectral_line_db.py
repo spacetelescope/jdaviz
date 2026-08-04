@@ -1,4 +1,3 @@
-import pytest
 from astropy.table import QTable
 
 
@@ -82,7 +81,7 @@ def test_search_no_results_status(deconfigged_helper):
     ldr.search()
 
     assert ldr.search_results == []
-    assert ldr.search_status == "No matching lines found."
+    assert ldr._obj.search_status == "No matching lines found."
 
 
 def test_search_single_result_status(deconfigged_helper):
@@ -92,9 +91,9 @@ def test_search_single_result_status(deconfigged_helper):
     ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     if len(ldr.search_results) == 1:
-        assert ldr.search_status == "1 line found."
+        assert ldr._obj.search_status == "1 line found."
     else:
-        assert "found" in ldr.search_status.lower()
+        assert "found" in ldr._obj.search_status.lower()
 
 
 def test_search_clears_previous_results(deconfigged_helper):
@@ -247,7 +246,7 @@ def test_clear_staged_when_empty(deconfigged_helper):
 def test_parse_input_none_when_nothing_staged(deconfigged_helper):
     """parse_input returns None when staged_lines is empty."""
     ldr = deconfigged_helper.loaders["spectral line database"]
-    assert ldr.parse_input() is None
+    assert ldr._obj.parse_input() is None
 
 
 def test_parse_input_returns_qtable(deconfigged_helper):
@@ -262,7 +261,7 @@ def test_parse_input_returns_qtable(deconfigged_helper):
     # Stage all unique-named results (DB may have duplicate names).
     ldr.stage_line(*ldr.search_results)
     n_staged = len(ldr.staged_lines)
-    qt = ldr.parse_input()
+    qt = ldr._obj.parse_input()
 
     assert isinstance(qt, QTable)
     assert "linename" in qt.colnames
@@ -279,10 +278,10 @@ def test_parse_input_after_unstage(deconfigged_helper):
     ldr.wavelength_max = "6600"
     ldr.search()
     ldr.stage_line(*ldr.search_results)
-    full_len = len(ldr.parse_input())
+    full_len = len(ldr._obj.parse_input())
 
     ldr.unstage_line(ldr.staged_lines[0]["line_name"])
-    assert len(ldr.parse_input()) == full_len - 1
+    assert len(ldr._obj.parse_input()) == full_len - 1
 
 
 def test_stage_across_multiple_searches(deconfigged_helper):
@@ -316,6 +315,6 @@ def test_stage_across_multiple_searches(deconfigged_helper):
     ldr.stage_line(*new_rows_unique)
     assert len(ldr.staged_lines) == after_first + len(new_rows_unique)
 
-    qt = ldr.parse_input()
+    qt = ldr._obj.parse_input()
     assert isinstance(qt, QTable)
     assert len(qt) == len(ldr.staged_lines)
