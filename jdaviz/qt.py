@@ -109,21 +109,21 @@ def clear_cache(clear_all=False):
                 shutil.rmtree(cache_dir)
                 os.makedirs(cache_dir, exist_ok=True)
                 print("Cache cleared successfully.")
-
             else:
-                # remove all files that are > 4 weeks ago
-                for file in Path(cache_dir).rglob("*"):
-                    if file.is_file():
-                        file_modified_time = os.path.getmtime(file)
+                # go through all files and folders (inc. subfolders).
+                # files will be deleted first then folder checked to see if it is empty. 
+                for fil in list(Path(cache_dir).rglob("*"))[::-1]:
+                    # delete files > 4 weeks AND hidden files
+                    if fil.is_file():
+                        file_modified_time = os.path.getmtime(fil)
                         if file_modified_time < cutoff_time:
-                            os.remove(file)
-                print('Files in cache cleared sucessfully')
-
-                # remove all empty folders
-                for item in Path(cache_dir).iterdir():
-                    if item.is_dir() and not any(item.iterdir()):
-                        shutil.rmtree(item)
-                print("Folders in cache cleared successfully.")
+                            os.remove(fil)
+                        elif str(fil.name).startswith('.'):
+                            os.remove(fil)
+                    # delete empty folders (inc. subfolders)
+                    elif fil.is_dir() and not any(fil.iterdir()):
+                        shutil.rmtree(fil)
+                print("Files/folders cleared successfully.")
 
         except Exception as e:
             print(f"Failed to delete cache folders: {e}")
@@ -161,7 +161,7 @@ def run_qt(url, app_name="Jdaviz"):
             f"<h3>{app_name}</h3>"
             f"<p>Version: {version('jdaviz')}</p>"
             "<hr>"
-            "<p><small>© JDADF Developers</small></p>")
+            "<p><small>© 2026 JDADF Developers</small></p>")
         # Spawns a modal, native popup window
         QMessageBox.about(
             window_container,       
@@ -325,3 +325,4 @@ def run_qt(url, app_name="Jdaviz"):
     # without this, ctrl-c does not work in the terminal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     app.exec_()
+    
