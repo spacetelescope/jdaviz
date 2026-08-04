@@ -325,4 +325,3 @@ def run_qt(url, app_name="Jdaviz"):
     # without this, ctrl-c does not work in the terminal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     app.exec_()
-    
