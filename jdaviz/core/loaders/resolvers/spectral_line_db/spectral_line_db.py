@@ -1,4 +1,4 @@
-from traitlets import Bool, List, Unicode
+from traitlets import Any, Bool, List, Unicode
 import numpy as np
 
 from jdaviz.core.registries import loader_resolver_registry
@@ -8,6 +8,19 @@ from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.data.linelists.query_helpers import to_jdaviz_line_list, load_db, list_elements
 
 __all__ = ['SpectralLineDatabaseResolver']
+
+
+def _to_wave_bound(value):
+    """Convert a wavelength bound (str, int, float, or None/empty) to float or None."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        stripped = str(value).strip()
+        return float(stripped) if stripped else None
+    except (ValueError, TypeError):
+        return None
 
 
 @loader_resolver_registry('spectral line database')
@@ -37,8 +50,8 @@ class SpectralLineDatabaseResolver(BaseResolver):
     title = Unicode("Spectral Line Database").tag(sync=True)
 
     # search parameters
-    wavelength_min = Unicode("").tag(sync=True)
-    wavelength_max = Unicode("").tag(sync=True)
+    wavelength_min = Any("").tag(sync=True)
+    wavelength_max = Any("").tag(sync=True)
     wavelength_unit_items = List().tag(sync=True)
     wavelength_unit_selected = Unicode("Angstrom").tag(sync=True)
     element_items = List([]).tag(sync=True)
@@ -132,14 +145,8 @@ class SpectralLineDatabaseResolver(BaseResolver):
             )
             name_contains = (self.name_contains or "").strip() or None
 
-            try:
-                wave_min = float(self.wavelength_min) if self.wavelength_min.strip() else None
-            except ValueError:
-                wave_min = None
-            try:
-                wave_max = float(self.wavelength_max) if self.wavelength_max.strip() else None
-            except ValueError:
-                wave_max = None
+            wave_min = _to_wave_bound(self.wavelength_min)
+            wave_max = _to_wave_bound(self.wavelength_max)
 
             result = get_lines(
                 self._db,
