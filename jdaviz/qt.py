@@ -109,18 +109,22 @@ def clear_cache(clear_all=False):
                 shutil.rmtree(cache_dir)
                 os.makedirs(cache_dir, exist_ok=True)
                 print("Cache cleared successfully.")
+
             else:
-                for item in Path(cache_dir).iterdir():
-                    # clear folders
-                    if item.is_dir():
-                        shutil.rmtree(item)
-                        print("Folders in cache cleared successfully.")
-                    # clear files if modified time > 4 weeks old
-                    else:
-                        file_modified_time = os.path.getmtime(item)
+                # remove all files that are > 4 weeks ago
+                for file in Path(cache_dir).rglob("*"):
+                    if file.is_file():
+                        file_modified_time = os.path.getmtime(file)
                         if file_modified_time < cutoff_time:
-                            os.remove(item)
-                            print('Files in cache cleared sucessfully')
+                            os.remove(file)
+                print('Files in cache cleared sucessfully')
+
+                # remove all empty folders
+                for item in Path(cache_dir).iterdir():
+                    if item.is_dir() and not any(item.iterdir()):
+                        shutil.rmtree(item)
+                print("Folders in cache cleared successfully.")
+
         except Exception as e:
             print(f"Failed to delete cache folders: {e}")
 
@@ -157,7 +161,7 @@ def run_qt(url, app_name="Jdaviz"):
             f"<h3>{app_name}</h3>"
             f"<p>Version: {version('jdaviz')}</p>"
             "<hr>"
-            "<p><small>© 2026 JDADF Developers</small></p>")
+            "<p><small>© JDADF Developers</small></p>")
         # Spawns a modal, native popup window
         QMessageBox.about(
             window_container,       
