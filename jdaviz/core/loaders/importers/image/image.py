@@ -515,7 +515,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     def _no_self_parenting(self, data):
         """
-        data being imported can't be its own parent. Matched on hash so this holds
+        Data being imported can't be its own parent. Matched on hash so this holds
         whether the entry is being overwritten or loaded alongside as a copy under a new label.
         """
         if not hasattr(self, 'extension'):
