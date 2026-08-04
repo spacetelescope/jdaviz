@@ -416,7 +416,9 @@ class ImageImporter(BaseImporterToDataCollection):
         elif isinstance(self.input, NDData):
             return [{'name': name} for name in ('DATA', 'MASK', 'UNCERTAINTY')]  # noqa must match order in _nddata_to_glue_data
         else:
-            return [{}] * len(self.output)
+            # remaining inputs (a bare glue Data object or a 2D ndarray) always
+            # produce a single output, so avoid computing self.output just for its length
+            return [{}]
 
     def _data_label_for_ext(self, base_data_label, ext_item):
         """
@@ -540,23 +542,22 @@ class ImageImporter(BaseImporterToDataCollection):
         if self.input_has_extensions and not hasattr(self, 'extension'):
             return
 
-        ext_items = self.ext_items if (self.input_has_extensions
-                                       or isinstance(self.input, NDData)) else [{}]
+        ext_items = self.ext_items
         parents = self._parent_labels_for_selection(self.data_label_value, ext_items)
         labels = [self._data_label_for_ext(self.data_label_value, ext_item)
                   for ext_item in ext_items]
         # no need to advertise where a child will land when its parent is part of the
         # same import, since the viewer selection then applies to that parent anyways
-        children = [label for label, parent in zip(labels, parents)
-                    if parent is not None and parent not in labels]
+        child_parent_pairs = [(label, parent) for label, parent in zip(labels, parents)
+                             if parent is not None and parent not in labels]
 
-        if not len(children):
+        if not len(child_parent_pairs):
             self.parenting_msg = ''
             self.hide_viewer_select = False
             return
 
-        unique_parents = sorted(set(parent for label, parent in zip(labels, parents)
-                                    if parent is not None and parent not in labels))
+        children = [label for label, parent in child_parent_pairs]
+        unique_parents = sorted(set(parent for label, parent in child_parent_pairs))
         viewers = [label for label, viewer in self._app._jdaviz_helper.viewers.items()
                    if len(set(unique_parents) & set(viewer.data_menu.data_labels_loaded))]
         target = f"the viewer(s) containing {', '.join(unique_parents)}"
