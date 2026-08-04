@@ -549,7 +549,7 @@ class ImageImporter(BaseImporterToDataCollection):
         # no need to advertise where a child will land when its parent is part of the
         # same import, since the viewer selection then applies to that parent anyways
         child_parent_pairs = [(label, parent) for label, parent in zip(labels, parents)
-                             if parent is not None and parent not in labels]
+                              if parent is not None and parent not in labels]
 
         if not len(child_parent_pairs):
             self.parenting_msg = ''
