@@ -4,7 +4,7 @@ from astropy.table import QTable
 
 def test_db_loads(deconfigged_helper):
     """DB should load successfully on init and resolver should be valid."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     assert ldr._obj._db is not None
     assert len(ldr._obj._db) > 0
     assert ldr._obj._check_is_valid() == ''
@@ -17,7 +17,7 @@ def test_db_loads(deconfigged_helper):
 
 def test_search_by_element(deconfigged_helper):
     """Filtering by element returns a subset; all rows carry that element tag."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.element = "H"
     ldr.search()
     h_results = list(ldr.search_results)
@@ -32,7 +32,7 @@ def test_search_by_element(deconfigged_helper):
 
 def test_search_by_wavelength_range(deconfigged_helper):
     """Wavelength range filter narrows the result set."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.wavelength_unit.selected = "Angstrom"
     ldr.wavelength_min = "6500"
     ldr.wavelength_max = "6600"
@@ -48,7 +48,7 @@ def test_search_by_wavelength_range(deconfigged_helper):
 
 def test_search_by_name_contains(deconfigged_helper):
     """name_contains substring filter narrows results."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.name_contains = "CO"
     ldr.search()
     co_count = len(ldr.search_results)
@@ -61,7 +61,7 @@ def test_search_by_name_contains(deconfigged_helper):
 
 def test_search_combined_filters(deconfigged_helper):
     """Combining element + wavelength range gives a subset of each alone."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.element.selected = "H"
     ldr.search()
     h_only = len(ldr.search_results)
@@ -77,7 +77,7 @@ def test_search_combined_filters(deconfigged_helper):
 
 def test_search_no_results_status(deconfigged_helper):
     """A search with no matches sets the correct status and empty results."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.name_contains = "ZZZNOMATCH_XYZ_9999"
     ldr.search()
 
@@ -89,7 +89,7 @@ def test_search_single_result_status(deconfigged_helper):
     """A search returning exactly one line reports '1 line found.'"""
     # Use a very narrow range that is known to contain exactly one line;
     # fall back to checking the message format if counts vary.
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     if len(ldr.search_results) == 1:
         assert ldr.search_status == "1 line found."
@@ -99,7 +99,7 @@ def test_search_single_result_status(deconfigged_helper):
 
 def test_search_clears_previous_results(deconfigged_helper):
     """A second, more restrictive search replaces the first results."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     all_count = len(ldr.search_results)
 
@@ -110,7 +110,7 @@ def test_search_clears_previous_results(deconfigged_helper):
 
 def test_stage_line_by_name(deconfigged_helper):
     """stage_line with a string name adds the matching row to staged_lines."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     name = ldr.search_results[0]["line_name"]
 
@@ -121,7 +121,7 @@ def test_stage_line_by_name(deconfigged_helper):
 
 def test_stage_line_by_dict(deconfigged_helper):
     """stage_line with a search-result dict adds it to staged_lines."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     row = ldr.search_results[0]
 
@@ -132,7 +132,7 @@ def test_stage_line_by_dict(deconfigged_helper):
 
 def test_stage_line_duplicate_skipped(deconfigged_helper):
     """Staging the same line a second time is silently ignored."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     name = ldr.search_results[0]["line_name"]
 
@@ -143,7 +143,7 @@ def test_stage_line_duplicate_skipped(deconfigged_helper):
 
 def test_stage_line_multiple_at_once(deconfigged_helper):
     """stage_line(*results) stages all unique-named results in a single call."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.wavelength_unit.selected = "Angstrom"
     ldr.wavelength_min = "6500"
     ldr.wavelength_max = "6600"
@@ -159,21 +159,21 @@ def test_stage_line_multiple_at_once(deconfigged_helper):
 
 def test_stage_line_unknown_name_raises(deconfigged_helper):
     """stage_line with an unknown name raises ValueError."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     with pytest.raises(ValueError, match="not found in database"):
         ldr.stage_line("NOSUCHLINE_XYZZY_9999")
 
 
 def test_stage_line_wrong_type_raises(deconfigged_helper):
     """stage_line with a non-str/dict argument raises TypeError."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     with pytest.raises(TypeError):
         ldr.stage_line(42)
 
 
 def test_unstage_line_by_name(deconfigged_helper):
     """unstage_line by string name removes just that line."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     names = [r["line_name"] for r in ldr.search_results[:3]]
     ldr.stage_line(*names)
@@ -186,7 +186,7 @@ def test_unstage_line_by_name(deconfigged_helper):
 
 def test_unstage_line_by_dict(deconfigged_helper):
     """unstage_line by dict removes the matching line."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     row = ldr.search_results[0]
     ldr.stage_line(row)
@@ -197,7 +197,7 @@ def test_unstage_line_by_dict(deconfigged_helper):
 
 def test_unstage_line_multiple_at_once(deconfigged_helper):
     """unstage_line(*args) removes several lines in one call."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     rows = ldr.search_results[:4]
     ldr.stage_line(*rows)
@@ -210,7 +210,7 @@ def test_unstage_line_multiple_at_once(deconfigged_helper):
 
 def test_unstage_line_not_staged_ignored(deconfigged_helper):
     """unstage_line for a line not currently staged is silently ignored."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     ldr.stage_line(ldr.search_results[0]["line_name"])
     before = len(ldr.staged_lines)
@@ -221,14 +221,14 @@ def test_unstage_line_not_staged_ignored(deconfigged_helper):
 
 def test_unstage_line_wrong_type_raises(deconfigged_helper):
     """unstage_line with a non-str/dict argument raises TypeError."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     with pytest.raises(TypeError):
         ldr.unstage_line(99)
 
 
 def test_clear_staged(deconfigged_helper):
     """clear_staged empties staged_lines regardless of how many lines are staged."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.search()
     ldr.stage_line(*ldr.search_results[:5])
     assert len(ldr.staged_lines) == 5
@@ -239,20 +239,20 @@ def test_clear_staged(deconfigged_helper):
 
 def test_clear_staged_when_empty(deconfigged_helper):
     """clear_staged on an already-empty list is a no-op."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.clear_staged()
     assert ldr.staged_lines == []
 
 
 def test_parse_input_none_when_nothing_staged(deconfigged_helper):
     """parse_input returns None when staged_lines is empty."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     assert ldr.parse_input() is None
 
 
 def test_parse_input_returns_qtable(deconfigged_helper):
     """parse_input returns a QTable with linename and rest columns."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.wavelength_unit.selected = "Angstrom"
     ldr.wavelength_min = "6500"
     ldr.wavelength_max = "6600"
@@ -273,7 +273,7 @@ def test_parse_input_returns_qtable(deconfigged_helper):
 
 def test_parse_input_after_unstage(deconfigged_helper):
     """Unstaging a line reduces the parse_input output length."""
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.wavelength_unit.selected = "Angstrom"
     ldr.wavelength_min = "6500"
     ldr.wavelength_max = "6600"
@@ -288,7 +288,7 @@ def test_parse_input_after_unstage(deconfigged_helper):
 def test_stage_across_multiple_searches(deconfigged_helper):
     """Lines staged from two separate searches accumulate correctly."""
     # First search
-    ldr = deconfigged_helper.loaders["Spectral Line Database"]
+    ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.element.selected = "H"
     ldr.wavelength_unit.selected = "Angstrom"
     ldr.wavelength_min = "6500"
