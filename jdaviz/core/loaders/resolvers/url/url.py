@@ -143,23 +143,25 @@ class URLResolver(BaseResolver):
                 return get_cloud_asdf(self.url.strip(), fsspec_filesystem=self.fsspec_filesystem)
 
         target_url = download_uri_to_path(self.url.strip(), cache=self.cache,
-                                    local_path=self.local_path, timeout=self.timeout)
+                                          local_path=self.local_path, timeout=self.timeout)
 
         # Set download persistent hint message
         if self.url_scheme.lower() == 'mast':
             self.download_path_msg = f"File stored at: {os.path.abspath(target_url)}"
 
         elif self.url_scheme.lower() in ('http', 'https', 'ftp'):
-            self.download_path_msg = f'File stored in astropy download cache at: {astropy.config.get_cache_dir()}'
+            self.download_path_msg = ('File stored in astropy download cache '
+                                      f'at: {astropy.config.get_cache_dir()}')
 
         elif self.url_scheme.lower() == 's3':
-            self.download_path_msg = f'File stored in s3 download cache at: ({self.local_path}/s3_downloads)'
+            self.download_path_msg = ('File stored in s3 download cache '
+                                      f'at: ({self.local_path}/s3_downloads)')
 
         else:
-            # since download_path_msg goes to a persistent hint in .vue file, 
+            # since download_path_msg goes to a persistent hint in .vue file,
             # create empty message for anything else
             self.download_path_msg = ''
-        
+
         return target_url
 
     def parse_input(self):
