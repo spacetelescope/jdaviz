@@ -6,31 +6,31 @@ from astropy.wcs import WCS
 from gwcs.wcs import WCS as GWCS
 
 from jdaviz.utils import get_top_layer_index
-from jdaviz.configs.imviz.wcs_utils import get_compass_info
+
+__all__ = ['AIDAMixin']
 
 
-class AID:
+class AIDAMixin:
     """
-    Common API methods for image viewers in astronomy, called
-    the Astro Image Display API (AIDA)[1]_.
+    This class implements the Common API methods for image viewers in
+    astronomy, called the Astro Image Display API (AIDA)[1]_ for the
+    Jdaviz *image* viewer. This does not provide a fully functional viewer,
+    but rather should be used as mixin into an existing viewer subclass.
 
     References
     ----------
     .. [1] https://github.com/astropy/astro-image-display-api/
 
     """
-
-    def __init__(self, viewer):
-        self.viewer = viewer
-        self._app = viewer.jdaviz_app
+    RESERVED_MARKER_SET_NAMES = ['all']
 
     def _get_image_glue_data(self, image_label):
         if image_label is None:
-            i_top = get_top_layer_index(self.viewer)
-            image = self.viewer.layers[i_top].layer
+            i_top = get_top_layer_index(self)
+            image = self.layers[i_top].layer
 
         else:
-            for lyr in self.viewer.layers:
+            for lyr in self.layers:
                 image = lyr.layer
                 if image.label == image_label:
                     break
@@ -43,14 +43,14 @@ class AID:
         if center is None:
             return
 
-        orientation = self._app._jdaviz_helper.plugins.get('Orientation', None)
+        orientation = self.jdaviz_app._jdaviz_helper.plugins.get('Orientation', None)
         imviz_aligned_by_wcs = orientation and orientation.align_by == 'WCS'
 
         if isinstance(center, SkyCoord):
             if imviz_aligned_by_wcs:
                 center = center.ra.degree, center.dec.degree
             else:
-                reference_wcs = self.viewer.state.reference_data.coords
+                reference_wcs = self.state.reference_data.coords
 
                 if isinstance(reference_wcs, GWCS):
                     reference_wcs = WCS(reference_wcs.to_fits_sip())
@@ -63,10 +63,10 @@ class AID:
                 f"a tuple of floats in pixel coordinates, got {center=}."
             )
 
-        with delay_callback(self.viewer.state, "zoom_center_y", "zoom_center_x"):
+        with delay_callback(self.state, "zoom_center_y", "zoom_center_x"):
             (
-                self.viewer.state.zoom_center_x,
-                self.viewer.state.zoom_center_y
+                self.state.zoom_center_x,
+                self.state.zoom_center_y
             ) = center
 
     def _set_fov(self, fov):
@@ -84,14 +84,14 @@ class AID:
 
         scale_factor = float(fov / current_fov)
 
-        with delay_callback(self.viewer.state, "zoom_radius"):
-            self.viewer.state.zoom_radius = self.viewer.state.zoom_radius * scale_factor
+        with delay_callback(self.state, "zoom_radius"):
+            self.state.zoom_radius = self.state.zoom_radius * scale_factor
 
     def _set_rotation(self, rotation):
         if rotation is None:
             return
 
-        orientation = self._app._jdaviz_helper.plugins.get('Orientation', None)
+        orientation = self.jdaviz_app._jdaviz_helper.plugins.get('Orientation', None)
 
         if not orientation or orientation.align_by != 'WCS':
             raise ValueError("The viewer must be aligned by WCS to use `set_rotation`.")
@@ -128,7 +128,7 @@ class AID:
             Center the viewer on this coordinate.
 
         fov : `~astropy.units.Quantity` or tuple of floats
-            Set the width of the viewport to span `field_of_view`.
+            Set the width of the viewport to span field_of_view.
 
             Set the viewport with respect to the image
             with the data label: ``image_label``.
@@ -139,9 +139,15 @@ class AID:
             an `~astropy.coordinates.Angle` or floats interpreted
             as angles in units of degrees.
 
+        kwargs:
+            The method accepts kwargs for AIDA compatibility with other backends [1].
+
+        References
+        ----------
+        .. [1] https://github.com/astropy/astro-image-display-api/
         """
         with ignore_callback(
-            self.viewer.state,
+            self.state,
             'x_min', 'x_max', 'y_min', 'y_max',
             'zoom_center_x', 'zoom_center_y', 'zoom_radius'
         ):
@@ -165,7 +171,7 @@ class AID:
         return np.mean(abs_cdelts)
 
     def _get_current_fov(self, sky_or_pixel=None):
-        state = self.viewer.state
+        state = self.state
         wcs = state.reference_data.coords
 
         pixel_fov = min(
@@ -205,21 +211,21 @@ class AID:
 
     def _get_current_center(self, sky_or_pixel, image_label=None):
         # center pixel coordinates on the reference data:
-        center_x = self.viewer.state.zoom_center_x
-        center_y = self.viewer.state.zoom_center_y
+        center_x = self.state.zoom_center_x
+        center_y = self.state.zoom_center_y
 
-        orientation = self._app._jdaviz_helper.plugins.get('Orientation', None)
+        orientation = self.jdaviz_app._jdaviz_helper.plugins.get('Orientation', None)
 
         if orientation and orientation.align_by == 'WCS':
-            reference_data = self.viewer.state.reference_data
+            reference_data = self.state.reference_data
         else:
             reference_data, image_label = self._get_image_glue_data(image_label)
 
         reference_wcs = reference_data.coords
         if reference_wcs and sky_or_pixel == 'sky':
-            # # if the image data have WCS, get the center sky coordinate:
+            # if the image data have WCS, get the center sky coordinate:
             if orientation.align_by == 'WCS':
-                center = self.viewer._get_center_skycoord()
+                center = self._get_center_skycoord()
             else:
                 center = reference_wcs.pixel_to_world(center_x, center_y)
         else:
@@ -228,8 +234,10 @@ class AID:
         return center
 
     def _get_current_rotation(self):
-        reference_data = self.viewer.state.reference_data
+        # import here to avoid circular dependencies
+        from jdaviz.configs.imviz.wcs_utils import get_compass_info
 
+        reference_data = self.state.reference_data
         if not reference_data.coords:
             return None
 
@@ -248,12 +256,12 @@ class AID:
         at https://docs.astropy.org/en/stable/wcs/supported_projections.html
         """
 
-        orientation = self._app._jdaviz_helper.plugins.get('Orientation', None)
+        orientation = self.jdaviz_app._jdaviz_helper.plugins.get('Orientation', None)
 
         if not orientation or orientation.align_by != 'WCS':
             return None
 
-        ref_data = self.viewer.state.reference_data
+        ref_data = self.state.reference_data
         if ref_data.coords is None or not hasattr(ref_data.coords, 'wcs'):
             return None
 
@@ -262,16 +270,19 @@ class AID:
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """
         sky_or_pixel : str, optional
-            If 'sky', the center will be returned as a `SkyCoord` object.
+            If 'sky', the center will be returned as a `astropy.coordinates.SkyCoord` object.
             If 'pixel', the center will be returned as a tuple of pixel coordinates.
-            If `None`, the default behavior is to return the center as a `SkyCoord` if
-            possible, or as a tuple of floats if the image is in pixel coordinates and has
-            no WCS information.
+            If `None`, the default behavior is to return the center as a
+            `astropy.coordinates.SkyCoord` if possible, or as a tuple of floats if the image
+            is in pixel coordinates and has no WCS information.
 
         image_label : str, optional
             The label of the image to get the viewport for. If not given and there is only one
             image loaded, the viewport for that image is returned. If there are multiple images
             and no label is provided, an error is raised.
+
+        kwargs:
+            The method accepts kwargs for AIDA compatibility with other backends [1].
 
         Returns
         -------
@@ -283,6 +294,10 @@ class AID:
             - 'rotation' is an `~astropy.coordinates.Angle`
             - 'projection' is a string representing the projection of the viewer
             - 'image_label' is a string representing the label of the image.
+
+        References
+        ----------
+        .. [1] https://github.com/astropy/astro-image-display-api/
         """
         image, image_label = self._get_image_glue_data(image_label)
 
