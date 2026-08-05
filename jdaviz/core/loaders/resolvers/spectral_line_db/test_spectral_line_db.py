@@ -2,7 +2,6 @@ import pytest
 from astropy.table import QTable
 
 
-@pytest.mark.skip("test 143")
 def test_db_loads(deconfigged_helper):
     """DB should load successfully on init and resolver should be valid."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -16,7 +15,6 @@ def test_db_loads(deconfigged_helper):
     assert all(required <= r.keys() for r in ldr.search_results)
 
 
-@pytest.mark.skip("test 143")
 def test_search_by_element(deconfigged_helper):
     """Filtering by element returns a subset; all rows carry that element tag."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -32,7 +30,6 @@ def test_search_by_element(deconfigged_helper):
     assert len(ldr.search_results) > len(h_results)
 
 
-@pytest.mark.skip("test 143")
 def test_search_by_wavelength_range(deconfigged_helper):
     """Wavelength range filter narrows the result set."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -49,7 +46,6 @@ def test_search_by_wavelength_range(deconfigged_helper):
     assert len(ldr.search_results) > filtered_count
 
 
-@pytest.mark.skip("test 143")
 def test_search_by_name_contains(deconfigged_helper):
     """name_contains substring filter narrows results."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -63,7 +59,6 @@ def test_search_by_name_contains(deconfigged_helper):
     assert len(ldr.search_results) > co_count
 
 
-@pytest.mark.skip("test 143")
 def test_search_combined_filters(deconfigged_helper):
     """Combining element + wavelength range gives a subset of each alone."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -80,7 +75,6 @@ def test_search_combined_filters(deconfigged_helper):
     assert combined <= h_only
 
 
-@pytest.mark.skip("test 143")
 def test_search_no_results_status(deconfigged_helper):
     """A search with no matches sets the correct status and empty results."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -91,7 +85,6 @@ def test_search_no_results_status(deconfigged_helper):
     assert ldr._obj.search_status == "No matching lines found."
 
 
-@pytest.mark.skip("test 143")
 def test_search_single_result_status(deconfigged_helper):
     """A search returning exactly one line reports '1 line found.'"""
     # Use a very narrow range that is known to contain exactly one line;
@@ -104,7 +97,6 @@ def test_search_single_result_status(deconfigged_helper):
         assert "found" in ldr._obj.search_status.lower()
 
 
-@pytest.mark.skip("test 143")
 def test_search_clears_previous_results(deconfigged_helper):
     """A second, more restrictive search replaces the first results."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -116,7 +108,6 @@ def test_search_clears_previous_results(deconfigged_helper):
     assert len(ldr.search_results) < all_count
 
 
-@pytest.mark.skip("test 143")
 def test_stage_line_by_name(deconfigged_helper):
     """stage_line with a string name adds the matching row to staged_lines."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -128,7 +119,6 @@ def test_stage_line_by_name(deconfigged_helper):
     assert ldr.staged_lines[0]["line_name"] == name
 
 
-@pytest.mark.skip("test 143")
 def test_stage_line_by_dict(deconfigged_helper):
     """stage_line with a search-result dict adds it to staged_lines."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -140,7 +130,6 @@ def test_stage_line_by_dict(deconfigged_helper):
     assert ldr.staged_lines[0]["line_name"] == row["line_name"]
 
 
-@pytest.mark.skip("test 143")
 def test_stage_line_duplicate_skipped(deconfigged_helper):
     """Staging the same line a second time is silently ignored."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -152,7 +141,6 @@ def test_stage_line_duplicate_skipped(deconfigged_helper):
     assert len(ldr.staged_lines) == 1
 
 
-@pytest.mark.skip("test 143")
 def test_stage_line_multiple_at_once(deconfigged_helper):
     """stage_line(*results) stages all unique-named results in a single call."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -169,7 +157,6 @@ def test_stage_line_multiple_at_once(deconfigged_helper):
     assert len(ldr.staged_lines) == len(unique_names)
 
 
-@pytest.mark.skip("test 143")
 def test_stage_line_unknown_name_raises(deconfigged_helper):
     """stage_line with an unknown name raises ValueError."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -177,7 +164,6 @@ def test_stage_line_unknown_name_raises(deconfigged_helper):
         ldr.stage_line("NOSUCHLINE_XYZZY_9999")
 
 
-@pytest.mark.skip("test 143")
 def test_stage_line_wrong_type_raises(deconfigged_helper):
     """stage_line with a non-str/dict argument raises TypeError."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -185,7 +171,6 @@ def test_stage_line_wrong_type_raises(deconfigged_helper):
         ldr.stage_line(42)
 
 
-@pytest.mark.skip("test 143")
 def test_unstage_line_by_name(deconfigged_helper):
     """unstage_line by string name removes just that line."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -199,7 +184,6 @@ def test_unstage_line_by_name(deconfigged_helper):
     assert all(r["line_name"] != names[1] for r in ldr.staged_lines)
 
 
-@pytest.mark.skip("test 143")
 def test_unstage_line_by_dict(deconfigged_helper):
     """unstage_line by dict removes the matching line."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -211,7 +195,6 @@ def test_unstage_line_by_dict(deconfigged_helper):
     assert ldr.staged_lines == []
 
 
-@pytest.mark.skip("test 143")
 def test_unstage_line_multiple_at_once(deconfigged_helper):
     """unstage_line(*args) removes several lines in one call."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -225,7 +208,6 @@ def test_unstage_line_multiple_at_once(deconfigged_helper):
     assert all(r["line_name"] not in removed for r in ldr.staged_lines)
 
 
-@pytest.mark.skip("test 143")
 def test_unstage_line_not_staged_ignored(deconfigged_helper):
     """unstage_line for a line not currently staged is silently ignored."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -237,7 +219,6 @@ def test_unstage_line_not_staged_ignored(deconfigged_helper):
     assert len(ldr.staged_lines) == before
 
 
-@pytest.mark.skip("test 143")
 def test_unstage_line_wrong_type_raises(deconfigged_helper):
     """unstage_line with a non-str/dict argument raises TypeError."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -245,7 +226,6 @@ def test_unstage_line_wrong_type_raises(deconfigged_helper):
         ldr.unstage_line(99)
 
 
-@pytest.mark.skip("test 143")
 def test_clear_staged(deconfigged_helper):
     """clear_staged empties staged_lines regardless of how many lines are staged."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -257,7 +237,6 @@ def test_clear_staged(deconfigged_helper):
     assert ldr.staged_lines == []
 
 
-@pytest.mark.skip("test 143")
 def test_clear_staged_when_empty(deconfigged_helper):
     """clear_staged on an already-empty list is a no-op."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -271,7 +250,6 @@ def test_parse_input_none_when_nothing_staged(deconfigged_helper):
     assert ldr._obj.parse_input() is None
 
 
-@pytest.mark.skip("test 143")
 def test_parse_input_returns_qtable(deconfigged_helper):
     """parse_input returns a QTable with linename and rest columns."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -293,7 +271,6 @@ def test_parse_input_returns_qtable(deconfigged_helper):
     assert qt["rest"].unit is not None
 
 
-@pytest.mark.skip("test 143")
 def test_parse_input_after_unstage(deconfigged_helper):
     """Unstaging a line reduces the parse_input output length."""
     ldr = deconfigged_helper.loaders["spectral line database"]
@@ -308,7 +285,6 @@ def test_parse_input_after_unstage(deconfigged_helper):
     assert len(ldr._obj.parse_input()) == full_len - 1
 
 
-@pytest.mark.skip("test 143")
 def test_stage_across_multiple_searches(deconfigged_helper):
     """Lines staged from two separate searches accumulate correctly."""
     # First search

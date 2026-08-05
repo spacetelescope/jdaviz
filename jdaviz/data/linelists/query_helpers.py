@@ -13,6 +13,8 @@ Examples
 >>> co_lines = get_lines(db, source="CO.csv")
 """
 
+from functools import lru_cache
+import json
 import numpy as np
 from astropy.table import Table
 from astropy import units as u
@@ -24,14 +26,28 @@ DB_FILE = str(_DIR / "emission_lines.ecsv")
 SCHEMA_FILE = str(_DIR / "schema.yaml")
 
 
-def load_db(db_file=DB_FILE):
-    """Load the consolidated database as an astropy Table."""
+@lru_cache(maxsize=None)
+def _load_db_cached(db_file):
     return Table.read(db_file, format="ascii.ecsv")
 
 
+def load_db(db_file=DB_FILE):
+    """Load the consolidated database as an astropy Table.
+
+    The loaded table is cached at module scope per db_file path so repeated
+    resolver instances in the same process reuse one in-memory table.
+    """
+    return _load_db_cached(str(db_file))
+
+
+def clear_db_cache():
+    """Clear the module-level database cache."""
+    _load_db_cached.cache_clear()
+
+
 def get_extra_info(row):
-    """Parse a row's extra_info payload into a plain Python dict."""
-    raise ValueError("in get_extra_info")
+    """Parse a row's extra_info JSON string into a plain Python dict."""
+    return json.loads(row["extra_info"]) if row["extra_info"] else {}
 
 
 def get_lines(db, name_contains=None, source=None, wave_min=None, wave_max=None, unit="Angstrom",
