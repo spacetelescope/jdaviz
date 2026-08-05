@@ -71,6 +71,12 @@ New Features
 
 - Table viewer UI to add/rename/remove columns. [#4282]
 
+- Fix issue where URLs could not be loaded into the standalone application. File location is now shown to the user [#4315]
+
+- Add caching mechanism for files downloaded from mast to standalone application.  Empty folders in cache are autodeleted when application closes, and files are deleted if they are more than 4 weeks old. [#4315]
+
+- Add menubar to standalone application. This includes Window (resizing/zooming application), Help (Documentation, Help desk), and Cache (manually empty jdaviz cache directory). [#4315]
+
 Mosviz
 ^^^^^^
 
