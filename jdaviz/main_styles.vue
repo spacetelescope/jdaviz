@@ -362,4 +362,10 @@ span.api-hint-header {
   color: #C6F0FD !important;
 }
 
+/* Table viewer: keep row selection checkboxes but hide the select-all header button. */
+.glue-table-container .glue-data-table thead tr > th:nth-child(2) .v-btn {
+  /* NOTE: display none will hide the checkmarks in individual rows as well */
+  height: 0px !important;
+}
+
 </style>
