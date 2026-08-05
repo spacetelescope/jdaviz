@@ -13,7 +13,6 @@ Examples
 >>> co_lines = get_lines(db, source="CO.csv")
 """
 
-import json
 import numpy as np
 from astropy.table import Table
 from astropy import units as u
@@ -32,10 +31,7 @@ def load_db(db_file=DB_FILE):
 
 def get_extra_info(row):
     """Parse a row's extra_info payload into a plain Python dict."""
-    extra_info = row["extra_info"]
-    if isinstance(extra_info, dict):
-        return extra_info
-    return json.loads(str(extra_info or "{}"))
+    raise ValueError("in get_extra_info")
 
 
 def get_lines(db, name_contains=None, source=None, wave_min=None, wave_max=None, unit="Angstrom",
