@@ -1,3 +1,4 @@
+import pytest
 from astropy.table import QTable
 
 

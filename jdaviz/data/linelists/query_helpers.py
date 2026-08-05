@@ -31,8 +31,11 @@ def load_db(db_file=DB_FILE):
 
 
 def get_extra_info(row):
-    """Parse a row's extra_info JSON string into a plain Python dict."""
-    return json.loads(row["extra_info"]) if row["extra_info"] else {}
+    """Parse a row's extra_info payload into a plain Python dict."""
+    extra_info = row["extra_info"]
+    if isinstance(extra_info, dict):
+        return extra_info
+    return json.loads(str(extra_info or "{}"))
 
 
 def get_lines(db, name_contains=None, source=None, wave_min=None, wave_max=None, unit="Angstrom",
