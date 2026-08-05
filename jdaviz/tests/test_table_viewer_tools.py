@@ -1143,6 +1143,50 @@ class TestTableRowSelectToolBehavior:
         assert self.toolbar.tool_override_mode != ''
         assert self.toolbar.active_tool_id != 'jdaviz:table_row_select'
 
+    def test_default_row_select_can_be_toggled_off(self):
+        """Clicking the active default tool should allow no tool to remain active."""
+        self.toolbar._update_tool_visibilities()
+        assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
+
+        # Simulate clicking the active default checkable tool again.
+        self.toolbar.active_tool_id = None
+        assert self.toolbar.active_tool_id is None
+
+        # Visibility refreshes should not force the default back on.
+        self.toolbar._update_tool_visibilities()
+        assert self.toolbar.active_tool_id is None
+
+    def test_default_row_select_toggle_via_select_tool_api(self):
+        """Programmatic toolbar-button click should allow toggling default tool off."""
+        self.toolbar._update_tool_visibilities()
+        assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
+
+        # Simulate clicking the currently-active toolbar button again.
+        self.toolbar.select_tool('jdaviz:table_row_select')
+
+        # Expected behavior: default checkable tool can be toggled off.
+        assert self.toolbar.active_tool_id is None
+
+    def test_default_row_select_can_be_toggled_off_with_reentrant_visibility_update(self):
+        """Deactivation side effects should not re-enable default tool during same toggle."""
+        self.toolbar._update_tool_visibilities()
+        assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
+
+        tool = self.toolbar.tools['jdaviz:table_row_select']
+        original_deactivate = tool.deactivate
+
+        def _deactivate_with_visibility_refresh(*args, **kwargs):
+            original_deactivate(*args, **kwargs)
+            # Simulate a side effect during deactivate() that triggers toolbar refresh.
+            self.toolbar._update_tool_visibilities()
+
+        tool.deactivate = _deactivate_with_visibility_refresh
+        try:
+            self.toolbar.active_tool_id = None
+            assert self.toolbar.active_tool_id is None
+        finally:
+            tool.deactivate = original_deactivate
+
     def test_active_row_restored_after_override(self):
         """The single checked row is preserved when another tool temporarily takes over."""
         # Start with TableRowSelect as default, select row 2
