@@ -687,9 +687,15 @@ class _BaseTableApplyTool(Tool):
             self.on_apply(selected_rows)
 
         # Restore toolbar (all_viewers=True to also restore image viewer toolbars).
-        # The default tool (TableRowSelect if visible) will re-activate and manage
-        # selection_enabled, so we do not need to set it explicitly here.
         self.viewer.toolbar.restore_tools(all_viewers=True)
+
+        # Some table updates during apply can restore the upstream widget default
+        # (selection_enabled=True). Keep checkboxes shown only when the active
+        # tool explicitly opts in to owning row-selection checkboxes.
+        active_tool = getattr(self.viewer.toolbar, 'active_tool', None)
+        self.viewer.widget_table.selection_enabled = bool(
+            active_tool and isinstance(active_tool, _BaseTableSelectionTool)
+        )
 
 
 @viewer_tool
