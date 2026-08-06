@@ -35,6 +35,8 @@
           :label="api_hints_enabled ? 'ldr.url =' : ''"
           :class="api_hints_enabled ? 'api-hint' : null"
           :error-messages="parsed_input_not_resolvable_message ? [parsed_input_not_resolvable_message] : []"
+          :hint="download_path_msg"
+          persistent-hint
         ></v-text-field>
       </j-flex-row>
 

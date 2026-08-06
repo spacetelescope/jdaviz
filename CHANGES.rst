@@ -58,13 +58,26 @@ New Features
 - Add ability to query VO and Astroquery from catalog/using viewer coordinates as the source. The former source selection
   choice 'Manual' is also now 'Source'. [#4275]
 
+- Improvements to spectral axis unit conversion logic to support workflows and
+  avoid errors in mixed unit viewers in deconfigged. [#4292]
+
 - Add importer for line lists. [#4305]
+
+- Add consolidated emission line list and ability to query database in API. [#4314]
 
 - Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322]
 
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 
 - Table viewer UI to add/rename/remove columns. [#4282]
+
+- Fix issue where URLs could not be loaded into the standalone application. File location is now shown to the user [#4315]
+
+- Add caching mechanism for files downloaded from mast to standalone application.  Empty folders in cache are autodeleted when application closes, and files are deleted if they are more than 4 weeks old. [#4315]
+
+- Add menubar to standalone application. This includes Window (resizing/zooming application), Help (Documentation, Help desk), and Cache (manually empty jdaviz cache directory). [#4315]
+
+- Introducing selected methods from the Astronomy Image Display API (AIDA) to image viewers.  [#4310]
 
 Mosviz
 ^^^^^^
@@ -118,6 +131,8 @@ Bug Fixes
 - Fix image importer support for Roman L3 mosaic files. [#4309]
 
 - Fix issue where snackbar is attached to the notebook rather than to the app. [#4313]
+
+- Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
 
 Mosviz
 ^^^^^^

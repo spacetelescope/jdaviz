@@ -1,4 +1,4 @@
-.. image:: https://github.com/spacetelescope/jdaviz/blob/main/docs/logos/jdaviz.svg
+.. image:: https://raw.githubusercontent.com/spacetelescope/jdaviz/refs/heads/main/docs/logos/jdaviz.svg
     :width: 400
     :alt: Jdaviz logo
     :align: center
@@ -25,7 +25,7 @@
 ``jdaviz`` is a package of astronomical data analysis visualization tools based
 on the Jupyter platform. It is one tool that is a part of STScI's
 larger `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
-This GUI-based tool links data visualization and interactive analysis. 
+This GUI-based tool links data visualization and interactive analysis.
 It is designed to work within a Jupyter notebook cell, as a standalone desktop
 application, or as embedded windows within a website -- all with nearly-identical
 user interfaces. ``jdaviz`` is under active development, and users who
@@ -35,7 +35,7 @@ repository.
 ``jdaviz`` provides data viewers and analysis plugins that can be flexibly
 combined as desired to create interactive applications that fit your workflow.
 In the most recent release (5.0), ``jdaviz`` has been refactored to combine what
-were previously separate 'configurations' (Cubeviz, Specviz, Specviz2D, and 
+were previously separate 'configurations' (Cubeviz, Specviz, Specviz2D, and
 Imviz) into a single, flexible application that supports mixed viewer
 types.
 

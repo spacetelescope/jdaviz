@@ -3,7 +3,7 @@ import sys
 from typing import List
 import webbrowser
 try:
-    from qtpy.QtWidgets import QApplication
+    from qtpy.QtWidgets import QApplication, QMessageBox, QAction, QMenuBar, QVBoxLayout, QWidget
     from qtpy.QtWebEngineWidgets import QWebEngineView
     from qtpy.QtWebChannel import QWebChannel
     from qtpy import QtCore, QtGui
@@ -13,7 +13,10 @@ $ pip install jdaviz[qt]
 to install.""") from e
 import signal
 from pathlib import Path
-
+from importlib.metadata import version
+import os
+import shutil
+import time
 HERE = Path(__file__).parent
 
 
@@ -94,16 +97,219 @@ class QWebEngineViewWithPopup(QWebEngineView):
         return webview
 
 
+def clear_cache(clear_all=False):
+    cache_dir = os.environ['JDAVIZ_CACHE_DIR']
+    # Clear after 4 weeks
+    seconds_in_two_weeks = 28 * 24 * 60 * 60
+    cutoff_time = time.time() - seconds_in_two_weeks
+    if os.path.exists(cache_dir):
+        try:
+            # clear all if button clicked
+            if clear_all:
+                shutil.rmtree(cache_dir)
+                os.makedirs(cache_dir, exist_ok=True)
+                print("Cache cleared successfully.")
+            else:
+                # go through all files and folders (inc. subfolders).
+                # files will be deleted first then folder checked to see if it is empty.
+                for fil in list(Path(cache_dir).rglob("*"))[::-1]:
+                    # delete files > 4 weeks AND hidden files
+                    if fil.is_file():
+                        file_modified_time = os.path.getmtime(fil)
+                        if file_modified_time < cutoff_time:
+                            os.remove(fil)
+                        elif str(fil.name).startswith('.'):
+                            os.remove(fil)
+                    # delete empty folders (inc. subfolders)
+                    elif fil.is_dir() and not any(fil.iterdir()):
+                        shutil.rmtree(fil)
+                print("Files/folders cleared successfully.")
+
+        except Exception as e:
+            print(f"Failed to delete cache folders: {e}")
+
+
 def run_qt(url, app_name="Jdaviz"):
     app = QApplication([])
+    window_container = QWidget()
     web = QWebEngineViewWithPopup()
     web.setUrl(QtCore.QUrl(url))
-    web.resize(1024, 1024)
-    web.show()
+
+    layout = QVBoxLayout(window_container)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(0)
+
+    ############
+    # Menu
+    ############
+
+    menu_bar = QMenuBar(window_container)
+
+    # Create Menu Bar menus
+    file_menu = menu_bar.addMenu("&File")
+    cache_menu = menu_bar.addMenu("&Cache")
+    window_menu = menu_bar.addMenu("&Window")
+    help_menu = menu_bar.addMenu("&Help")
+
+    # About menu
+    # ----------
+    about_action = QAction(f"&About {app_name}", window_container)
+    about_action.setMenuRole(QAction.MenuRole.AboutRole)
+    file_menu.addAction(about_action)
+
+    def show_about_dialog():
+        about_text = (
+            f"<h3>{app_name}</h3>"
+            f"<p>Version: {version('jdaviz')}</p>"
+            "<hr>"
+            "<p><small>© 2026 JDADF Developers</small></p>")
+        # Spawns a modal, native popup window
+        QMessageBox.about(
+            window_container,
+            f"About {app_name}",
+            about_text)
+    # Connect the button click to our popup trigger function
+    about_action.triggered.connect(show_about_dialog)
+
+    # Window menu dropdowns
+    # ----------
+
+    # Minimize
+    minimize_action = QAction("Minimize", window_container)
+    minimize_action.setShortcut("Ctrl+M")
+    minimize_action.triggered.connect(window_container.showMinimized)
+    window_menu.addAction(minimize_action)
+
+    # Toggle zoom
+    zoom_action = QAction("Zoom", window_container)
+
+    def toggle_zoom():
+        if window_container.isMaximized():
+            window_container.showNormal()
+        else:
+            window_container.showMaximized()
+    zoom_action.triggered.connect(toggle_zoom)
+    window_menu.addAction(zoom_action)
+
+    # Fill Screen
+    fill_action = QAction("Fill", window_container)
+    fill_action.setShortcut("Ctrl+Meta+F")
+
+    def fill_screen():
+        # Grabs monitor dimensions excluding the global top menu bar and system dock
+        screen_geometry = QApplication.primaryScreen().availableGeometry()
+        window_container.setGeometry(screen_geometry)
+    fill_action.triggered.connect(fill_screen)
+    window_menu.addAction(fill_action)
+
+    # Center Window
+    center_action = QAction("Center", window_container)
+    center_action.setShortcut("Ctrl+Meta+C")
+
+    def center_window():
+        screen_geometry = QApplication.primaryScreen().availableGeometry()
+        window_geometry = window_container.frameGeometry()
+        # Find center coordinates matching the target frame size
+        center_point = screen_geometry.center()
+        window_geometry.moveCenter(center_point)
+        window_container.move(window_geometry.topLeft())
+    center_action.triggered.connect(center_window)
+    window_menu.addAction(center_action)
+
+    # Full Screen
+    fullscreen_action = QAction("Enter Full Screen", window_container)
+    fullscreen_action.setShortcut("Ctrl+F")
+
+    def toggle_fullscreen():
+        if window_container.isFullScreen():
+            window_container.showNormal()
+        else:
+            window_container.showFullScreen()
+    fullscreen_action.triggered.connect(toggle_fullscreen)
+    window_menu.addAction(fullscreen_action)
+
+    window_menu.addSeparator()
+
+    # Zoom in/out
+    current_zoom = [1.0]
+
+    # Zoom In Control
+    zoom_in_action = QAction("Zoom In", window_container)
+    zoom_in_action.setShortcut("Ctrl++")  # Maps to Cmd++ on macOS
+
+    def zoom_in():
+        if current_zoom[0] < 3.0:  # Enforce safe ceiling multiplier limit
+            current_zoom[0] += 0.1
+            web.setZoomFactor(current_zoom[0])
+    zoom_in_action.triggered.connect(zoom_in)
+    window_menu.addAction(zoom_in_action)
+
+    # Zoom Out Control
+    zoom_out_action = QAction("Zoom Out", window_container)
+    zoom_out_action.setShortcut("Ctrl+-")  # Maps to Cmd+- on macOS
+
+    def zoom_out():
+        if current_zoom[0] > 0.5:  # Enforce safe basement floor multiplier limit
+            current_zoom[0] -= 0.1
+            web.setZoomFactor(current_zoom[0])
+    zoom_out_action.triggered.connect(zoom_out)
+    window_menu.addAction(zoom_out_action)
+
+    # Reset Zoom Target
+    zoom_reset_action = QAction("Reset Zoom", window_container)
+    zoom_reset_action.setShortcut("Ctrl+0")
+
+    def zoom_reset():
+        current_zoom[0] = 1.0
+        web.setZoomFactor(1.0)
+    zoom_reset_action.triggered.connect(zoom_reset)
+    window_menu.addAction(zoom_reset_action)
+
+    # Help Menu
+    # ----------
+
+    # ReadTheDocs
+    rtd_action = QAction("Jdaviz Documentation", window_container)
+    rtd_action.triggered.connect(
+        lambda: QtGui.QDesktopServices.openUrl(
+            QtCore.QUrl("https://jdaviz.readthedocs.io/en/latest/index.html")
+        )
+    )
+    help_menu.addAction(rtd_action)
+
+    # Zenodo
+    zenodo_action = QAction("Jdaviz Zenodo", window_container)
+    zenodo_action.triggered.connect(
+        lambda: QtGui.QDesktopServices.openUrl(
+            QtCore.QUrl("https://doi.org/10.5281/zenodo.5513927")
+        )
+    )
+    help_menu.addAction(zenodo_action)
+
+    # JWST Help Desk
+    jwst_action = QAction("JWST Help Desk", window_container)
+    jwst_action.triggered.connect(
+        lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl("https://stsci.service-now.com/jwst"))
+    )
+    help_menu.addAction(jwst_action)
+
+    # Cache Menu
+    # ----------
+    clear_action = cache_menu.addAction("Empty Jdaviz Cache")
+    clear_action.triggered.connect(lambda: clear_cache(True))
+
+    ############
+    ############
+
+    layout.addWidget(menu_bar)
+    layout.addWidget(web)
+
+    window_container.resize(1024, 1024)
+    window_container.show()
 
     app.setApplicationDisplayName(app_name)
     app.setApplicationName(app_name)
-    web.setWindowTitle(app_name)
+    window_container.setWindowTitle(app_name)
     if sys.platform.startswith("darwin"):
         # Set app name, if PyObjC is installed
         # Python 2 has PyObjC preinstalled
@@ -123,6 +329,9 @@ def run_qt(url, app_name="Jdaviz"):
         # on macs, the .icns set in jdaviz.spec handles the window icon, while
         # qt.setWindowIcon handles it in windows/linux
         app.setWindowIcon(QtGui.QIcon(str(HERE / "data/icons/jdaviz_logo.png")))
+
+    # empty folders in cache on close
+    app.aboutToQuit.connect(clear_cache)
 
     # without this, ctrl-c does not work in the terminal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
