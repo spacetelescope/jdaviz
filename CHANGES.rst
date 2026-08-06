@@ -60,7 +60,7 @@ New Features
 
 - Add importer for line lists. [#4305]
 
-- Add ability to view data in multiple viewers with row click in table viewer. [#4279]
+- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322]
 
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 
