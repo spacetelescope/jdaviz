@@ -26,18 +26,20 @@ DB_FILE = str(_DIR / "emission_lines.ecsv")
 SCHEMA_FILE = str(_DIR / "schema.yaml")
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=1)
 def _load_db_cached(db_file):
     return Table.read(db_file, format="ascii.ecsv")
 
 
-def load_db(db_file=DB_FILE):
+def load_db():
     """Load the consolidated database as an astropy Table.
 
     The loaded table is cached at module scope per db_file path so repeated
     resolver instances in the same process reuse one in-memory table.
     """
-    return _load_db_cached(str(db_file))
+    # NOTE: if ever accepting multiple different files,
+    # we would need to increase maxsize on lru_cache
+    return _load_db_cached(DB_FILE)
 
 
 def clear_db_cache():
