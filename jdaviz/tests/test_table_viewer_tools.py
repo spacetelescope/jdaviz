@@ -1106,6 +1106,61 @@ class TestTableViewerImageFirstWorkflow:
         assert self.table_viewer.toolbar.tools_data['jdaviz:table_row_select']['visible']
 
 
+class TestTableViewerLateCatalogAttachWorkflow:
+    """
+    Regression test: load catalog into a non-table viewer first, then create a
+    table viewer later. Columns should be backfilled when the table receives
+    the catalog data.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, deconfigged_helper, image_2d_wcs,
+                     sky_coord_only_source_catalog):
+        # 1. Load image first so there is an existing non-table viewer.
+        arr = np.arange(10000).reshape((100, 100))
+        deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
+
+        image_viewers = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
+        assert len(image_viewers) >= 1
+        self.image_viewer = image_viewers[0]
+        self.image_ref = self.image_viewer.reference
+
+        # 2. Load catalog to a non-table viewer (Scatter), so no table exists yet.
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = sky_coord_only_source_catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Scatter'
+        ldr.load()
+
+        self.app = deconfigged_helper
+        dc = deconfigged_helper._app.data_collection
+        self.catalog_label = next(d.label for d in dc
+                                  if (d.meta or {}).get('_importer') == 'CatalogImporter')
+        self.image_col = f'Data: {self.image_ref}'
+
+        # 3. Create table viewer later and attach the already-loaded catalog.
+        vc = self.app.new_viewers['Table']
+        vc.dataset = self.catalog_label
+        vc.viewer_label = 'Table (late)'
+        vc()
+        self.table_viewer = self.app._app.get_viewer('Table (late)')
+
+    @property
+    def catalog_data(self):
+        return self.app._app.data_collection[self.catalog_label]
+
+    def test_column_backfilled_when_table_added_later(self):
+        """A Data: column is created when the table viewer later receives the catalog."""
+        comps = [c.label for c in self.catalog_data.components]
+        assert self.image_col in comps
+        assert self.catalog_data.meta['_viewer_data_columns'][self.image_col] == self.image_ref
+
+    def test_row_select_tool_visible_after_late_attach(self):
+        """TableRowSelect tool becomes visible once late-attached columns are backfilled."""
+        self.table_viewer.toolbar._update_tool_visibilities()
+        assert self.table_viewer.toolbar.tools_data['jdaviz:table_row_select']['visible']
+
+
 class TestTableRowSelectToolBehavior:
     """
     Tests for TableRowSelect-specific behaviors:

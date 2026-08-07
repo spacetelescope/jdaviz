@@ -58,7 +58,7 @@ class CatalogRowLinkManager(HubListener):
 
     def __init__(self, app):
         self.app = app
-        # viewer_id -> (viewer, checked callback) for table viewers
+        # viewer_id -> (viewer, checked callback, data callback) for table viewers
         self._observed = {}
 
         app.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
@@ -138,9 +138,10 @@ class CatalogRowLinkManager(HubListener):
     def _on_viewer_removed(self, msg):
         entry = self._observed.pop(msg.viewer_id, None)
         if entry is not None:
-            viewer, callback = entry
+            viewer, checked_callback, data_callback = entry
             try:
-                viewer.widget_table.unobserve(callback, names=['checked'])
+                viewer.widget_table.unobserve(checked_callback, names=['checked'])
+                viewer.widget_table.unobserve(data_callback, names=['data'])
             except Exception:  # nosec
                 pass
 
@@ -155,7 +156,7 @@ class CatalogRowLinkManager(HubListener):
                 self._rename_in_column(data, column_name, msg.old_label, msg.new_label)
 
     def _setup_table_active_row_callbacks(self, viewer):
-        """Observe active-row (checked) changes on a table viewer.
+        """Observe row-selection and table-data changes on a table viewer.
 
         No-op for non-table viewers and for table viewers we already observe.
         """
@@ -165,13 +166,21 @@ class CatalogRowLinkManager(HubListener):
         if vid in self._observed:
             return
 
-        def callback(change, _viewer=viewer):
-            self._on_highlighted(_viewer, change)
+        def checked_callback(change, _viewer=viewer):
+            self._on_active_row_changed(_viewer, change)
 
-        viewer.widget_table.observe(callback, names=['checked'])
-        self._observed[vid] = (viewer, callback)
+        def data_callback(_change, _viewer=viewer):
+            self._on_table_data_changed(_viewer)
 
-    def _on_highlighted(self, viewer, change):
+        viewer.widget_table.observe(checked_callback, names=['checked'])
+        viewer.widget_table.observe(data_callback, names=['data'])
+        self._observed[vid] = (viewer, checked_callback, data_callback)
+
+        # The table may already be holding catalog data by the time this
+        # observer is attached (e.g. viewer created with an initial dataset).
+        self._on_table_data_changed(viewer)
+
+    def _on_active_row_changed(self, viewer, change):
         """Repopulate the listed viewers from the newly active (checked) row."""
         active_rows = change['new']
         # Only act on a single checked row (radio-button selection)
@@ -237,7 +246,7 @@ class CatalogRowLinkManager(HubListener):
         if not viewer_ref:
             return
         column_name = f'Data: {viewer_ref}'
-        for tv, _ in list(self._observed.values()):
+        for tv, _, _ in list(self._observed.values()):
             catalog = self._catalog_data_for_viewer(tv, require_managed=False)
             if catalog is None:
                 continue
@@ -249,12 +258,13 @@ class CatalogRowLinkManager(HubListener):
         """Called when a table viewer's catalog data changes.
 
         Creates ``Data:`` columns for every non-table viewer already in the
-        app so the table is immediately ready for two-way sync.  This only
-        takes effect once the catalog already has at least one managed column
-        (i.e. :meth:`set_viewer_data_columns` was called before), so that
-        freshly-imported catalogs do not trigger premature column creation.
+        app so the table is immediately ready for two-way sync.
         """
-        catalog = self._catalog_data_for_viewer(table_viewer)
+        table_data = getattr(getattr(table_viewer, 'widget_table', None), 'data', None)
+        if table_data is not None and table_data.meta.get('_importer') == 'CatalogImporter':
+            catalog = table_data
+        else:
+            catalog = self._catalog_data_for_viewer(table_viewer, require_managed=False)
         if catalog is None:
             return
         for viewer in list(self.app._viewer_store.values()):
@@ -279,7 +289,7 @@ class CatalogRowLinkManager(HubListener):
         if viewer is None or hasattr(viewer, 'widget_table'):
             return
         column_name = f'Data: {viewer_ref}'
-        for tv_id, (tv, _cb) in list(self._observed.items()):
+        for tv, _checked_cb, _data_cb in list(self._observed.values()):
             catalog = self._catalog_data_for_viewer(tv)
             if catalog is None:
                 continue
