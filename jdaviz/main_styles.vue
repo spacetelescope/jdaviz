@@ -213,12 +213,14 @@ a:active {
   margin-bottom: -28px !important;
 }
 
-.jdaviz-nested-toolbar .v-btn--active, .jdaviz-nested-toolbar .v-btn:focus, .v-toolbar .active, .jdaviz-viewer-toolbar .active {
+.jdaviz-nested-toolbar .v-btn--active,
+.v-toolbar .v-btn--active,
+.jdaviz-viewer-toolbar .v-btn--active {
   /* active color (orange) */
   background-color: #c75109 !important;
 }
 
-.plugin-nested-toolbar .v-btn--active, .plugin-nested-toolbar .v-btn:focus {
+.plugin-nested-toolbar .v-btn--active {
   /* semi-transparent active color (orange) */
   background-color: #c7510996 !important;
 }
@@ -360,6 +362,12 @@ span.api-hint-header {
 
 .api-hint-invert-color :is(.v-select__slot) > .v-label {
   color: #C6F0FD !important;
+}
+
+/* Table viewer: keep row selection checkboxes but hide the select-all header button. */
+.glue-table-container .glue-data-table thead tr > th:nth-child(2) .v-btn {
+  /* NOTE: display none will hide the checkmarks in individual rows as well */
+  height: 0px !important;
 }
 
 </style>

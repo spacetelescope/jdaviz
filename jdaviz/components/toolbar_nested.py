@@ -52,6 +52,9 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         super().__init__(viewer)
         self.viewer = viewer
         self._default_mouse_mode_active = self._default_mouse_mode is not None
+        # Tracks whether the user explicitly toggled off a default checkable tool.
+        # When True, visibility refreshes should preserve active_tool_id=None.
+        self._default_intentionally_deactivated = False
 
         # Store original values for reset functionality
         if isinstance(tools_nested, list):
@@ -249,6 +252,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self.tools.clear()
         self.tools_data = {}
         self.active_tool_id = None
+        # Reset state on full toolbar rebuilds/overrides.
+        self._default_intentionally_deactivated = False
         # Clear custom widgets and callbacks
         self.custom_widget_items = []
         self.custom_widget_selected = []
@@ -405,9 +410,18 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
 
         # mutation to dictionary needs to be manually sent to update the UI
         self.send_state("tools_data")
+
         if needs_deactivate_active:
+            # Active tool was hidden/removed; fallback to toolbar defaults.
+            self._default_intentionally_deactivated = False
             self.active_tool_id = None
-        self._handle_default_tool()
+
+        should_restore_default = (
+            needs_deactivate_active
+            or (self.active_tool_id is None and not self._default_intentionally_deactivated)
+        )
+        if should_restore_default:
+            self._handle_default_tool()
 
     def _handle_default_tool(self):
         # default to the first item in the default_tool_priority list that is currently
@@ -447,17 +461,33 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
 
     @traitlets.observe('active_tool_id')
     def _on_change_v_model(self, event):
+        if event['new'] is None and event['old'] in self.default_tool_priority:
+            # User toggled off the current default tool; preserve no-active state.
+            # This must happen BEFORE super()._on_change_v_model(event), since
+            # deactivation side effects can trigger _update_tool_visibilities().
+            self._default_intentionally_deactivated = True
+        elif event['new'] is not None:
+            self._default_intentionally_deactivated = False
+
         super()._on_change_v_model(event)
 
         if event['new'] is None and event['old'] not in self.default_tool_priority:
             # then we're unchecking a non-default tool
             self._handle_default_tool()
-        elif event['new'] in self.tools and not isinstance(self.tools[event['new']], CheckableTool):
-            # then we're clicking on a non-checkable tool and want to default to the previous
+        elif (event['new'] in self.tools
+              and not isinstance(self.tools[event['new']], CheckableTool)
+              and not self.tool_override_mode):
+            # then we're clicking on a non-checkable tool and want to default to the previous tool
+            # except when in override mode (as the default likely does not exist)
             if event['old'] is not None:
                 self.active_tool_id = event['old']
 
     def _select_tool(self, tool_id, menu_ind):
+        if tool_id == self.active_tool_id and isinstance(self.tools.get(tool_id), CheckableTool):
+            # Selecting an already-active checkable tool toggles it off.
+            self.active_tool_id = None
+            return
+
         for search_tool_id, info in self.tools_data.items():
             if info['menu_ind'] == menu_ind and info['primary']:
                 prev_id = search_tool_id

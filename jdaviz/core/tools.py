@@ -535,6 +535,66 @@ class ViewerFocusToggle(Tool):
         self.viewer.toggle_focus_mode()
 
 
+@viewer_tool
+class TableRowSelect(CheckableTool, HubListener):
+    """Default tool for the table viewer when data-association columns are present.
+
+    When active the table shows single-selection checkboxes to
+    the left of each row which dictate the "active row" and replace visible
+    data in non-table viewers.
+    """
+    icon = os.path.join(ICON_DIR, 'selection.svg')
+    tool_id = 'jdaviz:table_row_select'
+    action_text = 'Select row'
+    tool_tip = 'Select the active row controlling visible data in all viewers'
+
+    # the row needs to be stored internally as the other row-selection tools
+    # make use of the same checkbox UI
+    _saved_row = None
+
+    def activate(self):
+        self.viewer.widget_table.selection_enabled = True
+        # Guard against duplicate observers if the tool is re-activated
+        try:
+            self.viewer.widget_table.unobserve(self._on_checked_changed, names=['checked'])
+        except ValueError:
+            pass
+        # Restore the internally stored active row
+        saved = getattr(self.viewer, '_table_row_select_saved_row', None)
+        if saved is not None:
+            self.viewer.widget_table.checked = [saved]
+            self.viewer._table_row_select_saved_row = None
+        self.viewer.widget_table.observe(self._on_checked_changed, names=['checked'])
+
+    def deactivate(self):
+        checked = self.viewer.widget_table.checked
+        if len(checked) == 1:
+            self.viewer._table_row_select_saved_row = checked[0]
+        try:
+            self.viewer.widget_table.unobserve(self._on_checked_changed, names=['checked'])
+        except ValueError:
+            pass
+        self.viewer.widget_table.selection_enabled = False
+
+    def _on_checked_changed(self, change):
+        new_checked = change['new']
+        old_checked = change['old']
+        if len(new_checked) <= 1:
+            return
+        # Enforce single selection (radio-button behavior)
+        new_rows = [r for r in new_checked if r not in old_checked]
+        single = new_rows[-1] if new_rows else new_checked[-1]
+        self.viewer.widget_table.checked = [single]
+
+    def is_visible(self):
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        data = getattr(self.viewer.widget_table, 'data', None)
+        if data is None:
+            return False
+        return '_viewer_data_columns' in (getattr(data, 'meta', {}) or {})
+
+
 class _BaseTableSelectionTool(Tool):
     """
     Base class for table tools that enable row selection checkboxes and swap the toolbar.
@@ -569,10 +629,7 @@ class _BaseTableSelectionTool(Tool):
         return None
 
     def activate(self):
-        # Show checkboxes (they're hidden by default and should be hidden when toolbar restores)
-        self.viewer.widget_table.selection_enabled = True
-
-        # Override toolbar to show custom tools
+        # Override toolbar to show custom tools.
         # Pass callback for dynamic widget updates (e.g., when viewers are added/removed)
         custom_widgets = self.get_custom_widgets()
         custom_widgets_callback = self.get_custom_widgets if custom_widgets else None
@@ -582,6 +639,10 @@ class _BaseTableSelectionTool(Tool):
             custom_widgets=custom_widgets,
             custom_widgets_callback=custom_widgets_callback
         )
+
+        # Show checkboxes AFTER override_tools so that any previously active default
+        # tool's deactivate() (e.g. TableRowSelect) does not reset selection_enabled.
+        self.viewer.widget_table.selection_enabled = True
 
         # Also override toolbars in all image viewers
         for image_viewer in self._get_image_viewers():
@@ -619,10 +680,16 @@ class _BaseTableApplyTool(Tool):
         if len(selected_rows):
             self.on_apply(selected_rows)
 
-        # Hide checkboxes (they should always be hidden when default toolbar is shown)
-        self.viewer.widget_table.selection_enabled = False
-        # Restore toolbar (all_viewers=True to also restore image viewer toolbars)
+        # Restore toolbar (all_viewers=True to also restore image viewer toolbars).
         self.viewer.toolbar.restore_tools(all_viewers=True)
+
+        # Some table updates during apply can restore the upstream widget default
+        # (selection_enabled=True). Keep checkboxes shown only when the active
+        # tool explicitly opts in to owning row-selection checkboxes.
+        active_tool = getattr(self.viewer.toolbar, 'active_tool', None)
+        self.viewer.widget_table.selection_enabled = bool(
+            active_tool and isinstance(active_tool, _BaseTableSelectionTool)
+        )
 
 
 @viewer_tool
