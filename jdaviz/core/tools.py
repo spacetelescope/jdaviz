@@ -537,22 +537,19 @@ class ViewerFocusToggle(Tool):
 
 @viewer_tool
 class TableRowSelect(CheckableTool, HubListener):
-    """Default tool for the table viewer when row-link columns are present.
+    """Default tool for the table viewer when data-association columns are present.
 
-    When active the table shows radio buttons (single-selection checkboxes) to
-    the left of each row.  Selecting a row by clicking its radio button replaces
-    the previous click-on-row-body behaviour: only the checked row drives the
-    associated viewer contents (via the CatalogRowLinkManager).
+    When active the table shows single-selection checkboxes to
+    the left of each row which dictate the "active row" and replace visible
+    data in non-table viewers.
     """
     icon = os.path.join(ICON_DIR, 'selection.svg')
     tool_id = 'jdaviz:table_row_select'
     action_text = 'Select row'
-    tool_tip = 'Click a row\'s radio button to select it and display associated data'
+    tool_tip = 'Select the active row controlling visible data in all viewers'
 
-    # row index saved on deactivate so it can be restored on re-activate;
-    # stored on the tool instance as a class-level default — the actual saved
-    # value is written to the *viewer* so it survives toolbar rebuilds that
-    # create new tool instances.
+    # the row needs to be stored internally as the other row-selection tools
+    # make use of the same checkbox UI
     _saved_row = None
 
     def activate(self):
@@ -562,8 +559,7 @@ class TableRowSelect(CheckableTool, HubListener):
             self.viewer.widget_table.unobserve(self._on_checked_changed, names=['checked'])
         except ValueError:
             pass
-        # Restore the previously active row (saved on the viewer in deactivate) so
-        # the user's selection is preserved across tool switches (e.g. highlight / subset).
+        # Restore the internally stored active row
         saved = getattr(self.viewer, '_table_row_select_saved_row', None)
         if saved is not None:
             self.viewer.widget_table.checked = [saved]
@@ -571,8 +567,6 @@ class TableRowSelect(CheckableTool, HubListener):
         self.viewer.widget_table.observe(self._on_checked_changed, names=['checked'])
 
     def deactivate(self):
-        # Save the current single-row selection on the viewer so activate() can
-        # restore it even after the toolbar has been rebuilt with new tool instances.
         checked = self.viewer.widget_table.checked
         if len(checked) == 1:
             self.viewer._table_row_select_saved_row = checked[0]

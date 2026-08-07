@@ -201,10 +201,11 @@ class CatalogRowLinkManager(HubListener):
                 continue
             # the data labels this viewer should show for the active row
             try:
-                raw = catalog_data.get_component(column_name).data[active_row]
+                assoc_data = catalog_data.get_component(column_name).data[active_row]
             except (KeyError, IndexError):
-                raw = []
-            labels = [lbl for lbl in _as_list(raw) if lbl and lbl in available_labels]
+                assoc_data = []
+            labels = [lbl for lbl in _as_list(assoc_data)
+                      if lbl and lbl in available_labels]
             self._set_viewer_contents(target_viewer, labels)
 
     def _ensure_viewer_column(self, catalog, viewer_ref, column_name=None):
@@ -236,7 +237,7 @@ class CatalogRowLinkManager(HubListener):
         if not viewer_ref:
             return
         column_name = f'Data: {viewer_ref}'
-        for tv_id, (tv, _cb) in list(self._observed.items()):
+        for tv, _ in list(self._observed.values()):
             catalog = self._catalog_data_for_viewer(tv, require_managed=False)
             if catalog is None:
                 continue
@@ -329,17 +330,17 @@ class CatalogRowLinkManager(HubListener):
         )
 
     @staticmethod
-    def _first_layer_data(viewer, predicate):
-        """Return the first layer's ``Data`` object that satisfies *predicate*, or ``None``."""
+    def _first_layer_data(viewer, condition_func):
+        """Return the first layer's ``Data`` object that satisfies condition_func."""
         for layer in getattr(viewer, 'layers', []):
             data = getattr(getattr(layer, 'layer', None), 'data', None)
-            if data is not None and predicate(data):
+            if data is not None and condition_func(data):
                 return data
         return None
 
     @staticmethod
     def _viewer_ref(viewer):
-        """Return the canonical reference string for *viewer*."""
+        """Return the reference string for viewer (try reference first, fallback on reference_id)"""
         return getattr(viewer, 'reference', None) or getattr(viewer, 'reference_id', None)
 
     def _set_object_column(self, data, column_name, values):
