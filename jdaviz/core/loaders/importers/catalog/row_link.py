@@ -182,6 +182,13 @@ class CatalogRowLinkManager(HubListener):
 
     def _on_active_row_changed(self, viewer, change):
         """Repopulate the listed viewers from the newly active (checked) row."""
+        # Only react when the row-select tool is active; other tools (zoom,
+        # highlight, subset) also use checked rows and should not trigger
+        # row-link viewer repopulation.
+        if hasattr(viewer, 'toolbar') and viewer.toolbar is not None:
+            if viewer.toolbar.active_tool_id != 'jdaviz:table_row_select':
+                return
+
         active_rows = change['new']
         # Only act on a single checked row (radio-button selection)
         if not active_rows or len(active_rows) != 1:
