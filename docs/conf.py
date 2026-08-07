@@ -363,6 +363,7 @@ _TITLE_ACRONYMS = {
     'vo': 'VO',
     'api': 'API',
     'url': 'URL',
+    'db': 'Database',
 }
 
 
@@ -394,6 +395,15 @@ def _generate_conf_settings_js(app):
                 names.append(_rst_filename_to_title(fn))
     settings['loaderFormats'] = names
 
+    # Scan loaders/sources/ for RST files to populate source dropdown options
+    sources_dir = os.path.join(docs_dir, 'loaders', 'sources')
+    source_names = []
+    if os.path.isdir(sources_dir):
+        for fn in sorted(os.listdir(sources_dir)):
+            if fn.endswith('.rst') and fn not in ('index.rst', 'extensions.rst'):
+                source_names.append(_rst_filename_to_title(fn))
+    settings['loaderSources'] = source_names
+
     static_dir = os.path.join(docs_dir, '_static')
     os.makedirs(static_dir, exist_ok=True)
     js_path = os.path.join(static_dir, 'jdaviz-conf-settings.js')
@@ -419,6 +429,7 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
         'vo': 'VO',
         'api': 'API',
         'url': 'URL',
+        'db': 'Database',
     }
 
     links.append({'text': 'Overview', 'href': os.path.join(directory, 'index')})

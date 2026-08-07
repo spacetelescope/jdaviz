@@ -61,7 +61,7 @@ New Features
 - Improvements to spectral axis unit conversion logic to support workflows and
   avoid errors in mixed unit viewers in deconfigged. [#4292]
 
-- Add importer for line lists. [#4305]
+- Add Line List Database loader. [#4305, #4314, #4319]
 
 - Add consolidated emission line list and ability to query database in API. [#4314]
 

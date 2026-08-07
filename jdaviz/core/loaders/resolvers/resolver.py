@@ -188,7 +188,7 @@ class FormatSelect(SelectPluginComponent):
         catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
         other_formats = [f for f in all_formats
                          if f['label'] not in ('Catalog', 'Spectral Lines')]
-        self.items = other_formats + catalog_formats + spectral_lines_formats
+        self.items = other_formats + spectral_lines_formats + catalog_formats
         self._apply_default_selection()
 
 
