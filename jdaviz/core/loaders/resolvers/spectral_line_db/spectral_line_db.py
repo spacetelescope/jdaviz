@@ -254,12 +254,10 @@ class SpectralLineDatabaseResolver(BaseResolver):
         self.search()
 
     def vue_stage_line(self, data):
-        if isinstance(data, dict):
-            self.stage_line(data)
+        self.stage_line(data)
 
     def vue_unstage_line(self, data):
-        if isinstance(data, dict):
-            self.unstage_line(data)
+        self.unstage_line(data)
 
     def vue_clear_staged(self, _=None):
         self.clear_staged()
