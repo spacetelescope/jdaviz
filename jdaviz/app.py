@@ -53,7 +53,7 @@ from jdaviz.core.registries import (tool_registry, tray_registry,
                                     viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs,
+from jdaviz.utils import (SnackbarQueue, alpha_index, alpha_index_to_int, data_has_valid_wcs,
                           layer_is_table_data, MultiMaskSubsetState,
                           _wcs_only_label, CONFIGS_WITH_LOADERS,
                           _get_celestial_wcs)
@@ -61,7 +61,7 @@ from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, 
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                combine_flux_and_angle_units,
                                                flux_conversion_general,
-                                               spectral_axis_conversion,
+                                               spectral_unit_conversion,
                                                supported_sq_angle_units,
                                                viewer_flux_conversion_equivalencies)
 
@@ -137,7 +137,7 @@ class UnitConverterWithSpectral:
                                            target_units, viewer_equivs,
                                            with_unit=False)
         else:  # spectral axis
-            return spectral_axis_conversion(values, original_units, target_units)
+            return spectral_unit_conversion(values, original_units, target_units)
 
 
 # Set default opacity for data layers to 1 instead of 0.8 in
@@ -738,19 +738,14 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             elif not is_not_child:
                 parent_label = self._get_assoc_data_parent(layer_name)
                 parent_icon = self.state.layer_icons.get(parent_label)
-                index = len([ln for ln, ic in self.state.layer_icons.items()
-                             if not ic[:4] == 'mdi-' and
-                             self._get_assoc_data_parent(ln) == parent_label]) + 1
                 self.state.layer_icons = {
                     **self.state.layer_icons,
-                    layer_name: f"{parent_icon}{index}"
+                    layer_name: self._next_child_layer_icon(parent_icon)
                 }
             else:
                 self.state.layer_icons = {
                     **self.state.layer_icons,
-                    layer_name: alpha_index(len([ln for ln, ic in self.state.layer_icons.items()
-                                                 if not ic[:4] == 'mdi-' and
-                                                 self._get_assoc_data_parent(ln) is None]))
+                    layer_name: self._next_root_layer_icon()
                 }
 
         # all remaining layers at this point have a parent:
@@ -759,9 +754,11 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             children_layers = self._get_assoc_data_children(layer_name)
             if children_layers is not None:
                 parent_icon = self.state.layer_icons[layer_name]
-                for i, child_layer in enumerate(children_layers, start=1):
+                for child_layer in children_layers:
                     if child_layer not in self.state.layer_icons:
-                        child_layer_icons[child_layer] = f'{parent_icon}{i}'
+                        child_layer_icons[child_layer] = self._next_child_layer_icon(
+                            parent_icon,
+                            layer_icons={**self.state.layer_icons, **child_layer_icons})
 
         if child_layer_icons:
             self.state.layer_icons = {
@@ -913,7 +910,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                         msg = SnackbarMessage(text=msg_text,
                                               color='info', sender=self)
                         self.hub.broadcast(msg)
+
                         link = LinkSameWithUnits(new_comp, existing_comp)
+
                         new_links.append(link)
                         # only need one link for the new component, reparenting will handle
                         # if that data entry is deleted
@@ -3197,6 +3196,10 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             The Glue data collection add message containing information about
             the new data.
         """
+        # detach the removed entry from any parent/child associations so that
+        # remaining layers are not displayed as children of a non-existent parent
+        self._remove_assoc_data(msg.data.label)
+
         for data_item in self.state.data_items:
             if data_item['name'] == msg.data.label:
                 self.state.data_items.remove(data_item)
@@ -3920,6 +3923,142 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
     def _add_assoc_data_as_parent(self, data_label):
         self._data_associations[data_label] = {'parent': None, 'children': []}
+
+    def _next_root_layer_icon(self, layer_icons=None, exclude=()):
+        """
+        Determine the next available root (non-child) layer icon.
+
+        Assigns an icon (A, B, C, ..., AA, AB, ...) to a root (non-parented) data layer.
+        The icon follows the highest index currently in use so that removing an entry
+        does not cause the icon of a subsequently loaded entry to collide with an existing one.
+
+        E.g., if data A, B, C have layer icons a, b, c and B is removed, the next
+        loaded root layer receives icon d (not b).
+
+        Parameters
+        ----------
+        layer_icons : dict, optional
+            Mapping of data label to icon. If None, uses the current ``state.layer_icons``.
+        exclude : sequence, optional
+            Labels to exclude from consideration
+
+        Returns
+        -------
+        icon : str
+            The next available root layer icon.
+        """
+        if layer_icons is None:
+            layer_icons = self.state.layer_icons
+        indices = [alpha_index_to_int(icon) for label, icon in layer_icons.items()
+                   if label not in exclude]
+        indices = [index for index in indices if index is not None]
+        return alpha_index(max(indices) + 1 if len(indices) else 0)
+
+    def _next_child_layer_icon(self, parent_icon, layer_icons=None, exclude=()):
+        """
+        Determine the next available sublayer icon for a child data layer.
+
+        Assigns an icon (e.g., a1, a2, a3) to a child of the layer
+        with the given ``parent_icon``. Similar to root icons, this follows the highest
+        index in use so that removing a sublayer does not cause a collision.
+
+        For example, if a parent a has children with icons a1, a2 and
+        a1 is removed, the next child receives icon a3 (not a1).
+
+        Parameters
+        ----------
+        parent_icon : str
+            The icon of the parent layer (e.g., a).
+        layer_icons : dict, optional
+            Mapping of data label to icon. If None, uses the current ``state.layer_icons``.
+        exclude : sequence, optional
+            Labels to exclude from consideration.
+
+        Returns
+        -------
+        icon : str
+            The next available sublayer icon for the given parent.
+        """
+        if layer_icons is None:
+            layer_icons = self.state.layer_icons
+        highest = 0
+        for label, icon in layer_icons.items():
+            if label in exclude or not icon.startswith(parent_icon):
+                continue
+            suffix = icon[len(parent_icon):]
+            if suffix.isdigit():
+                highest = max(highest, int(suffix))
+        return f"{parent_icon}{highest + 1}"
+
+    def _remove_assoc_data(self, data_label):
+        """
+        Remove a data layer from the parent/child association map.
+
+        When a data layer is removed from the app, this method:
+        1. Removes it from ``_data_associations`` and ``state.layer_icons``.
+        2. Detaches it from its parent (if any).
+        3. Promotes its children (if any) to root layers and assigns them new icons
+           to reflect their new status.
+        4. Updates ``state.data_items`` to clear stale parent/child references.
+
+        This ensures that remaining child layers are no longer displayed as children
+        of a non-existent parent, and icon collisions do not occur if data is re-loaded.
+
+        Parameters
+        ----------
+        data_label : str
+            The label of the data layer to remove.
+        """
+        assoc = self._data_associations.pop(data_label, None)
+
+        # Remove the icon even if there was no association to prevent reusing a stale icon
+        layer_icons = {label: icon for label, icon in self.state.layer_icons.items()
+                       if label != data_label}
+        icons_changed = len(layer_icons) != len(self.state.layer_icons)
+
+        if assoc is None:
+            if icons_changed:
+                self.state.layer_icons = layer_icons
+            return
+
+        data_item = next((di for di in self.state.data_items
+                          if di['name'] == data_label), None)
+        data_id = data_item['id'] if data_item is not None else None
+        if data_item is not None:
+            # Clear parent/child references in the state item
+            data_item['parent'] = None
+            data_item['children'] = []
+
+        # Detach from parent (if it still exists in the data collection)
+        parent_label = assoc.get('parent')
+        if parent_label in self._data_associations:
+            children = self._data_associations[parent_label]['children']
+            self._data_associations[parent_label]['children'] = [child for child in children
+                                                                 if child != data_label]
+            for di in self.state.data_items:
+                if di['name'] == parent_label and data_id in di['children']:
+                    di['children'] = [child_id for child_id in di['children']
+                                      if child_id != data_id]
+
+        # Promote children to root layers and update their icons
+        for child_label in assoc.get('children', []):
+            if child_label not in self._data_associations:
+                continue
+
+            # Update association: child is no longer parented
+            self._data_associations[child_label]['parent'] = None
+            for di in self.state.data_items:
+                if di['name'] == child_label:
+                    di['parent'] = None
+
+            # Assign a new icon that reflects the child's new root status
+            if child_label in layer_icons:
+                layer_icons[child_label] = self._next_root_layer_icon(
+                    layer_icons=layer_icons, exclude=[child_label])
+                icons_changed = True
+
+        if icons_changed:
+            self.state.layer_icons = layer_icons
 
     def _set_assoc_data_as_child(self, data_label, new_parent_label):
         for data_item in self.state.data_items:

@@ -229,6 +229,15 @@ a:active {
   border-color: hsla(0,0%,100%,.35) !important;
 }
 
+.theme--dark .highlightedRow,
+.v-theme--dark .highlightedRow {
+  /* glue-jupyter's table row highlight (.highlightedRow) defaults to a light
+     blue (#E3F2FD) which is nearly invisible in dark mode. Override it with a
+     medium gray sitting between the dark table background and the white font so
+     the highlighted row is legible in dark mode. */
+  background-color: #616161 !important;
+}
+
 .no-hint .v-text-field__details {
   display: none !important;
 }
@@ -351,6 +360,23 @@ span.api-hint-header {
 
 .api-hint-invert-color :is(.v-select__slot) > .v-label {
   color: #C6F0FD !important;
+}
+
+.v-list-item-content {
+  display: inline !important;
+  flex: none !important;
+  white-space: nowrap !important;
+}
+
+/* Restore the Vuetify 2-like flex alignment so that icons and text stay vertically centered. */
+.v-list-item__content {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Adjust the separation between 'Select/Clear All' icons and text. */
+.v-list-item-action {
+  margin-right: 8px;
 }
 
 </style>

@@ -649,7 +649,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Need to set the units the first time we initialize a model component, after this
         # we listen for display unit changes
         if self._units.get('x', '') == '':
-            self._units['x'] = str(self._app._get_display_unit('spectral'))
+            display_spectral_unit = str(self._app._get_display_unit('spectral'))
+            if display_spectral_unit:
+                self._units['x'] = display_spectral_unit
+            else:
+                # Unit conversion plugin returned empty (e.g. pixel/dimensionless data);
+                # fall back to the native spectral axis unit of the selected data.
+                native_spec = self.dataset.selected_obj
+                if native_spec is not None and hasattr(native_spec, 'spectral_axis'):
+                    self._units['x'] = str(native_spec.spectral_axis.unit)
         if self._units.get('y', '') == '':
             if self.cube_fit:
                 self._units['y'] = str(self._app._get_display_unit('sb'))

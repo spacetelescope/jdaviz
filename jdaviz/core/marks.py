@@ -13,7 +13,8 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 RedshiftMessage)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
-                                               flux_conversion_general)
+                                               flux_conversion_general,
+                                               spectral_unit_conversion)
 
 
 __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
@@ -195,7 +196,7 @@ class PluginMark:
         unit = u.Unit(unit)
 
         if self.xunit is not None and not np.all([s == 0 for s in self.x.shape]):
-            x = (self.x * self.xunit).to_value(unit, u.spectral())
+            x = spectral_unit_conversion(self.x, self.xunit, unit)
             self.xunit = unit
             self.x = x
         self.xunit = unit
@@ -311,8 +312,7 @@ class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
             return
         if new_unit == self.xunit:
             return
-        old_quant = self.x[0]*self.xunit
-        x = old_quant.to_value(new_unit, equivalencies=u.spectral())
+        x = spectral_unit_conversion(self.x[0], self.xunit, new_unit)
         self.x = [x, x]
         self.xunit = new_unit
 
@@ -358,7 +358,7 @@ class SpectralLine(BaseSpectrumVerticalLine):
     def set_x_unit(self, unit=None):
         prev_unit = self.xunit
         super().set_x_unit(unit=unit)
-        self._rest_value = (self._rest_value * prev_unit).to_value(unit, u.spectral())
+        self._rest_value = spectral_unit_conversion(self._rest_value, prev_unit, unit)
 
     @property
     def redshift(self):
@@ -373,11 +373,9 @@ class SpectralLine(BaseSpectrumVerticalLine):
             obs_value = self._rest_value/(1+redshift)
         else:
             # catch all for anything else (wavenumber, energy, etc)
-            rest_angstrom = (self._rest_value*self.xunit).to_value(u.Angstrom,
-                                                                   equivalencies=u.spectral())
+            rest_angstrom = spectral_unit_conversion(self._rest_value, self.xunit, u.Angstrom)
             obs_angstrom = rest_angstrom*(1+redshift)
-            obs_value = (obs_angstrom*u.Angstrom).to_value(self.xunit,
-                                                           equivalencies=u.spectral())
+            obs_value = spectral_unit_conversion(obs_angstrom, u.Angstrom, self.xunit)
         self.x = [obs_value, obs_value]
 
     @property
@@ -402,8 +400,7 @@ class SpectralLine(BaseSpectrumVerticalLine):
         if new_unit == self.xunit:
             return
 
-        old_quant = self._rest_value*self.xunit
-        self._rest_value = old_quant.to_value(new_unit, equivalencies=u.spectral())
+        self._rest_value = spectral_unit_conversion(self._rest_value, self.xunit, new_unit)
         # re-compute self.x from current redshift (instead of converting that as well)
         self.redshift = self._redshift
         self.xunit = new_unit

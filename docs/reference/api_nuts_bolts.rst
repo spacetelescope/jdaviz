@@ -46,6 +46,10 @@ Application Module
    :no-inheritance-diagram:
    :no-inherited-members:
 
+.. automodapi:: jdaviz.core.aida_api
+   :no-inheritance-diagram:
+   :no-inherited-members:
+
 .. automodapi:: jdaviz.core.config
    :no-inheritance-diagram:
    :no-inherited-members:

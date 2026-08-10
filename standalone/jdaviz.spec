@@ -76,7 +76,7 @@ coll = COLLECT(
 app = BUNDLE(
     exe,
     coll,
-    name="jdaviz.app",
+    name="Jdaviz.app",
     icon=icon_file if sys.platform.startswith('darwin') else None,
     entitlements_file="entitlements.plist",
     bundle_identifier="edu.stsci.jdaviz",

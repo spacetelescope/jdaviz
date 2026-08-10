@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 import os
 from functools import cached_property
 from pathlib import Path
+import astropy
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import loader_resolver_registry
@@ -28,9 +29,16 @@ class URLResolver(BaseResolver):
     local_path = Unicode("").tag(sync=True)
     timeout = FloatHandleEmpty(10).tag(sync=True)
     fsspec_filesystem = None
+    download_path_msg = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        self.local_path = os.curdir
+
+        # set local path to the jdaviz_cache_dir for the standalone application
+        if 'JDAVIZ_CACHE_DIR' in os.environ:
+            self.local_path = os.environ['JDAVIZ_CACHE_DIR']
+        else:
+            self.local_path = os.curdir
+
         super().__init__(*args, **kwargs)
 
         self.fsspec_filesystem = kwargs.get('fsspec_filesystem', None)
@@ -126,14 +134,35 @@ class URLResolver(BaseResolver):
         url_file_extension = Path(self.url.strip()).suffix.lower()  # like '.fits'
         if self.url_scheme == 's3':
 
+            self.download_path_msg = 'Data is streaming from s3'
+
             if url_file_extension in ['.fits', '.fit']:
                 return get_cloud_fits(self.url.strip(), fsspec_filesystem=self.fsspec_filesystem)
 
             elif url_file_extension == '.asdf':
                 return get_cloud_asdf(self.url.strip(), fsspec_filesystem=self.fsspec_filesystem)
 
-        return download_uri_to_path(self.url.strip(), cache=self.cache,
-                                    local_path=self.local_path, timeout=self.timeout)
+        target_url = download_uri_to_path(self.url.strip(), cache=self.cache,
+                                          local_path=self.local_path, timeout=self.timeout)
+
+        # Set download persistent hint message
+        if self.url_scheme.lower() == 'mast':
+            self.download_path_msg = f"File stored at: {os.path.abspath(target_url)}"
+
+        elif self.url_scheme.lower() in ('http', 'https', 'ftp'):
+            self.download_path_msg = ('File stored in astropy download cache '
+                                      f'at: {astropy.config.get_cache_dir()}')
+
+        elif self.url_scheme.lower() == 's3':
+            self.download_path_msg = ('File stored in s3 download cache '
+                                      f'at: ({self.local_path}/s3_downloads)')
+
+        else:
+            # since download_path_msg goes to a persistent hint in .vue file,
+            # create empty message for anything else
+            self.download_path_msg = ''
+
+        return target_url
 
     def parse_input(self):
         return self._uri_output_file

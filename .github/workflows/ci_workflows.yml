@@ -120,7 +120,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Set up python ${{ matrix.python }} on ${{ matrix.os }}
-      uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v5.6.0
       with:
         python-version: ${{ matrix.python }}
     - name: Install base dependencies
