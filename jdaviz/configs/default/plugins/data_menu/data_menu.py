@@ -701,12 +701,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         """
         available = self.dataset.choices
 
-        # TODO: Remove this if we decide to prevent users from removing child data from viewers
-        for label in data_labels:
-            # Check if incoming labels are children of parent data
-            parent_label = self.app._get_assoc_data_parent(label)
-            available += self.app._get_assoc_data_children(parent_label)
-
         unavailable = [data_label for data_label in data_labels
                        if data_label not in available]
         if len(unavailable):

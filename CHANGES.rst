@@ -79,6 +79,9 @@ New Features
 
 - Introducing selected methods from the Astronomy Image Display API (AIDA) to image viewers.  [#4310]
 
+- Child data now follows its parent into the same viewer(s). Viewer selection for child data
+  is therefore hidden in the UI when parenting is set. [#4326]
+
 Mosviz
 ^^^^^^
 
