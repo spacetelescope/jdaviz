@@ -62,6 +62,8 @@ New Features
 
 - Add ability to view data in multiple viewers with row click in table viewer. [#4279]
 
+- Keep visibility consistent between blink and plot options. [#4316]
+
 Mosviz
 ^^^^^^
 
