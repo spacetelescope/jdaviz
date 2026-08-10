@@ -700,3 +700,34 @@ def test_set_layer_to_top_with_blinking(imviz_helper):
     assert img_c_layer.visible is True
     assert po.layer_is_top is True
     assert po.active_layer == 'img_c'
+
+
+def test_image_visibility_consistent_with_blink(imviz_helper):
+    """Regression test: hiding the image bitmap via plot options must also clear the
+    layer's overall ``visible`` flag so the state stays consistent with blinking (which
+    toggles ``visible``).  Previously ``visible`` stayed True when ``bitmap_visible`` was
+    set to False, leaving the layer in an inconsistent state.
+    """
+    arr = np.ones((10, 10))
+    imviz_helper.load_data(arr, data_label='img_a')
+
+    po = imviz_helper.plugins['Plot Options']
+    po.viewer = 'imviz-0'
+    po.layer = 'img_a'
+
+    viewer = imviz_helper.default_viewer._obj.glue_viewer
+    layer = [lyr for lyr in viewer.state.layers if lyr.layer.label == 'img_a'][0]
+
+    # image bitmap and overall layer are visible by default
+    assert layer.bitmap_visible is True
+    assert layer.visible is True
+
+    # hiding the bitmap via plot options should also clear the overall ``visible`` flag
+    po.image_visible.value = False
+    assert layer.bitmap_visible is False
+    assert layer.visible is False
+
+    # re-showing the bitmap restores overall visibility
+    po.image_visible.value = True
+    assert layer.bitmap_visible is True
+    assert layer.visible is True

@@ -6009,10 +6009,22 @@ class PlotOptionsSyncState(BasePluginComponent):
             else:
                 setattr(glue_state, glue_name, msg['new'])
 
-            if glue_name in ['bitmap_visible', 'contour_visible'] and msg['new'] is True:
-                # ensure that the layer is also visible
-                if not glue_state.visible:
-                    setattr(glue_state, 'visible', msg['new'])
+            if glue_name in ['bitmap_visible', 'contour_visible']:
+                if msg['new']:
+                    # ensure that the layer is also visible
+                    if not glue_state.visible:
+                        setattr(glue_state, 'visible', msg['new'])
+                else:
+                    # if neither the image bitmap nor a contour would remain visible,
+                    # also clear the overall ``visible`` flag so the state stays
+                    # consistent with blinking (which toggles ``visible``).  ``glue_name``
+                    # was just set to False above, so we only need to check the other gate
+                    # (e.g. ``contour_visible`` when hiding the bitmap) -- this preserves
+                    # the contour-only use-case.
+                    other = ('contour_visible'
+                             if glue_name == 'bitmap_visible' else 'bitmap_visible')
+                    if glue_state.visible and not getattr(glue_state, other, False):
+                        setattr(glue_state, 'visible', False)
 
         # need to recompute mixed state
         self._update_mixed_state()
