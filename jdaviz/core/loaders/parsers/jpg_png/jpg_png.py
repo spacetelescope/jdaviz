@@ -1,6 +1,6 @@
 from functools import cached_property
-from skimage.io import imread
-from skimage.color import rgb2gray, rgba2rgb
+import numpy as np
+from PIL import Image
 from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
 
@@ -37,9 +37,8 @@ class JPGPNGParser(BaseParser):
 
     @cached_property
     def output(self):
-        im = imread(self.input)
-        if im.shape[2] == 4:
-            pf = rgb2gray(rgba2rgb(im))
-        else:  # Assume RGB
-            pf = rgb2gray(im)
+        im = Image.open(self.input)
+        # convert input (RGB or RGBA or other) to
+        # 32 bit float grayscale, normalize on [0, 1]
+        pf = np.asarray(im.convert("F")) / 255
         return pf[::-1, :]  # Flip it
