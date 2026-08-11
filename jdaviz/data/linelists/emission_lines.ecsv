@@ -20,93 +20,93 @@
 #     ''stellar'', ''nebular'', ''molecular''). ''extra_info'' is a JSON string of any per-source-file metadata.'}
 # schema: astropy-2.0
 line_name rest_wavelength wavelength_unit source_list element extra_info science_case rest_wavelength_angstrom
-"2-0 22935" 2.2935 um CO-band-heads.csv CO "{""frequency"": 4360.1}" "[""galactic"",""nebular"",""stellar""]" 22934.999999999996
-"2-0 23448" 2.3448 um CO-band-heads.csv CO "{""frequency"": 4264.7}" "[""galactic"",""galactic""]" 23447.999999999996
-"3-1 23227" 2.3227 um CO-band-heads.csv CO "{""frequency"": 4305.4}" "[""galactic"",""galactic"",""stellar""]" 23226.999999999996
-"3-1 23739" 2.3739 um CO-band-heads.csv CO "{""frequency"": 4212.4}" "[""galactic"",""galactic""]" 23738.999999999996
-"4-2 23535" 2.3535 um CO-band-heads.csv CO "{""frequency"": 4250.8}" "[""galactic"",""galactic"",""stellar""]" 23534.999999999996
-"4-2 24037" 2.4037 um CO-band-heads.csv CO "{""frequency"": 4160.3}" "[""nebular"",""nebular""]" 24036.999999999996
-"5-3 23829" 2.3829 um CO-band-heads.csv CO "{""frequency"": 4196.5}" "[""nebular"",""nebular""]" 23828.999999999993
-"5-3 24341" 2.4341 um CO-band-heads.csv CO "{""frequency"": 4108.3}" "[""galactic"",""galactic"",""galactic"",""stellar""]" 24340.999999999996
+"2-0 22935" 2.2935 um CO-band-heads.csv CO "{""frequency"": 4360.1}" "[""nebular"",""nebular""]" 22934.999999999996
+"2-0 23448" 2.3448 um CO-band-heads.csv CO "{""frequency"": 4264.7}" "[""galactic"",""stellar""]" 23447.999999999996
+"3-1 23227" 2.3227 um CO-band-heads.csv CO "{""frequency"": 4305.4}" "[""galactic"",""stellar""]" 23226.999999999996
+"3-1 23739" 2.3739 um CO-band-heads.csv CO "{""frequency"": 4212.4}" "[""galactic"",""stellar""]" 23738.999999999996
+"4-2 23535" 2.3535 um CO-band-heads.csv CO "{""frequency"": 4250.8}" "[""galactic"",""galactic"",""nebular"",""stellar""]" 23534.999999999996
+"4-2 24037" 2.4037 um CO-band-heads.csv CO "{""frequency"": 4160.3}" "[""galactic"",""galactic""]" 24036.999999999996
+"5-3 23829" 2.3829 um CO-band-heads.csv CO "{""frequency"": 4196.5}" "[""galactic"",""galactic""]" 23828.999999999993
+"5-3 24341" 2.4341 um CO-band-heads.csv CO "{""frequency"": 4108.3}" "[""galactic"",""galactic"",""nebular"",""stellar""]" 24340.999999999996
 "6-4 24142" 2.4142 um CO-band-heads.csv CO "{""frequency"": 4142.2}" "[""galactic"",""stellar""]" 24141.999999999996
-"6-4 24652" 2.4652 um CO-band-heads.csv CO "{""frequency"": 4056.4}" "[""galactic"",""galactic"",""nebular"",""stellar""]" 24651.999999999993
+"6-4 24652" 2.4652 um CO-band-heads.csv CO "{""frequency"": 4056.4}" "[""nebular"",""nebular""]" 24651.999999999993
 "7-5 24461" 2.4461 um CO-band-heads.csv CO "{""frequency"": 4088.2}" "[""galactic"",""galactic""]" 24460.999999999996
-"7-5 24971" 2.4971 um CO-band-heads.csv CO "{""frequency"": 4004.7}" "[""galactic"",""galactic"",""stellar""]" 24970.999999999996
-8-6 2.4787 um CO-band-heads.csv CO "{""frequency"": 4034.3}" "[""galactic"",""stellar""]" 24786.999999999993
+"7-5 24971" 2.4971 um CO-band-heads.csv CO "{""frequency"": 4004.7}" "[""galactic"",""stellar""]" 24970.999999999996
+8-6 2.4787 um CO-band-heads.csv CO "{""frequency"": 4034.3}" "[""galactic"",""galactic""]" 24786.999999999993
 9-7 2.5122 um CO-band-heads.csv CO "{""frequency"": 3980.5}" "[""galactic"",""nebular""]" 25121.999999999996
-3-0 1.5582 um CO-band-heads.csv CO "{""frequency"": 6417.8}" "[""galactic"",""nebular"",""stellar""]" 15581.999999999998
-4-1 1.578 um CO-band-heads.csv CO "{""frequency"": 6337.2}" "[""galactic"",""galactic"",""nebular"",""stellar""]" 15779.999999999998
-5-2 1.5982 um CO-band-heads.csv CO "{""frequency"": 6257.2}" "[""galactic"",""galactic""]" 15981.999999999998
-6-3 1.6187 um CO-band-heads.csv CO "{""frequency"": 6177.7}" "[""galactic"",""galactic""]" 16186.999999999998
-7-4 1.6397 um CO-band-heads.csv CO "{""frequency"": 6098.8}" "[""galactic"",""galactic"",""stellar""]" 16396.999999999996
-8-5 1.661 um CO-band-heads.csv CO "{""frequency"": 6020.5}" "[""galactic"",""nebular"",""stellar""]" 16609.999999999996
-"CO 2-0" 2.2935 um CO.csv CO {} "[""galactic"",""galactic""]" 22934.999999999996
-"CO 3-1" 2.3227 um CO.csv CO {} "[""galactic"",""stellar""]" 23226.999999999996
-"CO 4-2" 2.3525 um CO.csv CO {} "[""nebular"",""nebular""]" 23524.999999999996
-"CO 5-3" 2.3829 um CO.csv CO {} "[""galactic"",""stellar""]" 23828.999999999993
-"CO 6-4" 2.4142 um CO.csv CO {} "[""galactic"",""galactic""]" 24141.999999999996
-"CO 7-5" 2.4461 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 24460.999999999996
-"CO 8-6" 2.4787 um CO.csv CO {} "[""galactic"",""nebular""]" 24786.999999999993
+3-0 1.5582 um CO-band-heads.csv CO "{""frequency"": 6417.8}" "[""galactic"",""galactic""]" 15581.999999999998
+4-1 1.578 um CO-band-heads.csv CO "{""frequency"": 6337.2}" "[""galactic"",""stellar""]" 15779.999999999998
+5-2 1.5982 um CO-band-heads.csv CO "{""frequency"": 6257.2}" "[""galactic"",""galactic"",""nebular"",""stellar""]" 15981.999999999998
+6-3 1.6187 um CO-band-heads.csv CO "{""frequency"": 6177.7}" "[""galactic"",""galactic"",""stellar""]" 16186.999999999998
+7-4 1.6397 um CO-band-heads.csv CO "{""frequency"": 6098.8}" "[""galactic"",""stellar""]" 16396.999999999996
+8-5 1.661 um CO-band-heads.csv CO "{""frequency"": 6020.5}" "[""galactic"",""nebular""]" 16609.999999999996
+"CO 2-0" 2.2935 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 22934.999999999996
+"CO 3-1" 2.3227 um CO.csv CO {} "[""nebular"",""nebular""]" 23226.999999999996
+"CO 4-2" 2.3525 um CO.csv CO {} "[""galactic"",""galactic""]" 23524.999999999996
+"CO 5-3" 2.3829 um CO.csv CO {} "[""nebular"",""nebular""]" 23828.999999999993
+"CO 6-4" 2.4142 um CO.csv CO {} "[""nebular"",""nebular""]" 24141.999999999996
+"CO 7-5" 2.4461 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 24460.999999999996
+"CO 8-6" 2.4787 um CO.csv CO {} "[""galactic"",""stellar""]" 24786.999999999993
 "CO 9-7" 2.5122 um CO.csv CO {} "[""galactic"",""galactic""]" 25121.999999999996
 "CO 3-0" 1.5582 um CO.csv CO {} "[""galactic"",""galactic""]" 15581.999999999998
-"CO 4-1" 1.578 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 15779.999999999998
-"CO 5-2" 1.5982 um CO.csv CO {} "[""galactic"",""nebular""]" 15981.999999999998
-"CO 6-3" 1.6187 um CO.csv CO {} "[""nebular"",""nebular""]" 16186.999999999998
-"CO 7-4" 1.6397 um CO.csv CO {} "[""galactic"",""galactic"",""galactic""]" 16396.999999999996
-"CO 8-5" 1.661 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 16609.999999999996
+"CO 4-1" 1.578 um CO.csv CO {} "[""galactic"",""stellar""]" 15779.999999999998
+"CO 5-2" 1.5982 um CO.csv CO {} "[""nebular"",""nebular""]" 15981.999999999998
+"CO 6-3" 1.6187 um CO.csv CO {} "[""galactic"",""galactic""]" 16186.999999999998
+"CO 7-4" 1.6397 um CO.csv CO {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 16396.999999999996
+"CO 8-5" 1.661 um CO.csv CO {} "[""galactic"",""stellar""]" 16609.999999999996
 "CO 1-0R(22)" 4.501 um CO.csv CO {} "[""galactic"",""galactic""]" 45009.99999999999
-"CO 1-0R(21)" 4.5071 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 45070.99999999999
-"CO 1-0R(20)" 4.5132 um CO.csv CO {} "[""galactic"",""galactic""]" 45131.99999999999
+"CO 1-0R(21)" 4.5071 um CO.csv CO {} "[""galactic"",""stellar""]" 45070.99999999999
+"CO 1-0R(20)" 4.5132 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 45131.99999999999
 "CO 1-0R(19)" 4.5195 um CO.csv CO {} "[""galactic"",""stellar""]" 45194.99999999999
 "CO 1-0R(18)" 4.5259 um CO.csv CO {} "[""galactic"",""galactic""]" 45258.99999999999
 "CO 1-0R(17)" 4.5324 um CO.csv CO {} "[""galactic"",""galactic""]" 45323.99999999999
-"CO 1-0R(16)" 4.5389 um CO.csv CO {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 45388.99999999999
-"CO 1-0R(15)" 4.5456 um CO.csv CO {} "[""galactic"",""nebular""]" 45455.99999999999
-"CO 1-0R(14)" 4.5547 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 45546.99999999999
-"CO 1-0R(13)" 4.5592 um CO.csv CO {} "[""galactic"",""galactic"",""galactic""]" 45591.999999999985
-"CO 1-0R(12)" 4.5662 um CO.csv CO {} "[""galactic"",""galactic""]" 45661.99999999999
+"CO 1-0R(16)" 4.5389 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 45388.99999999999
+"CO 1-0R(15)" 4.5456 um CO.csv CO {} "[""galactic"",""galactic""]" 45455.99999999999
+"CO 1-0R(14)" 4.5547 um CO.csv CO {} "[""galactic"",""galactic""]" 45546.99999999999
+"CO 1-0R(13)" 4.5592 um CO.csv CO {} "[""nebular"",""stellar""]" 45591.999999999985
+"CO 1-0R(12)" 4.5662 um CO.csv CO {} "[""galactic"",""stellar""]" 45661.99999999999
 "CO 1-0R(11)" 4.5732 um CO.csv CO {} "[""galactic"",""nebular""]" 45731.99999999999
-"CO 1-0R(10)" 4.5804 um CO.csv CO {} "[""galactic"",""stellar""]" 45803.99999999999
-"CO 1-0R(9)" 4.5876 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 45875.99999999999
-"CO 1-0R(8)" 4.595 um CO.csv CO {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 45949.99999999999
-"CO 1-0R(7)" 4.6024 um CO.csv CO {} "[""galactic"",""galactic""]" 46023.99999999999
-"CO 1-0R(6)" 4.61 um CO.csv CO {} "[""galactic"",""stellar""]" 46099.99999999999
-"CO 1-0R(5)" 4.6177 um CO.csv CO {} "[""galactic"",""galactic""]" 46176.99999999999
-"CO 1-0R(4)" 4.6254 um CO.csv CO {} "[""nebular"",""nebular""]" 46253.99999999999
-"CO 1-0R(3)" 4.6333 um CO.csv CO {} "[""galactic"",""nebular""]" 46332.99999999999
-"CO 1-0R(2)" 4.6412 um CO.csv CO {} "[""nebular"",""nebular""]" 46411.99999999999
-"CO 1-0R(1)" 4.6493 um CO.csv CO {} "[""nebular"",""stellar""]" 46492.99999999999
-"CO 1-0R(0)" 4.6575 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 46574.999999999985
-"CO 1-0P(1)" 4.6742 um CO.csv CO {} "[""galactic"",""nebular""]" 46741.99999999999
-"CO 1-0P(2)" 4.6826 um CO.csv CO {} "[""nebular"",""nebular""]" 46825.99999999999
-"CO 1-0P(3)" 4.6912 um CO.csv CO {} "[""galactic"",""stellar""]" 46911.99999999999
-"CO 1-0P (4)" 4.7002 um CO.csv CO {} "[""galactic"",""galactic""]" 47001.999999999985
-"CO 1-0P (5)" 4.7088 um CO.csv CO {} "[""galactic"",""galactic"",""nebular""]" 47087.99999999999
+"CO 1-0R(10)" 4.5804 um CO.csv CO {} "[""galactic"",""galactic""]" 45803.99999999999
+"CO 1-0R(9)" 4.5876 um CO.csv CO {} "[""galactic"",""galactic"",""galactic"",""stellar""]" 45875.99999999999
+"CO 1-0R(8)" 4.595 um CO.csv CO {} "[""galactic"",""stellar""]" 45949.99999999999
+"CO 1-0R(7)" 4.6024 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 46023.99999999999
+"CO 1-0R(6)" 4.61 um CO.csv CO {} "[""galactic"",""galactic""]" 46099.99999999999
+"CO 1-0R(5)" 4.6177 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 46176.99999999999
+"CO 1-0R(4)" 4.6254 um CO.csv CO {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 46253.99999999999
+"CO 1-0R(3)" 4.6333 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 46332.99999999999
+"CO 1-0R(2)" 4.6412 um CO.csv CO {} "[""galactic"",""galactic""]" 46411.99999999999
+"CO 1-0R(1)" 4.6493 um CO.csv CO {} "[""galactic"",""galactic"",""galactic""]" 46492.99999999999
+"CO 1-0R(0)" 4.6575 um CO.csv CO {} "[""galactic"",""galactic""]" 46574.999999999985
+"CO 1-0P(1)" 4.6742 um CO.csv CO {} "[""galactic"",""stellar""]" 46741.99999999999
+"CO 1-0P(2)" 4.6826 um CO.csv CO {} "[""galactic"",""galactic""]" 46825.99999999999
+"CO 1-0P(3)" 4.6912 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 46911.99999999999
+"CO 1-0P (4)" 4.7002 um CO.csv CO {} "[""galactic"",""galactic"",""nebular""]" 47001.999999999985
+"CO 1-0P (5)" 4.7088 um CO.csv CO {} "[""galactic"",""galactic""]" 47087.99999999999
 "CO 1-0P (6)" 4.7177 um CO.csv CO {} "[""nebular"",""nebular""]" 47176.99999999999
-"CO 1-0P (7)" 4.7267 um CO.csv CO {} "[""galactic"",""stellar""]" 47266.99999999999
+"CO 1-0P (7)" 4.7267 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 47266.99999999999
 "CO 1-0P (8)" 4.7359 um CO.csv CO {} "[""galactic"",""galactic""]" 47358.99999999999
-"CO 1-0P (9)" 4.7451 um CO.csv CO {} "[""galactic"",""galactic""]" 47450.99999999999
-"CO 2-0R(0)" 2.345305 um CO.csv CO {} "[""galactic"",""stellar""]" 23453.05
-"CO 2-0R(1)" 2.343269 um CO.csv CO {} "[""galactic"",""stellar""]" 23432.689999999995
-"CO 2-0R(2)" 2.341275 um CO.csv CO {} "[""galactic"",""stellar""]" 23412.749999999996
+"CO 1-0P (9)" 4.7451 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 47450.99999999999
+"CO 2-0R(0)" 2.345305 um CO.csv CO {} "[""galactic"",""galactic""]" 23453.05
+"CO 2-0R(1)" 2.343269 um CO.csv CO {} "[""galactic"",""galactic""]" 23432.689999999995
+"CO 2-0R(2)" 2.341275 um CO.csv CO {} "[""nebular"",""nebular""]" 23412.749999999996
 "CO 2-0R(3)" 2.339323 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 23393.229999999992
-"CO 2-0R(4)" 2.337413 um CO.csv CO {} "[""nebular"",""nebular""]" 23374.129999999997
-"CO 2-0P(1)" 2.3495 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 23494.999999999996
-"CO 2-0P(2)" 2.35167 um CO.csv CO {} "[""galactic"",""stellar""]" 23516.699999999993
-"CO 2-0P(3)" 2.35387 um CO.csv CO {} "[""galactic"",""nebular""]" 23538.699999999997
-"CO 2-0P(4)" 2.35612 um CO.csv CO {} "[""galactic"",""galactic""]" 23561.199999999997
-"CO 2-0P(5)" 2.35841 um CO.csv CO {} "[""galactic"",""galactic""]" 23584.1
+"CO 2-0R(4)" 2.337413 um CO.csv CO {} "[""galactic"",""galactic"",""galactic""]" 23374.129999999997
+"CO 2-0P(1)" 2.3495 um CO.csv CO {} "[""galactic"",""nebular""]" 23494.999999999996
+"CO 2-0P(2)" 2.35167 um CO.csv CO {} "[""galactic"",""nebular""]" 23516.699999999993
+"CO 2-0P(3)" 2.35387 um CO.csv CO {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 23538.699999999997
+"CO 2-0P(4)" 2.35612 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 23561.199999999997
+"CO 2-0P(5)" 2.35841 um CO.csv CO {} "[""galactic"",""nebular""]" 23584.1
 "HI 11-3" 0.8865217 um H-He.csv H "{""Error"": 1.9, ""Reference"": 1}" "[""galactic"",""galactic""]" 8865.216999999999
-"HI 10-3" 0.9017385 um H-He.csv H "{""Error"": 1.9, ""Reference"": 1}" "[""galactic"",""stellar""]" 9017.384999999998
-"HI 9-3" 0.9231547 um H-He.csv H "{""Error"": 2.0, ""Reference"": 1}" "[""nebular"",""nebular""]" 9231.546999999999
-"HI 8-3" 0.954859 um H-He.csv H "{""Error"": 2.1, ""Reference"": 1}" "[""galactic"",""galactic"",""nebular"",""stellar""]" 9548.589999999998
-"HI 7-3 10052" 1.0052128 um H-He.csv H "{""Error"": 2.3, ""Reference"": 1}" "[""galactic"",""galactic"",""nebular"",""stellar""]" 10052.127999999999
-"HI 6-3 10941" 1.094109 um H-He.csv H "{""Error"": 2.6, ""Reference"": 1}" "[""galactic"",""stellar""]" 10941.089999999998
-"HI 5-3 12822" 1.282159 um H-He.csv H "{""Error"": 3.3, ""Reference"": 1}" "[""galactic"",""galactic""]" 12821.589999999998
-"HI 11-4 16811" 1.6811111 um H-He.csv H "{""Error"": 2.2, ""Reference"": 1}" "[""nebular"",""nebular""]" 16811.110999999997
-"HI 10-4 17367" 1.736685 um H-He.csv H "{""Error"": 2.3, ""Reference"": 1}" "[""galactic"",""galactic""]" 17366.85
-"HI 9-4 18179" 1.8179084 um H-He.csv H "{""Error"": 2.5, ""Reference"": 1}" "[""galactic"",""galactic""]" 18179.084
-"HI 4-3 18756" 1.875613 um H-He.csv H "{""Error"": 5.9, ""Reference"": 1}" "[""galactic"",""galactic""]" 18756.129999999997
+"HI 10-3" 0.9017385 um H-He.csv H "{""Error"": 1.9, ""Reference"": 1}" "[""nebular"",""nebular""]" 9017.384999999998
+"HI 9-3" 0.9231547 um H-He.csv H "{""Error"": 2.0, ""Reference"": 1}" "[""galactic"",""galactic"",""stellar""]" 9231.546999999999
+"HI 8-3" 0.954859 um H-He.csv H "{""Error"": 2.1, ""Reference"": 1}" "[""galactic"",""galactic""]" 9548.589999999998
+"HI 7-3 10052" 1.0052128 um H-He.csv H "{""Error"": 2.3, ""Reference"": 1}" "[""galactic"",""galactic""]" 10052.127999999999
+"HI 6-3 10941" 1.094109 um H-He.csv H "{""Error"": 2.6, ""Reference"": 1}" "[""galactic"",""nebular""]" 10941.089999999998
+"HI 5-3 12822" 1.282159 um H-He.csv H "{""Error"": 3.3, ""Reference"": 1}" "[""galactic"",""nebular"",""stellar""]" 12821.589999999998
+"HI 11-4 16811" 1.6811111 um H-He.csv H "{""Error"": 2.2, ""Reference"": 1}" "[[""galactic"",""galactic""],""nebular""]" 16811.110999999997
+"HI 10-4 17367" 1.736685 um H-He.csv H "{""Error"": 2.3, ""Reference"": 1}" "[""galactic"",""galactic"",""stellar""]" 17366.85
+"HI 9-4 18179" 1.8179084 um H-He.csv H "{""Error"": 2.5, ""Reference"": 1}" "[""nebular"",""nebular""]" 18179.084
+"HI 4-3 18756" 1.875613 um H-He.csv H "{""Error"": 5.9, ""Reference"": 1}" "[""galactic"",""nebular""]" 18756.129999999997
 "HI 8-4 19451" 1.9450871 um H-He.csv H "{""Error"": 2.8, ""Reference"": 1}" """nebular""" 19450.870999999996
 "HI 7-4 21661" 2.16612 um H-He.csv H "{""Error"": 3.2, ""Reference"": 1}" """nebular""" 21661.199999999993
 "HI 6-4 26259" 2.625867 um H-He.csv H "{""Error"": 4.3, ""Reference"": 1}" """nebular""" 26258.669999999995
