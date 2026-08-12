@@ -334,15 +334,15 @@
     </div>
 
       <v-overlay
-        absolute
-        opacity=0.5
+        absolute contained
+        opacity=0.25
         :model-value="overwrite_warn"
         :zIndex=3
         style="grid-area: 1/1;
                margin-left: -24px;
                margin-right: -24px">
 
-      <v-card color="transparent" elevation=0 >
+      <v-card color="primary" elevation=4 >
         <v-card-text width="100%">
           <div class="white--text">
             A file with this name is already on disk. Overwrite?
@@ -351,8 +351,8 @@
 
         <v-card-actions>
           <j-flex-row justify="end">
-            <v-btn rounded="0" small color="primary" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
-            <v-btn rounded="0" small color="accent" class="mr-4" @click="overwrite_from_ui">Overwrite</v-btn>
+            <v-btn rounded="0" small color="primary" variant="flat" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
+            <v-btn rounded="0" small color="accent" variant="flat" class="mr-4" @click="overwrite_from_ui">Overwrite</v-btn>
           </j-flex-row>
         </v-card-actions>
       </v-card>
