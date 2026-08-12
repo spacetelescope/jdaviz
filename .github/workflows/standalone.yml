@@ -148,7 +148,7 @@ jobs:
       run: |
         pip install dmgbuild
         rm -rf standalone/dist/jdaviz
-        dmgbuild -s ./standalone/dmgbuild_settings.py -D app=./standalone/dist/Jdaviz.app "Jdaviz" Jdaviz.dmg
+        dmgbuild -s ./standalone/dmgbuild_settings.py -D app=./standalone/dist/Jdaviz.app "Jdaviz" standalone/dist/Jdaviz.dmg
         # hdiutil create -volname "Jdaviz" -srcfolder standalone/dist -ov -format UDZO standalone/dist/jdaviz.dmg
 
     # - name: Notary step + stapling (OSX)
