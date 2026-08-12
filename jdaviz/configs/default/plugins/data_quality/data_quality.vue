@@ -150,7 +150,7 @@
                   <j-tooltip tipid='plugin-dq-color-picker'>
                     <plugin-color-picker
                       :value="decoded_flags[index].color"
-                      @color-update="throttledSetColor(index, $event.hexa)"
+                      @color-update="throttledSetColor(index, $event)"
                     />
                   </j-tooltip>
                 </v-col>

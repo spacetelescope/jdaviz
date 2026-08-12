@@ -400,7 +400,7 @@
           api_hint="plg.subset_color = "
           :api_hints_enabled="api_hints_enabled"
           :value="subset_color_value"
-          @color-update="throttledSetValue('subset_color_value', $event.hexa)"
+          @color-update="throttledSetValue('subset_color_value', $event)"
         />
       </glue-state-sync-wrapper>
 
@@ -457,7 +457,7 @@
           api_hint="plg.line_color = "
           :api_hints_enabled="api_hints_enabled"
           :value="line_color_value"
-          @color-update="throttledSetValue('line_color_value', $event.hexa)"
+          @color-update="throttledSetValue('line_color_value', $event)"
         />
       </glue-state-sync-wrapper>
 
@@ -597,7 +597,7 @@
             api_hint="plg.marker_color = "
             :api_hints_enabled="api_hints_enabled"
             :value="marker_color_value"
-            @color-update="throttledSetValue('marker_color_value', $event.hexa)"
+            @color-update="throttledSetValue('marker_color_value', $event)"
           />
         </glue-state-sync-wrapper>
 
@@ -665,7 +665,7 @@
             api_hint="plg.hist_color = "
             :api_hints_enabled="api_hints_enabled"
             :value="hist_color_value"
-            @color-update="throttledSetValue('hist_color_value', $event.hexa)"
+            @color-update="throttledSetValue('hist_color_value', $event)"
           />
         </glue-state-sync-wrapper>
       </div>
@@ -783,7 +783,7 @@
             api_hint="plg.image_color = "
             :api_hints_enabled="api_hints_enabled"
             :value="image_color_value"
-            @color-update="throttledSetValue('image_color_value', $event.hexa)"
+            @color-update="throttledSetValue('image_color_value', $event)"
           />
         </glue-state-sync-wrapper>
 
