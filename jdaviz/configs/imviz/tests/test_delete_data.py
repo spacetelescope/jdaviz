@@ -1,9 +1,7 @@
 import numpy as np
 import pytest
-from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.nddata import NDData
-from astropy.table import QTable
 from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
