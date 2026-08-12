@@ -806,6 +806,11 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         new_refdata = self.data_collection[new_refdata_label]
 
+        if new_refdata.ndim < 2:
+            # an image viewer requires reference data with at least two pixel components
+            raise ValueError(f"'{new_refdata_label}' has {new_refdata.ndim} dimension(s) and "
+                             "cannot be used as reference data in an image viewer.")
+
         # make sure new refdata can be selected:
         refdata_choices = [choice.label for choice in viewer.state.ref_data_helper.choices]
         if new_refdata_label not in refdata_choices:

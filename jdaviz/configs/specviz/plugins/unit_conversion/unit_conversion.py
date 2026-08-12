@@ -393,6 +393,11 @@ class UnitConversion(PluginTemplateMixin):
             # NOTE: this assumes that all image data is coerced to surface brightness units
             layers = [lyr for lyr in msg.viewer.layers if lyr.layer.data.label == msg.data.label]
 
+            if not (hasattr(data_obj, 'flux') or hasattr(data_obj, 'unit')):
+                # e.g. a catalog/table loaded into an image viewer, which carries no
+                # flux or surface brightness units to sync with the plugin
+                return
+
             if not isinstance(data_obj, tracing.Trace):
 
                 if not len(self.spectral_unit_selected) and hasattr(data_obj, 'spectral_axis'):
