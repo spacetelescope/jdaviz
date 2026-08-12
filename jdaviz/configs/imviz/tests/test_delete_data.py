@@ -1,6 +1,9 @@
 import numpy as np
+import pytest
+from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.nddata import NDData
+from astropy.table import QTable
 from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
@@ -109,3 +112,45 @@ class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
         assert_quantity_allclose(reg.height, out_reg_d.height, rtol=1e-5)
         assert_quantity_allclose(reg.width, out_reg_d.width, rtol=1e-5)
         assert_quantity_allclose(reg.angle, out_reg_d.angle, rtol=1e-5)
+
+
+@pytest.mark.parametrize(
+    ('align_by', 'reference_data_label'),
+    [
+        ('Pixels', 'image_hdu_wcs (1)'),
+        ('WCS', 'Default orientation')
+    ])
+def test_delete_image_with_catalog(deconfigged_helper, align_by, reference_data_label,
+                                   image_hdu_wcs, wcs_linked_mixed_coord_catalog):
+    deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='image_hdu_wcs')
+    # start with two images to check glue reference data assignment
+    deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='image_hdu_wcs (1)')
+    deconfigged_helper.plugins['Orientation'].align_by = align_by
+    glue_viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+
+    deconfigged_helper.load(wcs_linked_mixed_coord_catalog, format='Catalog', data_label='catalog')
+
+    # remove one, the second image should be used
+    # as reference data instead of the catalog
+    deconfigged_helper._app.data_item_remove('image_hdu_wcs')
+    assert glue_viewer.state.reference_data.label == reference_data_label
+
+    # test that changing the reference data to catalog raises an error
+    with pytest.raises(ValueError, match='cannot be used as reference data'):
+        deconfigged_helper._app._change_reference_data('catalog')
+
+    # remove the second image
+    deconfigged_helper._app.data_item_remove('image_hdu_wcs (1)')
+
+    if align_by == 'Pixels':
+        # no reference data is available since the catalog cannot be used as such
+        assert glue_viewer.state.reference_data is None
+        assert deconfigged_helper._app.data_collection.labels == ['catalog']
+        assert [lyr.layer.label for lyr in glue_viewer.state.layers] == ['catalog']
+    else:  # WCS
+        # the WCS-only orientation layer remains as valid reference data,
+        # so the catalog layer can still be displayed
+        assert glue_viewer.state.reference_data.label == reference_data_label
+        assert 'catalog' in deconfigged_helper._app.data_collection.labels
+        cat_layer = [lyr for lyr in glue_viewer.layers if lyr.layer.label == 'catalog'][0]
+        assert cat_layer.enabled
