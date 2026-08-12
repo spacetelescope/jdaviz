@@ -224,8 +224,16 @@ class UserApiWrapper:
                 exp_obj.selected = value
                 return
             elif len(exp_obj.create_new.choices) > 0:
-                exp_obj.create_new.selected = exp_obj.create_new.choices[0]
-                exp_obj.new_label.value = value
+                if value in exp_obj.create_new.choices:
+                    # value matches a viewer type label (e.g. 'Table', 'Scatter') -
+                    # select that type and the label will also default to that type
+                    exp_obj.create_new.selected = value
+                else:
+                    # if value is not a valid viewer type,
+                    # assume value is intended as a new viewer label -
+                    # default to the first available viewer type
+                    exp_obj.create_new.selected = exp_obj.create_new.choices[0]
+                    exp_obj.new_label.value = value
                 return
 
         if isinstance(exp_obj, SelectPluginComponent):

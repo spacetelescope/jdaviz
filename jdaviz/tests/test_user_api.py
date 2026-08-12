@@ -148,6 +148,38 @@ def test_wildcard_match_extension(imviz_helper, multi_extension_image_hdu_wcs):
     assert selection_obj.multiselect is True
 
 
+def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_source_catalog):
+    """
+    Setting ldr.importer.viewer = type_label (where type_label is one of the create_new
+    choices, e.g. 'Table', 'Scatter') should select that viewer type,
+    not treat the string as a new viewer label that then defaults to a scatter viewer.
+    """
+    
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = sky_coord_only_source_catalog
+    ldr.format = 'Catalog'
+
+    importer_viewer = ldr.importer._obj.viewer
+
+    assert 'Scatter' in importer_viewer.create_new.choices
+    assert 'Table' in importer_viewer.create_new.choices
+
+    # setting via the user-api wrapper to 'Table' should select the Table type,
+    # not label a scatter viewer labeled 'Table'
+    ldr.importer.viewer = 'Table'
+    assert importer_viewer.create_new.selected == 'Table'
+
+    # setting to 'Scatter' should switch the type back
+    ldr.importer.viewer = 'Scatter'
+    assert importer_viewer.create_new.selected == 'Scatter'
+
+    # setting to a string that is NOT a type label should be treated as a new viewer label
+    # and should default the type to the first available choice ('Scatter')
+    ldr.importer.viewer = 'my-custom-viewer'
+    assert importer_viewer.create_new.selected == importer_viewer.create_new.choices[0]
+    assert importer_viewer.new_label.value == 'my-custom-viewer'
+
+
 def test_viewer_create_new(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper.new_viewers.keys()) == 0
     # passing [] should not load into a new viewer nor should it create a new viewer
