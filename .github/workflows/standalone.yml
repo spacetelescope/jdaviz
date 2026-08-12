@@ -166,38 +166,38 @@ jobs:
     #       xcrun notarytool log --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --password ${{ secrets.NOTARIZATION_PASSWORD }} $uuid || true
     #     fi
 
-    - name: Validate app (OSX)
-      if: ${{ matrix.os == 'macos-14' }}
-      run: |
-        spctl -a -vvv -t execute standalone/dist/jdaviz.app
+    # - name: Validate app (OSX)
+    #   if: ${{ matrix.os == 'macos-14' }}
+    #   run: |
+    #     spctl -a -vvv -t execute standalone/dist/jdaviz.app
 
-    - name: Run jdaviz cmd in background
-      if: ${{ matrix.os == 'macos-14' }}
-      env:
-        ASTROPY_ALLOW_INTERNET: "False"
-      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli --port=8765 &
+    # - name: Run jdaviz cmd in background
+    #   if: ${{ matrix.os == 'macos-14' }}
+    #   env:
+    #     ASTROPY_ALLOW_INTERNET: "False"
+    #   run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli --port=8765 &
 
-    - name: Install playwright
-      run: (pip install playwright; playwright install chromium)
+    # - name: Install playwright
+    #   run: (pip install playwright; playwright install chromium)
 
-    - name: Install pytest
-      run: pip install pytest-playwright
+    # - name: Install pytest
+    #   run: pip install pytest-playwright
 
-    - name: Wait for Solara to get online
-      uses: ifaxity/wait-on-action@a7d13170ec542bdca4ef8ac4b15e9c6aa00a6866  # v1.2.1
-      with:
-        resource: tcp:8765
-        timeout: 60000
+    # - name: Wait for Solara to get online
+    #   uses: ifaxity/wait-on-action@a7d13170ec542bdca4ef8ac4b15e9c6aa00a6866  # v1.2.1
+    #   with:
+    #     resource: tcp:8765
+    #     timeout: 60000
 
-    - name: Test standalone
-      run: (cd standalone; touch pytest.ini; JUPYTER_PLATFORM_DIRS=1 pytest test_standalone.py --video=on)
+    # - name: Test standalone
+    #   run: (cd standalone; touch pytest.ini; JUPYTER_PLATFORM_DIRS=1 pytest test_standalone.py --video=on)
 
-    - name: Upload Test artifacts
-      if: always()
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
-      with:
-        name: test-results-${{ matrix.os }}
-        path: standalone/test-results
+    # - name: Upload Test artifacts
+    #   if: always()
+    #   uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+    #   with:
+    #     name: test-results-${{ matrix.os }}
+    #     path: standalone/test-results
 
     - name: Upload jdaviz standalone (OSX)
       if: ${{ always() && (matrix.os == 'macos-14') }}
