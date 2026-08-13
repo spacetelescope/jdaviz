@@ -303,6 +303,8 @@
         attach
         :menu-props="{ location: 'bottom start' }"
         :items="table_columns_visible_sync.choices"
+        item-title="text"
+        item-value="value"
         v-model="table_columns_visible_value"
         :label="api_hints_enabled ? 'plg.table_columns_visible =' : 'Visible Columns'"
         :class="api_hints_enabled ? 'api-hint' : null"
