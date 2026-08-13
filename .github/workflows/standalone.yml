@@ -86,16 +86,16 @@ jobs:
   #     if: github.event_name != 'pull_request'
   #     uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
   #     with:
-  #       name: test-results-${{ matrix.os }}
+  #       name: test-results-${{ contains(matrix.os, 'windows') && 'windows' || 'ubuntu' }}
   #       path: standalone/test-results
 
-  #   - name: Upload jdaviz standalone (non-OSX)
-  #     if: github.event_name != 'pull_request'
-  #     uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
-  #     with:
-  #       name: jdaviz-standlone-${{ matrix.os }}
-  #       path: |
-  #         standalone/dist/jdaviz
+    # - name: Upload jdaviz standalone (non-OSX)
+    #   if: github.event_name != 'pull_request'
+    #   uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+    #   with:
+    #     name: jdaviz-standalone-${{ contains(matrix.os, 'windows') && 'windows' || 'ubuntu' }}
+    #     path: |
+    #       standalone/dist/jdaviz
 
   # Do not want to deal with OSX certs in pull request builds.
   build_binary_osx:
@@ -196,12 +196,12 @@ jobs:
     #   if: always()
     #   uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
     #   with:
-    #     name: test-results-${{ matrix.os }}
+    #     name: test-results-macosx
     #     path: standalone/test-results
 
     - name: Upload jdaviz standalone (OSX)
       if: ${{ always() && (matrix.os == 'macos-14') }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
-        name: jdaviz-standlone-${{ matrix.os }}
+        name: jdaviz-standlone-macosx
         path: standalone/dist/Jdaviz.dmg
