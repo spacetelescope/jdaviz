@@ -309,10 +309,6 @@ def test_boxcar_uncertainty_propagation_via_plugin(deconfigged_helper, flux_unit
     the plugin returns the same result.
     """
 
-    # NOTE: REMOVE AFTER JDAT-6281 IS RESOLVED
-    if flux_unit == u.DN:
-        return
-
     nrows, ncols = 10, 20
     flux = np.full((nrows, ncols), 100.0)
     variance = np.full((nrows, ncols), 4.0)
@@ -420,10 +416,6 @@ def test_background_uncertainty_propagation_via_plugin(deconfigged_helper, flux_
     background calculation in specreduce, and is meant to make sure going through
     the plugin returns the same result.
     """
-
-    # NOTE: REMOVE AFTER JDAT-6281 IS RESOLVED
-    if flux_unit == u.DN:
-        return
 
     nrows, ncols = 10, 20
     var = 4.0
