@@ -1353,13 +1353,13 @@
     <div class="container">
         <!-- Logo Section - kept for potential use elsewhere but hidden by CSS -->
         <div class="logo-section">
-            <img src="_static/logos/jdaviz.svg" alt="Jdaviz Logo" class="logo">
+            <img src="_static/logos/jdaviz_wordmark.svg" alt="Jdaviz Logo" class="logo">
         </div>
 
         <!-- Description Section with embedded logo -->
         <div class="description-section">
             <div class="description-logo">
-                <img src="_static/logos/jdaviz.svg" alt="Jdaviz Logo" class="logo">
+                <img src="_static/logos/jdaviz_wordmark.svg" alt="Jdaviz Logo" class="logo">
             </div>
             <div class="description-content">
                 <p>
@@ -1391,7 +1391,7 @@
             <!-- Platform Tabs Section -->
             <div class="platform-tabs-section">
             <div class="platform-tabs-header">
-                <button class="platform-tab" data-platform="desktop">Desktop UI</button>
+                <button class="platform-tab" data-platform="desktop">Desktop App</button>
                 <button class="platform-tab" data-platform="commandline">Command Line</button>
                 <button class="platform-tab" data-platform="mast">Jdaviz@MAST</button>
                 <button class="platform-tab active" data-platform="jupyter">Local Jupyter Notebook/Lab</button>
@@ -1640,7 +1640,7 @@ jd.show()</div>
 
             // Map platform IDs to display names
             const platformNames = {
-                'desktop': 'Desktop UI',
+                'desktop': 'Desktop App',
                 'mast': 'Jdaviz@MAST',
                 'jupyter': 'Jupyter Notebook',
                 'platform': 'Science Platforms'
@@ -1648,7 +1648,7 @@ jd.show()</div>
 
             // Install button configuration per platform
             const installButtonConfig = {
-                'desktop': { text: 'Download Desktop App', href: 'setup/desktop.html' },
+                'desktop': { text: 'Download Desktop App', href: '../setup/desktop.html' },
                 'mast': { text: 'Open Jdaviz@MAST', href: 'https://mast.stsci.edu/viz/ui/', target: '_blank' },
                 'commandline': { text: 'Install Jdaviz', href: 'setup/local.html' },
                 'jupyter': { text: 'Install Jdaviz', href: 'setup/local.html' },

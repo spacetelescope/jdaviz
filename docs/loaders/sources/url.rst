@@ -48,3 +48,27 @@ API Access
     ldr.url = 'https://example.com/data.fits'
     ldr.format = '1D Spectrum'
     ldr.load()
+
+
+Clear Cache (standalone application only)
+========================================
+
+In the standalone application, files downloaded directly from MAST (Mikulski Archive for Space Telescopes) are saved in 
+``$HOME/.cache/.jdaviz``. 
+
+Empty folders are automatically deleted from this cache when you close the Jdaviz application. 
+
+To save disk storage, when you close the Jdaviz application, Jdaviz will automatically delete files if they were downloaded 
+more than 4 week before the current application session. You must move these files if you do not want them deleted. 
+
+If you wish to delete the whole cache, click on the ``Cache`` dropdown in the Jdaviz application taskbar and select ``Empty Jdaviz Cache``. 
+
+.. note::
+   The files at HTTPS and HTTP URLs are downloaded via ``astropy`` and saved in ``$HOME/.cache/.astropy``. 
+   Any files downloaded via ``astropy``, even outside Jdaviz are saved there; therefore, we do not automatically or 
+   manually clear this cache. 
+   See ``astropy`` for details on this cache.
+
+.. note::
+   Downloading from URL in a local Jupyter session (jupyter notebook/lab or via command line) 
+   will save the files in the current working directory of the session. 
