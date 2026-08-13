@@ -108,7 +108,7 @@ def get_lines(db, name_contains=None, source=None, wave_min=None, wave_max=None,
         sc_mask = np.zeros(len(db), dtype=bool)
         for i, val in enumerate(db["science_case"]):
             if isinstance(val, (list, tuple)):
-                sc_mask[i] = sc_lower in [v.lower() for v in val]
+                sc_mask[i] = sc_lower in [str(v).lower() for v in val]
             else:
                 sc_mask[i] = str(val).lower() == sc_lower
         mask &= sc_mask

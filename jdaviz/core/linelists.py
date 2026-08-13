@@ -22,7 +22,7 @@ def get_available_linelists():
     mislead users
     """
     metadata = get_linelist_metadata()
-    return [name for name in metadata.keys() if 'medium' in metadata[name]]
+    return [list for list in metadata.keys() if 'medium' in metadata[list]]
 
 
 def load_preset_linelist(name):

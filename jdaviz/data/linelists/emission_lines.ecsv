@@ -20,96 +20,96 @@
 #     ''stellar'', ''nebular'', ''molecular''). ''extra_info'' is a JSON string of any per-source-file metadata.'}
 # schema: astropy-2.0
 line_name rest_wavelength wavelength_unit source_list element extra_info science_case rest_wavelength_angstrom
-"2-0 22935" 2.2935 um CO-band-heads.csv CO "{""frequency"": 4360.1}" "[""nebular"",""nebular""]" 22934.999999999996
-"2-0 23448" 2.3448 um CO-band-heads.csv CO "{""frequency"": 4264.7}" "[""galactic"",""stellar""]" 23447.999999999996
-"3-1 23227" 2.3227 um CO-band-heads.csv CO "{""frequency"": 4305.4}" "[""galactic"",""stellar""]" 23226.999999999996
-"3-1 23739" 2.3739 um CO-band-heads.csv CO "{""frequency"": 4212.4}" "[""galactic"",""stellar""]" 23738.999999999996
-"4-2 23535" 2.3535 um CO-band-heads.csv CO "{""frequency"": 4250.8}" "[""galactic"",""galactic"",""nebular"",""stellar""]" 23534.999999999996
-"4-2 24037" 2.4037 um CO-band-heads.csv CO "{""frequency"": 4160.3}" "[""galactic"",""galactic""]" 24036.999999999996
-"5-3 23829" 2.3829 um CO-band-heads.csv CO "{""frequency"": 4196.5}" "[""galactic"",""galactic""]" 23828.999999999993
-"5-3 24341" 2.4341 um CO-band-heads.csv CO "{""frequency"": 4108.3}" "[""galactic"",""galactic"",""nebular"",""stellar""]" 24340.999999999996
-"6-4 24142" 2.4142 um CO-band-heads.csv CO "{""frequency"": 4142.2}" "[""galactic"",""stellar""]" 24141.999999999996
-"6-4 24652" 2.4652 um CO-band-heads.csv CO "{""frequency"": 4056.4}" "[""nebular"",""nebular""]" 24651.999999999993
-"7-5 24461" 2.4461 um CO-band-heads.csv CO "{""frequency"": 4088.2}" "[""galactic"",""galactic""]" 24460.999999999996
-"7-5 24971" 2.4971 um CO-band-heads.csv CO "{""frequency"": 4004.7}" "[""galactic"",""stellar""]" 24970.999999999996
-8-6 2.4787 um CO-band-heads.csv CO "{""frequency"": 4034.3}" "[""galactic"",""galactic""]" 24786.999999999993
-9-7 2.5122 um CO-band-heads.csv CO "{""frequency"": 3980.5}" "[""galactic"",""nebular""]" 25121.999999999996
-3-0 1.5582 um CO-band-heads.csv CO "{""frequency"": 6417.8}" "[""galactic"",""galactic""]" 15581.999999999998
-4-1 1.578 um CO-band-heads.csv CO "{""frequency"": 6337.2}" "[""galactic"",""stellar""]" 15779.999999999998
-5-2 1.5982 um CO-band-heads.csv CO "{""frequency"": 6257.2}" "[""galactic"",""galactic"",""nebular"",""stellar""]" 15981.999999999998
-6-3 1.6187 um CO-band-heads.csv CO "{""frequency"": 6177.7}" "[""galactic"",""galactic"",""stellar""]" 16186.999999999998
-7-4 1.6397 um CO-band-heads.csv CO "{""frequency"": 6098.8}" "[""galactic"",""stellar""]" 16396.999999999996
-8-5 1.661 um CO-band-heads.csv CO "{""frequency"": 6020.5}" "[""galactic"",""nebular""]" 16609.999999999996
-"CO 2-0" 2.2935 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 22934.999999999996
-"CO 3-1" 2.3227 um CO.csv CO {} "[""nebular"",""nebular""]" 23226.999999999996
-"CO 4-2" 2.3525 um CO.csv CO {} "[""galactic"",""galactic""]" 23524.999999999996
-"CO 5-3" 2.3829 um CO.csv CO {} "[""nebular"",""nebular""]" 23828.999999999993
-"CO 6-4" 2.4142 um CO.csv CO {} "[""nebular"",""nebular""]" 24141.999999999996
-"CO 7-5" 2.4461 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 24460.999999999996
-"CO 8-6" 2.4787 um CO.csv CO {} "[""galactic"",""stellar""]" 24786.999999999993
-"CO 9-7" 2.5122 um CO.csv CO {} "[""galactic"",""galactic""]" 25121.999999999996
-"CO 3-0" 1.5582 um CO.csv CO {} "[""galactic"",""galactic""]" 15581.999999999998
-"CO 4-1" 1.578 um CO.csv CO {} "[""galactic"",""stellar""]" 15779.999999999998
-"CO 5-2" 1.5982 um CO.csv CO {} "[""nebular"",""nebular""]" 15981.999999999998
-"CO 6-3" 1.6187 um CO.csv CO {} "[""galactic"",""galactic""]" 16186.999999999998
-"CO 7-4" 1.6397 um CO.csv CO {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 16396.999999999996
-"CO 8-5" 1.661 um CO.csv CO {} "[""galactic"",""stellar""]" 16609.999999999996
-"CO 1-0R(22)" 4.501 um CO.csv CO {} "[""galactic"",""galactic""]" 45009.99999999999
-"CO 1-0R(21)" 4.5071 um CO.csv CO {} "[""galactic"",""stellar""]" 45070.99999999999
-"CO 1-0R(20)" 4.5132 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 45131.99999999999
-"CO 1-0R(19)" 4.5195 um CO.csv CO {} "[""galactic"",""stellar""]" 45194.99999999999
-"CO 1-0R(18)" 4.5259 um CO.csv CO {} "[""galactic"",""galactic""]" 45258.99999999999
-"CO 1-0R(17)" 4.5324 um CO.csv CO {} "[""galactic"",""galactic""]" 45323.99999999999
-"CO 1-0R(16)" 4.5389 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 45388.99999999999
-"CO 1-0R(15)" 4.5456 um CO.csv CO {} "[""galactic"",""galactic""]" 45455.99999999999
-"CO 1-0R(14)" 4.5547 um CO.csv CO {} "[""galactic"",""galactic""]" 45546.99999999999
-"CO 1-0R(13)" 4.5592 um CO.csv CO {} "[""nebular"",""stellar""]" 45591.999999999985
-"CO 1-0R(12)" 4.5662 um CO.csv CO {} "[""galactic"",""stellar""]" 45661.99999999999
-"CO 1-0R(11)" 4.5732 um CO.csv CO {} "[""galactic"",""nebular""]" 45731.99999999999
-"CO 1-0R(10)" 4.5804 um CO.csv CO {} "[""galactic"",""galactic""]" 45803.99999999999
-"CO 1-0R(9)" 4.5876 um CO.csv CO {} "[""galactic"",""galactic"",""galactic"",""stellar""]" 45875.99999999999
-"CO 1-0R(8)" 4.595 um CO.csv CO {} "[""galactic"",""stellar""]" 45949.99999999999
-"CO 1-0R(7)" 4.6024 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 46023.99999999999
-"CO 1-0R(6)" 4.61 um CO.csv CO {} "[""galactic"",""galactic""]" 46099.99999999999
-"CO 1-0R(5)" 4.6177 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 46176.99999999999
-"CO 1-0R(4)" 4.6254 um CO.csv CO {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 46253.99999999999
-"CO 1-0R(3)" 4.6333 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 46332.99999999999
-"CO 1-0R(2)" 4.6412 um CO.csv CO {} "[""galactic"",""galactic""]" 46411.99999999999
-"CO 1-0R(1)" 4.6493 um CO.csv CO {} "[""galactic"",""galactic"",""galactic""]" 46492.99999999999
-"CO 1-0R(0)" 4.6575 um CO.csv CO {} "[""galactic"",""galactic""]" 46574.999999999985
-"CO 1-0P(1)" 4.6742 um CO.csv CO {} "[""galactic"",""stellar""]" 46741.99999999999
-"CO 1-0P(2)" 4.6826 um CO.csv CO {} "[""galactic"",""galactic""]" 46825.99999999999
-"CO 1-0P(3)" 4.6912 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 46911.99999999999
-"CO 1-0P (4)" 4.7002 um CO.csv CO {} "[""galactic"",""galactic"",""nebular""]" 47001.999999999985
-"CO 1-0P (5)" 4.7088 um CO.csv CO {} "[""galactic"",""galactic""]" 47087.99999999999
-"CO 1-0P (6)" 4.7177 um CO.csv CO {} "[""nebular"",""nebular""]" 47176.99999999999
-"CO 1-0P (7)" 4.7267 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 47266.99999999999
-"CO 1-0P (8)" 4.7359 um CO.csv CO {} "[""galactic"",""galactic""]" 47358.99999999999
-"CO 1-0P (9)" 4.7451 um CO.csv CO {} "[""galactic"",""nebular"",""stellar""]" 47450.99999999999
-"CO 2-0R(0)" 2.345305 um CO.csv CO {} "[""galactic"",""galactic""]" 23453.05
-"CO 2-0R(1)" 2.343269 um CO.csv CO {} "[""galactic"",""galactic""]" 23432.689999999995
-"CO 2-0R(2)" 2.341275 um CO.csv CO {} "[""nebular"",""nebular""]" 23412.749999999996
-"CO 2-0R(3)" 2.339323 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 23393.229999999992
-"CO 2-0R(4)" 2.337413 um CO.csv CO {} "[""galactic"",""galactic"",""galactic""]" 23374.129999999997
-"CO 2-0P(1)" 2.3495 um CO.csv CO {} "[""galactic"",""nebular""]" 23494.999999999996
-"CO 2-0P(2)" 2.35167 um CO.csv CO {} "[""galactic"",""nebular""]" 23516.699999999993
-"CO 2-0P(3)" 2.35387 um CO.csv CO {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 23538.699999999997
-"CO 2-0P(4)" 2.35612 um CO.csv CO {} "[""galactic"",""galactic"",""stellar""]" 23561.199999999997
-"CO 2-0P(5)" 2.35841 um CO.csv CO {} "[""galactic"",""nebular""]" 23584.1
-"HI 11-3" 0.8865217 um H-He.csv H "{""Error"": 1.9, ""Reference"": 1}" "[""galactic"",""galactic""]" 8865.216999999999
-"HI 10-3" 0.9017385 um H-He.csv H "{""Error"": 1.9, ""Reference"": 1}" "[""nebular"",""nebular""]" 9017.384999999998
-"HI 9-3" 0.9231547 um H-He.csv H "{""Error"": 2.0, ""Reference"": 1}" "[""galactic"",""galactic"",""stellar""]" 9231.546999999999
-"HI 8-3" 0.954859 um H-He.csv H "{""Error"": 2.1, ""Reference"": 1}" "[""galactic"",""galactic""]" 9548.589999999998
-"HI 7-3 10052" 1.0052128 um H-He.csv H "{""Error"": 2.3, ""Reference"": 1}" "[""galactic"",""galactic""]" 10052.127999999999
-"HI 6-3 10941" 1.094109 um H-He.csv H "{""Error"": 2.6, ""Reference"": 1}" "[""galactic"",""nebular""]" 10941.089999999998
-"HI 5-3 12822" 1.282159 um H-He.csv H "{""Error"": 3.3, ""Reference"": 1}" "[""galactic"",""nebular"",""stellar""]" 12821.589999999998
-"HI 11-4 16811" 1.6811111 um H-He.csv H "{""Error"": 2.2, ""Reference"": 1}" "[[""galactic"",""galactic""],""nebular""]" 16811.110999999997
-"HI 10-4 17367" 1.736685 um H-He.csv H "{""Error"": 2.3, ""Reference"": 1}" "[""galactic"",""galactic"",""stellar""]" 17366.85
-"HI 9-4 18179" 1.8179084 um H-He.csv H "{""Error"": 2.5, ""Reference"": 1}" "[""nebular"",""nebular""]" 18179.084
-"HI 4-3 18756" 1.875613 um H-He.csv H "{""Error"": 5.9, ""Reference"": 1}" "[""galactic"",""nebular""]" 18756.129999999997
-"HI 8-4 19451" 1.9450871 um H-He.csv H "{""Error"": 2.8, ""Reference"": 1}" """nebular""" 19450.870999999996
-"HI 7-4 21661" 2.16612 um H-He.csv H "{""Error"": 3.2, ""Reference"": 1}" """nebular""" 21661.199999999993
-"HI 6-4 26259" 2.625867 um H-He.csv H "{""Error"": 4.3, ""Reference"": 1}" """nebular""" 26258.669999999995
+"2-0 22935" 2.2935 um CO-band-heads.csv CO "{""frequency"": 4360.1}" """molecular""" 22934.999999999996
+"2-0 23448" 2.3448 um CO-band-heads.csv CO "{""frequency"": 4264.7}" """molecular""" 23447.999999999996
+"3-1 23227" 2.3227 um CO-band-heads.csv CO "{""frequency"": 4305.4}" """molecular""" 23226.999999999996
+"3-1 23739" 2.3739 um CO-band-heads.csv CO "{""frequency"": 4212.4}" """molecular""" 23738.999999999996
+"4-2 23535" 2.3535 um CO-band-heads.csv CO "{""frequency"": 4250.8}" """molecular""" 23534.999999999996
+"4-2 24037" 2.4037 um CO-band-heads.csv CO "{""frequency"": 4160.3}" """molecular""" 24036.999999999996
+"5-3 23829" 2.3829 um CO-band-heads.csv CO "{""frequency"": 4196.5}" """molecular""" 23828.999999999993
+"5-3 24341" 2.4341 um CO-band-heads.csv CO "{""frequency"": 4108.3}" """molecular""" 24340.999999999996
+"6-4 24142" 2.4142 um CO-band-heads.csv CO "{""frequency"": 4142.2}" """molecular""" 24141.999999999996
+"6-4 24652" 2.4652 um CO-band-heads.csv CO "{""frequency"": 4056.4}" """molecular""" 24651.999999999993
+"7-5 24461" 2.4461 um CO-band-heads.csv CO "{""frequency"": 4088.2}" """molecular""" 24460.999999999996
+"7-5 24971" 2.4971 um CO-band-heads.csv CO "{""frequency"": 4004.7}" """molecular""" 24970.999999999996
+8-6 2.4787 um CO-band-heads.csv CO "{""frequency"": 4034.3}" """molecular""" 24786.999999999993
+9-7 2.5122 um CO-band-heads.csv CO "{""frequency"": 3980.5}" """molecular""" 25121.999999999996
+3-0 1.5582 um CO-band-heads.csv CO "{""frequency"": 6417.8}" """molecular""" 15581.999999999998
+4-1 1.578 um CO-band-heads.csv CO "{""frequency"": 6337.2}" """molecular""" 15779.999999999998
+5-2 1.5982 um CO-band-heads.csv CO "{""frequency"": 6257.2}" """molecular""" 15981.999999999998
+6-3 1.6187 um CO-band-heads.csv CO "{""frequency"": 6177.7}" """molecular""" 16186.999999999998
+7-4 1.6397 um CO-band-heads.csv CO "{""frequency"": 6098.8}" """molecular""" 16396.999999999996
+8-5 1.661 um CO-band-heads.csv CO "{""frequency"": 6020.5}" """molecular""" 16609.999999999996
+"CO 2-0" 2.2935 um CO.csv CO {} """molecular""" 22934.999999999996
+"CO 3-1" 2.3227 um CO.csv CO {} """molecular""" 23226.999999999996
+"CO 4-2" 2.3525 um CO.csv CO {} """molecular""" 23524.999999999996
+"CO 5-3" 2.3829 um CO.csv CO {} """molecular""" 23828.999999999993
+"CO 6-4" 2.4142 um CO.csv CO {} """molecular""" 24141.999999999996
+"CO 7-5" 2.4461 um CO.csv CO {} """molecular""" 24460.999999999996
+"CO 8-6" 2.4787 um CO.csv CO {} """molecular""" 24786.999999999993
+"CO 9-7" 2.5122 um CO.csv CO {} """molecular""" 25121.999999999996
+"CO 3-0" 1.5582 um CO.csv CO {} """molecular""" 15581.999999999998
+"CO 4-1" 1.578 um CO.csv CO {} """molecular""" 15779.999999999998
+"CO 5-2" 1.5982 um CO.csv CO {} """molecular""" 15981.999999999998
+"CO 6-3" 1.6187 um CO.csv CO {} """molecular""" 16186.999999999998
+"CO 7-4" 1.6397 um CO.csv CO {} """molecular""" 16396.999999999996
+"CO 8-5" 1.661 um CO.csv CO {} """molecular""" 16609.999999999996
+"CO 1-0R(22)" 4.501 um CO.csv CO {} """molecular""" 45009.99999999999
+"CO 1-0R(21)" 4.5071 um CO.csv CO {} """molecular""" 45070.99999999999
+"CO 1-0R(20)" 4.5132 um CO.csv CO {} """molecular""" 45131.99999999999
+"CO 1-0R(19)" 4.5195 um CO.csv CO {} """molecular""" 45194.99999999999
+"CO 1-0R(18)" 4.5259 um CO.csv CO {} """molecular""" 45258.99999999999
+"CO 1-0R(17)" 4.5324 um CO.csv CO {} """molecular""" 45323.99999999999
+"CO 1-0R(16)" 4.5389 um CO.csv CO {} """molecular""" 45388.99999999999
+"CO 1-0R(15)" 4.5456 um CO.csv CO {} """molecular""" 45455.99999999999
+"CO 1-0R(14)" 4.5547 um CO.csv CO {} """molecular""" 45546.99999999999
+"CO 1-0R(13)" 4.5592 um CO.csv CO {} """molecular""" 45591.999999999985
+"CO 1-0R(12)" 4.5662 um CO.csv CO {} """molecular""" 45661.99999999999
+"CO 1-0R(11)" 4.5732 um CO.csv CO {} """molecular""" 45731.99999999999
+"CO 1-0R(10)" 4.5804 um CO.csv CO {} """molecular""" 45803.99999999999
+"CO 1-0R(9)" 4.5876 um CO.csv CO {} """molecular""" 45875.99999999999
+"CO 1-0R(8)" 4.595 um CO.csv CO {} """molecular""" 45949.99999999999
+"CO 1-0R(7)" 4.6024 um CO.csv CO {} """molecular""" 46023.99999999999
+"CO 1-0R(6)" 4.61 um CO.csv CO {} """molecular""" 46099.99999999999
+"CO 1-0R(5)" 4.6177 um CO.csv CO {} """molecular""" 46176.99999999999
+"CO 1-0R(4)" 4.6254 um CO.csv CO {} """molecular""" 46253.99999999999
+"CO 1-0R(3)" 4.6333 um CO.csv CO {} """molecular""" 46332.99999999999
+"CO 1-0R(2)" 4.6412 um CO.csv CO {} """molecular""" 46411.99999999999
+"CO 1-0R(1)" 4.6493 um CO.csv CO {} """molecular""" 46492.99999999999
+"CO 1-0R(0)" 4.6575 um CO.csv CO {} """molecular""" 46574.999999999985
+"CO 1-0P(1)" 4.6742 um CO.csv CO {} """molecular""" 46741.99999999999
+"CO 1-0P(2)" 4.6826 um CO.csv CO {} """molecular""" 46825.99999999999
+"CO 1-0P(3)" 4.6912 um CO.csv CO {} """molecular""" 46911.99999999999
+"CO 1-0P (4)" 4.7002 um CO.csv CO {} """molecular""" 47001.999999999985
+"CO 1-0P (5)" 4.7088 um CO.csv CO {} """molecular""" 47087.99999999999
+"CO 1-0P (6)" 4.7177 um CO.csv CO {} """molecular""" 47176.99999999999
+"CO 1-0P (7)" 4.7267 um CO.csv CO {} """molecular""" 47266.99999999999
+"CO 1-0P (8)" 4.7359 um CO.csv CO {} """molecular""" 47358.99999999999
+"CO 1-0P (9)" 4.7451 um CO.csv CO {} """molecular""" 47450.99999999999
+"CO 2-0R(0)" 2.345305 um CO.csv CO {} """molecular""" 23453.05
+"CO 2-0R(1)" 2.343269 um CO.csv CO {} """molecular""" 23432.689999999995
+"CO 2-0R(2)" 2.341275 um CO.csv CO {} """molecular""" 23412.749999999996
+"CO 2-0R(3)" 2.339323 um CO.csv CO {} """molecular""" 23393.229999999992
+"CO 2-0R(4)" 2.337413 um CO.csv CO {} """molecular""" 23374.129999999997
+"CO 2-0P(1)" 2.3495 um CO.csv CO {} """molecular""" 23494.999999999996
+"CO 2-0P(2)" 2.35167 um CO.csv CO {} """molecular""" 23516.699999999993
+"CO 2-0P(3)" 2.35387 um CO.csv CO {} """molecular""" 23538.699999999997
+"CO 2-0P(4)" 2.35612 um CO.csv CO {} """molecular""" 23561.199999999997
+"CO 2-0P(5)" 2.35841 um CO.csv CO {} """molecular""" 23584.1
+"HI 11-3" 0.8865217 um H-He.csv H "{""Error"": 1.9, ""Reference"": 1}" """nebular""" 8865.216999999999
+"HI 10-3" 0.9017385 um H-He.csv H "{""Error"": 1.9, ""Reference"": 1}" """nebular""" 9017.384999999998
+"HI 9-3" 0.9231547 um H-He.csv H "{""Error"": 2.0, ""Reference"": 1}" """nebular""" 9231.546999999999
+"HI 8-3" 0.954859 um H-He.csv H "{""Error"": 2.1, ""Reference"": 1}" """nebular""" 9548.589999999998
+"HI 7-3 10052" 1.0052128 um H-He.csv H "{""Error"": 2.3, ""Reference"": 1}" "[""nebular"",""nebular""]" 10052.127999999999
+"HI 6-3 10941" 1.094109 um H-He.csv H "{""Error"": 2.6, ""Reference"": 1}" "[""nebular"",""nebular""]" 10941.089999999998
+"HI 5-3 12822" 1.282159 um H-He.csv H "{""Error"": 3.3, ""Reference"": 1}" "[""nebular"",""nebular""]" 12821.589999999998
+"HI 11-4 16811" 1.6811111 um H-He.csv H "{""Error"": 2.2, ""Reference"": 1}" "[""nebular"",""nebular""]" 16811.110999999997
+"HI 10-4 17367" 1.736685 um H-He.csv H "{""Error"": 2.3, ""Reference"": 1}" "[""nebular"",""nebular""]" 17366.85
+"HI 9-4 18179" 1.8179084 um H-He.csv H "{""Error"": 2.5, ""Reference"": 1}" """nebular""" 18179.084
+"HI 4-3 18756" 1.875613 um H-He.csv H "{""Error"": 5.9, ""Reference"": 1}" "[""nebular"",""nebular""]" 18756.129999999997
+"HI 8-4 19451" 1.9450871 um H-He.csv H "{""Error"": 2.8, ""Reference"": 1}" "[""nebular"",""nebular""]" 19450.870999999996
+"HI 7-4 21661" 2.16612 um H-He.csv H "{""Error"": 3.2, ""Reference"": 1}" "[""nebular"",""nebular""]" 21661.199999999993
+"HI 6-4 26259" 2.625867 um H-He.csv H "{""Error"": 4.3, ""Reference"": 1}" "[""nebular"",""nebular""]" 26258.669999999995
 "HI 11-5" 2.8729959 um H-He.csv H "{""Error"": 2.6, ""Reference"": 1}" """nebular""" 28729.95899999999
 "HI 10-5" 3.0392022 um H-He.csv H "{""Error"": 2.8, ""Reference"": 1}" """nebular""" 30392.021999999994
 "HI 9-5" 3.296992 um H-He.csv H "{""Error"": 3.2, ""Reference"": 1}" """nebular""" 32969.91999999999
@@ -238,35 +238,35 @@ line_name rest_wavelength wavelength_unit source_list element extra_info science
 "Ly d" 949.742 Angstrom Common_Galactic_700A-2000A.csv H {} """galactic""" 949.742
 "C III 977" 977.03 Angstrom Common_Galactic_700A-2000A.csv C {} """galactic""" 977.03
 "N III 990" 989.79 Angstrom Common_Galactic_700A-2000A.csv N {} """galactic""" 989.79
-"N III 992" 991.514 Angstrom Common_Galactic_700A-2000A.csv N {} """galactic""" 991.514
+"N III 992" 991.514 Angstrom Common_Galactic_700A-2000A.csv N {} "[""galactic"",""galactic""]" 991.514
 "Ly b" 1025.722 Angstrom Common_Galactic_700A-2000A.csv H {} """galactic""" 1025.722
 "O VI 1032" 1031.912 Angstrom Common_Galactic_700A-2000A.csv O {} """galactic""" 1031.912
 "O VI 1038" 1037.613 Angstrom Common_Galactic_700A-2000A.csv O {} """galactic""" 1037.613
 "Ar I 1067" 1066.66 Angstrom Common_Galactic_700A-2000A.csv Ar {} """galactic""" 1066.66
 "Ly a" 1215.67 Angstrom Common_Galactic_700A-2000A.csv H {} """galactic""" 1215.67
-"N V 1239" 1238.821 Angstrom Common_Galactic_700A-2000A.csv N {} """galactic""" 1238.821
-"N V 1243" 1242.804 Angstrom Common_Galactic_700A-2000A.csv N {} """galactic""" 1242.804
-"Si II 1260" 1260.422 Angstrom Common_Galactic_700A-2000A.csv Si {} """galactic""" 1260.422
+"N V 1239" 1238.821 Angstrom Common_Galactic_700A-2000A.csv N {} "[""galactic"",""galactic"",""stellar""]" 1238.821
+"N V 1243" 1242.804 Angstrom Common_Galactic_700A-2000A.csv N {} "[""galactic"",""galactic"",""stellar""]" 1242.804
+"Si II 1260" 1260.422 Angstrom Common_Galactic_700A-2000A.csv Si {} "[""galactic"",""galactic""]" 1260.422
 "Si II 1265" 1264.73 Angstrom Common_Galactic_700A-2000A.csv Si {} """galactic""" 1264.73
-"O I 1302" 1302.168 Angstrom Common_Galactic_700A-2000A.csv O {} """galactic""" 1302.168
-"C II 1335" 1334.532 Angstrom Common_Galactic_700A-2000A.csv C {} """galactic""" 1334.532
+"O I 1302" 1302.168 Angstrom Common_Galactic_700A-2000A.csv O {} "[""galactic"",""galactic""]" 1302.168
+"C II 1335" 1334.532 Angstrom Common_Galactic_700A-2000A.csv C {} "[""galactic"",""galactic"",""galactic""]" 1334.532
 "C II 1336" 1335.708 Angstrom Common_Galactic_700A-2000A.csv C {} """galactic""" 1335.708
-"Si IV 1394" 1393.755 Angstrom Common_Galactic_700A-2000A.csv Si {} """galactic""" 1393.755
+"Si IV 1394" 1393.755 Angstrom Common_Galactic_700A-2000A.csv Si {} "[""galactic"",""galactic"",""stellar""]" 1393.755
 "O IV] 1397" 1397.232 Angstrom Common_Galactic_700A-2000A.csv O {} """galactic""" 1397.232
 "O IV] 1400" 1399.78 Angstrom Common_Galactic_700A-2000A.csv O {} """galactic""" 1399.78
-"Si IV 1403" 1402.77 Angstrom Common_Galactic_700A-2000A.csv Si {} """galactic""" 1402.77
-"N IV] 1486" 1486.496 Angstrom Common_Galactic_700A-2000A.csv N {} """galactic""" 1486.496
-"C IV 1548" 1548.187 Angstrom Common_Galactic_700A-2000A.csv C {} """galactic""" 1548.187
-"C IV 1551" 1550.772 Angstrom Common_Galactic_700A-2000A.csv C {} """galactic""" 1550.772
-"He II 1640" 1640.42 Angstrom Common_Galactic_700A-2000A.csv He {} """galactic""" 1640.42
-"O III] 1661" 1660.809 Angstrom Common_Galactic_700A-2000A.csv O {} """galactic""" 1660.809
-"O III] 1666" 1666.15 Angstrom Common_Galactic_700A-2000A.csv O {} """galactic""" 1666.15
+"Si IV 1403" 1402.77 Angstrom Common_Galactic_700A-2000A.csv Si {} "[""galactic"",""galactic"",""stellar""]" 1402.77
+"N IV] 1486" 1486.496 Angstrom Common_Galactic_700A-2000A.csv N {} "[""galactic"",""galactic""]" 1486.496
+"C IV 1548" 1548.187 Angstrom Common_Galactic_700A-2000A.csv C {} "[""galactic"",""galactic"",""stellar""]" 1548.187
+"C IV 1551" 1550.772 Angstrom Common_Galactic_700A-2000A.csv C {} "[""galactic"",""galactic"",""stellar""]" 1550.772
+"He II 1640" 1640.42 Angstrom Common_Galactic_700A-2000A.csv He {} "[""galactic"",""galactic"",""galactic"",""stellar""]" 1640.42
+"O III] 1661" 1660.809 Angstrom Common_Galactic_700A-2000A.csv O {} "[""galactic"",""galactic""]" 1660.809
+"O III] 1666" 1666.15 Angstrom Common_Galactic_700A-2000A.csv O {} "[""galactic"",""galactic""]" 1666.15
 "N III] 1747" 1746.823 Angstrom Common_Galactic_700A-2000A.csv N {} """galactic""" 1746.823
 "N III] 1749" 1748.656 Angstrom Common_Galactic_700A-2000A.csv N {} """galactic""" 1748.656
-"Al III 1855" 1854.716 Angstrom Common_Galactic_700A-2000A.csv Al {} """galactic""" 1854.716
-"Al III 1863" 1862.79 Angstrom Common_Galactic_700A-2000A.csv Al {} """galactic""" 1862.79
-"Si III] 1892" 1892.03 Angstrom Common_Galactic_700A-2000A.csv Si {} """galactic""" 1892.03
-"C III] 1909" 1908.734 Angstrom Common_Galactic_700A-2000A.csv C {} """galactic""" 1908.734
+"Al III 1855" 1854.716 Angstrom Common_Galactic_700A-2000A.csv Al {} "[""galactic"",""galactic"",""stellar""]" 1854.716
+"Al III 1863" 1862.79 Angstrom Common_Galactic_700A-2000A.csv Al {} "[""galactic"",""galactic""]" 1862.79
+"Si III] 1892" 1892.03 Angstrom Common_Galactic_700A-2000A.csv Si {} "[""galactic"",""galactic""]" 1892.03
+"C III] 1909" 1908.734 Angstrom Common_Galactic_700A-2000A.csv C {} "[""galactic"",""galactic"",""stellar""]" 1908.734
 "N II] 2143" 2142.78 Angstrom Common_Galactic_2000A-11000A.csv N {} """galactic""" 2142.78
 "[O III] 2321" 2320.951 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 2320.951
 "C II] 2324" 2323.5 Angstrom Common_Galactic_2000A-11000A.csv C {} """galactic""" 2323.5
@@ -287,7 +287,7 @@ line_name rest_wavelength wavelength_unit source_list element extra_info science
 "He II 3203" 3203.1 Angstrom Common_Galactic_2000A-11000A.csv He {} """galactic""" 3203.1
 "O III 3312" 3312.329 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 3312.329
 "[Ne V] 3346" 3345.821 Angstrom Common_Galactic_2000A-11000A.csv Ne {} """galactic""" 3345.821
-"[Ne V] 3426" 3425.881 Angstrom Common_Galactic_2000A-11000A.csv Ne {} """galactic""" 3425.881
+"[Ne V] 3426" 3425.881 Angstrom Common_Galactic_2000A-11000A.csv Ne {} "[""galactic"",""nebular"",""stellar""]" 3425.881
 "O III 3444" 3444.052 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 3444.052
 "[N I] 3466" 3466.497 Angstrom Common_Galactic_2000A-11000A.csv N {} """galactic""" 3466.497
 "[N I] 3467" 3466.543 Angstrom Common_Galactic_2000A-11000A.csv N {} """galactic""" 3466.543
@@ -299,43 +299,43 @@ H18 3691.551 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3691.
 H17 3697.157 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3697.157
 H16 3703.859 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3703.859
 H15 3711.977 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3711.977
-"H14 3722" 3721.945 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3721.945
-"[O II] 3726" 3726.032 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 3726.032
-"[O II] 3729" 3728.815 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 3728.815
-"H13 3734" 3734.369 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3734.369
-"H12 3750" 3750.158 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3750.158
+"H14 3722" 3721.945 Angstrom Common_Galactic_2000A-11000A.csv H {} "[""galactic"",""stellar""]" 3721.945
+"[O II] 3726" 3726.032 Angstrom Common_Galactic_2000A-11000A.csv O {} "[""galactic"",""stellar""]" 3726.032
+"[O II] 3729" 3728.815 Angstrom Common_Galactic_2000A-11000A.csv O {} "[""galactic"",""nebular"",""stellar""]" 3728.815
+"H13 3734" 3734.369 Angstrom Common_Galactic_2000A-11000A.csv H {} "[""galactic"",""stellar""]" 3734.369
+"H12 3750" 3750.158 Angstrom Common_Galactic_2000A-11000A.csv H {} "[""galactic"",""stellar""]" 3750.158
 "[Fe VII] 3759" 3758.92 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 3758.92
-"H11 3771" 3770.637 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3770.637
-"H10 3798" 3797.904 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3797.904
-"H9 3835" 3835.391 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3835.391
+"H11 3771" 3770.637 Angstrom Common_Galactic_2000A-11000A.csv H {} "[""galactic"",""stellar""]" 3770.637
+"H10 3798" 3797.904 Angstrom Common_Galactic_2000A-11000A.csv H {} "[""galactic"",""stellar""]" 3797.904
+"H9 3835" 3835.391 Angstrom Common_Galactic_2000A-11000A.csv H {} "[""galactic"",""nebular"",""stellar""]" 3835.391
 "[Fe V] 3839" 3839.27 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 3839.27
-"[Ne III] 3869" 3868.76 Angstrom Common_Galactic_2000A-11000A.csv Ne {} """galactic""" 3868.76
-"He I 3889" 3888.647 Angstrom Common_Galactic_2000A-11000A.csv He {} """galactic""" 3888.647
-"H8 3889" 3889.064 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3889.064
+"[Ne III] 3869" 3868.76 Angstrom Common_Galactic_2000A-11000A.csv Ne {} "[""galactic"",""stellar""]" 3868.76
+"He I 3889" 3888.647 Angstrom Common_Galactic_2000A-11000A.csv He {} "[""galactic"",""galactic""]" 3888.647
+"H8 3889" 3889.064 Angstrom Common_Galactic_2000A-11000A.csv H {} "[""galactic"",""nebular"",""stellar""]" 3889.064
 "[Fe V] 3891" 3891.28 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 3891.28
 "[Fe V] 3911" 3911.33 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 3911.33
 "[Ne III] 3967" 3967.47 Angstrom Common_Galactic_2000A-11000A.csv Ne {} """galactic""" 3967.47
-"Hepsilon 3970" 3970.079 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3970.079
-"He I 4026" 4026.19 Angstrom Common_Galactic_2000A-11000A.csv He {} """galactic""" 4026.19
-"[S II] 4069" 4068.6 Angstrom Common_Galactic_2000A-11000A.csv S {} """galactic""" 4068.6
+"Hepsilon 3970" 3970.079 Angstrom Common_Galactic_2000A-11000A.csv H {} "[""galactic"",""galactic""]" 3970.079
+"He I 4026" 4026.19 Angstrom Common_Galactic_2000A-11000A.csv He {} "[""galactic"",""nebular""]" 4026.19
+"[S II] 4069" 4068.6 Angstrom Common_Galactic_2000A-11000A.csv S {} "[""galactic"",""stellar""]" 4068.6
 "[Fe V] 4071" 4071.24 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4071.24
-"[S II] 4076" 4076.349 Angstrom Common_Galactic_2000A-11000A.csv S {} """galactic""" 4076.349
+"[S II] 4076" 4076.349 Angstrom Common_Galactic_2000A-11000A.csv S {} "[""galactic"",""stellar""]" 4076.349
 "H e" 4101.742 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 4101.742
 "He I 4144" 4143.761 Angstrom Common_Galactic_2000A-11000A.csv He {} """galactic""" 4143.761
 "Fe II 4179" 4178.862 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4178.862
 "[Fe V] 4181" 4180.6 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4180.6
 "Fe II 4233" 4233.172 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4233.172
-"[Fe V] 4227" 4227.19 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4227.19
+"[Fe V] 4227" 4227.19 Angstrom Common_Galactic_2000A-11000A.csv Fe {} "[""galactic"",""nebular""]" 4227.19
 "[Fe II] 4287" 4287.394 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4287.394
 "Fe II 4303" 4303.176 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4303.176
 "O II 4317" 4317.139 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 4317.139
 "H g" 4340.471 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 4340.471
-"[O III] 4363" 4363.21 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 4363.21
+"[O III] 4363" 4363.21 Angstrom Common_Galactic_2000A-11000A.csv O {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 4363.21
 "[Ar XIV]" 4412.3 Angstrom Common_Galactic_2000A-11000A.csv Ar {} """galactic""" 4412.3
 "O II 4415" 4414.899 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 4414.899
 "Fe II 4417" 4416.83 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4416.83
 "[Fe II] 4452" 4452.098 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4452.098
-"He I 4471" 4471.479 Angstrom Common_Galactic_2000A-11000A.csv He {} """galactic""" 4471.479
+"He I 4471" 4471.479 Angstrom Common_Galactic_2000A-11000A.csv He {} "[""galactic"",""nebular""]" 4471.479
 "Fe II 4489" 4489.183 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4489.183
 "Fe II 4491" 4491.405 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4491.405
 "N III 4511" 4510.91 Angstrom Common_Galactic_2000A-11000A.csv N {} """galactic""" 4510.91
@@ -351,15 +351,15 @@ H15 3711.977 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3711.
 "C III 4650" 4650.25 Angstrom Common_Galactic_2000A-11000A.csv C {} """galactic""" 4650.25
 "C III 4651" 4651.47 Angstrom Common_Galactic_2000A-11000A.csv C {} """galactic""" 4651.47
 "[Fe III] 4658" 4658.05 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4658.05
-"He II 4686" 4685.71 Angstrom Common_Galactic_2000A-11000A.csv He {} """galactic""" 4685.71
+"He II 4686" 4685.71 Angstrom Common_Galactic_2000A-11000A.csv He {} "[""galactic"",""nebular"",""stellar""]" 4685.71
 "[Ar IV] 4711" 4711.26 Angstrom Common_Galactic_2000A-11000A.csv Ar {} """galactic""" 4711.26
-"[Ar IV] 4740" 4740.12 Angstrom Common_Galactic_2000A-11000A.csv Ar {} """galactic""" 4740.12
+"[Ar IV] 4740" 4740.12 Angstrom Common_Galactic_2000A-11000A.csv Ar {} "[""galactic"",""nebular""]" 4740.12
 "H b" 4861.333 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 4861.333
 "[Fe VII] 4893" 4893.37 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4893.37
 "[Fe IV] 4903" 4903.07 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4903.07
 "Fe II 4924" 4923.927 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 4923.927
-"[O III] 4959" 4958.911 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 4958.911
-"[O III] 5007" 5006.843 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 5006.843
+"[O III] 4959" 4958.911 Angstrom Common_Galactic_2000A-11000A.csv O {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 4958.911
+"[O III] 5007" 5006.843 Angstrom Common_Galactic_2000A-11000A.csv O {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 5006.843
 "Fe II 5018" 5018.44 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 5018.44
 "[Fe III] 5085" 5084.77 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 5084.77
 "[Fe VI] 5146" 5145.75 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 5145.75
@@ -375,7 +375,7 @@ H15 3711.977 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3711.
 "[Fe VII] 5276" 5276.38 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 5276.38
 "[Fe XIV]" 5302.86 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 5302.86
 "[Ca V]" 5309.11 Angstrom Common_Galactic_2000A-11000A.csv Ca {} """galactic""" 5309.11
-"Fe II 5317" 5316.615 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 5316.615
+"Fe II 5317" 5316.615 Angstrom Common_Galactic_2000A-11000A.csv Fe {} "[""galactic"",""galactic""]" 5316.615
 "[Fe VI] 5335" 5335.18 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 5335.18
 "[Fe VI] 5424" 5424.22 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 5424.22
 "[Cl III] 5518" 5517.709 Angstrom Common_Galactic_2000A-11000A.csv Cl {} """galactic""" 5517.709
@@ -384,27 +384,27 @@ H15 3711.977 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 3711.
 "[Fe VI] 5677" 5677.0 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 5677.0
 "C III 5696" 5695.92 Angstrom Common_Galactic_2000A-11000A.csv C {} """galactic""" 5695.92
 "[Fe VII] 5721" 5720.7 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 5720.7
-"[N II] 5755" 5754.59 Angstrom Common_Galactic_2000A-11000A.csv N {} """galactic""" 5754.59
+"[N II] 5755" 5754.59 Angstrom Common_Galactic_2000A-11000A.csv N {} "[""galactic"",""galactic"",""nebular""]" 5754.59
 "C IV 5801" 5801.33 Angstrom Common_Galactic_2000A-11000A.csv C {} """galactic""" 5801.33
 "C IV 5812" 5811.98 Angstrom Common_Galactic_2000A-11000A.csv C {} """galactic""" 5811.98
-"He I 5876" 5875.624 Angstrom Common_Galactic_2000A-11000A.csv He {} """galactic""" 5875.624
+"He I 5876" 5875.624 Angstrom Common_Galactic_2000A-11000A.csv He {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 5875.624
 "O I 6046" 6046.44 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 6046.44
 "[Fe VII] 6087" 6087.0 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 6087.0
-"[O I] 6300" 6300.304 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 6300.304
-"[S III] 6312" 6312.06 Angstrom Common_Galactic_2000A-11000A.csv S {} """galactic""" 6312.06
+"[O I] 6300" 6300.304 Angstrom Common_Galactic_2000A-11000A.csv O {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 6300.304
+"[S III] 6312" 6312.06 Angstrom Common_Galactic_2000A-11000A.csv S {} "[""galactic"",""galactic""]" 6312.06
 "Si II 6347" 6347.1 Angstrom Common_Galactic_2000A-11000A.csv Si {} """galactic""" 6347.1
-"[O I] 6364" 6363.776 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 6363.776
+"[O I] 6364" 6363.776 Angstrom Common_Galactic_2000A-11000A.csv O {} "[""galactic"",""stellar""]" 6363.776
 "Fe II 6369" 6369.462 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 6369.462
 "[Fe X]" 6374.51 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 6374.51
 "Fe II 6516" 6516.081 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 6516.081
-"[N II] 6548" 6548.05 Angstrom Common_Galactic_2000A-11000A.csv N {} """galactic""" 6548.05
+"[N II] 6548" 6548.05 Angstrom Common_Galactic_2000A-11000A.csv N {} "[""galactic"",""galactic"",""nebular"",""stellar""]" 6548.05
 "H a" 6562.819 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 6562.819
-"[N II] 6583" 6583.46 Angstrom Common_Galactic_2000A-11000A.csv N {} """galactic""" 6583.46
-"[S II] 6716" 6716.44 Angstrom Common_Galactic_2000A-11000A.csv S {} """galactic""" 6716.44
-"[S II] 6731" 6730.81 Angstrom Common_Galactic_2000A-11000A.csv S {} """galactic""" 6730.81
+"[N II] 6583" 6583.46 Angstrom Common_Galactic_2000A-11000A.csv N {} "[""galactic"",""galactic"",""stellar""]" 6583.46
+"[S II] 6716" 6716.44 Angstrom Common_Galactic_2000A-11000A.csv S {} "[""galactic"",""galactic"",""stellar""]" 6716.44
+"[S II] 6731" 6730.81 Angstrom Common_Galactic_2000A-11000A.csv S {} "[""galactic"",""stellar""]" 6730.81
 "O I 7002" 7002.23 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 7002.23
 "[Ar V] 7006" 7005.87 Angstrom Common_Galactic_2000A-11000A.csv Ar {} """galactic""" 7005.87
-"He I 7065" 7065.196 Angstrom Common_Galactic_2000A-11000A.csv He {} """galactic""" 7065.196
+"He I 7065" 7065.196 Angstrom Common_Galactic_2000A-11000A.csv He {} "[""galactic"",""nebular"",""stellar""]" 7065.196
 "[Ar III] 7136" 7135.79 Angstrom Common_Galactic_2000A-11000A.csv Ar {} """galactic""" 7135.79
 "[Fe II] 7155" 7155.157 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 7155.157
 "[Ar IV] 7171" 7170.62 Angstrom Common_Galactic_2000A-11000A.csv Ar {} """galactic""" 7170.62
@@ -432,14 +432,14 @@ Pa19 8413.318 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 8413
 Pa18 8437.956 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 8437.956
 "O I 8446" 8446.359 Angstrom Common_Galactic_2000A-11000A.csv O {} """galactic""" 8446.359
 Pa17 8467.254 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 8467.254
-"Ca II 8498" 8498.02 Angstrom Common_Galactic_2000A-11000A.csv Ca {} """galactic""" 8498.02
+"Ca II 8498" 8498.02 Angstrom Common_Galactic_2000A-11000A.csv Ca {} "[""galactic"",""stellar""]" 8498.02
 Pa16 8502.483 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 8502.483
-"Ca II 8542" 8542.09 Angstrom Common_Galactic_2000A-11000A.csv Ca {} """galactic""" 8542.09
+"Ca II 8542" 8542.09 Angstrom Common_Galactic_2000A-11000A.csv Ca {} "[""galactic"",""stellar""]" 8542.09
 Pa15 8545.383 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 8545.383
 "[Cl II]" 8578.7 Angstrom Common_Galactic_2000A-11000A.csv Cl {} """galactic""" 8578.7
 Pa14 8598.392 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 8598.392
 "[Fe II] 8617" 8616.95 Angstrom Common_Galactic_2000A-11000A.csv Fe {} """galactic""" 8616.95
-"Ca II 8662" 8662.14 Angstrom Common_Galactic_2000A-11000A.csv Ca {} """galactic""" 8662.14
+"Ca II 8662" 8662.14 Angstrom Common_Galactic_2000A-11000A.csv Ca {} "[""galactic"",""stellar""]" 8662.14
 Pa13 8665.019 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 8665.019
 "N I 8680" 8680.282 Angstrom Common_Galactic_2000A-11000A.csv N {} """galactic""" 8680.282
 "N I 8703" 8703.247 Angstrom Common_Galactic_2000A-11000A.csv N {} """galactic""" 8703.247
@@ -1336,8 +1336,8 @@ Pa9 9229.014 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 9229.
 "HeI 10314" 1.0314 um HeI-HeII.csv He "{""transition"": ""6D-3P 3dD-3Po""}" """nebular""" 10313.999999999998
 "HeII 10422" 1.0422 um HeI-HeII.csv He "{""transition"": ""13-6""}" """nebular""" 10421.999999999998
 "HeI 10668" 1.0668 um HeI-HeII.csv He "{""transition"": ""6S-3P 3S-3Po""}" """nebular""" 10667.999999999998
-"HeI 10832" 1.0832 um HeI-HeII.csv He "{""transition"": ""2P-2S 3Po-3S GU=3""}" """nebular""" 10831.999999999998
-"HeI 10833" 1.0833 um HeI-HeII.csv He "{""transition"": ""2P-2S 3Po-3S GU=5""}" """nebular""" 10832.999999999998
+"HeI 10832" 1.0832 um HeI-HeII.csv He "{""transition"": ""2P-2S 3Po-3S GU=3""}" "[""nebular"",""nebular""]" 10831.999999999998
+"HeI 10833" 1.0833 um HeI-HeII.csv He "{""transition"": ""2P-2S 3Po-3S GU=5""}" "[""nebular"",""nebular""]" 10832.999999999998
 "HeI 10905" 1.0905 um HeI-HeII.csv He "{""transition"": ""6P-3D 1Po-1d""}" """nebular""" 10904.999999999998
 "HeI 10916" 1.0916 um HeI-HeII.csv He "{""transition"": ""6F-3D 3Fo-3D""}" """nebular""" 10915.999999999996
 "HeI 10920" 1.092 um HeI-HeII.csv He "{""transition"": ""6F-3D 1Fo-1D""}" """nebular""" 10919.999999999998
@@ -1419,21 +1419,21 @@ Pa9 9229.014 Angstrom Common_Galactic_2000A-11000A.csv H {} """galactic""" 9229.
 "HeII 23788" 2.3788 um HeI-HeII.csv He "{""transition"": ""19-9""}" """nebular""" 23787.999999999996
 "HeII 24606" 2.4606 um HeI-HeII.csv He "{""transition"": ""18-9""}" """nebular""" 24605.999999999993
 "HeI 24734" 2.4734 um HeI-HeII.csv He "{""transition"": ""6D-4P 3D-3Po""}" """nebular""" 24733.999999999993
-"Mg II 2799" 2799.49 Angstrom SDSS-IV.csv Mg "{""Type"": ""Emission""}" """galactic""" 2799.49
+"Mg II 2799" 2799.49 Angstrom SDSS-IV.csv Mg "{""Type"": ""Emission""}" "[""galactic"",""galactic""]" 2799.49
 "[O II] 3725" 3726.032 Angstrom SDSS-IV.csv O "{""Type"": ""Emission""}" """galactic""" 3726.032
-"[O II] 3727" 3728.815 Angstrom SDSS-IV.csv O "{""Type"": ""Emission""}" """galactic""" 3728.815
-"[Ne III] 3868" 3868.76 Angstrom SDSS-IV.csv Ne "{""Type"": ""Emission""}" """galactic""" 3868.76
-"Hzeta 3889" 3889.049 Angstrom SDSS-IV.csv H "{""Type"": ""Emission""}" """galactic""" 3889.049
+"[O II] 3727" 3728.815 Angstrom SDSS-IV.csv O "{""Type"": ""Emission""}" "[""galactic"",""nebular""]" 3728.815
+"[Ne III] 3868" 3868.76 Angstrom SDSS-IV.csv Ne "{""Type"": ""Emission""}" "[""galactic"",""nebular""]" 3868.76
+"Hzeta 3889" 3889.049 Angstrom SDSS-IV.csv H "{""Type"": ""Emission""}" "[""galactic"",""galactic""]" 3889.049
 "[Ne III] 3970" 3970.0 Angstrom SDSS-IV.csv Ne "{""Type"": ""Emission""}" """galactic""" 3970.0
-"Hdelta 4102" 4101.734 Angstrom SDSS-IV.csv H "{""Type"": ""Emission""}" """galactic""" 4101.734
-"Hgamma 4340" 4340.464 Angstrom SDSS-IV.csv H "{""Type"": ""Emission""}" """galactic""" 4340.464
+"Hdelta 4102" 4101.734 Angstrom SDSS-IV.csv H "{""Type"": ""Emission""}" "[""galactic"",""galactic""]" 4101.734
+"Hgamma 4340" 4340.464 Angstrom SDSS-IV.csv H "{""Type"": ""Emission""}" "[""galactic"",""galactic""]" 4340.464
 "He II 4685" 4685.68 Angstrom SDSS-IV.csv He "{""Type"": ""Emission""}" """galactic""" 4685.68
-"Hbeta 4861" 4861.325 Angstrom SDSS-IV.csv H "{""Type"": ""Emission""}" """galactic""" 4861.325
-"He II 5411" 5411.52 Angstrom SDSS-IV.csv He "{""Type"": ""Emission""}" """galactic""" 5411.52
+"Hbeta 4861" 4861.325 Angstrom SDSS-IV.csv H "{""Type"": ""Emission""}" "[""galactic"",""galactic""]" 4861.325
+"He II 5411" 5411.52 Angstrom SDSS-IV.csv He "{""Type"": ""Emission""}" "[""galactic"",""nebular""]" 5411.52
 "[O I] 5577" 5577.339 Angstrom SDSS-IV.csv O "{""Type"": ""Emission""}" """galactic""" 5577.339
 "[O I] 6363" 6363.776 Angstrom SDSS-IV.csv O "{""Type"": ""Emission""}" """galactic""" 6363.776
-"Halpha 6563" 6562.801 Angstrom SDSS-IV.csv H "{""Type"": ""Emission""}" """galactic""" 6562.801
-"[S II] 6730" 6730.82 Angstrom SDSS-IV.csv S "{""Type"": ""Emission""}" """galactic""" 6730.82
+"Halpha 6563" 6562.801 Angstrom SDSS-IV.csv H "{""Type"": ""Emission""}" "[""galactic"",""galactic""]" 6562.801
+"[S II] 6730" 6730.82 Angstrom SDSS-IV.csv S "{""Type"": ""Emission""}" "[""galactic"",""nebular""]" 6730.82
 "[Ar III] 7135" 7135.79 Angstrom SDSS-IV.csv Ar "{""Type"": ""Emission""}" """galactic""" 7135.79
 "K (Ca II 3933)" 3933.7 Angstrom SDSS-IV.csv Ca "{""Type"": ""Absorption""}" """galactic""" 3933.7
 "H (Ca II 3968)" 3968.5 Angstrom SDSS-IV.csv Ca "{""Type"": ""Absorption""}" """galactic""" 3968.5
@@ -1486,13 +1486,13 @@ Na 5895.6 Angstrom SDSS.csv Na "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1
 "Sky 6302" 6301.7 Angstrom SDSS.csv 0 "{""Type"": ""Sky"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}" """galactic""" 6301.7
 "Sky 7246" 7246.0 Angstrom SDSS.csv 0 "{""Type"": ""Sky"", ""Weight-Galaxy"": 0.0, ""Weight-Quasar"": 0.0}" """galactic""" 7246.0
 "C I 1157" 1157.19 Angstrom UV_linelist_vacuum.csv C {} """galactic""" 1157.19
-"N IV 1169" 1168.6 Angstrom UV_linelist_vacuum.csv N {} """galactic""" 1168.6
-"C IV 1169" 1168.87 Angstrom UV_linelist_vacuum.csv C {} """galactic""" 1168.87
+"N IV 1169" 1168.6 Angstrom UV_linelist_vacuum.csv N {} "[""galactic"",""galactic"",""galactic""]" 1168.6
+"C IV 1169" 1168.87 Angstrom UV_linelist_vacuum.csv C {} "[""galactic"",""galactic""]" 1168.87
 "C III 1176" 1175.53 Angstrom UV_linelist_vacuum.csv C {} """galactic""" 1175.53
 "N III 1183" 1183.03 Angstrom UV_linelist_vacuum.csv N {} """galactic""" 1183.03
 "N III 1185" 1184.54 Angstrom UV_linelist_vacuum.csv N {} """galactic""" 1184.54
 "Mn II 1199" 1199.39 Angstrom UV_linelist_vacuum.csv Mn {} """galactic""" 1199.39
-"N I 1200" 1199.55 Angstrom UV_linelist_vacuum.csv N {} """galactic""" 1199.55
+"N I 1200" 1199.55 Angstrom UV_linelist_vacuum.csv N {} "[""galactic"",""galactic""]" 1199.55
 "N I 1201" 1200.71 Angstrom UV_linelist_vacuum.csv N {} """galactic""" 1200.71
 "Si III 1206" 1206.5 Angstrom UV_linelist_vacuum.csv Si {} """galactic""" 1206.5
 "H I" 1215.67 Angstrom UV_linelist_vacuum.csv H {} """galactic""" 1215.67
@@ -1512,7 +1512,7 @@ Na 5895.6 Angstrom SDSS.csv Na "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1
 "C II*" 1335.71 Angstrom UV_linelist_vacuum.csv C {} """galactic""" 1335.71
 "O IV" 1341.64 Angstrom UV_linelist_vacuum.csv O {} """galactic""" 1341.64
 "Fe V 1346" 1345.61 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1345.61
-"Fe V 1363" 1362.86 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1362.86
+"Fe V 1363" 1362.86 Angstrom UV_linelist_vacuum.csv Fe {} "[""galactic"",""galactic""]" 1362.86
 "Fe V 1365" 1364.82 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1364.82
 "O V" 1371.3 Angstrom UV_linelist_vacuum.csv O {} """galactic""" 1371.3
 "Si III 1417" 1417.24 Angstrom UV_linelist_vacuum.csv Si {} """galactic""" 1417.24
@@ -1549,16 +1549,16 @@ Na 5895.6 Angstrom SDSS.csv Na "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1
 "Si III] 1883" 1883.0 Angstrom UV_linelist_vacuum.csv Si {} """galactic""" 1883.0
 "Fe II 1902" 1901.77 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1901.77
 "C III] 1907" 1906.68 Angstrom UV_linelist_vacuum.csv C {} """galactic""" 1906.68
-"Fe III 1923" 1922.79 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1922.79
+"Fe III 1923" 1922.79 Angstrom UV_linelist_vacuum.csv Fe {} "[""galactic"",""galactic""]" 1922.79
 "Fe III 1924" 1923.88 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1923.88
 "Fe III 1925" 1924.53 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1924.53
-"Fe III 1926" 1926.04 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1926.04
+"Fe III 1926" 1926.04 Angstrom UV_linelist_vacuum.csv Fe {} "[""galactic"",""galactic""]" 1926.04
 "Fe III 1930" 1930.39 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1930.39
 "Fe III 1932" 1931.51 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1931.51
 "Fe III 1933" 1932.82 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1932.82
-"Fe III 1950" 1949.67 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1949.67
+"Fe III 1950" 1949.67 Angstrom UV_linelist_vacuum.csv Fe {} "[""galactic"",""galactic""]" 1949.67
 "Fe III 1951" 1951.01 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1951.01
-"Fe III 1953" 1952.65 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1952.65
+"Fe III 1953" 1952.65 Angstrom UV_linelist_vacuum.csv Fe {} "[""galactic"",""galactic""]" 1952.65
 "Fe III 1955" 1954.61 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1954.61
 "Fe III 1959" 1958.59 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1958.59
 "Fe III 1960" 1960.32 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 1960.32
@@ -1580,13 +1580,13 @@ Na 5895.6 Angstrom SDSS.csv Na "{""Type"": ""Absorption"", ""Weight-Galaxy"": -1
 "Fe II 2344" 2344.21 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 2344.21
 "Fe II 2374" 2374.46 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 2374.46
 "Fe II 2383" 2382.76 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 2382.76
-"[O II] 2471" 2470.97 Angstrom UV_linelist_vacuum.csv O {} """galactic""" 2470.97
+"[O II] 2471" 2470.97 Angstrom UV_linelist_vacuum.csv O {} "[""galactic"",""galactic""]" 2470.97
 "Mn II 2577" 2576.88 Angstrom UV_linelist_vacuum.csv Mn {} """galactic""" 2576.88
 "Fe II 2587" 2586.65 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 2586.65
 "Mn II 2594" 2594.5 Angstrom UV_linelist_vacuum.csv Mn {} """galactic""" 2594.5
 "Fe II 2600" 2600.17 Angstrom UV_linelist_vacuum.csv Fe {} """galactic""" 2600.17
 "Mn II 2606" 2606.46 Angstrom UV_linelist_vacuum.csv Mn {} """galactic""" 2606.46
-"Mg II 2796" 2796.35 Angstrom UV_linelist_vacuum.csv Mg {} """galactic""" 2796.35
+"Mg II 2796" 2796.35 Angstrom UV_linelist_vacuum.csv Mg {} "[""galactic"",""stellar""]" 2796.35
 "Mg II 2804" 2803.53 Angstrom UV_linelist_vacuum.csv Mg {} """galactic""" 2803.53
 "Mg I 2853" 2852.96 Angstrom UV_linelist_vacuum.csv Mg {} """galactic""" 2852.96
 [SiVI] 1.96341 um Atomic-ISO.csv Si "{""transition"": ""2P1/2-2P3/2"", ""error"": 0.0001, ""ep"": 166.77, ""ip"": 205.05}" """nebular""" 19634.1
@@ -1876,7 +1876,7 @@ Hb 4861.342 Angstrom Common_nebular.csv H {} """nebular""" 4861.342
 "[Ar V] 6435" 6435.0 Angstrom Common_nebular.csv Ar {} """nebular""" 6435.0
 Ha 6563.0 Angstrom Common_nebular.csv H {} """nebular""" 6563.0
 "[N II] 6584" 6584.0 Angstrom Common_nebular.csv N {} """nebular""" 6584.0
-"He I 6678" 6678.0 Angstrom Common_nebular.csv He {} """nebular""" 6678.0
+"He I 6678" 6678.0 Angstrom Common_nebular.csv He {} "[""nebular"",""stellar""]" 6678.0
 "[S II] 6719" 6719.0 Angstrom Common_nebular.csv S {} """nebular""" 6719.0
 "Ar III" 7136.0 Angstrom Common_nebular.csv Ar {} """nebular""" 7136.0
 La 1215.67 Angstrom Common_stellar.csv H {} """stellar""" 1215.67
