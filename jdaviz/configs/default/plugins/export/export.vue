@@ -335,26 +335,29 @@
 
       <v-overlay
         absolute contained
-        opacity=0.25
+        opacity=0.5
         :model-value="overwrite_warn"
         :zIndex=3
         style="grid-area: 1/1;
                margin-left: -24px;
                margin-right: -24px">
 
-      <v-card color="primary" elevation=4 >
-        <v-card-text width="100%">
+      <v-card color="primary" elevation=4 class="overwrite-card">
+        <v-card-text width="100%" class="overwrite-card-text">
           <div class="white--text">
-            A file with this name is already on disk. Overwrite?
+            A file named "{{ filename_value.length > 20 ? '...' : '' }}{{ filename_value.slice(-20) }}"
+            is already on disk. Overwrite?
           </div>
         </v-card-text>
 
-        <v-card-actions>
+        <v-card-actions class="overwrite-card-actions">
           <j-flex-row justify="end">
-            <v-btn rounded="0" small color="primary" variant="flat" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
-            <v-btn rounded="0" small color="accent" variant="flat" class="mr-4" @click="overwrite_from_ui">Overwrite</v-btn>
+            <v-btn rounded="2" small color="secondary" variant="flat" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
+            <v-btn rounded="2" small color="accent" variant="flat" class="mr-4" @click="overwrite_from_ui">Overwrite</v-btn>
           </j-flex-row>
         </v-card-actions>
+
+
       </v-card>
 
       </v-overlay>
@@ -382,6 +385,17 @@
     margin-left: 32px;
     width: 100%;
     padding-right: 24px;
+  }
+
+  .overwrite-card-text {
+    padding-top: 8px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .overwrite-card-actions {
+  min-height: 40px !important;
+  padding-top: 4px !important;
+  padding-bottom: 8px !important;
   }
 
 </style>
