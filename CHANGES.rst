@@ -84,6 +84,9 @@ New Features
   
 - Keep visibility consistent between blink and plot options. [#4316]
 
+- Improvements to flux / surface brightness unit conversion logic to support
+  workflows and avoid errors in mixed unit viewers in deconfigged. [#4336]
+
 Mosviz
 ^^^^^^
 

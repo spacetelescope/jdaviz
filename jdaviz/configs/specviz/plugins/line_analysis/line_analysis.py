@@ -29,7 +29,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
+from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
                                                coerce_unit)
 
 
@@ -383,8 +383,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                 else:
                     add_flux = False
 
-                solid_angle_in_flux_unit = check_if_unit_is_per_solid_angle(flux_unit,
-                                                                            return_unit=True)
+                solid_angle_in_flux_unit = is_unit_per_solid_angle(
+                    flux_unit, return_unit=True)
                 if solid_angle_in_flux_unit is None:
                     # use dimensionless_unscaled as a placeholder unit.
                     # is_equivalent() checks won't pass anyway if theres no

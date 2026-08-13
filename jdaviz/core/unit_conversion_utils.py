@@ -11,17 +11,36 @@ from jdaviz.core.custom_units_and_equivs import (PIX2,
                                                  _eqv_flux_to_sb_pixel,
                                                  _spectral_and_photon_flux_density_units)
 
-__all__ = ["all_flux_unit_conversion_equivs", "check_if_unit_is_per_solid_angle",
+__all__ = ["all_flux_unit_conversion_equivs", "is_unit_per_solid_angle",
            "coerce_unit", "combine_flux_and_angle_units",
            "convert_integrated_sb_unit",
            "create_equivalent_angle_units_list",
            "create_equivalent_flux_units_list",
            "create_equivalent_spectral_axis_units_list",
-           "flux_conversion_general", "handle_squared_flux_unit_conversions",
+           "flux_unit_conversion", "squared_flux_unit_conversions",
            "is_physical_flux_unit", "is_physical_spectral_unit",
            "supported_sq_angle_units", "spectral_unit_conversion",
            "units_to_strings", "flux_to_sb_unit", "to_flux_density_unit",
-           "spectrum_ensure_flux_density_unit", "viewer_flux_conversion_equivalencies"]
+           "spectrum_ensure_flux_density_unit", "viewer_flux_conversion_equivalencies",
+           "valid_glue_display_unit"]
+
+
+def valid_glue_display_unit(unit_str, viewer, axis='x'):
+    """Return the canonical glue-formatted string for ``unit_str`` by matching
+    it against the valid choices for the given viewer axis."""
+    if not unit_str or not viewer:
+        return unit_str
+    unit_u = u.Unit(unit_str)
+    if not hasattr(viewer.state.__class__, f'{axis}_display_unit'):
+        return unit_str
+    choices_str = getattr(viewer.state.__class__, f'{axis}_display_unit').get_choices(viewer.state)  # noqa
+    choices_str = [choice for choice in choices_str if choice is not None]
+    choices_u = [u.Unit(choice) for choice in choices_str]
+    if unit_u not in choices_u:
+        raise ValueError(
+            f"{unit_str} could not find match in valid {axis} display units {choices_str}")
+    ind = choices_u.index(unit_u)
+    return choices_str[ind]
 
 
 def all_flux_unit_conversion_equivs(pixar_sr=None, cube_wave=None):
@@ -114,7 +133,7 @@ def viewer_flux_conversion_equivalencies(values, spec):
     return equivs
 
 
-def check_if_unit_is_per_solid_angle(unit, return_unit=False):
+def is_unit_per_solid_angle(unit, return_unit=False):
     """
     Check if a given Unit or unit string (that can be converted to
     a Unit) represents some unit per solid angle. If 'return_unit'
@@ -141,11 +160,11 @@ def check_if_unit_is_per_solid_angle(unit, return_unit=False):
 
     Examples
     --------
-    >>> check_if_unit_is_per_solid_angle('erg / (s cm^2 sr)')
+    >>> is_unit_per_solid_angle('erg / (s cm^2 sr)')
     True
-    >>> check_if_unit_is_per_solid_angle('erg / s cm^2')
+    >>> is_unit_per_solid_angle('erg / s cm^2')
     False
-    >>> check_if_unit_is_per_solid_angle('Jy * sr^-1')
+    >>> is_unit_per_solid_angle('Jy * sr^-1')
     True
 
     """
@@ -268,6 +287,13 @@ def is_physical_flux_unit(flux_unit):
         unit = u.Unit(flux_unit)
     except Exception:
         return False
+
+    # strip solid angle from SB units (e.g MJy/sr -> MJy) so that only
+    # the flux numerator is checked against physical flux density units
+    angle_unit = is_unit_per_solid_angle(unit, return_unit=True)
+    if angle_unit is not None:
+        unit = unit * angle_unit
+
     equiv = u.spectral_density(1 * u.m)
     for phys_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
         if unit.is_equivalent(phys_unit, equiv):
@@ -389,7 +415,7 @@ def create_equivalent_spectral_axis_units_list(spectral_axis_unit,
     return sorted(units_to_strings(additional_units)) + spectral_axis_unit_equivalencies_titles
 
 
-def _check_if_unit_is_from_moment_map(unit):
+def unit_is_from_moment_map(unit):
     """
     Check if a unit is likely from a moment map to avoid attempting unit
     conversion on this data. Check for moment 0 by multiplying by length/freq unit
@@ -438,8 +464,8 @@ def _check_if_unit_is_from_moment_map(unit):
         return False
 
 
-def flux_conversion_general(values, original_unit, target_unit,
-                            equivalencies=None, with_unit=True):
+def flux_unit_conversion(values, original_unit, target_unit,
+                         equivalencies=None, with_unit=True):
     """
     Converts ``values`` from ``original_unit`` to ``target_unit`` using the
     provided ``equivalencies`` while handling special cases where direct unit
@@ -495,15 +521,22 @@ def flux_conversion_general(values, original_unit, target_unit,
     target_unit = u.Unit(target_unit)
 
     # get solid angle component of input and target (e.g sr in Jy/sr) if present
-    solid_angle_in_orig = check_if_unit_is_per_solid_angle(original_unit,
-                                                           return_unit=True)
-    solid_angle_in_targ = check_if_unit_is_per_solid_angle(target_unit,
-                                                           return_unit=True)
+    solid_angle_in_orig = is_unit_per_solid_angle(
+        original_unit, return_unit=True)
+    solid_angle_in_targ = is_unit_per_solid_angle(
+        target_unit, return_unit=True)
 
     # if the units being converted are likely from a moment map, skip conversion
     # (which will fail anyway) without erroring and just return input (with or
     # without units attached, as requested)
-    if _check_if_unit_is_from_moment_map(original_unit):
+    if unit_is_from_moment_map(original_unit):
+        if with_unit:
+            return values * original_unit
+        return values
+
+    # do not attempt to convert if either unit is pixel / dimensionless,
+    # to support mixed-unit viewing. If the units are the same, just return values
+    if not np.all([is_physical_flux_unit(x) for x in (original_unit, target_unit)]):
         if with_unit:
             return values * original_unit
         return values
@@ -544,11 +577,11 @@ def flux_conversion_general(values, original_unit, target_unit,
         return converted_values
 
 
-def handle_squared_flux_unit_conversions(value, original_unit=None,
-                                         target_unit=None, equivalencies=None):
+def squared_flux_unit_conversions(value, original_unit=None,
+                                  target_unit=None, equivalencies=None):
     """
-    Handles conversions between squared flux or surface brightness units
-    that cannot be directly converted, even with the correct equivalencies.
+    This function handles conversions between squared flux or surface brightness
+    units that cannot be directly converted, even with the correct equivalencies.
 
     This function is specifically designed to address cases where squared
     units, such as (MJy/sr)**2 to (Jy/sr)**2, appear in contexts like
@@ -574,11 +607,9 @@ def handle_squared_flux_unit_conversions(value, original_unit=None,
     """
 
     # get scale factor between non-squared units
-    converted = flux_conversion_general(1.,
-                                        original_unit ** 0.5,
-                                        target_unit ** 0.5,
-                                        equivalencies,
-                                        with_unit=False)
+    converted = flux_unit_conversion(
+        1., original_unit ** 0.5, target_unit ** 0.5,
+        equivalencies, with_unit=False)
 
     # square conversion factor and re-apply squared unit
     converted = converted ** 2 * value * target_unit
@@ -615,7 +646,8 @@ def spectral_unit_conversion(values, original_units, target_units, with_unit=Fal
     orig = u.Unit(original_units)
     targ = u.Unit(target_units)
 
-    # do not convert values if one of the units is pixel/dimensionless and the other is not.
+    # do not attempt to convert if either unit is pixel / dimensionless,
+    # to support mixed-unit viewing. If the units are the same, just return values
     if not np.all([is_physical_spectral_unit(x) for x in (orig, targ)]) and orig != targ:
         if with_unit:
             return values * orig
@@ -689,7 +721,7 @@ def convert_integrated_sb_unit(u1, spectral_axis_unit, desired_freq_unit, desire
     uu = u1 / spectral_axis_unit
 
     # multiply solid angle unit out of surface brightness to compare just flux components
-    flux = uu * check_if_unit_is_per_solid_angle(uu.unit, return_unit=True)
+    flux = uu * is_unit_per_solid_angle(uu.unit, return_unit=True)
 
     # then check if flux unit is a per-frequency or per-wavelength flux unit
     wav_units = _spectral_and_photon_flux_density_units(wav_only=True, as_units=True)
@@ -714,7 +746,8 @@ def convert_integrated_sb_unit(u1, spectral_axis_unit, desired_freq_unit, desire
 
 
 def flux_to_sb_unit(flux_unit, angle_unit):
-    if angle_unit not in supported_sq_angle_units(as_strings=True):
+    # use unit-object comparison to avoid string format mismatches (e.g. 'pix^2' vs 'pix2')
+    if u.Unit(angle_unit) not in supported_sq_angle_units():
         sb_unit = flux_unit
     else:
         # str > unit > str to remove formatting inconsistencies with
@@ -746,7 +779,7 @@ def to_flux_density_unit(input_unit, pixar_sr=1.0):
     # If it's surface brightness, convert to flux density
     elif input_unit.physical_type == 'surface brightness':
         # Extract the angle/pixel unit from the surface brightness unit
-        angle_unit = check_if_unit_is_per_solid_angle(input_unit, return_unit=True)
+        angle_unit = is_unit_per_solid_angle(input_unit, return_unit=True)
 
         # Use pixar_sr for pixel-based units, otherwise use the extracted angle unit
         if angle_unit == PIX2:
