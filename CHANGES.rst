@@ -84,6 +84,8 @@ New Features
   
 - Keep visibility consistent between blink and plot options. [#4316]
 
+- Change appearance of the overwrite warning overlay shown in the export plugin. [#4338]
+
 Mosviz
 ^^^^^^
 
