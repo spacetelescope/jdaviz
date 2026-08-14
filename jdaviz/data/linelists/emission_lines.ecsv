@@ -7,7 +7,7 @@
 # - {name: source_list, datatype: string}
 # - {name: element, datatype: string}
 # - {name: extra_info, datatype: string}
-# - {name: science_case, datatype: string}
+# - {name: science_case, datatype: string, subtype: json}
 # - {name: rest_wavelength_angstrom, unit: Angstrom, datatype: float64}
 # meta: !!omap
 # - {description: Consolidated emission line database}
