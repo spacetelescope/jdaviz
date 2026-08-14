@@ -11,7 +11,7 @@ a Python installation or Jupyter environment.
 Download and Installation Instructions 
 --------------------------------------
 
-All downloads are available on the latest `release <https://github.com/jdaviz/jdaviz/releases/latest/>`_ page. 
+All downloads are available on the latest `release <https://github.com/spacetelescope/jdaviz/releases/latest/>`_ page. 
 
 
 Mac 
@@ -20,7 +20,7 @@ The Jdaviz standalone app is supported on macOS 14 (Sonoma) or higher. Currently
 If you want to download the latest version, please remove the previous version first! 
 
 
-.. button-link::  https://github.com/jdaviz/jdaviz/releases/latest/download/jdaviz-standalone-macosx.zip
+.. button-link::  https://github.com/spacetelescope/jdaviz/releases/latest/download/jdaviz-standalone-macosx.zip
     :color: primary
     :align: center
     :shadow:
@@ -49,7 +49,7 @@ Windows
 The windows standalone app is supported on Windows 11 or higher.  Currently, there is no automatic update capabilities.  
 If you want to download the latest version, please remove the previous version first! 
 
-.. button-link::  https://github.com/jdaviz/jdaviz/releases/latest/download/jdaviz-standalone-windows.zip
+.. button-link::  https://github.com/spacetelescope/jdaviz/releases/latest/download/jdaviz-standalone-windows.zip
     :color: primary
     :align: center
     :shadow:
@@ -64,7 +64,7 @@ Linux
 The linux standalone app is supported on Ubuntu 22.04 or higher. Currently, there is no automatic update capabilities.  
 If you want to download the latest version, please remove the previous version first! 
 
-.. button-link::  https://github.com/jdaviz/jdaviz/releases/latest/download/jdaviz-standalone-ubuntu.zip
+.. button-link::  https://github.com/spacetelescope/jdaviz/releases/latest/download/jdaviz-standalone-ubuntu.zip
     :color: primary
     :align: center
     :shadow:
