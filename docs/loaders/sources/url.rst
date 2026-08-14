@@ -51,7 +51,7 @@ API Access
 
 
 Clear Cache (standalone application only)
-========================================
+=========================================
 
 In the standalone application, files downloaded directly from MAST (Mikulski Archive for Space Telescopes) are saved in 
 ``$HOME/.cache/.jdaviz``. 
