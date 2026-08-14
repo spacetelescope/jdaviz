@@ -293,6 +293,7 @@
     <plugin-auto-label
       v-model:value="filename_value"
       :default="filename_default"
+      v-model:trunc="filename_trunc"
       v-model:auto="filename_auto"
       :invalid_msg="filename_invalid_msg"
       label="Filename"
@@ -345,8 +346,7 @@
       <v-card color="primary" elevation=4 class="overwrite-card">
         <v-card-text width="100%" class="overwrite-card-text">
           <div class="white--text">
-            A file named "{{ filename_value.length > 20 ? '...' : '' }}{{ filename_value.slice(-20) }}"
-            is already on disk. Overwrite?
+            A file named "{{ filename_trunc }}" is already on disk. Overwrite?
           </div>
         </v-card-text>
 
