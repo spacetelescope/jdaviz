@@ -806,11 +806,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         new_refdata = self.data_collection[new_refdata_label]
 
-        if new_refdata.ndim < 2:
-            # an image viewer requires reference data with at least two pixel components
-            raise ValueError(f"'{new_refdata_label}' has {new_refdata.ndim} dimension(s) and "
-                             "cannot be used as reference data in an image viewer.")
-
         # make sure new refdata can be selected:
         refdata_choices = [choice.label for choice in viewer.state.ref_data_helper.choices]
         if new_refdata_label not in refdata_choices:
@@ -3054,6 +3049,21 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                 if viewer.state.reference_data.label == data_label:
                     self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
+
+            if len(viewer.layers) != 0 and getattr(viewer.state, 'reference_data', '') is None:
+                data_to_remove = [other_data.label for other_data in self.data_collection
+                                  if other_data.label in viewer.data_menu.data_labels_loaded and
+                                  other_data.label != data_label]
+
+                _ = [self.remove_data_from_viewer(viewer_id, data_label)
+                     for data_label in data_to_remove]
+
+                snackbar_message = SnackbarMessage(
+                    f"Reference data for viewer '{viewer_id}' was removed from the app. "
+                    f"The viewer no longer supports the following data: "
+                    f"{', '.join(data_to_remove)}.",
+                    sender=self, color="warning")
+                self.hub.broadcast(snackbar_message)
 
         data_to_remove = self.data_collection[data_label]
         if self.config in CONFIGS_WITH_LOADERS:
