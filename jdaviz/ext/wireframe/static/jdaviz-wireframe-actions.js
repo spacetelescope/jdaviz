@@ -392,12 +392,15 @@
         if (_sidebarContentCache) return _sidebarContentCache;
         var loaderFormats = getConfSettings().loaderFormats ||
             ['Auto', 'Image', 'Spectrum', 'Catalog', 'Cube'];
+        var loaderSources = getConfSettings().loaderSources ||
+            ['Astroquery', 'File', 'File Drop', 'Object', 'Spectral Line Database',
+             'URL', 'Virtual Observatory'];
         _sidebarContentCache = {
         'loaders': {
             tabs: ['Data', 'Viewer'],
             content: [
                 'Import data of multiple formats and from multiple sources into jdaviz.<br>' +
-                formSelect('Source', 'source-select', ['File', 'Astroquery', 'URL']) +
+                formSelect('Source', 'source-select', loaderSources) +
                 formSelect('Format', 'format-select', loaderFormats) +
                 formButton('Load') +
                 '<div class="jdaviz-api-snippet">ldr = jd.loaders[\'<i>source</i>\']\nldr.load()</div>',

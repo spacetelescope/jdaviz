@@ -171,8 +171,6 @@ def test_output_additional_columns(deconfigged_helper):
 def test_supported_viewers():
     """_get_supported_viewers should include Scatter, Table and Histogram viewers."""
     viewers = SpectralLinesImporter._get_supported_viewers()
-    assert len(viewers) == 3
+    assert len(viewers) == 1  # only table viewer for now
     references = [v['reference'] for v in viewers]
-    assert 'scatter-viewer' in references
     assert 'table-viewer' in references
-    assert 'histogram-viewer' in references

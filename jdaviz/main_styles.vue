@@ -364,6 +364,23 @@ span.api-hint-header {
   color: #C6F0FD !important;
 }
 
+.v-list-item-content {
+  display: inline !important;
+  flex: none !important;
+  white-space: nowrap !important;
+}
+
+/* Restore the Vuetify 2-like flex alignment so that icons and text stay vertically centered. */
+.v-list-item__content {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Adjust the separation between 'Select/Clear All' icons and text. */
+.v-list-item-action {
+  margin-right: 8px;
+}
+
 /* Table viewer: keep row selection checkboxes but hide the select-all header button. */
 .glue-table-container .glue-data-table thead tr > th:nth-child(2) .v-btn {
   /* NOTE: display none will hide the checkmarks in individual rows as well */

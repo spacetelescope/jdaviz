@@ -348,6 +348,8 @@ class BaseImporterToDataCollection(BaseImporter):
             data to. If not provided or ``None``, uses ``self.viewer``. Pass
             ``False`` to skip adding the data to any viewer entirely independent
               the selection on ``self.viewer``.
+            Ignored (unless ``False``) when ``parent`` is provided, in which case
+            the data is added to the viewers in which the parent is loaded.
         cls : class, optional
             The native data class to store in metadata for later export via
             ``get_data``. If not provided, uses the class of the input data.
@@ -369,6 +371,15 @@ class BaseImporterToDataCollection(BaseImporter):
                     if data_label in viewer._data_menu.data_labels_loaded:
                         self._app.remove_data_from_viewer(viewer.reference_id, data_label)
             self._app.data_collection.remove(self._app.data_collection[data_label])
+
+            # When replacing an existing data entry, clear its parent-child associations
+            # so the new entry appears as a fresh dataset in the UI. This avoids an issue
+            # where stale associations dictated how the data appeared in the viewer, i.e.
+            # parented or otherwise.
+            self._app._remove_assoc_data(data_label)
+            self._app.state.layer_icons = {label: icon for label, icon
+                                           in self._app.state.layer_icons.items()
+                                           if label != data_label}
 
         # Standardize metadata if possible
         if hasattr(data, 'meta'):
@@ -422,6 +433,17 @@ class BaseImporterToDataCollection(BaseImporter):
             # return without adding to viewers or broadcasting snackbar message that
             # data was loaded but not added to viewers. we don't want this snackbar
             # if data is being added to DC intentionally without a viewer from a plugin
+            return
+
+        if parent is not None:
+            # child data must be in the same viewer as its parent,
+            # so the viewer selection is ignored.
+            # data_menu.add_data is bypassed here since child layers are
+            # excluded from the data-menu dataset choices and can't be added manually.
+            for viewer_label, viewer_api in self._app._jdaviz_helper.viewers.items():
+                if parent not in viewer_api.data_menu.data_labels_loaded:
+                    continue
+                self._app.add_data_to_viewer(viewer_label, data_label)
             return
 
         # user requested creating a new viewer for this data.

@@ -61,7 +61,7 @@ New Features
 - Improvements to spectral axis unit conversion logic to support workflows and
   avoid errors in mixed unit viewers in deconfigged. [#4292]
 
-- Add importer for line lists. [#4305]
+- Add Line List Database loader. [#4305, #4314, #4319]
 
 - Add consolidated emission line list and ability to query database in API. [#4314]
 
@@ -78,6 +78,11 @@ New Features
 - Add menubar to standalone application. This includes Window (resizing/zooming application), Help (Documentation, Help desk), and Cache (manually empty jdaviz cache directory). [#4315]
 
 - Introducing selected methods from the Astronomy Image Display API (AIDA) to image viewers.  [#4310]
+
+- Child data now follows its parent into the same viewer(s). Viewer selection for child data
+  is therefore hidden in the UI when parenting is set. [#4326]
+  
+- Keep visibility consistent between blink and plot options. [#4316]
 
 Mosviz
 ^^^^^^

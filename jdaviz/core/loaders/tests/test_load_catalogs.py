@@ -285,6 +285,7 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     # in the data collection
     ldr = imviz_helper.loaders['file' if from_file else 'object']
     setattr(ldr, 'filepath' if from_file else 'object', catalog)
+    ldr.format = 'Catalog'
     assert ldr.importer._obj.col_ra_has_unit == with_units
 
     # load it again, make sure label incremented by 1
