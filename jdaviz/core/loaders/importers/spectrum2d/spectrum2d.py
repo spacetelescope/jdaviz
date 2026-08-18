@@ -1,5 +1,6 @@
 from traitlets import Any, Bool, List, Unicode, observe
 
+from astropy.io import fits
 import astropy.units as u
 
 from jdaviz.core.events import SnackbarMessage
@@ -137,8 +138,9 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             return 'HST imaging products (OBSTYPE=IMAGING) are not valid as a 2D spectrum.'
 
         # NIRISS images otherwise would be validated as 2D spectra.
-        elif self.input[0].header.get('EXP_TYPE', None) == 'NIS_IMAGE':
-            return 'NIRISS imaging products are not valid as a 2D spectrum'
+        if isinstance(self.input, fits.HDUList)
+            if self.input[0].header.get('EXP_TYPE', None) == 'NIS_IMAGE':
+                return 'NIRISS imaging products are not valid as a 2D spectrum'
 
         if self.spectrum.flux.ndim != 2:
             return 'Spectrum flux must be 2D.'
