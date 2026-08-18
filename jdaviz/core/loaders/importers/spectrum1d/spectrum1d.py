@@ -1,4 +1,5 @@
 import numpy as np
+from astropy.io import fits
 from astropy.nddata import StdDevUncertainty
 import astropy.units as u
 from specutils import Spectrum
@@ -83,10 +84,8 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
             return 'No extensions available.'
 
         # Check this before going through the trouble of accessing self.spectra
-        print(isinstance(self.input, fits.HDUList))
         if isinstance(self.input, fits.HDUList):
             if not self.hdu_is_valid_flux(self.input):
-                print("Returning from flux check")
                 return 'Input is not a valid spectrum'
 
         if np.any([spectrum.flux.ndim not in (1, 2) for spectrum in self.spectra]):

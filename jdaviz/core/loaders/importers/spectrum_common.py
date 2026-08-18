@@ -819,6 +819,10 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     raise ValueError(
                         "No primary data extension selected. Please select a FLUX extension."
                     )
+            # Avoid an edge case that is missed by the validity checks elsewhere
+            if hdulist[0].header.get('EXP_TYPE') == 'NIS_IMAGE':
+                return []
+
             return [self._spectrum_from_hdu(hdulist, hdu) for hdu in hdus]
         elif self.input_type == 'asdf:roman':
             roman = self.input["roman"]
