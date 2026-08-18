@@ -83,11 +83,6 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         if not len(self.extension.choices):
             return 'No extensions available.'
 
-        # Check this before going through the trouble of accessing self.spectra
-        if isinstance(self.input, fits.HDUList):
-            if not self.hdu_is_valid_flux(self.input):
-                return 'Input is not a valid spectrum'
-
         if np.any([spectrum.flux.ndim not in (1, 2) for spectrum in self.spectra]):
             return 'All spectra must have 1D or 2D flux.'
 
