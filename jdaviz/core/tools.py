@@ -688,7 +688,7 @@ class _BaseTableApplyTool(Tool):
         # tool explicitly opts in to owning row-selection checkboxes.
         active_tool = getattr(self.viewer.toolbar, 'active_tool', None)
         self.viewer.widget_table.selection_enabled = bool(
-            active_tool and isinstance(active_tool, _BaseTableSelectionTool)
+            active_tool and isinstance(active_tool, (_BaseTableSelectionTool, TableRowSelect))
         )
 
 
