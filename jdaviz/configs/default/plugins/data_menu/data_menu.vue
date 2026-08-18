@@ -617,15 +617,6 @@
   .layer-select > .v-list-item__content > .v-list-item-action:first-child {
     margin-right: 6px !important;
   }
-  /* Global .v-list-item-content styling (see main_styles.vue) prevents data menu
-   row labels from shrinking/wrapping and instead pushes the copy/visibility
-   icons out of the menu. We overwrite that styling here. */
-  .layer-select > .v-list-item__content > .v-list-item-content {
-    display: block !important;
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    white-space: normal !important;
-  }
   .layer-select {
     /* spacing between entries so selections are more apparent */
     margin-top: 1px !important;
