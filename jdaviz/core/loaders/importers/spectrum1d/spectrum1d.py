@@ -1,5 +1,4 @@
 import numpy as np
-from astropy.io import fits
 from astropy.nddata import StdDevUncertainty
 import astropy.units as u
 from specutils import Spectrum
