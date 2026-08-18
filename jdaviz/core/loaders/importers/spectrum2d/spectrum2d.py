@@ -138,7 +138,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             return 'HST imaging products (OBSTYPE=IMAGING) are not valid as a 2D spectrum.'
 
         # NIRISS images otherwise would be validated as 2D spectra.
-        if isinstance(self.input, fits.HDUList)
+        if isinstance(self.input, fits.HDUList):
             if self.input[0].header.get('EXP_TYPE', None) == 'NIS_IMAGE':
                 return 'NIRISS imaging products are not valid as a 2D spectrum'
 
