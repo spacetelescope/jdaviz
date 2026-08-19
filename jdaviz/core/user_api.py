@@ -229,11 +229,8 @@ class UserApiWrapper:
                     # select that type and the label will also default to that type
                     exp_obj.create_new.selected = value
                 else:
-                    # if value is not a valid viewer type,
-                    # assume value is intended as a new viewer label -
-                    # default to the first available viewer type
-                    exp_obj.create_new.selected = exp_obj.create_new.choices[0]
-                    exp_obj.new_label.value = value
+                    raise ValueError(f"{value} is not a valid viewer type."
+                                     f"  Valid labels are: {exp_obj.create_new.choices}")
                 return
 
         if isinstance(exp_obj, SelectPluginComponent):
