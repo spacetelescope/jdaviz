@@ -98,6 +98,9 @@ New Features
 - Updated documentation for the application and caching, updated the jdaviz logo, 
   and improved the .dmg installation process [#4337]
 
+- Coordinate frame and equinox are responsive to changes in ra / dec in catalog
+  loader. [#4347]
+
 Mosviz
 ^^^^^^
 
@@ -147,7 +150,7 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-- fix case where file drop loader would not show importer options. [#4303]
+- Fix case where file drop loader would not show importer options. [#4303]
 
 - Fix image importer support for Roman L3 mosaic files. [#4309]
 
@@ -155,10 +158,13 @@ Bug Fixes
 
 - Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
 
+<<<<<<< HEAD
 - Fix issue where removing an image from an Image viewer while a catalog (scatter) was present
   caused an index error from glue. [#4333]
 
 - Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
+=======
+>>>>>>> 7216a94e9 (change log)
 
 Mosviz
 ^^^^^^
