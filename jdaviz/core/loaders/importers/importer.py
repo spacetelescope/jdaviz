@@ -159,7 +159,7 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
 
     @property
     def targets(self):
-        raise NotImplementedError("Importer subclass must implement target")  # pragma: nocover
+        raise NotImplementedError("Importer subclass must implement targets")  # pragma: nocover
 
     def __call__(self):
         # override by subclass - should act on self.output and load into jdaviz
