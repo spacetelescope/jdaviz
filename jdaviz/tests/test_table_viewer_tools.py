@@ -398,15 +398,16 @@ class TestTableViewerTools:
     def test_rename_column(self):
         """Test that rename_column renames a column and raises errors appropriately."""
         tv = self.table_viewer_user_api
+        tv_obj = self.table_viewer
 
         # add a custom column so we have something user-defined to rename
         tv.add_column('custom_col', [1, 2, 3, 4, 5])
-        assert 'custom_col' in [c.label for c in tv.widget_table.data.components]
+        assert 'custom_col' in [c.label for c in tv_obj.widget_table.data.components]
 
         # rename it
         tv.rename_column('custom_col', 'renamed_col')
-        assert 'renamed_col' in [c.label for c in tv.widget_table.data.components]
-        assert 'custom_col' not in [c.label for c in tv.widget_table.data.components]
+        assert 'renamed_col' in [c.label for c in tv_obj.widget_table.data.components]
+        assert 'custom_col' not in [c.label for c in tv_obj.widget_table.data.components]
 
         # renaming a column that does not exist raises ValueError
         with pytest.raises(ValueError, match="Column 'nonexistent' not found in the table."):
@@ -419,13 +420,14 @@ class TestTableViewerTools:
     def test_remove_column(self):
         """Test that remove_column removes custom columns and protects role columns."""
         tv = self.table_viewer_user_api
+        tv_obj = self.table_viewer
 
         # add a custom column then remove it
         tv.add_column('to_remove', [10, 20, 30, 40, 50])
-        assert 'to_remove' in [c.label for c in tv.widget_table.data.components]
+        assert 'to_remove' in [c.label for c in tv_obj.widget_table.data.components]
 
         tv.remove_column('to_remove')
-        assert 'to_remove' not in [c.label for c in tv.widget_table.data.components]
+        assert 'to_remove' not in [c.label for c in tv_obj.widget_table.data.components]
 
         # removing a column that does not exist raises ValueError
         with pytest.raises(ValueError, match="Column 'to_remove' not found in the table."):
@@ -440,16 +442,17 @@ class TestTableViewerTools:
     def test_add_rename_remove_roundtrip(self):
         """End-to-end: add a custom column, rename it, then remove it via the public API."""
         tv = self.table_viewer_user_api
+        tv_obj = self.table_viewer
 
         tv.add_column('my_col', [0.1, 0.2, 0.3, 0.4, 0.5])
-        assert 'my_col' in [c.label for c in tv.widget_table.data.components]
+        assert 'my_col' in [c.label for c in tv_obj.widget_table.data.components]
 
         tv.rename_column('my_col', 'my_col_renamed')
-        assert 'my_col_renamed' in [c.label for c in tv.widget_table.data.components]
-        assert 'my_col' not in [c.label for c in tv.widget_table.data.components]
+        assert 'my_col_renamed' in [c.label for c in tv_obj.widget_table.data.components]
+        assert 'my_col' not in [c.label for c in tv_obj.widget_table.data.components]
 
         tv.remove_column('my_col_renamed')
-        assert 'my_col_renamed' not in [c.label for c in tv.widget_table.data.components]
+        assert 'my_col_renamed' not in [c.label for c in tv_obj.widget_table.data.components]
 
 
 class TestTableViewerToolsMultipleViewers:
