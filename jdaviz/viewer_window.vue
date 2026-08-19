@@ -36,8 +36,8 @@
         </v-toolbar-items>
         <j-play-pause-widget v-if="reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': id, 'method': 'next_row'})"></j-play-pause-widget>
         <j-tooltip v-if="focus_mode && coords_info_widget" tipid='coords-info-cycle'>
-          <v-btn variant="text" color="white" rounded="0" icon @click="cycle_coords_dataset()" style="height: 100%; width: 42px;">
-            <j-layer-viewer-icon :icon="coords_info_has_data ? coords_info_icon : coords_info_dataset_icon" color="white" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+          <v-btn variant="text" color="white" rounded="0" icon @click="cycle_coords_dataset()" style="height: 42px; width: 42px; min-width: 42px; padding: 0; display: flex; align-items: center; justify-content: center;">
+            <j-layer-viewer-icon :icon="coords_info_has_data ? coords_info_icon : coords_info_dataset_icon" color="white" :icon_size="20" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
           </v-btn>
         </j-tooltip>
         <v-spacer></v-spacer>
@@ -45,7 +45,7 @@
       </j-flex-row>
     </div>
 
-    <v-card tile flat style="width: 100%; height: calc(100% - 42px); overflow: hidden;"
+    <v-card class="jdaviz-viewer-figure-container" tile flat style="width: 100%; height: calc(100% - 42px); overflow: hidden;"
       @mousemove="onFigureMouseMove"
       @mouseleave="onFigureMouseLeave"
     >
