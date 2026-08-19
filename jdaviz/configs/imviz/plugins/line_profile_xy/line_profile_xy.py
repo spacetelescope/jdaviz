@@ -47,9 +47,9 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         self.plot_across_x_widget = 'IPY_MODEL_'+self.plot_across_x.model_id
         self.plot_across_y_widget = 'IPY_MODEL_'+self.plot_across_y.model_id
 
-        self.docs_description = "Press 'l' to plot line profiles across X and Y\
-                                 under cursor. You can also manually enter X, Y\
-                                 and then click PLOT."
+        self.docs_description = "Press lowercase 'L' to plot line profiles across\
+                                 X and Y under cursor. You can also manually enter\
+                                 X, Y and then click PLOT."
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 

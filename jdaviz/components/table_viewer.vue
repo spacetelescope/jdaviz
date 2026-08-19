@@ -293,6 +293,12 @@ module.exports = {
   background-color: #fff !important;
 }
 
+.theme--dark .edit-bar-input .v-input__slot,
+.v-theme--dark .edit-bar-input .v-input__slot {
+  /* keep the edit input legible in dark mode (white text on white is invisible) */
+  background-color: #424242 !important;
+}
+
 .edit-bar-actions {
   display: flex;
   gap: 4px;
@@ -355,10 +361,22 @@ module.exports = {
   background-color: #f5f5f5;
 }
 
+.theme--dark .glue-selectable-cell:hover,
+.v-theme--dark .glue-selectable-cell:hover {
+  /* light hover background leaves white dark-mode text illegible */
+  background-color: #616161;
+}
+
 /* Visual cue for selected cell */
 .glue-cell-selected {
   background-color: #E3F2FD !important;
   box-shadow: inset 0 0 0 2px #1976D2;
+}
+
+.theme--dark .glue-cell-selected,
+.v-theme--dark .glue-cell-selected {
+  /* light blue selection background renders white dark-mode text illegible */
+  background-color: #4A6572 !important;
 }
 
 /* ---- Column header rename / delete styles ---- */
