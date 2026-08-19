@@ -84,6 +84,8 @@ New Features
   
 - Keep visibility consistent between blink and plot options. [#4316]
 
+- Coordinate frame and equinox are responsive to changes in ra / dec in catalog loader. [#4347]
+
 Mosviz
 ^^^^^^
 
@@ -131,13 +133,14 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-- fix case where file drop loader would not show importer options. [#4303]
+- Fix case where file drop loader would not show importer options. [#4303]
 
 - Fix image importer support for Roman L3 mosaic files. [#4309]
 
 - Fix issue where snackbar is attached to the notebook rather than to the app. [#4313]
 
 - Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
+
 
 Mosviz
 ^^^^^^
