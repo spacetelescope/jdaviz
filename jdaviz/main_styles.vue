@@ -363,9 +363,10 @@ span.api-hint-header {
 }
 
 .v-list-item-content {
-  display: inline !important;
-  flex: none !important;
-  white-space: nowrap !important;
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  white-space: normal !important;
 }
 
 /* Restore the Vuetify 2-like flex alignment so that icons and text stay vertically centered. */
