@@ -81,8 +81,10 @@ New Features
 
 - Child data now follows its parent into the same viewer(s). Viewer selection for child data
   is therefore hidden in the UI when parenting is set. [#4326]
-  
+
 - Keep visibility consistent between blink and plot options. [#4316]
+
+- Importers can now support multiple targets when filtering format options based on target. [#4345]
 
 Mosviz
 ^^^^^^
