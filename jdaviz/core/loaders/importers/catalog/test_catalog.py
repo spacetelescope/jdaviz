@@ -237,3 +237,45 @@ def test_catalog_loader_coord_frame(deconfigged_helper, frame_selected, equinox_
         sc_icrs = sc_input.transform_to(ICRS())
         assert_allclose(ra_loaded, sc_icrs.ra.deg)
         assert_allclose(dec_loaded, sc_icrs.dec.deg)
+
+
+def test_coord_frame_default_and_reset(deconfigged_helper):
+    """coord_frame and coord_equinox should default to icrs/J2000.0 when ra/dec are detected,
+    '----' otherwise, and reset to '----' when ra or dec is unselected."""
+
+    # table with detectable ra/dec columns: coord_frame/equinox should start as icrs/J2000.0
+    tab = QTable({'ra': [10.0] * u.deg, 'dec': [-5.0] * u.deg})
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = tab
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+
+    # defaults, ra and dec cols autodetected so coord frame and equinox should
+    # also be set to their defaults
+    assert importer.col_ra.selected == 'ra'
+    assert importer.col_dec.selected == 'dec'
+    assert importer.coord_frame.selected == 'icrs'
+    assert importer.coord_equinox.selected == 'J2000.0'
+
+    # unselecting only ra resets both to '----'
+    importer.col_ra.selected = '---'
+    assert importer.coord_frame.selected == '----'
+    assert importer.coord_equinox.selected == '----'
+
+    # re-selecting ra when dec is already selected restores both defaults
+    importer.col_ra.selected = 'ra'
+    assert importer.coord_frame.selected == 'icrs'
+    assert importer.coord_equinox.selected == 'J2000.0'
+
+    # unselecting dec also resets both
+    importer.col_dec.selected = '---'
+    assert importer.coord_frame.selected == '----'
+    assert importer.coord_equinox.selected == '----'
+
+    # table with no detectable ra/dec columns: both should start as '----'
+    tab2 = QTable({'flux': [1.0], 'name': ['src']})
+    ldr.object = tab2
+    ldr.format = 'Catalog'
+    importer2 = ldr.importer
+    assert importer2.coord_frame.selected == '----'
+    assert importer2.coord_equinox.selected == '----'
