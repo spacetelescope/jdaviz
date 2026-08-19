@@ -21,7 +21,7 @@ a user would interact with them in a typical visualization-heavy workflow.
 The following diagram presents an overview of the framework's layers, with each being described
 in more detail below:
 
-.. figure:: jdaviz_wordmark.svg
+.. figure:: jdaviz.svg
     :alt: Jdaviz design and infrastructure chart.
 
     This figure illustrates the basics of Jdaviz design and infrastructure.
