@@ -426,7 +426,7 @@ class JdavizViewerMixin(WithCache):
             if isinstance(self, AIDAMixin):
                 expose += ['set_viewport', 'get_viewport']
         elif isinstance(self, TableViewer):
-            expose += []
+            expose += ['add_column', 'rename_column', 'remove_column']
         else:
             expose += ['set_limits', 'reset_limits', 'set_tick_format']
         return ViewerUserApi(self, expose=expose)
