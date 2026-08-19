@@ -154,7 +154,7 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
     choices, e.g. 'Table', 'Scatter') should select that viewer type,
     not treat the string as a new viewer label that then defaults to a scatter viewer.
     """
-    
+
     ldr = deconfigged_helper.loaders['object']
     ldr.object = sky_coord_only_source_catalog
     ldr.format = 'Catalog'
