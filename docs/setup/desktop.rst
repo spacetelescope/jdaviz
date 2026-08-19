@@ -16,8 +16,8 @@ All downloads are available on the latest `release <https://github.com/spacetele
 
 Mac 
 ^^^
-The Jdaviz standalone app is supported on macOS 14 (Sonoma) or higher. Currently, there is no automatic update capabilities.  
-If you want to download the latest version, please remove the previous version first! 
+The Jdaviz standalone app is supported on macOS 14 (Sonoma) or higher. Currently, there is no automatic update capability.  
+If you want to download the latest version, please remove the previous version first.
 
 
 .. button-link::  https://github.com/spacetelescope/jdaviz/releases/latest/download/jdaviz-standalone-macosx.zip
@@ -36,18 +36,19 @@ using the provided shortcut (or you can drag and drop into any folder of your ch
 
 You can now unmount the installer.  
 
-Click the Jdaviz.app to launch Jdaviz! If you see the message that "Jdaviz can't be opned as it is from an unidentifed developer",
+Click the Jdaviz.app file to launch Jdaviz. If you see the message that "Jdaviz can't be opened as it is from an unidentified developer",
 right click on the application, select open, and accept to open the app.  
 
 
 Windows and Linux
 ^^^^^^^^^^^^^^^^^
-We maintain distributions for both windows and linux; however, these are far less tested. If you run into any issues, please open an issue on the github repo so we can investigate!
+We maintain distributions for both windows and linux; however, these are less thoroughly tested than other ways of running Jdaviz. 
+If you run into any issues, please open an issue on the `github repo <https://github.com/spacetelescope/jdaviz/issues>`_ so we can investigate.
 
 Windows
 ~~~~~~~
-The windows standalone app is supported on Windows 11 or higher.  Currently, there is no automatic update capabilities.  
-If you want to download the latest version, please remove the previous version first! 
+The windows standalone app is supported on Windows 11 or higher.  Currently, there is no automatic update capability.  
+If you want to download the latest version, please remove the previous version first.
 
 .. button-link::  https://github.com/spacetelescope/jdaviz/releases/latest/download/jdaviz-standalone-windows.zip
     :color: primary
@@ -56,13 +57,13 @@ If you want to download the latest version, please remove the previous version f
     
     Download Jdaviz for Windows
 
-After downloading, unzip the package, and click to open the executable to launch Jdaviz!
+After downloading, unzip the package, and click to open the executable to launch Jdaviz.
 
 
 Linux
 ~~~~~
-The linux standalone app is supported on Ubuntu 22.04 or higher. Currently, there is no automatic update capabilities.  
-If you want to download the latest version, please remove the previous version first! 
+The linux standalone app is supported on Ubuntu 22.04 or higher. Currently, there is no automatic update capability.  
+If you want to download the latest version, please remove the previous version first.
 
 .. button-link::  https://github.com/spacetelescope/jdaviz/releases/latest/download/jdaviz-standalone-ubuntu.zip
     :color: primary
@@ -71,5 +72,5 @@ If you want to download the latest version, please remove the previous version f
     
     Download Jdaviz for Ubuntu
 
-After downloading, unzip the package, and click to open the executable to launch Jdaviz!
+After downloading, unzip the package, and click to open the executable to launch Jdaviz.
 

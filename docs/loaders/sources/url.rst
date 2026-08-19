@@ -59,7 +59,7 @@ In the standalone application, files downloaded directly from MAST (Mikulski Arc
 Empty folders are automatically deleted from this cache when you close the Jdaviz application. 
 
 To save disk storage, when you close the Jdaviz application, Jdaviz will automatically delete files if they were downloaded 
-more than 4 week before the current application session. You must move these files if you do not want them deleted. 
+more than 4 weeks before the current application session. You must move these files if you do not want them deleted. 
 
 If you wish to delete the whole cache, click on the ``Cache`` dropdown in the Jdaviz application taskbar and select ``Empty Jdaviz Cache``. 
 
@@ -67,7 +67,7 @@ If you wish to delete the whole cache, click on the ``Cache`` dropdown in the Jd
    The files at HTTPS and HTTP URLs are downloaded via ``astropy`` and saved in ``$HOME/.cache/.astropy``. 
    Any files downloaded via ``astropy``, even outside Jdaviz are saved there; therefore, we do not automatically or 
    manually clear this cache. 
-   See ``astropy`` for details on this cache.
+   See `astropy.utils.data <https://docs.astropy.org/en/stable/utils/data.html>`_  for details on this cache.
 
 .. note::
    Downloading from URL in a local Jupyter session (jupyter notebook/lab or via command line) 
