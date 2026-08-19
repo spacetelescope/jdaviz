@@ -44,7 +44,8 @@ class TestTableViewerTools:
         self.viewer.state._set_axes_aspect_ratio(1)
 
         # Get the table viewer
-        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.table_viewer_user_api = deconfigged_helper.viewers['Table']
+        self.table_viewer = self.table_viewer_user_api._obj.glue_viewer
 
     def test_table_highlight_tool_activates(self):
         """Test that TableHighlightSelected tool activates properly."""
@@ -393,6 +394,62 @@ class TestTableViewerTools:
         m = "Length of new column data does not match number of rows in the table."
         with pytest.raises(ValueError, match=m):
             tv.update_column('ra', [10, 20])
+
+    def test_rename_column(self):
+        """Test that rename_column renames a column and raises errors appropriately."""
+        tv = self.table_viewer_user_api
+
+        # add a custom column so we have something user-defined to rename
+        tv.add_column('custom_col', [1, 2, 3, 4, 5])
+        assert 'custom_col' in [c.label for c in tv.widget_table.data.components]
+
+        # rename it
+        tv.rename_column('custom_col', 'renamed_col')
+        assert 'renamed_col' in [c.label for c in tv.widget_table.data.components]
+        assert 'custom_col' not in [c.label for c in tv.widget_table.data.components]
+
+        # renaming a column that does not exist raises ValueError
+        with pytest.raises(ValueError, match="Column 'nonexistent' not found in the table."):
+            tv.rename_column('nonexistent', 'anything')
+
+        # new_name must be a non-empty string
+        with pytest.raises(ValueError, match="new_name must be a non-empty string."):
+            tv.rename_column('renamed_col', '   ')
+
+    def test_remove_column(self):
+        """Test that remove_column removes custom columns and protects role columns."""
+        tv = self.table_viewer_user_api
+
+        # add a custom column then remove it
+        tv.add_column('to_remove', [10, 20, 30, 40, 50])
+        assert 'to_remove' in [c.label for c in tv.widget_table.data.components]
+
+        tv.remove_column('to_remove')
+        assert 'to_remove' not in [c.label for c in tv.widget_table.data.components]
+
+        # removing a column that does not exist raises ValueError
+        with pytest.raises(ValueError, match="Column 'to_remove' not found in the table."):
+            tv.remove_column('to_remove')
+
+        # removing a protected role column (ra/dec set by the catalog loader) raises ValueError
+        with pytest.raises(ValueError, match="protected column"):
+            tv.remove_column('ra')
+        with pytest.raises(ValueError, match="protected column"):
+            tv.remove_column('dec')
+
+    def test_add_rename_remove_roundtrip(self):
+        """End-to-end: add a custom column, rename it, then remove it via the public API."""
+        tv = self.table_viewer_user_api
+
+        tv.add_column('my_col', [0.1, 0.2, 0.3, 0.4, 0.5])
+        assert 'my_col' in [c.label for c in tv.widget_table.data.components]
+
+        tv.rename_column('my_col', 'my_col_renamed')
+        assert 'my_col_renamed' in [c.label for c in tv.widget_table.data.components]
+        assert 'my_col' not in [c.label for c in tv.widget_table.data.components]
+
+        tv.remove_column('my_col_renamed')
+        assert 'my_col_renamed' not in [c.label for c in tv.widget_table.data.components]
 
 
 class TestTableViewerToolsMultipleViewers:
