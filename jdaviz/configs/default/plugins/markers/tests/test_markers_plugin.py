@@ -805,5 +805,5 @@ def test_markers_mouseover_and_load_into_new_viewer(deconfigged_helper, image_hd
     # verify that the new viewer has the expected data from the markers table
     new_viewer = deconfigged_helper.viewers[viewer_type]
     assert new_viewer is not None
-    assert len(new_viewer._obj.glue_viewer.data_labels_visible) == 1
-    assert new_viewer._obj.glue_viewer.data_labels_visible[0] == 'Catalog'
+    assert len(new_viewer.data_menu.data_labels_visible) == 1
+    assert new_viewer.data_menu.data_labels_visible[0] == 'Catalog'
