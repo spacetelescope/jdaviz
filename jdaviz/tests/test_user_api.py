@@ -173,12 +173,9 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
     ldr.importer.viewer = 'Scatter'
     assert importer_viewer.create_new.selected == 'Scatter'
 
-    # setting to a string that is NOT a type label should be treated as a new viewer label
-    # and should default the type to the first available choice ('Scatter')
-    ldr.importer.viewer = 'my-custom-viewer'
-    assert importer_viewer.create_new.selected == importer_viewer.create_new.choices[0]
-    assert importer_viewer.new_label.value == 'my-custom-viewer'
-
+    # setting to a string that is NOT a type label should raise an error
+    with pytest.raises(ValueError):
+        ldr.importer.viewer = 'my-custom-viewer'
 
 def test_viewer_create_new(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper.new_viewers.keys()) == 0
@@ -200,8 +197,16 @@ def test_viewer_create_new(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper.viewers) == 1
     assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 2
 
-    # passing a string of a viewer that does not exist should create a viewer with that label
-    deconfigged_helper.load(spectrum1d, format='1D Spectrum', viewer='user-defined-viewer', data_label='data4')  # noqa
+    # passing a string of a viewer that does not exist in create_new.choices should raise an error
+    with pytest.raises(ValueError):
+        deconfigged_helper.load(spectrum1d, format='1D Spectrum',
+                                viewer='user-defined-viewer', data_label='data4')
+    # instead have to spawn a new viewer first, then load into it
+    nv = deconfigged_helper.new_viewers['1D Spectrum']
+    nv.viewer_label = 'user-defined-viewer'
+    nv()
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum',
+                            viewer='user-defined-viewer', data_label='data4')
     assert len(deconfigged_helper._app.data_collection) == 4
     assert len(deconfigged_helper.viewers) == 2
     assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 2
