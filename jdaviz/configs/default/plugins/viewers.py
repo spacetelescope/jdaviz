@@ -54,8 +54,8 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import WithCache, TemplateMixin, show_widget
 from jdaviz.core.tools import _get_skycoords_from_table, _get_pixel_coords_from_table
 from jdaviz.core.user_api import ViewerUserApi
-from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
-                                               flux_conversion_general,
+from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
+                                               flux_unit_conversion,
                                                all_flux_unit_conversion_equivs)
 from jdaviz.utils import (ColorCycler, get_subset_type, _wcs_only_label,
                           layer_is_image_data, layer_is_not_dq, layer_is_3d)
@@ -1200,10 +1200,11 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                     cube_wave = data.get_component('spectral')
 
                     eqv = all_flux_unit_conversion_equivs(pixar_sr=psc, cube_wave=cube_wave)
-                    flux_conversion_general([1, 1],
-                                            data.get_component('flux').data.units,
-                                            self.state.y_display_unit,
-                                            equivalencies=eqv)
+                    flux_unit_conversion(
+                        [1, 1],
+                        data.get_component('flux').data.units,
+                        self.state.y_display_unit,
+                        equivalencies=eqv)
             except Exception as e:
                 # Raising exception here introduces a dirty state that messes up next load_data
                 # but not raising exception also causes weird behavior unless we remove the data
@@ -1417,7 +1418,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         # get square angle from 'sb' display unit
         sb_unit = self.jdaviz_app._get_display_unit(axis='sb')
         if sb_unit is not None:
-            solid_angle_unit = check_if_unit_is_per_solid_angle(sb_unit, return_unit=True)
+            solid_angle_unit = is_unit_per_solid_angle(sb_unit, return_unit=True)
         else:
             solid_angle_unit = None
 
