@@ -105,6 +105,8 @@ Bug Fixes
 
 - Fixed closing a viewer not deleting the associated backend objects. [#4317]
 
+- Fix color picker not showing correctly. [#4332]
+
 Mosviz
 ^^^^^^
 
