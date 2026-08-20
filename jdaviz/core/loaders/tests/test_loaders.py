@@ -1388,7 +1388,7 @@ def test_load_cube_no_dq_in_viewer(deconfigged_helper):
 
 @pytest.mark.remote_data
 def test_niriss_image_selection(deconfigged_helper):
-    fpath = download_file('https://stsci.box.com/shared/static/w5ycpuue07mpltam3apn9fsi5ajw2euw.fits')
+    fpath = download_file('https://stsci.box.com/shared/static/w5ycpuue07mpltam3apn9fsi5ajw2euw.fits')  # noqa
     ldr = deconfigged_helper.loaders['file']
     # We don't actually have to load the file, since the transposed warning triggers on parsing
     ldr.filepath = fpath
