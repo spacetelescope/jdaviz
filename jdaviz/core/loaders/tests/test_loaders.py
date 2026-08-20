@@ -10,6 +10,7 @@ from astropy.table import Table
 from astropy.io import fits
 from astropy.wcs import WCS
 from astroquery.mast import Mast, MastMissions
+from astropy.utils.data import download_file
 from gwcs import WCS as GWCS
 from specutils import SpectralRegion, Spectrum
 
@@ -1385,13 +1386,14 @@ def test_load_cube_no_dq_in_viewer(deconfigged_helper):
     assert '3D Spectrum [DQ]' in datasets
 
 
+@pytest.mark.remote_data
 def test_niriss_image_selection(deconfigged_helper):
-    test_file = 'https://stsci.box.com/shared/static/w5ycpuue07mpltam3apn9fsi5ajw2euw.fits'
-    ldr = deconfigged_helper.loaders['url']
-    ldr.url = test_file
-    ldr.load()
+    fpath = download_file('https://stsci.box.com/shared/static/w5ycpuue07mpltam3apn9fsi5ajw2euw.fits')
+    ldr = deconfigged_helper.loaders['file']
+    # We don't actually have to load the file, since the transposed warning triggers on parsing
+    ldr.filepath = fpath
 
     logger = deconfigged_helper.plugins['Logger']
     for msg in logger.history:
-        if msg['test'][0:9] == 'Transposed':
+        if msg['text'][0:10] == 'Transposed':
             raise ValueError('NIRISS images should not be treated as 2D spectra.')
