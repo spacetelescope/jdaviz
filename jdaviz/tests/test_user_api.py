@@ -177,6 +177,7 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
     with pytest.raises(ValueError):
         ldr.importer.viewer = 'my-custom-viewer'
 
+
 def test_viewer_create_new(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper.new_viewers.keys()) == 0
     # passing [] should not load into a new viewer nor should it create a new viewer
