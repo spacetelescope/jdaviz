@@ -2,8 +2,10 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.nddata import InverseVariance
+from astropy.wcs import WCS
 from specutils import Spectrum
 
+from jdaviz.configs.imviz.tests.utils import _image_nddata_wcs
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 
 
@@ -137,7 +139,7 @@ def test_non_stddev_uncertainty(deconfigged_helper):
     )
 
 
-@pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
+@pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, []),
                                                          (u.Jy, SPEC_PHOTON_FLUX_DENSITY_UNITS),
                                                          (u.nJy, SPEC_PHOTON_FLUX_DENSITY_UNITS + ['nJy'])])  # noqa
 def test_flux_unit_choices(deconfigged_helper, flux_unit, expected_choices):
@@ -152,7 +154,10 @@ def test_flux_unit_choices(deconfigged_helper, flux_unit, expected_choices):
 
     uc_plg = deconfigged_helper.plugins['Unit Conversion']
 
-    assert uc_plg.flux_unit.selected == flux_unit.to_string()
+    if u.Unit(flux_unit) == u.ct:
+        assert uc_plg.flux_unit.selected == ''
+    else:
+        assert uc_plg.flux_unit.selected == flux_unit.to_string()
     assert uc_plg.flux_unit.choices == expected_choices
 
 
@@ -313,6 +318,82 @@ def test_image_deconfigged(deconfigged_helper, image_nddata_wcs):
                                          '337.5199835909 -20.8330552820 (deg)')
 
 
+def test_image_viewer_mouseover_unit(deconfigged_helper):
+    """
+    Test that the image viewer mouseover shows the correct flux unit for both
+    physical (Jy) and non-physical (counts) data loaded in separate viewers.
+    """
+    ct_img = _image_nddata_wcs(unit=u.ct)
+    jy_img = _image_nddata_wcs(unit=u.Jy)
+
+    # Load counts image into the default Image viewer
+    deconfigged_helper.load(ct_img, format='Image', data_label='ct_image')
+
+    # Create a second Image viewer and load Jy image into it
+    vc = deconfigged_helper.new_viewers['Image']
+    vc()
+    deconfigged_helper.load(jy_img, format='Image', data_label='jy_image',
+                            viewer='Image (1)')
+
+    ct_viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+    jy_viewer = deconfigged_helper.viewers['Image (1)']._obj.glue_viewer
+    label_mouseover = deconfigged_helper._app.session.application._tools['g-coords-info']
+
+    label_mouseover._viewer_mouse_event(ct_viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 1, 'y': 1}})
+    assert '+1.00000e+00 ct' in label_mouseover.as_text()[0]
+
+    label_mouseover._viewer_mouse_event(jy_viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 1, 'y': 1}})
+    assert '+1.00000e+00 Jy' in label_mouseover.as_text()[0]
+
+
+def test_mixed_physical_nonphysical_flux_unit_load(deconfigged_helper):
+    """
+    Test that loading a non-physical (counts) cube does not set the global
+    flux display unit, but loading a physical (Jy) image afterwards does.
+    """
+    wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
+                "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
+                "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0, "PIXAR_SR": 8e-11}
+    w = WCS(wcs_dict)
+    flux = np.ones((5, 5, 5), dtype=np.float32)
+    cube = Spectrum(flux=flux * (u.ct / u.sr), wcs=w, meta=wcs_dict)
+
+    deconfigged_helper.load(cube, format='3D Spectrum', data_label='ct_cube')
+
+    uc_plg = deconfigged_helper.plugins['Unit Conversion']
+
+    # non-physical flux should not populate the global flux display unit
+    assert uc_plg.flux_unit.selected == ''
+    assert uc_plg.flux_unit.choices == []
+
+    # loading a physical image should set the global flux display unit
+    jy_img = _image_nddata_wcs(unit=u.Jy / u.sr)
+    deconfigged_helper.load(jy_img, format='Image', data_label='jy_image')
+
+    assert uc_plg.flux_unit.selected == 'Jy'
+    assert uc_plg.flux_unit.choices == SPEC_PHOTON_FLUX_DENSITY_UNITS
+
+    # cube viewer should show native ct / sr despite the global display unit being Jy
+    cube_viewer = deconfigged_helper.viewers['3D Spectrum']._obj.glue_viewer
+    image_viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+    label_mouseover = deconfigged_helper._app.session.application._tools['g-coords-info']
+
+    label_mouseover._viewer_mouse_event(cube_viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 2, 'y': 2}})
+    assert '+1.00000e+00 ct / sr' in label_mouseover.as_text()[0]
+
+    label_mouseover._viewer_mouse_event(image_viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 1, 'y': 1}})
+    assert '+1.00000e+00 Jy / sr' in label_mouseover.as_text()[0]
+
+
 def test_data_unload_reload(specviz2d_helper):
     """
     Test that when data is loaded (which sets ths initial unit selection
@@ -456,7 +537,55 @@ def test_mixed_1d_2d_spectral_unit_load_order(deconfigged_helper, pix_spec, dim_
     assert u.Unit(plg.spectral_unit.selected) == u.Unit('Hz')
 
 
-def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catalog, spectrum1d):
+@pytest.mark.parametrize('ct_spec', ['1d', '2d'])
+@pytest.mark.parametrize('dim_1d_first', [True, False])
+def test_mixed_1d_2d_flux_unit_load_order(deconfigged_helper, ct_spec, dim_1d_first):
+    """
+    Test loading a 1D and a 2D spectrum in either order, with counts flux on
+    either the 1D or 2D spectrum. Flux unit choices should be populated from
+    the physical-unit spectrum regardless of load order, and flux unit
+    conversion should work without errors.
+    """
+    spec_1d_flux = u.ct if ct_spec == '1d' else u.Jy
+    spec_2d_flux = u.ct if ct_spec == '2d' else u.Jy
+
+    spec_1d = Spectrum(flux=[1, 2, 3] * spec_1d_flux,
+                       spectral_axis=[1, 2, 3] * u.nm)
+    spec_2d = Spectrum(flux=np.ones((3, 3)) * spec_2d_flux,
+                       spectral_axis=[1, 2, 3] * u.nm,
+                       spectral_axis_index=-1)
+
+    # whether the first-loaded spectrum has non-physical (counts) flux
+    first_is_ct = (dim_1d_first and ct_spec == '1d') or (not dim_1d_first and ct_spec == '2d')
+
+    if dim_1d_first:
+        deconfigged_helper.load(spec_1d, data_label='spec_1d', format='1D Spectrum')
+        plg = deconfigged_helper.plugins["Unit Conversion"]
+        if first_is_ct:
+            assert plg.flux_unit.selected == ''
+        else:
+            assert u.Unit(plg.flux_unit.selected) == u.Jy
+        deconfigged_helper.load(spec_2d, data_label='spec_2d', format='2D Spectrum')
+    else:
+        deconfigged_helper.load(spec_2d, data_label='spec_2d', format='2D Spectrum')
+        plg = deconfigged_helper.plugins["Unit Conversion"]
+        if first_is_ct:
+            assert plg.flux_unit.selected == ''
+        else:
+            assert u.Unit(plg.flux_unit.selected) == u.Jy
+        deconfigged_helper.load(spec_1d, data_label='spec_1d', format='1D Spectrum')
+
+    # after both are loaded, choices should be populated from the Jy spectrum
+    assert len(plg.flux_unit.choices) > 0
+    assert u.Unit(plg.flux_unit.selected) == u.Jy
+
+    # converting to MJy should not raise errors
+    plg.flux_unit = 'MJy'
+    assert u.Unit(plg.flux_unit.selected) == u.MJy
+
+
+def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catalog,
+                                 image_nddata_wcs, spectrum1d):
     """
     Test that the Unit Conversion plugin is enabled when data is loaded in a
     relevant viewer, disabled when all data is removed, and re-enabled when
@@ -466,6 +595,8 @@ def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catal
 
     plg = deconfigged_helper.plugins["Unit Conversion"]
 
+    msg = 'Unit Conversion unavailable without data loaded in a viewer'
+
     # plugin should be enabled when data is loaded
     assert plg._obj.disabled_msg == ''
 
@@ -473,15 +604,47 @@ def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catal
     dm = deconfigged_helper.viewers['1D Spectrum'].data_menu
     dm.layer.selected = ['test']
     dm.remove_from_viewer()
-    assert plg._obj.disabled_msg == 'Unit Conversion unavailable without data loaded in a viewer'
+    assert plg._obj.disabled_msg == msg
 
     # load a catalog, which will be added to a new scatter viewer by default.
     # the unit conversion plugin should still be disabled since the check for
     # relevancy is for data in spectrum/image/cube viewers
     deconfigged_helper.load(sky_coord_only_source_catalog, format='Catalog')
     assert 'Scatter' in deconfigged_helper.viewers
-    assert plg._obj.disabled_msg == 'Unit Conversion unavailable without data loaded in a viewer'
+    assert plg._obj.disabled_msg == msg
 
-    # add the data back to the spectrum viewer, plugin should be reenabled
-    dm.add_data('test')
+    # loading an image should re-enable the plugin
+    deconfigged_helper.load(image_nddata_wcs, format='Image',
+                            data_label='test_image')
     assert plg._obj.disabled_msg == ''
+
+
+def test_unit_reset_on_all_data_removed(deconfigged_helper, spectrum1d):
+    """
+    Test that unit selections are reset when all data is removed from the app.
+    """
+    deconfigged_helper.load(spectrum1d, data_label='spec', format='1D Spectrum')
+
+    plg = deconfigged_helper.plugins["Unit Conversion"]._obj
+    # make sure the initial unit selections match the loaded data
+    assert plg.spectral_unit_selected == 'Angstrom'
+    assert plg.flux_unit_selected == 'Jy'
+
+    # remove the data from the app
+    app = deconfigged_helper._app
+    deconfigged_helper._app.data_collection.remove(app.data_collection['spec'])
+
+    assert len(app.data_collection) == 0
+
+    # all unit selections should be cleared
+    assert plg.spectral_unit_selected == ''
+    assert plg.flux_unit_selected == ''
+    assert plg.angle_unit_selected == ''
+    assert plg.sb_unit_selected == ''
+    assert plg.spectral_unit.choices == []
+    assert plg.flux_unit.choices == []
+
+    # check that loading new data after all data was removed resets the units
+    deconfigged_helper.load(spectrum1d, data_label='spec2', format='1D Spectrum')
+    assert plg.spectral_unit_selected == 'Angstrom'
+    assert plg.flux_unit_selected == 'Jy'

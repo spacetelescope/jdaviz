@@ -10,8 +10,8 @@ from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 
 from jdaviz.core.custom_units_and_equivs import PIX2
-from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
-                                               handle_squared_flux_unit_conversions)
+from jdaviz.core.unit_conversion_utils import (flux_unit_conversion,
+                                               squared_flux_unit_conversions)
 
 # subset of possible units to test various conversions, testing all is time intensive
 FLUX_UNITS = ['Jy', 'erg / (Hz s cm2)', 'W / (Hz m2)', 'ph / (Angstrom s cm2)']
@@ -276,15 +276,11 @@ def _compare_table_units(orig_tab, new_tab, orig_flux_unit=None,
             orig = float(row['result']) * orig_unit
 
             if 'var' in row['function']:  # variance is in units of flux/sb squared
-                orig_converted = handle_squared_flux_unit_conversions(orig.value,
-                                                                      orig_unit,
-                                                                      new_unit,
-                                                                      equivalencies)
+                orig_converted = squared_flux_unit_conversions(
+                    orig.value, orig_unit, new_unit, equivalencies)
             else:
-                orig_converted = flux_conversion_general(orig.value,
-                                                         orig_unit,
-                                                         new_unit,
-                                                         equivalencies)
+                orig_converted = flux_unit_conversion(
+                    orig.value, orig_unit, new_unit, equivalencies)
 
             # low rtol for match, phot table is rounded
             assert_quantity_allclose(orig_converted, new, rtol=1e-03)
