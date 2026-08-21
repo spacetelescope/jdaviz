@@ -127,11 +127,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                       'filename_default',
                                       'filename_auto',
                                       'filename_invalid_msg')
-        filename = self.filename.value
-        if len(filename) >= 20:
-            self.filename_trunc = str(filename[0:10]) + '...' + str(filename[-10:])
-        else:
-            self.filename_trunc = filename
+
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Export data/plots and other outputs to a file.'
@@ -229,6 +225,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                       'plugin_table_items',
                                       'plugin_plot_items'],
                 irrelevant_msg_callback=self.relevant_if_any_truthy)
+
+    def _file_trunc(self):
+        filename = self.filename.value
+        if len(filename) >= 20:
+            self.filename_trunc = str(filename[0:10]) + '...' + str(filename[-10:])
+        else:
+            self.filename_trunc = filename
 
     def _is_valid_item(self, item):
         return self._is_not_stcs(item) or self._is_stcs_region_supported(item)
@@ -370,10 +373,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def _is_filename_changed(self, event):
         filename = self.filename_value
 
-        if len(filename) >= 20:
-            self.filename_trunc = filename[:10] + '...' + filename[-10:]
-        else:
-            self.filename_trunc = filename
+        self.file_name_trunc = self._file_trunc(filename)
 
         # Update the UI Filepath if relative or absolute paths are provided
         # by user via self.filename_value
