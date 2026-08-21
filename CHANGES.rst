@@ -67,6 +67,8 @@ New Features
 
 - Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322]
 
+- Allow markers plugin table to create other viewer types besides Scatter (i.e. Table or Histogram). [#4331]
+
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 
 - Table viewer UI to add/rename/remove columns. [#4282]
@@ -81,7 +83,7 @@ New Features
 
 - Child data now follows its parent into the same viewer(s). Viewer selection for child data
   is therefore hidden in the UI when parenting is set. [#4326]
-  
+
 - Keep visibility consistent between blink and plot options. [#4316]
 
 - Add consolidated emission line list and ability to query database in API. [#4314, 4330]
