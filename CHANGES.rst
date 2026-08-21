@@ -89,6 +89,9 @@ New Features
 - Improvements to flux / surface brightness unit conversion logic to support
   workflows and avoid errors in mixed unit viewers in deconfigged. [#4336]
 
+- Updated documentation for the application and caching, updated the jdaviz logo, 
+  and improved the .dmg installation process [#4337]
+
 Mosviz
 ^^^^^^
 
