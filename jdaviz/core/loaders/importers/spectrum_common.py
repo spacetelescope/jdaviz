@@ -334,6 +334,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             if (len(getattr(hdu, 'shape', [])) == 2
                     and hdu.header.get('EXTNAME', '').upper() in ('SCI', 'FLUX', 'DATA')):
                 return True
+        # NIRISS images otherwise would be validated as 2D spectra.
+        elif self.input[0].header.get('EXP_TYPE', None) == 'NIS_IMAGE':
+            return False
 
         # Check for Binary Table HDU with spectral columns (for 1D spectra only)
         if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
@@ -816,6 +819,10 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     raise ValueError(
                         "No primary data extension selected. Please select a FLUX extension."
                     )
+            # Avoid an edge case that is missed by the validity checks elsewhere
+            if hdulist[0].header.get('EXP_TYPE') == 'NIS_IMAGE':
+                return []
+
             return [self._spectrum_from_hdu(hdulist, hdu) for hdu in hdus]
         elif self.input_type == 'asdf:roman':
             roman = self.input["roman"]

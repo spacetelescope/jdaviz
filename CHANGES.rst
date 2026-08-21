@@ -146,6 +146,8 @@ Bug Fixes
 
 - Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
 
+- Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
+
 Mosviz
 ^^^^^^
 
