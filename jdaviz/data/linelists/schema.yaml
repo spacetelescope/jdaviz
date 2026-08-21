@@ -4,31 +4,6 @@ core_columns:
 - wavelength_unit
 - source_list
 extra_info_columns_by_file:
-  Atomic-ISO.csv:
-    rest_wavelength_col: Rest Value
-    wavelength_unit: um
-    science_case: nebular
-    extra_cols:
-    - transition
-    - error
-    - ep
-    - ip
-    - reference
-    - notes
-  Atomic-Ionic.csv:
-    rest_wavelength_col: Rest Value
-    wavelength_unit: um
-    science_case: nebular
-    extra_cols:
-    - Error
-    - Reference
-  Atomic-Ionic_FineStructure.csv:
-    rest_wavelength_col: Rest Value
-    wavelength_unit: um
-    science_case: nebular
-    extra_cols:
-    - Error
-    - Reference
   CO-band-heads.csv:
     rest_wavelength_col: Rest Value
     wavelength_unit: um
@@ -41,6 +16,13 @@ extra_info_columns_by_file:
     wavelength_unit: um
     science_case: molecular
     extra_cols: []
+  H-He.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols:
+      - Error
+      - Reference
   Common_Galactic_700A-2000A.csv:
     rest_wavelength_col: Rest Value
     wavelength_unit: Angstrom
@@ -50,28 +32,6 @@ extra_info_columns_by_file:
     rest_wavelength_col: Rest Value
     wavelength_unit: Angstrom
     science_case: galactic
-    extra_cols: []
-  Common_nebular.csv:
-    rest_wavelength_col: Rest Value
-    wavelength_unit: Angstrom
-    science_case: nebular
-    extra_cols: []
-  Common_stellar.csv:
-    rest_wavelength_col: Rest Value
-    wavelength_unit: Angstrom
-    science_case: stellar
-    extra_cols: []
-  H-He.csv:
-    rest_wavelength_col: Rest Value
-    wavelength_unit: um
-    science_case: nebular
-    extra_cols:
-    - Error
-    - Reference
-  H-Paschen-Brackett.csv:
-    rest_wavelength_col: Rest Value
-    wavelength_unit: um
-    science_case: nebular
     extra_cols: []
   H2-alt.csv:
     rest_wavelength_col: Rest Value
@@ -98,17 +58,17 @@ extra_info_columns_by_file:
     science_case: molecular
     extra_cols: []
     element_override: H2
+  H-Paschen-Brackett.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols: []
   HeI-HeII.csv:
     rest_wavelength_col: Rest Value
     wavelength_unit: um
     science_case: nebular
     extra_cols:
     - transition
-  PAH.csv:
-    rest_wavelength_col: Rest Value
-    wavelength_unit: um
-    science_case: molecular
-    extra_cols: []
   SDSS-IV.csv:
     rest_wavelength_col: Rest Value
     wavelength_unit: Angstrom
@@ -127,6 +87,46 @@ extra_info_columns_by_file:
     rest_wavelength_col: Rest Value
     wavelength_unit: Angstrom
     science_case: galactic
+    extra_cols: []
+  Atomic-ISO.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols:
+      - transition
+      - error
+      - ep
+      - ip
+      - reference
+      - notes
+  Atomic-Ionic.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols:
+      - Error
+      - Reference
+  Atomic-Ionic_FineStructure.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: nebular
+    extra_cols:
+      - Error
+      - Reference
+  Common_nebular.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: Angstrom
+    science_case: nebular
+    extra_cols: []
+  Common_stellar.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: Angstrom
+    science_case: stellar
+    extra_cols: []
+  PAH.csv:
+    rest_wavelength_col: Rest Value
+    wavelength_unit: um
+    science_case: molecular
     extra_cols: []
 wavelength_sanity_bounds:
   um:
