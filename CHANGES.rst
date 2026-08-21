@@ -89,6 +89,8 @@ New Features
 - Improvements to flux / surface brightness unit conversion logic to support
   workflows and avoid errors in mixed unit viewers in deconfigged. [#4336]
 
+- Fix table selection color in dark mode, rename "Remove from app" to "Delete from app", and allow line profile to use upper or lower case "L". [#4348]
+
 Mosviz
 ^^^^^^
 
