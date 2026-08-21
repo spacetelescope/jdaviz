@@ -84,6 +84,8 @@ New Features
   
 - Keep visibility consistent between blink and plot options. [#4316]
 
+- Fix table selection color in dark mode, rename "Remove from app" to "Delete from app", and allow line profile to use upper or lower case "L". [#4348]
+
 Mosviz
 ^^^^^^
 
