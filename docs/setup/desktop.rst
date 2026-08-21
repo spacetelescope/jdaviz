@@ -37,7 +37,7 @@ using the provided shortcut (or you can drag and drop into any folder of your ch
 You can now unmount the installer.  
 
 Click the Jdaviz.app file to launch Jdaviz. If you see the message that "Jdaviz can't be opened as it is from an unidentified developer",
-right click on the application, select open, and accept to open the app.  
+right click on the application, select Open, and press Accept to open the app.  
 
 
 Windows and Linux
