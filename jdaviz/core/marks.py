@@ -12,8 +12,8 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 SpectralMarksChangedMessage,
                                 RedshiftMessage)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               check_if_unit_is_per_solid_angle,
-                                               flux_conversion_general,
+                                               is_unit_per_solid_angle,
+                                               flux_unit_conversion,
                                                spectral_unit_conversion)
 
 
@@ -218,7 +218,7 @@ class PluginMark:
 
         # spectrum y-values in viewer have already been converted, don't convert again
         # if a spectral_y_type is changed, just update the unit
-        if self.yunit is not None and check_if_unit_is_per_solid_angle(self.yunit) != check_if_unit_is_per_solid_angle(unit):  # noqa
+        if self.yunit is not None and is_unit_per_solid_angle(self.yunit) != is_unit_per_solid_angle(unit):  # noqa
             self.yunit = unit
             return
 
@@ -237,8 +237,8 @@ class PluginMark:
                 else:
                     wave = self.x * self.xunit
                 equivs = all_flux_unit_conversion_equivs(pixar_sr, wave)
-                y = flux_conversion_general(self.y, self.yunit, unit,
-                                            equivs, with_unit=False)
+                y = flux_unit_conversion(
+                    self.y, self.yunit, unit, equivs, with_unit=False)
 
             self.y = y
 

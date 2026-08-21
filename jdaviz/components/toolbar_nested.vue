@@ -180,7 +180,7 @@
           'jdaviz:viewer_popout',
         ];
 
-        let style = 'min-width: 40px !important; width: 40px !important; height: 40px !important; padding: 0px !important;';
+        let style = 'min-width: 42px !important; width: 42px !important; height: 42px !important; padding: 0px !important;';
         if (viewerActionTools.includes(id)) {
           // top app-toolbar dark blue
           style += ' background-color: rgba(0, 59, 77, 1);';
@@ -240,7 +240,9 @@
 .toolbar-icon-img {
   width: 20px;
   height: 20px;
-  display: block;
+  display: inline-block;
+  object-fit: contain;
+  vertical-align: middle;
 }
 .suboptions-carrot:hover {
   scale: 1.75;

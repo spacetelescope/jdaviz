@@ -34,8 +34,8 @@ from jdaviz.core.user_api import (DataApi, SpectralDataApi, SpatialDataApi,
 from jdaviz.utils import (JDAVIZ_CONFIGS, data_has_valid_wcs, CONFIGS_WITH_LOADERS,
                           suppress_widget_comms)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               check_if_unit_is_per_solid_angle,
-                                               flux_conversion_general,
+                                               is_unit_per_solid_angle,
+                                               flux_unit_conversion,
                                                spectral_unit_conversion)
 
 
@@ -677,8 +677,8 @@ class ConfigHelper(HubListener):
                 # starting the app? ideally this should raise an error, and this
                 # should allow pix2/spaxel but it doesn't - keeping this
                 # condition as-is until further investigation
-                orig_sa = check_if_unit_is_per_solid_angle(u.Unit(data.flux.unit))
-                targ_sa = check_if_unit_is_per_solid_angle(u.Unit(y_unit))
+                orig_sa = is_unit_per_solid_angle(u.Unit(data.flux.unit))
+                targ_sa = is_unit_per_solid_angle(u.Unit(y_unit))
                 skip_flux_conv = ('_pixel_scale_factor' not in data.meta) & (orig_sa != targ_sa)
 
                 # equivalencies for flux/sb unit conversions
@@ -701,29 +701,31 @@ class ConfigHelper(HubListener):
                         new_uncert = uncertainty
 
                     # convert uncertainty units to display units
-                    if skip_flux_conv:
+                    if skip_flux_conv or not y_unit:
                         new_uncert = StdDevUncertainty(new_uncert, unit=data.flux.unit)
                     else:
-                        new_uncert_conv = flux_conversion_general(new_uncert.quantity.value,
-                                                                  new_uncert.unit,
-                                                                  y_unit,
-                                                                  eqv,
-                                                                  with_unit=False)
+                        new_uncert_conv = flux_unit_conversion(
+                            new_uncert.quantity.value,
+                            new_uncert.unit,
+                            y_unit,
+                            eqv,
+                            with_unit=False)
                         new_uncert = StdDevUncertainty(new_uncert_conv,
                                                        unit=y_unit)
                 else:
                     new_uncert = None
 
                 # convert flux/sb units to display units
-                if skip_flux_conv:
+                if skip_flux_conv or not y_unit:
                     new_y = data.flux.value * u.Unit(data.flux.unit)
                 else:
                     # multiply by unit rather than using with_unit because of
                     # edge case for dimensionless we want here
-                    new_y = flux_conversion_general(data.flux.value,
-                                                    data.flux.unit,
-                                                    y_unit,
-                                                    eqv, with_unit=False) * u.Unit(y_unit)
+                    new_y = flux_unit_conversion(
+                        data.flux.value,
+                        data.flux.unit,
+                        y_unit,
+                        eqv, with_unit=False) * u.Unit(y_unit)
 
                 # convert spectral axis to display units
                 if spectral_unit != '' and data.spectral_axis.unit != spectral_unit:

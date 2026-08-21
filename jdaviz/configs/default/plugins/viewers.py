@@ -54,8 +54,8 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import WithCache, TemplateMixin, show_widget
 from jdaviz.core.tools import _get_skycoords_from_table, _get_pixel_coords_from_table
 from jdaviz.core.user_api import ViewerUserApi
-from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
-                                               flux_conversion_general,
+from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
+                                               flux_unit_conversion,
                                                all_flux_unit_conversion_equivs)
 from jdaviz.utils import (ColorCycler, get_subset_type, _wcs_only_label,
                           layer_is_image_data, layer_is_not_dq, layer_is_3d)
@@ -1200,10 +1200,11 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                     cube_wave = data.get_component('spectral')
 
                     eqv = all_flux_unit_conversion_equivs(pixar_sr=psc, cube_wave=cube_wave)
-                    flux_conversion_general([1, 1],
-                                            data.get_component('flux').data.units,
-                                            self.state.y_display_unit,
-                                            equivalencies=eqv)
+                    flux_unit_conversion(
+                        [1, 1],
+                        data.get_component('flux').data.units,
+                        self.state.y_display_unit,
+                        equivalencies=eqv)
             except Exception as e:
                 # Raising exception here introduces a dirty state that messes up next load_data
                 # but not raising exception also causes weird behavior unless we remove the data
@@ -1417,7 +1418,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         # get square angle from 'sb' display unit
         sb_unit = self.jdaviz_app._get_display_unit(axis='sb')
         if sb_unit is not None:
-            solid_angle_unit = check_if_unit_is_per_solid_angle(sb_unit, return_unit=True)
+            solid_angle_unit = is_unit_per_solid_angle(sb_unit, return_unit=True)
         else:
             solid_angle_unit = None
 
@@ -1571,6 +1572,7 @@ def _role_labels_from_meta(meta):
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
+                    ['jdaviz:table_row_select'],
                     ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
@@ -1580,6 +1582,8 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                    ]
 
     def __init__(self, session, *args, **kwargs):
+        default_tool_priority = kwargs.pop('default_tool_priority',
+                                           ['jdaviz:table_row_select'])
         super().__init__(session, *args, **kwargs)
 
         # table_viewer: replace default TableGlue with local override until upstream PR is merged
@@ -1599,6 +1603,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
                                   names=['checked'])
+        # check tool visibility when data changes (e.g. row-link columns added)
+        self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
+                                  names=['data'])
         # Also update selection highlight marks when checked rows change
         self.widget_table.observe(self._on_checked_changed, names=['checked'])
         self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
@@ -1620,6 +1627,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # if this table viewer is removed while tools are active
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=self._on_viewer_removed)
+
+        # Build the toolbar with the correct default-tool priority
+        self.initialize_toolbar(default_tool_priority=default_tool_priority)
 
     def _on_table_select_row_click(self, msg):
         """Handle click from image viewer to select/toggle closest table row."""
@@ -1851,11 +1861,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def _on_restore_toolbar(self, msg={}):
         """Clean up checkbox state when toolbar is restored."""
-        # Clear selection marks
         self._clear_selection_marks()
-
-        # Hide checkboxes (they should always be hidden when default toolbar is shown)
-        self.widget_table.selection_enabled = False
 
     def _on_viewer_removed(self, msg):
         """Clean up selection marks if this table viewer is removed."""

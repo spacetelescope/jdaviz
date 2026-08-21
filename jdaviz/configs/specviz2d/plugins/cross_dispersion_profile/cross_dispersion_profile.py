@@ -15,7 +15,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (DatasetSelect, PluginTemplateMixin,
                                         PlotMixin)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               flux_conversion_general)
+                                               flux_unit_conversion)
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['CrossDispersionProfile']
@@ -355,8 +355,8 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
                 wav = None
             eqv = all_flux_unit_conversion_equivs(data.meta.get('PIXAR_SR', 1.0),
                                                   wav)
-            profile = flux_conversion_general(profile.value, profile.unit,
-                                              self.flux_display_unit, eqv)
+            profile = flux_unit_conversion(
+                profile.value, profile.unit, self.flux_display_unit, eqv)
 
         self._profile = profile
 
