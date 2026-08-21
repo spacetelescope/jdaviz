@@ -84,6 +84,8 @@ New Features
   
 - Keep visibility consistent between blink and plot options. [#4316]
 
+- Change appearance of the overwrite warning overlay shown in the export plugin. [#4338]
+
 - Add consolidated emission line list and ability to query database in API. [#4314, 4330]
 
 - Improvements to flux / surface brightness unit conversion logic to support
