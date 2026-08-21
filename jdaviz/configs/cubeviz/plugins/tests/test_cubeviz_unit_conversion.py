@@ -123,7 +123,8 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
         assert_allclose(ap_plg.background_value, bg_ans, rtol=1e-4)
 
 
-@pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
+@pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, []),
+                                                         (u.count / PIX2, []),
                                                          (u.Jy, SPEC_PHOTON_FLUX_DENSITY_UNITS),
                                                          (u.nJy, SPEC_PHOTON_FLUX_DENSITY_UNITS + ['nJy'])])  # noqa
 def test_flux_unit_choices(deconfigged_helper, flux_unit, expected_choices):
@@ -141,9 +142,15 @@ def test_flux_unit_choices(deconfigged_helper, flux_unit, expected_choices):
 
     uc_plg = deconfigged_helper.plugins['Unit Conversion']
 
-    assert uc_plg.angle_unit.selected == 'pix2'  # will always be pix2
+    assert uc_plg.angle_unit.selected == 'pix2'
 
-    assert uc_plg.flux_unit.selected == flux_unit.to_string()
+    # loading data with non-physical flux units (counts) should not set the
+    # global display unit or populate any choices for flux unit conversion
+    if u.Unit(flux_unit) in (u.ct, u.ct / PIX2):
+        assert uc_plg.flux_unit.selected == ''
+    else:
+        assert uc_plg.flux_unit.selected == flux_unit.to_string()
+
     assert uc_plg.flux_unit.choices == expected_choices
 
 
@@ -314,22 +321,25 @@ def test_contour_unit_conversion(deconfigged_helper, spectrum1d_cube_fluxunit_jy
 
 
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
-def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
+def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit, flux_unit=u.ct):
 
     """
-    When a cube is loaded in counts, 'count' should be the only
-    available option for flux unit. The y axis can be translated
-    between flux and sb. Test a flux cube which will be converted
-    to ct/pix2, and a sb cube ct/sr.
+    When a cube is loaded in counts, there should be no options available for unit
+    conversion but the y axis can be translated between flux and sb. Test toggling
+    between flux and surface brightness for a cube in units of counts (for solid
+    angle units of both PIX2 and sr), including that the mouseover info is updated correctly.
+
+    TODO: this test needs to be moved to deconfigged once toggling is fixed
     """
 
     angle_str = angle_unit.to_string()
+    flux_unit_str = flux_unit.to_string()
 
     # custom cube to have Surface Brightness units
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum(flux=flux * (u.ct / angle_unit), wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * (flux_unit / angle_unit), wcs=w, meta=wcs_dict)
     cubeviz_helper.load(cube, data_label="test")
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
@@ -337,9 +347,8 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
 
     # ensure that per solid angle cube defaults to Flux spectrum
     assert uc_plg.spectral_y_type == 'Flux'
-    # flux choices is populated with only one choice, counts
-    assert len(uc_plg.flux_unit.choices) == 1
-    assert 'ct' in uc_plg.flux_unit.choices
+    # flux choices is populated with no additional choices since the cube is in counts
+    assert len(uc_plg.flux_unit.choices) == 0
     # and angle choices should be the only the input angle
     assert len(uc_plg.angle_unit.choices) == 1
     assert angle_str in uc_plg.angle_unit.choices
@@ -352,7 +361,7 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
     uc_plg.spectral_y_type.selected = 'Surface Brightness'
 
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    assert y_display_unit == u.ct / angle_unit
+    assert y_display_unit == flux_unit / angle_unit
 
     # and test mouseover info
     label_mouseover = cubeviz_helper._coords_info
@@ -363,7 +372,7 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
         flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
     )
     assert label_mouseover.as_text() == (
-            f"Pixel x=00010.0 y=00008.0 Value +1.00000e+00 ct / {angle_str}",
+            f"Pixel x=00010.0 y=00008.0 Value +1.00000e+00 {flux_unit_str} / {angle_str}",
             "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
             "204.9987654313 27.0008999946 (deg)")
 

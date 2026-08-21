@@ -83,6 +83,10 @@ div.output_wrapper {
   /*border-top: 1px solid #cccccc;*/
 }
 
+.jdaviz-viewer-figure-container .lm-Widget.bqplot.figure.jupyter-widgets.classic {
+  margin: 0 !important;
+}
+
 .lm_splitter {
   background: #e2e4e8;
   opacity: 1;
@@ -213,12 +217,14 @@ a:active {
   margin-bottom: -28px !important;
 }
 
-.jdaviz-nested-toolbar .v-btn--active, .jdaviz-nested-toolbar .v-btn:focus, .v-toolbar .active, .jdaviz-viewer-toolbar .active {
+.jdaviz-nested-toolbar .v-btn--active,
+.v-toolbar .v-btn--active,
+.jdaviz-viewer-toolbar .v-btn--active {
   /* active color (orange) */
   background-color: #c75109 !important;
 }
 
-.plugin-nested-toolbar .v-btn--active, .plugin-nested-toolbar .v-btn:focus {
+.plugin-nested-toolbar .v-btn--active {
   /* semi-transparent active color (orange) */
   background-color: #c7510996 !important;
 }
@@ -378,6 +384,12 @@ span.api-hint-header {
 /* Adjust the separation between 'Select/Clear All' icons and text. */
 .v-list-item-action {
   margin-right: 8px;
+}
+
+/* Table viewer: keep row selection checkboxes but hide the select-all header button. */
+.glue-table-container .glue-data-table thead tr > th:nth-child(2) .v-btn {
+  /* NOTE: display none will hide the checkmarks in individual rows as well */
+  height: 0px !important;
 }
 
 </style>

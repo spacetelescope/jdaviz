@@ -12,7 +12,7 @@ from jdaviz.core.config import get_configuration
 from jdaviz.app import PrivateApplication
 from jdaviz.utils import alpha_index
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
-from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
+from jdaviz.core.unit_conversion_utils import (flux_unit_conversion,
                                                viewer_flux_conversion_equivalencies)
 
 
@@ -351,9 +351,9 @@ def test_to_unit(cubeviz_helper):
 
     spec = data.get_object(cls=Spectrum)
     viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
-    value = flux_conversion_general(values, original_units,
-                                    target_units, viewer_equivs,
-                                    with_unit=False)
+    value = flux_unit_conversion(
+        values, original_units, target_units, viewer_equivs,
+        with_unit=False)
 
     # will be a uniform array since not wavelength dependent
     # so test first value in array
@@ -366,9 +366,9 @@ def test_to_unit(cubeviz_helper):
     target_units = u.erg / u.cm**2 / u.s / u.AA
 
     viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
-    new_values = flux_conversion_general(values, original_units,
-                                         target_units, viewer_equivs,
-                                         with_unit=False)
+    new_values = flux_unit_conversion(
+        values, original_units, target_units, viewer_equivs,
+        with_unit=False)
 
     assert np.allclose(new_values,
                        (values * original_units)
@@ -383,9 +383,9 @@ def test_to_unit(cubeviz_helper):
     target_units = u.erg / u.cm**2 / u.s / u.AA
 
     viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
-    new_values = flux_conversion_general(values, original_units,
-                                         target_units, viewer_equivs,
-                                         with_unit=False)
+    new_values = flux_unit_conversion(
+        values, original_units, target_units, viewer_equivs,
+        with_unit=False)
 
     # In this case we do a regular spectral density conversion, but using the
     # first value in the spectral axis for the equivalency

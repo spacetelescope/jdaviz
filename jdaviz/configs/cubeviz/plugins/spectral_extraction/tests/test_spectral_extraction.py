@@ -18,7 +18,7 @@ from specutils.manipulation import FluxConservingResampler
 
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               flux_conversion_general)
+                                               flux_unit_conversion)
 from jdaviz.utils import cached_uri
 from photutils import __version__ as photutils_version
 
@@ -722,10 +722,9 @@ def test_spectral_extraction_flux_unit_conversions(cubeviz_helper,
 
             # make sure extraction preview was translated to new display units
             new_sum_y_values = se._obj.marks['extract'].y
-            new_converted_to_old_unit = flux_conversion_general(new_sum_y_values,
-                                                                u.Unit(new_flux_unit),
-                                                                u.Unit(flux_unit),
-                                                                equivs, with_unit=False)
+            new_converted_to_old_unit = flux_unit_conversion(
+                new_sum_y_values, u.Unit(new_flux_unit),
+                u.Unit(flux_unit), equivs, with_unit=False)
             np.testing.assert_allclose(original_sum_y_values, new_converted_to_old_unit)
 
             # collapsed result will still have the native data flux unit

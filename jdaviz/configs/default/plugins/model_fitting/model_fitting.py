@@ -30,10 +30,36 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               flux_conversion_general)
+                                               flux_unit_conversion,
+                                               is_physical_spectral_unit)
 from jdaviz.core.custom_units_and_equivs import PIX2
 
 __all__ = ['ModelFitting']
+
+
+def _flux_conversion_strip_spectral(values, original_unit, target_unit,
+                                    equivalencies=None, with_unit=True):
+    """Strip common spectral-axis denominator from both units, convert, then re-apply."""
+    orig = u.Unit(original_unit)
+    targ = u.Unit(target_unit)
+    spectral_denom = None
+    for base, power in zip(orig.bases, orig.powers):
+        if power < 0 and is_physical_spectral_unit(base):
+            spectral_denom = base ** (-power)
+            break
+    # only strip if the target also has a spectral unit in its denominator
+    if spectral_denom is not None and not any(
+            power < 0 and is_physical_spectral_unit(base)
+            for base, power in zip(targ.bases, targ.powers)):
+        spectral_denom = None
+    if spectral_denom is None:
+        return flux_unit_conversion(values, orig, targ, equivalencies, with_unit=with_unit)
+    result = flux_unit_conversion(
+        values, orig * spectral_denom, targ * spectral_denom,
+        equivalencies, with_unit=with_unit)
+    if with_unit:
+        return result / spectral_denom
+    return result
 
 
 class _EmptyParam:
@@ -697,9 +723,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     cube_wave = viewer.slice_value * u.Unit(self._app._get_display_unit('spectral'))
                     equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
 
-                    initial_val = flux_conversion_general([default_param.value],
-                                                          default_param.unit,
-                                                          default_units, equivs)
+                    initial_val = _flux_conversion_strip_spectral(
+                        [default_param.value], default_param.unit, default_units, equivs)
                 else:
                     initial_val = default_param
 
@@ -751,10 +776,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             pixar_sr = masked_spectrum.meta.get('_pixel_scale_factor', 1.0)
             equivs = all_flux_unit_conversion_equivs(pixar_sr, init_x.mean())
 
-            init_y = flux_conversion_general(init_y.value,
-                                             init_y.unit,
-                                             self._units['y'],
-                                             equivs)
+            init_y = _flux_conversion_strip_spectral(
+                init_y.value, init_y.unit, self._units['y'], equivs)
 
         # We need this for models where we average over the spatial axes to initialize
         spectral_axis_index = masked_spectrum.spectral_axis_index
@@ -867,10 +890,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
                     # Try to convert the current value to the new unit
                     try:
-                        new_quant = flux_conversion_general(current_quant.value,
-                                                            current_quant.unit,
-                                                            new_param_unit,
-                                                            equivalencies=equivalencies)
+                        new_quant = _flux_conversion_strip_spectral(current_quant.value,
+                                                                    current_quant.unit,
+                                                                    new_param_unit,
+                                                                    equivalencies=equivalencies)
                         param['value'] = new_quant.value
                         param['unit'] = str(new_quant.unit)
 
@@ -878,10 +901,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                         if ('std' in param and param['std'] is not None
                                 and not np.isnan(param['std'])):
                             current_std_quant = param['std'] * u.Unit(old_param_unit)
-                            new_std = flux_conversion_general(current_std_quant.value,
-                                                              current_std_quant.unit,
-                                                              new_param_unit,
-                                                              equivalencies=equivalencies)
+                            new_std = _flux_conversion_strip_spectral(current_std_quant.value,
+                                                                      current_std_quant.unit,
+                                                                      new_param_unit,
+                                                                      equivalencies=equivalencies)
                             param['std'] = new_std.value
                     except Exception:
                         # If conversion fails, mark as incompatible
@@ -1674,7 +1697,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         spatial_axes.remove(spec.spectral_axis_index)
 
         sb_unit = self._app._get_display_unit('sb')
-        if spec.flux.unit != sb_unit:
+        if sb_unit and spec.flux.unit != sb_unit:
             # ensure specutils has access to jdaviz custom unit equivalencies
             pixar_sr = spec.meta.get('_pixel_scale_factor', None)
             equivalencies = all_flux_unit_conversion_equivs(pixar_sr=pixar_sr,
