@@ -426,7 +426,7 @@ class JdavizViewerMixin(WithCache):
             if isinstance(self, AIDAMixin):
                 expose += ['set_viewport', 'get_viewport']
         elif isinstance(self, TableViewer):
-            expose += []
+            expose += ['add_column', 'rename_column', 'remove_column']
         else:
             expose += ['set_limits', 'reset_limits', 'set_tick_format']
         return ViewerUserApi(self, expose=expose)
@@ -1969,12 +1969,17 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         Raises
         ------
         ValueError
-            If ``column_name`` is not found in the table.
+            If ``column_name`` is not found in the table, or if it is a
+            protected role column (e.g. RA, Dec, X, Y, ID).
         """
         found = False
         for glue_data in self._iter_table_data():
             if column_name in [c.label for c in glue_data.main_components]:
                 cid = glue_data.id[column_name]
+                if cid not in self.state.removable_components:
+                    raise ValueError(
+                        f"Column '{column_name}' is a protected column and cannot be removed."
+                    )
                 self.state.editable_components = [
                     c for c in self.state.editable_components if c is not cid
                 ]
