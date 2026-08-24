@@ -160,6 +160,8 @@ Bug Fixes
 
 - Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
 
+- Adjust data menu behavior to allow for showing more icons when the viewer is short. [#4352]
+
 Mosviz
 ^^^^^^
 
