@@ -58,9 +58,9 @@ from jdaviz.utils import (SnackbarQueue, alpha_index, alpha_index_to_int, data_h
                           _wcs_only_label, CONFIGS_WITH_LOADERS,
                           _get_celestial_wcs)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
-from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
+from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
                                                combine_flux_and_angle_units,
-                                               flux_conversion_general,
+                                               flux_unit_conversion,
                                                spectral_unit_conversion,
                                                supported_sq_angle_units,
                                                viewer_flux_conversion_equivalencies)
@@ -133,9 +133,9 @@ class UnitConverterWithSpectral:
                 spec = Spectrum(flux=data.data * u.Unit(original_units))
             # equivalencies for flux/surface brightness conversions
             viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
-            return flux_conversion_general(values, original_units,
-                                           target_units, viewer_equivs,
-                                           with_unit=False)
+            return flux_unit_conversion(
+                values, original_units, target_units, viewer_equivs,
+                with_unit=False)
         else:  # spectral axis
             return spectral_unit_conversion(values, original_units, target_units)
 
@@ -1657,7 +1657,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                 # first check the spectrum viewer y axis for any solid angle unit (i think that it
                 # will ALWAYS be in flux, but just to be sure). If no solid angle unit is found,
                 # check the flux viewer for surface brightness units
-                sv_y_angle_unit = check_if_unit_is_per_solid_angle(sv_y_unit, return_unit=True)
+                sv_y_angle_unit = is_unit_per_solid_angle(sv_y_unit, return_unit=True)
 
                 # check flux viewer if none in spectral viewer
                 fv_angle_unit = None
@@ -1666,8 +1666,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                         vname = self._jdaviz_helper._default_flux_viewer_reference_name
                         fv = self.get_viewer(vname)
                         fv_unit = fv.data()[0].get_object().flux.unit
-                        fv_angle_unit = check_if_unit_is_per_solid_angle(fv_unit,
-                                                                         return_unit=True)
+                        fv_angle_unit = is_unit_per_solid_angle(
+                            fv_unit, return_unit=True)
                     else:
                         # mosviz, not sure what to do here but can't access flux
                         # viewer the same way. once we force the UC plugin to

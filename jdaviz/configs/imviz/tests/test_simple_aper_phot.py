@@ -21,7 +21,7 @@ from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, BaseImviz_WCS_NoWCS
 from jdaviz.core.custom_units_and_equivs import PIX2
-from jdaviz.core.unit_conversion_utils import flux_conversion_general
+from jdaviz.core.unit_conversion_utils import flux_unit_conversion
 
 
 photutils.future_column_names = True
@@ -663,10 +663,8 @@ def _compare_image_table_units(orig_tab, new_tab, orig_unit, new_unit):
             orig_val = float(row['result']) * orig_u
 
             # Convert original value to new unit
-            orig_converted = flux_conversion_general(orig_val.value,
-                                                     orig_u,
-                                                     new_u,
-                                                     equivalencies=[])
+            orig_converted = flux_unit_conversion(
+                orig_val.value, orig_u, new_u, equivalencies=[])
 
             # Low rtol for match since phot table is rounded
             assert_quantity_allclose(orig_converted, new_val, rtol=1e-03)

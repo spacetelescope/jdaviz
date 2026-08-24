@@ -65,7 +65,7 @@ New Features
 
 - Add consolidated emission line list and ability to query database in API. [#4314]
 
-- Add ability to view data in multiple viewers with row click in table viewer. [#4279]
+- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322]
 
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 
@@ -83,6 +83,11 @@ New Features
   is therefore hidden in the UI when parenting is set. [#4326]
 
 - Keep visibility consistent between blink and plot options. [#4316]
+
+- Add consolidated emission line list and ability to query database in API. [#4314, 4330]
+
+- Improvements to flux / surface brightness unit conversion logic to support
+  workflows and avoid errors in mixed unit viewers in deconfigged. [#4336]
 
 - Importers can now support multiple targets when filtering format options based on target. [#4345]
 
@@ -106,6 +111,8 @@ Bug Fixes
 - Fixed a Vue3 button issue that triggers backend calls twice. [#4276, #4277]
 
 - Fixed closing a viewer not deleting the associated backend objects. [#4317]
+
+- Fix color picker not showing correctly. [#4332]
 
 Mosviz
 ^^^^^^
