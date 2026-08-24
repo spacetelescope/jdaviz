@@ -426,7 +426,7 @@ class JdavizViewerMixin(WithCache):
             if isinstance(self, AIDAMixin):
                 expose += ['set_viewport', 'get_viewport']
         elif isinstance(self, TableViewer):
-            expose += []
+            expose += ['add_column', 'rename_column', 'remove_column', 'set_column_sync']
         else:
             expose += ['set_limits', 'reset_limits', 'set_tick_format']
         return ViewerUserApi(self, expose=expose)
@@ -1789,6 +1789,34 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         self._add_or_update_column(column_name, data)
 
+    def set_column_sync(self, column_name, synced):
+        """Enable or disable row-link syncing for a data-association column.
+
+        Parameters
+        ----------
+        column_name : str
+            Name of the ``Data: <viewer>`` column to toggle.
+        synced : bool
+            ``True`` to sync (default); ``False`` to disable.
+        """
+        self.state.column_sync_state = {**self.state.column_sync_state,
+                                        column_name: bool(synced)}
+
+    def get_column_sync(self, column_name):
+        """Return the current sync state for a data-association column.
+
+        Parameters
+        ----------
+        column_name : str
+            Name of the column to query.
+
+        Returns
+        -------
+        bool
+            ``True`` if synced (default when not explicitly set).
+        """
+        return self.state.is_synced(column_name)
+
     def _on_checked_changed(self, change):
         """Update highlight marks in image viewers when checked rows change."""
         self._update_selection_marks()
@@ -1969,12 +1997,17 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         Raises
         ------
         ValueError
-            If ``column_name`` is not found in the table.
+            If ``column_name`` is not found in the table, or if it is a
+            protected role column (e.g. RA, Dec, X, Y, ID).
         """
         found = False
         for glue_data in self._iter_table_data():
             if column_name in [c.label for c in glue_data.main_components]:
                 cid = glue_data.id[column_name]
+                if cid not in self.state.removable_components:
+                    raise ValueError(
+                        f"Column '{column_name}' is a protected column and cannot be removed."
+                    )
                 self.state.editable_components = [
                     c for c in self.state.editable_components if c is not cid
                 ]

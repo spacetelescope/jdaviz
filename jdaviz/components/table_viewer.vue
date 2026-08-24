@@ -74,12 +74,17 @@
                 style="cursor: pointer; user-select: none; padding: 0 8px; white-space: nowrap; position: relative;"
                 :style="editingHeader === header.value ? {minWidth: '240px'} : {}"
             >
-              {{ header.text }}
-              <v-icon v-if="options.sortBy && options.sortBy[0] === header.value">
-                {{ options.sortDesc && options.sortDesc[0] ? 'arrow_drop_down' : 'arrow_drop_up' }}
-              </v-icon>
-              <v-icon size="x-small" v-if="hoverHeader === header.value && editingHeader !== header.value && header.renameable" @click.stop="enterHeaderRename(header.value)" style="cursor:pointer;margin-left:2px" title="Rename column">mdi-pencil</v-icon>
-              <v-icon size="x-small" v-if="hoverHeader === header.value && editingHeader !== header.value && header.removable" @click.stop="enterHeaderRemove(header.value)" style="cursor:pointer" title="Delete column">mdi-delete</v-icon>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+                <v-icon size="x-small" v-if="header.toggleable_sync" @click.stop="toggle_column_sync({column: header.value})" style="cursor:pointer;" :title="header.synced ? 'Synced (click to disable row-link sync)' : 'Not synced (click to enable row-link sync)'">{{ header.synced ? 'mdi-link' : 'mdi-link-off' }}</v-icon>
+                <div>
+                  {{ header.text }}
+                  <v-icon v-if="options.sortBy && options.sortBy[0] === header.value">
+                    {{ options.sortDesc && options.sortDesc[0] ? 'arrow_drop_down' : 'arrow_drop_up' }}
+                  </v-icon>
+                  <v-icon size="x-small" v-if="hoverHeader === header.value && editingHeader !== header.value && header.renameable" @click.stop="enterHeaderRename(header.value)" style="cursor:pointer;margin-left:2px" title="Rename column">mdi-pencil</v-icon>
+                  <v-icon size="x-small" v-if="hoverHeader === header.value && editingHeader !== header.value && header.removable" @click.stop="enterHeaderRemove(header.value)" style="cursor:pointer" title="Delete column">mdi-delete</v-icon>
+                </div>
+              </div>
 
               <!-- Rename mode: fills the th (min-width ensures it fits) -->
               <span v-if="editingHeader === header.value && headerMode === 'rename'" @click.stop style="position:absolute;top:0;left:0;right:0;bottom:0;display:inline-flex;align-items:center;gap:4px;background:white;padding:0 4px;z-index:1;"><input :data-header="header.value" v-model="headerEditValue" @keyup.enter.stop="acceptHeader(header.value)" @keyup.escape.stop="cancelHeader()" @click.stop class="glue-header-edit-input"/><v-icon size="x-small" @click.stop="cancelHeader()" style="cursor:pointer" title="Cancel (Esc)">mdi-close</v-icon><v-icon size="x-small" @click.stop="acceptHeader(header.value)" style="cursor:pointer" title="Accept (Enter)">mdi-check</v-icon></span>

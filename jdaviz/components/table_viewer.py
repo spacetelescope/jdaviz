@@ -9,7 +9,7 @@ TO REVERT once upstream glue-jupyter is updated:
   3. Update the glue-jupyter version pin.
 """
 
-from echo import ListCallbackProperty
+from echo import DictCallbackProperty, ListCallbackProperty
 from glue_jupyter.table.viewer import TableGlue, TableState, TableViewer
 
 
@@ -23,6 +23,9 @@ if not hasattr(TableState, 'renameable_components'):
         docstring='Attributes whose column header can be renamed')
     TableState.removable_components = ListCallbackProperty(
         docstring='Attributes whose column can be removed from the table')
+    # absent key means synced; only de-synced columns are stored as False
+    TableState.column_sync_state = DictCallbackProperty(
+        docstring='Per column-label sync enable state; absent == True (synced)')
 
     def _is_renameable(self, component_id):
         """Check if a component's header can be renamed (identity comparison)."""
@@ -38,8 +41,12 @@ if not hasattr(TableState, 'renameable_components'):
                 return True
         return False
 
+    def _is_synced(self, column_label):
+        return self.column_sync_state.get(str(column_label), True)
+
     TableState.is_renameable = _is_renameable
     TableState.is_removable = _is_removable
+    TableState.is_synced = _is_synced
 
 
 # ---------------------------------------------------------------------------
@@ -53,6 +60,7 @@ if not hasattr(TableViewer, '_shim_patched'):
         _orig_viewer_init(self, session, state=state)
         self.state.add_callback('renameable_components', self._update_renameable)
         self.state.add_callback('removable_components', self._update_removable)
+        self.state.add_callback('column_sync_state', self._update_sync_state)
 
     def _update_renameable(self, *args):
         self.widget_table._update_columns()
@@ -60,9 +68,13 @@ if not hasattr(TableViewer, '_shim_patched'):
     def _update_removable(self, *args):
         self.widget_table._update_columns()
 
+    def _update_sync_state(self, *args):
+        self.widget_table._update_columns()
+
     TableViewer.__init__ = _patched_viewer_init
     TableViewer._update_renameable = _update_renameable
     TableViewer._update_removable = _update_removable
+    TableViewer._update_sync_state = _update_sync_state
     TableViewer._shim_patched = True
 
 
@@ -79,6 +91,7 @@ class JdavizTableGlue(TableGlue):
         if self.data is None:
             return []
         components = self.get_visible_components()
+        assoc_columns = set(self.data.meta.get('_viewer_data_columns') or {})
         return [
             {
                 'text': str(k),
@@ -89,6 +102,8 @@ class JdavizTableGlue(TableGlue):
                 'editable': self.state is not None and self.state.is_editable(k),
                 'renameable': self.state is not None and self.state.is_renameable(k),
                 'removable': self.state is not None and self.state.is_removable(k),
+                'toggleable_sync': str(k) in assoc_columns,
+                'synced': self.state is None or self.state.is_synced(str(k)),
             }
             for k in components
         ]
@@ -137,6 +152,14 @@ class JdavizTableGlue(TableGlue):
             self._update()
         for fn in getattr(self, '_column_removed_callbacks', []):
             fn(label)
+
+    def vue_toggle_column_sync(self, data):
+        """Toggle the row-link sync state for a data-association column."""
+        label = data.get('column', '')
+        if not label or self.state is None:
+            return
+        current = self.state.column_sync_state.get(label, True)
+        self.state.column_sync_state = {**self.state.column_sync_state, label: not current}
 
 
 __all__ = ['JdavizTableGlue']

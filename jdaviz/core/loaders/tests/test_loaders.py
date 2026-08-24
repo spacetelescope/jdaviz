@@ -61,6 +61,17 @@ def test_resolver_matching(specviz_helper):
     assert len(specviz_helper._app.data_collection) == 1
 
 
+def test_catalog_format_available_for_table_target(deconfigged_helper):
+    table = Table({'ra': [1.0, 2.0], 'dec': [3.0, 4.0]})
+    ldr = deconfigged_helper.loaders['object']
+
+    ldr.object = table
+    assert 'Catalog' in ldr.format.choices
+
+    ldr.target = 'Table'
+    assert 'Catalog' in ldr.format.choices
+
+
 def test_dbg_access(deconfigged_helper):
     test_data = np.array([1, 2, 3])
     deconfigged_helper.loaders['object'].object = test_data

@@ -141,7 +141,8 @@ class FormatSelect(SelectPluginComponent):
                     if self.debug:
                         self._dbg_importers[label] = this_importer
                     if (self.plugin._restrict_to_target is not None and
-                            this_importer.target.get('label') != self.plugin._restrict_to_target):
+                            not any(target.get('label') == self.plugin._restrict_to_target
+                                    for target in this_importer.targets)):
                         # skip importers that do not match the target
                         self._invalid_importers[label] = 'Not matching target'
                         continue
@@ -150,7 +151,7 @@ class FormatSelect(SelectPluginComponent):
                             item = {'label': importer_name,
                                     'parser': parser_name,
                                     'importer': importer_name,
-                                    'target': this_importer.target}
+                                    'targets': this_importer.targets}
                             parser_pref = this_importer.parser_preference
                             if importer_name not in self._importers:
                                 all_formats.append(item)
@@ -239,9 +240,9 @@ class TargetSelect(SelectPluginComponent):
         # and use that list when compiling list of valid targets
         all_targets = []
         for importer in self.plugin.format._importers.values():
-            target = importer.target
-            if target not in all_targets:
-                all_targets.append(target)
+            for target in importer.targets:
+                if target not in all_targets:
+                    all_targets.append(target)
 
         self.items = [{'label': 'Any'}] + [item for item in all_targets if self._is_valid_item(item)]  # noqa
         self._apply_default_selection()
@@ -1024,7 +1025,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _on_target_selected_changed(self, change={}):
         def matches_target_factory(target):
             def matches_target(importer):
-                return importer.target.get('label', '') == target
+                return any(item.get('label', '') == target for item in importer.targets)
             return matches_target
 
         if self._restrict_to_target is not None:

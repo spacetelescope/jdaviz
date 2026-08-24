@@ -65,11 +65,11 @@ New Features
 
 - Add consolidated emission line list and ability to query database in API. [#4314]
 
-- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322]
+- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322, #4350]
 
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 
-- Table viewer UI to add/rename/remove columns. [#4282]
+- Table viewer API & UI to add/rename/remove columns. [#4282, #4343]
 
 - Fix issue where URLs could not be loaded into the standalone application. File location is now shown to the user [#4315]
 
@@ -81,13 +81,17 @@ New Features
 
 - Child data now follows its parent into the same viewer(s). Viewer selection for child data
   is therefore hidden in the UI when parenting is set. [#4326]
-  
+
 - Keep visibility consistent between blink and plot options. [#4316]
+
+- Change appearance of the overwrite warning overlay shown in the export plugin. [#4338]
 
 - Add consolidated emission line list and ability to query database in API. [#4314, 4330]
 
 - Improvements to flux / surface brightness unit conversion logic to support
   workflows and avoid errors in mixed unit viewers in deconfigged. [#4336]
+
+- Importers can now support multiple targets when filtering format options based on target. [#4345]
 
 - Fix table selection color in dark mode, rename "Remove from app" to "Delete from app", and allow line profile to use upper or lower case "L". [#4348]
 
