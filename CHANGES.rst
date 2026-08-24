@@ -69,7 +69,7 @@ New Features
 
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 
-- Table viewer UI to add/rename/remove columns. [#4282]
+- Table viewer API & UI to add/rename/remove columns. [#4282, #4343]
 
 - Fix issue where URLs could not be loaded into the standalone application. File location is now shown to the user [#4315]
 
