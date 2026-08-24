@@ -14,6 +14,9 @@ Imviz
 
 - Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
 
+- Fix issue where removing an image from an Image viewer while a catalog (scatter) was present
+  caused an index error from glue. [#4333]
+
 Mosviz
 ^^^^^^
 

@@ -3,6 +3,7 @@ from echo import delay_callback, CallbackProperty
 import numpy as np
 
 from astropy import units as u
+from glue.core import BaseData
 from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
@@ -131,6 +132,24 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
     def _set_viewer(self, viewer):
         self._viewer = viewer
         self._set_axes_lim()
+
+    def _update_combo_ref_data(self):
+        # exclude any data that cannot act as reference data for an image
+        # viewer (e.g. 1D catalogs/tables). Without this, removing the last image from a
+        # viewer that still contains a catalog would result in the catalog being selected
+        # as reference data, which then raises an IndexError in glue since the reference
+        # data is expected to have at least two pixel components.
+        self.ref_data_helper.set_multiple_data([data for data in self.layers_data
+                                                if data.ndim > 1])
+
+    def _set_reference_data(self):
+        # skip any data that cannot act as reference data for an image viewer.
+        # If no valid reference data is available, reference_data is left as None.
+        if self.reference_data is None:
+            for layer in self.layers:
+                if isinstance(layer.layer, BaseData) and layer.layer.ndim > 1:
+                    self.reference_data = layer.layer
+                    return
 
     @contextmanager
     def during_zoom_sync(self):
