@@ -65,7 +65,7 @@ New Features
 
 - Add consolidated emission line list and ability to query database in API. [#4314]
 
-- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322]
+- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322, #4350]
 
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 

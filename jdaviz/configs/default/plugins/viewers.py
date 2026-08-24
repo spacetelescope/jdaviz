@@ -426,7 +426,7 @@ class JdavizViewerMixin(WithCache):
             if isinstance(self, AIDAMixin):
                 expose += ['set_viewport', 'get_viewport']
         elif isinstance(self, TableViewer):
-            expose += ['add_column', 'rename_column', 'remove_column']
+            expose += ['add_column', 'rename_column', 'remove_column', 'set_column_sync']
         else:
             expose += ['set_limits', 'reset_limits', 'set_tick_format']
         return ViewerUserApi(self, expose=expose)
@@ -1788,6 +1788,34 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             raise ValueError(f"Column '{column_name}' does not exist in the table. Use add_column to add it first.")  # noqa: E501
 
         self._add_or_update_column(column_name, data)
+
+    def set_column_sync(self, column_name, synced):
+        """Enable or disable row-link syncing for a data-association column.
+
+        Parameters
+        ----------
+        column_name : str
+            Name of the ``Data: <viewer>`` column to toggle.
+        synced : bool
+            ``True`` to sync (default); ``False`` to disable.
+        """
+        self.state.column_sync_state = {**self.state.column_sync_state,
+                                        column_name: bool(synced)}
+
+    def get_column_sync(self, column_name):
+        """Return the current sync state for a data-association column.
+
+        Parameters
+        ----------
+        column_name : str
+            Name of the column to query.
+
+        Returns
+        -------
+        bool
+            ``True`` if synced (default when not explicitly set).
+        """
+        return self.state.is_synced(column_name)
 
     def _on_checked_changed(self, change):
         """Update highlight marks in image viewers when checked rows change."""
