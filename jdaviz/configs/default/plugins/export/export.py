@@ -91,6 +91,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     plugin_plot_format_selected = Unicode().tag(sync=True)
 
     filename_value = Unicode().tag(sync=True)
+    filename_trunc = Unicode().tag(sync=True)
     filename_default = Unicode().tag(sync=True)
     filename_auto = Bool(True).tag(sync=True)
     filename_invalid_msg = Unicode('').tag(sync=True)
@@ -126,6 +127,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                       'filename_default',
                                       'filename_auto',
                                       'filename_invalid_msg')
+
+        self.filename_trunc = self._filename_trunc(self.filename.value)
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Export data/plots and other outputs to a file.'
@@ -223,6 +226,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                       'plugin_table_items',
                                       'plugin_plot_items'],
                 irrelevant_msg_callback=self.relevant_if_any_truthy)
+
+    def _filename_trunc(self, filename):
+        if len(filename) >= 20:
+            return filename[:10] + '...' + filename[-10:]
+        else:
+            return filename
 
     def _is_valid_item(self, item):
         return self._is_not_stcs(item) or self._is_stcs_region_supported(item)
@@ -362,6 +371,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     @observe('filename_value')
     def _is_filename_changed(self, event):
+        filename = self.filename.value
+        self.filename_trunc = self._filename_trunc(filename)
+
         # Update the UI Filepath if relative or absolute paths are provided
         # by user via self.filename_value
         expanded_path = os.path.expanduser(self.filename_value)
