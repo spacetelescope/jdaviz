@@ -155,6 +155,8 @@ Bug Fixes
 - Fix issue where removing an image from an Image viewer while a catalog (scatter) was present
   caused an index error from glue. [#4333]
 
+- Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
+
 Mosviz
 ^^^^^^
 
