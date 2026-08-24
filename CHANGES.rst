@@ -95,6 +95,9 @@ New Features
 
 - Fix table selection color in dark mode, rename "Remove from app" to "Delete from app", and allow line profile to use upper or lower case "L". [#4348]
 
+- Updated documentation for the application and caching, updated the jdaviz logo, 
+  and improved the .dmg installation process [#4337]
+
 Mosviz
 ^^^^^^
 
