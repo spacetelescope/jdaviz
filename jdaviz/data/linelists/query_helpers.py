@@ -121,7 +121,14 @@ def get_lines(db, name_contains=None, source=None, wave_min=None, wave_max=None,
             mask &= converted <= wave_max
 
     if science_case is not None and "science_case" in db.colnames:
-        mask &= np.char.lower(db["science_case"].astype(str)) == science_case.lower()
+        sc_lower = science_case.lower()
+        sc_mask = np.zeros(len(db), dtype=bool)
+        for i, val in enumerate(db["science_case"]):
+            if isinstance(val, (list, tuple)):
+                sc_mask[i] = sc_lower in [str(v).lower() for v in val]
+            else:
+                sc_mask[i] = str(val).lower() == sc_lower
+        mask &= sc_mask
 
     if extra_filters:
         candidate_idx = np.where(mask)[0]

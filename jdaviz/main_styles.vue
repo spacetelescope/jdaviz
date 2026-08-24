@@ -83,6 +83,10 @@ div.output_wrapper {
   /*border-top: 1px solid #cccccc;*/
 }
 
+.jdaviz-viewer-figure-container .lm-Widget.bqplot.figure.jupyter-widgets.classic {
+  margin: 0 !important;
+}
+
 .lm_splitter {
   background: #e2e4e8;
   opacity: 1;

@@ -21,8 +21,8 @@ class TestBaseImporter(BaseImporter):
     # These are required to be implemented by the BaseImporter class
     # but are currently not tested here
     @property
-    def target(self):
-        return None
+    def targets(self):
+        return []
 
     def __call__(self, *args, **kwargs):
         return None

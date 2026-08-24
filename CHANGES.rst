@@ -69,7 +69,7 @@ New Features
 
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 
-- Table viewer UI to add/rename/remove columns. [#4282]
+- Table viewer API & UI to add/rename/remove columns. [#4282, #4343]
 
 - Fix issue where URLs could not be loaded into the standalone application. File location is now shown to the user [#4315]
 
@@ -84,8 +84,12 @@ New Features
 
 - Keep visibility consistent between blink and plot options. [#4316]
 
+- Add consolidated emission line list and ability to query database in API. [#4314, 4330]
+
 - Improvements to flux / surface brightness unit conversion logic to support
   workflows and avoid errors in mixed unit viewers in deconfigged. [#4336]
+
+- Importers can now support multiple targets when filtering format options based on target. [#4345]
 
 Mosviz
 ^^^^^^
@@ -107,6 +111,8 @@ Bug Fixes
 - Fixed a Vue3 button issue that triggers backend calls twice. [#4276, #4277]
 
 - Fixed closing a viewer not deleting the associated backend objects. [#4317]
+
+- Fix color picker not showing correctly. [#4332]
 
 Mosviz
 ^^^^^^

@@ -94,7 +94,7 @@
           api_hint="plg.color = "
           :api_hints_enabled="api_hints_enabled"
           :value="color"
-          @color-update="throttledSetColor($event.hexa)"
+          @color-update="throttledSetColor($event)"
         />
       </j-flex-row>
       <j-flex-row>

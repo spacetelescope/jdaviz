@@ -150,7 +150,7 @@
                 <j-tooltip tipid='plugin-line-lists-color-picker'>
                   <plugin-color-picker
                     :value="list_contents[item].color"
-                    @color-update="throttledSetColor({listname:item, color: $event.hexa})"
+                    @color-update="throttledSetColor({listname:item, color: $event})"
                   />
                 </j-tooltip>
               </v-col>

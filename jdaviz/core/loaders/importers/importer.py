@@ -158,8 +158,8 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
             # self.data_label_invalid_msg = msg
 
     @property
-    def target(self):
-        raise NotImplementedError("Importer subclass must implement target")  # pragma: nocover
+    def targets(self):
+        raise NotImplementedError("Importer subclass must implement targets")  # pragma: nocover
 
     def __call__(self):
         # override by subclass - should act on self.output and load into jdaviz
@@ -265,13 +265,11 @@ class BaseImporterToDataCollection(BaseImporter):
         return self._resolver.default_label
 
     @property
-    def target(self):
-        if len(self.viewer.create_new.choices) > 0:
-            return {'type': 'viewer',
-                    'icon': 'mdi-window-maximize',
-                    'label': self.viewer.create_new.choices[0]}
-        else:
-            return {}
+    def targets(self):
+        return [{'type': 'viewer',
+                 'icon': 'mdi-window-maximize',
+                 'label': choice}
+                for choice in self.viewer.create_new.choices]
 
     @observe('data_label_value', 'data_label_is_prefix', 'data_label_suffices')
     def _on_label_changed(self, msg={}):
@@ -513,10 +511,10 @@ class BaseImporterToPlugin(BaseImporter):
         raise NotImplementedError("Importer subclass must implement default_plugin")  # noqa pragma: nocover
 
     @property
-    def target(self):
-        return {'type': 'plugin',
-                'icon': 'mdi-toy-brick-outline',
-                'label': self.default_plugin}
+    def targets(self):
+        return [{'type': 'plugin',
+                 'icon': 'mdi-toy-brick-outline',
+                 'label': self.default_plugin}]
 
     @property
     def has_default_plugin(self):
