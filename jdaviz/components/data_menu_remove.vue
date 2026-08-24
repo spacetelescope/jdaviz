@@ -55,7 +55,7 @@
             {{ api_hints_enabled ?
                 'dm.remove_from_app()'
                 :
-                'Remove from app'
+                'Delete from app'
               }}
             </span>
           </j-tooltip>

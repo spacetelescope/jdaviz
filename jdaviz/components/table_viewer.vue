@@ -298,6 +298,39 @@ module.exports = {
   background-color: #fff !important;
 }
 
+/* Vuetify puts the theme class on the text-field element itself, so target both
+   the element and any ancestor. Keep the value text white in dark mode. */
+.edit-bar-input.theme--dark input,
+.edit-bar-input.v-theme--dark input,
+.theme--dark .edit-bar-input input,
+.v-theme--dark .edit-bar-input input {
+  color: #fff !important;
+}
+
+/* Make the value field stand out against the dark surroundings. */
+.theme--dark .glue-edit-bar,
+.v-theme--dark .glue-edit-bar {
+  background-color: #303030 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.theme--dark .edit-bar-cell-ref,
+.v-theme--dark .edit-bar-cell-ref {
+  /* dark fill + light text/border for the "column [row]" reference chip */
+  background-color: #424242 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #cfcfcf !important;
+}
+
+.edit-bar-input.theme--dark .v-input__slot,
+.edit-bar-input.v-theme--dark .v-input__slot,
+.theme--dark .edit-bar-input .v-input__slot,
+.v-theme--dark .edit-bar-input .v-input__slot {
+  /* dark value field with a light outline + drop shadow so it lifts off the bar */
+  background-color: #424242 !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+}
+
 .edit-bar-actions {
   display: flex;
   gap: 4px;
@@ -360,10 +393,22 @@ module.exports = {
   background-color: #f5f5f5;
 }
 
+.theme--dark .glue-selectable-cell:hover,
+.v-theme--dark .glue-selectable-cell:hover {
+  /* light hover background leaves white dark-mode text illegible */
+  background-color: #616161;
+}
+
 /* Visual cue for selected cell */
 .glue-cell-selected {
   background-color: #E3F2FD !important;
   box-shadow: inset 0 0 0 2px #1976D2;
+}
+
+.theme--dark .glue-cell-selected,
+.v-theme--dark .glue-cell-selected {
+  /* light blue selection background renders white dark-mode text illegible */
+  background-color: #4A6572 !important;
 }
 
 /* ---- Column header rename / delete styles ---- */

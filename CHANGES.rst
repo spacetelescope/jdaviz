@@ -93,6 +93,8 @@ New Features
 
 - Importers can now support multiple targets when filtering format options based on target. [#4345]
 
+- Fix table selection color in dark mode, rename "Remove from app" to "Delete from app", and allow line profile to use upper or lower case "L". [#4348]
+
 Mosviz
 ^^^^^^
 
