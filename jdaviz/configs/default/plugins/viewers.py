@@ -1799,7 +1799,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         synced : bool
             ``True`` to sync (default); ``False`` to disable.
         """
-        column_name = str(column_name)
         self.state.column_sync_state = {**self.state.column_sync_state,
                                         column_name: bool(synced)}
 
@@ -1816,7 +1815,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         bool
             ``True`` if synced (default when not explicitly set).
         """
-        return self.state.is_synced(str(column_name))
+        return self.state.is_synced(column_name)
 
     def _on_checked_changed(self, change):
         """Update highlight marks in image viewers when checked rows change."""
