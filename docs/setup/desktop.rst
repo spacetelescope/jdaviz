@@ -25,7 +25,7 @@ If you want to download the latest version, please remove the previous version f
     :align: center
     :shadow:
     
-    Download Jdaviz for MacOS
+    Download Jdaviz for MacOS (will release with Jdaviz 5.1)
     
 Jdaviz can be installed on macOS as a .dmg package from the downloadable .zipped package. After downloading, unzip the package, and 
 then mount the disk image by clicking on the .dmg.  You will see the application, which you can then drag and drop into the Application folder 
@@ -55,7 +55,7 @@ If you want to download the latest version, please remove the previous version f
     :align: center
     :shadow:
     
-    Download Jdaviz for Windows
+    Download Jdaviz for Windows (will release with Jdaviz 5.1)
 
 After downloading, unzip the package, and click to open the executable to launch Jdaviz.
 
@@ -70,7 +70,7 @@ If you want to download the latest version, please remove the previous version f
     :align: center
     :shadow:
     
-    Download Jdaviz for Ubuntu
+    Download Jdaviz for Ubuntu (will release with Jdaviz 5.1)
 
 After downloading, unzip the package, and click to open the executable to launch Jdaviz.
 
