@@ -212,6 +212,8 @@ class CatalogRowLinkManager(HubListener):
         # dataset that no longer exists
         available_labels = self.app.data_collection.labels
         for column_name, viewer_ref in column_to_viewer.items():
+            if not self._is_column_synced_in_viewer(viewer, column_name):
+                continue
             target_viewer = self.app.get_viewer(viewer_ref)
             if target_viewer is None:
                 continue
@@ -306,6 +308,8 @@ class CatalogRowLinkManager(HubListener):
             active_rows = tv.widget_table.checked
             if not active_rows:
                 continue
+            if not self._is_column_synced_in_viewer(tv, column_name):
+                continue
             active_row = active_rows[0]
             visible_labels = self._get_visible_data_labels(viewer)
             try:
@@ -314,6 +318,14 @@ class CatalogRowLinkManager(HubListener):
                 self._set_object_column(catalog, column_name, values)
             except Exception:  # nosec
                 pass
+
+    @staticmethod
+    def _is_column_synced_in_viewer(table_viewer, column_name):
+        """False only when the viewer explicitly marks this column as de-synced."""
+        state = getattr(table_viewer, 'state', None)
+        if state is None or not hasattr(state, 'is_synced'):
+            return True
+        return state.is_synced(column_name)
 
     def _get_visible_data_labels(self, viewer):
         """Return the labels of all visible non-subset data layers in ``viewer``."""
