@@ -81,9 +81,6 @@ class FileResolver(BaseResolver):
         if not os.path.exists(self.filepath):
             return 'Filepath does not exist.'
 
-        if not os.path.isfile(self.filepath):
-            return 'Filepath is not a file.'
-
         return ''
 
     @property
