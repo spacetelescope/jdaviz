@@ -173,9 +173,16 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
     ldr.importer.viewer = 'Scatter'
     assert importer_viewer.create_new.selected == 'Scatter'
 
-    # setting to a string that is NOT a type label should raise an error
-    with pytest.raises(ValueError):
-        ldr.importer.viewer = 'my-custom-viewer'
+    # setting to a string that is NOT a type label should default to
+    # the first type in the create_new.choices list (which is 'Scatter' in this case)
+    ldr.importer.viewer = 'my-custom-viewer'
+    assert importer_viewer.create_new.selected == importer_viewer.create_new.choices[0]
+    assert importer_viewer.new_label == 'my-custom-viewer'
+
+    # setting to a string of the format Type:label should select the type and set the label
+    ldr.importer.viewer = 'Table:my-custom-table'
+    assert importer_viewer.create_new.selected == 'Table'
+    assert importer_viewer.new_label == 'my-custom-table'
 
 
 def test_viewer_create_new(deconfigged_helper, spectrum1d):
@@ -198,14 +205,8 @@ def test_viewer_create_new(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper.viewers) == 1
     assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 2
 
-    # passing a string of a viewer that does not exist in create_new.choices should raise an error
-    with pytest.raises(ValueError):
-        deconfigged_helper.load(spectrum1d, format='1D Spectrum',
-                                viewer='user-defined-viewer', data_label='data4')
-    # instead have to spawn a new viewer first, then load into it
-    nv = deconfigged_helper.new_viewers['1D Spectrum']
-    nv.viewer_label = 'user-defined-viewer'
-    nv()
+    # passing a string of a viewer that does not exist in create_new.choices
+    # should default to the first viewer type in create_new.choices
     deconfigged_helper.load(spectrum1d, format='1D Spectrum',
                             viewer='user-defined-viewer', data_label='data4')
     assert len(deconfigged_helper._app.data_collection) == 4
