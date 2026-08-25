@@ -1327,8 +1327,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def _check_model_equation_invalid(self, event=None):
         # Length is a dummy check to test the infrastructure
         if len(self.model_equation) == 0:
-            self.model_equation_invalid_msg = 'model equation is required.'
-            return
+            self.model_equation_invalid_msg = msg = 'model equation is required.'
+            return msg
 
         # Disable computing model if cube_fit is active and
         # Spline1D component is present in the equation
@@ -1337,11 +1337,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             has_spline_in_eq = any(id_to_type.get(name) == 'Spline1D'
                                    for name in self.equation_components)
             if has_spline_in_eq:
-                self.model_equation_invalid_msg = (
+                self.model_equation_invalid_msg = msg = (
                     "Spline1D is only supported for 1D Data. "
                     "Disable 'Cube fit' to use Spline1D."
                 )
-                return
+                return msg
 
         # check for valid operators
         eq = self.model_equation.replace(' ', '')
@@ -1349,17 +1349,17 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         allowed_operators = {'+', '-'}
         bad_operators = sorted({op for op in ops if op not in allowed_operators})
         if bad_operators:
-            self.model_equation_invalid_msg = (
+            self.model_equation_invalid_msg = msg = (
                 "unsupported operator(s): "
                 f"{', '.join(bad_operators)}. "
                 "Only '+' and '-' are supported."
             )
-            return
+            return msg
 
         if '' in self.equation_components:
             # includes an operator without a variable (ex: 'C+')
-            self.model_equation_invalid_msg = 'incomplete equation.'
-            return
+            self.model_equation_invalid_msg = msg = 'incomplete equation.'
+            return msg
 
         components_not_existing = [comp for comp in self.equation_components
                                    if comp not in self.model_components]
@@ -1368,24 +1368,24 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 msg = "is not an existing model component."
             else:
                 msg = "are not existing model components."
-            self.model_equation_invalid_msg = f'{", ".join(components_not_existing)} {msg}'
-            return
+            self.model_equation_invalid_msg = msg = f'{", ".join(components_not_existing)} {msg}'
+            return msg
 
         has_spline = any(cm.get('model_type') == 'Spline1D' for cm in self.component_models)
         if has_spline:
             if any(cm.get('model_type') != 'Spline1D' for cm in self.component_models):
-                self.model_equation_invalid_msg = (
+                self.model_equation_invalid_msg = msg = (
                     "Spline1D cannot be combined with other model components."
                 )
-                return
+                return msg
 
             comps_in_eq = [c for c in self.equation_components if c]
             if len(comps_in_eq) != 1:
-                self.model_equation_invalid_msg = (
+                self.model_equation_invalid_msg = msg = (
                     "When using Spline1D, the equation must contain only the Spline1D component."
                 )
-                return
-            self.model_equation_invalid_msg = ""
+                return msg
+            self.model_equation_invalid_msg = msg = ""
 
         components_not_valid = [comp for comp in self.equation_components
                                 if comp not in self.valid_model_components]
@@ -1402,9 +1402,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                        " Remove the components from the equation,"
                        " re-estimate their free parameters to use the new units"
                        " or revert the display units.")
-            self.model_equation_invalid_msg = f'{", ".join(components_not_valid)} {msg}'
-            return
-        self.model_equation_invalid_msg = ''
+            self.model_equation_invalid_msg = msg = f'{", ".join(components_not_valid)} {msg}'
+            return msg
+        self.model_equation_invalid_msg = msg = ''
+        return msg
 
     def _check_has_cube_data(self, event={}):
         for dataset in self._app.data_collection:
@@ -1467,8 +1468,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if not self.spectral_subset_valid:
             valid, spec_range, subset_range = self._check_dataset_spectral_subset_valid(return_ranges=True)  # noqa
             raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
-        if len(self.model_equation_invalid_msg):
-            raise ValueError(f"model equation is invalid: {self.model_equation_invalid_msg}")
+        # rerun check in case model_equation_invalid_msg is out-of-date
+        model_equation_invalid_msg = self.model_equation_invalid_msg or self._check_model_equation_invalid()
+        if len(model_equation_invalid_msg):
+            raise ValueError(f"model equation is invalid: {model_equation_invalid_msg}")
 
         if self.cube_fit:
             ret = self._fit_model_to_cube(add_data=add_data)
