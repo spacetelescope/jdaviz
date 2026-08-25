@@ -23,6 +23,7 @@ _MOS_PRODUCT_SUFFIXES = _SPECTRUM_1D_SUFFIXES + _SPECTRUM_2D_SUFFIXES + _IMAGE_S
 class MOSImporter(BaseImporterToDataCollection):
     template_file = __file__, "./mos.vue"
     parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
+    allow_directory_input = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

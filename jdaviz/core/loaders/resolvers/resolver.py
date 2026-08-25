@@ -130,6 +130,11 @@ class FormatSelect(SelectPluginComponent):
                             importer_name not in self.plugin._restrict_to_formats:
                         self._invalid_importers[label] = 'Not matching format restriction'  # noqa
                         continue
+                    if (isinstance(importer_input, (str, os.PathLike))
+                            and os.path.isdir(importer_input)
+                            and not getattr(Importer, 'allow_directory_input', False)):
+                        self._invalid_importers[label] = 'Importer does not accept directory input.'  # noqa
+                        continue
                     try:
                         this_importer = Importer(app=self.plugin._app,
                                                  resolver=self.plugin,
