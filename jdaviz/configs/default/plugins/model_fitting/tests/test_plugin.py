@@ -565,3 +565,30 @@ def test_cube_fit_toggle_deconfigged(deconfigged_helper, spectrum1d_cube, spectr
 
     assert plg._obj.has_cube_data is False
     assert plg.cube_fit is False
+
+
+def test_invalid_equation(deconfigged_helper, spectrum1d):
+    deconfigged_helper.load(spectrum1d)
+
+    plg = deconfigged_helper.plugins['Model Fitting']
+    plg.create_model_component('Const1D', 'C')
+    plg.create_model_component('Linear1D', 'L')
+
+    plg.equation = 'C*L'
+    assert len(plg._obj.model_equation_invalid_msg) > 0
+
+    plg.equation = 'C+'
+    assert len(plg._obj.model_equation_invalid_msg) > 0
+
+    plg.equation = 'C+X'
+    assert len(plg._obj.model_equation_invalid_msg) > 0
+
+    # manually override invalid_msg
+    plg._obj.model_equation_invalid_msg = ''
+
+    with pytest.raises(ValueError, match='X is not an existing model component.'):
+        plg.calculate_fit()
+
+    plg.equation = 'C+L'
+    assert plg._obj.model_equation_invalid_msg == ''
+    plg.calculate_fit()  # should run successfully
