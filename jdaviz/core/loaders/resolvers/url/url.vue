@@ -1,3 +1,5 @@
+<script setup>
+</script>
 <template>
   <j-loader
     :title="title"
@@ -30,13 +32,13 @@
       <j-flex-row style="margin-bottom: 24px">
         <v-text-field
           v-model='url'
-          prepend-icon='mdi-link-box'
           style="padding: 0px 8px"
           :label="api_hints_enabled ? 'ldr.url =' : ''"
           :class="api_hints_enabled ? 'api-hint' : null"
           :error-messages="parsed_input_not_resolvable_message ? [parsed_input_not_resolvable_message] : []"
           :hint="download_path_msg"
           persistent-hint
+        <template #prepend>  <span style="padding-right: 3px">URL:</span></template>
         ></v-text-field>
       </j-flex-row>
 
