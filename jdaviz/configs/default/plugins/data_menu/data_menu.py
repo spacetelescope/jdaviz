@@ -774,7 +774,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         new_label = info.get('new_label')
         is_subset = info.get('is_subset', False)
 
-        if old_label == new_label or new_label is None:
+        # new_label can arrive as a non-string (None or dict) from
+        # frontend events; in that case there is nothing to validate.
+        if not isinstance(new_label, str) or old_label == new_label:
             self._reset_rename_error_messages(old_label)
             return
 

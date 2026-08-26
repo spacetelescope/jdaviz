@@ -74,6 +74,22 @@ def test_rename_data_and_subsets(deconfigged_helper, image_hdu_wcs):
     assert 'Subset 1' not in [x['label'] for x in dm.layer_items]
 
 
+def test_check_rename_non_string_new_label(deconfigged_helper, image_hdu_wcs):
+    """
+    A frontend event can deliver a non-string ``new_label`` (e.g. a
+    dict); ``vue_check_rename`` should handle it instead of raising.
+    """
+    deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='original_data')
+
+    dm = deconfigged_helper.viewers['Image'].data_menu._obj
+
+    # Should not raise (previously crashed in check_rename_availability via .strip())
+    dm.vue_check_rename({'old_label': 'original_data', 'new_label': {}, 'is_subset': False})
+    dm.vue_check_rename({'old_label': 'original_data', 'new_label': None, 'is_subset': False})
+
+    assert dm.rename_error_messages == {}
+
+
 def test_only_compatible_subsets_in_menu(deconfigged_helper, image_hdu_wcs, spectrum1d):
     deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='image_data')
     deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spectrum')
