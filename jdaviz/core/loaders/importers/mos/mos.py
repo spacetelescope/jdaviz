@@ -3,20 +3,34 @@ from pathlib import Path
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.resolvers.resolver import find_matching_resolver
 from jdaviz.core.user_api import ImporterUserApi
 
 
 __all__ = ['MOSImporter']
 
 
-_SPECTRUM_1D_SUFFIXES = ('_x1d.fits', '_x1d.fit', '_x1d.fits.gz', '_x1d.fit.gz')
+_SPECTRUM_1D_SUFFIXES = ('_x1d.fits', '_x1d.fit', '_x1d.fits.gz', '_x1d.fit.gz',
+                         '_c1d.fits', '_c1d.fit', '_c1d.fits.gz', '_c1d.fit.gz')
 _SPECTRUM_2D_SUFFIXES = ('_s2d.fits', '_s2d.fit', '_s2d.fits.gz', '_s2d.fit.gz',
                          '_cal.fits', '_cal.fit', '_cal.fits.gz', '_cal.fit.gz',
-                         '_c1d.fits', '_c1d.fit', '_c1d.fits.gz', '_c1d.fit.gz')
+                         )
 _IMAGE_SUFFIXES = ('_i2d.fits', '_i2d.fit', '_i2d.fits.gz', '_i2d.fit.gz')
 _CAT_SUFFIXES = ('_cat.ecsv', '_cat.csv', '_cat.fits', '_cat.fit', '_cat.ecsv.gz')
 _IGNORE_SUFFIXES = ('manifest.html', 'readme', 'readme.md', 'readme.txt')
 _MOS_PRODUCT_SUFFIXES = _SPECTRUM_1D_SUFFIXES + _SPECTRUM_2D_SUFFIXES + _IMAGE_SUFFIXES + _CAT_SUFFIXES + _IGNORE_SUFFIXES  # noqa
+
+
+def _product_type(filename):
+    if filename.endswith(_SPECTRUM_1D_SUFFIXES):
+        return '1D Spectrum'
+    if filename.endswith(_SPECTRUM_2D_SUFFIXES):
+        return '2D Spectrum'
+    if filename.endswith(_IMAGE_SUFFIXES):
+        return 'Image'
+    if filename.endswith(_CAT_SUFFIXES):
+        return 'Catalog'
+    return None
 
 
 @loader_importer_registry('MOS')
@@ -71,6 +85,22 @@ class MOSImporter(BaseImporterToDataCollection):
                 has_spectrum_1d = True
 
         if has_spectrum_1d:
+            for path in input_path.rglob('*'):
+                if path.name.startswith('.') or not path.is_file():
+                    continue
+                product = _product_type(path.name.lower())
+                if product is None:
+                    continue
+                resolver = None
+                try:
+                    resolver = find_matching_resolver(self._app, str(path), resolver='file',
+                                                      format=product)
+                except Exception as e:  # nosec
+                    return f"MOS file is not parseable as {product}: {path.name} ({e})"
+                finally:
+                    if resolver is not None and hasattr(resolver, '_obj'):
+                        resolver._obj._cleanup()
+
             return ''
 
         return 'Input directory does not contain any MOS 1D spectra matching *_x1d.fits.'
