@@ -162,6 +162,8 @@ Bug Fixes
 
 - Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
 
+- Updates AIDA methods to properly respect `image_label` argument [#4358]
+
 Mosviz
 ^^^^^^
 
