@@ -86,14 +86,14 @@ jobs:
       if: github.event_name != 'pull_request'
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
-        name: test-results-${{ matrix.os }}
+        name: test-results-${{ contains(matrix.os, 'windows') && 'windows' || 'ubuntu' }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (non-OSX)
       if: github.event_name != 'pull_request'
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
-        name: jdaviz-standlone-${{ matrix.os }}
+        name: jdaviz-standalone-${{ contains(matrix.os, 'windows') && 'windows' || 'ubuntu' }}
         path: |
           standalone/dist/jdaviz
 
@@ -138,6 +138,9 @@ jobs:
         cd standalone/dist
         codesign --deep --force --options=runtime --entitlements ../entitlements.plist --sign ${{ secrets.DEVELOPER_ID_APPLICATION }} --timestamp jdaviz.app
 
+    - name: Install dmgbuild
+      run: pip install dmgbuild 
+          
     - name: Create dmg (OSX)
       # if we do not call always() GHA will && with success()
       if: ${{ always() && (matrix.os == 'macos-14') }}
@@ -147,8 +150,9 @@ jobs:
       # see https://github.com/glue-viz/glue-standalone-apps/blob/main/.github/workflows/build_stable.yml
       run: |
         rm -rf standalone/dist/jdaviz
-        hdiutil create -volname "Jdaviz" -srcfolder standalone/dist -ov -format UDZO standalone/dist/jdaviz.dmg
-
+        dmgbuild -s standalone/dmgbuild_settings.py -D app=standalone/dist/Jdaviz.app "Jdaviz" standalone/dist/Jdaviz.dmg
+        # hdiutil create -volname "Jdaviz" -srcfolder standalone/dist -ov -format UDZO standalone/dist/jdaviz.dmg
+    
     - name: Notary step + stapling (OSX)
       if: ${{ matrix.os == 'macos-14' }}
       run: |
@@ -194,12 +198,12 @@ jobs:
       if: always()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
-        name: test-results-${{ matrix.os }}
+        name: test-results-macosx
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (OSX)
       if: ${{ always() && (matrix.os == 'macos-14') }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
-        name: jdaviz-standlone-${{ matrix.os }}
-        path: standalone/dist/jdaviz.dmg
+        name: jdaviz-standlone-macosx
+        path: standalone/dist/Jdaviz.dmg

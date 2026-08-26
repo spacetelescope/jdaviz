@@ -30,14 +30,14 @@
       <j-flex-row style="margin-bottom: 24px">
         <v-text-field
           v-model='url'
-          prepend-icon='mdi-link-box'
           style="padding: 0px 8px"
           :label="api_hints_enabled ? 'ldr.url =' : ''"
           :class="api_hints_enabled ? 'api-hint' : null"
-          :error-messages="parsed_input_not_resolvable_message ? [parsed_input_not_resolvable_message] : []"
-          :hint="download_path_msg"
-          persistent-hint
-        ></v-text-field>
+          :error-messages="url && parsed_input_not_resolvable_message ? [parsed_input_not_resolvable_message] : []"
+          :hint="url ? download_path_msg : 'Input a link to a file.'"
+          persistent-hint>
+        <template #prepend>  <span style="padding-right: 3px">URL:</span></template>
+        </v-text-field>
       </j-flex-row>
 
       <j-flex-row v-if="url_not_whitelisted">
