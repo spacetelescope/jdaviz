@@ -68,6 +68,11 @@ class MOSImporter(BaseImporterToDataCollection):
         if not isinstance(self.input, (str, os.PathLike)):
             return 'MOS importer input must be a directory.'
 
+        # don't attempt to parse directories in the file input
+        # when single-clicking on '..' to go up a directory
+        if self.input.endswith('..'):
+            return 'MOS importer input must not end with "..".'
+
         input_path = Path(self.input).expanduser()
         if not input_path.is_dir():
             return 'MOS importer input must be a directory.'
