@@ -16,7 +16,7 @@ _SPECTRUM_2D_SUFFIXES = ('_s2d.fits', '_s2d.fit', '_s2d.fits.gz', '_s2d.fit.gz',
 _IMAGE_SUFFIXES = ('_i2d.fits', '_i2d.fit', '_i2d.fits.gz', '_i2d.fit.gz')
 _CAT_SUFFIXES = ('_cat.ecsv', '_cat.csv', '_cat.fits', '_cat.fit', '_cat.ecsv.gz')
 _IGNORE_SUFFIXES = ('manifest.html', 'readme', 'readme.md', 'readme.txt')
-_MOS_PRODUCT_SUFFIXES = _SPECTRUM_1D_SUFFIXES + _SPECTRUM_2D_SUFFIXES + _IMAGE_SUFFIXES + _CAT_SUFFIXES + _IGNORE_SUFFIXES
+_MOS_PRODUCT_SUFFIXES = _SPECTRUM_1D_SUFFIXES + _SPECTRUM_2D_SUFFIXES + _IMAGE_SUFFIXES + _CAT_SUFFIXES + _IGNORE_SUFFIXES  # noqa
 
 
 @loader_importer_registry('MOS')
