@@ -2,6 +2,7 @@ from jdaviz.core.loaders.importers.mos.mos import MOSImporter
 
 
 def test_mos_importer_is_valid(deconfigged_helper, tmp_path):
+    deconfigged_helper._app.state.dev_mos_loader = True
     resolver = deconfigged_helper.loaders['object']._obj
     valid_dir = tmp_path / 'valid'
     valid_dir.mkdir()

@@ -48,6 +48,9 @@ class MOSImporter(BaseImporterToDataCollection):
             # NOTE: temporary during deconfig process
             return "MOS importer is only supported in generalized jdaviz."
 
+        if not self._app.state.dev_mos_loader:
+            return "MOS importer is only supported in dev mode."
+
         if not isinstance(self.input, (str, os.PathLike)):
             return 'MOS importer input must be a directory.'
 
