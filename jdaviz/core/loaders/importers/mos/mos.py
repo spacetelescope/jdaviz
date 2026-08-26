@@ -1,9 +1,10 @@
 import os
 from pathlib import Path
 
+from astropy.io import fits
+
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
-from jdaviz.core.loaders.resolvers.resolver import find_matching_resolver
 from jdaviz.core.user_api import ImporterUserApi
 
 
@@ -21,16 +22,32 @@ _IGNORE_SUFFIXES = ('manifest.html', 'readme', 'readme.md', 'readme.txt')
 _MOS_PRODUCT_SUFFIXES = _SPECTRUM_1D_SUFFIXES + _SPECTRUM_2D_SUFFIXES + _IMAGE_SUFFIXES + _CAT_SUFFIXES + _IGNORE_SUFFIXES  # noqa
 
 
-def _product_type(filename):
-    if filename.endswith(_SPECTRUM_1D_SUFFIXES):
-        return '1D Spectrum'
-    if filename.endswith(_SPECTRUM_2D_SUFFIXES):
-        return '2D Spectrum'
-    if filename.endswith(_IMAGE_SUFFIXES):
-        return 'Image'
-    if filename.endswith(_CAT_SUFFIXES):
-        return 'Catalog'
-    return None
+_FITS_SUFFIXES = ('.fits', '.fit', '.fits.gz', '.fit.gz')
+
+
+def _check_header(path):
+    """
+    Cheaply check whether ``path`` could be loaded as any of the supported MOS
+    products (image, catalog, 1D spectrum, 2D spectrum) by inspecting only the
+    FITS headers.  Returns an error string if the file can be ruled out, otherwise
+    an empty string.  This errs on the side of considering a file valid.
+    """
+    if not path.name.lower().endswith(_FITS_SUFFIXES):
+        # non-FITS products (ecsv/csv catalogs) are cheap enough to load later
+        return ''
+
+    try:
+        with fits.open(path, memmap=True, lazy_load_hdus=True) as hdul:
+            for hdu in hdul:
+                header = hdu.header
+                if header.get('XTENSION', '').strip() in ('BINTABLE', 'TABLE'):
+                    return ''
+                if header.get('NAXIS', 0) >= 1:
+                    return ''
+    except Exception as e:  # nosec
+        return f"MOS file is not readable as FITS: {path.name} ({e})"
+
+    return f"MOS file does not contain any table or array data: {path.name}"
 
 
 @loader_importer_registry('MOS')
@@ -84,6 +101,7 @@ class MOSImporter(BaseImporterToDataCollection):
         # to be valid, the directory must contain at least one 1D spectrum
         # and no extraneous/invalid files
         has_spectrum_1d = False
+        paths = []
         for path in input_path.rglob('*'):
             if path.name.startswith('.') or not path.is_file():
                 continue
@@ -92,27 +110,18 @@ class MOSImporter(BaseImporterToDataCollection):
                 return f"Input directory contains unsupported MOS file: {path.name}"
             if filename.endswith(_SPECTRUM_1D_SUFFIXES):
                 has_spectrum_1d = True
+            if not filename.endswith(_IGNORE_SUFFIXES):
+                paths.append(path)
 
-        if has_spectrum_1d:
-            for path in input_path.rglob('*'):
-                if path.name.startswith('.') or not path.is_file():
-                    continue
-                product = _product_type(path.name.lower())
-                if product is None:
-                    continue
-                resolver = None
-                try:
-                    resolver = find_matching_resolver(self._app, str(path), resolver='file',
-                                                      format=product)
-                except Exception as e:  # nosec
-                    return f"MOS file is not parseable as {product}: {path.name} ({e})"
-                finally:
-                    if resolver is not None and hasattr(resolver, '_obj'):
-                        resolver._obj._cleanup()
+        if not has_spectrum_1d:
+            return 'Input directory does not contain any MOS 1D spectra matching *_x1d.fits.'
 
-            return ''
+        for path in paths:
+            err = _check_header(path)
+            if err:
+                return err
 
-        return 'Input directory does not contain any MOS 1D spectra matching *_x1d.fits.'
+        return ''
 
     @property
     def user_api(self):
