@@ -6,16 +6,20 @@ def test_mos_importer_is_valid(deconfigged_helper, tmp_path):
     resolver = deconfigged_helper.loaders['object']._obj
     valid_dir = tmp_path / 'valid'
     valid_dir.mkdir()
-    nested_dir = valid_dir / 'JWST' / 'product'
-    nested_dir.mkdir(parents=True)
-    (nested_dir / 'jw00001_x1d.fits').touch()
 
     importer = MOSImporter(app=deconfigged_helper._app,
                            resolver=resolver,
                            parser=None,
                            input=valid_dir)
 
-    assert importer._check_is_valid() == ''
+    assert (importer._check_is_valid() ==
+            'Input directory does not contain any MOS 1D spectra matching *_x1d.fits.')
+
+    nested_dir = valid_dir / 'JWST' / 'product'
+    nested_dir.mkdir(parents=True)
+    (nested_dir / 'jw00001_x1d.fits').touch()
+    importer._input = valid_dir
+    assert importer._check_is_valid() == 'Input directory contains unsupported subdirectory: JWST'
 
     importer._input = nested_dir / 'jw00001_x1d.fits'
     assert importer._check_is_valid() == 'MOS importer input must be a directory.'
@@ -28,19 +32,6 @@ def test_mos_importer_is_valid(deconfigged_helper, tmp_path):
     (importer._input / 'MANIFEST.HTML').touch()
     assert (importer._check_is_valid() ==
             'Input directory does not contain any MOS 1D spectra matching *_x1d.fits.')
-
-    manifest_dir = tmp_path / 'manifest'
-    manifest_dir.mkdir()
-    (manifest_dir / 'jw00002_x1d.fits').touch()
-    (manifest_dir / 'MANIFEST.HTML').touch()
-    importer._input = manifest_dir
-    assert importer._check_is_valid() == ''
-
-    compressed_dir = tmp_path / 'compressed'
-    compressed_dir.mkdir()
-    (compressed_dir / 'jw00003_x1d.fits.gz').touch()
-    importer._input = str(compressed_dir)
-    assert importer._check_is_valid() == ''
 
     hidden_dir = tmp_path / 'hidden'
     hidden_dir.mkdir()

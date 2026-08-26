@@ -70,12 +70,16 @@ class MOSImporter(BaseImporterToDataCollection):
 
         # don't attempt to parse directories in the file input
         # when single-clicking on '..' to go up a directory
-        if self.input.endswith('..'):
+        if str(self.input).endswith('..'):
             return 'MOS importer input must not end with "..".'
 
         input_path = Path(self.input).expanduser()
         if not input_path.is_dir():
             return 'MOS importer input must be a directory.'
+
+        for path in input_path.rglob('*'):
+            if path.is_dir():
+                return f"Input directory contains unsupported subdirectory: {path.name}"
 
         # to be valid, the directory must contain at least one 1D spectrum
         # and no extraneous/invalid files
