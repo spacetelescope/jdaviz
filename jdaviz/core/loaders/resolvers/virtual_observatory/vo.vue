@@ -248,6 +248,18 @@
         :api_hints_enabled="api_hints_enabled"
         hint="Select a resource to query"
       ></plugin-select>
+
+      <j-flex-row justify="space-between" style="margin-top: 12px">
+        <v-text-field
+          v-model.number='max_results'
+          type="number"
+          style="padding: 0px"
+          :label="api_hints_enabled ? 'ldr.max_results =' : 'Max Results'"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          persistent-hint
+          hint="Maximum number of results to return from the query."
+        ></v-text-field>
+      </j-flex-row>
     </v-form>
 
     <j-flex-row class="row-no-outside-padding" justify="end">
@@ -267,6 +279,8 @@
           }}
       </plugin-action-button>
     </j-flex-row>
+
+    <j-cone-search-messages :items="query_message_items"></j-cone-search-messages>
   </j-loader>
 </template>
 
