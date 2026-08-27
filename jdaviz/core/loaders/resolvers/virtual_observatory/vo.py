@@ -114,28 +114,29 @@ class VOResolver(BaseConeSearchResolver):
                 )
                 + "or disable coverage filtering."
             )
-            self._query_message(error_msg, color="error", raise_msg=True)
+            self._query_message(error_msg, color="error",
+                                traceback=ValueError(error_msg), raise_msg=True)
 
         # Clear existing resources list
         self.resource.choices = []
         self.resource_selected = ""
+
+        # Resolve the coordinate used for coverage filtering before querying the
+        # registry.
+        coord = None
+        if self.resource_filter_coverage:
+            coord = self._source_to_skycoord(add_query_message=False)
+            if coord is None:
+                error_msg = f"Unable to resolve source coordinates: {self.source}"
+                self._query_message(error_msg, color="error",
+                                    traceback=LookupError(error_msg), raise_msg=True)
 
         try:
             registry_args = [
                 registry.Servicetype(VO_PROTOCOL[self.producttype_selected]['protocol']),
                 registry.Waveband(self.waveband_selected),
             ]
-            # If coverage filtering is enabled, lookup current
-            # source coordinate and add a Spatial search constraint
             if self.resource_filter_coverage:
-                coord = self._source_to_skycoord(add_query_message=False)
-                if coord is None:
-                    # snackbar failure already reported by _source_to_skycoord
-                    traceback = LookupError(
-                        f"Unable to resolve source coordinates: {self.source}"
-                    )
-                    self._query_message(repr(traceback), color="error",
-                                        traceback=traceback, raise_msg=True)
                 # noinspection bad-argument-type
                 registry_args.append(
                     registry.Spatial(
@@ -150,7 +151,9 @@ class VOResolver(BaseConeSearchResolver):
         except (DALFormatError, VocabularyError) as e:
             # HTTP Error 403 is being issued as a string as part of the
             # VocabularyError when the registry is having issues.
-            if type(e.cause) is RequestConnectionError or 'HTTP Error 403' in str(e):
+            # NOTE: VocabularyError does not carry a ``cause``.
+            cause = getattr(e, 'cause', None)
+            if type(cause) is RequestConnectionError or 'HTTP Error 403' in str(e):
                 self._query_message(
                     f"Can't connect to VO registry. Check your internet connection: {e}",
                     color="error", traceback=e, raise_msg=True
@@ -188,8 +191,8 @@ class VOResolver(BaseConeSearchResolver):
             # We've run into issues where the service assumes a FORMAT and injects it for us.
             # If the "image/fits" is duplicated, remove our requested format and rely on theirs
             if "Wrong FORMAT=image/fits,image/fits" not in str(e):
-                self._query_message(f"An error occurred querying the VO Registry: {e}",
-                                    color="error", traceback=e)
+                # any other query failure is reported by _query_single_coord_reporting
+                raise
             vo_results = vo_service.search(
                 skycoord_center,
                 **{
