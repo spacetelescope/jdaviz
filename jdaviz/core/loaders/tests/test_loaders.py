@@ -632,7 +632,7 @@ def test_failed_astroquery(deconfigged_helper):
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = "Bad Object"
     ldr.query_archive()
-    snackbar_msg = "Unable to resolve source as name: Bad Object"
+    snackbar_msg = "Unable to resolve source name: Bad Object"
     assert snackbar_msg in [d['text'] for d in deconfigged_helper.plugins['Logger'].history]
 
 
