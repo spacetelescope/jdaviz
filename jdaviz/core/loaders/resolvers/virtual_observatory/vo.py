@@ -82,6 +82,16 @@ class VOResolver(BaseConeSearchResolver):
     def _query_archive_label(self):
         return self.resource_selected
 
+    @staticmethod
+    def _registry_search(*constraints):
+        """
+        Search the VO registry for resources matching ``constraints``.
+
+        Split out from `query_registry_resources` to mirror `_query_single_coord`.
+        Doing so also allows for easier testing.
+        """
+        return registry.search(*constraints)
+
     @observe("producttype_selected", "waveband_selected",
              "source", "coordframe_selected",
              "radius", "radius_unit_selected",
@@ -145,18 +155,23 @@ class VOResolver(BaseConeSearchResolver):
                         intersect="overlaps",
                     )
                 )
-            self._full_registry_results = registry.search(*registry_args)
+            self._full_registry_results = self._registry_search(*registry_args)
             self.resource.choices = list(
                 self._full_registry_results.getcolumn("short_name")
             )
             if not self.resource.choices:
                 # otherwise the (empty) dropdown is the only indication of the outcome
-                self._query_message(
-                    f"No {self.waveband_selected} {self.producttype_selected.lower()} "
-                    f"resources found in the VO registry for {self.source}. "
-                    f"Try a different waveband or product type" +
-                    (", or disable coverage filtering." if self.resource_filter_coverage else "."),
-                    color='warning')
+                msg = f"No {self.waveband_selected} {self.producttype_selected.lower()} "\
+                      "resources found in the VO registry"
+                if self.resource_filter_coverage:
+                    msg += (f" for source: {self.source}. "
+                            f"Try a different waveband or product type, "
+                            f"or disable coverage filtering.")
+                else:
+                    msg += ". Try a different waveband or product type."
+
+                self._query_message(msg, color='warning')
+
         except (DALFormatError, VocabularyError) as e:
             # HTTP Error 403 is being issued as a string as part of the
             # VocabularyError when the registry is having issues.
