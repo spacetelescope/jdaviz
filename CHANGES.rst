@@ -98,6 +98,9 @@ New Features
 - Updated documentation for the application and caching, updated the jdaviz logo,
   and improved the .dmg installation process [#4337]
 
+- Coordinate frame and equinox are responsive to changes in ra / dec in catalog
+  loader. [#4347]
+
 - Improve UI appearance for URL loader. [#4354]
 
 Mosviz
@@ -149,7 +152,7 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-- fix case where file drop loader would not show importer options. [#4303]
+- Fix case where file drop loader would not show importer options. [#4303]
 
 - fix URL loader not showing in UI. [#4361]
 
