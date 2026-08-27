@@ -161,6 +161,9 @@ class VOResolver(BaseConeSearchResolver):
             )
             if not self.resource.choices:
                 # otherwise the (empty) dropdown is the only indication of the outcome
+                # TODO: no choices should also trigger the invalid 'This field is required'
+                #  message beneath the dropdown but it doesn't happen until you try to make
+                #  a selection on nothing.
                 msg = f"No {self.waveband_selected} {self.producttype_selected.lower()} "\
                       "resources found in the VO registry"
                 if self.resource_filter_coverage:
