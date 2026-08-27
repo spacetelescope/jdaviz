@@ -95,11 +95,13 @@ New Features
 
 - Fix table selection color in dark mode, rename "Remove from app" to "Delete from app", and allow line profile to use upper or lower case "L". [#4348]
 
-- Updated documentation for the application and caching, updated the jdaviz logo, 
+- Updated documentation for the application and caching, updated the jdaviz logo,
   and improved the .dmg installation process [#4337]
 
 - Coordinate frame and equinox are responsive to changes in ra / dec in catalog
   loader. [#4347]
+
+- Improve UI appearance for URL loader. [#4354]
 
 Mosviz
 ^^^^^^
@@ -158,13 +160,10 @@ Bug Fixes
 
 - Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
 
-<<<<<<< HEAD
 - Fix issue where removing an image from an Image viewer while a catalog (scatter) was present
   caused an index error from glue. [#4333]
 
 - Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
-=======
->>>>>>> 7216a94e9 (change log)
 
 Mosviz
 ^^^^^^
