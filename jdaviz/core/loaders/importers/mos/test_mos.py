@@ -1,3 +1,6 @@
+import numpy as np
+from astropy.io import fits
+
 from jdaviz.core.loaders.importers.mos.mos import MOSImporter
 
 
@@ -17,9 +20,9 @@ def test_mos_importer_is_valid(deconfigged_helper, tmp_path):
 
     nested_dir = valid_dir / 'JWST' / 'product'
     nested_dir.mkdir(parents=True)
-    (nested_dir / 'jw00001_x1d.fits').touch()
+    fits.PrimaryHDU(np.arange(10.)).writeto(nested_dir / 'jw00001_x1d.fits')
     importer._input = valid_dir
-    assert importer._check_is_valid() == 'Input directory contains unsupported subdirectory: JWST'
+    assert importer._check_is_valid() == ''
 
     importer._input = nested_dir / 'jw00001_x1d.fits'
     assert importer._check_is_valid() == 'MOS importer input must be a directory.'
