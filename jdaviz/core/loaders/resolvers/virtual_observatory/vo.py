@@ -82,12 +82,6 @@ class VOResolver(BaseConeSearchResolver):
     def _query_archive_label(self):
         return self.resource_selected
 
-    # def _query_message(self, *args, **kwargs):
-    #     # override the base class to always raise a warning/error when a query fails
-    #     # since there's no built-in warning mechanism like astroquery
-    #     kwargs['raise_msg'] = True
-    #     super()._query_message(*args, **kwargs)
-
     @observe("producttype_selected", "waveband_selected",
              "source", "coordframe_selected",
              "radius", "radius_unit_selected",
