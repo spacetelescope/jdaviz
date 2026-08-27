@@ -12,6 +12,7 @@ from astropy.coordinates import SkyCoord
 from astropy.coordinates.builtin_frames import __all__ as all_astropy_frames
 from astropy.coordinates.name_resolve import NameResolveError
 from astropy.table import Table as astropyTable
+from astropy import units as u
 from astroquery.mast import MastMissions
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
@@ -1123,9 +1124,13 @@ class BaseConeSearchResolver(BaseResolver):
     returned_no_results = Bool(False).tag(sync=True)
     returned_max_results = Bool(False).tag(sync=True)
 
+    # Unified reporting for all cone-search resolvers. See ``_query_message``.
+    query_message_items = List([]).tag(sync=True)
     results_loading = Bool(False).tag(sync=True)
 
     _catalog_source_index_colname = 'source_index'
+    # label of the source currently being queried, used in query failure messages
+    _current_query_source_label = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1206,6 +1211,150 @@ class BaseConeSearchResolver(BaseResolver):
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
+
+    def _clear_query_messages(self):
+        self.query_message_items = []
+
+    def _query_message(self, text, color='error', traceback=None,
+                       raise_msg=False):
+        """
+        Report ``text`` to the user through both a snackbar and a persistent
+        banner in the loader UI.
+        """
+        self.query_message_items = (self.query_message_items +
+                                    [{'text': text, 'color': color, 'traceback': traceback}])
+        # broadcast with short(er) timeout since the message is also shown as a banner
+        # broadcasting adds the message to the log otherwise we might consider
+        # avoiding it
+        self.hub.broadcast(
+            SnackbarMessage(text, color=color, sender=self, traceback=traceback, timeout=3000)
+        )
+
+        if raise_msg and color == 'warning':
+            warnings.warn(text)
+
+        elif raise_msg and color == 'error' and traceback is not None:
+            raise traceback
+
+    @property
+    def _query_archive_label(self):
+        # override by subclass to identify the queried archive/resource
+        return ''
+
+    def _query_single_coord(self, skycoord_center):
+        # override by subclass. This should return an astropy table (or None) of
+        # the results from querying the archive/resource at the given coordinate
+        raise NotImplementedError("Cone search resolver subclass must implement _query_single_coord")  # noqa pragma: nocover
+
+    def _query_single_coord_reporting(self, skycoord_center):
+        """
+        Call ``_query_single_coord``, converting any failure into an error message
+        and a ``None`` result.
+
+        Failures are reported rather than raised so that a single unreachable
+        service or malformed response doesn't abort a multi-source (Catalog
+        mode) query.
+        """
+        try:
+            return self._query_single_coord(skycoord_center)
+        except NotImplementedError:
+            # not a query failure, but an unsupported configuration
+            raise
+        except Exception as e:  # nosec
+            archive = f'{self._query_archive_label}' if self._query_archive_label else ''
+            source_label = self._current_query_source_label or self.source
+            self._query_message(f"Failed to query {archive.strip()} for source: {source_label}.",
+                                color='error', traceback=e)
+            return None
+
+    def _source_to_skycoord(self, add_query_message=True):
+        """
+        Resolve ``source`` into a ``SkyCoord``. The input is first parsed as a
+        coordinate pair in degrees and, failing that, as a source name via
+        ``SkyCoord.from_name``.
+
+        Returns ``None`` (reporting the failure via `_query_message`) when the
+        source cannot be resolved, e.g. because the name is unknown or because
+        the Sesame name resolution service is unreachable.
+        """
+        # Strip parentheses from source if present
+        stripped_source = self.source.strip('()')
+        try:
+            return SkyCoord(stripped_source, unit=u.deg, frame=self.coordframe_selected)
+        except Exception:  # nosec
+            pass
+
+        try:
+            return SkyCoord.from_name(stripped_source, frame=self.coordframe_selected)
+        except Exception as e:  # nosec
+            if add_query_message:
+                self._query_message(f"Unable to resolve source name: {self.source}",
+                                    color='error', traceback=e)
+            return None
+
+    def _finalize_query_output(self, output, hit_cap=False):
+        """
+        Apply the ``max_results`` cap to ``output``, update the result-state
+        traitlets, report the outcome of the query, and notify the loader that
+        the resolver input has changed.
+        """
+        if output is not None and len(output) >= self.max_results:
+            output = output[:self.max_results]
+            hit_cap = True
+
+        n_results = 0 if output is None else len(output)
+        self.returned_no_results = n_results == 0
+        self.returned_max_results = hit_cap and (n_results > 0)
+        self._output = output if n_results else None
+        failures = [msg for msg in self.query_message_items if msg['color'] == 'error']
+
+        if self.returned_no_results and not failures:
+            self._query_message("The search returned no results. Please modify your "
+                                "query parameters and try again.",
+                                color='error')
+        elif self.returned_max_results:
+            self._query_message("The number of results returned has reached the maximum "
+                                f"limit set ({self.max_results}).",
+                                color='success')
+        else:
+            # There can be a scenario where the query returns failures for every result
+            # but the query itself was successful. In that case, we don't want to show the
+            # "0 results found" message.
+            if not self.returned_no_results:
+                self._query_message(f"{n_results} results found.", color='success')
+
+        self._resolver_input_updated()
+
+    @with_spinner(spinner_traitlet="results_loading")
+    def query_archive(self):
+        """
+        Query the selected archive/resource for the selected source(s).
+
+        In "Source"/"Viewer" input mode, a single cone search is run on the
+        resolved coordinates.  In "Catalog" input mode, the archive is queried
+        once per (selected) catalog row and the results are stacked
+        (see ``_query_catalog``).
+        """
+        self._clear_query_messages()
+
+        # Catalog mode: loop over all (selected) catalog rows and stack results.
+        if self.search_input_selected == 'Catalog':
+            self._query_catalog()
+            return
+
+        # Source / Viewer mode: single coordinate. Only query when name
+        # resolution succeeded so that stale results are still cleared.
+        skycoord_center = self._source_to_skycoord()
+        output = (self._query_single_coord_reporting(skycoord_center)
+                  if skycoord_center is not None else None)
+
+        self._finalize_query_output(output)
+
+    def vue_query_archive(self, _=None):
+        self.query_archive()
+
+    def parse_input(self):
+        return self._output
 
     @observe('catalog_selected')
     def _on_catalog_selected(self, msg=None):
@@ -1389,9 +1538,9 @@ class BaseConeSearchResolver(BaseResolver):
         # Specify this (mostly) to check for general network issues
         err_strings = [e for (_, _, e) in coords if e]
         if len(set(err_strings)) == 1:
-            self.hub.broadcast(SnackbarMessage(
+            self._query_message(
                 f"Single reason failure occurred during name resolution: {err_strings[0]}",
-                color='warning', sender=self))
+                color='warning')
 
         return coords
 
@@ -1433,11 +1582,13 @@ class BaseConeSearchResolver(BaseResolver):
             coords.append((sc, f"{ra_data[i]:.12f} {dec_data[i]:.12f}", None))
         return coords
 
-    def _query_catalog(self, single_coord_query_fn):
+    def _query_catalog(self, single_coord_query_fn=None):
         """
         Loop over the rows of the selected catalog, calling
         ``single_coord_query_fn(skycoord)`` for each, and vertically stack the
-        returned tables into ``self._output``.
+        returned tables into ``self._output``. Defaults to
+        ``_query_single_coord_reporting`` so that a failure on one source doesn't
+        abort the remaining queries.
 
         A ``source_index`` column is added to identify which queried source each
         returned row corresponds to. The loop stops early once ``max_results``
@@ -1446,6 +1597,9 @@ class BaseConeSearchResolver(BaseResolver):
         the final table.
         """
         from astropy.table import vstack
+
+        if single_coord_query_fn is None:
+            single_coord_query_fn = self._query_single_coord_reporting
 
         coords = self._get_catalog_skycoords()
         n = len(coords)
@@ -1460,6 +1614,7 @@ class BaseConeSearchResolver(BaseResolver):
                     continue
 
                 self.query_progress = f"Querying source {i + 1} of {n}"
+                self._current_query_source_label = label
                 result = single_coord_query_fn(sc)
                 if result is not None and len(result) > 0:
                     result = result.copy()
@@ -1473,32 +1628,20 @@ class BaseConeSearchResolver(BaseResolver):
 
         finally:
             self.query_progress = ""
+            self._current_query_source_label = None
 
-        if results:
-            output = vstack(results, metadata_conflicts='silent')
-            if len(output) > self.max_results:
-                output = output[:self.max_results]
-                hit_cap = True
-
-            self.returned_max_results = hit_cap
-            self.returned_no_results = False
-            self._output = output
-
-        else:
-            self.returned_max_results = False
-            self.returned_no_results = True
-            self._output = None
-
-        self._resolver_input_updated()
+        output = vstack(results, metadata_conflicts='silent') if results else None
 
         if self._source_name_query_failures:
             # Full per-name errors remain in ``self._source_name_query_failures``
             # for a developer to inspect if needed.
-            self.hub.broadcast(SnackbarMessage(
+            self._query_message(
                 f"Could not resolve {len(self._source_name_query_failures)}/{len(coords)} "
                 f"source names from the '{self.catalog_name_col_selected}' column. "
                 f"Check the source names in your catalog.",
-                color='warning', sender=self))
+                color='warning')
+
+        self._finalize_query_output(output, hit_cap=hit_cap)
 
     def _check_is_valid(self):
         """
