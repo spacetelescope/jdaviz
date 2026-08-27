@@ -66,6 +66,15 @@ class TestVODeconfiggedImageLocal(BaseDeconfiggedImage_WCS_WCS):
         vo_ldr.viewer.selected = "Image (1)"
         assert vo_ldr.source == ""
 
+        # Coverage filtering requires a source, and the error message points at the
+        # empty viewer (rather than the source field) while in Viewer input mode
+        vo_ldr.resource_filter_coverage = True
+        with pytest.raises(ValueError, match="Load data into viewer"):
+            vo_ldr.waveband.selected = "optical"
+        # clear the waveband first so that neither reset re-triggers a registry query
+        vo_ldr.waveband.selected = ""
+        vo_ldr.resource_filter_coverage = False
+
         # Now load second data into second viewer and verify coordinates
         self.helper._app.add_data_to_viewer("Image (1)", "has_wcs_2")
         ra_str, dec_str = vo_ldr.source.split()
@@ -286,20 +295,19 @@ class TestVOImvizRemote:
 
         # If waveband selected and coverage filtering, can't query registry
         # if we don't have a source
-        expected_error_traceback = "Unable to resolve source coordinates:"
+        expected_error_msg = "Source is required for registry querying"
         vo_ldr.resource_filter_coverage = True
         vo_ldr.source = ""
         with pytest.raises(
-            Exception,
-            match=expected_error_traceback,
+            ValueError,
+            match=expected_error_msg,
         ):
             # Setting the waveband from nothing to something will trigger the query
             vo_ldr.waveband.selected = "optical"
-        # Also verify we get a snackbar message for it
-        assert any(
-            expected_error_traceback in d["text"]
-            for d in imviz_helper.plugins['Logger'].history
-        )
+        # Also verify we get a snackbar message for it, including how to resolve it
+        last_msg = imviz_helper.plugins['Logger'].history[-1]["text"]
+        assert expected_error_msg in last_msg
+        assert "Please enter your coordinates above" in last_msg
 
         # If waveband selected, but NOT filtering by coverage, then allow registry query
         vo_ldr.resource_filter_coverage = False
@@ -350,17 +358,15 @@ class TestVOImvizRemote:
         vo_ldr.radius = 1
         vo_ldr.radius_unit.selected = "deg"
 
-        # If we have coverage filtering on, we should get an error
+        # If we have coverage filtering on, we should get an error.
+        # The source-resolution failure is reported as itself, rather than being
+        # re-wrapped as a generic registry error.
         vo_ldr.resource_filter_coverage = True
-        # This is what shows in the snackbar/banner
-        expected_error_msg = "An error occurred querying the VO Registry"
-        # This is the actual traceback. In this case it also shows in the
-        # snackbar/banner, but in other cases it may not.
-        expected_error_traceback = "Unable to resolve source coordinates:"
-        with pytest.raises(LookupError, match=expected_error_traceback):
+        expected_error_msg = f"Unable to resolve source coordinates: {vo_ldr.source}"
+        with pytest.raises(LookupError, match=expected_error_msg):
             vo_ldr.waveband.selected = "optical"
         assert expected_error_msg in imviz_helper.plugins['Logger'].history[-1]["text"]
-        assert expected_error_traceback in imviz_helper.plugins['Logger'].history[-1]["text"]
+        assert "querying the VO Registry" not in imviz_helper.plugins['Logger'].history[-1]["text"]
         assert len(vo_ldr.resource.choices) == 0
 
         # By clearing coverage filtering, we should now be able to query the registry
