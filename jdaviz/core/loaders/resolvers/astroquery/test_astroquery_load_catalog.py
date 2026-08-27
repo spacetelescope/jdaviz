@@ -125,6 +125,19 @@ class TestCatalogConeSearch:
         assert self.ldr._output is None
         assert self.ldr.returned_no_results is True
 
+        # Reaching (without exceeding) max_results still queries every source and
+        # is reported as having hit the cap, since the archive may have had more.
+        n = len(self.sky_catalog)
+        self.ldr.max_results = n
+        fake = self._fake_query(n_per_source=1)
+        self.ldr._query_single_coord = fake
+
+        self.ldr.query_archive()
+
+        assert len(fake.calls) == n
+        assert len(self.ldr._output) == n
+        assert self.ldr.returned_max_results is True
+
     def test_query_catalog_with_subset(self):
         label = self._enter_catalog_mode()
         data = self.helper._app.data_collection[label]
