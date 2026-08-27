@@ -1309,8 +1309,10 @@ class BaseConeSearchResolver(BaseResolver):
         failures = [msg for msg in self.query_message_items if msg['color'] == 'error']
 
         if self.returned_no_results and not failures:
-            self._query_message("The search returned no results. Please modify your "
-                                "query parameters and try again.",
+            archive = self._query_archive_label.strip()
+            from_archive = f" from {archive}" if archive else ""
+            self._query_message(f"The search returned no results{from_archive}. Please modify "
+                                "your query parameters and try again.",
                                 color='error')
         elif self.returned_max_results:
             self._query_message("The number of results returned has reached the maximum "
