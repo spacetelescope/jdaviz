@@ -1,5 +1,8 @@
 import csv
 
+import numpy as np
+from astropy.io import fits
+
 from jdaviz.core.loaders.resolvers.file.file import FileResolver
 
 
@@ -23,9 +26,10 @@ def test_file_resolver_is_valid(deconfigged_helper, tmp_path):
 
 
 def test_file_resolver_directory_input_for_mos(deconfigged_helper, tmp_path):
+    deconfigged_helper._app.state.dev_mos_loader = True
     data_dir = tmp_path / 'mos_data'
     data_dir.mkdir()
-    (data_dir / 'jw00001_x1d.fits').touch()
+    fits.PrimaryHDU(np.arange(10.)).writeto(data_dir / 'jw00001_x1d.fits')
 
     resolver = FileResolver(app=deconfigged_helper._app)
     resolver.filepath = str(data_dir)
