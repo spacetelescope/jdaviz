@@ -1,4 +1,5 @@
 from packaging.version import parse
+from urllib.error import URLError
 import pytest
 import warnings
 
@@ -622,7 +623,10 @@ def test_spectral_extraction_scientific_validation(
     https://jwst-docs.stsci.edu/jwst-calibration-status/miri-calibration-status/
     """
     # Download CALSPEC model spectrum, initialize Spectrum.
-    calspec_fitsrec = fits.getdata(calspec_url)
+    try:
+        calspec_fitsrec = fits.getdata(calspec_url)
+    except URLError as exc:
+        pytest.skip(f"CALSPEC model download failed (transient remote failure): {exc}")
     column_units = [u.AA] + 2 * [u.Unit('erg s-1 cm-2 AA-1')]
     spectra_table = QTable(calspec_fitsrec, units=column_units)
     model_spectrum = Spectrum(
