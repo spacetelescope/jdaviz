@@ -6,6 +6,8 @@ Bug Fixes
 
 - fix case where file drop loader would not show importer options. [#4303]
 
+- fix URL loader not showing in UI. [#4361]
+
 Cubeviz
 ^^^^^^^
 
