@@ -151,6 +151,8 @@ Bug Fixes
 
 - fix case where file drop loader would not show importer options. [#4303]
 
+- fix URL loader not showing in UI. [#4361]
+
 - Fix image importer support for Roman L3 mosaic files. [#4309]
 
 - Fix issue where snackbar is attached to the notebook rather than to the app. [#4313]
