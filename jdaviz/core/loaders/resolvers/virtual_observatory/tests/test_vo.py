@@ -284,20 +284,22 @@ class TestVOImvizRemote:
         vo_ldr.waveband.selected = ""
         assert len(vo_ldr.resource.choices) == 0
 
-        # If waveband selected and coverage filtering, can't query registry if don't have a source
+        # If waveband selected and coverage filtering, can't query registry
+        # if we don't have a source
+        expected_error_traceback = "Unable to resolve source coordinates:"
         vo_ldr.resource_filter_coverage = True
         vo_ldr.source = ""
         with pytest.raises(
-            ValueError,
-            match="Source is required for registry querying when coverage filtering is enabled.",
+            Exception,
+            match=expected_error_traceback,
         ):
             # Setting the waveband from nothing to something will trigger the query
             vo_ldr.waveband.selected = "optical"
-            # Also verify we get a snackbar message for it
-            assert any(
-                "Source is required" in d["text"]
-                for d in imviz_helper.plugins['Logger'].history
-            )
+        # Also verify we get a snackbar message for it
+        assert any(
+            expected_error_traceback in d["text"]
+            for d in imviz_helper.plugins['Logger'].history
+        )
 
         # If waveband selected, but NOT filtering by coverage, then allow registry query
         vo_ldr.resource_filter_coverage = False
@@ -350,14 +352,16 @@ class TestVOImvizRemote:
 
         # If we have coverage filtering on, we should get an error
         vo_ldr.resource_filter_coverage = True
-        expected_error_msg = "Unable to resolve source coordinates"
-        with pytest.raises(LookupError, match=expected_error_msg):
+        # This is what shows in the snackbar/banner
+        expected_error_msg = "An error occurred querying the VO Registry"
+        # This is the actual traceback. In this case it also shows in the
+        # snackbar/banner, but in other cases it may not.
+        expected_error_traceback = "Unable to resolve source coordinates:"
+        with pytest.raises(LookupError, match=expected_error_traceback):
             vo_ldr.waveband.selected = "optical"
-            assert any(
-                expected_error_msg in d["text"]
-                for d in imviz_helper.plugins['Logger'].history
-            )
-            assert len(vo_ldr.resource.choices) == 0
+        assert expected_error_msg in imviz_helper.plugins['Logger'].history[-1]["text"]
+        assert expected_error_traceback in imviz_helper.plugins['Logger'].history[-1]["text"]
+        assert len(vo_ldr.resource.choices) == 0
 
         # By clearing coverage filtering, we should now be able to query the registry
         # and return the full list of available resources:
@@ -369,11 +373,10 @@ class TestVOImvizRemote:
         # Clear existing messages
         imviz_helper.plugins['Logger'].clear_history()
         vo_ldr.resource.selected = "HST.M51"
+        # Snackbar banner only, no tracebacks.
+        expected_error_msg = f"Unable to resolve source name: {vo_ldr.source}"
         vo_ldr.query_archive()
-        assert any(
-            expected_error_msg in d["text"]
-            for d in imviz_helper.plugins['Logger'].history
-        )
+        assert expected_error_msg in imviz_helper.plugins['Logger'].history[-1]["text"]
 
     @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
     def test_HSTM51_data_url(self, imviz_helper):
