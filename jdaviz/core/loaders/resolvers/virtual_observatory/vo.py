@@ -117,7 +117,8 @@ class VOResolver(BaseConeSearchResolver):
             self._query_message(error_msg, color="error",
                                 traceback=ValueError(error_msg), raise_msg=True)
 
-        # Clear existing resources list
+        # Clear existing resources list and any messages
+        self._clear_query_messages()
         self.resource.choices = []
         self.resource_selected = ""
 
@@ -148,6 +149,14 @@ class VOResolver(BaseConeSearchResolver):
             self.resource.choices = list(
                 self._full_registry_results.getcolumn("short_name")
             )
+            if not self.resource.choices:
+                # otherwise the (empty) dropdown is the only indication of the outcome
+                self._query_message(
+                    f"No {self.waveband_selected} {self.producttype_selected.lower()} "
+                    f"resources found in the VO registry for {self.source}. "
+                    f"Try a different waveband or product type" +
+                    (", or disable coverage filtering." if self.resource_filter_coverage else "."),
+                    color='warning')
         except (DALFormatError, VocabularyError) as e:
             # HTTP Error 403 is being issued as a string as part of the
             # VocabularyError when the registry is having issues.
