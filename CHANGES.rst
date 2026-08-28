@@ -8,6 +8,9 @@ Bug Fixes
 
 - fix URL loader not showing in UI. [#4361]
 
+- fix astro-image-display API for images without WCS. [#4304]
+
+
 Cubeviz
 ^^^^^^^
 
