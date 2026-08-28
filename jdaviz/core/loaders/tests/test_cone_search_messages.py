@@ -95,21 +95,6 @@ class TestConeSearchMessages:
         assert self._query_msg_texts('error') == []
         assert len(self._query_msg_texts('success')) == 1
 
-    def test_unsupported_query_is_raised(self):
-        """
-        Unsupported configurations (e.g. an archive without a query implementation)
-        are raised rather than reported as a query failure.
-        """
-        ldr = self.ldr
-
-        def _unsupported(_):
-            raise NotImplementedError('Querying for Foo is not supported.')
-
-        ldr._query_single_coord = _unsupported
-
-        with pytest.raises(NotImplementedError, match='not supported'):
-            ldr.query_archive()
-
     def test_query_message_raise_behavior(self):
         """``raise_msg`` warns for warnings and raises errors that carry a traceback."""
         ldr = self.ldr

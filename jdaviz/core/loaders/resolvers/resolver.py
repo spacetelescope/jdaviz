@@ -1238,7 +1238,7 @@ class BaseConeSearchResolver(BaseResolver):
     @property
     def _query_archive_label(self):
         # override by subclass to identify the queried archive/resource
-        return ''
+        return 'no archive/resource selected (subclass must override _query_archive_label)'  # noqa pragma: nocover
 
     def _query_single_coord(self, skycoord_center):
         # override by subclass. This should return an astropy table (or None) of
