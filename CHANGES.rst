@@ -160,9 +160,6 @@ Bug Fixes
 
 - Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
 
-- Fix editable select component, which was not rendering in the footprints
-  plugin to allow selecting overlay to edit in the UI. [#4364]
-
 Mosviz
 ^^^^^^
 
