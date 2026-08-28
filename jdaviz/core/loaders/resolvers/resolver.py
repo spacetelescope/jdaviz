@@ -1221,7 +1221,7 @@ class BaseConeSearchResolver(BaseResolver):
         banner in the loader UI.
         """
         self.query_message_items = (self.query_message_items +
-                                    [{'text': text, 'color': color, 'traceback': traceback}])
+                                    [{'text': text, 'color': color, 'traceback': str(traceback)}])
         # broadcast with short(er) timeout since the message is also shown as a banner
         # broadcasting adds the message to the log otherwise we might consider
         # avoiding it

@@ -214,10 +214,11 @@ class VOResolver(BaseConeSearchResolver):
                 },
                 format=("" if self.producttype_selected == "Catalog" else "fits"),
             )
-        except DALQueryError as e:
-            # We've run into issues where the service assumes a FORMAT and injects it for us.
-            # If the "image/fits" is duplicated, remove our requested format and rely on theirs
-            if "Wrong FORMAT=image/fits,image/fits" not in str(e):
+        except (DALQueryError, TypeError, ValueError) as e:
+            # We've run into issues where the service assumes a FORMAT and injects it for us,
+            # or advertises a set of accepted FORMAT values that excludes ours. In either
+            # case, drop our requested format and rely on the service default.
+            if "format" not in str(e).lower():
                 # any other query failure is reported by _query_single_coord_reporting
                 raise
             vo_results = vo_service.search(
