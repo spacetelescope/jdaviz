@@ -2,8 +2,6 @@ import pytest
 from astropy.table import Table
 from astropy.utils.data import conf as data_conf
 
-from jdaviz.core.events import SnackbarMessage
-
 
 CONE_SEARCH_RESOLVERS = ['astroquery', 'virtual observatory']
 
