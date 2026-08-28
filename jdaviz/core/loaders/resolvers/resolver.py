@@ -1215,8 +1215,7 @@ class BaseConeSearchResolver(BaseResolver):
     def _clear_query_messages(self):
         self.query_message_items = []
 
-    def _query_message(self, text, color='error', traceback=None,
-                       raise_msg=False):
+    def _query_message(self, text, color='error', traceback=None, raise_msg=False):
         """
         Report ``text`` to the user through both a snackbar and a persistent
         banner in the loader UI.
@@ -1257,13 +1256,10 @@ class BaseConeSearchResolver(BaseResolver):
         """
         try:
             return self._query_single_coord(skycoord_center)
-        except NotImplementedError:
-            # not a query failure, but an unsupported configuration
-            raise
         except Exception as e:  # nosec
-            archive = f'{self._query_archive_label}' if self._query_archive_label else ''
             source_label = self._current_query_source_label or self.source
-            self._query_message(f"Failed to query {archive.strip()} for source: {source_label}.",
+            self._query_message(f"Failed to query {self._query_archive_label.strip()} "
+                                f"for source: {source_label}.",
                                 color='error', traceback=e)
             return None
 
@@ -1306,13 +1302,11 @@ class BaseConeSearchResolver(BaseResolver):
         self.returned_no_results = n_results == 0
         self.returned_max_results = hit_cap and (n_results > 0)
         self._output = output if n_results else None
-        failures = [msg for msg in self.query_message_items if msg['color'] == 'error']
+        _failures = [msg for msg in self.query_message_items if msg['color'] == 'error']
 
-        if self.returned_no_results and not failures:
-            archive = self._query_archive_label.strip()
-            from_archive = f" from {archive}" if archive else ""
-            self._query_message(f"The search returned no results{from_archive}. Please modify "
-                                "your query parameters and try again.",
+        if self.returned_no_results and not len(_failures):
+            self._query_message(f"The search returned no results from {self._query_archive_label}. "
+                                f"Please modify your query parameters and try again.",
                                 color='error')
         elif self.returned_max_results:
             self._query_message("The number of results returned has reached the maximum "
@@ -1333,7 +1327,7 @@ class BaseConeSearchResolver(BaseResolver):
         Query the selected archive/resource for the selected source(s).
 
         In "Source"/"Viewer" input mode, a single cone search is run on the
-        resolved coordinates.  In "Catalog" input mode, the archive is queried
+        resolved coordinates. In "Catalog" input mode, the archive is queried
         once per (selected) catalog row and the results are stacked
         (see ``_query_catalog``).
         """
