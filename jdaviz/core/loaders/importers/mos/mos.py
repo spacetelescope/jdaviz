@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 from astropy.io import fits
@@ -11,18 +12,17 @@ from jdaviz.core.user_api import ImporterUserApi
 __all__ = ['MOSImporter']
 
 
-_SPECTRUM_1D_SUFFIXES = ('_x1d.fits', '_x1d.fit', '_x1d.fits.gz', '_x1d.fit.gz',
-                         '_c1d.fits', '_c1d.fit', '_c1d.fits.gz', '_c1d.fit.gz')
-_SPECTRUM_2D_SUFFIXES = ('_s2d.fits', '_s2d.fit', '_s2d.fits.gz', '_s2d.fit.gz',
-                         '_cal.fits', '_cal.fit', '_cal.fits.gz', '_cal.fit.gz',
-                         )
-_IMAGE_SUFFIXES = ('_i2d.fits', '_i2d.fit', '_i2d.fits.gz', '_i2d.fit.gz')
-_CAT_SUFFIXES = ('_cat.ecsv', '_cat.csv', '_cat.fits', '_cat.fit', '_cat.ecsv.gz')
-_IGNORE_SUFFIXES = ('manifest.html', 'readme', 'readme.md', 'readme.txt')
-_MOS_PRODUCT_SUFFIXES = _SPECTRUM_1D_SUFFIXES + _SPECTRUM_2D_SUFFIXES + _IMAGE_SUFFIXES + _CAT_SUFFIXES + _IGNORE_SUFFIXES  # noqa
-
-
-_FITS_SUFFIXES = ('.fits', '.fit', '.fits.gz', '.fit.gz')
+_SPECTRUM_1D_PATTERN = re.compile(r'_(?:x|c)1d\.fit(?:s)?(?:\.gz)?$', re.IGNORECASE)
+_SPECTRUM_2D_PATTERN = re.compile(r'_(?:s2d|cal)\.fit(?:s)?(?:\.gz)?$', re.IGNORECASE)
+_IMAGE_PATTERN = re.compile(r'_i2d\.fit(?:s)?(?:\.gz)?$', re.IGNORECASE)
+_CAT_PATTERN = re.compile(r'_cat\.(?:ecsv(?:\.gz)?|csv|fit(?:s)?)$', re.IGNORECASE)
+_IGNORE_PATTERN = re.compile(r'(?:manifest\.html|readme(?:\.md|\.txt)?)$', re.IGNORECASE)
+_MOS_PRODUCT_PATTERN = re.compile(
+    rf'(?:{_SPECTRUM_1D_PATTERN.pattern}|{_SPECTRUM_2D_PATTERN.pattern}|'
+    rf'{_IMAGE_PATTERN.pattern}|{_CAT_PATTERN.pattern}|{_IGNORE_PATTERN.pattern})',
+    re.IGNORECASE
+)
+_FITS_PATTERN = re.compile(r'\.fit(?:s)?(?:\.gz)?$', re.IGNORECASE)
 
 
 def _check_header(path):
@@ -32,7 +32,7 @@ def _check_header(path):
     FITS headers.  Returns an error string if the file can be ruled out, otherwise
     an empty string.  This errs on the side of considering a file valid.
     """
-    if not path.name.lower().endswith(_FITS_SUFFIXES):
+    if not _FITS_PATTERN.search(path.name):
         # non-FITS products (ecsv/csv catalogs) are cheap enough to load later
         return ''
 
@@ -101,12 +101,12 @@ class MOSImporter(BaseImporterToDataCollection):
         for path in input_path.rglob('*'):
             if path.name.startswith('.') or not path.is_file():
                 continue
-            filename = path.name.lower()
-            if not filename.endswith(_MOS_PRODUCT_SUFFIXES):
+            filename = path.name
+            if not _MOS_PRODUCT_PATTERN.search(filename):
                 return f"Input directory contains unsupported MOS file: {path.name}"
-            if filename.endswith(_SPECTRUM_1D_SUFFIXES):
+            if _SPECTRUM_1D_PATTERN.search(filename):
                 has_spectrum_1d = True
-            if not filename.endswith(_IGNORE_SUFFIXES):
+            if not _IGNORE_PATTERN.search(filename):
                 paths.append(path)
 
         if not has_spectrum_1d:
