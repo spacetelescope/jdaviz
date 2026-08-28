@@ -293,7 +293,7 @@ def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
 
     # The extracted spectrum has "steps" (aliased) but perhaps that is due to
     # how photutils is extracting a boxy aperture. There is still a slope.
-    if parse(photutils_version) > parse('3.0.0'):
+    if parse(photutils_version) >= parse('3.0.0'):
         # after 3.0.0, "exact" rectangular extraction is truly exact,
         expected_flux_step = [
             9.519410133361816, 10.564827919006348, 11.725051879882812,
