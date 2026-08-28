@@ -4,6 +4,9 @@
 Bug Fixes
 ---------
 
+- Stop using SkyCoord.from_name() to try to resolve sources in the astroquery loader
+  that are already RA and Dec coordinates. [#4193]
+
 - fix case where file drop loader would not show importer options. [#4303]
 
 - fix URL loader not showing in UI. [#4361]
@@ -83,7 +86,6 @@ Bug Fixes
   loading many datasets in a loop. [#4223]
 
 - Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
-
 
 5.0.1 (2026-05-01)
 ==================
