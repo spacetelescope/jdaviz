@@ -1,5 +1,6 @@
 from traitlets import Any, Bool, List, Unicode, observe
 
+from astropy.io import fits
 import astropy.units as u
 
 from jdaviz.core.events import SnackbarMessage
@@ -123,6 +124,10 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         if self._app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
             return False
+        # NIRISS images otherwise would be validated as 2D spectra.
+        if isinstance(self.input, fits.HDUList):
+            if self.input[0].header.get('EXP_TYPE', None) == 'NIS_IMAGE':
+                return False
         try:
             if self.spectrum.flux.ndim != 2:
                 return False

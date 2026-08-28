@@ -302,6 +302,10 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             return False
         hdu = item.get('obj')
 
+        # NIRISS images otherwise would be validated as 2D spectra.
+        if self.input[0].header.get('EXP_TYPE', None) == 'NIS_IMAGE':
+            return False
+
         # Check for Binary Table HDU with spectral columns (for 1D spectra only)
         if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
             if (hasattr(hdu, 'columns') and hdu.columns is not None and
@@ -751,6 +755,10 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if self.input_type == 'fits:hdulist':
             hdulist = self.input
             hdus = self.extension.selected_obj if self.multiselect else [self.extension.selected_obj]  # noqa
+            # Avoid an edge case that is missed by the validity checks elsewhere
+            if hdulist[0].header.get('EXP_TYPE') == 'NIS_IMAGE':
+                return []
+
             return [self._spectrum_from_hdu(hdulist, hdu) for hdu in hdus]
         elif self.input_type == 'asdf:roman':
             roman = self.input["roman"]
