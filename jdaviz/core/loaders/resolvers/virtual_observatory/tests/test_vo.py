@@ -285,6 +285,7 @@ class TestVOQueryPaths:
 
     @pytest.mark.parametrize("err_msg, n_calls, expected_error", [
         ("Wrong FORMAT=image/fits,image/fits", 2, None),
+        ("Service accepts only FORMAT = image/fits, ALL, or METADATA", 2, None),
         ("Unsupported service protocol", 1, "Failed to query FAKE for source"),
     ])
     def test_dal_query_error_retried_for_duplicate_format(self, deconfigged_helper, err_msg,
