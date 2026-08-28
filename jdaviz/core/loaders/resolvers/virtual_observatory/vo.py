@@ -1,7 +1,7 @@
 from astropy import units as u
 
 from pyvo import registry
-from pyvo.dal.exceptions import DALFormatError, DALQueryError
+from pyvo.dal.exceptions import DALFormatError
 from pyvo.utils.vocabularies import VocabularyError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Any, List, Unicode, observe
@@ -201,36 +201,27 @@ class VOResolver(BaseConeSearchResolver):
         vo_service = self._full_registry_results[
             self.resource_selected
         ].get_service(service_type=VO_PROTOCOL[self.producttype_selected]['protocol'])
+        search_kwargs = {
+            VO_PROTOCOL[self.producttype_selected]['size_arg']: (
+                (self.radius * u.Unit(self.radius_unit.selected))
+                if self.radius > 0.0
+                else None
+            )
+        }
         # search service using these coords.
         try:
             vo_results = vo_service.search(
                 skycoord_center,
-                **{
-                    VO_PROTOCOL[self.producttype_selected]['size_arg']: (
-                        (self.radius * u.Unit(self.radius_unit.selected))
-                        if self.radius > 0.0
-                        else None
-                    )
-                },
+                **search_kwargs,
                 format=("" if self.producttype_selected == "Catalog" else "fits"),
             )
-        except (DALQueryError, TypeError, ValueError) as e:
-            # We've run into issues where the service assumes a FORMAT and injects it for us,
-            # or advertises a set of accepted FORMAT values that excludes ours. In either
-            # case, drop our requested format and rely on the service default.
+        except Exception as e:  # nosec
+            # Services are inconsistent in how they handle FORMAT. Whenever the failure looks
+            # FORMAT related, retry once relying on the service default instead.
+            # Any other query failure is reported by _query_single_coord_reporting.
             if "format" not in str(e).lower():
-                # any other query failure is reported by _query_single_coord_reporting
                 raise
-            vo_results = vo_service.search(
-                skycoord_center,
-                **{
-                    "diameter" if self.producttype_selected == "Spectrum" else "size": (
-                        (self.radius * u.Unit(self.radius_unit.selected))
-                        if self.radius > 0.0
-                        else None
-                    )
-                },
-            )
+            vo_results = vo_service.search(skycoord_center, **search_kwargs)
 
         if len(vo_results) == 0:
             return None
