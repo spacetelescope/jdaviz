@@ -8,22 +8,58 @@ from astropy.coordinates import SkyCoord
 from astropy.table import QTable, Table
 import astropy.units as u
 
+from pyvo.dal.exceptions import DALFormatError, DALQueryError
 from pyvo.io.vosi.endpoint import parse_capabilities
+from pyvo.utils.vocabularies import VocabularyError
 from pyvo.utils.xml.exceptions import UnknownElementWarning
+from requests.exceptions import ConnectionError as RequestConnectionError
 
 import jdaviz as jd
 from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS
 
 
-class fake_siaresult:
-    """A mock class that simulates a SIAResult"""
+class _FakeVOResults(list):
+    """A mock class that simulates the results of a VO service search."""
 
-    def __init__(self, attrs):
-        for attr, value in attrs.items():
-            self.__setattr__(attr, value)
+    def to_table(self):
+        return Table({'access_url': list(self)})
 
-    def getdataurl(self):
-        return "Fake URL"
+
+class _FakeVOService:
+    """
+    A mock class that simulates the chain of pyvo objects the VO loader
+    interacts with: the registry results (``getcolumn`` and ``[short_name]``),
+    the resource that returns a service (``get_service``), and the service
+    itself (``search``).
+
+    ``search`` raises ``error`` (when given) on the first call only, so that
+    retry behavior can be exercised.
+    """
+
+    baseurl = "http://example.com/sia"
+
+    def __init__(self, short_names=('FAKE',), error=None):
+        self.short_names = list(short_names)
+        self.error = error
+        self.calls = []
+
+    # registry results
+    def getcolumn(self, name):
+        return self.short_names
+
+    def __getitem__(self, short_name):
+        return self
+
+    # resource
+    def get_service(self, service_type=None):
+        return self
+
+    # service
+    def search(self, coord, **kwargs):
+        self.calls.append(kwargs)
+        if self.error is not None and len(self.calls) == 1:
+            raise self.error
+        return _FakeVOResults(['a'])
 
 
 # TODO: Update all _obj calls to formal API calls once Plugin API is available
@@ -179,6 +215,97 @@ def test_vo_catalog_query_routes_to_query_catalog(deconfigged_helper):
     assert len(vo_ldr._output) == 6
     assert vo_ldr._catalog_source_index_colname in vo_ldr._output.colnames
     assert sorted(set(vo_ldr._output[vo_ldr._catalog_source_index_colname])) == [0, 1, 2]
+
+
+class TestVOQueryPaths:
+
+    @pytest.fixture(autouse=True)
+    def _setup(self, deconfigged_helper):
+        self.vo_ldr = deconfigged_helper.loaders["virtual observatory"]._obj
+        self.source = "337.5 -20.8"
+        self.fake_name = 'FAKE'
+
+    @pytest.mark.parametrize("error, expected_msg", [
+        (DALFormatError(cause=RequestConnectionError("no route to host"),
+                        url="http://example.com/registry"), "Can't connect to VO registry"),
+        (VocabularyError("HTTP Error 403: Forbidden"), "Can't connect to VO registry"),
+        (ValueError("kaboom"), "An error occurred querying the VO Registry"),
+    ])
+    def test_registry_query_failures_reported(self, deconfigged_helper, error, expected_msg):
+        """Registry failures are both raised and reported to the user."""
+        vo_ldr = self.vo_ldr
+
+        def _raise(*constraints):
+            raise error
+
+        vo_ldr._registry_search = _raise
+
+        with pytest.raises(type(error)):
+            # setting the waveband triggers the registry query
+            vo_ldr.waveband.selected = "optical"
+
+        assert vo_ldr.resource.choices == []
+        errors = [d['text'] for d in vo_ldr.query_message_items if d['color'] == 'error']
+        assert len(errors) == 1 and expected_msg in errors[0]
+
+    def test_empty_registry_results_reported(self, deconfigged_helper):
+        """Check that empty registry results are reported to the user,
+        and that the message is cleared once results are available again."""
+        vo_ldr = self.vo_ldr
+        results = _FakeVOService([self.fake_name])
+        vo_ldr._registry_search = lambda *constraints: results
+
+        vo_ldr.waveband.selected = "optical"
+        assert vo_ldr.resource.choices == [self.fake_name]
+        assert vo_ldr.query_message_items == []
+
+        results.short_names = []
+        vo_ldr.waveband.selected = "radio"
+        assert vo_ldr.resource.choices == []
+        assert [(d['text'], d['color']) for d in vo_ldr.query_message_items] == [
+            (f"No {vo_ldr.waveband.selected} image resources found in the VO registry. "
+             f"Try a different waveband or product type.", 'warning')]
+
+        # with coverage filtering the registry query is source-constrained, so the
+        # source is identified and clearing the filter is offered as a way out
+        vo_ldr.source = self.source
+        vo_ldr.resource_filter_coverage = True
+        assert vo_ldr.resource.choices == []
+        assert [(d['text'], d['color']) for d in vo_ldr.query_message_items] == [
+            (f"No {vo_ldr.waveband.selected} image resources found in the VO registry for source: "
+             f"{vo_ldr.source}. Try a different waveband or product type, or "
+             f"disable coverage filtering.", 'warning')]
+        vo_ldr.resource_filter_coverage = False
+
+        # the message is cleared once the registry returns resources again
+        results.short_names = [self.fake_name]
+        vo_ldr.waveband.selected = "optical"
+        assert vo_ldr.resource.choices == [self.fake_name]
+        assert vo_ldr.query_message_items == []
+
+    @pytest.mark.parametrize("err_msg, n_calls, expected_error", [
+        ("Wrong FORMAT=image/fits,image/fits", 2, None),
+        ("Unsupported service protocol", 1, "Failed to query FAKE for source"),
+    ])
+    def test_dal_query_error_retried_for_duplicate_format(self, deconfigged_helper, err_msg,
+                                                          n_calls, expected_error):
+        vo_ldr = self.vo_ldr
+        vo_ldr.source = self.source
+        service = _FakeVOService([self.fake_name], error=DALQueryError(err_msg))
+        vo_ldr._full_registry_results = service
+        vo_ldr.resource.choices = [self.fake_name]
+        vo_ldr.resource_selected = self.fake_name
+
+        vo_ldr.query_archive()
+
+        assert len(service.calls) == n_calls
+        errors = [d['text'] for d in vo_ldr.query_message_items if d['color'] == 'error']
+        if expected_error is None:
+            assert errors == []
+            assert len(vo_ldr._output) == 1
+        else:
+            assert len(errors) == 1 and expected_error in errors[0]
+            assert vo_ldr._output is None
 
 
 class TestVOXMLInjectionWarning:
