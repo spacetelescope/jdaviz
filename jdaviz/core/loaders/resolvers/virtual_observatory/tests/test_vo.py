@@ -283,16 +283,18 @@ class TestVOQueryPaths:
         assert vo_ldr.resource.choices == [self.fake_name]
         assert vo_ldr.query_message_items == []
 
-    @pytest.mark.parametrize("err_msg, n_calls, expected_error", [
-        ("Wrong FORMAT=image/fits,image/fits", 2, None),
-        ("Service accepts only FORMAT = image/fits, ALL, or METADATA", 2, None),
-        ("Unsupported service protocol", 1, "Failed to query FAKE for source"),
+    @pytest.mark.parametrize("error, n_calls, expected_error", [
+        (DALQueryError("Service accepts only FORMAT = image/fits, ALL, or METADATA"), 2, None),
+        # a service that doesn't accept the format argument at all
+        (TypeError("search() got an unexpected keyword argument 'format'"), 2, None),
+        (DALQueryError("Unsupported service protocol"), 1, "Failed to query FAKE for source"),
+        (RuntimeError("service is down"), 1, "Failed to query FAKE for source"),
     ])
-    def test_dal_query_error_retried_for_duplicate_format(self, deconfigged_helper, err_msg,
-                                                          n_calls, expected_error):
+    def test_query_error_retried_for_format_failures(self, deconfigged_helper, error,
+                                                     n_calls, expected_error):
         vo_ldr = self.vo_ldr
         vo_ldr.source = self.source
-        service = _FakeVOService([self.fake_name], error=DALQueryError(err_msg))
+        service = _FakeVOService([self.fake_name], error=error)
         vo_ldr._full_registry_results = service
         vo_ldr.resource.choices = [self.fake_name]
         vo_ldr.resource_selected = self.fake_name
@@ -300,6 +302,10 @@ class TestVOQueryPaths:
         vo_ldr.query_archive()
 
         assert len(service.calls) == n_calls
+        # the retry drops the format argument but preserves the cone-search size
+        if n_calls == 2:
+            assert 'format' not in service.calls[-1]
+            assert service.calls[-1]['size'] == service.calls[0]['size']
         errors = [d['text'] for d in vo_ldr.query_message_items if d['color'] == 'error']
         if expected_error is None:
             assert errors == []
