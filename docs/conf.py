@@ -312,7 +312,7 @@ intersphinx_mapping.update({  # noqa: F405
     'photutils': ('https://photutils.readthedocs.io/en/stable/', None),
     'regions': ('https://astropy-regions.readthedocs.io/en/stable/', None),
     'roman_datamodels': ('https://roman-datamodels.readthedocs.io/en/stable/', None),
-    'skimage': ('https://scikit-image.org/docs/stable/', None),
+    'pillow': ('https://pillow.readthedocs.io/en/stable/', None),
     'specreduce': ('https://specreduce.readthedocs.io/en/stable/', None),
     'specutils': ('https://specutils.readthedocs.io/en/stable/', None),
     'stdatamodels': ('https://stdatamodels.readthedocs.io/en/latest/', None),
