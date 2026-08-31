@@ -703,8 +703,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 # search-results CSV with obs_id + dataURL + s_region). Fall through to
                 # the observation_table branch so footprint display works correctly.
                 if observation_table is None or 's_region' not in parsed_input_table.colnames:
-                    for row in file_table:
-                        self.file_table.add_item(row)
+                    self.file_table.set_all_items_from_table(file_table)
 
                     # Technically input isn't complete yet but if we don't set this now
                     # the UI will appear bugged with the 'input is empty' message for astroquery
@@ -715,8 +714,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                     self.parsed_input_not_resolvable_message = ''
                     return
 
-                for row in observation_table:
-                    self.observation_table.add_item(row)
+                self.observation_table.set_all_items_from_table(observation_table)
                 self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible  # noqa
                                                           if h not in ['s_region']]
 
