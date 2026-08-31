@@ -458,9 +458,9 @@
         if (!container) return;
         const viewerHeight = container.getBoundingClientRect().height;
         const itemHeight = 30;
-        // Cap legend at 55% of viewer height so it doesn't dominate the view.
+        // Guarantee itemHeight of space beneath legend.
         // Reserve 2 slots: 1 for the viewer icon header, 1 for the "more" indicator.
-        const usableHeight = viewerHeight * 0.55;
+        const usableHeight = viewerHeight - itemHeight;
         this.max_legend_items = Math.max(1, Math.floor(usableHeight / itemHeight) - 2);
       },
       isSafari() {
