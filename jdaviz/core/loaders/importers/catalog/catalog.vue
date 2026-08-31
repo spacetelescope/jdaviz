@@ -7,6 +7,7 @@
       v-model:selected="extension_selected"
       :show_if_single_entry="true"
       :multiselect="extension_multiselect"
+      :search="extension_items.length > 3"
       label="Extension"
       api_hint="ldr.importer.extension ="
       :api_hints_enabled="api_hints_enabled"
