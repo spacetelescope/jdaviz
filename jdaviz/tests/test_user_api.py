@@ -174,7 +174,7 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
     assert importer_viewer.create_new.selected == 'Scatter'
 
     # setting to a string that is NOT a type label should default to
-    # the first type in the create_new.choices list (which is 'Scatter' in this case)
+    # the first type in the create_new.choices list
     ldr.importer.viewer = 'my-custom-viewer'
     assert importer_viewer.create_new.selected == importer_viewer.create_new.choices[0]
     assert importer_viewer.new_label == 'my-custom-viewer'
