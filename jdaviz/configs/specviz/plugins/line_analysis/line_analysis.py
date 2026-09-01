@@ -85,6 +85,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
     results_centroid = Float().tag(sync=True)  # stored in AA units
     line_menu_items = List([]).tag(sync=True)
     plot_analysis_marks = Bool(True).tag(sync=True)
+    plot_gaussian_spectrum = Bool(True).tag(sync=True)
+    plot_centroid_line = Bool(True).tag(sync=True)
+    plot_fwhm_line = Bool(True).tag(sync=True)
     sync_identify = Bool(True).tag(sync=True)
     sync_identify_icon_enabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
     sync_identify_icon_disabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select_disabled.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -386,7 +389,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                                         x=centroid_in_display_unit,
                                         colors=['#0511F7'],
                                         stroke_width=2,
-                                        line_style='dashed')
+                                        line_style='dash_dotted')
 
         return line
 
@@ -414,7 +417,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                           x=[centroid_in_display_unit - fwhm_in_display_unit / 2,
                              centroid_in_display_unit + fwhm_in_display_unit / 2],
                           y=[y_value, y_value],
-                          colors=['#0511F7'],
+                          colors=['#D41159'],
                           stroke_width=2,
                           line_style='solid')
 
@@ -424,17 +427,18 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         if self.spectrum_viewer is None:
             return
 
-        # Remove centroid line
-        if hasattr(self, 'centroid_line') and self.centroid_line is not None:
-            self.spectrum_viewer.figure.marks = [mark for mark in self.spectrum_viewer.figure.marks
-                                                 if mark is not self.centroid_line]
-            self.centroid_line = None
+        marks_to_keep = []
+        for mark in self.spectrum_viewer.figure.marks:
+            # remove only our marks (centroid and FWHM lines)
+            if mark is not getattr(self, '_centroid_line', None) and \
+                    mark is not getattr(self, '_fwhm_line', None):
+                marks_to_keep.append(mark)
 
-        # Remove FWHM line
-        if hasattr(self, 'fwhm_line') and self.fwhm_line is not None:
-            self.spectrum_viewer.figure.marks = [mark for mark in self.spectrum_viewer.figure.marks
-                                                 if mark is not self.fwhm_line]
-            self.fwhm_line = None
+        self.spectrum_viewer.figure.marks = marks_to_keep
+
+        # reset
+        self._centroid_line = None
+        self._fwhm_line = None
 
     def _plot_analysis_marks(self, parameters):
         if self.spectrum_viewer is None:
@@ -448,23 +452,39 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             amplitude_value = parameters['amplitude'].to(u.Unit(self.spectrum_viewer.state.y_display_unit))
             continuum = parameters['continuum'] * u.Unit(self.spectrum_viewer.state.y_display_unit)
 
-            self._centroid_line = self._create_centroid_line(centroid_value)
-            self._fwhm_line = self._create_fwhm_line(amplitude_value, centroid_value,
-                                                     fwhm_value, continuum)
 
-            self.spectrum_viewer.figure.marks = self.spectrum_viewer.figure.marks + [self._centroid_line]
-            self.spectrum_viewer.figure.marks = self.spectrum_viewer.figure.marks + [self._fwhm_line]
+            if self.plot_centroid_line:
+                self._centroid_line = self._create_centroid_line(centroid_value)
+                if self._centroid_line is not None:
+                    self.spectrum_viewer.figure.marks += [self._centroid_line]
+
+            if self.plot_fwhm_line:
+                self._fwhm_line = self._create_fwhm_line(amplitude_value, centroid_value,
+                                                     fwhm_value, continuum)
+                if self._fwhm_line is not None:
+                    self.spectrum_viewer.figure.marks += [self._fwhm_line]
+
             self.spectrum_viewer.figure.send_state('marks')
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"failed to plot analysis marks: {e}", sender=self,
                 color="warning", traceback=e))
 
+    @observe('plot_gaussian_spectrum', 'plot_centroid_line', 'plot_fwhm_line')
+    def _on_plot_toggles_changed(self, event):
+        """Clear marks when toggle states change."""
+        self._clear_analysis_marks()
+
+    @observe('spectral_subset_selected', 'continuum_subset_selected')
+    def _on_subset_changed_clear_marks(self, event):
+        """Clear marks when subsets change (before recalculation happens)."""
+        self._clear_analysis_marks()
+
     @observe("dataset_selected", "spectral_subset_selected",
              "continuum_subset_selected", "continuum_width")
     @with_spinner('results_computing')
     def _calculate_statistics(self, msg={}, store_results=False,
-                              update_marks=True, add_data=True):
+                              update_marks=True):
         """
         Run the line analysis functions on the selected data/subset and
         display the results.
@@ -643,15 +663,18 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         params = self._get_gaussian_parameters()
         gaussian_spectrum = self._create_gaussian_spectrum(params, spectrum)
 
-        if add_data:
-            load_kwargs = {}
-            if self.add_results.viewer.selected not in (None, 'None'):
-                load_kwargs['viewer'] = self.add_results.viewer.selected
-            else:
-                load_kwargs['viewer'] = self.spectrum_viewer.reference_id
+        load_kwargs = {}
+        if self.add_results.viewer.selected not in (None, 'None'):
+            load_kwargs['viewer'] = self.add_results.viewer.selected
+        else:
+            load_kwargs['viewer'] = self.spectrum_viewer.reference_id
+
+        if self.plot_gaussian_spectrum:
             self._set_default_results_label()
             self.add_results.add_results_from_plugin(
                 gaussian_spectrum, label="Gaussian Fit", format="1D Spectrum", load_kwargs=load_kwargs)
+
+        if self.plot_centroid_line or self.plot_fwhm_line:
             self._plot_analysis_marks(params)
 
         # run again to reset
