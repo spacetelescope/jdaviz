@@ -103,6 +103,8 @@ New Features
 
 - Improve UI appearance for URL loader. [#4354]
 
+- Adds search to extension menu in loaders when there are more than 3 extensions available. [#4372]
+
 Mosviz
 ^^^^^^
 

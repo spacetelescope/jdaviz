@@ -32,6 +32,7 @@
             hide-details
             autofocus
             style="margin: 8px;"
+            @keydown.space.stop
           />
           <v-divider class="mt-2"></v-divider>
         </div>

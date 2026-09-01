@@ -8,6 +8,7 @@
       :exists_in_dc="existing_data_in_dc"
       label="Extension"
       api_hint="ldr.importer.extension ="
+      :search="extension_items.length > 3"
       :api_hints_enabled="api_hints_enabled"
       hint="Extension to use for the data."
     ></plugin-select>
