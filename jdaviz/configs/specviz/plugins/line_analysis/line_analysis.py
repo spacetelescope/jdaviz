@@ -175,7 +175,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
     def user_api(self):
         return PluginUserApi(self, expose=('dataset', 'spectral_subset',
                                            'continuum', 'continuum_width', 'get_results',
-                                           'export_table', 'add_results'))
+                                           'export_table', 'add_results', 'plot_gaussian_spectrum',
+                                           'plot_centroid_line', 'plot_fwhm_line'))
 
     @property
     def line_items(self):

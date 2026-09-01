@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+from astropy.modeling.models import Gaussian1D
 from astropy import units as u
 from astropy.table import QTable
 from astropy.tests.helper import assert_quantity_allclose
@@ -650,3 +651,43 @@ def test_line_analysis_load_table_into_data_collection(deconfigged_helper, spect
 
     # Verify the table can be accessed and has correct data
     assert len(loaded_table) == 1
+
+def test_plot_line_analysis(deconfigged_helper):
+    """
+    Test that line analysis results can be plotted and toggled.
+    """
+    # Create a spectrum with an emission line and Gaussian noise
+    wave = np.linspace(4000, 7000, 500)
+    continuum = 5
+    line = Gaussian1D(amplitude=5.0, mean=5500, stddev=20.0)
+    flux_1d = (line(wave) + continuum) * u.Jy
+
+    rng = np.random.default_rng(42)
+    noise = rng.normal(loc=0.0, scale=0.05, size=wave.shape) * u.Jy
+    flux_1d += noise
+
+    spec1d = Spectrum(spectral_axis=wave * u.AA, flux=flux_1d)
+
+    # Load data into deconfigged helper
+    deconfigged_helper.load(spec1d, format='1D Spectrum')
+
+    # Create a spectral subset
+    st = deconfigged_helper.plugins['Subset Tools']
+    st.import_region(SpectralRegion(5380 * u.AA, 5650 * u.AA))
+
+    # Use Line Analysis plugin
+    la = deconfigged_helper.plugins['Line Analysis']
+    la.spectral_subset = 'Subset 1'
+    la.continuum = 'Surrounding'
+    la.continuum_width = 3
+    la.get_results(add_to_table=True)
+
+    # Verify that the line analysis results are plotted
+    sv = deconfigged_helper._app.get_viewer('1D Spectrum')
+    line_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
+    assert len(line_marks) == 3
+
+    # Toggle visibility of the line marks
+    la.plot_fwhm_line = False
+    line_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
+    assert len(line_marks) == 2

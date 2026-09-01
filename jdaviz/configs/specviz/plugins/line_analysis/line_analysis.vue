@@ -109,18 +109,6 @@
     >
     </v-switch>
     </j-flex-row>
-    <!-- Viewer selection for Gaussian spectrum -->
-    <j-flex-row v-if="plot_analysis_marks">
-      <div style="width: 100%">
-        <label>Plot to viewer:</label>
-        <plugin-viewer-select
-            :items="add_results_viewer_items"
-            v-model:selected="add_results_viewer_selected"
-            :show_if_single_entry="true"
-            hint="Select the spectrum viewer where the Gaussian fit will be displayed"
-            persistent-hint
-        />
-      </div></j-flex-row>
 
     <j-flex-row justify="end">
       <j-tooltip tooltipcontent="calculate results and add to results table">
