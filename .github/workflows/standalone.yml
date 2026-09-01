@@ -23,7 +23,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04, windows-latest]
     steps:
-    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
         fetch-depth: 0
 
@@ -42,7 +42,7 @@ jobs:
           apt: '^libxcb.*-dev libxkbcommon-x11-dev libegl1-mesa libopenblas-dev libhdf5-dev'
 
     - name: Setup headless display
-      uses: pyvista/setup-headless-display-action@v4
+      uses: pyvista/setup-headless-display-action@v5
 
     - name: Install jdaviz
       run: pip install ".[test,qt]"
@@ -113,7 +113,7 @@ jobs:
         p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}
         p12-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
 
-    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
         fetch-depth: 0
 
