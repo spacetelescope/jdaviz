@@ -652,6 +652,7 @@ def test_line_analysis_load_table_into_data_collection(deconfigged_helper, spect
     # Verify the table can be accessed and has correct data
     assert len(loaded_table) == 1
 
+
 def test_plot_line_analysis(deconfigged_helper):
     """
     Test that line analysis results can be plotted and toggled.

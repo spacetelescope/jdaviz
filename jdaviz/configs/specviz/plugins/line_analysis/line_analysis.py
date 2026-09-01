@@ -352,13 +352,15 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             amplitude_jy = amplitude_flam.to(u.Jy, equivalencies=u.spectral_density(centroid))
         except UnitConversionError:
             amplitude_jy = amplitude_flam
-        _, continuum, _ = self._get_continuum(self.dataset,self.spectral_subset)
+        _, continuum, _ = self._get_continuum(self.dataset, self.spectral_subset)
 
-        parameters = {'centroid': centroid, 'amplitude': amplitude_jy, 'sigma': sigma, 'fwhm': fwhm, 'continuum': continuum}
+        parameters = {'centroid': centroid, 'amplitude': amplitude_jy,
+                      'sigma': sigma, 'fwhm': fwhm, 'continuum': continuum}
         return parameters
 
     def _create_gaussian_spectrum(self, parameters, spectrum_template):
-        """Create a 1D Gaussian model using the provided parameters and return it as a Spectrum object."""
+        """Create a 1D Gaussian model using the provided parameters
+        and return it as a Spectrum object."""
 
         gaussian_model = Gaussian1D(amplitude=parameters['amplitude'].value,
                                     mean=parameters['centroid'].value,
@@ -367,15 +369,15 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
         # oversample the spectrum to get a smooth curve for plotting
         interp_spec_axis = np.linspace(spectrum_template.spectral_axis.value.min(),
-                                        spectrum_template.spectral_axis.value.max(),
-                                        5*len(spectrum_template.spectral_axis.value))
+                                       spectrum_template.spectral_axis.value.max(),
+                                       5*len(spectrum_template.spectral_axis.value))
         flux_values = gaussian_model(interp_spec_axis) + continuum_offset(interp_spec_axis)
 
         x_display_unit = self.spectrum_viewer.state.x_display_unit
         y_display_unit = self.spectrum_viewer.state.y_display_unit
         try:
             gaussian_spectrum = Spectrum(spectral_axis=interp_spec_axis * u.Unit(x_display_unit),
-                                       flux=(flux_values * parameters['amplitude'].unit).to(y_display_unit))
+                                         flux=(flux_values * parameters['amplitude'].unit).to(y_display_unit)) # noqa
         except UnitConversionError:
             gaussian_spectrum = None
 
@@ -389,12 +391,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             return None
 
         # Convert centroid value to the current display unit of the spectrum viewer
-        display_unit = spec_viewer.state.x_display_unit
+        display_unit = self.spectrum_viewer.state.x_display_unit
         centroid_in_display_unit = centroid_value.to(display_unit,
-                                                              equivalencies=u.spectral()).value
+                                                     equivalencies=u.spectral()).value
 
         # Create a vertical line at the centroid value
-        line = BaseSpectrumVerticalLine(viewer=spec_viewer,
+        line = BaseSpectrumVerticalLine(viewer=self.spectrum_viewer,
                                         x=centroid_in_display_unit,
                                         colors=['#0511F7'],
                                         stroke_width=2,
@@ -410,19 +412,19 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             return None
 
         # Convert centroid and FWHM values to the current display unit of the spectrum viewer
-        x_display_unit = spec_viewer.state.x_display_unit
+        x_display_unit = self.spectrum_viewer.state.x_display_unit
         centroid_in_display_unit = centroid_value.to(x_display_unit,
                                                      equivalencies=u.spectral()).value
         fwhm_in_display_unit = fwhm_value.to(x_display_unit,
                                              equivalencies=u.spectral()).value
 
         # Calculate the y-value for the FWHM line based on the amplitude
-        y_display_unit = spec_viewer.state.y_display_unit
+        y_display_unit = self.spectrum_viewer.state.y_display_unit
         continuum_offset = np.median(continuum)
-        y_value = amplitude_value.to(y_display_unit).value / 2 + continuum_offset.value  # FWHM is half of the amplitude
+        y_value = amplitude_value.to(y_display_unit).value / 2 + continuum_offset.value
 
         # Create a horizontal line at the FWHM value
-        line = PluginLine(viewer=spec_viewer,
+        line = PluginLine(viewer=self.spectrum_viewer,
                           x=[centroid_in_display_unit - fwhm_in_display_unit / 2,
                              centroid_in_display_unit + fwhm_in_display_unit / 2],
                           y=[y_value, y_value],
@@ -482,7 +484,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
             if self.plot_fwhm_line:
                 self._fwhm_line = self._create_fwhm_line(amplitude_value, centroid_value,
-                                                     fwhm_value, continuum)
+                                                         fwhm_value, continuum)
                 if self._fwhm_line is not None:
                     spec_viewer.figure.marks += [self._fwhm_line]
 
@@ -702,8 +704,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                     if isinstance(viewer, Spectrum1DViewer):
                         load_kwargs['viewer'] = viewer_id
                         break
-            self.add_results.add_results_from_plugin(
-                gaussian_spectrum, label="Gaussian Fit", format="1D Spectrum", load_kwargs=load_kwargs)
+            self.add_results.add_results_from_plugin(gaussian_spectrum,
+                                                     label="Gaussian Fit",
+                                                     format="1D Spectrum",
+                                                     load_kwargs=load_kwargs)
 
         if self.plot_centroid_line or self.plot_fwhm_line:
             self._plot_analysis_marks(params)
