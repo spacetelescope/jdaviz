@@ -92,6 +92,7 @@
         label="Plot Gaussian"
         hint="When enabled, plots the Gaussian fit spectrum."
         persistent-hint
+        :disabled="!results_available"
     >
     </v-switch>
     <v-switch

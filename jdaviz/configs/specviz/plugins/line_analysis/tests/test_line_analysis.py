@@ -11,7 +11,7 @@ from glue.core.roi import XRangeROI
 
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import LineIdentifyMessage
-from jdaviz.core.marks import LineAnalysisContinuum
+from jdaviz.core.marks import LineAnalysisContinuum, PluginLine, BaseSpectrumVerticalLine
 from jdaviz.core.unit_conversion_utils import coerce_unit
 
 
@@ -680,14 +680,14 @@ def test_plot_line_analysis(deconfigged_helper):
     la.spectral_subset = 'Subset 1'
     la.continuum = 'Surrounding'
     la.continuum_width = 3
+    la.plot_fwhm_line = False
     la.get_results(add_to_table=True)
 
     # Verify that the line analysis results are plotted
     sv = deconfigged_helper._app.get_viewer('1D Spectrum')
-    line_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
-    assert len(line_marks) == 3
-
-    # Toggle visibility of the line marks
-    la.plot_fwhm_line = False
-    line_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
-    assert len(line_marks) == 2
+    plugin_marks = [m for m in sv.figure.marks if isinstance(m, PluginLine)]
+    vert_marks = [m for m in sv.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
+    # 6 plugin marks: 3 for the continuum subset window, 1 for gaussian spectrum,
+    # 1 for fwhm line, 1 for centroid line
+    assert len(plugin_marks) == 6
+    assert len(vert_marks) == 1

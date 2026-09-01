@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+from astropy.units import UnitConversionError
 from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -340,20 +341,24 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
     def _get_gaussian_parameters(self):
         params = self.results
+        line_flux = float(params[0]['result']) * u.Unit(params[0]['unit'])
         sigma = float(params[2]['result']) * u.Unit(params[2]['unit'])
         fwhm = float(params[3]['result']) * u.Unit(params[3]['unit'])
         centroid = float(params[4]['result']) * u.Unit(params[4]['unit'])
 
         # have to convert from integrated line flux to peak amplitude
-        line_flux = float(params[0]['result']) * u.Unit(params[0]['unit'])
         amplitude_flam = (line_flux / (sigma * np.sqrt(2 * np.pi))).to(u.Unit(params[0]['unit']/u.Unit(params[2]['unit']))) # noqa
-        amplitude_jy = amplitude_flam.to(u.Jy, equivalencies=u.spectral_density(centroid))
+        try:
+            amplitude_jy = amplitude_flam.to(u.Jy, equivalencies=u.spectral_density(centroid))
+        except UnitConversionError:
+            amplitude_jy = amplitude_flam
         _, continuum, _ = self._get_continuum(self.dataset,self.spectral_subset)
 
         parameters = {'centroid': centroid, 'amplitude': amplitude_jy, 'sigma': sigma, 'fwhm': fwhm, 'continuum': continuum}
         return parameters
 
     def _create_gaussian_spectrum(self, parameters, spectrum_template):
+        """Create a 1D Gaussian model using the provided parameters and return it as a Spectrum object."""
 
         gaussian_model = Gaussian1D(amplitude=parameters['amplitude'].value,
                                     mean=parameters['centroid'].value,
@@ -368,8 +373,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
         x_display_unit = self.spectrum_viewer.state.x_display_unit
         y_display_unit = self.spectrum_viewer.state.y_display_unit
-        gaussian_spectrum = Spectrum(spectral_axis=interp_spec_axis * u.Unit(x_display_unit),
+        try:
+            gaussian_spectrum = Spectrum(spectral_axis=interp_spec_axis * u.Unit(x_display_unit),
                                        flux=(flux_values * parameters['amplitude'].unit).to(y_display_unit))
+        except UnitConversionError:
+            gaussian_spectrum = None
 
         return gaussian_spectrum
 
@@ -381,12 +389,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             return None
 
         # Convert centroid value to the current display unit of the spectrum viewer
-        display_unit = self.spectrum_viewer.state.x_display_unit
+        display_unit = spec_viewer.state.x_display_unit
         centroid_in_display_unit = centroid_value.to(display_unit,
                                                               equivalencies=u.spectral()).value
 
         # Create a vertical line at the centroid value
-        line = BaseSpectrumVerticalLine(viewer=self.spectrum_viewer,
+        line = BaseSpectrumVerticalLine(viewer=spec_viewer,
                                         x=centroid_in_display_unit,
                                         colors=['#0511F7'],
                                         stroke_width=2,
@@ -402,19 +410,19 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             return None
 
         # Convert centroid and FWHM values to the current display unit of the spectrum viewer
-        x_display_unit = self.spectrum_viewer.state.x_display_unit
+        x_display_unit = spec_viewer.state.x_display_unit
         centroid_in_display_unit = centroid_value.to(x_display_unit,
                                                      equivalencies=u.spectral()).value
         fwhm_in_display_unit = fwhm_value.to(x_display_unit,
                                              equivalencies=u.spectral()).value
 
         # Calculate the y-value for the FWHM line based on the amplitude
-        y_display_unit = self.spectrum_viewer.state.y_display_unit
+        y_display_unit = spec_viewer.state.y_display_unit
         continuum_offset = np.median(continuum)
         y_value = amplitude_value.to(y_display_unit).value / 2 + continuum_offset.value  # FWHM is half of the amplitude
 
         # Create a horizontal line at the FWHM value
-        line = PluginLine(viewer=self.spectrum_viewer,
+        line = PluginLine(viewer=spec_viewer,
                           x=[centroid_in_display_unit - fwhm_in_display_unit / 2,
                              centroid_in_display_unit + fwhm_in_display_unit / 2],
                           y=[y_value, y_value],
@@ -428,6 +436,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         if self.spectrum_viewer is None:
             return
 
+        for viewer_id, viewer in self._app._viewer_store.items():
+            if isinstance(viewer, Spectrum1DViewer):
+                spec_viewer = viewer
+                break
+
         marks_to_keep = []
         for mark in self.spectrum_viewer.figure.marks:
             # remove only our marks (centroid and FWHM lines)
@@ -435,37 +448,45 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                     mark is not getattr(self, '_fwhm_line', None):
                 marks_to_keep.append(mark)
 
-        self.spectrum_viewer.figure.marks = marks_to_keep
+        spec_viewer.figure.marks = marks_to_keep
 
         # reset
         self._centroid_line = None
         self._fwhm_line = None
 
     def _plot_analysis_marks(self, parameters):
+        """
+        Plot the centroid and FWHM lines on the spectrum viewer based on the
+        provided parameters from the line analysis results.
+        """
         if self.spectrum_viewer is None:
             return
+
+        for viewer_id, viewer in self._app._viewer_store.items():
+            if isinstance(viewer, Spectrum1DViewer):
+                spec_viewer = viewer
+                break
 
         self._clear_analysis_marks()
 
         try:
-            centroid_value = parameters['centroid'].to(u.Unit(self.spectrum_viewer.state.x_display_unit))
-            fwhm_value = parameters['fwhm'].to(u.Unit(self.spectrum_viewer.state.x_display_unit))
-            amplitude_value = parameters['amplitude'].to(u.Unit(self.spectrum_viewer.state.y_display_unit))
-            continuum = parameters['continuum'] * u.Unit(self.spectrum_viewer.state.y_display_unit)
-
+            centroid_value = parameters['centroid'].to(u.Unit(spec_viewer.state.x_display_unit))
+            fwhm_value = parameters['fwhm'].to(u.Unit(spec_viewer.state.x_display_unit))
+            amplitude_value = parameters['amplitude'].to(u.Unit(spec_viewer.state.y_display_unit))
+            continuum = parameters['continuum'] * u.Unit(spec_viewer.state.y_display_unit)
 
             if self.plot_centroid_line:
                 self._centroid_line = self._create_centroid_line(centroid_value)
                 if self._centroid_line is not None:
-                    self.spectrum_viewer.figure.marks += [self._centroid_line]
+                    spec_viewer.figure.marks += [self._centroid_line]
 
             if self.plot_fwhm_line:
                 self._fwhm_line = self._create_fwhm_line(amplitude_value, centroid_value,
                                                      fwhm_value, continuum)
                 if self._fwhm_line is not None:
-                    self.spectrum_viewer.figure.marks += [self._fwhm_line]
+                    spec_viewer.figure.marks += [self._fwhm_line]
 
-            self.spectrum_viewer.figure.send_state('marks')
+            spec_viewer.figure.send_state('marks')
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"failed to plot analysis marks: {e}", sender=self,
@@ -670,8 +691,17 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         else:
             load_kwargs['viewer'] = self.spectrum_viewer.reference_id
 
-        if self.plot_gaussian_spectrum:
+        if self.plot_gaussian_spectrum and gaussian_spectrum is not None:
             self._set_default_results_label()
+            if self.add_results.viewer.selected not in (None, 'None'):
+                load_kwargs['viewer'] = self.add_results.viewer.selected
+            else:
+                # find first 1D spectrum viewer (necessary to find the
+                # auto-extracted 1D spectrum viewer in cubeviz/specviz2d)
+                for viewer_id, viewer in self._app._viewer_store.items():
+                    if isinstance(viewer, Spectrum1DViewer):
+                        load_kwargs['viewer'] = viewer_id
+                        break
             self.add_results.add_results_from_plugin(
                 gaussian_spectrum, label="Gaussian Fit", format="1D Spectrum", load_kwargs=load_kwargs)
 
