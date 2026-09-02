@@ -17,6 +17,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         EditableSelectPluginComponent, SelectPluginComponent,
                                         FileImportSelectPluginComponent, HasFileImportSelect,
                                         CustomToolbarToggleMixin, LoadersMixin)
+from jdaviz.core.table_row_sync import PluginTableRowSync
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 
@@ -171,6 +172,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         disable footprint selection tools in the viewer toolbar
     """
     template_file = __file__, "footprints.vue"
+    table_row_sync = (
+        PluginTableRowSync('pa', 'pa', selectors=(('overlay', 'default'),)),
+    )
     uses_active_status = Bool(True).tag(sync=True)
 
     is_pixel_linked = Bool(True).tag(sync=True)  # plugin disabled if linked by pixel (default)
@@ -242,6 +246,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
                                                      items='overlay_items',
                                                      selected='overlay_selected',
                                                      manual_options=['default'],
+                                                     on_add_after_selection=self._on_overlay_add,
                                                      on_rename=self._on_overlay_rename,
                                                      on_remove=self._on_overlay_remove)
 
@@ -412,6 +417,32 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
             # update the marks
             self._preset_args_changed()
 
+    def read_table_row_sync_attribute(self, descriptor):
+        overlay = dict(descriptor.selectors).get('overlay')
+        if overlay is not None:
+            if overlay not in self._overlays:
+                return getattr(self, descriptor.traitlet)
+            return self._overlays[overlay][descriptor.attribute]
+        return super().read_table_row_sync_attribute(descriptor)
+
+    def apply_table_row_sync_attribute(self, descriptor, value):
+        overlay = dict(descriptor.selectors).get('overlay')
+        if overlay is None:
+            return super().apply_table_row_sync_attribute(descriptor, value)
+
+        if overlay not in self._overlays:
+            self._overlays[overlay] = {descriptor.attribute: value}
+            return
+
+        selected = self.overlay_selected
+        if selected == overlay:
+            setattr(self, descriptor.traitlet, value)
+            return
+
+        self._overlays[overlay][descriptor.attribute] = value
+        self._change_overlay(overlay_selected=overlay)
+        self._change_overlay(overlay_selected=selected)
+
     def rename_overlay(self, old_lbl, new_lbl):
         """
         Rename an existing overlay instance
@@ -453,9 +484,36 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         # NOTE: the overlay will call _on_overlay_remove after updating
         self.overlay.remove_choice(lbl)
 
+    def _on_overlay_add(self, lbl):
+        declarations = list(self.table_row_sync)
+        existing = {(declaration.attribute, declaration.selectors)
+                    for declaration in declarations}
+        for declaration in tuple(declarations):
+            selectors = dict(declaration.selectors)
+            if 'overlay' not in selectors:
+                continue
+            added = declaration.rename_selector('overlay', selectors['overlay'], lbl)
+            if (added.attribute, added.selectors) not in existing:
+                declarations.append(added)
+                existing.add((added.attribute, added.selectors))
+
+        manager = getattr(self._app, '_catalog_row_link_manager', None)
+        if manager is None:
+            self.table_row_sync = tuple(declarations)
+        else:
+            manager.update_plugin_declarations(self, declarations)
+
     def _on_overlay_rename(self, old_lbl, new_lbl):
         # this is triggered when the plugin overlay detects a change to the overlay name
         self._overlays[new_lbl] = self._overlays.pop(old_lbl, {})
+        manager = getattr(self._app, '_catalog_row_link_manager', None)
+        if manager is not None:
+            manager.rename_plugin_selector(self, 'overlay', old_lbl, new_lbl)
+        else:
+            self.table_row_sync = tuple(
+                declaration.rename_selector('overlay', old_lbl, new_lbl)
+                for declaration in self.table_row_sync
+            )
 
         # change the reference on any marks entries for this overlay (in any viewer)
         for viewer_id, viewer in self._app._viewer_store.items():
@@ -747,7 +805,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
             # TODO: need to re-call this logic when the reference_data is changed... which might
             # warrant some refactoring so we don't have to loop over all viewers if it has only
             # changed in one viewer
-            wcs = getattr(viewer.state.reference_data, 'coords', None)
+            reference_data = getattr(viewer.state, 'reference_data', None)
+            wcs = getattr(reference_data, 'coords', None)
             if wcs is None:
                 continue
             existing_overlays = self._get_marks(viewer, overlay_selected)

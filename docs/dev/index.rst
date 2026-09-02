@@ -15,6 +15,7 @@ Here is some documentation specific for developers.
   ui_description
   ui_style_guide
   ui_plugin_components
+  plugin_table_row_sync
   specviz_selection
   links
   win_dev

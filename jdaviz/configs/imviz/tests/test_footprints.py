@@ -18,6 +18,63 @@ def _get_markers_from_viewer(viewer):
     return [m for m in viewer.figure.marks if isinstance(m, FootprintOverlay)]
 
 
+def test_default_overlay_table_row_sync_preserves_selection(
+        deconfigged_helper, image_2d_wcs, sky_coord_only_source_catalog):
+    data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(data, data_label='data', format='Image')
+    deconfigged_helper.load(sky_coord_only_source_catalog,
+                            data_label='catalog', format='Catalog')
+    plugin = deconfigged_helper.plugins['Footprints']._obj
+    descriptor = plugin.table_row_sync[0]
+
+    plugin._ensure_first_overlay()
+    plugin.add_overlay('second')
+    plugin.pa = 12
+    plugin.apply_table_row_sync_attribute(descriptor, 34)
+
+    assert plugin.overlay_selected == 'second'
+    assert plugin.pa == 12
+    assert plugin._overlays['default']['pa'] == 34
+    assert plugin.read_table_row_sync_attribute(descriptor) == 34
+
+
+def test_overlay_rename_migrates_table_row_sync_column(
+        deconfigged_helper, image_2d_wcs, sky_coord_only_source_catalog):
+    data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(data, data_label='data', format='Image')
+    deconfigged_helper.load(sky_coord_only_source_catalog,
+                            data_label='catalog', format='Catalog')
+    catalog = next(item for item in deconfigged_helper._app.data_collection
+                   if item.meta.get('_importer') == 'CatalogImporter')
+    viewer_creator = deconfigged_helper.new_viewers['Table']
+    viewer_creator.dataset = catalog.label
+    viewer_creator.viewer_label = 'Table'
+    viewer_creator()
+    plugin = deconfigged_helper.plugins['Footprints']._obj
+    manager = deconfigged_helper._app._catalog_row_link_manager
+    manager._reconcile_plugin_columns()
+    table_viewer = next(entry[0] for entry in manager._observed.values())
+    plugin._ensure_first_overlay()
+    plugin.add_overlay('second')
+
+    old_name = 'Footprints[overlay=second]:pa'
+    old_values = catalog.get_component(old_name).data.copy()
+    assert catalog.id[old_name] not in table_viewer.state.hidden_components
+    table_viewer.set_column_sync(old_name, False)
+
+    plugin.rename_overlay('second', 'renamed')
+
+    new_name = 'Footprints[overlay=renamed]:pa'
+    assert old_name not in [component.label for component in catalog.components]
+    assert new_name in [component.label for component in catalog.components]
+    np.testing.assert_array_equal(catalog.get_component(new_name).data, old_values)
+    assert catalog.meta['_plugin_attribute_columns'][new_name]['selectors'] == {
+        'overlay': 'renamed'}
+    assert {declaration.selectors for declaration in plugin.table_row_sync} == {
+        (('overlay', 'default'),), (('overlay', 'renamed'),)}
+    assert table_viewer.get_column_sync(new_name) is False
+
+
 def test_user_api(deconfigged_helper, image_2d_wcs, tmp_path):
     arr = np.ones((10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)

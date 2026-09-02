@@ -853,6 +853,7 @@ class PluginTemplateMixin(TemplateMixin):
     """
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
+    table_row_sync = ()
     _plugin_name = None  # noqa overwritten by the registry - won't be populated by plugins instantiated directly
     _sidebar = 'plugins'  # noqa overwritten by the registry
     _subtab = None  # noqa overwritten by the registry
@@ -959,6 +960,25 @@ class PluginTemplateMixin(TemplateMixin):
         # plugins should override this to pass their own list of expose functionality, which
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
+
+    def read_table_row_sync_attribute(self, descriptor):
+        """Return the current value for a scalar catalog row-sync declaration."""
+        return getattr(self, descriptor.traitlet)
+
+    def apply_table_row_sync_attribute(self, descriptor, value):
+        """Apply a scalar catalog row-sync value through its backing traitlet."""
+        setattr(self, descriptor.traitlet, value)
+
+    def read_table_row_sync_group(self, group):
+        """Return all values declared by a packed catalog row-sync group."""
+        return {member.attribute: self.read_table_row_sync_attribute(member)
+                for member in group.members}
+
+    def apply_table_row_sync_group(self, group, values):
+        """Apply an independent packed group in declaration order."""
+        for member in group.members:
+            if member.attribute in values and values[member.attribute] is not None:
+                self.apply_table_row_sync_attribute(member, values[member.attribute])
 
     def _setup_relevant_if_truthy(self, traitlets):
         """
