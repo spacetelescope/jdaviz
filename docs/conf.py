@@ -160,7 +160,7 @@ dev = "dev" in release
 version = '.'.join(release.split('.')[:2])
 
 extensions += ['sphinx.ext.extlinks', 'sphinx_design', 'guidestar',  # noqa: F405
-               'jdaviz.ext.wireframe']
+               'jdaviz.ext.wireframe', 'sphinx_favicon']
 
 # get the most recent git commit hash at build time:
 commit_hash = subprocess.run(
@@ -241,12 +241,28 @@ html_context = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '_static/logos/jdaviz_wordmark.svg'
+html_logo = 'logos/jdaviz_wordmark.svg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = '_static/logos/jdaviz_favicon.png'
+# html_favicon = 'logos/jdaviz_favicon.png'
+
+# 3. Configure the explicit rules Safari expects
+favicons = [
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "16x16",
+        "href": "logos/jdaviz_favicon.png", # Path relative to your _static/ directory
+    },
+    {
+        "rel": "apple-touch-icon",
+        "sizes": "180x180",
+        "href": "logos/jdaviz_favicon.png",
+    }
+]
+
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
