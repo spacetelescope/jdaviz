@@ -84,33 +84,6 @@
       </v-text-field>
     </j-flex-row>
 
-    <j-plugin-section-header>Gaussian Fit Results</j-plugin-section-header>
-    <j-flex-row>  <j-docs-link>Automatically generate and plot a Gaussian model using the line analysis results. </j-docs-link></j-flex-row>
-    <!-- Toggle for plotting Gaussian spectrum and marks --><j-flex-row>
-    <v-switch
-        v-model="plot_gaussian_spectrum"
-        label="Plot Gaussian"
-        hint="When enabled, plots the Gaussian fit spectrum."
-        persistent-hint
-        :disabled="!results_available"
-    >
-    </v-switch>
-    <v-switch
-        v-model="plot_centroid_line"
-        label="Plot Centroid"
-        hint="When enabled, plots a vertical line at the centroid."
-        persistent-hint
-    >
-    </v-switch>
-    <v-switch
-        v-model="plot_fwhm_line"
-        label="Plot FWHM"
-        hint="When enabled, plots a horizontal at the FWHM."
-        persistent-hint
-    >
-    </v-switch>
-    </j-flex-row>
-
     <j-flex-row justify="end">
       <j-tooltip tooltipcontent="calculate results and add to results table">
         <plugin-action-button
@@ -125,6 +98,19 @@
           }}
         </plugin-action-button>
       </j-tooltip>
+    </j-flex-row>
+
+    <j-plugin-section-header>Gaussian Fit Results</j-plugin-section-header>
+    <j-flex-row>  <j-docs-link>Automatically generate and plot a Gaussian model using the line analysis results. </j-docs-link></j-flex-row>
+    <!-- Toggle for plotting Gaussian spectrum and marks --><j-flex-row>
+    <v-switch
+        v-model="plot_gaussian_params"
+        label="Plot Gaussian"
+        hint="When enabled, plots the Gaussian fit spectrum, and marks the centroid and FWHM."
+        persistent-hint
+        :disabled="!results_available"
+    >
+    </v-switch>
     </j-flex-row>
 
     <div v-if="results_available">
