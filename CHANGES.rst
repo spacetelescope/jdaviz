@@ -105,8 +105,8 @@ New Features
 
 - Adds search to extension menu in loaders when there are more than 3 extensions available. [#4372]
 
-- Unify astroquery and VO reporting behavior. Both now show snackbars and banners in the UI
-  for the results of queries. [#4369]
+- Unify astroquery and VO reporting behavior. Both now show banners in the UI for the
+  results of queries. This information can also be found in the logger. [#4369]
 
 Mosviz
 ^^^^^^

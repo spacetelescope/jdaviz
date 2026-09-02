@@ -1213,19 +1213,22 @@ class BaseConeSearchResolver(BaseResolver):
     def _clear_query_messages(self):
         self.query_message_items = []
 
-    def _query_message(self, text, color='error', traceback=None, raise_msg=False):
+    def _query_message(self, text, color='error', popup=False, traceback=None, raise_msg=False):
         """
-        Report ``text`` to the user through both a snackbar and a persistent
-        banner in the loader UI.
+        Report ``text`` to the user through both a persistent banner in the loader UI.
+        The messages are still passed to the logger so they can be accessed after the
+        fact.
         """
         self.query_message_items = (self.query_message_items +
                                     [{'text': text, 'color': color, 'traceback': str(traceback)}])
-        # broadcast with short(er) timeout since the message is also shown as a banner
-        # broadcasting adds the message to the log otherwise we might consider
-        # avoiding it
-        self.hub.broadcast(
-            SnackbarMessage(text, color=color, sender=self, traceback=traceback, timeout=3000)
-        )
+
+        # add message to logger with/without broadcasting
+        snackbar_msg = SnackbarMessage(text, color=color, sender=self, traceback=traceback)
+        self._app.state.snackbar_queue.put(self._app.state,
+                                           self._app._jdaviz_helper.plugins['Logger'],
+                                           snackbar_msg,
+                                           history=True,
+                                           popup=popup)
 
         if raise_msg and color == 'warning':
             warnings.warn(text)
