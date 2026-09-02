@@ -681,14 +681,22 @@ def test_plot_line_analysis(deconfigged_helper):
     la.spectral_subset = 'Subset 1'
     la.continuum = 'Surrounding'
     la.continuum_width = 3
-    la.plot_fwhm_line = False
+    la.plot_gaussian_params = True
     la.get_results(add_to_table=True)
 
     # Verify that the line analysis results are plotted
     sv = deconfigged_helper._app.get_viewer('1D Spectrum')
     plugin_marks = [m for m in sv.figure.marks if isinstance(m, PluginLine)]
     vert_marks = [m for m in sv.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
-    # 6 plugin marks: 3 for the continuum subset window, 1 for gaussian spectrum,
-    # 1 for fwhm line, 1 for centroid line
+    # 8 plugin marks: 3 for the continuum subset window, 1 for spectral subset,
+    # 1 for gaussian spectrum, 1 for fwhm line, 1 for centroid line, 1 for sliceindicator
+    assert len(plugin_marks) == 8
+    assert len(vert_marks) == 2
+
+    # When gaussian toggled off, 3 marks should disappear
+    la.plot_gaussian_params = False
+    sv = deconfigged_helper._app.get_viewer('1D Spectrum')
+    plugin_marks = [m for m in sv.figure.marks if isinstance(m, PluginLine)]
+    vert_marks = [m for m in sv.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
     assert len(plugin_marks) == 6
     assert len(vert_marks) == 1

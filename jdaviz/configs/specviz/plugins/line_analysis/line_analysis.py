@@ -514,7 +514,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                 f"failed to plot analysis marks: {e}", sender=self,
                 color="warning", traceback=e))
 
-
     @observe('plot_gaussian_params')
     def _on_plot_gaussian_params_changed(self, event):
         """Redraw marks when plot_gaussian_params toggle changes."""
@@ -528,11 +527,14 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
         if self.plot_gaussian_params:
             # re-add the marks
-            if self._gaussian_spectrum is not None and self._gaussian_spectrum not in spec_viewer.figure.marks:
+            if self._gaussian_spectrum is not None and \
+                    self._gaussian_spectrum not in spec_viewer.figure.marks:
                 spec_viewer.figure.marks += [self._gaussian_spectrum]
-            if self._centroid_line is not None and self._centroid_line not in spec_viewer.figure.marks:
+            if self._centroid_line is not None and \
+                    self._centroid_line not in spec_viewer.figure.marks:
                 spec_viewer.figure.marks += [self._centroid_line]
-            if self._fwhm_line is not None and self._fwhm_line not in spec_viewer.figure.marks:
+            if self._fwhm_line is not None and \
+                    self._fwhm_line not in spec_viewer.figure.marks:
                 spec_viewer.figure.marks += [self._fwhm_line]
         else:
             # remove the marks
