@@ -40,7 +40,9 @@ def test_spectral_lines_components(deconfigged_helper, spectrum1d):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'wavelength': rest_wav * u.AA, 'name': ['Ha', 'line2']})
     ldr.format = 'Spectral Lines'
-    ldr.importer()
+    importer = ldr.importer
+    importer.col_other = ['name']
+    importer()
 
     # plugin picked up the table and added a column for the default component
     assert plugin.line_table != ''
@@ -48,34 +50,72 @@ def test_spectral_lines_components(deconfigged_helper, spectrum1d):
 
     def col(component_lbl):
         cid = plugin._get_data_component_id(line_data,
-                                            f'rest wavelength:{component_lbl}')
+                                            f'observed wavelength:{component_lbl}')
         assert cid is not None
         return line_data[cid]
 
+    def component_lines_field(field):
+        return [line[field] for line in plugin.component_lines]
+
     assert plugin.component_selected == 'default'
     assert_allclose(col('default'), rest_wav)
+
+    # component_lines reflects the names/rest/observed wavelengths of the
+    # currently selected component, all initially visible
+    assert component_lines_field('linename') == ['Ha', 'line2']
+    assert_allclose(component_lines_field('rest'), rest_wav)
+    assert_allclose(component_lines_field('obs'), rest_wav)
+    assert component_lines_field('show') == [True, True]
 
     # a new component gets its own column, initially unshifted (z=0)
     plugin.component.add_choice('second')
     assert plugin.component_selected == 'second'
     assert plugin.component_redshift == 0
     assert_allclose(col('second'), rest_wav)
+    assert_allclose(component_lines_field('obs'), rest_wav)
 
     # adjusting the redshift updates only the selected component's column
+    # and its entries in component_lines
     plugin.component_redshift = 0.1
     assert_allclose(col('second'), rest_wav * 1.1)
     assert_allclose(col('default'), rest_wav)
+    assert_allclose(component_lines_field('obs'), rest_wav * 1.1)
+    assert_allclose(component_lines_field('rest'), rest_wav)
+
+    # toggling visibility only affects the current component's display state
+    plugin.vue_toggle_line_visibility(0)
+    assert component_lines_field('show') == [False, True]
+
+    # switching to another component keeps its own (unaffected) visibility...
+    plugin.component_selected = 'default'
+    assert component_lines_field('show') == [True, True]
+    assert_allclose(component_lines_field('obs'), rest_wav)
+
+    # ...and switching back restores the toggled state and redshifted values
+    plugin.component_selected = 'second'
+    assert component_lines_field('show') == [False, True]
+    assert_allclose(component_lines_field('obs'), rest_wav * 1.1)
 
     # renaming moves the shifted column to the new name and keeps the redshift
     plugin.component.rename_choice('second', 'renamed')
-    assert plugin._get_data_component_id(line_data, 'rest wavelength:second') is None
+    assert plugin._get_data_component_id(line_data, 'observed wavelength:second') is None
     assert_allclose(col('renamed'), rest_wav * 1.1)
     assert plugin.component_selected == 'renamed'
     assert plugin.component_redshift == 0.1
 
+    # component_lines follows the rename, keeping the shifted values and
+    # per-line visibility state
+    assert component_lines_field('linename') == ['Ha', 'line2']
+    assert_allclose(component_lines_field('obs'), rest_wav * 1.1)
+    assert component_lines_field('show') == [False, True]
+
     # removing a component removes its column, leaving others untouched
     plugin.component.remove_choice('renamed')
-    assert plugin._get_data_component_id(line_data, 'rest wavelength:renamed') is None
+    assert plugin._get_data_component_id(line_data, 'observed wavelength:renamed') is None
     assert plugin.component_selected == 'default'
     assert plugin.component_redshift == 0
     assert_allclose(col('default'), rest_wav)
+
+    # component_lines reflects the fallback to 'default', unshifted and visible
+    assert_allclose(component_lines_field('obs'), rest_wav)
+    assert component_lines_field('show') == [True, True]

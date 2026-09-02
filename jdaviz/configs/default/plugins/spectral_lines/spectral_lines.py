@@ -29,7 +29,7 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
     component_lines = List().tag(sync=True)
 
     # read-only: label of the data-collection table holding the spectral lines.
-    # each component corresponds to a 'rest wavelength:<component>' column in
+    # each component corresponds to a 'observed wavelength:<component>' column in
     # this table.
     line_table = Unicode().tag(sync=True)
 
@@ -104,7 +104,7 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
     @staticmethod
     def _component_col_name(lbl):
         """Name of the line-table column corresponding to a component."""
-        return f'rest wavelength:{lbl}'
+        return f'observed wavelength:{lbl}'
 
     def _get_line_table_data(self):
         """The glue Data object for the spectral lines table, or None."""
@@ -121,7 +121,7 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
 
     def _add_component_column(self, lbl, data=None):
         """
-        Add or update the 'rest wavelength:<lbl>' column in the line table,
+        Add or update the 'observed wavelength:<lbl>' column in the line table,
         applying the component's redshift to the table's original spectral
         location column (recomputed from the original values each time to
         avoid building up precision errors).

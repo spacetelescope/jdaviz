@@ -38,7 +38,7 @@
         v-model.number="component_redshift"
         type="number"
         label="Redshift"
-        hint="Redshift of the currently selected component."
+        hint="Redshift for all lines in the currently selected component."
         persistent-hint
       ></v-text-field>
     </v-row>
