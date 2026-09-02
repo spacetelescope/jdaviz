@@ -67,6 +67,8 @@ New Features
 
 - Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322, #4350]
 
+- Allow markers plugin table to create other viewer types besides Scatter (i.e. Table or Histogram). [#4331]
+
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 
 - Table viewer API & UI to add/rename/remove columns. [#4282, #4343]

@@ -148,6 +148,43 @@ def test_wildcard_match_extension(imviz_helper, multi_extension_image_hdu_wcs):
     assert selection_obj.multiselect is True
 
 
+def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_source_catalog):
+    """
+    Setting ldr.importer.viewer = type_label (where type_label is one of the create_new
+    choices, e.g. 'Table', 'Scatter') should select that viewer type,
+    not treat the string as a new viewer label that then defaults to a scatter viewer.
+    """
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = sky_coord_only_source_catalog
+    ldr.format = 'Catalog'
+
+    importer_viewer = ldr.importer._obj.viewer
+
+    assert 'Scatter' in importer_viewer.create_new.choices
+    assert 'Table' in importer_viewer.create_new.choices
+
+    # setting via the user-api wrapper to 'Table' should select the Table type,
+    # not label a scatter viewer labeled 'Table'
+    ldr.importer.viewer = 'Table'
+    assert importer_viewer.create_new.selected == 'Table'
+
+    # setting to 'Scatter' should switch the type back
+    ldr.importer.viewer = 'Scatter'
+    assert importer_viewer.create_new.selected == 'Scatter'
+
+    # setting to a string that is NOT a type label should default to
+    # the first type in the create_new.choices list
+    ldr.importer.viewer = 'my-custom-viewer'
+    assert importer_viewer.create_new.selected == importer_viewer.create_new.choices[0]
+    assert importer_viewer.new_label == 'my-custom-viewer'
+
+    # setting to a string of the format Type:label should select the type and set the label
+    ldr.importer.viewer = 'Table:my-custom-table'
+    assert importer_viewer.create_new.selected == 'Table'
+    assert importer_viewer.new_label == 'my-custom-table'
+
+
 def test_viewer_create_new(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper.new_viewers.keys()) == 0
     # passing [] should not load into a new viewer nor should it create a new viewer
@@ -168,8 +205,10 @@ def test_viewer_create_new(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper.viewers) == 1
     assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 2
 
-    # passing a string of a viewer that does not exist should create a viewer with that label
-    deconfigged_helper.load(spectrum1d, format='1D Spectrum', viewer='user-defined-viewer', data_label='data4')  # noqa
+    # passing a string of a viewer that does not exist in create_new.choices
+    # should default to the first viewer type in create_new.choices
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum',
+                            viewer='user-defined-viewer', data_label='data4')
     assert len(deconfigged_helper._app.data_collection) == 4
     assert len(deconfigged_helper.viewers) == 2
     assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 2
