@@ -29,8 +29,8 @@ def _check_header(path):
     """
     Cheaply check whether ``path`` could be loaded as any of the supported MOS
     products (image, catalog, 1D spectrum, 2D spectrum) by inspecting only the
-    FITS headers.  Returns an error string if the file can be ruled out, otherwise
-    an empty string.  This errs on the side of considering a file valid.
+    FITS headers. Returns an error string if the file can be ruled out, otherwise
+    an empty string. This errs on the side of considering a file valid.
     """
     if not _FITS_PATTERN.search(path.name):
         # non-FITS products (ecsv/csv catalogs) are cheap enough to load later
