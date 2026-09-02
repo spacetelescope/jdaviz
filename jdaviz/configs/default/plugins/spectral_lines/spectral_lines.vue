@@ -43,5 +43,53 @@
       ></v-text-field>
     </v-row>
 
+    <div v-if="component_lines.length">
+      <j-plugin-section-header>Lines in Component</j-plugin-section-header>
+
+      <div v-for="(line, line_ind) in component_lines" :key="line_ind" style="width: 100%">
+        <v-row class="row-no-vertical-padding-margin vuetify2" style="margin: 0px">
+          <v-col cols=9 style="padding: 0">
+            <span class='text--primary' style="overflow-wrap: anywhere; font-size: 16pt; padding-top: 3px;">
+              <b>{{ line.linename }}</b>
+            </span>
+          </v-col>
+          <v-col cols=3 align="right" style="padding: 0">
+            <v-btn
+              :color="line.show ? 'accent' : 'inherit'"
+              icon
+              variant="text"
+              density="compact"
+              @click="toggle_line_visibility(line_ind)">
+              <v-icon>{{ line.show ? "mdi-eye" : "mdi-eye-off" }}</v-icon>
+            </v-btn>
+          </v-col>
+        </v-row>
+        <v-row class="row-min-bottom-padding vuetify2">
+          <v-col cols=6 style="padding-bottom: 3px; padding-top: 0px">
+            <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Rest</b></v-subheader>
+            <v-text-field
+              :model-value="line.rest"
+              class="mt-0 pt-0"
+              density="compact"
+              :hint="line.unit"
+              persistent-hint
+              disabled
+            ></v-text-field>
+          </v-col>
+          <v-col cols=6 style="padding-top: 0px">
+            <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Observed</b></v-subheader>
+            <v-text-field
+              :model-value="line.obs"
+              class="mt-0 pt-0"
+              density="compact"
+              :hint="line.unit"
+              persistent-hint
+              disabled
+            ></v-text-field>
+          </v-col>
+        </v-row>
+      </div>
+    </div>
+
   </j-tray-plugin>
 </template>

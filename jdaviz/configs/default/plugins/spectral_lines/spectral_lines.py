@@ -24,6 +24,10 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
     # with the corresponding entry in self._components
     component_redshift = FloatHandleEmpty(0).tag(sync=True)
 
+    # read-only: per-line info (name, rest, obs, show) for the currently
+    # selected component, for display in the UI
+    component_lines = List().tag(sync=True)
+
     # read-only: label of the data-collection table holding the spectral lines.
     # each component corresponds to a 'rest wavelength:<component>' column in
     # this table.
@@ -94,7 +98,8 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
 
     def _default_component_info(self):
         """Default entry stored per-component in ``self._components``."""
-        return {'redshift': 0.0}
+        # 'show' maps line-table row index to visibility (defaults to True)
+        return {'redshift': 0.0, 'show': {}}
 
     @staticmethod
     def _component_col_name(lbl):
@@ -136,6 +141,56 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
         self._app._jdaviz_helper._set_data_component(
             data, self._component_col_name(lbl), data[source_cid] * (1 + redshift)
         )
+
+    def _get_line_names(self, data):
+        """Values of a line-name-like column in ``data``, or None."""
+        for cid in data.components:
+            if cid.label.lower() in ('linename', 'line_name', 'name', 'line', 'id', 'label'):
+                comp = data.get_component(cid)
+                # categorical (string) components store original values in .labels
+                return comp.labels if hasattr(comp, 'labels') else data[cid]
+        return None
+
+    def _update_component_lines(self):
+        """
+        Rebuild ``component_lines`` (name, rest, observed wavelength, and
+        visibility of each line) for the currently selected component.
+        """
+        data = self._get_line_table_data()
+        source_col = (data.meta.get('_jdaviz_loader_spectral_loc_col')
+                      if data is not None else None)
+        source_cid = (self._get_data_component_id(data, source_col)
+                      if source_col is not None else None)
+        if source_cid is None:
+            self.component_lines = []
+            return
+
+        if self.component_selected:
+            info = self._components.setdefault(self.component_selected,
+                                               self._default_component_info())
+        else:
+            info = self._default_component_info()
+
+        rest_values = data[source_cid]
+        unit = data.get_component(source_cid).units or ''
+        names = self._get_line_names(data)
+
+        self.component_lines = [
+            {'linename': str(names[i]) if names is not None else f'Line {i + 1}',
+             'rest': float(rest),
+             'obs': float(rest) * (1 + info['redshift']),
+             'unit': unit,
+             'show': bool(info['show'].get(i, True))}
+            for i, rest in enumerate(rest_values)
+        ]
+
+    def vue_toggle_line_visibility(self, line_ind):
+        if not self.component_selected:
+            return
+        info = self._components.setdefault(self.component_selected,
+                                           self._default_component_info())
+        info['show'][line_ind] = not info['show'].get(line_ind, True)
+        self._update_component_lines()
 
     def _remove_component_column(self, lbl):
         data = self._get_line_table_data()
@@ -186,6 +241,8 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
         finally:
             self._syncing_component_info = False
 
+        self._update_component_lines()
+
     @observe('component_redshift')
     def _on_component_redshift_changed(self, change):
         if self._syncing_component_info or not self.component_selected:
@@ -198,6 +255,7 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
         self._components[self.component_selected]['redshift'] = self.component_redshift
         # recompute this component's column from the original values
         self._add_component_column(self.component_selected)
+        self._update_component_lines()
 
     @property
     def user_api(self):
@@ -221,9 +279,12 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
             self._components.setdefault(lbl, self._default_component_info())
             self._add_component_column(lbl, data=data)
 
+        self._update_component_lines()
+
     def _on_data_collection_delete(self, msg):
         if msg.data.label == self.line_table:
             self.line_table = ''
+            self._update_component_lines()
 
     def _on_data_renamed(self, msg):
         if msg.old_label == self.line_table:
