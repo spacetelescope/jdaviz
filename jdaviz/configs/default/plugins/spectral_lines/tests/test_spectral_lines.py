@@ -29,8 +29,10 @@ def test_spectral_lines_relevancy(deconfigged_helper, spectrum1d, image_nddata_w
 
 
 def test_spectral_lines_components(deconfigged_helper, spectrum1d):
-    # spectrum1d spans 6000-8000 AA
+    # load a spectrum1d that spans 6000-8000 angstrom
     deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='my_spec')
+
+    # 'plugins' dict only exposes relevant plugins, so fetch from tray directly
     plugin = deconfigged_helper._app.get_tray_item_from_name('g-spectral-lines')
 
     # import a line list with lines in range of the loaded spectrum

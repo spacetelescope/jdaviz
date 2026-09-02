@@ -230,37 +230,37 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
             self.line_table = msg.new_label
 
     def _update_loader_items(self):
-            # kind of hacky override to restrict loaders to 'spectral line database'
-            # source only from the plugin. this is necessary because the spectral line
-            # database loader uses BaseImporterToDataCollection and not 
-            # BaseImporterToPlugin, which I decided to keep in order to allow the user
-            # to load the spectral line list into the data collection / table viewers etc.
-            # but restrict source and format to only Spectral Line Database here.
-            
-            def open_accordion():
-                self.open_in_tray()
-                self.loader_panel_ind = 0
-    
-            def close_accordion():
-                self.loader_panel_ind = None
-    
-            def set_active_loader(resolver):
-                self.loader_selected = resolver
-    
-            import jdaviz.core.loaders  # noqa
-            from jdaviz.core.registries import loader_resolver_registry
-            Resolver = loader_resolver_registry.members.get('spectral line database')
-            if Resolver is None:
-                self.loader_items = []
-                return
-            loader = Resolver(app=self._app,
-                              open_callback=open_accordion,
-                              close_callback=close_accordion,
-                              set_active_loader_callback=set_active_loader)
-            self.loader_items = [{
-                'name': 'spectral line database',
-                'label': 'spectral line database',
-                'requires_api_support': loader.requires_api_support,
-                'widget': 'IPY_MODEL_' + loader.model_id
-            }]
-            self.loader_selected = 'spectral line database'
+        # kind of hacky override to restrict loaders to 'spectral line database'
+        # source only from the plugin. this is necessary because the spectral line
+        # database loader uses BaseImporterToDataCollection and not
+        # BaseImporterToPlugin, which I decided to keep in order to allow the user
+        # to load the spectral line list into the data collection / table viewers etc.
+        # but restrict source and format to only Spectral Line Database here.
+
+        def open_accordion():
+            self.open_in_tray()
+            self.loader_panel_ind = 0
+
+        def close_accordion():
+            self.loader_panel_ind = None
+
+        def set_active_loader(resolver):
+            self.loader_selected = resolver
+
+        import jdaviz.core.loaders  # noqa
+        from jdaviz.core.registries import loader_resolver_registry
+        Resolver = loader_resolver_registry.members.get('spectral line database')
+        if Resolver is None:
+            self.loader_items = []
+            return
+        loader = Resolver(app=self._app,
+                          open_callback=open_accordion,
+                          close_callback=close_accordion,
+                          set_active_loader_callback=set_active_loader)
+        self.loader_items = [{
+            'name': 'spectral line database',
+            'label': 'spectral line database',
+            'requires_api_support': loader.requires_api_support,
+            'widget': 'IPY_MODEL_' + loader.model_id
+        }]
+        self.loader_selected = 'spectral line database'

@@ -105,6 +105,10 @@ New Features
 
 - Adds search to extension menu in loaders when there are more than 3 extensions available. [#4372]
 
+- Initial addition of the Spectral Lines plugin, which provides tools for managing
+  and analyzing spectral line data, grouping these lines by components for easier
+  management and analysis. This plugin will eventually replace the Line Lists plugin. [#4375]
+
 Mosviz
 ^^^^^^
 

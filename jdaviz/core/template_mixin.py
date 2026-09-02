@@ -590,7 +590,6 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         for name, Resolver in loader_resolver_registry.members.items():
             if name in disabled_loaders:
                 continue
-            print('', name, self._registry_label)
             loader = Resolver(app=self._app,
                               open_callback=open_accordion,
                               close_callback=close_accordion,
