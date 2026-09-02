@@ -109,6 +109,8 @@ export default {
       default: true
     }
   },
+  // Declare emitted events so Vue 3 knows which custom events this component can emit.
+  emits: ['input', 'cancel', 'rename'],
   data() {
     return {
       hovering: false,
