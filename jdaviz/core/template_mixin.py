@@ -4275,8 +4275,12 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                        simplify_spectral=True,
                                        use_display_units=True)
             spectrum = extract_region(full_spectrum, sr, return_single_spectrum=True)
-            sr_lower = np.nanmin(spectrum.spectral_axis[spectrum.spectral_axis >= sr.lower])  # noqa
-            sr_upper = np.nanmax(spectrum.spectral_axis[spectrum.spectral_axis <= sr.upper])  # noqa
+            # work with plain (unmasked) values/Quantities to avoid issues comparing a
+            # SpectralAxis directly against a (possibly masked) Quantity
+            axis_value = spectrum.spectral_axis.value
+            axis_unit = spectrum.spectral_axis.unit
+            sr_lower = np.nanmin(axis_value[axis_value >= sr.lower.value]) * axis_unit
+            sr_upper = np.nanmax(axis_value[axis_value <= sr.upper.value]) * axis_unit
 
         if self.continuum_subset_selected == 'None':
             self._update_continuum_marks()
@@ -4341,8 +4345,9 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                 continuum_subset = self._app.get_subsets(self.continuum_subset_selected,
                                                          simplify_spectral=True,
                                                          use_display_units=True)
-                continuum_mask = ((spectral_axis >= continuum_subset.lower) &
-                                  (spectral_axis <= continuum_subset.upper))
+                # compare on .value (both are already in display units)
+                continuum_mask = ((spectral_axis.value >= continuum_subset.lower.value) &
+                                  (spectral_axis.value <= continuum_subset.upper.value))
             else:
                 continuum_mask = ~continuum.mask
             spectral_axis_nanmasked = spectral_axis.value.copy()

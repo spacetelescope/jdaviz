@@ -424,6 +424,50 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
     np.testing.assert_allclose(float(plugin.get_results()[0]['result']), 1.482418e-14, atol=1e-16)
 
 
+@pytest.mark.parametrize('spectral_subset', ['Entire Spectrum', 'Subset 1'])
+def test_continuum_subset_no_mask(deconfigged_helper, spectrum1d, spectral_subset):
+    # Regression test for using a subset (rather than the full spectrum) as both the
+    # data and the continuum, when there's no underlying spectral axis mask.
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='1D Spectrum')
+
+    axis_value = spectrum1d.spectral_axis.value
+    flux_value = spectrum1d.flux.value
+
+    data_lower, data_upper = sorted((axis_value[2], axis_value[-3]))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        data_lower * u.AA, data_upper * u.AA))
+
+    continuum_lower, continuum_upper = sorted((axis_value[3], axis_value[-4]))
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        continuum_lower * u.AA, continuum_upper * u.AA))
+
+    plg = deconfigged_helper.plugins['Line Analysis']
+    assert 'Subset 1' in plg.spectral_subset.labels
+    assert 'Subset 2' in plg.spectral_subset.labels
+    plg.spectral_subset = spectral_subset
+    plg.continuum = 'Subset 2'
+
+    # sanity check that this test is actually exercising the `mask is None` code path
+    continuum_data = deconfigged_helper.get_data(
+        '1D Spectrum', spectral_subset='Subset 2', use_display_units=True)
+    assert continuum_data.mask is None
+
+    spectrum_out, continuum, spec_subtracted = plg._obj._get_continuum(
+        plg.dataset, plg.spectral_subset, update_marks=False)
+    assert spectrum_out is not None
+    assert continuum is not None
+
+    # continuum should be a linear fit over the continuum subset ("Subset 2"), evaluated
+    # at the spectral axis values of the extracted data subset ("Subset 1")
+    continuum_mask = (axis_value >= continuum_lower) & (axis_value <= continuum_upper)
+    min_x = axis_value.min()
+    slope, intercept = np.polyfit(axis_value[continuum_mask] - min_x,
+                                  flux_value[continuum_mask], deg=1)
+    expected_continuum = slope * (spectrum_out.spectral_axis.value - min_x) + intercept
+
+    np.testing.assert_allclose(continuum, expected_continuum, rtol=1e-10)
+
+
 def test_continuum_surrounding_no_right(deconfigged_helper, spectrum1d):
     label = "Test 1D Spectrum"
     deconfigged_helper.load(spectrum1d, data_label=label, format='1D Spectrum')
