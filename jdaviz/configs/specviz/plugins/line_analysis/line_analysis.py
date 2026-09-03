@@ -352,7 +352,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         centroid = float(params[4]['result']) * u.Unit(params[4]['unit'])
 
         # have to convert from integrated line flux to peak amplitude
-        amplitude_flam = (line_flux / (sigma * np.sqrt(2 * np.pi))).to(u.Unit(params[0]['unit']/u.Unit(params[2]['unit']))) # noqa
+        amplitude_flam = line_flux.to(u.Unit(params[0]['unit'])) / (sigma * np.sqrt(2 * np.pi)).to(u.Unit(params[2]['unit'])) # noqa
         try:
             amplitude_jy = amplitude_flam.to(u.Jy, equivalencies=u.spectral_density(centroid))
         except UnitConversionError:
