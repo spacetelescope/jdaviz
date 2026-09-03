@@ -31,6 +31,32 @@ def test_spectral_lines_relevancy(deconfigged_helper, spectrum1d, image_nddata_w
     assert 'Spectral Lines' not in deconfigged_helper.plugins
 
 
+def test_spectral_lines_relevancy_table_viewer(deconfigged_helper):
+
+    deconfigged_helper._app.state.dev_spectral_lines_plugin = True
+
+    plugin = deconfigged_helper._app.get_tray_item_from_name('g-spectral-lines')
+
+    # no viewers at all yet, plugin should be irrelevant
+    assert plugin.irrelevant_msg != ''
+
+    # load a line list into a table viewer (no spectrum viewer involved)
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = QTable({'wavelength': [6562.8, 7000.0] * u.AA, 'name': ['Ha', 'line2']})
+    ldr.format = 'Spectral Lines'
+    importer = ldr.importer
+    importer.viewer.create_new = 'Table'
+    importer()
+
+    # a table viewer showing spectral-line data should make the plugin relevant
+    # even without a spectrum viewer
+    assert plugin.irrelevant_msg == ''
+
+    # removing the table viewer's data should make it irrelevant again
+    deconfigged_helper._app.data_item_remove(deconfigged_helper._app.data_collection[0].label)
+    assert plugin.irrelevant_msg != ''
+
+
 def test_spectral_lines_components(deconfigged_helper, spectrum1d):
 
     deconfigged_helper._app.state.dev_spectral_lines_plugin = True

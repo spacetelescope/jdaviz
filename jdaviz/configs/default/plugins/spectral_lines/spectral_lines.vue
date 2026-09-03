@@ -4,8 +4,21 @@
     :link="docs_link"
     :irrelevant_msg="irrelevant_msg"
     :disabled_msg="disabled_msg"
+
   >
 
+    <j-plugin-section-header>Add Spectral Lines</j-plugin-section-header>
+
+    <plugin-loaders-panel
+      v-if="!server_is_remote"
+      v-model:loader_panel_ind="loader_panel_ind"
+      :loader_items="loader_items"
+      v-model:loader_selected="loader_selected"
+      :api_hints_enabled="api_hints_enabled"
+      style="margin-bottom: 12px"
+    ></plugin-loaders-panel>
+
+    <j-plugin-section-header>Select Component to Modify</j-plugin-section-header>
     <plugin-editable-select
       v-model:mode="component_mode"
       v-model:edit_value="component_edit_value"
@@ -19,17 +32,6 @@
       :api_hints_enabled="api_hints_enabled"
       hint="Current selected kinematic component. Select or create new to modify."
     ></plugin-editable-select>
-
-    <j-plugin-section-header>Add Spectral Lines to Component</j-plugin-section-header>
-
-    <plugin-loaders-panel
-      v-if="!server_is_remote"
-      v-model:loader_panel_ind="loader_panel_ind"
-      :loader_items="loader_items"
-      v-model:loader_selected="loader_selected"
-      :api_hints_enabled="api_hints_enabled"
-      style="margin-bottom: 12px"
-    ></plugin-loaders-panel>
 
     <j-plugin-section-header>Redshift</j-plugin-section-header>
 

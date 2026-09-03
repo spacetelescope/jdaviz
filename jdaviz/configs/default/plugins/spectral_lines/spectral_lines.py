@@ -91,13 +91,27 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
         if not getattr(self._app.state, 'dev_spectral_lines_plugin', False):
             return 'Spectral Lines unavailable (requires dev_spectral_lines_plugin to be enabled)'
 
-        if not len(self.viewer_items) or self.viewer.selected_obj is None:
-            return 'Spectral Lines unavailable without spectrum viewer'
+        has_spectrum_data = (len(self.viewer_items) > 0
+                            and self.viewer.selected_obj is not None
+                            and len(self.viewer.selected_obj.state.layers) > 0)
 
-        if not len(self.viewer.selected_obj.state.layers):
-            return 'Spectral Lines unavailable without data loaded in spectrum viewer'
+        if has_spectrum_data or self._table_viewer_has_line_table():
+            return ''
 
-        return ''
+        return ('Spectral Lines unavailable without either data loaded in a spectrum '
+                'viewer or a line list loaded in a table viewer')
+
+    def _table_viewer_has_line_table(self):
+        """Whether any table viewer is currently displaying data loaded via the
+        Spectral Line Database loader."""
+        from jdaviz.configs.default.plugins.viewers import JdavizTableViewer
+        for viewer in self._app._viewer_store.values():
+            if not isinstance(viewer, JdavizTableViewer):
+                continue
+            for layer in viewer.state.layers:
+                if getattr(layer.layer, 'meta', {}).get('_importer') == 'SpectralLinesImporter':
+                    return True
+        return False
 
     def _default_component_info(self):
         """Default entry stored per-component in ``self._components``."""
