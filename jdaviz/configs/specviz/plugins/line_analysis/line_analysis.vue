@@ -1,5 +1,3 @@
-<script setup>
-</script>
 <template>
   <j-tray-plugin
     :config="config"
@@ -105,7 +103,7 @@
     <!-- Toggle for plotting Gaussian spectrum and marks --><j-flex-row>
     <v-switch
         v-model="plot_gaussian_params"
-        label="Plot Gaussian"
+        :label="api_hints_enabled ? 'plg.plot_gaussian_params = True' : 'Plot Gaussian'"
         hint="When enabled, plots the Gaussian fit spectrum, and marks the centroid and FWHM."
         persistent-hint
         :disabled="!results_available"

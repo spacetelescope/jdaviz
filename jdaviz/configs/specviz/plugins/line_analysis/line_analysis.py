@@ -262,11 +262,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             mark.visible = self.is_active
 
         # control analysis marks visibility
-        if hasattr(self, '_gaussian_spectrum') and self._gaussian_spectrum is not None:
+        if getattr(self, '_gaussian_spectrum', None) is not None:
             self._gaussian_spectrum.visible = self.is_active
-        if hasattr(self, '_centroid_line') and self._centroid_line is not None:
+        if getattr(self, '_centroid_line', None) is not None:
             self._centroid_line.visible = self.is_active
-        if hasattr(self, '_fwhm_line') and self._fwhm_line is not None:
+        if getattr(self, '_fwhm_line', None) is not None:
             self._fwhm_line.visible = self.is_active
 
         if self.is_active:
@@ -338,11 +338,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
     @observe("dataset_selected", "dataset_items")
     def _set_default_results_label(self, event={}):
-        label_comps = []
+        label_comps = ''
         if hasattr(self, 'dataset') and (len(self.dataset.labels) > 1):  # noqa
-            label_comps += [self.dataset_selected]
-        label_comps += ["fit"]
-        self.results_label_default = " ".join(label_comps)
+            label_comps += f'{self.dataset_selected} '
+        label_comps += "fit"
+        self.results_label_default = label_comps
 
     def _get_gaussian_parameters(self):
         params = self.results
@@ -387,8 +387,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             return None
 
         line = PluginLine(viewer=self.spectrum_viewer,
-                          x=gaussian_spectrum.wavelength,
-                          y=gaussian_spectrum.flux,
+                          x=gaussian_spectrum.wavelength.to(x_display_unit),
+                          y=gaussian_spectrum.flux.to(y_display_unit),
                           colors=['#D41159'],
                           stroke_width=2,
                           line_style='solid')
@@ -511,7 +511,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             spec_viewer.figure.send_state('marks')
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
-                f"failed to plot analysis marks: {e}", sender=self,
+                f"Failed to plot analysis marks: {e}", sender=self,
                 color="warning", traceback=e))
 
     @observe('plot_gaussian_params')
