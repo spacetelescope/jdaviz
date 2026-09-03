@@ -42,5 +42,5 @@ def test_recipe_json_rejects_unsupported_values(value):
 def test_recipe_json_rejects_invalid_or_unknown_payloads():
     with pytest.raises(ValueError, match='invalid'):
         decode_row_sync_recipe('{')
-    with pytest.raises(ValueError, match='schema version'):
-        decode_row_sync_recipe('{"schema_version":2,"values":{}}')
+    assert decode_row_sync_recipe('{"schema_version":2,"values":{}}') == {}
+    assert decode_row_sync_recipe('{"values":{}}') == {}

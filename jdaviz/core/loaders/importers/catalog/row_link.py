@@ -521,7 +521,6 @@ class CatalogRowLinkManager(HubListener):
             metadata.update({
                 'storage': 'json',
                 'group': declaration.group,
-                'schema_version': declaration.schema_version,
                 'members': [
                     {'attribute': member.attribute,
                      'value_kind': member.value_kind,
@@ -546,7 +545,7 @@ class CatalogRowLinkManager(HubListener):
     def _read_plugin_declaration(plugin, declaration):
         if isinstance(declaration, PluginTableRowSyncGroup):
             values = plugin.read_table_row_sync_group(declaration)
-            return encode_row_sync_recipe(values, declaration.schema_version)
+            return encode_row_sync_recipe(values)
         return plugin.read_table_row_sync_attribute(declaration)
 
     def _reconcile_plugin_columns(self, catalog=None):
@@ -562,7 +561,7 @@ class CatalogRowLinkManager(HubListener):
                 except Exception:  # nosec
                     continue
                 if isinstance(declaration, PluginTableRowSyncGroup):
-                    decoded = decode_row_sync_recipe(value, declaration.schema_version)
+                    decoded = decode_row_sync_recipe(value)
                     if any(member.value_kind == 'data_label'
                            and not member.manual_values
                            and not decoded.get(member.attribute)
@@ -653,7 +652,7 @@ class CatalogRowLinkManager(HubListener):
             try:
                 value = catalog.get_component(column_name).data[active_row]
                 if isinstance(declaration, PluginTableRowSyncGroup):
-                    value = decode_row_sync_recipe(value, declaration.schema_version)
+                    value = decode_row_sync_recipe(value)
                 elif value == '':
                     continue
                 self._applying_plugin_state.add(id(plugin))
@@ -710,7 +709,7 @@ class CatalogRowLinkManager(HubListener):
                 new_values = []
                 for value in values:
                     try:
-                        recipe = decode_row_sync_recipe(value, target.get('schema_version', 1))
+                        recipe = decode_row_sync_recipe(value)
                     except ValueError:
                         new_values.append(value)
                         continue
@@ -720,8 +719,7 @@ class CatalogRowLinkManager(HubListener):
                                 and old_label not in member.get('manual_values', [])):
                             recipe[attribute] = new_label
                             changed = True
-                    new_values.append(encode_row_sync_recipe(
-                        recipe, target.get('schema_version', 1)))
+                    new_values.append(encode_row_sync_recipe(recipe))
             else:
                 continue
             if changed:

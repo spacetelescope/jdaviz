@@ -58,7 +58,6 @@ class PluginTableRowSyncGroup:
     members: tuple[PluginTableRowSync, ...]
     label: str | None = None
     direction: str = 'both'
-    schema_version: int = 1
 
     def __post_init__(self):
         _validate_identifier(self.group, 'group')
@@ -66,8 +65,6 @@ class PluginTableRowSyncGroup:
             raise ValueError(f"direction must be one of {_DIRECTIONS}")
         if not self.members:
             raise ValueError("members must contain at least one attribute")
-        if self.schema_version < 1:
-            raise ValueError("schema_version must be a positive integer")
         attributes = [member.attribute for member in self.members]
         if len(attributes) != len(set(attributes)):
             raise ValueError("group member attributes must be unique")
@@ -91,20 +88,21 @@ def _json_native(value):
     raise TypeError(f"unsupported row-sync recipe value: {type(value).__name__}")
 
 
-def encode_row_sync_recipe(values, schema_version=1):
+def encode_row_sync_recipe(values):
     """Return a canonical JSON string for a packed plugin recipe."""
-    payload = {'schema_version': schema_version, 'values': _json_native(values)}
+    payload = {'values': _json_native(values)}
     return json.dumps(payload, allow_nan=False, separators=(',', ':'), sort_keys=True)
 
 
-def decode_row_sync_recipe(value, schema_version=1):
-    """Decode and validate a packed plugin recipe JSON string."""
+def decode_row_sync_recipe(value):
+    """Decode and validate a packed plugin recipe JSON string.
+    """
     try:
         payload = json.loads(value)
     except (TypeError, json.JSONDecodeError) as exc:
         raise ValueError("invalid row-sync recipe JSON") from exc
-    if not isinstance(payload, dict) or payload.get('schema_version') != schema_version:
-        raise ValueError(f"unsupported row-sync recipe schema version; expected {schema_version}")
+    if not isinstance(payload, dict):
+        raise ValueError("row-sync recipe values must be a mapping")
     values = payload.get('values')
     if not isinstance(values, dict):
         raise ValueError("row-sync recipe values must be a mapping")
