@@ -92,8 +92,8 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
             return 'Spectral Lines unavailable (requires dev_spectral_lines_plugin to be enabled)'
 
         has_spectrum_data = (len(self.viewer_items) > 0
-                            and self.viewer.selected_obj is not None
-                            and len(self.viewer.selected_obj.state.layers) > 0)
+                             and self.viewer.selected_obj is not None
+                             and len(self.viewer.selected_obj.state.layers) > 0)
 
         if has_spectrum_data or self._table_viewer_has_line_table():
             return ''
@@ -308,12 +308,11 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
             self.line_table = msg.new_label
 
     def _update_loader_items(self):
-        # kind of hacky override to restrict loaders to 'spectral line database'
-        # source only from the plugin. this is necessary because the spectral line
-        # database loader uses BaseImporterToDataCollection and not
-        # BaseImporterToPlugin, which I decided to keep in order to allow the user
-        # to load the spectral line list into the data collection / table viewers etc.
-        # but restrict source and format to only Spectral Line Database here.
+        # override to skip restrict_to_target: the Spectral Line Database loader
+        # (and any other source loading spectral lines) uses BaseImporterToDataCollection
+        # rather than BaseImporterToPlugin, so importers would never match this plugin's
+        # target if restricted. Instead, just default the source to the Spectral Line
+        # Database loader.
 
         def open_accordion():
             self.open_in_tray()
@@ -327,18 +326,34 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
 
         import jdaviz.core.loaders  # noqa
         from jdaviz.core.registries import loader_resolver_registry
-        Resolver = loader_resolver_registry.members.get('spectral line database')
-        if Resolver is None:
-            self.loader_items = []
-            return
-        loader = Resolver(app=self._app,
-                          open_callback=open_accordion,
-                          close_callback=close_accordion,
-                          set_active_loader_callback=set_active_loader)
-        self.loader_items = [{
-            'name': 'spectral line database',
-            'label': 'spectral line database',
-            'requires_api_support': loader.requires_api_support,
-            'widget': 'IPY_MODEL_' + loader.model_id
-        }]
-        self.loader_selected = 'spectral line database'
+
+        disabled_loaders = self._app.state.settings.get('disabled_loaders')
+        if disabled_loaders is None:
+            # Default: disable loaders based on server_is_remote setting
+            if self._app.state.settings.get('server_is_remote', False):
+                disabled_loaders = ['file', 'file drop', 'url', 'object',
+                                    'astroquery', 'virtual observatory']
+            else:
+                disabled_loaders = []
+
+        loader_items = []
+        for name, Resolver in loader_resolver_registry.members.items():
+            if name in disabled_loaders:
+                continue
+            loader = Resolver(app=self._app,
+                              open_callback=open_accordion,
+                              close_callback=close_accordion,
+                              set_active_loader_callback=set_active_loader)
+            loader_items.append({
+                'name': name,
+                'label': name,
+                'requires_api_support': loader.requires_api_support,
+                'widget': 'IPY_MODEL_' + loader.model_id
+            })
+        self.loader_items = loader_items
+
+        default_name = 'spectral line database'
+        if any(item['name'] == default_name for item in loader_items):
+            self.loader_selected = default_name
+        elif len(loader_items):
+            self.loader_selected = loader_items[0]['name']
