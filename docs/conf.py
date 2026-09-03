@@ -246,22 +246,37 @@ html_logo = 'logos/jdaviz_wordmark.svg'
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = 'logos/jdaviz_favicon.png'
+html_favicon = 'logos/specviz2d.ico'
 
-# 3. Configure the explicit rules Safari expects
-favicons = [
-    {
-        "rel": "icon",
-        "type": "image/png",
-        "sizes": "16x16",
-        "href": "logos/jdaviz_favicon.png", # Path relative to your _static/ directory
-    },
-    {
-        "rel": "apple-touch-icon",
-        "sizes": "180x180",
-        "href": "logos/jdaviz_favicon.png",
-    }
-]
+# favicons = [
+#     {
+#         "rel": "icon",
+#         "type": "image/png",
+#         "sizes": "32x32",
+#         "href": "logos/jdaviz_favicon.png",
+#     },
+#     {
+#         "rel": "icon",
+#         "type": "image/png",
+#         "sizes": "32x32",
+#         "href": "logos/jdaviz_favicon.png",
+#     },
+#     {
+#         "rel": "shortcut icon",
+#         "type": "image/png",
+#         "href": "logos/jdaviz_favicon.png",
+#     },
+#     {
+#         "rel": "apple-touch-icon",
+#         "sizes": "180x180",
+#         "href": "logos/jdaviz_favicon.png",
+#     },
+#     {
+#         "rel": "mask-icon",
+#         "href": "logos/jdaviz_wordmark.svg",
+#         "color": "#007DA4",
+#     }
+# ]
 
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
