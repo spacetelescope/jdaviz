@@ -88,6 +88,9 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
         if not hasattr(self, 'viewer'):
             return None
 
+        if not getattr(self._app.state, 'dev_spectral_lines_plugin', False):
+            return 'Spectral Lines unavailable (requires dev_spectral_lines_plugin to be enabled)'
+
         if not len(self.viewer_items) or self.viewer.selected_obj is None:
             return 'Spectral Lines unavailable without spectrum viewer'
 

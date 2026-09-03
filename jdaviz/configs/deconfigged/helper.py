@@ -15,3 +15,4 @@ class App(ConfigHelper, LineListMixin):
         # Temporary during deconfig process
         self.load = self._load
         self._app.state.dev_loaders = True
+        self._app.state.dev_spectral_lines_plugin = True

@@ -12,17 +12,18 @@ Description
 ===========
 
 The Spectral Lines plugin loads a spectral line list and organizes lines into
-one or more named "components" (group of lines). Each component tracks its own
-redshift, which is applied to the component's lines to compute their observed
-wavelengths independently of other components. These changes are reflected in the
-displayed observed wavelengths for each line in both the plugin and in the
-associated data table.
+one or more named "components". Each component tracks its own redshift, which is
+applied to the lines to compute their observed wavelengths independently of other
+components. These changes are reflected in the displayed observed wavelengths
+for each line in both the plugin and in the associated data table.
 
 .. warning::
 
    The Spectral Lines plugin is still under active development. The API is
    not yet fully exposed, line plotting functionality has not been implemented
    yet, and there are planned changes to the interface for loading lines.
+   It is currently only available when developer mode for spectral lines is
+   enabled (``app.state.dev_spectral_lines = True``).
 
 **Key Features:**
 

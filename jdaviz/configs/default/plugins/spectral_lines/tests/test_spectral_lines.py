@@ -5,6 +5,9 @@ from numpy.testing import assert_allclose
 
 
 def test_spectral_lines_relevancy(deconfigged_helper, spectrum1d, image_nddata_wcs):
+
+    deconfigged_helper._app.state.dev_spectral_lines_plugin = True
+
     # 'plugins' dict only exposes relevant plugins, so fetch from tray directly
     plugin = deconfigged_helper._app.get_tray_item_from_name('g-spectral-lines')
 
@@ -29,6 +32,9 @@ def test_spectral_lines_relevancy(deconfigged_helper, spectrum1d, image_nddata_w
 
 
 def test_spectral_lines_components(deconfigged_helper, spectrum1d):
+
+    deconfigged_helper._app.state.dev_spectral_lines_plugin = True
+
     # load a spectrum1d that spans 6000-8000 angstrom
     deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='my_spec')
 
