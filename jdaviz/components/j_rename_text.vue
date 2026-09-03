@@ -109,6 +109,10 @@ export default {
       default: true
     }
   },
+  // Declare emitted events so Vue 3 does not also fall them through to the root
+  // element as native DOM listeners (the bubbling native `input` event would
+  // otherwise deliver an InputEvent instead of the edited string).
+  emits: ['input', 'cancel', 'rename'],
   data() {
     return {
       hovering: false,
