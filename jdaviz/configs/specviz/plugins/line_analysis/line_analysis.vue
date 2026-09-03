@@ -100,7 +100,8 @@
 
     <j-plugin-section-header>Gaussian Fit Results</j-plugin-section-header>
     <j-flex-row>  <j-docs-link>Automatically generate and plot a Gaussian model using the line analysis results. </j-docs-link></j-flex-row>
-    <!-- Toggle for plotting Gaussian spectrum and marks --><j-flex-row>
+    <!-- Toggle for plotting Gaussian spectrum and marks -->
+    <j-flex-row>
     <v-switch
         v-model="plot_gaussian_params"
         :label="api_hints_enabled ? 'plg.plot_gaussian_params = True' : 'Plot Gaussian'"

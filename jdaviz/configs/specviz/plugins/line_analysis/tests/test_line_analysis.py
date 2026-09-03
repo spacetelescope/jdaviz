@@ -694,7 +694,7 @@ def test_plot_line_analysis(deconfigged_helper):
     # 2 vertical marks: 1 for centroid line, 1 for sliceindicator
     assert len(vert_marks) == 2
 
-    # When gaussian toggled off, 3 marks should disappear
+    # When plot_gaussian_params toggled off, 3 marks should disappear
     la.plot_gaussian_params = False
     sv = deconfigged_helper._app.get_viewer('1D Spectrum')
     all_plugin_marks = [m for m in sv.figure.marks if isinstance(m, PluginLine)]
