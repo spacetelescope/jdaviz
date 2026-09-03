@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from astropy.nddata import NDData
 import astropy.units as u
 from regions import CirclePixelRegion, PixCoord
@@ -76,8 +77,10 @@ def test_rename_data_and_subsets(deconfigged_helper, image_hdu_wcs):
 
 def test_check_rename_non_string_new_label(deconfigged_helper, image_hdu_wcs):
     """
-    A frontend event can deliver a non-string ``new_label`` (e.g. a
-    dict); ``vue_check_rename`` should handle it instead of raising.
+    A frontend event can deliver a benign non-string ``new_label`` (None or an
+    empty dict from a serialized InputEvent); ``vue_check_rename`` should treat
+    those as "nothing to validate" instead of raising.  Any other unexpected
+    shape (e.g. a non-empty dict) is deliberately left to surface.
     """
     deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='original_data')
 
@@ -88,6 +91,11 @@ def test_check_rename_non_string_new_label(deconfigged_helper, image_hdu_wcs):
     dm.vue_check_rename({'old_label': 'original_data', 'new_label': None, 'is_subset': False})
 
     assert dm.rename_error_messages == {}
+
+    # An unexpected (non-empty) dict is not swallowed so the regression surfaces.
+    with pytest.raises(AttributeError):
+        dm.vue_check_rename({'old_label': 'original_data',
+                             'new_label': {'value': 'x'}, 'is_subset': False})
 
 
 def test_only_compatible_subsets_in_menu(deconfigged_helper, image_hdu_wcs, spectrum1d):
