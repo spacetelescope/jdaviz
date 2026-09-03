@@ -30,6 +30,7 @@ def test_recipe_json_is_canonical_and_normalizes_numpy_scalars():
 
     assert first == second
     assert decode_row_sync_recipe(first) == {'enabled': True, 'width': 3}
+    assert decode_row_sync_recipe('{"enabled":true,"width":3}') == {'enabled': True, 'width': 3}
 
 
 @pytest.mark.parametrize('value', [np.nan, np.inf, object()])
@@ -42,5 +43,5 @@ def test_recipe_json_rejects_unsupported_values(value):
 def test_recipe_json_rejects_invalid_or_unknown_payloads():
     with pytest.raises(ValueError, match='invalid'):
         decode_row_sync_recipe('{')
-    assert decode_row_sync_recipe('{"schema_version":2,"values":{}}') == {}
-    assert decode_row_sync_recipe('{"values":{}}') == {}
+    assert decode_row_sync_recipe('{}') == {}
+    assert decode_row_sync_recipe('{"enabled":true}') == {'enabled': True}

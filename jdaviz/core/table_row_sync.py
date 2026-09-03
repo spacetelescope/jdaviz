@@ -90,20 +90,15 @@ def _json_native(value):
 
 def encode_row_sync_recipe(values):
     """Return a canonical JSON string for a packed plugin recipe."""
-    payload = {'values': _json_native(values)}
-    return json.dumps(payload, allow_nan=False, separators=(',', ':'), sort_keys=True)
+    return json.dumps(_json_native(values), allow_nan=False, separators=(',', ':'), sort_keys=True)
 
 
 def decode_row_sync_recipe(value):
-    """Decode and validate a packed plugin recipe JSON string.
-    """
+    """Decode and validate a packed plugin recipe JSON string."""
     try:
         payload = json.loads(value)
     except (TypeError, json.JSONDecodeError) as exc:
         raise ValueError("invalid row-sync recipe JSON") from exc
     if not isinstance(payload, dict):
         raise ValueError("row-sync recipe values must be a mapping")
-    values = payload.get('values')
-    if not isinstance(values, dict):
-        raise ValueError("row-sync recipe values must be a mapping")
-    return values
+    return payload
