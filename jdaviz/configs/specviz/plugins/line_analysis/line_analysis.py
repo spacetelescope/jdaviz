@@ -546,7 +546,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
         spec_viewer.figure.send_state('marks')
 
-    @observe('spectral_subset_selected', 'continuum_subset_selected')
+    @observe('spectral_subset_selected', 'continuum_subset_selected',
+             'continuum_width')
     def _on_subset_changed_clear_marks(self, event):
         """Clear marks when subsets change (before recalculation happens)."""
         self._clear_analysis_marks()
