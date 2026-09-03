@@ -4328,13 +4328,23 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                              max(spectral_axis.value[continuum_mask])])}
 
         else:
-            # we'll access the mask of the continuum and then apply that to the spectrum.  For a
+            # we'll access the mask of the continuum and then apply that to the spectrum. For a
             # spatially-collapsed spectrum in cubeviz, this will access the mask from the full
             # cube, but still apply that to the spatially-collapsed spectrum.
-            continuum_mask = ~self._specviz_helper.get_data(
+            continuum = self._specviz_helper.get_data(
                 dataset.selected,
                 spectral_subset=self.continuum_subset_selected,
-                use_display_units=True).mask
+                use_display_units=True)
+            if continuum.mask is None:
+                # No masked pixels in the continuum subset. Create a mask for the full spectrum
+                # based on the continuum subset bounds
+                continuum_subset = self._app.get_subsets(self.continuum_subset_selected,
+                                                         simplify_spectral=True,
+                                                         use_display_units=True)
+                continuum_mask = ((spectral_axis >= continuum_subset.lower) &
+                                  (spectral_axis <= continuum_subset.upper))
+            else:
+                continuum_mask = ~continuum.mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
             if not update_marks:
