@@ -17,7 +17,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         EditableSelectPluginComponent, SelectPluginComponent,
                                         FileImportSelectPluginComponent, HasFileImportSelect,
                                         CustomToolbarToggleMixin, LoadersMixin)
-from jdaviz.core.table_row_sync import PluginTableRowSync
+from jdaviz.core.table_row_sync import PluginTableRowSync, PluginTableRowSyncGroup
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 
@@ -173,7 +173,19 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
     """
     template_file = __file__, "footprints.vue"
     table_row_sync = (
-        PluginTableRowSync('pa', 'pa', selectors=(('overlay', 'default'),)),
+        PluginTableRowSyncGroup(
+            'overlay_state', (
+                PluginTableRowSync('ra', 'ra', selectors=(('overlay', 'default'),)),
+                PluginTableRowSync('dec', 'dec', selectors=(('overlay', 'default'),)),
+                PluginTableRowSync('pa', 'pa', selectors=(('overlay', 'default'),)),
+                PluginTableRowSync('preset', 'preset_selected', value_kind='enum',
+                                  selectors=(('overlay', 'default'),)),
+                PluginTableRowSync('v2_offset', 'v2_offset',
+                                  selectors=(('overlay', 'default'),)),
+                PluginTableRowSync('v3_offset', 'v3_offset',
+                                  selectors=(('overlay', 'default'),)),
+            ),
+            label='Footprints[overlay=default]'),
     )
     uses_active_status = Bool(True).tag(sync=True)
 
@@ -353,6 +365,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
                                            'disable_footprint_selection_tools'))
 
     def _get_marks(self, viewer, overlay=None):
+        if not hasattr(viewer, 'figure'):
+            return []
         matches = [mark for mark in viewer.figure.marks
                    if (isinstance(mark, FootprintOverlay) and
                        (mark.overlay == overlay or overlay is None))]
@@ -422,7 +436,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         if overlay is not None:
             if overlay not in self._overlays:
                 return getattr(self, descriptor.traitlet)
-            return self._overlays[overlay][descriptor.attribute]
+            return self._overlays[overlay].get(descriptor.attribute,
+                                               getattr(self, descriptor.traitlet))
         return super().read_table_row_sync_attribute(descriptor)
 
     def apply_table_row_sync_attribute(self, descriptor, value):
@@ -486,16 +501,20 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
 
     def _on_overlay_add(self, lbl):
         declarations = list(self.table_row_sync)
-        existing = {(declaration.attribute, declaration.selectors)
+        existing = {(type(declaration), declaration.label)
                     for declaration in declarations}
         for declaration in tuple(declarations):
-            selectors = dict(declaration.selectors)
+            if isinstance(declaration, PluginTableRowSyncGroup):
+                selectors = dict(declaration.members[0].selectors)
+            else:
+                selectors = dict(declaration.selectors)
             if 'overlay' not in selectors:
                 continue
             added = declaration.rename_selector('overlay', selectors['overlay'], lbl)
-            if (added.attribute, added.selectors) not in existing:
+            key = (type(added), added.label)
+            if key not in existing:
                 declarations.append(added)
-                existing.add((added.attribute, added.selectors))
+                existing.add(key)
 
         manager = getattr(self._app, '_catalog_row_link_manager', None)
         if manager is None:
@@ -581,9 +600,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
             viewer_ref = self.viewer.selected[0]
         viewer = self._app.get_viewer(viewer_ref)
         center_coord = viewer._get_center_skycoord()
+        centered_ra = center_coord.ra.to_value('deg')
+        centered_dec = center_coord.dec.to_value('deg')
+        self._overlays[self.overlay_selected].update(ra=centered_ra, dec=centered_dec)
         self._ignore_traitlet_change = True
-        self.ra = center_coord.ra.to_value('deg')
-        self.dec = center_coord.dec.to_value('deg')
+        self.ra = centered_ra
+        self.dec = centered_dec
         self._ignore_traitlet_change = False
         self._preset_args_changed()  # process ra/dec simultaneously
 

@@ -69,6 +69,15 @@ class PluginTableRowSyncGroup:
         if len(attributes) != len(set(attributes)):
             raise ValueError("group member attributes must be unique")
 
+    def rename_selector(self, selector, old_value, new_value):
+        members = tuple(member.rename_selector(selector, old_value, new_value)
+                        for member in self.members)
+        label = self.label
+        if label is not None:
+            label = label.replace(f'[{selector}={old_value}]',
+                                  f'[{selector}={new_value}]')
+        return replace(self, members=members, label=label)
+
 
 def _json_native(value):
     if isinstance(value, np.generic):

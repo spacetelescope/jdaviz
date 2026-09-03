@@ -1,4 +1,5 @@
 import numpy as np
+from dataclasses import replace
 
 from glue.core.hub import HubListener
 from glue.core.message import DataCollectionDeleteMessage
@@ -456,10 +457,21 @@ class CatalogRowLinkManager(HubListener):
         new_declarations = []
         migrations = []
         for declaration in old_declarations:
+            updated = declaration
             if isinstance(declaration, PluginTableRowSyncGroup):
-                new_declarations.append(declaration)
-                continue
-            updated = declaration.rename_selector(selector, old_value, new_value)
+                updated_members = tuple(
+                    member.rename_selector(selector, old_value, new_value)
+                    for member in declaration.members
+                )
+                updated = replace(declaration, members=updated_members)
+                if declaration.label:
+                    updated_label = declaration.label.replace(
+                        f'[{selector}={old_value}]', f'[{selector}={new_value}]'
+                    )
+                    updated = replace(updated, label=updated_label)
+            else:
+                updated = declaration.rename_selector(selector, old_value, new_value)
+
             new_declarations.append(updated)
             if updated != declaration:
                 migrations.append((declaration, updated))
