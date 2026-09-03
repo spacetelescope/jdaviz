@@ -1,5 +1,8 @@
 import csv
 
+import numpy as np
+from astropy.io import fits
+
 from jdaviz.core.loaders.resolvers.file.file import FileResolver
 
 
@@ -17,9 +20,22 @@ def test_file_resolver_is_valid(deconfigged_helper, tmp_path):
     resolver.filepath = str(tmp_path / 'nonexistent.fits')
     assert resolver._check_is_valid() == 'Filepath does not exist.'
 
-    # Failure: directory instead of file
+    # Success: existing directory, for directory-aware importers like MOS
     resolver.filepath = str(tmp_path)
-    assert resolver._check_is_valid() == 'Filepath is not a file.'
+    assert resolver._check_is_valid() == ''
+
+
+def test_file_resolver_directory_input_for_mos(deconfigged_helper, tmp_path):
+    deconfigged_helper._app.state.dev_mos_loader = True
+    data_dir = tmp_path / 'mos_data'
+    data_dir.mkdir()
+    fits.PrimaryHDU(np.arange(10.)).writeto(data_dir / 'jw00001_x1d.fits')
+
+    resolver = FileResolver(app=deconfigged_helper._app)
+    resolver.filepath = str(data_dir)
+
+    assert resolver.parsed_input_is_empty is False
+    assert [item['label'] for item in resolver.format.items] == ['MOS']
 
 
 def test_mast_export_csv_treat_table_as_query(deconfigged_helper, tmp_path):

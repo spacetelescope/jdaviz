@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 
 from astropy import units as u
@@ -37,6 +39,9 @@ class SpecutilsSpectrumParser(BaseParser):
         if self._app.config not in ['deconfigged'] + accepted_configs:
             # NOTE: temporary during deconfig process
             return f"specutils.Spectrum format is only supported in {', '.join(accepted_configs)}."
+
+        if isinstance(self.input, (str, os.PathLike)) and os.path.isdir(self.input):
+            return f"Input '{self.input}' is a directory, not a file."
 
         _ = self.output
         return ''
