@@ -25,7 +25,7 @@ tray:
   - g-slit-overlay
   - g-model-fitting
   - g-line-list
-  - g-spectral-lines  - specviz-line-analysis
+  - specviz-line-analysis
   - export
   - about
   - logger

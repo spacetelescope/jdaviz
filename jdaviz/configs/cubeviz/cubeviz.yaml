@@ -31,7 +31,7 @@ tray:
   - g-collapse
   - g-model-fitting
   - g-line-list
-  - g-spectral-lines  - specviz-line-analysis
+  - specviz-line-analysis
   - cubeviz-moment-maps
   - imviz-aper-phot-simple
   - cubeviz-sonify-data

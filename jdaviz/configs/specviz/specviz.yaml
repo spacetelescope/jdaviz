@@ -26,7 +26,6 @@ tray:
   - g-model-fitting
   - g-unit-conversion
   - g-line-list
-  - g-spectral-lines
   - export
   - about
   - logger
