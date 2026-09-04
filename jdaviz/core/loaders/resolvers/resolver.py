@@ -1222,7 +1222,7 @@ class BaseConeSearchResolver(BaseResolver):
                                     [{'text': text, 'color': color, 'traceback': str(traceback)}])
 
         # add message to logger with/without broadcasting
-        text_w_traceback = text + (f'Traceback: {traceback}' if traceback is not None else '')
+        text_w_traceback = text + (f'; Traceback: {traceback}' if traceback is not None else '')
         snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
                                                    color=color, sender=self, traceback=traceback)
         self._app.state.snackbar_queue.put(self._app.state,
