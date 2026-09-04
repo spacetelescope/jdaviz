@@ -87,7 +87,8 @@ test = [
 docs = [
     "sphinx-astropy[confv2]>=1.9.1",
     "sphinx_design",
-    "sphinx-guidestar>=0.2.0,<0.3.0"
+    "sphinx-guidestar>=0.2.0,<0.3.0",
+    "sphinx-favicon"
 ]
 roman = [
     "roman_datamodels>=0.26.0",
