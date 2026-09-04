@@ -268,6 +268,13 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
             return
         if self.component_redshift == '':
             return
+        if self.component_redshift < 0:
+            # redshift cannot be negative
+            self._syncing_component_info = True
+            try:
+                self.component_redshift = 0
+            finally:
+                self._syncing_component_info = False
         self._components.setdefault(self.component_selected, self._default_component_info())
         self._components[self.component_selected]['redshift'] = self.component_redshift
         # recompute this component's column from the original values

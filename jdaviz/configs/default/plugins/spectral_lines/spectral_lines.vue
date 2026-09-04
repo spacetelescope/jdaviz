@@ -15,6 +15,7 @@
       :loader_items="loader_items"
       v-model:loader_selected="loader_selected"
       :api_hints_enabled="api_hints_enabled"
+      :api_hints_obj="api_hints_obj"
       style="margin-bottom: 12px"
     ></plugin-loaders-panel>
 
@@ -33,13 +34,14 @@
       hint="Current selected kinematic component. Select or create new to modify."
     ></plugin-editable-select>
 
-    <j-plugin-section-header>Redshift</j-plugin-section-header>
+    <j-plugin-section-header>Set Component Redshift</j-plugin-section-header>
 
     <v-row>
       <v-text-field
         v-model.number="component_redshift"
         type="number"
         step="0.0001"
+        min="0"
         label="Redshift"
         hint="Redshift for all lines in the currently selected component."
         persistent-hint
