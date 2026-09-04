@@ -14,6 +14,7 @@
       :loader_items="loader_items"
       v-model:loader_selected="loader_selected"
       :api_hints_enabled="api_hints_enabled"
+      :api_hints_obj="api_hints_obj"
       style="margin-bottom: 12px"
     ></plugin-loaders-panel>
 
