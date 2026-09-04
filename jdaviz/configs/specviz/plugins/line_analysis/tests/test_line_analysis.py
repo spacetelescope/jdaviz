@@ -696,13 +696,15 @@ def test_plot_line_analysis(deconfigged_helper):
 
     # When plot_gaussian_params toggled off, 3 marks should disappear
     la.plot_gaussian_params = False
-    sv = deconfigged_helper._app.get_viewer('1D Spectrum')
-    all_plugin_marks = [m for m in sv.figure.marks if isinstance(m, PluginLine)]
-    vert_marks = [m for m in sv.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
-    # gaussian spectrum and fwhm line disappear
-    assert len(all_plugin_marks) == 4
+    la.get_results()
+    sv_nogauss = deconfigged_helper._app.get_viewer('1D Spectrum')
+    all_plugin_marks_nogauss = [m for m in sv_nogauss.figure.marks if isinstance(m, PluginLine)]
+    vert_marks_nogauss = [m for m in sv_nogauss.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
     # fwhm line disappears
-    assert len(vert_marks) == 0
+    assert len(vert_marks_nogauss) == 0
+    # gaussian spectrum and fwhm line disappear
+    assert len(all_plugin_marks_nogauss) == 4
+
 
 
 def test_plot_line_analysis_with_units(deconfigged_helper):
