@@ -1568,6 +1568,10 @@ def _role_labels_from_meta(meta):
     ]
 
 
+def _plugin_labels_from_meta(meta):
+    return list((meta.get('_plugin_attribute_columns') or {}).keys())
+
+
 @viewer_registry("table-viewer", label="table")
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
@@ -1926,9 +1930,13 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             return
         meta = getattr(data, 'meta', {}) or {}
         role_labels = set(_role_labels_from_meta(meta))
-        self.state.renameable_components = list(data.main_components)
+        plugin_labels = set(_plugin_labels_from_meta(meta))
+        self.state.renameable_components = [
+            cid for cid in data.main_components if cid.label not in plugin_labels
+        ]
         self.state.removable_components = [
-            cid for cid in data.main_components if cid.label not in role_labels
+            cid for cid in data.main_components
+            if cid.label not in role_labels and cid.label not in plugin_labels
         ]
 
     def _iter_table_data(self):
@@ -1949,9 +1957,11 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         for data in self._iter_table_data():
             meta = getattr(data, 'meta', {}) or {}
             role_labels = set(_role_labels_from_meta(meta))
+            plugin_labels = set(_plugin_labels_from_meta(meta))
             for cid in data.main_components:
-                renameable.append(cid)
-                if cid.label not in role_labels:
+                if cid.label not in plugin_labels:
+                    renameable.append(cid)
+                if cid.label not in role_labels and cid.label not in plugin_labels:
                     removable.append(cid)
         self.state.renameable_components = renameable
         self.state.removable_components = removable

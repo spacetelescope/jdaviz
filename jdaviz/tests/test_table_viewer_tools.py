@@ -8,8 +8,10 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
+from specutils import Spectrum
 
 from jdaviz.core.marks import PluginScatter, TableSelectionMark
+from jdaviz.core.table_row_sync import decode_row_sync_recipe
 
 
 class TestTableViewerTools:
@@ -983,6 +985,107 @@ class TestTableViewerViewerDataColumns:
         assert self.image_viewer.state.x_min != -500
         assert self.image_viewer.state.x_max != -400
         assert self.img_b in self._visible(self.image_viewer)
+
+    def test_line_lists_redshift_column_two_way_sync(self):
+        plugin = self.app.plugins['Line Lists']._obj
+        manager = self.app._app._catalog_row_link_manager
+        manager._reconcile_plugin_columns(self.catalog_data)
+        column_name = 'Line Lists:redshift'
+
+        assert column_name in [component.label for component in self.catalog_data.components]
+        assert self.catalog_data.meta['_plugin_attribute_columns'][column_name] == {
+            'plugin': 'g-line-list',
+            'direction': 'both',
+            'storage': 'scalar',
+            'attribute': 'redshift',
+            'value_kind': 'scalar',
+            'manual_values': []
+        }
+        assert np.all(self.catalog_data.get_component(column_name).data == 0)
+
+        self.table_viewer._on_table_data_changed({'new': self.catalog_data})
+        header = next(header for header in self.table_viewer.widget_table._get_headers()
+                      if header['value'] == column_name)
+        assert header['editable'] is False
+        assert header['renameable'] is False
+        assert header['removable'] is False
+        assert header['toggleable_sync'] is True
+        self.table_viewer.widget_table.vue_rename_column(
+            {'column': column_name, 'newName': 'renamed'})
+        self.table_viewer.widget_table.vue_remove_column({'column': column_name})
+        assert column_name in [component.label for component in self.catalog_data.components]
+
+        self.table_viewer.widget_table.checked = [1]
+        plugin.rs_redshift = 0.25
+        assert self.catalog_data.get_component(column_name).data[1] == 0.25
+
+        self.table_viewer.widget_table.checked = [0]
+        assert plugin.rs_redshift == 0
+
+    def test_spectral_extraction_packed_recipe_two_way_sync(self):
+        spectrum = Spectrum(np.ones((10, 20)) * u.Jy,
+                            spectral_axis=np.arange(20) * u.pix)
+        self.app.load(spectrum, format='2D Spectrum', data_label='source-2d')
+        plugin = self.app.plugins['2D Spectral Extraction']._obj
+        manager = self.app._app._catalog_row_link_manager
+        manager._reconcile_plugin_columns(self.catalog_data)
+        column_name = '2D Spectral Extraction'
+
+        assert column_name in [component.label for component in self.catalog_data.components]
+        initial = decode_row_sync_recipe(
+            self.catalog_data.get_component(column_name).data[0])
+        assert initial['trace_dataset'] == 'source-2d'
+        assert initial['ext_dataset'] == 'From Plugin'
+
+        self.table_viewer.widget_table.checked = [1]
+        plugin.trace_pixel = initial['trace_pixel'] + 2
+        changed = decode_row_sync_recipe(
+            self.catalog_data.get_component(column_name).data[1])
+        assert changed['trace_pixel'] == initial['trace_pixel'] + 2
+        assert changed['bg_width'] == plugin.bg_width
+
+        self.table_viewer.widget_table.checked = [0]
+        assert plugin.trace_pixel == initial['trace_pixel']
+
+        self.app._app.rename_data('source-2d', 'renamed-2d')
+        recipes = [decode_row_sync_recipe(value)
+                   for value in self.catalog_data.get_component(column_name).data]
+        assert all(recipe['trace_dataset'] == 'renamed-2d' for recipe in recipes)
+        assert all(recipe['ext_dataset'] == 'From Plugin' for recipe in recipes)
+
+        self.app._app.data_collection.remove(
+            self.app._app.data_collection['renamed-2d'])
+        recipes = [decode_row_sync_recipe(value)
+                   for value in self.catalog_data.get_component(column_name).data]
+        assert all(recipe['trace_dataset'] is None for recipe in recipes)
+        assert all(recipe['ext_dataset'] == 'From Plugin' for recipe in recipes)
+
+    def test_plugin_columns_hide_and_pause_when_irrelevant(self):
+        plugin = self.app.plugins['Line Lists']._obj
+        manager = self.app._app._catalog_row_link_manager
+        manager._reconcile_plugin_columns(self.catalog_data)
+        column_name = 'Line Lists:redshift'
+        self.table_viewer.widget_table.checked = [0]
+        original = self.catalog_data.get_component(column_name).data[0]
+
+        plugin.irrelevant_msg = 'not relevant'
+        assert self.catalog_data.id[column_name] in self.table_viewer.state.hidden_components
+        plugin.rs_redshift = 0.5
+        assert self.catalog_data.get_component(column_name).data[0] == original
+
+        plugin.irrelevant_msg = ''
+        assert self.catalog_data.id[column_name] not in self.table_viewer.state.hidden_components
+
+    def test_plugin_column_name_collision_raises(self):
+        column_name = 'Line Lists:redshift'
+        if column_name in [component.label for component in self.catalog_data.components]:
+            self.catalog_data.remove_component(self.catalog_data.id[column_name])
+            self.catalog_data.meta.get('_plugin_attribute_columns', {}).pop(column_name, None)
+        self.catalog_data.add_component(np.zeros(self.catalog_data.size), column_name)
+
+        with pytest.raises(ValueError, match='column collision'):
+            self.app._app._catalog_row_link_manager._reconcile_plugin_columns(
+                self.catalog_data)
 
 
 class TestTableViewerTwoWaySync:

@@ -16,6 +16,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         skip_if_not_tray_instance,
                                         skip_if_not_relevant,
                                         with_spinner)
+from jdaviz.core.table_row_sync import PluginTableRowSync, PluginTableRowSyncGroup
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.marks import PluginMarkCollection, PluginLine
@@ -126,6 +127,42 @@ class SpectralExtraction2D(PluginTemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "spectral_extraction.vue"
     uses_active_status = Bool(True).tag(sync=True)
+
+    table_row_sync = (PluginTableRowSyncGroup(
+        'spectral_extraction_recipe', (
+            PluginTableRowSync('trace_dataset', 'trace_dataset_selected',
+                               value_kind='data_label'),
+            PluginTableRowSync('trace_trace', 'trace_trace_selected',
+                               value_kind='data_label', manual_values=('New Trace',)),
+            PluginTableRowSync('trace_type', 'trace_type_selected', value_kind='enum'),
+            PluginTableRowSync('trace_offset', 'trace_offset'),
+            PluginTableRowSync('trace_pixel', 'trace_pixel'),
+            PluginTableRowSync('trace_order', 'trace_order'),
+            PluginTableRowSync('trace_peak_method', 'trace_peak_method_selected',
+                               value_kind='enum'),
+            PluginTableRowSync('trace_do_binning', 'trace_do_binning'),
+            PluginTableRowSync('trace_bins', 'trace_bins'),
+            PluginTableRowSync('trace_window', 'trace_window'),
+            PluginTableRowSync('bg_dataset', 'bg_dataset_selected', value_kind='data_label'),
+            PluginTableRowSync('bg_type', 'bg_type_selected', value_kind='enum'),
+            PluginTableRowSync('bg_trace', 'bg_trace_selected', value_kind='data_label',
+                               manual_values=('From Plugin',)),
+            PluginTableRowSync('bg_trace_pixel', 'bg_trace_pixel'),
+            PluginTableRowSync('bg_statistic', 'bg_statistic_selected', value_kind='enum'),
+            PluginTableRowSync('bg_separation', 'bg_separation'),
+            PluginTableRowSync('bg_width', 'bg_width'),
+            PluginTableRowSync('ext_dataset', 'ext_dataset_selected', value_kind='data_label',
+                               manual_values=('From Plugin',)),
+            PluginTableRowSync('ext_trace', 'ext_trace_selected', value_kind='data_label',
+                               manual_values=('From Plugin',)),
+            PluginTableRowSync('ext_type', 'ext_type_selected', value_kind='enum'),
+            PluginTableRowSync('ext_width', 'ext_width'),
+            PluginTableRowSync('horne_ext_profile', 'horne_ext_profile_selected',
+                               value_kind='enum'),
+            PluginTableRowSync('self_prof_n_bins', 'self_prof_n_bins'),
+            PluginTableRowSync('self_prof_interp_degree_x', 'self_prof_interp_degree_x'),
+            PluginTableRowSync('self_prof_interp_degree_y', 'self_prof_interp_degree_y'),
+        ), label='2D Spectral Extraction'),)
 
     active_step = Unicode().tag(sync=True)
 
@@ -270,6 +307,7 @@ class SpectralExtraction2D(PluginTemplateMixin):
     # uses default "spinner"
 
     def __init__(self, *args, **kwargs):
+        self._table_row_sync_applying = False
         super().__init__(*args, **kwargs)
 
         # description displayed under plugin title in tray
@@ -701,6 +739,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
     @skip_if_not_tray_instance()
     @skip_if_not_relevant()
     def _update_interactive_extract(self, event={}):
+        if self._table_row_sync_applying:
+            return
         # also called by any of the _interaction_in_*_step
         if self.interactive_extract:
             try:
@@ -739,6 +779,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
     @skip_if_no_updates_since_last_active()
     @skip_if_not_relevant()
     def _interaction_in_trace_step(self, event={}):
+        if self._table_row_sync_applying:
+            return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'trace')
                 or not self.is_active):
             return
@@ -765,6 +807,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
     @skip_if_no_updates_since_last_active()
     @skip_if_not_relevant()
     def _interaction_in_bg_step(self, event={}):
+        if self._table_row_sync_applying:
+            return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'bg')
                 or not self.is_active):
             return
@@ -828,6 +872,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
     @skip_if_no_updates_since_last_active()
     @skip_if_not_relevant()
     def _interaction_in_ext_step(self, event={}):
+        if self._table_row_sync_applying:
+            return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
                 or not self.is_active):
             return
@@ -866,6 +912,59 @@ class SpectralExtraction2D(PluginTemplateMixin):
             self.ext_uncert_warn = isinstance(inp_sp2d.uncertainty, UnknownUncertainty)
         else:
             self.ext_uncert_warn = False
+
+    def apply_table_row_sync_group(self, group, values):
+        component_by_attribute = {
+            'trace_dataset': self.trace_dataset,
+            'trace_trace': self.trace_trace,
+            'trace_type': self.trace_type,
+            'trace_peak_method': self.trace_peak_method,
+            'bg_dataset': self.bg_dataset,
+            'bg_type': self.bg_type,
+            'bg_trace': self.bg_trace,
+            'bg_statistic': self.bg_statistic,
+            'ext_dataset': self.ext_dataset,
+            'ext_trace': self.ext_trace,
+            'ext_type': self.ext_type,
+            'horne_ext_profile': self.horne_ext_profile,
+        }
+        for attribute, component in component_by_attribute.items():
+            value = values.get(attribute)
+            if value is not None and value not in component.choices:
+                raise ValueError(f"'{value}' is not a valid value for {attribute}")
+        if values.get('ext_type') == 'Horne' and values.get('horne_ext_profile') == 'Self (interpolated)':  # noqa
+            for attribute in ('self_prof_n_bins', 'self_prof_interp_degree_x',
+                              'self_prof_interp_degree_y'):
+                if values.get(attribute, 0) <= 0:
+                    raise ValueError(f'{attribute} must be greater than zero')
+
+        snapshot = self.read_table_row_sync_group(group)
+        active_step = self.active_step
+        self._table_row_sync_applying = True
+        try:
+            for member in group.members:
+                value = values.get(member.attribute)
+                if value is None:
+                    continue
+                component = component_by_attribute.get(member.attribute)
+                if component is not None:
+                    component.selected = value
+                else:
+                    setattr(self, member.traitlet, value)
+        except Exception:
+            for member in group.members:
+                value = snapshot[member.attribute]
+                component = component_by_attribute.get(member.attribute)
+                if component is not None:
+                    component.selected = value
+                else:
+                    setattr(self, member.traitlet, value)
+            raise
+        finally:
+            self._table_row_sync_applying = False
+
+        if self.is_active:
+            self.update_marks(active_step)
 
     def _set_create_kwargs(self, **kwargs):
         invalid_kwargs = [k for k in kwargs.keys() if not hasattr(self, k)]
