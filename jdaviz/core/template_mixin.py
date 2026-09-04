@@ -6333,7 +6333,7 @@ class Table(PluginSubcomponent):
         # Cache the QTable
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",
-                                    message="ignore:column .* has a unit but is kept as",
+                                    message="column .* has a unit but is kept as",
                                     category=AstropyUserWarning)
             self._qtable = QTable(table)
         # Update headers
