@@ -22,8 +22,8 @@ for each line in both the plugin and in the associated data table.
    The Spectral Lines plugin is still under active development. The API is
    not yet fully exposed, line plotting functionality has not been implemented
    yet, and there are planned changes to the interface for loading lines.
-   It is currently only available when developer mode for spectral lines is
-   enabled (``app.state.dev_spectral_lines = True``).
+   It is currently only available when developer mode for the plugin is
+   enabled (``app.state.dev_spectral_lines_plugin = True``).
 
 **Key Features:**
 

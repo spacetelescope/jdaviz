@@ -96,9 +96,9 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
         )
 
     def _check_is_valid(self):
-        if not getattr(self._app.state, 'dev_spectral_lines_plugin', False):
+        if not getattr(self._app.state, 'dev_loaders', False):
             return ('Spectral Lines importer is under active development '
-                    '(requires dev_spectral_lines_plugin to be enabled).')
+                    '(requires dev_loaders to be enabled).')
 
         if not isinstance(self.input, (Table, QTable)):
             return 'Input must be an astropy Table or QTable.'
