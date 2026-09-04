@@ -774,7 +774,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         new_label = info.get('new_label')
         is_subset = info.get('is_subset', False)
 
-        if old_label == new_label or new_label is None:
+        # A spurious frontend event can deliver new_label as None or an empty
+        # dict (a serialized InputEvent); those carry no name to validate.  Any
+        # other non-string (e.g. a non-empty dict) is unexpected and is left to
+        # raise downstream so the regression can be tracked down.
+        if (old_label == new_label
+                or new_label is None
+                or (isinstance(new_label, dict) and not new_label)):
             self._reset_rename_error_messages(old_label)
             return
 

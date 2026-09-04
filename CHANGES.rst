@@ -130,6 +130,8 @@ Bug Fixes
 
 - Fix color picker not showing correctly. [#4332]
 
+- Fix error when typing while renaming data or subset. [#4359]
+
 Mosviz
 ^^^^^^
 
