@@ -107,6 +107,8 @@ New Features
 
 - Adds search to extension menu in loaders when there are more than 3 extensions available. [#4372]
 
+- Generate a Gaussian curve from Line Analysis plugin results and optionally add to the 1D Spectrum viewer. [#4374]
+
 Mosviz
 ^^^^^^
 

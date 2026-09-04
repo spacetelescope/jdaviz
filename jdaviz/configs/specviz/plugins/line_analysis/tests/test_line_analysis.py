@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+from astropy.modeling.models import Gaussian1D
 from astropy import units as u
 from astropy.table import QTable
 from astropy.tests.helper import assert_quantity_allclose
@@ -10,7 +11,7 @@ from glue.core.roi import XRangeROI
 
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import LineIdentifyMessage
-from jdaviz.core.marks import LineAnalysisContinuum
+from jdaviz.core.marks import LineAnalysisContinuum, PluginLine, BaseSpectrumVerticalLine
 from jdaviz.core.unit_conversion_utils import coerce_unit
 
 
@@ -650,3 +651,99 @@ def test_line_analysis_load_table_into_data_collection(deconfigged_helper, spect
 
     # Verify the table can be accessed and has correct data
     assert len(loaded_table) == 1
+
+
+def test_plot_line_analysis(deconfigged_helper):
+    """
+    Test that line analysis results can be plotted and toggled.
+    """
+    # Create a spectrum with an emission line and Gaussian noise
+    wave = np.linspace(4000, 7000, 500)
+    continuum = 5
+    line = Gaussian1D(amplitude=5.0, mean=5500, stddev=20.0)
+    flux_1d = (line(wave) + continuum) * u.Jy
+
+    rng = np.random.default_rng(42)
+    noise = rng.normal(loc=0.0, scale=0.05, size=wave.shape) * u.Jy
+    flux_1d += noise
+
+    spec1d = Spectrum(spectral_axis=wave * u.AA, flux=flux_1d)
+
+    # Load data into deconfigged helper
+    deconfigged_helper.load(spec1d, format='1D Spectrum')
+
+    # Create a spectral subset
+    st = deconfigged_helper.plugins['Subset Tools']
+    st.import_region(SpectralRegion(5380 * u.AA, 5650 * u.AA))
+
+    # Use Line Analysis plugin
+    la = deconfigged_helper.plugins['Line Analysis']
+    la.spectral_subset = 'Subset 1'
+    la.continuum = 'Surrounding'
+    la.continuum_width = 3
+    la.plot_gaussian_params = True
+    la.get_results(add_to_table=True)
+
+    # Verify that the line analysis results are plotted
+    sv_on = deconfigged_helper._app.get_viewer('1D Spectrum')
+    all_plugin_marks_on = [m for m in sv_on.figure.marks if isinstance(m, PluginLine)]
+    vert_marks_on = [m for m in sv_on.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
+    # 8 total plugin marks: 3 for the continuum subset window, 1 for spectral subset,
+    # 1 for gaussian spectrum, 1 for fwhm line, 1 for centroid line, 1 for sliceindicator
+    # (inequality because the number of marks may vary depending bqplot version)
+    assert len(all_plugin_marks_on) >= 6
+    # 1 vertical mark for centroid line
+    assert len(vert_marks_on) >= 1
+
+    # When plot_gaussian_params toggled off, 3 marks should disappear
+    la.plot_gaussian_params = False
+    sv_off = deconfigged_helper._app.get_viewer('1D Spectrum')
+    all_plugin_marks_off = [m for m in sv_off.figure.marks if isinstance(m, PluginLine)]
+    vert_marks_off = [m for m in sv_off.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
+    # gaussian spectrum and fwhm line disappear
+    assert len(all_plugin_marks_off) <= 6
+    # fwhm line disappears
+    assert len(vert_marks_off) <= 1
+
+
+def test_plot_line_analysis_with_units(deconfigged_helper):
+    """
+    Test that line analysis results obey global display units.
+    """
+    # Create a spectrum with an emission line and Gaussian noise
+    wave = np.linspace(.40, .70, 500)
+    continuum = 5
+    line = Gaussian1D(amplitude=50, mean=0.55, stddev=0.02)
+    flux_1d = (line(wave) + continuum) * u.Jy
+
+    rng = np.random.default_rng(42)
+    noise = rng.normal(loc=0.0, scale=0.05, size=wave.shape) * u.mJy
+    flux_1d += noise
+
+    # input in micron
+    spec1d = Spectrum(spectral_axis=wave * u.um, flux=flux_1d)
+
+    # Load data into deconfigged helper
+    deconfigged_helper.load(spec1d, format='1D Spectrum')
+
+    # use Unit Conversion plugin to convert to Angstrom
+    uc = deconfigged_helper.plugins['Unit Conversion']
+    uc.spectral_unit = 'Angstrom'
+    uc.flux_unit = 'Jy'
+
+    # Create a spectral subset
+    st = deconfigged_helper.plugins['Subset Tools']
+    st.import_region(SpectralRegion(0.538 * u.um, 0.565 * u.um))
+
+    # Use Line Analysis plugin
+    la = deconfigged_helper.plugins['Line Analysis']
+    la.spectral_subset = 'Subset 1'
+    la.continuum = 'Surrounding'
+    la.continuum_width = 3
+    la.plot_gaussian_params = True
+    la.get_results(add_to_table=True)
+
+    # verify that line analysis parameters are in display units
+    assert la._obj._gaussian_spectrum is not None
+    assert la._obj._gaussian_spectrum.spectral_axis.unit == u.AA
+    assert la._obj._gaussian_spectrum.flux.unit == u.Jy
