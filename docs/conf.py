@@ -160,7 +160,7 @@ dev = "dev" in release
 version = '.'.join(release.split('.')[:2])
 
 extensions += ['sphinx.ext.extlinks', 'sphinx_design', 'guidestar',  # noqa: F405
-               'jdaviz.ext.wireframe']
+               'jdaviz.ext.wireframe', 'sphinx_favicon']
 
 # get the most recent git commit hash at build time:
 commit_hash = subprocess.run(
@@ -243,10 +243,46 @@ html_context = {
 # of the sidebar.
 html_logo = 'logos/jdaviz.svg'
 
-# The name of an image file (within the static path) to use as favicon of the
-# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
-# pixels large.
-html_favicon = 'logos/specviz2d.ico'
+# The name of an image file (within the static path) to use as favicons
+favicons = [
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "16x16",
+        "href": "logos/jdaviz_favicon-16x16.png",
+    },
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "32x32",
+        "href": "logos/jdaviz_favicon-32x32.png",
+    },
+    {
+        "rel": "shortcut icon",
+        "type": "image/png",
+        "href": "logos/jdaviz_favicon-32x32.png",
+    },
+    # apple touch icons
+    {
+        "rel": "apple-touch-icon",
+        "sizes": "180x180",
+        "href": "logos/jdaviz_favicon-180x180.png",
+    },
+    # safari pinned tabs
+    {
+        "rel": "mask-icon",
+        "href": "logos/jdaviz_favicon-32x32.png",
+        "color": "#007DA4",
+    },
+    # windows tile color and image
+    {
+        "name": "msapplication-TileColor",
+        "content": "#007DA4"},
+    {
+        "name": "msapplication-TileImage",
+        "content": "logos/jdaviz_favicon-180x180.png"},
+]
+
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
