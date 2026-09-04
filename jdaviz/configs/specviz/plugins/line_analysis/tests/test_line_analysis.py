@@ -691,8 +691,8 @@ def test_plot_line_analysis(deconfigged_helper):
     # 8 total plugin marks: 3 for the continuum subset window, 1 for spectral subset,
     # 1 for gaussian spectrum, 1 for fwhm line, 1 for centroid line, 1 for sliceindicator
     assert len(all_plugin_marks) == 6
-    # 2 vertical marks: 1 for centroid line, 1 for sliceindicator
-    assert len(vert_marks) == 2
+    # 1 vertical mark for centroid line
+    assert len(vert_marks) == 1
 
     # When plot_gaussian_params toggled off, 3 marks should disappear
     la.plot_gaussian_params = False
@@ -702,7 +702,7 @@ def test_plot_line_analysis(deconfigged_helper):
     # gaussian spectrum and fwhm line disappear
     assert len(all_plugin_marks) == 4
     # fwhm line disappears
-    assert len(vert_marks) == 1
+    assert len(vert_marks) == 0
 
 
 def test_plot_line_analysis_with_units(deconfigged_helper):
