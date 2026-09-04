@@ -1,15 +1,11 @@
-from astropy.coordinates import SkyCoord
-from astropy.coordinates.name_resolve import NameResolveError
 from astropy import units as u
 
 
 from traitlets import Unicode, List
 
-from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.template_mixin import (
     SelectPluginComponent,
-    with_spinner,
 )
 from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.user_api import LoaderUserApi
@@ -82,27 +78,9 @@ class AstroqueryResolver(BaseConeSearchResolver):
             ],
         )
 
-    def _source_to_skycoord(self):
-        # Strip parentheses from source if present
-        stripped_source = self.source.strip('()')
-        # Check to see if source is "[RA] [Dec]" (in degrees)
-        split_source = stripped_source.split(' ')
-        if len(split_source) == 2:
-            try:
-                return SkyCoord(stripped_source, unit=u.deg, frame=self.coordframe.selected)
-            except ValueError:
-                pass
-
-        # Otherwise try to resolve coordinates from the source name
-        try:
-            return SkyCoord.from_name(stripped_source, frame=self.coordframe.selected)
-        except NameResolveError as e:
-            # Sesame name resolution can fail when the service is unreachable (SSL timeout,
-            # redirect error, etc.). Surface the failure as a snackbar rather than propagating
-            # the exception to the caller. Keep processing below so we clear stale results.
-            errmsg = f"Unable to resolve source coordinates: {self.source}"
-            self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self, traceback=e))
-            return None
+    @property
+    def _query_archive_label(self):
+        return self.telescope.selected
 
     def _query_single_coord(self, skycoord_center):
         """
@@ -123,64 +101,25 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
             r_max = 3 * u.arcmin
             if radius > r_max:  # SDSS now has radius max limit
-                self.hub.broadcast(SnackbarMessage(
+                self._query_message(
                     f"Radius for {self.telescope.selected} has max radius of {r_max}\' but got "
                     f"{radius.to(u.arcmin)}, using {r_max}.",
-                    color='warning', sender=self))
+                    color='warning', raise_msg=True)
                 radius = r_max
 
             # queries the region (based on the provided center point and radius)
             # finds all the sources in that region
-            try:
-                output = SDSS.query_region(skycoord_center, radius=radius,
-                                           data_release=17)
-            except Exception as e:  # nosec
-                errmsg = (f"Failed to query {self.telescope.selected} with c={skycoord_center} and "
-                          f"r={radius}: {repr(e)}")
-                self.hub.broadcast(SnackbarMessage(errmsg, color='error',
-                                                   sender=self,
-                                                   traceback=e))
-                output = None  # will force returned_max_results = False, returned_no_results = True
+            output = SDSS.query_region(skycoord_center, radius=radius,
+                                       data_release=17)
+
         elif self.telescope.selected == 'Gaia':
             from astroquery.gaia import Gaia
 
             Gaia.ROW_LIMIT = self.max_results
             output = Gaia.query_object(skycoord_center, radius=radius)
         else:
+            # this can only occur in the API and therefore doesn't need to go through
+            # _query_message
             raise NotImplementedError(f"Querying for {self.telescope.selected} is not supported.")
 
         return output
-
-    @with_spinner(spinner_traitlet="results_loading")
-    def query_archive(self):
-        # Catalog mode: loop over all (selected) catalog rows and stack results.
-        if self.search_input_selected == 'Catalog':
-            self._query_catalog(self._query_single_coord)
-            return
-
-        # Source / Viewer mode: single coordinate.
-        output = None
-        skycoord_center = self._source_to_skycoord()
-
-        # Only query the selected archive when name resolution succeeded.
-        if skycoord_center is not None:
-            output = self._query_single_coord(skycoord_center)
-
-        if output is not None and len(output) > self.max_results:
-            output = output[:self.max_results]
-            self.returned_max_results = True
-        else:
-            self.returned_max_results = False
-        if output is None or len(output) == 0:
-            self.returned_no_results = True
-        else:
-            self.returned_no_results = False
-        self._output = output
-
-        self._resolver_input_updated()
-
-    def vue_query_archive(self, _=None):
-        self.query_archive()
-
-    def parse_input(self):
-        return self._output

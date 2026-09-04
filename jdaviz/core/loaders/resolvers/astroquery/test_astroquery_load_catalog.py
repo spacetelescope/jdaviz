@@ -7,8 +7,6 @@ from astropy.table import Table
 
 from glue.core.subset import RangeSubsetState
 
-from jdaviz.core.events import SnackbarMessage
-
 
 class TestCatalogConeSearch:
     @pytest.fixture(autouse=True)
@@ -38,12 +36,6 @@ class TestCatalogConeSearch:
         if name_col is not None:
             self.ldr.catalog_name_col.selected = name_col
         return label
-
-    def _capture_snackbars(self):
-        """Collect ``SnackbarMessage`` broadcasts on the loader's hub."""
-        msgs = []
-        self.ldr.hub.subscribe(self.ldr, SnackbarMessage, handler=lambda m: msgs.append(m))
-        return msgs
 
     @staticmethod
     def _fake_query(n_per_source=2):
@@ -125,6 +117,19 @@ class TestCatalogConeSearch:
         assert self.ldr._output is None
         assert self.ldr.returned_no_results is True
 
+        # Reaching (without exceeding) max_results still queries every source and
+        # is reported as having hit the cap, since the archive may have had more.
+        n = len(self.sky_catalog)
+        self.ldr.max_results = n
+        fake = self._fake_query(n_per_source=1)
+        self.ldr._query_single_coord = fake
+
+        self.ldr.query_archive()
+
+        assert len(fake.calls) == n
+        assert len(self.ldr._output) == n
+        assert self.ldr.returned_max_results is True
+
     def test_query_catalog_with_subset(self):
         label = self._enter_catalog_mode()
         data = self.helper._app.data_collection[label]
@@ -181,12 +186,11 @@ class TestCatalogConeSearch:
 
     @pytest.mark.parametrize("fail_all", [False, True])
     def test_query_catalog_reports_unresolved(self, fail_all):
-        # Unresolved names are skipped, recorded in
-        # _source_name_query_failures, and summarized in a snackbar.
+        # Unresolved names are skipped, recorded in _source_name_query_failures,
+        # and summarized in a logger message.
         fail = self.source_names if fail_all else self.source_names[3:]
         self._enter_catalog_mode(col_other=['source_id'],
                                  col_type='source_name', name_col='source_id')
-        snackbars = self._capture_snackbars()
         fake = self._fake_query(n_per_source=1)
         self.ldr._query_single_coord = fake
 
@@ -207,22 +211,22 @@ class TestCatalogConeSearch:
             assert len(self.ldr._output) == n_ok
             assert self.ldr.returned_no_results is False
 
-        # check snackbar
-        assert any(f"Could not resolve {n_fail}/{n_total} source names" in m.text
-                   and "'source_id' column" in m.text and m.color == 'warning'
-                   for m in snackbars)
+        # check logger history
+        assert any(f"Could not resolve {n_fail}/{n_total} source names" in m['text']
+                   and "'source_id' column" in m['text'] and m['color'] == 'warning'
+                   for m in self.helper.plugins['Logger'].history)
 
         # the individual failures can be inspected
         failed_names = [name for f in self.ldr._source_name_query_failures for name in f]
         assert set(failed_names) == set(fail)
 
     @pytest.mark.parametrize("distinct,expect_hint", [(False, True), (True, False)])
-    def test_resolve_source_names_single_reason_snackbar(self, distinct, expect_hint):
+    def test_resolve_source_names_single_reason(self, distinct, expect_hint):
         # A single shared error across all failures emits a "single reason" hint
         # (a sign the resolver service may be down). Distinct errors do not.
         self._enter_catalog_mode(col_other=['source_id'],
                                  col_type='source_name', name_col='source_id')
-        snackbars = self._capture_snackbars()
+
         side_effect = self._fail_from_name(self.source_names, distinct=distinct)
         with patch.object(SkyCoord, 'from_name', side_effect=side_effect):
             coords = self.ldr._get_catalog_skycoords()
@@ -230,4 +234,4 @@ class TestCatalogConeSearch:
         # every row failed and is kept with its error string
         assert all(sc is None and err for sc, _, err in coords)
         hint = 'Single reason failure occurred during name resolution'
-        assert any(hint in m.text for m in snackbars) is expect_hint
+        assert any(hint in m['text'] for m in self.helper.plugins['Logger'].history) is expect_hint

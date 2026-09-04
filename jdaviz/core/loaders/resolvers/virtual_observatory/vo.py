@@ -1,13 +1,11 @@
-from astropy.coordinates import SkyCoord
 from astropy import units as u
 
 from pyvo import registry
-from pyvo.dal.exceptions import DALFormatError, DALQueryError
+from pyvo.dal.exceptions import DALFormatError
 from pyvo.utils.vocabularies import VocabularyError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Any, List, Unicode, observe
 
-from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.template_mixin import (
     SelectPluginComponent,
@@ -75,9 +73,24 @@ class VOResolver(BaseConeSearchResolver):
                 "catalog", "catalog_subset", "catalog_col_type", "catalog_name_col",
                 "query_progress",
                 "resource_filter_coverage", "waveband", "resource",
+                "max_results",
                 "query_archive"
             ],
         )
+
+    @property
+    def _query_archive_label(self):
+        return self.resource_selected
+
+    @staticmethod
+    def _registry_search(*constraints):
+        """
+        Search the VO registry for resources matching ``constraints``.
+
+        Split out from `query_registry_resources` to mirror `_query_single_coord`.
+        Doing so also allows for easier testing.
+        """
+        return registry.search(*constraints)
 
     @observe("producttype_selected", "waveband_selected",
              "source", "coordframe_selected",
@@ -111,203 +124,105 @@ class VOResolver(BaseConeSearchResolver):
                 )
                 + "or disable coverage filtering."
             )
-            self.hub.broadcast(SnackbarMessage(error_msg, sender=self, color="error"))
-            raise ValueError(error_msg)
+            self._query_message(error_msg, color="error",
+                                traceback=ValueError(error_msg), raise_msg=True)
 
-        # Clear existing resources list
+        # Clear existing resources list and any messages
+        self._clear_query_messages()
         self.resource.choices = []
         self.resource_selected = ""
+
+        # Resolve the coordinate used for coverage filtering before querying the
+        # registry.
+        coord = None
+        if self.resource_filter_coverage:
+            coord = self._source_to_skycoord(add_query_message=False)
+            if coord is None:
+                error_msg = f"Unable to resolve source coordinates: {self.source}"
+                self._query_message(error_msg, color="error",
+                                    traceback=LookupError(error_msg), raise_msg=True)
 
         try:
             registry_args = [
                 registry.Servicetype(VO_PROTOCOL[self.producttype_selected]['protocol']),
                 registry.Waveband(self.waveband_selected),
             ]
-            # If coverage filtering is enabled, lookup current
-            # source coordinate and add a Spatial search constraint
             if self.resource_filter_coverage:
-                try:
-                    # First parse user-provided source as direct coordinates
-                    coord = SkyCoord(
-                        self.source, unit=u.deg, frame=self.coordframe_selected
-                    )
-                except Exception:
-                    try:
-                        # If that didn't work, try parsing it as an object name
-                        coord = SkyCoord.from_name(
-                            self.source, frame=self.coordframe_selected
-                        )
-                    except Exception as e:
-                        self.hub.broadcast(
-                            SnackbarMessage(
-                                f"Unable to resolve source coordinates: {self.source}",
-                                sender=self,
-                                color="error",
-                                traceback=e
-                            )
-                        )
-                        raise LookupError(
-                            f"Unable to resolve source coordinates: {self.source}"
-                        )
+                # noinspection bad-argument-type
                 registry_args.append(
                     registry.Spatial(
                         (coord, (self.radius * u.Unit(self.radius_unit.selected))),
                         intersect="overlaps",
                     )
                 )
-            self._full_registry_results = registry.search(*registry_args)
+            self._full_registry_results = self._registry_search(*registry_args)
             self.resource.choices = list(
                 self._full_registry_results.getcolumn("short_name")
             )
+            if not self.resource.choices:
+                # otherwise the (empty) dropdown is the only indication of the outcome
+                # TODO: no choices should also trigger the invalid 'This field is required'
+                #  message beneath the dropdown but it doesn't happen until you try to make
+                #  a selection on nothing.
+                msg = f"No {self.waveband_selected} {self.producttype_selected.lower()} "\
+                      "resources found in the VO registry"
+                if self.resource_filter_coverage:
+                    msg += (f" for source: {self.source}. "
+                            f"Try a different waveband or product type, "
+                            f"or disable coverage filtering.")
+                else:
+                    msg += ". Try a different waveband or product type."
+
+                self._query_message(msg, color='warning')
+
         except (DALFormatError, VocabularyError) as e:
             # HTTP Error 403 is being issued as a string as part of the
             # VocabularyError when the registry is having issues.
-            if type(e.cause) is RequestConnectionError or 'HTTP Error 403' in str(e):
-                self.hub.broadcast(
-                    SnackbarMessage(
-                        f"Can't connect to VO registry. Check your internet connection: {e}",
-                        sender=self,
-                        color="error",
-                        traceback=e
-                    )
+            # NOTE: VocabularyError does not carry a ``cause``.
+            cause = getattr(e, 'cause', None)
+            if type(cause) is RequestConnectionError or 'HTTP Error 403' in str(e):
+                self._query_message(
+                    f"Can't connect to VO registry. Check your internet connection: {e}",
+                    color="error", traceback=e, raise_msg=True
                 )
             else:
-                raise e
+                self._query_message(f"An error occurred querying the VO Registry: {e}",
+                                    color="error", traceback=e, raise_msg=True)
         except Exception as e:
-            self.hub.broadcast(
-                SnackbarMessage(
-                    f"An error occured querying the VO Registry: {e}",
-                    sender=self,
-                    color="error",
-                    traceback=e
-                )
-            )
-            raise
+            self._query_message(f"An error occurred querying the VO Registry: {e}",
+                                color="error", traceback=e, raise_msg=True)
 
-    def _source_to_skycoord(self):
-        """
-        Resolve ``self.source`` into a ``SkyCoord``. First attempts to parse as
-        direct coordinates, then falls back to name resolution.
-        Returns None (and broadcasts a snackbar) if resolution fails.
-        """
-        # Strip parentheses from source if present
-        stripped_source = self.source.strip('()')
-        try:
-            return SkyCoord(stripped_source, unit=u.deg, frame=self.coordframe_selected)
-        except Exception:
-            try:
-                return SkyCoord.from_name(stripped_source, frame=self.coordframe_selected)
-            except Exception as e:
-                self.hub.broadcast(
-                    SnackbarMessage(
-                        f"Unable to resolve source coordinates: {self.source}",
-                        sender=self,
-                        color="error",
-                        traceback=e
-                    )
-                )
-                return None
-
-    def _query_single_coord(self, coord):
+    def _query_single_coord(self, skycoord_center):
         """
         Query the selected VO resource for a single ``SkyCoord`` center.
 
-        Returns an astropy Table (or None on failure / no results).
+        Returns an astropy Table (or None if the resource returned no results).
         """
+        vo_service = self._full_registry_results[
+            self.resource_selected
+        ].get_service(service_type=VO_PROTOCOL[self.producttype_selected]['protocol'])
+        search_kwargs = {
+            VO_PROTOCOL[self.producttype_selected]['size_arg']: (
+                (self.radius * u.Unit(self.radius_unit.selected))
+                if self.radius > 0.0
+                else None
+            )
+        }
+        # search service using these coords.
         try:
-            vo_service = self._full_registry_results[
-                self.resource_selected
-            ].get_service(service_type=VO_PROTOCOL[self.producttype_selected]['protocol'])
-            # search service using these coords.
-            try:
-                vo_results = vo_service.search(
-                    coord,
-                    **{
-                        VO_PROTOCOL[self.producttype_selected]['size_arg']: (
-                            (self.radius * u.Unit(self.radius_unit.selected))
-                            if self.radius > 0.0
-                            else None
-                        )
-                    },
-                    format=("" if self.producttype_selected == "Catalog" else "fits"),
-                )
-            except DALQueryError as e:
-                # We've run into issues where the service assumes a FORMAT and injects it for us.
-                # If the "image/fits" is duplicated, remove our requested format and rely on theirs
-                if "Wrong FORMAT=image/fits,image/fits" in str(e):
-                    vo_results = vo_service.search(
-                        coord,
-                        **{
-                            "diameter" if self.producttype_selected == "Spectrum" else "size": (
-                                (self.radius * u.Unit(self.radius_unit.selected))
-                                if self.radius > 0.0
-                                else None
-                            )
-                        },
-                    )
-                else:
-                    self.hub.broadcast(
-                        SnackbarMessage(
-                            f"Query failed: {e}",
-                            sender=self,
-                            traceback=e,
-                            color="error",
-                        )
-                    )
-                    return None
-            if len(vo_results) == 0:
-                self.hub.broadcast(
-                    SnackbarMessage(
-                        f"No observations returned at coords {coord} from VO resource: "
-                        f"{vo_service.baseurl}",
-                        sender=self,
-                        color="error",
-                    )
-                )
-                return None
-            return vo_results.to_table()
-        except Exception as e:
-            self.hub.broadcast(
-                SnackbarMessage(
-                    f"Unable to locate files for source {self.source}: {e}",
-                    sender=self,
-                    color="error",
-                    traceback=e
-                )
+            vo_results = vo_service.search(
+                skycoord_center,
+                **search_kwargs,
+                format=("" if self.producttype_selected == "Catalog" else "fits"),
             )
+        except Exception as e:  # nosec
+            # Services are inconsistent in how they handle FORMAT. Whenever the failure looks
+            # FORMAT related, retry once relying on the service default instead.
+            # Any other query failure is reported by _query_single_coord_reporting.
+            if "format" not in str(e).lower():
+                raise
+            vo_results = vo_service.search(skycoord_center, **search_kwargs)
+
+        if len(vo_results) == 0:
             return None
-
-    @with_spinner(spinner_traitlet="results_loading")
-    def query_archive(self):
-        """
-        Once a specific VO resource is selected, query it with the user-specified source target.
-        User input for source is first attempted to be parsed as a SkyCoord coordinate. If not,
-        then attempts to parse as a target name.
-
-        In "Catalog" input mode, the selected resource is queried once per catalog
-        row and the results are stacked (see ``_query_catalog``).
-        """
-        # Catalog mode: loop over all (selected) catalog rows and stack results.
-        if self.search_input_selected == 'Catalog':
-            self._query_catalog(self._query_single_coord)
-            return
-
-        # Source / Viewer mode: single coordinate.
-        coord = self._source_to_skycoord()
-        self._output = self._query_single_coord(coord) if coord is not None else []
-
-        if self._output is not None and len(self._output) > 0:
-            self.hub.broadcast(
-                SnackbarMessage(
-                    f"{len(self._output)} {self.producttype_selected} results found!",
-                    sender=self,
-                    color="success",
-                )
-            )
-        self._resolver_input_updated()
-
-    def vue_query_archive(self, _=None):
-        self.query_archive()
-
-    def parse_input(self):
-        return self._output
+        return vo_results.to_table()

@@ -252,17 +252,7 @@
       </plugin-action-button>
     </j-flex-row>
 
-    <j-flex-row v-if="returned_no_results">
-      <v-alert type="warning">
-        The search returned no results. Please modify your query parameters and try again.
-      </v-alert>
-    </j-flex-row>
-
-    <j-flex-row v-if="returned_max_results">
-      <v-alert type="warning">
-        The number of results returned has reached the maximum limit set ({{ max_results }}). Consider increasing the maximum results to ensure all data is retrieved.
-      </v-alert>
-    </j-flex-row>
+    <j-cone-search-messages :items="query_message_items"></j-cone-search-messages>
   </j-loader>
 </template>
 
