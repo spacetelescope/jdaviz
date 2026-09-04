@@ -685,26 +685,25 @@ def test_plot_line_analysis(deconfigged_helper):
     la.get_results(add_to_table=True)
 
     # Verify that the line analysis results are plotted
-    sv = deconfigged_helper._app.get_viewer('1D Spectrum')
-    all_plugin_marks = [m for m in sv.figure.marks if isinstance(m, PluginLine)]
-    vert_marks = [m for m in sv.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
+    sv_on = deconfigged_helper._app.get_viewer('1D Spectrum')
+    all_plugin_marks_on = [m for m in sv_on.figure.marks if isinstance(m, PluginLine)]
+    vert_marks_on = [m for m in sv_on.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
     # 8 total plugin marks: 3 for the continuum subset window, 1 for spectral subset,
     # 1 for gaussian spectrum, 1 for fwhm line, 1 for centroid line, 1 for sliceindicator
-    assert len(all_plugin_marks) == 6
+    assert len(all_plugin_marks_on) == 6
     # 1 vertical mark for centroid line
-    assert len(vert_marks) == 1
+    assert len(vert_marks_on) == 1
 
     # When plot_gaussian_params toggled off, 3 marks should disappear
     la.plot_gaussian_params = False
     la.get_results()
-    sv_nogauss = deconfigged_helper._app.get_viewer('1D Spectrum')
-    all_plugin_marks_nogauss = [m for m in sv_nogauss.figure.marks if isinstance(m, PluginLine)]
-    vert_marks_nogauss = [m for m in sv_nogauss.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
+    sv_off = deconfigged_helper._app.get_viewer('1D Spectrum')
+    all_plugin_marks_off = [m for m in sv_off.figure.marks if isinstance(m, PluginLine)]
+    vert_marks_off = [m for m in sv_off.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
     # fwhm line disappears
-    assert len(vert_marks_nogauss) == 0
+    assert len(vert_marks_off) == 0
     # gaussian spectrum and fwhm line disappear
-    assert len(all_plugin_marks_nogauss) == 4
-
+    assert len(all_plugin_marks_off) == 4
 
 
 def test_plot_line_analysis_with_units(deconfigged_helper):
