@@ -519,7 +519,6 @@ class TestVOImvizRemote:
         assert expected_error_msg in imviz_helper.plugins['Logger'].history[-1]["text"]
 
     @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
-    @pytest.mark.filterwarnings("ignore:column .* has a unit but is kept as")
     def test_HSTM51_data_url(self, imviz_helper):
         vo_ldr = self._init_vo_ldr_M51(imviz_helper)
 

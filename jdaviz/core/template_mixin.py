@@ -7,6 +7,8 @@ import time
 import warnings
 from contextlib import contextmanager
 from functools import cached_property, wraps
+
+from astropy.utils.exceptions import AstropyUserWarning
 from traitlets import link
 
 import astropy.units as u
@@ -6329,7 +6331,11 @@ class Table(PluginSubcomponent):
             self._clear_table()
             return
         # Cache the QTable
-        self._qtable = QTable(table)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",
+                                    message="ignore:column .* has a unit but is kept as",
+                                    category=AstropyUserWarning)
+            self._qtable = QTable(table)
         # Update headers
         all_headers = list(table.colnames)
         missing_headers = [h for h in all_headers if h not in self.headers_avail]
