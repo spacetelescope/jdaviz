@@ -262,8 +262,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             mark.visible = self.is_active
 
         # control analysis marks visibility
-        if getattr(self, '_gaussian_spectrum', None) is not None:
-            self._gaussian_spectrum.visible = self.is_active
+        if getattr(self, '_gaussian_line', None) is not None:
+            self._gaussian_line.visible = self.is_active
         if getattr(self, '_centroid_line', None) is not None:
             self._centroid_line.visible = self.is_active
         if getattr(self, '_fwhm_line', None) is not None:
@@ -381,14 +381,14 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         x_display_unit = self.spectrum_viewer.state.x_display_unit
         y_display_unit = self.spectrum_viewer.state.y_display_unit
         try:
-            gaussian_spectrum = Spectrum(spectral_axis=interp_spec_axis * u.Unit(x_display_unit),
+            self._gaussian_spectrum = Spectrum(spectral_axis=interp_spec_axis * u.Unit(x_display_unit),
                                          flux=(flux_values * parameters['amplitude'].unit).to(y_display_unit)) # noqa
         except UnitConversionError:
             return None
 
         line = PluginLine(viewer=self.spectrum_viewer,
-                          x=gaussian_spectrum.wavelength.to(x_display_unit),
-                          y=gaussian_spectrum.flux.to(y_display_unit),
+                          x=self._gaussian_spectrum.spectral_axis.to(x_display_unit),
+                          y=self._gaussian_spectrum.flux.to(y_display_unit),
                           colors=['#D41159'],
                           stroke_width=2,
                           line_style='solid')
@@ -466,7 +466,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         spec_viewer.figure.marks = marks_to_keep
 
         # reset
-        self._gaussian_spectrum = None
+        self._gaussian_line = None
         self._centroid_line = None
         self._fwhm_line = None
 
@@ -492,20 +492,20 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             continuum = parameters['continuum'] * u.Unit(spec_viewer.state.y_display_unit)
 
             if self.plot_gaussian_params:
-                self._gaussian_spectrum = self._create_gaussian_spectrum(self.params, self.spectrum)
-                if self._gaussian_spectrum is not None:
-                    spec_viewer.figure.marks += [self._gaussian_spectrum]
+                self._gaussian_line = self._create_gaussian_spectrum(self.params, self.spectrum)
+                if self._gaussian_line is not None:
+                    spec_viewer.figure.marks += [self._gaussian_line]
 
                 self._centroid_line = self._create_centroid_line(centroid_value)
                 # this is checking 1) that the centroid line was created successfully
                 # and 2) that the gaussian spectrum was created successfully
                 # (otherwise we don't want to plot the centroid line)
-                if self._centroid_line is not None and self._gaussian_spectrum is not None:
+                if self._centroid_line is not None and self._gaussian_line is not None:
                     spec_viewer.figure.marks += [self._centroid_line]
 
                 self._fwhm_line = self._create_fwhm_line(amplitude_value, centroid_value,
                                                          fwhm_value, continuum)
-                if self._fwhm_line is not None and self._gaussian_spectrum is not None:
+                if self._fwhm_line is not None and self._gaussian_line is not None:
                     spec_viewer.figure.marks += [self._fwhm_line]
 
             spec_viewer.figure.send_state('marks')
@@ -527,9 +527,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
         if self.plot_gaussian_params:
             # re-add the marks
-            if self._gaussian_spectrum is not None and \
-                    self._gaussian_spectrum not in spec_viewer.figure.marks:
-                spec_viewer.figure.marks += [self._gaussian_spectrum]
+            if self._gaussian_line is not None and \
+                    self._gaussian_line not in spec_viewer.figure.marks:
+                spec_viewer.figure.marks += [self._gaussian_line]
             if self._centroid_line is not None and \
                     self._centroid_line not in spec_viewer.figure.marks:
                 spec_viewer.figure.marks += [self._centroid_line]
@@ -539,7 +539,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         else:
             # remove the marks
             marks_to_keep = [m for m in spec_viewer.figure.marks
-                             if m is not self._gaussian_spectrum and
+                             if m is not self._gaussian_line and
                              m is not self._centroid_line and
                              m is not self._fwhm_line]
             spec_viewer.figure.marks = marks_to_keep
