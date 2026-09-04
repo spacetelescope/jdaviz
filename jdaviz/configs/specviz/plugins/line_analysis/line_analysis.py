@@ -381,7 +381,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         x_display_unit = self.spectrum_viewer.state.x_display_unit
         y_display_unit = self.spectrum_viewer.state.y_display_unit
         try:
-            self._gaussian_spectrum = Spectrum(spectral_axis=interp_spec_axis * u.Unit(x_display_unit),
+            self._gaussian_spectrum = Spectrum(spectral_axis=interp_spec_axis * u.Unit(x_display_unit), # noqa
                                          flux=(flux_values * parameters['amplitude'].unit).to(y_display_unit)) # noqa
         except UnitConversionError:
             return None
