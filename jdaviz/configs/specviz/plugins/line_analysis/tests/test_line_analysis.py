@@ -704,6 +704,7 @@ def test_plot_line_analysis(deconfigged_helper):
     # fwhm line disappears
     assert len(vert_marks) == 1
 
+
 def test_plot_line_analysis_with_units(deconfigged_helper):
     """
     Test that line analysis results obey global display units.
