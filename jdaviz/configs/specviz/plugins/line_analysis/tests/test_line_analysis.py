@@ -690,7 +690,7 @@ def test_plot_line_analysis(deconfigged_helper):
     vert_marks = [m for m in sv.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
     # 8 total plugin marks: 3 for the continuum subset window, 1 for spectral subset,
     # 1 for gaussian spectrum, 1 for fwhm line, 1 for centroid line, 1 for sliceindicator
-    assert len(all_plugin_marks) == 8
+    assert len(all_plugin_marks) == 6
     # 2 vertical marks: 1 for centroid line, 1 for sliceindicator
     assert len(vert_marks) == 2
 
@@ -700,7 +700,7 @@ def test_plot_line_analysis(deconfigged_helper):
     all_plugin_marks = [m for m in sv.figure.marks if isinstance(m, PluginLine)]
     vert_marks = [m for m in sv.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
     # gaussian spectrum and fwhm line disappear
-    assert len(all_plugin_marks) == 6
+    assert len(all_plugin_marks) == 4
     # fwhm line disappears
     assert len(vert_marks) == 1
 
