@@ -17,7 +17,7 @@
           :style="hovering ? 'cursor: pointer; text-decoration: underline;' : 'cursor: pointer;'"
           style="min-width: 0; overflow-wrap: break-word;"
         >
-          {{ value }}
+          {{ pendingValue !== null ? pendingValue : value }}
         </span>
 
         <!-- Pencil icon - visible on hover in display mode, fixed to the right -->
@@ -109,16 +109,24 @@ export default {
       default: true
     }
   },
+  // Declare emitted events so Vue 3 does not also fall them through to the root
+  // element as native DOM listeners (the bubbling native `input` event would
+  // otherwise deliver an InputEvent instead of the edited string).
+  emits: ['input', 'cancel', 'rename'],
   data() {
     return {
       hovering: false,
       isEditing: this.autoEdit,
       editValue: this.value,
+      // Optimistic name shown after accepting, until the backend updates `value`.
+      pendingValue: null,
       suppressPropagation: false
     };
   },
   watch: {
     value(newVal) {
+      // Backend confirmed the label; drop any optimistic pending name.
+      this.pendingValue = null;
       if (!this.isEditing) {
         this.editValue = newVal;
       }
@@ -133,6 +141,7 @@ export default {
   methods: {
     startEditing() {
       this.isEditing = true;
+      this.pendingValue = null;
       this.editValue = this.value;
       // Suppress propagation when entering edit mode to prevent selection change
       this.suppressPropagation = true;
@@ -165,7 +174,9 @@ export default {
       if (trimmedValue && trimmedValue !== this.value) {
         // Emit with old_label and new_label keys for data_menu.vue handler
         this.$emit('rename', trimmedValue);
-        // Keep the new value in editValue so it displays while waiting for backend update
+        // Show the new name immediately (avoids a flash of the old name) until
+        // the backend rename updates the `value` prop.
+        this.pendingValue = trimmedValue;
         this.editValue = trimmedValue;
       } else {
         // No change was made, treat as cancel

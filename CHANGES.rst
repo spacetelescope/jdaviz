@@ -67,6 +67,8 @@ New Features
 
 - Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322, #4350]
 
+- Allow markers plugin table to create other viewer types besides Scatter (i.e. Table or Histogram). [#4331]
+
 - Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
 
 - Table viewer API & UI to add/rename/remove columns. [#4282, #4343]
@@ -104,6 +106,8 @@ New Features
 - Improve UI appearance for URL loader. [#4354]
 
 - Adds search to extension menu in loaders when there are more than 3 extensions available. [#4372]
+  
+- Generate a Gaussian curve from Line Analysis plugin results and optionally add to the 1D Spectrum viewer. [#4374]
 
 - Unify astroquery and VO reporting behavior. Both now show banners in the UI for the
   results of queries. This information can also be found in the logger. [#4369]
@@ -130,6 +134,8 @@ Bug Fixes
 - Fixed closing a viewer not deleting the associated backend objects. [#4317]
 
 - Fix color picker not showing correctly. [#4332]
+
+- Fix error when typing while renaming data or subset. [#4359]
 
 Mosviz
 ^^^^^^

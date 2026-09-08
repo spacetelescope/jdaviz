@@ -748,3 +748,62 @@ def test_markers_load_table_into_data_collection(deconfigged_helper, spectrum1d)
     assert loaded_table['spectral_axis'][0] == 4623
     assert loaded_table['spectral_axis'][1] == 5000
     assert loaded_table['spectral_axis'][2] == 6000
+
+
+@pytest.mark.parametrize('viewer_type', ['Scatter', 'Table', 'Histogram'])
+def test_markers_mouseover_and_load_into_new_viewer(deconfigged_helper, image_hdu_wcs, viewer_type):
+    """
+    Test creating markers in the UI, loading table into app, then
+    create new viewers from the plugin table: scatter, table, histogram
+    """
+    # Load initial data into deconfigged helper
+    deconfigged_helper.load(image_hdu_wcs, format='Image')
+
+    # Create a 1D viewer
+    viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+
+    # Get the markers plugin
+    mp = deconfigged_helper.plugins['Markers']
+    mp.keep_active = True
+
+    # Get coords_info tool for mouseover events
+    label_mouseover = deconfigged_helper._coords_info
+
+    # Add first marker via mouseover + key event (mimics UI 'm' press)
+    label_mouseover._viewer_mouse_event(viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 4623, 'y': 50}})
+    mp._obj._on_viewer_key_event(viewer, {'event': 'keydown', 'key': 'm'})
+
+    # Add second marker
+    label_mouseover._viewer_mouse_event(viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 5000, 'y': 60}})
+    mp._obj._on_viewer_key_event(viewer, {'event': 'keydown', 'key': 'm'})
+
+    # Add third marker
+    label_mouseover._viewer_mouse_event(viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 6000, 'y': 70}})
+    mp._obj._on_viewer_key_event(viewer, {'event': 'keydown', 'key': 'm'})
+
+    # export table to markers plugin
+    qtbl = mp.export_table()
+    assert qtbl is not None
+    assert len(qtbl) == 3
+    mp._obj.table.loader_panel_ind = 0
+
+    # verify new viewers can be generated with marker table
+    ldr = mp._obj.table.loaders['object']
+    assert ldr.object is not None
+    ldr.format.selected = 'Catalog'
+    assert viewer_type in ldr.importer.viewer.create_new.choices
+    ldr.importer.viewer.create_new = viewer_type
+    ldr.importer.viewer = viewer_type
+    ldr.load()
+
+    # verify that the new viewer has the expected data from the markers table
+    new_viewer = deconfigged_helper.viewers[viewer_type]
+    assert new_viewer is not None
+    assert len(new_viewer.data_menu.data_labels_visible) == 1
+    assert new_viewer.data_menu.data_labels_visible[0] == 'Catalog'

@@ -98,6 +98,20 @@
       </j-tooltip>
     </j-flex-row>
 
+    <j-plugin-section-header>Gaussian Fit Results</j-plugin-section-header>
+    <j-flex-row>  <j-docs-link>Automatically generate and plot a Gaussian model using the line analysis results. </j-docs-link></j-flex-row>
+    <!-- Toggle for plotting Gaussian spectrum and marks -->
+    <j-flex-row>
+    <v-switch
+        v-model="plot_gaussian_params"
+        :label="api_hints_enabled ? 'plg.plot_gaussian_params = True' : 'Plot Gaussian'"
+        hint="When enabled, plots the Gaussian fit spectrum, and marks the centroid and FWHM."
+        persistent-hint
+        :disabled="!results_available"
+    >
+    </v-switch>
+    </j-flex-row>
+
     <div v-if="results_available">
       <j-plugin-section-header>Results</j-plugin-section-header>
 
