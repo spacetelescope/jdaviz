@@ -99,6 +99,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     * :meth:`rename_subset`
     * :meth:`update_subset`
     * :meth:`simplify_subset`
+    * :meth:`delete_subset`
     """
     template_file = __file__, "subset_tools.vue"
     select = List([]).tag(sync=True)

@@ -363,6 +363,10 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
+
+    # PRs to add to changelog when removing dev_mos_loader dev-flag: 4375
+    dev_spectral_lines_plugin = CallbackProperty(
+        False, docstring='Whether to enable developer mode for the Spectral Lines plugin')
     # PRs to add to changelog when removing dev_mos_loader dev-flag: 4357
     dev_mos_loader = CallbackProperty(
         False, docstring='Whether to enable developer mode for the MOS loader')

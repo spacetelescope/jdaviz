@@ -7,6 +7,7 @@
       v-model:selected="extension_selected"
       :show_if_single_entry="true"
       :multiselect="extension_multiselect"
+      :search="extension_items.length > 3"
       label="Extension"
       api_hint="ldr.importer.extension ="
       :api_hints_enabled="api_hints_enabled"
@@ -70,7 +71,7 @@
         :api_hints_enabled="api_hints_enabled"
       ></plugin-select>
 
-      <plugin-select v-if="coord_frame_selected !== 'icrs' && coord_frame_selected !== 'galactic'"
+      <plugin-select v-if="coord_frame_selected !== 'icrs' && coord_frame_selected !== 'galactic' && coord_frame_selected !== '----'"
         :items="coord_equinox_items.map(i => i.label)"
         v-model:selected="coord_equinox_selected"
         label="Equinox"

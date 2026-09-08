@@ -36,6 +36,9 @@ Plugins API
 .. automodapi:: jdaviz.configs.default.plugins.plot_options.plot_options
    :no-inheritance-diagram:
 
+.. automodapi:: jdaviz.configs.default.plugins.spectral_lines.spectral_lines
+   :no-inheritance-diagram:
+
 .. automodapi:: jdaviz.configs.default.plugins.subset_tools.subset_tools
    :no-inheritance-diagram:
 

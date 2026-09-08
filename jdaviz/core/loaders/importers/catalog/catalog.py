@@ -125,17 +125,28 @@ class CatalogImporter(BaseImporterToDataCollection):
         self.coord_frame = SelectPluginComponent(self,
                                                  items='coord_frame_items',
                                                  selected='coord_frame_selected',
-                                                 manual_options=['icrs', 'fk5',
+                                                 manual_options=['----', 'icrs', 'fk5',
                                                                  'fk4', 'galactic',
                                                                  'ecliptic'])
+
+        # only default to icrs if ra and dec were auto-detected
+        ra_detected = self.col_ra_selected not in ('---', '', None)
+        dec_detected = self.col_dec_selected not in ('---', '', None)
+        if ra_detected and dec_detected:
+            self.coord_frame_selected = 'icrs'
 
         self.coord_equinox = SelectPluginComponent(self,
                                                    items='coord_equinox_items',
                                                    selected='coord_equinox_selected',
-                                                   manual_options=['J2000.0',
+                                                   manual_options=['----',
+                                                                   'J2000.0',
                                                                    'J1950.0',
                                                                    'B1950.0',
                                                                    'B1900.0'])
+
+        # only default to J2000.0 if ra and dec were auto-detected
+        if ra_detected and dec_detected:
+            self.coord_equinox_selected = 'J2000.0'
 
         # dropdown for source ID column
         self.col_id = SelectPluginComponent(self,
@@ -391,6 +402,8 @@ class CatalogImporter(BaseImporterToDataCollection):
                 # disable import if RA is selected but Dec is not (or vice versa)
                 if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
                     import_disabled = True
+                self.coord_frame_selected = '----'
+                self.coord_equinox_selected = '----'
                 return
 
             has_units = False
@@ -420,6 +433,16 @@ class CatalogImporter(BaseImporterToDataCollection):
             # disable import if RA is selected but Dec is not (or vice versa)
             if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
                 import_disabled = True
+
+            # sync coord_frame and coord_equinox with ra/dec selection state
+            ra_is_invalid = ra in ('---', '', None)
+            dec_is_invalid = dec in ('---', '', None)
+            if ra_is_invalid or dec_is_invalid:
+                self.coord_frame_selected = '----'
+                self.coord_equinox_selected = '----'
+            elif self.coord_frame_selected == '----':
+                self.coord_frame_selected = 'icrs'
+                self.coord_equinox_selected = 'J2000.0'
 
         elif msg['name'] in ('col_x_selected', 'col_y_selected'):
             # disable import if RA is selected but Dec is not (or vice versa)

@@ -8,6 +8,7 @@
       :multiselect="multiselect"
       :nonmultiselect_allow_clear="true"
       :exists_in_dc="existing_data_in_dc"
+      :search="extension_items.length > 3"
       label="Extension"
       api_hint="ldr.importer.extension ="
       :api_hints_enabled="api_hints_enabled"

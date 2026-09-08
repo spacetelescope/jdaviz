@@ -1070,8 +1070,6 @@ class TestParenting:
         assert self._loaded() == ['Image[SCI,1]', 'Image[ERR,1]']
         assert self._loaded('Image (1)') == []
 
-    # TODO: Remove skip once this behavior is fixed
-    @pytest.mark.skip
     def test_load_unload_parenting_behavior(self):
         ldr = self.ldr
         dcf_helper = self.dcf_helper
