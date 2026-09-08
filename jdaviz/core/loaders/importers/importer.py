@@ -53,6 +53,7 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
     # over any parsers not included in the list).  If not empty but no valid parsers are in
     # the list, the first remaining match will be used.
     parser_preference = []
+    allow_directory_input = False
 
     import_disabled_msg = Unicode().tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)

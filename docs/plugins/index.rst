@@ -13,6 +13,7 @@ Jdaviz provides a wide range of data analysis plugins for different types of ast
    model_fitting
    line_analysis
    line_lists
+   spectral_lines
    gaussian_smooth
    collapse
    moment_maps
@@ -41,6 +42,7 @@ Plugins provide specialized analysis capabilities tailored to different data typ
   - Model Fitting
   - Line Analysis
   - Line Lists
+  - Spectral Lines
   - Gaussian Smooth
 
 **Cube Analysis (3D)**
