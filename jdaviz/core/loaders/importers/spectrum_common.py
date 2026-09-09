@@ -642,13 +642,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                         # about the wavelength solution for now
                         if len(wcs.forward_transform.inputs) == 5:
                             wcs = None
-                        # TODO: This is a temporary fix until handled upstream in glue
-                        # For 2D spectra, disable 3D GWCS
-                        # This prevents glue-astronomy from misidentifying component
-                        # units (setting Wavelength to 'deg' instead of wavelength unit).
-                        elif (self.supported_flux_ndim == 2 and
-                              getattr(wcs, 'world_n_dim', 0) > self.supported_flux_ndim):
-                            wcs = None
                     else:
                         wcs = None
                 except ValueError:
