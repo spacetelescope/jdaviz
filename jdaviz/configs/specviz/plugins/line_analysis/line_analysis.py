@@ -361,7 +361,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         continuum, _, _ = self._get_continuum(self.dataset, self.spectral_subset)
 
         parameters = {'centroid': centroid, 'amplitude': amplitude_jy,
-                      'sigma': sigma, 'fwhm': fwhm, 'continuum': continuum.flux.to('Jy')}
+                      'sigma': sigma, 'fwhm': fwhm, 'continuum': continuum.flux}
 
         return parameters
 
@@ -378,7 +378,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                                        spectrum_template.spectral_axis.value.max(),
                                        5*len(spectrum_template.spectral_axis.value))
         continuum_offset = interp1d(spectrum_template.spectral_axis.value,
-                                    parameters['continuum'].value)
+                                    parameters['continuum'].to(parameters['amplitude'].unit).value)
         flux_values = gaussian_model(interp_spec_axis) + continuum_offset(interp_spec_axis)
 
         x_display_unit = self.spectrum_viewer.state.x_display_unit
