@@ -124,11 +124,11 @@ class VOResolver(BaseConeSearchResolver):
                 )
                 + "or disable coverage filtering."
             )
-            self._query_message(error_msg, color="error",
+            self._loader_message(error_msg, color="error",
                                 traceback=ValueError(error_msg), raise_msg=True)
 
         # Clear existing resources list and any messages
-        self._clear_query_messages()
+        self._clear_loader_messages()
         self.resource.choices = []
         self.resource_selected = ""
 
@@ -136,10 +136,10 @@ class VOResolver(BaseConeSearchResolver):
         # registry.
         coord = None
         if self.resource_filter_coverage:
-            coord = self._source_to_skycoord(add_query_message=False)
+            coord = self._source_to_skycoord(add_loader_message=False)
             if coord is None:
                 error_msg = f"Unable to resolve source coordinates: {self.source}"
-                self._query_message(error_msg, color="error",
+                self._loader_message(error_msg, color="error",
                                     traceback=LookupError(error_msg), raise_msg=True)
 
         try:
@@ -173,7 +173,7 @@ class VOResolver(BaseConeSearchResolver):
                 else:
                     msg += ". Try a different waveband or product type."
 
-                self._query_message(msg, color='warning')
+                self._loader_message(msg, color='warning')
 
         except (DALFormatError, VocabularyError) as e:
             # HTTP Error 403 is being issued as a string as part of the
@@ -181,15 +181,15 @@ class VOResolver(BaseConeSearchResolver):
             # NOTE: VocabularyError does not carry a ``cause``.
             cause = getattr(e, 'cause', None)
             if type(cause) is RequestConnectionError or 'HTTP Error 403' in str(e):
-                self._query_message(
+                self._loader_message(
                     f"Can't connect to VO registry. Check your internet connection: {e}",
                     color="error", traceback=e, raise_msg=True
                 )
             else:
-                self._query_message(f"An error occurred querying the VO Registry: {e}",
+                self._loader_message(f"An error occurred querying the VO Registry: {e}",
                                     color="error", traceback=e, raise_msg=True)
         except Exception as e:
-            self._query_message(f"An error occurred querying the VO Registry: {e}",
+            self._loader_message(f"An error occurred querying the VO Registry: {e}",
                                 color="error", traceback=e, raise_msg=True)
 
     def _query_single_coord(self, skycoord_center):

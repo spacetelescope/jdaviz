@@ -252,7 +252,7 @@
       </plugin-action-button>
     </j-flex-row>
 
-    <j-cone-search-messages :items="query_message_items"></j-cone-search-messages>
+    <j-loader-banner-messages :items="loader_message_items"></j-loader-banner-messages>
   </j-loader>
 </template>
 
