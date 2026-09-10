@@ -125,7 +125,7 @@ class VOResolver(BaseConeSearchResolver):
                 + "or disable coverage filtering."
             )
             self._loader_message(error_msg, color="error",
-                                traceback=ValueError(error_msg), raise_msg=True)
+                                 traceback=ValueError(error_msg), raise_msg=True)
 
         # Clear existing resources list and any messages
         self._clear_loader_messages()
@@ -140,7 +140,7 @@ class VOResolver(BaseConeSearchResolver):
             if coord is None:
                 error_msg = f"Unable to resolve source coordinates: {self.source}"
                 self._loader_message(error_msg, color="error",
-                                    traceback=LookupError(error_msg), raise_msg=True)
+                                     traceback=LookupError(error_msg), raise_msg=True)
 
         try:
             registry_args = [
@@ -187,10 +187,10 @@ class VOResolver(BaseConeSearchResolver):
                 )
             else:
                 self._loader_message(f"An error occurred querying the VO Registry: {e}",
-                                    color="error", traceback=e, raise_msg=True)
+                                     color="error", traceback=e, raise_msg=True)
         except Exception as e:
             self._loader_message(f"An error occurred querying the VO Registry: {e}",
-                                color="error", traceback=e, raise_msg=True)
+                                 color="error", traceback=e, raise_msg=True)
 
     def _query_single_coord(self, skycoord_center):
         """

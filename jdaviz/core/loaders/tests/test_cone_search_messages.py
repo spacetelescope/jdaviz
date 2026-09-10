@@ -104,7 +104,7 @@ class TestConeSearchMessages:
 
         with pytest.raises(ValueError, match='fatal'):
             ldr._loader_message('fatal', color='error',
-                               traceback=ValueError('fatal'), raise_msg=True)
+                                traceback=ValueError('fatal'), raise_msg=True)
 
         # an error without a traceback can only be reported, never raised
         ldr._loader_message('reported only', color='error', raise_msg=True)

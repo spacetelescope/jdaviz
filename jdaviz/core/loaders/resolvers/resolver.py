@@ -1237,8 +1237,8 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         except Exception as e:  # nosec
             source_label = self._current_query_source_label or self.source
             self._loader_message(f"Failed to query {self._query_archive_label.strip()} "
-                                f"for source: {source_label}.",
-                                color='error', traceback=e)
+                                 f"for source: {source_label}.",
+                                 color='error', traceback=e)
             return None
 
     def _source_to_skycoord(self, add_loader_message=True):
@@ -1263,7 +1263,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         except Exception as e:  # nosec
             if add_loader_message:
                 self._loader_message(f"Unable to resolve source name: {self.source}",
-                                    color='error', traceback=e)
+                                     color='error', traceback=e)
             return None
 
     def _finalize_query_output(self, output, hit_cap=False):
@@ -1283,13 +1283,14 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         _failures = [msg for msg in self.loader_message_items if msg['color'] == 'error']
 
         if self.returned_no_results and not len(_failures):
-            self._loader_message(f"The search returned no results from {self._query_archive_label}. "
-                                f"Please modify your query parameters and try again.",
-                                color='error')
+            self._loader_message(
+                f"The search returned no results from {self._query_archive_label}. "
+                f"Please modify your query parameters and try again.",
+                color='error')
         elif self.returned_max_results:
             self._loader_message("The number of results returned has reached the maximum "
-                                f"limit set ({self.max_results}).",
-                                color='success')
+                                 f"limit set ({self.max_results}).",
+                                 color='success')
         else:
             # There can be a scenario where the query returns failures for every result
             # but the query itself was successful. In that case, we don't want to show the
