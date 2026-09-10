@@ -155,18 +155,33 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
             return
 
         redshift = self._components.get(lbl, self._default_component_info())['redshift']
+        col_name = self._component_col_name(lbl)
         self._app._jdaviz_helper._set_data_component(
-            data, self._component_col_name(lbl), data[source_cid] * (1 + redshift)
+            data, col_name, data[source_cid] * (1 + redshift)
         )
+        self._track_component_column(data, col_name)
+
+    @staticmethod
+    def _track_component_column(data, col_name, remove=False):
+        """Keep the list of plugin-added columns in ``data.meta`` up to date so
+        table viewers protect them from deletion and sync them on rename."""
+        cols = data.meta.setdefault('_jdaviz_plugin_component_column', [])
+        if remove:
+            if col_name in cols:
+                cols.remove(col_name)
+        elif col_name not in cols:
+            cols.append(col_name)
 
     def _get_line_names(self, data):
-        """Values of a line-name-like column in ``data``, or None."""
-        for cid in data.components:
-            if cid.label.lower() in ('linename', 'line_name', 'name', 'line', 'id', 'label'):
-                comp = data.get_component(cid)
-                # categorical (string) components store original values in .labels
-                return comp.labels if hasattr(comp, 'labels') else data[cid]
-        return None
+        """Values of the line-name column recorded by the loader, or None."""
+        linename_col = data.meta.get('_jdaviz_loader_linename_col')
+        cid = (self._get_data_component_id(data, linename_col)
+               if linename_col is not None else None)
+        if cid is None:
+            return None
+        comp = data.get_component(cid)
+        # categorical (string) components store original values in .labels
+        return comp.labels if hasattr(comp, 'labels') else data[cid]
 
     def _update_component_lines(self):
         """
@@ -216,6 +231,7 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
         cid = self._get_data_component_id(data, self._component_col_name(lbl))
         if cid is not None:
             data.remove_component(cid)
+            self._track_component_column(data, cid.label, remove=True)
 
     def _on_component_add(self, lbl):
         self._components.setdefault(lbl, self._default_component_info())
@@ -236,6 +252,8 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
             data, self._component_col_name(new_lbl), data[old_cid]
         )
         data.remove_component(old_cid)
+        self._track_component_column(data, old_cid.label, remove=True)
+        self._track_component_column(data, self._component_col_name(new_lbl))
 
     def _on_component_remove(self, lbl):
         self._components.pop(lbl, None)
