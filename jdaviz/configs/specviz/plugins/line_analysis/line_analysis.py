@@ -7,7 +7,8 @@ from glue.core.message import (SubsetDeleteMessage,
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, List, Float, Unicode, observe
 from astropy import units as u
-from astropy.modeling.models import Gaussian1D, Const1D
+from astropy.modeling.models import Gaussian1D
+from scipy.interpolate import interp1d
 from specutils import analysis, Spectrum
 
 from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
@@ -357,10 +358,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             amplitude_jy = amplitude_flam.to(u.Jy, equivalencies=u.spectral_density(centroid))
         except UnitConversionError:
             amplitude_jy = amplitude_flam
-        _, continuum, _ = self._get_continuum(self.dataset, self.spectral_subset)
+        continuum, _, _ = self._get_continuum(self.dataset, self.spectral_subset)
 
         parameters = {'centroid': centroid, 'amplitude': amplitude_jy,
-                      'sigma': sigma, 'fwhm': fwhm, 'continuum': continuum}
+                      'sigma': sigma, 'fwhm': fwhm, 'continuum': continuum.flux.to('Jy')}
+
         return parameters
 
     def _create_gaussian_spectrum(self, parameters, spectrum_template):
@@ -370,12 +372,13 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         gaussian_model = Gaussian1D(amplitude=parameters['amplitude'].value,
                                     mean=parameters['centroid'].value,
                                     stddev=parameters['sigma'].value)
-        continuum_offset = Const1D(amplitude=np.median(parameters['continuum']))
 
         # oversample the spectrum to get a smooth curve for plotting
         interp_spec_axis = np.linspace(spectrum_template.spectral_axis.value.min(),
                                        spectrum_template.spectral_axis.value.max(),
                                        5*len(spectrum_template.spectral_axis.value))
+        continuum_offset = interp1d(spectrum_template.spectral_axis.value,
+                                    parameters['continuum'].value)
         flux_values = gaussian_model(interp_spec_axis) + continuum_offset(interp_spec_axis)
 
         x_display_unit = self.spectrum_viewer.state.x_display_unit
@@ -460,7 +463,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             # remove gaussian lines but not the continuum lines
             if mark is not getattr(self, '_centroid_line', None) and \
                     mark is not getattr(self, '_fwhm_line', None) and \
-                    mark is not getattr(self, '_gaussian_spectrum', None):
+                    mark is not getattr(self, '_gaussian_line', None):
                 marks_to_keep.append(mark)
 
         spec_viewer.figure.marks = marks_to_keep
@@ -489,7 +492,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             centroid_value = parameters['centroid'].to(u.Unit(spec_viewer.state.x_display_unit))
             fwhm_value = parameters['fwhm'].to(u.Unit(spec_viewer.state.x_display_unit))
             amplitude_value = parameters['amplitude'].to(u.Unit(spec_viewer.state.y_display_unit))
-            continuum = parameters['continuum'] * u.Unit(spec_viewer.state.y_display_unit)
+            continuum = parameters['continuum'].to(u.Unit(spec_viewer.state.y_display_unit))
 
             if self.plot_gaussian_params:
                 self._gaussian_line = self._create_gaussian_spectrum(self.params, self.spectrum)
