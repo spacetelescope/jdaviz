@@ -570,38 +570,21 @@ function reconcileStateItem(item, templateMaps) {
   return cloned
 }
 
-function stripLayoutSizes(item) {
+function findFirstStack(item) {
   if (!item || typeof item !== 'object') {
-    return
+    return null
   }
-  // Force GoldenLayout to redistribute space evenly, exactly like the fresh template
-  delete item.size
-  delete item.minSize
-  delete item.width
-  delete item.height
+  if (item.type === 'stack') {
+    return item
+  }
   const content = Array.isArray(item.content) ? item.content : []
   for (const child of content) {
-    stripLayoutSizes(child)
-  }
-}
-
-function appendBottomStacks(root, newStacks) {
-  // Add the new stacks as full-width rows at the bottom of the vertical column,
-  // keeping a row-rooted layout that mirrors the slot template (which renders
-  // reliably); a column root or leftover runtime sizes can blank the viewer area.
-  const appendIntoColumn = (node) => {
-    if (node && node.type === 'column' && Array.isArray(node.content)) {
-      node.content.push(...newStacks)
-      return node
+    const nested = findFirstStack(child)
+    if (nested) {
+      return nested
     }
-    return { type: 'column', content: [node, ...newStacks] }
   }
-
-  if (root && root.type === 'row' && Array.isArray(root.content) && root.content.length === 1) {
-    root.content[0] = appendIntoColumn(root.content[0])
-    return root
-  }
-  return { type: 'row', content: [appendIntoColumn(root)] }
+  return null
 }
 
 function collectExistingComponentKeys(root) {
@@ -668,6 +651,16 @@ function sameSet(left, right) {
   return true
 }
 
+function countLayoutStacks(item) {
+  if (!item || typeof item !== 'object') {
+    return 0
+  }
+
+  const content = Array.isArray(item.content) ? item.content : []
+  const nestedCount = content.reduce((total, child) => total + countLayoutStacks(child), 0)
+  return (item.type === 'stack' ? 1 : 0) + nestedCount
+}
+
 function reconcileLayoutState(baseState, templateLayout) {
   if (!templateLayout || !templateLayout.root) {
     return baseState
@@ -691,14 +684,35 @@ function reconcileLayoutState(baseState, templateLayout) {
   })
 
   if (missingComponents.length) {
-    // Preserve the existing (possibly user-rearranged) layout and add each new
-    // viewer as a full-width row below the existing block rather than resetting.
-    const newStacks = missingComponents.map((component) => ({
-      type: 'stack',
-      content: [cloneValue(component)],
-    }))
-    reconciledRoot = appendBottomStacks(reconciledRoot, newStacks)
-    stripLayoutSizes(reconciledRoot)
+    if (countLayoutStacks(templateLayout.root) > countLayoutStacks(reconciledRoot)) {
+      return cloneValue(templateLayout)
+    }
+
+    let targetStack = findFirstStack(reconciledRoot)
+
+    if (!targetStack) {
+      targetStack = {
+        type: 'stack',
+        isClosable: false,
+        content: [],
+      }
+      if (Array.isArray(reconciledRoot.content)) {
+        reconciledRoot.content.push(targetStack)
+      } else {
+        reconciledRoot = {
+          type: 'row',
+          isClosable: false,
+          content: [reconciledRoot, targetStack],
+        }
+      }
+    }
+
+    if (!Array.isArray(targetStack.content)) {
+      targetStack.content = []
+    }
+    for (const component of missingComponents) {
+      targetStack.content.push(cloneValue(component))
+    }
   }
 
   return {

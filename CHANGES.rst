@@ -106,11 +106,9 @@ New Features
 - Improve UI appearance for URL loader. [#4354]
 
 - Adds search to extension menu in loaders when there are more than 3 extensions available. [#4372]
-  
+
 - Generate a Gaussian curve from Line Analysis plugin results and optionally add to the 1D Spectrum viewer. [#4374]
 
-- Unify astroquery and VO reporting behavior. Both now show banners in the UI for the
-  results of queries. This information can also be found in the logger. [#4369]
 
 Mosviz
 ^^^^^^
