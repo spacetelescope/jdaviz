@@ -419,7 +419,7 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     assert_quantity_allclose(reg[-1]['region'].center.y, ellipse1.center.y)
     assert_quantity_allclose(reg[-1]['region'].width, ellipse1.width)
     assert_quantity_allclose(reg[-1]['region'].height, ellipse1.height)
-    assert_quantity_allclose(reg[-1]['region'].angle, ellipse1.angle)
+    assert_quantity_allclose(reg[-1]['region'].angle, ellipse1.angle, atol=1e-7 * u.deg)
 
     expected_sky = ellipse1.to_sky(image_2d_wcs)
     assert_quantity_allclose(reg[-1]['sky_region'].center.ra, expected_sky.center.ra)

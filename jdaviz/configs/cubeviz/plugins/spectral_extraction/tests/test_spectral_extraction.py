@@ -1,3 +1,4 @@
+from packaging.version import parse
 import pytest
 import warnings
 
@@ -19,6 +20,7 @@ from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_conversion_general)
 from jdaviz.utils import cached_uri
+from photutils import __version__ as photutils_version
 
 calspec_url = "https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_calspec/"
 
@@ -291,8 +293,17 @@ def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
 
     # The extracted spectrum has "steps" (aliased) but perhaps that is due to
     # how photutils is extracting a boxy aperture. There is still a slope.
-    expected_flux_step = [9.378906, 10.5625, 11.816406, 13.140625, 14.535156,
-                          16, 17.535156, 19.691406, 21.972656, 24.378906]
+    if parse(photutils_version) >= parse('3.0.0'):
+        # after 3.0.0, "exact" rectangular extraction is truly exact,
+        expected_flux_step = [
+            9.519410133361816, 10.564827919006348, 11.725051879882812,
+            13.012691497802734, 14.441734313964844, 16, 17.535156,
+            19.691406, 21.972656, 24.378906
+        ]
+    else:
+        # up to 3.0.0, "exact" was  approximate
+        expected_flux_step = [9.378906, 10.5625, 11.816406, 13.140625, 14.535156,
+                              16, 17.535156, 19.691406, 21.972656, 24.378906]
     assert_allclose(collapsed_spec.flux.value[::301], expected_flux_step)
 
     extract_plg.wavelength_dependent = False
