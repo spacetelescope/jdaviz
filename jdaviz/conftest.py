@@ -43,7 +43,7 @@ SPECTRUM_SIZE = 10  # length of spectrum
 
 
 # ============================================================================
-# Pytest plugins
+# Pytest plugins 
 # - Memory logging (memlog): imported from pytest_memlog.py
 # - Remote failure skipping: imported from pytest_remote_skip.py
 # In CI, these utilities may have already been called from the root
