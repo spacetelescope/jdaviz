@@ -358,10 +358,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             amplitude_jy = amplitude_flam.to(u.Jy, equivalencies=u.spectral_density(centroid))
         except UnitConversionError:
             amplitude_jy = amplitude_flam
-        continuum, _, _ = self._get_continuum(self.dataset, self.spectral_subset)
+        _, continuum, _ = self._get_continuum(self.dataset, self.spectral_subset, with_units=True)
 
         parameters = {'centroid': centroid, 'amplitude': amplitude_jy,
-                      'sigma': sigma, 'fwhm': fwhm, 'continuum': continuum.flux}
+                      'sigma': sigma, 'fwhm': fwhm, 'continuum': continuum}
 
         return parameters
 

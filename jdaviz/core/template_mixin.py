@@ -4202,7 +4202,8 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                            mark_y.get(pos, []),
                            viewers=viewers)
 
-    def _get_continuum(self, dataset, spectral_subset, update_marks=False, per_pixel=False):
+    def _get_continuum(self, dataset, spectral_subset,
+                       update_marks=False, per_pixel=False, with_units=False):
         if dataset.selected == '':
             self._update_continuum_marks()
             return None, None, None
@@ -4354,7 +4355,11 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                          mark_y,
                                          viewers=dataset.viewers_with_selected_visible)
 
-        return spectrum, continuum, spectrum - continuum
+        if with_units:
+            continuum *= spectrum.flux.unit
+            return spectrum, continuum, spectrum - continuum.value
+        else:
+            return spectrum, continuum, spectrum - continuum
 
 
 class ViewerSelect(SelectPluginComponent):
