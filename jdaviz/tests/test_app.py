@@ -2,6 +2,7 @@ import pytest
 from copy import deepcopy
 
 import numpy as np
+from astropy.nddata import NDData
 from astropy import units as u
 from astropy.wcs import WCS
 from specutils import Spectrum
@@ -600,10 +601,14 @@ def test_add_custom_loader_open_in_tray(deconfigged_helper, tmp_path):
     assert repr(loader) == '<test API>'
 
 
-def test_delete_catalog_with_wcs_from_viewer(deconfigged_helper, sky_coord_only_source_catalog):
+def test_delete_catalog_with_wcs_from_viewer(deconfigged_helper, image_2d_wcs,
+                                             sky_coord_only_source_catalog):
     # load an image
-    image_data = np.ones((10, 10))
+    image_data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
     deconfigged_helper.load(image_data, format='Image', data_label='image')
+
+    # change app to WCS linking
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
 
     # load the catalog
     deconfigged_helper.load(sky_coord_only_source_catalog,
