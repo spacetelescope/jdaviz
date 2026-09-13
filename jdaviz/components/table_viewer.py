@@ -92,6 +92,7 @@ class JdavizTableGlue(TableGlue):
             return []
         components = self.get_visible_components()
         assoc_columns = set(self.data.meta.get('_viewer_data_columns') or {})
+        assoc_columns.update(self.data.meta.get('_plugin_attribute_columns') or {})
         return [
             {
                 'text': str(k),
@@ -121,7 +122,10 @@ class JdavizTableGlue(TableGlue):
         if not old_name or not new_name or old_name == new_name:
             return
         if self.data is not None and old_name in [c.label for c in self.data.main_components]:
-            self.data.id[old_name].label = new_name
+            component_id = self.data.id[old_name]
+            if self.state is not None and not self.state.is_renameable(component_id):
+                return
+            component_id.label = new_name
             for fn in getattr(self, '_column_renamed_callbacks', []):
                 fn(old_name, new_name)
             self._update()
@@ -139,6 +143,8 @@ class JdavizTableGlue(TableGlue):
             return
         if label in [c.label for c in self.data.main_components]:
             cid = self.data.id[label]
+            if self.state is not None and not self.state.is_removable(cid):
+                return
             self.state.editable_components = [
                 c for c in self.state.editable_components if c is not cid
             ]

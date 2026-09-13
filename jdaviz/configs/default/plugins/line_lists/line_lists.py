@@ -24,6 +24,7 @@ from jdaviz.core.marks import SpectralLine
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         CustomToolbarToggleMixin)
+from jdaviz.core.table_row_sync import PluginTableRowSync
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.unit_conversion_utils import create_equivalent_spectral_axis_units_list
 
@@ -32,6 +33,8 @@ __all__ = ['LineListTool']
 
 @tray_registry('g-line-list', label="Line Lists", category="data:analysis")
 class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMixin):
+    table_row_sync = (PluginTableRowSync('redshift', 'rs_redshift'),)
+
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_lists.vue"
 

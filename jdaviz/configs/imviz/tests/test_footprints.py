@@ -6,6 +6,7 @@ from astropy.coordinates import SkyCoord
 from regions import PixCoord, CirclePixelRegion, CircleSkyRegion, RectangleSkyRegion
 
 from jdaviz.core.marks import FootprintOverlay
+from jdaviz.core.table_row_sync import decode_row_sync_recipe
 from jdaviz.configs.imviz.plugins.footprints.preset_regions import _all_apertures
 from astropy.wcs import WCS
 
@@ -16,6 +17,107 @@ def _get_markers_from_viewer(viewer):
     if hasattr(viewer, '_obj'):
         viewer = viewer._obj
     return [m for m in viewer.figure.marks if isinstance(m, FootprintOverlay)]
+
+
+def test_default_overlay_table_row_sync_preserves_selection(
+        deconfigged_helper, image_2d_wcs, sky_coord_only_source_catalog):
+    data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(data, data_label='data', format='Image')
+    deconfigged_helper.load(sky_coord_only_source_catalog,
+                            data_label='catalog', format='Catalog')
+    plugin = deconfigged_helper.plugins['Footprints']._obj
+    descriptor = plugin.table_row_sync[0]
+
+    plugin._ensure_first_overlay()
+    plugin.add_overlay('second')
+    plugin.pa = 12
+    plugin.apply_table_row_sync_group(descriptor, {'pa': 34})
+
+    assert plugin.overlay_selected == 'second'
+    assert plugin.pa == 12
+    assert plugin._overlays['default']['pa'] == 34
+    assert plugin.read_table_row_sync_group(descriptor)['pa'] == 34
+
+
+def test_default_overlay_state_group_table_row_sync_round_trip(
+        deconfigged_helper, image_2d_wcs, sky_coord_only_source_catalog):
+    data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(data, data_label='data', format='Image')
+    deconfigged_helper.load(sky_coord_only_source_catalog,
+                            data_label='catalog', format='Catalog')
+    plugin = deconfigged_helper.plugins['Footprints']._obj
+    manager = deconfigged_helper._app._catalog_row_link_manager
+
+    plugin._ensure_first_overlay()
+    plugin.visible = False
+    plugin.color = '#123456'
+    plugin.fill_opacity = 0.37
+    plugin.ra = 12.0
+    plugin.dec = -13.0
+    plugin.pa = 45.0
+    plugin.preset.selected = 'MIRI'
+    plugin.v2_offset = 1.5
+    plugin.v3_offset = 2.5
+
+    manager._reconcile_plugin_columns()
+    group_name = 'Footprints[overlay=default]'
+    assert group_name in [component.label for component in next(
+        item for item in deconfigged_helper._app.data_collection
+        if item.meta.get('_importer') == 'CatalogImporter').components]
+
+    payload = decode_row_sync_recipe(
+        next(item for item in deconfigged_helper._app.data_collection
+             if item.meta.get('_importer') == 'CatalogImporter')
+        .get_component(group_name).data[0]
+    )
+    assert 'color' not in payload
+    assert 'visible' not in payload
+    assert 'fill_opacity' not in payload
+    assert 'preset' in payload
+
+    plugin.overlay_selected = 'default'
+    plugin.color = '#abcdef'
+    plugin.preset.selected = 'NIRCam:short'
+    plugin.apply_table_row_sync_group(plugin.table_row_sync[0], payload)
+    assert plugin.color == '#abcdef'
+    assert plugin.preset_selected == payload['preset']
+
+
+def test_overlay_rename_migrates_table_row_sync_column(
+        deconfigged_helper, image_2d_wcs, sky_coord_only_source_catalog):
+    data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(data, data_label='data', format='Image')
+    deconfigged_helper.load(sky_coord_only_source_catalog,
+                            data_label='catalog', format='Catalog')
+    catalog = next(item for item in deconfigged_helper._app.data_collection
+                   if item.meta.get('_importer') == 'CatalogImporter')
+    viewer_creator = deconfigged_helper.new_viewers['Table']
+    viewer_creator.dataset = catalog.label
+    viewer_creator.viewer_label = 'Table'
+    viewer_creator()
+    plugin = deconfigged_helper.plugins['Footprints']._obj
+    manager = deconfigged_helper._app._catalog_row_link_manager
+    manager._reconcile_plugin_columns()
+    table_viewer = next(entry[0] for entry in manager._observed.values())
+    plugin._ensure_first_overlay()
+    plugin.add_overlay('second')
+
+    old_name = 'Footprints[overlay=second]'
+    old_values = catalog.get_component(old_name).data.copy()
+    assert catalog.id[old_name] not in table_viewer.state.hidden_components
+    table_viewer.set_column_sync(old_name, False)
+
+    plugin.rename_overlay('second', 'renamed')
+
+    new_name = 'Footprints[overlay=renamed]'
+    assert old_name not in [component.label for component in catalog.components]
+    assert new_name in [component.label for component in catalog.components]
+    np.testing.assert_array_equal(catalog.get_component(new_name).data, old_values)
+    assert catalog.meta['_plugin_attribute_columns'][new_name]['selectors'] == {
+        'overlay': 'renamed'}
+    assert {declaration.label for declaration in plugin.table_row_sync} == {
+        'Footprints[overlay=default]', 'Footprints[overlay=renamed]'}
+    assert table_viewer.get_column_sync(new_name) is False
 
 
 def test_user_api(deconfigged_helper, image_2d_wcs, tmp_path):
@@ -93,6 +195,8 @@ def test_user_api(deconfigged_helper, image_2d_wcs, tmp_path):
 
         # test centering logic (for now just that it doesn't fail)
         plugin.center_on_viewer()
+        assert plugin._obj._overlays[plugin.overlay.selected]['ra'] == plugin.ra
+        assert plugin._obj._overlays[plugin.overlay.selected]['dec'] == plugin.dec
 
         # test from file/API ability
         reg = plugin.overlay_regions

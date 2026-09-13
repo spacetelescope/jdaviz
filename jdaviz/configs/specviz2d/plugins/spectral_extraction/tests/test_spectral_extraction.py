@@ -23,6 +23,41 @@ GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
 SPECREDUCE_LT_1_8_0 = Version(specreduce.__version__) < Version('1.8.0')
 
 
+def test_table_row_sync_recipe_transaction(deconfigged_helper):
+    spectrum = Spectrum(np.ones((10, 20)) * u.Jy,
+                        spectral_axis=np.arange(20) * u.pix)
+    deconfigged_helper.load(spectrum, format='2D Spectrum', data_label='source')
+    plugin = deconfigged_helper.plugins['2D Spectral Extraction']._obj
+    group = plugin.table_row_sync[0]
+
+    plugin.trace_type.selected = 'Flat'
+    plugin.trace_pixel = 4
+    plugin.bg_type.selected = 'TwoSided'
+    plugin.bg_separation = 3
+    plugin.bg_width = 2
+    plugin.ext_type.selected = 'Boxcar'
+    plugin.ext_width = 5
+    recipe = plugin.read_table_row_sync_group(group)
+
+    plugin.trace_pixel = 7
+    plugin.bg_width = 4
+    plugin.ext_width = 8
+    plugin.apply_table_row_sync_group(group, recipe)
+
+    assert plugin.trace_pixel == 4
+    assert plugin.bg_width == 2
+    assert plugin.ext_width == 5
+    assert plugin.trace_dataset.selected == 'source'
+
+    invalid = recipe | {'ext_type': 'Horne',
+                        'horne_ext_profile': 'Self (interpolated)',
+                        'self_prof_n_bins': 0}
+    before = plugin.read_table_row_sync_group(group)
+    with pytest.raises(ValueError, match='greater than zero'):
+        plugin.apply_table_row_sync_group(group, invalid)
+    assert plugin.read_table_row_sync_group(group) == before
+
+
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
 def test_plugin(specviz2d_helper):
