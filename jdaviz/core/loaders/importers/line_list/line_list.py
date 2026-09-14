@@ -32,6 +32,15 @@ class LineListImporter(BaseImporterToPlugin):
         self.observe(self._on_label_changed, 'line_list_label_value')
         self._on_label_changed()
 
+    @staticmethod
+    def _rest_col_name(table):
+        """Name of the rest-value column in ``table`` ('rest' or 'rest wavelength'),
+        or None if neither is present."""
+        for col_name in ('rest', 'rest wavelength'):
+            if col_name in table.colnames:
+                return col_name
+        return None
+
     def _check_is_valid(self):
         """
         Checks if the input is a valid QTable with required columns.
@@ -51,15 +60,16 @@ class LineListImporter(BaseImporterToPlugin):
         if "linename" not in self.input.colnames:
             return "Input must have a 'linename' column."
 
-        if "rest" not in self.input.colnames:
-            return "Input must have a 'rest' column."
+        rest_col = self._rest_col_name(self.input)
+        if rest_col is None:
+            return "Input must have a 'rest' or 'rest wavelength' column."
 
         # Check that rest column has units
-        if not hasattr(self.input['rest'], 'unit') or self.input['rest'].unit is None:
-            return "'rest' column must be an astropy Quantity object."
+        if not hasattr(self.input[rest_col], 'unit') or self.input[rest_col].unit is None:
+            return f"'{rest_col}' column must be an astropy Quantity object."
 
         # Check for positive rest values
-        if np.any(self.input['rest'] <= 0):
+        if np.any(self.input[rest_col] <= 0):
             return 'All rest values must be positive.'
 
         if not self.has_default_plugin:
@@ -96,15 +106,16 @@ class LineListImporter(BaseImporterToPlugin):
         # Set import_disabled_msg based on validation errors
         # Empty msg = enabled, non-empty = disabled
         if not self.is_valid:
+            rest_col = self._rest_col_name(self.input) if isinstance(self.input, QTable) else None
             if not isinstance(self.input, QTable):
                 self.import_disabled_msg = 'Input must be an astropy QTable'
             elif "linename" not in self.input.colnames:
                 self.import_disabled_msg = 'Table must have a "linename" column'
-            elif "rest" not in self.input.colnames:
-                self.import_disabled_msg = 'Table must have a "rest" column'
-            elif not hasattr(self.input['rest'], 'unit') or self.input['rest'].unit is None:
-                self.import_disabled_msg = 'The "rest" column must have astropy units'
-            elif np.any(self.input['rest'] <= 0):
+            elif rest_col is None:
+                self.import_disabled_msg = 'Table must have a "rest" or "rest wavelength" column'
+            elif not hasattr(self.input[rest_col], 'unit') or self.input[rest_col].unit is None:
+                self.import_disabled_msg = f'The "{rest_col}" column must have astropy units'
+            elif np.any(self.input[rest_col] <= 0):
                 self.import_disabled_msg = 'All rest values must be positive'
             else:
                 self.import_disabled_msg = 'Line list plugin not available'
@@ -121,6 +132,11 @@ class LineListImporter(BaseImporterToPlugin):
 
         # Prepare the table with the user-specified listname
         table = self.input.copy()
+
+        # the plugin expects the rest-value column to be named 'rest'
+        rest_col = self._rest_col_name(table)
+        if rest_col is not None and rest_col != 'rest':
+            table.rename_column(rest_col, 'rest')
 
         # Set the listname in metadata so the plugin will use it
         if not hasattr(table, 'meta'):
