@@ -541,6 +541,9 @@ def test_table_viewer_plot_options(deconfigged_helper):
         else:
             assert col in hidden, f"{col} should be hidden but is visible"
 
+    viewer.state.hidden_components = viewer.widget_table.data.main_components[:1]
+    assert po.table_columns_visible.value == all_column_names[1:]
+
     # Layer options should be empty/excluded when only table viewer is selected
     # (layers are excluded via the not_in_table_viewer filter)
     assert len(po.layer.choices) == 0
