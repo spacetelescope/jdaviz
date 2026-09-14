@@ -387,7 +387,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
     def _hide_layer(self, data_menu, label):
         """
         Hide the layer for ``label`` in ``viewer_label``.
-        
+
         TODO: Due to a synchronization issue between layer visibility state and the
          rendered view (particularly for 1D spectra), users may need to manually toggle
          visibility in the data menu to refresh the viewer state.
@@ -423,7 +423,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
                     # preexisting and imported, and must be treated as imported,
                     # otherwise re-importing a directory leaves every entry visible
                     continue
-                self._hide_layer(viewer_label, data_menu, label)
+                self._hide_layer(data_menu, label)
 
     def _import_file(self, file_info, viewers_by_product_type, data_label_prefix,
                      failures, imported_labels):
