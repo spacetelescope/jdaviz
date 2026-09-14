@@ -384,18 +384,14 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
             return []
         return list(viewer.data_menu.data_labels_loaded)
 
-    def _hide_layer(self, viewer_label, data_menu, label):
+    def _hide_layer(self, data_menu, label):
         """
         Hide the layer for ``label`` in ``viewer_label``.
+        
+        TODO: Due to a synchronization issue between layer visibility state and the
+         rendered view (particularly for 1D spectra), users may need to manually toggle
+         visibility in the data menu to refresh the viewer state.
         """
-        for layer in self._app.get_viewer(viewer_label).layers:
-            if layer.layer.label != label:
-                continue
-            if not layer.state.visible:
-                layer.state.visible = True
-            if not layer.enabled:
-                layer.update()
-
         data_menu.set_layer_visibility(label, visible=False)
 
     def _show_single_layer_per_viewer(self, preexisting_labels, imported_labels):
