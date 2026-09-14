@@ -47,7 +47,7 @@ SPECTRUM_SIZE = 10  # length of spectrum
 # - Memory logging (memlog): imported from pytest_memlog.py
 # - Remote failure skipping: imported from pytest_remote_skip.py
 # In CI, these utilities may have already been called from the root
-# conftest.py so we avoid errors by catching the ValueError pytest throws.
+# conftest.py, so we avoid errors by catching the ValueError pytest throws.
 # ============================================================================
 def pytest_addoption(parser):
     """
