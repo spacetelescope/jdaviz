@@ -61,7 +61,7 @@ def test_spectral_lines_uses_loader_linename_col(deconfigged_helper, spectrum1d)
     """
     component_lines should read line names from the column set in
     ``_jdaviz_loader_linename_col``, so they're displayed in the UI."""
-    
+
     deconfigged_helper._app.state.dev_spectral_lines_plugin = True
     deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='my_spec')
     plugin = deconfigged_helper._app.get_tray_item_from_name('g-spectral-lines')

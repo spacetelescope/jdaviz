@@ -1573,6 +1573,7 @@ def _role_labels_from_meta(meta):
     labels += [name for name in meta.get('_jdaviz_plugin_component_column', []) if name]
     return labels
 
+
 @viewer_registry("table-viewer", label="table")
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
