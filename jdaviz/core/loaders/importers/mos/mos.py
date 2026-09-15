@@ -6,7 +6,7 @@ from pathlib import Path
 from astropy.io import fits
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.core.events import NewViewerMessage, SnackbarMessage, SnackbarMessage
+from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import (LoaderBannerMessagesMixin,
