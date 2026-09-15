@@ -32,7 +32,7 @@ def test_line_list_importer_is_valid(deconfigged_helper):
 
     # Failure: missing 'rest' column
     importer._input = QTable({'linename': ['Ha', 'Hb']})
-    assert importer._check_is_valid() == "Input must have a 'rest' column."
+    assert importer._check_is_valid() == "Input must have a 'rest' or 'rest wavelength' column."
 
     # Failure: 'rest' column without units
     importer._input = QTable({'linename': ['Ha', 'Hb'], 'rest': [5000, 6000]})
@@ -40,4 +40,26 @@ def test_line_list_importer_is_valid(deconfigged_helper):
 
     # Failure: negative rest values
     importer._input = QTable({'linename': ['Ha', 'Hb'], 'rest': [-5000, 6000] * u.AA})
+    assert importer._check_is_valid() == 'All rest values must be positive.'
+
+
+def test_line_list_importer_rest_wavelength_alias(deconfigged_helper):
+    """A 'rest wavelength' column is accepted in place of 'rest'."""
+    app = deconfigged_helper._app
+
+    valid_table = QTable({'linename': ['Ha', 'Hb'],
+                          'rest wavelength': [6563, 4861] * u.AA})
+    importer = LineListImporter(app=app, resolver=None, parser=None, input=valid_table)
+
+    with patch.object(type(importer), 'has_default_plugin',
+                      new_callable=PropertyMock, return_value=True):
+        assert importer._check_is_valid() == ''
+
+    # 'rest wavelength' without units
+    importer._input = QTable({'linename': ['Ha', 'Hb'], 'rest wavelength': [5000, 6000]})
+    assert importer._check_is_valid() == "'rest wavelength' column must be an astropy Quantity object."  # noqa: E501
+
+    # negative rest values
+    importer._input = QTable({'linename': ['Ha', 'Hb'],
+                              'rest wavelength': [-5000, 6000] * u.AA})
     assert importer._check_is_valid() == 'All rest values must be positive.'

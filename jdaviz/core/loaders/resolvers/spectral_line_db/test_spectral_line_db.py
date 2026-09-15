@@ -251,7 +251,7 @@ def test_parse_input_none_when_nothing_staged(deconfigged_helper):
 
 
 def test_parse_input_returns_qtable(deconfigged_helper):
-    """parse_input returns a QTable with linename and rest columns."""
+    """parse_input returns a QTable with linename and rest_wavelength columns."""
     ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.wavelength_unit.selected = "Angstrom"
     ldr.wavelength_min = "6500"
@@ -266,9 +266,9 @@ def test_parse_input_returns_qtable(deconfigged_helper):
 
     assert isinstance(qt, QTable)
     assert "linename" in qt.colnames
-    assert "rest" in qt.colnames
+    assert "rest wavelength" in qt.colnames
     assert len(qt) == n_staged
-    assert qt["rest"].unit is not None
+    assert qt["rest wavelength"].unit is not None
 
 
 def test_parse_input_after_unstage(deconfigged_helper):
@@ -319,3 +319,46 @@ def test_stage_across_multiple_searches(deconfigged_helper):
     qt = ldr._obj.parse_input()
     assert isinstance(qt, QTable)
     assert len(qt) == len(ldr.staged_lines)
+
+
+def test_load_staged_lines_end_to_end(deconfigged_helper):
+    """Staged lines load through the Spectral Lines importer into the
+    data collection and a table viewer."""
+    ldr = deconfigged_helper.loaders["spectral line database"]
+    ldr.wavelength_unit.selected = "Angstrom"
+    ldr.wavelength_min = "6500"
+    ldr.wavelength_max = "6600"
+    ldr.search()
+    assert len(ldr.search_results) > 0
+    ldr.stage_line(*ldr.search_results)
+    n_staged = len(ldr.staged_lines)
+
+    # the Spectral Lines importer is the default format, and the linename and
+    # spectral location columns from parse_input are auto-detected
+    assert ldr.format.selected == "Spectral Lines"
+    importer = ldr.importer
+    assert importer.spectral_loc.selected == "rest wavelength"
+    assert importer._obj.linename_selected == "linename"
+
+    ldr.load()
+
+    dc = deconfigged_helper._app.data_collection
+    assert len(dc) == 1
+    data = dc[0]
+    labels = [str(c) for c in data.main_components]
+    assert "linename" in labels
+    assert "rest wavelength" in labels
+    assert data.shape == (n_staged,)
+    assert data.get_component(data.id["rest wavelength"]).units == "Angstrom"
+    assert data.meta["_jdaviz_loader_spectral_loc_col"] == "rest wavelength"
+    assert data.meta["_jdaviz_loader_linename_col"] == "linename"
+
+    # staged line names survive the round trip into the glue data
+    name_comp = data.get_component(data.id["linename"])
+    loaded_names = set(name_comp.labels if hasattr(name_comp, "labels")
+                       else name_comp.data)
+    assert loaded_names == {r["line_name"] for r in ldr.staged_lines}
+
+    # data is displayed in a table viewer
+    tv = deconfigged_helper.viewers["Table"]
+    assert len(tv._obj.glue_viewer.layers) == 1

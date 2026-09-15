@@ -22,11 +22,11 @@
     ></plugin-select>
 
     <plugin-select
-      :items="medium_items.map(i => i.label)"
-      v-model:selected="medium_selected"
-      label="Medium"
-      hint="Medium in which the spectral line positions are defined."
-      api_hint="ldr.importer.medium ="
+      :items="linename_items.map(i => i.label)"
+      v-model:selected="linename_selected"
+      label="Line Name"
+      hint="Column containing the line names (optional)."
+      api_hint="ldr.importer.linename ="
       :api_hints_enabled="api_hints_enabled"
     ></plugin-select>
 

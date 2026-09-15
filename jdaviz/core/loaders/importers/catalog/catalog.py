@@ -620,15 +620,13 @@ class CatalogImporter(BaseImporterToDataCollection):
             output_table.meta['_jdaviz_loader_y_col'] = self.col_y_selected
 
         # add source ID column. If no column selected, just use table index
-        # for now this will be added as a column named 'ID' in the output table,
-        # but this should be changed to adding a component label in JDAT-5716
 
         if self.col_id_selected in table.colnames:
             output_table['ID'] = table[self.col_id_selected]
-            output_table.meta['_jdaviz_id_col'] = self.col_id_selected
+            output_table.meta['_jdaviz_loader_id_col'] = self.col_id_selected
         else:
             output_table['ID'] = np.arange(len(table))
-            output_table.meta['_jdaviz_id_col'] = 'ID'
+            output_table.meta['_jdaviz_loader_id_col'] = 'ID'
 
         # add additional columns to output table
         for col in self.output_cols:
