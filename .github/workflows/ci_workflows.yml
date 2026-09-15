@@ -186,7 +186,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-durations
-        path: ./jdaviz/pytest_utilities/test_durations
+        path: ./jdaviz/pytest_utilities/.test_durations
         if-no-files-found: ignore
 
 
