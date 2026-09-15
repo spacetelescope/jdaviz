@@ -179,6 +179,16 @@ jobs:
         path: coverage.xml
         if-no-files-found: error
 
+    - name: Upload test durations from pytest-split
+      # Arbitrarily choose Linux - Python 3.14 to upload test durations,
+      # because that's been a useful/quick benchmark for tests (generally). 
+      if: "matrix.name == 'Linux - Python 3.14'"
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-durations
+        path: ./pytest_utilities/test_durations
+        if-no-files-found: ignore
+
 
   upload-codecov:
     needs: [ ci_tests ]
