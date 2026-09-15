@@ -103,10 +103,9 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
     parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
     allow_directory_input = True
 
-    # summary of the products found in the input directory, both derived from
-    # ``mos_files``: ``product_types`` lists the keys of ``_MOS_PRODUCTS`` that are
-    # present (and so which viewer selections apply), while ``product_items`` adds
-    # the labels/counts shown as chips in the UI.
+    # ``product_types`` lists the keys of ``_MOS_PRODUCTS`` that are
+    # present (and so which viewer selections apply)
+    # ``product_items`` adds the labels/counts shown in the UI
     product_types = List([]).tag(sync=True)
     product_items = List([]).tag(sync=True)
 
@@ -147,7 +146,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
 
         # self.viewer (from the base class) handles the 1D spectra, the remaining
         # product types each get their own viewer selection/creation component so
-        # that incompatible data are never sent to the same viewer.
+        # that incompatible data are never sent to the wrong viewer
         for product_type, product in _MOS_PRODUCTS.items():
             if product_type == 'spectrum1d':
                 continue
@@ -286,11 +285,10 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
     def mos_files(self):
         """
         Sorted list of dicts describing every importable MOS product in the input directory.
-        This is the single source of truth for what gets imported.
         ``product_types`` and ``product_items`` are per-product-type summaries of this list
         that are synced to the UI.
 
-        Cached because it walks the entire input directory and is read several
+        Cached because the method walks the input directory and is read several
         times (in ``__init__`` and again on import).
         """
         if self._input_path is None or not self._input_path.is_dir():
@@ -299,12 +297,10 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         def _label_suffix(filename):
             """
             Build the per-file data-label suffix by stripping any (compression) extension.
-            The leading separator is included, since ``data_label_suffices`` entries are
-            appended directly to the data-label prefix (both in the UI and on import).
             """
             if filename.lower().endswith('.gz'):
                 filename = Path(filename).stem
-            return f"_{Path(filename).stem}"
+            return str(Path(filename).stem)
 
         return [{'path': path,
                  'product_type': product_type,
@@ -342,6 +338,10 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         """
         Resolve a viewer selection component into a list of existing viewer labels,
         creating the requested new viewer (once) if applicable.
+
+        TODO: this code (for creating a new viewer) is quite similar to code in
+          add_results_from_plugin in template_mixin.py. Follow-up work should
+          implement logic to avoid this duplication.
         """
         if viewer_select.create_new.selected:
             if viewer_select.new_label.invalid_msg:
@@ -364,7 +364,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
 
     def _report_import_summary(self, failures):
         """
-        Summarize the import in a single popup. Individual failures have already
+        Summarize the import in a single popup/banner. Individual failures have already
         been reported (with their tracebacks) as they happened.
         """
         n_files = len(self.mos_files)
@@ -374,25 +374,6 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
                                  color='warning', popup=True)
         else:
             self._loader_message(f"{n_files} files imported.", color='success')
-
-    def _viewer_data_labels(self, viewer_label):
-        """
-        Labels of the data entries currently loaded.
-        """
-        viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
-        if viewer is None:
-            return []
-        return list(viewer.data_menu.data_labels_loaded)
-
-    def _hide_layer(self, data_menu, label):
-        """
-        Hide the layer for ``label`` in ``viewer_label``.
-
-        TODO: Due to a synchronization issue between layer visibility state and the
-         rendered view (particularly for 1D spectra), users may need to manually toggle
-         visibility in the data menu to refresh the viewer state.
-        """
-        data_menu.set_layer_visibility(label, visible=False)
 
     def _show_single_layer_per_viewer(self, preexisting_labels, imported_labels):
         """
@@ -408,7 +389,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
                 continue
             data_menu = viewer.data_menu
             if not hasattr(data_menu, 'set_layer_visibility'):
-                # e.g. table viewers do not support toggling layer visibility
+                # e.g. table viewers don't support toggling layer visibility
                 continue
             # the first (alphabetically) imported entry remains visible. Anything
             # else added by this import (including auto-extracted spectra) is hidden
@@ -423,7 +404,10 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
                     # preexisting and imported, and must be treated as imported,
                     # otherwise re-importing a directory leaves every entry visible
                     continue
-                self._hide_layer(data_menu, label)
+                # TODO: There's a synchronization issue between layer visibility state and the
+                #   rendered view (specifically for 1D spectra). Users will need to manually toggle
+                #   visibility in the data menu to refresh the viewer state.
+                data_menu.set_layer_visibility(label, visible=False)
 
     def _import_file(self, file_info, viewers_by_product_type, data_label_prefix,
                      failures, imported_labels):
@@ -434,12 +418,11 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         """
         filename = file_info['path'].name
         product_type = file_info['product_type']
-        data_label = f"{data_label_prefix}{file_info['suffix']}"
+        data_label = f"{data_label_prefix}_{file_info['suffix']}"
         kwargs = {}
         if product_type == 'spectrum2d':
             # MOS products are expected to provide their own 1D spectra, so
-            # extraction is skipped unless explicitly requested by the user, in
-            # which case the extractions join the imported 1D spectra.
+            # extraction is skipped unless explicitly requested by the user
             kwargs['auto_extract'] = self.auto_extract_2d
             if self.auto_extract_2d:
                 kwargs['ext_viewer'] = viewers_by_product_type.get('spectrum1d', [])
@@ -470,15 +453,25 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         # product type end up in the same viewer
         viewers_by_product_type = {
             product_type: self._resolve_viewers(viewer_select)
-            for product_type, viewer_select in self._viewer_select_by_product_type.items()}
+            for product_type, viewer_select in self._viewer_select_by_product_type.items()
+        }
 
         self._clear_loader_messages()
         failures = []
         data_label_prefix = self.data_label_value.strip()
 
+        def _viewer_data_labels(viewer_label):
+            """
+            Labels of the data entries currently loaded.
+            """
+            viewer = self._app._jdaviz_helper.viewers.get(viewer_label)
+            if viewer is None:
+                return []
+            return list(viewer.data_menu.data_labels_loaded)
+
         # record what was already in each viewer so that only the newly imported
         # entries have their visibility managed below
-        preexisting_labels = {viewer_label: self._viewer_data_labels(viewer_label)
+        preexisting_labels = {viewer_label: _viewer_data_labels(viewer_label)
                               for viewer_labels in viewers_by_product_type.values()
                               for viewer_label in viewer_labels}
         imported_labels = {viewer_label: [] for viewer_label in preexisting_labels}
@@ -493,8 +486,8 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         deferred = [file_info for file_info in self.mos_files if _defer(file_info)]
 
         # TODO: we artificially suppress snackbars here to avoid overwhelming the user
-        #  with a popup for every file, but we should implement a more permanent
-        #  solution as follow-up effort (such as snackbar kwarg 'suppress')
+        #  with a popup for every file, but we should implement a less hacky
+        #  solution as follow-up effort
         original_queue = self._app.state.snackbar_queue
 
         class NoPopupQueue:

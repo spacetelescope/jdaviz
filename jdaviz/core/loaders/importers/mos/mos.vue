@@ -80,7 +80,7 @@
       label="Extract 1D Spectra"
       api_hint="ldr.importer.auto_extract_2d ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Extract a 1D spectrum from each imported 2D spectrum, in addition to the 1D spectra found in the directory (use the 2D Spectral Extraction Plugin after importing to extract with custom aperture/options)."
+      hint="Extract a 1D spectrum from each imported 2D spectrum."
     ></plugin-switch>
 
     <plugin-viewer-create-new
@@ -125,7 +125,7 @@
       :spinner="import_spinner"
       :disabled_msg="import_disabled_msg"
       :api_hints_enabled="api_hints_enabled"
-      api_hint="ldr.load()"
+      api_hint="ldr.importer()"
       :data_label_overwrite="data_label_overwrite"
       :data_label_is_prefix="data_label_is_prefix"
       :data_label_suffices="data_label_suffices"

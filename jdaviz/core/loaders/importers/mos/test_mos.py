@@ -133,8 +133,8 @@ class TestMOSImporter:
         assert importer.data_label_value == 'mosdir'
         # use set to avoid any potential ordering issues
         assert set(importer.data_label_suffices) == {
-            '_jw00000_cat', '_jw00000_i2d', '_jw00000_s2d',
-            '_jw00000_x1d', '_jw00001_i2d', '_jw00001_x1d'
+            'jw00000_cat', 'jw00000_i2d', 'jw00000_s2d',
+            'jw00000_x1d', 'jw00001_i2d', 'jw00001_x1d'
         }
         assert [item['count'] for item in importer.product_items] == [2, 1, 2, 1]
         assert importer.product_types == ['spectrum1d', 'spectrum2d', 'image', 'catalog']
