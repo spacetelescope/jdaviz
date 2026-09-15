@@ -6,7 +6,7 @@ from pathlib import Path
 from astropy.io import fits
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.core.events import NewViewerMessage
+from jdaviz.core.events import NewViewerMessage, SnackbarMessage, SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import (LoaderBannerMessagesMixin,
@@ -492,10 +492,30 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         batched = [file_info for file_info in self.mos_files if not _defer(file_info)]
         deferred = [file_info for file_info in self.mos_files if _defer(file_info)]
 
-        with self._app._jdaviz_helper.batch_load():
-            for file_info in batched:
-                self._import_file(file_info, viewers_by_product_type, data_label_prefix,
-                                  failures, imported_labels)
+        # TODO: we artificially suppress snackbars here to avoid overwhelming the user
+        #  with a popup for every file, but we should implement a more permanent
+        #  solution as follow-up effort (such as snackbar kwarg 'suppress')
+        original_queue = self._app.state.snackbar_queue
+
+        class NoPopupQueue:
+            """Wrapper to suppress snackbar UI popups while preserving logger history."""
+            def __init__(self, wrapped_queue):
+                self.wrapped_queue = wrapped_queue
+
+            def put(self, app_state, logger_plugin, snackbar_msg, **kwargs):
+                # Suppress UI popup by overriding the popup kwarg
+                kwargs['popup'] = False
+                return self.wrapped_queue.put(app_state, logger_plugin, snackbar_msg, **kwargs)
+
+        self._app.state.snackbar_queue = NoPopupQueue(original_queue)
+
+        try:
+            with self._app._jdaviz_helper.batch_load():
+                for file_info in batched:
+                    self._import_file(file_info, viewers_by_product_type, data_label_prefix,
+                                      failures, imported_labels)
+        finally:
+            self._app.state.snackbar_queue = original_queue
 
         for file_info in deferred:
             self._import_file(file_info, viewers_by_product_type, data_label_prefix,
