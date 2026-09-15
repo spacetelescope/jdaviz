@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbar-nested-root" style="display: inline-flex; justify-content: flex-end; max-width: 100%; min-width: 0; overflow: hidden; margin-right: 0px">
+  <div class="toolbar-nested-root" style="display: flex; justify-content: flex-end; width: 100%; min-width: 0; overflow: hidden; margin-right: 0px">
     <!-- Override mode indicator -->
     <v-btn-toggle
       v-if="tool_override_mode.length > 0"
