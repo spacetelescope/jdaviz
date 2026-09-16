@@ -593,7 +593,7 @@ class BaseCatalogImporter(BaseImporterToDataCollection):
         if idx is None:
             return ['---'] + colnames
         return_cols = colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
-        return [return_cols[0]] + ['---'] + return_cols[1:]
+        return [return_cols[0], '---'] + return_cols[1:]
 
     @staticmethod
     def _guess_col_by_name_pattern(colnames, patterns, exclude_words=None):
