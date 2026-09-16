@@ -3,11 +3,10 @@ import astropy.units as u
 import re
 from traitlets import Bool, List, Unicode, observe
 
+from jdaviz.core.loaders.importers import BaseCatalogImporter
 from jdaviz.core.template_mixin import SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
-
-from ..catalog_common import BaseCatalogImporter
 
 
 __all__ = ['SpectralLinesImporter']

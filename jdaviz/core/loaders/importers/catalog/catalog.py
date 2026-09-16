@@ -7,13 +7,13 @@ import re
 from regions import PixCoord
 from traitlets import Any, Bool, List, Unicode, observe
 
+from jdaviz.core.loaders.importers import BaseCatalogImporter
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import create_data_hash, COORD_WORDS_TO_EXCLUDE
 
 from .row_link import get_catalog_row_link_manager
-from ..catalog_common import BaseCatalogImporter
 
 __all__ = ['CatalogImporter']
 
