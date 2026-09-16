@@ -711,6 +711,10 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
         # Store the list contents in a vuetify-friendly format
         line_list_dict = {"lines": [], "color": "#FF000080", "medium": list_medium}
 
+        # accept rest or rest wavelength column names
+        if "rest wavelength" in temp_table.colnames:
+            temp_table["rest"] = temp_table["rest wavelength"]
+
         for row in temp_table:
             temp_dict = {
                 "linename": row["linename"],

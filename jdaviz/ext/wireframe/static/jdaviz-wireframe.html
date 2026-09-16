@@ -43,20 +43,22 @@
       <!-- Viewer area -->
       <div class="jdaviz-viewer-area">
         <!-- Viewers are added dynamically via viewer-add action -->
-        <!-- Data Menu Popup (shared) -->
-        <div class="jdaviz-data-menu-popup" id="jdaviz-data-menu-popup">
-          <div class="jdaviz-data-menu-header">
-            <div class="jdaviz-data-menu-title">Data Menu</div>
-            <button class="jdaviz-data-menu-close">&times;</button>
-          </div>
-          <div class="jdaviz-data-menu-content">
-            <p class="jdaviz-data-menu-desc">
-              Control data and subset layer order and visibility for each viewer.
-            </p>
-          </div>
-        </div>
       </div>
 
+    </div>
+
+    <!-- Data Menu Popup: overlays the whole app, anchored to the legend of the
+         viewer whose legend was clicked (positioned from JS) -->
+    <div class="jdaviz-data-menu-popup" id="jdaviz-data-menu-popup">
+      <div class="jdaviz-data-menu-bar jdaviz-data-menu-header">
+        <div class="jdaviz-data-menu-title">Data Menu</div>
+        <button class="jdaviz-data-menu-icon-btn jdaviz-data-menu-add" title="Add data or subset to viewer">
+          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+        </button>
+      </div>
+      <!-- Layer rows are populated from the viewer legend in JS -->
+      <div class="jdaviz-data-menu-layers"></div>
+      <div class="jdaviz-data-menu-bar jdaviz-data-menu-footer"></div>
     </div>
   </div>
 </div>

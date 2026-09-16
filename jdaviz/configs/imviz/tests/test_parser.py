@@ -13,7 +13,7 @@ from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
 from regions import CirclePixelRegion, EllipsePixelRegion, PixCoord, RectanglePixelRegion
 from skimage.io import imsave
-from stdatamodels import asdf_in_fits
+from stdatamodels.jwst.datamodels import Level1bModel
 import photutils
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
@@ -254,12 +254,10 @@ class TestParseImage:
             imviz_helper.load_data(flist, data_label='foo', show_in_viewer=False, format='Image')
 
     def test_parse_asdf_in_fits_4d(self, deconfigged_helper, tmp_path):
-        hdulist = fits.HDUList([
-            fits.PrimaryHDU(),
-            fits.ImageHDU(np.zeros((1, 2, 5, 5)), name='SCI')])
-        tree = {'data': {'data': hdulist['SCI'].data}}
         filename = str(tmp_path / 'myasdf.fits')
-        asdf_in_fits.write(filename, tree, hdulist=hdulist, overwrite=True)
+        model = Level1bModel()
+        model.data = np.zeros((1, 2, 5, 5))
+        model.save(filename)
 
         with pytest.raises(ValueError, match='Imviz cannot load this HDU'):
             parse_data(deconfigged_helper._app, filename)

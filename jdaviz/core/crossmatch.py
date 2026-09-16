@@ -307,7 +307,7 @@ def catalogs_from_data_collection(app, data_labels, names=None):
     Reads each catalog's glue ``Data`` back into a QTable (via the glue-astronomy
     translator, ``data.get_object(cls=QTable)``) and pulls the standardized
     sky-position and id column names from the Catalog importer's metadata
-    (``_jdaviz_loader_ra_col`` / ``_jdaviz_loader_dec_col`` / ``_jdaviz_id_col``).
+    (``_jdaviz_loader_ra_col`` / ``_jdaviz_loader_dec_col`` / ``_jdaviz_loader_id_col``).
     This lets :func:`crossmatch_catalogs` run on data that has already gone through
     the loader, regardless of the original column names (e.g. ``ra_gaia``/``dec_roman``).
 
@@ -356,7 +356,7 @@ def catalogs_from_data_collection(app, data_labels, names=None):
         dec_col = meta.get('_jdaviz_loader_dec_col')
         if ra_col and dec_col:
             coord_columns[name] = (ra_col, dec_col)
-        id_col = meta.get('_jdaviz_id_col')
+        id_col = meta.get('_jdaviz_loader_id_col')
         if id_col:
             id_columns[name] = id_col
 

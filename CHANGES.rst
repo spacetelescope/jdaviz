@@ -112,6 +112,13 @@ New Features
 - Unify astroquery and VO reporting behavior. Both now show banners in the UI for the
   results of queries. This information can also be found in the logger. [#4369]
 
+- Fix issue where catalog datasets could not be deleted from scatter viewers when aligned by WCS. [#4389]
+
+- Some modifications to spectral lines loader and table, including disabling
+  deletion of line name / rest wavelengths columns assigned by the loader, removing
+  the selection of line medium in loader, and adding line name to table by
+  default. [#4386]
+
 Mosviz
 ^^^^^^
 
