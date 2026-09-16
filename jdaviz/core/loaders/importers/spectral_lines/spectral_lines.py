@@ -111,11 +111,11 @@ class SpectralLinesImporter(BaseCatalogImporter):
         followed by ``'---'`` (no selection) and then the remaining columns.
         If no match is found, ``'---'`` is the first item.
         """
-        input_table = self.input
-        colnames = input_table.colnames
+        tab = self.input
+        colnames = tab.colnames
 
-        idx = self._guess_col_by_unit_physical_type(input_table, colnames,
-                                                     _SPECTRAL_PHYSICAL_TYPES)
+        idx = self._guess_col_by_unit_physical_type(tab, colnames, _SPECTRAL_PHYSICAL_TYPES)
+
         if idx is None:
             idx = self._guess_col_by_name_pattern(colnames, _SPECTRAL_LOC_PATTERNS)
 
