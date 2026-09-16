@@ -3,10 +3,11 @@ import astropy.units as u
 import re
 from traitlets import Bool, List, Unicode, observe
 
-from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers import BaseCatalogImporter
 from jdaviz.core.template_mixin import SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
+
 
 __all__ = ['SpectralLinesImporter']
 
@@ -30,7 +31,7 @@ _LINENAME_PATTERNS = [
 
 
 @loader_importer_registry("Spectral Lines")
-class SpectralLinesImporter(BaseImporterToDataCollection):
+class SpectralLinesImporter(BaseCatalogImporter):
     """
     Importer for spectral line list tables.
 
@@ -54,11 +55,6 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
     # --- line name column (optional, column index is used if no selection) ---
     linename_items = List().tag(sync=True)
     linename_selected = Unicode().tag(sync=True)
-
-    # --- additional columns (optional, multiselect) ---
-    col_other_items = List().tag(sync=True)
-    col_other_selected = List().tag(sync=True)
-    col_other_multiselect = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -89,13 +85,7 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
                                               selected='linename_selected',
                                               manual_options=self._guess_linename_col())  # noqa
 
-        self.col_other = SelectPluginComponent(
-            self,
-            items='col_other_items',
-            selected='col_other_selected',
-            manual_options=input_table.colnames,
-            multiselect='col_other_multiselect',
-        )
+        self._init_col_other(input_table.colnames)
 
     def _check_is_valid(self):
         if not getattr(self._app.state, 'dev_loaders', False):
@@ -122,27 +112,15 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
         followed by ``'---'`` (no selection) and then the remaining columns.
         If no match is found, ``'---'`` is the first item.
         """
-        input_table = self.input
-        colnames = input_table.colnames
+        tab = self.input
+        colnames = tab.colnames
 
-        # column already has a recognised spectral unit
-        for i, col in enumerate(colnames):
-            col_data = input_table[col]
-            if hasattr(col_data, 'unit') and col_data.unit is not None:
-                physical_type = str(u.Unit(col_data.unit).physical_type)
-                if physical_type in _SPECTRAL_PHYSICAL_TYPES:
-                    return_cols = colnames if i == 0 else (colnames[i:] + colnames[:i])
-                    return [return_cols[0]] + ['---'] + list(return_cols[1:])
+        idx = self._guess_col_by_unit_physical_type(tab, colnames, _SPECTRAL_PHYSICAL_TYPES)
 
-        # if no unit match was found, pattern-match column names
-        for pattern in _SPECTRAL_LOC_PATTERNS:
-            for i, col in enumerate(colnames):
-                tokens = re.split(r'[\s_\-\.]+', col.lower().strip())
-                if any(pattern.search(t) for t in tokens):
-                    return_cols = colnames if i == 0 else (colnames[i:] + colnames[:i])
-                    return [return_cols[0]] + ['---'] + list(return_cols[1:])
+        if idx is None:
+            idx = self._guess_col_by_name_pattern(colnames, _SPECTRAL_LOC_PATTERNS)
 
-        return ['---'] + list(colnames)
+        return self._reorder_cols_with_best_guess(colnames, idx)
 
     def _guess_linename_col(self):
         """
