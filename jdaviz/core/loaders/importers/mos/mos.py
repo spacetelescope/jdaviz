@@ -183,10 +183,10 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
                                               f'{viewer_traitlet_prefix}_label_invalid_msg',
                                               multiselect='viewer_multiselect',
                                               default_mode='empty')
-        if self._app.config == 'deconfigged':
-            setattr(self, f'{viewer_traitlet_prefix}_create_new_items',
-                    [{'label': product['viewer_label'],
-                      'reference': product['viewer_reference']}])
+
+        setattr(self, f'{viewer_traitlet_prefix}_create_new_items',
+                [{'label': product['viewer_label'],
+                  'reference': product['viewer_reference']}])
 
         viewer_cls = viewer_registry.members.get(product['viewer_reference']).get('cls')
         viewer_select.add_filter(lambda viewer: isinstance(viewer, viewer_cls))
@@ -232,22 +232,24 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         if not self._app.state.dev_mos_loader:
             return "MOS importer is only supported in dev mode."
 
-        if self._input_path is None:
+        input_path = self._input_path
+
+        if input_path is None:
             return 'MOS importer input must be a directory.'
 
         # don't attempt to parse directories in the file input
         # when single-clicking on '..' to go up a directory
-        if self._input_path.name == '..':
+        if input_path.name == '..':
             return 'MOS importer input must not end with "..".'
 
-        if not self._input_path.is_dir():
+        if not input_path.is_dir():
             return 'MOS importer input must be a directory.'
 
         # to be valid, the directory must contain at least one 1D spectrum
         # and no extraneous/invalid files
         has_spectrum_1d = False
         paths = []
-        for path, product_type in _iter_input_files(self._input_path):
+        for path, product_type in _iter_input_files(input_path):
             if product_type is None:
                 return f"Input directory contains unsupported MOS file: {path.name}"
             if product_type == 'spectrum1d':
@@ -291,7 +293,8 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         Cached because the method walks the input directory and is read several
         times (in ``__init__`` and again on import).
         """
-        if self._input_path is None or not self._input_path.is_dir():
+        input_path = self._input_path
+        if input_path is None or not input_path.is_dir():
             return []
 
         def _label_suffix(filename):
@@ -306,7 +309,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
                  'product_type': product_type,
                  'format': _MOS_PRODUCTS[product_type]['format'],
                  'suffix': _label_suffix(path.name)}
-                for path, product_type in _iter_input_files(self._input_path)
+                for path, product_type in _iter_input_files(input_path)
                 if product_type in _MOS_PRODUCTS]
 
     @property
@@ -327,7 +330,8 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
     @property
     def default_data_label_prefix(self):
         # default to the name of the directory being imported
-        name = self._input_path.name if self._input_path is not None else ''
+        input_path = self._input_path
+        name = input_path.name if input_path is not None else ''
         return name if name else 'MOS'
 
     @property
