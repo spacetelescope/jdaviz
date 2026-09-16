@@ -43,6 +43,10 @@ def test_object_resolver_list_is_multiple_outputs(deconfigged_helper):
     image_item = next(item for item in fmt.items if item['label'] == 'Image')
     assert image_item['n_total'] == 2
     assert image_item['n_valid'] == 2
+    assert isinstance(resolver.importer, list)
+    assert len(resolver.importer) == len(resolver.output)
+    assert isinstance(resolver.parser, list)
+    assert len(resolver.parser) == len(resolver.output)
     assert '(2/2)' in repr(fmt)
 
 
@@ -57,7 +61,7 @@ def test_object_resolver_list_partial_format_validity(deconfigged_helper):
     assert image_item['n_valid'] == 1
 
     resolver.format.selected = 'Image'
-    assert len(resolver.selected_importers) == 1
+    assert not isinstance(resolver.importer, list)
 
 
 def test_object_resolver_hdulist_is_single_output(deconfigged_helper, image_hdu_wcs):

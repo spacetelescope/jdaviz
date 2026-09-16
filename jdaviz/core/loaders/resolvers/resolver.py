@@ -742,7 +742,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if self._restrict_to_formats is None or "Catalog" in self._restrict_to_formats:
             hdu = None
             if self.format.selected:
-                ext = getattr(self.importer, 'extension', None)
+                primary_importer = self._selected_importer_pairs()[0][1]
+                ext = getattr(primary_importer, 'extension', None)
                 if ext is not None:
                     hdu = ext.selected_index
                     if isinstance(hdu, list):
@@ -1084,11 +1085,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
     @property
     def parser(self):
-        # give access to the parser used by the selected (primary) importer
-        return self.importer._parser
+        """Return the selected parser, or a list when multiple outputs are valid."""
+        parsers = [importer._parser for _, importer in self._selected_importer_pairs()]
+        return parsers[0] if len(parsers) == 1 else parsers
 
-    @property
-    def selected_importers(self):
+    def _selected_importer_pairs(self):
         """
         Ordered list of ``(output_index, importer)`` for every output of this resolver that
         is valid for the currently selected format (see ``format_selected``).
@@ -1102,9 +1103,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
     @property
     def importer(self):
-        # give access to the primary importer (first valid output) defined by the
-        # user-selection on format.  Use ``selected_importers`` to access all of them.
-        return self.selected_importers[0][1]
+        """Return the selected importer, or a list when multiple outputs are valid."""
+        importers = [importer for _, importer in self._selected_importer_pairs()]
+        return importers[0] if len(importers) == 1 else importers
 
     def _output_suffices(self, selected_importers):
         # "_" + de-duplicated per-output label, in the same order as ``selected_importers``
@@ -1116,8 +1117,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         """
         Import into jdaviz with all selected options.
         """
-        selected_importers = self.selected_importers
-        primary_importer = selected_importers[0][1]
+        selected_importer_pairs = self._selected_importer_pairs()
+        selected_importers = [importer for _, importer in selected_importer_pairs]
+        primary_importer = selected_importers[0]
 
         # Check if import is disabled before attempting to load
         if len(primary_importer.import_disabled_msg) > 0:
@@ -1133,11 +1135,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # data_label_is_prefix/data_label_suffices on primary_importer were already set by
         # _on_format_selected_changed (so the UI reflects prefix mode before Import is clicked);
         # re-derive the same suffices here to apply per-output labels when actually loading.
-        suffices = self._output_suffices(selected_importers)
+        suffices = self._output_suffices(selected_importer_pairs)
         prefix = primary_importer.data_label.value if hasattr(primary_importer, 'data_label') else None  # noqa
 
         n_imported = 0
-        for (output_index, this_importer), suffix in zip(selected_importers, suffices):
+        for (output_index, this_importer), suffix in zip(selected_importer_pairs, suffices):
             if this_importer is not primary_importer:
                 if prefix is not None and hasattr(this_importer, 'data_label'):
                     this_importer.data_label.value = f"{prefix}{suffix}"
@@ -1190,10 +1192,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 # to user in a warning message
                 self.valid_import_formats = ", ".join(self._get_valid_import_formats())
         else:
-            self.importer_widget = "IPY_MODEL_" + self.importer.model_id
+            primary_importer = self._selected_importer_pairs()[0][1]
+            self.importer_widget = "IPY_MODEL_" + primary_importer.model_id
             self.valid_import_formats = ''
 
-            self.importer.reset_and_check_existing_data_in_dc()
+            primary_importer.reset_and_check_existing_data_in_dc()
             self._update_primary_importer_prefix()
 
     def _update_primary_importer_prefix(self):
@@ -1202,13 +1205,13 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # so the UI reflects this before the user clicks Import.  when there's only one
         # output, leave data_label_is_prefix/suffices alone: some importers set these
         # themselves (e.g. for their own multi-extension selection within one output).
-        primary_importer = self.importer
+        selected_importer_pairs = self._selected_importer_pairs()
+        primary_importer = selected_importer_pairs[0][1]
         if not hasattr(primary_importer, 'data_label_is_prefix'):
             return
-        selected_importers = self.selected_importers
-        if len(selected_importers) > 1:
+        if len(selected_importer_pairs) > 1:
             primary_importer.data_label_is_prefix = True
-            primary_importer.data_label_suffices = self._output_suffices(selected_importers)
+            primary_importer.data_label_suffices = self._output_suffices(selected_importer_pairs)
 
     def close_in_tray(self, close_sidebar=False):
         """
