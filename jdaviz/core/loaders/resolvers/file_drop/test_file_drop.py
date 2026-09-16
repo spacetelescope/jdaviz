@@ -91,8 +91,9 @@ class TestFileDropResolverBasic:
         """
         Test default_label returns file name with different conventions.
         """
-        file_drop_resolver._file_infos = [{'name': filename,
-                           'data': b'some data'}]
+        file_drop_resolver._file_infos = [
+            {'name': filename,
+             'data': b'some data'}]
 
         assert file_drop_resolver.default_label == result
 
@@ -297,22 +298,25 @@ class TestFileDropResolverEdgeCases:
         """
         Test file name with special characters, unicode, and 'large' data.
         """
-        file_drop_resolver._file_infos = [{'name': 'my-file_v2.0 (copy).csv',
-                           'data': b'data'}]
+        file_drop_resolver._file_infos = [
+            {'name': 'my-file_v2.0 (copy).csv',
+             'data': b'data'}]
 
         expected = 'my-file_v2.0 (copy)'
         assert file_drop_resolver.default_label == expected
 
         # Now test with unicode characters
-        file_drop_resolver._file_infos = [{'name': 'és_测试_🌟.csv',
-                           'data': b'data'}]
+        file_drop_resolver._file_infos = [
+            {'name': 'és_测试_🌟.csv',
+             'data': b'data'}]
         expected = 'és_测试_🌟'
         assert file_drop_resolver.default_label == expected
 
         # Simulate a large file by creating 'large' data
         large_data = b'x' * (10 * 1024 * 1024)  # 10 MB
-        file_drop_resolver._file_infos = [{'name': 'large_file.dat',
-                           'data': large_data}]
+        file_drop_resolver._file_infos = [
+            {'name': 'large_file.dat',
+             'data': large_data}]
         result = file_drop_resolver.parse_input()
         assert isinstance(result, io.BytesIO)
         # Read in chunks to avoid memory issues in test
