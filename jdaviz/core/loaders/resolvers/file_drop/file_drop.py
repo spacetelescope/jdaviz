@@ -83,7 +83,6 @@ class FileDropResolver(BaseResolver):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._file_info = None
         self._file_infos = []
 
         self.file_drop_widget_el = FileDropMultiple(label="Drop file here",
@@ -114,8 +113,8 @@ class FileDropResolver(BaseResolver):
     def default_label(self):
         # Use the first file name as the default label, if available.
         # Otherwise, return None.
-        if self._file_info and 'name' in self._file_info:
-            return os.path.splitext(self._file_info['name'])[0]
+        if self._file_infos and 'name' in self._file_infos[0]:
+            return os.path.splitext(self._file_infos[0]['name'])[0]
         return None
 
     def _parsed_input_to_table(self, parsed_input, hdu=None):
@@ -137,7 +136,8 @@ class FileDropResolver(BaseResolver):
     def _on_file_updated(self, file_infos):
         self.nfiles = len(file_infos)
         self._file_infos = list(file_infos)
-        self._file_info = self._file_infos[0]
+        if not self._file_infos:
+            raise IndexError("No files were provided")
         self._resolver_input_updated()
         self.progress = 100
 
@@ -151,7 +151,7 @@ class FileDropResolver(BaseResolver):
 
     def parse_input(self):
         # this will return a bytes object of the file contents
-        return io.BytesIO(self._file_info.get('data'))
+        return io.BytesIO(self._file_infos[0].get('data'))
 
     def _default_label_for_output(self, output_index):
         try:

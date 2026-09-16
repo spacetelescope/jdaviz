@@ -51,7 +51,7 @@ def test_file_resolver_multiple_paths(deconfigged_helper, tmp_path):
     resolver = FileResolver(app=deconfigged_helper._app)
 
     # widget callback with multiple selected paths
-    resolver._on_file_chooser_paths_changed([tmp_path / 'img0.fits', tmp_path / 'img1.fits'])
+    resolver._on_file_chooser_path_changed([tmp_path / 'img0.fits', tmp_path / 'img1.fits'])
     assert resolver.filepath == paths
     assert resolver._check_is_valid() == ''
     assert resolver.output == paths

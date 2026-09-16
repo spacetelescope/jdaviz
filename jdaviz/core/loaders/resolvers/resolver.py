@@ -51,12 +51,6 @@ from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMes
 __all__ = ['BaseResolver', 'BaseConeSearchResolver', 'find_matching_resolver']
 
 
-class _ReprStr(str):
-    """A str whose repr() is itself unquoted, for building custom list-reprs."""
-    def __repr__(self):
-        return str(self)
-
-
 def _as_output_list(output):
     """
     Normalize a resolver's ``output`` (single object or list/tuple) to a list.
@@ -121,9 +115,7 @@ class FormatSelect(SelectPluginComponent):
         def _with_counts(choice):
             item = items_by_label.get(choice)
             if item is not None and item['n_total'] > 1:
-                # _ReprStr's __repr__ returns the string unquoted, so this renders as
-                # 'label' (n/N) instead of "'label' (n/N)" when embedded in the choices list
-                return _ReprStr(f"{choice!r} ({item['n_valid']}/{item['n_total']})")
+                return f"{choice!r} ({item['n_valid']}/{item['n_total']})"
             return choice
 
         return f"[{', '.join([_with_counts(choice) for choice in choices])}]"
