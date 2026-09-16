@@ -50,7 +50,7 @@ class TestMOSImporter:
 
         return path
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture
     def _setup(self, deconfigged_helper, mos_dir):
         self.helper = deconfigged_helper
         self.helper._app.state.dev_mos_loader = True
@@ -68,7 +68,7 @@ class TestMOSImporter:
         data_menu = self.helper.viewers[viewer_label].data_menu
         assert set(data_menu.data_labels_visible) == set(expected)
 
-    def test_is_valid(self, tmp_path):
+    def test_is_valid(self, _setup, tmp_path):
         resolver = self.helper.loaders['object']._obj
         importer = MOSImporter(app=self.helper._app,
                                resolver=resolver,
@@ -122,7 +122,7 @@ class TestMOSImporter:
         assert (importer._check_is_valid() ==
                 'Input directory does not contain any MOS 1D spectra matching *_x1d.fits.')
 
-    def test_import_all(self):
+    def test_import_all(self, _setup):
         loader = self._loader_for_mos_dir()
         assert loader.format.choices == ['MOS']
 
@@ -176,7 +176,7 @@ class TestMOSImporter:
         assert messages[1]['text'] == ('1 of 6 files could not be imported '
                                        '(jw00001_i2d.fits).')
 
-    def test_show_single_layer_per_viewer(self):
+    def test_show_single_layer_per_viewer(self, _setup):
         """
         Check that only a single layer is visible in each viewer.
         """
@@ -196,7 +196,7 @@ class TestMOSImporter:
             assert [label for label, visible in drawn.items() if visible] == [
                 label for label in [visible_label] if label in drawn]
 
-    def test_reimport_into_existing_viewers(self):
+    def test_reimport_into_existing_viewers(self, _setup):
         """
         Re-importing a directory into the viewers created by an earlier import must
         still leave only a single entry visible. Every entry is overwritten by the
@@ -226,7 +226,7 @@ class TestMOSImporter:
         self._assert_visible('2D Spectrum', ['mosdir_jw00000_s2d'])
         self._assert_visible('Image', ['mosdir_jw00000_i2d'])
 
-    def test_preexisting_data_left_visible(self):
+    def test_preexisting_data_left_visible(self, _setup):
         """
         Data the user loaded before the import isn't touched, even though everything
         the import itself adds (beyond the first entry) is hidden.
@@ -244,7 +244,7 @@ class TestMOSImporter:
 
         self._assert_visible('1D Spectrum', ['preexisting', 'mosdir_jw00000_x1d'])
 
-    def test_auto_extract_2d(self):
+    def test_auto_extract_2d(self, _setup):
         loader = self._loader_for_mos_dir()
         importer = loader.importer._obj
         importer.auto_extract_2d = True
