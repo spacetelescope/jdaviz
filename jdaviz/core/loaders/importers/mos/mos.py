@@ -507,12 +507,13 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
                 for file_info in batched:
                     self._import_file(file_info, viewers_by_product_type, data_label_prefix,
                                       failures, imported_labels)
+
+            for file_info in deferred:
+                self._import_file(file_info, viewers_by_product_type, data_label_prefix,
+                                  failures, imported_labels)
+
         finally:
             self._app.state.snackbar_queue = original_queue
-
-        for file_info in deferred:
-            self._import_file(file_info, viewers_by_product_type, data_label_prefix,
-                              failures, imported_labels)
 
         self._show_single_layer_per_viewer(preexisting_labels, imported_labels)
         self._report_import_summary(failures)
