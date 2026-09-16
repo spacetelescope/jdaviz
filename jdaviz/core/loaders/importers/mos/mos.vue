@@ -125,7 +125,7 @@
       :spinner="import_spinner"
       :disabled_msg="import_disabled_msg"
       :api_hints_enabled="api_hints_enabled"
-      api_hint="ldr.importer()"
+      api_hint="ldr.load()"
       :data_label_overwrite="data_label_overwrite"
       :data_label_is_prefix="data_label_is_prefix"
       :data_label_suffices="data_label_suffices"
