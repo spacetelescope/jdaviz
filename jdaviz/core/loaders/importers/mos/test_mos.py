@@ -14,7 +14,8 @@ class TestMOSImporter:
     """
 
     @pytest.fixture(scope='class')
-    def mos_dir(self, tmp_path_factory):
+    @classmethod
+    def mos_dir(cls, tmp_path_factory):
         """
         A MOS directory containing one of each supported product, plus one image
         product that passes the (cheap) header check but fails on import.
