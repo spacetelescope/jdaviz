@@ -265,7 +265,7 @@ class CatalogRowLinkManager(HubListener):
             return
         column_name = f'Data: {viewer_ref}'
 
-        # Update columns in all catalogs whether or not
+        # Update columns in all catalogs whether or not they're in a table viewer
         for data in self.app.data_collection:
             if data.meta.get('_importer') == 'CatalogImporter':
                 self._ensure_viewer_column(data, viewer_ref, column_name)
