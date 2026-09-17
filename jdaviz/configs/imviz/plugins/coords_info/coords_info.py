@@ -327,7 +327,6 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                          RampvizImageView)
                         ):
             self._image_viewer_update(viewer, x, y, mouseevent=mouseevent)
-                    return
 
     def _image_shape_inds(self, image):
         # return the indices in image.shape for the x and y dimension, respectively
