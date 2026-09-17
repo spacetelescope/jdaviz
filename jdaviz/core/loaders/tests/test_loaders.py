@@ -581,8 +581,8 @@ def test_file_table_local_paths(deconfigged_helper):
         '/absolute/unix/path.fits', 'http://example.com/file.fits'
     ]
     with patch('jdaviz.core.loaders.resolvers.resolver.download_uri_to_path',
-               side_effect=['/tmp/first.fits', '/tmp/second.fits']) as download:
-        assert ldr._obj._download_from_file_table() == ['/tmp/first.fits', '/tmp/second.fits']
+               side_effect=['/mock/first.fits', '/mock/second.fits']) as download:
+        assert ldr._obj._download_from_file_table() == ['/mock/first.fits', '/mock/second.fits']
     assert download.call_count == 2
 
     # Test MAST product name gets the prefix

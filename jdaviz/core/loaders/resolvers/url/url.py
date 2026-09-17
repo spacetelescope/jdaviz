@@ -1,6 +1,7 @@
 from traitlets import Bool, Unicode, List, observe
 from urllib.parse import urlparse
 import os
+import shutil
 import tarfile
 import zipfile
 from functools import cached_property
@@ -38,16 +39,25 @@ def _unpack_if_archive(archive_path):
         with zipfile.ZipFile(archive_path) as archive:
             members = [member for member in archive.infolist() if not member.is_dir()]
             for member in members:
-                _safe_archive_member_path(extract_dir, member.filename)
-            archive.extractall(extract_dir)
+                target_path = _safe_archive_member_path(extract_dir, member.filename)
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                # extract member-by-member (rather than archive.extractall) so each
+                # target path can be validated to stay within extract_dir
+                with archive.open(member) as src, open(target_path, 'wb') as dest:
+                    shutil.copyfileobj(src, dest)
     elif tarfile.is_tarfile(archive_path):
         with tarfile.open(archive_path) as archive:
-            members = [member for member in archive.getmembers() if member.isfile()]
             for member in archive.getmembers():
-                _safe_archive_member_path(extract_dir, member.name)
+                target_path = _safe_archive_member_path(extract_dir, member.name)
                 if member.issym() or member.islnk():
                     raise ValueError(f'Archive member is a link: {member.name}')
-            archive.extractall(extract_dir, members=members)
+                if not member.isfile():
+                    continue
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                # extract member-by-member (rather than archive.extractall) so each
+                # target path can be validated to stay within extract_dir
+                with archive.extractfile(member) as src, open(target_path, 'wb') as dest:
+                    shutil.copyfileobj(src, dest)
     else:
         # return original filepath
         return archive_path
