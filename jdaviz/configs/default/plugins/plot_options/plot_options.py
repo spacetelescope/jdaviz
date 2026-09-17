@@ -186,6 +186,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Linear".
     * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Custom".
+    * :meth:`set_layer_to_top`
     * ``volume_level`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. Set the volume for the selected sonified layer.
     * ``sonified_audible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -433,6 +434,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     axes_visible_value = Bool().tag(sync=True)
     axes_visible_sync = Dict().tag(sync=True)
 
+    layer_is_top = Bool(False).tag(sync=True)
+
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
@@ -515,6 +518,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Set viewer and layer display options.'
+
+        # ids of layer states whose ``visible`` attribute is already being watched
+        # to refresh the top-layer determination (see ``_watch_layer_visibility``)
+        self._visibility_watched = set()
 
         if self.config == 'deconfigged':
             self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/settings/plot_options.html'  # noqa
@@ -821,7 +828,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         # Add layer callback to image viewers to track active layer
         for viewer in self._app._viewer_store.values():
-            viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
+            viewer.state.add_callback('layers',
+                                      lambda msg, v=viewer: self._layers_changed(viewer=v))
+            self._watch_layer_visibility(viewer)
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
@@ -851,7 +860,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                        'image_contrast', 'image_bias',
                        'contour_visible', 'contour_mode',
                        'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels',
-                       'stretch_curve_visible', 'apply_RGB_presets']
+                       'stretch_curve_visible', 'apply_RGB_presets', 'set_layer_to_top']
         if self.config == 'deconfigged':
             expose += ['xatt', 'yatt', 'hist_visible', 'hist_color', 'hist_opacity',
                        'hist_xlog', 'hist_ylog', 'hist_n_bin', 'hist_x_min', 'hist_x_max',
@@ -961,7 +970,20 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
     def _on_viewer_added(self, msg):
         viewer = self._app.get_viewer_by_id(msg.viewer_id)
-        viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
+        viewer.state.add_callback('layers',
+                                  lambda msg, v=viewer: self._layers_changed(viewer=v))
+        self._watch_layer_visibility(viewer)
+
+    def _watch_layer_visibility(self, viewer):
+        # Register a callback on each layer's ``visible`` attribute so that the
+        # highlighted (top) layer and the ``layer_is_top`` button state are refreshed
+        # whenever visibility changes without the layer list itself changing -- most
+        # notably when blinking cycles which image is shown.
+        for lyr in getattr(viewer.state, 'layers', []):
+            if id(lyr) in self._visibility_watched or not hasattr(lyr, 'visible'):
+                continue
+            lyr.add_callback('visible', lambda value, v=viewer: self._layers_changed(viewer=v))
+            self._visibility_watched.add(id(lyr))
 
     @observe('viewer_selected')
     def _layers_changed(self, msg=None, viewer=None):
@@ -974,11 +996,26 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         if viewer is None:
             viewer = self.viewer.selected_obj
 
+        # Ensure any newly-added layers have their visibility watched (e.g. blinking
+        # toggles visibility, which must refresh the top-layer determination below).
+        if viewer is not None:
+            self._watch_layer_visibility(viewer)
+
         if viewer is self.viewer.selected_obj and self._viewer_is_image_viewer():  # noqa
-            if viewer.active_image_layer is None:
+            # Use the same exclusion set as ``layer_is_top`` / ``set_layer_to_top`` so that
+            # the highlighted (top) layer is determined consistently: subsets, WCS-only/
+            # orientation layers, and associated child layers (DQ, uncertainty, etc.) are
+            # excluded from the comparison.
+            eligible_layers = self._eligible_top_layers(viewer)
+            if not eligible_layers:
                 self.active_layer = ""
-                return
-            self.active_layer = viewer.active_image_layer.layer.label
+            else:
+                top_layer = max(eligible_layers, key=lambda lyr: lyr.zorder)
+                self.active_layer = top_layer.layer.label
+
+        # Refresh the top-layer button state whenever the viewer's layer list changes
+        # (e.g. a layer is added, removed, or reordered via the data menu).
+        self._update_layer_is_top()
 
     def vue_unmix_state(self, names):
         if isinstance(names, str):
@@ -1051,6 +1088,112 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
+
+    def _assoc_child_labels(self):
+        # Labels of layers that are associated children (DQ, uncertainty, WCS-only) of
+        # another data layer.  These float above their parent via zorder + 0.1 and cannot
+        # be independently promoted, so they are excluded from top-layer determination.
+        return set(
+            child for data in self._app.data_collection
+            for child in self._app._get_assoc_data_children(data.label)
+        )
+
+    def _eligible_top_layers(self, viewer, child_labels=None):
+        # Image layers eligible to be considered the 'top' layer in the viewer.
+        # Excludes subsets, WCS-only/orientation layers, and associated child layers,
+        # matching the logic used by ``set_layer_to_top`` / ``layer_is_top``.  Hidden
+        # layers are also excluded so that the determination tracks what is actually
+        # displayed on top (e.g. blinking toggles layer ``visible`` to show one image
+        # at a time, which must update the highlighted/top layer accordingly).
+        # ``child_labels`` may be passed in by callers that have already computed it
+        # to avoid recomputing the associated-child set more than once per update.
+        if child_labels is None:
+            child_labels = self._assoc_child_labels()
+        return [lyr for lyr in viewer.state.layers
+                if (hasattr(lyr, 'layer') and hasattr(lyr, 'zorder') and lyr.zorder is not None
+                    and getattr(lyr, 'visible', True)
+                    and not hasattr(lyr.layer, 'subset_state')
+                    and is_not_wcs_only(lyr.layer)
+                    and lyr.layer.label not in child_labels)]
+
+    @observe('layer_selected', 'viewer_selected', 'layer_items',
+             'layer_multiselect', 'viewer_multiselect')
+    def _update_layer_is_top(self, msg={}):
+        if (not hasattr(self, 'viewer') or self.viewer_multiselect or self.layer_multiselect
+                or not self.viewer.selected or not self.layer_selected):
+            self.layer_is_top = False
+            return
+        if not self.layer.selected_item or self.layer.selected_item.get('is_subset'):
+            self.layer_is_top = False
+            return
+        # When viewer_multiselect transitions True→False, this observer can fire before
+        # ViewerSelect._multiselect_changed clears its caches, leaving stale cached
+        # properties.  selected_obj derives its id from the separate ``selected_item``
+        # cache, which still holds the multiselect-aggregated value (where ``id`` is a
+        # list), so clearing only ``selected_obj`` is not enough -- recomputing it would
+        # then pass a list into get_viewer_by_id and raise.  Clear the full cache (as
+        # _multiselect_changed itself does) so every dependent property is recomputed
+        # fresh.  This is the only trigger for which the cache may be out of date; for
+        # every other trigger (and manual calls with msg={}) the cache is already valid.
+        if msg.get('name') == 'viewer_multiselect':
+            self.viewer._clear_cache()
+        viewer = self.viewer.selected_obj
+        if viewer is None:
+            self.layer_is_top = False
+            return
+        # Child layers (DQ, uncertainty, WCS-only) float above their parent via zorder + 0.1
+        # and cannot be independently promoted; treat them as already on top.
+        child_labels = self._assoc_child_labels()
+        if self.layer_selected in child_labels:
+            self.layer_is_top = True
+            return
+        # Compare the selected layer's zorder against the running maximum across all
+        # eligible layers (subsets, child layers, and WCS-only/orientation layers excluded).
+        eligible_layers = self._eligible_top_layers(viewer, child_labels=child_labels)
+        max_zorder = max((lyr.zorder for lyr in eligible_layers), default=None)
+        selected_zorder = next(
+            (lyr.zorder for lyr in eligible_layers
+             if lyr.layer.label == self.layer_selected), None
+        )
+        self.layer_is_top = (selected_zorder is not None and selected_zorder == max_zorder)
+
+    def vue_set_layer_to_top(self, data):
+        self.set_layer_to_top()
+
+    def set_layer_to_top(self):
+        """Set the currently selected layer as the top layer in the image viewer.
+
+        The selected layer is also made visible, and its opacity is set to 1 if it
+        was zero, so that the change is actually reflected at the top of the viewer.
+        """
+        if self.viewer_multiselect or self.layer_multiselect:
+            raise ValueError("set_layer_to_top only works with a single viewer and layer selected")
+        viewer = self.viewer.selected_obj
+        layer_label = self.layer_selected
+        # Use the maximum zorder across ALL layers (including orientation/WCS-only and subsets)
+        # so the selected layer is placed strictly above every other layer. Using only image
+        # zorders would create a tie with the orientation layer (whose zorder DataMenu sets just
+        # above image layers), which can cause ambiguous sort order in DataMenu normalization.
+        all_zorders = [lyr.zorder for lyr in viewer.state.layers
+                       if hasattr(lyr, 'zorder') and lyr.zorder is not None]
+        if not all_zorders:
+            return
+        for lyr in viewer.state.layers:
+            if hasattr(lyr, 'layer') and lyr.layer.label == layer_label:
+                lyr.zorder = max(all_zorders) + 1
+                # ensure the layer is visible (and has non-zero opacity) so that
+                # promoting it to the top is actually reflected in the viewer.
+                # ``visible`` is the overall toggle (e.g. cleared by blinking),
+                # while ``bitmap_visible`` gates the image bitmap specifically; set
+                # both so a previously-blinked-out layer is actually shown.
+                if hasattr(lyr, 'visible'):
+                    lyr.visible = True
+                if hasattr(lyr, 'bitmap_visible'):
+                    lyr.bitmap_visible = True
+                if getattr(lyr, 'alpha', None) == 0:
+                    lyr.alpha = 1
+                break
+        self._update_layer_is_top()
 
     @observe('viewer_selected',
              'x_min_value', 'x_max_value',

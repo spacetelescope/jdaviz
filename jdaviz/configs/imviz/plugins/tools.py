@@ -7,7 +7,7 @@ from glue.viewers.common.tool import CheckableTool
 from glue_jupyter.utils import debounced
 
 from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-from jdaviz.core.tools import BoxZoom, PanZoom, _MatchedZoomMixin
+from jdaviz.core.tools import BoxZoom, PanZoom, _MatchedZoomMixin, _count_visible_image_layers
 from jdaviz.utils import get_top_layer_index
 
 __all__ = []
@@ -69,6 +69,7 @@ class BlinkOnce(CheckableTool):
     action_text = 'Go to next image'
     tool_tip = ('Click on the viewer or press "b" to display the next image, '
                 'or right-click or press "B" to display the previous')
+    keep_visible_in_focus_mode = True
 
     def activate(self):
         self.viewer.add_event_callback(self.on_click, events=['click', 'contextmenu'])
@@ -106,6 +107,13 @@ class ContrastBias(CheckableTool):
     tool_id = 'jdaviz:contrastbias'
     action_text = 'Adjust contrast/bias'
     tool_tip = 'Click and drag to adjust contrast and bias, double-click to reset'
+    keep_visible_in_focus_mode = True
+    _tool_tip_template = 'Click and drag to adjust contrast and bias of {layer_ref}, double-click to reset'  # noqa
+
+    def get_tooltip(self):
+        n = _count_visible_image_layers(self.viewer)
+        layer_ref = 'the image layer' if n <= 1 else 'the top visible image layer'
+        return self._tool_tip_template.format(layer_ref=layer_ref)
 
     def __init__(self, viewer, **kwargs):
         super().__init__(viewer, **kwargs)

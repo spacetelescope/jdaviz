@@ -33,8 +33,12 @@ from specutils import Spectrum
 
 from traitlets import Bool, Unicode
 
+# table_viewer: temporary until glue-jupyter PR is merged; see that file for revert instructions.
+from jdaviz.components.table_viewer import JdavizTableGlue  # noqa: E402
+
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
+from jdaviz.core.aida_api import AIDAMixin
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
 from jdaviz.core.events import (SnackbarMessage,
@@ -50,8 +54,8 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import WithCache, TemplateMixin, show_widget
 from jdaviz.core.tools import _get_skycoords_from_table, _get_pixel_coords_from_table
 from jdaviz.core.user_api import ViewerUserApi
-from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
-                                               flux_conversion_general,
+from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
+                                               flux_unit_conversion,
                                                all_flux_unit_conversion_equivs)
 from jdaviz.utils import (ColorCycler, get_subset_type, _wcs_only_label,
                           layer_is_image_data, layer_is_not_dq, layer_is_3d)
@@ -75,6 +79,13 @@ class JdavizViewerMixin(WithCache):
     tools_nested = []
     _prev_limits = None
     _native_mark_classnames = ('Lines', 'LinesGL', 'FRBImage', 'Contour')
+
+    def _on_mouse_interaction(self, interaction, data, buffers):
+        """Override to block all mousemove events when a toolbar override is active."""
+        if (data.get('event') == 'mousemove'
+                and getattr(getattr(self, 'toolbar', None), 'tool_override_mode', '') != ''):
+            return
+        super()._on_mouse_interaction(interaction, data, buffers)
 
     def __init__(self, *args, **kwargs):
         # NOTE: anything here most likely won't be called by viewers because of inheritance order
@@ -393,8 +404,11 @@ class JdavizViewerMixin(WithCache):
             expose = ['data_labels_loaded', 'data_labels_visible', 'data_menu']
         else:
             expose = []
-        if self.jdaviz_app.config == 'deconfigged':
-            expose += ['clone_viewer']
+        # TODO: remove if-statement once configs removed
+        if self.jdaviz_app.config not in ('imviz', 'specviz',
+                                          'specviz2d', 'cubeviz',
+                                          'mosviz', 'rampviz'):
+            expose += ['clone_viewer', 'toggle_focus_mode']
         if isinstance(self, BqplotImageView):
             if isinstance(self, AstrowidgetsImageViewerMixin):
                 expose += ['save',
@@ -408,8 +422,11 @@ class JdavizViewerMixin(WithCache):
                 # cubeviz image viewers don't inherit from AstrowidgetsImageViewerMixin yet,
                 # but also shouldn't expose set_limits because of equal aspect ratio concerns
                 expose += []
+
+            if isinstance(self, AIDAMixin):
+                expose += ['set_viewport', 'get_viewport']
         elif isinstance(self, TableViewer):
-            expose += []
+            expose += ['add_column', 'rename_column', 'remove_column', 'set_column_sync']
         else:
             expose += ['set_limits', 'reset_limits', 'set_tick_format']
         return ViewerUserApi(self, expose=expose)
@@ -498,6 +515,25 @@ class JdavizViewerMixin(WithCache):
                 setattr(new_layer_state, k, v)
 
         return JdavizViewerWindow(new_viewer, app=self.jdaviz_app).user_api
+
+    def toggle_focus_mode(self, focus=None):
+        """
+        Toggle focus mode for this viewer.
+
+        Parameters
+        ----------
+        focus : bool or None, optional
+            If True, set focus to this viewer.  If False, unset focus if it is currently
+            on this viewer.
+            If None (default), toggle focus on this viewer.
+        """
+        curr_focus = self.jdaviz_app.state.focus_viewer
+        if focus is None:
+            # set to this viewer if not already, otherwise None
+            new_focus = self.reference if curr_focus != self.reference else ''
+        else:
+            new_focus = self.reference if focus else ''
+        self.jdaviz_app.state.focus_viewer = new_focus
 
     def reset_limits(self):
         """
@@ -895,6 +931,11 @@ class JdavizViewerWindow(TemplateMixin):
     tool_override_mode = Unicode("").tag(sync=True)
 
     viewer_destroyed = Bool(False).tag(sync=True)
+    focus_mode = Bool(False).tag(sync=True)
+    coords_info_widget = Unicode("").tag(sync=True)
+    coords_info_has_data = Bool(False).tag(sync=True)
+    coords_info_icon = Unicode("").tag(sync=True)
+    coords_info_dataset_icon = Unicode("").tag(sync=True)
 
     def __init__(self, viewer, *args, reference="", name="", **kwargs):
         super().__init__(*args, **kwargs)
@@ -914,10 +955,40 @@ class JdavizViewerWindow(TemplateMixin):
             self.tool_override_mode = viewer.toolbar.tool_override_mode
             viewer.toolbar.observe(self._on_toolbar_override_change, names=['tool_override_mode'])
 
+        # Track focus mode by observing app.state.focus_viewer
+        coords_info = self._app.session.application._tools.get('g-coords-info')
+        if coords_info is not None:
+            self.coords_info_widget = "IPY_MODEL_" + coords_info.model_id
+            self.coords_info_has_data = bool(coords_info.icon)
+            self.coords_info_icon = coords_info.icon
+            self.coords_info_dataset_icon = coords_info.dataset_icon
+            coords_info.observe(self._on_coords_info_icon_changed, names=['icon'])
+            coords_info.observe(self._on_coords_info_dataset_icon_changed, names=['dataset_icon'])
+        self._app.state.add_callback('focus_viewer', self._on_focus_viewer_changed)
+        self._on_focus_viewer_changed()
+
         self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
 
     def _on_toolbar_override_change(self, change):
         self.tool_override_mode = change['new']
+
+    def _on_toolbar_dropdown_active_changed(self, change):
+        pass  # no-op, can be defined by subclasses
+
+    def _on_focus_viewer_changed(self, *args):
+        self.focus_mode = (self._app.state.focus_viewer == self.reference)
+
+    def _on_coords_info_icon_changed(self, change):
+        self.coords_info_has_data = bool(change['new'])
+        self.coords_info_icon = change['new']
+
+    def _on_coords_info_dataset_icon_changed(self, change):
+        self.coords_info_dataset_icon = change['new']
+
+    def vue_cycle_coords_dataset(self, *args):
+        coords_info = self._app.session.application._tools.get('g-coords-info')
+        if coords_info is not None:
+            coords_info.dataset.select_next()
 
     @property
     def user_api(self):
@@ -990,7 +1061,8 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
 
     default_class = NDDataArray
@@ -1128,10 +1200,11 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                     cube_wave = data.get_component('spectral')
 
                     eqv = all_flux_unit_conversion_equivs(pixar_sr=psc, cube_wave=cube_wave)
-                    flux_conversion_general([1, 1],
-                                            data.get_component('flux').data.units,
-                                            self.state.y_display_unit,
-                                            equivalencies=eqv)
+                    flux_unit_conversion(
+                        [1, 1],
+                        data.get_component('flux').data.units,
+                        self.state.y_display_unit,
+                        equivalencies=eqv)
             except Exception as e:
                 # Raising exception here introduces a dirty state that messes up next load_data
                 # but not raising exception also causes weird behavior unless we remove the data
@@ -1345,7 +1418,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         # get square angle from 'sb' display unit
         sb_unit = self.jdaviz_app._get_display_unit(axis='sb')
         if sb_unit is not None:
-            solid_angle_unit = check_if_unit_is_per_solid_angle(sb_unit, return_unit=True)
+            solid_angle_unit = is_unit_per_solid_angle(sb_unit, return_unit=True)
         else:
             solid_angle_unit = None
 
@@ -1447,7 +1520,8 @@ class ScatterViewer(JdavizViewerMixin, BqplotScatterView):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange', 'bqplot:yrange', 'bqplot:rectangle'],
                     [],
-                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
     _state_cls = ScatterViewerState
 
@@ -1463,25 +1537,67 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     [],
-                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
     _state_cls = HistogramViewerState
 
     _native_mark_classnames = ('Bars', 'BarsGL')
 
 
+def _role_labels_from_meta(meta):
+    """Return the list of non-removable column names encoded in a glue Data meta dict.
+
+    Two kinds of columns are protected:
+    - The actual column names recorded by the loader (values of the ``_jdaviz_loader_*``
+      keys), e.g. ``'SkyCoord_RA'`` or ``'xcentroid'``.
+    - Fixed derived-column names (``'X'``, ``'Y'``, ``'ID'``) that jdaviz creates
+      whenever the corresponding loader key is present, regardless of what the
+      original column was called.
+    """
+    pairs = {'_jdaviz_loader_ra_col': None,
+             '_jdaviz_loader_dec_col': None,
+             '_jdaviz_loader_x_col': 'X',
+             '_jdaviz_loader_y_col': 'Y',
+             '_jdaviz_loader_id_col': 'ID',
+             '_jdaviz_loader_linename_col': None,
+             '_jdaviz_loader_spectral_loc_col': None
+             }
+    labels = [
+        name
+        for meta_key, derived_name in pairs.items()
+        for name in (meta.get(meta_key), derived_name if meta_key in meta else None)
+        if name
+    ]
+    # columns added by plugins (e.g. spectral-lines component columns) are also protected
+    labels += [name for name in meta.get('_jdaviz_plugin_component_column', []) if name]
+    return labels
+
+
 @viewer_registry("table-viewer", label="table")
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
+                    ['jdaviz:table_row_select'],
                     ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
-                    ['jdaviz:viewer_clone']
+                    ['jdaviz:table_add_column'],
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                    ]
 
     def __init__(self, session, *args, **kwargs):
+        default_tool_priority = kwargs.pop('default_tool_priority',
+                                           ['jdaviz:table_row_select'])
         super().__init__(session, *args, **kwargs)
+
+        # table_viewer: replace default TableGlue with local override until upstream PR is merged
+        self.widget_table = JdavizTableGlue(
+            data=None,
+            apply_filter=self.apply_filter,
+            state=self.state,
+        )
 
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True
@@ -1493,9 +1609,16 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
                                   names=['checked'])
+        # check tool visibility when data changes (e.g. row-link columns added)
+        self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
+                                  names=['data'])
         # Also update selection highlight marks when checked rows change
         self.widget_table.observe(self._on_checked_changed, names=['checked'])
         self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
+
+        # Inline column-header editing: re-sync role labels when data changes
+        self.widget_table.observe(self._on_table_data_changed, names=['data'])
+        self.widget_table.add_column_renamed_callback(self._sync_role_meta_on_rename)
 
         # Subscribe to RestoreToolbarMessage to clean up checkbox state
         # when toolbar is restored (e.g., by clicking X on custom toolbar)
@@ -1510,6 +1633,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # if this table viewer is removed while tools are active
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=self._on_viewer_removed)
+
+        # Build the toolbar with the correct default-tool priority
+        self.initialize_toolbar(default_tool_priority=default_tool_priority)
 
     def _on_table_select_row_click(self, msg):
         """Handle click from image viewer to select/toggle closest table row."""
@@ -1596,7 +1722,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             # Add new column
             tab.data.add_component(data, column_name)
 
-    def add_column(self, column_name, data=None):
+    def add_column(self, column_name, data=None, fill_value=None):
         """
         Add a new data column to the table.
 
@@ -1606,8 +1732,12 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             The name of the column to add.
         data : list-like, optional
             The data for the column. Must be the same length as the number of
-            rows in the table. If None, the column will be filled with None-type
-            values.
+            rows in the table. If None, the column will be filled with
+            ``fill_value``.
+        fill_value : scalar, optional
+            Value to use when ``data`` is None.  Defaults to ``None`` (stored
+            as object-dtype None values). Pass ``np.nan`` for NaN-filled float
+            columns or any string/number to pre-fill with a constant.
 
         Raises
         ------
@@ -1615,20 +1745,25 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             If column_name is not provided, not a string, or if data length does
             not match number of rows in the table.
         """
-
         # make sure column name is not in table already
         if column_name in [c.label for c in self.widget_table.data.components]:
             raise ValueError(f"Column '{column_name}' already exists in the table. Use update_column to update it instead.")  # noqa: E501
 
+        if data is None and fill_value is not None:
+            nrows = self.widget_table.data.shape[0]
+            data = np.full(nrows, fill_value)
+
         self._add_or_update_column(column_name, data)
 
-        # and make the user-added column editable
+        # and make the new column editable
 
         # we already know column_name can safely be cast to a string from check
         # in _add_or_update_column
         column_name = str(column_name)
         cid = self.layers[0].layer.data.id[column_name]
         self.state.editable_components = list(self.state.editable_components) + [cid]
+        self.state.renameable_components = list(self.state.renameable_components) + [cid]
+        self.state.removable_components = list(self.state.removable_components) + [cid]
 
     def update_column(self, column_name, data):
         """
@@ -1659,6 +1794,34 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             raise ValueError(f"Column '{column_name}' does not exist in the table. Use add_column to add it first.")  # noqa: E501
 
         self._add_or_update_column(column_name, data)
+
+    def set_column_sync(self, column_name, synced):
+        """Enable or disable row-link syncing for a data-association column.
+
+        Parameters
+        ----------
+        column_name : str
+            Name of the ``Data: <viewer>`` column to toggle.
+        synced : bool
+            ``True`` to sync (default); ``False`` to disable.
+        """
+        self.state.column_sync_state = {**self.state.column_sync_state,
+                                        column_name: bool(synced)}
+
+    def get_column_sync(self, column_name):
+        """Return the current sync state for a data-association column.
+
+        Parameters
+        ----------
+        column_name : str
+            Name of the column to query.
+
+        Returns
+        -------
+        bool
+            ``True`` if synced (default when not explicitly set).
+        """
+        return self.state.is_synced(column_name)
 
     def _on_checked_changed(self, change):
         """Update highlight marks in image viewers when checked rows change."""
@@ -1732,11 +1895,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def _on_restore_toolbar(self, msg={}):
         """Clean up checkbox state when toolbar is restored."""
-        # Clear selection marks
         self._clear_selection_marks()
-
-        # Hide checkboxes (they should always be hidden when default toolbar is shown)
-        self.widget_table.selection_enabled = False
 
     def _on_viewer_removed(self, msg):
         """Clean up selection marks if this table viewer is removed."""
@@ -1746,3 +1905,142 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Clear selection marks in image viewers when this table viewer is removed
         # (toolbar cleanup is handled generically by NestedJupyterToolbar)
         self._clear_selection_marks()
+
+    def _sync_role_meta_on_rename(self, old_name, new_name):
+        """Update role-metadata entries across all layers when a column is renamed."""
+        for glue_data in self._iter_table_data():
+            meta = getattr(glue_data, 'meta', None)
+            if meta:
+                for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
+                            '_jdaviz_loader_x_col', '_jdaviz_loader_y_col',
+                            '_jdaviz_loader_id_col', '_jdaviz_loader_linename_col',
+                            '_jdaviz_loader_spectral_loc_col'):
+                    if meta.get(key) == old_name:
+                        meta[key] = new_name
+                plugin_cols = meta.get('_jdaviz_plugin_component_column', [])
+                if old_name in plugin_cols:
+                    meta['_jdaviz_plugin_component_column'] = [
+                        new_name if name == old_name else name for name in plugin_cols
+                    ]
+        self._update_component_permissions()
+
+    def _on_table_data_changed(self, change):
+        """
+        Sync renameable/removable_components whenever table data is set.
+
+        Reads from change['new'] rather than via _iter_table_data() because this
+        observer fires before the layer is appended to self.layers.
+        """
+        data = change['new']
+        if data is None:
+            self.state.renameable_components = []
+            self.state.removable_components = []
+            return
+        meta = getattr(data, 'meta', {}) or {}
+        role_labels = set(_role_labels_from_meta(meta))
+        plugin_labels = set(meta.get('_jdaviz_plugin_component_column', []))
+        self.state.renameable_components = [
+            cid for cid in data.main_components if cid.label not in plugin_labels
+        ]
+        self.state.removable_components = [
+            cid for cid in data.main_components if cid.label not in role_labels
+        ]
+
+    def _iter_table_data(self):
+        """Yield each unique glue Data object visible in this viewer."""
+        seen = set()
+        for layer_artist in self.layers:
+            data = layer_artist.layer
+            if hasattr(data, 'data'):  # Subset
+                data = data.data
+            if id(data) not in seen:
+                seen.add(id(data))
+                yield data
+
+    def _update_component_permissions(self):
+        """Sync renameable/removable_components to state based on role assignments."""
+        renameable = []
+        removable = []
+        for data in self._iter_table_data():
+            meta = getattr(data, 'meta', {}) or {}
+            role_labels = set(_role_labels_from_meta(meta))
+            plugin_labels = set(meta.get('_jdaviz_plugin_component_column', []))
+            for cid in data.main_components:
+                if cid.label not in plugin_labels:
+                    renameable.append(cid)
+                if cid.label not in role_labels:
+                    removable.append(cid)
+        self.state.renameable_components = renameable
+        self.state.removable_components = removable
+
+    def rename_column(self, old_name, new_name):
+        """
+        Rename an existing column across all table data entries.
+
+        Parameters
+        ----------
+        old_name : str
+            Current name of the column.
+        new_name : str
+            New name for the column.
+
+        Raises
+        ------
+        ValueError
+            If ``old_name`` is not found in the table, or if it is a
+            plugin-managed component column (e.g. added by Spectral Lines).
+        """
+        new_name = str(new_name).strip()
+        if not new_name:
+            raise ValueError("new_name must be a non-empty string.")
+        found = False
+        for glue_data in self._iter_table_data():
+            if old_name in [c.label for c in glue_data.main_components]:
+                meta = getattr(glue_data, 'meta', {}) or {}
+                if old_name in meta.get('_jdaviz_plugin_component_column', []):
+                    raise ValueError(
+                        f"Column '{old_name}' is a protected column and cannot be renamed."
+                    )
+                glue_data.id[old_name].label = new_name
+                found = True
+        if not found:
+            raise ValueError(f"Column '{old_name}' not found in the table.")
+        self._sync_role_meta_on_rename(old_name, new_name)
+        self.redraw()
+
+    def remove_column(self, column_name):
+        """
+        Remove an existing column from all table data entries.
+
+        Parameters
+        ----------
+        column_name : str
+            Name of the column to remove.
+
+        Raises
+        ------
+        ValueError
+            If ``column_name`` is not found in the table, or if it is a
+            protected role column (e.g. RA, Dec, X, Y, ID).
+        """
+        found = False
+        for glue_data in self._iter_table_data():
+            if column_name in [c.label for c in glue_data.main_components]:
+                cid = glue_data.id[column_name]
+                if cid not in self.state.removable_components:
+                    raise ValueError(
+                        f"Column '{column_name}' is a protected column and cannot be removed."
+                    )
+                self.state.editable_components = [
+                    c for c in self.state.editable_components if c is not cid
+                ]
+                self.state.renameable_components = [
+                    c for c in self.state.renameable_components if c is not cid
+                ]
+                self.state.removable_components = [
+                    c for c in self.state.removable_components if c is not cid
+                ]
+                glue_data.remove_component(cid)
+                found = True
+        if not found:
+            raise ValueError(f"Column '{column_name}' not found in the table.")

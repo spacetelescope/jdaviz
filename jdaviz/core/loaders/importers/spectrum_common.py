@@ -16,7 +16,7 @@ from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
-from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
+from jdaviz.core.unit_conversion_utils import is_unit_per_solid_angle
 from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
 from jdaviz.utils import (standardize_metadata,
                           create_data_hash,
@@ -334,6 +334,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             if (len(getattr(hdu, 'shape', [])) == 2
                     and hdu.header.get('EXTNAME', '').upper() in ('SCI', 'FLUX', 'DATA')):
                 return True
+        # NIRISS images otherwise would be validated as 2D spectra.
+        elif self.input[0].header.get('EXP_TYPE', None) == 'NIS_IMAGE':
+            return False
 
         # Check for Binary Table HDU with spectral columns (for 1D spectra only)
         if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
@@ -631,20 +634,13 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                 try:
                     from stdatamodels import asdf_in_fits
                     tree = asdf_in_fits.open(hdulist).tree
-                    if 'meta' in tree and 'wcs' in tree['meta']:
+                    if 'meta' in tree and tree['meta'].get('wcs', None) is not None:
                         wcs = tree["meta"]["wcs"]
                         if isinstance(wcs, (list, tuple)):
                             wcs = wcs[0]
                         # Check needed for BSUB files, which we want to allow without worrying
                         # about the wavelength solution for now
                         if len(wcs.forward_transform.inputs) == 5:
-                            wcs = None
-                        # TODO: This is a temporary fix until handled upstream in glue
-                        # For 2D spectra, disable 3D GWCS
-                        # This prevents glue-astronomy from misidentifying component
-                        # units (setting Wavelength to 'deg' instead of wavelength unit).
-                        elif (self.supported_flux_ndim == 2 and
-                              getattr(wcs, 'world_n_dim', 0) > self.supported_flux_ndim):
                             wcs = None
                     else:
                         wcs = None
@@ -680,9 +676,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         apply_pix2 = 'FLUX' in self.extension.selected or 'ERR' in self.extension.selected
         flux = sc.flux
         if (apply_pix2 and
-                (not check_if_unit_is_per_solid_angle(flux.unit))):
+                (not is_unit_per_solid_angle(flux.unit))):
             target_flux_unit = flux.unit / PIX2
-        elif check_if_unit_is_per_solid_angle(flux.unit, return_unit=True) == "spaxel":
+        elif is_unit_per_solid_angle(flux.unit, return_unit=True) == "spaxel":
             # We need to convert spaxel to pixel squared, since spaxel isn't fully supported
             # by astropy
             # This is horribly ugly but just multiplying by u.Unit("spaxel") doesn't work
@@ -816,6 +812,10 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     raise ValueError(
                         "No primary data extension selected. Please select a FLUX extension."
                     )
+            # Avoid an edge case that is missed by the validity checks elsewhere
+            if hdulist[0].header.get('EXP_TYPE') == 'NIS_IMAGE':
+                return []
+
             return [self._spectrum_from_hdu(hdulist, hdu) for hdu in hdus]
         elif self.input_type == 'asdf:roman':
             roman = self.input["roman"]

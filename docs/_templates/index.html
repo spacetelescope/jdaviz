@@ -922,6 +922,18 @@
             color: #1a1a1a;
         }
 
+        .jupyter-cell-footer {
+            padding: 10px 16px;
+            border-top: 1px solid var(--grid-border);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        html[data-theme="light"] .jupyter-cell-footer {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
         /* Content Border Wrapper */
         .content-border-wrapper {
             width: 99%;
@@ -1341,13 +1353,13 @@
     <div class="container">
         <!-- Logo Section - kept for potential use elsewhere but hidden by CSS -->
         <div class="logo-section">
-            <img src="_static/logos/jdaviz.svg" alt="Jdaviz Logo" class="logo">
+            <img src="_static/logos/jdaviz_wordmark.svg" alt="Jdaviz Logo" class="logo">
         </div>
 
         <!-- Description Section with embedded logo -->
         <div class="description-section">
             <div class="description-logo">
-                <img src="_static/logos/jdaviz.svg" alt="Jdaviz Logo" class="logo">
+                <img src="_static/logos/jdaviz_wordmark.svg" alt="Jdaviz Logo" class="logo">
             </div>
             <div class="description-content">
                 <p>
@@ -1379,7 +1391,7 @@
             <!-- Platform Tabs Section -->
             <div class="platform-tabs-section">
             <div class="platform-tabs-header">
-                <button class="platform-tab" data-platform="desktop">Desktop UI</button>
+                <button class="platform-tab" data-platform="desktop">Desktop App</button>
                 <button class="platform-tab" data-platform="commandline">Command Line</button>
                 <button class="platform-tab" data-platform="mast">Jdaviz@MAST</button>
                 <button class="platform-tab active" data-platform="jupyter">Local Jupyter Notebook/Lab</button>
@@ -1449,6 +1461,15 @@
 
             <!-- Command Line Content -->
             <div class="platform-tab-content" data-platform-content="commandline">
+                <div class="jupyter-cell-container">
+                    <div class="jupyter-cell-header">
+                        <span class="jupyter-cell-prompt">Command Line / Terminal</span>
+                    </div>
+                    <div class="jupyter-cell-code">$ jdaviz</div>
+                    <div class="jupyter-cell-footer">
+                        See <a href="{{ pathto('quickstart') }}#launching-from-the-command-line" target="_self" style="color: var(--pst-color-primary-highlight); text-decoration: underline;">additional command line arguments</a>
+                    </div>
+                </div>
             </div>
 
             <!-- Jdaviz@MAST Content -->
@@ -1619,7 +1640,7 @@ jd.show()</div>
 
             // Map platform IDs to display names
             const platformNames = {
-                'desktop': 'Desktop UI',
+                'desktop': 'Desktop App',
                 'mast': 'Jdaviz@MAST',
                 'jupyter': 'Jupyter Notebook',
                 'platform': 'Science Platforms'

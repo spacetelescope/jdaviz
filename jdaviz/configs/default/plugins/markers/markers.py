@@ -227,6 +227,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     def _create_viewer_callbacks(self, viewer):
         if not self.is_active:
             return
+        if not hasattr(viewer, 'add_event_callback'):
+            return
         callback = self._viewer_callback(viewer, self._on_viewer_key_event)
         viewer.add_event_callback(callback, events=['keydown'])
 
@@ -234,6 +236,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         self._create_viewer_callbacks(self._app.get_viewer_by_id(msg.viewer_id))
 
     def _recompute_mark_positions(self, viewer):
+        if not hasattr(viewer, 'figure'):
+            return
         if self.table is None or self.table._qtable is None:
             return
         if 'world_ra' not in self.table.headers_avail:
@@ -475,6 +479,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         return snapped_coords
 
     def _get_mark(self, viewer):
+        if not hasattr(viewer, 'figure'):
+            # this will be the case for a Table viewer with no marks
+            return None
         matches = [mark for mark in viewer.figure.marks if isinstance(mark, MarkersMark)]
         if len(matches):
             return matches[0]
@@ -549,6 +556,12 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                                    k.startswith('pixel_') else v
                                    for k, v in row_info.items()
                                    if k in self.table.headers_avail}
+
+                # explicitly set value:unit to None (not '') if flux has no units
+                # (this happens for Roman asdf image files)
+                if not row_item_to_add.get('value:unit'):
+                    row_item_to_add['value:unit'] = None
+
                 self.table.add_item(row_item_to_add)
                 self.hub.broadcast(MarkersPluginUpdate(table_length=len(self.table), sender=self))
 

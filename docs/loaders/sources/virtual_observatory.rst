@@ -44,7 +44,33 @@ API Access
     ldr.query_archive()
 
 
-Since there are many options and the exposed options depend on previous selections, the best way to write a script to write a workflow loading from astroquery is to enable :ref:`userapi-api_hints`,
+Input Modes
+===========
+
+Like the :doc:`astroquery` loader, the VO loader can be pointed at coordinates via the
+``Input`` selector (``ldr.input_select``): **Source** (manual name/coordinates),
+**Viewer** (viewer center), or **Catalog**. In ``Catalog`` mode the selected VO
+resource is queried once for every row of a loaded source catalog and the
+results are stacked with a ``source_index`` column identifying the originating
+source. Use ``ldr.catalog`` to pick the catalog and ``ldr.catalog_subset`` to
+optionally restrict the query to a subset of rows. Coordinates can come from the
+catalog's RA/Dec columns (``ldr.catalog_col_type = 'sky_coords'``) or from
+resolving a retained name column (``ldr.catalog_col_type = 'source_name'`` with
+``ldr.catalog_name_col``, see :doc:`astroquery` for more details.). As with :doc:`astroquery`,
+``ldr.max_results`` bounds the per-source loop, stopping once that many stacked rows
+have been collected.
+
+.. code-block:: python
+
+    ldr = jd.loaders['virtual observatory']
+    ldr.input_select = 'Catalog'
+    ldr.catalog = 'my_catalog'
+    ldr.waveband = 'optical'
+    ldr.resource = ...
+    ldr.query_archive()
+
+
+Since there are many options and the exposed options depend on previous selections, the best way to write a script to write a workflow loading from the virtual observatory is to enable :ref:`userapi-api_hints`,
 and interactively do a search in the UI and reproduce in a notebook cell:
 
 .. guidestar-demo:: _static/jdaviz-wireframe.html

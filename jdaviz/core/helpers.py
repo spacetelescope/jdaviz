@@ -31,11 +31,12 @@ from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.core.user_api import (DataApi, SpectralDataApi, SpatialDataApi,
                                   TemporalSpatialDataApi, SpectralSpatialDataApi)
-from jdaviz.utils import data_has_valid_wcs, CONFIGS_WITH_LOADERS, suppress_widget_comms
+from jdaviz.utils import (JDAVIZ_CONFIGS, data_has_valid_wcs, CONFIGS_WITH_LOADERS,
+                          suppress_widget_comms)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               check_if_unit_is_per_solid_angle,
-                                               flux_conversion_general,
-                                               spectral_axis_conversion)
+                                               is_unit_per_solid_angle,
+                                               flux_unit_conversion,
+                                               spectral_unit_conversion)
 
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper', 'CubeConfigHelper']
@@ -193,6 +194,39 @@ class ConfigHelper(HubListener):
         new_viewers = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api  # noqa
                        for item in self._app.state.new_viewer_items if item['is_relevant']}
         return new_viewers
+
+    def set_viewer_data_columns(self, data_label, viewer_data, column_prefix='Data: '):
+        """
+        Add or update read-only ``"<column_prefix><viewer>"`` columns on a loaded
+        catalog, one per viewer, listing the data to show in that viewer.
+
+        When a row is clicked in any table viewer showing the catalog, each listed
+        viewer is cleared and repopulated with exactly the data in its column for
+        that row. The columns live on the catalog itself, so they are shared across
+        every table viewer showing it and are kept in sync when data is renamed.
+
+        Parameters
+        ----------
+        data_label : str
+            Label of a catalog (loaded via the Catalog importer) in the data
+            collection.
+        viewer_data : dict
+            Mapping of viewer reference (``str``) or viewer instance to the per-row
+            data for that viewer. Each value is a list with one entry per catalog
+            row; each entry is a data-collection label (``str``), a list of labels,
+            or ``None``/empty for "no data in that viewer for that row".
+        column_prefix : str
+            Prefix used to build each column name (default ``"Data: "``).
+
+        Returns
+        -------
+        list
+            The names of the registered columns.
+        """
+        from jdaviz.core.loaders.importers.catalog.row_link import (
+            get_catalog_row_link_manager)
+        manager = get_catalog_row_link_manager(self._app)
+        return manager.set_viewer_data_columns(data_label, viewer_data, column_prefix)
 
     def _load(self,
               inp=None,
@@ -542,7 +576,9 @@ class ConfigHelper(HubListener):
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
         as only JupyterLab has a mechanism to have multiple tabs.
         """
-        title = self._app.config if title is None else title
+        if title is None:
+            config = self._app.config
+            title = "jdaviz" if config not in JDAVIZ_CONFIGS else config
         if height is not None:
             if isinstance(height, int):
                 height = f"{height}px"
@@ -622,15 +658,15 @@ class ConfigHelper(HubListener):
         If the spectral axis unit of data is pixels, and the
         display unit is not pixels (or vice versa), no conversion is done to allow
         for mixed pixel/world unit viewing (this logic is handled by
-        spectral_axis_conversion, which is called from this method when converting
+        spectral_unit_conversion, which is called from this method when converting
         the spectral axis).
 
         """
         if use_display_units:
             if isinstance(data, Spectrum):
+
                 spectral_unit = self._app._get_display_unit('spectral')
-                if not spectral_unit:
-                    return data
+
                 if self._app.config == 'specviz' and self._app._get_display_unit('sb'):
                     y_unit = self._app._get_display_unit('sb')
                 else:
@@ -641,8 +677,8 @@ class ConfigHelper(HubListener):
                 # starting the app? ideally this should raise an error, and this
                 # should allow pix2/spaxel but it doesn't - keeping this
                 # condition as-is until further investigation
-                orig_sa = check_if_unit_is_per_solid_angle(u.Unit(data.flux.unit))
-                targ_sa = check_if_unit_is_per_solid_angle(u.Unit(y_unit))
+                orig_sa = is_unit_per_solid_angle(u.Unit(data.flux.unit))
+                targ_sa = is_unit_per_solid_angle(u.Unit(y_unit))
                 skip_flux_conv = ('_pixel_scale_factor' not in data.meta) & (orig_sa != targ_sa)
 
                 # equivalencies for flux/sb unit conversions
@@ -665,33 +701,35 @@ class ConfigHelper(HubListener):
                         new_uncert = uncertainty
 
                     # convert uncertainty units to display units
-                    if skip_flux_conv:
+                    if skip_flux_conv or not y_unit:
                         new_uncert = StdDevUncertainty(new_uncert, unit=data.flux.unit)
                     else:
-                        new_uncert_conv = flux_conversion_general(new_uncert.quantity.value,
-                                                                  new_uncert.unit,
-                                                                  y_unit,
-                                                                  eqv,
-                                                                  with_unit=False)
+                        new_uncert_conv = flux_unit_conversion(
+                            new_uncert.quantity.value,
+                            new_uncert.unit,
+                            y_unit,
+                            eqv,
+                            with_unit=False)
                         new_uncert = StdDevUncertainty(new_uncert_conv,
                                                        unit=y_unit)
                 else:
                     new_uncert = None
 
                 # convert flux/sb units to display units
-                if skip_flux_conv:
+                if skip_flux_conv or not y_unit:
                     new_y = data.flux.value * u.Unit(data.flux.unit)
                 else:
                     # multiply by unit rather than using with_unit because of
                     # edge case for dimensionless we want here
-                    new_y = flux_conversion_general(data.flux.value,
-                                                    data.flux.unit,
-                                                    y_unit,
-                                                    eqv, with_unit=False) * u.Unit(y_unit)
+                    new_y = flux_unit_conversion(
+                        data.flux.value,
+                        data.flux.unit,
+                        y_unit,
+                        eqv, with_unit=False) * u.Unit(y_unit)
 
                 # convert spectral axis to display units
-                if data.spectral_axis.unit != spectral_unit:
-                    new_spec = (spectral_axis_conversion(data.spectral_axis.value,
+                if spectral_unit != '' and data.spectral_axis.unit != spectral_unit:
+                    new_spec = (spectral_unit_conversion(data.spectral_axis.value,
                                                          data.spectral_axis.unit,
                                                          spectral_unit, with_unit=True))
                 else:
@@ -704,6 +742,7 @@ class ConfigHelper(HubListener):
                                 spectral_axis_index=data.spectral_axis_index)
             else:  # pragma: nocover
                 raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
+
         return data
 
     def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,

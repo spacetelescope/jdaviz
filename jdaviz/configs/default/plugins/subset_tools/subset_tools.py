@@ -11,7 +11,7 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.subset import (RoiSubsetState, RangeSubsetState, CompositeSubsetState,
-                              MaskSubsetState)
+                              MaskSubsetState, ElementSubsetState)
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -99,6 +99,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     * :meth:`rename_subset`
     * :meth:`update_subset`
     * :meth:`simplify_subset`
+    * :meth:`delete_subset`
     """
     template_file = __file__, "subset_tools.vue"
     select = List([]).tag(sync=True)
@@ -615,6 +616,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                       "value": total_masked,
                                       "orig": total_masked}]
                 subset_type = "Mask"
+
+            elif isinstance(subset_state, ElementSubsetState):
+                n_rows_selected = len(subset_state.indices)
+                subset_type = "Table Selection"
+                val_str = f'Selected {n_rows_selected} rows from table:\n {subset_state.indices}'
+                subset_definition = [{"name": "Selected rows", "att": "indices",
+                                      "value": val_str},]
 
             if len(subset_definition) > 0:
                 # Note: .append() does not work for List traitlet.

@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+from astropy.modeling.models import Gaussian1D
 from astropy import units as u
 from astropy.table import QTable
 from astropy.tests.helper import assert_quantity_allclose
@@ -10,19 +11,21 @@ from glue.core.roi import XRangeROI
 
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import LineIdentifyMessage
-from jdaviz.core.marks import LineAnalysisContinuum
+from jdaviz.core.marks import LineAnalysisContinuum, PluginLine, BaseSpectrumVerticalLine
 from jdaviz.core.unit_conversion_utils import coerce_unit
 
 
-def test_plugin(specviz_helper, spectrum1d):
+def test_plugin(deconfigged_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    deconfigged_helper.load(spectrum1d, data_label=label, format='1D Spectrum')
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper._app.get_viewer('spectrum-viewer')
+    # TODO: get default viewer names
+    # sv = deconfigged_helper._app.get_viewer('spectrum-viewer')
+    sv = deconfigged_helper._app.get_viewer('1D Spectrum')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
@@ -32,10 +35,10 @@ def test_plugin(specviz_helper, spectrum1d):
     assert np.all([cm.visible is False for cm in continuum_marks])
 
     # add a region and rerun stats for that region
-    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
-    specviz_helper._app.state.drawer_content = 'plugins'
+    unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
+    deconfigged_helper._app.state.drawer_content = 'plugins'
 
     assert 'Subset 1' in plugin.spectral_subset.labels
     plugin.selected_subset = 'Subset 1'
@@ -165,15 +168,15 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
                                float(line_flux_before_unit_conversion['uncertainty']))
 
 
-def test_user_api(specviz_helper, spectrum1d):
+def test_user_api(deconfigged_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    deconfigged_helper.load(spectrum1d, data_label=label, format='1D Spectrum')
 
-    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
+    unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
 
-    la = specviz_helper.plugins['Line Analysis']
+    la = deconfigged_helper.plugins['Line Analysis']
     la.keep_active = True
 
     # spectral subset now supports multiselect
@@ -196,18 +199,18 @@ def test_user_api(specviz_helper, spectrum1d):
     la.get_results()
 
 
-def test_line_identify(specviz_helper, spectrum1d):
+def test_line_identify(deconfigged_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    deconfigged_helper.load(spectrum1d, data_label=label, format='1D Spectrum')
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
     lt['rest'] = [5007, 6563]*u.AA
     lt['listname'] = 'Test List'
-    specviz_helper.load_line_list(lt)
+    deconfigged_helper.load_line_list(lt)
 
-    ll_plugin = specviz_helper._app.get_tray_item_from_name('g-line-list')
-    la_plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    ll_plugin = deconfigged_helper._app.get_tray_item_from_name('g-line-list')
+    la_plugin = deconfigged_helper._app.get_tray_item_from_name('specviz-line-analysis')
     la_plugin.get_results()
     rest_names = [line['name_rest'] for line in ll_plugin.list_contents['Test List']['lines']]
 
@@ -222,8 +225,8 @@ def test_line_identify(specviz_helper, spectrum1d):
     assert la_plugin.sync_identify is True
 
     msg = LineIdentifyMessage(rest_names[1],
-                              sender=specviz_helper)
-    specviz_helper._app.session.hub.broadcast(msg)
+                              sender=deconfigged_helper)
+    deconfigged_helper._app.session.hub.broadcast(msg)
     assert la_plugin.selected_line == rest_names[1]
 
     # and changing the dropdown should change the identified line
@@ -272,26 +275,26 @@ def test_coerce_unit():
     assert not hasattr(q_coerced, 'uncertainty')
 
 
-def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
+def test_continuum_surrounding_spectral_subset(deconfigged_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    deconfigged_helper.load(spectrum1d, data_label=label, format='1D Spectrum')
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('Line Analysis')
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper._app.get_viewer('spectrum-viewer')
+    sv = deconfigged_helper._app.get_viewer('1D Spectrum')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
 
     # add a region and rerun stats for that region
-    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
-    specviz_helper._app.state.drawer_content = 'plugins'
+    unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
+    deconfigged_helper._app.state.drawer_content = 'plugins'
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('Line Analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
     plugin.continuum_subset_selected = 'Surrounding'
     plugin.spectral_subset_selected = 'Subset 1'
@@ -316,13 +319,13 @@ def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
     specviz_helper._app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
-    plugin.continuum_subset_selected = 'Subset 1'
+    plugin.continuum.selected = 'Subset 1'
     plugin.spectral_subset_selected = 'Subset 1'
     plugin.width = 3
 
@@ -330,26 +333,26 @@ def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
     assert plugin.get_results()[0]['result'] == ''
 
 
-def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
+def test_continuum_surrounding_invalid_width(deconfigged_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    deconfigged_helper.load(spectrum1d, data_label=label, format='1D Spectrum')
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('Line Analysis')
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper._app.get_viewer('spectrum-viewer')
+    sv = deconfigged_helper._app.get_viewer('1D Spectrum')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
 
     # add a region and rerun stats for that region
-    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
-    specviz_helper._app.state.drawer_content = 'plugins'
+    unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
+    deconfigged_helper._app.state.drawer_content = 'plugins'
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('Line Analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
     plugin.continuum_subset_selected = 'Surrounding'
     plugin.spectral_subset_selected = 'Subset 1'
@@ -372,13 +375,13 @@ def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7400 * unit))
     specviz_helper._app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
-    plugin.continuum_subset_selected = 'Subset 1'
+    plugin.continuum.selected = 'Subset 1'
     plugin.spectral_subset_selected = 'Entire Spectrum'
     plugin.width = 3
 
@@ -401,46 +404,46 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6200 * unit,
-                                                                        7000 * unit))
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6200 * unit, 7000 * unit))
     specviz_helper._app.state.drawer_content = 'plugins'
 
     specviz_helper.plugins['Subset Tools'].combination_mode = 'new'
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(7100 * unit,
-                                                                        7700 * unit))
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        7100 * unit, 7700 * unit))
     specviz_helper._app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
     assert plugin.spectral_subset.labels == ['Entire Spectrum', 'Subset 1', 'Subset 2']
 
     plugin.spectral_subset_selected = 'Subset 2'
-    plugin.continuum_subset_selected = 'Subset 1'
+    plugin.continuum.selected = 'Subset 1'
     plugin.width = 3
 
     # Values have not yet been validated
     np.testing.assert_allclose(float(plugin.get_results()[0]['result']), 1.482418e-14, atol=1e-16)
 
 
-def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
+def test_continuum_surrounding_no_right(deconfigged_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    deconfigged_helper.load(spectrum1d, data_label=label, format='1D Spectrum')
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('Line Analysis')
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper._app.get_viewer('spectrum-viewer')
+    sv = deconfigged_helper._app.get_viewer('1D Spectrum')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
 
     # add a region and rerun stats for that region
-    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        8000 * unit))
-    specviz_helper._app.state.drawer_content = 'plugins'
+    unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 8000 * unit))
+    deconfigged_helper._app.state.drawer_content = 'plugins'
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('Line Analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
 
     plugin.spectral_subset_selected = 'Subset 1'
@@ -451,26 +454,26 @@ def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
     np.testing.assert_allclose(float(plugin.get_results()[0]['result']), 4.204513e-14, atol=1e-16)
 
 
-def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
+def test_continuum_surrounding_no_left(deconfigged_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    deconfigged_helper.load(spectrum1d, data_label=label, format='1D Spectrum')
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('Line Analysis')
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper._app.get_viewer('spectrum-viewer')
+    sv = deconfigged_helper._app.get_viewer('1D Spectrum')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
 
     # add a region and rerun stats for that region
-    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6000 * unit,
-                                                                        7500 * unit))
-    specviz_helper._app.state.drawer_content = 'plugins'
+    unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6000 * unit, 7500 * unit))
+    deconfigged_helper._app.state.drawer_content = 'plugins'
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('Line Analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
 
     plugin.spectral_subset_selected = 'Subset 1'
@@ -481,58 +484,58 @@ def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
     np.testing.assert_allclose(float(plugin.get_results()[0]['result']), 7.570859e-14, atol=1e-16)
 
 
-def test_subset_changed(specviz_helper, spectrum1d):
+def test_subset_changed(deconfigged_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    deconfigged_helper.load(spectrum1d, data_label=label, format='1D Spectrum')
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('Line Analysis')
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper._app.get_viewer('spectrum-viewer')
+    sv = deconfigged_helper._app.get_viewer('1D Spectrum')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
 
     # add a region and rerun stats for that region
-    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6000 * unit,
-                                                                        7500 * unit))
-    specviz_helper._app.state.drawer_content = 'plugins'
+    unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6000 * unit, 7500 * unit))
+    deconfigged_helper._app.state.drawer_content = 'plugins'
 
-    plugin = specviz_helper._app.get_tray_item_from_name('specviz-line-analysis')
+    plugin = deconfigged_helper._app.get_tray_item_from_name('Line Analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
 
     plugin.spectral_subset_selected = 'Subset 1'
     plugin.continuum_subset_selected = 'Surrounding'
     plugin.width = 3
 
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7500 * unit),
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        6500 * unit, 7500 * unit),
                                                          edit_subset='Subset 1')
-    specviz_helper._app.state.drawer_content = 'plugins'
+    deconfigged_helper._app.state.drawer_content = 'plugins'
 
     # Values have not yet been validated
     np.testing.assert_allclose(float(plugin.get_results()[0]['result']), 2.153181e-13, atol=1e-15)
 
 
-def test_invalid_subset(specviz_helper, spectrum1d):
+def test_invalid_subset(deconfigged_helper, spectrum1d):
     # 6000-8000
-    specviz_helper.load_data(spectrum1d, data_label="right_spectrum")
+    deconfigged_helper.load(spectrum1d, data_label="right_spectrum", format='1D Spectrum')
 
     # 5000-7000
     sp2 = Spectrum(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
                    flux=spectrum1d.flux * 1.25)
-    specviz_helper.load_data(sp2, data_label="left_spectrum")
+    deconfigged_helper.load(sp2, data_label="left_spectrum", format='1D Spectrum')
 
     # apply subset that overlaps on left_spectrum, but not right_spectrum
     # NOTE: using a subset that overlaps the right_spectrum (reference) results in errors when
     # retrieving the subset (https://github.com/spacetelescope/jdaviz/issues/1868)
-    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(5000 * unit,
-                                                                        6000 * unit))
+    unit = u.Unit(deconfigged_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
+        5000 * unit, 6000 * unit))
 
-    plugin = specviz_helper.plugins['Line Analysis']
+    plugin = deconfigged_helper.plugins['Line Analysis']
     plugin.dataset = 'right_spectrum'
     assert plugin.dataset == 'right_spectrum'
     assert plugin.spectral_subset == 'Entire Spectrum'
@@ -648,3 +651,99 @@ def test_line_analysis_load_table_into_data_collection(deconfigged_helper, spect
 
     # Verify the table can be accessed and has correct data
     assert len(loaded_table) == 1
+
+
+def test_plot_line_analysis(deconfigged_helper):
+    """
+    Test that line analysis results can be plotted and toggled.
+    """
+    # Create a spectrum with an emission line and Gaussian noise
+    wave = np.linspace(4000, 7000, 500)
+    continuum = 5
+    line = Gaussian1D(amplitude=5.0, mean=5500, stddev=20.0)
+    flux_1d = (line(wave) + continuum) * u.Jy
+
+    rng = np.random.default_rng(42)
+    noise = rng.normal(loc=0.0, scale=0.05, size=wave.shape) * u.Jy
+    flux_1d += noise
+
+    spec1d = Spectrum(spectral_axis=wave * u.AA, flux=flux_1d)
+
+    # Load data into deconfigged helper
+    deconfigged_helper.load(spec1d, format='1D Spectrum')
+
+    # Create a spectral subset
+    st = deconfigged_helper.plugins['Subset Tools']
+    st.import_region(SpectralRegion(5380 * u.AA, 5650 * u.AA))
+
+    # Use Line Analysis plugin
+    la = deconfigged_helper.plugins['Line Analysis']
+    la.spectral_subset = 'Subset 1'
+    la.continuum = 'Surrounding'
+    la.continuum_width = 3
+    la.plot_gaussian_params = True
+    la.get_results(add_to_table=True)
+
+    # Verify that the line analysis results are plotted
+    sv_on = deconfigged_helper._app.get_viewer('1D Spectrum')
+    all_plugin_marks_on = [m for m in sv_on.figure.marks if isinstance(m, PluginLine)]
+    vert_marks_on = [m for m in sv_on.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
+    # 8 total plugin marks: 3 for the continuum subset window, 1 for spectral subset,
+    # 1 for gaussian spectrum, 1 for fwhm line, 1 for centroid line, 1 for sliceindicator
+    # (inequality because the number of marks may vary depending bqplot version)
+    assert len(all_plugin_marks_on) >= 6
+    # 1 vertical mark for centroid line
+    assert len(vert_marks_on) >= 1
+
+    # When plot_gaussian_params toggled off, 3 marks should disappear
+    la.plot_gaussian_params = False
+    sv_off = deconfigged_helper._app.get_viewer('1D Spectrum')
+    all_plugin_marks_off = [m for m in sv_off.figure.marks if isinstance(m, PluginLine)]
+    vert_marks_off = [m for m in sv_off.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
+    # gaussian spectrum and fwhm line disappear
+    assert len(all_plugin_marks_off) <= 6
+    # fwhm line disappears
+    assert len(vert_marks_off) <= 1
+
+
+def test_plot_line_analysis_with_units(deconfigged_helper):
+    """
+    Test that line analysis results obey global display units.
+    """
+    # Create a spectrum with an emission line and Gaussian noise
+    wave = np.linspace(.40, .70, 500)
+    continuum = 5
+    line = Gaussian1D(amplitude=50, mean=0.55, stddev=0.02)
+    flux_1d = (line(wave) + continuum) * u.Jy
+
+    rng = np.random.default_rng(42)
+    noise = rng.normal(loc=0.0, scale=0.05, size=wave.shape) * u.mJy
+    flux_1d += noise
+
+    # input in micron
+    spec1d = Spectrum(spectral_axis=wave * u.um, flux=flux_1d)
+
+    # Load data into deconfigged helper
+    deconfigged_helper.load(spec1d, format='1D Spectrum')
+
+    # use Unit Conversion plugin to convert to Angstrom
+    uc = deconfigged_helper.plugins['Unit Conversion']
+    uc.spectral_unit = 'Angstrom'
+    uc.flux_unit = 'Jy'
+
+    # Create a spectral subset
+    st = deconfigged_helper.plugins['Subset Tools']
+    st.import_region(SpectralRegion(0.538 * u.um, 0.565 * u.um))
+
+    # Use Line Analysis plugin
+    la = deconfigged_helper.plugins['Line Analysis']
+    la.spectral_subset = 'Subset 1'
+    la.continuum = 'Surrounding'
+    la.continuum_width = 3
+    la.plot_gaussian_params = True
+    la.get_results(add_to_table=True)
+
+    # verify that line analysis parameters are in display units
+    assert la._obj._gaussian_spectrum is not None
+    assert la._obj._gaussian_spectrum.spectral_axis.unit == u.AA
+    assert la._obj._gaussian_spectrum.flux.unit == u.Jy

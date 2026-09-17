@@ -116,15 +116,13 @@ class TestFileDropResolverFileHandling:
         # Mock the internal methods to track calls but avoid any unintended
         # side effects that we don't need to check here.
         with patch.object(file_drop_resolver, '_resolver_input_updated') as mock_input_updated:
-            with patch.object(file_drop_resolver, '_update_format_items') as mock_update_format:
-                file_drop_resolver._on_file_updated(file_info)
+            file_drop_resolver._on_file_updated(file_info)
 
-                assert file_drop_resolver.nfiles == len(file_info)
-                assert file_drop_resolver._file_info == file_info[0] if len(file_info) > 1 else file_info  # noqa
-                assert file_drop_resolver.progress == 100
+            assert file_drop_resolver.nfiles == len(file_info)
+            assert file_drop_resolver._file_info == file_info[0] if len(file_info) > 1 else file_info  # noqa
+            assert file_drop_resolver.progress == 100
 
-                mock_input_updated.assert_called_once()
-                mock_update_format.assert_called_once()
+            mock_input_updated.assert_called_once()
 
     def test_on_file_updated_empty_list(self, file_drop_resolver):
         """

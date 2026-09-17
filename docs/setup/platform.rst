@@ -9,13 +9,13 @@ Run Jdaviz on cloud-based astronomy platforms without local installation.
 Available Platforms
 -------------------
 
-TIKE (JWebbinar Interactive Kernel Environment)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Time Series Integrated Knowledge Engine (TIKE)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TIKE provides a cloud-based Jupyter environment with Jdaviz pre-installed, optimized
-for JWST data analysis.
+The TIKE science platform provides a cloud-based Jupyter environment with Jdaviz pre-installed, optimized
+for time series data analysis.
 
-**Access:** `JWebbinar TIKE <https://www.stsci.edu/jwst/science-execution/jwebbinar>`_
+**Access:** `TIKE Science Platform <https://timeseries.science.stsci.edu/>`_
 
 **Features:**
 
@@ -27,7 +27,7 @@ for JWST data analysis.
 
 **Getting Started:**
 
-1. Visit the JWebbinar TIKE platform
+1. Visit the TIKE science platform
 2. Log in with your STScI account (or create one)
 3. Create a new notebook
 4. Import and use Jdaviz:
@@ -127,8 +127,8 @@ Getting Help
 
 For platform-specific issues:
 
-* **TIKE:** Contact the `JWebbinar help desk <https://www.stsci.edu/jwst/science-execution/jwebbinar>`_
-* **Roman Science Platform:** See the `Roman documentation <https://roman.ipac.caltech.edu/>`_
+* **TIKE:** ; the `TIKE intro <https://github.com/spacetelescope/tike_content/blob/main/content/Introduction.md>`_
+* **Roman Science Platform:** See the `Roman documentation <https://roman-docs.stsci.edu/data-handbook/roman-research-nexus>`_
 * **Jdaviz issues:** File issues on the `GitHub repository <https://github.com/spacetelescope/jdaviz/issues>`_
 
 See Also

@@ -19,13 +19,13 @@ Automatic Directory Loading
 Mosviz provides instrument-specific directory parsers for select instruments. At this
 time, Mosviz supports automatic parsing for the following instruments:
 
-* `NIRSPEC <https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph#gsc.tab=0>`_
-* `NIRISS <https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph#gsc.tab=0>`_
-* `NIRCAM <https://jwst-docs.stsci.edu/jwst-near-infrared-camera#gsc.tab=0>`_
+* `NIRSPEC <https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph>`_
+* `NIRISS <https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph>`_
+* `NIRCAM <https://jwst-docs.stsci.edu/jwst-near-infrared-camera>`_
 
 .. note::
    For more information on the data products produced by JWST's various instruments, see
-   `JWST Science Data Overview <https://jwst-docs.stsci.edu/accessing-jwst-data/jwst-science-data-overview#gsc.tab=0>`_
+   `JWST Science Data Overview <https://jwst-docs.stsci.edu/accessing-jwst-data/jwst-science-data-overview>`_
 
 In a Jupyter context (notebook or Lab), you must specify the instrument with a directory
 as such:

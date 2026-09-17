@@ -1,4 +1,4 @@
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import ICRS, SkyCoord
 from astropy.io.fits import BinTableHDU, HDUList, TableHDU
 from astropy.table import Table, QTable, vstack
 import astropy.units as u
@@ -7,17 +7,27 @@ import re
 from regions import PixCoord
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers import BaseCatalogImporter
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import create_data_hash, COORD_WORDS_TO_EXCLUDE
 
+from .row_link import get_catalog_row_link_manager
+
 __all__ = ['CatalogImporter']
+
+# regular expressions to guess which columns correspond to ra, dec, x, y
+COORD_PATTERNS = {
+    "ra": re.compile(r'^ra$|^ra|ra$|^rightascension$|^rightascension|rightascension$|^right$|^ascension$', re.IGNORECASE), # noqa
+    "dec": re.compile(r'^dec$|^dec|dec$|^declination$|^declination|declination$', re.IGNORECASE), # noqa
+    "x": re.compile(r'^x(pix(el)?)$|^x$|^x', re.IGNORECASE),
+    "y": re.compile(r'^y(pix(el)?)$|^y$|^y', re.IGNORECASE),
+}
 
 
 @loader_importer_registry("Catalog")
-class CatalogImporter(BaseImporterToDataCollection):
+class CatalogImporter(BaseCatalogImporter):
 
     template_file = __file__, "./catalog.vue"
 
@@ -34,6 +44,15 @@ class CatalogImporter(BaseImporterToDataCollection):
     col_dec_unit_items = List().tag(sync=True)
     col_dec_unit_selected = Unicode().tag(sync=True)
 
+    # For coordinate frame and equinox specification. Will be converted to ICRS
+    # and J2000 for consistency, but this gives the user the ability to load
+    # data in other frames
+    coord_frame_items = List().tag(sync=True)
+    coord_frame_selected = Unicode().tag(sync=True)
+
+    coord_equinox_items = List().tag(sync=True)
+    coord_equinox_selected = Unicode().tag(sync=True)
+
     # for catalogs with source positions in pixel coordinates
     col_x_items = List().tag(sync=True)
     col_x_selected = Unicode().tag(sync=True)
@@ -44,11 +63,6 @@ class CatalogImporter(BaseImporterToDataCollection):
     # displayed for mouseover. If None selected, an index column is used.
     col_id_items = List().tag(sync=True)
     col_id_selected = Unicode().tag(sync=True)
-
-    # additional (optional) non-position columns to load (e.g. flux, id)
-    col_other_items = List().tag(sync=True)
-    col_other_selected = List().tag(sync=True)
-    col_other_multiselect = Bool(True).tag(sync=True)
 
     # HDUList-specific options
     input_has_extensions = Bool(False).tag(sync=True)
@@ -111,6 +125,32 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                   selected='col_dec_unit_selected',
                                                   manual_options=self._valid_coord_units('dec'))
 
+        self.coord_frame = SelectPluginComponent(self,
+                                                 items='coord_frame_items',
+                                                 selected='coord_frame_selected',
+                                                 manual_options=['----', 'icrs', 'fk5',
+                                                                 'fk4', 'galactic',
+                                                                 'ecliptic'])
+
+        # only default to icrs if ra and dec were auto-detected
+        ra_detected = self.col_ra_selected not in ('---', '', None)
+        dec_detected = self.col_dec_selected not in ('---', '', None)
+        if ra_detected and dec_detected:
+            self.coord_frame_selected = 'icrs'
+
+        self.coord_equinox = SelectPluginComponent(self,
+                                                   items='coord_equinox_items',
+                                                   selected='coord_equinox_selected',
+                                                   manual_options=['----',
+                                                                   'J2000.0',
+                                                                   'J1950.0',
+                                                                   'B1950.0',
+                                                                   'B1900.0'])
+
+        # only default to J2000.0 if ra and dec were auto-detected
+        if ra_detected and dec_detected:
+            self.coord_equinox_selected = 'J2000.0'
+
         # dropdown for source ID column
         self.col_id = SelectPluginComponent(self,
                                             items='col_id_items',
@@ -128,11 +168,7 @@ class CatalogImporter(BaseImporterToDataCollection):
                                            manual_options=self._guess_coord_cols('y'))
 
         # dropdowns for (optional) additional columns
-        self.col_other = SelectPluginComponent(self,
-                                               items='col_other_items',
-                                               selected='col_other_selected',
-                                               manual_options=input.colnames,
-                                               multiselect='col_other_multiselect')
+        self._init_col_other(input.colnames)
 
     @property
     def input_as_table(self):
@@ -199,20 +235,6 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         return 'Input is not a valid catalog.'
 
-    def _update_col_items_and_selected(self, base_attr, options, select_first=True):
-        """update column items and selected value."""
-        items_attr = f'{base_attr}_items'
-        selected_attr = f'{base_attr}_selected'
-
-        setattr(self, items_attr, [{'label': item} for item in options])
-        self.send_state(items_attr)
-
-        if select_first:
-            setattr(self, selected_attr, options[0] if options else None)
-        else:
-            setattr(self, selected_attr, [])
-        self.send_state(selected_attr)
-
     @observe('extension_selected')
     def _on_extension_selected_change(self, event):
         # when the selected extension changes, we need to update the column selection dropdowns
@@ -256,15 +278,6 @@ class CatalogImporter(BaseImporterToDataCollection):
         column is found, the initial selection in the drop down for RA/x, dec/y
         columns will be '---' (no selection)
         """
-
-        # regular expressions to guess which columns correspond to ra, dec, x, y
-        COORD_PATTERNS = {
-            "ra": re.compile(r'^ra$|^ra|ra$|^rightascension$|^rightascension|rightascension$|^right$|^ascension$', re.IGNORECASE), # noqa
-            "dec": re.compile(r'^dec$|^dec|dec$|^declination$|^declination|declination$', re.IGNORECASE), # noqa
-            "x": re.compile(r'^x(pix(el)?)$|^x$|^x', re.IGNORECASE),
-            "y": re.compile(r'^y(pix(el)?)$|^y$|^y', re.IGNORECASE),
-        }
-
         input = self.input_as_table
 
         if not isinstance(input, (Table, QTable)):
@@ -275,48 +288,18 @@ class CatalogImporter(BaseImporterToDataCollection):
         if colnames is None:
             return
 
-        idx = None
-        if col in ['ra', 'dec']:
-            col_is_sc = [isinstance(input[colnames[i]], SkyCoord) for i in range(len(colnames))]
-            if np.any(col_is_sc):
-                idx = np.where(col_is_sc)[0][0]
-
-        elif col in ['x', 'y']:
-            col_is_pc = [isinstance(input[colnames[i]][0], PixCoord) for i in range(len(colnames))]
-            if np.any(col_is_pc):
-                idx = np.where(col_is_pc)[0][0]
-
-        if idx is None:
-            all_column_names = [str(x).lower().strip() for x in colnames]
-
-            get_idx = lambda x, s, d: s.index(x) if x in s else d # noqa
-
-            if col in ("ra", "dec", "x", "y"):
-                token_pattern = COORD_PATTERNS[col]
-            else:
-                raise NotImplementedError(f"Not a valid coordinate column: {col}.")
-
-            for c in all_column_names:
-                tokens = re.split(r'[\s_\-\.]+', c)
-                if self._check_col_tokens(col, token_pattern, tokens):
-                    idx = get_idx(c, all_column_names, None)
-
-        # if no good candidate found, default to '---' (no selection) for
-        # the default selection.
-        if idx is None:
-            return ['---'] + colnames
-        return_cols = colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
-        # non-selection is the second option, so you don't have to scroll
-        # all the way down to see that its an option not to load a column
-        return [return_cols[0]] + ['---'] + return_cols[1:]
-
-    def _check_col_tokens(self, col, token_pattern, tokens):
-        if col in ("ra", "dec", "x", "y"):
-            return (not any(token in COORD_WORDS_TO_EXCLUDE for token in tokens)
-                    and any(token_pattern.search(t) for t in tokens)
-                    )
+        if col in ('ra', 'dec'):
+            idx = self._guess_col_by_instance_type(input, colnames, SkyCoord)
+        elif col in ('x', 'y'):
+            idx = self._guess_col_by_instance_type(input, colnames, PixCoord, per_row=True)
         else:
             raise NotImplementedError(f"Not a valid coordinate column: {col}.")
+
+        if idx is None:
+            idx = self._guess_col_by_name_pattern(colnames, COORD_PATTERNS[col],
+                                                  exclude_words=COORD_WORDS_TO_EXCLUDE)
+
+        return self._reorder_cols_with_best_guess(colnames, idx)
 
     def _valid_coord_units(self, coord):
         """Valid choices for Ra, Dec units."""
@@ -366,6 +349,8 @@ class CatalogImporter(BaseImporterToDataCollection):
                 # disable import if RA is selected but Dec is not (or vice versa)
                 if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
                     import_disabled = True
+                self.coord_frame_selected = '----'
+                self.coord_equinox_selected = '----'
                 return
 
             has_units = False
@@ -396,6 +381,16 @@ class CatalogImporter(BaseImporterToDataCollection):
             if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
                 import_disabled = True
 
+            # sync coord_frame and coord_equinox with ra/dec selection state
+            ra_is_invalid = ra in ('---', '', None)
+            dec_is_invalid = dec in ('---', '', None)
+            if ra_is_invalid or dec_is_invalid:
+                self.coord_frame_selected = '----'
+                self.coord_equinox_selected = '----'
+            elif self.coord_frame_selected == '----':
+                self.coord_frame_selected = 'icrs'
+                self.coord_equinox_selected = 'J2000.0'
+
         elif msg['name'] in ('col_x_selected', 'col_y_selected'):
             # disable import if RA is selected but Dec is not (or vice versa)
             if (x in ['---', ''] or x is None) != (y in ['---', ''] or y is None):
@@ -420,9 +415,14 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other']
+        # for fixed frames, dont expose coord_equinox
+
+        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other',
+                  'coord_frame', 'coord_equinox']
+
         if self.input_has_extensions:
             expose += ['extension']
+
         return ImporterUserApi(self, expose=expose)
 
     @property
@@ -496,6 +496,28 @@ class CatalogImporter(BaseImporterToDataCollection):
             if getattr(dec, 'unit') is None:
                 dec = dec.astype(float) * u.Unit(self.col_dec_unit_selected)
 
+            # apply selection of coordinate frame if not already in ICRS
+            # if the coordinates are in a different frame, they will be transformed
+            # to ICRS, which is the internal frame used in jdaviz for consistency
+
+            _frame_name_map = {'ecliptic': 'barycentrictrueecliptic'}
+            if self.coord_frame_selected not in ['', 'icrs']:
+                frame = _frame_name_map.get(self.coord_frame_selected,
+                                            self.coord_frame_selected)
+                kwargs = {'frame': frame}
+                # ICRS and galactic are fixed frames so don't expose this choice
+                # of 'equinox' for those frames
+                if self.coord_equinox_selected not in ['', 'J2000'] and self.coord_frame_selected != 'galactic':  # noqa
+                    kwargs['equinox'] = self.coord_equinox_selected
+
+                # transform to ICRS / J2000for consistency
+                # TODO: until we are able to support different coordinate frames
+                # in the app
+                sc_temp = SkyCoord(ra, dec, **kwargs)
+                sc_temp = sc_temp.transform_to(ICRS())
+                ra = sc_temp.icrs.ra
+                dec = sc_temp.icrs.dec
+
             output_table[col_ra_selected] = ra
             output_table[col_dec_selected] = dec
 
@@ -545,15 +567,13 @@ class CatalogImporter(BaseImporterToDataCollection):
             output_table.meta['_jdaviz_loader_y_col'] = self.col_y_selected
 
         # add source ID column. If no column selected, just use table index
-        # for now this will be added as a column named 'ID' in the output table,
-        # but this should be changed to adding a component label in JDAT-5716
 
         if self.col_id_selected in table.colnames:
             output_table['ID'] = table[self.col_id_selected]
-            output_table.meta['_jdaviz_id_col'] = self.col_id_selected
+            output_table.meta['_jdaviz_loader_id_col'] = self.col_id_selected
         else:
             output_table['ID'] = np.arange(len(table))
-            output_table.meta['_jdaviz_id_col'] = 'ID'
+            output_table.meta['_jdaviz_loader_id_col'] = 'ID'
 
         # add additional columns to output table
         for col in self.output_cols:
@@ -561,6 +581,12 @@ class CatalogImporter(BaseImporterToDataCollection):
                 output_table[col] = table[col]
 
         return output_table
+
+    def __call__(self):
+        super().__call__()
+        # ensure the app-level manager that links catalog rows to viewer contents
+        # exists (and is subscribed) as soon as a catalog has been imported
+        get_catalog_row_link_manager(self._app)
 
 
 def _validate_fits_tablehdu(item):

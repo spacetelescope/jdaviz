@@ -4,5 +4,6 @@ from .file import *  # noqa
 from .file_drop import *  # noqa
 from .url import *  # noqa
 from .object import *  # noqa
+from .spectral_line_db import *  # noqa
 from .astroquery import *  # noqa
 from .virtual_observatory import *  # noqa

@@ -47,7 +47,7 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         self.plot_across_x_widget = 'IPY_MODEL_'+self.plot_across_x.model_id
         self.plot_across_y_widget = 'IPY_MODEL_'+self.plot_across_y.model_id
 
-        self.docs_description = "Press 'l' to plot line profiles across X and Y\
+        self.docs_description = "Press 'L' to plot line profiles across X and Y\
                                  under cursor. You can also manually enter X, Y\
                                  and then click PLOT."
 
@@ -90,7 +90,7 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         self.vue_draw_plot(msg)
 
     def _on_viewer_key_event(self, viewer, data):
-        if data['key'] == 'l':
+        if data['key'] in ('l', 'L'):
             image = viewer.active_image_layer.layer
             x = data['domain']['x']
             y = data['domain']['y']

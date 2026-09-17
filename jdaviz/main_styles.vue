@@ -1,43 +1,5 @@
 <template>
 </template>
-<script>
-export default {
-  created() {
-    this.$vuetify.theme.themes.light = {
-      toolbar: "#003B4D",
-      primary: "#00617E",
-      secondary: "#007DA4",
-      accent: "#C75109",
-      turquoise: "#007BA1",
-      lightblue: "#E3F2FD",  // matches highlighted row in MOS table
-      spinner: "#163C4C",
-      error: '#FF5252',
-      info: '#2196F3',
-      success: '#4CAF50',
-      warning: '#FFC107',
-      gray: '#F8F8F8',
-      active: '#C75109',
-      viewer_toolbar: '#205f76',
-    };
-    this.$vuetify.theme.themes.dark = {
-      toolbar: "#153A4B",
-      primary: "#53CBFF",
-      secondary: "#007DA4",
-      accent: "#FF9D42",
-      turquoise: "#007BA1",
-      lightblue: "#E3F2FD",
-      spinner: "#ACE1FF",
-      error: '#FF5252',
-      info: '#2196F3',
-      success: '#4CAF50',
-      warning: '#FFC107',
-      gray: '#141414',
-      active: '#C75109',
-      viewer_toolbar: '#205f76',
-    };
-  },
-}
-</script>
 
 <style id="jdaviz-main-styles" >
 * {
@@ -63,12 +25,25 @@ div.output_wrapper {
   padding: 0px;
 }
 
+.v-slider:not(.v-input--disabled) .v-slider-track__background,
+.v-slider:not(.v-input--disabled) .v-slider-track__fill {
+  background-color: rgb(var(--v-theme-viewer_toolbar));
+}
+
+.v-slider:not(.v-input--disabled) .v-slider-thumb {
+  color: rgb(var(--v-theme-viewer_toolbar));
+}
+
+.v-slider .v-slider__container {
+  margin-bottom: 16px;
+}
+
 .plugin-header {
   /* ensure dropdown arrow aligns to the top for tall headers */
   align-items: start !important;
 }
 
-.plugin-header .v-expansion-panel-header__icon {
+.plugin-header .v-expansion-panel-title__icon {
   margin-top: 4px;
 }
 
@@ -83,7 +58,8 @@ div.output_wrapper {
   align-items: center;
 }
 
-.v-tabs-items {
+.v-tabs-items,
+.v-window {
   height: 100%;
 }
 
@@ -105,6 +81,10 @@ div.output_wrapper {
   background: #ffffff;
   border: none;
   /*border-top: 1px solid #cccccc;*/
+}
+
+.jdaviz-viewer-figure-container .lm-Widget.bqplot.figure.jupyter-widgets.classic {
+  margin: 0 !important;
 }
 
 .lm_splitter {
@@ -153,9 +133,9 @@ div.output_wrapper {
   display: none;
 }
 
-.v-toolbar__items .v-btn {
+.v-toolbar-items .v-btn {
   /* allow v-toolbar-items styling to pass through tooltip wrapping span */
-  /* css is copied from .v-toolbar__items>.v-btn */
+  /* css is copied from toolbar item button styling */
   border-radius: 0;
   height: 100% !important;
   max-height: none;
@@ -169,7 +149,7 @@ div.output_wrapper {
   z-index: 10000 !important;
 }
 
-.v-expansion-panel-content__wrap {
+.v-expansion-panel-text__wrapper {
   padding-left: 12px !important;
   padding-right: 12px !important;
 }
@@ -190,7 +170,7 @@ a:active {
   text-decoration: none;
 }
 
-.invert, .invert-if-dark.theme--dark {
+.invert, .invert-if-dark.theme--dark, .v-theme--dark .invert-if-dark {
   filter: invert(1) saturate(1) brightness(100);
   color: white;
 }
@@ -219,12 +199,17 @@ a:active {
   height: 42px !important;
   border: none !important;
   min-width: 42px !important;
-  /* remove "dimming" since we use orange background for active */
-  color: transparent !important;
+  /* keep icons visible in Vuetify 3 (older transparent-color hack hides content) */
+  color: inherit !important;
 }
 
 .jdaviz-nested-toolbar .v-btn-toggle>.v-btn.v-btn {
     opacity: 1;
+}
+
+.jdaviz-nested-toolbar .v-btn .v-btn__content,
+.plugin-nested-toolbar .v-btn .v-btn__content {
+  opacity: 1 !important;
 }
 
 .suboptions-carrot {
@@ -232,19 +217,31 @@ a:active {
   margin-bottom: -28px !important;
 }
 
-.jdaviz-nested-toolbar .v-btn--active, .jdaviz-nested-toolbar .v-btn:focus, .v-toolbar .active, .jdaviz-viewer-toolbar .active {
+.jdaviz-nested-toolbar .v-btn--active,
+.v-toolbar .v-btn--active,
+.jdaviz-viewer-toolbar .v-btn--active {
   /* active color (orange) */
   background-color: #c75109 !important;
 }
 
-.plugin-nested-toolbar .v-btn--active, .plugin-nested-toolbar .v-btn:focus {
+.plugin-nested-toolbar .v-btn--active {
   /* semi-transparent active color (orange) */
   background-color: #c7510996 !important;
 }
 
-.v-divider.theme--dark {
+.v-divider.theme--dark,
+.v-theme--dark .v-divider {
   /* make the v-divider standout more */
   border-color: hsla(0,0%,100%,.35) !important;
+}
+
+.theme--dark .highlightedRow,
+.v-theme--dark .highlightedRow {
+  /* glue-jupyter's table row highlight (.highlightedRow) defaults to a light
+     blue (#E3F2FD) which is nearly invisible in dark mode. Override it with a
+     medium gray sitting between the dark table background and the white font so
+     the highlighted row is legible in dark mode. */
+  background-color: #616161 !important;
 }
 
 .no-hint .v-text-field__details {
@@ -260,9 +257,11 @@ a:active {
   filter: brightness(0) saturate(100%) invert(100%);
 }
 
+/* TODO: is this still needed? It breaks tooltip positioning
 .v-overlay__content {
   position: unset !important;
 }
+*/
 
 .jdaviz__content--not-in-notebook {
   max-height: calc(100% - 48px);
@@ -273,6 +272,8 @@ a:active {
 .jupyter-widgets-popout-container .v-application.jdaviz {
   min-height: 100vh;
   max-height: 100vh;
+  min-width: 100vw;
+  max-width: 100vw;
 }
 
 /* #popout-widget-container line can be removed once users use ipypopout >= 1.3.0 */
@@ -294,6 +295,23 @@ a:active {
   font-size: 15px !important;
   font-family: Roboto, sans-serif !important;
   font-weight: 500 !important;
+}
+
+.v-application.jdaviz.jdaviz-notebook-context,
+.v-application.jdaviz.jdaviz-notebook-context .v-application__wrap {
+  min-height: 0;
+  height: var(--jdaviz-notebook-max-height);
+  max-height: var(--jdaviz-notebook-max-height);
+  overflow: hidden;
+}
+
+.v-application.jdaviz.jdaviz-notebook-context .v-main,
+.v-application.jdaviz.jdaviz-notebook-context .v-main > .v-container,
+.v-application.jdaviz.jdaviz-notebook-context .splitpanes {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 span.api-hint, span.api-hint-header {
@@ -348,6 +366,30 @@ span.api-hint-header {
 
 .api-hint-invert-color :is(.v-select__slot) > .v-label {
   color: #C6F0FD !important;
+}
+
+.v-list-item-content {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+}
+
+/* Restore the Vuetify 2-like flex alignment so that icons and text stay vertically centered. */
+.v-list-item__content {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Adjust the separation between 'Select/Clear All' icons and text. */
+.v-list-item-action {
+  margin-right: 8px;
+}
+
+/* Table viewer: keep row selection checkboxes but hide the select-all header button. */
+.glue-table-container .glue-data-table thead tr > th:nth-child(2) .v-btn {
+  /* NOTE: display none will hide the checkmarks in individual rows as well */
+  height: 0px !important;
 }
 
 </style>

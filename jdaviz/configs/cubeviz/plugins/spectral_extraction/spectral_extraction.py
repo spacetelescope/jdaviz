@@ -24,8 +24,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               flux_conversion_general,
-                                               check_if_unit_is_per_solid_angle)
+                                               flux_unit_conversion,
+                                               is_unit_per_solid_angle)
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 
@@ -610,8 +610,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             )  # returns an NDDataArray
 
             # Remove per solid angle denominator to turn sb into flux
-            sq_angle_unit = check_if_unit_is_per_solid_angle(collapsed_nddata.unit,
-                                                             return_unit=True)
+            sq_angle_unit = is_unit_per_solid_angle(
+                collapsed_nddata.unit, return_unit=True)
             if sq_angle_unit is not None:
                 # convert aperture area in steradians to the selected square angle unit
                 # NOTE: just forcing these units for now!! this is in steradians and
@@ -698,8 +698,9 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             eqv = all_flux_unit_conversion_equivs(self.dataset.selected_obj.meta.get('PIXAR_SR', 1.0),  # noqa
                                                   self.dataset.selected_obj.spectral_axis)
 
-            return flux_conversion_general(extracted.flux.value, extracted.flux.unit,
-                                           self.spectrum_y_units, eqv)
+            return flux_unit_conversion(
+                extracted.flux.value, extracted.flux.unit,
+                self.spectrum_y_units, eqv)
 
         return extracted.flux
 

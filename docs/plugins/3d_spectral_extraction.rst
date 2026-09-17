@@ -64,7 +64,7 @@ This is useful for matching PSF size variations with wavelength.
 Aperture Masking Methods
 -------------------------
 
-The plugin supports different aperture masking methods (see `photutils aperture documentation <https://photutils.readthedocs.io/en/stable/aperture.html#aperture-and-pixel-overlap>`_):
+The plugin supports different aperture masking methods (see `photutils aperture documentation <https://photutils.readthedocs.io/en/stable/user_guide/aperture.html#aperture-and-pixel-overlap>`_):
 
 * **Center**: Use only pixels whose centers fall within the aperture
 * **Exact**: Calculate exact overlap between aperture and pixels (slower)
@@ -259,7 +259,7 @@ Batch Extraction
 Example Notebooks
 =================
 
-* :gh-notebook:`CubevizExample.ipynb <CubevizExample>` - Includes extraction examples
+* :gh-notebook:`Jdaviz3DSpectrumExample.ipynb <Jdaviz3DSpectrumExample>` - Includes extraction examples
 
 See Also
 ========

@@ -10,6 +10,7 @@ from astropy.table import Table
 from astropy.io import fits
 from astropy.wcs import WCS
 from astroquery.mast import Mast, MastMissions
+from astropy.utils.data import download_file
 from gwcs import WCS as GWCS
 from specutils import SpectralRegion, Spectrum
 
@@ -59,6 +60,17 @@ def test_resolver_matching(specviz_helper):
 
     specviz_helper.load(sp)
     assert len(specviz_helper._app.data_collection) == 1
+
+
+def test_catalog_format_available_for_table_target(deconfigged_helper):
+    table = Table({'ra': [1.0, 2.0], 'dec': [3.0, 4.0]})
+    ldr = deconfigged_helper.loaders['object']
+
+    ldr.object = table
+    assert 'Catalog' in ldr.format.choices
+
+    ldr.target = 'Table'
+    assert 'Catalog' in ldr.format.choices
 
 
 def test_dbg_access(deconfigged_helper):
@@ -296,10 +308,6 @@ def test_hst_product_identification_and_load(deconfigged_helper, hst_product_hdu
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
-@pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'
-                          ' used to avoid an error when handling 3D WCS with 2D data.'
-                          'The temporary fix will be removed once an upstream solution'
-                          'is implemented.')
 def test_fits_spectrum2d(deconfigged_helper):
     uri = cached_uri('mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits')
     if 'mast' in uri:
@@ -620,8 +628,10 @@ def test_failed_astroquery(deconfigged_helper):
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = "Bad Object"
     ldr.query_archive()
-    snackbar_msg = "Unable to resolve source coordinates: Bad Object"
-    assert deconfigged_helper.plugins['Logger'].history[-1]['text'] == snackbar_msg
+    snackbar_msg = ("Unable to resolve source name: Bad Object; "
+                    "Traceback: Unable to find coordinates for name 'Bad Object' "
+                    "using https://cds.unistra.fr/cgi-bin/nph-sesame/SNV?Bad%20Object")
+    assert snackbar_msg in [d['text'] for d in deconfigged_helper.plugins['Logger'].history]
 
 
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
@@ -747,16 +757,23 @@ def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper._app.data_collection.external_links) == 4
 
 
+def _make_multi_sci_hdul():
+    sci1 = np.ones((2, 2), dtype=np.float32)
+    err1 = np.full((2, 2), 2, dtype=np.float32)
+    sci2 = np.full((2, 2), 3, dtype=np.float32)
+    err2 = np.full((2, 2), 4, dtype=np.float32)
+    return fits.HDUList([fits.PrimaryHDU(),
+                         fits.ImageHDU(sci1, name='SCI', ver=1),
+                         fits.ImageHDU(err1, name='ERR', ver=1),
+                         fits.ImageHDU(sci2, name='SCI', ver=2),
+                         fits.ImageHDU(err2, name='ERR', ver=2)
+                         ])
+
+
 def test_load_image_mult_sci_extension(imviz_helper):
     # test loading an image with multiple SCI extensions and
     # ensure that automatic parenting logic is handled correctly
-    arr = np.zeros((2, 2), dtype=np.float32)
-    hdul = fits.HDUList([fits.PrimaryHDU(),
-                        fits.ImageHDU(arr, name='SCI', ver=1),
-                        fits.ImageHDU(arr, name='ERR', ver=1),
-                        fits.ImageHDU(arr, name='SCI', ver=2),
-                        fits.ImageHDU(arr, name='ERR', ver=2)
-                         ])
+    hdul = _make_multi_sci_hdul()
 
     # imviz_helper._load(hdul, extension=('SCI,1', 'SCI,2', 'ERR,2'))
     imviz_helper.load_data(hdul, ext=('SCI,1', 'SCI,2', 'ERR,2'))
@@ -771,13 +788,7 @@ def test_load_image_mult_sci_extension(imviz_helper):
 
 def test_loaders_extension_select(imviz_helper):
     # tests internal logic of SelectFileExtensionComponent
-    arr = np.zeros((2, 2), dtype=np.float32)
-    hdul = fits.HDUList([fits.PrimaryHDU(),
-                        fits.ImageHDU(arr, name='SCI', ver=1),
-                        fits.ImageHDU(arr, name='ERR', ver=1),
-                        fits.ImageHDU(arr, name='SCI', ver=2),
-                        fits.ImageHDU(arr, name='ERR', ver=2)
-                         ])
+    hdul = _make_multi_sci_hdul()
 
     ldr = imviz_helper.loaders['object']
     ldr.object = hdul
@@ -798,6 +809,286 @@ def test_loaders_extension_select(imviz_helper):
     assert ldr.importer.extension.selected == ['1: [SCI,1]', '3: [SCI,2]']
 
 
+class TestParenting:
+
+    @pytest.fixture(autouse=True)
+    def _setup(self, deconfigged_helper):
+        self.dcf_helper = deconfigged_helper
+        self.ldr = deconfigged_helper.loaders['object']
+        self.ldr.object = _make_multi_sci_hdul()
+
+    def _loaded(self, viewer_id='Image'):
+        return self.dcf_helper.viewers[viewer_id].data_menu.data_labels_loaded
+
+    def _assert_parented(self, parent, children):
+        app = self.dcf_helper._app
+        assert app._get_assoc_data_children(parent) == children
+        for child in children:
+            assert app._get_assoc_data_parent(child) == parent
+
+    def _assert_unparented(self, labels):
+        app = self.dcf_helper._app
+        for label in labels:
+            assert app._get_assoc_data_parent(label) is None
+            assert app._get_assoc_data_children(label) == []
+
+    @pytest.mark.parametrize('parent', ('Auto', 'None'))
+    def test_load_image_parent_selection(self, parent):
+        """'Auto' should associate matching SCI/ERR pairs by hash, while 'None'
+        should prevent any parenting, even with multiple extensions"""
+        ldr = self.ldr
+
+        if parent == 'Auto':
+            # confirm this is also the default selection
+            assert ldr.importer.parent.selected == 'Auto'
+        assert 'Auto' in ldr.importer.parent.choices
+        assert 'None' in ldr.importer.parent.choices
+
+        ldr.importer.extension = ['SCI,1', 'ERR,1', 'SCI,2', 'ERR,2']
+        ldr.importer.parent = parent
+        ldr.load()
+
+        assert len(self.dcf_helper._app.data_collection) == 4
+        assert len(self._loaded()) == 4
+
+        if parent == 'Auto':
+            self._assert_parented('Image[SCI,1]', ['Image[ERR,1]'])
+            self._assert_parented('Image[SCI,2]', ['Image[ERR,2]'])
+        else:
+            self._assert_unparented(('Image[SCI,1]', 'Image[ERR,1]',
+                                     'Image[SCI,2]', 'Image[ERR,2]'))
+
+    def test_reload_after_removal_reparents(self):
+        """Check that removing every entry from the app and reloading does not
+        cause any unforeseen association/labeling/icon issues."""
+        app = self.dcf_helper._app
+        expected_icons = {'Image[SCI,1]': 'a', 'Image[ERR,1]': 'a1',
+                          'Image[SCI,2]': 'b', 'Image[ERR,2]': 'b1'}
+
+        for _ in range(2):
+            self.ldr.object = _make_multi_sci_hdul()
+            self.ldr.importer.extension = ['SCI,1', 'ERR,1', 'SCI,2', 'ERR,2']
+            self.ldr.importer.parent = 'Auto'
+            self.ldr.load()
+
+            self._assert_parented('Image[SCI,1]', ['Image[ERR,1]'])
+            self._assert_parented('Image[SCI,2]', ['Image[ERR,2]'])
+            assert dict(app.state.layer_icons) == expected_icons
+
+            for label in [data.label for data in app.data_collection]:
+                app.data_item_remove(label)
+
+            # stale entries would otherwise be reused on the next load
+            assert app._data_associations == {}
+            assert dict(app.state.layer_icons) == {}
+
+    def test_auto_parent_existing_in_dc_after_rename(self):
+        """
+        'Auto' should associate a child extension loaded later with a matching
+        science extension already in the data collection (matched by hash,
+        so a rename of the parent in-between must not break the association)
+        """
+        ldr = self.ldr
+
+        # first load only the science extension
+        ldr.importer.extension = 'SCI,2'
+        ldr.load()
+
+        assert [d.label for d in self.dcf_helper._app.data_collection] == ['Image[SCI,2]']
+        self._assert_unparented(['Image[SCI,2]'])
+
+        self.dcf_helper.viewers['Image'].data_menu.rename('Image[SCI,2]', 'new name')
+
+        # then load only the matching error extension. It should auto-associate
+        # with the already-loaded (and renamed) science extension
+        ldr.importer.extension = 'ERR,2'
+        ldr.load()
+
+        assert len(self._loaded()) == 2
+        self._assert_parented('new name', ['Image[ERR,2]'])
+
+    def test_child_viewer_placement_mirrors_parent(self):
+        """child data should only be added to viewers that display its parent
+        (including when the parent is displayed in more than one viewer), and
+        should not land in any viewer if the parent isn't displayed anywhere"""
+        dcf_helper = self.dcf_helper
+        ldr = self.ldr
+
+        ldr.importer.extension = ['SCI,1', 'SCI,2']
+        ldr.load()
+
+        # second viewer with only one of the two science extensions
+        vc = dcf_helper.new_viewers['Image']
+        vc.dataset = 'Image[SCI,2]'
+        vc()
+
+        assert len(self._loaded()) == 2
+        assert self._loaded('Image (1)') == ['Image[SCI,2]']
+
+        # both children are loaded in the same call, and the viewer selection
+        # should not leak between the two nor persist after the load
+        ldr.importer.viewer = ['Image', 'Image (1)']
+        ldr.importer.extension = ['ERR,1', 'ERR,2']
+        ldr.load()
+
+        assert ldr.importer.viewer.selected == ['Image', 'Image (1)']
+
+        # ERR,2 should be in both viewers because its parent data is in both
+        assert sorted(self._loaded()) == ['Image[ERR,1]', 'Image[ERR,2]',
+                                          'Image[SCI,1]', 'Image[SCI,2]']
+        # ERR,1 must not appear here since SCI,1 is not in this viewer
+        assert sorted(self._loaded('Image (1)')) == ['Image[ERR,2]', 'Image[SCI,2]']
+
+        # now hide the parent (SCI,2) from every viewer, then load a new child of it;
+        # it should not be placed into any viewer since its parent isn't displayed anywhere
+        for viewer_id in ('Image', 'Image (1)'):
+            dm = dcf_helper.viewers[viewer_id].data_menu
+            dm.layer = ['Image[SCI,2]']
+            dm.remove_from_viewer()
+
+        ldr.importer.extension = 'ERR,2'
+        ldr.importer.parent = 'Auto'
+        ldr.importer.data_label = 'Image[ERR,2] (2)'
+        ldr.load()
+
+        assert dcf_helper._app._get_assoc_data_parent('Image[ERR,2] (2)') == 'Image[SCI,2]'
+        assert sorted(self._loaded()) == ['Image[ERR,1]', 'Image[ERR,2]', 'Image[SCI,1]']
+        # the pre-existing ERR,2 stays put, but the newly loaded child is not added
+        # since its parent is no longer displayed in this viewer
+        assert self._loaded('Image (1)') == ['Image[ERR,2]']
+
+    def test_parent_selection_ui_state(self):
+        """
+        Check the viewer selection replacement message. Also checks that a
+        dataset being re-imported isn't also listed as a parent choice.
+        """
+        dcf_helper = self.dcf_helper
+        ldr = self.ldr
+        importer_obj = ldr.importer._obj
+
+        # no parent -> viewer selection fully applies, with no message
+        ldr.importer.extension = 'SCI,1'
+        ldr.importer.parent = 'None'
+        assert importer_obj.parenting_msg == ''
+        assert importer_obj.hide_viewer_select is False
+        ldr.load()
+
+        # a second viewer, which becomes the default (most recent) selection
+        ldr.importer.extension = 'SCI,2'
+        ldr.importer.parent = 'None'
+        importer_obj.viewer.create_new.selected = 'Image'
+        ldr.load()
+
+        assert importer_obj.viewer.selected == ['Image (1)']
+
+        # matched on data hash, so this holds whether the entry is being overwritten
+        # or loaded alongside as a copy under a different label
+        ldr.importer.extension = 'SCI,2'
+        assert importer_obj.data_label_value == 'Image[SCI,2] (1)'
+        assert importer_obj.parent.choices == ['Auto', 'None', 'Image[SCI,1]']
+
+        ldr.importer.data_label = 'Image[SCI,2]'
+        assert importer_obj.parent.choices == ['Auto', 'None', 'Image[SCI,1]']
+
+        ldr.importer.extension = 'SCI,1'
+        assert importer_obj.parent.choices == ['Auto', 'None', 'Image[SCI,2]']
+
+        # neither of the two being imported is a valid parent
+        ldr.importer.extension = ['SCI,1', 'SCI,2']
+        assert importer_obj.parent.choices == ['Auto', 'None']
+
+        # unrelated extensions leave both available
+        ldr.importer.extension = 'ERR,1'
+        assert importer_obj.parent.choices == ['Auto', 'None', 'Image[SCI,1]', 'Image[SCI,2]']
+
+        # restore automatic labeling before continuing (an explicit data_label
+        # was set above to exercise the parent-choices check)
+        ldr.importer.data_label.auto = True
+
+        # mixed selection -> no message since the parent is loaded alongside its child,
+        # so the viewer selection applies (via the science extension) either way
+        ldr.importer.parent = 'Auto'
+        ldr.importer.extension = ['SCI,1', 'ERR,1']
+        assert importer_obj.parenting_msg == ''
+        assert importer_obj.hide_viewer_select is False
+
+        # only a child -> viewer selection is hidden and the message names the
+        # viewer the data actually lands in, not the most recent selection
+        ldr.importer.extension = 'ERR,1'
+        assert importer_obj.hide_viewer_select is True
+        assert importer_obj.parenting_msg.endswith('Image.')
+
+        # an explicit parent follows that dataset's viewer instead
+        ldr.importer.parent = 'Image[SCI,2]'
+        assert importer_obj.parenting_msg.endswith('Image (1).')
+
+        # a parent in multiple viewers lists all of them
+        dcf_helper.viewers['Image (1)'].data_menu.add_data('Image[SCI,1]')
+        ldr.importer.parent = 'Image[SCI,1]'
+        assert importer_obj.parenting_msg.endswith('Image, Image (1).')
+
+        # opting out of parenting restores the viewer selection
+        ldr.importer.parent = 'None'
+        assert importer_obj.parenting_msg == ''
+        assert importer_obj.hide_viewer_select is False
+        assert importer_obj.viewer.selected == ['Image (1)']
+
+    def test_overwrite_unparented_entry_with_parented_entry(self):
+        """
+        overwriting an existing (unparented) entry with a parented one should fully
+        re-establish the association, including the child layer icon used by the data
+        menu and the move into the parent's viewer
+        """
+        dcf_helper = self.dcf_helper
+        ldr = self.ldr
+
+        ldr.importer.extension = 'SCI,1'
+        ldr.importer.parent = 'None'
+        ldr.load()
+
+        # load the would-be child into its own viewer, unparented
+        ldr.importer.extension = 'ERR,1'
+        ldr.importer.parent = 'None'
+        ldr.importer._obj.viewer.create_new.selected = 'Image'
+        ldr.load()
+
+        assert self._loaded('Image (1)') == ['Image[ERR,1]']
+        assert dcf_helper._app.state.layer_icons['Image[ERR,1]'] == 'b'
+
+        # now overwrite that same label, this time with parenting enabled
+        ldr.importer.extension = 'ERR,1'
+        ldr.importer.parent = 'Auto'
+        ldr.importer.data_label = 'Image[ERR,1]'
+        ldr.load()
+
+        self._assert_parented('Image[SCI,1]', ['Image[ERR,1]'])
+        # a child icon (parent icon + index) is what tells the data menu to nest the entry
+        assert dcf_helper._app.state.layer_icons['Image[ERR,1]'] == 'a1'
+
+        assert self._loaded() == ['Image[SCI,1]', 'Image[ERR,1]']
+        assert self._loaded('Image (1)') == []
+
+    def test_load_unload_parenting_behavior(self):
+        ldr = self.ldr
+        dcf_helper = self.dcf_helper
+
+        # Default parent selection is 'auto'
+        ldr.importer.extension = ['SCI,1', 'ERR,1']
+        ldr.load()
+
+        # Get ready for the next round
+        ldr.importer.extension = 'ERR,1'
+        ldr.importer.parent = 'None'
+
+        dm = dcf_helper.viewers['Image'].data_menu
+        dm.layer = ['Image[ERR,1]']
+        # Remove from app and load again
+        dm.remove_from_app()
+        ldr.load()
+
+        self._assert_unparented(['Image[SCI,1]', 'Image[ERR,1]'])
+
+
 def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = image_nddata_wcs
@@ -814,6 +1105,24 @@ def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):
     ldr.load()
 
     assert deconfigged_helper.plugins['Orientation'].align_by.selected == 'WCS'
+
+
+@pytest.mark.parametrize(
+    ('align_by', ), (('WCS', ), ('Pixels', ))
+)
+def test_load_image_align_by_and_astroquery_loader(deconfigged_helper, image_nddata_wcs, align_by):
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = image_nddata_wcs
+    ldr.format = 'Image'
+    ldr.load()
+
+    astroquery_loader = deconfigged_helper.loaders['astroquery']
+    astroquery_loader.search_input = 'Viewer'
+    astroquery_loader.viewer = 'Image'
+
+    deconfigged_helper.plugins['Orientation'].align_by = align_by
+    assert len(astroquery_loader.source)
 
 
 @pytest.mark.remote_data
@@ -1082,3 +1391,16 @@ def test_load_cube_no_dq_in_viewer(deconfigged_helper):
     datasets = deconfigged_helper.datasets
     assert len(datasets) == 3
     assert '3D Spectrum [DQ]' in datasets
+
+
+@pytest.mark.remote_data
+def test_niriss_image_selection(deconfigged_helper):
+    fpath = download_file('https://stsci.box.com/shared/static/w5ycpuue07mpltam3apn9fsi5ajw2euw.fits')  # noqa
+    ldr = deconfigged_helper.loaders['file']
+    # We don't actually have to load the file, since the transposed warning triggers on parsing
+    ldr.filepath = fpath
+
+    logger = deconfigged_helper.plugins['Logger']
+    for msg in logger.history:
+        if msg['text'][0:10] == 'Transposed':
+            raise ValueError('NIRISS images should not be treated as 2D spectra.')

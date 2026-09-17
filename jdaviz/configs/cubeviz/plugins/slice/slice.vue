@@ -1,110 +1,110 @@
 <template>
   <j-tray-plugin
-    :config="config"
-    :plugin_key="plugin_key || 'Slice'"
-    :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description"
-    :irrelevant_msg="irrelevant_msg"
-    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slice'"
-    :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+      :config="config"
+      :plugin_key="plugin_key || 'Slice'"
+      v-model:api_hints_enabled="api_hints_enabled"
+      :description="docs_description"
+      :irrelevant_msg="irrelevant_msg"
+      :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slice'"
+      :popout_button="popout_button"
+      v-model:scroll_to="scroll_to">
 
-    <v-row>
+    <j-flex-row>
       <v-expansion-panels popout>
         <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-title v-slot="{ open }">
             <span style="padding: 6px">Indicator Settings</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <v-row v-if="allow_disable_snapping">
+          </v-expansion-panel-title>
+          <v-expansion-panel-text class="plugin-expansion-panel-content">
+            <j-flex-row v-if="allow_disable_snapping">
               <plugin-switch
-                :value.sync="snap_to_slice"
-                label="Snap to Slice"
-                api_hint="plg.snap_to_slice = "
-                :api_hints_enabled="api_hints_enabled"
-                hint="Snap indicator (and value) to the nearest slice in the cube."
+                  v-model:value="snap_to_slice"
+                  label="Snap to Slice"
+                  api_hint="plg.snap_to_slice = "
+                  :api_hints_enabled="api_hints_enabled"
+                  hint="Snap indicator (and value) to the nearest slice in the cube."
               />
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <plugin-switch
-                :value.sync="show_indicator"
-                label="Show Indicator"
-                api_hint="plg.show_indicator = "
-                :api_hints_enabled="api_hints_enabled"
-                hint="Show slice indicator even when slice tool is inactive."
+                  v-model:value="show_indicator"
+                  label="Show Indicator"
+                  api_hint="plg.show_indicator = "
+                  :api_hints_enabled="api_hints_enabled"
+                  hint="Show slice indicator even when slice tool is inactive."
               />
-            </v-row>
-            <v-row>
+            </j-flex-row>
+            <j-flex-row>
               <plugin-switch
-                :value.sync="show_value"
-                label="Show Value"
-                api_hint="plg.show_value = "
-                :api_hints_enabled="api_hints_enabled"
-                :hint="'Show slice '+value_label.toLowerCase()+' in label to right of indicator.'"
+                  v-model:value="show_value"
+                  label="Show Value"
+                  api_hint="plg.show_value = "
+                  :api_hints_enabled="api_hints_enabled"
+                  :hint="'Show slice '+value_label.toLowerCase()+' in label to right of indicator.'"
               />
-            </v-row>
-          </v-expansion-panel-content>
+            </j-flex-row>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
-    </v-row>
+    </j-flex-row>
 
-    <v-row justify="end" class="ignore-api-hints">
-      <v-btn color="primary" text v-if="!cube_viewer_exists" @click="create_cube_viewer">
+    <j-flex-row justify="end" class="ignore-api-hints">
+      <v-btn color="primary" variant="text" v-if="!cube_viewer_exists" @click="create_cube_viewer">
         Show Cube Viewer
       </v-btn>
-    </v-row>
+    </j-flex-row>
 
-    <v-row>
+    <j-flex-row>
       <v-text-field
-        type="number"
-        v-model.number="value"
-        @focus="(e) => value_editing = true"
-        @blur="(e) => value_editing = false"
-        :label="api_hints_enabled ? 'plg.value =' : value_label"
-        :class="api_hints_enabled ? 'api-hint' : null"
-        :hint="value_label+' corresponding to slice.'+(snap_to_slice && value_editing ? '  Indicator will snap to slice when clicking or tabbing away from input.' : '')"
-        :suffix="value_unit"
+          type="number"
+          v-model.number="value"
+          @focus="(e) => value_editing = true"
+          @blur="(e) => value_editing = false"
+          :label="api_hints_enabled ? 'plg.value =' : value_label"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          :hint="value_label+' corresponding to slice.'+(snap_to_slice && value_editing ? '  Indicator will snap to slice when clicking or tabbing away from input.' : '')"
+          :suffix="value_unit"
       ></v-text-field>
-    </v-row>
+    </j-flex-row>
 
-    <v-row class="row-no-outside-padding row-min-bottom-padding ignore-api-hints">
+    <v-row class="row-no-outside-padding row-min-bottom-padding ignore-api-hints vuetify2">
       <v-col>
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="goto_first" v-bind="attrs" v-on="on" :disabled="is_playing">
-              <v-icon>skip_previous</v-icon>
+        <v-tooltip location="top">
+          <template v-slot:activator="{ props }">
+            <v-btn variant="text" icon @click="goto_first" v-bind="props" :disabled="is_playing">
+              <v-icon>mdi-skip-previous</v-icon>
             </v-btn>
           </template>
           <span>Jump to first</span>
         </v-tooltip>
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="play_prev" v-bind="attrs" v-on="on" :disabled="is_playing">
-              <v-icon>exposure_minus_1</v-icon>
+        <v-tooltip location="top">
+          <template v-slot:activator="{ props }">
+            <v-btn variant="text" icon @click="play_prev" v-bind="props" :disabled="is_playing">
+              <span class="slice-step-button-label">-1</span>
             </v-btn>
           </template>
           <span>Previous</span>
         </v-tooltip>
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="play_start_stop" v-bind="attrs" v-on="on">
+        <v-tooltip location="top">
+          <template v-slot:activator="{ props }">
+            <v-btn variant="text" icon @click="play_start_stop" v-bind="props">
               <v-icon>mdi-play-pause</v-icon>
             </v-btn>
           </template>
           <span>Play/Pause</span>
         </v-tooltip>
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="play_next" v-bind="attrs" v-on="on" :disabled="is_playing">
-              <v-icon>exposure_plus_1</v-icon>
+        <v-tooltip location="top">
+          <template v-slot:activator="{ props }">
+            <v-btn variant="text" icon @click="play_next" v-bind="props" :disabled="is_playing">
+              <span class="slice-step-button-label">+1</span>
             </v-btn>
           </template>
           <span>Next</span>
         </v-tooltip>
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="goto_last" v-bind="attrs" v-on="on" :disabled="is_playing">
-              <v-icon>skip_next</v-icon>
+        <v-tooltip location="top">
+          <template v-slot:activator="{ props }">
+            <v-btn variant="text" icon @click="goto_last" v-bind="props" :disabled="is_playing">
+              <v-icon>mdi-skip-next</v-icon>
             </v-btn>
           </template>
           <span>Jump to last</span>
@@ -115,7 +115,7 @@
 </template>
 
 <script>
-  module.exports = {
+  export default {
     created() {
       this.throttledSetValue = _.throttle(
         (v) => { this.slice = v; },
@@ -128,4 +128,8 @@
   .v-slider {
     margin: 0px !important;
   }
+
+.slice-step-button-label {
+  font-weight: 600;
+}
 </style>

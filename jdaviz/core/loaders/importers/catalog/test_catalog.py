@@ -1,7 +1,10 @@
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import ICRS, SkyCoord
 from astropy.table import Table, QTable
 import astropy.units as u
 from jdaviz.core.loaders.importers.catalog.catalog import CatalogImporter
+import numpy as np
+from numpy.testing import assert_allclose
+import pytest
 from regions import PixCoord
 
 
@@ -54,7 +57,7 @@ def test_pixel_column_detection(deconfigged_helper):
     """Test automatic detection of x/y columns with various naming
     conventions, and that non-pixel-coordinate columns are not misidentified as
     pixel-coordinate columns (e.g 'galaxy' which contains 'x' but should not be
-    identified as x pixel-coordinate)."""
+    identified as x pixel-coordinate). """
 
     x_variations = ['X', 'xpix', 'xpixel', 'pixel_x', 'x_coord', 'xsource']
     y_variations = ['Y', 'ypix', 'ypixel', 'pixel_y', 'y_coord', 'ysource']
@@ -129,6 +132,37 @@ def test_pixcoord_column_detection(deconfigged_helper):
     assert 'Y' in importer.output.keys()
 
 
+def test_roman_catalog_detection(deconfigged_helper):
+    """
+    Test automatic detection of ra/dec columns when input catalog has multiple columns that could
+    be interpreted as coordinates (e.g., 'ra', 'ra_centroid', 'ra_err'), which will be the case
+    for Roman photometric catalogs. CatalogImporter should default to the first match,
+    but should exclude uncertainty or window columns like 'ra_min' or 'ra_err'.
+    """
+    ra = [149.0, 150.0, 151.0] * u.degree
+    dec = [1.9, 2.0, 2.1] * u.degree
+    x = [1, 2, 3]
+    y = [4, 5, 6]
+
+    tab = QTable({'ra_err': ra, 'dec_err': dec,
+                  'ra': ra, 'dec': dec,
+                  'ra_centroid': ra, 'dec_centroid': dec,
+                  'ra_min': ra, 'dec_min': dec,
+                  'x': x, 'y': y,
+                  'x_model': x, 'y_model': y})
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = tab
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+
+    # make sure the coordinate columns default to the first not-excluded match
+    assert importer.col_ra == 'ra'
+    assert importer.col_dec == 'dec'
+    assert importer.col_x == 'x'
+    assert importer.col_y == 'y'
+
+
 def test_catalog_importer_is_valid(deconfigged_helper):
     """Test _check_is_valid for CatalogImporter: success and failure cases."""
     resolver = deconfigged_helper.loaders['object']._obj
@@ -146,3 +180,102 @@ def test_catalog_importer_is_valid(deconfigged_helper):
     # Failure: empty table
     importer._input = Table()
     assert importer._check_is_valid() == 'Input is not a valid catalog.'
+
+
+@pytest.mark.parametrize('frame_selected, equinox_selected', [
+    pytest.param('icrs', 'J2000.0', id='icrs'),
+    pytest.param('fk5', 'B1950.0', id='fk5'),
+    pytest.param('fk4', 'B1950.0', id='fk4'),
+    pytest.param('galactic', 'J2000.0', id='galactic'),
+    pytest.param('ecliptic', 'J2000.0', id='ecliptic'),
+])
+def test_catalog_loader_coord_frame(deconfigged_helper, frame_selected, equinox_selected):
+    """
+    Test coordinate frame / equinox selection in the Catalog loader for all
+    supported frames: icrs, fk5, fk4, galactic, ecliptic.
+    """
+    ra_input = np.array([83.6287, 299.8681, 187.7059])
+    dec_input = np.array([-5.4230, 40.7339, 12.3911])
+
+    input_table = QTable({
+        'ra': ra_input * u.deg,
+        'dec': dec_input * u.deg,
+    })
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = input_table
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+
+    importer.coord_frame.selected = frame_selected
+    importer.coord_equinox.selected = equinox_selected
+
+    importer()
+
+    dc = deconfigged_helper._app.data_collection
+    assert 'Catalog' in dc.labels
+
+    loaded = dc['Catalog'].get_object(QTable)
+    ra_col = dc['Catalog'].meta['_jdaviz_loader_ra_col']
+    dec_col = dc['Catalog'].meta['_jdaviz_loader_dec_col']
+
+    ra_loaded = loaded[ra_col].to(u.deg).value
+    dec_loaded = loaded[dec_col].to(u.deg).value
+
+    # if 'ecliptic' is set, use 'barycentrictrueecliptic' for the frame name
+    _frame_name_map = {'ecliptic': 'barycentrictrueecliptic'}
+
+    if frame_selected == 'icrs':
+        assert_allclose(ra_loaded, ra_input)
+        assert_allclose(dec_loaded, dec_input)
+    else:
+        frame = _frame_name_map.get(frame_selected, frame_selected)
+        kwargs = {'frame': frame}
+        if equinox_selected not in ['', 'J2000'] and frame_selected != 'galactic':
+            kwargs['equinox'] = equinox_selected
+        sc_input = SkyCoord(ra_input * u.deg, dec_input * u.deg, **kwargs)
+        sc_icrs = sc_input.transform_to(ICRS())
+        assert_allclose(ra_loaded, sc_icrs.ra.deg)
+        assert_allclose(dec_loaded, sc_icrs.dec.deg)
+
+
+def test_coord_frame_default_and_reset(deconfigged_helper):
+    """coord_frame and coord_equinox should default to icrs/J2000.0 when ra/dec are detected,
+    '----' otherwise, and reset to '----' when ra or dec is unselected."""
+
+    # table with detectable ra/dec columns: coord_frame/equinox should start as icrs/J2000.0
+    tab = QTable({'ra': [10.0] * u.deg, 'dec': [-5.0] * u.deg})
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = tab
+    ldr.format = 'Catalog'
+    importer = ldr.importer
+
+    # defaults, ra and dec cols autodetected so coord frame and equinox should
+    # also be set to their defaults
+    assert importer.col_ra.selected == 'ra'
+    assert importer.col_dec.selected == 'dec'
+    assert importer.coord_frame.selected == 'icrs'
+    assert importer.coord_equinox.selected == 'J2000.0'
+
+    # unselecting only ra resets both to '----'
+    importer.col_ra.selected = '---'
+    assert importer.coord_frame.selected == '----'
+    assert importer.coord_equinox.selected == '----'
+
+    # re-selecting ra when dec is already selected restores both defaults
+    importer.col_ra.selected = 'ra'
+    assert importer.coord_frame.selected == 'icrs'
+    assert importer.coord_equinox.selected == 'J2000.0'
+
+    # unselecting dec also resets both
+    importer.col_dec.selected = '---'
+    assert importer.coord_frame.selected == '----'
+    assert importer.coord_equinox.selected == '----'
+
+    # table with no detectable ra/dec columns: both should start as '----'
+    tab2 = QTable({'flux': [1.0], 'name': ['src']})
+    ldr.object = tab2
+    ldr.format = 'Catalog'
+    importer2 = ldr.importer
+    assert importer2.coord_frame.selected == '----'
+    assert importer2.coord_equinox.selected == '----'

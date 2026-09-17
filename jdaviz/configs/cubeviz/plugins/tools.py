@@ -57,6 +57,7 @@ class SelectSlice(CheckableTool):
     tool_id = 'jdaviz:selectslice'
     action_text = 'Select cube slice'
     tool_tip = 'Select cube slice'
+    keep_visible_in_focus_mode = True
 
     def __init__(self, viewer, **kwargs):
         self._time_last = 0

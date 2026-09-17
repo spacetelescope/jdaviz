@@ -1,3 +1,4 @@
+import re
 from astropy.io import fits
 from astropy.nddata import NDData
 import astropy.units as u
@@ -91,7 +92,7 @@ def test_data_menu_add_remove_data(imviz_helper):
     assert len(dm._obj.dataset.choices) == 2
 
     with pytest.raises(ValueError,
-                       match="Data labels \\['dne1', 'dne2'\\] not able to be loaded into 'imviz-0'.  Must be one of: \\['image_1', 'image_2'\\]"):  # noqa
+                       match=re.escape("Data labels ['dne1', 'dne2'] not able to be loaded into 'imviz-0'. Must be one of: ['image_1', 'image_2']")):  # noqa
         dm.add_data('dne1', 'dne2')
 
     dm.add_data('image_1', 'image_2')
@@ -422,7 +423,8 @@ def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     # load catalog
-    imviz_helper.load(sky_coord_only_source_catalog, data_label='catalog')
+    imviz_helper.load(sky_coord_only_source_catalog, data_label='catalog',
+                      format='Catalog')
 
     # load catalog. with the presence of a 'Default Orientation' layer that is
     # NOT listed in the data menu, loading a catalog will cause the layer

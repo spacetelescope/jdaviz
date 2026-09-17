@@ -44,7 +44,8 @@ class TestTableViewerTools:
         self.viewer.state._set_axes_aspect_ratio(1)
 
         # Get the table viewer
-        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.table_viewer_user_api = deconfigged_helper.viewers['Table']
+        self.table_viewer = self.table_viewer_user_api._obj.glue_viewer
 
     def test_table_highlight_tool_activates(self):
         """Test that TableHighlightSelected tool activates properly."""
@@ -54,8 +55,9 @@ class TestTableViewerTools:
         assert 'jdaviz:table_highlight_selected' in toolbar.tools
         tool = toolbar.tools['jdaviz:table_highlight_selected']
 
-        # Check that selection is not enabled initially
-        assert not self.table_viewer.widget_table.selection_enabled
+        # Check that selection is enabled initially (TableRowSelect is the default
+        # tool when row-link columns exist)
+        assert self.table_viewer.widget_table.selection_enabled
 
         # Activate the tool
         tool.activate()
@@ -73,8 +75,8 @@ class TestTableViewerTools:
         # Restore toolbar
         toolbar.restore_tools()
 
-        # Check that selection is disabled after restore
-        assert not self.table_viewer.widget_table.selection_enabled
+        # After restore, TableRowSelect re-activates (selection still enabled)
+        assert self.table_viewer.widget_table.selection_enabled
         assert toolbar.tool_override_mode == ''
 
     def test_table_highlight_marks_appear(self):
@@ -393,6 +395,65 @@ class TestTableViewerTools:
         m = "Length of new column data does not match number of rows in the table."
         with pytest.raises(ValueError, match=m):
             tv.update_column('ra', [10, 20])
+
+    def test_rename_column(self):
+        """Test that rename_column renames a column and raises errors appropriately."""
+        tv = self.table_viewer_user_api
+        tv_obj = self.table_viewer
+
+        # add a custom column so we have something user-defined to rename
+        tv.add_column('custom_col', [1, 2, 3, 4, 5])
+        assert 'custom_col' in [c.label for c in tv_obj.widget_table.data.components]
+
+        # rename it
+        tv.rename_column('custom_col', 'renamed_col')
+        assert 'renamed_col' in [c.label for c in tv_obj.widget_table.data.components]
+        assert 'custom_col' not in [c.label for c in tv_obj.widget_table.data.components]
+
+        # renaming a column that does not exist raises ValueError
+        with pytest.raises(ValueError, match="Column 'nonexistent' not found in the table."):
+            tv.rename_column('nonexistent', 'anything')
+
+        # new_name must be a non-empty string
+        with pytest.raises(ValueError, match="new_name must be a non-empty string."):
+            tv.rename_column('renamed_col', '   ')
+
+    def test_remove_column(self):
+        """Test that remove_column removes custom columns and protects role columns."""
+        tv = self.table_viewer_user_api
+        tv_obj = self.table_viewer
+
+        # add a custom column then remove it
+        tv.add_column('to_remove', [10, 20, 30, 40, 50])
+        assert 'to_remove' in [c.label for c in tv_obj.widget_table.data.components]
+
+        tv.remove_column('to_remove')
+        assert 'to_remove' not in [c.label for c in tv_obj.widget_table.data.components]
+
+        # removing a column that does not exist raises ValueError
+        with pytest.raises(ValueError, match="Column 'to_remove' not found in the table."):
+            tv.remove_column('to_remove')
+
+        # removing a protected role column (ra/dec set by the catalog loader) raises ValueError
+        with pytest.raises(ValueError, match="protected column"):
+            tv.remove_column('ra')
+        with pytest.raises(ValueError, match="protected column"):
+            tv.remove_column('dec')
+
+    def test_add_rename_remove_roundtrip(self):
+        """End-to-end: add a custom column, rename it, then remove it via the public API."""
+        tv = self.table_viewer_user_api
+        tv_obj = self.table_viewer
+
+        tv.add_column('my_col', [0.1, 0.2, 0.3, 0.4, 0.5])
+        assert 'my_col' in [c.label for c in tv_obj.widget_table.data.components]
+
+        tv.rename_column('my_col', 'my_col_renamed')
+        assert 'my_col_renamed' in [c.label for c in tv_obj.widget_table.data.components]
+        assert 'my_col' not in [c.label for c in tv_obj.widget_table.data.components]
+
+        tv.remove_column('my_col_renamed')
+        assert 'my_col_renamed' not in [c.label for c in tv_obj.widget_table.data.components]
 
 
 class TestTableViewerToolsMultipleViewers:
@@ -716,3 +777,581 @@ class TestTableViewerToolsPixelLinked:
 
         # Restore and check marks are cleared
         toolbar.restore_tools()
+
+
+class TestTableViewerViewerDataColumns:
+    """
+    Test ``helper.set_viewer_data_columns``: one read-only "Data: <viewer>" column
+    per viewer stored on the catalog itself. On row click (in any table viewer
+    showing the catalog), each viewer is cleared and repopulated with exactly the
+    data in its column. Handled app-level by the CatalogRowLinkManager.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, deconfigged_helper, image_2d_wcs, spectrum1d,
+                     sky_coord_only_source_catalog):
+        """Set up deconfigged app with images, spectra, dedicated viewers, and a Table."""
+        # images
+        arr = np.arange(10000).reshape((100, 100))
+        deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
+        deconfigged_helper.load(NDData(arr + 1, wcs=image_2d_wcs), data_label='img_b')
+        # spectra
+        deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec_a')
+        deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec_b')
+
+        # catalog -> Table viewer (5 rows)
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = sky_coord_only_source_catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Table'
+        ldr.load()
+
+        self.app = deconfigged_helper
+        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+
+        dc = deconfigged_helper._app.data_collection
+        # resolve the actual data-collection labels (loading may apply a suffix)
+        dc_labels = list(dc.labels)
+        self.img_a = next(lbl for lbl in dc_labels if lbl.startswith('img_a'))
+        self.img_b = next(lbl for lbl in dc_labels if lbl.startswith('img_b'))
+        self.spec_a = next(lbl for lbl in dc_labels if lbl.startswith('spec_a'))
+        self.spec_b = next(lbl for lbl in dc_labels if lbl.startswith('spec_b'))
+        self.catalog_label = next(d.label for d in dc
+                                  if (d.meta or {}).get('_importer') == 'CatalogImporter')
+
+        # dedicated target viewers seeded with img_a / spec_a
+        vc = deconfigged_helper.new_viewers['Image']
+        vc.dataset = self.img_a
+        vc.viewer_label = 'Image (2)'
+        vc()
+        self.image_viewer = deconfigged_helper._app.get_viewer('Image (2)')
+
+        vc = deconfigged_helper.new_viewers['1D Spectrum']
+        vc.dataset = self.spec_a
+        vc.viewer_label = '1D Spectrum (2)'
+        vc()
+        self.spec_viewer = deconfigged_helper._app.get_viewer('1D Spectrum (2)')
+
+        self.image_ref = self.image_viewer.reference
+        self.spec_ref = self.spec_viewer.reference
+        self.image_col = f'Data: {self.image_ref}'
+        self.spec_col = f'Data: {self.spec_ref}'
+
+    @property
+    def catalog_data(self):
+        return self.app._app.data_collection[self.catalog_label]
+
+    def _visible(self, viewer):
+        return {layer.layer.label for layer in viewer.layers if layer.visible}
+
+    def test_columns_created_on_catalog_and_readonly(self):
+        """A 'Data: <viewer>' column is added to the catalog (and shown in the table)."""
+        viewer_data = {
+            self.image_ref: [[self.img_b], [], [], [], []],
+            self.spec_ref: [[self.spec_a], [], [], [], []],
+        }
+        names = self.app.set_viewer_data_columns(self.catalog_label, viewer_data)
+        assert names == [self.image_col, self.spec_col]
+
+        data = self.catalog_data
+        comps = [c.label for c in data.components]
+        assert self.image_col in comps
+        assert self.spec_col in comps
+        # the marker meta records the column -> viewer mapping on the catalog itself
+        assert data.meta['_viewer_data_columns'][self.image_col] == self.image_ref
+        assert data.meta['_viewer_data_columns'][self.spec_col] == self.spec_ref
+        # the columns are visible in the table viewer (same shared Data)
+        tv_comps = [c.label for c in self.table_viewer.widget_table.data.components]
+        assert self.image_col in tv_comps and self.spec_col in tv_comps
+        # read-only: not registered as an editable component in the table viewer
+        editable = [x.label for x in list(self.table_viewer.state.editable_components)]
+        assert self.image_col not in editable
+        assert self.spec_col not in editable
+
+    def test_click_replaces_viewer_contents(self):
+        """Clicking a row clears each viewer and shows exactly the data in its column."""
+        viewer_data = {
+            self.image_ref: [[self.img_b],
+                             [self.img_a, self.img_b],
+                             [],
+                             [self.img_a],
+                             []],
+            self.spec_ref: [[self.spec_a],
+                            [self.spec_b],
+                            [self.spec_a, self.spec_b],
+                            [],
+                            []],
+        }
+        self.app.set_viewer_data_columns(self.catalog_label, viewer_data)
+
+        # row 0: image shows only img_b (img_a hidden); spectrum shows only spec_a
+        self.table_viewer.widget_table.checked = [0]
+        assert self._visible(self.image_viewer) == {self.img_b}
+        assert self._visible(self.spec_viewer) == {self.spec_a}
+
+        # row 1: image shows both images; spectrum swaps to spec_b
+        self.table_viewer.widget_table.checked = [1]
+        assert self._visible(self.image_viewer) == {self.img_a, self.img_b}
+        assert self._visible(self.spec_viewer) == {self.spec_b}
+
+        # row 2: image column empty -> image cleared; spectrum shows both
+        self.table_viewer.widget_table.checked = [2]
+        assert self._visible(self.image_viewer) == set()
+        assert self._visible(self.spec_viewer) == {self.spec_a, self.spec_b}
+
+    def test_columns_shared_across_table_viewers(self):
+        """The columns live on the catalog, so a second table viewer shares them
+        (no duplication) and clicking in it drives the same behavior."""
+        self.app.set_viewer_data_columns(
+            self.catalog_label,
+            {self.image_ref: [[self.img_b], [self.img_a], [], [], []]})
+
+        # a second table viewer showing the same catalog
+        vc = self.app.new_viewers['Table']
+        vc.dataset = self.catalog_label
+        vc.viewer_label = 'Table (2)'
+        vc()
+        table2 = self.app._app.get_viewer('Table (2)')
+
+        # the column exists exactly once on the shared catalog Data
+        comps = [c.label for c in self.catalog_data.components]
+        assert comps.count(self.image_col) == 1
+        # and is visible in the second table viewer too
+        assert self.image_col in [c.label for c in table2.widget_table.data.components]
+
+        # clicking in the second table viewer drives the image viewer
+        table2.widget_table.checked = [0]
+        assert self._visible(self.image_viewer) == {self.img_b}
+        table2.widget_table.checked = [1]
+        assert self._visible(self.image_viewer) == {self.img_a}
+
+    def test_columns_update_on_data_rename(self):
+        """Renaming a referenced dataset updates every 'Data: <viewer>' column."""
+        self.app.set_viewer_data_columns(
+            self.catalog_label,
+            {self.image_ref: [[self.img_a], [self.img_a, self.img_b], [], [], []]})
+
+        self.app._app.rename_data(self.img_a, 'img_a_renamed')
+
+        values = list(self.catalog_data.get_component(self.image_col).data)
+        assert values[0] == ['img_a_renamed']
+        assert values[1] == ['img_a_renamed', self.img_b]
+
+        # clicking still resolves and shows the renamed dataset
+        self.table_viewer.widget_table.checked = [0]
+        assert 'img_a_renamed' in self._visible(self.image_viewer)
+
+    def test_length_mismatch_raises(self):
+        """A per-viewer list that does not match the number of rows raises."""
+        with pytest.raises(ValueError, match="must have one entry per row"):
+            self.app.set_viewer_data_columns(self.catalog_label,
+                                             {self.image_ref: [[self.img_b]]})
+
+    def test_invalid_viewer_raises(self):
+        """An unknown viewer reference raises a ValueError."""
+        with pytest.raises(ValueError, match="Could not find viewer"):
+            self.app.set_viewer_data_columns(self.catalog_label,
+                                             {'no_such_viewer': [[], [], [], [], []]})
+
+    def test_non_catalog_raises(self):
+        """Setting columns on non-catalog data raises a ValueError."""
+        with pytest.raises(ValueError, match="is not a catalog"):
+            self.app.set_viewer_data_columns(self.img_a,
+                                             {self.image_ref: [[]] * 5})
+
+    def test_viewer_by_object(self):
+        """Viewer keys may be viewer objects, not just reference strings."""
+        viewer_data = {self.image_viewer: [[self.img_b], [], [], [], []]}
+        names = self.app.set_viewer_data_columns(self.catalog_label, viewer_data)
+        assert names == [self.image_col]
+
+        self.table_viewer.widget_table.checked = [0]
+        assert self._visible(self.image_viewer) == {self.img_b}
+
+    def test_click_resets_zoom_limits(self):
+        """Clicking a row resets the viewer zoom limits so the new data fits in view."""
+        self.app.set_viewer_data_columns(
+            self.catalog_label, {self.image_ref: [[self.img_b], [], [], [], []]})
+
+        # zoom to an off-data region first
+        self.image_viewer.state.x_min = -500
+        self.image_viewer.state.x_max = -400
+
+        self.table_viewer.widget_table.checked = [0]
+
+        # the limits were reset (no longer the artificial off-data values)
+        assert self.image_viewer.state.x_min != -500
+        assert self.image_viewer.state.x_max != -400
+        assert self.img_b in self._visible(self.image_viewer)
+
+
+class TestTableViewerTwoWaySync:
+    """
+    Test two-way sync between the table viewer and non-table viewers.
+
+    * Adding a new viewer auto-creates the corresponding ``Data: <viewer>`` column.
+    * Adding/removing data from a viewer updates the active table row.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, deconfigged_helper, image_2d_wcs, spectrum1d,
+                     sky_coord_only_source_catalog):
+        arr = np.arange(10000).reshape((100, 100))
+        deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
+        deconfigged_helper.load(NDData(arr + 1, wcs=image_2d_wcs), data_label='img_b')
+        deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec_a')
+
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = sky_coord_only_source_catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Table'
+        ldr.load()
+
+        self.app = deconfigged_helper
+        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+
+        dc = deconfigged_helper._app.data_collection
+        dc_labels = list(dc.labels)
+        self.img_a = next(lbl for lbl in dc_labels if lbl.startswith('img_a'))
+        self.img_b = next(lbl for lbl in dc_labels if lbl.startswith('img_b'))
+        self.spec_a = next(lbl for lbl in dc_labels if lbl.startswith('spec_a'))
+        self.catalog_label = next(d.label for d in dc
+                                  if (d.meta or {}).get('_importer') == 'CatalogImporter')
+
+        # One image viewer created up-front (simulates the user creating it before
+        # any row-link columns are registered).
+        vc = deconfigged_helper.new_viewers['Image']
+        vc.dataset = self.img_a
+        vc.viewer_label = 'Image A'
+        vc()
+        self.image_viewer = deconfigged_helper._app.get_viewer('Image A')
+        self.image_ref = self.image_viewer.reference
+        self.image_col = f'Data: {self.image_ref}'
+
+    @property
+    def catalog_data(self):
+        return self.app._app.data_collection[self.catalog_label]
+
+    def _visible(self, viewer):
+        return {layer.layer.label for layer in viewer.layers if layer.visible}
+
+    # ------------------------------------------------------------------
+    # Direction 1: viewer added → column auto-created
+    # ------------------------------------------------------------------
+
+    def test_existing_viewer_gets_column_when_catalog_loaded(self):
+        """Image viewer that existed before the catalog gets a Data: column automatically."""
+        comps = [c.label for c in self.catalog_data.components]
+        assert self.image_col in comps
+        assert self.catalog_data.meta['_viewer_data_columns'][self.image_col] == self.image_ref
+
+    def test_new_viewer_creates_column(self):
+        """Creating a new viewer auto-adds a Data: column for it on every managed catalog."""
+        vc = self.app.new_viewers['Image']
+        vc.dataset = self.img_b
+        vc.viewer_label = 'Image B'
+        vc()
+        img_b_viewer = self.app._app.get_viewer('Image B')
+        img_b_ref = img_b_viewer.reference
+        img_b_col = f'Data: {img_b_ref}'
+
+        comps = [c.label for c in self.catalog_data.components]
+        assert img_b_col in comps
+        assert self.catalog_data.meta['_viewer_data_columns'][img_b_col] == img_b_ref
+
+    def test_new_viewer_column_initially_empty(self):
+        """The auto-created column starts with empty lists for every row."""
+        vc = self.app.new_viewers['Image']
+        vc.dataset = self.img_b
+        vc.viewer_label = 'Image B'
+        vc()
+        img_b_viewer = self.app._app.get_viewer('Image B')
+        col = f'Data: {img_b_viewer.reference}'
+
+        values = list(self.catalog_data.get_component(col).data)
+        assert all(v == [] for v in values)
+
+    def test_row_select_tool_visible_after_catalog_load(self):
+        """TableRowSelect tool becomes visible once the catalog has Data: columns."""
+        toolbar = self.table_viewer.toolbar
+        toolbar._update_tool_visibilities()
+        assert toolbar.tools_data['jdaviz:table_row_select']['visible']
+
+    # ------------------------------------------------------------------
+    # Direction 2: viewer layers change → active row updated
+    # ------------------------------------------------------------------
+
+    def test_add_data_to_viewer_updates_active_row(self):
+        """Adding data to a viewer while a row is active records it in the table."""
+        # Activate row 0
+        self.table_viewer.widget_table.checked = [0]
+
+        # Add img_b to the image viewer (img_a already there from fixture)
+        self.app._app.add_data_to_viewer(self.image_ref, self.img_b)
+
+        values = list(self.catalog_data.get_component(self.image_col).data)
+        assert self.img_b in values[0]
+
+    def test_no_update_without_active_row(self):
+        """Viewer layer changes are ignored when no row is checked."""
+        # Ensure no row is checked
+        self.table_viewer.widget_table.checked = []
+
+        self.app._app.add_data_to_viewer(self.image_ref, self.img_b)
+
+        values = list(self.catalog_data.get_component(self.image_col).data)
+        # Row 0 should still be empty (no active row was set)
+        assert values[0] == []
+
+    def test_layer_change_updates_only_active_row(self):
+        """Only the checked row is updated; other rows stay empty."""
+        # Activate row 2
+        self.table_viewer.widget_table.checked = [2]
+
+        self.app._app.add_data_to_viewer(self.image_ref, self.img_b)
+
+        values = list(self.catalog_data.get_component(self.image_col).data)
+        assert self.img_b in values[2]
+        assert values[0] == []
+        assert values[1] == []
+
+
+class TestTableViewerImageFirstWorkflow:
+    """
+    Regression test: load image (creates image viewer) first, then load catalog
+    (creates table viewer).  Columns should be auto-created and TableRowSelect
+    should become visible without any manual set_viewer_data_columns call.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, deconfigged_helper, image_2d_wcs,
+                     sky_coord_only_source_catalog):
+        # 1. Load image first — creates the image viewer
+        arr = np.arange(10000).reshape((100, 100))
+        deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
+
+        # Grab the auto-created image viewer
+        image_viewers = list(
+            deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
+        assert len(image_viewers) >= 1
+        self.image_viewer = image_viewers[0]
+        self.image_ref = self.image_viewer.reference
+
+        # 2. Load catalog second — creates the table viewer and the manager
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = sky_coord_only_source_catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Table'
+        ldr.load()
+
+        self.app = deconfigged_helper
+        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        dc = deconfigged_helper._app.data_collection
+        self.catalog_label = next(d.label for d in dc
+                                  if (d.meta or {}).get('_importer') == 'CatalogImporter')
+        self.image_col = f'Data: {self.image_ref}'
+
+    @property
+    def catalog_data(self):
+        return self.app._app.data_collection[self.catalog_label]
+
+    def test_column_auto_created_for_existing_image_viewer(self):
+        """The image viewer that existed before the catalog gets a Data: column."""
+        comps = [c.label for c in self.catalog_data.components]
+        assert self.image_col in comps
+
+    def test_row_select_tool_visible(self):
+        """TableRowSelect tool is visible after the catalog is loaded."""
+        self.table_viewer.toolbar._update_tool_visibilities()
+        assert self.table_viewer.toolbar.tools_data['jdaviz:table_row_select']['visible']
+
+
+class TestTableViewerLateCatalogAttachWorkflow:
+    """
+    Regression test: load catalog into a non-table viewer first, then create a
+    table viewer later. Columns should be backfilled when the table receives
+    the catalog data.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, deconfigged_helper, image_2d_wcs,
+                     sky_coord_only_source_catalog):
+        # 1. Load image first so there is an existing non-table viewer.
+        arr = np.arange(10000).reshape((100, 100))
+        deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
+
+        image_viewers = list(deconfigged_helper._app.get_viewers_of_cls('ImvizImageView'))
+        assert len(image_viewers) >= 1
+        self.image_viewer = image_viewers[0]
+        self.image_ref = self.image_viewer.reference
+
+        # 2. Load catalog to a non-table viewer (Scatter), so no table exists yet.
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = sky_coord_only_source_catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Scatter'
+        ldr.load()
+
+        self.app = deconfigged_helper
+        dc = deconfigged_helper._app.data_collection
+        self.catalog_label = next(d.label for d in dc
+                                  if (d.meta or {}).get('_importer') == 'CatalogImporter')
+        self.image_col = f'Data: {self.image_ref}'
+
+        # 3. Create table viewer later and attach the already-loaded catalog.
+        vc = self.app.new_viewers['Table']
+        vc.dataset = self.catalog_label
+        vc.viewer_label = 'Table (late)'
+        vc()
+        self.table_viewer = self.app._app.get_viewer('Table (late)')
+
+    @property
+    def catalog_data(self):
+        return self.app._app.data_collection[self.catalog_label]
+
+    def test_column_backfilled_when_table_added_later(self):
+        """A Data: column is created when the table viewer later receives the catalog."""
+        comps = [c.label for c in self.catalog_data.components]
+        assert self.image_col in comps
+        assert self.catalog_data.meta['_viewer_data_columns'][self.image_col] == self.image_ref
+
+    def test_row_select_tool_visible_after_late_attach(self):
+        """TableRowSelect tool becomes visible once late-attached columns are backfilled."""
+        self.table_viewer.toolbar._update_tool_visibilities()
+        assert self.table_viewer.toolbar.tools_data['jdaviz:table_row_select']['visible']
+
+
+class TestTableRowSelectToolBehavior:
+    """
+    Tests for TableRowSelect-specific behaviors:
+    - The tool should not show as active (orange) while another tool is in override mode.
+    - The single active row is preserved across tool switches.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, deconfigged_helper, image_2d_wcs, sky_coord_only_source_catalog):
+        arr = np.arange(10000).reshape((100, 100))
+        deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
+
+        # Catalog loaded after image so auto-columns are created
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = sky_coord_only_source_catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Table'
+        ldr.load()
+
+        self.app = deconfigged_helper
+        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.toolbar = self.table_viewer.toolbar
+
+    def test_row_select_not_active_during_override(self):
+        """TableRowSelect should not be the active tool while another tool is in override mode."""
+        # TableRowSelect should be the default active tool
+        self.toolbar._update_tool_visibilities()
+        assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
+
+        # Activate a selection tool (override mode)
+        self.toolbar.tools['jdaviz:table_highlight_selected'].activate()
+
+        # In override mode the active_tool_id must NOT be table_row_select;
+        # the button should therefore not appear orange
+        assert self.toolbar.tool_override_mode != ''
+        assert self.toolbar.active_tool_id != 'jdaviz:table_row_select'
+
+    def test_default_row_select_can_be_toggled_off(self):
+        """Clicking the active default tool should allow no tool to remain active."""
+        self.toolbar._update_tool_visibilities()
+        assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
+
+        # Simulate clicking the active default checkable tool again.
+        self.toolbar.active_tool_id = None
+        assert self.toolbar.active_tool_id is None
+
+        # Visibility refreshes should not force the default back on.
+        self.toolbar._update_tool_visibilities()
+        assert self.toolbar.active_tool_id is None
+
+    def test_default_row_select_toggle_via_select_tool_api(self):
+        """Programmatic toolbar-button click should allow toggling default tool off."""
+        self.toolbar._update_tool_visibilities()
+        assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
+
+        # Simulate clicking the currently-active toolbar button again.
+        self.toolbar.select_tool('jdaviz:table_row_select')
+
+        # Expected behavior: default checkable tool can be toggled off.
+        assert self.toolbar.active_tool_id is None
+
+    def test_default_row_select_can_be_toggled_off_with_reentrant_visibility_update(self):
+        """Deactivation side effects should not re-enable default tool during same toggle."""
+        self.toolbar._update_tool_visibilities()
+        assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
+
+        tool = self.toolbar.tools['jdaviz:table_row_select']
+        original_deactivate = tool.deactivate
+
+        def _deactivate_with_visibility_refresh(*args, **kwargs):
+            original_deactivate(*args, **kwargs)
+            # Simulate a side effect during deactivate() that triggers toolbar refresh.
+            self.toolbar._update_tool_visibilities()
+
+        tool.deactivate = _deactivate_with_visibility_refresh
+        try:
+            self.toolbar.active_tool_id = None
+            assert self.toolbar.active_tool_id is None
+        finally:
+            tool.deactivate = original_deactivate
+
+    def test_active_row_restored_after_override(self):
+        """The single checked row is preserved when another tool temporarily takes over."""
+        # Start with TableRowSelect as default, select row 2
+        self.toolbar._update_tool_visibilities()
+        self.table_viewer.widget_table.checked = [2]
+        assert self.table_viewer.widget_table.checked == [2]
+
+        # Activate the highlight tool (which uses multi-select checkboxes)
+        self.toolbar.tools['jdaviz:table_highlight_selected'].activate()
+
+        # Simulate user checking additional rows during highlight mode
+        self.table_viewer.widget_table.checked = [0, 1, 4]
+
+        # Close the override tool → TableRowSelect should re-activate
+        self.toolbar.restore_tools()
+
+        # The original single-row selection (row 2) must be restored
+        assert self.table_viewer.widget_table.checked == [2]
+
+    def test_apply_checkmark_falls_back_to_default_tool(self):
+        """Clicking the apply checkmark in an override toolbar also falls back to TableRowSelect."""
+        self.toolbar._update_tool_visibilities()
+        assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
+
+        # Enter override mode via subset tool (has an apply checkmark)
+        self.toolbar.tools['jdaviz:table_subset'].activate()
+        assert self.toolbar.tool_override_mode != ''
+        assert self.toolbar.active_tool_id != 'jdaviz:table_row_select'
+
+        # Click the apply checkmark (activates the tool directly, as the UI would)
+        self.toolbar.tools['jdaviz:table_apply_subset'].activate()
+
+        # Override should be closed and TableRowSelect should be the active tool again
+        assert self.toolbar.tool_override_mode == ''
+        assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
+
+    def test_apply_checkmark_restores_active_row(self):
+        """After closing an override with the apply checkmark, the saved row is restored."""
+        self.toolbar._update_tool_visibilities()
+        self.table_viewer.widget_table.checked = [1]
+
+        # Enter subset override mode
+        self.toolbar.tools['jdaviz:table_subset'].activate()
+
+        # Use multi-select during subset mode
+        self.table_viewer.widget_table.checked = [0, 2, 3]
+
+        # Apply the subset
+        self.toolbar.tools['jdaviz:table_apply_subset'].activate()
+
+        # TableRowSelect back with the original row restored
+        assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
+        assert self.table_viewer.widget_table.checked == [1]

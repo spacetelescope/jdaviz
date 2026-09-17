@@ -8,6 +8,7 @@ from specutils import Spectrum
 
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import get_available_linelists
+from jdaviz.core.linelists import get_linelist_metadata
 
 
 # two-argument Table.loc is deprecated as of Astropy 7.2. Syntax update will be needed
@@ -41,8 +42,8 @@ class TestLineLists:
         assert np.all(specviz_helper.spectral_lines["show"] == False)  # noqa
         assert specviz_helper.plugins['Line Lists']._obj.rs_enabled is False
 
-        specviz_helper.plot_spectral_line("Halpha")
-        specviz_helper.plot_spectral_line("O III 5007.0")
+        specviz_helper.plot_spectral_lines("Halpha")
+        specviz_helper.plot_spectral_lines("O III 5007.0")
 
         assert np.all(specviz_helper.spectral_lines["show"])
 
@@ -104,7 +105,7 @@ class TestLineLists:
         assert ll_plugin.identify_label == ''
 
     def test_load_available_preset_lists(self, specviz_helper, spectrum1d):
-        """ Loads all available line lists and checks the medium requirement """
+        """ Loads sample preset line lists and checks the medium requirement """
         label = "Test 1D Spectrum"
         specviz_helper.load_data(spectrum1d, data_label=label)
 
@@ -112,19 +113,30 @@ class TestLineLists:
         available_linelists = get_available_linelists()
         assert len(available_linelists) > 0
 
-        for linelist in available_linelists:
+        # Load a sample of line lists to verify functionality (loading all can be expensive)
+        sample_size = min(5, len(available_linelists))
+        sample_linelists = available_linelists[:sample_size]
+
+        for linelist in sample_linelists:
             specviz_helper.plugins['Line Lists']._obj.vue_list_selected(linelist)
             specviz_helper.plugins['Line Lists']._obj.vue_load_list(linelist)
 
-        # Check that we loaded all the lists (+1 because of the Custom list)
+        # Check that we loaded the sample lists (+1 because of the Custom list)
         assert (
             len(specviz_helper.plugins['Line Lists']._obj.list_contents.keys()) ==
-            len(available_linelists) + 1
+            sample_size + 1
         )
 
-        # Line list must have "medium" info to be available
+        # Verify sample line lists have "medium" info
         for list in specviz_helper.plugins['Line Lists']._obj.list_contents.values():  # noqa
             assert 'medium' in list
+
+        # Additionally, verify ALL available line lists have metadata (without loading them)
+        # This is much faster and ensures metadata quality across all lists
+        metadata = get_linelist_metadata()
+        for linelist in available_linelists:
+            assert 'medium' in metadata[linelist], \
+                f"Line list '{linelist}' missing 'medium' metadata"
 
     def test_line_identify(self, specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d)
@@ -157,10 +169,10 @@ class TestLineLists:
             specviz_helper.load_line_list(lt)
 
         # Load a line, and apply redshift globally
-        specviz_helper.plot_spectral_line("Halpha")
+        specviz_helper.plot_spectral_lines("Halpha")
         specviz_helper.set_redshift(0.01)
         # Load second line, redshift should also be applied to it
-        specviz_helper.plot_spectral_line("O III")
+        specviz_helper.plot_spectral_lines("O III")
 
         viewer_lines = [mark for mark in specviz_helper._app.get_viewer(
             specviz_helper._default_spectrum_viewer_reference_name).figure.marks
@@ -180,7 +192,7 @@ class TestLineLists:
             specviz_helper.load_line_list(lt)
 
         # Load a line, so we can apply redshift
-        specviz_helper.plot_spectral_line("Halpha")
+        specviz_helper.plot_spectral_lines("Halpha")
         global_redshift = 0.01
         specviz_helper.set_redshift(global_redshift)
         # Load remaining lines
@@ -198,10 +210,15 @@ class TestLineLists:
         helper = request.getfixturevalue(helper_name)
 
         if helper_name == 'specviz_helper':
-            helper.load_data(spectrum1d)
+            helper.load_data(spectrum1d, data_label='Test Spectrum')
         else:
             # For deconfigged, load data and create a viewer
             helper.load(spectrum1d, format='1D Spectrum', data_label='Test Spectrum')
+
+        # Set redshift, make sure it is globally applied
+        helper.set_redshift(0.1)
+        ll_plugin = helper.plugins['Line Lists']._obj
+        assert ll_plugin.rs_redshift == 0.1
 
         # Create a line list table with metadata
         lt = QTable()
@@ -219,7 +236,6 @@ class TestLineLists:
         assert 'Test Lines' in helper.spectral_lines['listname']
 
         # Verify plugin internals
-        ll_plugin = helper.plugins['Line Lists']._obj
         assert 'Test Lines' in ll_plugin.loaded_lists
         assert len(ll_plugin.list_contents['Test Lines']['lines']) == 3
         assert ll_plugin.list_contents['Test Lines']['medium'] == 'Vacuum'
@@ -233,7 +249,17 @@ class TestLineLists:
         assert line_hbeta["listname"] == "Test Lines"
 
         # Test plotting lines
-        helper.plot_spectral_line('O III 5007.0')
+        helper.plot_spectral_lines('O III 5007.0')
+
+        # Verify that lines were plotted at the correct observed wavelength
+        if hasattr(helper, '_default_spectrum_viewer_reference_name'):
+            viewer_lines = [mark for mark in helper._app.get_viewer(
+                            helper._default_spectrum_viewer_reference_name).figure.marks
+                            if isinstance(mark, SpectralLine)]
+        else:
+            viewer_lines = [mark for mark in helper._app.get_viewer('1D Spectrum').figure.marks
+                            if isinstance(mark, SpectralLine)]
+        assert np.all([line.redshift == 0.1 for line in viewer_lines])
 
         # Test erasing lines
         helper.erase_spectral_lines()

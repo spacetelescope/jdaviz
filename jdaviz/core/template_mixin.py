@@ -1,11 +1,14 @@
 import inspect
 import os
+import logging
 import re
 import threading
 import time
 import warnings
 from contextlib import contextmanager
 from functools import cached_property, wraps
+
+from astropy.utils.exceptions import AstropyUserWarning
 from traitlets import link
 
 import astropy.units as u
@@ -124,6 +127,19 @@ def show_widget(widget, loc, title, height=None):  # pragma: no cover
     from IPython import get_ipython
     from IPython.display import display
     import ipywidgets as widgets
+
+    # Displaying jdaviz in a sidecar can leave the frontend {'execution_state': 'busy'},
+    # which causes timeout failures in notebook ci with `spacetelescope/notebook-ci-actions`, since
+    # `nbval` listens for {'execution_state': 'idle'} before advancing to the next cell.
+    # Here we check for a CI environment variable - if true, we skip calls to `display`.
+    # This no-op is not specific to loc='sidecar' so that tests aren't broken when calling
+    # `jd.show()` within a sidecar context in the notebook.
+    if os.getenv('JDAVIZ_SKIP_DISPLAY') == 'true':
+        logging.debug(
+            'environment variable "JDAVIZ_SKIP_DISPLAY = true" was found, jdaviz will '
+            'skip all show/display commands.'
+        )
+        return
 
     # Check if the user is running Jdaviz in the correct environments.
     # If not, provide a friendly msg to guide them!
@@ -814,9 +830,9 @@ def with_temp_disable(timeout=0.3,
     This should be used with::
 
         <plugin-previews-temp-disabled
-          :previews_temp_disabled.sync="previews_temp_disabled"
+          v-model:previews_temp_disabled="previews_temp_disabled"
           :previews_last_time="previews_last_time"
-          :show_live_preview.sync="show_live_preview"
+          v-model:show_live_preview="show_live_preview"
         />
     """
     def decorator(meth):
@@ -863,7 +879,7 @@ class PluginTemplateMixin(TemplateMixin):
     is_active = Bool(False).tag(sync=True)  # noqa read-only: whether the previews should be shown according to plugin_opened and keep_active
     scroll_to = Bool(False).tag(sync=True)  # noqa once set to True, vue will scroll to the element and reset to False
     spinner = Bool(False).tag(sync=True)  # noqa use along-side @with_spinner() and <plugin-add-results :action_spinner="spinner">
-    previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
+    previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled v-model:previews_temp_disabled="previews_temp_disabled" :previews_last_time="previews_last_time" v-model:show_live_preview="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
 
@@ -1863,7 +1879,7 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
         hint="Select a file to import"
         :show="method_selected === 'From File...' && from_file.length === 0"
         :from_file="from_file"
-        :from_file_message.sync="from_file_message"
+        v-model:from_file_message="from_file_message"
         @click-cancel="method_selected=method_items[0].label"
         @click-import="file_import_accept()">
           <g-file-import id="file-uploader"></g-file-import>
@@ -2017,10 +2033,10 @@ class EditableSelectPluginComponent(SelectPluginComponent):
     Example template (label and hint are optional)::
 
       <plugin-editable-select
-        :mode.sync="mode"
-        :edit_value.sync="edit_value"
+        v-model:mode="mode"
+        v-model:edit_value="edit_value"
         :items="items"
-        :selected.sync="selected"
+        v-model:selected="selected"
         label="Label"
         hint="Select an item to modify."
       </plugin-editable-select>
@@ -2220,7 +2236,7 @@ class LayerSelect(SelectPluginComponent):
 
       <plugin-layer-select
         :items="layer_items"
-        :selected.sync="layer_selected"
+        v-model:selected="layer_selected"
         :show_if_single_entry="true"
         label="Layer"
         hint="Select layer."
@@ -2819,7 +2835,7 @@ class LayerSelectMixin(VuetifyTemplate, HubListener):
 
       <plugin-layer-select
         :items="layer_items"
-        :selected.sync="layer_selected"
+        v-model:selected="layer_selected"
         :show_if_single_entry="true"
         label="Layer"
         hint="Select layer."
@@ -2889,7 +2905,7 @@ class SubsetSelect(SelectPluginComponent):
 
       <plugin-subset-select
         :items="spectral_subset_items"
-        :selected.sync="spectral_subset_selected"
+        v-model:selected="spectral_subset_selected"
         :show_if_single_entry="true"
         label="Subset"
         hint="Select subset."
@@ -3278,7 +3294,7 @@ class SubsetSelectMixin(VuetifyTemplate, HubListener):
 
       <plugin-subset-select
         :items="subset_items"
-        :selected.sync="subset_selected"
+        v-model:selected="subset_selected"
         :show_if_single_entry="true"
         label="Subset"
         hint="Select subset."
@@ -3314,7 +3330,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
       <plugin-subset-select
         :items="spectral_subset_items"
-        :selected.sync="spectral_subset_selected"
+        v-model:selected="spectral_subset_selected"
         :show_if_single_entry="true"
         label="Spectral region"
         hint="Select spectral region."
@@ -3355,7 +3371,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
 
       <plugin-subset-select
         :items="spatial_subset_items"
-        :selected.sync="spatial_subset_selected"
+        v-model:selected="spatial_subset_selected"
         label="Spatial region"
         hint="Select spatial region."
       />
@@ -3426,7 +3442,7 @@ class ApertureSubsetSelect(SubsetSelect):
 
       <plugin-subset-select
         :items="aperture_items"
-        :selected.sync="aperture_selected"
+        v-model:selected="aperture_selected"
         :show_if_single_entry="true"
         label="Aperture"
         hint="Select aperture."
@@ -3772,7 +3788,7 @@ class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
 
       <plugin-subset-select
         :items="aperture_items"
-        :selected.sync="aperture_selected"
+        v-model:selected="aperture_selected"
         label="Aperture"
         hint="Select aperture."
       />
@@ -3834,7 +3850,7 @@ class PluginTableSelect(SelectPluginComponent):
 
       <plugin-select
         :items="table_items"
-        :selected.sync="table_selected"
+        v-model:selected="table_selected"
         label="Table"
         hint="Select table."
       />
@@ -3948,7 +3964,7 @@ class PluginPlotSelect(SelectPluginComponent):
 
       <plugin-select
         :items="plot_items"
-        :selected.sync="plot_selected"
+        v-model:selected="plot_selected"
         label="Plot"
         hint="Select plot."
       />
@@ -4385,7 +4401,7 @@ class ViewerSelect(SelectPluginComponent):
 
       <plugin-viewer-select
         :items="viewer_items"
-        :selected.sync="viewer_selected"
+        v-model:selected="viewer_selected"
         label="Viewer"
         hint="Select viewer."
       />
@@ -4536,7 +4552,7 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
 
       <plugin-viewer-select
         :items="viewer_items"
-        :selected.sync="viewer_selected"
+        v-model:selected="viewer_selected"
         label="Viewer"
         hint="Select viewer."
       />
@@ -4662,7 +4678,7 @@ class DatasetSelect(SelectPluginComponent):
 
       <plugin-dataset-select
         :items="dataset_items"
-        :selected.sync="dataset_selected"
+        v-model:selected="dataset_selected"
         label="Data"
         hint="Select data."
       />
@@ -4786,7 +4802,7 @@ class DatasetSelect(SelectPluginComponent):
         If the spectral axis unit of data is pixels, and the
         display unit is not pixels (or vice versa), no conversion is done to allow
         for mixed pixel/world unit viewing (this logic is handled by
-        spectral_axis_conversion, which is called from this method when converting
+        spectral_unit_conversion, which is called from this method when converting
         the spectral axis).
         """
         # retrieves the 1d spectrum
@@ -4878,7 +4894,8 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 2
 
         def is_catalog(data):
-            return data.meta.get('_importer', '') == 'CatalogImporter'
+            return data.meta.get('_importer', '') in ['SpectralLinesImporter',
+                                                      'CatalogImporter']
 
         def is_catalog_or_image_not_spectrum(data):
             return is_catalog(data) or is_image_not_spectrum(data)
@@ -5008,7 +5025,7 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
 
       <plugin-dataset-select
         :items="dataset_items"
-        :selected.sync="dataset_selected"
+        v-model:selected="dataset_selected"
         label="Data"
         hint="Select data."
       />
@@ -5041,7 +5058,7 @@ class DatasetMultiSelectMixin(VuetifyTemplate, HubListener):
 
       <plugin-dataset-select
         :items="dataset_items"
-        :selected.sync="dataset_selected"
+        v-model:selected="dataset_selected"
         :multiselect="multiselect"
         label="Data"
         hint="Select data."
@@ -5085,9 +5102,9 @@ class AutoTextField(BasePluginComponent):
     Example template::
 
       <plugin-auto-label
-        :value.sync="value"
+        v-model:value="value"
         :default="comp_label_default"
-        :auto.sync="comp_label_auto"
+        v-model:auto="comp_label_auto"
         :invalid_msg="invalid_msg"
         hint="Label hint."
       ></plugin-auto-label>
@@ -5144,9 +5161,9 @@ class AutoTextFieldMixin(VuetifyTemplate, HubListener):
     Example template::
 
       <plugin-auto-label
-        :value.sync="label"
+        v-model:value="label"
         :default="label_default"
-        :auto.sync="label_auto"
+        v-model:auto="label_auto"
         :invalid_msg="invalid_msg"
         hint="Label hint."
       ></plugin-auto-label>
@@ -5256,15 +5273,15 @@ class AddResults(BasePluginComponent):
     Example template::
 
       <plugin-add-results
-        :label.sync="results_label"
+        v-model:label="results_label"
         :label_default="results_label_default"
-        :label_auto.sync="results_label_auto"
+        v-model:label_auto="results_label_auto"
         :label_invalid_msg="results_label_invalid_msg"
         :label_overwrite="results_label_overwrite"
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
-        :add_to_viewer_selected.sync="add_to_viewer_selected"
-        :auto_update_result.sync="auto_update_result"
+        v-model:add_to_viewer_selected="add_to_viewer_selected"
+        v-model:auto_update_result="auto_update_result"
         action_label="Apply"
         action_tooltip="Apply the action to the data"
         @click:action="apply"
@@ -5552,15 +5569,15 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
     Example template::
 
       <plugin-add-results
-        :label.sync="results_label"
+        v-model:label="results_label"
         :label_default="results_label_default"
-        :label_auto.sync="results_label_auto"
+        v-model:label_auto="results_label_auto"
         :label_invalid_msg="results_label_invalid_msg"
         :label_overwrite="results_label_overwrite"
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
-        :add_to_viewer_selected.sync="add_to_viewer_selected"
-        :auto_update_result.sync="auto_update_result"
+        v-model:add_to_viewer_selected="add_to_viewer_selected"
+        v-model:auto_update_result="auto_update_result"
         action_label="Apply"
         action_tooltip="Apply the action to the data"
         @click:action="apply"
@@ -5829,7 +5846,8 @@ class PlotOptionsSyncState(BasePluginComponent):
         # Clear layer watch callbacks from previously tracked viewers
         for viewer in self._layer_watch_viewers:
             try:
-                viewer.widget_table.unobserve(self._on_table_viewer_layers_changed, names=['data'])
+                viewer.widget_table.unobserve(self._on_table_viewer_layers_changed,
+                                              names=['data', 'headers'])
             except (ValueError, AttributeError):
                 pass
         self._layer_watch_viewers = []
@@ -5847,7 +5865,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             for viewer in self.subscribed_viewers:
                 if viewer is not None and hasattr(viewer, 'widget_table'):
                     viewer.widget_table.observe(self._on_table_viewer_layers_changed,
-                                                names=['data'])
+                                                names=['data', 'headers'])
                     self._layer_watch_viewers.append(viewer)
 
         in_subscribed_states = False
@@ -5993,10 +6011,22 @@ class PlotOptionsSyncState(BasePluginComponent):
             else:
                 setattr(glue_state, glue_name, msg['new'])
 
-            if glue_name in ['bitmap_visible', 'contour_visible'] and msg['new'] is True:
-                # ensure that the layer is also visible
-                if not glue_state.visible:
-                    setattr(glue_state, 'visible', msg['new'])
+            if glue_name in ['bitmap_visible', 'contour_visible']:
+                if msg['new']:
+                    # ensure that the layer is also visible
+                    if not glue_state.visible:
+                        setattr(glue_state, 'visible', msg['new'])
+                else:
+                    # if neither the image bitmap nor a contour would remain visible,
+                    # also clear the overall ``visible`` flag so the state stays
+                    # consistent with blinking (which toggles ``visible``).  ``glue_name``
+                    # was just set to False above, so we only need to check the other gate
+                    # (e.g. ``contour_visible`` when hiding the bitmap) -- this preserves
+                    # the contour-only use-case.
+                    other = ('contour_visible'
+                             if glue_name == 'bitmap_visible' else 'bitmap_visible')
+                    if glue_state.visible and not getattr(glue_state, other, False):
+                        setattr(glue_state, 'visible', False)
 
         # need to recompute mixed state
         self._update_mixed_state()
@@ -6301,7 +6331,11 @@ class Table(PluginSubcomponent):
             self._clear_table()
             return
         # Cache the QTable
-        self._qtable = QTable(table)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",
+                                    message="column .* has a unit but is kept as",
+                                    category=AstropyUserWarning)
+            self._qtable = QTable(table)
         # Update headers
         all_headers = list(table.colnames)
         missing_headers = [h for h in all_headers if h not in self.headers_avail]

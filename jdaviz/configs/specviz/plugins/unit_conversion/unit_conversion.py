@@ -2,45 +2,32 @@ from contextlib import nullcontext
 
 from astropy import units as u
 from glue.core import Data as glue_core_data
+from glue.core.message import DataCollectionDeleteMessage
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
-from specutils import Spectrum
-from traitlets import List, Unicode, observe, Bool
 from specreduce import tracing
+from specutils import Spectrum
+from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
 from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_units_and_equivs import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 from jdaviz.core.events import (GlobalDisplayUnitChanged, AddDataMessage,
-                                RemoveDataMessage, SliceValueUpdatedMessage)
+                                RemoveDataMessage, SliceValueUpdatedMessage,
+                                ViewerRemovedMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
                                         SelectPluginComponent, PluginUserApi)
-from jdaviz.core.unit_conversion_utils import (create_equivalent_spectral_axis_units_list,
+from jdaviz.core.unit_conversion_utils import (create_equivalent_angle_units_list,
                                                create_equivalent_flux_units_list,
-                                               check_if_unit_is_per_solid_angle,
-                                               create_equivalent_angle_units_list,
-                                               flux_to_sb_unit)
+                                               create_equivalent_spectral_axis_units_list,
+                                               flux_to_sb_unit,
+                                               is_physical_flux_unit,
+                                               is_physical_spectral_unit,
+                                               is_unit_per_solid_angle,
+                                               valid_glue_display_unit)
 
 __all__ = ['UnitConversion']
-
-
-def _valid_glue_display_unit(unit_str, viewer, axis='x'):
-    # need to make sure the unit string is formatted according to the list of valid choices
-    # that glue will accept (may not be the same as the defaults of the installed version of
-    # astropy)
-    if not unit_str or not viewer:
-        return unit_str
-    unit_u = u.Unit(unit_str)
-    if not hasattr(viewer.state.__class__, f'{axis}_display_unit'):
-        return unit_str
-    choices_str = getattr(viewer.state.__class__, f'{axis}_display_unit').get_choices(viewer.state)  # noqa
-    choices_str = [choice for choice in choices_str if choice is not None]
-    choices_u = [u.Unit(choice) for choice in choices_str]
-    if unit_u not in choices_u:
-        raise ValueError(f"{unit_str} could not find match in valid {axis} display units {choices_str}")  # noqa
-    ind = choices_u.index(unit_u)
-    return choices_str[ind]
 
 
 @tray_registry('g-unit-conversion', label="Unit Conversion",
@@ -122,6 +109,10 @@ class UnitConversion(PluginTemplateMixin):
                                    handler=self._on_add_data_to_viewer)
         self.session.hub.subscribe(self, RemoveDataMessage,
                                    handler=self._on_remove_data_from_viewer)
+        self.session.hub.subscribe(self, DataCollectionDeleteMessage,
+                                   handler=self._on_data_collection_delete)
+        self.session.hub.subscribe(self, ViewerRemovedMessage,
+                                   handler=self._on_viewer_removed)
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
@@ -130,14 +121,20 @@ class UnitConversion(PluginTemplateMixin):
         self.spectral_unit = UnitSelectPluginComponent(self,
                                                        items='spectral_unit_items',
                                                        selected='spectral_unit_selected')
-        self.spectral_unit.choices = create_equivalent_spectral_axis_units_list(u.Hz)
+        # initialize spectral axis unit choices to empty list, will be populated
+        # when data is loaded, if data has equivalent units. otherwise (e.g data
+        # is in pixels) it will remain empty and user will not be able to select
+        # a unit until data with equivalent units is loaded
+        self.spectral_unit.choices = []
 
         self.has_flux = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz', 'deconfigged')
         self.flux_unit = UnitSelectPluginComponent(self,
                                                    items='flux_unit_items',
                                                    selected='flux_unit_selected')
-        # NOTE: will switch to count only if first data loaded into viewer in in counts
         # initialize flux choices to empty list, will be populated when data is loaded
+        # if data has equivalent units, otherwise (e.g data is in DN) it will
+        # remain empty and user will not be able to select a unit until data
+        # with equivalent units is loaded
         self.flux_unit.choices = []
 
         self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz',
@@ -203,15 +200,58 @@ class UnitConversion(PluginTemplateMixin):
                 for viewer in self._app._viewer_store.values() if isinstance(viewer, BqplotImageView)  # noqa
                 for layer in viewer.layers]
 
-    def _on_remove_data_from_viewer(self, msg):
-        viewer = msg.viewer
-        if viewer.reference == 'spectrum-viewer' and not len(viewer.layers):
-            self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer' # noqa
+    def _no_data_in_relevant_viewers(self):
+        """Return True if no spectrum/image/cube viewer has any data loaded."""
+        return not any(
+            len(v.layers) for v in self._app._viewer_store.values()
+            if isinstance(v, (JdavizProfileView, BqplotImageView))
+        )
 
-        elif viewer.reference == 'spectrum-viewer' and len(viewer.layers):
-            xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
-            viewer.state.x_display_unit = xunit
-            viewer.set_plot_axes()
+    def _on_remove_data_from_viewer(self, msg):
+
+        viewer = msg.viewer
+
+        if self._no_data_in_relevant_viewers():
+            self.disabled_msg = 'Unit Conversion unavailable without data loaded in a viewer'
+            return
+
+        # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
+        # access. this may need to be generalized for deconfigged and removed
+        # once the configs are deprecated
+        if self.config in ('specviz', 'specviz2d'):
+
+            # if no layers remain in spectrum viewer, disable the unit conversion plugin.
+            if viewer.reference == 'spectrum-viewer' and not len(viewer.layers):
+                self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer' # noqa
+
+            # if layers do remain in the viewer, re-validate and re-apply the
+            # current spectral x unit to the viewer state and refresh plot axes.
+            elif viewer.reference == 'spectrum-viewer' and len(viewer.layers):
+                xunit = valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
+                viewer.state.x_display_unit = xunit
+                viewer.set_plot_axes()
+
+    def _on_data_collection_delete(self, msg):
+        if len(self._app.data_collection) == 0:
+            self._reset_unit_selections()
+
+    def _reset_unit_selections(self):
+        """Clear all unit selections when no data remains in the app."""
+        self.spectral_unit.choices = []
+        self.flux_unit.choices = []
+        self.angle_unit.choices = []
+        self.time_unit.choices = []
+        self.spectral_unit_selected = ''
+        self.flux_unit_selected = ''
+        self.angle_unit_selected = ''
+        self.sb_unit_selected = ''
+        self.time_unit_selected = ''
+        self.spectral_y_type_selected = ''
+
+    def _on_viewer_removed(self, msg):
+
+        if self._no_data_in_relevant_viewers():
+            self.disabled_msg = 'Unit Conversion unavailable without data loaded in a viewer'
 
     def _on_add_data_to_viewer(self, msg):
 
@@ -225,9 +265,24 @@ class UnitConversion(PluginTemplateMixin):
                 self.pixar_sr_exists = False
 
         viewer = msg.viewer
-        # If we were disabled due to having no data loaded, undo that
-        if viewer.reference == 'spectrum-viewer':
+
+        # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
+        # access. this may need to be generalized for deconfigged and removed
+        # once the configs are deprecated.
+        # If we disabled the unit conversion plugin due to no data in the
+        # spectrum viewer, re-enable it.
+        if self.config in ('specviz', 'specviz2d') and viewer.reference == 'spectrum-viewer':
             self.disabled_msg = ''
+
+        # if we disabled the unit conversion plugin due to no data in any
+        # image/spectrum/cube, viewer, but data is being added to one of those
+        # viewers, re-enable the plugin
+        if self.disabled_msg:
+            if isinstance(viewer, (JdavizProfileView, BqplotImageView)):
+                self.disabled_msg = ''
+
+        # this was added to avoid triggering unit logic when plugin data is being
+        # added to the viewer.
         if isinstance(msg.data, glue_core_data):
             data_obj = None
 
@@ -242,9 +297,10 @@ class UnitConversion(PluginTemplateMixin):
                 display_unit = u.Unit(self.spectral_unit_selected)
                 unit_types = [str(x) for x in [orig_unit.physical_type, display_unit.physical_type]]
                 if unit_types.count('unknown') + unit_types.count('dimensionless') != 1:
-                    xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
+                    xunit = valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
                     viewer.state.x_display_unit = xunit
                     viewer.set_plot_axes()
+
         if len(self.spectral_y_unit) and hasattr(viewer.state, 'y_display_unit'):
             if viewer.state.y_display_unit != self.spectral_y_unit:
                 self._handle_spectral_y_unit()
@@ -260,22 +316,27 @@ class UnitConversion(PluginTemplateMixin):
             # if the viewer is spectral and the data is Spectrum, get flux/sb/spectral
             # axis units from the Spectrum object
             if isinstance(data_obj, Spectrum) and isinstance(viewer, Spectrum1DViewer):
+                spectral_axis_unit = data_obj.spectral_axis.unit
+                if is_physical_spectral_unit(spectral_axis_unit):
+                    self.spectral_unit.choices = create_equivalent_spectral_axis_units_list(
+                        spectral_axis_unit)
                 self.spectral_unit._addl_unit_strings = viewer.state.__class__.x_display_unit.get_choices(viewer.state)  # noqa
                 if not len(self.spectral_unit_selected):
                     try:
-                        self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
+                        self.spectral_unit.selected = str(spectral_axis_unit)
                     except ValueError:
                         self.spectral_unit.selected = ''
 
-                angle_unit = check_if_unit_is_per_solid_angle(data_obj.flux.unit, return_unit=True)
+                angle_unit = is_unit_per_solid_angle(data_obj.flux.unit, return_unit=True)
                 flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
 
                 if not self.flux_unit_selected:
-                    self.flux_unit.choices = create_equivalent_flux_units_list(flux_unit)
-                    try:
-                        self.flux_unit.selected = str(flux_unit)
-                    except ValueError:
-                        self.flux_unit.selected = ''
+                    if is_physical_flux_unit(flux_unit):
+                        self.flux_unit.choices = create_equivalent_flux_units_list(flux_unit)
+                        try:
+                            self.flux_unit.selected = str(flux_unit)
+                        except ValueError:
+                            self.flux_unit.selected = ''
 
                 if not self.angle_unit_selected:
                     self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
@@ -303,6 +364,13 @@ class UnitConversion(PluginTemplateMixin):
                         self.spectral_y_type_selected = 'Flux'
                     else:
                         self.spectral_y_type_selected = 'Surface Brightness'
+
+                # for non-physical flux (counts/DN), set sb_unit_selected directly
+                # from the native flux and angle units so the Flux<->SB toggle works
+                if (not self.flux_unit_selected and not self.sb_unit_selected
+                        and self.angle_unit_selected):
+                    self.sb_unit_selected = flux_to_sb_unit(
+                        str(flux_unit), self.angle_unit_selected)
 
                 # setting default values will trigger the observes to set the units
                 # in _on_unit_selected, so return here to avoid setting twice
@@ -337,6 +405,11 @@ class UnitConversion(PluginTemplateMixin):
             # NOTE: this assumes that all image data is coerced to surface brightness units
             layers = [lyr for lyr in msg.viewer.layers if lyr.layer.data.label == msg.data.label]
 
+            if not (hasattr(data_obj, 'flux') or hasattr(data_obj, 'unit')):
+                # e.g. a catalog/table loaded into an image viewer, which carries no
+                # flux or surface brightness units to sync with the plugin
+                return
+
             if not isinstance(data_obj, tracing.Trace):
 
                 if not len(self.spectral_unit_selected) and hasattr(data_obj, 'spectral_axis'):
@@ -348,20 +421,23 @@ class UnitConversion(PluginTemplateMixin):
                 if not self.flux_unit_selected:
                     flux_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
                     # get flux/sb unit from data object, and solid angle to turn sb into flux
-                    angle_unit = check_if_unit_is_per_solid_angle(flux_unit,
-                                                                  return_unit=True)
+                    angle_unit = is_unit_per_solid_angle(flux_unit, return_unit=True)
                     flux_unit = flux_unit if angle_unit is None else flux_unit * angle_unit  # noqa
 
-                    self.flux_unit.choices = create_equivalent_flux_units_list(flux_unit)
-                    try:
-                        self.flux_unit.selected = str(flux_unit)
-                    except ValueError:
-                        self.flux_unit.selected = ''
+                    if is_physical_flux_unit(flux_unit):
+                        self.flux_unit.choices = create_equivalent_flux_units_list(flux_unit)
+                        try:
+                            self.flux_unit.selected = str(flux_unit)
+                        except ValueError:
+                            self.flux_unit.selected = ''
 
                 if not self.angle_unit_selected:
-                    flux_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
-                    angle_unit = check_if_unit_is_per_solid_angle(flux_unit,
-                                                                  return_unit=True)
+                    # reuse values computed above if available, otherwise derive them now
+                    if not self.flux_unit_selected:
+                        pass  # flux_unit and angle_unit already set above
+                    else:
+                        _raw = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
+                        angle_unit = is_unit_per_solid_angle(_raw, return_unit=True)
                     self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
                     try:
                         if angle_unit is None:
@@ -391,8 +467,9 @@ class UnitConversion(PluginTemplateMixin):
              'time_unit_selected')
     def _on_unit_selected(self, msg):
         """
-        When any user selection is made, update the relevant viewer(s) with the new unit,
-        and then emit a GlobalDisplayUnitChanged message to notify other plugins of the change.
+        When any user selection is made, update the relevant viewer(s) with the
+        new unit, and then emit a GlobalDisplayUnitChanged message to notify
+        other plugins of the change.
         """
         if not len(msg.get('new', '')):
             # empty string, nothing to set yet
@@ -402,11 +479,21 @@ class UnitConversion(PluginTemplateMixin):
 
         if axis == 'spectral':
             for sv in self.spectrum_1d_viewers:
-                xunit = _valid_glue_display_unit(self.spectral_unit.selected, sv, 'x')
+                if not (is_physical_spectral_unit(self.spectral_unit.selected)
+                        and is_physical_spectral_unit(sv.state.x_display_unit)):
+                    continue
+                xunit = valid_glue_display_unit(self.spectral_unit.selected, sv, 'x')
                 sv.state.x_display_unit = xunit
                 sv.set_plot_axes()
             for s2dv in self.spectrum_2d_viewers:
-                xunit = _valid_glue_display_unit(self.spectral_unit.selected, s2dv, 'x')
+                if not hasattr(s2dv.state, 'x_display_unit'):
+                    continue
+                if not (is_physical_spectral_unit(self.spectral_unit.selected)
+                        and is_physical_spectral_unit(s2dv.state.x_display_unit)):
+                    continue
+                xunit = valid_glue_display_unit(self.spectral_unit.selected, s2dv, 'x')
+                s2dv.state.x_display_unit = xunit
+                s2dv.set_plot_axes()
 
         elif axis == 'flux':
             # handle spectral y-unit first since that is a more apparent change to the user
@@ -414,6 +501,9 @@ class UnitConversion(PluginTemplateMixin):
             if self.spectral_y_type_selected == 'Flux':
                 self._handle_spectral_y_unit()
             for sv in self.spectrum_1d_viewers:
+                if not (is_physical_flux_unit(self.flux_unit.selected)
+                        and is_physical_flux_unit(sv.state.y_display_unit)):
+                    continue
                 sv.set_plot_axes()
 
             if len(self.angle_unit_selected):
@@ -436,11 +526,14 @@ class UnitConversion(PluginTemplateMixin):
         elif axis == 'sb':
             # handle spectral y-unit first since that is a more apparent change to the user
             # and feels laggy if it is done later
-            if self.spectral_y_type and self.spectral_y_type_selected == 'Surface Brightness':
+            if self.spectral_y_type_selected == 'Surface Brightness':
                 self._handle_spectral_y_unit()
 
             self._handle_attribute_display_unit(self.sb_unit_selected)
             for sv in self.spectrum_1d_viewers:
+                if not (is_physical_flux_unit(self.sb_unit_selected)
+                        and is_physical_flux_unit(sv.state.y_display_unit)):
+                    continue
                 sv.set_plot_axes()
 
         # custom axes downstream can override _on_unit_selected if anything needs to be
@@ -459,14 +552,21 @@ class UnitConversion(PluginTemplateMixin):
         GlobalDisplayUnitChanged message to notify
         """
         if self.spectral_y_type_selected:
-            yunit = _valid_glue_display_unit(self.spectral_y_unit, self.spectrum_viewer, 'y')
+            yunit = valid_glue_display_unit(self.spectral_y_unit, self.spectrum_viewer, 'y')
         elif self.sb_unit_selected:
-            yunit = _valid_glue_display_unit(self.sb_unit_selected, self.spectrum_viewer, 'y')
+            yunit = valid_glue_display_unit(self.sb_unit_selected, self.spectrum_viewer, 'y')
         else:
-            yunit = _valid_glue_display_unit(self.flux_unit_selected, self.spectrum_viewer, 'y')
+            yunit = valid_glue_display_unit(self.flux_unit_selected, self.spectrum_viewer, 'y')
+
+        if not yunit:
+            return
 
         spectral_y_change = False
         for sv in self.spectrum_1d_viewers:
+            sv_yunit = sv.state.y_display_unit
+            # skip only if switching between incompatible types (physical <-> non-physical)
+            if sv_yunit and is_physical_flux_unit(yunit) != is_physical_flux_unit(sv_yunit):
+                continue
 
             if self.spectral_unit.selected != yunit:
                 spectral_y_change = True
@@ -522,5 +622,5 @@ class UnitConversion(PluginTemplateMixin):
             else:
                 ctx = nullcontext()
             with ctx:
-                layer.state.attribute_display_unit = _valid_glue_display_unit(
+                layer.state.attribute_display_unit = valid_glue_display_unit(
                     attr_unit, layer, 'attribute')

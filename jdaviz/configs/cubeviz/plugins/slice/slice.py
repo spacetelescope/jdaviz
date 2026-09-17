@@ -23,6 +23,7 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, SliceToolStat
                                 GlobalDisplayUnitChanged)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
+from jdaviz.core.unit_conversion_utils import spectral_unit_conversion
 from jdaviz.core.user_api import PluginUserApi
 
 
@@ -261,7 +262,7 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
         self.value = float(self._convert_value_to_unit(self.value, prev_unit, msg.unit))
 
     def _convert_value_to_unit(self, value, prev_unit, new_unit):
-        return (value * prev_unit).to_value(new_unit, equivalencies=u.spectral())
+        return spectral_unit_conversion(value, prev_unit, new_unit)
 
     def _clear_cache(self, *attrs):
         if not len(attrs):

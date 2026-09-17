@@ -260,8 +260,8 @@ Exporting Results
 Example Notebooks
 =================
 
-* :gh-notebook:`ImvizExample.ipynb <ImvizExample>` - Imviz photometry example
-* :gh-notebook:`CubevizExample.ipynb <CubevizExample>` - Cubeviz photometry example
+* :gh-notebook:`JdavizImageExample.ipynb <JdavizImageExample>` - Imviz photometry example
+* :gh-notebook:`Jdaviz3DSpectrumExample.ipynb <Jdaviz3DSpectrumExample>` - Cubeviz photometry example
 
 See Also
 ========

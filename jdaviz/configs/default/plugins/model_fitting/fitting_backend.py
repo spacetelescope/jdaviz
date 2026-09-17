@@ -284,6 +284,7 @@ class SpaxelWorker:
                 weights = 'unc'
             else:
                 weights = None
+
             fitted_model = fit_lines(sp, self.model, fitter=self.fitter, window=self.window,
                                      weights=weights, **self.kw)
 

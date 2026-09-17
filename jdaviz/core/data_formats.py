@@ -132,11 +132,15 @@ def _get_wcs(filename, header):
     """
     try:
         with asdf_in_fits.open(filename) as af:
-            wcs = af.tree['meta']['wcs']
+            wcs = af.tree['meta'].get('wcs', None)
 
     # if the file doesn't have ASDF-in-FITS, then
     # the 'meta' key doesn't exist, yielding a KeyError:
     except KeyError:
+        # fall back on using astropy WCS:
+        wcs = None
+    # Catches both model.meta wcs is None and KeyError
+    if wcs is None:
         # fall back on using astropy WCS:
         wcs = WCS(header)
 

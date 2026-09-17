@@ -86,12 +86,18 @@ class ImageImporter(BaseImporterToDataCollection):
     # viewer, expose options to align by pixels or WCS.
     expose_align_by_options = Bool(True).tag(sync=True)
 
+    # message shown in place of viewer selection for data that will be parented
+    # (and therefore follows the viewer(s) of its parent)
+    parenting_msg = Unicode().tag(sync=True)
+    # if parented, hide/disable viewer selection
+    hide_viewer_select = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.parent = DatasetSelect(self, 'parent_items', 'parent_selected',
-                                    multiselect=None, manual_options=['Auto'])
-        self.parent.add_filter('is_image', 'not_from_plugin')
+                                    multiselect=None, manual_options=['Auto', 'None'])
+        self.parent.add_filter('is_image', 'not_from_plugin', self._no_self_parenting)
         self.parent.selected = 'Auto'
 
         self.align_by = SelectPluginComponent(self,
@@ -115,7 +121,7 @@ class ImageImporter(BaseImporterToDataCollection):
             input = fits.HDUList([input])
 
         input_is_roman_imagemodel = (
-            HAS_ROMAN_DATAMODELS and isinstance(input, rdd.ImageModel)
+            HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.ImageModel, rdd.MosaicModel))
         )
         input_is_roman_asdf = isinstance(input, asdf.AsdfFile) and 'roman' in input
 
@@ -134,7 +140,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'ver': hdu.ver,
                                 'name_ver': f"{hdu.name},{hdu.ver}",
                                 'index': index,
-                                'data_hash': create_data_hash(hdu),
+                                'data_hash': create_data_hash(getattr(hdu, 'data', None)),
                                 'obj': hdu}
                                for index, hdu in enumerate(input)]
             elif input_is_roman_asdf:
@@ -410,17 +416,169 @@ class ImageImporter(BaseImporterToDataCollection):
         elif isinstance(self.input, NDData):
             return [{'name': name} for name in ('DATA', 'MASK', 'UNCERTAINTY')]  # noqa must match order in _nddata_to_glue_data
         else:
-            return [{}] * len(self.output)
+            # remaining inputs (a bare glue Data object or a 2D ndarray) always
+            # produce a single output, so avoid computing self.output just for its length
+            return [{}]
+
+    def _data_label_for_ext(self, base_data_label, ext_item):
+        """
+        Determine the data label for some extension of the file.
+        """
+        if self.data_label_is_prefix:
+            # If data_label is a prefix, we need to append the extension
+            # to the data label.
+            return self._get_label_with_extension(base_data_label,
+                                                  ext_item.get('name'),
+                                                  ver=ext_item.get('ver', None))
+
+        # If data_label is not a prefix, we use it as is.
+        return base_data_label
+
+    @staticmethod
+    def _find_sci_parent_ext(ext_item, candidate_ext_items):
+        """
+        Return the SCI/DATA extension (matching ver) that should act as the
+        parent of ``ext_item``, or None if no suitable science parent exists.
+        """
+        for other_ext_item in candidate_ext_items:
+            if other_ext_item is ext_item:
+                # an extension can't be its own parent
+                continue
+
+            if (other_ext_item.get('name').lower() in ('sci', 'data')
+                    and other_ext_item.get('ver', None) == ext_item.get('ver', None)):
+                return other_ext_item
+
+        return None
+
+    def _determine_parent_label(self, parent_selected, ext_item, base_data_label,
+                                selected_ext_items, all_ext_items, dc_hash_to_label):
+        """
+        Determine the parent data label to associate with the extension being
+        imported based on the ``Parent Dataset`` selection.
+
+        * ``'None'``: never associate, even with multiple extensions.
+        * a specific dataset label: associate with that dataset.
+        * ``'Auto'``: associate other extensions (e.g. ERR, DQ) with the
+          matching science (SCI/DATA, matching ver) extension. The science parent
+          may either be part of the current import or already present in the data
+          collection (matched by data hash), so that extensions loaded later still
+          associate with a previously-loaded science extension.
+        """
+        if parent_selected == 'None':
+            return None
+        elif parent_selected != 'Auto':
+            return parent_selected
+
+        parent_ext = self._find_sci_parent_ext(ext_item, all_ext_items)
+        # Data coming from a plugin is never auto-associated
+        if (getattr(self.input, 'meta', {}).get('plugin', None) is not None or
+                parent_ext is None):
+            return None
+
+        # If the science parent is part of the current import, use its new label
+        if any(parent_ext is sel_ext for sel_ext in selected_ext_items):
+            return self._data_label_for_ext(base_data_label, parent_ext)
+
+        # Otherwise associate with a matching science parent already in the
+        # data collection (matched by data hash from the extension dropdown)
+        parent_hash = parent_ext.get('data_hash')
+        return dc_hash_to_label.get(parent_hash, None)
+
+    def _parent_labels_for_selection(self, base_data_label, ext_items):
+        """
+        Return a list, aligned with ``ext_items``, of the parent data label that
+        will be assigned to each extension on import (``None`` where the
+        extension will be imported without any association).
+        """
+        # Grab all extensions available in the extension dropdown.
+        # Used to find a parent even when said parent isn't part of the current selection.
+        if self.input_has_extensions:
+            all_ext_items = self.extension.items
+        else:
+            all_ext_items = ext_items
+
+        # Map data hash -> label for data already in the data collection so that
+        # 'Auto' can associate new children with a previously loaded parent.
+        dc_hash_to_label = {data.meta.get('_data_hash'): data.label
+                            for data in self._app.data_collection}
+
+        parent_labels = []
+        for ext_item in ext_items:
+            data_label = self._data_label_for_ext(base_data_label, ext_item)
+            parent_label = self._determine_parent_label(self.parent.selected, ext_item,
+                                                        base_data_label, ext_items,
+                                                        all_ext_items, dc_hash_to_label)
+            # an extension can never be its own parent
+            parent_labels.append(parent_label if parent_label != data_label else None)
+        return parent_labels
+
+    def _no_self_parenting(self, data):
+        """
+        Data being imported can't be its own parent. Matched on hash so this holds
+        whether the entry is being overwritten or loaded alongside as a copy under a new label.
+        """
+        if not hasattr(self, 'extension'):
+            # no extensions to match against (or still in __init__)
+            return True
+        hashes = [item.get('data_hash') for item in self.extension.selected_item_list]
+        data_hash = data.meta.get('_data_hash')
+        return data_hash is None or data_hash not in hashes
+
+    @observe('extension_selected')
+    def _update_parent_choices(self, *args):
+        if hasattr(self, 'parent'):
+            self.parent._update_items()
+
+    @observe('parent_selected', 'extension_selected',
+             'data_label_value', 'data_label_as_prefix')
+    def _update_parenting_msg(self, *args):
+        """
+        Child data always follows its parent into that parent's viewer(s), so replace
+        the viewer selection with a message when every entry is parented.
+        """
+        if not hasattr(self, 'parent') or not hasattr(self, 'data_label'):
+            return
+        if self.input_has_extensions and not hasattr(self, 'extension'):
+            return
+
+        ext_items = self.ext_items
+        parents = self._parent_labels_for_selection(self.data_label_value, ext_items)
+        labels = [self._data_label_for_ext(self.data_label_value, ext_item)
+                  for ext_item in ext_items]
+        # no need to advertise where a child will land when its parent is part of the
+        # same import, since the viewer selection then applies to that parent anyways
+        child_parent_pairs = [(label, parent) for label, parent in zip(labels, parents)
+                              if parent is not None and parent not in labels]
+
+        if not len(child_parent_pairs):
+            self.parenting_msg = ''
+            self.hide_viewer_select = False
+            return
+
+        children = [label for label, parent in child_parent_pairs]
+        unique_parents = sorted(set(parent for label, parent in child_parent_pairs))
+        viewers = [label for label, viewer in self._app._jdaviz_helper.viewers.items()
+                   if len(set(unique_parents) & set(viewer.data_menu.data_labels_loaded))]
+        target = f"the viewer(s) containing {', '.join(unique_parents)}"
+        target = f"{target}: {', '.join(viewers)}." if len(viewers) else f"{target} (none)."
+
+        self.parenting_msg = f"{', '.join(children)} will be loaded into {target}"
+        self.hide_viewer_select = len(children) == len(parents)
 
     def __call__(self):
 
         base_data_label = self.data_label_value
-        # self.output is always a list of Data objects
         outputs = self.output
         ext_items = self.ext_items
 
-        parent_selected = self.parent.selected
-        for output, ext_item in zip(outputs, ext_items):
+        # Determine all parents up-front to ensure that UI messages correctly
+        # reflect where child data will actually be loaded.
+        # I.e. if we were to call _parent_labels_for_selection in loop, the resulting label
+        # might conflict with the _parent_labels_for_selection call in _update_parenting_msg.
+        parent_labels = self._parent_labels_for_selection(base_data_label, ext_items)
+
+        for output, ext_item, parent_data_label in zip(outputs, ext_items, parent_labels):
             if output is None:
                 # needed for NDData where one of the "extensions" might
                 # not be present.  Remove this once users can select
@@ -428,46 +586,13 @@ class ImageImporter(BaseImporterToDataCollection):
                 continue
 
             # Determine data label
-            if self.data_label_is_prefix:
-                # If data_label is a prefix, we need to append the extension
-                # to the data label.
-                data_label = self._get_label_with_extension(base_data_label,
-                                                            ext_item.get('name'),
-                                                            ver=ext_item.get('ver', None))
-            else:
-                # If data_label is not a prefix, we use it as is.
-                data_label = base_data_label
-
-            # Determine parent
-            if (parent_selected == 'Auto' and
-                    len(ext_items) > 1 and
-                    getattr(self.input, 'meta', {}).get('plugin', None) is None):
-                # If parent is set to 'Auto', use SCI/DATA extension
-                # as parent of any other selected extensions with same ver (if applicable)
-                for other_ext_item in ext_items:
-                    if (other_ext_item.get('name') in ('SCI', 'sci', 'DATA', 'data')
-                            and other_ext_item.get('ver', None) == ext_item.get('ver', None)):
-                        parent_ext_item = other_ext_item
-                        break
-                else:
-                    # No SCI/DATA extension found, so default to no parent
-                    parent_ext_item = None
-                    parent_data_label = None
-                if parent_ext_item is not None:
-                    # assume self.data_label_is_prefix is True
-                    parent_data_label = self._get_label_with_extension(base_data_label,
-                                                                       parent_ext_item.get('name'),
-                                                                       ver=parent_ext_item.get('ver', None))  # noqa
-            elif parent_selected == 'Auto':
-                parent_data_label = None
-            else:
-                parent_data_label = parent_selected
+            data_label = self._data_label_for_ext(base_data_label, ext_item)
 
             if self.gwcs_to_fits_sip:
                 output = self._glue_data_wcs_to_fits(output)
 
             self.add_to_data_collection(output, data_label, data_hash=ext_item.get('data_hash'),
-                                        parent=parent_data_label if parent_data_label != data_label else None,  # noqa
+                                        parent=parent_data_label,
                                         cls=CCDData)
 
         align_plg = self._app._jdaviz_helper.plugins.get('Orientation', None)
@@ -617,7 +742,7 @@ def _jwst2data(hdu, hdulist, try_gwcs_to_fits_sip=False):
                 bunit = ''
 
             # This is instance of gwcs.WCS, not astropy.wcs.WCS
-            if 'wcs' in dm_meta:
+            if dm_meta.get('wcs', None) is not None:
                 gwcs = dm_meta['wcs']
 
                 if try_gwcs_to_fits_sip:

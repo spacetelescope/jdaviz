@@ -18,8 +18,8 @@ specify the rest wavelengths of emission or absorption features and their labels
 
 .. warning::
 
-   The Line Lists functionality is still under active development. For more information see
-   :ref:`line-lists` in the plugins documentation.
+   This imports lines into the :ref:`line-lists` plugin, which will soon be deprecated
+   in favor of using the :ref:`loaders-format-spectral-lines` format.
 
 Usage
 =====

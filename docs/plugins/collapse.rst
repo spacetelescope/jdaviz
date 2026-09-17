@@ -194,7 +194,7 @@ Direct Data Access
 Example Notebooks
 =================
 
-* :gh-notebook:`CubevizExample.ipynb <CubevizExample>` - Includes collapse examples
+* :gh-notebook:`Jdaviz3DSpectrumExample.ipynb <Jdaviz3DSpectrumExample>` - Includes collapse examples
 
 See Also
 ========

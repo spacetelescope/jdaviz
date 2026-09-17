@@ -1,4 +1,5 @@
-.. _cubeviz-display-cubes:
+
+.. _cubeviz-display-cubes: 
 
 ****************
 Displaying Cubes

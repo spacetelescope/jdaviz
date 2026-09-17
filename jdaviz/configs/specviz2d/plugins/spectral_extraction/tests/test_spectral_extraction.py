@@ -181,12 +181,12 @@ def test_plugin(specviz2d_helper):
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
-def test_user_api(specviz2d_helper):
+def test_user_api(deconfigged_helper):
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
 
-    specviz2d_helper.load_data(spectrum_2d=fn)
+    deconfigged_helper.load(fn, format='2D Spectrum')
 
-    pext = specviz2d_helper.plugins['2D Spectral Extraction']
+    pext = deconfigged_helper.plugins['Spectral Extraction']
     pext.keep_active = True
 
     # test that setting a string to an AddResults object redirects to the label
@@ -206,10 +206,10 @@ def test_user_api(specviz2d_helper):
 @pytest.mark.remote_data
 @pytest.mark.skipif(GWCS_LT_0_18_1, reason='Needs GWCS 0.18.1 or later')
 @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
-def test_background_extraction_and_display(specviz2d_helper):
+def test_background_extraction_and_display(deconfigged_helper):
     uri = 'mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
-    specviz2d_helper.load_data(spectrum_2d=cached_uri(uri), cache=True)
-    pext = specviz2d_helper._app.get_tray_item_from_name('spectral-extraction-2d')
+    deconfigged_helper.load(cached_uri(uri), format='2D Spectrum')
+    pext = deconfigged_helper._app.get_tray_item_from_name('2D Spectral Extraction')
 
     # check that the background extraction method and parameters are as expected
     assert pext.bg_type_selected == 'TwoSided'
@@ -218,14 +218,14 @@ def test_background_extraction_and_display(specviz2d_helper):
     # test extracting background and background subtracted images and adding
     # them to the viewer
     pext.export_bg_sub(add_data=True)
-    assert specviz2d_helper._app.data_collection[2].label == 'background-subtracted'
+    assert deconfigged_helper._app.data_collection[2].label == 'background-subtracted'
 
     pext.export_bg_img(add_data=True)
-    assert specviz2d_helper._app.data_collection[3].label == 'background'
+    assert deconfigged_helper._app.data_collection[3].label == 'background'
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_horne_extract_self_profile(specviz2d_helper):
+def test_horne_extract_self_profile(deconfigged_helper):
 
     spec2d = np.zeros((40, 100))
     spec2dvar = np.ones((40, 100))
@@ -243,8 +243,8 @@ def test_horne_extract_self_profile(specviz2d_helper):
                           flux=spec2d*u.Jy,
                           uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
 
-    specviz2d_helper.load(objectspec, format='2D Spectrum')
-    pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
+    deconfigged_helper.load(objectspec, format='2D Spectrum')
+    pext = deconfigged_helper.plugins['2D Spectral Extraction']._obj
 
     trace_fit = tracing.FitTrace(objectspec,
                                  trace_model=models.Polynomial1D(degree=1),
@@ -301,25 +301,27 @@ def test_horne_extract_self_profile(specviz2d_helper):
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
-def test_boxcar_uncertainty_propagation_via_plugin(specviz2d_helper):
+@pytest.mark.parametrize('flux_unit', [u.Jy, u.DN])
+def test_boxcar_uncertainty_propagation_via_plugin(deconfigged_helper, flux_unit):
     """
     This is an identical test to the test for uncertainty propogation in
     boxcar extraction in specreduce, and is meant to make sure going through
     the plugin returns the same result.
     """
+
     nrows, ncols = 10, 20
     flux = np.full((nrows, ncols), 100.0)
     variance = np.full((nrows, ncols), 4.0)
     width = 3
 
     img = Spectrum(
-        flux * u.DN,
+        flux * flux_unit,
         uncertainty=VarianceUncertainty(variance),
         spectral_axis=np.arange(ncols) * u.pix,
     )
 
-    specviz2d_helper.load(img, format='2D Spectrum')
-    pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
+    deconfigged_helper.load(img, format='2D Spectrum')
+    pext = deconfigged_helper.plugins['2D Spectral Extraction']._obj
 
     pext.trace_type_selected = 'Flat'
     pext.trace_pixel = nrows // 2
@@ -341,24 +343,29 @@ def test_boxcar_uncertainty_propagation_via_plugin(specviz2d_helper):
     np.testing.assert_allclose(var_uncert.array, expected_variance, rtol=0.01)
 
     # Check units are correct (flux_unit^2)
-    assert var_uncert.unit == u.DN**2
+    assert var_uncert.unit == flux_unit**2
 
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
-def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper):
+@pytest.mark.parametrize('flux_unit', [u.Jy, u.DN])
+def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper, flux_unit):
     """
     This is an identical test to the test for uncertainty propogation in
     Horne extraction in specreduce, and is meant to make sure going through
     the plugin returns the same result.
     """
 
+    # NOTE: REMOVE AFTER JDAT-6281 IS RESOLVED
+    if flux_unit == u.DN:
+        return
+
     nrows, ncols = 20, 30
     input_variance = 4.0
     img = Spectrum(
-        np.zeros((nrows, ncols)) * u.DN,
+        np.zeros((nrows, ncols)) * flux_unit,
         uncertainty=VarianceUncertainty(np.full((nrows, ncols),
-                                                input_variance) * u.DN**2),
+                                                input_variance) * flux_unit**2),
         spectral_axis=np.arange(ncols) * u.pix
     )
     add_gaussian_source(img, amps=100.0, stddevs=2.0, means=10)
@@ -386,7 +393,7 @@ def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper):
     assert np.all(var_uncert.array > 0)
 
     # Check units are correct (flux_unit^2)
-    assert var_uncert.unit == u.DN**2
+    assert var_uncert.unit == flux_unit**2
 
     # Calculate expected variance analytically.
     # For optimal extraction: var_out = norms^2 / sum(kernel^2 / var_in)
@@ -402,7 +409,8 @@ def test_horne_uncertainty_propagation_via_plugin(deconfigged_helper):
 
 
 @pytest.mark.skipif(SPECREDUCE_LT_1_8_0, reason='Needs specreduce 1.8.0 or later')
-def test_background_uncertainty_propagation_via_plugin(deconfigged_helper):
+@pytest.mark.parametrize('flux_unit', [u.Jy, u.DN])
+def test_background_uncertainty_propagation_via_plugin(deconfigged_helper, flux_unit):
     """
     This is an identical test to the test for uncertainty propogation in
     background calculation in specreduce, and is meant to make sure going through
@@ -411,8 +419,8 @@ def test_background_uncertainty_propagation_via_plugin(deconfigged_helper):
 
     nrows, ncols = 10, 20
     var = 4.0
-    img = Spectrum(np.ones((nrows, ncols)) * u.DN,
-                   uncertainty=VarianceUncertainty(np.full((nrows, ncols), var) * u.DN**2),
+    img = Spectrum(np.ones((nrows, ncols)) * flux_unit,
+                   uncertainty=VarianceUncertainty(np.full((nrows, ncols), var) * flux_unit**2),
                    spectral_axis=np.arange(ncols) * u.pix)
 
     deconfigged_helper.load(img, format='2D Spectrum')

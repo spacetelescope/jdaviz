@@ -203,6 +203,8 @@ Single-Pixel Selection
 
 This tool is no longer available as of Jdaviz v3.9; use the :ref:`markers-plugin` plugin instead.
 
+.. _imviz-blinking:
+
 Blinking
 ========
 

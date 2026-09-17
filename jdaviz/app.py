@@ -11,8 +11,6 @@ from astropy.io import fits
 from astropy.time import Time
 from echo import (CallbackProperty, DictCallbackProperty,
                   ListCallbackProperty, delay_callback)
-from ipygoldenlayout import GoldenLayout
-from ipysplitpanes import SplitPanes
 import numpy as np
 from glue.config import data_translator, settings as glue_settings
 from glue.core import HubListener
@@ -31,9 +29,9 @@ from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
-from glue_jupyter.state_traitlets_helpers import GlueState
+from echo.vue import autoconnect_callbacks_to_vue
 from ipypopout import PopoutButton
-from ipyvuetify import VuetifyTemplate
+from ipyvuetify import VuetifyTemplate, theme as vuetify_theme
 from ipywidgets import widget_serialization
 from traitlets import Dict, Bool, List, Unicode, Any
 from specutils import Spectrum, SpectralRegion
@@ -55,22 +53,19 @@ from jdaviz.core.registries import (tool_registry, tray_registry,
                                     viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs,
+from jdaviz.utils import (SnackbarQueue, alpha_index, alpha_index_to_int, data_has_valid_wcs,
                           layer_is_table_data, MultiMaskSubsetState,
                           _wcs_only_label, CONFIGS_WITH_LOADERS,
                           _get_celestial_wcs)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
-from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
+from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
                                                combine_flux_and_angle_units,
-                                               flux_conversion_general,
-                                               spectral_axis_conversion,
+                                               flux_unit_conversion,
+                                               spectral_unit_conversion,
                                                supported_sq_angle_units,
                                                viewer_flux_conversion_equivalencies)
 
 __all__ = ['PrivateApplication', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
-
-SplitPanes()
-GoldenLayout()
 
 enable_spaxel_unit()
 
@@ -138,11 +133,11 @@ class UnitConverterWithSpectral:
                 spec = Spectrum(flux=data.data * u.Unit(original_units))
             # equivalencies for flux/surface brightness conversions
             viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
-            return flux_conversion_general(values, original_units,
-                                           target_units, viewer_equivs,
-                                           with_unit=False)
+            return flux_unit_conversion(
+                values, original_units, target_units, viewer_equivs,
+                with_unit=False)
         else:  # spectral axis
-            return spectral_axis_conversion(values, original_units, target_units)
+            return spectral_unit_conversion(values, original_units, target_units)
 
 
 # Set default opacity for data layers to 1 instead of 0.8 in
@@ -153,6 +148,14 @@ glue_settings.DATA_ALPHA = 1
 glue_settings.UNIT_CONVERTER = 'custom-jdaviz'
 
 custom_components = {'j-tooltip': 'components/tooltip.vue',
+                     'splitpanes': 'temp_components/splitpanes.vue',
+                     'pane': 'temp_components/pane.vue',
+                     'golden-layout': 'temp_components/golden-layout.vue',
+                     'gl-row': 'temp_components/gl-row.vue',
+                     'gl-col': 'temp_components/gl-col.vue',
+                     'gl-stack': 'temp_components/gl-stack.vue',
+                     'gl-component': 'temp_components/gl-component.vue',
+                     'j-flex-row': 'components/flex_row.vue',
                      'j-external-link': 'components/external_link.vue',
                      'j-docs-link': 'components/docs_link.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
@@ -172,6 +175,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
                      'j-about-menu': 'components/about_menu.vue',
                      'j-custom-toolbar-toggle': 'components/custom_toolbar_toggle.vue',
+                     'j-cone-search-messages': 'components/cone_search_messages.vue',
                      'loader-import-button': 'components/loader_import_button.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
@@ -211,6 +215,40 @@ for name, path in custom_components.items():
 
 ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
+
+vuetify_theme.themes.light.primary = "#00617E"
+vuetify_theme.themes.light.secondary = "#007DA4"
+vuetify_theme.themes.light.error = '#FF5252'
+vuetify_theme.themes.light.info = '#2196F3'
+vuetify_theme.themes.light.success = '#4CAF50'
+vuetify_theme.themes.light.warning = '#FFC107'
+vuetify_theme.themes.light.custom_theme_colors = {
+    'toolbar': "#003B4D",
+    'accent': "#C75109",
+    'turquoise': "#007BA1",
+    'lightblue': "#E3F2FD",
+    'spinner': "#163C4C",
+    'gray': '#F8F8F8',
+    'active': '#C75109',
+    'viewer_toolbar': '#205f76',
+}
+
+vuetify_theme.themes.dark.primary = "#53CBFF"
+vuetify_theme.themes.dark.secondary = "#007DA4"
+vuetify_theme.themes.dark.error = '#FF5252'
+vuetify_theme.themes.dark.info = '#2196F3'
+vuetify_theme.themes.dark.success = '#4CAF50'
+vuetify_theme.themes.dark.warning = '#FFC107'
+vuetify_theme.themes.dark.custom_theme_colors = {
+    'toolbar': "#153A4B",
+    'accent': "#FF9D42",
+    'turquoise': "#007BA1",
+    'lightblue': "#E3F2FD",
+    'spinner': "#ACE1FF",
+    'gray': '#141414',
+    'active': '#C75109',
+    'viewer_toolbar': '#205f76',
+}
 
 style_registry.add((__file__, 'main_styles.vue'))
 
@@ -326,6 +364,13 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
+
+    # PRs to add to changelog when removing dev_mos_loader dev-flag: 4375
+    dev_spectral_lines_plugin = CallbackProperty(
+        False, docstring='Whether to enable developer mode for the Spectral Lines plugin')
+    # PRs to add to changelog when removing dev_mos_loader dev-flag: 4357
+    dev_mos_loader = CallbackProperty(
+        False, docstring='Whether to enable developer mode for the MOS loader')
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(
@@ -356,6 +401,10 @@ class ApplicationState(State):
     viewer_items = ListCallbackProperty(
         docstring="List (flat) of viewer objects")
 
+    focus_viewer = CallbackProperty(
+        '', docstring="The viewer that is currently in focus mode - or an empty string "
+                      "to show the entire app.")
+
     style_widget = CallbackProperty(
         '', docstring="Jupyter widget that won't be displayed but can apply css to the app"
     )
@@ -367,8 +416,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
     template instructions for composing the interface.
     """
     _metadata = Dict({"mount_id": "content"}).tag(sync=True)
-
-    state = GlueState().tag(sync=True)
 
     template_file = __file__, "app.vue"
 
@@ -429,6 +476,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
+
+        # Connect ApplicationState callback properties to Vue traitlets
+        self._autoconnect_state()
 
         # If true, link data on load. If false, do not link data to speed up
         # data loading
@@ -696,19 +746,14 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             elif not is_not_child:
                 parent_label = self._get_assoc_data_parent(layer_name)
                 parent_icon = self.state.layer_icons.get(parent_label)
-                index = len([ln for ln, ic in self.state.layer_icons.items()
-                             if not ic[:4] == 'mdi-' and
-                             self._get_assoc_data_parent(ln) == parent_label]) + 1
                 self.state.layer_icons = {
                     **self.state.layer_icons,
-                    layer_name: f"{parent_icon}{index}"
+                    layer_name: self._next_child_layer_icon(parent_icon)
                 }
             else:
                 self.state.layer_icons = {
                     **self.state.layer_icons,
-                    layer_name: alpha_index(len([ln for ln, ic in self.state.layer_icons.items()
-                                                 if not ic[:4] == 'mdi-' and
-                                                 self._get_assoc_data_parent(ln) is None]))
+                    layer_name: self._next_root_layer_icon()
                 }
 
         # all remaining layers at this point have a parent:
@@ -717,9 +762,11 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             children_layers = self._get_assoc_data_children(layer_name)
             if children_layers is not None:
                 parent_icon = self.state.layer_icons[layer_name]
-                for i, child_layer in enumerate(children_layers, start=1):
+                for child_layer in children_layers:
                     if child_layer not in self.state.layer_icons:
-                        child_layer_icons[child_layer] = f'{parent_icon}{i}'
+                        child_layer_icons[child_layer] = self._next_child_layer_icon(
+                            parent_icon,
+                            layer_icons={**self.state.layer_icons, **child_layer_icons})
 
         if child_layer_icons:
             self.state.layer_icons = {
@@ -871,7 +918,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                         msg = SnackbarMessage(text=msg_text,
                                               color='info', sender=self)
                         self.hub.broadcast(msg)
+
                         link = LinkSameWithUnits(new_comp, existing_comp)
+
                         new_links.append(link)
                         # only need one link for the new component, reparenting will handle
                         # if that data entry is deleted
@@ -1616,7 +1665,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                 # first check the spectrum viewer y axis for any solid angle unit (i think that it
                 # will ALWAYS be in flux, but just to be sure). If no solid angle unit is found,
                 # check the flux viewer for surface brightness units
-                sv_y_angle_unit = check_if_unit_is_per_solid_angle(sv_y_unit, return_unit=True)
+                sv_y_angle_unit = is_unit_per_solid_angle(sv_y_unit, return_unit=True)
 
                 # check flux viewer if none in spectral viewer
                 fv_angle_unit = None
@@ -1625,8 +1674,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                         vname = self._jdaviz_helper._default_flux_viewer_reference_name
                         fv = self.get_viewer(vname)
                         fv_unit = fv.data()[0].get_object().flux.unit
-                        fv_angle_unit = check_if_unit_is_per_solid_angle(fv_unit,
-                                                                         return_unit=True)
+                        fv_angle_unit = is_unit_per_solid_angle(
+                            fv_unit, return_unit=True)
                     else:
                         # mosviz, not sure what to do here but can't access flux
                         # viewer the same way. once we force the UC plugin to
@@ -3005,9 +3054,25 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # Make sure the data isn't loaded in any viewers and isn't the selected orientation
         for viewer_id, viewer in list(self._viewer_store.items()):
             if orientation_plugin is not None and self._align_by == 'wcs':
-                if viewer.state.reference_data.label == data_label:
-                    self._change_reference_data(base_wcs_layer_label, viewer_id)
+                if hasattr(viewer.state, 'reference_data') and viewer.state.reference_data is not None: # noqa
+                    if viewer.state.reference_data.label == data_label:
+                        self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
+
+            if len(viewer.layers) != 0 and getattr(viewer.state, 'reference_data', '') is None:
+                data_to_remove = [other_data.label for other_data in self.data_collection
+                                  if other_data.label in viewer.data_menu.data_labels_loaded and
+                                  other_data.label != data_label]
+
+                _ = [self.remove_data_from_viewer(viewer_id, data_label)
+                     for data_label in data_to_remove]
+
+                snackbar_message = SnackbarMessage(
+                    f"Reference data for viewer '{viewer_id}' was removed from the app. "
+                    f"The viewer no longer supports the following data: "
+                    f"{', '.join(data_to_remove)}.",
+                    sender=self, color="warning")
+                self.hub.broadcast(snackbar_message)
 
         data_to_remove = self.data_collection[data_label]
         if self.config in CONFIGS_WITH_LOADERS:
@@ -3155,6 +3220,10 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             The Glue data collection add message containing information about
             the new data.
         """
+        # detach the removed entry from any parent/child associations so that
+        # remaining layers are not displayed as children of a non-existent parent
+        self._remove_assoc_data(msg.data.label)
+
         for data_item in self.state.data_items:
             if data_item['name'] == msg.data.label:
                 self.state.data_items.remove(data_item)
@@ -3784,9 +3853,22 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         return self._get_state_item_from_name(self.state.new_viewer_items,
                                               name, return_widget)
 
+    def _autoconnect_state(self):
+        # Create bidirectional connections between all CallbackProperty
+        # attributes on self.state (the ApplicationState) and traitlets on
+        # this widget, so that changes to e.g. self.state.drawer_content
+        # automatically sync to Vue and vice versa. Property types are
+        # inferred from the descriptors (ListCallbackProperty -> list,
+        # DictCallbackProperty -> dict, etc.). Non-CallbackProperty
+        # attributes like snackbar_queue are ignored automatically.
+        autoconnect_callbacks_to_vue(self.state, self,
+                                     infer_properties_from='python',
+                                     prefix='state_')
+
     def _reset_state(self):
         """ Resets the application state """
         self.state = ApplicationState()
+        self._autoconnect_state()
         self._application_handler._tools = {}
 
     def get_configuration(self, path=None, section=None):
@@ -3867,6 +3949,142 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
     def _add_assoc_data_as_parent(self, data_label):
         self._data_associations[data_label] = {'parent': None, 'children': []}
+
+    def _next_root_layer_icon(self, layer_icons=None, exclude=()):
+        """
+        Determine the next available root (non-child) layer icon.
+
+        Assigns an icon (A, B, C, ..., AA, AB, ...) to a root (non-parented) data layer.
+        The icon follows the highest index currently in use so that removing an entry
+        does not cause the icon of a subsequently loaded entry to collide with an existing one.
+
+        E.g., if data A, B, C have layer icons a, b, c and B is removed, the next
+        loaded root layer receives icon d (not b).
+
+        Parameters
+        ----------
+        layer_icons : dict, optional
+            Mapping of data label to icon. If None, uses the current ``state.layer_icons``.
+        exclude : sequence, optional
+            Labels to exclude from consideration
+
+        Returns
+        -------
+        icon : str
+            The next available root layer icon.
+        """
+        if layer_icons is None:
+            layer_icons = self.state.layer_icons
+        indices = [alpha_index_to_int(icon) for label, icon in layer_icons.items()
+                   if label not in exclude]
+        indices = [index for index in indices if index is not None]
+        return alpha_index(max(indices) + 1 if len(indices) else 0)
+
+    def _next_child_layer_icon(self, parent_icon, layer_icons=None, exclude=()):
+        """
+        Determine the next available sublayer icon for a child data layer.
+
+        Assigns an icon (e.g., a1, a2, a3) to a child of the layer
+        with the given ``parent_icon``. Similar to root icons, this follows the highest
+        index in use so that removing a sublayer does not cause a collision.
+
+        For example, if a parent a has children with icons a1, a2 and
+        a1 is removed, the next child receives icon a3 (not a1).
+
+        Parameters
+        ----------
+        parent_icon : str
+            The icon of the parent layer (e.g., a).
+        layer_icons : dict, optional
+            Mapping of data label to icon. If None, uses the current ``state.layer_icons``.
+        exclude : sequence, optional
+            Labels to exclude from consideration.
+
+        Returns
+        -------
+        icon : str
+            The next available sublayer icon for the given parent.
+        """
+        if layer_icons is None:
+            layer_icons = self.state.layer_icons
+        highest = 0
+        for label, icon in layer_icons.items():
+            if label in exclude or not icon.startswith(parent_icon):
+                continue
+            suffix = icon[len(parent_icon):]
+            if suffix.isdigit():
+                highest = max(highest, int(suffix))
+        return f"{parent_icon}{highest + 1}"
+
+    def _remove_assoc_data(self, data_label):
+        """
+        Remove a data layer from the parent/child association map.
+
+        When a data layer is removed from the app, this method:
+        1. Removes it from ``_data_associations`` and ``state.layer_icons``.
+        2. Detaches it from its parent (if any).
+        3. Promotes its children (if any) to root layers and assigns them new icons
+           to reflect their new status.
+        4. Updates ``state.data_items`` to clear stale parent/child references.
+
+        This ensures that remaining child layers are no longer displayed as children
+        of a non-existent parent, and icon collisions do not occur if data is re-loaded.
+
+        Parameters
+        ----------
+        data_label : str
+            The label of the data layer to remove.
+        """
+        assoc = self._data_associations.pop(data_label, None)
+
+        # Remove the icon even if there was no association to prevent reusing a stale icon
+        layer_icons = {label: icon for label, icon in self.state.layer_icons.items()
+                       if label != data_label}
+        icons_changed = len(layer_icons) != len(self.state.layer_icons)
+
+        if assoc is None:
+            if icons_changed:
+                self.state.layer_icons = layer_icons
+            return
+
+        data_item = next((di for di in self.state.data_items
+                          if di['name'] == data_label), None)
+        data_id = data_item['id'] if data_item is not None else None
+        if data_item is not None:
+            # Clear parent/child references in the state item
+            data_item['parent'] = None
+            data_item['children'] = []
+
+        # Detach from parent (if it still exists in the data collection)
+        parent_label = assoc.get('parent')
+        if parent_label in self._data_associations:
+            children = self._data_associations[parent_label]['children']
+            self._data_associations[parent_label]['children'] = [child for child in children
+                                                                 if child != data_label]
+            for di in self.state.data_items:
+                if di['name'] == parent_label and data_id in di['children']:
+                    di['children'] = [child_id for child_id in di['children']
+                                      if child_id != data_id]
+
+        # Promote children to root layers and update their icons
+        for child_label in assoc.get('children', []):
+            if child_label not in self._data_associations:
+                continue
+
+            # Update association: child is no longer parented
+            self._data_associations[child_label]['parent'] = None
+            for di in self.state.data_items:
+                if di['name'] == child_label:
+                    di['parent'] = None
+
+            # Assign a new icon that reflects the child's new root status
+            if child_label in layer_icons:
+                layer_icons[child_label] = self._next_root_layer_icon(
+                    layer_icons=layer_icons, exclude=[child_label])
+                icons_changed = True
+
+        if icons_changed:
+            self.state.layer_icons = layer_icons
 
     def _set_assoc_data_as_child(self, data_label, new_parent_label):
         for data_item in self.state.data_items:

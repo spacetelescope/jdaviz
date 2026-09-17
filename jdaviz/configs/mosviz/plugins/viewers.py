@@ -24,7 +24,8 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewe
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom'],
                     ['jdaviz:panzoom'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
 
     default_class = None
@@ -70,7 +71,8 @@ class MosvizProfile2DView(Spectrum2DViewer):
                     ['mosviz:boxzoom', 'mosviz:xrangezoom', 'jdaviz:yrangezoom'],
                     ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
 
     _state_cls = FreezableBqplotImageViewerState
@@ -89,7 +91,8 @@ class MosvizProfileView(Spectrum1DViewer):
                     ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y'],  # noqa
                     ['bqplot:xrange'],
                     ['jdaviz:selectline'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
                 ]
 
     def __init__(self, *args, **kwargs):

@@ -13,15 +13,17 @@ from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView,
                                                    MosvizProfile2DView)
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
 from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer, Spectrum2DViewer
-from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import ViewerAddedMessage, ViewerRenamedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               check_if_unit_is_per_solid_angle,
-                                               flux_conversion_general)
+                                               is_unit_per_solid_angle,
+                                               flux_unit_conversion,
+                                               spectral_unit_conversion,
+                                               is_physical_flux_unit,
+                                               unit_is_from_moment_map)
 
 __all__ = ['CoordsInfo']
 
@@ -79,6 +81,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     )  # option for layer (auto, none, or specific layer)
     icon = Unicode("").tag(sync=True)  # currently exposed layer
 
+    focus = Bool(False).tag(sync=True)  # floating mode when in focus mode
+
     row1a_title = Unicode("").tag(sync=True)
     row1a_text = Unicode("").tag(sync=True)
     row1b_title = Unicode("").tag(sync=True)
@@ -114,10 +118,18 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
         # keep marks dict in sync when a viewer is renamed
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._viewer_renamed)
+
+        # compact mode when any viewer is in focus
+        self._app.state.add_callback('focus_viewer',
+                                     self._focus_viewer_changed)
+        self._focus_viewer_changed()
         if self.config in ("cubeviz", 'deconfigged'):
             self.hub.subscribe(
                 self, GlobalDisplayUnitChanged, handler=self._on_global_display_unit_changed
             )
+
+    def _focus_viewer_changed(self, *args):
+        self.focus = self._app.state.focus_viewer != ''
 
     def _create_marks_for_viewer(self, viewer, id=None):
         if id is None:
@@ -249,6 +261,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     def _viewer_mouse_event(self, viewer, data):
         if data['event'] in ('mouseleave', 'mouseenter'):
             self._viewer_mouse_clear_event(viewer, data)
+            return
+
+        # Don't process mousemove while a toolbar override is active to avoid
+        # toolbar dropdown from closing
+        if any(getattr(getattr(v, 'toolbar', None), 'tool_override_mode', '') != ''
+               for v in self._app._viewer_store.values()):
             return
 
         if len(self._app.data_collection) < 1:
@@ -545,11 +563,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                                                               'pixel_to_world'):
             # use WCS to expose the wavelength for a 2d spectrum shown in pixel space
             try:
-                wave, pixel = image.coords.pixel_to_world(x, y)
+                wave, _ = image.coords.pixel_to_world(x, y)
                 if wave is not None:
-                    equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
-                    wave = wave.to(self._app._get_display_unit('spectral'),
-                                   equivalencies=equivalencies)
+                    wave = spectral_unit_conversion(wave.value,
+                                                    wave.unit,
+                                                    self._app._get_display_unit('spectral'),
+                                                    with_unit=True)
+
                     self._dict['spectral_axis'] = wave.value
                     self._dict['spectral_axis:unit'] = wave.unit.to_string()
             except Exception:  # WCS might not be valid  # pragma: no cover
@@ -633,12 +653,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     # no layers loaded, so no display unit set
                     disp_unit = None
                 if (isinstance(viewer, (ImvizImageView, Spectrum2DViewer))
-                        and unit != '' and disp_unit is not None
+                        and unit != '' and disp_unit
+                        and is_physical_flux_unit(unit)
                         and u.Unit(self._app._get_display_unit(attribute)).physical_type
                         not in ['frequency', 'wavelength', 'length']
                         and unit != self._app._get_display_unit(attribute)):
                     to_unit = self._app._get_display_unit(attribute)
-                    if (check_if_unit_is_per_solid_angle(unit) and attribute == 'flux'):
+                    if (is_unit_per_solid_angle(unit) and attribute == 'flux'):
                         to_unit = self._app._get_display_unit('sb')
 
                     try:
@@ -646,10 +667,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     except UnboundLocalError:
                         # wave is not defined (image viewer without spectral axis)
                         equivalencies = None
-                    value = flux_conversion_general(value, unit,
-                                                    to_unit,
-                                                    equivalencies,
-                                                    with_unit=False)
+                    value = flux_unit_conversion(
+                        value, unit, to_unit, equivalencies, with_unit=False)
                     unit = to_unit
 
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
@@ -659,25 +678,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     image, arr, x, y, viewer
                 )
 
-                # We don't want to convert for things like moment maps, so check
-                # physical type If unit is flux per pix2, the type will be
-                # 'unknown' rather than surface brightness, so multiply out pix2
-                # and check if the numerator is a spectral/photon flux density
-                if check_if_unit_is_per_solid_angle(unit, return_unit=True) == PIX2:
-                    physical_type = (unit * PIX2).physical_type
-                else:
-                    physical_type = unit.physical_type
-
-                valid_physical_types = ["spectral flux density",
-                                        "surface brightness",
-                                        "surface brightness wav",
-                                        "photon surface brightness wav",
-                                        "photon surface brightness",
-                                        "power density/spectral flux density wav",
-                                        "photon flux density wav",
-                                        "photon flux density"]
-
-                if str(physical_type) in valid_physical_types and self.image_unit is not None:
+                # Avoid converting for moment maps / non-physical flux units
+                if self.image_unit is not None and (is_physical_flux_unit(unit) and not unit_is_from_moment_map(unit)):  # noqa
 
                     # Create list of potentially needed equivalencies for flux/sb unit conversions
                     pixar_sr = self._app.data_collection[0].meta.get('PIXAR_SR', 1)
@@ -690,8 +692,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     equivalencies = all_flux_unit_conversion_equivs(pixar_sr,
                                                                     cube_wave)
 
-                    value = flux_conversion_general(value, unit, u.Unit(self.image_unit),
-                                                    equivalencies, with_unit=False)
+                    value = flux_unit_conversion(
+                        value, unit, u.Unit(self.image_unit),
+                        equivalencies, with_unit=False)
                     unit = self.image_unit
 
                 if associated_dq_layers is not None:
@@ -728,7 +731,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 if coords_status and hasattr(getattr(image, 'coords', None), 'pixel_to_world'):
                     # should already have wave computed from setting the coords-info
                     matched_viewer = self._app.get_viewer(matched_marker_id.split(':matched')[0])
-                    wave_matched = wave.to_value(matched_viewer.state.x_display_unit)
+                    wave_matched = spectral_unit_conversion(wave.value,
+                                                            wave.unit,
+                                                            matched_viewer.state.x_display_unit)  # noqa
                     self.marks[matched_marker_id].update_xy([wave_matched, wave_matched], [0, 1])
                     self.marks[matched_marker_id].visible = True
                 else:
@@ -796,6 +801,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     self._app._get_object_cache[cache_key] = sp
 
                 # Calculations have to happen in the frame of viewer display units.
+                # We can just use to_value here rather than spectral_unit_conversion
+                # because we are converting to the viewer display unit, which should be
+                # compatible with the data unit and doesn't need the safeguards there.
+                # TODO: Revisit this and see what happens with viewers in units
+                # of pixels, I don't - think that scenario is covered by tests
                 disp_wave = sp.spectral_axis.to_value(viewer.state.x_display_unit, u.spectral())
 
                 # temporarily here, may be removed after upstream units handling
@@ -806,10 +816,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                                                                 sp.spectral_axis)
 
                 if sp.flux.unit is not None and viewer.state.y_display_unit is not None:
-                    disp_flux = flux_conversion_general(sp.flux.value,
-                                                        sp.flux.unit,
-                                                        viewer.state.y_display_unit,
-                                                        equivalencies, with_unit=False)  # noqa: E501
+                    disp_flux = flux_unit_conversion(
+                        sp.flux.value, sp.flux.unit,
+                        viewer.state.y_display_unit,
+                        equivalencies, with_unit=False)  # noqa: E501
                 else:
                     disp_flux = sp.flux
 

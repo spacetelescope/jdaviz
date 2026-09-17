@@ -6,6 +6,7 @@ import os
 from PyInstaller.building.build_main import Analysis
 from PyInstaller.building.api import COLLECT, EXE, PYZ
 from PyInstaller.building.osx import BUNDLE
+from PyInstaller.utils.hooks import copy_metadata
 
 import jdaviz
 from jdaviz.configs import Specviz, Specviz2d, Cubeviz, Mosviz, Imviz
@@ -15,18 +16,19 @@ codesign_identity = os.environ.get("DEVELOPER_ID_APPLICATION")
 # for all the widgets
 datas = [
     (Path(sys.prefix) / "share" / "jupyter", "./share/jupyter"),
-    (Path(sys.prefix) / "etc" / "jupyter", "./etc/jupyter"),
-]
+    (Path(sys.prefix) / "etc" / "jupyter", "./etc/jupyter")] + \
+    copy_metadata('echo') 
 
 block_cipher = None
 
+icon_file = '../assets/app.ico' if sys.platform == 'win32' else '../assets/app.icns' 
 
 a = Analysis(
     ["jdaviz-cli-entrypoint.py"],
     pathex=[],
     binaries=[],
     datas=datas,
-    hiddenimports=["rich.logging"],
+    hiddenimports=["rich.logging", 'glue.plugins.coordinate_helpers', 'glue.plugins.coordinate_helpers.link_helpers'],
     hookspath=["hooks"],
     hooksconfig={},
     runtime_hooks=[],
@@ -42,6 +44,7 @@ exe = EXE(
     pyz,
     a.scripts,
     [],
+    [],
     exclude_binaries=True,
     # executable name: dist/jdaviz/jdaviz-cli
     # note: cannot be called jdaviz, because there is a directory called jdaviz
@@ -56,6 +59,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=codesign_identity,
     entitlements_file="entitlements.plist",
+    icon=icon_file if sys.platform.startswith('win') else None, # Windows
 )
 coll = COLLECT(
     exe,
@@ -71,8 +75,8 @@ coll = COLLECT(
 app = BUNDLE(
     exe,
     coll,
-    name="jdaviz.app",
-    icon=None,
+    name="Jdaviz.app",
+    icon=icon_file if sys.platform.startswith('darwin') else None,
     entitlements_file="entitlements.plist",
     bundle_identifier="edu.stsci.jdaviz",
     version=jdaviz.__version__,

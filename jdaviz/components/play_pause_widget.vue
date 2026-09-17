@@ -13,12 +13,12 @@
         max="60"
         @change="changeDelay"
         @mousedown="changeDelay"
-        class="mt-0 pt-0 theme--dark"
+        class="mt-0 pt-0 v-theme--dark"
         style="width: 60px"
         hide-details
         single-line
         filled
-        dense
+        density="compact"
       />
     </j-tooltip>
   </v-toolbar-items>
@@ -28,7 +28,7 @@
 
 //var activeInterval = null;
 
-module.exports = {
+export default {
   data: function () {
     return {
       activeInterval: null,

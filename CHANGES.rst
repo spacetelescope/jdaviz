@@ -19,8 +19,105 @@ New Features
 - Label default behavior now adjusts for added *or* removed data/viewers i.e. viewer -> viewer (1) ->
   viewer (2) -> remove viewer (2) -> default is again viewer(2) [#4192]
 
+- Imported Catalogs default to the first ra/dec/x/y match if multiple options are available.
+  Increased the list of strings to exclude: now excludes bounding box and source position error columns. [#4216]
+
 - Add option to limit results to science products when retrieving files from an archive query
   results table. [#4194]
+
+- Loader now displays inline loading status and success confirmation messages at the
+  top of the loader window when fetching files from selected footprints. Success
+  messages auto-dismiss after 4 seconds and a progress indicator appears on the file
+  table during loading. [#4203]
+
+- Fix issue in Line Lists where a new custom line was not plotted at the redshifted wavelength. [#4224]
+
+- Fix issue where erase_spectral_lines() permanently set 'show' to False for all lines, with new option to
+  reset all emission lines to show == True. [#4224]
+
+- The Virtual Observatory loader now supports querying spectral products
+  and catalog targets. [#4060]
+
+- Add "set layer to top" button in plot options. [#4218]
+
+- Show basic table subset information in the Subset Tools plugin. [#4266]
+
+- Implement a "focus mode" that shows a simplified view of a single viewer.  Focus mode can
+  be toggled on/off from the viewer toolbar or via the API. [#4242]
+
+- Parenting now includes a 'None' option to allow multi-extension FITS to be loaded as separate data entries. [#4248]
+
+- 'Auto' parenting can now associate with data already loaded into the app without needing to specify the data label. [#4248]
+
+- Add window docker icons for standalone app [#4289]
+
+- New image viewer tools for editing the colormap, stretch function, and opacity of the top-layer. [#4290]
+
+- Add ability to crossmatch catalogs within a user defined range. [#4228]
+
+- Add ability to query VO and Astroquery from catalog/using viewer coordinates as the source. The former source selection
+  choice 'Manual' is also now 'Source'. [#4275]
+
+- Improvements to spectral axis unit conversion logic to support workflows and
+  avoid errors in mixed unit viewers in deconfigged. [#4292]
+
+- Add Line List Database loader. [#4305, #4314, #4319]
+
+- Add consolidated emission line list and ability to query database in API. [#4314]
+
+- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322, #4350]
+
+- Allow markers plugin table to create other viewer types besides Scatter (i.e. Table or Histogram). [#4331]
+
+- Add ability to specify coordinate frame and equinox in catalog loader. [#4207]
+
+- Table viewer API & UI to add/rename/remove columns. [#4282, #4343]
+
+- Fix issue where URLs could not be loaded into the standalone application. File location is now shown to the user [#4315]
+
+- Add caching mechanism for files downloaded from mast to standalone application.  Empty folders in cache are autodeleted when application closes, and files are deleted if they are more than 4 weeks old. [#4315]
+
+- Add menubar to standalone application. This includes Window (resizing/zooming application), Help (Documentation, Help desk), and Cache (manually empty jdaviz cache directory). [#4315]
+
+- Introducing selected methods from the Astronomy Image Display API (AIDA) to image viewers.  [#4310]
+
+- Child data now follows its parent into the same viewer(s). Viewer selection for child data
+  is therefore hidden in the UI when parenting is set. [#4326]
+
+- Keep visibility consistent between blink and plot options. [#4316]
+
+- Change appearance of the overwrite warning overlay shown in the export plugin. [#4338]
+
+- Add consolidated emission line list and ability to query database in API. [#4314, 4330]
+
+- Improvements to flux / surface brightness unit conversion logic to support
+  workflows and avoid errors in mixed unit viewers in deconfigged. [#4336]
+
+- Importers can now support multiple targets when filtering format options based on target. [#4345]
+
+- Fix table selection color in dark mode, rename "Remove from app" to "Delete from app", and allow line profile to use upper or lower case "L". [#4348]
+
+- Updated documentation for the application and caching, updated the jdaviz logo,
+  and improved the .dmg installation process [#4337]
+
+- Coordinate frame and equinox are responsive to changes in ra / dec in catalog
+  loader. [#4347]
+
+- Improve UI appearance for URL loader. [#4354]
+
+- Adds search to extension menu in loaders when there are more than 3 extensions available. [#4372]
+  
+- Generate a Gaussian curve from Line Analysis plugin results and optionally add to the 1D Spectrum viewer. [#4374]
+
+- Unify astroquery and VO reporting behavior. Both now show banners in the UI for the
+  results of queries. This information can also be found in the logger. [#4369]
+
+- Fix issue where catalog datasets could not be deleted from scatter viewers when aligned by WCS. [#4389]
+
+- Some modifications to spectral lines loader and table, including disabling
+  deletion of line name / rest wavelengths columns assigned by the loader, removing
+  the selection of line medium in loader, and adding line name to table by
+  default. [#4386]
 
 Mosviz
 ^^^^^^
@@ -36,6 +133,16 @@ Bug Fixes
 
 - HST products (as defined by ``OBSTYPE``) are now correctly identified as being
   either images or 2D spectra. [#4217]
+
+- Fixed main widget not displaying in standalone build. [#4271]
+
+- Fixed a Vue3 button issue that triggers backend calls twice. [#4276, #4277]
+
+- Fixed closing a viewer not deleting the associated backend objects. [#4317]
+
+- Fix color picker not showing correctly. [#4332]
+
+- Fix error when typing while renaming data or subset. [#4359]
 
 Mosviz
 ^^^^^^
@@ -55,14 +162,57 @@ Other Changes and Additions
   of reusing the existing flux cube label, which previously caused a silent
   overwrite. [#4125]
 
-5.0.3 (unreleased)
+- Updated all front end vuetify templates for Vue 3 compatibility. [#4053]
+
+5.0.4 (unreleased)
 ==================
 
 Bug Fixes
 ---------
 
-Mosviz
+- Fix case where file drop loader would not show importer options. [#4303]
 
+- fix URL loader not showing in UI. [#4361]
+
+- Fix image importer support for Roman L3 mosaic files. [#4309]
+
+- Fix issue where snackbar is attached to the notebook rather than to the app. [#4313]
+
+- Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
+
+- Fix issue where removing an image from an Image viewer while a catalog (scatter) was present
+  caused an index error from glue. [#4333]
+
+- Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
+
+- Adjust data menu behavior to allow for showing more icons when the viewer is short. [#4352]
+
+Mosviz
+^^^^^^
+
+5.0.3 (2026-07-21)
+==================
+
+Bug Fixes
+---------
+
+- Update docs to reflect new minimum version of Python (>=3.12). Recommend Python 3.13
+  to implicitly reflect testing environments. [#4240]
+
+- Fixed a bug in the compass plugin where the image would be flipped when WCS linked. [#4252]
+
+- Update the File Drop Resolver to parse input the same way as the File Resolver,
+  which fixes a bug where the resolver would not correctly parse some file types. [#4250]
+
+- Fix horizontal spacing of the app-level toolbar for small displays. [#4245]
+
+- Fix treating input tables as queries and add support for exports from MAST portal. [#4234]
+
+- Fixed a bug with the astroquery/VO loaders where the loader would get stuck on a failed query. [#4257]
+
+- Updates to standalone app hooks, spec, and workflow due to updates in astropy8.0 [#4264]
+
+- Safely handle case where meta.wcs may be None. [#4272]
 
 5.0.2 (2026-06-12)
 ==================
@@ -97,8 +247,6 @@ Bug Fixes
 
 - Fix interference between slice tools of different types (ie ramp vs spectral slices). [#4225]
 
-Mosviz
-^^^^^^
 
 5.0.1 (2026-05-01)
 ==================

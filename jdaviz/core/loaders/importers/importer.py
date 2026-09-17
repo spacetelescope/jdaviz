@@ -1,4 +1,5 @@
 import os
+import re
 
 from astropy import units as u
 from traitlets import Any, Bool, List, Unicode, observe
@@ -7,8 +8,9 @@ from glue.core.message import (DataCollectionAddMessage,
 
 from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.template_mixin import (PluginTemplateMixin,
-                                        AutoTextField,
+from jdaviz.core.template_mixin import (AutoTextField,
+                                        PluginTemplateMixin,
+                                        SelectPluginComponent,
                                         ViewerSelectCreateNew,
                                         with_spinner,
                                         ValidatorMixin)
@@ -18,7 +20,8 @@ from jdaviz.utils import (standardize_metadata,
                           CONFIGS_WITH_LOADERS,
                           create_data_hash)
 
-__all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
+__all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin',
+           'BaseCatalogImporter']
 
 
 def _physical_type_from_component(comp_id, comp):
@@ -53,6 +56,7 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
     # over any parsers not included in the list).  If not empty but no valid parsers are in
     # the list, the first remaining match will be used.
     parser_preference = []
+    allow_directory_input = False
 
     import_disabled_msg = Unicode().tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
@@ -160,8 +164,8 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
             # self.data_label_invalid_msg = msg
 
     @property
-    def target(self):
-        raise NotImplementedError("Importer subclass must implement target")  # pragma: nocover
+    def targets(self):
+        raise NotImplementedError("Importer subclass must implement targets")  # pragma: nocover
 
     def __call__(self):
         # override by subclass - should act on self.output and load into jdaviz
@@ -267,13 +271,11 @@ class BaseImporterToDataCollection(BaseImporter):
         return self._resolver.default_label
 
     @property
-    def target(self):
-        if len(self.viewer.create_new.choices) > 0:
-            return {'type': 'viewer',
-                    'icon': 'mdi-window-maximize',
-                    'label': self.viewer.create_new.choices[0]}
-        else:
-            return {}
+    def targets(self):
+        return [{'type': 'viewer',
+                 'icon': 'mdi-window-maximize',
+                 'label': choice}
+                for choice in self.viewer.create_new.choices]
 
     @observe('data_label_value', 'data_label_is_prefix', 'data_label_suffices')
     def _on_label_changed(self, msg={}):
@@ -350,6 +352,8 @@ class BaseImporterToDataCollection(BaseImporter):
             data to. If not provided or ``None``, uses ``self.viewer``. Pass
             ``False`` to skip adding the data to any viewer entirely independent
               the selection on ``self.viewer``.
+            Ignored (unless ``False``) when ``parent`` is provided, in which case
+            the data is added to the viewers in which the parent is loaded.
         cls : class, optional
             The native data class to store in metadata for later export via
             ``get_data``. If not provided, uses the class of the input data.
@@ -371,6 +375,15 @@ class BaseImporterToDataCollection(BaseImporter):
                     if data_label in viewer._data_menu.data_labels_loaded:
                         self._app.remove_data_from_viewer(viewer.reference_id, data_label)
             self._app.data_collection.remove(self._app.data_collection[data_label])
+
+            # When replacing an existing data entry, clear its parent-child associations
+            # so the new entry appears as a fresh dataset in the UI. This avoids an issue
+            # where stale associations dictated how the data appeared in the viewer, i.e.
+            # parented or otherwise.
+            self._app._remove_assoc_data(data_label)
+            self._app.state.layer_icons = {label: icon for label, icon
+                                           in self._app.state.layer_icons.items()
+                                           if label != data_label}
 
         # Standardize metadata if possible
         if hasattr(data, 'meta'):
@@ -424,6 +437,17 @@ class BaseImporterToDataCollection(BaseImporter):
             # return without adding to viewers or broadcasting snackbar message that
             # data was loaded but not added to viewers. we don't want this snackbar
             # if data is being added to DC intentionally without a viewer from a plugin
+            return
+
+        if parent is not None:
+            # child data must be in the same viewer as its parent,
+            # so the viewer selection is ignored.
+            # data_menu.add_data is bypassed here since child layers are
+            # excluded from the data-menu dataset choices and can't be added manually.
+            for viewer_label, viewer_api in self._app._jdaviz_helper.viewers.items():
+                if parent not in viewer_api.data_menu.data_labels_loaded:
+                    continue
+                self._app.add_data_to_viewer(viewer_label, data_label)
             return
 
         # user requested creating a new viewer for this data.
@@ -493,11 +517,146 @@ class BaseImporterToPlugin(BaseImporter):
         raise NotImplementedError("Importer subclass must implement default_plugin")  # noqa pragma: nocover
 
     @property
-    def target(self):
-        return {'type': 'plugin',
-                'icon': 'mdi-toy-brick-outline',
-                'label': self.default_plugin}
+    def targets(self):
+        return [{'type': 'plugin',
+                 'icon': 'mdi-toy-brick-outline',
+                 'label': self.default_plugin}]
 
     @property
     def has_default_plugin(self):
         return self.default_plugin in self._app._jdaviz_helper.plugins
+
+
+class BaseCatalogImporter(BaseImporterToDataCollection):
+    """
+    Shared logic for importers that load tabular catalogs (source catalogs,
+    spectral line lists, etc.) and need to let the user assign table columns
+    to specific roles (e.g. RA/Dec, a spectral location, a source ID), with
+    reasonable auto-detected defaults.
+
+    Subclasses remain responsible for creating their own role-specific
+    ``SelectPluginComponent`` instances (``col_ra``, ``col_x``,
+    ``spectral_loc``, etc.), but can use the guessing helpers below to build
+    the ``manual_options`` for those components, and can use
+    ``_init_col_other`` for the "additional columns" selector that is common
+    to all of these importers.
+    """
+
+    # additional (optional) columns to load alongside the role-specific ones.
+    # shared across all catalog-style importers.
+    col_other_items = List().tag(sync=True)
+    col_other_selected = List().tag(sync=True)
+    col_other_multiselect = Bool(True).tag(sync=True)
+
+    def _init_col_other(self, colnames):
+        """
+        Create the shared 'additional columns' multiselect component from
+        ``colnames``. Call this once column names for the current input are
+        known (i.e. after any extension/table selection is resolved).
+        """
+        self.col_other = SelectPluginComponent(
+            self,
+            items='col_other_items',
+            selected='col_other_selected',
+            manual_options=list(colnames),
+            multiselect='col_other_multiselect',
+        )
+
+    def _update_col_items_and_selected(self, base_attr, options, select_first=True):
+        """
+        Update a column-selection component's items/selected traitlets in
+        place (e.g. in response to a change of input table/extension).
+        """
+        items_attr = f'{base_attr}_items'
+        selected_attr = f'{base_attr}_selected'
+
+        setattr(self, items_attr, [{'label': item} for item in options])
+        self.send_state(items_attr)
+
+        if select_first:
+            setattr(self, selected_attr, options[0] if options else None)
+        else:
+            setattr(self, selected_attr, [])
+        self.send_state(selected_attr)
+
+    @staticmethod
+    def _reorder_cols_with_best_guess(colnames, idx):
+        """
+        Reorder ``colnames`` so the best-guess column (at ``idx``) appears
+        first, followed by the ``'---'`` (no selection) sentinel placed
+        second (so it doesn't require scrolling past every column to reach
+        it), followed by the remaining columns in their original relative
+        order (wrapping around).
+
+        If ``idx`` is None (no guess found), ``'---'`` is placed first
+        instead, so no column is auto-selected.
+        """
+        colnames = list(colnames)
+        if idx is None:
+            return ['---'] + colnames
+        return_cols = colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
+        return [return_cols[0], '---'] + return_cols[1:]
+
+    @staticmethod
+    def _guess_col_by_name_pattern(colnames, patterns, exclude_words=None):
+        """
+        Find the index of the first column in ``colnames`` whose name
+        (split into tokens on whitespace/underscore/hyphen/period) matches
+        one of ``patterns``. Patterns are tried in priority order; all
+        columns are checked against a given pattern before moving to the
+        next pattern.
+
+        Parameters
+        ----------
+        colnames : list of str
+        patterns : compiled regex, or list of compiled regex
+            Tried in priority order.
+        exclude_words : iterable of str, optional
+            Tokens which should never count as a match (e.g. generic words
+            that coincidentally match a pattern).
+
+        Returns
+        -------
+        int or None
+        """
+        if not isinstance(patterns, (list, tuple)):
+            patterns = [patterns]
+        exclude_words = set(exclude_words or [])
+
+        for pattern in patterns:
+            for i, col in enumerate(colnames):
+                tokens = re.split(r'[\s_\-\.]+', str(col).lower().strip())
+                if any(token in exclude_words for token in tokens):
+                    continue
+                if any(pattern.search(t) for t in tokens):
+                    return i
+        return None
+
+    @staticmethod
+    def _guess_col_by_unit_physical_type(input_table, colnames, physical_types):
+        """
+        Find the index of the first column in ``colnames`` whose astropy
+        unit has a physical type in ``physical_types`` (e.g. ``'angle'`` for
+        RA/Dec, or ``'length'``/``'frequency'``/``'energy'``/``'wavenumber'``
+        for a spectral axis).
+        """
+        for i, col in enumerate(colnames):
+            col_data = input_table[col]
+            unit = getattr(col_data, 'unit', None)
+            if unit is not None and str(u.Unit(unit).physical_type) in physical_types:
+                return i
+        return None
+
+    @staticmethod
+    def _guess_col_by_instance_type(input_table, colnames, instance_type, per_row=False):
+        """
+        Find the index of the first column in ``colnames`` whose data (or,
+        if ``per_row``, whose first element) is an instance of
+        ``instance_type`` (e.g. a ``SkyCoord`` or ``PixCoord`` column).
+        """
+        for i, col in enumerate(colnames):
+            col_data = input_table[col]
+            candidate = col_data[0] if per_row else col_data
+            if isinstance(candidate, instance_type):
+                return i
+        return None

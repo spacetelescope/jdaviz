@@ -16,6 +16,7 @@ Jdaviz can load data from various sources. Select a source below to learn more:
    object
    astroquery
    virtual_observatory
+   spectral_line_db
 
 Each source can load data in various formats. See :ref:`loaders-formats` for information
 on supported data formats.

@@ -4,11 +4,11 @@
     :link="'https://www.ivoa.net/astronomers/index.html'"
     :popout_button="popout_button">
 
-    <v-row>
+    <j-flex-row>
       <v-alert type="info">
         Virtual Observatory support has been moved to the loaders infrastructure.
       </v-alert>
-    </v-row>
+    </j-flex-row>
   </j-tray-plugin>
 </template>
 

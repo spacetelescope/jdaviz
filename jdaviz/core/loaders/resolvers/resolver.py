@@ -4,13 +4,15 @@ import threading
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
-from traitlets import Bool, Float, Instance, List, Unicode, observe, default
+from traitlets import Bool, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.builtin_frames import __all__ as all_astropy_frames
+from astropy.coordinates.name_resolve import NameResolveError
 from astropy.table import Table as astropyTable
+from astropy import units as u
 from astroquery.mast import MastMissions
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
@@ -19,10 +21,13 @@ from jdaviz.core.events import (AddDataMessage,
                                 SnackbarMessage,
                                 FootprintOverlayClickMessage,
                                 LinkUpdatedMessage,
-                                ViewerAddedMessage)
+                                ViewerAddedMessage,
+                                ViewerRemovedMessage,
+                                SubsetRenameMessage)
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
+                                        DatasetSelect,
                                         Table,
                                         CustomToolbarToggleMixin,
                                         FootprintDisplayMixin,
@@ -39,7 +44,8 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
                           find_polygon_mark_with_skewer,
                           layer_is_image_data)
-from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
+from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMessage,
+                               SubsetCreateMessage, SubsetDeleteMessage)
 
 
 __all__ = ['BaseResolver', 'BaseConeSearchResolver', 'find_matching_resolver']
@@ -125,6 +131,11 @@ class FormatSelect(SelectPluginComponent):
                             importer_name not in self.plugin._restrict_to_formats:
                         self._invalid_importers[label] = 'Not matching format restriction'  # noqa
                         continue
+                    if (isinstance(importer_input, (str, os.PathLike))
+                            and os.path.isdir(importer_input)
+                            and not getattr(Importer, 'allow_directory_input', False)):
+                        self._invalid_importers[label] = 'Importer does not accept directory input.'  # noqa
+                        continue
                     try:
                         this_importer = Importer(app=self.plugin._app,
                                                  resolver=self.plugin,
@@ -136,7 +147,8 @@ class FormatSelect(SelectPluginComponent):
                     if self.debug:
                         self._dbg_importers[label] = this_importer
                     if (self.plugin._restrict_to_target is not None and
-                            this_importer.target.get('label') != self.plugin._restrict_to_target):
+                            not any(target.get('label') == self.plugin._restrict_to_target
+                                    for target in this_importer.targets)):
                         # skip importers that do not match the target
                         self._invalid_importers[label] = 'Not matching target'
                         continue
@@ -145,7 +157,7 @@ class FormatSelect(SelectPluginComponent):
                             item = {'label': importer_name,
                                     'parser': parser_name,
                                     'importer': importer_name,
-                                    'target': this_importer.target}
+                                    'targets': this_importer.targets}
                             parser_pref = this_importer.parser_preference
                             if importer_name not in self._importers:
                                 all_formats.append(item)
@@ -177,10 +189,13 @@ class FormatSelect(SelectPluginComponent):
                     else:
                         self._invalid_importers[label] = this_importer.is_valid.message
 
-        # Sort to move Catalog to the end of the list
+        # Sort generic table importers to the end of the list so more specific
+        # formats are selected by default.  Order: other > Catalog > Spectral Lines.
+        spectral_lines_formats = [f for f in all_formats if f['label'] == 'Spectral Lines']
         catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
-        other_formats = [f for f in all_formats if f['label'] != 'Catalog']
-        self.items = other_formats + catalog_formats
+        other_formats = [f for f in all_formats
+                         if f['label'] not in ('Catalog', 'Spectral Lines')]
+        self.items = other_formats + spectral_lines_formats + catalog_formats
         self._apply_default_selection()
 
 
@@ -231,9 +246,9 @@ class TargetSelect(SelectPluginComponent):
         # and use that list when compiling list of valid targets
         all_targets = []
         for importer in self.plugin.format._importers.values():
-            target = importer.target
-            if target not in all_targets:
-                all_targets.append(target)
+            for target in importer.targets:
+                if target not in all_targets:
+                    all_targets.append(target)
 
         self.items = [{'label': 'Any'}] + [item for item in all_targets if self._is_valid_item(item)]  # noqa
         self._apply_default_selection()
@@ -250,7 +265,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     spinner = Unicode("").tag(sync=True)
 
     parsed_input_is_empty = Bool(True).tag(sync=True)
-    parsed_input_is_resolvable = Unicode("").tag(sync=True)
+    parsed_input_not_resolvable_message = Unicode("").tag(sync=True)
 
     # whether the current output could be interpreted as a list of data products
     parsed_input_is_query = Bool(False).tag(sync=True)
@@ -265,6 +280,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     limit_to_science_products = Bool(True).tag(sync=True)
     file_table = Instance(Table).tag(sync=True, **widget_serialization)
     file_table_populated = Bool(False).tag(sync=True)
+    spinner_success_message = Unicode("").tag(sync=True)
 
     # options to download selected item in products list
     file_cache = Bool(True).tag(sync=True)
@@ -564,9 +580,16 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # try to read into a table which could be a products list
             try:
                 with warnings.catch_warnings():
-                    warnings.simplefilter("ignore",
-                                          message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
-                    parsed_input = astropyTable.read(parsed_input, hdu=hdu)
+                    warnings.filterwarnings("ignore",
+                                            message="hdu= was not specified but multiple tables are present, reading in first available table")  # noqa: E501
+                    read_kwargs = {'hdu': hdu} if hdu is not None else {}
+                    try:
+                        parsed_input = astropyTable.read(parsed_input, **read_kwargs)
+                    except Exception:  # nosec
+                        # Fall back with comment='#' for formats like MAST search
+                        # exports that have '#'-prefixed comment lines at the top
+                        parsed_input = astropyTable.read(parsed_input, comment='#',
+                                                         **read_kwargs)
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, astropyTable):
@@ -576,7 +599,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _parsed_input_to_observation_table(self, parsed_input_table):
         if 'Dataset' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_ds in ('fileSetName', 'sci_data_set_name'):
+        for map_to_ds in ('fileSetName', 'sci_data_set_name', 'obs_id'):
             if map_to_ds in parsed_input_table.colnames:
                 parsed_input_table.rename_column(map_to_ds, 'Dataset')
                 return parsed_input_table
@@ -585,7 +608,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _parsed_input_to_file_table(self, parsed_input_table):
         if 'location' in parsed_input_table.colnames:
             return parsed_input_table
-        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
+        for map_to_location in ('url', 'URL', 'uri', 'URI', 'dataURI', 'dataURL',
+                                'download', 'Filename', 'access_url'):
             if map_to_location in parsed_input_table.colnames:
                 parsed_input_table.rename_column(map_to_location, 'location')
                 return parsed_input_table
@@ -623,10 +647,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
+            self.parsed_input_not_resolvable_message = str(e)
+
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
-            self.parsed_input_is_resolvable = str(e)
             return
 
         if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
@@ -634,10 +659,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
+            self.parsed_input_not_resolvable_message = 'Parsed input is empty or None, cannot resolve.'  # noqa
+
             self.observation_table._clear_table()
             self.file_table._clear_table()
             self._update_format_items()
-            self.parsed_input_is_resolvable = 'Parsed input is empty or None, cannot resolve.'
             return
 
         # first attempt to parse the input as a table
@@ -663,11 +689,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             if is_query and not self.treat_table_as_query:
                 # Keep parsed_input_is_query True so the toggle switch stays visible.
                 # Set everything else in the meantime.
-                self.parsed_input_is_resolvable = ''
                 self.parsed_input_is_empty = False
                 self.parsed_input_is_query = True
                 self.observation_table_populated = False
                 self.file_table_populated = False
+                self.parsed_input_not_resolvable_message = ''
+
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
                 self._update_format_items()
@@ -677,23 +704,22 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
 
-                for row in file_table:
-                    self.file_table.add_item(row)
+                # When s_region is present the table is observation-level (e.g. a MAST
+                # search-results CSV with obs_id + dataURL + s_region). Fall through to
+                # the observation_table branch so footprint display works correctly.
+                if observation_table is None or 's_region' not in parsed_input_table.colnames:
+                    self.file_table.set_all_items_from_table(file_table)
 
-                # Technically input isn't complete yet but if we don't set this now
-                # the UI will appear bugged with the 'input is empty' message for astroquery
-                self.parsed_input_is_empty = False
-                self.parsed_input_is_query = True
-                self.observation_table_populated = False
-                self.file_table_populated = True
-                return
+                    # Technically input isn't complete yet but if we don't set this now
+                    # the UI will appear bugged with the 'input is empty' message for astroquery
+                    self.parsed_input_is_empty = False
+                    self.parsed_input_is_query = True
+                    self.observation_table_populated = False
+                    self.file_table_populated = True
+                    self.parsed_input_not_resolvable_message = ''
+                    return
 
-            if self.treat_table_as_query and observation_table is not None:
-                self.observation_table._clear_table()
-                self.file_table._clear_table()
-
-                for row in observation_table:
-                    self.observation_table.add_item(row)
+                self.observation_table.set_all_items_from_table(observation_table)
                 self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible  # noqa
                                                           if h not in ['s_region']]
 
@@ -702,13 +728,32 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True
                 self.file_table_populated = False
+                self.parsed_input_not_resolvable_message = ''
                 return
 
-        self.parsed_input_is_resolvable = ""
+            elif self.treat_table_as_query and observation_table is not None:
+                # file_table is None but observation_table is not None
+                # (e.g. a table with Dataset + s_region but no URL-like column)
+                self.observation_table._clear_table()
+                self.file_table._clear_table()
+                self.observation_table.set_all_items_from_table(observation_table)
+                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible  # noqa
+                                                          if h not in ['s_region']]
+
+                # See 'input is empty' comment above
+                self.parsed_input_is_empty = False
+                self.parsed_input_is_query = True
+                self.observation_table_populated = True
+                self.file_table_populated = False
+                self.parsed_input_not_resolvable_message = ''
+                return
+
         self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
         self.observation_table_populated = False
         self.file_table_populated = False
+        self.parsed_input_not_resolvable_message = ''
+
         self._update_format_items()
 
     @cached_property
@@ -755,10 +800,13 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.file_table.selected_indices = []
             self.file_table.set_all_items_from_table(file_table)
             self.file_table_populated = True
+            num_products = len(file_table)
+            self.spinner_success_message = f"{num_products} products loaded"
         else:
             self._app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
                                                     sender=self, color="error"))
             self.file_table_populated = False
+            self.spinner_success_message = ""
 
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""
@@ -980,7 +1028,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _on_target_selected_changed(self, change={}):
         def matches_target_factory(target):
             def matches_target(importer):
-                return importer.target.get('label', '') == target
+                return any(item.get('label', '') == target for item in importer.targets)
             return matches_target
 
         if self._restrict_to_target is not None:
@@ -1043,12 +1091,34 @@ class BaseConeSearchResolver(BaseResolver):
     viewer_items = List([]).tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
 
+    search_input_items = List([]).tag(sync=True)
+    # Can be "Source" (manual entry), "Viewer" (viewer center),
+    # or "Catalog" (loop over rows of a loaded source-catalog).
+    search_input_selected = Unicode("").tag(sync=True)
+
+    # Used only for catalog input
+    catalog_items = List([]).tag(sync=True)
+    catalog_selected = Unicode("").tag(sync=True)
+
+    # Catalog subsets
+    catalog_subset_items = List([]).tag(sync=True)
+    catalog_subset_selected = Unicode("Entire Catalog").tag(sync=True)
+
+    # How to interpret the catalog: use assigned RA/Dec columns ("sky_coords")
+    # or resolve a column of source names ("source_name") via SkyCoord.from_name.
+    catalog_col_type = Unicode("sky_coords").tag(sync=True)
+    catalog_name_col_items = List([]).tag(sync=True)
+    catalog_name_col_selected = Unicode("").tag(sync=True)
+
+    # Progress indicator
+    query_progress = Unicode("").tag(sync=True)
+
     source = Unicode("").tag(sync=True)
     coord_follow_viewer_pan = Bool(False).tag(sync=True)
     viewer_centered = Bool(False).tag(sync=True)
     coordframe_choices = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
-    radius = Float(1).tag(sync=True)
+    radius = FloatHandleEmpty(1).tag(sync=True)
     radius_unit_items = List().tag(sync=True)
     radius_unit_selected = Unicode("deg").tag(sync=True)
 
@@ -1056,16 +1126,77 @@ class BaseConeSearchResolver(BaseResolver):
     returned_no_results = Bool(False).tag(sync=True)
     returned_max_results = Bool(False).tag(sync=True)
 
+    # Unified reporting for all cone-search resolvers. See ``_query_message``.
+    query_message_items = List([]).tag(sync=True)
     results_loading = Bool(False).tag(sync=True)
+
+    _catalog_source_index_colname = 'source_index'
+    # label of the source currently being queried, used in query failure messages
+    _current_query_source_label = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._output = None
 
-        self.viewer = ViewerSelect(
-            self, "viewer_items", "viewer_selected", manual_options=["Manual"],
-            filters=['is_image_viewer']
+        # "Viewer" is only offered when at least one image viewer exists and
+        # "Catalog" only when at least one catalog is loaded in the data collection.
+        self.search_input = SelectPluginComponent(
+            self,
+            items='search_input_items',
+            selected='search_input_selected',
+            manual_options=['Source', 'Viewer', 'Catalog'],
+            apply_filters_to_manual_options=True,
+            default_mode='first',
         )
+        self.search_input.add_filter(
+            lambda item: item['label'] != 'Viewer' or any(
+                _is_image_viewer(v) for v in self._app._viewer_store.values()
+            )
+        )
+        self.search_input.add_filter(
+            lambda item: item['label'] != 'Catalog' or any(
+                d.meta.get('_importer') == 'CatalogImporter'
+                for d in self._app.data_collection
+            )
+        )
+        for message in (ViewerAddedMessage, ViewerRemovedMessage,
+                        DataCollectionAddMessage, DataCollectionDeleteMessage):
+            self.hub.subscribe(self, message,
+                               handler=lambda lambda_msg=None: self.search_input._update_items())  # noqa
+
+        self.viewer = ViewerSelect(
+            self, "viewer_items", "viewer_selected", filters=['is_image_viewer']
+        )
+
+        self.catalog = DatasetSelect(
+            self, 'catalog_items', 'catalog_selected',
+            filters=['is_catalog']
+        )
+
+        self.catalog_subset = SelectPluginComponent(
+            self,
+            items="catalog_subset_items",
+            selected="catalog_subset_selected",
+            manual_options=["Entire Catalog"],
+        )
+
+        # Column of source names to resolve (only used when
+        # catalog_col_type == "source_name").
+        self.catalog_name_col = SelectPluginComponent(
+            self,
+            items="catalog_name_col_items",
+            selected="catalog_name_col_selected",
+        )
+
+        def _update_catalog_subset_items(msg=None):
+            subset_names = [sg.label for sg in self._app.data_collection.subset_groups]
+            self.catalog_subset.items = (
+                    [{'label': 'Entire Catalog'}] + [{'label': name} for name in subset_names]
+            )
+
+        for message in (SubsetCreateMessage, SubsetDeleteMessage, SubsetRenameMessage):
+            self.hub.subscribe(self, message,
+                               handler=lambda lambda_msg=None: _update_catalog_subset_items())
 
         self.coordframe = SelectPluginComponent(
             self, items="coordframe_choices", selected="coordframe_selected"
@@ -1082,6 +1213,184 @@ class BaseConeSearchResolver(BaseResolver):
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
+
+    def _clear_query_messages(self):
+        self.query_message_items = []
+
+    def _query_message(self, text, color='error', popup=False, traceback=None, raise_msg=False):
+        """
+        Report ``text`` to the user through both a persistent banner in the loader UI.
+        The messages are still passed to the logger so they can be accessed after the
+        fact.
+        """
+        self.query_message_items = (self.query_message_items +
+                                    [{'text': text, 'color': color, 'traceback': str(traceback)}])
+
+        # add message to logger with/without broadcasting
+        text_w_traceback = text + (f'; Traceback: {traceback}' if traceback is not None else '')
+        snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
+                                                   color=color, sender=self, traceback=traceback)
+        self._app.state.snackbar_queue.put(self._app.state,
+                                           self._app._jdaviz_helper.plugins['Logger'],
+                                           snackbar_msg_w_traceback,
+                                           history=True,
+                                           popup=popup)
+
+        if raise_msg and color == 'warning':
+            warnings.warn(text)
+
+        elif raise_msg and color == 'error' and traceback is not None:
+            raise traceback
+
+    @property
+    def _query_archive_label(self):
+        # override by subclass to identify the queried archive/resource
+        return 'no archive/resource selected (subclass must override _query_archive_label)'  # noqa pragma: nocover
+
+    def _query_single_coord(self, skycoord_center):
+        # override by subclass. This should return an astropy table (or None) of
+        # the results from querying the archive/resource at the given coordinate
+        raise NotImplementedError("Cone search resolver subclass must implement _query_single_coord")  # noqa pragma: nocover
+
+    def _query_single_coord_reporting(self, skycoord_center):
+        """
+        Call ``_query_single_coord``, converting any failure into an error message
+        and a ``None`` result.
+
+        Failures are reported rather than raised so that a single unreachable
+        service or malformed response doesn't abort a multi-source (Catalog
+        mode) query.
+        """
+        try:
+            return self._query_single_coord(skycoord_center)
+        except Exception as e:  # nosec
+            source_label = self._current_query_source_label or self.source
+            self._query_message(f"Failed to query {self._query_archive_label.strip()} "
+                                f"for source: {source_label}.",
+                                color='error', traceback=e)
+            return None
+
+    def _source_to_skycoord(self, add_query_message=True):
+        """
+        Resolve ``source`` into a ``SkyCoord``. The input is first parsed as a
+        coordinate pair in degrees and, failing that, as a source name via
+        ``SkyCoord.from_name``.
+
+        Returns ``None`` (reporting the failure via `_query_message`) when the
+        source cannot be resolved, e.g. because the name is unknown or because
+        the Sesame name resolution service is unreachable.
+        """
+        # Strip parentheses from source if present
+        stripped_source = self.source.strip('()')
+        try:
+            return SkyCoord(stripped_source, unit=u.deg, frame=self.coordframe_selected)
+        except Exception:  # nosec
+            pass
+
+        try:
+            return SkyCoord.from_name(stripped_source, frame=self.coordframe_selected)
+        except Exception as e:  # nosec
+            if add_query_message:
+                self._query_message(f"Unable to resolve source name: {self.source}",
+                                    color='error', traceback=e)
+            return None
+
+    def _finalize_query_output(self, output, hit_cap=False):
+        """
+        Apply the ``max_results`` cap to ``output``, update the result-state
+        traitlets, report the outcome of the query, and notify the loader that
+        the resolver input has changed.
+        """
+        if output is not None and len(output) >= self.max_results:
+            output = output[:self.max_results]
+            hit_cap = True
+
+        n_results = 0 if output is None else len(output)
+        self.returned_no_results = n_results == 0
+        self.returned_max_results = hit_cap and (n_results > 0)
+        self._output = output if n_results else None
+        _failures = [msg for msg in self.query_message_items if msg['color'] == 'error']
+
+        if self.returned_no_results and not len(_failures):
+            self._query_message(f"The search returned no results from {self._query_archive_label}. "
+                                f"Please modify your query parameters and try again.",
+                                color='error')
+        elif self.returned_max_results:
+            self._query_message("The number of results returned has reached the maximum "
+                                f"limit set ({self.max_results}).",
+                                color='success')
+        else:
+            # There can be a scenario where the query returns failures for every result
+            # but the query itself was successful. In that case, we don't want to show the
+            # "0 results found" message.
+            if not self.returned_no_results:
+                self._query_message(f"{n_results} results found.", color='success')
+
+        self._resolver_input_updated()
+
+    @with_spinner(spinner_traitlet="results_loading")
+    def query_archive(self):
+        """
+        Query the selected archive/resource for the selected source(s).
+
+        In "Source"/"Viewer" input mode, a single cone search is run on the
+        resolved coordinates. In "Catalog" input mode, the archive is queried
+        once per (selected) catalog row and the results are stacked
+        (see ``_query_catalog``).
+        """
+        self._clear_query_messages()
+
+        # Catalog mode: loop over all (selected) catalog rows and stack results.
+        if self.search_input_selected == 'Catalog':
+            self._query_catalog()
+            return
+
+        # Source / Viewer mode: single coordinate. Only query when name
+        # resolution succeeded so that stale results are still cleared.
+        skycoord_center = self._source_to_skycoord()
+        output = (self._query_single_coord_reporting(skycoord_center)
+                  if skycoord_center is not None else None)
+
+        self._finalize_query_output(output)
+
+    def vue_query_archive(self, _=None):
+        self.query_archive()
+
+    def parse_input(self):
+        return self._output
+
+    @observe('catalog_selected')
+    def _on_catalog_selected(self, msg=None):
+        """Reset subset selection and refresh name-column choices on catalog change."""
+        self.catalog_subset_selected = 'Entire Catalog'
+
+        if not hasattr(self, 'catalog_name_col'):
+            return
+
+        data = self.catalog.selected_dc_item
+        if data is None:
+            self.catalog_name_col.choices = []
+            return
+
+        self.catalog_name_col.choices = [
+            str(cid) for cid in data.main_components
+            if data.get_component(cid).data.dtype.kind in ('U', 'S', 'O')
+        ]
+
+        # Default to id column if one is selected and is valid
+        # according to 'choices'
+        id_col = data.meta.get('_jdaviz_loader_id_col', None)
+        if id_col in self.catalog_name_col.choices:
+            self.catalog_name_col.selected = id_col
+        elif len(self.catalog_name_col.choices):
+            # Otherwise default to first choice if any are valid
+            self.catalog_name_col.selected = self.catalog_name_col.choices[0]
+
+    @observe('search_input_selected')
+    def _on_search_input_selected(self, msg=None):
+        """When switching to Viewer mode, immediately center on the current viewer."""
+        if self.search_input_selected == 'Viewer':
+            self.vue_center_on_data()
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
@@ -1123,6 +1432,8 @@ class BaseConeSearchResolver(BaseResolver):
     @observe("coord_follow_viewer_pan", type="change")
     def _toggle_viewer_pan_tracking(self, _=None):
         """Detects when live viewer tracking toggle is clicked and centers on data if necessary"""
+        if self.search_input_selected != 'Viewer':
+            return
         # Center on data if we're enabling the toggle
         if self.coord_follow_viewer_pan:
             self.vue_center_on_data()
@@ -1137,9 +1448,8 @@ class BaseConeSearchResolver(BaseResolver):
         * UI entrypoint for the manual viewer center button
         * Callback method for user panning (sub'ed to zoom_center_x/zoom_center_y)
         """
-        # If plugin is in "Manual" mode, we should never
-        # autocenter and potentially wipe the user's data
-        if not self.viewer_selected or self.viewer_selected == "Manual":
+        # Only auto center when in Viewer input mode
+        if self.search_input_selected != 'Viewer':
             return
 
         # If the user panned but tracking not enabled, don't recenter
@@ -1161,13 +1471,15 @@ class BaseConeSearchResolver(BaseResolver):
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
+        ref_data = viewer.state.reference_data
 
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
         if (
-            len(self._app._jdaviz_helper.datasets) < 1
-            or viewer.state.reference_data is None
-            or viewer.state.reference_data.coords is None
+
+            len(self.app._jdaviz_helper.datasets) < 1
+            or ref_data is None
+            or ref_data.coords is None
         ):
             self.source = ""
             return
@@ -1188,10 +1500,151 @@ class BaseConeSearchResolver(BaseResolver):
         frame = skycoord_center.frame.name.lower()
 
         # Show center value in plugin
-        self.source = f"{ra_deg} {dec_deg}"
+        self.source = f"{ra_deg:.8f} {dec_deg:.8f}"
         self.coordframe_selected = frame
 
         self.viewer_centered = True
+
+    def _get_catalog_row_indices(self, data):
+        """
+        Return the list of row indices to query, applying the selected subset
+        mask (if any) to the catalog ``data``.
+        """
+        row_indices = list(range(data.shape[0]))
+
+        if self.catalog_subset_selected and self.catalog_subset_selected != 'Entire Catalog':
+            sg = next((sg for sg in self._app.data_collection.subset_groups
+                       if sg.label == self.catalog_subset_selected), None)
+            if sg is not None:
+                mask = sg.subset_state.to_mask(data)
+                row_indices = [i for i in row_indices if mask[i]]
+
+        return row_indices
+
+    def _resolve_catalog_source_names(self, data, row_indices):
+        """Resolve the selected source-name column to SkyCoords via name lookup."""
+        if not self.catalog_name_col_selected:
+            raise ValueError("Select a source-name column to run a name-based cone search.")
+        name_data = data[data.id[self.catalog_name_col_selected]]
+
+        coords = []
+        for i in row_indices:
+            name = str(name_data[i])
+            err_str = None
+            try:
+                sc = SkyCoord.from_name(name, frame=self.coordframe_selected)
+            except NameResolveError as e:
+                sc = None
+                err_str = str(e)
+            coords.append((sc, name, err_str))
+
+        # Specify this (mostly) to check for general network issues
+        err_strings = [e for (_, _, e) in coords if e]
+        if len(set(err_strings)) == 1:
+            self._query_message(
+                f"Single reason failure occurred during name resolution: {err_strings[0]}",
+                color='warning')
+
+        return coords
+
+    def _get_catalog_skycoords(self):
+        """
+        Return a list of ``(SkyCoord, source_label)`` tuples for the selected
+        catalog, restricted to the selected subset (if any).
+
+        When ``catalog_col_type == "sky_coords"`` (default), coordinates are read
+        from the RA/Dec columns assigned at load time. When it is
+        ``"source_name"``, the selected name column is resolved row-by-row via
+        ``SkyCoord.from_name`` (one network request per row); rows that fail to
+        resolve are skipped with a warning.
+        """
+        data = self.catalog.selected_dc_item
+        if data is None:
+            raise ValueError(f"Catalog '{self.catalog_selected}' not found in data collection.")
+
+        row_indices = self._get_catalog_row_indices(data)
+
+        if self.catalog_col_type == 'source_name':
+            return self._resolve_catalog_source_names(data, row_indices)
+
+        ra_col = data.meta.get('_jdaviz_loader_ra_col')
+        dec_col = data.meta.get('_jdaviz_loader_dec_col')
+        if ra_col is None or dec_col is None:
+            raise ValueError(
+                "Selected catalog does not have RA/Dec columns assigned; "
+                "a sky-coordinate cone search is not possible."
+            )
+
+        ra_data = data[data.id[ra_col]]
+        dec_data = data[data.id[dec_col]]
+
+        coords = []
+        for i in row_indices:
+            sc = SkyCoord(float(ra_data[i]), float(dec_data[i]),
+                          unit='deg', frame=self.coordframe_selected)
+            coords.append((sc, f"{ra_data[i]:.12f} {dec_data[i]:.12f}", None))
+        return coords
+
+    def _query_catalog(self, single_coord_query_fn=None):
+        """
+        Loop over the rows of the selected catalog, calling
+        ``single_coord_query_fn(skycoord)`` for each, and vertically stack the
+        returned tables into ``self._output``. Defaults to
+        ``_query_single_coord_reporting`` so that a failure on one source doesn't
+        abort the remaining queries.
+
+        A ``source_index`` column is added to identify which queried source each
+        returned row corresponds to. The loop stops early once ``max_results``
+        total rows have been collected so that ``max_results`` bounds the amount
+        of (potentially slow, per-source) querying rather than only truncating
+        the final table.
+        """
+        from astropy.table import vstack
+
+        if single_coord_query_fn is None:
+            single_coord_query_fn = self._query_single_coord_reporting
+
+        coords = self._get_catalog_skycoords()
+        n = len(coords)
+        results = []
+        self._source_name_query_failures = []
+        total = 0
+        hit_cap = False
+        try:
+            for i, (sc, label, err_str) in enumerate(coords):
+                if sc is None:
+                    self._source_name_query_failures.append({label: err_str})
+                    continue
+
+                self.query_progress = f"Querying source {i + 1} of {n}"
+                self._current_query_source_label = label
+                result = single_coord_query_fn(sc)
+                if result is not None and len(result) > 0:
+                    result = result.copy()
+                    result[self._catalog_source_index_colname] = i
+                    results.append(result)
+                    total += len(result)
+                    if total >= self.max_results:
+                        # enough results collected, avoid querying remaining sources
+                        hit_cap = i < n - 1 or total > self.max_results
+                        break
+
+        finally:
+            self.query_progress = ""
+            self._current_query_source_label = None
+
+        output = vstack(results, metadata_conflicts='silent') if results else None
+
+        if self._source_name_query_failures:
+            # Full per-name errors remain in ``self._source_name_query_failures``
+            # for a developer to inspect if needed.
+            self._query_message(
+                f"Could not resolve {len(self._source_name_query_failures)}/{len(coords)} "
+                f"source names from the '{self.catalog_name_col_selected}' column. "
+                f"Check the source names in your catalog.",
+                color='warning')
+
+        self._finalize_query_output(output, hit_cap=hit_cap)
 
     def _check_is_valid(self):
         """

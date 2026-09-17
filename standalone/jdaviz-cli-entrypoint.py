@@ -15,11 +15,34 @@ matplotlib.use("module://matplotlib_inline.backend_inline")
 # it seems that matplotlib_inline.backend_inline is an alias for inline
 # so we make sure to communicate that to PyInstaller
 matplotlib.use("inline")
-
+from pathlib import Path
+import os
 import jdaviz.cli
 
 
 if __name__ == "__main__":
+
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+
+        # Define a safe user-writable path (e.g., user's home folder)
+        user_home = Path.home() 
+
+        # create jdaviz_cache directory to save downloaded files
+        jdaviz_cache = user_home / ".cache" / "jdaviz"
+        jdaviz_cache.mkdir(exist_ok=True)
+        os.environ['JDAVIZ_CACHE_DIR'] = str(jdaviz_cache)
+
+        # create astropy_cache directory to save downloaded files 
+        # (backup in case it had been deleted or astropy not installed)
+        astropy_cache = user_home / ".cache" / "astropy"
+        astropy_cache.mkdir(exist_ok=True)
+        os.environ['ASTROPY_CACHE_DIR'] = str(astropy_cache)
+
+        # Change Python's working directory to a writable directory
+        # This prevents Jdaviz from defaulting download_uri_to_path to the read-only _MEIPASS path
+        os.chdir(user_home)
+
+
     # should change this to _main, but now it doesn't need arguments
     args = sys.argv.copy()
     # change the browser to qt if not specified

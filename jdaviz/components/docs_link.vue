@@ -15,7 +15,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: {link: String, 
           linktext: String, 
           divider: Boolean

@@ -18,7 +18,7 @@ The power of Jdaviz is that it can integrated into your Jupyter notebook workflo
 
 Jdaviz also provides a directory of :ref:`sample notebooks <sample_notebook>`
 to test the application, located in the :gh-tree:`notebooks` sub-directory of the Git repository.
-:gh-notebook:`ImvizExample.ipynb <ImvizExample>` is provided as an example that loads
+:gh-notebook:`JdavizImageExample.ipynb <JdavizImageExample>` is provided as an example that loads
 two 47 Tucanae exposures taken with HST/ACS WFC detectors with the ``Imviz`` configuration.
 To run the provided example, start the Jupyter kernel with the notebook path::
 

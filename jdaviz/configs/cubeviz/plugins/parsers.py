@@ -5,7 +5,7 @@ from astropy import units as u
 from specutils import Spectrum
 
 from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
-from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
+from jdaviz.core.unit_conversion_utils import is_unit_per_solid_angle
 
 __all__ = []
 
@@ -38,9 +38,9 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
     # convert flux and uncertainty to per-pix2 if input is not a surface brightness
     target_flux_unit = None
     if (apply_pix2 and (data_type != "mask") and
-            (not check_if_unit_is_per_solid_angle(flux.unit))):
+            (not is_unit_per_solid_angle(flux.unit))):
         target_flux_unit = flux.unit / PIX2
-    elif check_if_unit_is_per_solid_angle(flux.unit, return_unit=True) == "spaxel":
+    elif is_unit_per_solid_angle(flux.unit, return_unit=True) == "spaxel":
         # We need to convert spaxel to pixel squared, since spaxel isn't fully supported by astropy
         # This is horribly ugly but just multiplying by u.Unit("spaxel") doesn't work
         target_flux_unit = flux.unit * u.Unit('spaxel') / PIX2

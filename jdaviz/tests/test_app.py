@@ -2,6 +2,7 @@ import pytest
 from copy import deepcopy
 
 import numpy as np
+from astropy.nddata import NDData
 from astropy import units as u
 from astropy.wcs import WCS
 from specutils import Spectrum
@@ -10,8 +11,9 @@ from ipywidgets.widgets import widget_serialization
 from jdaviz import Specviz, Specviz2d
 from jdaviz.core.config import get_configuration
 from jdaviz.app import PrivateApplication
+from jdaviz.utils import alpha_index
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
-from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
+from jdaviz.core.unit_conversion_utils import (flux_unit_conversion,
                                                viewer_flux_conversion_equivalencies)
 
 
@@ -241,6 +243,84 @@ def test_data_associations(imviz_helper):
         imviz_helper.load_data(data_child, data_label='child_data', parent='absent parent')
 
 
+def test_data_associations_removal(deconfigged_helper):
+    """
+    Test that removing parented data properly cleans up associations and state items.
+    """
+    shape = (10, 10)
+    app = deconfigged_helper._app
+
+    deconfigged_helper.load(np.ones(shape, dtype=float),
+                            data_label='parent_data', format='Image')
+    deconfigged_helper.load(np.zeros(shape, dtype=int),
+                            data_label='child_data', parent='parent_data', format='Image')
+    deconfigged_helper.load(np.zeros(shape, dtype=int),
+                            data_label='other_child', parent='parent_data', format='Image')
+
+    parent_item = next(di for di in app.state.data_items if di['name'] == 'parent_data')
+    other_child_id = next(di['id'] for di in app.state.data_items if di['name'] == 'other_child')
+    assert other_child_id in parent_item['children']
+
+    # removing a child detaches it from the parent
+    app.data_item_remove('other_child')
+    assert app._get_assoc_data_children('parent_data') == ['child_data']
+    assert 'other_child' not in app._data_associations
+    assert other_child_id not in parent_item['children']
+    assert 'other_child' not in app.state.layer_icons
+
+    parent_icon = app.state.layer_icons['parent_data']
+
+    # removing the parent orphans (rather than deletes) the remaining child
+    app.data_item_remove('parent_data')
+    assert 'parent_data' not in app._data_associations
+    assert 'child_data' in app.data_collection.labels
+    assert app._get_assoc_data_parent('child_data') is None
+    assert app._get_assoc_data_children('child_data') == []
+
+    child_item = next(di for di in app.state.data_items if di['name'] == 'child_data')
+    assert child_item['parent'] is None
+
+    # the orphan is no longer displayed as a sublayer of the removed parent, and
+    # takes over the root icon freed up by that parent
+    assert 'parent_data' not in app.state.layer_icons
+    child_icon = app.state.layer_icons['child_data']
+    assert child_icon == alpha_index(0) == parent_icon
+
+    # re-loading the parent does not resurrect the stale association
+    deconfigged_helper.load(np.ones(shape, dtype=float),
+                            data_label='parent_data', format='Image')
+    assert app._get_assoc_data_parent('child_data') is None
+    assert app._get_assoc_data_children('parent_data') == []
+
+
+@pytest.mark.parametrize('parented', (True, False))
+def test_layer_icons_after_removal(deconfigged_helper, parented):
+    """Re-loading an entry after removing data must not reuse an icon that is
+    still in use by another layer."""
+    app = deconfigged_helper._app
+
+    parent = 'A' if parented else 'None'
+    deconfigged_helper.load(np.random.random((4, 4)),
+                            format='Image', data_label='A')
+    deconfigged_helper.load(np.random.random((4, 4)),
+                            format='Image', data_label='B', parent=parent)
+    deconfigged_helper.load(np.random.random((4, 4)),
+                            format='Image', data_label='C', parent=parent)
+
+    assert dict(app.state.layer_icons) == ({'A': 'a', 'B': 'a1', 'C': 'a2'} if parented
+                                           else {'A': 'a', 'B': 'b', 'C': 'c'})
+
+    app.data_item_remove('B')
+    assert dict(app.state.layer_icons) == ({'A': 'a', 'C': 'a2'} if parented
+                                           else {'A': 'a', 'C': 'c'})
+
+    # the icon freed up by 'B' must not be reused, otherwise it would collide with 'C'
+    deconfigged_helper.load(np.random.random((4, 4)),
+                            format='Image', data_label='B', parent=parent)
+    assert dict(app.state.layer_icons) == ({'A': 'a', 'C': 'a2', 'B': 'a3'} if parented
+                                           else {'A': 'a', 'C': 'c', 'B': 'd'})
+
+
 def test_to_unit(cubeviz_helper):
     # custom cube to have Surface Brightness units
     wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
@@ -272,9 +352,9 @@ def test_to_unit(cubeviz_helper):
 
     spec = data.get_object(cls=Spectrum)
     viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
-    value = flux_conversion_general(values, original_units,
-                                    target_units, viewer_equivs,
-                                    with_unit=False)
+    value = flux_unit_conversion(
+        values, original_units, target_units, viewer_equivs,
+        with_unit=False)
 
     # will be a uniform array since not wavelength dependent
     # so test first value in array
@@ -287,9 +367,9 @@ def test_to_unit(cubeviz_helper):
     target_units = u.erg / u.cm**2 / u.s / u.AA
 
     viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
-    new_values = flux_conversion_general(values, original_units,
-                                         target_units, viewer_equivs,
-                                         with_unit=False)
+    new_values = flux_unit_conversion(
+        values, original_units, target_units, viewer_equivs,
+        with_unit=False)
 
     assert np.allclose(new_values,
                        (values * original_units)
@@ -304,9 +384,9 @@ def test_to_unit(cubeviz_helper):
     target_units = u.erg / u.cm**2 / u.s / u.AA
 
     viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
-    new_values = flux_conversion_general(values, original_units,
-                                         target_units, viewer_equivs,
-                                         with_unit=False)
+    new_values = flux_unit_conversion(
+        values, original_units, target_units, viewer_equivs,
+        with_unit=False)
 
     # In this case we do a regular spectral density conversion, but using the
     # first value in the spectral axis for the equivalency
@@ -472,8 +552,6 @@ def test_add_custom_loader_object(deconfigged_helper, spectrum1d):
     assert my_table_item['requires_api_support'] is True
 
 
-# TODO: comply with more strict 404 handling in python 3.14 instead of skipping
-@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_add_custom_loader_url(deconfigged_helper):
     """Test _add_custom_loader with a URL resolver."""
     # Use a simple test URL (it doesn't need to be valid for the loader creation)
@@ -486,8 +564,6 @@ def test_add_custom_loader_url(deconfigged_helper):
     assert 'remote_file' in deconfigged_helper._app._jdaviz_helper.loaders
 
 
-# TODO: comply with more strict 404 handling in python 3.14 instead of skipping
-@pytest.mark.filterwarnings('ignore::pytest.PytestUnraisableExceptionWarning')
 def test_add_custom_loader_invalid_resolver(deconfigged_helper):
     """Test _add_custom_loader with an invalid resolver type."""
     with pytest.raises(ValueError, match="Unknown resolver type 'invalid'"):
@@ -523,3 +599,35 @@ def test_add_custom_loader_open_in_tray(deconfigged_helper, tmp_path):
 
     # The loader should be returned and the name should match
     assert repr(loader) == '<test API>'
+
+
+def test_delete_catalog_with_wcs_from_viewer(deconfigged_helper, image_2d_wcs,
+                                             sky_coord_only_source_catalog):
+    # load an image
+    image_data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(image_data, format='Image', data_label='image')
+
+    # change app to WCS linking
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+
+    # load the catalog
+    deconfigged_helper.load(sky_coord_only_source_catalog,
+                            format='Catalog',
+                            data_label='my_catalog')
+
+    # create a scatter viewer
+    create_scatter_viewer = deconfigged_helper.new_viewers['Scatter']
+    create_scatter_viewer.dataset = 'my_catalog'
+    create_scatter_viewer()
+
+    # verify the catalog is loaded in the viewer
+    dm = deconfigged_helper.viewers['Scatter'].data_menu
+    assert 'my_catalog' in dm.layer.choices
+
+    # now remove the catalog from the app
+    dm.layer = 'my_catalog'
+    dm.remove_from_app()
+
+    # verify the catalog was removed
+    assert 'my_catalog' not in deconfigged_helper._app.data_collection.labels
+    assert 'my_catalog' not in dm.layer.choices

@@ -24,7 +24,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue.viewers.scatter.state import ScatterLayerState
 from glue_jupyter.bqplot.image import BqplotImageView
 
-import ipyvuedraggable
+# import ipyvuedraggable
 
 __all__ = ['DataMenu']
 
@@ -121,12 +121,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     rename_error_messages = Dict({}).tag(sync=True)
     # Track pending rename targets: {old_label: {'new_label': str, 'is_subset': bool}}
     _pending_renames = {}
+    focus_mode = Bool(False).tag(sync=True)
 
     def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Trigger the loading of ipyvuedraggable in the frontend in notebook and Solara.
-        ipyvuedraggable.Draggable()
+        # ipyvuedraggable.Draggable()
         self._viewer = viewer
         self._during_select_sync = False
 
@@ -184,6 +185,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
         self.icons = {k: v for k, v in self._app.state.icons.items()}
         self.prevent_layer_items_recursion = False
+
+        # track focus mode
+        self._app.state.add_callback('focus_viewer', self._on_focus_viewer_changed)
+        self._on_focus_viewer_changed()
+
+    def _on_focus_viewer_changed(self, *args):
+        self.focus_mode = (self.app.state.focus_viewer == getattr(self._viewer, 'reference', None))
 
     @property
     def user_api(self):
@@ -691,10 +699,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         *data_labels : str
             The label(s) of the dataset to add to the viewer.
         """
+        available = self.dataset.choices
+
         unavailable = [data_label for data_label in data_labels
-                       if data_label not in self.dataset.choices]
+                       if data_label not in available]
         if len(unavailable):
-            raise ValueError(f"Data labels {unavailable} not able to be loaded into '{self.viewer_id}'.  Must be one of: {self.dataset.choices}")  # noqa
+            raise ValueError(f"Data labels {unavailable} not able to be loaded into '{self.viewer_id}'. Must be one of: {available}")  # noqa
+
         for data_label in data_labels:
             self._app.add_data_to_viewer(self.viewer_id, data_label)
 
@@ -763,7 +774,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         new_label = info.get('new_label')
         is_subset = info.get('is_subset', False)
 
-        if old_label == new_label or new_label is None:
+        # A spurious frontend event can deliver new_label as None or an empty
+        # dict (a serialized InputEvent); those carry no name to validate.  Any
+        # other non-string (e.g. a non-empty dict) is unexpected and is left to
+        # raise downstream so the regression can be tracked down.
+        if (old_label == new_label
+                or new_label is None
+                or (isinstance(new_label, dict) and not new_label)):
             self._reset_rename_error_messages(old_label)
             return
 

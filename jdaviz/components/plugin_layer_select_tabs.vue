@@ -30,7 +30,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['items', 'selected', 'multiselect', 'colormode', 'cmap_samples',
           'show_multiselect_toggle', 'icon_checktoradial', 'icon_radialtocheck',
           'active_layer'],

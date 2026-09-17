@@ -7,6 +7,7 @@ from .subset_widget.subset_widget import * # noqa
 from .model_fitting.model_fitting import *  # noqa
 from .collapse.collapse import *  # noqa
 from .line_lists.line_lists import *  # noqa
+from .spectral_lines.spectral_lines import *  # noqa
 from .metadata_viewer.metadata_viewer import *  # noqa
 from .export.export import *  # noqa
 from .plot_options.plot_options import *  # noqa

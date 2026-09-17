@@ -7,7 +7,7 @@
 </template>
 
 <script>
-module.exports = {
+export default {
   props: ['active'],
 };
 </script>

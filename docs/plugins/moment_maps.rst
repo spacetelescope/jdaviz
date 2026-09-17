@@ -235,7 +235,7 @@ Batch Processing
 Example Notebooks
 =================
 
-* :gh-notebook:`CubevizExample.ipynb <CubevizExample>` - Includes moment map examples
+* :gh-notebook:`Jdaviz3DSpectrumExample.ipynb <Jdaviz3DSpectrumExample>` - Includes moment map examples
 
 See Also
 ========

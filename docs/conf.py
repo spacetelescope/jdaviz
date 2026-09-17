@@ -160,7 +160,7 @@ dev = "dev" in release
 version = '.'.join(release.split('.')[:2])
 
 extensions += ['sphinx.ext.extlinks', 'sphinx_design', 'guidestar',  # noqa: F405
-               'jdaviz.ext.wireframe']
+               'jdaviz.ext.wireframe', 'sphinx_favicon']
 
 # get the most recent git commit hash at build time:
 commit_hash = subprocess.run(
@@ -241,12 +241,48 @@ html_context = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'logos/jdaviz.svg'
+html_logo = 'logos/jdaviz_wordmark.svg'
 
-# The name of an image file (within the static path) to use as favicon of the
-# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
-# pixels large.
-html_favicon = 'logos/specviz2d.ico'
+# The name of an image file (within the static path) to use as favicons
+favicons = [
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "16x16",
+        "href": "logos/jdaviz_favicon-16x16.png",
+    },
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "32x32",
+        "href": "logos/jdaviz_favicon-32x32.png",
+    },
+    {
+        "rel": "shortcut icon",
+        "type": "image/png",
+        "href": "logos/jdaviz_favicon-32x32.png",
+    },
+    # apple touch icons
+    {
+        "rel": "apple-touch-icon",
+        "sizes": "180x180",
+        "href": "logos/jdaviz_favicon-180x180.png",
+    },
+    # safari pinned tabs
+    {
+        "rel": "mask-icon",
+        "href": "logos/jdaviz_favicon-32x32.png",
+        "color": "#007DA4",
+    },
+    # windows tile color and image
+    {
+        "name": "msapplication-TileColor",
+        "content": "#007DA4"},
+    {
+        "name": "msapplication-TileImage",
+        "content": "logos/jdaviz_favicon-180x180.png"},
+]
+
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -326,7 +362,8 @@ intersphinx_mapping.update({  # noqa: F405
 # Options for linkcheck
 linkcheck_ignore = [
     'https://github.com/spacetelescope/jdaviz/settings/branches',
-    'https://pypi.org/project/jdaviz/#files'
+    'https://pypi.org/project/jdaviz/#files',
+    '../index.html'  # warning raised by docs/cubeviz/displaycubes.rst
 ]
 
 
@@ -362,6 +399,7 @@ _TITLE_ACRONYMS = {
     'vo': 'VO',
     'api': 'API',
     'url': 'URL',
+    'db': 'Database',
 }
 
 
@@ -393,6 +431,15 @@ def _generate_conf_settings_js(app):
                 names.append(_rst_filename_to_title(fn))
     settings['loaderFormats'] = names
 
+    # Scan loaders/sources/ for RST files to populate source dropdown options
+    sources_dir = os.path.join(docs_dir, 'loaders', 'sources')
+    source_names = []
+    if os.path.isdir(sources_dir):
+        for fn in sorted(os.listdir(sources_dir)):
+            if fn.endswith('.rst') and fn not in ('index.rst', 'extensions.rst'):
+                source_names.append(_rst_filename_to_title(fn))
+    settings['loaderSources'] = source_names
+
     static_dir = os.path.join(docs_dir, '_static')
     os.makedirs(static_dir, exist_ok=True)
     js_path = os.path.join(static_dir, 'jdaviz-conf-settings.js')
@@ -418,6 +465,7 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
         'vo': 'VO',
         'api': 'API',
         'url': 'URL',
+        'db': 'Database',
     }
 
     links.append({'text': 'Overview', 'href': os.path.join(directory, 'index')})

@@ -44,7 +44,7 @@ class FileResolver(BaseResolver):
         # prevent errors from solara being raised if input is not valid
         if not isinstance(inp, (str, bytes, os.PathLike)):
             raise ValueError(f"'{inp}' is not a valid file path.")
-        if not os.path.exists(inp) or not os.path.isfile(inp):
+        if not os.path.exists(inp):
             raise ValueError(f"'{inp}' is not a valid file path.")
         return super().from_input(app, inp, **kwargs)
 
@@ -62,8 +62,8 @@ class FileResolver(BaseResolver):
             return
         self.filepath_reactive.value = Path(self.filepath)
         self._resolver_input_updated()
-        if not os.path.exists(self.filepath) or not os.path.isfile(self.filepath):
-            # consider empty if a directory or non-existent file is selected
+        if not os.path.exists(self.filepath):
+            # consider empty if a non-existent path is selected
             self.parsed_input_is_empty = True
 
     def _check_is_valid(self):
@@ -80,9 +80,6 @@ class FileResolver(BaseResolver):
         """
         if not os.path.exists(self.filepath):
             return 'Filepath does not exist.'
-
-        if not os.path.isfile(self.filepath):
-            return 'Filepath is not a file.'
 
         return ''
 
@@ -106,7 +103,7 @@ class PresetFileResolver(FileResolver):
 
     def __init__(self, filepath, title=None, *args, **kwargs):
         # Validate filepath before initialization
-        if not os.path.exists(filepath) or not os.path.isfile(filepath):
+        if not os.path.exists(filepath):
             raise ValueError(f"'{filepath}' is not a valid file path.")
 
         # Skip the FileBrowser widget initialization
@@ -138,5 +135,5 @@ class PresetFileResolver(FileResolver):
         if self.filepath == '':
             return
         self._resolver_input_updated()
-        if not os.path.exists(self.filepath) or not os.path.isfile(self.filepath):
+        if not os.path.exists(self.filepath):
             self.parsed_input_is_empty = True

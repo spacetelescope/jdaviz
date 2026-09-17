@@ -8,10 +8,10 @@ from jdaviz.core.custom_units_and_equivs import (PIX2,
                                                  SPEC_PHOTON_FLUX_DENSITY_UNITS,
                                                  _eqv_pixar_sr)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               check_if_unit_is_per_solid_angle,
+                                               is_unit_per_solid_angle,
                                                combine_flux_and_angle_units,
-                                               flux_conversion_general,
-                                               handle_squared_flux_unit_conversions,
+                                               flux_unit_conversion,
+                                               squared_flux_unit_conversions,
                                                viewer_flux_conversion_equivalencies)
 
 
@@ -19,26 +19,26 @@ from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
     ('erg / sr', True), ('erg / (deg * deg)', True), ('erg / (deg * arcsec)', True),
     ('erg / (deg**2)', True), ('erg deg**-2', True), ('erg sr^-1', True),
     ('erg / degree', False), ('erg sr^-2', False)])
-def test_check_if_unit_is_per_solid_angle(unit, is_solid_angle):
+def test_is_unit_per_solid_angle(unit, is_solid_angle):
     # test function that tests if a unit string or u.Unit is per solid angle
-    assert check_if_unit_is_per_solid_angle(unit) == is_solid_angle
+    assert is_unit_per_solid_angle(unit) == is_solid_angle
 
     # turn string into u.Unit, and make sure it also passes
-    assert check_if_unit_is_per_solid_angle(u.Unit(unit)) == is_solid_angle
+    assert is_unit_per_solid_angle(u.Unit(unit)) == is_solid_angle
 
 
 def test_general_flux_conversion():
     """
-    This test function tests that the `flux_conversion_general` function is able
+    This test function tests that the `flux_unit_conversion` function is able
     to convert between all available flux units in the unit conversion plugin
     for data in spectral/photon flux density (e.g Jy, erg/s/cm2/A) or surface
-    brightness. `flux_conversion_general` handles special cases where flux and
+    brightness. `flux_unit_conversion` handles special cases where flux and
     surface brightness can't be converted directly, so it is used
     in place of astropy.units.to() across the application to handle flux/sb unit
     conversions. This test ensures that all advertised conversions are supported
     and correct.
 
-    Also tests the `handle_squared_flux_unit_conversions` function, which is used
+    Also tests the `squared_flux_unit_conversions` function, which is used
     to convert units for the aperture photometry table.
     """
 
@@ -51,8 +51,8 @@ def test_general_flux_conversion():
     all_convertable_units_sr = SPEC_PHOTON_FLUX_DENSITY_UNITS + sr_sbs
     for combo in combinations(all_convertable_units_sr, 2):
         original_unit, target_unit = (u.Unit(x) for x in combo)
-        converted = flux_conversion_general([1, 2, 3], original_unit,
-                                            target_unit, equivalencies)
+        converted = flux_unit_conversion(
+            [1, 2, 3], original_unit, target_unit, equivalencies)
         assert len(converted) == 3
 
     # next test all conversions between flux and surface brightness units (per
@@ -62,15 +62,15 @@ def test_general_flux_conversion():
     all_convertable_units_pix = set(all_convertable_units_pix) - set(all_convertable_units_sr)
     for combo in combinations(all_convertable_units_pix, 2):
         original_unit, target_unit = (u.Unit(x) for x in combo)
-        converted = flux_conversion_general([1, 2, 3], original_unit,
-                                            target_unit, equivalencies)
+        converted = flux_unit_conversion(
+            [1, 2, 3], original_unit, target_unit, equivalencies)
         assert len(converted) == 3
 
     # test that a unit combination passed in without the correct equivalency
     # raises the correct error
     msg = 'Could not convert Jy / pix2 to Jy / sr with provided equivalencies.'
     with pytest.raises(u.UnitConversionError, match=msg):
-        converted = flux_conversion_general([1, 2, 3], u.Jy / PIX2, u.Jy / u.sr)
+        converted = flux_unit_conversion([1, 2, 3], u.Jy / PIX2, u.Jy / u.sr)
 
     # and finally, numerically verify a subset of possible unit conversion combos
     # a case of each 'type' of conversion is covered here
@@ -90,13 +90,13 @@ def test_general_flux_conversion():
 
     equivalencies = all_flux_unit_conversion_equivs(pixar_sr=4, cube_wave=1*u.nm)
     for orig, targ, truth in units_and_expected:
-        converted_value = flux_conversion_general([1], orig, targ, equivalencies)
+        converted_value = flux_unit_conversion([1], orig, targ, equivalencies)
         assert_allclose(converted_value[0].value, truth)
         assert converted_value.unit == targ
 
         # as a bonus, also test the function that converts squared flux units
         # (relevant in aperture photometry)
-        sq = handle_squared_flux_unit_conversions(1, orig**2, targ**2, equivalencies)
+        sq = squared_flux_unit_conversions(1, orig**2, targ**2, equivalencies)
         assert_allclose(sq.value, truth**2, rtol=1e-06)
         assert sq.unit == targ ** 2
 
@@ -149,58 +149,61 @@ def test_general_flux_conversion_continuted():
                    ]
 
     for orig, targ, expected in test_combos:
-        converted = flux_conversion_general(values, orig, targ, equivs)
+        converted = flux_unit_conversion(values, orig, targ, equivs)
         assert_allclose(converted, expected * targ, rtol=1e-05)
 
     # some other misc test cases from previous test
-    converted = flux_conversion_general(1., u.MJy / u.sr,
-                                        u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
-                                        equivs)
+    converted = flux_unit_conversion(
+        1., u.MJy / u.sr,
+        u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
+        equivs)
     assert_allclose(converted, 1.e-17 * u.erg / (u.s * u.cm**2 * u.Hz * u.sr))
 
     # another old test case
-    converted = flux_conversion_general(10., u.MJy / u.sr, u.Jy / u.sr)
+    converted = flux_unit_conversion(10., u.MJy / u.sr, u.Jy / u.sr)
     assert_allclose(converted, 10000000. * u.Jy / u.sr)
 
     # Quantity scalar pixel scale factor
     eqv = _eqv_pixar_sr(0.1 * (u.sr / u.pix))
-    assert_allclose(flux_conversion_general(values, u.Jy / u.sr, u.Jy, eqv),
+    assert_allclose(flux_unit_conversion(values, u.Jy / u.sr, u.Jy, eqv),
                     [1, 2, 3] * u.Jy)
-    assert_allclose(flux_conversion_general(values, u.Jy, u.Jy / u.sr, eqv),
+    assert_allclose(flux_unit_conversion(values, u.Jy, u.Jy / u.sr, eqv),
                     [100, 200, 300] * u.Jy / u.sr)
 
     # values == 2
-    assert_allclose(flux_conversion_general([10, 20], u.Jy / u.sr, u.Jy, eqv),
+    assert_allclose(flux_unit_conversion([10, 20], u.Jy / u.sr, u.Jy, eqv),
                     [1, 2] * u.Jy)
-    assert_allclose(flux_conversion_general([10, 20], u.Jy, u.Jy / u.sr, eqv),
+    assert_allclose(flux_unit_conversion([10, 20], u.Jy, u.Jy / u.sr, eqv),
                     [100, 200] * u.Jy / u.sr)
 
     # array scale factor, same length arrays
-    res = flux_conversion_general(values, u.Jy / u.sr, u.Jy,
-                                  _eqv_pixar_sr([0.1, 0.2, 0.3]))
+    res = flux_unit_conversion(
+        values, u.Jy / u.sr, u.Jy,
+        _eqv_pixar_sr([0.1, 0.2, 0.3]))
     assert_allclose(res, [1., 4., 9.] * u.Jy)
 
-    res = flux_conversion_general(values, u.Jy, u.Jy / u.sr,
-                                  _eqv_pixar_sr([0.1, 0.2, 0.3]))
+    res = flux_unit_conversion(
+        values, u.Jy, u.Jy / u.sr,
+        _eqv_pixar_sr([0.1, 0.2, 0.3]))
     assert_allclose(res, [100, 100, 100] * u.Jy / u.sr)
 
     # array + quantity scale factor, same length arrays
     eqv = _eqv_pixar_sr([0.1, 0.2, 0.3] * (u.sr / u.pix))
-    assert_allclose(flux_conversion_general(values, u.Jy / u.sr, u.Jy, eqv),
+    assert_allclose(flux_unit_conversion(values, u.Jy / u.sr, u.Jy, eqv),
                     [1., 4., 9.] * u.Jy)
-    assert_allclose(flux_conversion_general(values, u.Jy, u.Jy / u.sr, eqv),
+    assert_allclose(flux_unit_conversion(values, u.Jy, u.Jy / u.sr, eqv),
                     [100, 100, 100] * u.Jy / u.sr)
 
     # values != 2 but _pixel_scale_factor size mismatch
     with pytest.raises(ValueError, match="operands could not be broadcast together"):
         eqv = _eqv_pixar_sr([0.1, 0.2, 0.3, 0.4])
-        flux_conversion_general(values, u.Jy / u.sr, u.Jy, eqv)
+        flux_unit_conversion(values, u.Jy / u.sr, u.Jy, eqv)
 
     # Other kind of flux conversion unrelated to _pixel_scale_factor.
     # The answer was obtained from synphot unit conversion.
     targ = [2.99792458e-12, 1.49896229e-12, 9.99308193e-13]
     targ *= (u.erg / (u.AA * u.cm * u.cm * u.s))
-    assert_allclose(flux_conversion_general(values, u.Jy, targ.unit, equivs), targ)
+    assert_allclose(flux_unit_conversion(values, u.Jy, targ.unit, equivs), targ)
 
 
 def test_viewer_flux_conversion():
@@ -222,11 +225,13 @@ def test_viewer_flux_conversion():
 
     # test for when scale factor array len > 2 but there are 2 values to be
     # converted, the min/max should be used. min_max = [0.1, 0.3]
-    res = flux_conversion_general([10, 20], u.Jy / u.sr, u.Jy,
-                                  viewer_equivs)
+    res = flux_unit_conversion(
+        [10, 20], u.Jy / u.sr, u.Jy,
+        viewer_equivs)
     assert_allclose(res, [1, 6] * u.Jy)
-    res = flux_conversion_general([10, 20], u.Jy, u.Jy / u.sr,
-                                  viewer_equivs)
+    res = flux_unit_conversion(
+        [10, 20], u.Jy, u.Jy / u.sr,
+        viewer_equivs)
     assert_allclose(res, [100, 66.66666666666667] * u.Jy / u.sr)
 
     # test converting 2 values when spectral axis for u.spectral,
@@ -234,5 +239,5 @@ def test_viewer_flux_conversion():
     values = [10, 20]
     targ = [2.99792458e-12, 5.99584916e-12]
     targ *= (u.erg / (u.AA * u.cm * u.cm * u.s))  # FLAM
-    assert_allclose(flux_conversion_general(values, u.Jy, targ.unit, viewer_equivs),
+    assert_allclose(flux_unit_conversion(values, u.Jy, targ.unit, viewer_equivs),
                     targ)

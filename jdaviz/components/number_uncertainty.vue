@@ -6,7 +6,7 @@
 
 <script>
 
-module.exports = {
+export default {
   data: function () {
     const defaultDigs = this.defaultDigs || 5;
     return {

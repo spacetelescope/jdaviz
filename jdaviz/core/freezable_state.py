@@ -3,14 +3,15 @@ from echo import delay_callback, CallbackProperty
 import numpy as np
 
 from astropy import units as u
+from glue.core import BaseData
 from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
 
 from jdaviz.utils import get_reference_image_data
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               flux_conversion_general,
-                                               spectral_axis_conversion)
+                                               flux_unit_conversion,
+                                               spectral_unit_conversion)
 
 __all__ = ['FreezableState', 'FreezableProfileViewerState', 'FreezableBqplotImageViewerState']
 
@@ -68,7 +69,7 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
             self._reset_x_limits()
             return
 
-        x_lims_new = spectral_axis_conversion([self.x_min, self.x_max],
+        x_lims_new = spectral_unit_conversion([self.x_min, self.x_max],
                                               old_unit, new_unit)
 
         self.x_min = np.nanmin(x_lims_new)
@@ -104,7 +105,7 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
                 eqv = all_flux_unit_conversion_equivs(cube_wave=spectral_axis)
                 spectral_axis = None
 
-            y_corners_new = flux_conversion_general(y_corners, old_unit, new_unit, eqv, with_unit=False)  # noqa
+            y_corners_new = flux_unit_conversion(y_corners, old_unit, new_unit, eqv, with_unit=False)  # noqa
 
             with delay_callback(self, 'y_min', 'y_max'):
                 self.y_min = np.nanmin(y_corners_new)
@@ -131,6 +132,24 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
     def _set_viewer(self, viewer):
         self._viewer = viewer
         self._set_axes_lim()
+
+    def _update_combo_ref_data(self):
+        # exclude any data that cannot act as reference data for an image
+        # viewer (e.g. 1D catalogs/tables). Without this, removing the last image from a
+        # viewer that still contains a catalog would result in the catalog being selected
+        # as reference data, which then raises an IndexError in glue since the reference
+        # data is expected to have at least two pixel components.
+        self.ref_data_helper.set_multiple_data([data for data in self.layers_data
+                                                if data.ndim > 1])
+
+    def _set_reference_data(self):
+        # skip any data that cannot act as reference data for an image viewer.
+        # If no valid reference data is available, reference_data is left as None.
+        if self.reference_data is None:
+            for layer in self.layers:
+                if isinstance(layer.layer, BaseData) and layer.layer.ndim > 1:
+                    self.reference_data = layer.layer
+                    return
 
     @contextmanager
     def during_zoom_sync(self):

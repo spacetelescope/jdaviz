@@ -85,7 +85,7 @@ Key Components
 
     - First argument: plugin ID (kebab-case, used in config files)
     - ``label``: Display name shown in the UI
-    - ``category``: Determines icon and grouping (e.g., "data:analysis", "data:reduction", "data:manipulation")
+    - ``category``: Determines icon and grouping (e.g., ``data:analysis``, ``data:reduction``, ``data:manipulation``)
 
 **Inheritance**
     Common base classes to inherit from:
