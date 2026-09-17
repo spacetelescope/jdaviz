@@ -54,8 +54,7 @@ jobs:
           - name: Python 3.13 with only remote data, coverage checking, and all deps
             os: ubuntu-latest
             python: '3.13'
-            toxenv: py313-test-alldeps-cov
-            toxposargs: --remote-data --run-slow -m remote_data
+            toxenv: py313-test-alldeps-remotedata-cov
             allow_failure: true
 
           - name: OS X - Python 3.13
@@ -76,7 +75,7 @@ jobs:
             toxenv: py314-test
             allow_failure: false
 
-          # This also runs on cron but we want to make sure new changes
+          # This also runs on cron, but we want to make sure new changes
           # won't break this job at the PR stage.
           - name: Python 3.13 with latest dev versions of key dependencies
             os: ubuntu-latest
@@ -88,8 +87,7 @@ jobs:
           - name: Python 3.13 with only remote data and dev deps
             os: ubuntu-latest
             python: '3.13'
-            toxenv: py313-test-devdeps
-            toxposargs: --remote-data --run-slow -m remote_data
+            toxenv: py313-test-devdeps-remotedata
             allow_failure: true
 
           - name: Python 3.12 with stable versions of dependencies and Roman
