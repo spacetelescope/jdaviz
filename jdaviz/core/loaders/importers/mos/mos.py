@@ -32,7 +32,7 @@ _MOS_PRODUCTS = {
                    'format': '1D Spectrum',
                    'viewer_label': '1D Spectrum',
                    'viewer_reference': 'spectrum-1d-viewer',
-                   'viewer_traitlet_prefix': 'viewer'},
+                   'viewer_traitlet_prefix': 'viewer_1d'},
     'spectrum2d': {'pattern': _SPECTRUM_2D_PATTERN,
                    'format': '2D Spectrum',
                    'viewer_label': '2D Spectrum',
@@ -112,8 +112,16 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
     # automatic extraction of 2D spectra is opt-in
     auto_extract_2d = Bool(False).tag(sync=True)
 
-    # per-product-type viewer selection/creation. The 1D spectrum viewer uses the
-    # viewer_* traitlets inherited from BaseImporterToDataCollection
+    # per-product-type viewer selection/creation
+    viewer_1d_items = List([]).tag(sync=True)
+    viewer_1d_selected = Any([]).tag(sync=True)
+    viewer_1d_create_new_items = List([]).tag(sync=True)
+    viewer_1d_create_new_selected = Unicode().tag(sync=True)
+    viewer_1d_label_value = Unicode().tag(sync=True)
+    viewer_1d_label_default = Unicode().tag(sync=True)
+    viewer_1d_label_auto = Bool(True).tag(sync=True)
+    viewer_1d_label_invalid_msg = Unicode().tag(sync=True)
+
     viewer_2d_items = List([]).tag(sync=True)
     viewer_2d_selected = Any([]).tag(sync=True)
     viewer_2d_create_new_items = List([]).tag(sync=True)
@@ -144,12 +152,9 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # self.viewer (from the base class) handles the 1D spectra, the remaining
-        # product types each get their own viewer selection/creation component so
+        # each product type gets its own viewer selection/creation component so
         # that incompatible data are never sent to the wrong viewer
         for product_type, product in _MOS_PRODUCTS.items():
-            if product_type == 'spectrum1d':
-                continue
             setattr(self, product['viewer_traitlet_prefix'],
                     self._init_product_viewer(product_type))
 
@@ -195,8 +200,8 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
 
     @staticmethod
     def _get_supported_viewers():
-        # the base-class viewer component is used for the 1D spectra,
-        # required to be present for the input directory to be considered valid
+        # the 1D spectra viewer component is required to be present
+        # for the input directory to be considered valid
         return [{'label': _MOS_PRODUCTS['spectrum1d']['viewer_label'],
                  'reference': _MOS_PRODUCTS['spectrum1d']['viewer_reference']}]
 
@@ -269,7 +274,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
 
     @property
     def user_api(self):
-        expose = ['viewer_2d', 'viewer_image', 'viewer_catalog', 'auto_extract_2d']
+        expose = ['viewer_1d', 'viewer_2d', 'viewer_image', 'viewer_catalog', 'auto_extract_2d']
         return ImporterUserApi(self, expose)
 
     @property

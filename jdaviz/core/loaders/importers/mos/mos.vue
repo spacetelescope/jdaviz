@@ -38,14 +38,14 @@
     </j-flex-row>
 
     <plugin-viewer-create-new
-      :items="viewer_items"
-      v-model:selected="viewer_selected"
-      :create_new_items="viewer_create_new_items"
-      v-model:create_new_selected="viewer_create_new_selected"
-      v-model:new_label_value="viewer_label_value"
-      :new_label_default="viewer_label_default"
-      v-model:new_label_auto="viewer_label_auto"
-      :new_label_invalid_msg="viewer_label_invalid_msg"
+      :items="viewer_1d_items"
+      v-model:selected="viewer_1d_selected"
+      :create_new_items="viewer_1d_create_new_items"
+      v-model:create_new_selected="viewer_1d_create_new_selected"
+      v-model:new_label_value="viewer_1d_label_value"
+      :new_label_default="viewer_1d_label_default"
+      v-model:new_label_auto="viewer_1d_label_auto"
+      :new_label_invalid_msg="viewer_1d_label_invalid_msg"
       :multiselect="viewer_multiselect"
       :show_multiselect_toggle="false"
       label="1D Spectrum Viewer"
