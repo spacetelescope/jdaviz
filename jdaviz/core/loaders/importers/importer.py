@@ -127,9 +127,7 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
         if not hasattr(self, 'data_hashes'):
             # If we do this here instead of at init, then we shouldn't get errors
             # from attempting to access unavailable importer attributes from 'output'
-            output = self.output
-            outputs = output if isinstance(output, list) else [output]
-            self.data_hashes = [create_data_hash(o) for o in outputs]
+            self.data_hashes = [create_data_hash(self.output)]
 
         if not hasattr(self, 'hash_map_to_label'):
             self.hash_map_to_label = {dh: '' for dh in self.data_hashes}
