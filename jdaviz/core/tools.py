@@ -8,6 +8,8 @@ from echo import delay_callback
 from functools import cached_property
 from glue.config import viewer_tool
 from glue.core import HubListener
+from glue.core.message import (ComponentReplacedMessage, DataAddComponentMessage,
+                               DataRemoveComponentMessage, DataRenameComponentMessage)
 from glue.viewers.common.tool import Tool
 from glue_jupyter.bqplot.common import tools
 from glue_jupyter.bqplot.common.tools import (CheckableTool,
@@ -980,7 +982,7 @@ class TableApplyAddColumn(Tool):
 
 
 @viewer_tool
-class TableColumnsVisible(Tool):
+class TableColumnsVisible(Tool, HubListener):
     icon = os.path.join(ICON_DIR, 'table-columns-visible.svg')
     tool_id = 'jdaviz:table_columns_visible'
     action_text = 'Visible columns'
@@ -1006,11 +1008,17 @@ class TableColumnsVisible(Tool):
         toolbar = getattr(self.viewer, 'toolbar', None)
         if toolbar is None or toolbar.tool_override_mode != self._override_title:
             return
-        toolbar.custom_widget_selected = [w.get('selected')
-                                          for w in self._build_custom_widgets()]
+        widgets = self._build_custom_widgets()
+        toolbar.custom_widget_items = widgets
+        toolbar.custom_widget_selected = [widget.get('selected') for widget in widgets]
 
     def _on_state_changed(self, *args):
         self._refresh_widget()
+
+    def _on_component_changed(self, msg):
+        data = getattr(getattr(self.viewer, 'widget_table', None), 'data', None)
+        if msg.sender is data or getattr(msg.sender, 'parent', None) is data:
+            self._refresh_widget()
 
     def _on_selection_changed(self, new_selected):
         if not len(new_selected):
@@ -1032,12 +1040,24 @@ class TableColumnsVisible(Tool):
             selection_callback=self._on_selection_changed,
         )
         self.viewer.state.add_callback('hidden_components', self._on_state_changed)
+        widget_table = self.viewer.widget_table
+        widget_table.observe(self._on_state_changed,
+                             names=['header_renamed', 'header_deleted'])
+        hub = self.viewer.session.hub
+        component_messages = (ComponentReplacedMessage, DataAddComponentMessage,
+                              DataRemoveComponentMessage, DataRenameComponentMessage)
+        for message in component_messages:
+            hub.subscribe(self, message, handler=self._on_component_changed)
 
         def _cleanup():
             try:
                 self.viewer.state.remove_callback('hidden_components', self._on_state_changed)
             except Exception:  # nosec
                 pass
+            widget_table.unobserve(self._on_state_changed,
+                                   names=['header_renamed', 'header_deleted'])
+            for message in component_messages:
+                hub.unsubscribe(self, message)
 
         self.viewer.toolbar._pre_clear_callback = _cleanup
 

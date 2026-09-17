@@ -1412,6 +1412,22 @@ class TestTableColumnsVisible:
 
         assert str(components[0]) not in self.toolbar.custom_widget_selected[0]
 
+    def test_component_changes_update_widget(self):
+        self.tool.activate()
+        data = self.table_viewer.widget_table.data
+        component = data.main_components[0]
+
+        self.table_viewer.widget_table.vue_rename_column(
+            {'column': str(component), 'newName': 'renamed'}
+        )
+        assert 'renamed' in self.toolbar.custom_widget_selected[0]
+
+        data.add_component(np.ones(data.size), 'added')
+        assert 'added' in [item['value'] for item in self.toolbar.custom_widget_items[0]['items']]
+
+        self.table_viewer.widget_table.vue_remove_column({'column': 'added'})
+        assert 'added' not in [item['value'] for item in self.toolbar.custom_widget_items[0]['items']]
+
     def test_restore_removes_state_callback(self):
         self.tool.activate()
         self.toolbar.restore_tools()
