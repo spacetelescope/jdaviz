@@ -261,7 +261,7 @@ class BaseImporterToDataCollection(BaseImporter):
     @property
     def default_data_label_from_resolver(self):
         if self._resolver.parsed_input_is_query and self._resolver.treat_table_as_query:
-            url = self._resolver.get_selected_url()
+            url = self._resolver.get_selected_urls()[0]
             path = os.path.splitext(os.path.basename(url.strip()))[0]
             if "product_name=" in path:
                 path = path.split("product_name=")[1]

@@ -61,8 +61,18 @@ class ObjectResolver(BaseResolver):
     @object.setter
     def object(self, obj):
         self._object = obj
-        self.object_repr = f"<{obj.__class__.__name__} object>"
+        # a top-level list/tuple (exact type, not a subclass like HDUList) is treated as
+        # multiple outputs, see BaseResolver.output/_as_output_list
+        if type(obj) in (list, tuple):
+            self.object_repr = f"<list of {len(obj)} objects>"
+        else:
+            self.object_repr = f"<{obj.__class__.__name__} object>"
         self._resolver_input_updated()
+
+    def _default_label_for_output(self, output_index):
+        if type(self.object) in (list, tuple):
+            return f"{self.object[output_index].__class__.__name__.lower()}_{output_index}"
+        return super()._default_label_for_output(output_index)
 
     def parse_input(self):
         return self.object

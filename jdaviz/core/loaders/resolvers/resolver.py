@@ -51,6 +51,27 @@ from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMes
 __all__ = ['BaseResolver', 'BaseConeSearchResolver', 'find_matching_resolver']
 
 
+def _as_output_list(output):
+    """
+    Normalize a resolver's ``output`` (single object or list/tuple) to a list.
+
+    Only exact ``list``/``tuple`` instances are treated as multiple outputs (not subclasses,
+    e.g. `~astropy.io.fits.HDUList` is a `list` subclass but represents a single output).
+    """
+    return list(output) if type(output) in (list, tuple) else [output]
+
+
+def _default_labels_for_outputs(labels):
+    """De-duplicate a list of per-output labels (append ``_1``, ``_2``, ... on collision)."""
+    seen = {}
+    deduped = []
+    for label in labels:
+        count = seen.get(label, 0)
+        seen[label] = count + 1
+        deduped.append(label if count == 0 else f"{label}_{count}")
+    return deduped
+
+
 class FormatSelect(SelectPluginComponent):
     """
     Select component for the format field of a resolver.
@@ -82,6 +103,23 @@ class FormatSelect(SelectPluginComponent):
     def _is_valid_item(self, item):
         return super()._is_valid_item(item, locals())
 
+    def _repr_choices(self):
+        # append the n_valid/n_total output counts to each choice (without changing the
+        # underlying label/choice strings used for selection)
+        choices = super()._repr_choices()
+        if not isinstance(choices, list):
+            # already truncated to a preview string by the base implementation
+            return choices
+        items_by_label = {item['label']: item for item in self.items}
+
+        def _with_counts(choice):
+            item = items_by_label.get(choice)
+            if item is not None and item['n_total'] > 1:
+                return f"{choice!r} ({item['n_valid']}/{item['n_total']})"
+            return choice
+
+        return f"[{', '.join([_with_counts(choice) for choice in choices])}]"
+
     @observe('filters', 'debug')
     def _update_items(self, msg={}):
         if not self.plugin.is_valid:
@@ -89,11 +127,20 @@ class FormatSelect(SelectPluginComponent):
             self._apply_default_selection()
             return
 
-        all_formats = []
         self._parsers = {}
         self._dbg_importers = {}
         self._invalid_importers = {}
+        # keyed by importer (format) name -> {output_index: importer instance}, across all
+        # outputs of the resolver (see ``_as_output_list``).  entries here may or may not
+        # pass ``_is_valid_item`` (see ``_importer_valid_indices`` below) - invalid ones are
+        # kept only so their ``targets`` can still be used to compile TargetSelect's choices.
         self._importers = {}
+        # keyed by importer name -> set of output indices for which that importer both is_valid
+        # and passes ``_is_valid_item``, i.e. is actually selectable/importable for that output.
+        self._importer_valid_indices = {}
+        # keyed by importer name -> {'parser': parser_name, 'targets': targets} taken from the
+        # first (primary) valid output, used to build the display item for that format.
+        self._importer_meta = {}
 
         # check for valid parser > importer combinations given the current filters
         # and resolver inputs
@@ -101,93 +148,115 @@ class FormatSelect(SelectPluginComponent):
             # NOTE: plugin is just because this inherits from SelectPluginComponent,
             # but is actually the resolver.  This calls the implemented __call__ method
             # on the parent resolver.
-            parser_input = self.plugin.output
+            outputs = _as_output_list(self.plugin.output)
         except Exception as e:
             self.items = []
             self._invalid_importers = f'Resolver exception: {e}'
             self._apply_default_selection()
             return
 
+        n_total = len(outputs)
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            for parser_name, Parser in loader_parser_registry.members.items():
-                this_parser = Parser(self.plugin._app, parser_input)
-                self._parsers[parser_name] = this_parser
-                if this_parser.is_valid:
-                    try:
-                        importer_input = this_parser.output
-                    except Exception as e:
-                        self._invalid_importers[parser_name] = f'Parser exception: {e}'
+            for output_index, parser_input in enumerate(outputs):
+                # per-output bookkeeping (mirrors the single-output parser-preference
+                # resolution below, but scoped to this one output of the resolver)
+                output_importers = {}
+                output_importers_is_valid_item = {}
+                output_importers_parser_name = {}
+
+                for parser_name, Parser in loader_parser_registry.members.items():
+                    this_parser = Parser(self.plugin._app, parser_input)
+                    self._parsers[(parser_name, output_index)] = this_parser
+                    if this_parser.is_valid:
+                        try:
+                            importer_input = this_parser.output
+                        except Exception as e:
+                            self._invalid_importers[parser_name] = f'Parser exception: {e}'
+                            this_parser._cleanup()
+                            continue
+                    else:
+                        self._invalid_importers[parser_name] = this_parser.is_valid.message
+                        self._invalid_importers.setdefault(parser_name, this_parser.is_valid.message)  # noqa
                         this_parser._cleanup()
                         continue
-                else:
-                    self._invalid_importers[parser_name] = this_parser.is_valid.message
-                    self._invalid_importers.setdefault(parser_name, this_parser.is_valid.message)
-                    this_parser._cleanup()
-                    continue
-                for importer_name, Importer in loader_importer_registry.members.items():
-                    label = f"{parser_name} > {importer_name}"
-                    if getattr(self.plugin, '_restrict_to_formats', None) is not None and \
-                            importer_name not in self.plugin._restrict_to_formats:
-                        self._invalid_importers[label] = 'Not matching format restriction'  # noqa
-                        continue
-                    if (isinstance(importer_input, (str, os.PathLike))
-                            and os.path.isdir(importer_input)
-                            and not getattr(Importer, 'allow_directory_input', False)):
-                        self._invalid_importers[label] = 'Importer does not accept directory input.'  # noqa
-                        continue
-                    try:
-                        this_importer = Importer(app=self.plugin._app,
-                                                 resolver=self.plugin,
-                                                 parser=this_parser,
-                                                 input=importer_input)
-                    except Exception as e:  # nosec
-                        self._invalid_importers[label] = f'Importer exception: {e}'
-                        continue
-                    if self.debug:
-                        self._dbg_importers[label] = this_importer
-                    if (self.plugin._restrict_to_target is not None and
-                            not any(target.get('label') == self.plugin._restrict_to_target
-                                    for target in this_importer.targets)):
-                        # skip importers that do not match the target
-                        self._invalid_importers[label] = 'Not matching target'
-                        continue
-                    if this_importer.is_valid:
-                        if self._is_valid_item(this_importer):
-                            item = {'label': importer_name,
-                                    'parser': parser_name,
-                                    'importer': importer_name,
-                                    'targets': this_importer.targets}
-                            parser_pref = this_importer.parser_preference
-                            if importer_name not in self._importers:
-                                all_formats.append(item)
-                                self._importers[importer_name] = this_importer
-                            elif not len(parser_pref) or parser_name not in parser_pref:
-                                # default to the previous (or first) found match
-                                continue
-                            else:
-                                # then there was already a match from an earlier parser.  Compare
-                                # to see which has preference and replace if necessary.
-                                item_importers = [i['importer'] for i in all_formats]
-                                item_index = item_importers.index(importer_name)
-                                prev_parser = all_formats[item_index]['parser']
+                    for importer_name, Importer in loader_importer_registry.members.items():
+                        label = f"{parser_name} > {importer_name}"
+                        if getattr(self.plugin, '_restrict_to_formats', None) is not None and \
+                                importer_name not in self.plugin._restrict_to_formats:
+                            self._invalid_importers[label] = 'Not matching format restriction'  # noqa
+                            continue
+                        if (isinstance(importer_input, (str, os.PathLike))
+                                and os.path.isdir(importer_input)
+                                and not getattr(Importer, 'allow_directory_input', False)):
+                            self._invalid_importers[label] = 'Importer does not accept directory input.'  # noqa
+                            continue
+                        try:
+                            this_importer = Importer(app=self.plugin._app,
+                                                     resolver=self.plugin,
+                                                     parser=this_parser,
+                                                     input=importer_input)
+                        except Exception as e:  # nosec
+                            self._invalid_importers[label] = f'Importer exception: {e}'
+                            continue
+                        if self.debug:
+                            self._dbg_importers[label] = this_importer
+                        if (self.plugin._restrict_to_target is not None and
+                                not any(target.get('label') == self.plugin._restrict_to_target
+                                        for target in this_importer.targets)):
+                            # skip importers that do not match the target
+                            self._invalid_importers[label] = 'Not matching target'
+                            continue
+                        if this_importer.is_valid:
+                            if self._is_valid_item(this_importer):
                                 parser_pref = this_importer.parser_preference
-                                if (prev_parser not in parser_pref or
-                                        parser_pref.index(prev_parser) > parser_pref.index(parser_name)):  # noqa
-                                    # this parser has preference over the previous one
-                                    all_formats[item_index] = item
-                                    self._importers[importer_name] = this_importer
+                                prev_is_valid_item = output_importers_is_valid_item.get(importer_name, False)  # noqa
+                                if importer_name not in output_importers or not prev_is_valid_item:
+                                    # first valid match for this importer at this output
+                                    replace = True
+                                elif not len(parser_pref) or parser_name not in parser_pref:
+                                    # default to the previous (or first) found match
+                                    replace = False
                                 else:
-                                    # this previous parser has preference over this one
-                                    continue
-
+                                    # then there was already a match from an earlier parser.
+                                    # Compare to see which has preference.
+                                    prev_parser = output_importers_parser_name[importer_name]
+                                    replace = (prev_parser not in parser_pref or
+                                              parser_pref.index(prev_parser) > parser_pref.index(parser_name))  # noqa
+                                if replace:
+                                    output_importers[importer_name] = this_importer
+                                    output_importers_is_valid_item[importer_name] = True
+                                    output_importers_parser_name[importer_name] = parser_name
+                            elif importer_name not in output_importers:
+                                # we'll store the importer even if it isn't valid according to
+                                # the filters so that it can be used when compiling the list of
+                                # target filters
+                                output_importers[importer_name] = this_importer
+                                output_importers_is_valid_item[importer_name] = False
+                                output_importers_parser_name[importer_name] = parser_name
                         else:
-                            # we'll store the importer even if it isn't valid according to the
-                            # filters so that they can be used when compiling the list of
-                            # target filters
-                            self._importers[importer_name] = this_importer
-                    else:
-                        self._invalid_importers[label] = this_importer.is_valid.message
+                            self._invalid_importers[label] = this_importer.is_valid.message
+
+                # merge this output's winning importers into the cross-output aggregates
+                for importer_name, this_importer in output_importers.items():
+                    self._importers.setdefault(importer_name, {})[output_index] = this_importer
+                    if output_importers_is_valid_item.get(importer_name):
+                        self._importer_valid_indices.setdefault(importer_name, set()).add(output_index)  # noqa
+                        self._importer_meta.setdefault(importer_name, {
+                            'parser': output_importers_parser_name[importer_name],
+                            'targets': this_importer.targets,
+                        })
+
+        all_formats = [
+            {'label': importer_name,
+             'parser': meta['parser'],
+             'importer': importer_name,
+             'targets': meta['targets'],
+             'n_valid': len(self._importer_valid_indices[importer_name]),
+             'n_total': n_total}
+            for importer_name, meta in self._importer_meta.items()
+        ]
 
         # Sort generic table importers to the end of the list so more specific
         # formats are selected by default.  Order: other > Catalog > Spectral Lines.
@@ -245,10 +314,11 @@ class TargetSelect(SelectPluginComponent):
         # so we want to store all importers in the target select even if they are not valid there
         # and use that list when compiling list of valid targets
         all_targets = []
-        for importer in self.plugin.format._importers.values():
-            for target in importer.targets:
-                if target not in all_targets:
-                    all_targets.append(target)
+        for importer_dict in self.plugin.format._importers.values():
+            for importer in importer_dict.values():
+                for target in importer.targets:
+                    if target not in all_targets:
+                        all_targets.append(target)
 
         self.items = [{'label': 'Any'}] + [item for item in all_targets if self._is_valid_item(item)]  # noqa
         self._apply_default_selection()
@@ -328,7 +398,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.file_table.show_if_empty = False
         self.file_table.show_rowselect = True
         self.file_table.item_key = "location"
-        self.file_table.multiselect = False
+        self.file_table.multiselect = True
         self.file_table.server_pagination = True
         self.file_table._selected_rows_changed_callback = self.on_file_select_changed
 
@@ -620,9 +690,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # from referenced parsers/importers
         for parser in self.format._parsers.values():
             parser._cleanup()
-        for importer in self.format._importers.values():
-            if hasattr(importer, '_cleanup'):
-                importer._cleanup()
+        for importer_dict in self.format._importers.values():
+            for importer in importer_dict.values():
+                if hasattr(importer, '_cleanup'):
+                    importer._cleanup()
         self._clear_cache('parsed_input', 'output')
 
     @observe('parsed_input_is_query', 'treat_table_as_query')
@@ -671,7 +742,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         if self._restrict_to_formats is None or "Catalog" in self._restrict_to_formats:
             hdu = None
             if self.format.selected:
-                ext = getattr(self.importer, 'extension', None)
+                primary_importer = self._selected_importer_pairs()[0][1]
+                ext = getattr(primary_importer, 'extension', None)
                 if ext is not None:
                     hdu = ext.selected_index
                     if isinstance(hdu, list):
@@ -923,10 +995,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # ensure the importer updates even if the format selection remains fixed
         self._on_format_selected_changed()
 
-    def get_selected_url(self):
-        if len(self.file_table.selected_rows) != 1:
-            return None
-        location = self.file_table.selected_rows[0]['location']
+    def get_selected_urls(self):
+        """Return URLs for every selected product-table row."""
+        return [self._location_to_url(row['location']) for row in self.file_table.selected_rows]
+
+    def _location_to_url(self, location):
 
         # Check if it's a local file path (absolute, relative, or home directory)
         # or if it starts with a recognized URL scheme
@@ -944,13 +1017,15 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
     @with_spinner('spinner', 'downloading file...')
     def _download_from_file_table(self):
-        url = self.get_selected_url().strip()
-        if not url:
+        urls = self.get_selected_urls()
+        if not urls:
             return None
-        return download_uri_to_path(url,
-                                    cache=self.file_cache,
-                                    local_path=self.file_local_path,
-                                    timeout=self.file_timeout)
+        paths = [download_uri_to_path(url.strip(),
+                                      cache=self.file_cache,
+                                      local_path=self.file_local_path,
+                                      timeout=self.file_timeout)
+                 for url in urls]
+        return paths[0] if len(paths) == 1 else paths
 
     @cached_property
     def output(self):
@@ -1003,26 +1078,86 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # importers can then decide whether to use this or not.
         return None
 
+    def _default_label_for_output(self, output_index):
+        # override by subclass to provide a per-output label (e.g. file name) used to
+        # auto-suffix data labels when multiple outputs are imported under one format.
+        return f"output_{output_index}"
+
     @property
     def parser(self):
-        # give access to the parser used by the selected importer
-        return self.importer._parser
+        """Return the selected parser, or a list when multiple outputs are valid."""
+        parsers = [importer._parser for _, importer in self._selected_importer_pairs()]
+        return parsers[0] if len(parsers) == 1 else parsers
+
+    def _selected_importer_pairs(self):
+        """
+        Ordered list of ``(output_index, importer)`` for every output of this resolver that
+        is valid for the currently selected format (see ``format_selected``).
+        """
+        if not self.format.selected:
+            raise ValueError("must select a format before accessing importer")
+        importer_dict = self.format._importers[self.format.selected]
+        valid_indices = sorted(self.format._importer_valid_indices.get(self.format.selected,
+                                                                       importer_dict.keys()))
+        return [(i, importer_dict[i]) for i in valid_indices]
 
     @property
     def importer(self):
-        # give access to the importer defined by the user-selection on format
-        if not self.format.selected:
-            raise ValueError("must select a format before accessing importer")
-        return self.format._importers[self.format.selected]
+        """Return the selected importer, or a list when multiple outputs are valid."""
+        importers = [importer for _, importer in self._selected_importer_pairs()]
+        return importers[0] if len(importers) == 1 else importers
+
+    def _output_suffices(self, selected_importers):
+        # "_" + de-duplicated per-output label, in the same order as ``selected_importers``
+        labels = _default_labels_for_outputs(
+            [self._default_label_for_output(i) for i, _ in selected_importers])
+        return [f"_{label}" for label in labels]
 
     def load(self):
         """
         Import into jdaviz with all selected options.
         """
+        selected_importer_pairs = self._selected_importer_pairs()
+        selected_importers = [importer for _, importer in selected_importer_pairs]
+        primary_importer = selected_importers[0]
+
         # Check if import is disabled before attempting to load
-        if len(self.importer.import_disabled_msg) > 0:
-            raise ValueError(self.importer.import_disabled_msg)
-        return self.importer()
+        if len(primary_importer.import_disabled_msg) > 0:
+            raise ValueError(primary_importer.import_disabled_msg)
+
+        if len(selected_importers) == 1:
+            return primary_importer()
+
+        format_item = next((item for item in self.format.items
+                            if item['label'] == self.format.selected), None)
+        n_total = format_item['n_total'] if format_item is not None else len(selected_importers)
+
+        # data_label_is_prefix/data_label_suffices on primary_importer were already set by
+        # _on_format_selected_changed (so the UI reflects prefix mode before Import is clicked);
+        # re-derive the same suffices here to apply per-output labels when actually loading.
+        suffices = self._output_suffices(selected_importer_pairs)
+        prefix = primary_importer.data_label.value if hasattr(primary_importer, 'data_label') else None  # noqa
+
+        n_imported = 0
+        for (output_index, this_importer), suffix in zip(selected_importer_pairs, suffices):
+            if this_importer is not primary_importer:
+                if prefix is not None and hasattr(this_importer, 'data_label'):
+                    this_importer.data_label.value = f"{prefix}{suffix}"
+                if hasattr(this_importer, 'viewer') and hasattr(primary_importer, 'viewer'):
+                    this_importer.viewer.selected = primary_importer.viewer.selected
+            try:
+                this_importer()
+                n_imported += 1
+            except Exception as e:
+                self._app.hub.broadcast(SnackbarMessage(
+                    f"Failed to import output {output_index}: {e}", sender=self, color='error'))
+
+        n_skipped = n_total - len(selected_importers)
+        msg = f"{n_imported} of {n_total} outputs imported"
+        if n_skipped:
+            msg += f", {n_skipped} skipped (not valid for this format)"
+        self._app.hub.broadcast(SnackbarMessage(
+            msg, sender=self, color='success' if n_imported else 'error'))
 
     @observe('target_selected')
     def _on_target_selected_changed(self, change={}):
@@ -1057,10 +1192,26 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 # to user in a warning message
                 self.valid_import_formats = ", ".join(self._get_valid_import_formats())
         else:
-            self.importer_widget = "IPY_MODEL_" + self.importer.model_id
+            primary_importer = self._selected_importer_pairs()[0][1]
+            self.importer_widget = "IPY_MODEL_" + primary_importer.model_id
             self.valid_import_formats = ''
 
-            self.importer.reset_and_check_existing_data_in_dc()
+            primary_importer.reset_and_check_existing_data_in_dc()
+            self._update_primary_importer_prefix()
+
+    def _update_primary_importer_prefix(self):
+        # when the selected format applies to multiple outputs, show the shared data_label
+        # as a prefix (with the resolved per-output labels) rather than a single label,
+        # so the UI reflects this before the user clicks Import.  when there's only one
+        # output, leave data_label_is_prefix/suffices alone: some importers set these
+        # themselves (e.g. for their own multi-extension selection within one output).
+        selected_importer_pairs = self._selected_importer_pairs()
+        primary_importer = selected_importer_pairs[0][1]
+        if not hasattr(primary_importer, 'data_label_is_prefix'):
+            return
+        if len(selected_importer_pairs) > 1:
+            primary_importer.data_label_is_prefix = True
+            primary_importer.data_label_suffices = self._output_suffices(selected_importer_pairs)
 
     def close_in_tray(self, close_sidebar=False):
         """
