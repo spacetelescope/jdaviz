@@ -145,6 +145,14 @@ class CatalogRowLinkManager(HubListener):
             except Exception:  # nosec
                 pass
 
+        column_name = f'Data: {msg.viewer_id}'
+        # Also need to remove the component from any catalog data collection objects
+        for data in self.app.data_collection:
+            if data.meta.get('_importer') == 'CatalogImporter':
+                cid = data.find_component_id(column_name)
+                if cid is not None:
+                    data.remove_component(cid)
+
     def _on_data_renamed(self, msg):
         # the renamed dataset may be *referenced* by any catalog's columns, so
         # update every catalog that carries the marker meta
@@ -245,9 +253,10 @@ class CatalogRowLinkManager(HubListener):
     def _auto_create_column_for_viewer(self, viewer):
         """When a non-table viewer is added, auto-create ``Data:`` columns.
 
-        For each table viewer that currently holds a catalog, a
-        ``Data: <viewer_ref>`` column is added (if absent) and the toolbar
-        visibility is refreshed so the ``TableRowSelect`` tool appears.
+        For each catalog object currently in the data collection, a
+        ``Data: <viewer_ref>`` column is added (if absent). If any table viewers
+        exist, the toolbar visibility is refreshed so the ``TableRowSelect`` tool
+        appears.
         """
         if viewer is None or hasattr(viewer, 'widget_table'):
             return
@@ -255,11 +264,17 @@ class CatalogRowLinkManager(HubListener):
         if not viewer_ref:
             return
         column_name = f'Data: {viewer_ref}'
+
+        # Update columns in all catalogs whether or not they're in a table viewer
+        for data in self.app.data_collection:
+            if data.meta.get('_importer') == 'CatalogImporter':
+                self._ensure_viewer_column(data, viewer_ref, column_name)
+
+        # If we're observing any table viewers, update the toolbar visibility.
         for tv, _, _ in list(self._observed.values()):
             catalog = self._catalog_data_for_viewer(tv, require_managed=False)
             if catalog is None:
                 continue
-            self._ensure_viewer_column(catalog, viewer_ref, column_name)
             if hasattr(tv, 'toolbar') and tv.toolbar is not None:
                 tv.toolbar._update_tool_visibilities()
 
