@@ -17,6 +17,9 @@ from importlib.metadata import version
 import os
 import shutil
 import time
+import re
+import requests
+
 HERE = Path(__file__).parent
 
 
@@ -171,6 +174,92 @@ def run_qt(url, app_name="Jdaviz"):
     # Connect the button click to our popup trigger function
     about_action.triggered.connect(show_about_dialog)
 
+    # Update dropdown
+    # ----------
+    update_action = QAction("&Check for Update...", window_container)
+    update_action.setMenuRole(QAction.MenuRole.ApplicationSpecificRole)
+
+    def _parse_version_nums(s: str):
+        # Extract numeric groups for a simple version comparison, e.g. 'v1.2.3' -> (1,2,3)
+        # this covers both releases and dev versions for testing
+        parts = re.findall(r"\d+", str(s).split('+g')[0])
+        return tuple(int(p) for p in parts) if parts else ()
+
+    def check_for_updates(show_up_to_date_message=True):
+        try:
+            api_url = "https://api.github.com/repos/spacetelescope/jdaviz/releases/latest"
+            response = requests.get(api_url, timeout=10,
+                                    headers={"User-Agent": "jdaviz-check-updates"})
+            response.raise_for_status()
+            data = response.json()
+
+            latest_tag = data.get("tag_name") or data.get("name")
+            release_html = data.get("html_url")
+            installed = version("jdaviz")
+
+            msg_utd = QMessageBox(window_container)
+            icon_path = str(HERE / "data/icons/jdaviz_logo_transparent.png")
+            pixmap = QtGui.QPixmap(icon_path)
+            scaled_pixmap = pixmap.scaled(
+                100, 100, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                QtCore.Qt.TransformationMode.SmoothTransformation)
+            msg_utd.setIconPixmap(scaled_pixmap)
+
+            if not latest_tag:
+                msg_utd.setText("Error")
+                msg_utd.setInformativeText("Could not determine the latest release for Jdaviz.")
+                process_btn = msg_utd.addButton("File GitHub Issue",
+                                                QMessageBox.ButtonRole.AcceptRole)
+                msg_utd.addButton(QMessageBox.StandardButton.Cancel)
+
+                ret = msg_utd.exec()
+                if msg_utd.clickedButton() == process_btn:
+                    QtGui.QDesktopServices.openUrl(
+                        QtCore.QUrl('https://github.com/spacetelescope/jdaviz/issues')
+                        )
+                return
+
+            if _parse_version_nums(latest_tag) > _parse_version_nums(installed):
+                msg_utd.setText("Update Available")
+                msg = (f"There is a new version of Jdaviz available to download: {latest_tag}\n\n"
+                       "Press OK to open the download page in your browser.")
+                msg_utd.setInformativeText(msg)
+                msg_utd.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                ret = msg_utd.exec()
+                # Convert the menu item into a direct link to the release page
+                if release_html:
+                    update_action.setText("Update Available")
+                    update_action.setToolTip(release_html)
+
+                    if ret == QMessageBox.Ok:
+                        QtGui.QDesktopServices.openUrl(QtCore.QUrl(release_html))
+
+            elif show_up_to_date_message:
+                msg_utd.setText("You're up to date!")
+                msg = f"Jdaviz {installed} is currently the newest version available."
+                msg_utd.setInformativeText(msg)
+                msg_utd.setStandardButtons(QMessageBox.Ok)
+                ret = msg_utd.exec()
+
+        except requests.exceptions.HTTPError:
+            QMessageBox.warning(window_container, "Check for updates...",
+                                "Failed to check updates: GitHub request failed")
+
+        except requests.exceptions.RequestException as e:
+            QMessageBox.warning(window_container, "Check for updates...",
+                                f"Failed to check updates: {e}")
+
+        except Exception as e:
+            QMessageBox.warning(window_container, "Check for updates...",
+                                f"Failed to check updates: {e}")
+
+    update_action.triggered.connect(lambda: check_for_updates(show_up_to_date_message=True))
+    ## Uncomment if we want to trigger an update message when the app opens if
+    ## an update is available.  Does NOT have a way to stop popups reopening the app
+    ## so it could get very annoying if you don't want an update. 
+    # QtCore.QTimer.singleShot(0, lambda: check_for_updates(show_up_to_date_message=False))
+    file_menu.addAction(update_action)
+
     # Window menu dropdowns
     # ----------
 
@@ -285,6 +374,15 @@ def run_qt(url, app_name="Jdaviz"):
         )
     )
     help_menu.addAction(zenodo_action)
+
+    # Github
+    git_action = QAction("Jdaviz GitHub", window_container)
+    git_action.triggered.connect(
+        lambda: QtGui.QDesktopServices.openUrl(
+            QtCore.QUrl("https://github.com/spacetelescope/jdaviz")
+        )
+    )
+    help_menu.addAction(git_action)
 
     # JWST Help Desk
     jwst_action = QAction("JWST Help Desk", window_container)
