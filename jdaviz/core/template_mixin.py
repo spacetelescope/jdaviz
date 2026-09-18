@@ -624,7 +624,7 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
         """
         self.loader_message_items = (self.loader_message_items +
                                      [{'text': text, 'color': color,
-                                       'traceback': str(traceback)}])
+                                       'traceback': f"{type(traceback).__name__}: {traceback}"}])
 
         # add message to logger with/without broadcasting
         text_w_traceback = text + (f'; Traceback: {traceback}' if traceback is not None else '')
