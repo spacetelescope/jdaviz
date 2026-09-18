@@ -343,6 +343,18 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
     def output(self):
         return self.input
 
+    def _apply_kwargs(self, kwargs):
+        """
+        Limit the kwargs that can be passed to the MOS importer.
+        """
+        allowed_kwargs = {'auto_extract_2d'}
+        invalid = set(kwargs) - allowed_kwargs
+        if invalid:
+            raise ValueError(
+                f"MOS importer does not support key word argument: {', '.join(invalid)}"
+            )
+        super()._apply_kwargs(kwargs)
+
     def _resolve_viewers(self, viewer_select):
         """
         Resolve a viewer selection component into a list of existing viewer labels,
