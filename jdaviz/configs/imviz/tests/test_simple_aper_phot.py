@@ -1,6 +1,8 @@
 import warnings
 
+from packaging.version import Version
 import pytest
+
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -477,7 +479,7 @@ class TestRadialProfile():
         x_arr, y_arr = _radial_profile(self.data, self.bbox, self.centroid, raw=True)
 
         # TODO: min pin next photutils release (probably 3.0.1) and remove this conditional check
-        if photutils.__version__ > '3.0.0':
+        if Version(photutils.__version__) > Version('3.0.0'):
             # Too many data points to compare each one for X.
             assert x_arr.shape == y_arr.shape == (1373, )
         else:
