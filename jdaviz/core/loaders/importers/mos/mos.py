@@ -276,7 +276,10 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
     def user_api(self):
         expose = ['viewer_1d', 'viewer_2d', 'viewer_image', 'viewer_catalog', 'auto_extract_2d']
         user_api = ImporterUserApi(self, expose)
-        user_api._expose.remove('viewer')
+        # remove the default 'viewer' and 'viewer_label' attributes from the user API
+        for attr in ('viewer', 'viewer_label'):
+            if hasattr(self, attr):
+                user_api._expose.remove(attr)
         return user_api
 
     @property
