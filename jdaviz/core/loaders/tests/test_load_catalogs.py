@@ -412,12 +412,17 @@ def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
     ldr.radius = 3
     ldr.radius_unit = 'arcmin'
     ldr.query_archive()
+    # TODO: leaving this in to catch any potential transient errors
+    #  remove after next major release (5.1)
     try:
         assert 'Catalog' in ldr.format.choices
     except AssertionError:
+        # print any tracebacks/msgs that may have caused the query to fail
         print(ldr._obj.query_message_items)
-        print('--'*80)
+        print('-'*80)
+        # use .load() to print any load errors directly to stdout
         deconfigged_helper.load(ldr._obj._output, format='Catalog')
+        # still raise to notify
         raise
     ldr.format = 'Catalog'
     ldr.load()
