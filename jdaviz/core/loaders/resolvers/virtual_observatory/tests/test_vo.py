@@ -245,7 +245,7 @@ class TestVOQueryPaths:
             vo_ldr.waveband.selected = "optical"
 
         assert vo_ldr.resource.choices == []
-        errors = [d['text'] for d in vo_ldr.query_message_items if d['color'] == 'error']
+        errors = [d['text'] for d in vo_ldr.loader_message_items if d['color'] == 'error']
         assert len(errors) == 1 and expected_msg in errors[0]
 
     def test_empty_registry_results_reported(self, deconfigged_helper):
@@ -257,12 +257,12 @@ class TestVOQueryPaths:
 
         vo_ldr.waveband.selected = "optical"
         assert vo_ldr.resource.choices == [self.fake_name]
-        assert vo_ldr.query_message_items == []
+        assert vo_ldr.loader_message_items == []
 
         results.short_names = []
         vo_ldr.waveband.selected = "radio"
         assert vo_ldr.resource.choices == []
-        assert [(d['text'], d['color']) for d in vo_ldr.query_message_items] == [
+        assert [(d['text'], d['color']) for d in vo_ldr.loader_message_items] == [
             (f"No {vo_ldr.waveband.selected} image resources found in the VO registry. "
              f"Try a different waveband or product type.", 'warning')]
 
@@ -271,7 +271,7 @@ class TestVOQueryPaths:
         vo_ldr.source = self.source
         vo_ldr.resource_filter_coverage = True
         assert vo_ldr.resource.choices == []
-        assert [(d['text'], d['color']) for d in vo_ldr.query_message_items] == [
+        assert [(d['text'], d['color']) for d in vo_ldr.loader_message_items] == [
             (f"No {vo_ldr.waveband.selected} image resources found in the VO registry for source: "
              f"{vo_ldr.source}. Try a different waveband or product type, or "
              f"disable coverage filtering.", 'warning')]
@@ -281,7 +281,7 @@ class TestVOQueryPaths:
         results.short_names = [self.fake_name]
         vo_ldr.waveband.selected = "optical"
         assert vo_ldr.resource.choices == [self.fake_name]
-        assert vo_ldr.query_message_items == []
+        assert vo_ldr.loader_message_items == []
 
     @pytest.mark.parametrize("error, n_calls, expected_error", [
         (DALQueryError("Service accepts only FORMAT = image/fits, ALL, or METADATA"), 2, None),
@@ -306,7 +306,7 @@ class TestVOQueryPaths:
         if n_calls == 2:
             assert 'format' not in service.calls[-1]
             assert service.calls[-1]['size'] == service.calls[0]['size']
-        errors = [d['text'] for d in vo_ldr.query_message_items if d['color'] == 'error']
+        errors = [d['text'] for d in vo_ldr.loader_message_items if d['color'] == 'error']
         if expected_error is None:
             assert errors == []
             assert len(vo_ldr._output) == 1

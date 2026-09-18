@@ -101,7 +101,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
             r_max = 3 * u.arcmin
             if radius > r_max:  # SDSS now has radius max limit
-                self._query_message(
+                self._loader_message(
                     f"Radius for {self.telescope.selected} has max radius of {r_max}\' but got "
                     f"{radius.to(u.arcmin)}, using {r_max}.",
                     color='warning', raise_msg=True)
@@ -119,7 +119,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
             output = Gaia.query_object(skycoord_center, radius=radius)
         else:
             # this can only occur in the API and therefore doesn't need to go through
-            # _query_message
+            # _loader_message
             raise NotImplementedError(f"Querying for {self.telescope.selected} is not supported.")
 
         return output

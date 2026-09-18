@@ -21,11 +21,11 @@ class TestConeSearchMessages:
         self.calls = []
 
     def _query_msg_texts(self, color=None):
-        return [item['text'] for item in self.ldr.query_message_items
+        return [item['text'] for item in self.ldr.loader_message_items
                 if color is None or item['color'] == color]
 
     def _query_msg_tracebacks(self, color=None):
-        return [repr(item['traceback']) for item in self.ldr.query_message_items
+        return [repr(item['traceback']) for item in self.ldr.loader_message_items
                 if color is None or item['color'] == color]
 
     def _fail_first(self, coord):
@@ -59,7 +59,7 @@ class TestConeSearchMessages:
         # every banner message is also broadcast as a snackbar/recorded in the logger
         assert [m['text'] for m in self.helper.plugins['Logger'].history] == self._query_msg_texts()
         assert [m['color'] for m in self.helper.plugins['Logger'].history] == [
-            d['color'] for d in ldr.query_message_items]
+            d['color'] for d in ldr.loader_message_items]
 
     def test_no_results_reported(self):
         ldr = self.ldr
@@ -95,19 +95,19 @@ class TestConeSearchMessages:
         assert self._query_msg_texts('error') == []
         assert len(self._query_msg_texts('success')) == 1
 
-    def test_query_message_raise_behavior(self):
+    def test_loader_message_raise_behavior(self):
         """``raise_msg`` warns for warnings and raises errors that carry a traceback."""
         ldr = self.ldr
 
         with pytest.warns(UserWarning, match='heads up'):
-            ldr._query_message('heads up', color='warning', raise_msg=True)
+            ldr._loader_message('heads up', color='warning', raise_msg=True)
 
         with pytest.raises(ValueError, match='fatal'):
-            ldr._query_message('fatal', color='error',
-                               traceback=ValueError('fatal'), raise_msg=True)
+            ldr._loader_message('fatal', color='error',
+                                traceback=ValueError('fatal'), raise_msg=True)
 
         # an error without a traceback can only be reported, never raised
-        ldr._query_message('reported only', color='error', raise_msg=True)
+        ldr._loader_message('reported only', color='error', raise_msg=True)
         assert 'reported only' in self._query_msg_texts('error')
 
     def test_unresolvable_source_reported(self):
