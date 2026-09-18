@@ -702,8 +702,15 @@ def test_plot_line_analysis(deconfigged_helper):
     vert_marks_off = [m for m in sv_off.figure.marks if isinstance(m, BaseSpectrumVerticalLine)]
     # gaussian spectrum and fwhm line disappear
     assert len(all_plugin_marks_off) <= 6
-    # fwhm line disappears
+    # centroid line disappears
     assert len(vert_marks_off) <= 1
+
+    # when subset is changed, 3 marks should disappear
+    la.spectral_subset = 'Entire Spectrum'
+    all_plugin_marks_subset_change = [m for m in sv_on.figure.marks if isinstance(m, PluginLine)]
+    vert_marks_subset_change = [m for m in sv_on.figure.marks if isinstance(m, BaseSpectrumVerticalLine)] # noqa
+    assert len(all_plugin_marks_subset_change) <= 6
+    assert len(vert_marks_subset_change) <= 1
 
 
 def test_plot_line_analysis_with_units(deconfigged_helper):
@@ -742,6 +749,9 @@ def test_plot_line_analysis_with_units(deconfigged_helper):
     la.continuum_width = 3
     la.plot_gaussian_params = True
     la.get_results(add_to_table=True)
+
+    # verify that line analysis results are in consistent units
+    assert la._obj.params['continuum'].unit == la._obj.params['amplitude'].unit
 
     # verify that line analysis parameters are in display units
     assert la._obj._gaussian_spectrum is not None
