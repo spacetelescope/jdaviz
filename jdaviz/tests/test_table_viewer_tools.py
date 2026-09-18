@@ -1355,3 +1355,97 @@ class TestTableRowSelectToolBehavior:
         # TableRowSelect back with the original row restored
         assert self.toolbar.active_tool_id == 'jdaviz:table_row_select'
         assert self.table_viewer.widget_table.checked == [1]
+
+
+class TestTableColumnsVisible:
+    """Test the 'Visible columns' toolbar tool in the table viewer."""
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, deconfigged_helper, sky_coord_only_source_catalog):
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = sky_coord_only_source_catalog
+        ldr.format = 'Catalog'
+        ldr.importer.viewer.create_new = 'Table'
+        ldr.load()
+
+        self._app = deconfigged_helper
+        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.toolbar = self.table_viewer.toolbar
+        self.tool = self.toolbar.tools['jdaviz:table_columns_visible']
+
+    def test_activate_shows_all_columns_selected(self):
+        assert self.tool.is_visible() is True
+
+        self.tool.activate()
+        assert self.toolbar.tool_override_mode == 'Visible Columns'
+
+        widget = self.toolbar.custom_widget_items[0]
+        all_names = [item['value'] for item in widget['items']]
+        assert len(all_names) > 1
+        assert self.toolbar.custom_widget_selected[0] == all_names
+        assert self.table_viewer.state.hidden_components == []
+
+    def test_selection_updates_hidden_components(self):
+        self.tool.activate()
+        all_names = [item['value'] for item in self.toolbar.custom_widget_items[0]['items']]
+        visible = all_names[:1]
+
+        self.toolbar.custom_widget_selected = [visible]
+
+        hidden = [str(c) for c in self.table_viewer.state.hidden_components]
+        assert sorted(hidden) == sorted(all_names[1:])
+
+    def test_empty_selection_is_reverted(self):
+        self.tool.activate()
+        all_names = [item['value'] for item in self.toolbar.custom_widget_items[0]['items']]
+
+        self.toolbar.custom_widget_selected = [[]]
+
+        assert self.table_viewer.state.hidden_components == []
+        assert self.toolbar.custom_widget_selected[0] == all_names
+
+    def test_external_state_change_updates_widget(self):
+        self.tool.activate()
+        components = self.tool._get_components()
+
+        self.table_viewer.state.hidden_components = [components[0]]
+
+        assert str(components[0]) not in self.toolbar.custom_widget_selected[0]
+
+    def test_component_changes_update_widget(self):
+        self.tool.activate()
+        data = self.table_viewer.widget_table.data
+        component = data.main_components[0]
+
+        self.table_viewer.widget_table.vue_rename_column(
+            {'column': str(component), 'newName': 'renamed'}
+        )
+        assert 'renamed' in self.toolbar.custom_widget_selected[0]
+
+        data.add_component(np.ones(data.size), 'added')
+        assert 'added' in [item['value'] for item in self.toolbar.custom_widget_items[0]['items']]
+
+        self.table_viewer.widget_table.vue_remove_column({'column': 'added'})
+        assert 'added' not in [item['value'] for item in self.toolbar.custom_widget_items[0]['items']]
+
+    def test_restore_removes_state_callback(self):
+        self.tool.activate()
+        self.toolbar.restore_tools()
+        assert self.toolbar.tool_override_mode == ''
+
+        # no error and no widget updates after the override is closed
+        self.table_viewer.state.hidden_components = self.tool._get_components()[:1]
+        assert self.toolbar.custom_widget_items == []
+
+
+def test_plot_options_table_columns_visible_deprecated(deconfigged_helper,
+                                                       sky_coord_only_source_catalog):
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = sky_coord_only_source_catalog
+    ldr.format = 'Catalog'
+    ldr.importer.viewer.create_new = 'Table'
+    ldr.load()
+
+    po = deconfigged_helper.plugins['Plot Options']
+    with pytest.warns(DeprecationWarning, match='Visible columns'):
+        po.table_columns_visible
