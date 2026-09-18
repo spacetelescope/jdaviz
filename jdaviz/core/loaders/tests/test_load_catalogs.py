@@ -409,6 +409,8 @@ def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
     ldr.viewer = list(deconfigged_helper.viewers.keys())[0]
     ldr.telescope = 'SDSS'
     ldr.max_results = 10
+    ldr.radius = 3
+    ldr.radius_unit = 'arcmin'
     ldr.query_archive()
     assert 'Catalog' in ldr.format.choices
     ldr.format = 'Catalog'
