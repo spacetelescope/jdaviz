@@ -275,7 +275,9 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
     @property
     def user_api(self):
         expose = ['viewer_1d', 'viewer_2d', 'viewer_image', 'viewer_catalog', 'auto_extract_2d']
-        return ImporterUserApi(self, expose)
+        user_api = ImporterUserApi(self, expose)
+        user_api._expose.remove('viewer')
+        return user_api
 
     @property
     def _input_path(self):
@@ -342,18 +344,6 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
     @property
     def output(self):
         return self.input
-
-    def _apply_kwargs(self, kwargs):
-        """
-        Limit the kwargs that can be passed to the MOS importer.
-        """
-        allowed_kwargs = {'auto_extract_2d'}
-        invalid = set(kwargs) - allowed_kwargs
-        if invalid:
-            raise ValueError(
-                f"MOS importer does not support key word argument: {', '.join(invalid)}"
-            )
-        super()._apply_kwargs(kwargs)
 
     def _resolve_viewers(self, viewer_select):
         """
