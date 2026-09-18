@@ -607,7 +607,7 @@ def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
 
     # file table is now populated asynchronously in a background thread;
     # poll briefly until it finishes
-    deadline = time.time() + 30
+    deadline = time.time() + 60
     while not ldr._obj.file_table_populated and time.time() < deadline:
         time.sleep(0.1)
 
