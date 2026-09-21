@@ -1426,7 +1426,7 @@ class TestTableColumnsVisible:
         assert 'added' in [item['value'] for item in self.toolbar.custom_widget_items[0]['items']]
 
         self.table_viewer.widget_table.vue_remove_column({'column': 'added'})
-        assert 'added' not in [item['value'] for item in self.toolbar.custom_widget_items[0]['items']]
+        assert 'added' not in [item['value'] for item in self.toolbar.custom_widget_items[0]['items']]  # noqa
 
     def test_restore_removes_state_callback(self):
         self.tool.activate()
