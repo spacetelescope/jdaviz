@@ -28,7 +28,6 @@ def test_row_data_association(deconfigged_helper, image_2d_wcs):
     # the catalog isn't loaded in a table viewer
     assert cat.find_component_id('Data: Image') is not None
 
-    print(deconfigged_helper.new_viewers)
     vc = deconfigged_helper.new_viewers['Scatter']
     vc.viewer_label = "Test Scatter"
     vc()
