@@ -26,6 +26,7 @@ from jdaviz.core.events import (AddDataMessage,
                                 SubsetRenameMessage)
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
+                                        LoaderBannerMessagesMixin,
                                         SelectPluginComponent,
                                         DatasetSelect,
                                         Table,
@@ -1238,7 +1239,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.open_callback()
 
 
-class BaseConeSearchResolver(BaseResolver):
+class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
     viewer_items = List([]).tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
 
@@ -1277,8 +1278,6 @@ class BaseConeSearchResolver(BaseResolver):
     returned_no_results = Bool(False).tag(sync=True)
     returned_max_results = Bool(False).tag(sync=True)
 
-    # Unified reporting for all cone-search resolvers. See ``_query_message``.
-    query_message_items = List([]).tag(sync=True)
     results_loading = Bool(False).tag(sync=True)
 
     _catalog_source_index_colname = 'source_index'
@@ -1365,34 +1364,6 @@ class BaseConeSearchResolver(BaseResolver):
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
 
-    def _clear_query_messages(self):
-        self.query_message_items = []
-
-    def _query_message(self, text, color='error', popup=False, traceback=None, raise_msg=False):
-        """
-        Report ``text`` to the user through both a persistent banner in the loader UI.
-        The messages are still passed to the logger so they can be accessed after the
-        fact.
-        """
-        self.query_message_items = (self.query_message_items +
-                                    [{'text': text, 'color': color, 'traceback': str(traceback)}])
-
-        # add message to logger with/without broadcasting
-        text_w_traceback = text + (f'; Traceback: {traceback}' if traceback is not None else '')
-        snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
-                                                   color=color, sender=self, traceback=traceback)
-        self._app.state.snackbar_queue.put(self._app.state,
-                                           self._app._jdaviz_helper.plugins['Logger'],
-                                           snackbar_msg_w_traceback,
-                                           history=True,
-                                           popup=popup)
-
-        if raise_msg and color == 'warning':
-            warnings.warn(text)
-
-        elif raise_msg and color == 'error' and traceback is not None:
-            raise traceback
-
     @property
     def _query_archive_label(self):
         # override by subclass to identify the queried archive/resource
@@ -1416,18 +1387,18 @@ class BaseConeSearchResolver(BaseResolver):
             return self._query_single_coord(skycoord_center)
         except Exception as e:  # nosec
             source_label = self._current_query_source_label or self.source
-            self._query_message(f"Failed to query {self._query_archive_label.strip()} "
-                                f"for source: {source_label}.",
-                                color='error', traceback=e)
+            self._loader_message(f"Failed to query {self._query_archive_label.strip()} "
+                                 f"for source: {source_label}.",
+                                 color='error', traceback=e)
             return None
 
-    def _source_to_skycoord(self, add_query_message=True):
+    def _source_to_skycoord(self, add_loader_message=True):
         """
         Resolve ``source`` into a ``SkyCoord``. The input is first parsed as a
         coordinate pair in degrees and, failing that, as a source name via
         ``SkyCoord.from_name``.
 
-        Returns ``None`` (reporting the failure via `_query_message`) when the
+        Returns ``None`` (reporting the failure via `_loader_message`) when the
         source cannot be resolved, e.g. because the name is unknown or because
         the Sesame name resolution service is unreachable.
         """
@@ -1441,9 +1412,9 @@ class BaseConeSearchResolver(BaseResolver):
         try:
             return SkyCoord.from_name(stripped_source, frame=self.coordframe_selected)
         except Exception as e:  # nosec
-            if add_query_message:
-                self._query_message(f"Unable to resolve source name: {self.source}",
-                                    color='error', traceback=e)
+            if add_loader_message:
+                self._loader_message(f"Unable to resolve source name: {self.source}",
+                                     color='error', traceback=e)
             return None
 
     def _finalize_query_output(self, output, hit_cap=False):
@@ -1460,22 +1431,23 @@ class BaseConeSearchResolver(BaseResolver):
         self.returned_no_results = n_results == 0
         self.returned_max_results = hit_cap and (n_results > 0)
         self._output = output if n_results else None
-        _failures = [msg for msg in self.query_message_items if msg['color'] == 'error']
+        _failures = [msg for msg in self.loader_message_items if msg['color'] == 'error']
 
         if self.returned_no_results and not len(_failures):
-            self._query_message(f"The search returned no results from {self._query_archive_label}. "
-                                f"Please modify your query parameters and try again.",
-                                color='error')
+            self._loader_message(
+                f"The search returned no results from {self._query_archive_label}. "
+                f"Please modify your query parameters and try again.",
+                color='error')
         elif self.returned_max_results:
-            self._query_message("The number of results returned has reached the maximum "
-                                f"limit set ({self.max_results}).",
-                                color='success')
+            self._loader_message("The number of results returned has reached the maximum "
+                                 f"limit set ({self.max_results}).",
+                                 color='success')
         else:
             # There can be a scenario where the query returns failures for every result
             # but the query itself was successful. In that case, we don't want to show the
             # "0 results found" message.
             if not self.returned_no_results:
-                self._query_message(f"{n_results} results found.", color='success')
+                self._loader_message(f"{n_results} results found.", color='success')
 
         self._resolver_input_updated()
 
@@ -1489,7 +1461,7 @@ class BaseConeSearchResolver(BaseResolver):
         once per (selected) catalog row and the results are stacked
         (see ``_query_catalog``).
         """
-        self._clear_query_messages()
+        self._clear_loader_messages()
 
         # Catalog mode: loop over all (selected) catalog rows and stack results.
         if self.search_input_selected == 'Catalog':
@@ -1692,7 +1664,7 @@ class BaseConeSearchResolver(BaseResolver):
         # Specify this (mostly) to check for general network issues
         err_strings = [e for (_, _, e) in coords if e]
         if len(set(err_strings)) == 1:
-            self._query_message(
+            self._loader_message(
                 f"Single reason failure occurred during name resolution: {err_strings[0]}",
                 color='warning')
 
@@ -1789,7 +1761,7 @@ class BaseConeSearchResolver(BaseResolver):
         if self._source_name_query_failures:
             # Full per-name errors remain in ``self._source_name_query_failures``
             # for a developer to inspect if needed.
-            self._query_message(
+            self._loader_message(
                 f"Could not resolve {len(self._source_name_query_failures)}/{len(coords)} "
                 f"source names from the '{self.catalog_name_col_selected}' column. "
                 f"Check the source names in your catalog.",

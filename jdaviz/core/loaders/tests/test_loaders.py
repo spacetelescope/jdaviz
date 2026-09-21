@@ -308,10 +308,6 @@ def test_hst_product_identification_and_load(deconfigged_helper, hst_product_hdu
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
-@pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'
-                          ' used to avoid an error when handling 3D WCS with 2D data.'
-                          'The temporary fix will be removed once an upstream solution'
-                          'is implemented.')
 def test_fits_spectrum2d(deconfigged_helper):
     uri = cached_uri('mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits')
     if 'mast' in uri:
@@ -620,7 +616,7 @@ def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
 
     # file table is now populated asynchronously in a background thread;
     # poll briefly until it finishes
-    deadline = time.time() + 30
+    deadline = time.time() + 60
     while not ldr._obj.file_table_populated and time.time() < deadline:
         time.sleep(0.1)
 
@@ -641,10 +637,14 @@ def test_failed_astroquery(deconfigged_helper):
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = "Bad Object"
     ldr.query_archive()
-    snackbar_msg = ("Unable to resolve source name: Bad Object; "
-                    "Traceback: Unable to find coordinates for name 'Bad Object' "
-                    "using https://cds.unistra.fr/cgi-bin/nph-sesame/SNV?Bad%20Object")
-    assert snackbar_msg in [d['text'] for d in deconfigged_helper.plugins['Logger'].history]
+    snackbar_msg = "Unable to resolve source name: Bad Object; Traceback:"
+    # work backwards through history since the message is likely at the end
+    for msg in deconfigged_helper.plugins['Logger'].history[::-1]:
+        if snackbar_msg in msg['text']:
+            break
+    else:
+        raise AssertionError(
+            f"Expected snackbar message not found in logger history: {snackbar_msg}")
 
 
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):

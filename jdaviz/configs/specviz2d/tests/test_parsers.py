@@ -13,14 +13,10 @@ from jdaviz.configs.imviz.tests.utils import create_example_gwcs
 
 
 @pytest.mark.remote_data
-@pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'
-                          ' used to avoid an error when handling 3D WCS with 2D data.'
-                          'The temporary fix will be removed once an upstream solution'
-                          'is implemented.')
 def test_2d_parser_jwst(deconfigged_helper):
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
 
-    deconfigged_helper.load(spectrum_2d=fn, format='2D Spectrum')
+    deconfigged_helper.load(fn, format='2D Spectrum', data_label='Spectrum 2D')
     assert len(deconfigged_helper._app.data_collection) == 2
 
     dc_0 = deconfigged_helper._app.data_collection[0]
@@ -31,14 +27,14 @@ def test_2d_parser_jwst(deconfigged_helper):
     assert dc_0.get_component('flux').units == 'MJy / sr'
 
     dc_1 = deconfigged_helper._app.data_collection[1]
-    assert dc_1.label == 'Spectrum 1D'
+    assert dc_1.label == 'Spectrum 2D (auto-ext)'
     assert 'header' not in dc_1.meta
 
     # extracted 1D spectrum should have same flux units as 2d spectrum
     assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
     # Also check the coordinates info panel.
-    viewer_2d = deconfigged_helper._app.get_viewer('spectrum-2d-viewer')
+    viewer_2d = deconfigged_helper._app.get_viewer('2D Spectrum')
     label_mouseover = deconfigged_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 350, 'y': 30}})

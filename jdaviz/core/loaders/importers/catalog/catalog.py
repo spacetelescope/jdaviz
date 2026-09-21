@@ -7,7 +7,7 @@ import re
 from regions import PixCoord
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers import BaseCatalogImporter
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
@@ -17,9 +17,17 @@ from .row_link import get_catalog_row_link_manager
 
 __all__ = ['CatalogImporter']
 
+# regular expressions to guess which columns correspond to ra, dec, x, y
+COORD_PATTERNS = {
+    "ra": re.compile(r'^ra$|^ra|ra$|^rightascension$|^rightascension|rightascension$|^right$|^ascension$', re.IGNORECASE), # noqa
+    "dec": re.compile(r'^dec$|^dec|dec$|^declination$|^declination|declination$', re.IGNORECASE), # noqa
+    "x": re.compile(r'^x(pix(el)?)$|^x$|^x', re.IGNORECASE),
+    "y": re.compile(r'^y(pix(el)?)$|^y$|^y', re.IGNORECASE),
+}
+
 
 @loader_importer_registry("Catalog")
-class CatalogImporter(BaseImporterToDataCollection):
+class CatalogImporter(BaseCatalogImporter):
 
     template_file = __file__, "./catalog.vue"
 
@@ -55,11 +63,6 @@ class CatalogImporter(BaseImporterToDataCollection):
     # displayed for mouseover. If None selected, an index column is used.
     col_id_items = List().tag(sync=True)
     col_id_selected = Unicode().tag(sync=True)
-
-    # additional (optional) non-position columns to load (e.g. flux, id)
-    col_other_items = List().tag(sync=True)
-    col_other_selected = List().tag(sync=True)
-    col_other_multiselect = Bool(True).tag(sync=True)
 
     # HDUList-specific options
     input_has_extensions = Bool(False).tag(sync=True)
@@ -165,11 +168,7 @@ class CatalogImporter(BaseImporterToDataCollection):
                                            manual_options=self._guess_coord_cols('y'))
 
         # dropdowns for (optional) additional columns
-        self.col_other = SelectPluginComponent(self,
-                                               items='col_other_items',
-                                               selected='col_other_selected',
-                                               manual_options=input.colnames,
-                                               multiselect='col_other_multiselect')
+        self._init_col_other(input.colnames)
 
     @property
     def input_as_table(self):
@@ -236,20 +235,6 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         return 'Input is not a valid catalog.'
 
-    def _update_col_items_and_selected(self, base_attr, options, select_first=True):
-        """update column items and selected value."""
-        items_attr = f'{base_attr}_items'
-        selected_attr = f'{base_attr}_selected'
-
-        setattr(self, items_attr, [{'label': item} for item in options])
-        self.send_state(items_attr)
-
-        if select_first:
-            setattr(self, selected_attr, options[0] if options else None)
-        else:
-            setattr(self, selected_attr, [])
-        self.send_state(selected_attr)
-
     @observe('extension_selected')
     def _on_extension_selected_change(self, event):
         # when the selected extension changes, we need to update the column selection dropdowns
@@ -293,15 +278,6 @@ class CatalogImporter(BaseImporterToDataCollection):
         column is found, the initial selection in the drop down for RA/x, dec/y
         columns will be '---' (no selection)
         """
-
-        # regular expressions to guess which columns correspond to ra, dec, x, y
-        COORD_PATTERNS = {
-            "ra": re.compile(r'^ra$|^ra|ra$|^rightascension$|^rightascension|rightascension$|^right$|^ascension$', re.IGNORECASE), # noqa
-            "dec": re.compile(r'^dec$|^dec|dec$|^declination$|^declination|declination$', re.IGNORECASE), # noqa
-            "x": re.compile(r'^x(pix(el)?)$|^x$|^x', re.IGNORECASE),
-            "y": re.compile(r'^y(pix(el)?)$|^y$|^y', re.IGNORECASE),
-        }
-
         input = self.input_as_table
 
         if not isinstance(input, (Table, QTable)):
@@ -312,47 +288,18 @@ class CatalogImporter(BaseImporterToDataCollection):
         if colnames is None:
             return
 
-        idx = None
-        if col in ['ra', 'dec']:
-            col_is_sc = [isinstance(input[colnames[i]], SkyCoord) for i in range(len(colnames))]
-            if np.any(col_is_sc):
-                idx = np.where(col_is_sc)[0][0]
-
-        elif col in ['x', 'y']:
-            col_is_pc = [isinstance(input[colnames[i]][0], PixCoord) for i in range(len(colnames))]
-            if np.any(col_is_pc):
-                idx = np.where(col_is_pc)[0][0]
-
-        if idx is None:
-            all_column_names = [str(x).lower().strip() for x in colnames]
-
-            get_idx = lambda x, s, d: s.index(x) if x in s else d # noqa
-
-            if col in ("ra", "dec", "x", "y"):
-                token_pattern = COORD_PATTERNS[col]
-            else:
-                raise NotImplementedError(f"Not a valid coordinate column: {col}.")
-
-            idx = next((get_idx(c, all_column_names, None) for c in all_column_names
-                        if self._check_col_tokens(col, token_pattern, re.split(r'[\s_\-\.]+', c))),
-                       None)
-
-        # if no good candidate found, default to '---' (no selection) for
-        # the default selection.
-        if idx is None:
-            return ['---'] + colnames
-        return_cols = colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
-        # non-selection is the second option, so you don't have to scroll
-        # all the way down to see that its an option not to load a column
-        return [return_cols[0]] + ['---'] + return_cols[1:]
-
-    def _check_col_tokens(self, col, token_pattern, tokens):
-        if col in ("ra", "dec", "x", "y"):
-            return (not any(token in COORD_WORDS_TO_EXCLUDE for token in tokens)
-                    and any(token_pattern.search(t) for t in tokens)
-                    )
+        if col in ('ra', 'dec'):
+            idx = self._guess_col_by_instance_type(input, colnames, SkyCoord)
+        elif col in ('x', 'y'):
+            idx = self._guess_col_by_instance_type(input, colnames, PixCoord, per_row=True)
         else:
             raise NotImplementedError(f"Not a valid coordinate column: {col}.")
+
+        if idx is None:
+            idx = self._guess_col_by_name_pattern(colnames, COORD_PATTERNS[col],
+                                                  exclude_words=COORD_WORDS_TO_EXCLUDE)
+
+        return self._reorder_cols_with_best_guess(colnames, idx)
 
     def _valid_coord_units(self, coord):
         """Valid choices for Ra, Dec units."""

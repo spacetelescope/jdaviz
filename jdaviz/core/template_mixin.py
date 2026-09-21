@@ -608,6 +608,41 @@ class LoadersMixin(VuetifyTemplate, HubListener):
             self.loader_selected = loader_items[0]['name']
 
 
+class LoaderBannerMessagesMixin(VuetifyTemplate):
+    """
+    Unified inline reporting for loader resolvers and importers.
+    """
+    loader_message_items = List([]).tag(sync=True)
+
+    def _clear_loader_messages(self):
+        self.loader_message_items = []
+
+    def _loader_message(self, text, color='error', popup=False, traceback=None, raise_msg=False):
+        """
+        Report ``text`` to the user through a persistent banner in the loader UI and
+        added to the logger without necessarily raising a snackbar.
+        """
+        self.loader_message_items = (self.loader_message_items +
+                                     [{'text': text, 'color': color,
+                                       'traceback': f"{type(traceback).__name__}: {traceback}"}])
+
+        # add message to logger with/without broadcasting
+        text_w_traceback = text + (f'; Traceback: {traceback}' if traceback is not None else '')
+        snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
+                                                   color=color, sender=self, traceback=traceback)
+        self._app.state.snackbar_queue.put(self._app.state,
+                                           self._app._jdaviz_helper.plugins['Logger'],
+                                           snackbar_msg_w_traceback,
+                                           history=True,
+                                           popup=popup)
+
+        if raise_msg and color == 'warning':
+            warnings.warn(text)
+
+        elif raise_msg and color == 'error' and traceback is not None:
+            raise traceback
+
+
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
     config = Unicode("").tag(sync=True)
     api_hints_obj = Unicode("").tag(sync=True)
@@ -4202,7 +4237,8 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                            mark_y.get(pos, []),
                            viewers=viewers)
 
-    def _get_continuum(self, dataset, spectral_subset, update_marks=False, per_pixel=False):
+    def _get_continuum(self, dataset, spectral_subset,
+                       update_marks=False, per_pixel=False, with_units=False):
         if dataset.selected == '':
             self._update_continuum_marks()
             return None, None, None
@@ -4354,7 +4390,11 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                          mark_y,
                                          viewers=dataset.viewers_with_selected_visible)
 
-        return spectrum, continuum, spectrum - continuum
+        if with_units:
+            continuum *= spectrum.flux.unit
+            return spectrum, continuum, spectrum - continuum.value
+        else:
+            return spectrum, continuum, spectrum - continuum
 
 
 class ViewerSelect(SelectPluginComponent):
