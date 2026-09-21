@@ -1,11 +1,11 @@
-<template>
+ƒ<template>
   <j-loader
     title="Astroquery"
     :popout_button="popout_button"
     :spinner="spinner"
     :spinner_success_message="spinner_success_message"
     :parsed_input_is_empty="parsed_input_is_empty"
-    :parsed_input_is_query="parsed_input_is_query"
+    :parsed_input_is_query="parsedƒ_input_is_query"
     v-model:treat_table_as_query="treat_table_as_query"
     v-model:limit_to_science_products="limit_to_science_products"
     v-model:can_filter_science="can_filter_science"
@@ -37,7 +37,7 @@
         :items="search_input_items.map(i => i.label)"
         v-model:selected="search_input_selected"
         label="Input"
-        api_hint="ldr.search_input_select ="
+        api_hint="ldr.search_input ="
         :api_hints_enabled="api_hints_enabled"
         hint="Select the source of cone-search coordinates."
       ></plugin-select>
