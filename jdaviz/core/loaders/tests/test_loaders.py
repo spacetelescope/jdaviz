@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import time
 from pathlib import Path
 from itertools import product
 
@@ -58,6 +59,17 @@ def test_resolver_matching(specviz_helper):
 
     specviz_helper.load(sp)
     assert len(specviz_helper._app.data_collection) == 1
+
+
+def test_catalog_format_available_for_table_target(deconfigged_helper):
+    table = Table({'ra': [1.0, 2.0], 'dec': [3.0, 4.0]})
+    ldr = deconfigged_helper.loaders['object']
+
+    ldr.object = table
+    assert 'Catalog' in ldr.format.choices
+
+    ldr.target = 'Table'
+    assert 'Catalog' in ldr.format.choices
 
 
 def test_dbg_access(deconfigged_helper):
@@ -121,12 +133,180 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     specviz2d_helper.load_data(spectrum2d)
 
 
+def test_spectrum3d_deselected_extensions(deconfigged_helper):
+    """Test that deselecting uncertainty/mask extensions doesn't cause errors."""
+    from astropy.nddata import StdDevUncertainty
+
+    # Create a 3D spectrum with uncertainty and mask
+    flux_data = np.ones((5, 10, 10)) * u.Jy
+    uncertainty_data = StdDevUncertainty(np.ones((5, 10, 10)) * 0.1)
+    mask_data = np.zeros((5, 10, 10), dtype=bool)
+    spectral_axis = np.arange(5) * u.um
+
+    spectrum3d = Spectrum(
+        flux=flux_data,
+        spectral_axis=spectral_axis,
+        uncertainty=uncertainty_data,
+        mask=mask_data
+    )
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = spectrum3d
+    ldr.format = '3D Spectrum'
+
+    # Verify extensions are available
+    assert 'spectrum.uncertainty' in ldr.importer.unc_extension.choices
+    assert 'spectrum.mask' in ldr.importer.mask_extension.choices
+
+    # Deselect uncertainty and mask extensions
+    ldr.importer.unc_extension.selected = ''
+    ldr.importer.mask_extension.selected = ''
+
+    # This should not raise an AttributeError
+    ldr.load()
+
+    # Verify only flux cube was loaded (plus auto-extracted 1d spectrum)
+    assert len(deconfigged_helper._app.data_collection) == 2
+    # The first should be the flux cube, the second should be the auto-extracted spectrum
+    assert '3D Spectrum' in deconfigged_helper._app.data_collection[0].label
+
+    # Verify no uncertainty cube was created
+    unc_labels = [d.label for d in deconfigged_helper._app.data_collection if 'UNC' in d.label]
+    assert len(unc_labels) == 0
+
+    # Verify no mask cube was created
+    mask_labels = [d.label for d in deconfigged_helper._app.data_collection if 'MASK' in d.label]
+    assert len(mask_labels) == 0
+
+
+def test_spectrum3d_fits_no_flux_selected(deconfigged_helper):
+    """Test error handling when FLUX extension is deselected for FITS input."""
+    # Create a FITS HDUList with FLUX, ERR, and DQ extensions
+    flux_data = np.ones((5, 10, 10), dtype=np.float32)
+    err_data = np.ones((5, 10, 10), dtype=np.float32) * 0.1
+    dq_data = np.zeros((5, 10, 10), dtype=np.int32)
+
+    hdul = fits.HDUList([
+        fits.PrimaryHDU(),
+        fits.ImageHDU(flux_data, name='FLUX'),
+        fits.ImageHDU(err_data, name='ERR'),
+        fits.ImageHDU(dq_data, name='DQ')
+    ])
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdul
+    ldr.format = '3D Spectrum'
+
+    # Verify all extensions are available
+    assert '1: FLUX' in ldr.importer.extension.choices
+    assert '2: ERR' in ldr.importer.unc_extension.choices
+
+    # Deselect FLUX (primary) extension
+    ldr.importer.extension.selected = ''
+    # ERR should still be selected
+    assert ldr.importer.unc_extension.selected == '2: ERR'
+
+    # Verify the import button is disabled with appropriate message
+    assert ldr.importer._obj.import_disabled_msg == "No primary data extension selected. Please select a FLUX extension."  # noqa
+
+    # Attempting to import via API should raise ValueError with the disabled message
+    with pytest.raises(ValueError, match="No primary data extension selected"):
+        ldr.load()
+
+
+def test_spectrum3d_load_flux_then_err_only(deconfigged_helper, image_cube_hdu_obj):
+    """Test loading ERR extension as primary data when FLUX is deselected."""
+    # Use the existing fixture which has FLUX, ERR, and MASK extensions
+    hdul = image_cube_hdu_obj
+
+    # Load FLUX without uncertainty
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdul
+    ldr.format = '3D Spectrum'
+
+    # Verify FLUX is available but ERR is not in extension choices
+    # (due to hdu_is_valid_flux filter)
+    assert '1: FLUX' in ldr.importer.extension.choices
+    assert '2: ERR' not in ldr.importer.extension.choices
+
+    # Load FLUX without uncertainty
+    ldr.importer.extension.selected = '1: FLUX'
+    ldr.importer.unc_extension.selected = ''
+    ldr.load()
+
+    initial_count = len(deconfigged_helper._app.data_collection)
+    assert initial_count > 0
+
+    # After loading flux, deselect FLUX while unc_extension is still ''.
+    # With a flux cube already loaded, import_disabled_msg should be cleared
+    # (the "select a FLUX extension" alert is not applicable when a flux cube
+    # is already in the data collection).
+    ldr.importer.extension.selected = ''
+    # unc_extension is still '' from the setup above
+    assert ldr.importer.unc_extension.selected == ''
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Selecting ERR in unc_extension should keep import enabled
+    ldr.importer.unc_extension.selected = '2: ERR'
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Now try to load only ERR as primary data (flux extension deselected).
+    # The auto-generated data_label.default must have changed to reflect the
+    # ERR extension so the second load does not silently overwrite the first.
+    ldr.importer.mask_extension.selected = ''  # Deselect mask too
+    flux_label = deconfigged_helper._app.data_collection[0].label
+    assert ldr.importer._obj.data_label_value != flux_label, (
+        f"data_label_value should differ from flux label, "
+        f"got: {ldr.importer._obj.data_label_value}"
+    )
+    expected_err_label = ldr.importer._obj.data_label_value  # e.g. '3D Spectrum [ERR]'
+
+    # This should now work - ERR can be loaded as primary data
+    ldr.load()
+
+    # No warning should be shown after a successful import
+    assert ldr.importer._obj.import_disabled_msg == ''
+
+    # Verify ERR was loaded as a *new* entry in the data collection
+    assert len(deconfigged_helper._app.data_collection) > initial_count
+    assert expected_err_label in [d.label for d in deconfigged_helper._app.data_collection]
+
+
+@pytest.mark.parametrize(
+    "obstype, wcs_type, dispaxis, instrument, expected",
+    [
+        # STIS sx2/flt/raw spectroscopic: spectral WCS + DISPAXIS
+        ('SPECTROSCOPIC', 'spectral', 1, 'STIS', '2D Spectrum'),
+        # WFC3/IR grism drz spectroscopic: celestial WCS, no DISPAXIS.
+        ('SPECTROSCOPIC', 'celestial', None, 'WFC3', '2D Spectrum'),
+        # ACS drz imaging: celestial WCS, no DISPAXIS
+        ('IMAGING', 'celestial', None, 'ACS', 'Image'),
+        # COS flt imaging: celestial WCS but DISPAXIS present.
+        ('IMAGING', 'celestial', 1, 'COS', 'Image'),
+    ],
+)
+def test_hst_product_identification_and_load(deconfigged_helper, hst_product_hdulist,
+                                             obstype, wcs_type, dispaxis, instrument, expected):
+    hdulist = hst_product_hdulist(obstype=obstype, wcs_type=wcs_type,
+                                  dispaxis=dispaxis, instrument=instrument)
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdulist
+
+    # Some HST products share file suffixes/structure between imaging and
+    # spectroscopic observations. The OBSTYPE header keyword is used to
+    # delineate between the two.
+    options = {'2D Spectrum', 'Image'}
+    unexpected = options.difference({expected}).pop()
+    choices = ldr.format.choices
+    assert expected in choices
+    assert unexpected not in choices
+
+    ldr.format = expected
+    ldr.importer()
+
+
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
-@pytest.mark.xfail(reason='spectral_axis unit failure is due to a temporary fix'
-                          ' used to avoid an error when handling 3D WCS with 2D data.'
-                          'The temporary fix will be removed once an upstream solution'
-                          'is implemented.')
 def test_fits_spectrum2d(deconfigged_helper):
     uri = cached_uri('mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits')
     if 'mast' in uri:
@@ -424,6 +604,12 @@ def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
 
     ldr.observation_table.select_rows(0)
 
+    # file table is now populated asynchronously in a background thread;
+    # poll briefly until it finishes
+    deadline = time.time() + 60
+    while not ldr._obj.file_table_populated and time.time() < deadline:
+        time.sleep(0.1)
+
     assert ldr._obj.file_table_populated is True
     assert ldr._obj.get_selected_url() is None
 
@@ -441,8 +627,14 @@ def test_failed_astroquery(deconfigged_helper):
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = "Bad Object"
     ldr.query_archive()
-    snackbar_msg = "Unable to resolve source coordinates: Bad Object"
-    assert deconfigged_helper.plugins['Logger'].history[-1]['text'] == snackbar_msg
+    snackbar_msg = "Unable to resolve source name: Bad Object; Traceback:"
+    # work backwards through history since the message is likely at the end
+    for msg in deconfigged_helper.plugins['Logger'].history[::-1]:
+        if snackbar_msg in msg['text']:
+            break
+    else:
+        raise AssertionError(
+            f"Expected snackbar message not found in logger history: {snackbar_msg}")
 
 
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
@@ -489,16 +681,23 @@ def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper._app.data_collection.external_links) == 4
 
 
+def _make_multi_sci_hdul():
+    sci1 = np.ones((2, 2), dtype=np.float32)
+    err1 = np.full((2, 2), 2, dtype=np.float32)
+    sci2 = np.full((2, 2), 3, dtype=np.float32)
+    err2 = np.full((2, 2), 4, dtype=np.float32)
+    return fits.HDUList([fits.PrimaryHDU(),
+                         fits.ImageHDU(sci1, name='SCI', ver=1),
+                         fits.ImageHDU(err1, name='ERR', ver=1),
+                         fits.ImageHDU(sci2, name='SCI', ver=2),
+                         fits.ImageHDU(err2, name='ERR', ver=2)
+                         ])
+
+
 def test_load_image_mult_sci_extension(imviz_helper):
     # test loading an image with multiple SCI extensions and
     # ensure that automatic parenting logic is handled correctly
-    arr = np.zeros((2, 2), dtype=np.float32)
-    hdul = fits.HDUList([fits.PrimaryHDU(),
-                        fits.ImageHDU(arr, name='SCI', ver=1),
-                        fits.ImageHDU(arr, name='ERR', ver=1),
-                        fits.ImageHDU(arr, name='SCI', ver=2),
-                        fits.ImageHDU(arr, name='ERR', ver=2)
-                         ])
+    hdul = _make_multi_sci_hdul()
 
     # imviz_helper._load(hdul, extension=('SCI,1', 'SCI,2', 'ERR,2'))
     imviz_helper.load_data(hdul, ext=('SCI,1', 'SCI,2', 'ERR,2'))
@@ -513,13 +712,7 @@ def test_load_image_mult_sci_extension(imviz_helper):
 
 def test_loaders_extension_select(imviz_helper):
     # tests internal logic of SelectFileExtensionComponent
-    arr = np.zeros((2, 2), dtype=np.float32)
-    hdul = fits.HDUList([fits.PrimaryHDU(),
-                        fits.ImageHDU(arr, name='SCI', ver=1),
-                        fits.ImageHDU(arr, name='ERR', ver=1),
-                        fits.ImageHDU(arr, name='SCI', ver=2),
-                        fits.ImageHDU(arr, name='ERR', ver=2)
-                         ])
+    hdul = _make_multi_sci_hdul()
 
     ldr = imviz_helper.loaders['object']
     ldr.object = hdul
@@ -569,6 +762,7 @@ def test_load_image_align_by_and_astroquery_loader(deconfigged_helper, image_ndd
     ldr.load()
 
     astroquery_loader = deconfigged_helper.loaders['astroquery']
+    astroquery_loader.search_input = 'Viewer'
     astroquery_loader.viewer = 'Image'
 
     deconfigged_helper.plugins['Orientation'].align_by = align_by
@@ -831,7 +1025,7 @@ def test_load_cube_no_dq_in_viewer(deconfigged_helper):
 
     deconfigged_helper.load(hdul, format='3D Spectrum', dq_add_to_flux_viewer=False)
 
-    # make sure the flux viewer '3D Spectrum' only has one dataset loaded
+    # make sure the flux viewer only has one dataset loaded
     data_in_flux_viewer = deconfigged_helper.viewers['3D Spectrum'].data_menu.data_labels_loaded
     assert len(data_in_flux_viewer) == 1
     assert '3D Spectrum' in data_in_flux_viewer

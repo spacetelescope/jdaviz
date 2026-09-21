@@ -47,15 +47,13 @@ jobs:
           - name: Python 3.13 with coverage checking and all deps
             os: ubuntu-latest
             python: '3.13'
-            toxenv: py313-test-alldeps-cov
-            toxposargs: --run-slow
+            toxenv: py313-test-alldeps-runslow-cov
             allow_failure: false
 
           - name: Python 3.13 with only remote data, coverage checking, and all deps
             os: ubuntu-latest
             python: '3.13'
-            toxenv: py313-test-alldeps-cov
-            toxposargs: --remote-data --run-slow -m remote_data
+            toxenv: py313-test-alldeps-runslow-remotedata-cov
             allow_failure: true
 
           - name: OS X - Python 3.13
@@ -76,20 +74,18 @@ jobs:
             toxenv: py314-test
             allow_failure: false
 
-          # This also runs on cron but we want to make sure new changes
+          # This also runs on cron, but we want to make sure new changes
           # won't break this job at the PR stage.
           - name: Python 3.13 with latest dev versions of key dependencies
             os: ubuntu-latest
             python: '3.13'
-            toxenv: py313-test-devdeps
-            toxposargs: --run-slow
+            toxenv: py313-test-devdeps-runslow
             allow_failure: true
 
           - name: Python 3.13 with only remote data and dev deps
             os: ubuntu-latest
             python: '3.13'
-            toxenv: py313-test-devdeps
-            toxposargs: --remote-data --run-slow -m remote_data
+            toxenv: py313-test-devdeps-runslow-remotedata
             allow_failure: true
 
           - name: Python 3.12 with stable versions of dependencies and Roman
@@ -129,18 +125,18 @@ jobs:
       if: "contains(matrix.toxenv, 'alldeps')"
       run: sudo apt-get install libportaudio2
     - name: Get IP address for MAST debugging
-      if: "contains(matrix.toxposargs, '--remote-data')"
+      if: "contains(matrix.toxenv, 'remotedata')"
       run: curl https://api.ipify.org
     - name: Get components for cache key
       id: date
-      if: "contains(matrix.toxposargs, '--remote-data')"
+      if: "contains(matrix.toxenv, 'remotedata')"
       shell: bash
       run: |
         echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
         echo "week=$(date +'%V')" >> $GITHUB_OUTPUT
         echo "day=$(date +'%j')" >> $GITHUB_OUTPUT
     - name: Restore MAST cache
-      if: "contains(matrix.toxposargs, '--remote-data')"
+      if: "contains(matrix.toxenv, 'remotedata')"
       id: cache-restore
       uses: actions/cache/restore@v6
       with:
@@ -152,7 +148,7 @@ jobs:
           mast-cache-${{ steps.date.outputs.year }}-
           mast-cache-
     - name: Move cache to tox working directory
-      if: "contains(matrix.toxposargs, '--remote-data')"
+      if: "contains(matrix.toxenv, 'remotedata')"
       shell: bash
       run: |
         # Create cache directories for all possible tox environments
