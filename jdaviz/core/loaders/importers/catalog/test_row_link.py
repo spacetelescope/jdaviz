@@ -2,7 +2,6 @@ from astropy.nddata import NDData
 from astropy.table import QTable
 import numpy as np
 
-from jdaviz.core.loaders.importers.catalog.catalog import CatalogImporter
 
 def test_row_data_association(deconfigged_helper, image_2d_wcs):
     # Create a table to load
@@ -19,8 +18,8 @@ def test_row_data_association(deconfigged_helper, image_2d_wcs):
 
     # Load two images into an image viewer
     data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
-    deconfigged_helper.load(data, data_label = "ImData1")
-    deconfigged_helper.load(data, data_label = "ImData2")
+    deconfigged_helper.load(data, data_label="ImData1")
+    deconfigged_helper.load(data, data_label="ImData2")
     deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
 
     cat = deconfigged_helper._app.data_collection[0]
