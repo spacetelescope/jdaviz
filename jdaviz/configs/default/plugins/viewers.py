@@ -1583,6 +1583,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
                     ['jdaviz:table_add_column'],
+                    ['jdaviz:table_columns_visible'],
                     ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
                      'jdaviz:viewer_popout']
                    ]

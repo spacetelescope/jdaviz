@@ -299,6 +299,10 @@
     </glue-state-sync-wrapper>
 
     <glue-state-sync-wrapper :sync="table_columns_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('table_columns_visible')">
+      <v-alert type="warning" density="compact" style="margin-bottom: 8px">
+        Setting visible columns here is deprecated and will be removed in a future version of
+        Jdaviz.  Use the "Visible columns" tool in the table viewer toolbar instead.
+      </v-alert>
       <v-select
         attach
         :menu-props="{ location: 'bottom start' }"

@@ -168,6 +168,8 @@ class UserApiWrapper:
         self._readonly = readonly
         self._exclude_from_dict = exclude_from_dict
         self._deprecation_msg = None
+        # either a list of attribute names or a dict mapping attribute name to a
+        # custom deprecation message
         self._deprecated = deprecated
         self._repr_callable = repr_callable
         if obj.__doc__ is not None:
@@ -188,11 +190,19 @@ class UserApiWrapper:
         if attr in _internal_attrs or attr not in self._expose:
             return super().__getattribute__(attr)
 
-        if attr in self._deprecated:
-            warnings.warn(f"{attr} is deprecated", DeprecationWarning)
+        self._warn_if_deprecated(attr)
 
         exp_obj = getattr(self._obj, attr)
         return getattr(exp_obj, 'user_api', exp_obj)
+
+    def _warn_if_deprecated(self, attr):
+        if attr not in self._deprecated:
+            return
+        if isinstance(self._deprecated, dict):
+            msg = self._deprecated[attr]
+        else:
+            msg = f"{attr} is deprecated"
+        warnings.warn(msg, DeprecationWarning)
 
     def __setattr__(self, attr, value):
         if attr in _internal_attrs:
@@ -203,6 +213,8 @@ class UserApiWrapper:
 
         if attr in self._readonly:
             raise AttributeError("cannot set read-only item")
+
+        self._warn_if_deprecated(attr)
 
         exp_obj = getattr(self._obj, attr)
         if hasattr(exp_obj, '__call__'):

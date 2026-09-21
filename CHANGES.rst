@@ -106,7 +106,7 @@ New Features
 - Improve UI appearance for URL loader. [#4354]
 
 - Adds search to extension menu in loaders when there are more than 3 extensions available. [#4372]
-  
+
 - Generate a Gaussian curve from Line Analysis plugin results and optionally add to the 1D Spectrum viewer. [#4374]
 
 - Unify astroquery and VO reporting behavior. Both now show banners in the UI for the
@@ -163,6 +163,9 @@ Other Changes and Additions
   overwrite. [#4125]
 
 - Updated all front end vuetify templates for Vue 3 compatibility. [#4053]
+
+- Changing visible columns in the table viewer has been moved from the Plot Options
+  plugin to a tool in the table viewer toolbar (with deprecation). [#4382]
 
 5.0.4 (unreleased)
 ==================

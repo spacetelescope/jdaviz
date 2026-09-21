@@ -6104,6 +6104,21 @@ class PlotOptionsSyncState(BasePluginComponent):
         if self._processing_change_to_glue:
             return
 
+        if self._glue_name == 'hidden_components':
+            if not all(isinstance(component, str) for component in value):
+                viewer = self._viewer_select.selected_obj
+                if isinstance(viewer, list):
+                    viewer = viewer[0] if len(viewer) else None
+                if viewer is None or not hasattr(viewer, 'widget_table'):
+                    return
+                data = viewer.widget_table.data
+                if data is None:
+                    return
+                all_components = data.main_components + data.derived_components
+                hidden_names = {str(component) for component in value}
+                value = [str(component) for component in all_components
+                         if str(component) not in hidden_names]
+
         self._processing_change_from_glue = True
         if "Colormap" in value.__class__.__name__:
             value = value.name
