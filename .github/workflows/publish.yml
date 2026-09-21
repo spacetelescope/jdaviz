@@ -7,8 +7,8 @@ on:
     types: [released]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'release' }}
 
 jobs:
   build-n-publish:
@@ -85,13 +85,14 @@ jobs:
         cd ..
         echo "pytest args ${{ steps.build-pytestargs.outputs.pytestargs }}"
         python -m venv testenv
-        testenv/bin/pip install pytest pytest-astropy pytest-tornasync pytest-xdist jdaviz/dist/*.whl
-        testenv/bin/pytest -p no:warnings -n auto --dist load --astropy-header --remote-data ${{ steps.build-pytestargs.outputs.pytestargs }} --pyargs jdaviz
+        testenv/bin/pip install pytest pytest-astropy pytest-tornasync pytest-xdist pytest-split jdaviz/dist/*.whl
+        testenv/bin/pytest -p no:warnings -n auto --dist loadscope --splits 2 --group 1 --durations-path=${{ github.workspace }}/jdaviz/pytest_utilities/.test_durations --astropy-header --remote-data ${{ steps.build-pytestargs.outputs.pytestargs }} --pyargs jdaviz
+        testenv/bin/pytest -p no:warnings -n auto --dist loadscope --splits 2 --group 2 --durations-path=${{ github.workspace }}/jdaviz/pytest_utilities/.test_durations --astropy-header --remote-data ${{ steps.build-pytestargs.outputs.pytestargs }} --pyargs jdaviz
 
     # NOTE: Do not run this part for PR testing.
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
-      if: github.event_name != 'pull_request'
+      if: github.event_name == 'release'
       with:
         user: __token__
         password: ${{ secrets.PYPI_TOKEN }}

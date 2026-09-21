@@ -189,7 +189,7 @@ class ConfigHelper(HubListener):
         new_viewers : dict
             dict of viewer-creator objects
         """
-        if not self._app.config == 'deconfigged':
+        if self._app.config in ('imviz', 'mosviz', 'specviz', 'specviz2d', 'cubeviz', 'rampviz'):
             raise NotImplementedError("new_viewers is only enabled in the deconfigged app")  # noqa
         new_viewers = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api  # noqa
                        for item in self._app.state.new_viewer_items if item['is_relevant']}
