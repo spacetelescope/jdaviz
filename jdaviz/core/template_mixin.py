@@ -4933,9 +4933,17 @@ class DatasetSelect(SelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 2
 
+        def is_source_catalog_table(data):
+            return data.meta.get('_importer', '') == 'CatalogImporter'
+
+        def is_spectral_lines_list_table(data):
+            return data.meta.get('_importer', '') == 'SpectralLinesImporter'
+
+        def is_generic_table(data):
+            return data.meta.get('_importer', '') == 'GenericCatalogImporter'
+
         def is_catalog(data):
-            return data.meta.get('_importer', '') in ['SpectralLinesImporter',
-                                                      'CatalogImporter']
+            return is_source_catalog_table(data) or is_spectral_lines_list_table(data) or is_generic_table(data)  # noqa
 
         def is_catalog_or_image_not_spectrum(data):
             return is_catalog(data) or is_image_not_spectrum(data)

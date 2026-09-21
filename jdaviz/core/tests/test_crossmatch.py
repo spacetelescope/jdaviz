@@ -369,7 +369,7 @@ def _load_catalog(helper, table, ra_col='ra', dec_col='dec', id_col=None):
     ldr = helper.loaders['object']
     ldr.object = table
     ldr.format = 'Catalog'
-    ldr.importer.viewer.create_new = 'Table'
+    ldr.importer.viewer.create_new = 'Source Catalog Table'
     ldr.importer.col_ra.selected = ra_col
     ldr.importer.col_dec.selected = dec_col
     if id_col is not None:

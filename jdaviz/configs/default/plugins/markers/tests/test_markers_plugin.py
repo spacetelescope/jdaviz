@@ -750,7 +750,7 @@ def test_markers_load_table_into_data_collection(deconfigged_helper, spectrum1d)
     assert loaded_table['spectral_axis'][2] == 6000
 
 
-@pytest.mark.parametrize('viewer_type', ['Scatter', 'Table', 'Histogram'])
+@pytest.mark.parametrize('viewer_type', ['Scatter', 'Source Catalog Table', 'Histogram'])
 def test_markers_mouseover_and_load_into_new_viewer(deconfigged_helper, image_hdu_wcs, viewer_type):
     """
     Test creating markers in the UI, loading table into app, then

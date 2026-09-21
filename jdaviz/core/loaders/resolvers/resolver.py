@@ -193,10 +193,12 @@ class FormatSelect(SelectPluginComponent):
         # Sort generic table importers to the end of the list so more specific
         # formats are selected by default.  Order: other > Catalog > Spectral Lines.
         spectral_lines_formats = [f for f in all_formats if f['label'] == 'Spectral Lines']
-        catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
+        cat_formats = [f for f in all_formats if f['label'] == 'Catalog']
+        generic_cat_formats = [f for f in all_formats if f['label'] == 'Generic Catalog']
         other_formats = [f for f in all_formats
-                         if f['label'] not in ('Catalog', 'Spectral Lines')]
-        self.items = other_formats + spectral_lines_formats + catalog_formats
+                         if f['label'] not in ('Catalog', 'Spectral Lines',
+                                               'Generic Catalog')]
+        self.items = other_formats + spectral_lines_formats + cat_formats + generic_cat_formats
         self._apply_default_selection()
 
 

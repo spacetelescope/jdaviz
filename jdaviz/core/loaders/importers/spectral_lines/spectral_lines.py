@@ -88,17 +88,8 @@ class SpectralLinesImporter(BaseCatalogImporter):
         self._init_col_other(input_table.colnames)
 
     def _check_is_valid(self):
-        if not getattr(self._app.state, 'dev_loaders', False):
-            return ('Spectral Lines importer is under active development '
-                    '(requires dev_loaders to be enabled).')
 
-        if not isinstance(self.input, (Table, QTable)):
-            return 'Input must be an astropy Table or QTable.'
-
-        if len(self.input) == 0:
-            return 'Input table is empty.'
-
-        return ''
+        return self._basic_table_validity_checks(self.input)
 
     def _guess_spectral_loc_col(self):
         """
@@ -214,7 +205,7 @@ class SpectralLinesImporter(BaseCatalogImporter):
     @staticmethod
     def _get_supported_viewers():
         return [
-            {'label': 'Table', 'reference': 'table-viewer'}
+            {'label': 'Spectral Line List Table', 'reference': 'line-list-table-viewer'}
         ]
 
     @property

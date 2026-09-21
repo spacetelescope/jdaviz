@@ -67,7 +67,9 @@ uncertainty_str_to_cls_mapping = {
 }
 
 
-__all__ = ['JdavizViewerMixin', 'JdavizProfileView']
+__all__ = ['JdavizViewerMixin', 'JdavizViewerWindow', 'JdavizProfileView',
+           'ScatterViewer', 'HistogramViewer', 'JdavizTableViewer',
+           'JdavizSourceCatalogTableViewer', 'JdavizSpectralLineListTableViewer']
 
 viewer_registry.add("g-profile-viewer", label="Profile 1D", cls=BqplotProfileView)
 viewer_registry.add("g-image-viewer", label="Image 2D", cls=BqplotImageView)
@@ -1574,11 +1576,61 @@ def _role_labels_from_meta(meta):
     return labels
 
 
-@viewer_registry("table-viewer", label="table")
+def _catalog_kind_from_meta(meta):
+    """Classify a glue ``Data``'s catalog "kind" from its loader-set meta keys.
+
+    Jdaviz loaders record which physical roles a catalog's columns play (RA/Dec,
+    X/Y, ID, line name, spectral location, ...) as ``_jdaviz_loader_*`` meta
+    keys. This inspects those keys to decide which specialized table viewer a
+    catalog belongs in.
+
+    Returns
+    -------
+    kind : {'source', 'line_list', 'generic'}
+        ``'source'`` if the catalog has RA/Dec or X/Y position columns (i.e.
+        a source/object catalog that can be cross-matched against image
+        viewers).
+        ``'line_list'`` if the catalog has a line-name and/or spectral-location
+        column (i.e. a spectral line list).
+        ``'generic'`` otherwise (a catalog with no jdaviz-recognized special
+        columns).
+    """
+    if not meta:
+        return 'generic'
+    if (meta.get('_jdaviz_loader_linename_col') is not None
+            or meta.get('_jdaviz_loader_spectral_loc_col') is not None):
+        return 'line_list'
+    if (meta.get('_jdaviz_loader_ra_col') is not None
+            or meta.get('_jdaviz_loader_dec_col') is not None
+            or meta.get('_jdaviz_loader_x_col') is not None
+            or meta.get('_jdaviz_loader_y_col') is not None):
+        return 'source'
+    return 'generic'
+
+
+@viewer_registry("table-viewer", label="Table")
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
+    """
+    Table viewer for generic tabular data with no jdaviz-recognized
+    special columns (e.g source position, line name, wavelength), as well as the
+    base class for all specialized table viewers.
+
+    This holds all the behavior shared by every table viewer (column
+    add/rename/remove, role-metadata tracking, the base toolbar). Two
+    subclasses differentiate catalog table viewer types jdaviz knows how to
+    interpret and add their own viewer-creator registration, data-menu filter,
+    and tools:
+
+    * `JdavizSourceCatalogTableViewer` -- catalogs with RA/Dec or X/Y position
+      columns. Adds the "active row" tool and cross-viewer row highlighting
+      against image viewers.
+    * `JdavizSpectralLineListTableViewer` -- spectral line lists with a
+      line-name and/or spectral-location column.
+    """
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    # NOTE: no active-row-select tool here -- highlighting a row only makes
+    # sense for catalogs with a known position (see JdavizSourceCatalogTableViewer).
     tools_nested = [
-                    ['jdaviz:table_row_select'],
                     ['jdaviz:table_highlight_selected'],
                     ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
@@ -1588,9 +1640,14 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                      'jdaviz:viewer_popout']
                    ]
 
+    # Name of the data-menu dataset filter applied in __init__. Subclasses
+    # override this to restrict themselves to their own catalog "kind"
+    # (see _catalog_kind_from_meta). These filter names must be registered
+    # with the data-menu dataset filter registry.
+    _data_menu_filter = 'is_generic_table'
+
     def __init__(self, session, *args, **kwargs):
-        default_tool_priority = kwargs.pop('default_tool_priority',
-                                           ['jdaviz:table_row_select'])
+        default_tool_priority = kwargs.pop('default_tool_priority', [])
         super().__init__(session, *args, **kwargs)
 
         # table_viewer: replace default TableGlue with local override until upstream PR is merged
@@ -1606,29 +1663,22 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # hide checkboxes by default (shown when TableSubset tool is activated)
         self.widget_table.selection_enabled = False
 
-        self.data_menu._obj.dataset.add_filter('is_catalog')
+        self.data_menu._obj.dataset.add_filter(self._data_menu_filter)
 
         self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
                                   names=['checked'])
         # check tool visibility when data changes (e.g. row-link columns added)
         self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
                                   names=['data'])
-        # Also update selection highlight marks when checked rows change
-        self.widget_table.observe(self._on_checked_changed, names=['checked'])
-        self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
 
         # Inline column-header editing: re-sync role labels when data changes
         self.widget_table.observe(self._on_table_data_changed, names=['data'])
         self.widget_table.add_column_renamed_callback(self._sync_role_meta_on_rename)
 
-        # Subscribe to RestoreToolbarMessage to clean up checkbox state
+        # Subscribe to RestoreToolbarMessage to clean up viewer-specific UI state
         # when toolbar is restored (e.g., by clicking X on custom toolbar)
         self.hub.subscribe(self, RestoreToolbarMessage,
                            handler=self._on_restore_toolbar)
-
-        # Subscribe to TableSelectRowClickMessage to handle clicks from image viewers
-        self.hub.subscribe(self, TableSelectRowClickMessage,
-                           handler=self._on_table_select_row_click)
 
         # Subscribe to ViewerRemovedMessage to clean up toolbar overrides
         # if this table viewer is removed while tools are active
@@ -1638,58 +1688,15 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # Build the toolbar with the correct default-tool priority
         self.initialize_toolbar(default_tool_priority=default_tool_priority)
 
-    def _on_table_select_row_click(self, msg):
-        """Handle click from image viewer to select/toggle closest table row."""
-        # Only respond if this message is for this table viewer
-        if msg.table_viewer_id != self.reference_id:
-            return
+    def _on_restore_toolbar(self, msg={}):
+        """Hook for subclasses to clean up viewer-specific UI state (e.g.
+        selection highlight marks) when the toolbar is restored."""
+        pass
 
-        if not len(self.layers):
-            return
-
-        # Get pixel coordinates from the message (these are in reference data frame)
-        click_x, click_y = msg.x, msg.y
-
-        try:
-            layer = self.layers[0].layer
-
-            # Get sky coordinates for WCS-accurate comparison.
-            # Click coordinates are in the viewer's reference frame, so catalog
-            # coordinates must also be converted to that frame for proper matching.
-            xs, ys = None, None
-            skycoords = _get_skycoords_from_table(layer)
-
-            if skycoords is not None:
-                # Convert sky coordinates to pixels in the viewer's reference frame
-                for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
-                    if viewer.state.reference_data is None:
-                        continue
-                    if viewer.state.reference_data.coords is None:
-                        continue
-                    pixel_result = viewer.state.reference_data.coords.world_to_pixel(skycoords)
-                    xs, ys = pixel_result[0], pixel_result[1]
-                    break
-            else:
-                # Fall back to pixel coordinates only if no sky coordinates available
-                pixel_coords = _get_pixel_coords_from_table(layer)
-                if pixel_coords is not None:
-                    xs, ys = pixel_coords
-
-            if xs is None or ys is None:
-                return
-
-            # Find nearest point and toggle its selection
-            distsq = (xs - click_x)**2 + (ys - click_y)**2
-            ind = int(np.argmin(distsq))
-
-            current_checked = list(self.widget_table.checked)
-            if ind in current_checked:
-                current_checked.remove(ind)
-            else:
-                current_checked.append(ind)
-            self.widget_table.checked = current_checked
-        except Exception:  # nosec # pragma: no cover
-            pass
+    def _on_viewer_removed(self, msg):
+        """Hook for subclasses to clean up viewer-specific UI state if this
+        table viewer is removed."""
+        pass
 
     def _add_or_update_column(self, column_name, data=None):
         """
@@ -1823,89 +1830,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             ``True`` if synced (default when not explicitly set).
         """
         return self.state.is_synced(column_name)
-
-    def _on_checked_changed(self, change):
-        """Update highlight marks in image viewers when checked rows change."""
-        self._update_selection_marks()
-
-    def _on_selection_enabled_changed(self, change):
-        """Show/hide selection marks when selection is enabled/disabled."""
-        if not change['new']:
-            # Selection disabled, clear all marks
-            self._clear_selection_marks()
-        else:
-            # Selection enabled, update marks
-            self._update_selection_marks()
-
-    def _get_selection_mark(self, viewer):
-        """Get or create a selection highlight mark for the given viewer."""
-        matches = [mark for mark in viewer.figure.marks if isinstance(mark, TableSelectionMark)]
-        if len(matches):
-            return matches[0]
-        mark = TableSelectionMark(viewer)
-        viewer.figure.marks = viewer.figure.marks + [mark]
-        return mark
-
-    def _update_selection_marks(self):
-        """Update selection highlight marks in all image viewers."""
-        if not self.widget_table.selection_enabled:
-            return
-
-        checked_rows = self.widget_table.checked
-        if not len(checked_rows) or not len(self.layers):
-            self._clear_selection_marks()
-            return
-
-        layer = self.layers[0].layer
-
-        # Get sky coordinates for WCS-accurate placement across different images.
-        # Pixel coordinates from the catalog are in the catalog's original image frame,
-        # which may differ from the viewer's reference data frame.
-        skycoords = _get_skycoords_from_table(layer, checked_rows)
-        pixel_coords = None
-        if skycoords is None:
-            # Fall back to pixel coordinates only if no sky coordinates available
-            pixel_coords = _get_pixel_coords_from_table(layer, checked_rows)
-            if pixel_coords is None:
-                self._clear_selection_marks()
-                return
-
-        # Update marks in all image viewers
-        for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
-            try:
-                if skycoords is not None:
-                    # Convert sky coordinates to pixels for this viewer's reference frame
-                    coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
-                    xs, ys = coords[0], coords[1]
-                else:
-                    # Use pixel coordinates directly (last resort when no sky coords)
-                    xs, ys = pixel_coords[0], pixel_coords[1]
-
-                mark = self._get_selection_mark(viewer)
-                mark.update_xy(xs, ys)
-                mark.visible = True
-            except Exception:  # nosec # pragma: no cover
-                pass
-
-    def _clear_selection_marks(self):
-        """Clear selection highlight marks from all image viewers."""
-        for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
-            for mark in viewer.figure.marks:
-                if isinstance(mark, TableSelectionMark):
-                    mark.visible = False
-
-    def _on_restore_toolbar(self, msg={}):
-        """Clean up checkbox state when toolbar is restored."""
-        self._clear_selection_marks()
-
-    def _on_viewer_removed(self, msg):
-        """Clean up selection marks if this table viewer is removed."""
-        if msg.viewer_id != self.reference_id:
-            return
-
-        # Clear selection marks in image viewers when this table viewer is removed
-        # (toolbar cleanup is handled generically by NestedJupyterToolbar)
-        self._clear_selection_marks()
 
     def _sync_role_meta_on_rename(self, old_name, new_name):
         """Update role-metadata entries across all layers when a column is renamed."""
@@ -2045,3 +1969,193 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                 found = True
         if not found:
             raise ValueError(f"Column '{column_name}' not found in the table.")
+
+
+@viewer_registry("source-catalog-table-viewer", label="Catalog")
+class JdavizSourceCatalogTableViewer(JdavizTableViewer):
+    """
+    Table viewer for source/object catalogs with RA/Dec and/or X/Y position
+    columns.
+
+    In addition to everything `JdavizTableViewer` provides, this adds the
+    "active row" tool and cross-viewer row highlighting: checking a row here
+    highlights the corresponding source in any open image viewers, and
+    clicking a source in an image viewer selects (toggles) the nearest row
+    here.
+    """
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['jdaviz:table_row_select'],
+                    ['jdaviz:table_highlight_selected'],
+                    ['jdaviz:table_zoom_to_selected'],
+                    ['jdaviz:table_subset'],
+                    ['jdaviz:table_add_column'],
+                    ['jdaviz:table_columns_visible'],
+                    ['jdaviz:viewer_focus_toggle', 'jdaviz:viewer_clone',
+                     'jdaviz:viewer_popout']
+                   ]
+
+    _data_menu_filter = 'is_source_catalog_table'
+
+    def __init__(self, session, *args, **kwargs):
+        kwargs.setdefault('default_tool_priority', ['jdaviz:table_row_select'])
+        super().__init__(session, *args, **kwargs)
+
+        # Update selection highlight marks when checked rows (or whether
+        # selection is enabled at all) change.
+        self.widget_table.observe(self._on_checked_changed, names=['checked'])
+        self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
+
+        # Subscribe to TableSelectRowClickMessage to handle clicks from image viewers
+        self.hub.subscribe(self, TableSelectRowClickMessage,
+                           handler=self._on_table_select_row_click)
+
+    def _on_table_select_row_click(self, msg):
+        """Handle click from image viewer to select/toggle closest table row."""
+        # Only respond if this message is for this table viewer
+        if msg.table_viewer_id != self.reference_id:
+            return
+
+        if not len(self.layers):
+            return
+
+        # Get pixel coordinates from the message (these are in reference data frame)
+        click_x, click_y = msg.x, msg.y
+
+        try:
+            layer = self.layers[0].layer
+
+            # Get sky coordinates for WCS-accurate comparison.
+            # Click coordinates are in the viewer's reference frame, so catalog
+            # coordinates must also be converted to that frame for proper matching.
+            xs, ys = None, None
+            skycoords = _get_skycoords_from_table(layer)
+
+            if skycoords is not None:
+                # Convert sky coordinates to pixels in the viewer's reference frame
+                for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+                    if viewer.state.reference_data is None:
+                        continue
+                    if viewer.state.reference_data.coords is None:
+                        continue
+                    pixel_result = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                    xs, ys = pixel_result[0], pixel_result[1]
+                    break
+            else:
+                # Fall back to pixel coordinates only if no sky coordinates available
+                pixel_coords = _get_pixel_coords_from_table(layer)
+                if pixel_coords is not None:
+                    xs, ys = pixel_coords
+
+            if xs is None or ys is None:
+                return
+
+            # Find nearest point and toggle its selection
+            distsq = (xs - click_x)**2 + (ys - click_y)**2
+            ind = int(np.argmin(distsq))
+
+            current_checked = list(self.widget_table.checked)
+            if ind in current_checked:
+                current_checked.remove(ind)
+            else:
+                current_checked.append(ind)
+            self.widget_table.checked = current_checked
+        except Exception:  # nosec # pragma: no cover
+            pass
+
+    def _on_checked_changed(self, change):
+        """Update highlight marks in image viewers when checked rows change."""
+        self._update_selection_marks()
+
+    def _on_selection_enabled_changed(self, change):
+        """Show/hide selection marks when selection is enabled/disabled."""
+        if not change['new']:
+            # Selection disabled, clear all marks
+            self._clear_selection_marks()
+        else:
+            # Selection enabled, update marks
+            self._update_selection_marks()
+
+    def _get_selection_mark(self, viewer):
+        """Get or create a selection highlight mark for the given viewer."""
+        matches = [mark for mark in viewer.figure.marks if isinstance(mark, TableSelectionMark)]
+        if len(matches):
+            return matches[0]
+        mark = TableSelectionMark(viewer)
+        viewer.figure.marks = viewer.figure.marks + [mark]
+        return mark
+
+    def _update_selection_marks(self):
+        """Update selection highlight marks in all image viewers."""
+        if not self.widget_table.selection_enabled:
+            return
+
+        checked_rows = self.widget_table.checked
+        if not len(checked_rows) or not len(self.layers):
+            self._clear_selection_marks()
+            return
+
+        layer = self.layers[0].layer
+
+        # Get sky coordinates for WCS-accurate placement across different images.
+        # Pixel coordinates from the catalog are in the catalog's original image frame,
+        # which may differ from the viewer's reference data frame.
+        skycoords = _get_skycoords_from_table(layer, checked_rows)
+        pixel_coords = None
+        if skycoords is None:
+            # Fall back to pixel coordinates only if no sky coordinates available
+            pixel_coords = _get_pixel_coords_from_table(layer, checked_rows)
+            if pixel_coords is None:
+                self._clear_selection_marks()
+                return
+
+        # Update marks in all image viewers
+        for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            try:
+                if skycoords is not None:
+                    # Convert sky coordinates to pixels for this viewer's reference frame
+                    coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                    xs, ys = coords[0], coords[1]
+                else:
+                    # Use pixel coordinates directly (last resort when no sky coords)
+                    xs, ys = pixel_coords[0], pixel_coords[1]
+
+                mark = self._get_selection_mark(viewer)
+                mark.update_xy(xs, ys)
+                mark.visible = True
+            except Exception:  # nosec # pragma: no cover
+                pass
+
+    def _clear_selection_marks(self):
+        """Clear selection highlight marks from all image viewers."""
+        for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            for mark in viewer.figure.marks:
+                if isinstance(mark, TableSelectionMark):
+                    mark.visible = False
+
+    def _on_restore_toolbar(self, msg={}):
+        """Clean up checkbox state when toolbar is restored."""
+        self._clear_selection_marks()
+
+    def _on_viewer_removed(self, msg):
+        """Clean up selection marks if this table viewer is removed."""
+        if msg.viewer_id != self.reference_id:
+            return
+
+        # Clear selection marks in image viewers when this table viewer is
+        # removed (toolbar cleanup is handled generically by NestedJupyterToolbar)
+        self._clear_selection_marks()
+
+
+@viewer_registry("line-list-table-viewer", label="Spectral Line List Table")
+class JdavizSpectralLineListTableViewer(JdavizTableViewer):
+    """
+    Table viewer class for Spectral Line Catalogs. These are catalogs in the
+    data collection that contain information specifying the name, wavelength, and
+    unit of spectral lines, and enable functionality in the Spectral Lines plugin.
+
+    At the moment, this class does not contain additional functionality beyond
+    what is provided by `JdavizTableViewer`, but is in its own class for clarity
+    and for the ability to add specialized functionality in the future.
+    """
+    _data_menu_filter = 'is_spectral_lines_list_table'

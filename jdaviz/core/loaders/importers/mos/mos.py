@@ -45,8 +45,8 @@ _MOS_PRODUCTS = {
               'viewer_traitlet_prefix': 'viewer_image'},
     'catalog': {'pattern': _CAT_PATTERN,
                 'format': 'Catalog',
-                'viewer_label': 'Table',
-                'viewer_reference': 'table-viewer',
+                'viewer_label': 'Source Catalog Table',
+                'viewer_reference': 'source-catalog-table-viewer',
                 'viewer_traitlet_prefix': 'viewer_catalog'},
 }
 

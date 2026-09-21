@@ -504,21 +504,21 @@ def test_table_viewer_plot_options(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = catalog
     ldr.format = 'Catalog'
-    ldr.importer.viewer.create_new = 'Table'
+    ldr.importer.viewer.create_new = 'Source Catalog Table'
     ldr.load()
 
     assert len(deconfigged_helper.viewers) == 1
-    tv = deconfigged_helper.viewers['Table']
+    tv = deconfigged_helper.viewers['Source Catalog Table']
     viewer = tv._obj.glue_viewer
 
     # Get plot options plugin
     po = deconfigged_helper.plugins['Plot Options']._obj
 
-    # Table viewer should appear in viewer choices
-    assert 'Table' in po.viewer.choices
+    # Source Catalog table viewer should appear in viewer choices
+    assert 'Source Catalog Table' in po.viewer.choices
 
-    # Select the table viewer
-    po.viewer.selected = 'Table'
+    # Select the source catalog table viewer
+    po.viewer.selected = 'Source Catalog Table'
 
     # table_columns_visible should be available and have choices
     assert po.table_columns_visible.sync['in_subscribed_states'] is True

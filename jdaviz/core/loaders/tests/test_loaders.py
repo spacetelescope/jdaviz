@@ -69,7 +69,7 @@ def test_catalog_format_available_for_table_target(deconfigged_helper):
     ldr.object = table
     assert 'Catalog' in ldr.format.choices
 
-    ldr.target = 'Table'
+    ldr.target = 'Source Catalog Table'
     assert 'Catalog' in ldr.format.choices
 
 

@@ -209,7 +209,8 @@ class TestViewerCreatorObject:
 
         new_viewers_set = set(self.dcf_helper.new_viewers.keys())
         assert new_viewers_set == {'1D Spectrum', '2D Spectrum', '3D Spectrum',
-                                   'Image', 'Histogram', 'Scatter', 'Table'}
+                                   'Image', 'Histogram', 'Scatter',
+                                   'Source Catalog Table'}
 
         existing_viewers = set(self.dcf_helper.viewers)
         created = {}

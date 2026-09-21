@@ -14,8 +14,8 @@ import pytest
 
 def _make_catalog(with_units=True, as_skycoord=False):
     """
-    Create a sample catalog table with optional units and SkyCoord columns
-    for testing purposes.
+    Create a sample source catalog table, with or without units and with or
+    without SkyCoord columns.
     """
 
     ra = [9.423, 9.421, 9.415] * (u.deg if with_units else 1)
@@ -33,6 +33,11 @@ def _make_catalog(with_units=True, as_skycoord=False):
 
 
 def _make_catalog_xy_radec(with_units=True, colnames=None):
+    """
+    Create a sample source catalog with both RA/Dec and X/Y source positions,
+    with or without units. Specify the column names using the `colnames` parameter
+    to override defaults.
+    """
 
     ra = [337.52274, 337.48273, 337.48296, 337.52333] * (u.deg if with_units else 1)
     dec = [-20.80742, -20.80741, -20.82380, -20.82425] * (u.deg if with_units else 1)
@@ -51,6 +56,10 @@ def _make_catalog_xy_radec(with_units=True, colnames=None):
 
 
 def _make_catalog_string_coord_columns():
+    """Create a sample source catalog with both RA/Dec and X/Y source positions,
+    using string representations for the coordinates.
+    """
+
     # complete nonsense coordinates, just care about parsing the units
     ra = ['5° 55′ 55″', '5° 55′ 55″', '5° 55′ 55″', '09h59m46.18778822s']
     dec = ['4° 44′ 44″', '4° 44′ 44″', '4° 44′ 44″', '+02d11m32.14597268s']
@@ -64,7 +73,7 @@ def _make_catalog_string_coord_columns():
 
 
 def _make_catalog_no_coordinates():
-    # Table to test loading catalogs that aren't 'Source Catalogs',
+    """Table to test loading catalogs that aren't 'Source Catalogs'."""
     col1 = ['A', 'B', 'C']
     col2 = [1, 2, 3]
     col3 = [True, False, True]
@@ -99,26 +108,25 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     assert 'col1' in tab.colnames
 
     # make sure linking doesn't produce any errors when alignment changes.
-    # this isn't relevant for this catalog with no source positons,
-    # but orientation will check for the presence of certain
-    # components in a table to decide not to link and we
-    # want to make sure that works correctly
+    # this isn't relevant for this catalog with no source positons, but the
+    # orientation plugin will check for the presence of certain components in a
+    # table to decide not to link and we want to make this case is handled correctly.
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
 
-def test_load_catalog_with_string_coord_cols(imviz_helper):
+def test_load_catalog_with_string_coord_cols(deconfigged_helper):
     """
     Test loading a catalog with string RA/Dec columns (that can be converted
-    into units, e.g string representation of hourangle units) into the
-    Imviz helper."""
+    into units, e.g string representation of hourangle units) into the app.
+    """
     catalog_obj = _make_catalog_string_coord_columns()
 
     # load catalog
-    imviz_helper.load(catalog_obj, format='Catalog')
+    deconfigged_helper.load(catalog_obj, format='Catalog')
 
-    dc = imviz_helper._app.data_collection
+    dc = deconfigged_helper._app.data_collection
     assert len(dc) == 1
-    assert 'Catalog' in imviz_helper._app.data_collection.labels
+    assert 'Catalog' in deconfigged_helper._app.data_collection.labels
 
     # make coordinate columns were renamed to Right Ascension and Declination,
     # X and Y in the data collection for consistency, and that RA / Dec always
@@ -147,8 +155,14 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
 
 @pytest.mark.parametrize("from_file", [True, False])
 @pytest.mark.parametrize("with_units", [True, False])
-def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units):
-    catalog_obj = _make_catalog_xy_radec(with_units=True)
+def test_load_catalog_xy_and_radec(deconfigged_helper, tmp_path, from_file, with_units):
+    """
+    Test loading a Source Catalog that has both X/Y and RA/Dec columns,
+    ensuring that the correct columns are recognized and loaded with appropriate
+    units (once from the original catalog, and once as assigned by the loader)
+    as well as testing reading from object and from file.
+    """
+    catalog_obj = _make_catalog_xy_radec(with_units)
 
     if from_file:
         fn = os.path.join(tmp_path, "catalog.ecsv")
@@ -158,16 +172,16 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
         catalog = catalog_obj
 
     # load catalog
-    imviz_helper.load(catalog, format='Catalog')
+    deconfigged_helper.load(catalog, format='Catalog')
 
-    dc = imviz_helper._app.data_collection
+    dc = deconfigged_helper._app.data_collection
     assert len(dc) == 1
-    assert 'Catalog' in imviz_helper._app.data_collection.labels
+    assert 'Catalog' in deconfigged_helper._app.data_collection.labels
 
     # make sure 'RA' column was renamed to Right Ascension and 'Dec' to 'Declination'
     # in the data collection for consistency, and that the table in the data
     # collection always has units
-    qtab = imviz_helper._app.data_collection[0].get_object(QTable)
+    qtab = deconfigged_helper._app.data_collection[0].get_object(QTable)
     assert 'RA' in qtab.colnames
     assert 'Dec' in qtab.colnames
     assert 'X' in qtab.colnames
@@ -176,8 +190,10 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
     # make sure only ra/dec/x/y/index/data link loaded, since we didn't specify more columns
     assert len(qtab.colnames) == 6
     # and that it has the correct contents
-    assert_quantity_allclose(qtab['RA'], catalog_obj['RA'])
-    assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'])
+    un = 1 if with_units else u.deg
+    assert_quantity_allclose(qtab['RA'], catalog_obj['RA'] * un)
+    assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'] * un)
+    assert qtab['RA'].unit == qtab['Dec'].unit == u.deg
     assert_quantity_allclose(qtab['X'], catalog_obj['X'])
     assert_quantity_allclose(qtab['Y'], catalog_obj['Y'])
 
@@ -544,19 +560,22 @@ def test_histogram_viewer(deconfigged_helper):
     assert str(deconfigged_helper.viewers['Histogram']._obj.glue_viewer.state.x_att) == 'RA'  # noqa
 
 
-def test_table_viewer(deconfigged_helper):
+def test_source_catalog_table_viewer(deconfigged_helper):
+    """
+    Test basic functionality for the 'Source Catalog Table' viewer.
+    """
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
     ldr.format = 'Catalog'
-    ldr.importer.viewer.create_new = 'Table'
+    ldr.importer.viewer.create_new = 'Source Catalog Table'
     ldr.load()
 
-    assert len(deconfigged_helper.viewers) == 1  # Table viewer created upon load
-    tv = deconfigged_helper.viewers['Table']
+    assert len(deconfigged_helper.viewers) == 1  # Source Catalog Table viewer created upon load
+    tv = deconfigged_helper.viewers['Source Catalog Table']
     assert len(tv._obj.glue_viewer.layers) == 1
 
     # create another viewer through viewer creator
-    vc = deconfigged_helper.new_viewers['Table']
+    vc = deconfigged_helper.new_viewers['Source Catalog Table']
     vc.dataset.select_all()
     nv = vc()
 
@@ -589,7 +608,7 @@ def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
     """
     Test loading a catalog from a FITS file HDUList (from opened file in memory,
     and from a fits file) containing a BinTableHDU extension and verify that it
-    can be loaded through the catalog importer.
+    can be loaded through the Catalog importer into a Source Catalog Table viewer.
     """
 
     # create an HDUList with a table extension
@@ -620,13 +639,18 @@ def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
     assert len(extension_labels) == 1
     assert extension_labels[0] == '1: [CATALOG,1]'
 
-    # load catalog
+    # load catalog into a Source Catalog Table viewer
+    ldr.importer.viewer.create_new = 'Source Catalog Table'
     ldr.load()
 
     # verify catalog is in the data collection
     dc = deconfigged_helper._app.data_collection
     assert len(dc) == 1
     assert 'Catalog' in dc.labels
+
+    # and was correctly loaded into a Source Catalog Table viewer
+    assert len(deconfigged_helper.viewers) == 1
+    assert 'Source Catalog Table' in deconfigged_helper.viewers
 
     # verify the table contents
     qtab = dc[0].get_object(QTable)

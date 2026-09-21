@@ -2957,10 +2957,11 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             # unless it is used
             color = data.meta.get('_default_color')
             if color is None:
-                # check if this is a catalog/scatter layer and use scatter_color_cycler,
-                # which has brighter colors.
-                is_catalog = data.meta.get('_importer') == 'CatalogImporter'
-                if is_catalog and hasattr(viewer, 'scatter_color_cycler'):
+                # check if this is a source catalog/scatter layer and use
+                # scatter_color_cycler, which has brighter colors for overplotting
+                # on images
+                is_source_catalog = data.meta.get('_importer') == 'CatalogImporter'
+                if is_source_catalog and hasattr(viewer, 'scatter_color_cycler'):
                     color = viewer.scatter_color_cycler()
                 else:
                     color = viewer.color_cycler()
