@@ -5,7 +5,7 @@
     :spinner="spinner"
     :spinner_success_message="spinner_success_message"
     :parsed_input_is_empty="parsed_input_is_empty"
-    :parsed_input_is_query="parsedƒ_input_is_query"
+    :parsed_input_is_query="parsed_input_is_query"
     v-model:treat_table_as_query="treat_table_as_query"
     v-model:limit_to_science_products="limit_to_science_products"
     v-model:can_filter_science="can_filter_science"
