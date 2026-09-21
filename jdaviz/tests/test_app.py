@@ -2,6 +2,7 @@ import pytest
 from copy import deepcopy
 
 import numpy as np
+from astropy.nddata import NDData
 from astropy import units as u
 from astropy.wcs import WCS
 from specutils import Spectrum
@@ -598,3 +599,35 @@ def test_add_custom_loader_open_in_tray(deconfigged_helper, tmp_path):
 
     # The loader should be returned and the name should match
     assert repr(loader) == '<test API>'
+
+
+def test_delete_catalog_with_wcs_from_viewer(deconfigged_helper, image_2d_wcs,
+                                             sky_coord_only_source_catalog):
+    # load an image
+    image_data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(image_data, format='Image', data_label='image')
+
+    # change app to WCS linking
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+
+    # load the catalog
+    deconfigged_helper.load(sky_coord_only_source_catalog,
+                            format='Catalog',
+                            data_label='my_catalog')
+
+    # create a scatter viewer
+    create_scatter_viewer = deconfigged_helper.new_viewers['Scatter']
+    create_scatter_viewer.dataset = 'my_catalog'
+    create_scatter_viewer()
+
+    # verify the catalog is loaded in the viewer
+    dm = deconfigged_helper.viewers['Scatter'].data_menu
+    assert 'my_catalog' in dm.layer.choices
+
+    # now remove the catalog from the app
+    dm.layer = 'my_catalog'
+    dm.remove_from_app()
+
+    # verify the catalog was removed
+    assert 'my_catalog' not in deconfigged_helper._app.data_collection.labels
+    assert 'my_catalog' not in dm.layer.choices

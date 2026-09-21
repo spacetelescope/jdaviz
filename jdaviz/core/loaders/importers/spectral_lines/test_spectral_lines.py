@@ -131,14 +131,12 @@ def test_output_with_units_already_present(deconfigged_helper):
     table = QTable({'wavelength': [6562.8, 4861.3] * u.AA, 'name': ['Ha', 'Hb']})
     importer = SpectralLinesImporter(app=app, resolver=None, parser=None, input=table)
     importer.spectral_loc_selected = 'wavelength'
-    importer.medium_selected = 'Vacuum'
 
     out = importer.output
     assert isinstance(out, QTable)
     assert 'wavelength' in out.colnames
     assert out['wavelength'].unit == u.AA
     assert out.meta['_jdaviz_loader_spectral_loc_col'] == 'wavelength'
-    assert out.meta['_jdaviz_loader_medium'] == 'Vacuum'
 
 
 def test_output_unit_applied_when_missing(deconfigged_helper):
@@ -148,11 +146,9 @@ def test_output_unit_applied_when_missing(deconfigged_helper):
     importer = SpectralLinesImporter(app=app, resolver=None, parser=None, input=table)
     importer.spectral_loc_selected = 'wavelength'
     importer.spectral_loc_unit_selected = 'nm'
-    importer.medium_selected = 'Air'
 
     out = importer.output
     assert out['wavelength'].unit == u.nm
-    assert out.meta['_jdaviz_loader_medium'] == 'Air'
 
 
 def test_output_additional_columns(deconfigged_helper):

@@ -3,10 +3,11 @@ import astropy.units as u
 import re
 from traitlets import Bool, List, Unicode, observe
 
-from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers import BaseCatalogImporter
 from jdaviz.core.template_mixin import SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
+
 
 __all__ = ['SpectralLinesImporter']
 
@@ -23,15 +24,19 @@ _SPECTRAL_LOC_PATTERNS = [
     re.compile(r'^energy$', re.IGNORECASE),
 ]
 
+# Regex patterns for guessing line name columns
+_LINENAME_PATTERNS = [
+    re.compile(r'^linename$|line_name|^name$|^id$', re.IGNORECASE),
+]
+
 
 @loader_importer_registry("Spectral Lines")
-class SpectralLinesImporter(BaseImporterToDataCollection):
+class SpectralLinesImporter(BaseCatalogImporter):
     """
     Importer for spectral line list tables.
 
     Accepts an astropy ``Table`` or ``QTable``, and lets the user designate a
-    spectral location column along with its unit and the wavelength medium
-    (vacuum or air).
+    spectral location column along with its unit.
     """
 
     template_file = __file__, "./spectral_lines.vue"
@@ -47,14 +52,9 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
     spectral_loc_unit_items = List().tag(sync=True)
     spectral_loc_unit_selected = Unicode().tag(sync=True)
 
-    # --- medium ---
-    medium_items = List().tag(sync=True)
-    medium_selected = Unicode().tag(sync=True)
-
-    # --- additional columns (optional, multiselect) ---
-    col_other_items = List().tag(sync=True)
-    col_other_selected = List().tag(sync=True)
-    col_other_multiselect = Bool(True).tag(sync=True)
+    # --- line name column (optional, column index is used if no selection) ---
+    linename_items = List().tag(sync=True)
+    linename_selected = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -80,20 +80,12 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
             manual_options=self._valid_spectral_units(),
         )
 
-        self.medium = SelectPluginComponent(
-            self,
-            items='medium_items',
-            selected='medium_selected',
-            manual_options=['Vacuum', 'Air'],
-        )
+        self.linename = SelectPluginComponent(self,
+                                              items='linename_items',
+                                              selected='linename_selected',
+                                              manual_options=self._guess_linename_col())  # noqa
 
-        self.col_other = SelectPluginComponent(
-            self,
-            items='col_other_items',
-            selected='col_other_selected',
-            manual_options=input_table.colnames,
-            multiselect='col_other_multiselect',
-        )
+        self._init_col_other(input_table.colnames)
 
     def _check_is_valid(self):
         if not getattr(self._app.state, 'dev_loaders', False):
@@ -120,20 +112,29 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
         followed by ``'---'`` (no selection) and then the remaining columns.
         If no match is found, ``'---'`` is the first item.
         """
+        tab = self.input
+        colnames = tab.colnames
+
+        idx = self._guess_col_by_unit_physical_type(tab, colnames, _SPECTRAL_PHYSICAL_TYPES)
+
+        if idx is None:
+            idx = self._guess_col_by_name_pattern(colnames, _SPECTRAL_LOC_PATTERNS)
+
+        return self._reorder_cols_with_best_guess(colnames, idx)
+
+    def _guess_linename_col(self):
+        """
+        Guess the line name column from common naming conventions.
+
+        Returns a list of column names ordered so the best guess is first,
+        followed by ``'---'`` (no selection) and then the remaining columns.
+        If no match is found, ``'---'`` is the first item, which will result in
+        the index of the column being used as the line name.
+        """
         input_table = self.input
         colnames = input_table.colnames
 
-        # column already has a recognised spectral unit
-        for i, col in enumerate(colnames):
-            col_data = input_table[col]
-            if hasattr(col_data, 'unit') and col_data.unit is not None:
-                physical_type = str(u.Unit(col_data.unit).physical_type)
-                if physical_type in _SPECTRAL_PHYSICAL_TYPES:
-                    return_cols = colnames if i == 0 else (colnames[i:] + colnames[:i])
-                    return [return_cols[0]] + ['---'] + list(return_cols[1:])
-
-        # if no unit match was found, pattern-match column names
-        for pattern in _SPECTRAL_LOC_PATTERNS:
+        for pattern in _LINENAME_PATTERNS:
             for i, col in enumerate(colnames):
                 tokens = re.split(r'[\s_\-\.]+', col.lower().strip())
                 if any(pattern.search(t) for t in tokens):
@@ -207,7 +208,7 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['spectral_loc', 'spectral_loc_unit', 'medium', 'col_other']
+        expose = ['spectral_loc', 'spectral_loc_unit', 'col_other']
         return ImporterUserApi(self, expose=expose)
 
     @staticmethod
@@ -241,7 +242,13 @@ class SpectralLinesImporter(BaseImporterToDataCollection):
             return None
 
         output_table = QTable()
-        output_table.meta['_jdaviz_loader_medium'] = self.medium_selected
+
+        # Line name column (optional, use column index if not specified)
+        if self.linename_selected not in ('---', '', None):
+            col_name = self.linename_selected
+            if col_name in input_table.colnames:
+                output_table[col_name] = input_table[col_name]
+                output_table.meta['_jdaviz_loader_linename_col'] = col_name
 
         # Spectral location column
         if self.spectral_loc_selected not in ('---', '', None):

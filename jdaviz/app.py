@@ -3054,8 +3054,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # Make sure the data isn't loaded in any viewers and isn't the selected orientation
         for viewer_id, viewer in list(self._viewer_store.items()):
             if orientation_plugin is not None and self._align_by == 'wcs':
-                if viewer.state.reference_data.label == data_label:
-                    self._change_reference_data(base_wcs_layer_label, viewer_id)
+                if hasattr(viewer.state, 'reference_data') and viewer.state.reference_data is not None: # noqa
+                    if viewer.state.reference_data.label == data_label:
+                        self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
 
             if len(viewer.layers) != 0 and getattr(viewer.state, 'reference_data', '') is None:
@@ -3638,15 +3639,18 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # Tray plugins
         if self.config == 'deconfigged':
             self.update_tray_items_from_registry()
-            import jdaviz.core.viewer_creators  # noqa
-            self.update_new_viewers_from_registry()
         else:
             for name in config.get('tray', []):
                 tray_registry_member = tray_registry.members.get(name)
                 self.state.tray_items.append(self._create_tray_item(tray_registry_member))
 
+        # Viewer creators — populate for deconfigged and any downstream config
+        if self.config not in ('imviz', 'mosviz', 'specviz', 'specviz2d', 'cubeviz', 'rampviz'):
+            import jdaviz.core.viewer_creators  # noqa
+            self.update_new_viewers_from_registry()
+
     def update_loaders_from_registry(self):
-        if self.config != 'deconfigged':
+        if self.config in ('imviz', 'mosviz', 'specviz', 'specviz2d', 'cubeviz', 'rampviz'):
             raise NotImplementedError("update_loaders_from_registry is only "
                                       "implemented for the deconfigged app")
         for loader in self._jdaviz_helper.loaders.values():
@@ -3743,7 +3747,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         return ldr
 
     def update_tray_items_from_registry(self):
-        if self.config != 'deconfigged':
+        if self.config in ('imviz', 'mosviz', 'specviz', 'specviz2d', 'cubeviz', 'rampviz'):
             raise NotImplementedError("update_tray_items_from_registry is only "
                                       "implemented for the deconfigged app")
         # need to rebuild in order, just pulling from existing dict if its already there
@@ -3796,8 +3800,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         return tray_item
 
     def update_new_viewers_from_registry(self):
-        # TODO: implement jdaviz.new_viewers dictionary to instantiated items here
-        if self.config != 'deconfigged':
+        if self.config in ('imviz', 'mosviz', 'specviz', 'specviz2d', 'cubeviz', 'rampviz'):
             raise NotImplementedError("update_new_viewers_from_registry is only "
                                       "implemented for the deconfigged app")
 

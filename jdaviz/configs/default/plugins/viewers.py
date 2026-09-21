@@ -1559,13 +1559,19 @@ def _role_labels_from_meta(meta):
              '_jdaviz_loader_dec_col': None,
              '_jdaviz_loader_x_col': 'X',
              '_jdaviz_loader_y_col': 'Y',
-             '_jdaviz_id_col': 'ID'}
-    return [
+             '_jdaviz_loader_id_col': 'ID',
+             '_jdaviz_loader_linename_col': None,
+             '_jdaviz_loader_spectral_loc_col': None
+             }
+    labels = [
         name
         for meta_key, derived_name in pairs.items()
         for name in (meta.get(meta_key), derived_name if meta_key in meta else None)
         if name
     ]
+    # columns added by plugins (e.g. spectral-lines component columns) are also protected
+    labels += [name for name in meta.get('_jdaviz_plugin_component_column', []) if name]
+    return labels
 
 
 @viewer_registry("table-viewer", label="table")
@@ -1908,9 +1914,15 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             if meta:
                 for key in ('_jdaviz_loader_ra_col', '_jdaviz_loader_dec_col',
                             '_jdaviz_loader_x_col', '_jdaviz_loader_y_col',
-                            '_jdaviz_id_col'):
+                            '_jdaviz_loader_id_col', '_jdaviz_loader_linename_col',
+                            '_jdaviz_loader_spectral_loc_col'):
                     if meta.get(key) == old_name:
                         meta[key] = new_name
+                plugin_cols = meta.get('_jdaviz_plugin_component_column', [])
+                if old_name in plugin_cols:
+                    meta['_jdaviz_plugin_component_column'] = [
+                        new_name if name == old_name else name for name in plugin_cols
+                    ]
         self._update_component_permissions()
 
     def _on_table_data_changed(self, change):
@@ -1927,7 +1939,10 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             return
         meta = getattr(data, 'meta', {}) or {}
         role_labels = set(_role_labels_from_meta(meta))
-        self.state.renameable_components = list(data.main_components)
+        plugin_labels = set(meta.get('_jdaviz_plugin_component_column', []))
+        self.state.renameable_components = [
+            cid for cid in data.main_components if cid.label not in plugin_labels
+        ]
         self.state.removable_components = [
             cid for cid in data.main_components if cid.label not in role_labels
         ]
@@ -1950,8 +1965,10 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         for data in self._iter_table_data():
             meta = getattr(data, 'meta', {}) or {}
             role_labels = set(_role_labels_from_meta(meta))
+            plugin_labels = set(meta.get('_jdaviz_plugin_component_column', []))
             for cid in data.main_components:
-                renameable.append(cid)
+                if cid.label not in plugin_labels:
+                    renameable.append(cid)
                 if cid.label not in role_labels:
                     removable.append(cid)
         self.state.renameable_components = renameable
@@ -1971,7 +1988,8 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         Raises
         ------
         ValueError
-            If ``old_name`` is not found in the table.
+            If ``old_name`` is not found in the table, or if it is a
+            plugin-managed component column (e.g. added by Spectral Lines).
         """
         new_name = str(new_name).strip()
         if not new_name:
@@ -1979,6 +1997,11 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         found = False
         for glue_data in self._iter_table_data():
             if old_name in [c.label for c in glue_data.main_components]:
+                meta = getattr(glue_data, 'meta', {}) or {}
+                if old_name in meta.get('_jdaviz_plugin_component_column', []):
+                    raise ValueError(
+                        f"Column '{old_name}' is a protected column and cannot be renamed."
+                    )
                 glue_data.id[old_name].label = new_name
                 found = True
         if not found:

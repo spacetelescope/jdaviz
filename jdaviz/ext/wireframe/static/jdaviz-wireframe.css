@@ -775,6 +775,13 @@ html[data-theme="light"] .jdaviz-mode-btn {
     height: 16px;
 }
 
+.jdaviz-legend-close-icon {
+    width: 14px;
+    height: 14px;
+    display: block;
+    margin: 1px auto;
+}
+
 .jdaviz-legend-text {
     max-width: 0;
     overflow: hidden;
@@ -790,65 +797,138 @@ html[data-theme="light"] .jdaviz-mode-btn {
 
 /* ── Data menu popup ─────────────────────────────────────────────── */
 
+/* Anchored immediately to the left of the legend of the active viewer.
+   `top`/`right` are set from JS relative to the wireframe container. */
 .jdaviz-data-menu-popup {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.95);
-    background: #003B4D;
+    top: 0;
+    right: 0;
+    transform: translateX(8px);
+    background: var(--jdw-bg);
     border: 2px solid var(--jdw-border);
     padding: 0;
     width: 300px;
+    max-height: calc(100% - 16px);
+    display: flex;
+    flex-direction: column;
     z-index: 200;
     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     opacity: 0;
     pointer-events: none;
-    transition: all 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .jdaviz-data-menu-popup.visible {
     opacity: 1;
     pointer-events: auto;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translateX(0);
+}
+
+/* blue bars at the top and bottom of the menu */
+.jdaviz-data-menu-bar {
+    background: #003B4D;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    min-height: 36px;
+    flex-shrink: 0;
 }
 
 .jdaviz-data-menu-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
     border-bottom: 1px solid var(--jdw-border);
+}
+
+.jdaviz-data-menu-footer {
+    border-top: 1px solid var(--jdw-border);
+    justify-content: flex-end;
 }
 
 .jdaviz-data-menu-title {
     font-weight: 700;
-    color: var(--jdw-text);
-    font-size: 14px;
+    color: #fff;
+    font-size: 13px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.jdaviz-data-menu-close {
+.jdaviz-data-menu-icon-btn {
     background: none;
     border: none;
-    color: var(--jdw-text);
-    font-size: 20px;
+    color: #fff;
+    padding: 2px;
     cursor: pointer;
-    padding: 0 4px;
-    opacity: 0.7;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    line-height: 0;
 }
 
-.jdaviz-data-menu-close:hover {
+.jdaviz-data-menu-icon-btn:hover {
     opacity: 1;
 }
 
-.jdaviz-data-menu-content {
-    padding: 16px;
+.jdaviz-data-menu-icon-btn svg {
+    width: 18px;
+    height: 18px;
 }
 
-.jdaviz-data-menu-desc {
-    font-size: 13px;
+.jdaviz-data-menu-add {
+    margin-left: auto;
+}
+
+/* ── Data menu layer rows ────────────────────────────────────────── */
+
+.jdaviz-data-menu-layers {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.jdaviz-data-menu-layer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
     color: var(--jdw-text);
-    opacity: 0.8;
-    margin: 0;
+}
+
+.jdaviz-data-menu-layer:hover {
+    background: rgba(0, 125, 164, 0.15);
+}
+
+.jdaviz-data-menu-layer-letter {
+    font-weight: 700;
+    font-size: 12px;
+    min-width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.jdaviz-data-menu-layer-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.jdaviz-data-menu-layer .jdaviz-data-menu-icon-btn {
+    color: var(--jdw-text);
+}
+
+.jdaviz-data-menu-layer.hidden-layer .jdaviz-data-menu-layer-letter,
+.jdaviz-data-menu-layer.hidden-layer .jdaviz-data-menu-layer-label {
+    opacity: 0.4;
+}
+
+.jdaviz-data-menu-empty {
+    padding: 12px;
+    font-size: 12px;
+    color: var(--jdw-text);
+    opacity: 0.6;
 }
 
 /* ── Mouseover button flyout ─────────────────────────────────────── */

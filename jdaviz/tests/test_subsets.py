@@ -20,10 +20,13 @@ from astropy.utils.data import download_file
 from jdaviz.utils import get_subset_type, MultiMaskSubsetState
 
 
-# due to improvements in calcuations in the regions package, we have a version
-# check on this that will be removed once we have a minimum version of regions
-# of 0.12
-IS_REGIONS_0_11_OR_OLDER = Version(regions.__version__) <= Version('0.11')
+# due to improvements in calculations in the regions package, different versions
+# result in different values for the center of a region. Remove these when we min
+# pin regions to specific version that is hopefully more stable.
+_reg_ver = Version(regions.__version__)
+IS_REGIONS_0_11_OR_OLDER = _reg_ver <= Version('0.11')
+IS_BETWEEN_REGIONS_0_11_0_12 = Version('0.11') < _reg_ver <= Version('0.12')
+IS_BETWEEN_REGIONS_0_12_0_13 = Version('0.12') < _reg_ver <= Version('0.13')
 
 
 def test_region_from_subset_2d(cubeviz_helper):
@@ -964,8 +967,13 @@ class TestRegionsFromSubsets:
         assert_allclose(sky_region.center.dec.deg, 22.45185308)
         if IS_REGIONS_0_11_OR_OLDER:
             assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
-        else:
+        elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region.radius.arcsec, 27843.243375)
+        elif IS_BETWEEN_REGIONS_0_12_0_13:
+            assert_allclose(sky_region.radius.arcsec, 27794.327242)
+        else:
+            raise Exception(f'sky region radius value: {sky_region.radius.arcsec}. '
+                            f'Check the regions package version, this test may need to be updated.')
 
         # and that it is None when not specified
         subsets = cubeviz_helper._app.get_subsets()
@@ -983,14 +991,24 @@ class TestRegionsFromSubsets:
         assert_allclose(sky_region_0.center.dec.deg, 22.45185308)
         if IS_REGIONS_0_11_OR_OLDER:
             assert_allclose(sky_region_0.radius.arcsec, 28001.08106569353)
-        else:
+        elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region_0.radius.arcsec, 27843.243375)
+        elif IS_BETWEEN_REGIONS_0_12_0_13:
+            assert_allclose(sky_region_0.radius.arcsec, 27794.327242)
+        else:
+            raise Exception(f'sky region radius value: {sky_region_0.radius.arcsec}. '
+                            f'Check the regions package version, this test may need to be updated.')
         assert_allclose(sky_region_1.center.ra.deg, 28.41569583)
         assert_allclose(sky_region_1.center.dec.deg, 25.44814949)
         if IS_REGIONS_0_11_OR_OLDER:
             assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
-        else:
+        elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region_1.radius.arcsec, 25662.37978)
+        elif IS_BETWEEN_REGIONS_0_12_0_13:
+            assert_allclose(sky_region_1.radius.arcsec, 25478.764496)
+        else:
+            raise Exception(f'sky region radius value: {sky_region_1.radius.arcsec}. '
+                            f'Check the regions package version, this test may need to be updated.')
 
         # and that they are both None when not specified
         subsets = cubeviz_helper._app.get_subsets()
@@ -1018,9 +1036,13 @@ class TestRegionsFromSubsets:
         assert_allclose(sky_region.center.dec.deg, 22.45185308)
         if IS_REGIONS_0_11_OR_OLDER:
             assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
-        else:
+        elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region.radius.arcsec, 27843.243375)
-
+        elif IS_BETWEEN_REGIONS_0_12_0_13:
+            assert_allclose(sky_region.radius.arcsec, 27794.327242)
+        else:
+            raise Exception(f'sky region radius value: {sky_region.radius.arcsec}. '
+                            f'Check the regions package version, this test may need to be updated.')
         # now test a composite subset, each component should have a sky region
         subset_plugin .import_region(CircularROI(30, 30, 10),
                                      edit_subset='Subset 1',
@@ -1034,14 +1056,24 @@ class TestRegionsFromSubsets:
         assert_allclose(sky_region_0.center.dec.deg, 22.45185308)
         if IS_REGIONS_0_11_OR_OLDER:
             assert_allclose(sky_region_0.radius.arcsec, 28001.08106569353)
-        else:
+        elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region_0.radius.arcsec, 27843.243375)
+        elif IS_BETWEEN_REGIONS_0_12_0_13:
+            assert_allclose(sky_region_0.radius.arcsec, 27794.327242)
+        else:
+            raise Exception(f'sky region radius value: {sky_region_0.radius.arcsec}. '
+                            f'Check the regions package version, this test may need to be updated.')
         assert_allclose(sky_region_1.center.ra.deg, 28.41569583)
         assert_allclose(sky_region_1.center.dec.deg, 25.44814949)
         if IS_REGIONS_0_11_OR_OLDER:
             assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
-        else:
+        elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region_1.radius.arcsec, 25662.37978)
+        elif IS_BETWEEN_REGIONS_0_12_0_13:
+            assert_allclose(sky_region_1.radius.arcsec, 25478.764496)
+        else:
+            raise Exception(f'sky region radius value: {sky_region_1.radius.arcsec}. '
+                            f'Check the regions package version, this test may need to be updated.')
 
     def test_no_wcs_sky_regions(self, imviz_helper):
         """ Make sure that if sky regions are requested and there is no WCS,

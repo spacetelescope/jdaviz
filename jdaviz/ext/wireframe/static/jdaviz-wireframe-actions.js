@@ -513,6 +513,120 @@
         return viewer;
     }
 
+    // ── Helpers: per-viewer data menu ───────────────────────────────────
+
+    var DATA_MENU_ICONS = {
+        copy: 'M19,3H14.82C14.4,1.84 13.3,1 12,1C10.7,1 9.6,1.84 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3M19,19H5V5H7V7H17V5H19V19Z',
+        eye: 'M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z',
+        'eye-off': 'M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z',
+        check: 'M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z'
+    };
+
+    function dataMenuIconBtn(icon, title, extraClass) {
+        return '<button class="jdaviz-data-menu-icon-btn ' + (extraClass || '') + '" title="' + title + '">' +
+               '<svg viewBox="0 0 24 24"><path fill="currentColor" d="' + DATA_MENU_ICONS[icon] + '"/></svg>' +
+               '</button>';
+    }
+
+    function setIconBtnIcon(btn, icon) {
+        var path = btn.querySelector('path');
+        if (path) path.setAttribute('d', DATA_MENU_ICONS[icon]);
+    }
+
+    /** The top legend entry shows a close icon in place of its letter while the menu is open. */
+    function setLegendCloseIcon(contentRoot, openViewer) {
+        contentRoot.querySelectorAll('.jdaviz-viewer-legend').forEach(function(legend) {
+            var letter = legend.querySelector('.jdaviz-legend-item .jdaviz-legend-letter');
+            if (!letter) return;
+            if (openViewer && legend.closest('.jdaviz-viewer') === openViewer) {
+                if (!letter.dataset.letter) letter.dataset.letter = letter.textContent;
+                letter.innerHTML = '<svg class="jdaviz-legend-close-icon" viewBox="0 0 24 24">' +
+                    '<path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>';
+            } else if (letter.dataset.letter) {
+                letter.textContent = letter.dataset.letter;
+                delete letter.dataset.letter;
+            }
+        });
+    }
+
+    /** Mirror the viewer legend entries as rows in the data menu. */
+    function populateDataMenuLayers(popup, viewer) {
+        var list = popup.querySelector('.jdaviz-data-menu-layers');
+        if (!list) return;
+
+        list.innerHTML = '';
+        var legendItems = viewer.querySelectorAll('.jdaviz-legend-item');
+        if (!legendItems.length) {
+            list.innerHTML = '<div class="jdaviz-data-menu-empty">No data in viewer</div>';
+            return;
+        }
+
+        legendItems.forEach(function(legendItem) {
+            var letterEl = legendItem.querySelector('.jdaviz-legend-letter');
+            var textEl = legendItem.querySelector('.jdaviz-legend-text');
+            var row = document.createElement('div');
+            row.className = 'jdaviz-data-menu-layer';
+            row.innerHTML =
+                '<span class="jdaviz-data-menu-layer-letter">' + (letterEl ? letterEl.textContent : '') + '</span>' +
+                '<span class="jdaviz-data-menu-layer-label">' + (textEl ? textEl.textContent : '') + '</span>' +
+                dataMenuIconBtn('copy', 'Copy label to clipboard', 'jdaviz-data-menu-copy') +
+                dataMenuIconBtn('eye', 'Toggle visibility', 'jdaviz-data-menu-visibility');
+            list.appendChild(row);
+        });
+    }
+
+    /**
+     * Open the data menu as an overlay over the whole app, anchored
+     * immediately to the left of the given viewer's legend.
+     */
+    function openDataMenu(contentRoot, viewer) {
+        var popup = contentRoot.querySelector('.jdaviz-data-menu-popup');
+        var container = contentRoot.querySelector('.jdaviz-wireframe-container');
+        var legend = viewer && viewer.querySelector('.jdaviz-viewer-legend');
+        if (!popup || !container || !legend) return;
+
+        var containerRect = container.getBoundingClientRect();
+        var legendRect = legend.getBoundingClientRect();
+
+        popup.dataset.viewerId = viewer.dataset.viewerId || '';
+        popup.style.right = Math.max(0, containerRect.right - legendRect.left + 8) + 'px';
+        popup.style.top = Math.max(8, legendRect.top - containerRect.top) + 'px';
+
+        var title = popup.querySelector('.jdaviz-data-menu-title');
+        if (title) title.textContent = viewer.dataset.viewerId || 'Data Menu';
+
+        populateDataMenuLayers(popup, viewer);
+        setLegendCloseIcon(contentRoot, viewer);
+
+        popup.classList.add('visible');
+
+        // keep the popup inside the container if it would overflow the bottom
+        var overflow = popup.getBoundingClientRect().bottom - (containerRect.bottom - 8);
+        if (overflow > 0) {
+            popup.style.top = Math.max(8, parseFloat(popup.style.top) - overflow) + 'px';
+        }
+    }
+
+    function closeDataMenu(contentRoot) {
+        var popup = contentRoot.querySelector('.jdaviz-data-menu-popup');
+        if (!popup) return;
+        popup.classList.remove('visible');
+        delete popup.dataset.viewerId;
+        setLegendCloseIcon(contentRoot, null);
+    }
+
+    /** Toggle: clicking the legend of the viewer that is already open closes it. */
+    function toggleDataMenu(contentRoot, viewer) {
+        var popup = contentRoot.querySelector('.jdaviz-data-menu-popup');
+        if (!popup) return;
+        var isOpen = popup.classList.contains('visible');
+        if (isOpen && popup.dataset.viewerId === (viewer.dataset.viewerId || '')) {
+            closeDataMenu(contentRoot);
+        } else {
+            openDataMenu(contentRoot, viewer);
+        }
+    }
+
     // ── Helper: generate Plot Options HTML ──────────────────────────────
 
     function generatePlotOptionsHTML(contentRoot, selectedViewerId, selectedLayerIndex, selectedColor) {
@@ -814,6 +928,8 @@
         var viewerArea = contentRoot.querySelector('.jdaviz-viewer-area');
         if (!viewerArea) return;
 
+        closeDataMenu(contentRoot);
+
         var targetViewer;
         if (parentId) {
             targetViewer = contentRoot.querySelector('.jdaviz-viewer[data-viewer-id="' + parentId + '"]');
@@ -898,6 +1014,11 @@
             item.innerHTML = '<span class="jdaviz-legend-letter">' + letter + '</span><span class="jdaviz-legend-text">' + name + '</span>';
             legend.appendChild(item);
         });
+
+        var popup = contentRoot.querySelector('.jdaviz-data-menu-popup');
+        if (popup && popup.classList.contains('visible') && popup.dataset.viewerId === viewerId) {
+            openDataMenu(contentRoot, viewer);
+        }
     });
 
     /**
@@ -921,6 +1042,8 @@
         if (!step.value) return;
         var viewer = contentRoot.querySelector('.jdaviz-viewer[data-viewer-id="' + step.value + '"]');
         if (!viewer) return;
+
+        closeDataMenu(contentRoot);
 
         var parent = viewer.parentNode;
         viewer.remove();
@@ -985,11 +1108,21 @@
     });
 
     /**
-     * open-data-menu: Open the data menu popup.
+     * open-data-menu: Open the data menu popup for a viewer.
+     * step.value = viewerId (optional, defaults to the first viewer)
      */
     Guidestar.registerAction('open-data-menu', function(step, el, contentRoot) {
-        var popup = contentRoot.querySelector('.jdaviz-data-menu-popup');
-        if (popup) popup.classList.add('visible');
+        var viewer = step.value
+            ? contentRoot.querySelector('.jdaviz-viewer[data-viewer-id="' + step.value + '"]')
+            : contentRoot.querySelector('.jdaviz-viewer');
+        if (viewer) openDataMenu(contentRoot, viewer);
+    });
+
+    /**
+     * close-data-menu: Close the data menu popup.
+     */
+    Guidestar.registerAction('close-data-menu', function(step, el, contentRoot) {
+        closeDataMenu(contentRoot);
     });
 
     /**
@@ -1088,12 +1221,33 @@
                     });
                 });
 
-                // Wire up data menu close button
-                var closeBtn = root.querySelector('.jdaviz-data-menu-close');
-                if (closeBtn) {
-                    closeBtn.addEventListener('click', function() {
-                        var popup = root.querySelector('.jdaviz-data-menu-popup');
-                        if (popup) popup.classList.remove('visible');
+                // Wire up data menu layer row buttons (delegated, rows are dynamic)
+                var dataMenu = root.querySelector('.jdaviz-data-menu-popup');
+                if (dataMenu) {
+                    dataMenu.addEventListener('click', function(ev) {
+                        var btn = ev.target.closest('.jdaviz-data-menu-icon-btn');
+                        if (!btn) return;
+                        var row = btn.closest('.jdaviz-data-menu-layer');
+                        if (btn.classList.contains('jdaviz-data-menu-visibility')) {
+                            var hidden = row.classList.toggle('hidden-layer');
+                            setIconBtnIcon(btn, hidden ? 'eye-off' : 'eye');
+                        } else if (btn.classList.contains('jdaviz-data-menu-copy')) {
+                            setIconBtnIcon(btn, 'check');
+                            setTimeout(function() { setIconBtnIcon(btn, 'copy'); }, 1200);
+                        }
+                    });
+                }
+
+                // Wire up legend clicks (delegated, since viewers are dynamic)
+                var viewerArea = root.querySelector('.jdaviz-viewer-area');
+                if (viewerArea) {
+                    viewerArea.addEventListener('click', function(ev) {
+                        var legend = ev.target.closest('.jdaviz-viewer-legend');
+                        if (!legend) return;
+                        var viewer = legend.closest('.jdaviz-viewer');
+                        if (!viewer) return;
+                        if (ev.isTrusted && e.detail.instance) e.detail.instance.pause();
+                        toggleDataMenu(root, viewer);
                     });
                 }
 

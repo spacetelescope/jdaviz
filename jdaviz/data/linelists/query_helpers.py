@@ -212,5 +212,5 @@ def to_jdaviz_line_list(db_subset, unit="Angstrom"):
 
     out = QTable()
     out["linename"] = [str(n) for n in db_subset["line_name"]]
-    out["rest"] = rest
+    out["rest wavelength"] = rest
     return out
