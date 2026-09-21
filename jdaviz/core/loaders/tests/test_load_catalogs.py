@@ -414,7 +414,7 @@ def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
     ldr.query_archive()
 
     # TODO: apply this check to the other tests here
-    final_query_message = ldr._obj.query_message_items[-1]
+    final_query_message = ldr._obj.loader_message_items[-1]
     color = final_query_message.get('color', '')
     tb = final_query_message.get('traceback', '')
     if color == 'error' and tb:
