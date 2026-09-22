@@ -621,7 +621,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                     flux_unit, return_unit=True)
                 if solid_angle_in_flux_unit is None:
                     # use dimensionless_unscaled as a placeholder unit.
-                    # is_equivalent() checks won't pass anyway if theres no
+                    # is_equivalent() checks won't pass anyway if there's no
                     # solid angle in the unit, so it won't matter what this is
                     solid_angle_in_flux_unit = u.dimensionless_unscaled
 
@@ -677,7 +677,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                         if add_flux:
                             raw_result = analysis.line_flux(wave_spec) * flux_unit
                         else:
-                            raw_result = raw_result = analysis.line_flux(wave_spec)
+                            raw_result = analysis.line_flux(wave_spec)
                     except ValueError as e:
                         # can happen if interpolation out-of-bounds or any error from specutils
                         # let's avoid the whole app crashing and instead expose the error to the
@@ -687,7 +687,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                             color="warning", traceback=e))
                         self.update_results(None)
                         return
-                    # When flux is equivalent to Jy, lineflux result should be shown in W/m2
+                    # When flux is equivalent to Jy, line flux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.W / (u.m * u.m * u.m * solid_angle_in_flux_unit)):
                         final_unit = u.Unit(f'W/(m2 {solid_angle_string})')
                     else:
