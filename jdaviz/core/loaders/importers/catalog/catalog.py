@@ -7,6 +7,7 @@ import re
 from regions import PixCoord
 from traitlets import Any, Bool, List, Unicode, observe
 
+from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.loaders.importers import BaseCatalogImporter
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
@@ -237,9 +238,8 @@ class CatalogImporter(BaseCatalogImporter):
 
     @property
     def import_confidence_score(self):
-        input = self.input_as_table
-        if any(cls.__name__ == 'BaseConeSearchResolver'
-               for cls in type(self.resolver).mro()) and isinstance(input, (Table, QTable)):
+        if (isinstance(self.resolver, BaseConeSearchResolver)
+                and self.resolver.treat_table_as_query):
             return 2
 
         def _has_selected_col(col):

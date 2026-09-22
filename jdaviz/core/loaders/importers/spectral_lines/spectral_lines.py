@@ -105,9 +105,6 @@ class SpectralLinesImporter(BaseCatalogImporter):
         if self.resolver.__class__.__name__ == 'SpectralLineDatabaseResolver':
             return 2
 
-        if not isinstance(self.input, (Table, QTable)):
-            return -1
-
         def _has_selected_col(attr):
             selected = getattr(self, f'{attr}_selected', None)
             return selected not in ('---', '', None)
