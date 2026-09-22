@@ -248,14 +248,11 @@ class CatalogImporter(BaseCatalogImporter):
 
         has_ra_dec = all(_has_selected_col(col) for col in ('ra', 'dec'))
         has_xy = all(_has_selected_col(col) for col in ('x', 'y'))
-        if has_ra_dec and has_xy:
-            return 2
-        if has_ra_dec:
-            return 1
-        if not any(_has_selected_col(col) for col in ('ra', 'dec', 'x', 'y')):
-            return -2
-        # default to -1 to still place below any image/spectrum importers
-        return -1
+        if has_ra_dec or has_xy:
+            # still below any image/spectrum importers at default confidence
+            return -1
+        # at bottom of list
+        return -2
 
     @observe('extension_selected')
     def _on_extension_selected_change(self, event):

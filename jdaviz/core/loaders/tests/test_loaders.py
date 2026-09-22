@@ -426,9 +426,10 @@ def test_resolver_url(deconfigged_helper):
     # https valid input (2D Spectrum)
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
 
-    # may change with future importers
+    # This file is also a valid Catalog, but Catalog confidence stays below the
+    # default so 2D Spectrum remains the default selection.
     assert len(loader.format.choices) == 3
-    assert loader.format.selected == '2D Spectrum'  # default may change with future importers
+    assert loader.format.selected == '2D Spectrum'
 
     # test target filtering
     assert len(loader.target.choices) > 1
