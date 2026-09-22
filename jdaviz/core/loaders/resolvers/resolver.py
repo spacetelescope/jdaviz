@@ -158,7 +158,8 @@ class FormatSelect(SelectPluginComponent):
                             item = {'label': importer_name,
                                     'parser': parser_name,
                                     'importer': importer_name,
-                                    'targets': this_importer.targets}
+                                    'targets': this_importer.targets,
+                                    'import_confidence_score': this_importer.import_confidence_score}  # noqa
                             parser_pref = this_importer.parser_preference
                             if importer_name not in self._importers:
                                 all_formats.append(item)
@@ -190,13 +191,12 @@ class FormatSelect(SelectPluginComponent):
                     else:
                         self._invalid_importers[label] = this_importer.is_valid.message
 
-        # Sort generic table importers to the end of the list so more specific
-        # formats are selected by default.  Order: other > Catalog > Spectral Lines.
-        spectral_lines_formats = [f for f in all_formats if f['label'] == 'Spectral Lines']
-        catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
-        other_formats = [f for f in all_formats
-                         if f['label'] not in ('Catalog', 'Spectral Lines')]
-        self.items = other_formats + spectral_lines_formats + catalog_formats
+        # if any choice has a non-zero/default confidence score, then sort by score
+        if any(item['import_confidence_score'] != 0 for item in all_formats):
+            all_formats = sorted(all_formats,
+                                 key=lambda item: item['import_confidence_score'],
+                                 reverse=True)
+        self.items = all_formats
         self._apply_default_selection()
 
 

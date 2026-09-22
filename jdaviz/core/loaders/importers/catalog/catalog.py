@@ -235,6 +235,28 @@ class CatalogImporter(BaseCatalogImporter):
 
         return 'Input is not a valid catalog.'
 
+    @property
+    def import_confidence_score(self):
+        input = self.input_as_table
+        if any(cls.__name__ == 'BaseConeSearchResolver'
+               for cls in type(self.resolver).mro()) and isinstance(input, (Table, QTable)):
+            return 2
+
+        def _has_selected_col(col):
+            selected = getattr(self, f'col_{col}_selected', None)
+            return selected not in ('---', '', None)
+
+        has_ra_dec = all(_has_selected_col(col) for col in ('ra', 'dec'))
+        has_xy = all(_has_selected_col(col) for col in ('x', 'y'))
+        if has_ra_dec and has_xy:
+            return 2
+        if has_ra_dec:
+            return 1
+        if not any(_has_selected_col(col) for col in ('ra', 'dec', 'x', 'y')):
+            return -2
+        # default to -1 to still place below any image/spectrum importers
+        return -1
+
     @observe('extension_selected')
     def _on_extension_selected_change(self, event):
         # when the selected extension changes, we need to update the column selection dropdowns
