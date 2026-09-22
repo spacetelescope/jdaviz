@@ -192,6 +192,8 @@ class FormatSelect(SelectPluginComponent):
                         self._invalid_importers[label] = this_importer.is_valid.message
 
         # if any choice has a non-zero/default confidence score, then sort by score
+        # for any items with the same score, original ordering (ie import order in
+        # importers/__init__.py) will be preserved.
         if any(item['import_confidence_score'] != 0 for item in all_formats):
             all_formats = sorted(all_formats,
                                  key=lambda item: item['import_confidence_score'],
