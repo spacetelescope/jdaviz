@@ -254,9 +254,9 @@ def run_qt(url, app_name="Jdaviz"):
                                 f"Failed to check updates: {e}")
 
     update_action.triggered.connect(lambda: check_for_updates(show_up_to_date_message=True))
-    ## Uncomment if we want to trigger an update message when the app opens if
-    ## an update is available.  Does NOT have a way to stop popups reopening the app
-    ## so it could get very annoying if you don't want an update. 
+    # Uncomment if we want to trigger an update message when the app opens if
+    # an update is available.  Does NOT have a way to stop popups reopening the app
+    # so it could get very annoying if you don't want an update.
     # QtCore.QTimer.singleShot(0, lambda: check_for_updates(show_up_to_date_message=False))
     file_menu.addAction(update_action)
 
