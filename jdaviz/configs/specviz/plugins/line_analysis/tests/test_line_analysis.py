@@ -426,8 +426,8 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
 
 @pytest.mark.parametrize('spectral_subset', ['Entire Spectrum', 'Subset 1'])
 def test_continuum_subset_no_mask(deconfigged_helper, spectrum1d, spectral_subset):
-    # Regression test for using a subset (rather than the full spectrum) as both the
-    # data and the continuum, when there's no underlying spectral axis mask.
+    """Regression test for using a subset (rather than the full spectrum) as both the
+    data and the continuum, when there's no underlying spectral axis mask."""
     deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='1D Spectrum')
 
     axis_value = spectrum1d.spectral_axis.value
@@ -447,7 +447,7 @@ def test_continuum_subset_no_mask(deconfigged_helper, spectrum1d, spectral_subse
     plg.spectral_subset = spectral_subset
     plg.continuum = 'Subset 2'
 
-    # sanity check that this test is actually exercising the `mask is None` code path
+    # check the `mask is None` code path
     continuum_data = deconfigged_helper.get_data(
         '1D Spectrum', spectral_subset='Subset 2', use_display_units=True)
     assert continuum_data.mask is None
@@ -457,8 +457,8 @@ def test_continuum_subset_no_mask(deconfigged_helper, spectrum1d, spectral_subse
     assert spectrum_out is not None
     assert continuum is not None
 
-    # continuum should be a linear fit over the continuum subset ("Subset 2"), evaluated
-    # at the spectral axis values of the extracted data subset ("Subset 1")
+    # continuum should be a linear fit over the continuum subset (Subset 2), evaluated
+    # at the spectral axis values of the extracted data subset (Subset 1)
     continuum_mask = (axis_value >= continuum_lower) & (axis_value <= continuum_upper)
     min_x = axis_value.min()
     slope, intercept = np.polyfit(axis_value[continuum_mask] - min_x,
