@@ -119,6 +119,9 @@ New Features
   the selection of line medium in loader, and adding line name to table by
   default. [#4386]
 
+- Format choices are now sorted so that the most likely format is at the top of the list
+  and selected by default. [#4402]
+
 Mosviz
 ^^^^^^
 
