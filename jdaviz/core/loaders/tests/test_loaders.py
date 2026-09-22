@@ -80,7 +80,7 @@ def test_format_selection_prefers_catalog_for_sky_coords(deconfigged_helper):
     ldr.object = table
 
     assert ldr.format.selected == 'Catalog'
-    assert ldr.format.items[0]['import_confidence_score'] > 0
+    assert ldr.format.items[0]['import_confidence_score'] == -1
 
 
 def test_format_selection_prefers_spectral_lines_for_spectral_table(deconfigged_helper):

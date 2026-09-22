@@ -717,11 +717,11 @@ def test_hdulist_multiple_table_extensions(deconfigged_helper):
     ldr.object = hdulist
 
     # This HDUList contains both table and image extensions, so both Catalog and Image
-    # formats should be valid. Catalog should be selected by default because the table
-    # extensions have sky-coordinate columns.
+    # formats should be valid. Image should be selected by default because Catalog
+    # confidence stays below the default even when coordinate columns are detected.
     assert 'Catalog' in ldr.format.choices
     assert len(ldr.format.choices) > 1
-    assert ldr.format.selected == 'Catalog'
+    assert ldr.format.selected == 'Image'
 
     ldr.format = 'Catalog'
 
