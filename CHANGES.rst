@@ -119,6 +119,8 @@ New Features
   the selection of line medium in loader, and adding line name to table by
   default. [#4386]
 
+- Logger is accessible in UI before data is loaded. [#4403]
+
 Mosviz
 ^^^^^^
 

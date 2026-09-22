@@ -141,7 +141,7 @@ class SnackbarQueue:
 
     def put(self, state, logger_plg, msg, history=True, popup=True):
         if msg.color not in ['debug', 'info', 'warning', 'error', 'success', None]:
-            raise ValueError(f"color ({msg.color}) must be on of: debug, info, warning, error, success")
+            raise ValueError(f"color ({msg.color}) must be on of: debug, info, warning, error, success")  # noqa
 
         if not msg.loading and history and logger_plg is not None:
             now = time.localtime()

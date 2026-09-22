@@ -165,7 +165,7 @@ class FormatSelect(SelectPluginComponent):
                                 self._importers[importer_name] = this_importer
                             elif not len(parser_pref) or parser_name not in parser_pref:
                                 # default to the previous (or first) found match
-                                self._invalid_importers[label] = f'Parser {parser_name} has no priority set'
+                                self._invalid_importers[label] = f'Parser {parser_name} has no priority set'  # noqa
                                 continue
                             else:
                                 # then there was already a match from an earlier parser.  Compare
