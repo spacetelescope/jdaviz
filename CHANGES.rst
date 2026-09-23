@@ -173,13 +173,33 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-- Fix case where file drop loader would not show importer options. [#4303]
+Mosviz
+^^^^^^
+
+5.0.4 (2026-09-23)
+==================
+
+Bug Fixes
+---------
+
+- Stop using SkyCoord.from_name() to try to resolve sources in the astroquery loader
+  that are already RA and Dec coordinates. [#4193]
+
+- fix case where file drop loader would not show importer options. [#4303]
 
 - fix URL loader not showing in UI. [#4361]
 
-- Fix image importer support for Roman L3 mosaic files. [#4309]
+- fix astro-image-display API for images without WCS. [#4304]
 
-- Fix issue where snackbar is attached to the notebook rather than to the app. [#4313]
+- Adjust data menu behavior to allow for showing more icons when the viewer is short. [#4352]
+
+- Fix a couple incorrect API hints in the data loaders. [#4399]
+
+- Ensure model fitting equation is validated before calculate fitting. [#4407]
+
+
+Imviz
+^^^^^
 
 - Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
 
@@ -188,14 +208,6 @@ Bug Fixes
 
 - Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
 
-- Adjust data menu behavior to allow for showing more icons when the viewer is short. [#4352]
-
-- Fix a couple incorrect API hints in the data loaders. [#4399]
-
-- Ensure model fitting equation is validated before calculate fitting. [#4407]
-
-Mosviz
-^^^^^^
 
 5.0.3 (2026-07-21)
 ==================
