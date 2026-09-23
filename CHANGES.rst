@@ -192,6 +192,8 @@ Bug Fixes
 
 - Fix a couple incorrect API hints in the data loaders. [#4399]
 
+- Ensure model fitting equation is validated before calculate fitting. [#4407]
+
 Mosviz
 ^^^^^^
 
