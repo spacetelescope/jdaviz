@@ -591,4 +591,6 @@ def test_invalid_equation(deconfigged_helper, spectrum1d):
 
     plg.equation = 'C+L'
     assert plg._obj.model_equation_invalid_msg == ''
-    plg.calculate_fit()  # should run successfully
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        plg.calculate_fit()  # should run successfully
