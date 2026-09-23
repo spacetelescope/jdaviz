@@ -1,6 +1,8 @@
 import warnings
 
+from packaging.version import Version
 import pytest
+
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -472,8 +474,14 @@ class TestRadialProfile():
 
     def test_profile_raw(self):
         x_arr, y_arr = _radial_profile(self.data, self.bbox, self.centroid, raw=True)
-        # Too many data points to compare each one for X.
-        assert x_arr.shape == y_arr.shape == (1371, )
+
+        # TODO: min pin next photutils release (probably 3.0.1) and remove this conditional check
+        if Version(photutils.__version__) > Version('3.0.0'):
+            # Too many data points to compare each one for X.
+            assert x_arr.shape == y_arr.shape == (1373, )
+        else:
+            assert x_arr.shape == y_arr.shape == (1371,)
+
         assert_allclose(x_arr.min(), 0)
         assert_allclose(x_arr.max(), 21)
         assert_allclose(y_arr, 1)

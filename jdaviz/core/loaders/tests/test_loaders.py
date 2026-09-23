@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import time
 from pathlib import Path
 from itertools import product
 
@@ -424,6 +425,12 @@ def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
 
     ldr.observation_table.select_rows(0)
 
+    # file table is now populated asynchronously in a background thread;
+    # poll briefly until it finishes
+    deadline = time.time() + 60
+    while not ldr._obj.file_table_populated and time.time() < deadline:
+        time.sleep(0.1)
+
     assert ldr._obj.file_table_populated is True
     assert ldr._obj.get_selected_url() is None
 
@@ -489,16 +496,23 @@ def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
     assert len(deconfigged_helper._app.data_collection.external_links) == 4
 
 
+def _make_multi_sci_hdul():
+    sci1 = np.ones((2, 2), dtype=np.float32)
+    err1 = np.full((2, 2), 2, dtype=np.float32)
+    sci2 = np.full((2, 2), 3, dtype=np.float32)
+    err2 = np.full((2, 2), 4, dtype=np.float32)
+    return fits.HDUList([fits.PrimaryHDU(),
+                         fits.ImageHDU(sci1, name='SCI', ver=1),
+                         fits.ImageHDU(err1, name='ERR', ver=1),
+                         fits.ImageHDU(sci2, name='SCI', ver=2),
+                         fits.ImageHDU(err2, name='ERR', ver=2)
+                         ])
+
+
 def test_load_image_mult_sci_extension(imviz_helper):
     # test loading an image with multiple SCI extensions and
     # ensure that automatic parenting logic is handled correctly
-    arr = np.zeros((2, 2), dtype=np.float32)
-    hdul = fits.HDUList([fits.PrimaryHDU(),
-                        fits.ImageHDU(arr, name='SCI', ver=1),
-                        fits.ImageHDU(arr, name='ERR', ver=1),
-                        fits.ImageHDU(arr, name='SCI', ver=2),
-                        fits.ImageHDU(arr, name='ERR', ver=2)
-                         ])
+    hdul = _make_multi_sci_hdul()
 
     # imviz_helper._load(hdul, extension=('SCI,1', 'SCI,2', 'ERR,2'))
     imviz_helper.load_data(hdul, ext=('SCI,1', 'SCI,2', 'ERR,2'))
@@ -513,13 +527,7 @@ def test_load_image_mult_sci_extension(imviz_helper):
 
 def test_loaders_extension_select(imviz_helper):
     # tests internal logic of SelectFileExtensionComponent
-    arr = np.zeros((2, 2), dtype=np.float32)
-    hdul = fits.HDUList([fits.PrimaryHDU(),
-                        fits.ImageHDU(arr, name='SCI', ver=1),
-                        fits.ImageHDU(arr, name='ERR', ver=1),
-                        fits.ImageHDU(arr, name='SCI', ver=2),
-                        fits.ImageHDU(arr, name='ERR', ver=2)
-                         ])
+    hdul = _make_multi_sci_hdul()
 
     ldr = imviz_helper.loaders['object']
     ldr.object = hdul
@@ -831,7 +839,7 @@ def test_load_cube_no_dq_in_viewer(deconfigged_helper):
 
     deconfigged_helper.load(hdul, format='3D Spectrum', dq_add_to_flux_viewer=False)
 
-    # make sure the flux viewer '3D Spectrum' only has one dataset loaded
+    # make sure the flux viewer only has one dataset loaded
     data_in_flux_viewer = deconfigged_helper.viewers['3D Spectrum'].data_menu.data_labels_loaded
     assert len(data_in_flux_viewer) == 1
     assert '3D Spectrum' in data_in_flux_viewer
