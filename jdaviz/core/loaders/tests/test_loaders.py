@@ -444,14 +444,8 @@ def test_failed_astroquery(deconfigged_helper):
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = "Bad Object"
     ldr.query_archive()
-    snackbar_msg = "Unable to resolve source name: Bad Object; Traceback:"
-    # work backwards through history since the message is likely at the end
-    for msg in deconfigged_helper.plugins['Logger'].history[::-1]:
-        if snackbar_msg in msg['text']:
-            break
-    else:
-        raise AssertionError(
-            f"Expected snackbar message not found in logger history: {snackbar_msg}")
+    snackbar_msg = "Unable to resolve source coordinates: Bad Object"
+    assert deconfigged_helper.plugins['Logger'].history[-1]['text'] == snackbar_msg
 
 
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
