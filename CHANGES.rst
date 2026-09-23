@@ -167,7 +167,7 @@ Other Changes and Additions
 - Changing visible columns in the table viewer has been moved from the Plot Options
   plugin to a tool in the table viewer toolbar (with deprecation). [#4382]
 
-5.0.4 (unreleased)
+5.0.5 (unreleased)
 ==================
 
 Bug Fixes
