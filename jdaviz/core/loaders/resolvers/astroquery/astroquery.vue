@@ -1,4 +1,4 @@
-ƒ<template>
+<template>
   <j-loader
     title="Astroquery"
     :popout_button="popout_button"
