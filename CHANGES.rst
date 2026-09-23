@@ -28,6 +28,8 @@ Imviz
 
 - Fix a couple incorrect API hints in the data loaders. [#4399]
 
+- Ensure model fitting equation is validated before calculate fitting. [#4407]
+
 
 5.0.3 (2026-07-21)
 ==================

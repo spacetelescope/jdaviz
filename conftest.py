@@ -1,3 +1,6 @@
+import os
+import tempfile
+
 import pytest
 from jdaviz import __version__
 from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
@@ -82,9 +85,21 @@ except ImportError:
 
 # This is repeated from jdaviz/conftest.py because tox cannot grab test
 # header from that file.
+@pytest.hookimpl(tryfirst=True)
 def pytest_configure(config):
     # Initialize memlog
     memlog_configure(config)
+
+    # Prevent glue plugin state initialization race condition (dendro_factory error)
+    # by giving each worker its own temporary config directory. This is necessary
+    # when running pytest-xdist in parallel.
+    from glue import config as glue_config
+
+    worker = os.environ.get("PYTEST_XDIST_WORKER", "master")
+
+    glue_config.CFG_DIR = tempfile.mkdtemp(
+        prefix=f"jdaviz-glue-{worker}-"
+    )
 
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
