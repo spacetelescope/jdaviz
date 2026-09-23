@@ -1,4 +1,4 @@
-5.0.4 (unreleased)
+5.0.4 (2026-09-23)
 ==================
 
 Bug Fixes
@@ -14,9 +14,6 @@ Bug Fixes
 - fix astro-image-display API for images without WCS. [#4304]
 
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
@@ -31,14 +28,6 @@ Imviz
 
 - Fix a couple incorrect API hints in the data loaders. [#4399]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 5.0.3 (2026-07-21)
 ==================
