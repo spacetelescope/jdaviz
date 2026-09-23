@@ -1,4 +1,4 @@
-5.0.4 (unreleased)
+5.0.4 (2026-09-23)
 ==================
 
 Bug Fixes
@@ -13,9 +13,12 @@ Bug Fixes
 
 - fix astro-image-display API for images without WCS. [#4304]
 
+- Adjust data menu behavior to allow for showing more icons when the viewer is short. [#4352]
 
-Cubeviz
-^^^^^^^
+- Fix a couple incorrect API hints in the data loaders. [#4399]
+
+- Ensure model fitting equation is validated before calculate fitting. [#4407]
+
 
 Imviz
 ^^^^^
@@ -27,20 +30,6 @@ Imviz
 
 - Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
 
-- Adjust data menu behavior to allow for showing more icons when the viewer is short. [#4352]
-
-- Fix a couple incorrect API hints in the data loaders. [#4399]
-
-- Ensure model fitting equation is validated before calculate fitting. [#4407]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 5.0.3 (2026-07-21)
 ==================
