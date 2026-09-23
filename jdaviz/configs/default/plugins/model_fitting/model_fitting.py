@@ -1469,7 +1469,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             valid, spec_range, subset_range = self._check_dataset_spectral_subset_valid(return_ranges=True)  # noqa
             raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
         # rerun check in case model_equation_invalid_msg is out-of-date
-        model_equation_invalid_msg = self.model_equation_invalid_msg or self._check_model_equation_invalid()
+        model_equation_invalid_msg = self.model_equation_invalid_msg or self._check_model_equation_invalid()  # noqa
         if len(model_equation_invalid_msg):
             raise ValueError(f"model equation is invalid: {model_equation_invalid_msg}")
 
