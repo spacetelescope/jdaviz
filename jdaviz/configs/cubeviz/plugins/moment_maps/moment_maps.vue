@@ -1,5 +1,3 @@
-<script setup>
-</script>
 <template>
   <j-tray-plugin
     :config="config"
