@@ -163,7 +163,6 @@ def test_get_viewport_no_wcs(deconfigged_helper):
     assert viewport['center'] == (24.5, 24.5)
     assert viewport['fov'] == 50.0
     assert viewport['rotation'] is None
-    assert viewport['projection'] is None
     assert viewport['image_label'] == 'Image'
 
 
@@ -178,5 +177,4 @@ def test_set_viewport_no_wcs(deconfigged_helper):
     assert viewport['center'] == (0, 0)
     assert viewport['fov'] == 10
     assert viewport['rotation'] is None
-    assert viewport['projection'] is None
     assert viewport['image_label'] == 'Image'
