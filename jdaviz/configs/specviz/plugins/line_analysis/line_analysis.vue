@@ -58,12 +58,19 @@
       :items="continuum_subset_items"
       v-model:selected="continuum_subset_selected"
       :show_if_single_entry="true"
-      :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
       label="Continuum"
       api_hint="plg.continuum ="
       :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the continuum."
     />
+
+    <j-flex-row v-if="continuum_subset_selected===spectral_subset_selected">
+      <v-alert type="error" style="width: 100%; margin-left: 12px; margin-right: 12px;">
+        <span class="v-messages v-messages__message text--secondary">
+            Cannot use the same region to define both the spectral line and the continuum.
+        </span>
+      </v-alert>
+    </j-flex-row>
 
     <j-flex-row v-if="continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
