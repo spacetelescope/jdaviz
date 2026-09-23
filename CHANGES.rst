@@ -191,6 +191,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fix a bug in Line Analysis that looks for a (possibly) non-existent mask when getting the continuum [#4406]
+
 Mosviz
 ^^^^^^
 
