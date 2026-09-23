@@ -29,6 +29,8 @@ Imviz
 
 - Adjust data menu behavior to allow for showing more icons when the viewer is short. [#4352]
 
+- Fix a couple incorrect API hints in the data loaders. [#4399]
+
 Mosviz
 ^^^^^^
 
