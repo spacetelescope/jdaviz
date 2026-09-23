@@ -190,6 +190,8 @@ Bug Fixes
 
 - Adjust data menu behavior to allow for showing more icons when the viewer is short. [#4352]
 
+- Ensure model fitting equation is validated before calculate fitting. [#4407]
+
 Mosviz
 ^^^^^^
 
