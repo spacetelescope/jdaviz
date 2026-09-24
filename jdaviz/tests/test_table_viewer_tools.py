@@ -934,8 +934,8 @@ class TestTableViewerViewerDataColumns:
         self.app._app.rename_data(self.img_a, 'img_a_renamed')
 
         values = list(self.catalog_data.get_component(self.image_col).data)
-        assert values[0] == ['img_a_renamed']
-        assert values[1] == ['img_a_renamed', self.img_b]
+        assert values[0] == ('img_a_renamed',)
+        assert values[1] == ('img_a_renamed', self.img_b)
 
         # clicking still resolves and shows the renamed dataset
         self.table_viewer.widget_table.checked = [0]
@@ -1069,7 +1069,7 @@ class TestTableViewerTwoWaySync:
         col = f'Data: {img_b_viewer.reference}'
 
         values = list(self.catalog_data.get_component(col).data)
-        assert all(v == [] for v in values)
+        assert all(v == () for v in values)
 
     def test_row_select_tool_visible_after_catalog_load(self):
         """TableRowSelect tool becomes visible once the catalog has Data: columns."""
@@ -1101,7 +1101,7 @@ class TestTableViewerTwoWaySync:
 
         values = list(self.catalog_data.get_component(self.image_col).data)
         # Row 0 should still be empty (no active row was set)
-        assert values[0] == []
+        assert values[0] == ()
 
     def test_layer_change_updates_only_active_row(self):
         """Only the checked row is updated; other rows stay empty."""
@@ -1112,8 +1112,8 @@ class TestTableViewerTwoWaySync:
 
         values = list(self.catalog_data.get_component(self.image_col).data)
         assert self.img_b in values[2]
-        assert values[0] == []
-        assert values[1] == []
+        assert values[0] == ()
+        assert values[1] == ()
 
 
 class TestTableViewerImageFirstWorkflow:

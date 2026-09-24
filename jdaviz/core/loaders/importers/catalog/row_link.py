@@ -23,7 +23,7 @@ def _as_list(value):
     if value is None:
         return ()
     if isinstance(value, str):
-        return [value] if value else ()
+        return (value) if value else ()
     try:
         return tuple(value)
     except TypeError:
