@@ -1703,6 +1703,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def _is_valid_item(self, item, filter_callables={}):
         for valid_filter in self.filters:
+            print(f"Checking filter {valid_filter}")
             if isinstance(valid_filter, str):
                 # pull from the functions above (should be subclassed),
                 # will raise an error if not in locals

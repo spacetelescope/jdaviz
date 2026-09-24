@@ -510,6 +510,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
     def _spectrum_from_table_hdu(self, hdulist, hdu):
         """Extract spectrum from Binary Table HDU with array-valued columns."""
         # Read the HDU as an astropy Table
+        print(hdu)
         table = Table.read(hdu)
 
         # if columns are shape (1, N), flatten them before passing to generic_spectrum_from_table
@@ -548,6 +549,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
     def _spectrum_from_hdu(self, hdulist, hdu):
         # Handle Binary Table HDU with spectral columns
+        print(f"Handling HDU of type {type(hdu)}")
+        print(f"Hdulist is {hdulist}")
+        print(f"HDU is {hdu}")
         if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)):
             return self._spectrum_from_table_hdu(hdulist, hdu)
 
