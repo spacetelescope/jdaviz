@@ -245,10 +245,6 @@ def run_qt(url, app_name="Jdaviz"):
             QMessageBox.warning(window_container, "Check for updates...",
                                 "Failed to check updates: GitHub request failed")
 
-        except requests.exceptions.RequestException as e:
-            QMessageBox.warning(window_container, "Check for updates...",
-                                f"Failed to check updates: {e}")
-
         except Exception as e:
             QMessageBox.warning(window_container, "Check for updates...",
                                 f"Failed to check updates: {e}")
