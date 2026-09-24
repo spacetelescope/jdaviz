@@ -128,8 +128,8 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     assert 'Dec' in qtab.colnames
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
-    # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 5
+    # make sure only ra/dec/x/y/index/data link loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 6
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
@@ -173,8 +173,8 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
 
-    # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 5
+    # make sure only ra/dec/x/y/index/data link loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 6
     # and that it has the correct contents
     assert_quantity_allclose(qtab['RA'], catalog_obj['RA'])
     assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'])
@@ -267,8 +267,8 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     # we didn't specify a specific ID column, so it should just be the index
     # of each source
     assert np.all(qtab['ID'] == np.arange(len(catalog_obj)))
-    # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 3
+    # make sure only ra and dec (plus index and data association) loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 4
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
