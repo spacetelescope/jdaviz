@@ -267,7 +267,8 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     # we didn't specify a specific ID column, so it should just be the index
     # of each source
     assert np.all(qtab['ID'] == np.arange(len(catalog_obj)))
-    # make sure only ra and dec (plus index and data association) loaded, since we didn't specify more columns
+    # make sure only ra and dec (plus index and data association) loaded,
+    # since we didn't specify more columns
     assert len(qtab.colnames) == 4
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
