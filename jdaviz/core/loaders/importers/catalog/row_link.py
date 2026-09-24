@@ -14,19 +14,20 @@ _META_KEY = '_viewer_data_columns'
 
 
 def _as_list(value):
-    """Normalize a single cell value to a list.
+    """Normalize a single cell value to a tuple. Can't use list since lists are
+    unhashable.
 
-    ``None`` -> ``[]``, a string -> ``[value]`` (or ``[]`` if empty), any other
-    iterable -> ``list(value)``, and anything else -> ``[value]``.
+    ``None`` -> ``()``, a string -> ``(value)`` (or ``()`` if empty), any other
+    iterable -> ``tuple(value)``, and anything else -> ``(value)``.
     """
     if value is None:
-        return []
+        return ()
     if isinstance(value, str):
-        return [value] if value else []
+        return [value] if value else ()
     try:
-        return list(value)
+        return tuple(value)
     except TypeError:
-        return [value]
+        return (value)
 
 
 def get_catalog_row_link_manager(app):

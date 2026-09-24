@@ -340,8 +340,9 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     qtab = imviz_helper._app.data_collection[0].get_object(QTable)
     assert 'SkyCoord_RA' in qtab.colnames
     assert 'SkyCoord_Dec' in qtab.colnames
-    # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 3
+    # make sure only ra and dec (plus index and data association) loaded,
+    # since we didn't specify more columns
+    assert len(qtab.colnames) == 4
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
