@@ -103,6 +103,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                        'value', 'value:unit', 'value:unreliable',
                        'viewer']
             self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/info/markers.html'
+            self.viewer.add_filter('is_not_table_viewer')
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
         else:
             # allow downstream configs to override headers
             headers = kwargs.get('headers', [])
