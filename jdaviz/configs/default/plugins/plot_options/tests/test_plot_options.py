@@ -503,7 +503,7 @@ def test_table_viewer_plot_options(deconfigged_helper):
     # Load catalog into a table viewer
     ldr = deconfigged_helper.loaders['object']
     ldr.object = catalog
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     ldr.importer.viewer.create_new = 'Source Catalog Table'
     ldr.load()
 

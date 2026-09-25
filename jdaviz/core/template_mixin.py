@@ -2454,7 +2454,7 @@ class LayerSelect(SelectPluginComponent):
                 return True
 
             # non-catalog layers should remain available regardless of link type
-            if getattr(lyr, 'meta', {}).get('_importer', '') != 'CatalogImporter':
+            if getattr(lyr, 'meta', {}).get('_importer', '') != 'SourceCatalogImporter':
                 return True
 
             comp_labels = [str(x) for x in lyr.component_ids()]
@@ -4934,7 +4934,7 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 2
 
         def is_source_catalog_table(data):
-            return data.meta.get('_importer', '') == 'CatalogImporter'
+            return data.meta.get('_importer', '') == 'SourceCatalogImporter'
 
         def is_spectral_lines_list_table(data):
             return data.meta.get('_importer', '') == 'SpectralLinesImporter'

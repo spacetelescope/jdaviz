@@ -15,7 +15,7 @@ from jdaviz.utils import create_data_hash, COORD_WORDS_TO_EXCLUDE
 
 from .row_link import get_catalog_row_link_manager
 
-__all__ = ['CatalogImporter']
+__all__ = ['SourceCatalogImporter']
 
 # regular expressions to guess which columns correspond to ra, dec, x, y
 COORD_PATTERNS = {
@@ -26,8 +26,8 @@ COORD_PATTERNS = {
 }
 
 
-@loader_importer_registry("Catalog")
-class CatalogImporter(BaseCatalogImporter):
+@loader_importer_registry("Source Catalog")
+class SourceCatalogImporter(BaseCatalogImporter):
 
     template_file = __file__, "./catalog.vue"
 

@@ -191,9 +191,9 @@ def test_vo_catalog_query_routes_to_query_catalog(deconfigged_helper):
     catalog = QTable()
     catalog['RA'] = [10.0, 20.0, 30.0] * u.deg
     catalog['Dec'] = [-5.0, 0.0, 5.0] * u.deg
-    deconfigged_helper.load(catalog, format='Catalog')
+    deconfigged_helper.load(catalog, format='Source Catalog')
     label = [d.label for d in deconfigged_helper._app.data_collection
-             if d.meta.get('_importer') == 'CatalogImporter'][-1]
+             if d.meta.get('_importer') == 'SourceCatalogImporter'][-1]
 
     vo_ldr = deconfigged_helper.loaders["virtual observatory"]._obj
     vo_ldr.search_input.selected = 'Catalog'

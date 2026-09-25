@@ -132,9 +132,9 @@ class TestConeSearchMessages:
     def test_catalog_mode_failure_identifies_source(self, sky_coord_only_source_catalog):
         """A failure on one catalog row is reported per-source and does not abort the loop."""
         ldr = self.ldr
-        self.helper.load(sky_coord_only_source_catalog, format='Catalog')
+        self.helper.load(sky_coord_only_source_catalog, format='Source Catalog')
         label = [d.label for d in self.helper._app.data_collection
-                 if d.meta.get('_importer') == 'CatalogImporter'][-1]
+                 if d.meta.get('_importer') == 'SourceCatalogImporter'][-1]
         ldr.search_input.selected = 'Catalog'
         ldr.catalog.selected = label
 

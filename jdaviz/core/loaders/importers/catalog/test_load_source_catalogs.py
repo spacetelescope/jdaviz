@@ -98,12 +98,12 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
 
     # load catalog, all columns
     imviz_helper.load(catalog_obj, col_other=['col1', 'col2', 'col3'],
-                      format='Catalog')
+                      format='Source Catalog')
 
     # check for the table in the data collection
     dc = imviz_helper._app.data_collection
     assert len(dc) == 2
-    assert 'Catalog' in imviz_helper._app.data_collection.labels
+    assert 'Source Catalog' in imviz_helper._app.data_collection.labels
     tab = imviz_helper._app.data_collection[1].get_object(Table)
     assert 'col1' in tab.colnames
 
@@ -122,11 +122,11 @@ def test_load_catalog_with_string_coord_cols(deconfigged_helper):
     catalog_obj = _make_catalog_string_coord_columns()
 
     # load catalog
-    deconfigged_helper.load(catalog_obj, format='Catalog')
+    deconfigged_helper.load(catalog_obj, format='Source Catalog')
 
     dc = deconfigged_helper._app.data_collection
     assert len(dc) == 1
-    assert 'Catalog' in deconfigged_helper._app.data_collection.labels
+    assert 'Source Catalog' in deconfigged_helper._app.data_collection.labels
 
     # make coordinate columns were renamed to Right Ascension and Declination,
     # X and Y in the data collection for consistency, and that RA / Dec always
@@ -172,11 +172,11 @@ def test_load_catalog_xy_and_radec(deconfigged_helper, tmp_path, from_file, with
         catalog = catalog_obj
 
     # load catalog
-    deconfigged_helper.load(catalog, format='Catalog')
+    deconfigged_helper.load(catalog, format='Source Catalog')
 
     dc = deconfigged_helper._app.data_collection
     assert len(dc) == 1
-    assert 'Catalog' in deconfigged_helper._app.data_collection.labels
+    assert 'Source Catalog' in deconfigged_helper._app.data_collection.labels
 
     # make sure 'RA' column was renamed to Right Ascension and 'Dec' to 'Declination'
     # in the data collection for consistency, and that the table in the data
@@ -212,7 +212,7 @@ def test_import_enabled_disabled(imviz_helper):
     ldr = loaders['object']
     ldr.object = catalog_obj
 
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     ldr.importer.col_ra.selected = '---'
     ldr.importer.col_dec.selected = '---'
     ldr.importer.col_x.selected = '---'
@@ -265,12 +265,12 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     # load catalog
-    imviz_helper.load(catalog, format='Catalog')
+    imviz_helper.load(catalog, format='Source Catalog')
 
-    # ensure that it is in the data collection with the correct label "Catalog"
+    # ensure that it is in the data collection with the correct label "Source Catalog"
     dc = imviz_helper._app.data_collection
     assert len(dc) == 3  # image, orientation layer, and catalog
-    assert 'Catalog' in imviz_helper._app.data_collection.labels
+    assert 'Source Catalog' in imviz_helper._app.data_collection.labels
 
     # make sure 'RA' column was renamed to Right Ascension and 'Dec' to 'Declination'
     # in the data collection for consistency, and that the table in the data
@@ -302,23 +302,23 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     # in the data collection
     ldr = imviz_helper.loaders['file' if from_file else 'object']
     setattr(ldr, 'filepath' if from_file else 'object', catalog)
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     assert ldr.importer._obj.col_ra_has_unit == with_units
 
     # load it again, make sure label incremented by 1
-    imviz_helper.load(catalog, format='Catalog')
+    imviz_helper.load(catalog, format='Source Catalog')
     assert len(dc) == 4  # image, orientation layer, and 2 catalogs
-    assert 'Catalog (1)' in imviz_helper._app.data_collection.labels
+    assert 'Source Catalog (1)' in imviz_helper._app.data_collection.labels
 
     # load with custom label and check label
-    imviz_helper.load(catalog, data_label='my_catalog', format='Catalog')
+    imviz_helper.load(catalog, data_label='my_catalog', format='Source Catalog')
     assert len(dc) == 5  # image, orientation layer, and 3 catalogs
     assert 'my_catalog' in imviz_helper._app.data_collection.labels
 
     # test other loader API options. switch RA and Dec col just to test
     # non-default column selection
     imviz_helper.load(catalog, data_label='with_flux', col_other='flux',
-                      col_ra='Dec', col_dec='RA', format='Catalog')
+                      col_ra='Dec', col_dec='RA', format='Source Catalog')
     assert len(dc) == 6  # image, orientation layer, and 4 catalogs
     assert 'flux' in dc['with_flux'].get_object(QTable).colnames
     qtab = imviz_helper._app.data_collection[-1].get_object(QTable)
@@ -347,11 +347,11 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
         catalog = catalog_obj
 
     # load catalog
-    imviz_helper.load(catalog, format='Catalog')
+    imviz_helper.load(catalog, format='Source Catalog')
 
     dc = imviz_helper._app.data_collection
     assert len(dc) == 1
-    assert 'Catalog' in imviz_helper._app.data_collection.labels
+    assert 'Source Catalog' in imviz_helper._app.data_collection.labels
 
     qtab = imviz_helper._app.data_collection[0].get_object(QTable)
     assert 'SkyCoord_RA' in qtab.colnames
@@ -386,9 +386,9 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
     except requests.exceptions.RequestException as exc:
         pytest.skip(f"Transient remote archive failure: {exc}")
 
-    assert 'Catalog' in ldr.format.choices
+    assert 'Source Catalog' in ldr.format.choices
 
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     ldr.importer.col_ra = 'ra'
     ldr.importer.col_dec = 'dec'
     ldr.importer.col_id = 'source_id'
@@ -397,7 +397,7 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
     ldr.load()
 
     assert 'Scatter' in deconfigged_helper.viewers
-    assert 'Catalog' in deconfigged_helper.viewers['Scatter'].data_menu.layer.choices
+    assert 'Source Catalog' in deconfigged_helper.viewers['Scatter'].data_menu.layer.choices
 
 
 @pytest.mark.remote_data
@@ -441,8 +441,8 @@ def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
         else:
             raise Exception(tb)
 
-    assert 'Catalog' in ldr.format.choices
-    ldr.format = 'Catalog'
+    assert 'Source Catalog' in ldr.format.choices
+    ldr.format = 'Source Catalog'
     ldr.load()
 
 
@@ -475,10 +475,10 @@ def test_astroquery_jwst_hst(deconfigged_helper, telescope):
     # note: querying coverage covered by test_resolver_table_as_query_astroquery
 
     ldr.treat_table_as_query = False
-    assert 'Catalog' in ldr.format.choices
+    assert 'Source Catalog' in ldr.format.choices
 
     # remove and replace with an assertion after JDAT-6412
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
 
     ldr.load()
     assert len(deconfigged_helper._app.data_collection) == 1
@@ -492,7 +492,7 @@ def test_invalid(imviz_helper, tmp_path):
     ldr = imviz_helper.loaders['object']
     with pytest.raises(ValueError, match="Parsed input is empty or None, cannot resolve."):
         ldr.object = empty_table
-    assert 'Catalog' not in ldr.format.choices
+    assert 'Source Catalog' not in ldr.format.choices
 
     # empty table from file
     fn = os.path.join(tmp_path, "empty_catalog.ecsv")
@@ -502,20 +502,20 @@ def test_invalid(imviz_helper, tmp_path):
     # Since no parsing of the actual file happens with the file parser
     # we don't error out as we did above.
     ldr.filepath = fn
-    assert 'Catalog' not in ldr.format.choices
+    assert 'Source Catalog' not in ldr.format.choices
 
     # while a fits file can be opened with table.read, it should not be
     # validated as a Catalog
     ldr = imviz_helper.loaders['object']
     ldr.object = fits.ImageHDU(np.ones((32, 25)))
     assert 'Image' in ldr.format.choices
-    assert 'Catalog' not in ldr.format.choices
+    assert 'Source Catalog' not in ldr.format.choices
 
 
 def test_scatter_viewer(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
 
     assert 'Scatter' in ldr.importer.viewer.create_new.choices
     ldr.importer.viewer.create_new = 'Scatter'
@@ -525,7 +525,7 @@ def test_scatter_viewer(deconfigged_helper):
     assert 'Scatter' in deconfigged_helper.new_viewers
 
     nv = deconfigged_helper.new_viewers['Scatter']
-    nv.dataset = ['Catalog']
+    nv.dataset = ['Source Catalog']
     nv.viewer_label = 'Added Scatter Viewer'
     nv()
 
@@ -535,7 +535,7 @@ def test_scatter_viewer(deconfigged_helper):
 def test_histogram_viewer(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     ldr.importer.col_other = ['flux']
 
     assert 'Histogram' in ldr.importer.viewer.create_new.choices
@@ -546,7 +546,7 @@ def test_histogram_viewer(deconfigged_helper):
     assert 'Histogram' in deconfigged_helper.new_viewers
 
     nv = deconfigged_helper.new_viewers['Histogram']
-    nv.dataset = ['Catalog']
+    nv.dataset = ['Source Catalog']
     nv.xatt = 'flux'
     nv.viewer_label = 'Added Histogram Viewer'
     nv()
@@ -566,7 +566,7 @@ def test_source_catalog_table_viewer(deconfigged_helper):
     """
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     ldr.importer.viewer.create_new = 'Source Catalog Table'
     ldr.load()
 
@@ -608,7 +608,8 @@ def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
     """
     Test loading a catalog from a FITS file HDUList (from opened file in memory,
     and from a fits file) containing a BinTableHDU extension and verify that it
-    can be loaded through the Catalog importer into a Source Catalog Table viewer.
+    can be loaded through the Source Catalog importer into a Source Catalog Table
+    viewer.
     """
 
     # create an HDUList with a table extension
@@ -628,10 +629,10 @@ def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
         ldr = deconfigged_helper.loaders['object']
         ldr.object = hdulist
 
-    # Verify Catalog format is available
-    assert 'Catalog' in ldr.format.choices
+    # Verify Source Catalog format is available
+    assert 'Source Catalog' in ldr.format.choices
 
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
 
     # Check that Primary HDU (index 0) is not in the extension choices, it should
     # have been filtered out because it is not a table extension
@@ -646,7 +647,7 @@ def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
     # verify catalog is in the data collection
     dc = deconfigged_helper._app.data_collection
     assert len(dc) == 1
-    assert 'Catalog' in dc.labels
+    assert 'Source Catalog' in dc.labels
 
     # and was correctly loaded into a Source Catalog Table viewer
     assert len(deconfigged_helper.viewers) == 1
@@ -678,7 +679,7 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     table_x_y_only = orig_catalog['X', 'Y', 'Obj_ID']
 
     imviz_helper.load(table_ra_dec_only,
-                      data_label='catalog0', format='Catalog')
+                      data_label='catalog0', format='Source Catalog')
 
     # since we're pixel linked and catalog has only world coordinates,
     # visibility should be off by default
@@ -692,7 +693,7 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
 
     # but if we load the catalog with X, Y, it should be visible
     imviz_helper.load(table_x_y_only,
-                      data_label='catalog1', format='Catalog')
+                      data_label='catalog1', format='Source Catalog')
     assert dm.data_labels_visible == ['catalog1', 'Image[DATA]']
 
     assert po.layer.choices == ['Image[DATA]', 'catalog1']  # catalog layer is now an option
@@ -703,7 +704,7 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     # load catalog with RA, Dec only again. Its default visibility should
     # now be on since we're WCS linked
     imviz_helper.load(table_ra_dec_only,
-                      data_label='catalog2', format='Catalog')
+                      data_label='catalog2', format='Source Catalog')
 
     # the pixel-only 'catalog1' should now be hidden
     assert dm.data_labels_visible == ['catalog2', 'Image[DATA]']
@@ -711,7 +712,7 @@ def test_catalog_visibility(imviz_helper, image_2d_wcs):
     # loading a pixel-coordinate-only catalog should now be hidden by default
     # since were WCS linked
     imviz_helper.load(table_x_y_only,
-                      data_label='catalog3', format='Catalog')
+                      data_label='catalog3', format='Source Catalog')
     assert 'catalog3' not in dm.data_labels_visible
 
 
@@ -742,13 +743,14 @@ def test_hdulist_multiple_table_extensions(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = hdulist
 
-    # This HDUList contains both table and image extensions, so both Catalog and Image
-    # formats should be valid. Verify Catalog is listed last when multiple formats exist.
-    assert 'Catalog' in ldr.format.choices
+    # This HDUList contains both table and image extensions, so both
+    # Source Catalog and Image formats should be valid. Verify Catalog is listed
+    # last when multiple formats exist.
+    assert 'Source Catalog' in ldr.format.choices
     assert len(ldr.format.choices) > 1
-    assert ldr.format.choices[-1] == 'Catalog'
+    assert ldr.format.choices[-1] == 'Source Catalog'
 
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
 
     # check that both table extensions are available. Checking this indirectly
     # verifies that the primary and image HDUs were correctly filtered out of
@@ -830,7 +832,7 @@ def test_load_catalog_from_fits_multiselect(deconfigged_helper):
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = hdul
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
 
     assert ldr.importer.extension.multiselect is True
 
@@ -878,7 +880,7 @@ def test_load_catalog_from_fits_multiselect(deconfigged_helper):
                           fits.BinTableHDU(table3)])
 
     ldr.object = hdul2
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
 
     ldr.importer.extension.selected = ldr.importer.extension.choices
 

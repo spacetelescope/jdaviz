@@ -160,7 +160,7 @@ def test_catalog_in_image_viewer(deconfigged_helper, image_2d_wcs,
     deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
 
     # Load the source catalog into the data collection, and into the image viewer
-    deconfigged_helper.load(sky_coord_only_source_catalog, format='Catalog',
+    deconfigged_helper.load(sky_coord_only_source_catalog, format='Source Catalog',
                             data_label='my_catalog')
 
     iv = deconfigged_helper.viewers['Image']
@@ -172,7 +172,7 @@ def test_catalog_in_image_viewer(deconfigged_helper, image_2d_wcs,
     assert dm.data_labels_visible == ['my_catalog', 'my_data[DATA]']
 
     assert deconfigged_helper._app.data_collection[2].label == 'my_catalog'
-    assert deconfigged_helper._app.data_collection[2].meta.get('_importer') == 'CatalogImporter'
+    assert deconfigged_helper._app.data_collection[2].meta.get('_importer') == 'SourceCatalogImporter'
 
     # since catalog is already loaded, it should not be in the "available"
     # choices, but should be in the visible list

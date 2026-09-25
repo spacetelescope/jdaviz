@@ -796,7 +796,7 @@ def test_markers_mouseover_and_load_into_new_viewer(deconfigged_helper, image_hd
     # verify new viewers can be generated with marker table
     ldr = mp._obj.table.loaders['object']
     assert ldr.object is not None
-    ldr.format.selected = 'Catalog'
+    ldr.format.selected = 'Source Catalog'
     assert viewer_type in ldr.importer.viewer.create_new.choices
     ldr.importer.viewer.create_new = viewer_type
     ldr.importer.viewer = viewer_type
@@ -806,4 +806,4 @@ def test_markers_mouseover_and_load_into_new_viewer(deconfigged_helper, image_hd
     new_viewer = deconfigged_helper.viewers[viewer_type]
     assert new_viewer is not None
     assert len(new_viewer.data_menu.data_labels_visible) == 1
-    assert new_viewer.data_menu.data_labels_visible[0] == 'Catalog'
+    assert new_viewer.data_menu.data_labels_visible[0] == 'Source Catalog'

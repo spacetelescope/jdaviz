@@ -157,7 +157,7 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = sky_coord_only_source_catalog
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
 
     importer_viewer = ldr.importer._obj.viewer
 
@@ -249,7 +249,7 @@ def test_expected_data_api_class(deconfigged_helper,
         (spectrum1d, '1D Spectrum', SpectralDataApi),
         (spectrum2d, '2D Spectrum', SpectralDataApi),
         (spectrum1d_cube, '3D Spectrum', SpectralSpatialDataApi),
-        (sky_coord_only_source_catalog, 'Catalog', DataApi)
+        (sky_coord_only_source_catalog, 'Source Catalog', DataApi)
     ]
 
     # Disable linking to speed up test

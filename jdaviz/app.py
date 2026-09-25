@@ -862,7 +862,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         new_data = self.data_collection[new_data_label]
 
-        if (new_data.meta.get('_importer') in ('ImageImporter', 'CatalogImporter') and
+        if (new_data.meta.get('_importer') in ('ImageImporter', 'SourceCatalogImporter') and
                 'Orientation' in self._jdaviz_helper.plugins):
             # Orientation plugin alreadly listens for messages for added Data and handles linking
             # orientation_plugin._link_image_data()
@@ -2960,7 +2960,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                 # check if this is a source catalog/scatter layer and use
                 # scatter_color_cycler, which has brighter colors for overplotting
                 # on images
-                is_source_catalog = data.meta.get('_importer') == 'CatalogImporter'
+                is_source_catalog = data.meta.get('_importer') == 'SourceCatalogImporter'
                 if is_source_catalog and hasattr(viewer, 'scatter_color_cycler'):
                     color = viewer.scatter_color_cycler()
                 else:

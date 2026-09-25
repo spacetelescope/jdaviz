@@ -606,10 +606,10 @@ def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catal
     dm.remove_from_viewer()
     assert plg._obj.disabled_msg == msg
 
-    # load a catalog, which will be added to a new scatter viewer by default.
+    # load a source catalog, which will be added to a new scatter viewer by default.
     # the unit conversion plugin should still be disabled since the check for
     # relevancy is for data in spectrum/image/cube viewers
-    deconfigged_helper.load(sky_coord_only_source_catalog, format='Catalog')
+    deconfigged_helper.load(sky_coord_only_source_catalog, format='Source Catalog')
     assert 'Scatter' in deconfigged_helper.viewers
     assert plg._obj.disabled_msg == msg
 
