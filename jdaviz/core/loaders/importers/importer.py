@@ -63,10 +63,13 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
 
     existing_data_in_dc = List([]).tag(sync=True)
 
-    def __init__(self, app, resolver, parser, input, **kwargs):
+    def __init__(self, app, resolver, parser, input, output_index=None, **kwargs):
         self._input = input
         self._parser = parser
         self._resolver = resolver
+        # index of the resolver output this importer is responsible for (None if the
+        # resolver produced a single output), used to disambiguate default data labels
+        self._output_index = output_index
         super().__init__(app=app, **kwargs)
 
         # Doing this in app instead of here avoids a lot of unnecessary overhead
@@ -105,6 +108,23 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
     @property
     def resolver(self):
         return self._resolver
+
+    @property
+    def resolver_output_suffix(self):
+        """
+        Suffix disambiguating this importer's output from the resolver's other outputs.
+        Empty string when the resolver produced a single output.
+        """
+        return self._resolver._output_label_suffix(self._output_index)
+
+    def _default_data_label_base(self, fallback=''):
+        """
+        Base data label for this importer's output: the resolver-provided label (or
+        ``fallback``) plus ``resolver_output_suffix``.  Importer-specific suffixes
+        (e.g. extension names) must be appended to this rather than before it.
+        """
+        base = self.default_data_label_from_resolver or fallback
+        return f"{base}{self.resolver_output_suffix}"
 
     @property
     def input(self):
@@ -209,7 +229,7 @@ class BaseImporterToDataCollection(BaseImporter):
                                         'data_label_invalid_msg',
                                         unique_in_data_collection=True)
 
-        self.data_label.default = self._registry_label
+        self.data_label.default = f"{self._registry_label}{self.resolver_output_suffix}"
 
         self.viewer = ViewerSelectCreateNew(self, 'viewer_items',
                                             'viewer_selected',

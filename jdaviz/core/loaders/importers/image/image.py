@@ -309,10 +309,7 @@ class ImageImporter(BaseImporterToDataCollection):
         if not hasattr(self, 'data_label'):
             return
 
-        if self.default_data_label_from_resolver:
-            prefix = self.default_data_label_from_resolver
-        else:
-            prefix = "Image"
+        prefix = self._default_data_label_base("Image")
 
         if self.input_has_extensions and hasattr(self, 'extension'):
             if self.extension.selected_name is None:

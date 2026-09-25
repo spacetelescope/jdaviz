@@ -100,3 +100,45 @@ def test_object_resolver_load_multiple_outputs(deconfigged_helper):
 
     assert len(deconfigged_helper._app.data_collection) == 2
     assert any('2 of 3 outputs imported' in text and '1 skipped' in text for text in messages)
+
+
+def test_object_resolver_multiple_outputs_labels_match_preview(deconfigged_helper):
+    """The data label shown in the importer widget must match the label actually created
+    for that output, and each output must get its own distinct label."""
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = [np.zeros((3, 3)), np.zeros((4, 4))]
+    ldr.format = 'Image'
+
+    resolver = ldr._obj
+    importers = resolver.importer
+    # the widget the user sees/configures corresponds to the first output
+    previewed_label = importers[0].data_label_value
+    expected_labels = [imp.data_label_value for imp in importers]
+    assert expected_labels == ['Image_ndarray_0', 'Image_ndarray_1']
+
+    ldr.load()
+
+    created_labels = [data.label for data in deconfigged_helper._app.data_collection]
+    assert sorted(created_labels) == sorted(expected_labels)
+    assert previewed_label in created_labels
+
+
+def test_multiple_outputs_resolver_suffix_precedes_extension_suffix(deconfigged_helper):
+    """The per-output suffix must be folded into the base label *before* an importer's
+    own extension suffix, and must not be applied twice."""
+    from astropy.io import fits
+
+    def _make_hdul(value):
+        hdul = fits.HDUList([fits.PrimaryHDU()])
+        hdul.append(fits.ImageHDU(data=np.zeros((5, 5)) + value, name='SCI', ver=1))
+        hdul.append(fits.ImageHDU(data=np.zeros((5, 5)) + value, name='ERR', ver=1))
+        return hdul
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = [_make_hdul(1), _make_hdul(2)]
+    ldr.format = 'Image'
+
+    ldr.load()
+
+    created_labels = [data.label for data in deconfigged_helper._app.data_collection]
+    assert created_labels == ['Image_hdulist_0[SCI,1]', 'Image_hdulist_1[SCI,1]']

@@ -111,10 +111,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
 
     @property
     def default_data_label_prefix(self):
-        if self.default_data_label_from_resolver:
-            return self.default_data_label_from_resolver
-        else:
-            return '1D Spectrum'
+        return self._default_data_label_base('1D Spectrum')
 
     @observe('extension_items',
              'extension_selected',

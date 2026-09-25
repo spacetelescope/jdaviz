@@ -157,6 +157,9 @@ class FormatSelect(SelectPluginComponent):
             return
 
         n_total = len(outputs)
+        # exposed to importers via BaseResolver._output_label_suffix; must be set before
+        # any importer is constructed since they resolve their default label at init
+        self.plugin._n_outputs = n_total
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -197,7 +200,8 @@ class FormatSelect(SelectPluginComponent):
                             this_importer = Importer(app=self.plugin._app,
                                                      resolver=self.plugin,
                                                      parser=this_parser,
-                                                     input=importer_input)
+                                                     input=importer_input,
+                                                     output_index=output_index)
                         except Exception as e:  # nosec
                             self._invalid_importers[label] = f'Importer exception: {e}'
                             continue
@@ -332,6 +336,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     default_input_cast = None
     requires_api_support = False
     _update_format_spinner_text = 'searching for valid formats...'
+    # number of outputs from the most recent format search (see FormatSelect._update_items)
+    _n_outputs = 1
 
     spinner = Unicode("").tag(sync=True)
 
@@ -1084,6 +1090,18 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # auto-suffix data labels when multiple outputs are imported under one format.
         return f"output_{output_index}"
 
+    def _output_label_suffix(self, output_index):
+        """
+        Suffix appended to an importer's base data label to disambiguate it from the
+        resolver's other outputs.  Empty when this resolver produced a single output so
+        that single-output labels are unaffected.
+        """
+        if output_index is None or self._n_outputs <= 1 or output_index >= self._n_outputs:
+            return ''
+        labels = _default_labels_for_outputs(
+            [self._default_label_for_output(i) for i in range(self._n_outputs)])
+        return f"_{labels[output_index]}"
+
     @property
     def parser(self):
         """Return the selected parser, or a list when multiple outputs are valid."""
@@ -1108,12 +1126,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         importers = [importer for _, importer in self._selected_importer_pairs()]
         return importers[0] if len(importers) == 1 else importers
 
-    def _output_suffices(self, selected_importers):
-        # "_" + de-duplicated per-output label, in the same order as ``selected_importers``
-        labels = _default_labels_for_outputs(
-            [self._default_label_for_output(i) for i, _ in selected_importers])
-        return [f"_{label}" for label in labels]
-
     def load(self):
         """
         Import into jdaviz with all selected options.
@@ -1133,17 +1145,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                             if item['label'] == self.format.selected), None)
         n_total = format_item['n_total'] if format_item is not None else len(selected_importers)
 
-        # data_label_is_prefix/data_label_suffices on primary_importer were already set by
-        # _on_format_selected_changed (so the UI reflects prefix mode before Import is clicked);
-        # re-derive the same suffices here to apply per-output labels when actually loading.
-        suffices = self._output_suffices(selected_importer_pairs)
-        prefix = primary_importer.data_label.value if hasattr(primary_importer, 'data_label') else None  # noqa
-
         n_imported = 0
-        for (output_index, this_importer), suffix in zip(selected_importer_pairs, suffices):
+        for output_index, this_importer in selected_importer_pairs:
+            # each importer already resolved its own data label via resolver_output_suffix;
+            # only the viewer selection (configured on the primary importer's widget) is
+            # shared across outputs and needs propagating.
             if this_importer is not primary_importer:
-                if prefix is not None and hasattr(this_importer, 'data_label'):
-                    this_importer.data_label.value = f"{prefix}{suffix}"
                 if hasattr(this_importer, 'viewer') and hasattr(primary_importer, 'viewer'):
                     this_importer.viewer.selected = primary_importer.viewer.selected
             try:
@@ -1198,21 +1205,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.valid_import_formats = ''
 
             primary_importer.reset_and_check_existing_data_in_dc()
-            self._update_primary_importer_prefix()
-
-    def _update_primary_importer_prefix(self):
-        # when the selected format applies to multiple outputs, show the shared data_label
-        # as a prefix (with the resolved per-output labels) rather than a single label,
-        # so the UI reflects this before the user clicks Import.  when there's only one
-        # output, leave data_label_is_prefix/suffices alone: some importers set these
-        # themselves (e.g. for their own multi-extension selection within one output).
-        selected_importer_pairs = self._selected_importer_pairs()
-        primary_importer = selected_importer_pairs[0][1]
-        if not hasattr(primary_importer, 'data_label_is_prefix'):
-            return
-        if len(selected_importer_pairs) > 1:
-            primary_importer.data_label_is_prefix = True
-            primary_importer.data_label_suffices = self._output_suffices(selected_importer_pairs)
 
     def close_in_tray(self, close_sidebar=False):
         """
