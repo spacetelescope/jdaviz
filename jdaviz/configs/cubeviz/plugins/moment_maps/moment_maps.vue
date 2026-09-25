@@ -59,7 +59,7 @@
       v-model:selected="continuum_subset_selected"
       :show_if_single_entry="true"
       label="Continuum"
-      api_hint="plg.continuum_subset ="
+      api_hint="plg.continuum ="
       :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the continuum."
     />
