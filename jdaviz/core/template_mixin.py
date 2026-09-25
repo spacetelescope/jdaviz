@@ -1703,7 +1703,6 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def _is_valid_item(self, item, filter_callables={}):
         for valid_filter in self.filters:
-            print(f"Checking filter {valid_filter}")
             if isinstance(valid_filter, str):
                 # pull from the functions above (should be subclassed),
                 # will raise an error if not in locals
@@ -4613,8 +4612,11 @@ class ViewerSelect(SelectPluginComponent):
         # list of dictionaries with id, ref, ref_or_id
         was_empty = len(self.items) == 0
         manual_items = [{'label': label} for label in self.manual_options]
-        self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
-                                     for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])]  # noqa
+        try:
+            self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
+                                        for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])]  # noqa
+        except ValueError:
+            print(self.viewer_dicts)
         if auto_select:
             self._apply_default_selection(skip_if_current_valid=not was_empty)
 
