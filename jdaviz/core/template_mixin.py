@@ -4275,8 +4275,12 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                        simplify_spectral=True,
                                        use_display_units=True)
             spectrum = extract_region(full_spectrum, sr, return_single_spectrum=True)
-            sr_lower = np.nanmin(spectrum.spectral_axis[spectrum.spectral_axis >= sr.lower])  # noqa
-            sr_upper = np.nanmax(spectrum.spectral_axis[spectrum.spectral_axis <= sr.upper])  # noqa
+            # work with plain (unmasked) values/Quantities to avoid issues comparing a
+            # SpectralAxis directly against a (possibly masked) Quantity
+            axis_value = spectrum.spectral_axis.value
+            axis_unit = spectrum.spectral_axis.unit
+            sr_lower = np.nanmin(axis_value[axis_value >= sr.lower.value]) * axis_unit
+            sr_upper = np.nanmax(axis_value[axis_value <= sr.upper.value]) * axis_unit
 
         if self.continuum_subset_selected == 'None':
             self._update_continuum_marks()
@@ -4328,13 +4332,24 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                              max(spectral_axis.value[continuum_mask])])}
 
         else:
-            # we'll access the mask of the continuum and then apply that to the spectrum.  For a
+            # we'll access the mask of the continuum and then apply that to the spectrum. For a
             # spatially-collapsed spectrum in cubeviz, this will access the mask from the full
             # cube, but still apply that to the spatially-collapsed spectrum.
-            continuum_mask = ~self._specviz_helper.get_data(
+            continuum = self._specviz_helper.get_data(
                 dataset.selected,
                 spectral_subset=self.continuum_subset_selected,
-                use_display_units=True).mask
+                use_display_units=True)
+            if continuum.mask is None:
+                # No masked pixels in the continuum subset. Create a mask for the full spectrum
+                # based on the continuum subset bounds
+                continuum_subset = self._app.get_subsets(self.continuum_subset_selected,
+                                                         simplify_spectral=True,
+                                                         use_display_units=True)
+                # compare on .value (both are already in display units)
+                continuum_mask = ((spectral_axis.value >= continuum_subset.lower.value) &
+                                  (spectral_axis.value <= continuum_subset.upper.value))
+            else:
+                continuum_mask = ~continuum.mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
             if not update_marks:
