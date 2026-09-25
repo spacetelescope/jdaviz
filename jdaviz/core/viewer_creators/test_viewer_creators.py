@@ -205,7 +205,7 @@ class TestViewerCreatorObject:
         catalog = Table()
         catalog['ra'] = [337.503, 337.528] * u.deg
         catalog['dec'] = [-20.815, -20.804] * u.deg
-        self.dcf_helper.load(catalog, format='Catalog')
+        self.dcf_helper.load(catalog, format='Source Catalog')
 
         new_viewers_set = set(self.dcf_helper.new_viewers.keys())
         assert new_viewers_set == {'1D Spectrum', '2D Spectrum', '3D Spectrum',

@@ -44,7 +44,7 @@ _MOS_PRODUCTS = {
               'viewer_reference': 'imviz-image-viewer',
               'viewer_traitlet_prefix': 'viewer_image'},
     'catalog': {'pattern': _CAT_PATTERN,
-                'format': 'Catalog',
+                'format': 'Source Catalog',
                 'viewer_label': 'Source Catalog Table',
                 'viewer_reference': 'source-catalog-table-viewer',
                 'viewer_traitlet_prefix': 'viewer_catalog'},
