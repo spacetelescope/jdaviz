@@ -29,7 +29,7 @@ COORD_PATTERNS = {
 @loader_importer_registry("Source Catalog")
 class SourceCatalogImporter(BaseCatalogImporter):
 
-    template_file = __file__, "./catalog.vue"
+    template_file = __file__, "./source_catalog.vue"
 
     # for catalogs with source positions in sky coordinates
     col_ra_items = List().tag(sync=True)

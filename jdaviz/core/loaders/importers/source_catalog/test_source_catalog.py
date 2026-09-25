@@ -1,7 +1,7 @@
 from astropy.coordinates import ICRS, SkyCoord
 from astropy.table import Table, QTable
 import astropy.units as u
-from jdaviz.core.loaders.importers.catalog.catalog import SourceCatalogImporter
+from jdaviz.core.loaders.importers.source_catalog.source_catalog import SourceCatalogImporter
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest

@@ -9,7 +9,7 @@ from .ramp_integration import *  # noqa
 from .image import *  # noqa
 from .subset import *  # noqa
 from .trace import *  # noqa
-from .catalog import *  # noqa
+from .source_catalog import *  # noqa
 from .footprint import *  # noqa
 from .line_list import *  # noqa
 from .spectral_lines import *  # noqa
