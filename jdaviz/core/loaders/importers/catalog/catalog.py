@@ -7,6 +7,7 @@ import re
 from regions import PixCoord
 from traitlets import Any, Bool, List, Unicode, observe
 
+from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.loaders.importers import BaseCatalogImporter
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
@@ -234,6 +235,24 @@ class CatalogImporter(BaseCatalogImporter):
                     return ''
 
         return 'Input is not a valid catalog.'
+
+    @property
+    def import_confidence_score(self):
+        if (isinstance(self.resolver, BaseConeSearchResolver)
+                and self.resolver.treat_table_as_query):
+            return 2
+
+        def _has_selected_col(col):
+            selected = getattr(self, f'col_{col}_selected', None)
+            return selected not in ('---', '', None)
+
+        has_ra_dec = all(_has_selected_col(col) for col in ('ra', 'dec'))
+        has_xy = all(_has_selected_col(col) for col in ('x', 'y'))
+        if has_ra_dec or has_xy:
+            # still below any image/spectrum importers at default confidence
+            return -1
+        # at bottom of list
+        return -2
 
     @observe('extension_selected')
     def _on_extension_selected_change(self, event):

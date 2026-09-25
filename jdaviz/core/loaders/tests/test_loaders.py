@@ -6,7 +6,7 @@ from itertools import product
 from unittest.mock import patch
 
 from astropy import units as u
-from astropy.table import Table
+from astropy.table import QTable, Table
 from astropy.io import fits
 from astropy.wcs import WCS
 from astroquery.mast import Mast, MastMissions
@@ -71,6 +71,27 @@ def test_catalog_format_available_for_table_target(deconfigged_helper):
 
     ldr.target = 'Table'
     assert 'Catalog' in ldr.format.choices
+
+
+def test_format_selection_prefers_catalog_for_sky_coords(deconfigged_helper):
+    table = Table({'ra': [1.0, 2.0], 'dec': [3.0, 4.0], 'flux': [5.0, 6.0]})
+    ldr = deconfigged_helper.loaders['object']
+
+    ldr.object = table
+
+    assert ldr.format.selected == 'Catalog'
+    assert ldr.format.items[0]['import_confidence_score'] == -1
+
+
+def test_format_selection_prefers_spectral_lines_for_spectral_table(deconfigged_helper):
+    table = QTable({'rest wavelength': [6562.8, 4861.3] * u.AA,
+                    'linename': ['H-alpha', 'H-beta']})
+    ldr = deconfigged_helper.loaders['object']
+
+    ldr.object = table
+
+    assert ldr.format.selected == 'Spectral Lines'
+    assert ldr.format.items[0]['import_confidence_score'] > 0
 
 
 def test_dbg_access(deconfigged_helper):
@@ -405,9 +426,10 @@ def test_resolver_url(deconfigged_helper):
     # https valid input (2D Spectrum)
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
 
-    # may change with future importers
+    # This file is also a valid Catalog, but Catalog confidence stays below the
+    # default so 2D Spectrum remains the default selection.
     assert len(loader.format.choices) == 3
-    assert loader.format.selected == '2D Spectrum'  # default may change with future importers
+    assert loader.format.selected == '2D Spectrum'
 
     # test target filtering
     assert len(loader.target.choices) > 1

@@ -100,6 +100,23 @@ class SpectralLinesImporter(BaseCatalogImporter):
 
         return ''
 
+    @property
+    def import_confidence_score(self):
+        if self.resolver.__class__.__name__ == 'SpectralLineDatabaseResolver':
+            return 2
+
+        def _has_selected_col(attr):
+            selected = getattr(self, f'{attr}_selected', None)
+            return selected not in ('---', '', None)
+
+        has_spectral_loc = _has_selected_col('spectral_loc')
+        has_linename = _has_selected_col('linename')
+        if has_spectral_loc and has_linename:
+            return 1
+        if has_spectral_loc:
+            return -1
+        return -2
+
     def _guess_spectral_loc_col(self):
         """
         Guess the spectral location column from common naming conventions.
