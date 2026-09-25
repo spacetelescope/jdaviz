@@ -54,11 +54,11 @@
       </j-docs-link>
     </j-flex-row>
 
+    <!-- TODO: remove the rule(s) when the v-alert below is implemented with disabling calculate -->
     <plugin-subset-select
       :items="continuum_subset_items"
       v-model:selected="continuum_subset_selected"
       :show_if_single_entry="true"
-<!--      TODO: remove this when the v-alert below is implemented with disabling calculate -->
       :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
       label="Continuum"
       api_hint="plg.continuum_subset ="
