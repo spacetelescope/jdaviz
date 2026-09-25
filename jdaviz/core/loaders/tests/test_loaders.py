@@ -567,14 +567,23 @@ def test_file_table_local_paths(deconfigged_helper):
 
     for row_idx, expected_path, description in test_cases:
         ldr.file_table.select_rows(row_idx)
-        result = ldr._obj.get_selected_url()
-        assert result == expected_path, (
+        result = ldr._obj.get_selected_urls()
+        assert result == [expected_path], (
             f"Failed for {description}: expected {expected_path}, got {result}"
         )
 
+    ldr.file_table.select_rows([0, 6])
+    assert ldr._obj.get_selected_urls() == [
+        '/absolute/unix/path.fits', 'http://example.com/file.fits'
+    ]
+    with patch('jdaviz.core.loaders.resolvers.resolver.download_uri_to_path',
+               side_effect=['/mock/first.fits', '/mock/second.fits']) as download:
+        assert ldr._obj._download_from_file_table() == ['/mock/first.fits', '/mock/second.fits']
+    assert download.call_count == 2
+
     # Test MAST product name gets the prefix
     ldr.file_table.select_rows(7)
-    result = ldr._obj.get_selected_url()
+    result = ldr._obj.get_selected_urls()[0]
     assert result.startswith('https://mast.stsci.edu/search/jwst/api/'), \
         f"MAST product name should get URL prefix, got: {result}"
     assert 'jwst-product-name' in result, \
@@ -612,10 +621,10 @@ def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
         time.sleep(0.1)
 
     assert ldr._obj.file_table_populated is True
-    assert ldr._obj.get_selected_url() is None
+    assert ldr._obj.get_selected_urls() == []
 
     ldr.file_table.select_rows(0)
-    assert ldr._obj.get_selected_url() is not None
+    assert len(ldr._obj.get_selected_urls()) == 1
     # we can't guarantee any specific format choices since
     # this depends on what data is returned from MAST
     # but let's at least make sure the download was successful

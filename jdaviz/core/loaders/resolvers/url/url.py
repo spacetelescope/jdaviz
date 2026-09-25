@@ -1,8 +1,12 @@
 from traitlets import Bool, Unicode, List, observe
 from urllib.parse import urlparse
 import os
+import shutil
+import tarfile
+import zipfile
 from functools import cached_property
 from pathlib import Path
+
 import astropy
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -13,6 +17,52 @@ from jdaviz.utils import download_uri_to_path, get_cloud_fits, get_cloud_asdf
 
 
 __all__ = ['URLResolver', 'PresetURLResolver']
+
+
+def _archive_extract_dir(archive_path):
+    return archive_path.with_name(f'{archive_path.name}.unpacked')
+
+
+def _safe_archive_member_path(extract_dir, member_name):
+    member_path = (extract_dir / member_name).resolve()
+    if member_path != extract_dir and extract_dir not in member_path.parents:
+        raise ValueError(f'Archive member has an unsafe path: {member_name}')
+    return member_path
+
+
+def _unpack_if_archive(archive_path):
+    """Extract a ZIP or TAR archive and return its regular-file members."""
+    archive_path = Path(archive_path)
+    extract_dir = _archive_extract_dir(archive_path).resolve()
+
+    if zipfile.is_zipfile(archive_path):
+        with zipfile.ZipFile(archive_path) as archive:
+            members = [member for member in archive.infolist() if not member.is_dir()]
+            for member in members:
+                target_path = _safe_archive_member_path(extract_dir, member.filename)
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                # extract member-by-member (rather than archive.extractall) so each
+                # target path can be validated to stay within extract_dir
+                with archive.open(member) as src, open(target_path, 'wb') as dest:
+                    shutil.copyfileobj(src, dest)
+    elif tarfile.is_tarfile(archive_path):
+        with tarfile.open(archive_path) as archive:
+            for member in archive.getmembers():
+                target_path = _safe_archive_member_path(extract_dir, member.name)
+                if member.issym() or member.islnk():
+                    raise ValueError(f'Archive member is a link: {member.name}')
+                if not member.isfile():
+                    continue
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                # extract member-by-member (rather than archive.extractall) so each
+                # target path can be validated to stay within extract_dir
+                with archive.extractfile(member) as src, open(target_path, 'wb') as dest:
+                    shutil.copyfileobj(src, dest)
+    else:
+        # return original filepath
+        return archive_path
+
+    return sorted(str(path) for path in extract_dir.rglob('*') if path.is_file())
 
 
 @loader_resolver_registry('url')
@@ -162,10 +212,15 @@ class URLResolver(BaseResolver):
             # create empty message for anything else
             self.download_path_msg = ''
 
-        return target_url
+        return _unpack_if_archive(target_url)
 
     def parse_input(self):
         return self._uri_output_file
+
+    def _default_label_for_output(self, output_index):
+        if type(self.output) is list:
+            return Path(self.output[output_index]).stem
+        return super()._default_label_for_output(output_index)
 
 
 class PresetURLResolver(URLResolver):

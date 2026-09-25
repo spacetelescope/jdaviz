@@ -38,6 +38,43 @@ def test_file_resolver_directory_input_for_mos(deconfigged_helper, tmp_path):
     assert [item['label'] for item in resolver.format.items] == ['MOS']
 
 
+def test_file_resolver_multiple_paths(deconfigged_helper, tmp_path):
+    """Setting filepath to a list (e.g. via cmd/ctrl+click multi-select) results
+    in multiple resolver outputs; a single-element/string filepath keeps the
+    original scalar behavior."""
+    paths = []
+    for i in range(2):
+        p = tmp_path / f'img{i}.fits'
+        fits.PrimaryHDU(np.zeros((5, 5))).writeto(p)
+        paths.append(str(p))
+
+    resolver = FileResolver(app=deconfigged_helper._app)
+
+    # widget callback with multiple selected paths
+    resolver._on_file_chooser_path_changed([tmp_path / 'img0.fits', tmp_path / 'img1.fits'])
+    assert resolver.filepath == paths
+    assert resolver._check_is_valid() == ''
+    assert resolver.output == paths
+    image_item = next(item for item in resolver.format.items if item['label'] == 'Image')
+    assert image_item['n_total'] == 2
+
+    # setting via the API as a plain string keeps the single-output behavior
+    resolver.filepath = paths[0]
+    assert resolver.output == paths[0]
+    image_item = next(item for item in resolver.format.items if item['label'] == 'Image')
+    assert image_item['n_total'] == 1
+
+    # setting via the API as a list is equivalent to multi-select in the browser
+    resolver.filepath = paths
+    assert resolver.output == paths
+    image_item = next(item for item in resolver.format.items if item['label'] == 'Image')
+    assert image_item['n_total'] == 2
+
+    # nonexistent path in the list is invalid
+    resolver.filepath = paths + [str(tmp_path / 'missing.fits')]
+    assert resolver._check_is_valid() == 'Filepath does not exist.'
+
+
 def test_mast_export_csv_treat_table_as_query(deconfigged_helper, tmp_path):
     """
     Test that a Missions-MAST-export CSV (Dataset + Filename columns) loaded via

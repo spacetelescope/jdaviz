@@ -15,8 +15,8 @@
       :disabled="disabled"
       :dense="dense"
       :loading="loading"
-      item-title="label"
-      item-value="label"
+      :item-title="item_title_key || 'label'"
+      :item-value="item_value_key || 'label'"
       persistent-hint
       style="width: 100%"
       :search-input="search_enabled ? search_query : undefined"
@@ -124,7 +124,10 @@
 export default {
   props: ['items', 'selected', 'label', 'hint', 'rules',
           'show_if_single_entry', 'multiselect', 'nonmultiselect_allow_clear',
-          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading', 'exists_in_dc'],
+          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading', 'exists_in_dc',
+          // optional: item field to use for the displayed title/underlying value,
+          // e.g. when an item's display text should differ from its selected value
+          'item_title_key', 'item_value_key'],
   data() {
     return {
       search_query: '',

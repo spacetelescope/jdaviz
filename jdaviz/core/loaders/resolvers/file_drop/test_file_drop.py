@@ -45,7 +45,7 @@ class TestFileDropResolverBasic:
         Test basic initialization of traitlets and some properties
         in FileDropResolver.
         """
-        assert file_drop_resolver._file_info is None
+        assert file_drop_resolver._file_infos == []
         assert file_drop_resolver.progress == 100
         assert file_drop_resolver.nfiles == 0
 
@@ -91,8 +91,9 @@ class TestFileDropResolverBasic:
         """
         Test default_label returns file name with different conventions.
         """
-        file_drop_resolver._file_info = {'name': filename,
-                                         'data': b'some data'}
+        file_drop_resolver._file_infos = [
+            {'name': filename,
+             'data': b'some data'}]
 
         assert file_drop_resolver.default_label == result
 
@@ -119,7 +120,7 @@ class TestFileDropResolverFileHandling:
             file_drop_resolver._on_file_updated(file_info)
 
             assert file_drop_resolver.nfiles == len(file_info)
-            assert file_drop_resolver._file_info == file_info[0] if len(file_info) > 1 else file_info  # noqa
+            assert file_drop_resolver._file_infos == file_info
             assert file_drop_resolver.progress == 100
 
             mock_input_updated.assert_called_once()
@@ -143,7 +144,7 @@ class TestFileDropResolverParseInput:
         """
         Test that parse_input returns BytesIO object.
         """
-        file_drop_resolver._file_info = _FILE_INFO[0]
+        file_drop_resolver._file_infos = [_FILE_INFO[0]]
 
         result = file_drop_resolver.parse_input()
 
@@ -154,9 +155,35 @@ class TestFileDropResolverParseInput:
         """
         Test parse_input when no file is loaded.
         """
-        file_drop_resolver._file_info = None
-        with pytest.raises(AttributeError):
+        file_drop_resolver._file_infos = []
+        with pytest.raises(IndexError):
             file_drop_resolver.parse_input()
+
+    def test_output_single_file(self, file_drop_resolver):
+        """
+        A single dropped file results in a scalar (non-list) output.
+        """
+        with patch.object(file_drop_resolver, '_resolver_input_updated'):
+            file_drop_resolver._on_file_updated([_FILE_INFO[0]])
+
+        assert isinstance(file_drop_resolver.output, io.BytesIO)
+        assert file_drop_resolver.output.read() == _FILE_INFO[0]['data']
+
+    def test_output_multiple_files(self, file_drop_resolver):
+        """
+        Multiple dropped files result in a list of BytesIO outputs, one per file.
+        """
+        with patch.object(file_drop_resolver, '_resolver_input_updated'):
+            file_drop_resolver._on_file_updated(_FILE_INFO)
+
+        output = file_drop_resolver.output
+        assert isinstance(output, list)
+        assert len(output) == len(_FILE_INFO)
+        for result, file_info in zip(output, _FILE_INFO):
+            assert isinstance(result, io.BytesIO)
+            assert result.read() == file_info['data']
+
+        assert file_drop_resolver._default_label_for_output(1) == 'file2'
 
 
 def _create_sample_csv_data():
@@ -271,22 +298,25 @@ class TestFileDropResolverEdgeCases:
         """
         Test file name with special characters, unicode, and 'large' data.
         """
-        file_drop_resolver._file_info = {'name': 'my-file_v2.0 (copy).csv',
-                                         'data': b'data'}
+        file_drop_resolver._file_infos = [
+            {'name': 'my-file_v2.0 (copy).csv',
+             'data': b'data'}]
 
         expected = 'my-file_v2.0 (copy)'
         assert file_drop_resolver.default_label == expected
 
         # Now test with unicode characters
-        file_drop_resolver._file_info = {'name': 'és_测试_🌟.csv',
-                                         'data': b'data'}
+        file_drop_resolver._file_infos = [
+            {'name': 'és_测试_🌟.csv',
+             'data': b'data'}]
         expected = 'és_测试_🌟'
         assert file_drop_resolver.default_label == expected
 
         # Simulate a large file by creating 'large' data
         large_data = b'x' * (10 * 1024 * 1024)  # 10 MB
-        file_drop_resolver._file_info = {'name': 'large_file.dat',
-                                         'data': large_data}
+        file_drop_resolver._file_infos = [
+            {'name': 'large_file.dat',
+             'data': large_data}]
         result = file_drop_resolver.parse_input()
         assert isinstance(result, io.BytesIO)
         # Read in chunks to avoid memory issues in test
@@ -306,8 +336,8 @@ class TestFileDropResolverEdgeCases:
                     file_drop_resolver.progress = 50
                     file_drop_resolver._on_file_updated([file_info])
 
-                    # Each upload should update _file_info
-                    assert file_drop_resolver._file_info['name'] == file_info['name']
+                    # Each upload should update the first entry in _file_infos
+                    assert file_drop_resolver._file_infos[0]['name'] == file_info['name']
                     assert file_drop_resolver.nfiles == 1
                     # Check that progress is reset to 100 after each upload
                     assert file_drop_resolver.progress == 100
@@ -317,13 +347,13 @@ class TestFileDropResolverEdgeCases:
         Test behavior when file_info is missing name/data keys.
         """
         # Missing 'name' key
-        file_drop_resolver._file_info = {'data': b'some data'}
+        file_drop_resolver._file_infos = [{'data': b'some data'}]
 
         # default_label should return None
         assert file_drop_resolver.default_label is None
 
         # Now with missing 'data' key
-        file_drop_resolver._file_info = {'name': 'test.csv'}
+        file_drop_resolver._file_infos = [{'name': 'test.csv'}]
 
         # parse_input uses .get() which returns None
         # io.BytesIO(None) creates empty BytesIO, doesn't raise

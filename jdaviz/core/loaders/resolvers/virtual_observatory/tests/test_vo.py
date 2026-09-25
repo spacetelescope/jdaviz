@@ -531,9 +531,10 @@ class TestVOImvizRemote:
         assert len(vo_ldr.file_table._obj.items) > 0
 
         # Load first data product
-        assert vo_ldr._obj.get_selected_url() is None
+        assert vo_ldr._obj.get_selected_urls() == []
         vo_ldr.file_table.select_rows(0)
-        assert vo_ldr._obj.get_selected_url() is not None and len(vo_ldr._obj.get_selected_url()) > 0  # noqa
+        assert len(vo_ldr._obj.get_selected_urls()) == 1
+        assert len(vo_ldr._obj.get_selected_urls()[0]) > 0
 
 
 @pytest.mark.remote_data
@@ -569,9 +570,10 @@ class TestVOSSARemote:
         assert len(ssa_out) > 0
 
         # Load first data product
-        assert vo_loader._obj.get_selected_url() is None
+        assert vo_loader._obj.get_selected_urls() == []
         vo_loader.file_table.select_rows(0)
-        assert vo_loader._obj.get_selected_url() is not None and len(vo_loader._obj.get_selected_url()) > 0  # noqa
+        assert len(vo_loader._obj.get_selected_urls()) == 1
+        assert len(vo_loader._obj.get_selected_urls()[0]) > 0
 
 
 @pytest.mark.remote_data

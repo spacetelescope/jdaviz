@@ -119,6 +119,8 @@ New Features
   the selection of line medium in loader, and adding line name to table by
   default. [#4386]
 
+- Loaders now support loading multiple files (of the same format) at once. [#4385]
+
 Mosviz
 ^^^^^^
 

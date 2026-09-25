@@ -8,9 +8,20 @@
       label="Data Label"
       api_hint="ldr.importer.data_label ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Label to assign to the new data entry."
+      :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.  Will resolve to the following data labels:' : 'Label to assign to the new data entry.'"
     >
     </plugin-auto-label>
+
+    <j-flex-row v-if="data_label_is_prefix">
+        <j-tooltip v-for="(suff, index) in data_label_suffices"
+          :key="index"
+          :tooltipcontent="data_label_overwrite_by_index[index] ? 'Will overwrite existing entry' : 'New entry'">
+          <v-chip small style="margin: 2px">
+            <v-icon v-if="data_label_overwrite_by_index[index]" small left color="warning">mdi-file-replace</v-icon>
+            {{data_label_value}}{{suff}}
+          </v-chip>
+        </j-tooltip>
+    </j-flex-row>
 
     <plugin-viewer-create-new
       :items="viewer_items"

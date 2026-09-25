@@ -174,12 +174,13 @@
           </j-flex-row>
           <j-flex-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
               <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">ldr.format = '{{ format_selected }}'</span>
-              <span v-else><b>Format:</b> {{ format_selected }}</span>
+              <span v-else><b>Format:</b> {{ formatItemDisplay(format_items[0]) }}</span>
           </j-flex-row>
           <plugin-select
               v-if="format_items.length >= 2"
               :show_if_single_entry="false"
-              :items="format_items.map(i => i.label)"
+              :items="format_items_display"
+              item_value_key="format_label"
               :selected="format_selected"
               @update:selected="$emit('update:format_selected', $event)"
               label="Format"
@@ -202,6 +203,26 @@ export default {
     return {
       success_dismiss_timer: null,
       success_dismissed: false
+    }
+  },
+  computed: {
+    // format_items as displayed in the format dropdown: the underlying format value
+    // ("format_label") is kept distinct from the displayed "label" so a resolver with
+    // multiple outputs can show how many of them are valid for each format
+    format_items_display() {
+      return this.format_items.map(item => ({
+        ...item,
+        format_label: item.label,
+        label: this.formatItemDisplay(item),
+      }));
+    }
+  },
+  methods: {
+    formatItemDisplay(item) {
+      if (!item) {
+        return '';
+      }
+      return item.n_total > 1 ? `${item.label} (${item.n_valid}/${item.n_total})` : item.label;
     }
   },
   props: ['title', 'popout_button', 'spinner',
