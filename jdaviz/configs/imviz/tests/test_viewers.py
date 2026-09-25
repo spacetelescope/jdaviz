@@ -171,8 +171,9 @@ def test_catalog_in_image_viewer(deconfigged_helper, image_2d_wcs,
     # loaded/removed from the image viewer
     assert dm.data_labels_visible == ['my_catalog', 'my_data[DATA]']
 
-    assert deconfigged_helper._app.data_collection[2].label == 'my_catalog'
-    assert deconfigged_helper._app.data_collection[2].meta.get('_importer') == 'SourceCatalogImporter'
+    dc_entry = deconfigged_helper._app.data_collection[2]
+    assert dc_entry.label == 'my_catalog'
+    assert dc_entry.meta.get('_importer') == 'SourceCatalogImporter'
 
     # since catalog is already loaded, it should not be in the "available"
     # choices, but should be in the visible list
