@@ -65,7 +65,7 @@ New Features
 
 - Add consolidated emission line list and ability to query database in API. [#4314]
 
-- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322, #4350]
+- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322, #4350, #4397]
 
 - Allow markers plugin table to create other viewer types besides Scatter (i.e. Table or Histogram). [#4331]
 
