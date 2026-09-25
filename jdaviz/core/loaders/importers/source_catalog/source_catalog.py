@@ -15,7 +15,7 @@ from jdaviz.utils import create_data_hash, COORD_WORDS_TO_EXCLUDE
 
 from .row_link import get_catalog_row_link_manager
 
-__all__ = ['CatalogImporter']
+__all__ = ['SourceCatalogImporter']
 
 # regular expressions to guess which columns correspond to ra, dec, x, y
 COORD_PATTERNS = {
@@ -26,10 +26,10 @@ COORD_PATTERNS = {
 }
 
 
-@loader_importer_registry("Catalog")
-class CatalogImporter(BaseCatalogImporter):
+@loader_importer_registry("Source Catalog")
+class SourceCatalogImporter(BaseCatalogImporter):
 
-    template_file = __file__, "./catalog.vue"
+    template_file = __file__, "./source_catalog.vue"
 
     # for catalogs with source positions in sky coordinates
     col_ra_items = List().tag(sync=True)
@@ -93,7 +93,7 @@ class CatalogImporter(BaseCatalogImporter):
                                                           selected='extension_selected',
                                                           multiselect='extension_multiselect',
                                                           manual_options=ext_options,
-                                                          filters=[_validate_fits_tablehdu])
+                                                          filters=[self._validate_fits_tablehdu])
 
             # the choices have already been filtered to only valid table HDUs, so
             # choose the 0th to select the first valid table HDU by default
@@ -411,7 +411,7 @@ class CatalogImporter(BaseCatalogImporter):
         return [{'label': 'Image', 'reference': 'imviz-image-viewer', 'allow_create': False},
                 {'label': 'Scatter', 'reference': 'scatter-viewer'},
                 {'label': 'Histogram', 'reference': 'histogram-viewer'},
-                {'label': 'Table', 'reference': 'table-viewer'}]
+                {'label': 'Source Catalog Table', 'reference': 'source-catalog-table-viewer'}]
 
     @property
     def user_api(self):
@@ -587,8 +587,3 @@ class CatalogImporter(BaseCatalogImporter):
         # ensure the app-level manager that links catalog rows to viewer contents
         # exists (and is subscribed) as soon as a catalog has been imported
         get_catalog_row_link_manager(self._app)
-
-
-def _validate_fits_tablehdu(item):
-    hdu = item.get('obj')
-    return isinstance(hdu, (TableHDU, BinTableHDU))

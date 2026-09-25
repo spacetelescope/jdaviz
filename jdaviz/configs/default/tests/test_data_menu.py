@@ -408,13 +408,14 @@ class TestResizeSubset:
 def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
                                                 sky_coord_only_source_catalog):
     """
-    Test that catalog layers are excluded from zordermanagement in image viewers.
+    Test that catalog layers are excluded from zorder management in image viewers.
 
-    To do this, load an image, align by WCS, then load a catalog. The catalog
-    layer should always be at the top of the layer stack. Then, add a subset to
-    ensure the catalog layer remains on top. The addition of a 'Default Orientation'
-    and a subset layer will test the reordering functionality of the data menu, and
-    ensure that catalog layers are excluded from reordering and always remain on top.
+    To do this, load an image, align by WCS, then load a source catalog. The source
+    catalog layer should always be at the top of the layer stack. Then, add a
+    subset to ensure the catalog layer remains on top. The addition of a
+    'Default Orientation' and a subset layer will test the reordering
+    functionality of the data menu, and ensure that catalog layers are excluded
+    from reordering and always remain on top.
     """
 
     data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
@@ -422,13 +423,13 @@ def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
 
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
-    # load catalog
+    # load source catalog
     imviz_helper.load(sky_coord_only_source_catalog, data_label='catalog',
-                      format='Catalog')
+                      format='Source Catalog')
 
-    # load catalog. with the presence of a 'Default Orientation' layer that is
-    # NOT listed in the data menu, loading a catalog will cause the layer
-    # reordering logic in data_menu to run, and scatter layers should remain unchanged
+    # with the presence of a 'Default Orientation' layer that is NOT listed in
+    # the data menu, loading a catalog will cause the layer reordering logic in
+    # data_menu to run, and scatter layers should remain unchanged
     layers = imviz_helper.default_viewer.data_menu._obj._viewer.layers
     assert layers[-1].layer.label == 'catalog'
 

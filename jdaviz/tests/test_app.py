@@ -612,7 +612,7 @@ def test_delete_catalog_with_wcs_from_viewer(deconfigged_helper, image_2d_wcs,
 
     # load the catalog
     deconfigged_helper.load(sky_coord_only_source_catalog,
-                            format='Catalog',
+                            format='Source Catalog',
                             data_label='my_catalog')
 
     # create a scatter viewer

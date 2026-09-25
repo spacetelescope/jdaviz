@@ -17,7 +17,7 @@ def test_spectral_lines_importer_is_valid(deconfigged_helper):
     assert importer.is_valid
     assert importer._check_is_valid() == ''
 
-    # non table input (a string) should not be valid
+    # non-table input (a string) should not be valid
     importer._input = 'not_a_table'
     assert importer._check_is_valid() == 'Input must be an astropy Table or QTable.'
 
@@ -48,10 +48,10 @@ def test_wavelength_column_detection(deconfigged_helper, col_name):
     assert importer.spectral_loc == col_name
 
     # load into a Table viewer and verify the data appears there
-    importer.viewer.create_new = 'Table'
+    importer.viewer.create_new = 'Spectral Line List Table'
     importer()
 
-    tv = deconfigged_helper.viewers['Table']
+    tv = deconfigged_helper.viewers['Spectral Line List Table']
     assert len(tv._obj.glue_viewer.layers) == 1
 
 
@@ -165,8 +165,10 @@ def test_output_additional_columns(deconfigged_helper):
 
 
 def test_supported_viewers():
-    """_get_supported_viewers should include Scatter, Table and Histogram viewers."""
+    """
+    TODO:_get_supported_viewers should include Scatter, Spectral Line List Table
+    and Histogram viewers? currently only the Spectral Line List Table is supported."""
     viewers = SpectralLinesImporter._get_supported_viewers()
     assert len(viewers) == 1  # only table viewer for now
     references = [v['reference'] for v in viewers]
-    assert 'table-viewer' in references
+    assert 'line-list-table-viewer' in references

@@ -268,10 +268,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self._set_viewer_id()
 
     def _on_layers_finalized(self, msg=None):
-        # when a catalog is added, set visibility based on alignment type
+        # when a source catalog is added, set visibility based on alignment type
         # and presence of pixel and/or world coordinates.
         new_data = msg.data
-        if new_data.meta.get('_importer') == 'CatalogImporter':
+        if new_data.meta.get('_importer') == 'SourceCatalogImporter':
             self._handle_catalog_layer_visibility(layers=[new_data])
 
     def _on_link_changed(self, msg=None):
@@ -305,7 +305,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
         for layer in layers:
             if hasattr(layer, 'meta'):
-                if layer.meta.get('_importer') == 'CatalogImporter':
+                if layer.meta.get('_importer') == 'SourceCatalogImporter':
                     ra_col = layer.meta.get('_jdaviz_loader_ra_col')
                     dec_col = layer.meta.get('_jdaviz_loader_dec_col')
                     x_col = layer.meta.get('_jdaviz_loader_x_col')
@@ -325,7 +325,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
             if len(hiding_due_to_pixel_sky_mismatch):
                 plural = 's' if len(hiding_due_to_pixel_sky_mismatch) > 1 else ''
-                m = (f"Hiding Catalog layer{plural} {hiding_due_to_pixel_sky_mismatch} in "
+                m = (f"Hiding Source Catalog layer{plural} {hiding_due_to_pixel_sky_mismatch} in "
                      f"'{self.viewer_reference}. Catalog{plural} contains {coord_type} "
                      f"coordinates only, which do not match current viewer alignment "
                      f"({align_type}).")

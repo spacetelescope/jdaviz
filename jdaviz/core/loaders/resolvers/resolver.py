@@ -191,12 +191,14 @@ class FormatSelect(SelectPluginComponent):
                         self._invalid_importers[label] = this_importer.is_valid.message
 
         # Sort generic table importers to the end of the list so more specific
-        # formats are selected by default.  Order: other > Catalog > Spectral Lines.
+        # formats are selected by default.  Order: other > Source Catalog > Spectral Lines.
         spectral_lines_formats = [f for f in all_formats if f['label'] == 'Spectral Lines']
-        catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
+        cat_formats = [f for f in all_formats if f['label'] == 'Source Catalog']
+        generic_cat_formats = [f for f in all_formats if f['label'] == 'Generic Catalog']
         other_formats = [f for f in all_formats
-                         if f['label'] not in ('Catalog', 'Spectral Lines')]
-        self.items = other_formats + spectral_lines_formats + catalog_formats
+                         if f['label'] not in ('Source Catalog', 'Spectral Lines',
+                                               'Generic Catalog')]
+        self.items = other_formats + spectral_lines_formats + cat_formats + generic_cat_formats
         self._apply_default_selection()
 
 
@@ -1154,7 +1156,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         )
         self.search_input.add_filter(
             lambda item: item['label'] != 'Catalog' or any(
-                d.meta.get('_importer') == 'CatalogImporter'
+                d.meta.get('_importer') == 'SourceCatalogImporter'
                 for d in self._app.data_collection
             )
         )

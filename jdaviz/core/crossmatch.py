@@ -347,9 +347,9 @@ def catalogs_from_data_collection(app, data_labels, names=None):
     for label, name in zip(data_labels, names):
         data = dc[label]
         meta = getattr(data, 'meta', {}) or {}
-        if meta.get('_importer') != 'CatalogImporter':
+        if meta.get('_importer') != 'SourceCatalogImporter':
             raise ValueError(f"Data '{label}' is not a catalog loaded via the "
-                             "Catalog importer.")
+                             "Source Catalog importer.")
         catalogs.append((name, data.get_object(cls=QTable)))
 
         ra_col = meta.get('_jdaviz_loader_ra_col')

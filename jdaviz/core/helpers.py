@@ -198,7 +198,7 @@ class ConfigHelper(HubListener):
     def set_viewer_data_columns(self, data_label, viewer_data, column_prefix='Data: '):
         """
         Add or update read-only ``"<column_prefix><viewer>"`` columns on a loaded
-        catalog, one per viewer, listing the data to show in that viewer.
+        Source Catalog, one per viewer, listing the data to show in that viewer.
 
         When a row is clicked in any table viewer showing the catalog, each listed
         viewer is cleared and repopulated with exactly the data in its column for
@@ -208,7 +208,7 @@ class ConfigHelper(HubListener):
         Parameters
         ----------
         data_label : str
-            Label of a catalog (loaded via the Catalog importer) in the data
+            Label of a catalog (loaded via the Source Catalog importer) in the data
             collection.
         viewer_data : dict
             Mapping of viewer reference (``str``) or viewer instance to the per-row

@@ -335,7 +335,7 @@ def test_load_staged_lines_end_to_end(deconfigged_helper):
 
     # the Spectral Lines importer is the default format, and the linename and
     # spectral location columns from parse_input are auto-detected
-    assert ldr.format.selected == "Spectral Lines"
+    assert ldr.format == "Spectral Lines"
     importer = ldr.importer
     assert importer.spectral_loc.selected == "rest wavelength"
     assert importer._obj.linename_selected == "linename"
@@ -360,5 +360,5 @@ def test_load_staged_lines_end_to_end(deconfigged_helper):
     assert loaded_names == {r["line_name"] for r in ldr.staged_lines}
 
     # data is displayed in a table viewer
-    tv = deconfigged_helper.viewers["Table"]
+    tv = deconfigged_helper.viewers["Spectral Line List Table"]
     assert len(tv._obj.glue_viewer.layers) == 1

@@ -45,11 +45,11 @@ def test_spectral_lines_relevancy_table_viewer(deconfigged_helper):
     ldr.object = QTable({'wavelength': [6562.8, 7000.0] * u.AA, 'name': ['Ha', 'line2']})
     ldr.format = 'Spectral Lines'
     importer = ldr.importer
-    importer.viewer.create_new = 'Table'
+    importer.viewer.create_new = 'Spectral Line List Table'
     importer()
 
-    # a table viewer showing spectral-line data should make the plugin relevant
-    # even without a spectrum viewer
+    # a spectral line listtable viewer showing should make the plugin relevant
+    assert 'Spectral Line List Table' in deconfigged_helper.viewers
     assert plugin.irrelevant_msg == ''
 
     # removing the table viewer's data should make it irrelevant again

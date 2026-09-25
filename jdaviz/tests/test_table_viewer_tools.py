@@ -27,8 +27,8 @@ class TestTableViewerTools:
         self.catalog = sky_coord_only_source_catalog
         ldr = deconfigged_helper.loaders['object']
         ldr.object = self.catalog
-        ldr.format = 'Catalog'
-        ldr.importer.viewer.create_new = 'Table'
+        ldr.format = 'Source Catalog'
+        ldr.importer.viewer.create_new = 'Source Catalog Table'
         ldr.load()
 
         self._app = deconfigged_helper
@@ -44,7 +44,7 @@ class TestTableViewerTools:
         self.viewer.state._set_axes_aspect_ratio(1)
 
         # Get the table viewer
-        self.table_viewer_user_api = deconfigged_helper.viewers['Table']
+        self.table_viewer_user_api = deconfigged_helper.viewers['Source Catalog Table']
         self.table_viewer = self.table_viewer_user_api._obj.glue_viewer
 
     def test_table_highlight_tool_activates(self):
@@ -467,12 +467,12 @@ class TestTableViewerToolsMultipleViewers:
         ndd = NDData(arr, wcs=image_2d_wcs)
         deconfigged_helper.load(ndd, data_label='test_image')
 
-        # Load catalog into a Table viewer
+        # Load catalog into a Source Catalog Table viewer
         self.catalog = sky_coord_only_source_catalog
         ldr = deconfigged_helper.loaders['object']
         ldr.object = self.catalog
-        ldr.format = 'Catalog'
-        ldr.importer.viewer.create_new = 'Table'
+        ldr.format = 'Source Catalog'
+        ldr.importer.viewer.create_new = 'Source Catalog Table'
         ldr.load()
 
         self.app = deconfigged_helper
@@ -494,7 +494,7 @@ class TestTableViewerToolsMultipleViewers:
             v.state._set_axes_aspect_ratio(1)
 
         # Get table viewer
-        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.table_viewer = deconfigged_helper.viewers['Source Catalog Table']._obj.glue_viewer
 
     def test_zoom_applies_to_all_viewers_by_default(self):
         """Test that zoom applies to all viewers when no specific viewer is selected."""
@@ -561,8 +561,8 @@ class TestTableViewerToolsWcsLinkedMixedCoords:
         self.catalog = wcs_linked_mixed_coord_catalog
         ldr = deconfigged_helper.loaders['object']
         ldr.object = self.catalog
-        ldr.format = 'Catalog'
-        ldr.importer.viewer.create_new = 'Table'
+        ldr.format = 'Source Catalog'
+        ldr.importer.viewer.create_new = 'Source Catalog Table'
         # Set xcentroid/ycentroid as pixel columns - these are the "wrong" coords
         ldr.importer.col_x.selected = 'xcentroid'
         ldr.importer.col_y.selected = 'ycentroid'
@@ -581,7 +581,7 @@ class TestTableViewerToolsWcsLinkedMixedCoords:
         self.viewer.state._set_axes_aspect_ratio(1)
 
         # Get the table viewer
-        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.table_viewer = deconfigged_helper.viewers['Source Catalog Table']._obj.glue_viewer
 
     def test_highlight_uses_wcs_not_pixel_coords(self):
         """
@@ -690,12 +690,12 @@ class TestTableViewerToolsPixelLinked:
         ndd = NDData(arr)
         deconfigged_helper.load(ndd, data_label='test_image')
 
-        # Load the pixel-coordinate catalog into a Table viewer
+        # Load the pixel-coordinate catalog into a Source Catalog Table viewer
         self.catalog = pixel_coord_source_catalog
         ldr = deconfigged_helper.loaders['object']
         ldr.object = self.catalog
-        ldr.format = 'Catalog'
-        ldr.importer.viewer.create_new = 'Table'
+        ldr.format = 'Source Catalog'
+        ldr.importer.viewer.create_new = 'Source Catalog Table'
         ldr.importer.col_x.selected = 'x'
         ldr.importer.col_y.selected = 'y'
         ldr.load()
@@ -712,7 +712,7 @@ class TestTableViewerToolsPixelLinked:
         self.viewer.state._set_axes_aspect_ratio(1)
 
         # Get the table viewer
-        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.table_viewer = deconfigged_helper.viewers['Source Catalog Table']._obj.glue_viewer
 
     def test_pixel_linked_zoom_applies_correct_limits(self):
         """Test that zoom-to-selected works with pixel-linked catalogs."""
@@ -799,15 +799,15 @@ class TestTableViewerViewerDataColumns:
         deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec_a')
         deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec_b')
 
-        # catalog -> Table viewer (5 rows)
+        # source catalog -> Source Catalog Table viewer (5 rows)
         ldr = deconfigged_helper.loaders['object']
         ldr.object = sky_coord_only_source_catalog
-        ldr.format = 'Catalog'
-        ldr.importer.viewer.create_new = 'Table'
+        ldr.format = 'Source Catalog'
+        ldr.importer.viewer.create_new = 'Source Catalog Table'
         ldr.load()
 
         self.app = deconfigged_helper
-        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.table_viewer = deconfigged_helper.viewers['Source Catalog Table']._obj.glue_viewer
 
         dc = deconfigged_helper._app.data_collection
         # resolve the actual data-collection labels (loading may apply a suffix)
@@ -817,7 +817,7 @@ class TestTableViewerViewerDataColumns:
         self.spec_a = next(lbl for lbl in dc_labels if lbl.startswith('spec_a'))
         self.spec_b = next(lbl for lbl in dc_labels if lbl.startswith('spec_b'))
         self.catalog_label = next(d.label for d in dc
-                                  if (d.meta or {}).get('_importer') == 'CatalogImporter')
+                                  if (d.meta or {}).get('_importer') == 'SourceCatalogImporter')
 
         # dedicated target viewers seeded with img_a / spec_a
         vc = deconfigged_helper.new_viewers['Image']
@@ -907,11 +907,11 @@ class TestTableViewerViewerDataColumns:
             {self.image_ref: [[self.img_b], [self.img_a], [], [], []]})
 
         # a second table viewer showing the same catalog
-        vc = self.app.new_viewers['Table']
+        vc = self.app.new_viewers['Source Catalog Table']
         vc.dataset = self.catalog_label
-        vc.viewer_label = 'Table (2)'
+        vc.viewer_label = 'Source Catalog Table (2)'
         vc()
-        table2 = self.app._app.get_viewer('Table (2)')
+        table2 = self.app._app.get_viewer('Source Catalog Table (2)')
 
         # the column exists exactly once on the shared catalog Data
         comps = [c.label for c in self.catalog_data.components]
@@ -955,7 +955,7 @@ class TestTableViewerViewerDataColumns:
 
     def test_non_catalog_raises(self):
         """Setting columns on non-catalog data raises a ValueError."""
-        with pytest.raises(ValueError, match="is not a catalog"):
+        with pytest.raises(ValueError, match="is not a source catalog."):
             self.app.set_viewer_data_columns(self.img_a,
                                              {self.image_ref: [[]] * 5})
 
@@ -1003,12 +1003,12 @@ class TestTableViewerTwoWaySync:
 
         ldr = deconfigged_helper.loaders['object']
         ldr.object = sky_coord_only_source_catalog
-        ldr.format = 'Catalog'
-        ldr.importer.viewer.create_new = 'Table'
+        ldr.format = 'Source Catalog'
+        ldr.importer.viewer.create_new = 'Source Catalog Table'
         ldr.load()
 
         self.app = deconfigged_helper
-        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.table_viewer = deconfigged_helper.viewers['Source Catalog Table']._obj.glue_viewer
 
         dc = deconfigged_helper._app.data_collection
         dc_labels = list(dc.labels)
@@ -1016,7 +1016,7 @@ class TestTableViewerTwoWaySync:
         self.img_b = next(lbl for lbl in dc_labels if lbl.startswith('img_b'))
         self.spec_a = next(lbl for lbl in dc_labels if lbl.startswith('spec_a'))
         self.catalog_label = next(d.label for d in dc
-                                  if (d.meta or {}).get('_importer') == 'CatalogImporter')
+                                  if (d.meta or {}).get('_importer') == 'SourceCatalogImporter')
 
         # One image viewer created up-front (simulates the user creating it before
         # any row-link columns are registered).
@@ -1140,15 +1140,15 @@ class TestTableViewerImageFirstWorkflow:
         # 2. Load catalog second — creates the table viewer and the manager
         ldr = deconfigged_helper.loaders['object']
         ldr.object = sky_coord_only_source_catalog
-        ldr.format = 'Catalog'
-        ldr.importer.viewer.create_new = 'Table'
+        ldr.format = 'Source Catalog'
+        ldr.importer.viewer.create_new = 'Source Catalog Table'
         ldr.load()
 
         self.app = deconfigged_helper
-        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.table_viewer = deconfigged_helper.viewers['Source Catalog Table']._obj.glue_viewer
         dc = deconfigged_helper._app.data_collection
         self.catalog_label = next(d.label for d in dc
-                                  if (d.meta or {}).get('_importer') == 'CatalogImporter')
+                                  if (d.meta or {}).get('_importer') == 'SourceCatalogImporter')
         self.image_col = f'Data: {self.image_ref}'
 
     @property
@@ -1188,22 +1188,22 @@ class TestTableViewerLateCatalogAttachWorkflow:
         # 2. Load catalog to a non-table viewer (Scatter), so no table exists yet.
         ldr = deconfigged_helper.loaders['object']
         ldr.object = sky_coord_only_source_catalog
-        ldr.format = 'Catalog'
+        ldr.format = 'Source Catalog'
         ldr.importer.viewer.create_new = 'Scatter'
         ldr.load()
 
         self.app = deconfigged_helper
         dc = deconfigged_helper._app.data_collection
         self.catalog_label = next(d.label for d in dc
-                                  if (d.meta or {}).get('_importer') == 'CatalogImporter')
+                                  if (d.meta or {}).get('_importer') == 'SourceCatalogImporter')
         self.image_col = f'Data: {self.image_ref}'
 
         # 3. Create table viewer later and attach the already-loaded catalog.
-        vc = self.app.new_viewers['Table']
+        vc = self.app.new_viewers['Source Catalog Table']
         vc.dataset = self.catalog_label
-        vc.viewer_label = 'Table (late)'
+        vc.viewer_label = 'Source Catalog Table (late)'
         vc()
-        self.table_viewer = self.app._app.get_viewer('Table (late)')
+        self.table_viewer = self.app._app.get_viewer('Source Catalog Table (late)')
 
     @property
     def catalog_data(self):
@@ -1236,12 +1236,12 @@ class TestTableRowSelectToolBehavior:
         # Catalog loaded after image so auto-columns are created
         ldr = deconfigged_helper.loaders['object']
         ldr.object = sky_coord_only_source_catalog
-        ldr.format = 'Catalog'
-        ldr.importer.viewer.create_new = 'Table'
+        ldr.format = 'Source Catalog'
+        ldr.importer.viewer.create_new = 'Source Catalog Table'
         ldr.load()
 
         self.app = deconfigged_helper
-        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.table_viewer = deconfigged_helper.viewers['Source Catalog Table']._obj.glue_viewer
         self.toolbar = self.table_viewer.toolbar
 
     def test_row_select_not_active_during_override(self):
@@ -1364,12 +1364,12 @@ class TestTableColumnsVisible:
     def setup_method(self, deconfigged_helper, sky_coord_only_source_catalog):
         ldr = deconfigged_helper.loaders['object']
         ldr.object = sky_coord_only_source_catalog
-        ldr.format = 'Catalog'
-        ldr.importer.viewer.create_new = 'Table'
+        ldr.format = 'Source Catalog'
+        ldr.importer.viewer.create_new = 'Source Catalog Table'
         ldr.load()
 
         self._app = deconfigged_helper
-        self.table_viewer = deconfigged_helper.viewers['Table']._obj.glue_viewer
+        self.table_viewer = deconfigged_helper.viewers['Source Catalog Table']._obj.glue_viewer
         self.toolbar = self.table_viewer.toolbar
         self.tool = self.toolbar.tools['jdaviz:table_columns_visible']
 
@@ -1442,8 +1442,8 @@ def test_plot_options_table_columns_visible_deprecated(deconfigged_helper,
                                                        sky_coord_only_source_catalog):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = sky_coord_only_source_catalog
-    ldr.format = 'Catalog'
-    ldr.importer.viewer.create_new = 'Table'
+    ldr.format = 'Source Catalog'
+    ldr.importer.viewer.create_new = 'Source Catalog Table'
     ldr.load()
 
     po = deconfigged_helper.plugins['Plot Options']

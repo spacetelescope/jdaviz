@@ -67,10 +67,10 @@ def test_catalog_format_available_for_table_target(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
 
     ldr.object = table
-    assert 'Catalog' in ldr.format.choices
+    assert 'Source Catalog' in ldr.format.choices
 
-    ldr.target = 'Table'
-    assert 'Catalog' in ldr.format.choices
+    ldr.target = 'Source Catalog Table'
+    assert 'Source Catalog' in ldr.format.choices
 
 
 def test_dbg_access(deconfigged_helper):
