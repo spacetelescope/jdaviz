@@ -325,7 +325,6 @@ def test_load_staged_lines_end_to_end(deconfigged_helper):
     """Staged lines load through the Spectral Lines importer into the
     data collection and a table viewer."""
     ldr = deconfigged_helper.loaders["spectral line database"]
-    ldr.format = 'Spectral Lines'
     ldr.wavelength_unit.selected = "Angstrom"
     ldr.wavelength_min = "6500"
     ldr.wavelength_max = "6600"
@@ -336,7 +335,7 @@ def test_load_staged_lines_end_to_end(deconfigged_helper):
 
     # the Spectral Lines importer is the default format, and the linename and
     # spectral location columns from parse_input are auto-detected
-    assert ldr.format.selected == "Spectral Lines"
+    assert ldr.format == "Spectral Lines"
     importer = ldr.importer
     assert importer.spectral_loc.selected == "rest wavelength"
     assert importer._obj.linename_selected == "linename"

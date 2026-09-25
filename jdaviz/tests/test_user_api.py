@@ -165,8 +165,9 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
     assert 'Source Catalog Table' in importer_viewer.create_new.choices
     assert 'Histogram' in importer_viewer.create_new.choices
 
-    # setting via the user-api wrapper to 'Source Catalog Table' should select the Table type,
-    # not label a scatter viewer labeled 'Source Catalog Table'
+    # setting via the user-api wrapper to 'Source Catalog Table' should select
+    # the Source Catalog Table viewer type, not label a scatter viewer labeled
+    # 'Source Catalog Table'
     ldr.importer.viewer = 'Source Catalog Table'
     assert importer_viewer.create_new.selected == 'Source Catalog Table'
 
