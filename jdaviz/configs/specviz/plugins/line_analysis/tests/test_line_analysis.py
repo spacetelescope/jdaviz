@@ -433,11 +433,11 @@ def test_continuum_subset_no_mask(deconfigged_helper, spectrum1d, spectral_subse
     axis_value = spectrum1d.spectral_axis.value
     flux_value = spectrum1d.flux.value
 
-    data_lower, data_upper = sorted((axis_value[2], axis_value[-3]))
+    data_lower, data_upper = sorted((axis_value[3], axis_value[-4]))
     deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
         data_lower * u.AA, data_upper * u.AA))
 
-    continuum_lower, continuum_upper = sorted((axis_value[3], axis_value[-4]))
+    continuum_lower, continuum_upper = sorted((axis_value[2], axis_value[-3]))
     deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(
         continuum_lower * u.AA, continuum_upper * u.AA))
 
