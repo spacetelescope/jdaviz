@@ -1,3 +1,5 @@
+<script setup>
+</script>
 <template>
   <j-tray-plugin
     :config="config"
@@ -63,9 +65,11 @@
     />
 <!-- TODO: fix up backend to disable 'calculate'-->
 <!--    <j-flex-row v-if="continuum_subset_selected===spectral_subset_selected">-->
-<!--      <span class="v-messages v-messages__message text&#45;&#45;secondary" style="color: red !important">-->
-<!--          Cannot use the same region to define both the spectral region and the continuum.-->
-<!--      </span>-->
+<!--      <v-alert type="error" style="width: 100%; margin-left: 12px; margin-right: 12px;">-->
+<!--        <span class="v-messages v-messages__message text&#45;&#45;secondary" style="color: red !important">-->
+<!--            Cannot use the same region to define both the spectral region and the continuum.-->
+<!--        </span>-->
+<!--      </v-alert>-->
 <!--    </j-flex-row>-->
 
     <plugin-dataset-select
