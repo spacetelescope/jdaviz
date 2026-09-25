@@ -61,12 +61,12 @@
       :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the continuum."
     />
-
-    <j-flex-row v-if="continuum_subset_selected===spectral_subset_selected">
-      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
-          Cannot use the same region to define both the spectral region and the continuum.
-      </span>
-    </j-flex-row>
+<!-- TODO: fix up backend to disable 'calculate'-->
+<!--    <j-flex-row v-if="continuum_subset_selected===spectral_subset_selected">-->
+<!--      <span class="v-messages v-messages__message text&#45;&#45;secondary" style="color: red !important">-->
+<!--          Cannot use the same region to define both the spectral region and the continuum.-->
+<!--      </span>-->
+<!--    </j-flex-row>-->
 
     <plugin-dataset-select
       v-if="continuum_subset_selected !== 'None'"
