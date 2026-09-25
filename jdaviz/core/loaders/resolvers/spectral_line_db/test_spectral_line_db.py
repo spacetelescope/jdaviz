@@ -325,6 +325,7 @@ def test_load_staged_lines_end_to_end(deconfigged_helper):
     """Staged lines load through the Spectral Lines importer into the
     data collection and a table viewer."""
     ldr = deconfigged_helper.loaders["spectral line database"]
+    ldr.format = 'Spectral Lines'
     ldr.wavelength_unit.selected = "Angstrom"
     ldr.wavelength_min = "6500"
     ldr.wavelength_max = "6600"
@@ -360,5 +361,5 @@ def test_load_staged_lines_end_to_end(deconfigged_helper):
     assert loaded_names == {r["line_name"] for r in ldr.staged_lines}
 
     # data is displayed in a table viewer
-    tv = deconfigged_helper.viewers["Table"]
+    tv = deconfigged_helper.viewers["Spectral Line List Table"]
     assert len(tv._obj.glue_viewer.layers) == 1
