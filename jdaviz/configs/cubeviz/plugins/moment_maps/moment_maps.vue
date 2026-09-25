@@ -66,7 +66,7 @@
 
     <j-flex-row v-if="continuum_subset_selected===spectral_subset_selected">
       <v-alert type="error" style="width: 100%; margin-left: 12px; margin-right: 12px;">
-        <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+        <span class="v-messages v-messages__message text--secondary">
             Cannot use the same region to define both the spectral region and the continuum.
         </span>
       </v-alert>
@@ -171,11 +171,10 @@
       action_label="Calculate"
       action_tooltip="Calculate moment map"
       :action_spinner="spinner"
-      :action_disabled="n_moment > 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0"
+      :action_disabled="continuum_subset_selected===spectral_subset_selected || (n_moment > 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0)"
       add_results_api_hint = 'plg.add_results'
       action_api_hint='plg.calculate_moment(add_data=True)'
       :api_hints_enabled="api_hints_enabled"
-      :disabled="continuum_subset_selected===spectral_subset_selected"
       @click:action="calculate_moment"
     ></plugin-add-results>
 
