@@ -13,21 +13,21 @@ __all__ = ['CatalogRowLinkManager', 'get_catalog_row_link_manager']
 _META_KEY = '_viewer_data_columns'
 
 
-def _as_list(value):
+def _as_tuple(value):
     """Normalize a single cell value to a tuple. Can't use list since lists are
     unhashable.
 
-    ``None`` -> ``()``, a string -> ``(value)`` (or ``()`` if empty), any other
-    iterable -> ``tuple(value)``, and anything else -> ``(value)``.
+    ``None`` -> ``()``, a string -> ``(value,)`` (or ``()`` if empty), any other
+    iterable -> ``tuple(value)``, and anything else -> ``(value,)``.
     """
     if value is None:
         return ()
     if isinstance(value, str):
-        return (value) if value else ()
+        return (value,) if value else ()
     try:
         return tuple(value)
     except TypeError:
-        return (value)
+        return (value,)
 
 
 def get_catalog_row_link_manager(app):
@@ -231,7 +231,7 @@ class CatalogRowLinkManager(HubListener):
                 assoc_data = catalog_data.get_component(column_name).data[active_row]
             except (KeyError, IndexError):
                 assoc_data = []
-            labels = [lbl for lbl in _as_list(assoc_data)
+            labels = [lbl for lbl in _as_tuple(assoc_data)
                       if lbl and lbl in available_labels]
             self._set_viewer_contents(target_viewer, labels)
 
@@ -393,7 +393,7 @@ class CatalogRowLinkManager(HubListener):
         column_name = str(column_name)
         arr = np.empty(len(values), dtype=object)
         for i, v in enumerate(values):
-            arr[i] = _as_list(v)
+            arr[i] = _as_tuple(v)
         if column_name in [c.label for c in data.components]:
             data.update_components({data.get_component(column_name): arr})
         else:
@@ -425,7 +425,7 @@ class CatalogRowLinkManager(HubListener):
         changed = False
         new_values = []
         for cell in values:
-            cell_list = _as_list(cell)
+            cell_list = _as_tuple(cell)
             if old_label in cell_list:
                 cell_list = [new_label if v == old_label else v for v in cell_list]
                 changed = True
