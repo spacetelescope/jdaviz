@@ -119,9 +119,16 @@ New Features
   the selection of line medium in loader, and adding line name to table by
   default. [#4386]
 
-- Refactoring and some renaming of table viewer classes and catalog loaders. The existing 'Table' viewer class is now the
-  base table viewer for generic tabular data. The 'Source Catalog Table' viewer (elaborate on this later brb just want change
-  log test to pass). [#4401]
+- Refactoring and some renaming of table viewer classes and catalog loaders.
+  The 'Source Catalog Table' viewer is now specialized for catalogs
+  with RA/Dec or X/Y position columns. The 'Spectral Line Table' viewer is now
+  specialized for spectral line lists with a line-name and/or spectral-location
+  column.  The existing 'Table' viewer class is now the base table viewer for
+  generic tabular data without columns with special roles. There are now three
+  tabular data loaders - 'Generic Catalog' for generic tabular data,
+  'Source Catalog' (formerly 'Catalog') for catalogs with RA/Dec or X/Y position
+  columns, and 'Spectral Line' for spectral line lists with a line-name and/or
+  spectral-location column. [#4401]
 
 Mosviz
 ^^^^^^

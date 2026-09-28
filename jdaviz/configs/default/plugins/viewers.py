@@ -1609,8 +1609,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
                    ]
 
     # Name of the data-menu dataset filter applied in __init__. Subclasses
-    # override this to restrict themselves to their own catalog "kind"
-    # These filter names must be registered with the data-menu dataset filter registry.
+    # override this (before __init__, in the class definition) to restrict
+    # themselves to their own catalog "kind" These filter names must be
+    # registered with the data-menu dataset filter registry.
     _data_menu_filter = 'is_generic_table'
 
     def __init__(self, session, *args, **kwargs):
