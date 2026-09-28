@@ -196,7 +196,7 @@ def test_import_enabled_disabled(imviz_helper):
     ldr = loaders['object']
     ldr.object = catalog_obj
 
-    ldr.format = 'Catalog'
+    assert ldr.format == 'Catalog'
     ldr.importer.col_ra.selected = '---'
     ldr.importer.col_dec.selected = '---'
     ldr.importer.col_x.selected = '---'
@@ -285,7 +285,7 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     # in the data collection
     ldr = imviz_helper.loaders['file' if from_file else 'object']
     setattr(ldr, 'filepath' if from_file else 'object', catalog)
-    ldr.format = 'Catalog'
+    assert ldr.format == 'Catalog'
     assert ldr.importer._obj.col_ra_has_unit == with_units
 
     # load it again, make sure label incremented by 1
@@ -370,7 +370,7 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
 
     assert 'Catalog' in ldr.format.choices
 
-    ldr.format = 'Catalog'
+    assert ldr.format == 'Catalog'
     ldr.importer.col_ra = 'ra'
     ldr.importer.col_dec = 'dec'
     ldr.importer.col_id = 'source_id'
@@ -424,7 +424,7 @@ def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
             raise Exception(tb)
 
     assert 'Catalog' in ldr.format.choices
-    ldr.format = 'Catalog'
+    assert ldr.format == 'Catalog'
     ldr.load()
 
 
@@ -497,7 +497,7 @@ def test_invalid(imviz_helper, tmp_path):
 def test_scatter_viewer(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
-    ldr.format = 'Catalog'
+    assert ldr.format == 'Catalog'
 
     assert 'Scatter' in ldr.importer.viewer.create_new.choices
     ldr.importer.viewer.create_new = 'Scatter'
@@ -517,7 +517,7 @@ def test_scatter_viewer(deconfigged_helper):
 def test_histogram_viewer(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
-    ldr.format = 'Catalog'
+    assert ldr.format == 'Catalog'
     ldr.importer.col_other = ['flux']
 
     assert 'Histogram' in ldr.importer.viewer.create_new.choices
@@ -545,7 +545,7 @@ def test_histogram_viewer(deconfigged_helper):
 def test_table_viewer(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
-    ldr.format = 'Catalog'
+    assert ldr.format == 'Catalog'
     ldr.importer.viewer.create_new = 'Table'
     ldr.load()
 
@@ -609,8 +609,7 @@ def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
 
     # Verify Catalog format is available
     assert 'Catalog' in ldr.format.choices
-
-    ldr.format = 'Catalog'
+    assert ldr.format == 'Catalog'
 
     # Check that Primary HDU (index 0) is not in the extension choices, it should
     # have been filtered out because it is not a table extension
@@ -805,7 +804,7 @@ def test_load_catalog_from_fits_multiselect(deconfigged_helper):
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = hdul
-    ldr.format = 'Catalog'
+    assert ldr.format == 'Catalog'
 
     assert ldr.importer.extension.multiselect is True
 
@@ -853,7 +852,7 @@ def test_load_catalog_from_fits_multiselect(deconfigged_helper):
                           fits.BinTableHDU(table3)])
 
     ldr.object = hdul2
-    ldr.format = 'Catalog'
+    assert ldr.format == 'Catalog'
 
     ldr.importer.extension.selected = ldr.importer.extension.choices
 

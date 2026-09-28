@@ -43,7 +43,7 @@ def test_wavelength_column_detection(deconfigged_helper, col_name):
     """
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({col_name: [6562.8, 4861.3], 'flux': [1.0, 0.5]})
-    ldr.format = 'Spectral Lines'
+    assert ldr.format == 'Spectral Lines'
     importer = ldr.importer
     assert importer.spectral_loc == col_name
 
@@ -63,7 +63,7 @@ def test_spectral_unit_column_detection(deconfigged_helper):
     """
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'pos': [6562.8, 4861.3] * u.AA, 'name': ['Ha', 'Hb']})
-    ldr.format = 'Spectral Lines'
+    assert ldr.format == 'Spectral Lines'
     importer = ldr.importer
     assert importer.spectral_loc == 'pos'
 
@@ -77,7 +77,7 @@ def test_spectral_loc_excludes_non_numeric_columns(deconfigged_helper):
     ldr.object = QTable({'wavelength': [6562.8, 4861.3],
                          'name': ['Ha', 'Hb'],       # string – not numeric
                          'flag': [True, False]})      # bool – not float-castable via astype
-    ldr.format = 'Spectral Lines'
+    assert ldr.format == 'Spectral Lines'
     importer = ldr.importer
 
     choices = importer.spectral_loc.choices
@@ -90,7 +90,7 @@ def test_no_spectral_column_detected(deconfigged_helper):
     """When no spectral column is found, selection should default to '---'."""
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'flux': [1.0, 0.5], 'name': ['Ha', 'Hb']})
-    ldr.format = 'Spectral Lines'
+    assert ldr.format == 'Spectral Lines'
     importer = ldr.importer
     assert importer.spectral_loc == '---'
 
