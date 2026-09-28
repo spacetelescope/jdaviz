@@ -1,13 +1,13 @@
 from jdaviz.configs.default.plugins.viewers import (JdavizTableViewer,
                                                     JdavizSourceCatalogTableViewer,
-                                                    JdavizSpectralLineListTableViewer)
+                                                    JdavizSpectralLineTableViewer)
 from jdaviz.core.user_api import ViewerCreatorUserApi
 from jdaviz.core.viewer_creators import BaseViewerCreator
 from jdaviz.core.registries import viewer_creator_registry
 
 
 __all__ = ['TableViewerCreator', 'SourceCatalogTableViewerCreator',
-           'SpectralLineListTableViewerCreator']
+           'SpectralLineTableViewerCreator']
 
 
 @viewer_creator_registry('Table', overwrite=True)
@@ -46,14 +46,14 @@ class SourceCatalogTableViewerCreator(BaseViewerCreator):
         return JdavizSourceCatalogTableViewer
 
 
-@viewer_creator_registry('Spectral Line List Table', overwrite=True)
-class SpectralLineListTableViewerCreator(BaseViewerCreator):
+@viewer_creator_registry('Spectral Line Table', overwrite=True)
+class SpectralLineTableViewerCreator(BaseViewerCreator):
     template_file = __file__, "table.vue"
 
     def __init__(self, app, **kwargs):
         super().__init__(app, **kwargs)
         self.dataset.filters = ['is_spectral_lines_list_table']
-        self.viewer_label_default = 'JdavizSpectralLineListTableViewer'
+        self.viewer_label_default = 'JdavizSpectralLineTableViewer'
 
     @property
     def user_api(self):
@@ -61,4 +61,4 @@ class SpectralLineListTableViewerCreator(BaseViewerCreator):
 
     @property
     def viewer_class(self):
-        return JdavizSpectralLineListTableViewer
+        return JdavizSpectralLineTableViewer

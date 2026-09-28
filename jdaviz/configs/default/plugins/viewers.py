@@ -69,7 +69,7 @@ uncertainty_str_to_cls_mapping = {
 
 __all__ = ['JdavizViewerMixin', 'JdavizViewerWindow', 'JdavizProfileView',
            'ScatterViewer', 'HistogramViewer', 'JdavizTableViewer',
-           'JdavizSourceCatalogTableViewer', 'JdavizSpectralLineListTableViewer']
+           'JdavizSourceCatalogTableViewer', 'JdavizSpectralLineTableViewer']
 
 viewer_registry.add("g-profile-viewer", label="Profile 1D", cls=BqplotProfileView)
 viewer_registry.add("g-image-viewer", label="Image 2D", cls=BqplotImageView)
@@ -1624,7 +1624,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     * `JdavizSourceCatalogTableViewer` -- catalogs with RA/Dec or X/Y position
       columns. Adds the "active row" tool and cross-viewer row highlighting
       against image viewers.
-    * `JdavizSpectralLineListTableViewer` -- spectral line lists with a
+    * `JdavizSpectralLineTableViewer` -- spectral line lists with a
       line-name and/or spectral-location column.
     """
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
@@ -2147,8 +2147,8 @@ class JdavizSourceCatalogTableViewer(JdavizTableViewer):
         self._clear_selection_marks()
 
 
-@viewer_registry("line-list-table-viewer", label="Spectral Line List Table")
-class JdavizSpectralLineListTableViewer(JdavizTableViewer):
+@viewer_registry("spectral-line-table-viewer", label="Spectral Line Table")
+class JdavizSpectralLineTableViewer(JdavizTableViewer):
     """
     Table viewer class for Spectral Line Catalogs. These are catalogs in the
     data collection that contain information specifying the name, wavelength, and

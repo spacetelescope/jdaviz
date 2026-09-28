@@ -48,10 +48,10 @@ def test_wavelength_column_detection(deconfigged_helper, col_name):
     assert importer.spectral_loc == col_name
 
     # load into a Table viewer and verify the data appears there
-    importer.viewer.create_new = 'Spectral Line List Table'
+    importer.viewer.create_new = 'Spectral Line Table'
     importer()
 
-    tv = deconfigged_helper.viewers['Spectral Line List Table']
+    tv = deconfigged_helper.viewers['Spectral Line Table']
     assert len(tv._obj.glue_viewer.layers) == 1
 
 
@@ -166,9 +166,9 @@ def test_output_additional_columns(deconfigged_helper):
 
 def test_supported_viewers():
     """
-    TODO:_get_supported_viewers should include Scatter, Spectral Line List Table
-    and Histogram viewers? currently only the Spectral Line List Table is supported."""
+    TODO:_get_supported_viewers should include Scatter, Spectral Line Table
+    and Histogram viewers? currently only the Spectral Line Table is supported."""
     viewers = SpectralLinesImporter._get_supported_viewers()
     assert len(viewers) == 1  # only table viewer for now
     references = [v['reference'] for v in viewers]
-    assert 'line-list-table-viewer' in references
+    assert 'spectral-line-table-viewer' in references

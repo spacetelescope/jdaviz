@@ -360,5 +360,5 @@ def test_load_staged_lines_end_to_end(deconfigged_helper):
     assert loaded_names == {r["line_name"] for r in ldr.staged_lines}
 
     # data is displayed in a table viewer
-    tv = deconfigged_helper.viewers["Spectral Line List Table"]
+    tv = deconfigged_helper.viewers["Spectral Line Table"]
     assert len(tv._obj.glue_viewer.layers) == 1

@@ -33,7 +33,7 @@ def test_generic_catalog_supported_viewers(deconfigged_helper):
     for viewer in ('Scatter', 'Histogram', 'Table'):
         assert viewer in choices
     assert 'Source Catalog Table' not in choices
-    assert 'Spectral Line List Table' not in choices
+    assert 'Spectral Line Table' not in choices
 
 
 def test_generic_catalog_col_other_choices(deconfigged_helper):
