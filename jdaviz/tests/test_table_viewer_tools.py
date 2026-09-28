@@ -653,7 +653,8 @@ class TestTableViewerToolsWcsLinkedMixedCoords:
         new_y_max = self.viewer.state.y_max
 
         # The view should NOT be zoomed to ~1050 (the wrong pixel coords)
-        # It should be zoomed to somewhere in the 0-100 range (the correct WCS-converted coords)
+        # It should be zoomed to somewhere in the 0-100 range
+        # (the correct WCS-converted coords)
         assert new_x_max < 200, (
             f"Zoom x_max {new_x_max} suggests catalog pixel coords were used instead of WCS"
         )

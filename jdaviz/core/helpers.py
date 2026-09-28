@@ -223,7 +223,7 @@ class ConfigHelper(HubListener):
         list
             The names of the registered columns.
         """
-        from jdaviz.core.loaders.importers.catalog.row_link import (
+        from jdaviz.core.loaders.importers.source_catalog.row_link import (
             get_catalog_row_link_manager)
         manager = get_catalog_row_link_manager(self._app)
         return manager.set_viewer_data_columns(data_label, viewer_data, column_prefix)
