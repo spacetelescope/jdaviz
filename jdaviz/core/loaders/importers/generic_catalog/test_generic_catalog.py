@@ -8,8 +8,6 @@ import numpy as np
 import pytest
 from astropy.table import QTable, Table
 
-from jdaviz.configs.default.plugins.viewers import _catalog_kind_from_meta
-
 
 def _make_generic_table():
     """Table with no source-position or spectral-line columns."""
@@ -65,7 +63,6 @@ def test_load_generic_catalog(deconfigged_helper, tmp_path, from_file):
 
     # classified as a generic table, not a source catalog or line list
     assert data.meta['_importer'] == 'GenericCatalogImporter'
-    assert _catalog_kind_from_meta(data.meta) == 'generic'
 
     qtab = data.get_object(QTable)
     assert set(qtab.colnames) == {'ID', 'col1', 'col2', 'col3'}

@@ -1576,38 +1576,6 @@ def _role_labels_from_meta(meta):
     return labels
 
 
-def _catalog_kind_from_meta(meta):
-    """Classify a glue ``Data``'s catalog "kind" from its loader-set meta keys.
-
-    Jdaviz loaders record which physical roles a catalog's columns play (RA/Dec,
-    X/Y, ID, line name, spectral location, ...) as ``_jdaviz_loader_*`` meta
-    keys. This inspects those keys to decide which specialized table viewer a
-    catalog belongs in.
-
-    Returns
-    -------
-    kind : {'source', 'line_list', 'generic'}
-        ``'source'`` if the catalog has RA/Dec or X/Y position columns (i.e.
-        a source/object catalog that can be cross-matched against image
-        viewers).
-        ``'line_list'`` if the catalog has a line-name and/or spectral-location
-        column (i.e. a spectral line list).
-        ``'generic'`` otherwise (a catalog with no jdaviz-recognized special
-        columns).
-    """
-    if not meta:
-        return 'generic'
-    if (meta.get('_jdaviz_loader_linename_col') is not None
-            or meta.get('_jdaviz_loader_spectral_loc_col') is not None):
-        return 'line_list'
-    if (meta.get('_jdaviz_loader_ra_col') is not None
-            or meta.get('_jdaviz_loader_dec_col') is not None
-            or meta.get('_jdaviz_loader_x_col') is not None
-            or meta.get('_jdaviz_loader_y_col') is not None):
-        return 'source'
-    return 'generic'
-
-
 @viewer_registry("table-viewer", label="Table")
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     """
@@ -1642,8 +1610,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     # Name of the data-menu dataset filter applied in __init__. Subclasses
     # override this to restrict themselves to their own catalog "kind"
-    # (see _catalog_kind_from_meta). These filter names must be registered
-    # with the data-menu dataset filter registry.
+    # These filter names must be registered with the data-menu dataset filter registry.
     _data_menu_filter = 'is_generic_table'
 
     def __init__(self, session, *args, **kwargs):
