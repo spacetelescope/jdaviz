@@ -115,6 +115,8 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
         Suffix disambiguating this importer's output from the resolver's other outputs.
         Empty string when the resolver produced a single output.
         """
+        if self._resolver is None:
+            return ''
         return self._resolver._output_label_suffix(self._output_index)
 
     def _default_data_label_base(self, fallback=''):
