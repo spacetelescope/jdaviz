@@ -64,7 +64,7 @@
       </v-col>
     </v-row>
 
-    <j-flex-row v-if="api_hints_enabled" style="margin-top: -32px">
+    <j-flex-row v-if="api_hints_enabled" style="margin-top: -12px">
       <span class="api-hint">
         plg.combination_mode = '{{ combination_mode_selected }}'
       </span>
