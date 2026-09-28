@@ -45,7 +45,7 @@ def test_solara_astroquery_gaia(page: Page):
 
     # change parameters: unit -> arcmin
     page.locator(".v-input", has_text="Unit").click()
-    dropdown_menu = page.get_by_role("listbox")
+    dropdown_menu = page.get_by_role("listbox", name='Unit')
     dropdown_menu.wait_for(state="visible")
     target_option = dropdown_menu.get_by_role("option", name="arcmin")
     target_option.wait_for(state="visible")
@@ -53,7 +53,7 @@ def test_solara_astroquery_gaia(page: Page):
 
     # change parameters: Telescope -> Gaia
     page.locator(".v-input", has_text="Telescope").click()
-    dropdown_menu = page.get_by_role("listbox")
+    dropdown_menu = page.get_by_role("listbox", name='Telescope')
     dropdown_menu.wait_for(state="visible")
     target_option = dropdown_menu.get_by_role("option", name="Gaia")
     target_option.wait_for(state="visible")
@@ -77,7 +77,7 @@ def test_solara_astroquery_gaia(page: Page):
 
     # select format as catalog
     page.locator(".v-input", has_text="Format").click()
-    dropdown_menu = page.get_by_role("listbox")
+    dropdown_menu = page.get_by_role("listbox", name='Format')
     dropdown_menu.wait_for(state="visible")
     target_option = dropdown_menu.get_by_role("option", name="Catalog")
     target_option.wait_for(state="visible")
@@ -98,3 +98,4 @@ def test_solara_astroquery_gaia(page: Page):
     table_success.wait_for()
 
     print("Found logger message showing catalog loaded")
+    
