@@ -194,9 +194,6 @@
             }}
           </plugin-action-button>
         </j-tooltip>
-        <v-alert v-if="api_hints_enabled" type="info" density="compact">
-          see individual commands above to update subset properties
-        </v-alert>
         <plugin-action-button
           :disabled="subset_selected === 'Create New'"
           :results_isolated_to_plugin="false"
@@ -204,6 +201,11 @@
         >
           Update
         </plugin-action-button>
+      </j-flex-row>
+      <j-flex-row v-if="api_hints_enabled" justify="end" no-gutters>
+        <v-alert type="info" density="compact">
+          see individual commands above to update subset properties
+        </v-alert>
       </j-flex-row>
   </j-tray-plugin>
 </template>
