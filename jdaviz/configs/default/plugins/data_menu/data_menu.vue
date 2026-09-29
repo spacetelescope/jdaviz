@@ -405,7 +405,8 @@
         }
       }
     },
-    mounted() {
+    async mounted() {
+      await this.$nextTick();
       let element = this.$refs.dataMenuTarget.parentElement
       if (element === null) {
         return
@@ -416,7 +417,11 @@
         }
         element = element.parentElement;
       }
-      this.jupyterLabCell = this.$el.closest(".jp-Notebook-cell");
+      this._visibilityObserver = new IntersectionObserver(([entry]) => {
+        this._activatorVisible = entry.isIntersecting && entry.intersectionRatio >= 0.01;
+        this.onScroll();
+      }, { threshold: 0.01 });
+      this._visibilityObserver.observe(this.$refs.dataMenu.activatorEl);
 
       // Dynamically adjust legend truncation based on viewer height.
       // Must observe the actual viewer container (the v-card that wraps
@@ -433,6 +438,7 @@
       });
     },
     beforeUnmount() {
+      this._visibilityObserver?.disconnect();
       if (this._resizeObserver) {
         this._resizeObserver.disconnect();
         this._resizeObserver = null;
@@ -521,9 +527,7 @@
             return;
           }
 
-          /* since Jupyter Lab 4.2 cells outside the view port get a height of 0, causing the menu to be visible when
-           * that happens. This workaround hides the menu when it's parent cell is not in the viewport. */
-          const labCellHidden = this.jupyterLabCell && window.getComputedStyle(this.jupyterLabCell).height === "0px";
+          const labCellHidden = this._activatorVisible === false;
           menuContent.parentElement.style.display = labCellHidden ? "none" : "";
         }
       },
