@@ -12,7 +12,7 @@ def test_row_data_association(deconfigged_helper, image_2d_wcs):
     # Load the table as a catalog but don't add it to a table viewer yet
     ldr = deconfigged_helper.loaders['object']
     ldr.object = tab
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     ldr.importer.viewer = []
     ldr.load()
 

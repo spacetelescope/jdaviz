@@ -415,7 +415,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._dict['data_label'] = ''
             coords_status = False
 
-        elif getattr(image, 'meta', {}).get('_importer', '') == 'CatalogImporter':
+        elif getattr(image, 'meta', {}).get('_importer', '') == 'SourceCatalogImporter':
             # only give mouseover for scatter layers if explicitly requested
             x, y, coords_status, (unreliable_world, unreliable_pixel) = viewer._get_real_xy(image, x, y)  # noqa
 
@@ -595,7 +595,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         if unreliable_pixel or any(['nan' in map(str, (x, y))]):
             row1a_text = ""
             row1a_title = ""
-        elif getattr(image, 'meta', {}).get('_importer', '') == 'CatalogImporter':
+        elif getattr(image, 'meta', {}).get('_importer', '') == 'SourceCatalogImporter':
             row1a_text = str(image.data['ID'][cur_i])
             row1a_title = 'Source ID'
         else:

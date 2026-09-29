@@ -1,7 +1,7 @@
 from astropy.coordinates import ICRS, SkyCoord
 from astropy.table import Table, QTable
 import astropy.units as u
-from jdaviz.core.loaders.importers.catalog.catalog import CatalogImporter
+from jdaviz.core.loaders.importers.source_catalog.source_catalog import SourceCatalogImporter
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest
@@ -33,7 +33,7 @@ def test_coord_column_detection(deconfigged_helper):
 
         ldr = deconfigged_helper.loaders['object']
         ldr.object = tab
-        ldr.format = 'Catalog'
+        ldr.format = 'Source Catalog'
         importer = ldr.importer
 
         # make sure the coordinate columns were correctly identified
@@ -45,19 +45,21 @@ def test_coord_column_detection(deconfigged_helper):
     tab = QTable({'radial_velocity': [10.0], 'fluxradius': [5.0], 'decrement': [1.0]})
     ldr = deconfigged_helper.loaders['object']
     ldr.object = tab
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     importer = ldr.importer
-    # none of the column names in the input table should have been identified as RA or Dec columns,
-    # so they should be set as a placeholder value of '---'
+    # none of the column names in the input table should have been identified as
+    # RA or Dec columns, so they should be set as a placeholder value of '---'
     assert importer.col_ra == '---'
     assert importer.col_dec == '---'
 
 
 def test_pixel_column_detection(deconfigged_helper):
-    """Test automatic detection of x/y columns with various naming
+    """
+    Test automatic detection of x/y columns with various naming
     conventions, and that non-pixel-coordinate columns are not misidentified as
     pixel-coordinate columns (e.g 'galaxy' which contains 'x' but should not be
-    identified as x pixel-coordinate). """
+    identified as x pixel-coordinate).
+    """
 
     x_variations = ['X', 'xpix', 'xpixel', 'pixel_x', 'x_coord', 'xsource']
     y_variations = ['Y', 'ypix', 'ypixel', 'pixel_y', 'y_coord', 'ysource']
@@ -70,7 +72,7 @@ def test_pixel_column_detection(deconfigged_helper):
 
         ldr = deconfigged_helper.loaders['object']
         ldr.object = tab
-        ldr.format = 'Catalog'
+        ldr.format = 'Source Catalog'
         importer = ldr.importer
 
         # make sure the coordinate columns were correctly identified
@@ -82,7 +84,7 @@ def test_pixel_column_detection(deconfigged_helper):
     tab = QTable({'galaxy': [10.0], 'parallax': [5.0], 'velocity': [1.0]})
     ldr = deconfigged_helper.loaders['object']
     ldr.object = tab
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     importer = ldr.importer
     # none of the column names in the input table should have been identified as x or y columns,
     # so they should be set as a placeholder value of '---'
@@ -102,7 +104,7 @@ def test_skycoord_column_detection(deconfigged_helper):
     # Success: SkyCoord instance
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'coords': SkyCoord(ra=ra, dec=dec), 'x': x, 'y': y})
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     importer = ldr.importer
 
     # make sure the coordinate columns were correctly identified
@@ -123,7 +125,7 @@ def test_pixcoord_column_detection(deconfigged_helper):
     # Success: PixCoord instance
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'coords': SkyCoord(ra=ra, dec=dec), 'pix': PixCoord(x=x, y=y)})
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     importer = ldr.importer
 
     # make sure x and y are ignored
@@ -136,7 +138,7 @@ def test_roman_catalog_detection(deconfigged_helper):
     """
     Test automatic detection of ra/dec columns when input catalog has multiple columns that could
     be interpreted as coordinates (e.g., 'ra', 'ra_centroid', 'ra_err'), which will be the case
-    for Roman photometric catalogs. CatalogImporter should default to the first match,
+    for Roman photometric catalogs. SourceCatalogImporter should default to the first match,
     but should exclude uncertainty or window columns like 'ra_min' or 'ra_err'.
     """
     ra = [149.0, 150.0, 151.0] * u.degree
@@ -153,7 +155,7 @@ def test_roman_catalog_detection(deconfigged_helper):
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = tab
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     importer = ldr.importer
 
     # make sure the coordinate columns default to the first not-excluded match
@@ -164,13 +166,14 @@ def test_roman_catalog_detection(deconfigged_helper):
 
 
 def test_catalog_importer_is_valid(deconfigged_helper):
-    """Test _check_is_valid for CatalogImporter: success and failure cases."""
+    """Test _check_is_valid for SourceCatalogImporter: success and failure cases."""
     resolver = deconfigged_helper.loaders['object']._obj
 
     # Success: non-empty table
-    importer = CatalogImporter(app=deconfigged_helper._app,
-                               resolver=resolver, parser=None,
-                               input=Table({'ra': [10.0, 20.0], 'dec': [-5.0, 10.0]}))
+    importer = SourceCatalogImporter(app=deconfigged_helper._app,
+                                     resolver=resolver, parser=None,
+                                     input=Table({'ra': [10.0, 20.0],
+                                                  'dec': [-5.0, 10.0]}))
     assert importer._check_is_valid() == ''
 
     # Failure: non-table input
@@ -191,7 +194,7 @@ def test_catalog_importer_is_valid(deconfigged_helper):
 ])
 def test_catalog_loader_coord_frame(deconfigged_helper, frame_selected, equinox_selected):
     """
-    Test coordinate frame / equinox selection in the Catalog loader for all
+    Test coordinate frame / equinox selection in the Source Catalog loader for all
     supported frames: icrs, fk5, fk4, galactic, ecliptic.
     """
     ra_input = np.array([83.6287, 299.8681, 187.7059])
@@ -204,7 +207,7 @@ def test_catalog_loader_coord_frame(deconfigged_helper, frame_selected, equinox_
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = input_table
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     importer = ldr.importer
 
     importer.coord_frame.selected = frame_selected
@@ -213,11 +216,11 @@ def test_catalog_loader_coord_frame(deconfigged_helper, frame_selected, equinox_
     importer()
 
     dc = deconfigged_helper._app.data_collection
-    assert 'Catalog' in dc.labels
+    assert 'Source Catalog' in dc.labels
 
-    loaded = dc['Catalog'].get_object(QTable)
-    ra_col = dc['Catalog'].meta['_jdaviz_loader_ra_col']
-    dec_col = dc['Catalog'].meta['_jdaviz_loader_dec_col']
+    loaded = dc['Source Catalog'].get_object(QTable)
+    ra_col = dc['Source Catalog'].meta['_jdaviz_loader_ra_col']
+    dec_col = dc['Source Catalog'].meta['_jdaviz_loader_dec_col']
 
     ra_loaded = loaded[ra_col].to(u.deg).value
     dec_loaded = loaded[dec_col].to(u.deg).value
@@ -247,7 +250,7 @@ def test_coord_frame_default_and_reset(deconfigged_helper):
     tab = QTable({'ra': [10.0] * u.deg, 'dec': [-5.0] * u.deg})
     ldr = deconfigged_helper.loaders['object']
     ldr.object = tab
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     importer = ldr.importer
 
     # defaults, ra and dec cols autodetected so coord frame and equinox should
@@ -275,7 +278,7 @@ def test_coord_frame_default_and_reset(deconfigged_helper):
     # table with no detectable ra/dec columns: both should start as '----'
     tab2 = QTable({'flux': [1.0], 'name': ['src']})
     ldr.object = tab2
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
     importer2 = ldr.importer
     assert importer2.coord_frame.selected == '----'
     assert importer2.coord_equinox.selected == '----'

@@ -128,7 +128,8 @@ def test_delete_image_with_catalog(deconfigged_helper, align_by, reference_data_
     data_menu = image_viewer.data_menu
     glue_viewer = image_viewer._obj.glue_viewer
 
-    deconfigged_helper.load(wcs_linked_mixed_coord_catalog, format='Catalog', data_label='catalog')
+    deconfigged_helper.load(wcs_linked_mixed_coord_catalog, format='Source Catalog',
+                            data_label='catalog')
 
     # remove one, the second image should be used
     # as reference data instead of the catalog
