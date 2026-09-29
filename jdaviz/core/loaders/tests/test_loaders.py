@@ -79,7 +79,7 @@ def test_format_selection_prefers_catalog_for_sky_coords(deconfigged_helper):
 
     ldr.object = table
 
-    assert ldr.format.selected == 'Catalog'
+    assert ldr.format.selected == 'Source Catalog'
     assert ldr.format.items[0]['import_confidence_score'] == -1
 
 
