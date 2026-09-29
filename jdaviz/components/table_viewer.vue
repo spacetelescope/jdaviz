@@ -1,5 +1,8 @@
 <template>
-  <div class="glue-table-container">
+  <div
+    :class="['glue-table-container', scrollable && 'glue-table-container--scrollable']"
+    :style="scrollable && height != null && `height: ${height}`"
+  >
     <!-- Cell display/edit bar (always visible) -->
     <div class="glue-edit-bar elevation-1">
       <div class="edit-bar-cell-ref">
@@ -53,7 +56,6 @@
         :items_per_page.sync="items_per_page"
         :server-items-length="total_length"
         :class="['elevation-1', 'glue-data-table', scrollable && 'glue-data-table--scrollable']"
-        :style="scrollable && height != null && `height: ${height}`"
       >
       <template v-slot:headers>
           <tr>
@@ -360,9 +362,36 @@ module.exports = {
   text-overflow: ellipsis;
 }
 
+/* Scrollable: fill the available height, scroll the rows, and keep the edit bar
+   and paging footer pinned so they never get clipped in short viewers. */
+.glue-table-container--scrollable {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.glue-table-container--scrollable > .glue-edit-bar {
+  flex: 0 0 auto;
+}
+
+.glue-data-table.glue-data-table--scrollable {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.glue-data-table--scrollable .v-table__wrapper,
 .glue-data-table--scrollable .v-data-table__wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  height: calc(100% - 59px);
+}
+
+.glue-data-table--scrollable .v-data-table-footer,
+.glue-data-table--scrollable .v-data-footer {
+  flex: 0 0 auto;
 }
 
 .glue-data-table--scrollable thead > tr {
