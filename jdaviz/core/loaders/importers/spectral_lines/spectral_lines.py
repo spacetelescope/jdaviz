@@ -33,7 +33,7 @@ _LINENAME_PATTERNS = [
 @loader_importer_registry("Spectral Lines")
 class SpectralLinesImporter(BaseCatalogImporter):
     """
-    Importer for spectral line list tables.
+    Importer for Spectral Line Tables.
 
     Accepts an astropy ``Table`` or ``QTable``, and lets the user designate a
     spectral location column along with its unit.
@@ -88,17 +88,8 @@ class SpectralLinesImporter(BaseCatalogImporter):
         self._init_col_other(input_table.colnames)
 
     def _check_is_valid(self):
-        if not getattr(self._app.state, 'dev_loaders', False):
-            return ('Spectral Lines importer is under active development '
-                    '(requires dev_loaders to be enabled).')
 
-        if not isinstance(self.input, (Table, QTable)):
-            return 'Input must be an astropy Table or QTable.'
-
-        if len(self.input) == 0:
-            return 'Input table is empty.'
-
-        return ''
+        return self._basic_table_validity_checks(self.input)
 
     @property
     def import_confidence_score(self):
@@ -231,7 +222,7 @@ class SpectralLinesImporter(BaseCatalogImporter):
     @staticmethod
     def _get_supported_viewers():
         return [
-            {'label': 'Table', 'reference': 'table-viewer'}
+            {'label': 'Spectral Line Table', 'reference': 'spectral-line-table-viewer'}
         ]
 
     @property

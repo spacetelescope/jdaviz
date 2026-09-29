@@ -144,7 +144,7 @@ class TestMOSImporter:
         assert importer.viewer.create_new.selected == '1D Spectrum'
         assert importer.viewer_2d.create_new.selected == '2D Spectrum'
         assert importer.viewer_image.create_new.selected == 'Image'
-        assert importer.viewer_catalog.create_new.selected == 'Table'
+        assert importer.viewer_catalog.create_new.selected == 'Source Catalog Table'
 
         # MOS directories are expected to provide their own 1D spectra
         assert importer.auto_extract_2d is False
@@ -157,12 +157,13 @@ class TestMOSImporter:
         }
 
         viewers = self.helper.viewers
-        assert set(viewers.keys()) == {'1D Spectrum', '2D Spectrum', 'Image', 'Table'}
+        assert set(viewers.keys()) == {'1D Spectrum', '2D Spectrum', 'Image',
+                                       'Source Catalog Table'}
         assert set(viewers['1D Spectrum'].data_menu.data_labels_loaded) == {
             'mosdir_jw00000_x1d', 'mosdir_jw00001_x1d'}
         assert viewers['2D Spectrum'].data_menu.data_labels_loaded == ['mosdir_jw00000_s2d']
         assert viewers['Image'].data_menu.data_labels_loaded == ['mosdir_jw00000_i2d']
-        assert viewers['Table'].data_menu.data_labels_loaded == ['mosdir_jw00000_cat']
+        assert viewers['Source Catalog Table'].data_menu.data_labels_loaded == ['mosdir_jw00000_cat']  # noqa
 
         # everything is loaded into the viewers,
         # but only one entry per viewer should be visible
@@ -215,7 +216,7 @@ class TestMOSImporter:
         for viewer_select, viewer_label in ((importer.viewer, '1D Spectrum'),
                                             (importer.viewer_2d, '2D Spectrum'),
                                             (importer.viewer_image, 'Image'),
-                                            (importer.viewer_catalog, 'Table')):
+                                            (importer.viewer_catalog, 'Source Catalog Table')):
             viewer_select.create_new.selected = ''
             viewer_select.selected = [viewer_label]
         loader.load()

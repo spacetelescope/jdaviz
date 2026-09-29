@@ -204,15 +204,15 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self._app._jdaviz_helper._in_batch_load > 0:
             return
         if isinstance(msg, DataCollectionAddMessage):
-            if msg.data.meta.get('_importer') != 'CatalogImporter':
+            if msg.data.meta.get('_importer') != 'SourceCatalogImporter':
                 components = [str(comp) for comp in msg.data.main_components]
                 if "ra" in components or "Lon" in components:
                     # linking currently removes any markers, so we want to skip
                     # linking immediately after new markers are added. Check if
-                    # data was added by the Catalog importer because these may have
-                    # columns called 'ra' or "Lon". Eventually we'll probably
-                    # want to support linking WITH markers, # at which point this
-                    # if-statement should be removed.
+                    # data was added by the Source Catalog importer because these
+                    # may have columns called 'ra' or "Lon". Eventually we'll
+                    # probably want to support linking WITH markers, at which point
+                    # this if-statement should be removed.
                     return
         self._link_image_data()
         self._check_if_data_with_wcs_exists()
@@ -734,7 +734,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         for link in app.data_collection.external_links:
             if hasattr(link, 'data2'):
                 data_already_linked.append(link.data2)
-            if hasattr(link, 'comp_from'):  # for Catalogs, which are linked by ComponentLink
+            if hasattr(link, 'comp_from'):  # for Source Catalogs, which are linked by ComponentLink
                 data_already_linked.append(link.comp_from.data)
     else:  # pragma: no cover
         # Everything has to be relinked.
@@ -813,10 +813,10 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         if i == iref or data in data_already_linked:
             continue
 
-        # Special handling of Catalogs: only link RA/Dec to reference WCS,
+        # Special handling of Source Catalogs: only link RA/Dec to reference WCS,
         # and use ComponentLink instead of WCSLink because Catalogs do not
         # have coords (wcs) attribute.
-        if data.meta.get('_importer') == 'CatalogImporter':
+        if data.meta.get('_importer') == 'SourceCatalogImporter':
 
             comp_labels = [str(x) for x in data.component_ids()]
 
