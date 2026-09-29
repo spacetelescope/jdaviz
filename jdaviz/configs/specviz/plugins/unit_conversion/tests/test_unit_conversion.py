@@ -610,7 +610,7 @@ def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catal
     # the unit conversion plugin should still be disabled since the check for
     # relevancy is for data in spectrum/image/cube viewers
     deconfigged_helper.load(sky_coord_only_source_catalog, format='Source Catalog')
-    assert 'Scatter' in deconfigged_helper.viewers
+    assert 'Source Catalog Table' in deconfigged_helper.viewers
     assert plg._obj.disabled_msg == msg
 
     # loading an image should re-enable the plugin
