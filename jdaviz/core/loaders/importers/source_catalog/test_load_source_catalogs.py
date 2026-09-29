@@ -136,7 +136,8 @@ def test_load_catalog_with_string_coord_cols(deconfigged_helper):
     assert 'Dec' in qtab.colnames
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
-    # make sure only ra/dec/x/y/index columns are loaded since we didn't specify any additional columns
+    # make sure only ra/dec/x/y/index columns are loaded since we didn't specify
+    # any additional columns
     assert len(qtab.colnames) == 5
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
