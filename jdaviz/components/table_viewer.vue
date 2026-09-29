@@ -261,18 +261,18 @@ module.exports = {
 .glue-edit-bar {
   display: flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: 2px 6px;
   background-color: #f5f5f5;
   border: 1px solid #e0e0e0;
   border-bottom: none;
   border-radius: 4px 4px 0 0;
-  gap: 8px;
+  gap: 6px;
 }
 
 .edit-bar-cell-ref {
   display: flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: 1px 6px;
   background-color: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
@@ -296,8 +296,26 @@ module.exports = {
 }
 
 .edit-bar-input .v-input__slot {
-  min-height: 32px !important;
+  min-height: 24px !important;
   background-color: #fff !important;
+}
+
+.edit-bar-input .v-field {
+  --v-input-control-height: 24px;
+  --v-field-input-padding-top: 0px;
+  --v-field-input-padding-bottom: 0px;
+  font-size: 12px;
+}
+
+.edit-bar-input .v-field__input {
+  min-height: 24px !important;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.edit-bar-actions .v-btn {
+  height: 24px !important;
+  width: 24px !important;
 }
 
 /* Vuetify puts the theme class on the text-field element itself, so target both
@@ -392,6 +410,32 @@ module.exports = {
 .glue-data-table--scrollable .v-data-table-footer,
 .glue-data-table--scrollable .v-data-footer {
   flex: 0 0 auto;
+}
+
+/* Compact paging footer */
+.glue-data-table .v-data-table-footer {
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.glue-data-table .v-data-table-footer__items-per-page .v-field {
+  --v-input-control-height: 24px;
+  --v-field-input-padding-top: 0px;
+  --v-field-input-padding-bottom: 0px;
+  font-size: 12px;
+}
+
+.glue-data-table .v-data-table-footer__items-per-page .v-field__input,
+.glue-data-table .v-data-table-footer__items-per-page .v-field__append-inner {
+  min-height: 24px;
+  padding-top: 0;
+  padding-bottom: 0;
+  align-items: center;
+}
+
+.glue-data-table .v-data-table-footer .v-btn {
+  height: 24px !important;
+  width: 24px !important;
 }
 
 .glue-data-table--scrollable thead > tr {
