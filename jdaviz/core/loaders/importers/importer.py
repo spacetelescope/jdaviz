@@ -560,6 +560,10 @@ class BaseCatalogImporter(BaseImporterToDataCollection):
     col_other_selected = List().tag(sync=True)
     col_other_multiselect = Bool(True).tag(sync=True)
 
+    def _has_selected_col(self, attr):
+        selected = getattr(self, f'{attr}_selected', None)
+        return selected not in ('---', '', None)
+
     def _basic_table_validity_checks(self, input):
 
         if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):

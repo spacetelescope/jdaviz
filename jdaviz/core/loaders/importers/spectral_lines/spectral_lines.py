@@ -88,25 +88,23 @@ class SpectralLinesImporter(BaseCatalogImporter):
         self._init_col_other(input_table.colnames)
 
     def _check_is_valid(self):
-
-        return self._basic_table_validity_checks(self.input)
+        basic_check = self._basic_table_validity_checks(self.input)
+        if basic_check:
+            return basic_check
+        if not self._has_selected_col('spectral_loc'):
+            return 'No detected columns for spectral location.'
+        return ''
 
     @property
     def import_confidence_score(self):
         if self.resolver.__class__.__name__ == 'SpectralLineDatabaseResolver':
             return 2
 
-        def _has_selected_col(attr):
-            selected = getattr(self, f'{attr}_selected', None)
-            return selected not in ('---', '', None)
-
-        has_spectral_loc = _has_selected_col('spectral_loc')
-        has_linename = _has_selected_col('linename')
-        if has_spectral_loc and has_linename:
+        # NOTE: has_spectral_loc is required by is_valid
+        has_linename = self._has_selected_col('linename')
+        if has_linename:
             return 1
-        if has_spectral_loc:
-            return -1
-        return -2
+        return -1
 
     def _guess_spectral_loc_col(self):
         """

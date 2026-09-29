@@ -225,16 +225,20 @@ class SourceCatalogImporter(BaseCatalogImporter):
             # NOTE: temporary during deconfig process
             return 'Catalog importer is only supported in imviz, mastviz, generalized jdaviz.'
 
-        if isinstance(self.input, (Table, QTable)) and len(self.input):
-            return ''
+        if not (isinstance(self.input, (Table, QTable)) and len(self.input)):
+            return 'Input is not a valid catalog.'
 
         elif isinstance(self.input, HDUList):
             # check for the presence of at least one TableHDU/BinTableHDU extension
             for i, hdu in enumerate(self.input):
                 if isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0:
-                    return ''
+                    break
+            else:
+                return 'Input HDUList does not contain any valid table extensions.'
 
-        return 'Input is not a valid catalog.'
+        if not ((self._has_selected_col('ra') and self._has_selected_col('dec'))
+                or (self._has_selected_col('x') and self._has_selected_col('y'))):
+            return 'No detected columns for RA/Dec or X/Y.'
 
     @property
     def import_confidence_score(self):
@@ -246,13 +250,12 @@ class SourceCatalogImporter(BaseCatalogImporter):
             selected = getattr(self, f'col_{col}_selected', None)
             return selected not in ('---', '', None)
 
+        # NOTE: is_valid requires either ra/dec or x/y
         has_ra_dec = all(_has_selected_col(col) for col in ('ra', 'dec'))
         has_xy = all(_has_selected_col(col) for col in ('x', 'y'))
-        if has_ra_dec or has_xy:
-            # still below any image/spectrum importers at default confidence
-            return -1
-        # at bottom of list
-        return -2
+        if has_ra_dec and has_xy:
+            return 1
+        return -1
 
     @observe('extension_selected')
     def _on_extension_selected_change(self, event):
