@@ -84,10 +84,11 @@ class FormatSelect(SelectPluginComponent):
         return super()._is_valid_item(item, locals())
 
     @observe('filters', 'debug')
-    def _update_items(self, msg={}):
+    def _update_items(self, msg={}, reset_selection=False):
+        skip_if_current_valid = not reset_selection
         if not self.plugin.is_valid:
             self.items = []
-            self._apply_default_selection()
+            self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
             return
 
         all_formats = []
@@ -106,7 +107,7 @@ class FormatSelect(SelectPluginComponent):
         except Exception as e:
             self.items = []
             self._invalid_importers = f'Resolver exception: {e}'
-            self._apply_default_selection()
+            self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
             return
 
         with warnings.catch_warnings():
@@ -202,7 +203,7 @@ class FormatSelect(SelectPluginComponent):
                                  key=lambda item: item['import_confidence_score'],
                                  reverse=True)
         self.items = all_formats
-        self._apply_default_selection()
+        self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
 
 
 class TargetSelect(SelectPluginComponent):
@@ -657,7 +658,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
             self.observation_table._clear_table()
             self.file_table._clear_table()
-            self._update_format_items()
+            self._update_format_items(reset_selection=True)
             return
 
         if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
@@ -669,7 +670,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
             self.observation_table._clear_table()
             self.file_table._clear_table()
-            self._update_format_items()
+            self._update_format_items(reset_selection=True)
             return
 
         # first attempt to parse the input as a table
@@ -703,7 +704,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
-                self._update_format_items()
+                self._update_format_items(reset_selection=True)
                 return
 
             if self.treat_table_as_query and file_table is not None:
@@ -760,7 +761,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.file_table_populated = False
         self.parsed_input_not_resolvable_message = ''
 
-        self._update_format_items()
+        self._update_format_items(reset_selection=True)
 
     @cached_property
     def missions_query(self):
@@ -922,9 +923,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self._update_format_items()
 
     @with_spinner('spinner', '_update_format_spinner_text')
-    def _update_format_items(self):
+    def _update_format_items(self, reset_selection=False):
         # NOTE: this will call self.output
-        self.format._update_items()
+        self.format._update_items(reset_selection=reset_selection)
         self.target._update_items()  # assumes format._importers is updated from above
         # ensure the importer updates even if the format selection remains fixed
         self._on_format_selected_changed()

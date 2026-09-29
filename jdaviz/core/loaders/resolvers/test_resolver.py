@@ -6,7 +6,9 @@ from jdaviz.core.events import FootprintOverlayClickMessage
 
 import numpy as np
 import pytest
-from astropy.table import Table
+from astropy import units as u
+from astropy.io import fits
+from astropy.table import QTable, Table
 
 
 # Create a minimal test class that mimics the resolver behavior
@@ -819,6 +821,30 @@ def test_load_by_s3_uri(deconfigged_helper):
 
     # no expected error:
     deconfigged_helper.load(s3_uri, format='Image')
+
+
+def test_format_default_resets_on_new_input(deconfigged_helper):
+    def _hdulist(value):
+        table = QTable(data=[[9.423, 9.421] * u.deg, [-33.711, -33.716] * u.deg],
+                       names=['ra', 'dec'])
+        return fits.HDUList([fits.PrimaryHDU(),
+                             fits.BinTableHDU(table, name='CATALOG'),
+                             fits.ImageHDU(np.ones((8, 8)) * value, name='SCI')])
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = _hdulist(1)
+
+    assert 'Source Catalog' in ldr.format.choices
+    assert ldr.format.selected == 'Image'
+
+    ldr.format = 'Source Catalog'
+    assert ldr.format.selected == 'Source Catalog'
+
+    # changing the input should reset the format to the default, even though
+    # the previous selection is still a valid choice
+    ldr.object = _hdulist(2)
+    assert 'Source Catalog' in ldr.format.choices
+    assert ldr.format.selected == 'Image'
 
 
 class TestIsValid:
