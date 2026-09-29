@@ -541,6 +541,25 @@ def flux_unit_conversion(values, original_unit, target_unit,
             return values * original_unit
         return values
 
+    # conversions between per-steradian and per-pixel-squared surface
+    # brightnesses require the pixel scale equivalency from ``_eqv_pixar_sr``;
+    # if it was not provided, return the input unchanged in its original unit
+    # to support mixed-unit viewing
+    if ((solid_angle_in_orig == PIX2 and solid_angle_in_targ == u.sr)
+            or (solid_angle_in_orig == u.sr and solid_angle_in_targ == PIX2)):
+        # first swap the solid angle within the same flux type (scaled by the
+        # pixel scale factor), then convert the flux portion to the target
+        intermediate_unit = original_unit * solid_angle_in_orig / solid_angle_in_targ
+        try:
+            with u.set_enabled_equivalencies(equivalencies):
+                intermediate = (values * original_unit).to(intermediate_unit)
+        except u.UnitConversionError:
+            if with_unit:
+                return values * original_unit
+            return values
+        return flux_unit_conversion(intermediate.value, intermediate_unit,
+                                    target_unit, equivalencies, with_unit)
+
     with u.set_enabled_equivalencies(equivalencies):
         # first possible case we want to catch before trying to translate: both
         # the original and target unit are per-pixel-squared SB units
