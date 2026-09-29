@@ -221,24 +221,20 @@ class SourceCatalogImporter(BaseCatalogImporter):
         return self.input
 
     def _check_is_valid(self):
-        if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
-            # NOTE: temporary during deconfig process
-            return 'Catalog importer is only supported in imviz, mastviz, generalized jdaviz.'
+        basic_check = self._basic_table_validity_checks(self.input)
+        if basic_check:
+            return basic_check
 
-        if not (isinstance(self.input, (Table, QTable)) and len(self.input)):
-            return 'Input is not a valid catalog.'
+        if not hasattr(self, 'col_ra'):
+            # column components are not yet created (called during __init__),
+            # so we can only check the basic validity of the input
+            return ''
 
-        elif isinstance(self.input, HDUList):
-            # check for the presence of at least one TableHDU/BinTableHDU extension
-            for i, hdu in enumerate(self.input):
-                if isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0:
-                    break
-            else:
-                return 'Input HDUList does not contain any valid table extensions.'
-
-        if not ((self._has_selected_col('ra') and self._has_selected_col('dec'))
-                or (self._has_selected_col('x') and self._has_selected_col('y'))):
+        if not ((self._has_selected_col('col_ra') and self._has_selected_col('col_dec'))
+                or (self._has_selected_col('col_x') and self._has_selected_col('col_y'))):
             return 'No detected columns for RA/Dec or X/Y.'
+
+        return ''
 
     @property
     def import_confidence_score(self):
@@ -246,13 +242,9 @@ class SourceCatalogImporter(BaseCatalogImporter):
                 and self.resolver.treat_table_as_query):
             return 2
 
-        def _has_selected_col(col):
-            selected = getattr(self, f'col_{col}_selected', None)
-            return selected not in ('---', '', None)
-
         # NOTE: is_valid requires either ra/dec or x/y
-        has_ra_dec = all(_has_selected_col(col) for col in ('ra', 'dec'))
-        has_xy = all(_has_selected_col(col) for col in ('x', 'y'))
+        has_ra_dec = all(self._has_selected_col(f'col_{col}') for col in ('ra', 'dec'))
+        has_xy = all(self._has_selected_col(f'col_{col}') for col in ('x', 'y'))
         if has_ra_dec and has_xy:
             return 1
         return -1

@@ -91,6 +91,10 @@ class SpectralLinesImporter(BaseCatalogImporter):
         basic_check = self._basic_table_validity_checks(self.input)
         if basic_check:
             return basic_check
+        if not hasattr(self, 'spectral_loc'):
+            # column components are not yet created (called during __init__),
+            # so we can only check the basic validity of the input
+            return ''
         if not self._has_selected_col('spectral_loc'):
             return 'No detected columns for spectral location.'
         return ''
