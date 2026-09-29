@@ -130,6 +130,8 @@ New Features
   columns, and 'Spectral Line' for spectral line lists with a line-name and/or
   spectral-location column. [#4401]
 
+- Logger is accessible in UI before data is loaded. [#4403]
+
 Mosviz
 ^^^^^^
 

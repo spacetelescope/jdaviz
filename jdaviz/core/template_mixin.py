@@ -212,6 +212,14 @@ def _is_image_viewer(viewer):
     return 'ImageView' in viewer.__class__.__name__
 
 
+def _supports_markers(viewer):
+    # markers require a bqplot figure (excludes table viewers) and mouseover coordinates
+    # that map to data (excludes scatter/histogram viewers of arbitrary columns)
+    if not hasattr(viewer, 'figure'):
+        return False
+    return viewer.__class__.__name__ not in ('ScatterViewer', 'HistogramViewer')
+
+
 class ViewerPropertiesMixin:
     # assumes that self._app is defined by the class
     def get_matching_viewers(self, filter_or_cls, raise_if_none=False):
@@ -4560,6 +4568,12 @@ class ViewerSelect(SelectPluginComponent):
 
         def reference_has_wcs(viewer):
             return getattr(viewer.state.reference_data, 'coords', None) is not None
+
+        def is_not_table_viewer(viewer):
+            return not hasattr(viewer, 'widget_table')
+
+        def supports_markers(viewer):
+            return _supports_markers(viewer)
 
         return super()._is_valid_item(viewer, locals())
 
