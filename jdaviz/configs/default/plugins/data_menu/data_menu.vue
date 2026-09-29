@@ -3,13 +3,14 @@
     <div class="viewer-label-container">
       <div>
         <v-menu
+          ref="dataMenu"
           location="start"
           :offset="[8, 0]"
           transition="slide-x-reverse-transition"
           :close-on-content-click="false"
           v-model="data_menu_open">
           <template v-slot:activator="{ props }">
-            <div :id="'layer-legend-'+ viewer_id" class="layer-legend" v-bind="props">
+            <div class="layer-legend" v-bind="props">
               <div
                 v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0 || data_menu_open"
                 :class="loaded_n_data === 0 && !data_menu_open ? 'viewer-label pulse' : 'viewer-label'"
@@ -67,7 +68,7 @@
               </div>
             </div>
           </template>
-          <v-list :id="'dm-content-' + viewer_id" style="width: 400px; max-height: 600px; overflow-y: auto" class="overflow-y-auto">
+          <v-list ref="dataMenuContent" style="width: 400px; max-height: 600px; overflow-y: auto" class="overflow-y-auto">
             <v-list-item v-if="api_hints_enabled" style="min-height: 12px">
               <div class="v-list-item-content">
                 <span class="api-hint">
@@ -309,7 +310,7 @@
           </v-list>
         </v-menu>
       </div>
-      <div :id="'dm-target-' + viewer_id"></div>
+      <div ref="dataMenuTarget"></div>
     </div>
     <div v-if="loaded_n_data == 0 && dataset_items.length > 0" style="height: 100%">
       <v-list style="height: 100%">
@@ -405,7 +406,7 @@
       }
     },
     mounted() {
-      let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
+      let element = this.$refs.dataMenuTarget.parentElement
       if (element === null) {
         return
       }
@@ -436,7 +437,7 @@
         this._resizeObserver.disconnect();
         this._resizeObserver = null;
       }
-      let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
+      let element = this.$refs.dataMenuTarget.parentElement
       if (element === null) {
         return
       }
@@ -514,11 +515,11 @@
         this._dragGhostParent = null;
       },
       onScroll(e) {
-        if (this.data_menu_open && document.getElementById(`dm-target-${this.viewer_id}`)) {
-          const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height
-          const top = document.getElementById(`dm-target-${this.viewer_id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
-          const menuContent = document.getElementById(`dm-content-${this.viewer_id}`);
-          if (menuContent === null || menuContent.parentElement === null) {
+        if (this.data_menu_open && this.$refs.dataMenuTarget) {
+          const dataMenuHeight = this.$refs.dataMenu.activatorEl.parentElement.getBoundingClientRect().height
+          const top = this.$refs.dataMenuTarget.getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
+          const menuContent = this.$refs.dataMenuContent?.$el;
+          if (!menuContent || menuContent.parentElement === null) {
             return;
           }
           menuContent.parentElement.style.top = top + "px";

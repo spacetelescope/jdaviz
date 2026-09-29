@@ -1,5 +1,6 @@
 <template>
   <v-menu
+    ref="aboutMenu"
     v-model="popup_open"
     location="bottom"
     absolute
@@ -10,7 +11,6 @@
       <j-tooltip tooltipcontent="Show app information and docs">
         <v-btn
           variant="text"
-          id="about-scroll-target"
           v-bind="props"
 
           color="white"
@@ -26,7 +26,7 @@
       </j-tooltip>
     </template>
 
-    <v-card id="about-scroll-content">
+    <v-card ref="aboutContent">
       <span v-if="api_hints_enabled" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj }}.plugins['About']</span>
       <jupyter-widget v-if="about_widget" :widget="about_widget" :key="about_widget"></jupyter-widget>
     </v-card>
@@ -41,9 +41,11 @@
         popup_open: false,
       }
     },
-    mounted() {
-      let element = document.getElementById('about-scroll-target')
-      if (element === null) {
+    async mounted() {
+      // Vuetify resolves its activator element after mounting.
+      await this.$nextTick();
+      let element = this.$refs.aboutMenu.activatorEl
+      if (!element) {
         return
       }
       while (element["tagName"] !== "BODY") {
@@ -55,8 +57,8 @@
       this.jupyterLabCell = this.$el.closest(".jp-Notebook-cell");
     },
     beforeUnmount() {
-      let element = document.getElementById('about-scroll-target')
-      if (element === null) {
+      let element = this.$refs.aboutMenu.activatorEl
+      if (!element) {
         return
       }
       while (element["tagName"] !== "BODY") {
@@ -68,10 +70,10 @@
     },
     methods: {
       onScroll(e) {
-        if (this.popup_open && document.getElementById('about-scroll-target')) {
-          const top = document.getElementById('about-scroll-target').getBoundingClientRect().y + document.body.parentElement.scrollTop;
-          const menuContent = document.getElementById('about-scroll-content');
-          if (menuContent === null || menuContent.parentElement === null) {
+        if (this.popup_open && this.$refs.aboutMenu.activatorEl) {
+          const top = this.$refs.aboutMenu.activatorEl.getBoundingClientRect().y + document.body.parentElement.scrollTop;
+          const menuContent = this.$refs.aboutContent?.$el;
+          if (!menuContent || menuContent.parentElement === null) {
             return;
           }
           menuContent.parentElement.style.top = top + "px";
