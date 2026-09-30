@@ -157,17 +157,19 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = sky_coord_only_source_catalog
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
 
     importer_viewer = ldr.importer._obj.viewer
 
     assert 'Scatter' in importer_viewer.create_new.choices
-    assert 'Table' in importer_viewer.create_new.choices
+    assert 'Source Catalog Table' in importer_viewer.create_new.choices
+    assert 'Histogram' in importer_viewer.create_new.choices
 
-    # setting via the user-api wrapper to 'Table' should select the Table type,
-    # not label a scatter viewer labeled 'Table'
-    ldr.importer.viewer = 'Table'
-    assert importer_viewer.create_new.selected == 'Table'
+    # setting via the user-api wrapper to 'Source Catalog Table' should select
+    # the Source Catalog Table viewer type, not label a scatter viewer labeled
+    # 'Source Catalog Table'
+    ldr.importer.viewer = 'Source Catalog Table'
+    assert importer_viewer.create_new.selected == 'Source Catalog Table'
 
     # setting to 'Scatter' should switch the type back
     ldr.importer.viewer = 'Scatter'
@@ -180,8 +182,8 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
     assert importer_viewer.new_label == 'my-custom-viewer'
 
     # setting to a string of the format Type:label should select the type and set the label
-    ldr.importer.viewer = 'Table:my-custom-table'
-    assert importer_viewer.create_new.selected == 'Table'
+    ldr.importer.viewer = 'Source Catalog Table:my-custom-table'
+    assert importer_viewer.create_new.selected == 'Source Catalog Table'
     assert importer_viewer.new_label == 'my-custom-table'
 
 
@@ -247,7 +249,7 @@ def test_expected_data_api_class(deconfigged_helper,
         (spectrum1d, '1D Spectrum', SpectralDataApi),
         (spectrum2d, '2D Spectrum', SpectralDataApi),
         (spectrum1d_cube, '3D Spectrum', SpectralSpatialDataApi),
-        (sky_coord_only_source_catalog, 'Catalog', DataApi)
+        (sky_coord_only_source_catalog, 'Source Catalog', DataApi)
     ]
 
     # Disable linking to speed up test

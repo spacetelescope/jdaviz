@@ -212,6 +212,14 @@ def _is_image_viewer(viewer):
     return 'ImageView' in viewer.__class__.__name__
 
 
+def _supports_markers(viewer):
+    # markers require a bqplot figure (excludes table viewers) and mouseover coordinates
+    # that map to data (excludes scatter/histogram viewers of arbitrary columns)
+    if not hasattr(viewer, 'figure'):
+        return False
+    return viewer.__class__.__name__ not in ('ScatterViewer', 'HistogramViewer')
+
+
 class ViewerPropertiesMixin:
     # assumes that self._app is defined by the class
     def get_matching_viewers(self, filter_or_cls, raise_if_none=False):
@@ -2454,7 +2462,7 @@ class LayerSelect(SelectPluginComponent):
                 return True
 
             # non-catalog layers should remain available regardless of link type
-            if getattr(lyr, 'meta', {}).get('_importer', '') != 'CatalogImporter':
+            if getattr(lyr, 'meta', {}).get('_importer', '') != 'SourceCatalogImporter':
                 return True
 
             comp_labels = [str(x) for x in lyr.component_ids()]
@@ -4561,6 +4569,12 @@ class ViewerSelect(SelectPluginComponent):
         def reference_has_wcs(viewer):
             return getattr(viewer.state.reference_data, 'coords', None) is not None
 
+        def is_not_table_viewer(viewer):
+            return not hasattr(viewer, 'widget_table')
+
+        def supports_markers(viewer):
+            return _supports_markers(viewer)
+
         return super()._is_valid_item(viewer, locals())
 
     @observe('filters')
@@ -4933,9 +4947,17 @@ class DatasetSelect(SelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 2
 
+        def is_source_catalog_table(data):
+            return data.meta.get('_importer', '') == 'SourceCatalogImporter'
+
+        def is_spectral_lines_list_table(data):
+            return data.meta.get('_importer', '') == 'SpectralLinesImporter'
+
+        def is_generic_table(data):
+            return data.meta.get('_importer', '') == 'GenericCatalogImporter'
+
         def is_catalog(data):
-            return data.meta.get('_importer', '') in ['SpectralLinesImporter',
-                                                      'CatalogImporter']
+            return is_source_catalog_table(data) or is_spectral_lines_list_table(data) or is_generic_table(data)  # noqa
 
         def is_catalog_or_image_not_spectrum(data):
             return is_catalog(data) or is_image_not_spectrum(data)
@@ -6103,6 +6125,21 @@ class PlotOptionsSyncState(BasePluginComponent):
 
         if self._processing_change_to_glue:
             return
+
+        if self._glue_name == 'hidden_components':
+            if not all(isinstance(component, str) for component in value):
+                viewer = self._viewer_select.selected_obj
+                if isinstance(viewer, list):
+                    viewer = viewer[0] if len(viewer) else None
+                if viewer is None or not hasattr(viewer, 'widget_table'):
+                    return
+                data = viewer.widget_table.data
+                if data is None:
+                    return
+                all_components = data.main_components + data.derived_components
+                hidden_names = {str(component) for component in value}
+                value = [str(component) for component in all_components
+                         if str(component) not in hidden_names]
 
         self._processing_change_from_glue = True
         if "Colormap" in value.__class__.__name__:

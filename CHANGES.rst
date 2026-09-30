@@ -65,7 +65,7 @@ New Features
 
 - Add consolidated emission line list and ability to query database in API. [#4314]
 
-- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322, #4350]
+- Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322, #4350, #4397]
 
 - Allow markers plugin table to create other viewer types besides Scatter (i.e. Table or Histogram). [#4331]
 
@@ -106,7 +106,7 @@ New Features
 - Improve UI appearance for URL loader. [#4354]
 
 - Adds search to extension menu in loaders when there are more than 3 extensions available. [#4372]
-  
+
 - Generate a Gaussian curve from Line Analysis plugin results and optionally add to the 1D Spectrum viewer. [#4374]
 
 - Unify astroquery and VO reporting behavior. Both now show banners in the UI for the
@@ -118,6 +118,19 @@ New Features
   deletion of line name / rest wavelengths columns assigned by the loader, removing
   the selection of line medium in loader, and adding line name to table by
   default. [#4386]
+
+- Refactoring and some renaming of table viewer classes and catalog loaders.
+  The 'Source Catalog Table' viewer is now specialized for catalogs
+  with RA/Dec or X/Y position columns. The 'Spectral Line Table' viewer is now
+  specialized for spectral line lists with a line-name and/or spectral-location
+  column.  The existing 'Table' viewer class is now the base table viewer for
+  generic tabular data without columns with special roles. There are now three
+  tabular data loaders - 'Generic Catalog' for generic tabular data,
+  'Source Catalog' (formerly 'Catalog') for catalogs with RA/Dec or X/Y position
+  columns, and 'Spectral Line' for spectral line lists with a line-name and/or
+  spectral-location column. [#4401]
+
+- Logger is accessible in UI before data is loaded. [#4403]
 
 - Loaders now support loading multiple files (of the same format) at once. [#4385]
 
@@ -166,19 +179,42 @@ Other Changes and Additions
 
 - Updated all front end vuetify templates for Vue 3 compatibility. [#4053]
 
-5.0.4 (unreleased)
+- Changing visible columns in the table viewer has been moved from the Plot Options
+  plugin to a tool in the table viewer toolbar (with deprecation). [#4382]
+
+5.0.5 (unreleased)
 ==================
 
 Bug Fixes
 ---------
 
-- Fix case where file drop loader would not show importer options. [#4303]
+Mosviz
+^^^^^^
+
+5.0.4 (2026-09-23)
+==================
+
+Bug Fixes
+---------
+
+- Stop using SkyCoord.from_name() to try to resolve sources in the astroquery loader
+  that are already RA and Dec coordinates. [#4193]
+
+- fix case where file drop loader would not show importer options. [#4303]
 
 - fix URL loader not showing in UI. [#4361]
 
-- Fix image importer support for Roman L3 mosaic files. [#4309]
+- fix astro-image-display API for images without WCS. [#4304]
 
-- Fix issue where snackbar is attached to the notebook rather than to the app. [#4313]
+- Adjust data menu behavior to allow for showing more icons when the viewer is short. [#4352]
+
+- Fix a couple incorrect API hints in the data loaders. [#4399]
+
+- Ensure model fitting equation is validated before calculate fitting. [#4407]
+
+
+Imviz
+^^^^^
 
 - Allow markers plugin table to handle images with no flux units specified in the header. [#4320]
 
@@ -187,10 +223,6 @@ Bug Fixes
 
 - Avoid triggering a 2D spectrum-related warning for NIRISS images. [#4342]
 
-- Adjust data menu behavior to allow for showing more icons when the viewer is short. [#4352]
-
-Mosviz
-^^^^^^
 
 5.0.3 (2026-07-21)
 ==================

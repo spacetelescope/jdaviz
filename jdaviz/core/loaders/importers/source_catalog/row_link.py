@@ -13,20 +13,21 @@ __all__ = ['CatalogRowLinkManager', 'get_catalog_row_link_manager']
 _META_KEY = '_viewer_data_columns'
 
 
-def _as_list(value):
-    """Normalize a single cell value to a list.
+def _as_tuple(value):
+    """Normalize a single cell value to a tuple. Can't use list since lists are
+    unhashable.
 
-    ``None`` -> ``[]``, a string -> ``[value]`` (or ``[]`` if empty), any other
-    iterable -> ``list(value)``, and anything else -> ``[value]``.
+    ``None`` -> ``()``, a string -> ``(value,)`` (or ``()`` if empty), any other
+    iterable -> ``tuple(value)``, and anything else -> ``(value,)``.
     """
     if value is None:
-        return []
+        return ()
     if isinstance(value, str):
-        return [value] if value else []
+        return (value,) if value else ()
     try:
-        return list(value)
+        return tuple(value)
     except TypeError:
-        return [value]
+        return (value,)
 
 
 def get_catalog_row_link_manager(app):
@@ -81,7 +82,7 @@ class CatalogRowLinkManager(HubListener):
         Parameters
         ----------
         data_label : str
-            Label of a catalog (loaded via the Catalog importer) in the data
+            Label of a catalog (loaded via the Source Catalog importer) in the data
             collection.
         viewer_data : dict
             Mapping of viewer reference (``str``) or viewer instance to the per-row
@@ -103,8 +104,8 @@ class CatalogRowLinkManager(HubListener):
             per-viewer list does not have one entry per catalog row.
         """
         data = self.app.data_collection[data_label]
-        if data.meta.get('_importer') != 'CatalogImporter':
-            raise ValueError(f"Data '{data_label}' is not a catalog.")
+        if data.meta.get('_importer') != 'SourceCatalogImporter':
+            raise ValueError(f"Data '{data_label}' is not a source catalog.")
 
         nrows = data.size
         columns = dict(data.meta.get(_META_KEY) or {})
@@ -144,6 +145,14 @@ class CatalogRowLinkManager(HubListener):
                 viewer.widget_table.unobserve(data_callback, names=['data'])
             except Exception:  # nosec
                 pass
+
+        column_name = f'Data: {msg.viewer_id}'
+        # Also need to remove the component from any catalog data collection objects
+        for data in self.app.data_collection:
+            if data.meta.get('_importer') == 'SourceCatalogImporter':
+                cid = data.find_component_id(column_name)
+                if cid is not None:
+                    data.remove_component(cid)
 
     def _on_data_renamed(self, msg):
         # the renamed dataset may be *referenced* by any catalog's columns, so
@@ -222,7 +231,7 @@ class CatalogRowLinkManager(HubListener):
                 assoc_data = catalog_data.get_component(column_name).data[active_row]
             except (KeyError, IndexError):
                 assoc_data = []
-            labels = [lbl for lbl in _as_list(assoc_data)
+            labels = [lbl for lbl in _as_tuple(assoc_data)
                       if lbl and lbl in available_labels]
             self._set_viewer_contents(target_viewer, labels)
 
@@ -245,9 +254,10 @@ class CatalogRowLinkManager(HubListener):
     def _auto_create_column_for_viewer(self, viewer):
         """When a non-table viewer is added, auto-create ``Data:`` columns.
 
-        For each table viewer that currently holds a catalog, a
-        ``Data: <viewer_ref>`` column is added (if absent) and the toolbar
-        visibility is refreshed so the ``TableRowSelect`` tool appears.
+        For each catalog object currently in the data collection, a
+        ``Data: <viewer_ref>`` column is added (if absent). If any table viewers
+        exist, the toolbar visibility is refreshed so the ``TableRowSelect`` tool
+        appears.
         """
         if viewer is None or hasattr(viewer, 'widget_table'):
             return
@@ -255,11 +265,18 @@ class CatalogRowLinkManager(HubListener):
         if not viewer_ref:
             return
         column_name = f'Data: {viewer_ref}'
+
+        # Update columns in all source catalogs in the data collection
+        # whether or not they're in a table viewer
+        for data in self.app.data_collection:
+            if data.meta.get('_importer') == 'SourceCatalogImporter':
+                self._ensure_viewer_column(data, viewer_ref, column_name)
+
+        # If we're observing any table viewers, update the toolbar visibility.
         for tv, _, _ in list(self._observed.values()):
             catalog = self._catalog_data_for_viewer(tv, require_managed=False)
             if catalog is None:
                 continue
-            self._ensure_viewer_column(catalog, viewer_ref, column_name)
             if hasattr(tv, 'toolbar') and tv.toolbar is not None:
                 tv.toolbar._update_tool_visibilities()
 
@@ -270,7 +287,7 @@ class CatalogRowLinkManager(HubListener):
         app so the table is immediately ready for two-way sync.
         """
         table_data = getattr(getattr(table_viewer, 'widget_table', None), 'data', None)
-        if table_data is not None and table_data.meta.get('_importer') == 'CatalogImporter':
+        if table_data is not None and table_data.meta.get('_importer') == 'SourceCatalogImporter':
             catalog = table_data
         else:
             catalog = self._catalog_data_for_viewer(table_viewer, require_managed=False)
@@ -349,13 +366,13 @@ class CatalogRowLinkManager(HubListener):
         require_managed : bool
             If ``True`` (default) only return a catalog that has been registered
             via :meth:`set_viewer_data_columns` (carries ``_META_KEY`` in its
-            meta).  If ``False``, return any catalog loaded by the Catalog
+            meta).  If ``False``, return any catalog loaded by the Source Catalog
             importer, including freshly imported ones with no link columns yet.
         """
         if require_managed:
             return self._first_layer_data(viewer, lambda d: _META_KEY in d.meta)
         return self._first_layer_data(
-            viewer, lambda d: d.meta.get('_importer') == 'CatalogImporter'
+            viewer, lambda d: d.meta.get('_importer') == 'SourceCatalogImporter'
         )
 
     @staticmethod
@@ -377,7 +394,7 @@ class CatalogRowLinkManager(HubListener):
         column_name = str(column_name)
         arr = np.empty(len(values), dtype=object)
         for i, v in enumerate(values):
-            arr[i] = _as_list(v)
+            arr[i] = _as_tuple(v)
         if column_name in [c.label for c in data.components]:
             data.update_components({data.get_component(column_name): arr})
         else:
@@ -409,7 +426,7 @@ class CatalogRowLinkManager(HubListener):
         changed = False
         new_values = []
         for cell in values:
-            cell_list = _as_list(cell)
+            cell_list = _as_tuple(cell)
             if old_label in cell_list:
                 cell_list = [new_label if v == old_label else v for v in cell_list]
                 changed = True

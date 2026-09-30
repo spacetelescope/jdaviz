@@ -37,7 +37,7 @@
         :items="search_input_items.map(i => i.label)"
         v-model:selected="search_input_selected"
         label="Input"
-        api_hint="ldr.search_input_select ="
+        api_hint="ldr.search_input ="
         :api_hints_enabled="api_hints_enabled"
         hint="Select the source of cone-search coordinates."
       ></plugin-select>

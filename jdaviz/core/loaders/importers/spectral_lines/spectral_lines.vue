@@ -47,7 +47,7 @@
       v-model:auto="data_label_auto"
       :invalid_msg="data_label_invalid_msg"
       label="Line list label"
-      api_hint="ldr.importer.label ="
+      api_hint="ldr.importer.data_label ="
       :api_hints_enabled="api_hints_enabled"
       hint="Label to assign to the line list in the data collection."
     ></plugin-auto-label>

@@ -217,22 +217,27 @@ class FormatSelect(SelectPluginComponent):
                             if self._is_valid_item(this_importer):
                                 parser_pref = this_importer.parser_preference
                                 prev_is_valid_item = output_importers_is_valid_item.get(importer_name, False)  # noqa
+                                prev_parser = output_importers_parser_name.get(importer_name)
                                 if importer_name not in output_importers or not prev_is_valid_item:
                                     # first valid match for this importer at this output
                                     replace = True
                                 elif not len(parser_pref) or parser_name not in parser_pref:
                                     # default to the previous (or first) found match
+                                    self._invalid_importers[label] = f'Parser {parser_name} has no priority set'  # noqa
                                     replace = False
                                 else:
                                     # then there was already a match from an earlier parser.
                                     # Compare to see which has preference.
-                                    prev_parser = output_importers_parser_name[importer_name]
                                     replace = (prev_parser not in parser_pref or
                                               parser_pref.index(prev_parser) > parser_pref.index(parser_name))  # noqa
                                 if replace:
                                     output_importers[importer_name] = this_importer
                                     output_importers_is_valid_item[importer_name] = True
                                     output_importers_parser_name[importer_name] = parser_name
+                                    if prev_parser is not None:
+                                        self._invalid_importers[prev_parser] = f'Parser {parser_name} has preference over {prev_parser}'  # noqa
+                                else:
+                                    self._invalid_importers[label] = f'Parser {prev_parser} has preference over {parser_name}'  # noqa
                             elif importer_name not in output_importers:
                                 # we'll store the importer even if it isn't valid according to
                                 # the filters so that it can be used when compiling the list of
@@ -264,12 +269,14 @@ class FormatSelect(SelectPluginComponent):
         ]
 
         # Sort generic table importers to the end of the list so more specific
-        # formats are selected by default.  Order: other > Catalog > Spectral Lines.
+        # formats are selected by default.  Order: other > Source Catalog > Spectral Lines.
         spectral_lines_formats = [f for f in all_formats if f['label'] == 'Spectral Lines']
-        catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
+        cat_formats = [f for f in all_formats if f['label'] == 'Source Catalog']
+        generic_cat_formats = [f for f in all_formats if f['label'] == 'Generic Catalog']
         other_formats = [f for f in all_formats
-                         if f['label'] not in ('Catalog', 'Spectral Lines')]
-        self.items = other_formats + spectral_lines_formats + catalog_formats
+                         if f['label'] not in ('Source Catalog', 'Spectral Lines',
+                                               'Generic Catalog')]
+        self.items = other_formats + spectral_lines_formats + cat_formats + generic_cat_formats
         self._apply_default_selection()
 
 
@@ -1297,7 +1304,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         )
         self.search_input.add_filter(
             lambda item: item['label'] != 'Catalog' or any(
-                d.meta.get('_importer') == 'CatalogImporter'
+                d.meta.get('_importer') == 'SourceCatalogImporter'
                 for d in self._app.data_collection
             )
         )

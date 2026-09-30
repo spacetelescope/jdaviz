@@ -242,8 +242,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     * ``marker_colormap_vmax`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       only exposed for Imviz and deconfigged. Controls marker colormap maximum value.
     * ``table_columns_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      Controls which columns are visible in the table viewer. Only applicable when a
-      table viewer is selected.
+      Deprecated.  Use the "Visible columns" tool in the table viewer toolbar instead.
     """
     template_file = __file__, "plot_options.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -878,7 +877,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         if self._user_api_remove:
             expose = [e for e in expose if e not in self._user_api_remove]
 
-        return PluginUserApi(self, expose)
+        return PluginUserApi(self, expose,
+                             deprecated={'table_columns_visible': "plot_options.table_columns_visible is deprecated, use the 'Visible columns' tool in the table viewer toolbar instead."})  # noqa
 
     @property
     def multiselect(self):

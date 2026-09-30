@@ -1,20 +1,21 @@
 <template>
-  <div style="overflow: hidden; margin-right: 0px">
+  <div class="toolbar-nested-root" style="display: flex; justify-content: flex-end; width: 100%; min-width: 0; overflow: hidden; margin-right: 0px">
     <!-- Override mode indicator -->
     <v-btn-toggle
       v-if="tool_override_mode.length > 0"
+      class="custom-toolbar-mode-toggle"
       style="border-top-left-radius: 24px; border-bottom-left-radius: 24px;"
     >
-      <v-btn @click="restore_tools" style="background-color: #007ba1; color: white; border-bottom-right-radius: 0; border-top-right-radius: 0; margin-right: -6px; padding-top: 3px">
+      <v-btn class="custom-toolbar-mode-button" @click="restore_tools" style="background-color: #007ba1; color: white; border-bottom-right-radius: 0; border-top-right-radius: 0; margin-right: -6px; padding-top: 3px">
         <j-tooltip :tooltipcontent="`exit '${tool_override_mode}' mode and restore original toolbar`" span_style="height: inherit; display: inherit; pointer-events: cursor;">
           <v-icon style="margin-left: 4px;">mdi-close</v-icon>
-          <span style="color: white; margin-top: 0px; margin-left: 12px">{{ tool_override_mode }}</span>
+          <span class="custom-toolbar-mode-label" style="color: white; margin-top: 0px; margin-left: 12px">{{ tool_override_mode }}</span>
         </j-tooltip>
       </v-btn>
     </v-btn-toggle>
 
     <!-- Custom widgets (dropdowns, text inputs, and sliders) -->
-    <span v-if="custom_widget_items.length > 0" style="display: inline-flex; align-items: center; vertical-align: top; height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
+    <span v-if="custom_widget_items.length > 0" class="custom-toolbar-widgets" style="display: inline-flex; align-items: center; vertical-align: top; height: 42px; background-color: #007ba1; padding: 0 4px; margin-right: -4px;">
       <template v-for="(widget, idx) in custom_widget_items" :key="idx">
         <!-- Text input widget -->
         <v-text-field
@@ -55,22 +56,34 @@
           :items="widget.items"
           :placeholder="widget.label"
           :multiple="widget.multiselect"
-          :chips="widget.multiselect"
-          :small-chips="widget.multiselect"
-          deletable-chips
           density="compact"
-          solo
+          variant="solo"
           flat
           hide-details
-          style="min-width: 120px; max-width: 250px;"
+          :style="widget.multiselect ? 'width: 100%; max-width: 320px;' : 'width: 100%; max-width: 250px;'"
           class="custom-toolbar-select"
           item-title="label"
           item-value="value"
-        ></v-select>
+        >
+          <template v-slot:selection="{ item, index }">
+            <span v-if="!widget.multiselect" class="custom-toolbar-selection-text">{{ item.title }}</span>
+            <v-chip
+              v-else-if="index < max_chips(widget)"
+              size="x-small"
+              label
+              class="custom-toolbar-chip"
+            >{{ item.title }}</v-chip>
+            <span
+              v-else-if="index === max_chips(widget)"
+              class="custom-toolbar-overflow"
+              :title="(custom_widget_selected[idx] || []).join(', ')"
+            >+{{ (custom_widget_selected[idx] || []).length - max_chips(widget) }} more</span>
+          </template>
+        </v-select>
       </template>
     </span>
 
-    <v-btn-toggle v-model="active_tool_id" style="overflow-x: hidden" class="transparent">
+    <v-btn-toggle v-if="custom_widget_items.length === 0" v-model="active_tool_id" style="overflow-x: hidden" class="transparent">
       <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" :key="id">
         <v-tooltip v-if="primary && visible &&!should_hide_in_popout(id)" location="bottom">
           <template v-slot:activator="{ props }">
@@ -193,6 +206,10 @@
 
         return style;
       },
+      max_chips(widget) {
+        // number of chips shown inline before collapsing the rest into a "+N" counter
+        return widget.max_chips !== undefined ? widget.max_chips : 3;
+      },
       update_widget_selection(idx, val) {
         // Update the selection for a specific widget index
         let newSelected = [...this.custom_widget_selected];
@@ -251,32 +268,58 @@
 .v-theme--dark .invert-if-dark {
   filter: invert(1) !important;
 }
+.toolbar-nested-root {
+  container-type: inline-size;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: flex-end;
+  max-width: 100%;
+  min-width: 0;
+}
+.custom-toolbar-mode-toggle {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  width: fit-content !important;
+  margin-right: 0 !important;
+}
+.custom-toolbar-mode-button {
+  flex: 0 0 auto !important;
+  min-width: 42px !important;
+}
+.custom-toolbar-mode-label {
+  display: inline-block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.custom-toolbar-widgets {
+  display: inline-flex !important;
+  flex: 0 1 auto !important;
+  width: fit-content !important;
+  min-width: 0;
+  max-width: 100%;
+  margin-left: 0 !important;
+}
 .custom-toolbar-select {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   background-color: #007ba1 !important;
   border-radius: 4px !important;
 }
-.custom-toolbar-select.v-text-field.v-text-field--solo .v-input__slot {
+.custom-toolbar-select .v-field,
+.custom-toolbar-select .v-field__overlay {
   background-color: #007ba1 !important;
+  box-shadow: none !important;
+  border-radius: 4px !important;
+  opacity: 1 !important;
 }
-.custom-toolbar-select >>> .v-input__slot {
+.custom-toolbar-select .v-input__control {
   min-height: 32px !important;
-  padding: 0 8px !important;
-  background-color: #007ba1 !important;
+  min-width: 0 !important;
 }
-.custom-toolbar-select >>> .v-text-field__slot {
-  background-color: #007ba1 !important;
-}
-.custom-toolbar-select >>> .v-select__slot {
-  background-color: #007ba1 !important;
-}
-.custom-toolbar-select >>> .v-input__control {
-  min-height: 32px !important;
-}
-.custom-toolbar-select >>> .v-select__selections {
-  min-height: 28px !important;
-  padding: 0 !important;
-}
-/* Vuetify 3: selected text and input field */
+/* selected text and input field */
 .custom-toolbar-select .v-select__selection-text,
 .custom-toolbar-select .v-field__input,
 .custom-toolbar-select .v-field__input input,
@@ -284,18 +327,71 @@
   color: white !important;
   font-size: 12px !important;
 }
-.custom-toolbar-select >>> .v-chip {
-  height: 22px !important;
-  margin: 2px !important;
+/* keep selections on a single line, collapsing overflow into the "+N" counter */
+.custom-toolbar-select .v-field__input {
+  min-width: 0 !important;
+  flex-wrap: nowrap !important;
+  overflow: hidden !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  min-height: 32px !important;
+  row-gap: 0 !important;
 }
-.custom-toolbar-select >>> .v-chip .v-chip__content {
-  font-size: 11px;
+.custom-toolbar-select .v-field__input > input {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
 }
-.custom-toolbar-select >>> .v-icon {
+.custom-toolbar-select .v-field__field {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+.custom-toolbar-select .v-field__append {
+  flex: 0 0 28px !important;
+  min-width: 28px !important;
+  padding-inline-start: 4px !important;
+}
+.custom-toolbar-select .v-select__selection {
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+.custom-toolbar-select .v-chip {
+  height: 20px !important;
+  margin: 0 2px 0 0 !important;
+  padding: 0 6px !important;
+  flex: none !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
   color: white !important;
 }
-.custom-toolbar-select >>> input::placeholder {
+.custom-toolbar-select .v-chip .v-chip__content {
+  font-size: 11px;
+  white-space: nowrap;
+  display: block;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.custom-toolbar-overflow {
+  color: white !important;
+  font-size: 11px;
+  white-space: nowrap;
+  flex: none;
+  margin-left: 2px;
+}
+.custom-toolbar-selection-text {
+  color: white !important;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.custom-toolbar-select .v-icon {
+  color: white !important;
+}
+.custom-toolbar-select input::placeholder {
   color: rgba(255, 255, 255, 0.7) !important;
+}
+@container (max-width: 520px) {
+  .custom-toolbar-mode-label {
+    display: none;
+  }
 }
 .custom-toolbar-slider .v-slider-track__background,
 .custom-toolbar-slider .v-slider-track__fill {

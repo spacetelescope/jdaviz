@@ -133,7 +133,9 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             List of dicts defining custom widgets to display. Each dict should have:
             - 'label': tooltip/label for the widget
             - 'type': 'select' (default), 'text', or 'slider'
-            - For 'select': 'items' (list of dicts with 'label'/'value'), 'multiselect' (bool)
+            - For 'select': 'items' (list of dicts with 'label'/'value'), 'multiselect' (bool),
+              'max_chips' (int, number of chips shown inline before collapsing the
+              remainder into a "+N" counter; defaults to 3)
             - For 'text': no extra keys required (uses 'label' as placeholder)
             - For 'slider': 'min', 'max', 'step' (floats)
             - 'selected': initial selected value(s)
