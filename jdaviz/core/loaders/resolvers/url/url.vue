@@ -32,12 +32,11 @@
           variant="underlined"
           v-model='url'
           style="padding: 0px 8px"
-          :label="api_hints_enabled ? 'ldr.url =' : ''"
+          :label="api_hints_enabled ? 'ldr.url =' : 'URL'"
           :class="api_hints_enabled ? 'api-hint' : null"
           :error-messages="url && parsed_input_not_resolvable_message ? [parsed_input_not_resolvable_message] : []"
           :hint="url ? download_path_msg : 'Input a link to a file.'"
           persistent-hint>
-        <template #prepend>  <span style="padding-right: 3px">URL:</span></template>
         </v-text-field>
       </j-flex-row>
 
