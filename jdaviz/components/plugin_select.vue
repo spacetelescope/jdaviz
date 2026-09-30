@@ -1,8 +1,12 @@
 <template>
-  <j-flex-row v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
+  <j-flex-row
+    v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled"
+    style="margin-bottom: 18px"
+  >
     <v-select
       :menu-props="{ location: 'bottom start' }"
       attach
+      variant="underlined"
       :items="filtered_items"
       :model-value="selected"
       @update:modelValue="$emit('update:selected', $event)"
