@@ -26,6 +26,11 @@ class GenericCatalogImporter(BaseCatalogImporter):
     def _check_is_valid(self):
         return self._basic_table_validity_checks(self.input)
 
+    @property
+    def import_confidence_score(self):
+        # at bottom of list
+        return -2
+
     @staticmethod
     def _get_supported_viewers():
         return [{'label': 'Scatter', 'reference': 'scatter-viewer'},

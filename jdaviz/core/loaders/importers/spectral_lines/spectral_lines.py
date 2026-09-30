@@ -88,8 +88,28 @@ class SpectralLinesImporter(BaseCatalogImporter):
         self._init_col_other(input_table.colnames)
 
     def _check_is_valid(self):
+        basic_check = self._basic_table_validity_checks(self.input)
+        if basic_check:
+            return basic_check
+        if not hasattr(self, 'spectral_loc'):
+            # column components are not yet created (called during __init__),
+            # so we can only check the basic validity of the input
+            return ''
+        if not self._has_selected_col('spectral_loc'):
+            return 'No detected columns for spectral location.'
+        return ''
 
-        return self._basic_table_validity_checks(self.input)
+    @property
+    def import_confidence_score(self):
+        if self.resolver.__class__.__name__ == 'SpectralLineDatabaseResolver':
+            return 2
+
+        # NOTE: has_spectral_loc is required by is_valid.  Only a column that carries
+        # spectral units is strong enough evidence to outrank other catalog importers,
+        # since column-name matches are common in generic catalogs.
+        if self.spectral_loc_has_unit and self._has_selected_col('linename'):
+            return 1
+        return -1
 
     def _guess_spectral_loc_col(self):
         """

@@ -105,6 +105,18 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
         return 'Not implemented.'  # pragma: nocover
 
     @property
+    def import_confidence_score(self):
+        """
+        Return how confidently this importer matches its current input.
+
+        This only ranks importers that are already valid for the input; it is
+        not a replacement for ``_check_is_valid``.  By convention, confidence
+        scores are relative boosts or penalties from the default score of 0,
+        usually in the range -2 to +2.
+        """
+        return 0
+
+    @property
     def resolver(self):
         return self._resolver
 
@@ -547,6 +559,10 @@ class BaseCatalogImporter(BaseImporterToDataCollection):
     col_other_items = List().tag(sync=True)
     col_other_selected = List().tag(sync=True)
     col_other_multiselect = Bool(True).tag(sync=True)
+
+    def _has_selected_col(self, attr):
+        selected = getattr(self, f'{attr}_selected', None)
+        return selected not in ('---', '', None)
 
     def _basic_table_validity_checks(self, input):
 

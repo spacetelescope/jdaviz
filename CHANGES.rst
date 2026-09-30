@@ -132,6 +132,9 @@ New Features
 
 - Logger is accessible in UI before data is loaded. [#4403]
 
+- Format choices are now sorted so that the most likely format is at the top of the list
+  and selected by default. [#4402]
+
 Mosviz
 ^^^^^^
 
