@@ -47,6 +47,24 @@ class TestTableViewerTools:
         self.table_viewer_user_api = deconfigged_helper.viewers['Source Catalog Table']
         self.table_viewer = self.table_viewer_user_api._obj.glue_viewer
 
+    def test_focus_mode_tool_visibility(self):
+        toolbar = self.table_viewer.toolbar
+        self._app._app.state.focus_viewer = self.table_viewer.reference
+
+        visible = {
+            tool_id for tool_id in toolbar.tools
+            if toolbar._is_visible(tool_id)
+        }
+        assert visible == {
+            'jdaviz:table_add_column',
+            'jdaviz:table_columns_visible',
+            'jdaviz:viewer_focus_toggle',
+            'jdaviz:viewer_popout',
+        }
+
+        toolbar.tools['jdaviz:table_add_column'].activate()
+        assert toolbar._is_visible('jdaviz:table_apply_add_column')
+
     def test_table_highlight_tool_activates(self):
         """Test that TableHighlightSelected tool activates properly."""
         toolbar = self.table_viewer.toolbar
