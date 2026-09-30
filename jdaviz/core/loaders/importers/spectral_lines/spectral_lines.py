@@ -104,9 +104,10 @@ class SpectralLinesImporter(BaseCatalogImporter):
         if self.resolver.__class__.__name__ == 'SpectralLineDatabaseResolver':
             return 2
 
-        # NOTE: has_spectral_loc is required by is_valid
-        has_linename = self._has_selected_col('linename')
-        if has_linename:
+        # NOTE: has_spectral_loc is required by is_valid.  Only a column that carries
+        # spectral units is strong enough evidence to outrank other catalog importers,
+        # since column-name matches are common in generic catalogs.
+        if self.spectral_loc_has_unit and self._has_selected_col('linename'):
             return 1
         return -1
 

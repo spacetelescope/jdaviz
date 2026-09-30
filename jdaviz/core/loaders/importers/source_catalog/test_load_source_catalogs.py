@@ -84,11 +84,9 @@ def _make_catalog_no_coordinates():
 
 def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     """
-    A table should be able to be loaded without selecting
-    an RA/Dec or X/Y pair. This table will not have the functionality
-    of a 'Source Catalog' that does have source positions
-    (linking, mouseover) but it may be loaded to plot for example
-    in the scatter or histogram viewer.
+    A table without an RA/Dec or X/Y pair is not a 'Source Catalog' (no linking
+    or mouseover), but it can still be loaded as a 'Generic Catalog' to plot, for
+    example, in the scatter or histogram viewer.
     """
     catalog_obj = _make_catalog_no_coordinates()
 
@@ -98,12 +96,12 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
 
     # load catalog, all columns
     imviz_helper.load(catalog_obj, col_other=['col1', 'col2', 'col3'],
-                      format='Source Catalog')
+                      format='Generic Catalog')
 
     # check for the table in the data collection
     dc = imviz_helper._app.data_collection
     assert len(dc) == 2
-    assert 'Source Catalog' in imviz_helper._app.data_collection.labels
+    assert 'Generic Catalog' in imviz_helper._app.data_collection.labels
     tab = imviz_helper._app.data_collection[1].get_object(Table)
     assert 'col1' in tab.colnames
 

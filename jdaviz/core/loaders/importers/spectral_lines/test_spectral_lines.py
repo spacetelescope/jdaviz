@@ -87,12 +87,11 @@ def test_spectral_loc_excludes_non_numeric_columns(deconfigged_helper):
 
 
 def test_no_spectral_column_detected(deconfigged_helper):
-    """When no spectral column is found, selection should default to '---'."""
+    """Without a spectral column, Spectral Lines is not valid and Generic Catalog is used."""
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'flux': [1.0, 0.5], 'name': ['Ha', 'Hb']})
-    assert ldr.format == 'Spectral Lines'
-    importer = ldr.importer
-    assert importer.spectral_loc == '---'
+    assert 'Spectral Lines' not in ldr.format.choices
+    assert ldr.format == 'Generic Catalog'
 
 
 def test_spectral_loc_has_unit_true(deconfigged_helper):
