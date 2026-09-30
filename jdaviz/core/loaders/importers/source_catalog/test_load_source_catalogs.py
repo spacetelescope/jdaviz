@@ -84,11 +84,9 @@ def _make_catalog_no_coordinates():
 
 def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     """
-    A table should be able to be loaded without selecting
-    an RA/Dec or X/Y pair. This table will not have the functionality
-    of a 'Source Catalog' that does have source positions
-    (linking, mouseover) but it may be loaded to plot for example
-    in the scatter or histogram viewer.
+    A table without an RA/Dec or X/Y pair is not a 'Source Catalog' (no linking
+    or mouseover), but it can still be loaded as a 'Generic Catalog' to plot, for
+    example, in the scatter or histogram viewer.
     """
     catalog_obj = _make_catalog_no_coordinates()
 
@@ -98,12 +96,12 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
 
     # load catalog, all columns
     imviz_helper.load(catalog_obj, col_other=['col1', 'col2', 'col3'],
-                      format='Source Catalog')
+                      format='Generic Catalog')
 
     # check for the table in the data collection
     dc = imviz_helper._app.data_collection
     assert len(dc) == 2
-    assert 'Source Catalog' in imviz_helper._app.data_collection.labels
+    assert 'Generic Catalog' in imviz_helper._app.data_collection.labels
     tab = imviz_helper._app.data_collection[1].get_object(Table)
     assert 'col1' in tab.colnames
 
@@ -214,7 +212,7 @@ def test_import_enabled_disabled(imviz_helper):
     ldr = loaders['object']
     ldr.object = catalog_obj
 
-    ldr.format = 'Source Catalog'
+    assert ldr.format == 'Source Catalog'
     ldr.importer.col_ra.selected = '---'
     ldr.importer.col_dec.selected = '---'
     ldr.importer.col_x.selected = '---'
@@ -304,7 +302,7 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     # in the data collection
     ldr = imviz_helper.loaders['file' if from_file else 'object']
     setattr(ldr, 'filepath' if from_file else 'object', catalog)
-    ldr.format = 'Source Catalog'
+    assert ldr.format == 'Source Catalog'
     assert ldr.importer._obj.col_ra_has_unit == with_units
 
     # load it again, make sure label incremented by 1
@@ -390,7 +388,7 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
 
     assert 'Source Catalog' in ldr.format.choices
 
-    ldr.format = 'Source Catalog'
+    assert ldr.format == 'Source Catalog'
     ldr.importer.col_ra = 'ra'
     ldr.importer.col_dec = 'dec'
     ldr.importer.col_id = 'source_id'
@@ -443,8 +441,7 @@ def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
         else:
             raise Exception(tb)
 
-    assert 'Source Catalog' in ldr.format.choices
-    ldr.format = 'Source Catalog'
+    assert ldr.format == 'Source Catalog'
     ldr.load()
 
 
@@ -477,10 +474,9 @@ def test_astroquery_jwst_hst(deconfigged_helper, telescope):
     # note: querying coverage covered by test_resolver_table_as_query_astroquery
 
     ldr.treat_table_as_query = False
-    assert 'Source Catalog' in ldr.format.choices
 
-    # remove and replace with an assertion after JDAT-6412
-    ldr.format = 'Source Catalog'
+    # loader confidence scoring should default to "Source Catalog"
+    assert ldr.format == 'Source Catalog'
 
     ldr.load()
     assert len(deconfigged_helper._app.data_collection) == 1
@@ -517,7 +513,7 @@ def test_invalid(imviz_helper, tmp_path):
 def test_scatter_viewer(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
-    ldr.format = 'Source Catalog'
+    assert ldr.format == 'Source Catalog'
 
     assert 'Scatter' in ldr.importer.viewer.create_new.choices
     ldr.importer.viewer.create_new = 'Scatter'
@@ -537,7 +533,7 @@ def test_scatter_viewer(deconfigged_helper):
 def test_histogram_viewer(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
-    ldr.format = 'Source Catalog'
+    assert ldr.format == 'Source Catalog'
     ldr.importer.col_other = ['flux']
 
     assert 'Histogram' in ldr.importer.viewer.create_new.choices
@@ -568,7 +564,7 @@ def test_source_catalog_table_viewer(deconfigged_helper):
     """
     ldr = deconfigged_helper.loaders['object']
     ldr.object = _make_catalog(with_units=True)
-    ldr.format = 'Source Catalog'
+    assert ldr.format == 'Source Catalog'
     ldr.importer.viewer.create_new = 'Source Catalog Table'
     ldr.load()
 
@@ -631,10 +627,8 @@ def test_load_catalog_from_hdulist(deconfigged_helper, tmp_path, from_file):
         ldr = deconfigged_helper.loaders['object']
         ldr.object = hdulist
 
-    # Verify Source Catalog format is available
-    assert 'Source Catalog' in ldr.format.choices
-
-    ldr.format = 'Source Catalog'
+    # Verify Catalog format is available
+    assert ldr.format == 'Source Catalog'
 
     # Check that Primary HDU (index 0) is not in the extension choices, it should
     # have been filtered out because it is not a table extension
@@ -745,12 +739,12 @@ def test_hdulist_multiple_table_extensions(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = hdulist
 
-    # This HDUList contains both table and image extensions, so both
-    # Source Catalog and Image formats should be valid. Verify Catalog is listed
-    # last when multiple formats exist.
+    # This HDUList contains both table and image extensions, so both Catalog and Image
+    # formats should be valid. Image should be selected by default because Catalog
+    # confidence stays below the default even when coordinate columns are detected.
     assert 'Source Catalog' in ldr.format.choices
     assert len(ldr.format.choices) > 1
-    assert ldr.format.choices[-1] == 'Source Catalog'
+    assert ldr.format.selected == 'Image'
 
     ldr.format = 'Source Catalog'
 
@@ -834,7 +828,7 @@ def test_load_catalog_from_fits_multiselect(deconfigged_helper):
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = hdul
-    ldr.format = 'Source Catalog'
+    assert ldr.format == 'Source Catalog'
 
     assert ldr.importer.extension.multiselect is True
 
@@ -882,7 +876,7 @@ def test_load_catalog_from_fits_multiselect(deconfigged_helper):
                           fits.BinTableHDU(table3)])
 
     ldr.object = hdul2
-    ldr.format = 'Source Catalog'
+    assert ldr.format == 'Source Catalog'
 
     ldr.importer.extension.selected = ldr.importer.extension.choices
 

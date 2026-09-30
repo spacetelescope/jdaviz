@@ -45,12 +45,8 @@ def test_coord_column_detection(deconfigged_helper):
     tab = QTable({'radial_velocity': [10.0], 'fluxradius': [5.0], 'decrement': [1.0]})
     ldr = deconfigged_helper.loaders['object']
     ldr.object = tab
-    ldr.format = 'Source Catalog'
-    importer = ldr.importer
-    # none of the column names in the input table should have been identified as
-    # RA or Dec columns, so they should be set as a placeholder value of '---'
-    assert importer.col_ra == '---'
-    assert importer.col_dec == '---'
+    # without detected RA/Dec (or X/Y) columns, Source Catalog is not a valid format
+    assert 'Source Catalog' not in ldr.format.choices
 
 
 def test_pixel_column_detection(deconfigged_helper):
@@ -84,12 +80,8 @@ def test_pixel_column_detection(deconfigged_helper):
     tab = QTable({'galaxy': [10.0], 'parallax': [5.0], 'velocity': [1.0]})
     ldr = deconfigged_helper.loaders['object']
     ldr.object = tab
-    ldr.format = 'Source Catalog'
-    importer = ldr.importer
-    # none of the column names in the input table should have been identified as x or y columns,
-    # so they should be set as a placeholder value of '---'
-    assert importer.col_x == '---'
-    assert importer.col_y == '---'
+    # without detected X/Y (or RA/Dec) columns, Source Catalog is not a valid format
+    assert 'Source Catalog' not in ldr.format.choices
 
 
 def test_skycoord_column_detection(deconfigged_helper):
@@ -178,11 +170,11 @@ def test_catalog_importer_is_valid(deconfigged_helper):
 
     # Failure: non-table input
     importer._input = 'not_a_catalog'
-    assert importer._check_is_valid() == 'Input is not a valid catalog.'
+    assert importer._check_is_valid() == 'Input must be an astropy Table or QTable.'
 
     # Failure: empty table
     importer._input = Table()
-    assert importer._check_is_valid() == 'Input is not a valid catalog.'
+    assert importer._check_is_valid() == 'Input table is empty.'
 
 
 @pytest.mark.parametrize('frame_selected, equinox_selected', [
@@ -275,10 +267,7 @@ def test_coord_frame_default_and_reset(deconfigged_helper):
     assert importer.coord_frame.selected == '----'
     assert importer.coord_equinox.selected == '----'
 
-    # table with no detectable ra/dec columns: both should start as '----'
+    # table with no detectable ra/dec columns: Source Catalog is not a valid format
     tab2 = QTable({'flux': [1.0], 'name': ['src']})
     ldr.object = tab2
-    ldr.format = 'Source Catalog'
-    importer2 = ldr.importer
-    assert importer2.coord_frame.selected == '----'
-    assert importer2.coord_equinox.selected == '----'
+    assert 'Source Catalog' not in ldr.format.choices

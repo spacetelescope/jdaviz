@@ -29,7 +29,7 @@ class SpectralLineDatabaseResolver(BaseResolver):
 
     Users search by spectral range, element, and/or line-name substring,
     then stage individual results to build up an output
-    ``QTable(linename, rest)`` that is consumed by ``LineListImporter``.
+    ``QTable(linename, rest)`` that is consumed by ``SpectralLinesImporter``.
 
     Example usage from a notebook::
 

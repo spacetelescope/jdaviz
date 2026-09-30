@@ -208,6 +208,14 @@ class ImageImporter(BaseImporterToDataCollection):
             expose += ['extension']
         return ImporterUserApi(self, expose)
 
+    @property
+    def import_confidence_score(self):
+        if isinstance(self.input, fits.HDUList):
+            # an HDUList with valid image extensions should default to an image,
+            # even if it also contains table extensions
+            return 2
+        return 0
+
     def _check_is_valid(self):
         """
         Checks if the input is a valid image data object.
