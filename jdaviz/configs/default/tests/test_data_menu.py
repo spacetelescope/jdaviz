@@ -438,6 +438,7 @@ def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
     subset_tools.import_region(CircularROI(xc=0, yc=0, radius=1))
     assert layers[-1].layer.label == 'catalog'
 
+
 def test_data_menu_invalid_selection_raises(deconfigged_helper, image_2d_wcs):
 
     # load an image
