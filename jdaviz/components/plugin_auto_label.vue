@@ -18,8 +18,20 @@
           <slot></slot>
         </template>
         <template v-slot:append-inner>
-          <j-tooltip v-if="!auto || showIcon" :tooltipcontent="auto ? 'Using default (click to use custom)' : 'Using custom (click to use default)'">
-            <v-btn icon density="compact" variant="text" @click="() => {$emit('update:auto', !auto)}" style="padding-bottom: 4px" @mouseenter="showIcon = true" @mouseleave="showIcon = false">
+          <j-tooltip
+            :disabled="auto && !showIcon"
+            :tooltipcontent="auto ? 'Using default (click to use custom)' : 'Using custom (click to use default)'"
+          >
+            <v-btn
+              variant="text"
+              icon
+              density="compact"
+              class="auto-label-toggle"
+              :class="{'auto-label-toggle--hidden': auto && !showIcon}"
+              @click="() => {$emit('update:auto', !auto)}"
+              @mouseenter="showIcon = true"
+              @mouseleave="showIcon = false"
+            >
               <v-icon :color="auto ? 'accent' : ''" style="transform: rotate(180deg);">mdi-label</v-icon>
             </v-btn>
           </j-tooltip>
@@ -64,3 +76,17 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.auto-label-toggle {
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+}
+
+.auto-label-toggle--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+</style>
