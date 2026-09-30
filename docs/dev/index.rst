@@ -11,6 +11,7 @@ Here is some documentation specific for developers.
 
   release
   infrastructure
+  viewer_layout
   new_plugin
   ui_description
   ui_style_guide
