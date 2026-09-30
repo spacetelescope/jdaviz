@@ -236,6 +236,7 @@ class TestCatalogConeSearch:
         hint = 'Single reason failure occurred during name resolution'
         assert any(hint in m['text'] for m in self.helper.plugins['Logger'].history) is expect_hint
 
+
 def test_astroquery_table_with_nans(deconfigged_helper):
     # Test that a table with NaNs can be loaded as a catalog
     table = Table({'ra': [1, 2, 3], 'dec': [4, 5, np.nan]})
@@ -243,6 +244,7 @@ def test_astroquery_table_with_nans(deconfigged_helper):
     assert len(deconfigged_helper._app.data_collection) == 1
     data = deconfigged_helper._app.data_collection[0]
     assert np.isnan(data['dec'][-1])
+
 
 def test_astroquery_gaia_query(deconfigged_helper):
     # Test if this is specific to astoquery
@@ -265,5 +267,3 @@ def test_astroquery_gaia_query(deconfigged_helper):
     print(gaia_table)
     assert 'bp_g' in gaia_table.colnames
     assert np.isnan(gaia_table['bp_g'][1])  # Check that the second entry is NaN
-
-
