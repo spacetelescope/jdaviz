@@ -132,7 +132,7 @@
                           Loader: {{ ldrItem.label }}
                         </v-list-item-title>
                         <v-list-item-subtitle v-if="state_show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint">ldr = {{  api_hints_obj || config }}.loaders['{{ ldrItem.label }}']</span>
+                          <span class="api-hint" style="margin-left: 12px">ldr = {{  api_hints_obj || config }}.loaders['{{ ldrItem.label }}']</span>
                         </v-list-item-subtitle>
                         <template v-if="state_show_api_hints && state_global_search.length">
                           <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(ldrItem, state_global_search)" :key="`loader-${ldrItem.label}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
@@ -183,7 +183,7 @@
                           {{ trayItem.label }}
                         </v-list-item-title>
                         <v-list-item-subtitle v-if="state_show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
+                          <span class="api-hint" style="margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
                         </v-list-item-subtitle>
                         <template v-if="state_show_api_hints && state_global_search.length">
                           <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(trayItem, state_global_search)" :key="`tray-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
@@ -264,7 +264,7 @@
               </v-window>
             </v-card>
             <v-card v-if="state_drawer_content === 'save' && !state_settings.server_is_remote" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Export']</span>
+              <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px;">plg = {{  api_hints_obj || config }}.plugins['Export']</span>
               <jupyter-widget v-if="trayWidget('Export')" :widget="trayWidget('Export')" :key="trayWidget('Export')"></jupyter-widget>
             </v-card>
             <v-card v-if="state_drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
@@ -314,21 +314,21 @@
               </v-tabs>
               <v-window v-model="state_info_subtab" style="overflow-y: auto">
                 <v-window-item style="padding-bottom: 40px">
-                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
+                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
                   <jupyter-widget v-if="trayWidget('Metadata')" :widget="trayWidget('Metadata')" :key="trayWidget('Metadata')"></jupyter-widget>
                 </v-window-item>
                 <v-window-item style="padding-bottom: 40px">
-                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
+                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
                   <jupyter-widget v-if="trayWidget('Markers')" :widget="trayWidget('Markers')" :key="trayWidget('Markers')"></jupyter-widget>
                 </v-window-item>
                 <v-window-item style="padding-bottom: 40px">
-                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Logger']</span>
+                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Logger']</span>
                   <jupyter-widget v-if="trayWidget('Logger')" :widget="trayWidget('Logger')" :key="trayWidget('Logger')"></jupyter-widget>
                 </v-window-item>
               </v-window>
             </v-card>
             <v-card v-if="state_drawer_content === 'subsets'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</span>
+              <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</span>
               <jupyter-widget v-if="trayWidget('Subset Tools')" :widget="trayWidget('Subset Tools')" :key="trayWidget('Subset Tools')"></jupyter-widget>
             </v-card>
             <v-card v-if="state_drawer_content === 'settings'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
@@ -338,11 +338,11 @@
               </v-tabs>
               <v-window v-model="state_settings_subtab" style="overflow-y: auto">
                 <v-window-item style="padding-bottom: 40px">
-                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
+                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
                   <jupyter-widget v-if="trayWidget('Plot Options')" :widget="trayWidget('Plot Options')" :key="trayWidget('Plot Options')"></jupyter-widget>
                 </v-window-item>
                 <v-window-item style="padding-bottom: 40px">
-                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Unit Conversion']</span>
+                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Unit Conversion']</span>
                   <jupyter-widget v-if="trayWidget('Unit Conversion')" :widget="trayWidget('Unit Conversion')" :key="trayWidget('Unit Conversion')"></jupyter-widget>
                 </v-window-item>
               </v-window>
