@@ -23,7 +23,7 @@
       hint="Select a dataset to associate as the parent of the new data entry. 'Auto' associates non-science extensions with the matching science extension; 'None' imports the data without any association."
     ></plugin-dataset-select>
     <div style="margin-top: 4px; margin-left: 4px">
-      <j-external-link link="https://jdaviz.readthedocs.io/en/latest/loaders/formats/image.html#data-association-parent-dataset"></j-external-link>
+      <j-external-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/loaders/formats/image.html#data-association-parent-dataset'"></j-external-link>
     </div>
     <plugin-auto-label
       v-model:value="data_label_value"
