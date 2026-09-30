@@ -52,6 +52,7 @@
             </j-flex-row>
             <j-flex-row v-if="image_custom_size">
               <v-text-field
+                variant="underlined"
                 ref="image_width"
                 type="number"
                 :label="api_hints_enabled ? 'plg.image_width =' : 'Width'"
@@ -65,6 +66,7 @@
             </j-flex-row>
             <j-flex-row v-if="image_custom_size">
               <v-text-field
+                variant="underlined"
                 ref="image_height"
                 type="number"
                 :label="api_hints_enabled ? 'plg.image_height =' : 'Height'"
@@ -90,6 +92,7 @@
           <v-row class="row-min-bottom-padding vuetify2">
             <v-col>
               <v-text-field
+                variant="underlined"
                 v-model.number="i_start"
                 class="mt-0 pt-0"
                 type="number"
@@ -101,6 +104,7 @@
             </v-col>
             <v-col>
               <v-text-field
+                variant="underlined"
                 v-model.number="i_end"
                 class="mt-0 pt-0"
                 type="number"
@@ -114,6 +118,7 @@
           <v-row class="row-min-bottom-padding vuetify2">
             <v-col>
               <v-text-field
+                variant="underlined"
                 v-model.number="movie_fps"
                 class="mt-0 pt-0"
                 type="number"
@@ -277,6 +282,7 @@
     <v-row v-if="serverside_enabled" class="row-no-outside-padding row-min-bottom-padding vuetify2">
       <v-col>
         <v-text-field
+          variant="underlined"
           :model-value="filepath"
           :label="api_hints_enabled ? 'plg.filepath' : 'Filepath'"
           :class="api_hints_enabled ? 'api-hint' : null"

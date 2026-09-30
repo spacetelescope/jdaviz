@@ -1,6 +1,7 @@
 <template>
   <div>
     <v-select
+      variant="outlined"
       :menu-props="{ location: 'bottom start' }"
       attach
       :items="new_viewer_items_filtered"
@@ -11,7 +12,6 @@
       item-title="label"
       item-value="label"
       persistent-hint
-      variant="outlined"
       style="width: 100%; margin-top: 12px; padding-left: 6px; padding-right: 6px;"
     ></v-select>
 

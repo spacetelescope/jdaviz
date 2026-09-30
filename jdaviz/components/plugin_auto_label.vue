@@ -2,6 +2,7 @@
   <j-flex-row>
     <v-form ref="form" style="width: 100%">
       <v-text-field
+        variant="underlined"
         ref="textField"
         :model-value="displayValue"
         @update:modelValue="updateValue"

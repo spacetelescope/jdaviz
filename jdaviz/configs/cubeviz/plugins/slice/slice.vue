@@ -56,6 +56,7 @@
 
     <j-flex-row>
       <v-text-field
+          variant="underlined"
           type="number"
           v-model.number="value"
           @focus="(e) => value_editing = true"

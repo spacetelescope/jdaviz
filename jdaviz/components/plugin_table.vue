@@ -3,6 +3,7 @@
     <j-flex-row style="margin: 0px 0px -8px 0px !important">
       <div class="row-select">
         <v-select
+          variant="underlined"
           class="no-hint"
           v-model="headers_visible"
           :items="headers_avail"

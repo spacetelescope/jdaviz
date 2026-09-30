@@ -1,6 +1,7 @@
 <template>
   <div>
     <v-select
+      variant="outlined"
       v-if="!hide_resolver"
       :menu-props="{ location: 'bottom start' }"
       attach
@@ -12,7 +13,6 @@
       item-title="name"
       item-value="name"
       persistent-hint
-      variant="outlined"
       style="width: 100%; margin-top: 12px; padding-left: 6px; padding-right: 6px;"
     ></v-select>
 

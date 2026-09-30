@@ -110,12 +110,12 @@
             >
               <template v-slot:activator="{ props }">
                 <v-text-field
+                    variant="underlined"
                     class="app-bar-search-field"
                     v-model='state_global_search'
                     append-icon='mdi-magnify'
                     style="width: 200px; margin-right: 8px; margin-top: 2px; max-height: 28px"
                     density="compact"
-                    variant="underlined"
                     clearable
                     hide-details
                     single-line
@@ -269,6 +269,7 @@
             </v-card>
             <v-card v-if="state_drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-text-field
+                variant="underlined"
                 v-model='state_tray_items_filter'
                 append-icon='mdi-magnify'
                 style="padding: 0px 8px"
@@ -399,6 +400,7 @@
 
             <v-card v-if="state_drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-text-field
+                variant="underlined"
                 v-model='state_tray_items_filter'
                 append-icon='mdi-magnify'
                 style="padding: 0px 8px"

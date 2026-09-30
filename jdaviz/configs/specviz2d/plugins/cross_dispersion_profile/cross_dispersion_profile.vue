@@ -44,6 +44,7 @@
 
       <v-col cols="3" style="padding: 7px">
         <v-text-field
+          variant="underlined"
           v-model.number="pixel"
           type="number"
           style="width: 60px"
@@ -82,6 +83,7 @@
 
         <v-col cols="3" style="padding: 7px">
           <v-text-field
+            variant="underlined"
             v-model.number="y_pixel"
             type="number"
             style="width: 60px"
@@ -111,6 +113,7 @@
 
         <v-col cols="3" style="padding: 7px">
           <v-text-field
+            variant="underlined"
             v-model.number="width"
             type="number"
             style="width: 60px"

@@ -78,6 +78,7 @@
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
            in line_analysis.py  -->
       <v-text-field
+        variant="underlined"
         :label="api_hints_enabled ? 'plg.continuum_width =' : 'Width'"
         :class="api_hints_enabled ? 'api-hint' : null"
         type="number"
@@ -99,6 +100,7 @@
 
     <j-flex-row>
       <v-text-field
+        variant="underlined"
         ref="n_moment"
         type="number"
         :label="api_hints_enabled ? 'plg.n_moment =' : 'Moment'"
@@ -130,6 +132,7 @@
       </j-flex-row>
       <j-flex-row v-if="output_unit_selected !== 'Spectral Unit' && output_unit_selected !== 'Surface Brightness'">
         <v-text-field
+        variant="underlined"
         ref="reference_wavelength"
         type="number"
         :label="api_hints_enabled ? 'plg.reference_wavelength =' : 'Reference Wavelength'"

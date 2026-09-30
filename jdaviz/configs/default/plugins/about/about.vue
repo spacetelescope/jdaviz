@@ -9,7 +9,9 @@
     </j-flex-row>
 
     <j-flex-row>
-      <v-text-field class="v-messages v-messages__message text--secondary"
+      <v-text-field
+        variant="underlined"
+        class="v-messages v-messages__message text--secondary"
         v-model="jdaviz_version"
         label="jdaviz version"
         hint="Version of installed Jdaviz."
@@ -45,7 +47,9 @@
     </j-flex-row>
 
     <v-row v-for="pkg in downstream_packages" :key="pkg.name">
-      <v-text-field class="v-messages v-messages__message text--secondary"
+      <v-text-field
+        variant="underlined"
+        class="v-messages v-messages__message text--secondary"
         :value="pkg.version"
         :label="pkg.name + ' version'"
         :hint="'Version of installed ' + pkg.name + '.'"

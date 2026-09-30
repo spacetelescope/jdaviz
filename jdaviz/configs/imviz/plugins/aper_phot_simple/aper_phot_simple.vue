@@ -31,6 +31,7 @@
       <v-row class="row-no-outside-padding row-min-bottom-padding vuetify2">
         <v-col>
           <v-text-field
+            variant="underlined"
             :model-value="cube_slice"
             class="mt-0 pt-0"
             :label="api_hints_enabled ? 'plg.cube_slice' : 'Slice wavelength'"
@@ -84,6 +85,7 @@
         </j-flex-row>
         <j-flex-row v-else>
           <v-text-field
+            variant="underlined"
             v-model.number="background_value"
             type="number"
             hint="Background to subtract"
@@ -107,6 +109,7 @@
         <j-flex-row v-if="(!multiselect || !pixel_area_multi_auto) && display_solid_angle_unit!='pix2'">
 
           <v-text-field
+            variant="underlined"
             :label="api_hints_enabled ? 'plg.pixel_area =' : 'Pixel area'"
             :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="pixel_area"
@@ -119,6 +122,7 @@
 
         <j-flex-row>
           <v-text-field
+            variant="underlined"
             :label="api_hints_enabled ? 'plg.counts_factor =' : 'Counts conversion factor'"
             :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="counts_factor"
@@ -140,6 +144,7 @@
         </j-flex-row>
         <j-flex-row v-if="!multiselect || !flux_scaling_multi_auto">
           <v-text-field
+            variant="underlined"
             v-model.number="flux_scaling"
             type="number"
             hint="Used in -2.5 * log(flux / flux_scaling)"

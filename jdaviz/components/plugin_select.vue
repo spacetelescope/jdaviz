@@ -4,9 +4,9 @@
     style="margin-bottom: 18px"
   >
     <v-select
+      variant="underlined"
       :menu-props="{ location: 'bottom start' }"
       attach
-      variant="underlined"
       :items="filtered_items"
       :model-value="selected"
       @update:modelValue="$emit('update:selected', $event)"
@@ -29,6 +29,7 @@
       <template #prepend-item>
         <div v-if="search_enabled">
           <v-text-field
+            variant="underlined"
             v-model="search_query"
             prepend-inner-icon="mdi-magnify"
             label="Search"

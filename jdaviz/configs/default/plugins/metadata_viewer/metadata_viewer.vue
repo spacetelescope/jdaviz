@@ -39,6 +39,7 @@
       </j-flex-row>
       <j-flex-row>
         <v-text-field
+          variant="underlined"
           v-model='metadata_filter'
           append-icon='mdi-magnify'
           style="padding: 0px 8px"

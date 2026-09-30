@@ -29,6 +29,7 @@
     <div v-if="!hide_resolver_inputs">
       <j-flex-row style="margin-bottom: 24px">
         <v-text-field
+          variant="underlined"
           v-model='url'
           style="padding: 0px 8px"
           :label="api_hints_enabled ? 'ldr.url =' : ''"
@@ -48,6 +49,7 @@
 
       <j-flex-row v-if="url_scheme !== 's3'">
         <v-text-field
+          variant="underlined"
           v-model.number='timeout'
           type="number"
           style="padding: 0px 8px"

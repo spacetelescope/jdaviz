@@ -69,6 +69,7 @@
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
            in line_analysis.py  -->
       <v-text-field
+        variant="underlined"
         :label="api_hints_enabled ? 'plg.continuum_width =' : 'Width'"
         type="number"
         v-model.number="continuum_width"
@@ -193,6 +194,7 @@
             </v-col>
             <v-col cols=10>
               <v-select
+                variant="underlined"
                 :menu-props="{ location: 'bottom start' }"
                 attach
                 :items="line_menu_items"
@@ -208,6 +210,7 @@
 
           <j-flex-row v-if="selected_line">
             <v-text-field
+              variant="underlined"
               :model-value='selected_line_redshift'
               class="mt-0 pt-0"
               type="number"

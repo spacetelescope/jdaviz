@@ -36,6 +36,7 @@
     <j-flex-row justify="space-between">
       <div style="width: 35%">
         <v-text-field
+          variant="underlined"
           v-model="wavelength_min"
           :label="api_hints_enabled ? 'ldr.wavelength_min =' : 'Min'"
           :class="api_hints_enabled ? 'api-hint' : null"
@@ -46,6 +47,7 @@
       </div>
       <div style="width: 35%">
         <v-text-field
+          variant="underlined"
           v-model="wavelength_max"
           :label="api_hints_enabled ? 'ldr.wavelength_max =' : 'Max'"
           :class="api_hints_enabled ? 'api-hint' : null"
@@ -79,6 +81,7 @@
 
     <j-flex-row>
       <v-text-field
+        variant="underlined"
         v-model="name_contains"
         :label="api_hints_enabled ? 'ldr.name_contains =' : 'Line name contains'"
         :class="api_hints_enabled ? 'api-hint' : null"

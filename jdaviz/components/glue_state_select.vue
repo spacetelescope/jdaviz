@@ -1,5 +1,6 @@
 <template>
   <v-select
+    variant="underlined"
     attach
     :menu-props="{ location: 'bottom start' }"
     :items="items"

@@ -33,6 +33,7 @@
 
       <j-flex-row>
         <v-text-field
+          variant="underlined"
           ref="stddev"
           :label="api_hints_enabled ? 'plg.stddev =' : 'Standard deviation'"
           :class="api_hints_enabled ? 'api-hint' : null"

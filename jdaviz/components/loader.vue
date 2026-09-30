@@ -101,6 +101,7 @@
                       <v-main>
                         <j-flex-row>
                           <v-text-field
+                            variant="underlined"
                             :model-value="file_timeout"
                             @update:modelValue="$emit('update:file_timeout', Number($event))"
                             type="number"

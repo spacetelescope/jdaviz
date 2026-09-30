@@ -109,6 +109,7 @@
                   </span>
                 </j-tooltip>
                 <v-select
+                  variant="underlined"
                   v-if="orientation_enabled && orientation_align_by_wcs && orientation_layer_items.length > 0"
                   density="compact"
                   :items="orientation_layer_items"
