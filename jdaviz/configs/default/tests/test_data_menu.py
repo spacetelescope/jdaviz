@@ -437,3 +437,29 @@ def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
     subset_tools = imviz_helper.plugins['Subset Tools']
     subset_tools.import_region(CircularROI(xc=0, yc=0, radius=1))
     assert layers[-1].layer.label == 'catalog'
+
+def test_data_menu_invalid_selection_raises(deconfigged_helper, image_2d_wcs):
+
+    # load an image
+    image_data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(image_data, format='Image', data_label='image')
+
+    dm = deconfigged_helper.viewers['Image'].data_menu
+    # dm is set to multiselect by default
+    assert dm.layer.is_multiselect is True
+    original = dm.layer.selected
+
+    m = "Not all items in '['not-a-layer']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
+        dm.layer = 'not-a-layer'
+
+    # selection should remain unchanged after attempting to set an invalid layer
+    assert dm.layer.selected == original
+
+    # also make sure this happens when the data menu is not in multiselect mode
+    dm.layer.multiselect = False
+    original = dm.layer.selected
+    m = "'not-a-layer' not one of ['image[DATA]'], reverting selection to ''"
+    with pytest.raises(ValueError, match=re.escape(m)):
+        dm.layer = 'not-a-layer'
+    assert dm.layer.selected == original
