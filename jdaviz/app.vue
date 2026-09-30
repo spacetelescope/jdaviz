@@ -354,33 +354,15 @@
           </pane>
 
           <pane size="75" min-size='25'>
-            <golden-layout
-              v-if="outputCellHasHeight && showGoldenLayout"
-              style="height: 100%;"
+            <j-viewer-layout
+              :layout="state_viewer_layout"
+              :layout-reset="viewer_layout_reset"
+              :viewers="state_viewer_items"
               :has-headers="state_settings.visible.tab_headers"
-              @state="onLayoutChange"
-              :state="golden_layout_state"
+              @update:layout="set_viewer_layout"
+              @viewer-close="close_viewer"
             >
-              <gl-row :closable="false">
-                <g-viewer-tab
-                  v-for="(stack, index) in state_stack_items"
-                  :stack="stack"
-                  :key="stack.id"
-                  :data_items="state_data_items"
-                  :app_settings="state_settings"
-                  :config="config"
-                  :icons="state_icons"
-                  :viewer_icons="state_viewer_icons"
-                  :layer_icons="state_layer_icons"
-                  :closefn="destroy_viewer_item"
-                  @data-item-visibility="data_item_visibility($event)"
-                  @data-item-unload="data_item_unload($event)"
-                  @data-item-remove="data_item_remove($event)"
-                  @call-viewer-method="call_viewer_method($event)"
-                  @change-reference-data="change_reference_data($event)"
-                ></g-viewer-tab>
-              </gl-row>
-            </golden-layout>
+            </j-viewer-layout>
           </pane>
 
           <pane size="25" min-size="25" v-if="config !== 'deconfigged' && state_drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
@@ -479,28 +461,13 @@
 
 <script>
 export default {
-  data() {
-    return {
-      outputCellHasHeight: false,
-      showGoldenLayout: true,
-    };
-  },
   computed: {
     focused_viewer_item() {
       if (!this.state_focus_viewer) return null;
-      const findViewer = (stackItems) => {
-        for (const stack of stackItems) {
-          for (const viewer of stack.viewers) {
-            if (viewer.reference === this.state_focus_viewer) return viewer;
-          }
-          if (stack.children && stack.children.length > 0) {
-            const found = findViewer(stack.children);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
-      return findViewer(this.state_stack_items);
+      return this.state_viewer_items.find(
+        viewer => viewer.reference === this.state_focus_viewer
+          || viewer.id === this.state_focus_viewer
+      ) || null;
     },
     loader_items_filtered() {
       // Determine which loaders to disable
@@ -549,9 +516,6 @@ export default {
       }
       return trayItem.api_methods.filter((item) => ("."+item.toLowerCase()).includes(tray_items_filter.toLowerCase()))
     },
-    onLayoutChange(v) {
-      this.golden_layout_state = v;
-    },
     trayWidget(label) {
       const index = this.state_tray_items.findIndex(ti => ti.label === label);
       if (index === -1) {
@@ -567,39 +531,6 @@ export default {
     const jpOutputElem = el.closest('.jp-OutputArea-output');
     if (jpOutputElem) {
       jpOutputElem.classList.remove('jupyter-widgets');
-    }
-    /* Workaround for Lab 4.2: cells outside the viewport get the style "display: none" which causes the content to not
-     * have height. This causes an error in size calculations of golden layout from which it doesn't recover.
-     */
-    new ResizeObserver(entries => {
-      this.outputCellHasHeight = this.outputCellHasHeight || entries[0].contentRect.height > 0;
-    }).observe(el);
-    this.outputCellHasHeight = el.offsetHeight > 0
-
-    /* Workaround for Lab 4.5: cells outside the viewport get the style "contentVisibility: auto" which causes wrong
-     * size calculations of golden layout from which it doesn't recover.
-     */
-    const jpCell = el.closest('.jp-Cell.jp-CodeCell');
-    if (jpCell) {
-      const observer = new MutationObserver((mutationsList) => {
-        if (jpCell.style.contentVisibility !== 'visible') {
-          jpCell.style.contentVisibility = 'visible';
-        }
-      });
-      observer.observe(jpCell, { attributes: true, attributeFilter: ['style'] });
-      jpCell.style.contentVisibility = 'visible';
-    }
-
-    /* workaround: when initializing with an existing golden_layout state, the layout doesn't show. rendering it a
-     * second time the layout does show.
-     */
-    if (this.golden_layout_state) {
-      setTimeout(() => {
-        this.showGoldenLayout = false;
-        setTimeout(() => {
-          this.showGoldenLayout = true;
-        }, 100);
-      }, 500);
     }
   }
 };

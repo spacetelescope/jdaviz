@@ -75,9 +75,9 @@ The target interfaces are:
 Each of these interfaces uses a common set of applications implemented in Python
 and leverages ipywidgets_ as the communication layer between Python and the
 JavaScript-level layout, rendering, and interactivity libraries. Hence, the following
-layers are primarily implemented in Python, but utilize tools like ipyvuetify_ and
-ipygoldenlayout_ to allow the Python code to interact with the JavaScript
-implementations at the interface level.
+layers are primarily implemented in Python, but utilize ipyvuetify_ and Jdaviz's
+own viewer layout component to interact with the JavaScript implementations
+at the interface level. See :doc:`viewer_layout` for the layout model and configuration.
 
 Applications
 ------------
@@ -213,5 +213,4 @@ to focus on to complement or extend their Jdaviz workflows.
 
 .. _ipywidgets: https://ipywidgets.readthedocs.io
 .. _ipyvuetify: https://github.com/mariobuikhuizen/ipyvuetify
-.. _ipygoldenlayout: https://github.com/nmearl/ipygoldenlayout
 .. _glue-jupyter: https://github.com/glue-viz/glue-jupyter
