@@ -246,6 +246,7 @@ def test_astroquery_table_with_nans(deconfigged_helper):
     assert np.isnan(data['dec'][-1])
 
 
+@pytest.mark.remote_data
 def test_astroquery_gaia_query(deconfigged_helper):
     # Test if this is specific to astoquery
     ldr = deconfigged_helper.loaders['astroquery']
