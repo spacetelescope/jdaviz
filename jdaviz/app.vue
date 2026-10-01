@@ -127,52 +127,52 @@
                 <v-container>
                   <div v-for="ldrItem in loader_items_filtered" :key="ldrItem.label">
                     <j-flex-row v-if="trayItemVisible(ldrItem, state_global_search)">
-                      <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'loaders', label: ldrItem.label})}">
-                        <v-list-item-title>
-                          Loader: {{ ldrItem.label }}
-                        </v-list-item-title>
-                        <v-list-item-subtitle v-if="state_show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint" style="margin-left: 12px">ldr = {{  api_hints_obj || config }}.loaders['{{ ldrItem.label }}']</span>
-                        </v-list-item-subtitle>
-                        <template v-if="state_show_api_hints && state_global_search.length">
-                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(ldrItem, state_global_search)" :key="`loader-${ldrItem.label}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                            <span class="api-hint">ldr.{{ api_method }}</span>
-                          </v-list-item-subtitle>
-                        </template>
+                      <v-list-item class="app-search-result-item" @click="(e) => {search_item_clicked({attr: 'loaders', label: ldrItem.label})}">
+                        <div class="app-search-result-content">
+                          <div class="app-search-result-title">Loader: {{ ldrItem.label }}</div>
+                          <div v-if="state_show_api_hints" class="app-search-result-api-hint api-hint">
+                            <span class="api-hint">ldr = {{ api_hints_obj || config }}.loaders['{{ ldrItem.label }}']</span>
+                          </div>
+                          <template v-if="state_show_api_hints && state_global_search.length">
+                            <div v-for="api_method in trayItemMethodMatch(ldrItem, state_global_search)" :key="`loader-${ldrItem.label}-${api_method}`" class="app-search-result-api-hint api-hint">
+                              <span class="api-hint">ldr.{{ api_method }}</span>
+                            </div>
+                          </template>
+                        </div>
                       </v-list-item>
                     </j-flex-row>
                   </div>
                   <div v-for="vcItem in state_new_viewer_items" :key="vcItem.label">
                     <j-flex-row v-if="vcItem.is_relevant && trayItemVisible(vcItem, state_global_search)">
-                      <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'new_viewers', label: vcItem.label})}">
-                        <v-list-item-title>
-                          New Viewer: {{ vcItem.label }}
-                        </v-list-item-title>
-                        <v-list-item-subtitle v-if="state_show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint">vc = {{  api_hints_obj || config }}.new_viewers['{{ vcItem.label }}']</span>
-                        </v-list-item-subtitle>
-                        <template v-if="state_show_api_hints && state_global_search.length">
-                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(vcItem, state_global_search)" :key="`new-viewer-${vcItem.label}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                            <span class="api-hint">vc.{{ api_method }}</span>
-                          </v-list-item-subtitle>
-                        </template>
+                      <v-list-item class="app-search-result-item" @click="(e) => {search_item_clicked({attr: 'new_viewers', label: vcItem.label})}">
+                        <div class="app-search-result-content">
+                          <div class="app-search-result-title">New Viewer: {{ vcItem.label }}</div>
+                          <div v-if="state_show_api_hints" class="app-search-result-api-hint api-hint">
+                            <span class="api-hint">vc = {{ api_hints_obj || config }}.new_viewers['{{ vcItem.label }}']</span>
+                          </div>
+                          <template v-if="state_show_api_hints && state_global_search.length">
+                            <div v-for="api_method in trayItemMethodMatch(vcItem, state_global_search)" :key="`new-viewer-${vcItem.label}-${api_method}`" class="app-search-result-api-hint api-hint">
+                              <span class="api-hint">vc.{{ api_method }}</span>
+                            </div>
+                          </template>
+                        </div>
                       </v-list-item>
                     </j-flex-row>
                   </div>
                   <div v-for="dmItem in state_viewer_items" :key="dmItem.name">
                     <j-flex-row v-if="trayItemVisible(dmItem, state_global_search)">
-                      <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'data_menus', label: dmItem.name})}">
-                        <v-list-item-title>
-                          Data Menu: {{ dmItem.name }}
-                        </v-list-item-title>
-                        <v-list-item-subtitle v-if="state_show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint">dm = {{  api_hints_obj || config }}.viewers['{{ dmItem.name }}'].data_menu</span>
-                        </v-list-item-subtitle>
-                        <template v-if="state_show_api_hints && state_global_search.length">
-                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(dmItem, state_global_search)" :key="`data-menu-${dmItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                            <span class="api-hint">dm.{{ api_method }}</span>
-                          </v-list-item-subtitle>
-                        </template>
+                      <v-list-item class="app-search-result-item" @click="(e) => {search_item_clicked({attr: 'data_menus', label: dmItem.name})}">
+                        <div class="app-search-result-content">
+                          <div class="app-search-result-title">Data Menu: {{ dmItem.name }}</div>
+                          <div v-if="state_show_api_hints" class="app-search-result-api-hint api-hint">
+                            <span class="api-hint">dm = {{ api_hints_obj || config }}.viewers['{{ dmItem.name }}'].data_menu</span>
+                          </div>
+                          <template v-if="state_show_api_hints && state_global_search.length">
+                            <div v-for="api_method in trayItemMethodMatch(dmItem, state_global_search)" :key="`data-menu-${dmItem.name}-${api_method}`" class="app-search-result-api-hint api-hint">
+                              <span class="api-hint">dm.{{ api_method }}</span>
+                            </div>
+                          </template>
+                        </div>
                       </v-list-item>
                     </j-flex-row>
                   </div>
@@ -183,11 +183,11 @@
                           <div class="app-search-result-title">
                             {{ trayItem.label }}
                           </div>
-                          <div v-if="state_show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                            <span class="api-hint" style="margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
+                          <div v-if="state_show_api_hints" class="app-search-result-api-hint api-hint">
+                            <span class="api-hint">plg = {{ api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
                           </div>
                           <template v-if="state_show_api_hints && state_global_search.length">
-                            <div v-for="api_method in trayItemMethodMatch(trayItem, state_global_search)" :key="`tray-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                            <div v-for="api_method in trayItemMethodMatch(trayItem, state_global_search)" :key="`tray-${trayItem.name}-${api_method}`" class="app-search-result-api-hint api-hint">
                               <span class="api-hint">plg.{{ api_method }}</span>
                             </div>
                           </template>
@@ -644,6 +644,14 @@ export default {
 
 .app-search-result-title {
   line-height: 1.5;
+}
+
+.app-search-result-api-hint {
+  width: 100%;
+  padding: 4px 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 8pt;
 }
 
 .app-search-result-description {
