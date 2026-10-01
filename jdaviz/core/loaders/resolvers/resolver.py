@@ -52,14 +52,15 @@ from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMes
 __all__ = ['BaseResolver', 'BaseConeSearchResolver', 'find_matching_resolver']
 
 
-def _as_output_list(output):
+def _as_output_list(output, allow_multiple=True):
     """
     Normalize a resolver's ``output`` (single object or list/tuple) to a list.
 
     Only exact ``list``/``tuple`` instances are treated as multiple outputs (not subclasses,
     e.g. `~astropy.io.fits.HDUList` is a `list` subclass but represents a single output).
     """
-    return list(output) if type(output) in (list, tuple) else [output]
+    outputs = list(output) if type(output) in (list, tuple) else [output]
+    return outputs if allow_multiple else outputs[:1]
 
 
 def _default_labels_for_outputs(labels):
@@ -150,7 +151,8 @@ class FormatSelect(SelectPluginComponent):
             # NOTE: plugin is just because this inherits from SelectPluginComponent,
             # but is actually the resolver.  This calls the implemented __call__ method
             # on the parent resolver.
-            outputs = _as_output_list(self.plugin.output)
+            outputs = _as_output_list(self.plugin.output,
+                                      allow_multiple=self.plugin.dev_multi_loaders)
         except Exception as e:
             self.items = []
             self._invalid_importers = f'Resolver exception: {e}'
@@ -378,6 +380,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     # Set remote server options based on the app configuration
     # read-only: change via app.state.settings['server_is_remote']
     server_is_remote = Bool(False).tag(sync=True)
+    dev_multi_loaders = Bool(False).tag(sync=True)
     # Hide the resolver UI (title, input fields, query results) and show only importer selection
     hide_resolver = Bool(False).tag(sync=True)
     # Hide only the resolver input fields (for preset loaders), but still show query results
@@ -403,20 +406,25 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
         super().__init__(*args, **kwargs)
 
+        self.dev_multi_loaders = self._app.state.dev_multi_loaders
+
         self.observation_table.enable_clear = False
         self.observation_table.show_if_empty = False
         self.observation_table.show_rowselect = True
         self.observation_table.item_key = "Dataset"
-        self.observation_table.multiselect = True
+        self.observation_table.multiselect = self.dev_multi_loaders
         self.observation_table._selected_rows_changed_callback = self.on_observation_select_changed
 
         self.file_table.enable_clear = False
         self.file_table.show_if_empty = False
         self.file_table.show_rowselect = True
         self.file_table.item_key = "location"
-        self.file_table.multiselect = True
+        self.file_table.multiselect = self.dev_multi_loaders
         self.file_table.server_pagination = True
         self.file_table._selected_rows_changed_callback = self.on_file_select_changed
+
+        self._app.state.add_callback(
+            'dev_multi_loaders', self._on_dev_multi_loaders_changed)
 
         # Setup footprint selection
         if self.app is not None:
@@ -465,6 +473,17 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         # Set up bidirectional synchronization
         # Listen for changes to app.state.settings and update traitlet
         self._app.state.add_callback('settings', self._on_app_settings_changed)
+
+    def _on_dev_multi_loaders_changed(self, enabled):
+        self.dev_multi_loaders = enabled
+        self.observation_table.multiselect = enabled
+        self.file_table.multiselect = enabled
+        self._clear_cache('output')
+        if not enabled:
+            self.observation_table.selected_rows = self.observation_table.selected_rows[:1]
+            self.file_table.selected_rows = self.file_table.selected_rows[:1]
+        if not self.parsed_input_is_empty:
+            self._update_format_items(reset_selection=True)
 
     @default('observation_table')
     def _default_observation_table(self):
@@ -1046,9 +1065,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     @cached_property
     def output(self):
         if self.parsed_input_is_query and self.treat_table_as_query:
-            return self._download_from_file_table()
+            output = self._download_from_file_table()
         else:
-            return self.parsed_input
+            output = self.parsed_input
+        if not self.dev_multi_loaders and type(output) in (list, tuple):
+            return output[0] if output else None
+        return output
 
     def enable_footprint_selection_tools(self):
         """

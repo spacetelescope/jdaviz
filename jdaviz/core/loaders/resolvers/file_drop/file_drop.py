@@ -147,6 +147,8 @@ class FileDropResolver(BaseResolver):
         results = [io.BytesIO(file_info.get('data')) for file_info in self._file_infos]
         for result in results:
             result.seek(0)
+        if not self.dev_multi_loaders:
+            return results[0] if results else None
         return results if len(results) != 1 else results[0]
 
     def parse_input(self):

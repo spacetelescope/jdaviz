@@ -173,6 +173,7 @@ class TestFileDropResolverParseInput:
         """
         Multiple dropped files result in a list of BytesIO outputs, one per file.
         """
+        file_drop_resolver.dev_multi_loaders = True
         with patch.object(file_drop_resolver, '_resolver_input_updated'):
             file_drop_resolver._on_file_updated(_FILE_INFO)
 
@@ -184,6 +185,14 @@ class TestFileDropResolverParseInput:
             assert result.read() == file_info['data']
 
         assert file_drop_resolver._default_label_for_output(1) == 'file2'
+
+    def test_output_multiple_files_disabled(self, file_drop_resolver):
+        with patch.object(file_drop_resolver, '_resolver_input_updated'):
+            file_drop_resolver._on_file_updated(_FILE_INFO)
+
+        output = file_drop_resolver.output
+        assert isinstance(output, io.BytesIO)
+        assert output.read() == _FILE_INFO[0]['data']
 
 
 def _create_sample_csv_data():

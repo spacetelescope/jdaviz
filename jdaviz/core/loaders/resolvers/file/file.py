@@ -1,7 +1,7 @@
 import os
 from traitlets import Any, Unicode, observe
 from ipywidgets import widget_serialization
-from solara import FileBrowserMultiple, reactive
+from solara import FileBrowser, FileBrowserMultiple, reactive
 import reacton
 from pathlib import Path
 
@@ -32,15 +32,39 @@ class FileResolver(BaseResolver):
 
     def __init__(self, *args, **kwargs):
         self._updating_filepath = False
+        app = kwargs.get('app', args[0] if args else None)
+        self.dev_multi_loaders = app.state.dev_multi_loaders
         # NOTE: file_chooser_dir must always be an absolute path or else its impossible to
         # navigate higher in the directory tree
         self.file_chooser_dir = reactive(Path(os.path.abspath(os.environ.get('JDAVIZ_START_DIR', os.path.curdir))))  # noqa
-        self.filepath_reactive = reactive(self.filepath)
-        self.file_chooser_widget_el = FileBrowserMultiple(directory=self.file_chooser_dir,
-                                                          selected=self.filepath_reactive,
-                                                          on_paths_select=self._on_file_chooser_path_changed)  # noqa
-        self.file_chooser_widget, rc = reacton.render(self.file_chooser_widget_el)
+        self.filepath_reactive = None
+        self._render_file_browser()
         super().__init__(*args, **kwargs)
+
+    def _render_file_browser(self):
+        paths = [Path(path) for path in _as_path_list(self.filepath)]
+        if self.dev_multi_loaders:
+            self.filepath_reactive = reactive(paths)
+            self.file_chooser_widget_el = FileBrowserMultiple(
+                directory=self.file_chooser_dir,
+                selected=self.filepath_reactive,
+                on_paths_select=self._on_file_chooser_path_changed)
+        else:
+            self.filepath_reactive = reactive(paths[0] if paths else None)
+            self.file_chooser_widget_el = FileBrowser(
+                directory=self.file_chooser_dir,
+                selected=self.filepath_reactive,
+                on_path_select=self._on_file_chooser_path_changed,
+                can_select=True)
+        self.file_chooser_widget, self._file_chooser_rc = reacton.render(
+            self.file_chooser_widget_el)
+
+    def _on_dev_multi_loaders_changed(self, enabled):
+        changed = enabled != self.dev_multi_loaders
+        super()._on_dev_multi_loaders_changed(enabled)
+        if not changed or self.file_chooser_dir is None:
+            return
+        self._render_file_browser()
 
     @property
     def user_api(self):
@@ -56,10 +80,13 @@ class FileResolver(BaseResolver):
         return super().from_input(app, inp, **kwargs)
 
     def _on_file_chooser_path_changed(self, paths):
-        filepaths = [str(path) for path in paths]
         self._updating_filepath = True
         try:
-            self.filepath = filepaths[0] if len(filepaths) <= 1 else filepaths
+            if self.dev_multi_loaders:
+                filepaths = [str(path) for path in paths]
+                self.filepath = filepaths[0] if len(filepaths) <= 1 else filepaths
+            else:
+                self.filepath = str(paths) if paths is not None else ''
         finally:
             self._updating_filepath = False
 
@@ -67,9 +94,11 @@ class FileResolver(BaseResolver):
     def _on_filepath_changed(self, change):
         if not self._updating_filepath:
             # filepath was set directly (e.g. via the API) rather than through the file
-            # browser widget: sync the widget's multi-select state to match
+            # browser widget: sync the widget state to match
             if self.filepath_reactive is not None:
-                self.filepath_reactive.value = [Path(p) for p in _as_path_list(self.filepath)]
+                paths = [Path(p) for p in _as_path_list(self.filepath)]
+                self.filepath_reactive.value = paths if self.dev_multi_loaders else (
+                    paths[0] if paths else None)
         if not self.filepath:
             return
         self._resolver_input_updated()
@@ -131,7 +160,10 @@ class PresetFileResolver(FileResolver):
         self.file_chooser_widget_el = None
         self.file_chooser_dir = None
         self.filepath_reactive = None
+        self._file_chooser_rc = None
         self._updating_filepath = False
+        app = kwargs.get('app', args[0] if args else None)
+        self.dev_multi_loaders = app.state.dev_multi_loaders
 
         # Call grandparent (BaseResolver) init directly to skip FileResolver's init
         BaseResolver.__init__(self, *args, **kwargs)

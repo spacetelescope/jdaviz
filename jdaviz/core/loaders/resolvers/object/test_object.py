@@ -31,6 +31,7 @@ def test_object_resolver_is_valid(deconfigged_helper, tmp_path):
 
 def test_object_resolver_list_is_multiple_outputs(deconfigged_helper):
     """A top-level list/tuple passed to the object resolver is treated as multiple outputs."""
+    deconfigged_helper._app.state.dev_multi_loaders = True
     ldr = deconfigged_helper.loaders['object']
     images = [np.zeros((3, 3)), np.zeros((4, 4))]
     ldr.object = images
@@ -50,8 +51,20 @@ def test_object_resolver_list_is_multiple_outputs(deconfigged_helper):
     assert '(2/2)' in repr(fmt)
 
 
+def test_object_resolver_list_disabled_uses_first_output(deconfigged_helper):
+    ldr = deconfigged_helper.loaders['object']
+    objects = [np.zeros((3, 3)), np.zeros((4, 4))]
+    ldr.object = objects
+
+    resolver = ldr._obj
+    assert resolver.output == objects
+    assert resolver._n_outputs == 1
+    assert not isinstance(resolver.importer, list)
+
+
 def test_object_resolver_list_partial_format_validity(deconfigged_helper):
     """Only outputs valid for the selected format should count towards n_valid."""
+    deconfigged_helper._app.state.dev_multi_loaders = True
     ldr = deconfigged_helper.loaders['object']
     ldr.object = [np.zeros((3, 3)), 'not an image']
 
@@ -83,6 +96,7 @@ def test_object_resolver_load_multiple_outputs(deconfigged_helper):
     from unittest.mock import patch
     from jdaviz.core.events import SnackbarMessage
 
+    deconfigged_helper._app.state.dev_multi_loaders = True
     ldr = deconfigged_helper.loaders['object']
     ldr.object = [np.zeros((3, 3)), np.zeros((4, 4)), 'not an image']
     ldr.format = 'Image'
@@ -105,6 +119,7 @@ def test_object_resolver_load_multiple_outputs(deconfigged_helper):
 def test_object_resolver_multiple_outputs_labels_match_preview(deconfigged_helper):
     """The data label shown in the importer widget must match the label actually created
     for that output, and each output must get its own distinct label."""
+    deconfigged_helper._app.state.dev_multi_loaders = True
     ldr = deconfigged_helper.loaders['object']
     ldr.object = [np.zeros((3, 3)), np.zeros((4, 4))]
     ldr.format = 'Image'
@@ -134,6 +149,7 @@ def test_multiple_outputs_resolver_suffix_precedes_extension_suffix(deconfigged_
         hdul.append(fits.ImageHDU(data=np.zeros((5, 5)) + value, name='ERR', ver=1))
         return hdul
 
+    deconfigged_helper._app.state.dev_multi_loaders = True
     ldr = deconfigged_helper.loaders['object']
     ldr.object = [_make_hdul(1), _make_hdul(2)]
     ldr.format = 'Image'
