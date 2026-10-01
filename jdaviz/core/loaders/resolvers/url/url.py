@@ -65,6 +65,16 @@ def _unpack_if_archive(archive_path):
     return sorted(str(path) for path in extract_dir.rglob('*') if path.is_file())
 
 
+def _is_html_file(path):
+    """Return whether a downloaded file starts like an HTML document."""
+    try:
+        with open(path, 'rb') as file_obj:
+            prefix = file_obj.read(512).lstrip().lower()
+    except (OSError, TypeError):
+        return False
+    return prefix.startswith((b'<!doctype html', b'<html'))
+
+
 @loader_resolver_registry('url')
 class URLResolver(BaseResolver):
     template_file = __file__, "url.vue"
@@ -194,6 +204,12 @@ class URLResolver(BaseResolver):
 
         target_url = download_uri_to_path(self.url.strip(), cache=self.cache,
                                           local_path=self.local_path, timeout=self.timeout)
+
+        if _is_html_file(target_url):
+            raise ValueError(
+                'URL returned an HTML page instead of a data file. Use a direct download URL '
+                'and ensure the file does not require authentication.'
+            )
 
         # Set download persistent hint message
         if self.url_scheme.lower() == 'mast':
