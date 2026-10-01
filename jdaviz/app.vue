@@ -178,21 +178,23 @@
                   </div>
                   <div v-for="(trayItem, index) in state_tray_items" :key="index">
                     <j-flex-row v-if="trayItem.is_relevant && trayItemVisible(trayItem, state_global_search)">
-                      <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'plugins', label: trayItem.label})}">
-                        <v-list-item-title>
-                          {{ trayItem.label }}
-                        </v-list-item-title>
-                        <v-list-item-subtitle v-if="state_show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint" style="margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
-                        </v-list-item-subtitle>
-                        <template v-if="state_show_api_hints && state_global_search.length">
-                          <v-list-item-subtitle v-for="api_method in trayItemMethodMatch(trayItem, state_global_search)" :key="`tray-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                            <span class="api-hint">plg.{{ api_method }}</span>
-                          </v-list-item-subtitle>
-                        </template>
-                        <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
-                          {{ trayItem.tray_item_description }}
-                        </v-list-item-subtitle>
+                      <v-list-item class="app-search-result-item" @click="(e) => {search_item_clicked({attr: 'plugins', label: trayItem.label})}">
+                        <div class="app-search-result-content">
+                          <div class="app-search-result-title">
+                            {{ trayItem.label }}
+                          </div>
+                          <div v-if="state_show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                            <span class="api-hint" style="margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
+                          </div>
+                          <template v-if="state_show_api_hints && state_global_search.length">
+                            <div v-for="api_method in trayItemMethodMatch(trayItem, state_global_search)" :key="`tray-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                              <span class="api-hint">plg.{{ api_method }}</span>
+                            </div>
+                          </template>
+                          <div class="app-search-result-description">
+                            {{ trayItem.tray_item_description }}
+                          </div>
+                        </div>
                       </v-list-item>
                     </j-flex-row>
                   </div>
@@ -626,6 +628,32 @@ export default {
 .app-bar-search-field :deep(input) {
   padding-top: 0;
 }
+
+.app-search-result-item {
+  width: 100%;
+  min-height: 6px;
+  cursor: pointer;
+}
+
+.app-search-result-content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.app-search-result-title {
+  line-height: 1.5;
+}
+
+.app-search-result-description {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  white-space: normal;
+  font-size: 8pt;
+}
+
 .app-bar-right .v-input__append-inner {
   padding-bottom: 6px !important;
 }
