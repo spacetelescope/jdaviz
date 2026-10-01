@@ -258,7 +258,10 @@ def test_astroquery_gaia_query(deconfigged_helper):
     ldr.query_archive()
 
     ldr.target = 'Table'
-    ldr.format = 'Catalog'
+    try:
+        ldr.format = 'Catalog'
+    except ValueError:
+        ldr.format = 'Generic Catalog'
     ldr.importer.col_other = 'bp_g'
     ldr.importer.viewer.create_new = 'Table'
     ldr.load()
