@@ -48,7 +48,7 @@
       if (!element) {
         return
       }
-      while (element["tagName"] !== "BODY") {
+      while (element && element["tagName"] !== "BODY") {
         if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
           element.addEventListener("scroll", this.onScroll);
         }
@@ -66,7 +66,7 @@
       if (!element) {
         return
       }
-      while (element["tagName"] !== "BODY") {
+      while (element && element["tagName"] !== "BODY") {
         if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
           element.removeEventListener("scroll", this.onScroll);
         }

@@ -82,6 +82,15 @@ class JdavizViewerMixin(WithCache):
     _prev_limits = None
     _native_mark_classnames = ('Lines', 'LinesGL', 'FRBImage', 'Contour')
 
+    def _sync_figure_aspect(self, *args, **kwargs):
+        # Inactive tabs and hidden notebook cells can report a zero-size image.
+        # glue-jupyter skips rendering these buffers, but its aspect calculation
+        # still divides by their width. Retain the last usable aspect until the
+        # view listener reports positive dimensions again.
+        if self.shape is not None and min(self.shape) <= 0:
+            return
+        return super()._sync_figure_aspect(*args, **kwargs)
+
     def _on_mouse_interaction(self, interaction, data, buffers):
         """Override to block all mousemove events when a toolbar override is active."""
         if (data.get('event') == 'mousemove'
