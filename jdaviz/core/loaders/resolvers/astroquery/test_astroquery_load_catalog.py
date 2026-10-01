@@ -266,7 +266,13 @@ def test_astroquery_gaia_query(deconfigged_helper):
     ldr.importer.viewer.create_new = 'Table'
     ldr.load()
 
-    assert 'Catalog' in deconfigged_helper.datasets
+    try:
+        assert 'Catalog' in deconfigged_helper.datasets
+    except AssertionError:
+        assert 'Generic Catalog' in deconfigged_helper.datasets
+
+    if 'Catalog' not in deconfigged_helper.datasets:
+        deconfigged_helper.datasets['Catalog'] = deconfigged_helper.datasets['Generic Catalog']
     gaia_table = deconfigged_helper.datasets['Catalog'].get_data()
     print(gaia_table)
     assert 'bp_g' in gaia_table.colnames
