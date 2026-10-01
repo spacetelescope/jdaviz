@@ -39,8 +39,16 @@
     </j-flex-row>
     <jupyter-widget
       v-if="file_chooser_widget && !server_is_remote && !hide_resolver_inputs"
+      class="jdaviz-file-browser"
       :widget="file_chooser_widget"
       :key="file_chooser_widget"
     ></jupyter-widget>
   </j-loader>
 </template>
+
+<style>
+.v-theme--dark .jdaviz-file-browser .solara-file-list-selected {
+  background-color: rgba(var(--v-theme-primary), 0.24) !important;
+  box-shadow: inset 3px 0 rgb(var(--v-theme-primary));
+}
+</style>
