@@ -339,7 +339,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         The *base* is taken from the resolver (e.g. the filename stem) when
         available, falling back to ``'3D Spectrum'``.
         """
-        base = self.default_data_label_from_resolver or '3D Spectrum'
+        base = self._default_data_label_base('3D Spectrum')
         # ERR-as-primary: extension is deselected but unc_extension is selected
         if (hasattr(self, 'extension') and not self.extension.selected
                 and hasattr(self, 'unc_extension')

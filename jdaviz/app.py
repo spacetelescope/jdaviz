@@ -364,6 +364,8 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
+    dev_multi_loaders = CallbackProperty(
+        False, docstring='Whether to enable selecting and loading multiple inputs at once')
 
     # PRs to add to changelog when removing dev_mos_loader dev-flag: 4375
     dev_spectral_lines_plugin = CallbackProperty(

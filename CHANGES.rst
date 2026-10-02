@@ -135,6 +135,8 @@ New Features
 - Format choices are now sorted so that the most likely format is at the top of the list
   and selected by default. [#4402]
 
+- Loaders now support loading multiple files (of the same format) at once. [#4385]
+
 Mosviz
 ^^^^^^
 
