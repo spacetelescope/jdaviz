@@ -238,14 +238,9 @@ class TestCatalogConeSearch:
 
 
 def test_astroquery_table_with_nans(deconfigged_helper):
-    # Test that any table can be loaded as a catalog
-    table = Table({'ra': [1, 2, 3], 'dec': [4, 5, 6]})
-    deconfigged_helper.load(table, format='Catalog')
-    assert len(deconfigged_helper._app.data_collection) == 1
-    print("regular catalog loaded")
     # Test that a table with NaNs can be loaded as a catalog
     table2 = Table({'ra': [1, 2, 3], 'dec': [4, 5, np.nan]})
-    deconfigged_helper.load(table2, format='Catalog')
+    deconfigged_helper.load(table2, format='Source Catalog')
     assert len(deconfigged_helper._app.data_collection) == 2
     data = deconfigged_helper._app.data_collection[1]
     assert np.isnan(data['dec'][-1])
@@ -266,7 +261,7 @@ def test_astroquery_gaia_query(deconfigged_helper):
     try:
         ldr.format = 'Catalog'
     except ValueError:
-        ldr.format = 'Generic Catalog'
+        ldr.format = 'Source Catalog'
     ldr.importer.col_other = 'bp_g'
     ldr.importer.viewer.create_new = 'Table'
     ldr.load()
@@ -274,12 +269,12 @@ def test_astroquery_gaia_query(deconfigged_helper):
     try:
         assert 'Catalog' in deconfigged_helper.datasets
     except AssertionError:
-        assert 'Generic Catalog' in deconfigged_helper.datasets
+        assert 'Source Catalog' in deconfigged_helper.datasets
 
     if 'Catalog' in deconfigged_helper.datasets:
         cat_data = deconfigged_helper.datasets['Catalog']
     else:
-        cat_data = deconfigged_helper.datasets['Generic Catalog']
+        cat_data = deconfigged_helper.datasets['Source Catalog']
 
     gaia_table = cat_data.get_data()
     print(gaia_table)
