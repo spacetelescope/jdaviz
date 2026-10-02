@@ -241,8 +241,8 @@ def test_astroquery_table_with_nans(deconfigged_helper):
     # Test that a table with NaNs can be loaded as a catalog
     table2 = Table({'ra': [1, 2, 3], 'dec': [4, 5, np.nan]})
     deconfigged_helper.load(table2, format='Source Catalog')
-    assert len(deconfigged_helper._app.data_collection) == 2
-    data = deconfigged_helper._app.data_collection[1]
+    assert len(deconfigged_helper._app.data_collection) == 1
+    data = deconfigged_helper._app.data_collection[0]
     assert np.isnan(data['dec'][-1])
 
 
