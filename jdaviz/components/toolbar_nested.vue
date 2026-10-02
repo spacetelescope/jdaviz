@@ -83,7 +83,7 @@
       </template>
     </span>
 
-    <v-btn-toggle v-if="custom_widget_items.length === 0" v-model="active_tool_id" style="overflow-x: hidden" class="transparent">
+    <v-btn-toggle v-model="active_tool_id" style="overflow-x: hidden" class="transparent toolbar-nested-tools">
       <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible, disabled_msg}] of Object.entries(tools_data)" :key="id">
         <v-tooltip v-if="primary && visible &&!should_hide_in_popout(id)" location="bottom">
           <template v-slot:activator="{ props }">
@@ -299,7 +299,12 @@
   width: fit-content !important;
   min-width: 0;
   max-width: 100%;
+  overflow: hidden;
   margin-left: 0 !important;
+}
+/* custom widgets shrink first so apply/confirm buttons stay visible */
+.custom-toolbar-widgets ~ .toolbar-nested-tools {
+  flex: 0 0 auto !important;
 }
 .custom-toolbar-select {
   flex: 1 1 auto !important;
