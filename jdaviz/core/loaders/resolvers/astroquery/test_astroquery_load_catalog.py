@@ -261,7 +261,7 @@ def test_astroquery_gaia_query(deconfigged_helper):
     try:
         ldr.format = 'Catalog'
     except ValueError:
-        ldr.format = 'Source Catalog'
+        ldr.format = 'Generic Catalog'
     ldr.importer.col_other = 'bp_g'
     ldr.importer.viewer.create_new = 'Table'
     ldr.load()
@@ -269,12 +269,12 @@ def test_astroquery_gaia_query(deconfigged_helper):
     try:
         assert 'Catalog' in deconfigged_helper.datasets
     except AssertionError:
-        assert 'Source Catalog' in deconfigged_helper.datasets
+        assert 'Generic Catalog' in deconfigged_helper.datasets
 
     if 'Catalog' in deconfigged_helper.datasets:
         cat_data = deconfigged_helper.datasets['Catalog']
     else:
-        cat_data = deconfigged_helper.datasets['Source Catalog']
+        cat_data = deconfigged_helper.datasets['Generic Catalog']
 
     gaia_table = cat_data.get_data()
     print(gaia_table)
