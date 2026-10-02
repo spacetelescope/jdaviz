@@ -108,9 +108,11 @@ class UnitConversion(PluginTemplateMixin):
         self.session.hub.subscribe(self, AddDataMessage,
                                    handler=self._on_add_data_to_viewer)
         self.session.hub.subscribe(self, RemoveDataMessage,
-                                   handler=self._on_remove_data_from_viewer)
+                                   handler=self._on_remove_data_from_viewer,
+                                   priority=999)
         self.session.hub.subscribe(self, DataCollectionDeleteMessage,
-                                   handler=self._on_data_collection_delete)
+                                   handler=self._on_data_collection_delete,
+                                   priority=999)
         self.session.hub.subscribe(self, ViewerRemovedMessage,
                                    handler=self._on_viewer_removed)
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
@@ -215,6 +217,11 @@ class UnitConversion(PluginTemplateMixin):
             self.disabled_msg = 'Unit Conversion unavailable without data loaded in a viewer'
             return
 
+        # update the angle unit (and dependent sb/y-display units) before other
+        # plugins react to this message and potentially reprocess data using
+        # stale display units.
+        self._reset_angle_unit_to_remaining_data()
+
         # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
         # access. this may need to be generalized for deconfigged and removed
         # once the configs are deprecated
@@ -234,6 +241,85 @@ class UnitConversion(PluginTemplateMixin):
     def _on_data_collection_delete(self, msg):
         if len(self._app.data_collection) == 0:
             self._reset_unit_selections()
+            return
+
+        self._reset_angle_unit_to_remaining_data()
+
+    def _relevant_data_for_unit_conversion(self):
+        """
+        Return a list of (label, data_obj) pairs for data layers currently loaded
+        (excluding subsets) in any viewer relevant to unit conversion (spectral,
+        image, or cube viewers), limited to entries that carry flux or
+        surface-brightness units (i.e., excluding catalogs/tables and other data
+        without a direct flux/unit attribute).
+
+        Viewer layers (rather than the data collection) are used so that this
+        reflects data still loaded in relevant viewers even mid-way through a
+        data removal, before the data collection itself has been updated.
+        """
+        seen_labels = set()
+        relevant = []
+        for v in self._app._viewer_store.values():
+            if not isinstance(v, (JdavizProfileView, BqplotImageView)):
+                continue
+            for layer in v.layers:
+                if isinstance(layer.layer, GroupedSubset):
+                    continue
+                label = layer.layer.label
+                if label in seen_labels:
+                    continue
+                seen_labels.add(label)
+                try:
+                    data_obj = self._app._jdaviz_helper.get_data(label)
+                except AttributeError:
+                    continue
+                if hasattr(data_obj, 'flux') or hasattr(data_obj, 'unit'):
+                    relevant.append((label, data_obj))
+        return relevant
+
+    def _reset_angle_unit_to_remaining_data(self):
+        """
+        If exactly one dataset relevant to unit conversion remains loaded, reset
+        the angle and surface-brightness unit selections to match its native
+        units (defaulting to 'pix2' for the angle if the data is not a surface
+        brightness unit). This prevents those selections from being stuck on a
+        previous choice (e.g. pix2 from a dataset in Jy) after the dataset that
+        required that choice has been removed, leaving a single remaining
+        dataset (e.g. in Jy/sr) unable to be viewed in its native surface
+        brightness unit.
+
+        The surface-brightness unit is realigned explicitly here (rather than
+        relying solely on the flux_unit_selected -> sb cascade in
+        ``_on_unit_selected``) because ``flux_unit_selected`` is not populated
+        for all data sources (e.g. images loaded via the generic Image
+        importer), in which case that cascade would be skipped, leaving a stale
+        ``attribute_display_unit`` that can crash glue's rendering when it
+        later tries to convert the remaining data using incompatible units.
+        """
+        if not self.has_angle or not len(self.angle_unit_selected):
+            return
+
+        self._clear_cache('image_layers')
+        relevant = self._relevant_data_for_unit_conversion()
+        if len(relevant) != 1:
+            return
+
+        _, data_obj = relevant[0]
+        native_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
+        angle_unit = is_unit_per_solid_angle(native_unit, return_unit=True)
+        new_angle_str = str(angle_unit) if angle_unit is not None else 'pix2'
+        plain_flux_unit = native_unit if angle_unit is None else native_unit * angle_unit
+        new_sb_str = flux_to_sb_unit(str(plain_flux_unit), new_angle_str)
+
+        if new_angle_str != self.angle_unit_selected:
+            self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
+            try:
+                self.angle_unit.selected = new_angle_str
+            except ValueError:
+                pass
+
+        if new_sb_str != self.sb_unit_selected:
+            self.sb_unit_selected = new_sb_str
 
     def _reset_unit_selections(self):
         """Clear all unit selections when no data remains in the app."""
@@ -622,5 +708,12 @@ class UnitConversion(PluginTemplateMixin):
             else:
                 ctx = nullcontext()
             with ctx:
-                layer.state.attribute_display_unit = valid_glue_display_unit(
-                    attr_unit, layer, 'attribute')
+                try:
+                    layer.state.attribute_display_unit = valid_glue_display_unit(
+                        attr_unit, layer, 'attribute')
+                except u.UnitsError:
+                    # this layer's native unit cannot be converted to attr_unit
+                    # (e.g. no equivalency available between pix2 and sr for this
+                    # data source), so leave its display unit as-is rather than
+                    # propagating an error that would interrupt other processing
+                    continue
