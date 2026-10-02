@@ -1,6 +1,7 @@
 <template>
   <j-flex-row v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
+      variant="underlined"
       :menu-props="{ location: 'bottom start' }"
       attach
       :items="items"

@@ -2,6 +2,7 @@
   <div>
   <j-flex-row>
     <v-select
+      variant="underlined"
       v-if="mode=='select'"
       attach
       :menu-props="{ location: 'bottom start' }"
@@ -60,6 +61,7 @@
       </template>
     </v-alert>
     <v-text-field
+      variant="underlined"
       v-else-if="['rename', 'add'].indexOf(mode) !== -1"
       :model-value="edit_value"
       @update:modelValue="$emit('update:edit_value', $event)"

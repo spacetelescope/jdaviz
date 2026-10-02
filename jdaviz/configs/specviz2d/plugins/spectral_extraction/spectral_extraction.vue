@@ -53,6 +53,7 @@
       <div v-if="trace_trace_selected !== 'New Trace'">
         <j-flex-row>
           <v-text-field
+            variant="underlined"
             :label="api_hints_enabled ? 'plg.trace_offset =' : 'Offset'"
             :class="api_hints_enabled ? 'api-hint' : null"
             type="number"
@@ -86,6 +87,7 @@
 
         <j-flex-row v-if="trace_type_selected!=='Flat'">
           <v-text-field
+            variant="underlined"
             :label="api_hints_enabled ? 'plg.trace_order =' : 'Order'"
             :class="api_hints_enabled ? 'api-hint' : null"
             type="number"
@@ -101,6 +103,7 @@
 
         <j-flex-row>
           <v-text-field
+            variant="underlined"
             :label="api_hints_enabled ? 'plg.trace_pixel = ' : 'Pixel'"
             :class="api_hints_enabled ? 'api-hint' : null"
             type="number"
@@ -120,6 +123,7 @@
             :api_hints_enabled="api_hints_enabled"
           />
           <v-text-field
+            variant="underlined"
             v-if="trace_do_binning"
             :label="api_hints_enabled ? 'plg.trace_bins =' : 'Bins'"
             :class="api_hints_enabled ? 'api-hint' : null"
@@ -148,6 +152,7 @@
 
         <j-flex-row v-if="trace_type_selected!=='Flat'">
           <v-text-field
+            variant="underlined"
             :label="api_hints_enabled ? 'plg.trace_window = ' : 'Window Width'"
             :class="api_hints_enabled ? 'api-hint' : null"
             type="number"
@@ -250,6 +255,7 @@
 
       <j-flex-row v-if="bg_type_selected === 'Manual'">
         <v-text-field
+          variant="underlined"
           :label="api_hints_enabled ? 'plg.bg_trace_pixel' : 'Pixel'"
           :class="api_hints_enabled ? 'api-hint' : null"
           type="number"
@@ -263,6 +269,7 @@
 
       <j-flex-row v-if="['OneSided', 'TwoSided'].indexOf(bg_type_selected) !== -1">
         <v-text-field
+          variant="underlined"
           :label="api_hints_enabled ? 'plg.bg_separation =' : 'Separation'"
           :class="api_hints_enabled ? 'api-hint' : null"
           type="number"
@@ -276,6 +283,7 @@
 
       <j-flex-row>
         <v-text-field
+          variant="underlined"
           :label="api_hints_enabled ? 'plg.bg_width =' : 'Width'"
           :class="api_hints_enabled ? 'api-hint' : null"
           type="number"
@@ -443,6 +451,7 @@
 
       <j-flex-row v-if="ext_type_selected === 'Boxcar'">
         <v-text-field
+          variant="underlined"
           :label="api_hints_enabled ? 'plg.ext_width =' : 'Width'"
           :class="api_hints_enabled ? 'api-hint' : null"
           type="number"
@@ -466,6 +475,7 @@
 
       <j-flex-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
         <v-text-field
+          variant="underlined"
           :label="api_hints_enabled ? 'plg.self_prof_n_bins =' : 'N Bins'"
           :class="api_hints_enabled ? 'api-hint' : null"
           type="number"
@@ -481,6 +491,7 @@
       <div v-if="ext_type_selected === 'Horne'">
         <j-flex-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
           <v-text-field
+            variant="underlined"
             :label="api_hints_enabled ? 'plg.self_prof_interp_degree_x =' : 'Interpolation Degree (X)'"
             :class="api_hints_enabled ? 'api-hint' : null"
             type="number"
@@ -495,6 +506,7 @@
 
         <j-flex-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
           <v-text-field
+            variant="underlined"
             :label="api_hints_enabled ? 'plg.self_prof_interp_degree_y =' : 'Interpolation Degree (Y)'"
             :class="api_hints_enabled ? 'api-hint' : null"
             type="number"

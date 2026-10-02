@@ -55,6 +55,7 @@
 
     <j-flex-row v-if="has_sb">
       <v-text-field
+        variant="underlined"
         v-model="sb_unit_selected"
         :label="api_hints_enabled ? 'plg.sb_unit' : 'Surface Brightness Unit'"
         :class="api_hints_enabled ? 'api-hint' : null"

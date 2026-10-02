@@ -143,6 +143,7 @@
       <div v-for="(item, index2) in region">
         <j-flex-row v-if="item.name === 'Parent' || item.name === 'Masked values'" class="row-no-outside-padding">
           <v-text-field
+            variant="underlined"
             :label="item.name"
             :model-value="item.value"
             style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
@@ -158,6 +159,7 @@
         </j-flex-row>
         <j-flex-row v-else class="row-no-outside-padding">
           <v-text-field
+            variant="underlined"
             :label="api_hints_enabled ? 'plg.update_subset(\'' + subset_selected + '\', subregion=' + index + ', ' + item.att + '=' + item.value + ')' : item.name"
             v-model.number="item.value"
             type="number"

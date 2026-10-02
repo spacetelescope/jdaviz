@@ -51,6 +51,7 @@
     <v-form v-model="formValidModelComponent">
       <j-flex-row v-if="model_comp_items">
         <v-select
+          variant="underlined"
           attach
           :items="model_comp_items.map(i => i.label)"
           v-model="model_comp_selected"
@@ -63,6 +64,7 @@
 
       <j-flex-row v-if="display_order">
         <v-text-field
+          variant="underlined"
           type="number"
           v-model.number="poly_order"
           :label="api_hints_enabled ? 'plg.poly_order' : 'Order'"
@@ -224,6 +226,7 @@
                   class="py-0 my-0 vuetify2">
                   <v-col class="py-my-0">
                     <v-text-field
+                      variant="underlined"
                       density="compact"
                       v-model="param.value"
                     >
@@ -264,6 +267,7 @@
       </j-flex-row>
       <j-flex-row v-if="fitter_items">
         <v-select
+          variant="underlined"
           attach
           :items="fitter_items.map(i => i.label)"
           v-model="fitter_selected"
@@ -296,7 +300,9 @@
                         </span>
                      </template>
                 </v-switch>
-                <v-text-field v-else
+                <v-text-field
+                    variant="underlined"
+                    v-else
                     v-model.number="item.value"
                     type="number"
                     :min="item.name === 'degree' ? 1 : undefined"

@@ -92,6 +92,7 @@
     <v-col>
       <v-row class="vuetify2">
       <v-select
+        variant="underlined"
         :menu-props="{ location: 'bottom start' }"
         attach
         multiple

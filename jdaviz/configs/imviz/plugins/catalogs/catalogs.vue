@@ -48,6 +48,7 @@
 
     <j-flex-row v-if="catalog_selected && catalog_selected.endsWith('.ecsv')">
       <v-select
+        variant="underlined"
         v-model="selected_columns"
         :items="column_names"
         label="Select Columns"
@@ -58,6 +59,7 @@
 
     <j-flex-row>
       <v-text-field
+        variant="underlined"
         v-model.number="max_sources"
         type="number"
         step="10"

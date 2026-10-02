@@ -47,11 +47,11 @@
     </div>
     <j-flex-row>
         <v-text-field
+            variant="outlined"
             v-model="filepath"
             class="my-4"
             autofocus="true"
             theme="dark"
-            variant="outlined"
             label="File Path"
             :hint="hint"
             persistent-hint

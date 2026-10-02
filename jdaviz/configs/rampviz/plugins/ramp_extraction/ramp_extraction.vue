@@ -123,6 +123,7 @@
 
             <j-flex-row>
               <v-text-field
+              variant="underlined"
               v-model="filename"
               label="Filename"
               hint="Export the latest extracted ramp profile."

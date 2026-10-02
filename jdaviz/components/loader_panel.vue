@@ -1,6 +1,7 @@
 <template>
   <div>
     <v-select
+      variant="outlined"
       v-if="!hide_resolver"
       :menu-props="{ location: 'bottom start' }"
       attach
@@ -12,11 +13,10 @@
       item-title="name"
       item-value="name"
       persistent-hint
-      variant="outlined"
       style="width: 100%; margin-top: 12px; padding-left: 6px; padding-right: 6px;"
     ></v-select>
 
-    <span v-if="loader_selected && loader_selected.length && (api_hints_enabled || (loader_selected === 'object' && !hide_resolver))" class="api-hint" style="font-weight: bold; padding-left: 6px">
+    <span v-if="loader_selected && loader_selected.length && (api_hints_enabled || (loader_selected === 'object' && !hide_resolver))" class="api-hint" style="font-weight: bold; margin-left: 12px">
       ldr = {{ api_hints_obj }}.loaders['{{ loader_selected }}']
     </span>
 

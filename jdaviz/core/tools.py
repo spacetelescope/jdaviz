@@ -925,6 +925,7 @@ class TableAddColumn(Tool):
     tool_id = 'jdaviz:table_add_column'
     action_text = 'Add column'
     tool_tip = 'Add a new empty column to the table data'
+    keep_visible_in_focus_mode = True
 
     def activate(self):
         self.viewer.toolbar.override_tools(
@@ -950,6 +951,7 @@ class TableApplyAddColumn(Tool):
     tool_id = 'jdaviz:table_apply_add_column'
     action_text = 'Apply add column'
     tool_tip = 'Add a new column with the given name to all table data entries'
+    keep_visible_in_focus_mode = True
 
     def activate(self):
         selected = self.viewer.toolbar.custom_widget_selected
@@ -987,6 +989,7 @@ class TableColumnsVisible(Tool, HubListener):
     tool_id = 'jdaviz:table_columns_visible'
     action_text = 'Visible columns'
     tool_tip = 'Select which columns are visible in the table'
+    keep_visible_in_focus_mode = True
     _override_title = 'Visible Columns'
 
     def _get_components(self):

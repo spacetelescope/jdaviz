@@ -18,6 +18,7 @@
 
     <j-flex-row>
       <v-text-field
+        variant="underlined"
         v-model.number='selected_x'
         type="number"
         label="X"
@@ -27,6 +28,7 @@
 
     <j-flex-row>
       <v-text-field
+        variant="underlined"
         v-model.number='selected_y'
         type="number"
         label="Y"

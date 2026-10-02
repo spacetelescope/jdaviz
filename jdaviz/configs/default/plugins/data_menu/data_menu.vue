@@ -109,6 +109,7 @@
                   </span>
                 </j-tooltip>
                 <v-select
+                  variant="underlined"
                   v-if="orientation_enabled && orientation_align_by_wcs && orientation_layer_items.length > 0"
                   density="compact"
                   :items="orientation_layer_items"
@@ -221,18 +222,20 @@
                         <div style="display: flex; align-items: center;">
                           <j-tooltip :tooltipcontent="copied_label === item.label ? 'Copied' : 'Copy label to clipboard'">
                             <v-btn
+                              variant="text"
                               icon
-                              x-small
+                              size="small"
+                              density="default"
                               @click.stop="copyLabel(item.label)"
                             >
-                              <v-icon small>{{ copied_label === item.label ? 'mdi-check' : 'mdi-clipboard-outline' }}</v-icon>
+                              <v-icon>{{ copied_label === item.label ? 'mdi-check' : 'mdi-clipboard-outline' }}</v-icon>
                             </v-btn>
                           </j-tooltip>
                           <j-tooltip
                             v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
                             tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
                           >
-                            <v-btn icon disabled>
+                            <v-btn variant="text" icon size="small" density="default" disabled>
                               <v-icon>mdi-eye-off</v-icon>
                             </v-btn>
                           </j-tooltip>

@@ -219,7 +219,7 @@ ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 vuetify_theme.themes.light.primary = "#00617E"
 vuetify_theme.themes.light.secondary = "#007DA4"
 vuetify_theme.themes.light.error = '#FF5252'
-vuetify_theme.themes.light.info = '#2196F3'
+vuetify_theme.themes.light.info = '#205F76'
 vuetify_theme.themes.light.success = '#4CAF50'
 vuetify_theme.themes.light.warning = '#FFC107'
 vuetify_theme.themes.light.custom_theme_colors = {
@@ -236,7 +236,7 @@ vuetify_theme.themes.light.custom_theme_colors = {
 vuetify_theme.themes.dark.primary = "#53CBFF"
 vuetify_theme.themes.dark.secondary = "#007DA4"
 vuetify_theme.themes.dark.error = '#FF5252'
-vuetify_theme.themes.dark.info = '#2196F3'
+vuetify_theme.themes.dark.info = '#205F76'
 vuetify_theme.themes.dark.success = '#4CAF50'
 vuetify_theme.themes.dark.warning = '#FFC107'
 vuetify_theme.themes.dark.custom_theme_colors = {

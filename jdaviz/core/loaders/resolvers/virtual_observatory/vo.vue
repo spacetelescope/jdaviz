@@ -52,6 +52,7 @@
       <div v-if="search_input_selected === 'Source'">
         <j-flex-row>
           <v-text-field
+            variant="underlined"
             v-model="source"
             :label="api_hints_enabled ? 'ldr.source =' : 'Source/Coordinates'"
             :class="api_hints_enabled ? 'api-hint' : null"
@@ -190,6 +191,7 @@
       <j-flex-row justify="space-between">
         <div :style="{ width: '55%' }">
           <v-text-field
+            variant="underlined"
             v-model.number="radius"
             type="number"
             :label="api_hints_enabled ? 'ldr.radius =' : 'Radius'"
@@ -251,6 +253,7 @@
 
       <j-flex-row justify="space-between" style="margin-top: 12px">
         <v-text-field
+          variant="underlined"
           v-model.number='max_results'
           type="number"
           style="padding: 0px"
