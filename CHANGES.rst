@@ -188,7 +188,7 @@ Other Changes and Additions
 
 Bug Fixes
 ---------
-- Fix recursion limit bug when attempting to set an invaliddata menu layer in
+- Fix recursion limit bug when attempting to set an invalid data menu layer in
   multiselect mode. [#4419]
 
 Mosviz
