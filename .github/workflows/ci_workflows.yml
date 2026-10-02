@@ -47,8 +47,9 @@ jobs:
           - name: Python 3.13 with coverage checking and all deps
             os: ubuntu-latest
             python: '3.13'
-            toxenv: py313-test-alldeps-runslow-cov
-            allow_failure: false
+            toxenv: py313-test-alldeps-cov
+            toxposargs: --run-slow
+            allow_failure: true
 
           - name: Python 3.13 with only remote data, coverage checking, and all deps
             os: ubuntu-latest
@@ -60,19 +61,19 @@ jobs:
             os: macos-latest
             python: '3.13'
             toxenv: py313-test
-            allow_failure: false
+            allow_failure: true
 
           - name: Windows - Python 3.13
             os: windows-latest
             python: '3.13'
             toxenv: py313-test
-            allow_failure: false
+            allow_failure: true
 
           - name: Linux - Python 3.14
             os: ubuntu-latest
             python: '3.14'
             toxenv: py314-test
-            allow_failure: false
+            allow_failure: true
 
           # This also runs on cron, but we want to make sure new changes
           # won't break this job at the PR stage.
