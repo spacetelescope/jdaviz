@@ -271,7 +271,7 @@ class UnitConversion(PluginTemplateMixin):
                 seen_labels.add(label)
                 try:
                     data_obj = self._app._jdaviz_helper.get_data(label)
-                except Exception:
+                except AttributeError:
                     continue
                 if hasattr(data_obj, 'flux') or hasattr(data_obj, 'unit'):
                     relevant.append((label, data_obj))
