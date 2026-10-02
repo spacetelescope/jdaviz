@@ -59,6 +59,7 @@ from jdaviz.utils import (SnackbarQueue, alpha_index, alpha_index_to_int, data_h
                           _get_celestial_wcs)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
 from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
+                                               all_flux_unit_conversion_equivs,
                                                combine_flux_and_angle_units,
                                                flux_unit_conversion,
                                                spectral_unit_conversion,
@@ -124,7 +125,9 @@ class UnitConverterWithSpectral:
         elif (data.meta.get('_importer') == 'ImageImporter' and
               u.Unit(data.get_component(cid).units).physical_type == 'surface brightness'):
             # handle surface brightness units in image-like data
-            return (values * u.Unit(original_units)).to_value(target_units)
+            equivs = all_flux_unit_conversion_equivs(pixar_sr=data.meta.get('_pixel_scale_factor'))
+            return flux_unit_conversion(values, original_units, target_units,
+                                        equivs, with_unit=False)
         elif cid.label in ("flux"):
             try:
                 spec = data.get_object(cls=Spectrum)
@@ -133,9 +136,8 @@ class UnitConverterWithSpectral:
                 spec = Spectrum(flux=data.data * u.Unit(original_units))
             # equivalencies for flux/surface brightness conversions
             viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
-            return flux_unit_conversion(
-                values, original_units, target_units, viewer_equivs,
-                with_unit=False)
+            return flux_unit_conversion(values, original_units, target_units,
+                                        viewer_equivs, with_unit=False)
         else:  # spectral axis
             return spectral_unit_conversion(values, original_units, target_units)
 
