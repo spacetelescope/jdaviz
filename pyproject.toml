@@ -136,7 +136,6 @@ testpaths = [
     "docs",
 ]
 astropy_header = true
-doctest_plus = "enabled"
 text_file_format = "rst"
 addopts = "--doctest-rst --import-mode=append --ignore-glob='*/jdaviz/qt.py'"
 xfail_strict = true
