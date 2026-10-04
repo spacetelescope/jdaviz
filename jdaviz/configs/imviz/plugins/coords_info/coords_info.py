@@ -666,9 +666,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     except UnboundLocalError:
                         # wave is not defined (image viewer without spectral axis)
                         equivalencies = None
-                    value = flux_unit_conversion(
-                        value, unit, to_unit, equivalencies, with_unit=False)
-                    unit = to_unit
+                    converted = flux_unit_conversion(
+                        value, unit, to_unit, equivalencies, with_unit=True)
+                    # the applied unit may differ from to_unit (e.g. if the data is in
+                    # a per-steradian unit but the app display is stuck in pix2)
+                    value, unit = converted.value, converted.unit
 
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
                 arr = image.get_component(attribute).data
@@ -691,10 +693,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     equivalencies = all_flux_unit_conversion_equivs(pixar_sr,
                                                                     cube_wave)
 
-                    value = flux_unit_conversion(
+                    converted = flux_unit_conversion(
                         value, unit, u.Unit(self.image_unit),
-                        equivalencies, with_unit=False)
-                    unit = self.image_unit
+                        equivalencies, with_unit=True)
+                    # the applied unit may differ from self.image_unit (e.g. if the data
+                    # is in a per-steradian unit but the app display is stuck in pix2)
+                    value, unit = converted.value, converted.unit
 
                 if associated_dq_layers is not None:
                     associated_dq_layer = associated_dq_layers[0]

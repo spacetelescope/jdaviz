@@ -271,7 +271,9 @@ class UnitConversion(PluginTemplateMixin):
                 seen_labels.add(label)
                 try:
                     data_obj = self._app._jdaviz_helper.get_data(label)
-                except AttributeError:
+                except (AttributeError, ValueError):
+                    # label may no longer be in the data collection (e.g. the viewer's
+                    # layer list hasn't yet caught up to a just-removed dataset)
                     continue
                 if hasattr(data_obj, 'flux') or hasattr(data_obj, 'unit'):
                     relevant.append((label, data_obj))
