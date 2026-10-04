@@ -526,6 +526,15 @@ def flux_unit_conversion(values, original_unit, target_unit,
     solid_angle_in_targ = is_unit_per_solid_angle(
         target_unit, return_unit=True)
 
+    # if one solid angle unit is pix2 and the other is not, avoid converting and
+    # return the input values. This can be reverted once proper handling for
+    # conversions involving pix2 is implemented.
+    if (solid_angle_in_orig == PIX2 and solid_angle_in_targ != PIX2) or \
+       (solid_angle_in_orig != PIX2 and solid_angle_in_targ == PIX2):
+        if with_unit:
+            return values * original_unit
+        return values
+
     # if the units being converted are likely from a moment map, skip conversion
     # (which will fail anyway) without erroring and just return input (with or
     # without units attached, as requested)
