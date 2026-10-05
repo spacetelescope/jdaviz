@@ -281,14 +281,14 @@ class UnitConversion(PluginTemplateMixin):
 
     def _reset_angle_unit_to_remaining_data(self):
         """
-        If exactly one dataset relevant to unit conversion remains loaded, reset
-        the angle and surface-brightness unit selections to match its native
-        units (defaulting to 'pix2' for the angle if the data is not a surface
-        brightness unit). This prevents those selections from being stuck on a
-        previous choice (e.g. pix2 from a dataset in Jy) after the dataset that
-        required that choice has been removed, leaving a single remaining
-        dataset (e.g. in Jy/sr) unable to be viewed in its native surface
-        brightness unit.
+        If every dataset relevant to unit conversion that remains loaded shares
+        the same native solid angle unit (defaulting to 'pix2' for datasets
+        that are not surface brightness units), reset the angle and
+        surface-brightness unit selections to match. This prevents those
+        selections from being stuck on a previous choice (e.g. pix2 from a
+        dataset in Jy) after the dataset(s) that required that choice have
+        been removed, leaving the remaining dataset(s) (e.g. in Jy/sr) unable
+        to be viewed in their native surface brightness unit.
 
         The surface-brightness unit is realigned explicitly here (rather than
         relying solely on the flux_unit_selected -> sb cascade in
@@ -303,13 +303,26 @@ class UnitConversion(PluginTemplateMixin):
 
         self._clear_cache('image_layers')
         relevant = self._relevant_data_for_unit_conversion()
-        if len(relevant) != 1:
+        if not len(relevant):
             return
 
-        _, data_obj = relevant[0]
-        native_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
+        def _native_angle_str(data_obj):
+            native_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
+            angle_unit = is_unit_per_solid_angle(native_unit, return_unit=True)
+            return str(angle_unit) if angle_unit is not None else 'pix2'
+
+        native_angle_strs = {_native_angle_str(data_obj) for _, data_obj in relevant}
+        if len(native_angle_strs) != 1:
+            # remaining datasets don't agree on a single native angle unit, so
+            # there isn't an unambiguous choice to reset to
+            return
+
+        new_angle_str = native_angle_strs.pop()
+
+        _, first_data_obj = relevant[0]
+        native_unit = (first_data_obj.flux.unit if hasattr(first_data_obj, 'flux')
+                       else first_data_obj.unit)
         angle_unit = is_unit_per_solid_angle(native_unit, return_unit=True)
-        new_angle_str = str(angle_unit) if angle_unit is not None else 'pix2'
         plain_flux_unit = native_unit if angle_unit is None else native_unit * angle_unit
         new_sb_str = flux_to_sb_unit(str(plain_flux_unit), new_angle_str)
 

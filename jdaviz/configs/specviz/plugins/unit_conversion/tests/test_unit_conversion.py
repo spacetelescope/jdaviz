@@ -658,7 +658,7 @@ def test_solid_angle_unit_reset(deconfigged_helper, image_2d_wcs):
     is loaded first (setting the solid angle unit to pix2 initially), then a
     dataset in surface brightness units per steradian is loaded. When the initial
     dataset in units of pix2 is then deleted, the unit conversion plugin selection
-    for solid angle unit should be reset to steradians to reflect the reamaining
+    for solid angle unit should be reset to steradians to reflect the remaining
     dataset.
     """
 
