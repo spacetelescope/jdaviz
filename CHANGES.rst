@@ -200,6 +200,8 @@ Bug Fixes
 
 - Fix viewer container width. [#4424]
 
+- Fix an IO error when loading another data type after loading a 1D spectrum. [#4428]
+
 Mosviz
 ^^^^^^
 
