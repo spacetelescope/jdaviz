@@ -14,7 +14,7 @@ from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_units_and_equivs import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 from jdaviz.core.events import (GlobalDisplayUnitChanged, AddDataMessage,
                                 RemoveDataMessage, SliceValueUpdatedMessage,
-                                ViewerRemovedMessage)
+                                SnackbarMessage, ViewerRemovedMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
                                         SelectPluginComponent, PluginUserApi)
@@ -331,6 +331,8 @@ class UnitConversion(PluginTemplateMixin):
             try:
                 self.angle_unit.selected = new_angle_str
             except ValueError:
+                msg = f"Could not reset solid angle unit to '{new_angle_str}' to match remaining data."  # noqa: E501
+                self.hub.broadcast(SnackbarMessage(msg, color='warning', sender=self))
                 pass
 
         if new_sb_str != self.sb_unit_selected:
@@ -731,4 +733,7 @@ class UnitConversion(PluginTemplateMixin):
                     # (e.g. no equivalency available between pix2 and sr for this
                     # data source), so leave its display unit as-is rather than
                     # propagating an error that would interrupt other processing
+                    msg = f"Could not convert layer '{layer.layer.label}' to display unit '{attr_unit}'."  # noqa: E501
+                    self.hub.broadcast(SnackbarMessage(msg, color='warning',
+                                                       sender=self))
                     continue
