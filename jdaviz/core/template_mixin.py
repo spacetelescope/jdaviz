@@ -4614,8 +4614,7 @@ class ViewerSelect(SelectPluginComponent):
         was_empty = len(self.items) == 0
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
-                                        for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])]  # noqa
-
+                                     for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])]  # noqa
         if auto_select:
             self._apply_default_selection(skip_if_current_valid=not was_empty)
 
