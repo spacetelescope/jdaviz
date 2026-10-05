@@ -1710,6 +1710,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                     valid_filter = filter_callables[valid_filter]
                 except KeyError:
                     raise ValueError(f"{valid_filter} not an implemented filter.")
+
             if not valid_filter(item):
                 return False
         return True
@@ -4612,11 +4613,9 @@ class ViewerSelect(SelectPluginComponent):
         # list of dictionaries with id, ref, ref_or_id
         was_empty = len(self.items) == 0
         manual_items = [{'label': label} for label in self.manual_options]
-        try:
-            self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
+        self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
                                         for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])]  # noqa
-        except ValueError:
-            print(self.viewer_dicts)
+
         if auto_select:
             self._apply_default_selection(skip_if_current_valid=not was_empty)
 
