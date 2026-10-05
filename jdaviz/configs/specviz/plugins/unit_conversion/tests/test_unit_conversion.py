@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.nddata import InverseVariance
+from astropy.nddata import NDData
 from astropy.wcs import WCS
 from specutils import Spectrum
 
@@ -648,3 +649,35 @@ def test_unit_reset_on_all_data_removed(deconfigged_helper, spectrum1d):
     deconfigged_helper.load(spectrum1d, data_label='spec2', format='1D Spectrum')
     assert plg.spectral_unit_selected == 'Angstrom'
     assert plg.flux_unit_selected == 'Jy'
+
+
+def test_solid_angle_unit_reset(deconfigged_helper, image_2d_wcs):
+    """
+    Test to ensure that the solid angle display unit does not become 'stuck'
+    in pix2 if an initial dataset in flux units with no solid angle component
+    is loaded first (setting the solid angle unit to pix2 initially), then a
+    dataset in surface brightness units per steradian is loaded. When the initial
+    dataset in units of pix2 is then deleted, the unit conversion plugin selection
+    for solid angle unit should be reset to steradians to reflect the remaining
+    dataset.
+    """
+
+    # first, load dataset in ct / pix2
+    img = NDData(np.ones(100).reshape(10, 10) * u.ct, wcs=image_2d_wcs)
+    deconfigged_helper.load(img, data_label='img_ct', format='Image')
+
+    plg = deconfigged_helper.plugins["Unit Conversion"]._obj
+    assert plg.angle_unit_selected == 'pix^2'
+
+    # now load an image in Jy / sr
+    img = NDData(np.ones(100).reshape(10, 10) * u.Jy / u.sr, wcs=image_2d_wcs)
+    deconfigged_helper.load(img, data_label='img_jy_sr', format='Image')
+
+    # app should still be in pix2 since the first dataset in pix2 is still present
+    assert plg.angle_unit_selected == 'pix^2'
+
+    # now remove the initial dataset in ct and check that the angle unit resets to sr
+    app = deconfigged_helper._app
+    deconfigged_helper._app.data_collection.remove(app.data_collection['img_ct[DATA]'])
+
+    assert plg.angle_unit_selected == 'sr'

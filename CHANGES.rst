@@ -135,6 +135,9 @@ New Features
 - Format choices are now sorted so that the most likely format is at the top of the list
   and selected by default. [#4402]
 
+- Improve logic in unit conversion plugin to prevent stale or incompatible unit
+  selections when data is removed from viewers. [#4423]
+
 Mosviz
 ^^^^^^
 
