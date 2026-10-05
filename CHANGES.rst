@@ -5,6 +5,8 @@ Bug Fixes
 ---------
 
 
+- Fix viewer container width. [#4424]
+
 Mosviz
 ^^^^^
 
