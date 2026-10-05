@@ -73,6 +73,10 @@ div.output_wrapper {
   width: 5px;
 }
 
+.splitpanes__pane {
+  width: 100% !important;
+}
+
 .lm_goldenlayout {
   background: #f8f8f8;
 }

@@ -198,6 +198,8 @@ Bug Fixes
 
 - Fix a bug in Line Analysis that looks for a (possibly) non-existent mask when getting the continuum [#4406]
 
+- Fix viewer container width. [#4424]
+
 Mosviz
 ^^^^^^
 
