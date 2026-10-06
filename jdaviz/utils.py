@@ -125,13 +125,14 @@ def in_dec_comps(comp):
 
 
 class SnackbarQueue:
-    '''
+    """
     Class that performs the role of VSnackbarQueue, which is not
     implemented in ipyvuetify.
-    '''
+    """
 
     def __init__(self):
         self.queue = deque()
+        self.deferred = deque()
         # track whether we're showing a loading message which won't clear by timeout,
         # but instead requires another message with msg.loading = False to clear
         self.loading = False
@@ -139,9 +140,14 @@ class SnackbarQueue:
         # to give time for the app to load.
         self.first = True
 
-    def put(self, state, logger_plg, msg, history=True, popup=True):
+    def put(self, state, logger_plg, msg, history=True, popup=True, defer=False):
         if msg.color not in ['debug', 'info', 'warning', 'error', 'success', None]:
             raise ValueError(f"color ({msg.color}) must be on of: debug, info, warning, error, success")  # noqa
+
+        if defer:
+            # Store message for later display
+            self.deferred.append((state, logger_plg, msg, {'history': history, 'popup': popup}))
+            return
 
         if not msg.loading and history and logger_plg is not None:
             now = time.localtime()
@@ -200,7 +206,7 @@ class SnackbarQueue:
             # loading is complete
             return
 
-        # turn off snackbar iteself
+        # turn off snackbar itself
         state.snackbar['show'] = False
 
         if len(self.queue) > 0:
@@ -266,6 +272,62 @@ class SnackbarQueue:
                              args=(timeout, msg.text),
                              daemon=True)
         x.start()
+
+    def flush_deferred(self, key_bool_dict=None, msg_key_dict=None):
+        """Display all deferred snackbar messages."""
+        deferred_copy = list(self.deferred)
+        self.deferred.clear()
+
+        if key_bool_dict is None:
+            key_bool_dict = {}
+
+        if msg_key_dict is None:
+            msg_key_dict = {}
+
+        for state, logger_plg, msg, kwargs in deferred_copy:
+            if key_bool_dict.get(msg_key_dict.get(msg, None), True):
+                self.put(state, logger_plg, msg, **kwargs)
+
+
+@contextmanager
+def defer_snackbars(app):
+    """Context manager to defer snackbar popups while preserving logger history.
+
+    All snackbar messages raised within this context will be deferred and displayed
+    together after exiting the context.
+    """
+    queue = app.state.snackbar_queue
+    key_bool_dict = {}
+    msg_key_dict = {}
+    key = None
+
+    def set_key(new_key):
+        nonlocal key
+        key = new_key
+
+    class DeferringQueue:
+        def __init__(self, wrapped_queue):
+            self.wrapped_queue = wrapped_queue
+
+        def put(self, app_state, logger_plugin, snackbar_msg, **kwargs):
+            # Automatically defer all snackbars in this context
+            kwargs['defer'] = True
+            msg_key_dict[snackbar_msg] = key
+            return self.wrapped_queue.put(app_state, logger_plugin, snackbar_msg, **kwargs)
+
+        def __getattr__(self, name):
+            # Delegate other attributes to wrapped queue
+            return getattr(self.wrapped_queue, name)
+
+    deferring_queue = DeferringQueue(queue)
+    app.state.snackbar_queue = deferring_queue
+
+    try:
+        yield key_bool_dict, set_key
+    finally:
+        # Restore original queue and flush deferred snackbars
+        app.state.snackbar_queue = queue
+        queue.flush_deferred(key_bool_dict, msg_key_dict)
 
 
 def enable_hot_reloading():
