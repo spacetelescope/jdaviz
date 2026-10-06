@@ -42,7 +42,7 @@ from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
+from jdaviz.utils import (defer_snackbars, download_uri_to_path, find_closest_polygon_mark,
                           find_polygon_mark_with_skewer,
                           layer_is_image_data)
 from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMessage,
@@ -110,12 +110,19 @@ class FormatSelect(SelectPluginComponent):
             self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
             return
 
-        with warnings.catch_warnings():
+        with (
+            warnings.catch_warnings(),
+            defer_snackbars(self.plugin._app) as (key_bool_dict, set_key)
+        ):
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
+                set_key(parser_name)
+                key_bool_dict[parser_name] = False
                 this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
-                if this_parser.is_valid:
+
+                this_parser_is_valid = bool(this_parser.is_valid)
+                if this_parser_is_valid:
                     try:
                         importer_input = this_parser.output
                     except Exception as e:
@@ -129,6 +136,8 @@ class FormatSelect(SelectPluginComponent):
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     label = f"{parser_name} > {importer_name}"
+                    set_key(label)
+                    key_bool_dict[label] = False
                     if getattr(self.plugin, '_restrict_to_formats', None) is not None and \
                             importer_name not in self.plugin._restrict_to_formats:
                         self._invalid_importers[label] = 'Not matching format restriction'  # noqa
@@ -154,7 +163,9 @@ class FormatSelect(SelectPluginComponent):
                         # skip importers that do not match the target
                         self._invalid_importers[label] = 'Not matching target'
                         continue
-                    if this_importer.is_valid:
+
+                    this_importer_is_valid = bool(this_importer.is_valid)
+                    if this_importer_is_valid:
                         if self._is_valid_item(this_importer):
                             item = {'label': importer_name,
                                     'parser': parser_name,
@@ -194,6 +205,9 @@ class FormatSelect(SelectPluginComponent):
                             self._importers[importer_name] = this_importer
                     else:
                         self._invalid_importers[label] = this_importer.is_valid.message
+
+                    key_bool_dict[label] = this_importer_is_valid
+                    key_bool_dict[parser_name] = this_parser_is_valid
 
         # if any choice has a non-zero/default confidence score, then sort by score
         # for any items with the same score, original ordering (ie import order in
@@ -262,7 +276,7 @@ class TargetSelect(SelectPluginComponent):
 
 
 class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin,
-                   ValidatorMixin):
+                   ValidatorMixin, LoaderBannerMessagesMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
@@ -1766,47 +1780,53 @@ def find_matching_resolver(app,
     formats = format if isinstance(format, (list, tuple)) else [format]
     invalid_resolvers = {}
     valid_resolvers = []
-    for resolver_name, Resolver in loader_resolver_registry.members.items():
-        if resolver_name == 'file drop':
-            # no API input, so let's avoid always returning the confusing
-            # message that default_input is undefined
-            continue
-        if resolver is not None and resolver != resolver_name:
-            invalid_resolvers[resolver_name] = f'not {resolver}'
-            continue
-        try:
-            this_resolver = Resolver.from_input(app, inp, format=format, **kwargs)
-        except Exception as e:  # nosec
-            invalid_resolvers[resolver_name] = f'Resolver exception: {e}'
-            if resolver_name == 'url' and 'timeout' in str(e):
-                raise e
-            continue
-
-        if not this_resolver.is_valid:
-            invalid_resolvers[resolver_name] = this_resolver.is_valid.message
-            invalid_resolvers.setdefault(resolver_name, this_resolver.is_valid.message)
-            continue
-
-        if target is not None:
+    with defer_snackbars(app) as (key_bool_dict, set_key):
+        for resolver_name, Resolver in loader_resolver_registry.members.items():
+            set_key(resolver_name)
+            key_bool_dict[resolver_name] = False
+            if resolver_name == 'file drop':
+                # no API input, so let's avoid always returning the confusing
+                # message that default_input is undefined
+                continue
+            if resolver is not None and resolver != resolver_name:
+                invalid_resolvers[resolver_name] = f'not {resolver}'
+                continue
             try:
-                this_resolver.target = target
-            except ValueError:
-                invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
+                this_resolver = Resolver.from_input(app, inp, format=format, **kwargs)
+            except Exception as e:  # nosec
+                invalid_resolvers[resolver_name] = f'Resolver exception: {e}'
+                if resolver_name == 'url' and 'timeout' in str(e):
+                    raise e
                 continue
-        if not len(this_resolver.format.items):
-            invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
-            continue
 
-        for fmt_item in this_resolver.format.items:
-            if (format is not None
-                and not any([format in (fmt_item['label'],
-                                        fmt_item['parser'],
-                                        fmt_item['importer'])
-                             for format in formats])):
+            this_resolver_is_valid = bool(this_resolver.is_valid)
+            if not this_resolver_is_valid:
+                invalid_resolvers[resolver_name] = this_resolver.is_valid.message
+                invalid_resolvers.setdefault(resolver_name, this_resolver.is_valid.message)
+                continue
+
+            if target is not None:
+                try:
+                    this_resolver.target = target
+                except ValueError:
+                    invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
+                    continue
+            if not len(this_resolver.format.items):
                 invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
                 continue
-            this_resolver.format.selected = fmt_item['label']
-            valid_resolvers.append((this_resolver, resolver_name, fmt_item['label']))
+
+            for fmt_item in this_resolver.format.items:
+                if (format is not None
+                    and not any([format in (fmt_item['label'],
+                                            fmt_item['parser'],
+                                            fmt_item['importer'])
+                                 for format in formats])):
+                    invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
+                    continue
+                this_resolver.format.selected = fmt_item['label']
+                valid_resolvers.append((this_resolver, resolver_name, fmt_item['label']))
+
+            key_bool_dict[resolver_name] = this_resolver_is_valid
 
     if len(valid_resolvers) == 0:
         msg = (f'No valid loaders found for input. Tried:\n\n'
