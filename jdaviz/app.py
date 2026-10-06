@@ -59,6 +59,7 @@ from jdaviz.utils import (SnackbarQueue, alpha_index, alpha_index_to_int, data_h
                           _get_celestial_wcs)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
 from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
+                                               all_flux_unit_conversion_equivs,
                                                combine_flux_and_angle_units,
                                                flux_unit_conversion,
                                                spectral_unit_conversion,
@@ -124,7 +125,9 @@ class UnitConverterWithSpectral:
         elif (data.meta.get('_importer') == 'ImageImporter' and
               u.Unit(data.get_component(cid).units).physical_type == 'surface brightness'):
             # handle surface brightness units in image-like data
-            return (values * u.Unit(original_units)).to_value(target_units)
+            equivs = all_flux_unit_conversion_equivs(pixar_sr=data.meta.get('_pixel_scale_factor'))
+            return flux_unit_conversion(values, original_units, target_units,
+                                        equivs, with_unit=False)
         elif cid.label in ("flux"):
             try:
                 spec = data.get_object(cls=Spectrum)
@@ -133,9 +136,8 @@ class UnitConverterWithSpectral:
                 spec = Spectrum(flux=data.data * u.Unit(original_units))
             # equivalencies for flux/surface brightness conversions
             viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
-            return flux_unit_conversion(
-                values, original_units, target_units, viewer_equivs,
-                with_unit=False)
+            return flux_unit_conversion(values, original_units, target_units,
+                                        viewer_equivs, with_unit=False)
         else:  # spectral axis
             return spectral_unit_conversion(values, original_units, target_units)
 
@@ -219,7 +221,7 @@ ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 vuetify_theme.themes.light.primary = "#00617E"
 vuetify_theme.themes.light.secondary = "#007DA4"
 vuetify_theme.themes.light.error = '#FF5252'
-vuetify_theme.themes.light.info = '#2196F3'
+vuetify_theme.themes.light.info = '#205F76'
 vuetify_theme.themes.light.success = '#4CAF50'
 vuetify_theme.themes.light.warning = '#FFC107'
 vuetify_theme.themes.light.custom_theme_colors = {
@@ -236,7 +238,7 @@ vuetify_theme.themes.light.custom_theme_colors = {
 vuetify_theme.themes.dark.primary = "#53CBFF"
 vuetify_theme.themes.dark.secondary = "#007DA4"
 vuetify_theme.themes.dark.error = '#FF5252'
-vuetify_theme.themes.dark.info = '#2196F3'
+vuetify_theme.themes.dark.info = '#205F76'
 vuetify_theme.themes.dark.success = '#4CAF50'
 vuetify_theme.themes.dark.warning = '#FFC107'
 vuetify_theme.themes.dark.custom_theme_colors = {
@@ -862,7 +864,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         new_data = self.data_collection[new_data_label]
 
-        if (new_data.meta.get('_importer') in ('ImageImporter', 'CatalogImporter') and
+        if (new_data.meta.get('_importer') in ('ImageImporter', 'SourceCatalogImporter') and
                 'Orientation' in self._jdaviz_helper.plugins):
             # Orientation plugin alreadly listens for messages for added Data and handles linking
             # orientation_plugin._link_image_data()
@@ -2957,10 +2959,11 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             # unless it is used
             color = data.meta.get('_default_color')
             if color is None:
-                # check if this is a catalog/scatter layer and use scatter_color_cycler,
-                # which has brighter colors.
-                is_catalog = data.meta.get('_importer') == 'CatalogImporter'
-                if is_catalog and hasattr(viewer, 'scatter_color_cycler'):
+                # check if this is a source catalog/scatter layer and use
+                # scatter_color_cycler, which has brighter colors for overplotting
+                # on images
+                is_source_catalog = data.meta.get('_importer') == 'SourceCatalogImporter'
+                if is_source_catalog and hasattr(viewer, 'scatter_color_cycler'):
                     color = viewer.scatter_color_cycler()
                 else:
                     color = viewer.color_cycler()

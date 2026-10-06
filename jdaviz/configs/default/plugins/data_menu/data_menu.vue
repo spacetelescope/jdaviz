@@ -3,13 +3,14 @@
     <div class="viewer-label-container">
       <div>
         <v-menu
+          ref="dataMenu"
           location="start"
           :offset="[8, 0]"
           transition="slide-x-reverse-transition"
           :close-on-content-click="false"
           v-model="data_menu_open">
           <template v-slot:activator="{ props }">
-            <div :id="'layer-legend-'+ viewer_id" class="layer-legend" v-bind="props">
+            <div class="layer-legend" v-bind="props">
               <div
                 v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0 || data_menu_open"
                 :class="loaded_n_data === 0 && !data_menu_open ? 'viewer-label pulse' : 'viewer-label'"
@@ -67,7 +68,7 @@
               </div>
             </div>
           </template>
-          <v-list :id="'dm-content-' + viewer_id" style="width: 400px; max-height: 600px; overflow-y: auto" class="overflow-y-auto">
+          <v-list ref="dataMenuContent" style="width: 400px; max-height: 600px; overflow-y: auto" class="overflow-y-auto">
             <v-list-item v-if="api_hints_enabled" style="min-height: 12px">
               <div class="v-list-item-content">
                 <span class="api-hint">
@@ -108,6 +109,7 @@
                   </span>
                 </j-tooltip>
                 <v-select
+                  variant="underlined"
                   v-if="orientation_enabled && orientation_align_by_wcs && orientation_layer_items.length > 0"
                   density="compact"
                   :items="orientation_layer_items"
@@ -220,18 +222,20 @@
                         <div style="display: flex; align-items: center;">
                           <j-tooltip :tooltipcontent="copied_label === item.label ? 'Copied' : 'Copy label to clipboard'">
                             <v-btn
+                              variant="text"
                               icon
-                              x-small
+                              size="small"
+                              density="default"
                               @click.stop="copyLabel(item.label)"
                             >
-                              <v-icon small>{{ copied_label === item.label ? 'mdi-check' : 'mdi-clipboard-outline' }}</v-icon>
+                              <v-icon>{{ copied_label === item.label ? 'mdi-check' : 'mdi-clipboard-outline' }}</v-icon>
                             </v-btn>
                           </j-tooltip>
                           <j-tooltip
                             v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
                             tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
                           >
-                            <v-btn icon disabled>
+                            <v-btn variant="text" icon size="small" density="default" disabled>
                               <v-icon>mdi-eye-off</v-icon>
                             </v-btn>
                           </j-tooltip>
@@ -309,7 +313,7 @@
           </v-list>
         </v-menu>
       </div>
-      <div :id="'dm-target-' + viewer_id"></div>
+      <div ref="dataMenuTarget"></div>
     </div>
     <div v-if="loaded_n_data == 0 && dataset_items.length > 0" style="height: 100%">
       <v-list style="height: 100%">
@@ -404,18 +408,23 @@
         }
       }
     },
-    mounted() {
-      let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
+    async mounted() {
+      await this.$nextTick();
+      let element = this.$refs.dataMenuTarget.parentElement
       if (element === null) {
         return
       }
-      while (element["tagName"] !== "BODY") {
+      while (element && element["tagName"] !== "BODY") {
         if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
           element.addEventListener("scroll", this.onScroll);
         }
         element = element.parentElement;
       }
-      this.jupyterLabCell = this.$el.closest(".jp-Notebook-cell");
+      this._visibilityObserver = new IntersectionObserver(([entry]) => {
+        this._activatorVisible = entry.isIntersecting && entry.intersectionRatio >= 0.01;
+        this.onScroll();
+      }, { threshold: 0.01 });
+      this._visibilityObserver.observe(this.$refs.dataMenu.activatorEl);
 
       // Dynamically adjust legend truncation based on viewer height.
       // Must observe the actual viewer container (the v-card that wraps
@@ -432,15 +441,16 @@
       });
     },
     beforeUnmount() {
+      this._visibilityObserver?.disconnect();
       if (this._resizeObserver) {
         this._resizeObserver.disconnect();
         this._resizeObserver = null;
       }
-      let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
+      let element = this.$refs.dataMenuTarget.parentElement
       if (element === null) {
         return
       }
-      while (element["tagName"] !== "BODY") {
+      while (element && element["tagName"] !== "BODY") {
         if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
           element.removeEventListener("scroll", this.onScroll);
         }
@@ -514,18 +524,13 @@
         this._dragGhostParent = null;
       },
       onScroll(e) {
-        if (this.data_menu_open && document.getElementById(`dm-target-${this.viewer_id}`)) {
-          const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height
-          const top = document.getElementById(`dm-target-${this.viewer_id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
-          const menuContent = document.getElementById(`dm-content-${this.viewer_id}`);
-          if (menuContent === null || menuContent.parentElement === null) {
+        if (this.data_menu_open && this.$refs.dataMenuTarget) {
+          const menuContent = this.$refs.dataMenuContent?.$el;
+          if (!menuContent || menuContent.parentElement === null) {
             return;
           }
-          menuContent.parentElement.style.top = top + "px";
 
-          /* since Jupyter Lab 4.2 cells outside the view port get a height of 0, causing the menu to be visible when
-           * that happens. This workaround hides the menu when it's parent cell is not in the viewport. */
-          const labCellHidden = this.jupyterLabCell && window.getComputedStyle(this.jupyterLabCell).height === "0px";
+          const labCellHidden = this._activatorVisible === false;
           menuContent.parentElement.style.display = labCellHidden ? "none" : "";
         }
       },

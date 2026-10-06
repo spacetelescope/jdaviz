@@ -119,6 +119,25 @@ New Features
   the selection of line medium in loader, and adding line name to table by
   default. [#4386]
 
+- Refactoring and some renaming of table viewer classes and catalog loaders.
+  The 'Source Catalog Table' viewer is now specialized for catalogs
+  with RA/Dec or X/Y position columns. The 'Spectral Line Table' viewer is now
+  specialized for spectral line lists with a line-name and/or spectral-location
+  column.  The existing 'Table' viewer class is now the base table viewer for
+  generic tabular data without columns with special roles. There are now three
+  tabular data loaders - 'Generic Catalog' for generic tabular data,
+  'Source Catalog' (formerly 'Catalog') for catalogs with RA/Dec or X/Y position
+  columns, and 'Spectral Line' for spectral line lists with a line-name and/or
+  spectral-location column. [#4401]
+
+- Logger is accessible in UI before data is loaded. [#4403]
+
+- Format choices are now sorted so that the most likely format is at the top of the list
+  and selected by default. [#4402]
+
+- Improve logic in unit conversion plugin to prevent stale or incompatible unit
+  selections when data is removed from viewers. [#4423]
+
 Mosviz
 ^^^^^^
 
@@ -143,6 +162,8 @@ Bug Fixes
 - Fix color picker not showing correctly. [#4332]
 
 - Fix error when typing while renaming data or subset. [#4359]
+
+
 
 Mosviz
 ^^^^^^
@@ -172,6 +193,12 @@ Other Changes and Additions
 
 Bug Fixes
 ---------
+- Fix recursion limit bug when attempting to set an invalid data menu layer in
+  multiselect mode. [#4419]
+
+- Fix a bug in Line Analysis that looks for a (possibly) non-existent mask when getting the continuum [#4406]
+
+- Fix viewer container width. [#4424]
 
 Mosviz
 ^^^^^^

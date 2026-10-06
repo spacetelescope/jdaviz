@@ -61,6 +61,7 @@
     <v-row class="row-no-outside-padding row-min-bottom-padding vuetify2">
       <v-col>
         <v-text-field
+          variant="underlined"
           :model-value='rs_redshift'
           @update:modelValue='setRedshiftFloat'
           @blur="unpause_tables"
@@ -80,6 +81,7 @@
     <v-row class="row-no-outside-padding vuetify2">
       <v-col>
         <v-text-field
+          variant="underlined"
           :model-value="rs_rv"
           @update:modelValue='setRVFloat'
           @blur="unpause_tables"
@@ -99,6 +101,7 @@
     <j-plugin-section-header>Preset Line Lists</j-plugin-section-header>
     <j-flex-row>
       <v-select
+        variant="underlined"
         :menu-props="{ location: 'bottom start' }"
         attach
         :items="available_lists"
@@ -167,6 +170,7 @@
               <j-flex-row class="row-min-bottom-padding" no-gutters>
                   <j-tooltip tipid='plugin-line-lists-line-name' span_style="display: block; width: 100%;">
                     <v-text-field
+                      variant="underlined"
                       label="Line Name"
                       v-model="custom_name"
                       density="compact"
@@ -178,6 +182,7 @@
               <j-flex-row class="row-min-bottom-padding" no-gutters>
                 <j-tooltip tipid='plugin-line-lists-custom-rest' span_style="display: block; width: 100%;">
                   <v-text-field
+                    variant="underlined"
                     label="Rest Value"
                     v-model="custom_rest"
                     density="compact"
@@ -255,6 +260,7 @@
                 </j-tooltip>
 
                 <v-text-field
+                  variant="underlined"
                   v-model="lines_filter"
                   append-inner-icon='mdi-magnify'
                   style="padding: 0px 0px; margin-left: 8px; max-width: calc(100% - 38px)"
@@ -310,6 +316,7 @@
                     <v-col cols=6 style="padding-bottom: 3px; padding-top: 0px">
                       <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Rest</b/></v-subheader>
                       <v-text-field
+                        variant="underlined"
                         v-model="line.rest"
                         class="mt-0 pt-0"
                         density="compact"
@@ -321,6 +328,7 @@
                     <v-col cols=6 style="padding-top: 0px">
                       <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Observed</b/></v-subheader>
                       <v-text-field
+                        variant="underlined"
                         :model-value="line.obs"
                         @update:modelValue="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: true})"
                         @blur="unpause_tables"
@@ -461,7 +469,7 @@
       padding-left: 16px;
       border: 2px solid rgba(0,0,0,0.54);
   }
-  
+
   .loaded-lines-content {
     width: 100%;
     box-sizing: border-box;

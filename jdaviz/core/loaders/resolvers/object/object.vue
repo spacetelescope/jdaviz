@@ -35,6 +35,7 @@
         Access the user API in a notebook cell to import a python object.
       </v-alert>
       <v-text-field
+        variant="underlined"
         v-model='object_repr'
         prepend-icon='mdi-language-python'
         style="padding: 0px 8px"

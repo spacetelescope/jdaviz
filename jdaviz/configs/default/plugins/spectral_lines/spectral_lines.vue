@@ -38,6 +38,7 @@
 
     <v-row>
       <v-text-field
+        variant="underlined"
         v-model.number="component_redshift"
         type="number"
         step="0.0001"
@@ -73,6 +74,7 @@
           <v-col cols=6 style="padding-bottom: 3px; padding-top: 0px">
             <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Rest</b></v-subheader>
             <v-text-field
+              variant="underlined"
               :model-value="line.rest"
               class="mt-0 pt-0"
               density="compact"
@@ -84,6 +86,7 @@
           <v-col cols=6 style="padding-top: 0px">
             <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Observed</b></v-subheader>
             <v-text-field
+              variant="underlined"
               :model-value="line.obs"
               class="mt-0 pt-0"
               density="compact"

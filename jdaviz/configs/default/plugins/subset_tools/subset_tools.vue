@@ -64,7 +64,7 @@
       </v-col>
     </v-row>
 
-    <j-flex-row v-if="api_hints_enabled" style="margin-top: -32px">
+    <j-flex-row v-if="api_hints_enabled" style="margin-top: -12px">
       <span class="api-hint">
         plg.combination_mode = '{{ combination_mode_selected }}'
       </span>
@@ -143,6 +143,7 @@
       <div v-for="(item, index2) in region">
         <j-flex-row v-if="item.name === 'Parent' || item.name === 'Masked values'" class="row-no-outside-padding">
           <v-text-field
+            variant="underlined"
             :label="item.name"
             :model-value="item.value"
             style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
@@ -158,6 +159,7 @@
         </j-flex-row>
         <j-flex-row v-else class="row-no-outside-padding">
           <v-text-field
+            variant="underlined"
             :label="api_hints_enabled ? 'plg.update_subset(\'' + subset_selected + '\', subregion=' + index + ', ' + item.att + '=' + item.value + ')' : item.name"
             v-model.number="item.value"
             type="number"
@@ -194,9 +196,6 @@
             }}
           </plugin-action-button>
         </j-tooltip>
-        <v-alert v-if="api_hints_enabled" type="info" density="compact">
-          see individual commands above to update subset properties
-        </v-alert>
         <plugin-action-button
           :disabled="subset_selected === 'Create New'"
           :results_isolated_to_plugin="false"
@@ -204,6 +203,11 @@
         >
           Update
         </plugin-action-button>
+      </j-flex-row>
+      <j-flex-row v-if="api_hints_enabled" justify="end" no-gutters>
+        <v-alert type="info" density="compact">
+          see individual commands above to update subset properties
+        </v-alert>
       </j-flex-row>
   </j-tray-plugin>
 </template>

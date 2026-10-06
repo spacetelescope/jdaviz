@@ -17,7 +17,7 @@ def test_spectral_lines_importer_is_valid(deconfigged_helper):
     assert importer.is_valid
     assert importer._check_is_valid() == ''
 
-    # non table input (a string) should not be valid
+    # non-table input (a string) should not be valid
     importer._input = 'not_a_table'
     assert importer._check_is_valid() == 'Input must be an astropy Table or QTable.'
 
@@ -43,15 +43,15 @@ def test_wavelength_column_detection(deconfigged_helper, col_name):
     """
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({col_name: [6562.8, 4861.3], 'flux': [1.0, 0.5]})
-    ldr.format = 'Spectral Lines'
+    assert ldr.format == 'Spectral Lines'
     importer = ldr.importer
     assert importer.spectral_loc == col_name
 
     # load into a Table viewer and verify the data appears there
-    importer.viewer.create_new = 'Table'
+    importer.viewer.create_new = 'Spectral Line Table'
     importer()
 
-    tv = deconfigged_helper.viewers['Table']
+    tv = deconfigged_helper.viewers['Spectral Line Table']
     assert len(tv._obj.glue_viewer.layers) == 1
 
 
@@ -63,7 +63,7 @@ def test_spectral_unit_column_detection(deconfigged_helper):
     """
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'pos': [6562.8, 4861.3] * u.AA, 'name': ['Ha', 'Hb']})
-    ldr.format = 'Spectral Lines'
+    assert ldr.format == 'Spectral Lines'
     importer = ldr.importer
     assert importer.spectral_loc == 'pos'
 
@@ -77,7 +77,7 @@ def test_spectral_loc_excludes_non_numeric_columns(deconfigged_helper):
     ldr.object = QTable({'wavelength': [6562.8, 4861.3],
                          'name': ['Ha', 'Hb'],       # string – not numeric
                          'flag': [True, False]})      # bool – not float-castable via astype
-    ldr.format = 'Spectral Lines'
+    assert ldr.format == 'Spectral Lines'
     importer = ldr.importer
 
     choices = importer.spectral_loc.choices
@@ -87,12 +87,11 @@ def test_spectral_loc_excludes_non_numeric_columns(deconfigged_helper):
 
 
 def test_no_spectral_column_detected(deconfigged_helper):
-    """When no spectral column is found, selection should default to '---'."""
+    """Without a spectral column, Spectral Lines is not valid and Generic Catalog is used."""
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'flux': [1.0, 0.5], 'name': ['Ha', 'Hb']})
-    ldr.format = 'Spectral Lines'
-    importer = ldr.importer
-    assert importer.spectral_loc == '---'
+    assert 'Spectral Lines' not in ldr.format.choices
+    assert ldr.format == 'Generic Catalog'
 
 
 def test_spectral_loc_has_unit_true(deconfigged_helper):
@@ -165,8 +164,10 @@ def test_output_additional_columns(deconfigged_helper):
 
 
 def test_supported_viewers():
-    """_get_supported_viewers should include Scatter, Table and Histogram viewers."""
+    """
+    TODO:_get_supported_viewers should include Scatter, Spectral Line Table
+    and Histogram viewers? currently only the Spectral Line Table is supported."""
     viewers = SpectralLinesImporter._get_supported_viewers()
     assert len(viewers) == 1  # only table viewer for now
     references = [v['reference'] for v in viewers]
-    assert 'table-viewer' in references
+    assert 'spectral-line-table-viewer' in references

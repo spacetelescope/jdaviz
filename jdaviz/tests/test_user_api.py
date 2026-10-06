@@ -74,18 +74,18 @@ def test_wildcard_match_extensions(specviz_helper, premade_spectrum_list):
     # Resetting to empty
     selection_obj.selected = []
 
-    err_str1 = "not all items in"
-    err_str2 = f"are one of {selection_obj.choices}, reverting selection to []"
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *'] {err_str2}")):
+    s = "Not all items in"
+
+    m = f"{s} '['bad *']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer.extension = 'bad *'
 
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *', '* result'] {err_str2}")):
+    m = f"{s} '['bad *', '* result']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer.extension = ['bad *', '* result']
 
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['another', 'bad * result'] {err_str2}")):
+    m = f"{s} '['another', 'bad * result']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer.extension = ['another', 'bad * result']
 
     # Check that selected is still/reverted successfully to []
@@ -124,18 +124,18 @@ def test_wildcard_match_extension(imviz_helper, multi_extension_image_hdu_wcs):
     assert selection_obj.selected == []
     assert selection_obj.choices == default_choices
 
-    err_str1 = "not all items in"
-    err_str2 = f"are one of {selection_obj.choices}, reverting selection to []"
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *'] {err_str2}")):
+    s = "Not all items in"
+
+    m = f"{s} '['bad *']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer._obj.user_api.extension = 'bad *'
 
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *', '* result'] {err_str2}")):
+    m = f"{s} '['bad *', '* result']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer._obj.user_api.extension = ['bad *', '* result']
 
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['another', 'bad * result'] {err_str2}")):
+    m = f"{s} '['another', 'bad * result']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer._obj.user_api.extension = ['another', 'bad * result']
 
     # Check that selected is still/reverted successfully to []
@@ -157,17 +157,19 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = sky_coord_only_source_catalog
-    ldr.format = 'Catalog'
+    ldr.format = 'Source Catalog'
 
     importer_viewer = ldr.importer._obj.viewer
 
     assert 'Scatter' in importer_viewer.create_new.choices
-    assert 'Table' in importer_viewer.create_new.choices
+    assert 'Source Catalog Table' in importer_viewer.create_new.choices
+    assert 'Histogram' in importer_viewer.create_new.choices
 
-    # setting via the user-api wrapper to 'Table' should select the Table type,
-    # not label a scatter viewer labeled 'Table'
-    ldr.importer.viewer = 'Table'
-    assert importer_viewer.create_new.selected == 'Table'
+    # setting via the user-api wrapper to 'Source Catalog Table' should select
+    # the Source Catalog Table viewer type, not label a scatter viewer labeled
+    # 'Source Catalog Table'
+    ldr.importer.viewer = 'Source Catalog Table'
+    assert importer_viewer.create_new.selected == 'Source Catalog Table'
 
     # setting to 'Scatter' should switch the type back
     ldr.importer.viewer = 'Scatter'
@@ -180,8 +182,8 @@ def test_viewer_create_new_type_selection(deconfigged_helper, sky_coord_only_sou
     assert importer_viewer.new_label == 'my-custom-viewer'
 
     # setting to a string of the format Type:label should select the type and set the label
-    ldr.importer.viewer = 'Table:my-custom-table'
-    assert importer_viewer.create_new.selected == 'Table'
+    ldr.importer.viewer = 'Source Catalog Table:my-custom-table'
+    assert importer_viewer.create_new.selected == 'Source Catalog Table'
     assert importer_viewer.new_label == 'my-custom-table'
 
 
@@ -247,7 +249,7 @@ def test_expected_data_api_class(deconfigged_helper,
         (spectrum1d, '1D Spectrum', SpectralDataApi),
         (spectrum2d, '2D Spectrum', SpectralDataApi),
         (spectrum1d_cube, '3D Spectrum', SpectralSpatialDataApi),
-        (sky_coord_only_source_catalog, 'Catalog', DataApi)
+        (sky_coord_only_source_catalog, 'Source Catalog', DataApi)
     ]
 
     # Disable linking to speed up test

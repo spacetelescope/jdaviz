@@ -33,7 +33,7 @@ _LINENAME_PATTERNS = [
 @loader_importer_registry("Spectral Lines")
 class SpectralLinesImporter(BaseCatalogImporter):
     """
-    Importer for spectral line list tables.
+    Importer for Spectral Line Tables.
 
     Accepts an astropy ``Table`` or ``QTable``, and lets the user designate a
     spectral location column along with its unit.
@@ -88,17 +88,28 @@ class SpectralLinesImporter(BaseCatalogImporter):
         self._init_col_other(input_table.colnames)
 
     def _check_is_valid(self):
-        if not getattr(self._app.state, 'dev_loaders', False):
-            return ('Spectral Lines importer is under active development '
-                    '(requires dev_loaders to be enabled).')
-
-        if not isinstance(self.input, (Table, QTable)):
-            return 'Input must be an astropy Table or QTable.'
-
-        if len(self.input) == 0:
-            return 'Input table is empty.'
-
+        basic_check = self._basic_table_validity_checks(self.input)
+        if basic_check:
+            return basic_check
+        if not hasattr(self, 'spectral_loc'):
+            # column components are not yet created (called during __init__),
+            # so we can only check the basic validity of the input
+            return ''
+        if not self._has_selected_col('spectral_loc'):
+            return 'No detected columns for spectral location.'
         return ''
+
+    @property
+    def import_confidence_score(self):
+        if self.resolver.__class__.__name__ == 'SpectralLineDatabaseResolver':
+            return 2
+
+        # NOTE: has_spectral_loc is required by is_valid.  Only a column that carries
+        # spectral units is strong enough evidence to outrank other catalog importers,
+        # since column-name matches are common in generic catalogs.
+        if self.spectral_loc_has_unit and self._has_selected_col('linename'):
+            return 1
+        return -1
 
     def _guess_spectral_loc_col(self):
         """
@@ -214,7 +225,7 @@ class SpectralLinesImporter(BaseCatalogImporter):
     @staticmethod
     def _get_supported_viewers():
         return [
-            {'label': 'Table', 'reference': 'table-viewer'}
+            {'label': 'Spectral Line Table', 'reference': 'spectral-line-table-viewer'}
         ]
 
     @property

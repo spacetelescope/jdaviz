@@ -19,10 +19,10 @@ class TestCatalogConeSearch:
         self.source_names = list(sky_coord_only_source_catalog['source_id'])
 
     def _load_catalog(self, catalog, **load_kwargs):
-        """Load ``catalog`` as a Catalog and return its data collection label."""
-        self.helper.load(catalog, format='Catalog', **load_kwargs)
+        """Load ``catalog`` as a Source Catalog and return its data collection label."""
+        self.helper.load(catalog, format='Source Catalog', **load_kwargs)
         return [d.label for d in self.helper._app.data_collection
-                if d.meta.get('_importer') == 'CatalogImporter'][-1]
+                if d.meta.get('_importer') == 'SourceCatalogImporter'][-1]
 
     def _enter_catalog_mode(self, catalog=None, col_other=None,
                             col_type='sky_coords', name_col=None):

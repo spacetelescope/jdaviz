@@ -7,6 +7,7 @@ import re
 from regions import PixCoord
 from traitlets import Any, Bool, List, Unicode, observe
 
+from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.loaders.importers import BaseCatalogImporter
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
@@ -15,7 +16,7 @@ from jdaviz.utils import create_data_hash, COORD_WORDS_TO_EXCLUDE
 
 from .row_link import get_catalog_row_link_manager
 
-__all__ = ['CatalogImporter']
+__all__ = ['SourceCatalogImporter']
 
 # regular expressions to guess which columns correspond to ra, dec, x, y
 COORD_PATTERNS = {
@@ -26,10 +27,10 @@ COORD_PATTERNS = {
 }
 
 
-@loader_importer_registry("Catalog")
-class CatalogImporter(BaseCatalogImporter):
+@loader_importer_registry("Source Catalog")
+class SourceCatalogImporter(BaseCatalogImporter):
 
-    template_file = __file__, "./catalog.vue"
+    template_file = __file__, "./source_catalog.vue"
 
     # for catalogs with source positions in sky coordinates
     col_ra_items = List().tag(sync=True)
@@ -93,7 +94,7 @@ class CatalogImporter(BaseCatalogImporter):
                                                           selected='extension_selected',
                                                           multiselect='extension_multiselect',
                                                           manual_options=ext_options,
-                                                          filters=[_validate_fits_tablehdu])
+                                                          filters=[self._validate_fits_tablehdu])
 
             # the choices have already been filtered to only valid table HDUs, so
             # choose the 0th to select the first valid table HDU by default
@@ -220,20 +221,33 @@ class CatalogImporter(BaseCatalogImporter):
         return self.input
 
     def _check_is_valid(self):
-        if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
-            # NOTE: temporary during deconfig process
-            return 'Catalog importer is only supported in imviz, mastviz, generalized jdaviz.'
+        basic_check = self._basic_table_validity_checks(self.input)
+        if basic_check:
+            return basic_check
 
-        if isinstance(self.input, (Table, QTable)) and len(self.input):
+        if not hasattr(self, 'col_ra'):
+            # column components are not yet created (called during __init__),
+            # so we can only check the basic validity of the input
             return ''
 
-        elif isinstance(self.input, HDUList):
-            # check for the presence of at least one TableHDU/BinTableHDU extension
-            for i, hdu in enumerate(self.input):
-                if isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0:
-                    return ''
+        if not ((self._has_selected_col('col_ra') and self._has_selected_col('col_dec'))
+                or (self._has_selected_col('col_x') and self._has_selected_col('col_y'))):
+            return 'No detected columns for RA/Dec or X/Y.'
 
-        return 'Input is not a valid catalog.'
+        return ''
+
+    @property
+    def import_confidence_score(self):
+        if (isinstance(self.resolver, BaseConeSearchResolver)
+                and self.resolver.treat_table_as_query):
+            return 2
+
+        # NOTE: is_valid requires either ra/dec or x/y
+        has_ra_dec = all(self._has_selected_col(f'col_{col}') for col in ('ra', 'dec'))
+        has_xy = all(self._has_selected_col(f'col_{col}') for col in ('x', 'y'))
+        if has_ra_dec and has_xy:
+            return 1
+        return -1
 
     @observe('extension_selected')
     def _on_extension_selected_change(self, event):
@@ -409,9 +423,9 @@ class CatalogImporter(BaseCatalogImporter):
     @staticmethod
     def _get_supported_viewers():
         return [{'label': 'Image', 'reference': 'imviz-image-viewer', 'allow_create': False},
+                {'label': 'Source Catalog Table', 'reference': 'source-catalog-table-viewer'},
                 {'label': 'Scatter', 'reference': 'scatter-viewer'},
-                {'label': 'Histogram', 'reference': 'histogram-viewer'},
-                {'label': 'Table', 'reference': 'table-viewer'}]
+                {'label': 'Histogram', 'reference': 'histogram-viewer'}]
 
     @property
     def user_api(self):
@@ -587,8 +601,3 @@ class CatalogImporter(BaseCatalogImporter):
         # ensure the app-level manager that links catalog rows to viewer contents
         # exists (and is subscribed) as soon as a catalog has been imported
         get_catalog_row_link_manager(self._app)
-
-
-def _validate_fits_tablehdu(item):
-    hdu = item.get('obj')
-    return isinstance(hdu, (TableHDU, BinTableHDU))

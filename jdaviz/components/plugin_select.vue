@@ -1,6 +1,10 @@
 <template>
-  <j-flex-row v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
+  <j-flex-row
+    v-if="items.length> 1 || selected.length===0 || show_if_single_entry || api_hints_enabled"
+    style="margin-bottom: 18px"
+  >
     <v-select
+      variant="underlined"
       :menu-props="{ location: 'bottom start' }"
       attach
       :items="filtered_items"
@@ -25,6 +29,7 @@
       <template #prepend-item>
         <div v-if="search_enabled">
           <v-text-field
+            variant="underlined"
             v-model="search_query"
             prepend-inner-icon="mdi-magnify"
             label="Search"

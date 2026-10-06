@@ -2,6 +2,7 @@
   <div>
     <j-flex-row>
       <v-select
+        variant="underlined"
         :menu-props="{ location: 'bottom start' }"
         attach
         :items="items"

@@ -1,3 +1,5 @@
+<script setup>
+</script>
 <template>
   <j-tray-plugin
     :config="config"
@@ -56,12 +58,19 @@
       :items="continuum_subset_items"
       v-model:selected="continuum_subset_selected"
       :show_if_single_entry="true"
-      :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
       label="Continuum"
-      api_hint="plg.continuum_subset ="
+      api_hint="plg.continuum ="
       :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the continuum."
     />
+
+    <j-flex-row v-if="continuum_subset_selected===spectral_subset_selected">
+      <v-alert type="error" style="width: 100%; margin-left: 12px; margin-right: 12px;">
+        <span class="v-messages v-messages__message text--secondary">
+            Cannot use the same region to define both the spectral region and the continuum.
+        </span>
+      </v-alert>
+    </j-flex-row>
 
     <plugin-dataset-select
       v-if="continuum_subset_selected !== 'None'"
@@ -78,6 +87,7 @@
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
            in line_analysis.py  -->
       <v-text-field
+        variant="underlined"
         :label="api_hints_enabled ? 'plg.continuum_width =' : 'Width'"
         :class="api_hints_enabled ? 'api-hint' : null"
         type="number"
@@ -99,6 +109,7 @@
 
     <j-flex-row>
       <v-text-field
+        variant="underlined"
         ref="n_moment"
         type="number"
         :label="api_hints_enabled ? 'plg.n_moment =' : 'Moment'"
@@ -130,6 +141,7 @@
       </j-flex-row>
       <j-flex-row v-if="output_unit_selected !== 'Spectral Unit' && output_unit_selected !== 'Surface Brightness'">
         <v-text-field
+        variant="underlined"
         ref="reference_wavelength"
         type="number"
         :label="api_hints_enabled ? 'plg.reference_wavelength =' : 'Reference Wavelength'"
@@ -162,7 +174,7 @@
       action_label="Calculate"
       action_tooltip="Calculate moment map"
       :action_spinner="spinner"
-      :action_disabled="n_moment > 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0"
+      :action_disabled="continuum_subset_selected===spectral_subset_selected || (n_moment > 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0)"
       add_results_api_hint = 'plg.add_results'
       action_api_hint='plg.calculate_moment(add_data=True)'
       :api_hints_enabled="api_hints_enabled"

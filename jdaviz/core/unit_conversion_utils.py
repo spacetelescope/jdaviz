@@ -497,6 +497,14 @@ def flux_unit_conversion(values, original_unit, target_unit,
     -------
     converted_values : `~astropy.units.Quantity` or float
         The converted values, with or without units based on ``with_unit``.
+        Note that the returned unit may not always match ``target_unit``: if
+        ``original_unit`` is a per-steradian surface brightness but
+        ``target_unit`` is per-square-pixel (e.g. the app display unit is
+        stuck in pix2 because the first loaded dataset had no solid angle
+        component), the steradian is preserved rather than converted to
+        pixels. Callers that need the unit actually applied (rather than
+        assuming it matches ``target_unit``) should call with
+        ``with_unit=True`` and use the returned Quantity's ``.unit``.
 
     Raises
     ------
@@ -511,11 +519,6 @@ def flux_unit_conversion(values, original_unit, target_unit,
     if not target_unit:
         return values
 
-    if original_unit == target_unit:
-        if not with_unit:
-            return values
-        return values * u.Unit(original_unit)
-
     # convert to Unit object (if not already, which is handled in when casting)
     original_unit = u.Unit(original_unit)
     target_unit = u.Unit(target_unit)
@@ -525,6 +528,21 @@ def flux_unit_conversion(values, original_unit, target_unit,
         original_unit, return_unit=True)
     solid_angle_in_targ = is_unit_per_solid_angle(
         target_unit, return_unit=True)
+
+    # if the solid angle component of the original unit is 'sr', and the target
+    # unit is 'pix2', we assume the app is set in 'pix2' because the initial dataset
+    # loaded was in flux not surface brightness and we want to avoid trying to convert
+    # steradians to pixels, effectively ignoring the display solid angle unit in the
+    # conversion. This allows Jy / sr to be converted to MJy / sr, for example,
+    # when the app is set to display in 'pix2'.
+    if solid_angle_in_orig == u.sr and solid_angle_in_targ == PIX2:
+        solid_angle_in_targ = u.sr
+        target_unit = target_unit * PIX2 / u.sr
+
+    if original_unit == target_unit:
+        if not with_unit:
+            return values
+        return values * u.Unit(original_unit)
 
     # if the units being converted are likely from a moment map, skip conversion
     # (which will fail anyway) without erroring and just return input (with or

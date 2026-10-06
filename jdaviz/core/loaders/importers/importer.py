@@ -1,7 +1,9 @@
 import os
 import re
 
+from astropy.table import Table, QTable
 from astropy import units as u
+from astropy.io.fits import BinTableHDU, HDUList, TableHDU
 from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
@@ -101,6 +103,18 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin):
         """
         # override by subclass
         return 'Not implemented.'  # pragma: nocover
+
+    @property
+    def import_confidence_score(self):
+        """
+        Return how confidently this importer matches its current input.
+
+        This only ranks importers that are already valid for the input; it is
+        not a replacement for ``_check_is_valid``.  By convention, confidence
+        scores are relative boosts or penalties from the default score of 0,
+        usually in the range -2 to +2.
+        """
+        return 0
 
     @property
     def resolver(self):
@@ -545,6 +559,36 @@ class BaseCatalogImporter(BaseImporterToDataCollection):
     col_other_items = List().tag(sync=True)
     col_other_selected = List().tag(sync=True)
     col_other_multiselect = Bool(True).tag(sync=True)
+
+    def _has_selected_col(self, attr):
+        selected = getattr(self, f'{attr}_selected', None)
+        return selected not in ('---', '', None)
+
+    def _basic_table_validity_checks(self, input):
+
+        if self._app.config not in ('deconfigged', 'imviz', 'mastviz'):
+            # NOTE: temporary during deconfig process
+            return 'Catalog importer is only supported in Imviz, Mastviz, generalized Jdaviz.'
+
+        if isinstance(input, (Table, QTable)):
+            if len(input):
+                return ''
+            else:
+                return 'Input table is empty.'
+
+        elif isinstance(input, HDUList):
+            # check for the presence of at least one TableHDU/BinTableHDU extension
+            for _, hdu in enumerate(input):
+                if isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0:
+                    return ''
+            return 'No valid TableHDU/BinTableHDU extensions found.'
+
+        return 'Input must be an astropy Table or QTable.'
+
+    @staticmethod
+    def _validate_fits_tablehdu(item):
+        hdu = item.get('obj')
+        return isinstance(hdu, (TableHDU, BinTableHDU))
 
     def _init_col_other(self, colnames):
         """

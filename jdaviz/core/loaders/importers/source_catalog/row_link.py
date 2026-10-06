@@ -82,7 +82,7 @@ class CatalogRowLinkManager(HubListener):
         Parameters
         ----------
         data_label : str
-            Label of a catalog (loaded via the Catalog importer) in the data
+            Label of a catalog (loaded via the Source Catalog importer) in the data
             collection.
         viewer_data : dict
             Mapping of viewer reference (``str``) or viewer instance to the per-row
@@ -104,8 +104,8 @@ class CatalogRowLinkManager(HubListener):
             per-viewer list does not have one entry per catalog row.
         """
         data = self.app.data_collection[data_label]
-        if data.meta.get('_importer') != 'CatalogImporter':
-            raise ValueError(f"Data '{data_label}' is not a catalog.")
+        if data.meta.get('_importer') != 'SourceCatalogImporter':
+            raise ValueError(f"Data '{data_label}' is not a source catalog.")
 
         nrows = data.size
         columns = dict(data.meta.get(_META_KEY) or {})
@@ -149,7 +149,7 @@ class CatalogRowLinkManager(HubListener):
         column_name = f'Data: {msg.viewer_id}'
         # Also need to remove the component from any catalog data collection objects
         for data in self.app.data_collection:
-            if data.meta.get('_importer') == 'CatalogImporter':
+            if data.meta.get('_importer') == 'SourceCatalogImporter':
                 cid = data.find_component_id(column_name)
                 if cid is not None:
                     data.remove_component(cid)
@@ -266,9 +266,10 @@ class CatalogRowLinkManager(HubListener):
             return
         column_name = f'Data: {viewer_ref}'
 
-        # Update columns in all catalogs whether or not they're in a table viewer
+        # Update columns in all source catalogs in the data collection
+        # whether or not they're in a table viewer
         for data in self.app.data_collection:
-            if data.meta.get('_importer') == 'CatalogImporter':
+            if data.meta.get('_importer') == 'SourceCatalogImporter':
                 self._ensure_viewer_column(data, viewer_ref, column_name)
 
         # If we're observing any table viewers, update the toolbar visibility.
@@ -286,7 +287,7 @@ class CatalogRowLinkManager(HubListener):
         app so the table is immediately ready for two-way sync.
         """
         table_data = getattr(getattr(table_viewer, 'widget_table', None), 'data', None)
-        if table_data is not None and table_data.meta.get('_importer') == 'CatalogImporter':
+        if table_data is not None and table_data.meta.get('_importer') == 'SourceCatalogImporter':
             catalog = table_data
         else:
             catalog = self._catalog_data_for_viewer(table_viewer, require_managed=False)
@@ -365,13 +366,13 @@ class CatalogRowLinkManager(HubListener):
         require_managed : bool
             If ``True`` (default) only return a catalog that has been registered
             via :meth:`set_viewer_data_columns` (carries ``_META_KEY`` in its
-            meta).  If ``False``, return any catalog loaded by the Catalog
+            meta).  If ``False``, return any catalog loaded by the Source Catalog
             importer, including freshly imported ones with no link columns yet.
         """
         if require_managed:
             return self._first_layer_data(viewer, lambda d: _META_KEY in d.meta)
         return self._first_layer_data(
-            viewer, lambda d: d.meta.get('_importer') == 'CatalogImporter'
+            viewer, lambda d: d.meta.get('_importer') == 'SourceCatalogImporter'
         )
 
     @staticmethod

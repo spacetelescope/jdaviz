@@ -73,6 +73,10 @@ div.output_wrapper {
   width: 5px;
 }
 
+.splitpanes__pane {
+  width: 100% !important;
+}
+
 .lm_goldenlayout {
   background: #f8f8f8;
 }
@@ -219,7 +223,8 @@ a:active {
 
 .jdaviz-nested-toolbar .v-btn--active,
 .v-toolbar .v-btn--active,
-.jdaviz-viewer-toolbar .v-btn--active {
+.jdaviz-viewer-toolbar .v-btn--active,
+.v-app-bar .v-btn.active {
   /* active color (orange) */
   background-color: #c75109 !important;
 }

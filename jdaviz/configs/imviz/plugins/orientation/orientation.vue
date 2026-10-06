@@ -181,6 +181,7 @@
                 <v-expansion-panel-text class="plugin-expansion-panel-content">
                   <j-flex-row>
                     <v-text-field
+                      variant="underlined"
                       v-model.number="rotation_angle"
                       type="number"
                       :label="api_hints_enabled ? 'plg.rotation_angle =' : 'Rotation angle'"

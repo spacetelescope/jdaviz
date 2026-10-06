@@ -50,6 +50,7 @@
         </j-tooltip>
         <!-- Select/dropdown widget -->
         <v-select
+          variant="solo"
           v-else
           :model-value="custom_widget_selected[idx]"
           @update:modelValue="(val) => update_widget_selection(idx, val)"
@@ -57,7 +58,6 @@
           :placeholder="widget.label"
           :multiple="widget.multiselect"
           density="compact"
-          variant="solo"
           flat
           hide-details
           :style="widget.multiselect ? 'width: 100%; max-width: 320px;' : 'width: 100%; max-width: 250px;'"

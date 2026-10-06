@@ -408,13 +408,14 @@ class TestResizeSubset:
 def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
                                                 sky_coord_only_source_catalog):
     """
-    Test that catalog layers are excluded from zordermanagement in image viewers.
+    Test that catalog layers are excluded from zorder management in image viewers.
 
-    To do this, load an image, align by WCS, then load a catalog. The catalog
-    layer should always be at the top of the layer stack. Then, add a subset to
-    ensure the catalog layer remains on top. The addition of a 'Default Orientation'
-    and a subset layer will test the reordering functionality of the data menu, and
-    ensure that catalog layers are excluded from reordering and always remain on top.
+    To do this, load an image, align by WCS, then load a source catalog. The source
+    catalog layer should always be at the top of the layer stack. Then, add a
+    subset to ensure the catalog layer remains on top. The addition of a
+    'Default Orientation' and a subset layer will test the reordering
+    functionality of the data menu, and ensure that catalog layers are excluded
+    from reordering and always remain on top.
     """
 
     data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
@@ -422,13 +423,13 @@ def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
 
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
-    # load catalog
+    # load source catalog
     imviz_helper.load(sky_coord_only_source_catalog, data_label='catalog',
-                      format='Catalog')
+                      format='Source Catalog')
 
-    # load catalog. with the presence of a 'Default Orientation' layer that is
-    # NOT listed in the data menu, loading a catalog will cause the layer
-    # reordering logic in data_menu to run, and scatter layers should remain unchanged
+    # with the presence of a 'Default Orientation' layer that is NOT listed in
+    # the data menu, loading a catalog will cause the layer reordering logic in
+    # data_menu to run, and scatter layers should remain unchanged
     layers = imviz_helper.default_viewer.data_menu._obj._viewer.layers
     assert layers[-1].layer.label == 'catalog'
 
@@ -436,3 +437,30 @@ def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
     subset_tools = imviz_helper.plugins['Subset Tools']
     subset_tools.import_region(CircularROI(xc=0, yc=0, radius=1))
     assert layers[-1].layer.label == 'catalog'
+
+
+def test_data_menu_invalid_selection_raises(deconfigged_helper, image_2d_wcs):
+
+    # load an image
+    image_data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(image_data, format='Image', data_label='image')
+
+    dm = deconfigged_helper.viewers['Image'].data_menu
+    # dm is set to multiselect by default
+    assert dm.layer.is_multiselect is True
+    original = dm.layer.selected
+
+    m = "Not all items in '['not-a-layer']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
+        dm.layer = 'not-a-layer'
+
+    # selection should remain unchanged after attempting to set an invalid layer
+    assert dm.layer.selected == original
+
+    # also make sure this happens when the data menu is not in multiselect mode
+    dm.layer.multiselect = False
+    original = dm.layer.selected
+    m = "'not-a-layer' not one of ['image[DATA]'], reverting selection to ''"
+    with pytest.raises(ValueError, match=re.escape(m)):
+        dm.layer = 'not-a-layer'
+    assert dm.layer.selected == original

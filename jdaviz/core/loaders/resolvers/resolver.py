@@ -84,10 +84,11 @@ class FormatSelect(SelectPluginComponent):
         return super()._is_valid_item(item, locals())
 
     @observe('filters', 'debug')
-    def _update_items(self, msg={}):
+    def _update_items(self, msg={}, reset_selection=False):
+        skip_if_current_valid = not reset_selection
         if not self.plugin.is_valid:
             self.items = []
-            self._apply_default_selection()
+            self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
             return
 
         all_formats = []
@@ -106,7 +107,7 @@ class FormatSelect(SelectPluginComponent):
         except Exception as e:
             self.items = []
             self._invalid_importers = f'Resolver exception: {e}'
-            self._apply_default_selection()
+            self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
             return
 
         with warnings.catch_warnings():
@@ -158,13 +159,15 @@ class FormatSelect(SelectPluginComponent):
                             item = {'label': importer_name,
                                     'parser': parser_name,
                                     'importer': importer_name,
-                                    'targets': this_importer.targets}
+                                    'targets': this_importer.targets,
+                                    'import_confidence_score': this_importer.import_confidence_score}  # noqa
                             parser_pref = this_importer.parser_preference
                             if importer_name not in self._importers:
                                 all_formats.append(item)
                                 self._importers[importer_name] = this_importer
                             elif not len(parser_pref) or parser_name not in parser_pref:
                                 # default to the previous (or first) found match
+                                self._invalid_importers[label] = f'Parser {parser_name} has no priority set'  # noqa
                                 continue
                             else:
                                 # then there was already a match from an earlier parser.  Compare
@@ -178,8 +181,10 @@ class FormatSelect(SelectPluginComponent):
                                     # this parser has preference over the previous one
                                     all_formats[item_index] = item
                                     self._importers[importer_name] = this_importer
+                                    self._invalid_importers[prev_parser] = f'Parser {parser_name} has preference over {prev_parser}'  # noqa
                                 else:
                                     # this previous parser has preference over this one
+                                    self._invalid_importers[label] = f'Parser {prev_parser} has preference over {parser_name}'  # noqa
                                     continue
 
                         else:
@@ -190,14 +195,15 @@ class FormatSelect(SelectPluginComponent):
                     else:
                         self._invalid_importers[label] = this_importer.is_valid.message
 
-        # Sort generic table importers to the end of the list so more specific
-        # formats are selected by default.  Order: other > Catalog > Spectral Lines.
-        spectral_lines_formats = [f for f in all_formats if f['label'] == 'Spectral Lines']
-        catalog_formats = [f for f in all_formats if f['label'] == 'Catalog']
-        other_formats = [f for f in all_formats
-                         if f['label'] not in ('Catalog', 'Spectral Lines')]
-        self.items = other_formats + spectral_lines_formats + catalog_formats
-        self._apply_default_selection()
+        # if any choice has a non-zero/default confidence score, then sort by score
+        # for any items with the same score, original ordering (ie import order in
+        # importers/__init__.py) will be preserved.
+        if any(item['import_confidence_score'] != 0 for item in all_formats):
+            all_formats = sorted(all_formats,
+                                 key=lambda item: item['import_confidence_score'],
+                                 reverse=True)
+        self.items = all_formats
+        self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
 
 
 class TargetSelect(SelectPluginComponent):
@@ -652,7 +658,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
             self.observation_table._clear_table()
             self.file_table._clear_table()
-            self._update_format_items()
+            self._update_format_items(reset_selection=True)
             return
 
         if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
@@ -664,7 +670,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
             self.observation_table._clear_table()
             self.file_table._clear_table()
-            self._update_format_items()
+            self._update_format_items(reset_selection=True)
             return
 
         # first attempt to parse the input as a table
@@ -698,7 +704,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
 
                 self.observation_table._clear_table()
                 self.file_table._clear_table()
-                self._update_format_items()
+                self._update_format_items(reset_selection=True)
                 return
 
             if self.treat_table_as_query and file_table is not None:
@@ -755,7 +761,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.file_table_populated = False
         self.parsed_input_not_resolvable_message = ''
 
-        self._update_format_items()
+        self._update_format_items(reset_selection=True)
 
     @cached_property
     def missions_query(self):
@@ -917,9 +923,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self._update_format_items()
 
     @with_spinner('spinner', '_update_format_spinner_text')
-    def _update_format_items(self):
+    def _update_format_items(self, reset_selection=False):
         # NOTE: this will call self.output
-        self.format._update_items()
+        self.format._update_items(reset_selection=reset_selection)
         self.target._update_items()  # assumes format._importers is updated from above
         # ensure the importer updates even if the format selection remains fixed
         self._on_format_selected_changed()
@@ -1154,7 +1160,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         )
         self.search_input.add_filter(
             lambda item: item['label'] != 'Catalog' or any(
-                d.meta.get('_importer') == 'CatalogImporter'
+                d.meta.get('_importer') == 'SourceCatalogImporter'
                 for d in self._app.data_collection
             )
         )

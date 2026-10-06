@@ -84,6 +84,7 @@
             </j-flex-row>
             <j-flex-row>
               <v-text-field
+                variant="underlined"
                 v-model.number="reference_spectral_value"
                 type="number"
                 :step="0.1"
@@ -144,6 +145,7 @@
         <div v-if="bg_wavelength_dependent">
           <j-flex-row>
             <v-text-field
+              variant="underlined"
               v-model.number="reference_spectral_value"
               type="number"
               :step="0.1"

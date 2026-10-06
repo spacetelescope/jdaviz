@@ -45,6 +45,7 @@
           <v-expansion-panel-text class="plugin-expansion-panel-content">
             <j-flex-row>
               <v-text-field
+                variant="underlined"
                 ref="audfrqmin"
                 type="number"
                 label="Minimum Audio Frequency"
@@ -55,6 +56,7 @@
             </j-flex-row>
             <j-flex-row>
               <v-text-field
+                variant="underlined"
                 ref="audfrqmax"
                 type="number"
                 label="Maximum Audio Frequency"
@@ -65,6 +67,7 @@
             </j-flex-row>
             <j-flex-row>
               <v-text-field
+                variant="underlined"
                 ref="assidx"
                 type="number"
                 label="Audio Spectrum Scaling Index"
@@ -75,6 +78,7 @@
             </j-flex-row>
             <j-flex-row>
               <v-text-field
+                variant="underlined"
                 ref="ssvidx"
                 type="number"
                 label="Spectrum-Spectrum Volume Index"
@@ -93,6 +97,7 @@
 	    </j-flex-row>
             <j-flex-row v-if="use_pccut">
               <v-text-field
+                variant="underlined"
                 ref="pccut"
                 type="number"
                 label="Flux Percentile Cut Value"
@@ -123,6 +128,7 @@
     </j-flex-row>
     <j-flex-row>
       <v-select
+        variant="underlined"
         :menu-props="{ location: 'bottom start' }"
         attach
         :items="sound_devices_items"

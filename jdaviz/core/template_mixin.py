@@ -212,6 +212,14 @@ def _is_image_viewer(viewer):
     return 'ImageView' in viewer.__class__.__name__
 
 
+def _supports_markers(viewer):
+    # markers require a bqplot figure (excludes table viewers) and mouseover coordinates
+    # that map to data (excludes scatter/histogram viewers of arbitrary columns)
+    if not hasattr(viewer, 'figure'):
+        return False
+    return viewer.__class__.__name__ not in ('ScatterViewer', 'HistogramViewer')
+
+
 class ViewerPropertiesMixin:
     # assumes that self._app is defined by the class
     def get_matching_viewers(self, filter_or_cls, raise_if_none=False):
@@ -1719,17 +1727,31 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         self._selected_previous = event['old']
         self._clear_cache()
         valid = self.labels
+
+        new = event['new']
+        old = event['old']
+
         if self.is_multiselect:
-            if not isinstance(event['new'], list):
-                self.selected = [event['new']]
-                return
-            if not np.all([item in valid + [''] for item in event['new']]):
-                self.selected = event['old']
-                raise ValueError(f"not all items in {event['new']} are one of {valid}, reverting selection to {event['old']}")  # noqa
+            if not isinstance(new, list):
+                new = [new] if new != '' else []
+            if not all(item in valid + [''] for item in new):
+                # revert only to a valid label, otherwise the revert re-triggers
+                # this observer and can encounter a recursion limit
+                if isinstance(old, list) and all(item in valid + [''] for item in old):
+                    revert = old
+                else:
+                    revert = []
+                self.selected = revert
+                raise ValueError(f"Not all items in \'{new}\' are one of \'{old}\', "
+                                 f"reverting selection to \'{revert}\'.")
+
+            if new != event['new']:
+                self.selected = new
+            return
         else:
             if event['new'] not in valid + ['']:
                 self.selected = event['old']
-                raise ValueError(f"\'{event['new']}\' not one of {valid}, reverting selection to \'{event['old']}\'")  # noqa
+                raise ValueError(f"\'{new}\' not one of {valid}, reverting selection to \'{old}\'")
 
     def _update_selected_on_rename(self, old_label, new_label):
         """
@@ -2454,7 +2476,7 @@ class LayerSelect(SelectPluginComponent):
                 return True
 
             # non-catalog layers should remain available regardless of link type
-            if getattr(lyr, 'meta', {}).get('_importer', '') != 'CatalogImporter':
+            if getattr(lyr, 'meta', {}).get('_importer', '') != 'SourceCatalogImporter':
                 return True
 
             comp_labels = [str(x) for x in lyr.component_ids()]
@@ -4275,8 +4297,12 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                        simplify_spectral=True,
                                        use_display_units=True)
             spectrum = extract_region(full_spectrum, sr, return_single_spectrum=True)
-            sr_lower = np.nanmin(spectrum.spectral_axis[spectrum.spectral_axis >= sr.lower])  # noqa
-            sr_upper = np.nanmax(spectrum.spectral_axis[spectrum.spectral_axis <= sr.upper])  # noqa
+            # work with plain (unmasked) values/Quantities to avoid issues comparing a
+            # SpectralAxis directly against a (possibly masked) Quantity
+            axis_value = spectrum.spectral_axis.value
+            axis_unit = spectrum.spectral_axis.unit
+            sr_lower = np.nanmin(axis_value[axis_value >= sr.lower.value]) * axis_unit
+            sr_upper = np.nanmax(axis_value[axis_value <= sr.upper.value]) * axis_unit
 
         if self.continuum_subset_selected == 'None':
             self._update_continuum_marks()
@@ -4328,13 +4354,24 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                              max(spectral_axis.value[continuum_mask])])}
 
         else:
-            # we'll access the mask of the continuum and then apply that to the spectrum.  For a
+            # we'll access the mask of the continuum and then apply that to the spectrum. For a
             # spatially-collapsed spectrum in cubeviz, this will access the mask from the full
             # cube, but still apply that to the spatially-collapsed spectrum.
-            continuum_mask = ~self._specviz_helper.get_data(
+            continuum = self._specviz_helper.get_data(
                 dataset.selected,
                 spectral_subset=self.continuum_subset_selected,
-                use_display_units=True).mask
+                use_display_units=True)
+            if continuum.mask is None:
+                # No masked pixels in the continuum subset. Create a mask for the full spectrum
+                # based on the continuum subset bounds
+                continuum_subset = self._app.get_subsets(self.continuum_subset_selected,
+                                                         simplify_spectral=True,
+                                                         use_display_units=True)
+                # compare on .value (both are already in display units)
+                continuum_mask = ((spectral_axis.value >= continuum_subset.lower.value) &
+                                  (spectral_axis.value <= continuum_subset.upper.value))
+            else:
+                continuum_mask = ~continuum.mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
             if not update_marks:
@@ -4560,6 +4597,12 @@ class ViewerSelect(SelectPluginComponent):
 
         def reference_has_wcs(viewer):
             return getattr(viewer.state.reference_data, 'coords', None) is not None
+
+        def is_not_table_viewer(viewer):
+            return not hasattr(viewer, 'widget_table')
+
+        def supports_markers(viewer):
+            return _supports_markers(viewer)
 
         return super()._is_valid_item(viewer, locals())
 
@@ -4933,9 +4976,17 @@ class DatasetSelect(SelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 2
 
+        def is_source_catalog_table(data):
+            return data.meta.get('_importer', '') == 'SourceCatalogImporter'
+
+        def is_spectral_lines_list_table(data):
+            return data.meta.get('_importer', '') == 'SpectralLinesImporter'
+
+        def is_generic_table(data):
+            return data.meta.get('_importer', '') == 'GenericCatalogImporter'
+
         def is_catalog(data):
-            return data.meta.get('_importer', '') in ['SpectralLinesImporter',
-                                                      'CatalogImporter']
+            return is_source_catalog_table(data) or is_spectral_lines_list_table(data) or is_generic_table(data)  # noqa
 
         def is_catalog_or_image_not_spectrum(data):
             return is_catalog(data) or is_image_not_spectrum(data)

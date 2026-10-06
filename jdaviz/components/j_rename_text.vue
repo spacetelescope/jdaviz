@@ -21,16 +21,20 @@
         </span>
 
         <!-- Pencil icon - visible on hover in display mode, fixed to the right -->
-        <v-icon
+        <v-btn
+          variant="text"
           v-if="showPencil"
-          small
-          style="margin-left: auto; cursor: pointer; flex-shrink: 0; visibility: hidden;"
+          icon
+          size="small"
+          density="default"
+          aria-label="Rename layer"
+          style="margin-left: auto; flex-shrink: 0; visibility: hidden;"
           :style="hovering ? 'visibility: visible;' : ''"
           @click.stop="startEditing"
           @mousedown.stop
         >
-          mdi-pencil
-        </v-icon>
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
       </span>
 
       <!-- Edit mode: shows text field with cancel and confirm buttons -->
