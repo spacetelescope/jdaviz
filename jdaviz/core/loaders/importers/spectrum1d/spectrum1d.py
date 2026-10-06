@@ -36,7 +36,8 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
             # Just return False right away if this triggered off another importer, otherwise
             # trying to access self.output will cause a FileIO error due to closing the input
             # HDUList on cleanup
-            if isinstance(self.input, HDUList) and self.input._file.closed:
+            if isinstance(self.input, HDUList) and (self.input._file is not None and
+                                                    self.input._file.closed):
                 return False
 
             viewer_x_unit = getattr(viewer.state, 'x_display_unit', None)
