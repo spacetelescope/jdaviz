@@ -95,9 +95,15 @@ independent of docking.
 Testing
 -------
 
-Python layout and application tests live in ``jdaviz/core/tests/test_viewer_layout*.py``.
-The native component's unit and browser tests live in ``tests/frontend``; see its
-README for commands. ``tests/integration`` contains a real-widget fixture and
-browser smoke checks for Solara and JupyterLab, including resize/reveal, focus,
-same-kernel remount, and JupyterLab popout. Its README describes setup and the
-limits of the notebook content-visibility check.
+``jdaviz/core/tests/test_viewer_layout.py`` covers the layout model and
+``jdaviz/core/tests/test_viewer_layout_app.py`` the application integration; both
+run with the regular suite. ``jdaviz/tests/test_viewer_docking.py`` drives real
+Imviz viewers with Playwright, served by ``jdaviz/tests/docking_app.py``: it docks,
+resizes, cancels, maximizes, and closes, and checks that the Python viewers,
+widgets, and plot DOM nodes survive each edit. It is skipped unless
+``pytest-playwright`` is installed; CI runs it in the ``browser`` tox environment.
+Locally, either ``tox -e browser`` or::
+
+    pip install playwright pytest-playwright
+    playwright install chromium
+    pytest jdaviz/tests/test_viewer_docking.py
