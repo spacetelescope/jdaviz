@@ -9,7 +9,7 @@
         <v-icon small class="mr-1">{{ selectedCell ? (selectedCell.editable ? 'mdi-table-edit' : 'mdi-table-eye') : 'mdi-table' }}</v-icon>
         <span class="edit-bar-label">{{ selectedCell ? selectedCell.column + ' [' + selectedCell.row + ']' : 'Click a cell to view' }}</span>
       </div>
-      <div class="edit-bar-input-container">
+      <div class="edit-bar-input-container" v-if="selectedCell && selectedCell.editable">
         <v-text-field
           ref="editInput"
           v-model="editValue"
@@ -24,6 +24,12 @@
           @keyup.escape="cancelEdit"
         ></v-text-field>
       </div>
+      <div class="edit-bar-readonly-container" v-else>
+        <span>
+          {{ selectedCell ? editValue : '' }}
+        </span>
+      </div>
+
       <div class="edit-bar-actions" v-if="selectedCell && selectedCell.editable">
         <v-btn
           icon
@@ -277,7 +283,7 @@ module.exports = {
   padding: 1px 6px;
   background-color: #205f76;
   border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 4px;
+  border-radius: 4px 0px 0px 4px;
   min-width: 120px;
   font-size: 12px;
   color: white;
