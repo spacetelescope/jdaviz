@@ -14,7 +14,6 @@ from specutils import Spectrum, SpectrumList, SpectrumCollection
 from specutils.io.parsing_utils import generic_spectrum_from_table
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.template_mixin import LoaderBannerMessagesMixin, SelectFileExtensionComponent
 from jdaviz.core.unit_conversion_utils import is_unit_per_solid_angle
 from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
