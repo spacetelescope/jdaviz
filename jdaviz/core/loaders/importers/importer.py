@@ -11,7 +11,7 @@ from glue.core.message import (DataCollectionAddMessage,
 from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import (AutoTextField,
-                                        PluginTemplateMixin,
+                                        LoaderBannerMessagesMixin, PluginTemplateMixin,
                                         SelectPluginComponent,
                                         ViewerSelectCreateNew,
                                         with_spinner,
@@ -52,7 +52,7 @@ def _physical_type_from_component(comp_id, comp):
         return comp_units, None
 
 
-class BaseImporter(PluginTemplateMixin, ValidatorMixin):
+class BaseImporter(PluginTemplateMixin, ValidatorMixin, LoaderBannerMessagesMixin):
     # preference order of parsers, by registry name.  If empty, the first found match will
     # be used by default.  If not empty, the first match in the list will be used (including
     # over any parsers not included in the list).  If not empty but no valid parsers are in
