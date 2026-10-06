@@ -306,6 +306,30 @@
 .custom-toolbar-widgets ~ .toolbar-nested-tools {
   flex: 0 0 auto !important;
 }
+.custom-toolbar-text-input,
+.custom-toolbar-text-input .v-field,
+.custom-toolbar-text-input .v-field__overlay {
+  background-color: #007ba1 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+.custom-toolbar-text-input .v-field__input,
+.custom-toolbar-text-input input {
+  color: white !important;
+  caret-color: white !important;
+}
+.custom-toolbar-text-input .v-field,
+.custom-toolbar-text-input .v-field::before,
+.custom-toolbar-text-input .v-field::after,
+.custom-toolbar-text-input .v-field__outline,
+.custom-toolbar-text-input .v-field__outline::before,
+.custom-toolbar-text-input .v-field__outline::after {
+  border-bottom-color: rgba(255, 255, 255, 0.75) !important;
+}
+.custom-toolbar-text-input input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+  opacity: 1 !important;
+}
 .custom-toolbar-select {
   flex: 1 1 auto !important;
   min-width: 0 !important;
