@@ -3,6 +3,7 @@ from astropy.nddata import NDData
 import astropy.units as u
 import pytest
 import numpy as np
+import re
 from specutils import SpectralRegion
 from glue.core.roi import (
     RectangularROI, CircularROI, EllipticalROI,
