@@ -138,6 +138,8 @@ New Features
 - Improve logic in unit conversion plugin to prevent stale or incompatible unit
   selections when data is removed from viewers. [#4423]
 
+- Add update feature to standalone app to allow users to click to see if update is available. [#4400]
+
 Mosviz
 ^^^^^^
 
