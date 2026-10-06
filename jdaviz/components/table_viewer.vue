@@ -74,7 +74,7 @@
                 @mouseenter="hoverHeader = header.value"
                 @mouseleave="hoverHeader = null"
                 style="cursor: pointer; user-select: none; padding: 0 8px; white-space: nowrap; position: relative;"
-                :style="editingHeader === header.value ? {minWidth: '240px'} : {}"
+                :style="[editingHeader === header.value ? {minWidth: header.value === headers[headers.length - 1].value ? '96px' : '72px'} : {}, header.value === headers[headers.length - 1].value ? {paddingRight: '32px'} : {}]"
             >
               <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
                 <v-icon size="x-small" v-if="header.toggleable_sync" @click.stop="toggle_column_sync({column: header.value})" style="cursor:pointer;" :title="header.synced ? 'Synced (click to disable row-link sync)' : 'Not synced (click to enable row-link sync)'">{{ header.synced ? 'mdi-link' : 'mdi-link-off' }}</v-icon>
@@ -89,10 +89,10 @@
               </div>
 
               <!-- Rename mode: fills the th (min-width ensures it fits) -->
-              <span v-if="editingHeader === header.value && headerMode === 'rename'" @click.stop style="position:absolute;top:0;left:0;right:0;bottom:0;display:inline-flex;align-items:center;gap:4px;background:white;padding:0 4px;z-index:1;"><input :data-header="header.value" v-model="headerEditValue" @keyup.enter.stop="acceptHeader(header.value)" @keyup.escape.stop="cancelHeader()" @click.stop class="glue-header-edit-input"/><v-icon size="x-small" @click.stop="cancelHeader()" style="cursor:pointer" title="Cancel (Esc)">mdi-close</v-icon><v-icon size="x-small" @click.stop="acceptHeader(header.value)" style="cursor:pointer" title="Accept (Enter)">mdi-check</v-icon></span>
+              <span v-if="editingHeader === header.value && headerMode === 'rename'" @click.stop :class="['glue-header-edit-overlay', 'glue-header-edit-overlay--rename', header.value === headers[headers.length - 1].value && 'glue-header-edit-overlay--last-column']"><input :data-header="header.value" v-model="headerEditValue" @keyup.enter.stop="acceptHeader(header.value)" @keyup.escape.stop="cancelHeader()" @click.stop class="glue-header-edit-input"/><v-icon size="x-small" class="glue-header-edit-action" @click.stop="cancelHeader()" title="Cancel (Esc)">mdi-close</v-icon><v-icon size="x-small" class="glue-header-edit-action" @click.stop="acceptHeader(header.value)" title="Accept (Enter)">mdi-check</v-icon></span>
 
               <!-- Delete confirmation: fills the th (min-width ensures it fits) -->
-              <span v-if="editingHeader === header.value && headerMode === 'remove'" @click.stop style="position:absolute;top:0;left:0;right:0;bottom:0;display:inline-flex;align-items:center;gap:4px;background:#FFF3CD;border:1px solid #FFC107;padding:0 4px;z-index:1;font-size:11px;white-space:nowrap;"><v-icon size="x-small" style="color:#F57C00;">mdi-alert</v-icon><span>remove '{{ header.text }}'?</span><v-icon size="x-small" @click.stop="cancelHeader()" style="cursor:pointer" title="Cancel">mdi-close</v-icon><v-icon size="x-small" @click.stop="deleteHeader(header.value)" style="cursor:pointer" title="Confirm delete">mdi-delete</v-icon></span>
+              <span v-if="editingHeader === header.value && headerMode === 'remove'" @click.stop :class="['glue-header-edit-overlay', 'glue-header-edit-overlay--remove', header.value === headers[headers.length - 1].value && 'glue-header-edit-overlay--last-column']"><v-icon size="x-small">mdi-alert</v-icon><span>Remove '{{ header.text }}'?</span><v-icon size="x-small" class="glue-header-edit-action" @click.stop="cancelHeader()" title="Cancel">mdi-close</v-icon><v-icon size="x-small" class="glue-header-edit-action" @click.stop="deleteHeader(header.value)" title="Confirm delete">mdi-delete</v-icon></span>
             </th>
           </tr>
       </template>
@@ -262,24 +262,29 @@ module.exports = {
   display: flex;
   align-items: center;
   padding: 2px 6px;
-  margin-right: 32px;
-  background-color: #f5f5f5;
-  border: 1px solid #e0e0e0;
+  margin-right: 30px;
+  background-color: #205f76;
+  border: 1px solid #205f76;
   border-bottom: none;
-  border-radius: 4px 4px 0 0;
+  border-radius: 0px;
   gap: 6px;
+  color: white;
 }
 
 .edit-bar-cell-ref {
   display: flex;
   align-items: center;
   padding: 1px 6px;
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
+  background-color: #205f76;
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 4px;
   min-width: 120px;
   font-size: 12px;
-  color: #666;
+  color: white;
+}
+
+.glue-edit-bar .v-icon {
+  color: white;
 }
 
 .edit-bar-label {
@@ -326,21 +331,6 @@ module.exports = {
 .theme--dark .edit-bar-input input,
 .v-theme--dark .edit-bar-input input {
   color: #fff !important;
-}
-
-/* Make the value field stand out against the dark surroundings. */
-.theme--dark .glue-edit-bar,
-.v-theme--dark .glue-edit-bar {
-  background-color: #303030 !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-}
-
-.theme--dark .edit-bar-cell-ref,
-.v-theme--dark .edit-bar-cell-ref {
-  /* dark fill + light text/border for the "column [row]" reference chip */
-  background-color: #424242 !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: #cfcfcf !important;
 }
 
 .edit-bar-input.theme--dark .v-input__slot,
@@ -439,6 +429,41 @@ module.exports = {
   width: 24px !important;
 }
 
+/* Match the toolbar treatment for the table header, edit bar, and paging footer. */
+.glue-data-table thead,
+.glue-data-table thead tr,
+.glue-data-table thead th,
+.glue-data-table .v-data-table-footer,
+.glue-data-table .v-data-footer {
+  background-color: #205f76 !important;
+  color: white !important;
+}
+
+.glue-data-table thead th,
+.glue-data-table thead th .v-icon,
+.glue-data-table .v-data-table-footer,
+.glue-data-table .v-data-footer,
+.glue-data-table .v-data-table-footer .v-icon,
+.glue-data-table .v-data-footer .v-icon,
+.glue-data-table .v-data-table-footer .v-btn,
+.glue-data-table .v-data-footer .v-btn {
+  color: white !important;
+}
+
+.glue-data-table .v-data-table-footer .v-field,
+.glue-data-table .v-data-table-footer .v-field__overlay,
+.glue-data-table .v-data-footer .v-field,
+.glue-data-table .v-data-footer .v-field__overlay {
+  background-color: #205f76 !important;
+}
+
+.glue-data-table .v-data-table-footer .v-field__input,
+.glue-data-table .v-data-table-footer .v-select__selection-text,
+.glue-data-table .v-data-footer .v-field__input,
+.glue-data-table .v-data-footer .v-select__selection-text {
+  color: white !important;
+}
+
 .glue-data-table--scrollable thead > tr {
   position: sticky;
   top: 0;
@@ -486,7 +511,47 @@ module.exports = {
 }
 
 /* ---- Column header rename / delete styles ---- */
+.glue-header-edit-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+  background: #205f76;
+  color: white;
+  font-size: 11px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.glue-header-edit-overlay--last-column {
+  padding-right: 32px;
+}
+
+.glue-header-edit-overlay--remove > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.glue-header-edit-action,
+.glue-header-edit-overlay--remove > .v-icon {
+  color: white !important;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.glue-header-edit-action:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
 .glue-header-edit-input {
+  flex: 1 1 110px;
+  min-width: 0;
   font-size: 12px;
   border: 1px solid #90CAF9;
   border-radius: 3px;
@@ -495,6 +560,7 @@ module.exports = {
   outline: none;
   vertical-align: middle;
   background: #fff;
+  color: #222;
 }
 
 .glue-header-edit-input:focus {
