@@ -204,17 +204,16 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                                  add_data=False)
         except Exception as e:
             ext = None
-            msg = SnackbarMessage(
+            self._loader_message(
                 "Automatic spectrum extraction failed. See the 2D spectral extraction"
                 " plugin to perform a custom extraction",
-                color='error', sender=self, timeout=10000, traceback=e)
+                color='error', timeout=10000, traceback=e)
         else:
-            msg = SnackbarMessage(
+            self._loader_message(
                 "The extracted 1D spectrum was generated automatically."
                 " See the 2D spectral extraction plugin for details or to"
                 " perform a custom extraction.",
-                color='warning', sender=self, timeout=10000)
-        self._app.hub.broadcast(msg)
+                color='warning', timeout=10000)
 
         if ext is not None:
             self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer,
