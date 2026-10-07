@@ -1098,7 +1098,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.open_callback()
 
 
-class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
+class BaseConeSearchResolver(BaseResolver):
     viewer_items = List([]).tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
 
