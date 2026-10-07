@@ -281,7 +281,8 @@ class SnackbarQueue:
         self.deferred.clear()
 
         if msg_filter is None:
-            msg_filter = lambda msg: True
+            def msg_filter(_):
+                return True
 
         for state, logger_plg, msg, kwargs in deferred_copy:
             if msg_filter(msg):
