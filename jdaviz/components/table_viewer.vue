@@ -34,21 +34,22 @@
         <v-btn
           icon
           small
-          color="success"
-          @click="commitEdit"
-          title="Confirm and move to next row (Enter)"
-        >
-          <v-icon small>mdi-check</v-icon>
-        </v-btn>
-        <v-btn
-          icon
-          small
-          color="error"
+          class="edit-bar-action edit-bar-action--cancel"
           @click="cancelEdit"
           title="Cancel (Escape)"
         >
           <v-icon small>mdi-close</v-icon>
         </v-btn>
+        <v-btn
+          icon
+          small
+          class="edit-bar-action edit-bar-action--confirm"
+          @click="commitEdit"
+          title="Confirm and move to next row (Enter)"
+        >
+          <v-icon small>mdi-check</v-icon>
+        </v-btn>
+
       </div>
     </div>
 
@@ -328,6 +329,26 @@ module.exports = {
 .edit-bar-actions .v-btn {
   height: 24px !important;
   width: 24px !important;
+}
+
+.edit-bar-action {
+  color: rgba(227, 242, 253, 0.9) !important;
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  border-radius: 4px;
+}
+
+.edit-bar-action .v-icon {
+  color: inherit !important;
+  transition: color 120ms ease-in-out;
+}
+
+.edit-bar-action:hover,
+.edit-bar-action:hover .v-icon {
+  color: white !important;
+}
+
+.edit-bar-action .v-btn__overlay {
+  opacity: 0 !important;
 }
 
 /* Vuetify puts the theme class on the text-field element itself, so target both
