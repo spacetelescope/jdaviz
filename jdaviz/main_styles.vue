@@ -97,7 +97,8 @@ div.output_wrapper {
   width: 5px;
 }
 
-.splitpanes__pane {
+div.splitpanes__pane.container:has(.gl-compat-root) {
+  /* only target glue viewers, which are panes that contain the div class ".gl-compat-root" */
   width: 100% !important;
 }
 
