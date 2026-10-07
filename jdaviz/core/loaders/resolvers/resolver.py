@@ -42,7 +42,7 @@ from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import (defer_snackbars, download_uri_to_path, find_closest_polygon_mark,
+from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
                           find_polygon_mark_with_skewer,
                           layer_is_image_data)
 from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMessage,
