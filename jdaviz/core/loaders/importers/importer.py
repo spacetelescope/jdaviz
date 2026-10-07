@@ -217,6 +217,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
     def __init__(self, app, resolver, parser, input, **kwargs):
         super().__init__(app, resolver, parser, input, **kwargs)
+        self._clear_loader_messages()
         self.data_label = AutoTextField(self, 'data_label_value',
                                         'data_label_default',
                                         'data_label_auto',
@@ -510,6 +511,11 @@ class BaseImporterToDataCollection(BaseImporter):
                 msg = f"Failed to add {data_label} to viewers: {', '.join(failed_viewers)}"
                 self._app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error',
                                                         traceback=exceptions))
+
+        # Flush all deferred messages to snackbar queue
+        # so that the user sees them immediately after import
+        self._app.state.snackbar_queue.flush_deferred(
+            lambda msg: isinstance(msg.sender, type(self)))
 
     @with_spinner('import_spinner')
     def __call__(self):
