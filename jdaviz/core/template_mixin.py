@@ -630,15 +630,18 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
         Report ``text`` to the user through a persistent banner in the loader UI and
         added to the logger without necessarily raising a snackbar.
         """
-        color = put_kwargs.setdefault('color', 'error')
-        traceback = put_kwargs.setdefault('traceback', None)
+        # color and traceback aren't valid kwargs for put()
+        color = put_kwargs.pop('color', 'error')
+        traceback = put_kwargs.pop('traceback', None)
+        timeout = put_kwargs.pop('timeout', 5000)
         self.loader_message_items = (self.loader_message_items +
                                      [{'text': text, 'color': color,
                                        'traceback': f"{type(traceback).__name__}: {traceback}"}])
         # add message to logger with/without broadcasting
         text_w_traceback = text + (f'; Traceback: {traceback}' if traceback is not None else '')
         snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
-                                                   color=color, sender=self, traceback=traceback)
+                                                   color=color, sender=self,
+                                                   traceback=traceback, timeout=timeout)
 
         put_kwargs.setdefault('history', True)
         put_kwargs.setdefault('popup', True)
