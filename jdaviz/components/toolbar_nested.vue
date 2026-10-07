@@ -8,7 +8,7 @@
     >
       <v-btn class="custom-toolbar-mode-button" @click="restore_tools" style="background-color: #007ba1; color: white; border-bottom-right-radius: 0; border-top-right-radius: 0; margin-right: -6px; padding-top: 3px">
         <j-tooltip :tooltipcontent="`exit '${tool_override_mode}' mode and restore original toolbar`" span_style="height: inherit; display: inherit; pointer-events: cursor;">
-          <v-icon style="margin-left: 4px;">mdi-close</v-icon>
+          <v-icon class="custom-toolbar-mode-cancel" style="margin-left: 4px;">mdi-close</v-icon>
           <span class="custom-toolbar-mode-label" style="color: white; margin-top: 0px; margin-left: 12px">{{ tool_override_mode }}</span>
         </j-tooltip>
       </v-btn>
@@ -285,6 +285,9 @@
 .custom-toolbar-mode-button {
   flex: 0 0 auto !important;
   min-width: 42px !important;
+}
+.custom-toolbar-mode-cancel {
+  color: white !important;
 }
 .custom-toolbar-mode-label {
   display: inline-block;

@@ -186,7 +186,8 @@ a:active {
   margin-right: 4px;
 }
 
-.jdaviz-nested-toolbar .v-icon, .jdaviz-nested-toolbar img {
+.jdaviz-nested-toolbar .v-icon:not(.custom-toolbar-mode-cancel),
+.jdaviz-nested-toolbar img {
   /* icons from dark to (consistently) light */
   filter: invert(1) saturate(1) brightness(100);
 }

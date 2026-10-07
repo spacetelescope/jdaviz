@@ -270,7 +270,7 @@ module.exports = {
   align-items: center;
   padding: 2px 6px;
   margin-right: 30px;
-  background-color: #205f76;
+  background-color: #205f76 !important;
   border: 1px solid #205f76;
   border-bottom: none;
   border-radius: 0px;
@@ -282,7 +282,7 @@ module.exports = {
   display: flex;
   align-items: center;
   padding: 1px 6px;
-  background-color: #205f76;
+  background-color: #205f76 !important;
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 4px 0px 0px 4px;
   min-width: 120px;
@@ -310,7 +310,22 @@ module.exports = {
 
 .edit-bar-input .v-input__slot {
   min-height: 24px !important;
-  background-color: #fff !important;
+  background-color: #194f63 !important;
+}
+
+.edit-bar-input .v-field,
+.edit-bar-input .v-field__overlay {
+  background-color: #194f63 !important;
+}
+
+.edit-bar-input input {
+  color: white !important;
+  caret-color: white !important;
+}
+
+.edit-bar-input input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+  opacity: 1 !important;
 }
 
 .edit-bar-input .v-field {
@@ -349,24 +364,6 @@ module.exports = {
 
 .edit-bar-action .v-btn__overlay {
   opacity: 0 !important;
-}
-
-/* Vuetify puts the theme class on the text-field element itself, so target both
-   the element and any ancestor. Keep the value text white in dark mode. */
-.edit-bar-input.theme--dark input,
-.edit-bar-input.v-theme--dark input,
-.theme--dark .edit-bar-input input,
-.v-theme--dark .edit-bar-input input {
-  color: #fff !important;
-}
-
-.edit-bar-input.theme--dark .v-input__slot,
-.edit-bar-input.v-theme--dark .v-input__slot,
-.theme--dark .edit-bar-input .v-input__slot,
-.v-theme--dark .edit-bar-input .v-input__slot {
-  /* dark value field with a light outline + drop shadow so it lifts off the bar */
-  background-color: #424242 !important;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
 }
 
 .edit-bar-actions {
