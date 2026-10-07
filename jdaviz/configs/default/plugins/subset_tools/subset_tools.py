@@ -358,7 +358,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         for subset_label in labels:
             try:
                 ss = subsets[subset_label]
-                if isinstance(ss, SpectralRegion):
+                if isinstance(ss, SpectralRegion) or len(ss) == 1:
                     regions[subset_label] = ss
                 else:
                     reg = _chain_regions([x[reg_type] for x in ss],
