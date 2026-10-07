@@ -3,7 +3,6 @@ from traitlets import Any, Bool, List, Unicode, observe
 from astropy.io import fits
 import astropy.units as u
 
-from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
                                            SpectrumInputExtensionsMixin,
