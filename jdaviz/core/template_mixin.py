@@ -625,29 +625,30 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
     def _clear_loader_messages(self):
         self.loader_message_items = []
 
-    def _loader_message(self, text,
-                        color='error', history=True, popup=False, defer=True,
-                        traceback=None, raise_msg=False):
+    def _loader_message(self, text, raise_msg=False, **put_kwargs):
         """
         Report ``text`` to the user through a persistent banner in the loader UI and
         added to the logger without necessarily raising a snackbar.
         """
+        color = put_kwargs.setdefault('color', 'error')
+        traceback = put_kwargs.setdefault('traceback', None)
         self.loader_message_items = (self.loader_message_items +
                                      [{'text': text, 'color': color,
                                        'traceback': f"{type(traceback).__name__}: {traceback}"}])
-
         # add message to logger with/without broadcasting
         text_w_traceback = text + (f'; Traceback: {traceback}' if traceback is not None else '')
         snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
                                                    color=color, sender=self, traceback=traceback)
+
+        put_kwargs.setdefault('history', True)
+        put_kwargs.setdefault('popup', True)
+        # Default to defer=True because we want to defer messages
+        # until after loading is completed
+        put_kwargs.setdefault('defer', True)
         self._app.state.snackbar_queue.put(self._app.state,
                                            self._app._jdaviz_helper.plugins['Logger'],
                                            snackbar_msg_w_traceback,
-                                           history=history,
-                                           popup=popup,
-                                           # Default to defer=True because we want to defer messages
-                                           # until after loading is completed
-                                           defer=defer)
+                                           **put_kwargs)
 
         if raise_msg and color == 'warning':
             warnings.warn(text)
