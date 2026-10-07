@@ -292,47 +292,6 @@ class SnackbarQueue:
         logger_plg.history = sorted(logger_plg.history, key=lambda x: x['time'])
 
 
-@contextmanager
-def defer_snackbars(app):
-    """Context manager to defer snackbar popups while preserving logger history.
-
-    All snackbar messages raised within this context will be deferred and displayed
-    together after exiting the context.
-    """
-    queue = app.state.snackbar_queue
-    key_bool_dict = {}
-    msg_key_dict = {}
-    key = None
-
-    def set_key(new_key):
-        nonlocal key
-        key = new_key
-
-    class DeferringQueue:
-        def __init__(self, wrapped_queue):
-            self.wrapped_queue = wrapped_queue
-
-        def put(self, app_state, logger_plugin, snackbar_msg, **kwargs):
-            # Automatically defer all snackbars in this context
-            kwargs['defer'] = True
-            msg_key_dict[snackbar_msg] = key
-            return self.wrapped_queue.put(app_state, logger_plugin, snackbar_msg, **kwargs)
-
-        def __getattr__(self, name):
-            # Delegate other attributes to wrapped queue
-            return getattr(self.wrapped_queue, name)
-
-    deferring_queue = DeferringQueue(queue)
-    app.state.snackbar_queue = deferring_queue
-
-    try:
-        yield key_bool_dict, set_key
-    finally:
-        # Restore original queue and flush deferred snackbars
-        app.state.snackbar_queue = queue
-        queue.flush_deferred()
-
-
 def enable_hot_reloading():
     """Use ``watchdog`` to perform hot reloading."""
     try:
