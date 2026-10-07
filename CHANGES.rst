@@ -202,6 +202,9 @@ Bug Fixes
 
 - Fix viewer container width. [#4424]
 
+- Fixed AttributeError: 'NoneType' object has no attribute 'height' by ensuring figure_widget has an assigned layout. [#4429]
+
+
 Mosviz
 ^^^^^^
 
