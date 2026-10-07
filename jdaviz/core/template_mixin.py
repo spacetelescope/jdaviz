@@ -123,7 +123,7 @@ if 'histogram' not in glue_viewer_registry.members.keys():
         pass
 
 
-def show_widget(widget, loc, title, height=None):  # pragma: no cover
+def show_widget(widget, loc, title, height=None):
     from IPython import get_ipython
     from IPython.display import display
     import ipywidgets as widgets
@@ -144,7 +144,13 @@ def show_widget(widget, loc, title, height=None):  # pragma: no cover
     # Check if the user is running Jdaviz in the correct environments.
     # If not, provide a friendly msg to guide them!
     cur_shell_name = get_ipython().__class__.__name__
-    if cur_shell_name != 'ZMQInteractiveShell':
+    in_solara = False
+    if cur_shell_name == 'FakeIPython':
+        # The command-line app runs in a Solara virtual kernel, whose IPython
+        # shim is also used when opening viewer and plugin popouts.
+        from solara.server.kernel_context import has_current_context
+        in_solara = has_current_context()
+    if cur_shell_name != 'ZMQInteractiveShell' and not in_solara:
         raise RuntimeError("\nYou are currently running Jdaviz from an unsupported "
                            f"shell ({cur_shell_name}). Jdaviz is intended to be run within a "
                            "Jupyter notebook, or directly from the command line.\n\n"
@@ -158,7 +164,7 @@ def show_widget(widget, loc, title, height=None):  # pragma: no cover
     # (used for whether to show the API hints toggle button)
     app_state = getattr(widget, 'state', None) or getattr(getattr(widget, '_app', None), 'state', None)  # noqa
     if app_state is not None and hasattr(app_state, 'in_notebook'):
-        app_state.in_notebook = True
+        app_state.in_notebook = not in_solara
 
     if loc == "inline":
         if height is not None:
