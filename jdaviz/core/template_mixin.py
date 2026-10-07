@@ -626,7 +626,8 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
         self.loader_message_items = []
 
     def _loader_message(self, text,
-                        color='error', history=True, popup=False, traceback=None, raise_msg=False):
+                        color='error', history=True, popup=False, defer=True,
+                        traceback=None, raise_msg=False):
         """
         Report ``text`` to the user through a persistent banner in the loader UI and
         added to the logger without necessarily raising a snackbar.
@@ -643,7 +644,10 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
                                            self._app._jdaviz_helper.plugins['Logger'],
                                            snackbar_msg_w_traceback,
                                            history=history,
-                                           popup=popup)
+                                           popup=popup,
+                                           # Default to defer=True because we want to defer messages
+                                           # until after loading is completed
+                                           defer=defer)
 
         if raise_msg and color == 'warning':
             warnings.warn(text)
