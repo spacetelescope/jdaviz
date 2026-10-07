@@ -140,18 +140,20 @@ class SnackbarQueue:
         # to give time for the app to load.
         self.first = True
 
-    def put(self, state, logger_plg, msg, history=True, popup=True, defer=False):
+    def put(self, state, logger_plg, msg, history=True, timestamp=None, popup=True, defer=False):
         if msg.color not in ['debug', 'info', 'warning', 'error', 'success', None]:
             raise ValueError(f"color ({msg.color}) must be on of: debug, info, warning, error, success")  # noqa
 
+        now = time.localtime()
+        timestamp = timestamp or f'{now.tm_hour}:{now.tm_min:02d}:{now.tm_sec:02d}'
+
         if defer:
             # Store message for later display
-            self.deferred.append((state, logger_plg, msg, {'history': history, 'popup': popup}))
+            self.deferred.append((state, logger_plg, msg,
+                                  {'history': history, 'popup': popup, 'timestamp': timestamp}))
             return
 
         if not msg.loading and history and logger_plg is not None:
-            now = time.localtime()
-            timestamp = f'{now.tm_hour}:{now.tm_min:02d}:{now.tm_sec:02d}'
             new_history = {'time': timestamp, 'text': msg.text,
                            'color': msg.color, 'traceback': msg.traceback}
             # for now, we'll hardcode the max length of the stored history
@@ -273,20 +275,21 @@ class SnackbarQueue:
                              daemon=True)
         x.start()
 
-    def flush_deferred(self, key_bool_dict=None, msg_key_dict=None):
+    def flush_deferred(self, msg_filter=None):
         """Display all deferred snackbar messages."""
         deferred_copy = list(self.deferred)
         self.deferred.clear()
 
-        if key_bool_dict is None:
-            key_bool_dict = {}
-
-        if msg_key_dict is None:
-            msg_key_dict = {}
+        if msg_filter is None:
+            msg_filter = lambda msg: True
 
         for state, logger_plg, msg, kwargs in deferred_copy:
-            if key_bool_dict.get(msg_key_dict.get(msg, None), True):
+            if msg_filter(msg):
                 self.put(state, logger_plg, msg, **kwargs)
+
+        logger_plg = deferred_copy[-1][1]
+        # Sort to orient the history by time, since deferred messages are added out of order
+        logger_plg.history = sorted(logger_plg.history, key=lambda x: x['time'])
 
 
 @contextmanager
@@ -327,7 +330,7 @@ def defer_snackbars(app):
     finally:
         # Restore original queue and flush deferred snackbars
         app.state.snackbar_queue = queue
-        queue.flush_deferred(key_bool_dict, msg_key_dict)
+        queue.flush_deferred()
 
 
 def enable_hot_reloading():
