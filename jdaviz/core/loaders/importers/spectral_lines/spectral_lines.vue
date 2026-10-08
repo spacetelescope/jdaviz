@@ -1,6 +1,12 @@
 <template>
   <v-container>
 
+    <div class="invert-if-dark" style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
+      Load a table of spectral lines (e.g. wavelengths or frequencies and names).
+      For tabular data with source positions, see the "Source Catalog" loader.
+      For other generic tabular data, use the "Generic Catalog" loader.
+    </div>
+
     <j-plugin-section-header>Definitions</j-plugin-section-header>
 
     <plugin-select

@@ -1,6 +1,12 @@
 <template>
   <v-container>
 
+    <div class="invert-if-dark" style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
+      Load a table of sources with RA/Dec and/or X/Y positions. 
+      For loading a table of spectral lines, see the "Spectral Lines" loader.
+      For other generic tabular data, use the "Generic Catalog" loader.
+    </div>
+
     <plugin-select v-if="extension_items.length"
       :items="extension_items"
       :exists_in_dc="existing_data_in_dc"

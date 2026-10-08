@@ -1,6 +1,13 @@
 <template>
   <v-container>
 
+      <div class="invert-if-dark" style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
+        Load generic tabular data into the data collection. For catalogs with
+        source positions or spectral lines, use the "Source Catalog" or
+        "Spectral Lines" loaders, respectively, to enable their specialized
+        features.
+      </div>
+
       <j-plugin-section-header>Select Columns</j-plugin-section-header>
       <plugin-select
         :items="col_other_items.map(i => i.label)"
@@ -49,8 +56,6 @@
         :data_label_overwrite="data_label_overwrite"
         @click="import_clicked">
       </loader-import-button>
-
-  </v-container>
 
   </v-container>
 </template>
