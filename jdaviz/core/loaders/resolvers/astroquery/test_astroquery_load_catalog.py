@@ -231,6 +231,8 @@ class TestCatalogConeSearch:
         with patch.object(SkyCoord, 'from_name', side_effect=side_effect):
             coords = self.ldr._get_catalog_skycoords()
 
+        # Force flush deferred because this is a nonstandard code path.
+        self.helper._app.state.snackbar_queue.flush_deferred()
         # every row failed and is kept with its error string
         assert all(sc is None and err for sc, _, err in coords)
         hint = 'Single reason failure occurred during name resolution'
