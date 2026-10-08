@@ -625,15 +625,15 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
     def _clear_loader_messages(self):
         self.loader_message_items = []
 
-    def _loader_message(self, text, raise_msg=False, **put_kwargs):
+    def _loader_message(self, text, raise_msg=False, **kwargs):
         """
         Report ``text`` to the user through a persistent banner in the loader UI and
         added to the logger without necessarily raising a snackbar.
         """
         # color and traceback aren't valid kwargs for put()
-        color = put_kwargs.pop('color', 'error')
-        traceback = put_kwargs.pop('traceback', None)
-        timeout = put_kwargs.pop('timeout', 5000)
+        color = kwargs.pop('color', 'error')
+        traceback = kwargs.pop('traceback', None)
+        timeout = kwargs.pop('timeout', 5000)
         self.loader_message_items = (self.loader_message_items +
                                      [{'text': text, 'color': color,
                                        'traceback': f"{type(traceback).__name__}: {traceback}"}])
@@ -643,15 +643,15 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
                                                    color=color, sender=self,
                                                    traceback=traceback, timeout=timeout)
 
-        put_kwargs.setdefault('history', True)
-        put_kwargs.setdefault('popup', True)
+        kwargs.setdefault('history', True)
+        kwargs.setdefault('popup', True)
         # Default to defer=True because we want to defer messages
         # until after loading is completed
-        put_kwargs.setdefault('defer', True)
+        kwargs.setdefault('defer', True)
         self._app.state.snackbar_queue.put(self._app.state,
                                            self._app._jdaviz_helper.plugins['Logger'],
                                            snackbar_msg_w_traceback,
-                                           **put_kwargs)
+                                           **kwargs)
 
         if raise_msg and color == 'warning':
             warnings.warn(text)
