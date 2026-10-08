@@ -652,7 +652,7 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
             # else default to defer=True so that the snackbar is
             # shown after loading is completed
             kwargs.setdefault('defer', True)
-            
+
         self._app.state.snackbar_queue.put(self._app.state,
                                            self._app._jdaviz_helper.plugins['Logger'],
                                            snackbar_msg_w_traceback,
