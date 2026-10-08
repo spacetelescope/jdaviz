@@ -275,13 +275,13 @@ class SnackbarQueue:
                              daemon=True)
         x.start()
 
-    def flush_deferred(self, deferred_history=False, msg_filter=None):
+    def flush_deferred(self, flush_to_history_only=False, msg_filter=None):
         """
         Display all deferred snackbar messages.
 
         Parameters
         ----------
-        deferred_history : bool, optional
+        flush_to_history_only : bool, optional
             If True, we are using this function to flush deferred messages to history, but we
             may still want to flush them to the snackbar queue for display.
         msg_filter : callable, optional
@@ -297,12 +297,12 @@ class SnackbarQueue:
 
         for state, logger_plg, msg, kwargs in deferred_copy:
             if msg_filter(msg):
-                if deferred_history:
+                if flush_to_history_only:
                     # we are flushing a deferred history, do not popup
                     kwargs['popup'] = False
                 self.put(state, logger_plg, msg, **kwargs)
 
-            if deferred_history:
+            if flush_to_history_only:
                 # Set history to False to avoid double populating the logger history
                 # with deferred messages on a future flush
                 kwargs['history'] = False
