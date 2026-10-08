@@ -152,6 +152,9 @@ Mosviz
 Bug Fixes
 ---------
 
+- Fixed viewer popouts being rejected as an unsupported shell in the command-line
+  and standalone apps. [#4434]
+
 - HST products (as defined by ``OBSTYPE``) are now correctly identified as being
   either images or 2D spectra. [#4217]
 
