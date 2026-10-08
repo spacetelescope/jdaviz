@@ -302,11 +302,11 @@ class SnackbarQueue:
                     kwargs['popup'] = False
                 self.put(state, logger_plg, msg, **kwargs)
 
-            if flush_to_history_only:
-                # Set history to False to avoid double populating the logger history
-                # with deferred messages on a future flush
-                kwargs['history'] = False
-                self.deferred.append((state, logger_plg, msg, kwargs))
+                if flush_to_history_only:
+                    # Set history to False to avoid double populating the logger history
+                    # with deferred messages on a future flush
+                    kwargs['history'] = False
+                    self.deferred.append((state, logger_plg, msg, kwargs))
 
         if len(deferred_copy):
             logger_plg = deferred_copy[-1][1]
