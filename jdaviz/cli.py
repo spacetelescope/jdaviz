@@ -4,7 +4,7 @@ import inspect
 import os
 import pathlib
 
-from jdaviz import __version__
+from jdaviz import __version__, __file__
 from jdaviz.app import ALL_JDAVIZ_CONFIGS
 from jdaviz.configs.default.plugins.logger import _verbosity_levels
 from jdaviz import configs
@@ -82,10 +82,31 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
 
 def run_solara(host, port, theme, browser, production: bool = True):
     os.environ["SOLARA_APP"] = "jdaviz.solara"
+    
+    import jinja2
+    import solara.server.server
     import solara.server.starlette
     import solara.server.settings
+
+    # gets jdaviz/templates
+    jdaviz_templates = pathlib.Path(__file__).resolve().parent / "templates"
+    jdaviz_loader = jinja2.FileSystemLoader(jdaviz_templates)
+
+    # Grab a reference to the existing memoized function
+    solara_loader = solara.server.server.get_jinja_env("__default__")
+
+    def get_jinja_env(app_name: str) -> jinja2.Environment:
+        if (not isinstance(solara_loader.loader, jinja2.ChoiceLoader) or
+                jdaviz_loader not in solara_loader.loader.loaders):
+
+            solara_loader.loader = jinja2.ChoiceLoader([jdaviz_loader, solara_loader.loader])
+        return solara_loader
+
+    solara.server.server.get_jinja_env = get_jinja_env
+
     solara.server.settings.theme.variant = theme
-    solara.server.settings.theme.loader = "plain"
+    solara.server.settings.theme.loader = "custom"
+    solara.server.settings.theme.title = 'Jdaviz'
     solara.server.settings.main.mode = "production" if production else "development"
 
     server = solara.server.starlette.ServerStarlette(host="localhost", port=port)
