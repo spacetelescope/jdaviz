@@ -1,6 +1,6 @@
 <template>
   <div>
-    <j-flex-row v-if="spinner && disabled_msg && disabled_msg.length> 0" style="margin-bottom: 8px; margin-top: 12px">
+    <j-flex-row v-if="disabled_msg && disabled_msg.length > 0" style="margin-bottom: 8px; margin-top: 12px">
       <v-alert type="warning" style="width: 100%; margin-left: 12px; margin-right: 12px;">
         {{ disabled_msg }}
       </v-alert>
@@ -44,6 +44,9 @@ module.exports = {
       return 'Import';
     },
     tooltipText() {
+      if (this.disabled_msg && this.disabled_msg.length > 0) {
+        return this.disabled_msg;
+      }
       if (this.data_label_is_prefix && this.overwriteCount > 0) {
         return 'Import and replace ' + this.overwriteCount + ' existing entries';
       } else if (this.data_label_overwrite) {
