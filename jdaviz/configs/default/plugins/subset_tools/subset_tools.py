@@ -240,8 +240,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         region_type : str or None, optional
             Specifies the type of subsets to retrieve. Options are ``spatial``
             to retrieve only spatial subsets, ``spectral`` to retrieve only
-            spectral subsets or ``None`` (default) to retrieve both spatial
-            and spectral subsets, when relevant to the current configuration.
+            spectral subsets, ``scatter`` to retrieve only unitless subsets from
+            scatter viewers, or ``None`` (default) to retrieve all types of
+            subsets, when relevant to the current configuration.
 
         list_of_subset_labels : list of str or None, optional
             If specified, only subsets matching these labels will be included.
@@ -255,13 +256,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         wrt_data : str  or None
             Only applicable for spatial subsets, an error will be raised when ''region_type''
-            equals 'spectral'. Otherwise, spectral subsets will not be impacted when called.
-            Controls return type of ``PixelRegion`` / ``SkyRegion``. To return a spatial
-            subset in opposition with the current link type (e.g return ``PixelRegion``
-            when WCS linked, ``SkyRegion`` when pixel linked), ``wrt_data`` can be set to
-            the data label of the dataset whose WCS should be used for this transformation.
-            The default behavior (None) will return Pixel/Sky region based on app link type
-            (Sky for Cubeviz), using the WCS of the subset's parent dataset (i.e the data
+            equals 'spectral' or 'scatter'. Otherwise, spectral and scatter subsets will not
+            be impacted when called. Controls return type of ``PixelRegion`` / ``SkyRegion``.
+            To return a spatial subset in opposition with the current link type (e.g return
+            ``PixelRegion`` when WCS linked, ``SkyRegion`` when pixel linked), ``wrt_data`` can
+            be set to the data label of the dataset whose WCS should be used for this
+            transformation. The default behavior (None) will return Pixel/Sky region based on app
+            link type (Sky for Cubeviz), using the WCS of the subset's parent dataset (i.e the data
             layer the subset was created on).
 
         Returns
@@ -308,8 +309,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         if region_type is not None:
             region_type = region_type.lower()
-            if region_type not in ['spectral', 'spatial']:
-                raise ValueError("`region_type` must be 'spectral', 'spatial', or None for any.")
+            if region_type not in ['spectral', 'spatial', 'scatter']:
+                raise ValueError("`region_type` must be 'spectral', 'spatial', 'scatter',"
+                                 " or None for any.")
             elif region_type == 'spectral' and wrt_data:
                 raise ValueError('Unable to retrieve SkyRegion objects for spectral subsets')
             if ((self.config == 'imviz' and region_type == 'spectral') or
@@ -319,7 +321,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         else:  # determine subset return type(s) by config, if not specified
             region_type = {'imviz': ['spatial'],
-                           'specviz': ['spectral']}.get(self.config, ['spatial', 'spectral'])
+                           'specviz': ['spectral']}.get(self.config,
+                                                        ['spatial', 'spectral', 'scatter'])
 
         if isinstance(wrt_data, str) and wrt_data not in self.data_collection:
             raise ValueError(f'{wrt_data} is not data in {self.data_collection}')
@@ -349,10 +352,16 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 if isinstance(ss, SpectralRegion):
                     regions[subset_label] = ss
                 else:
-                    print(reg_type)
-                    print(ss)
-                    reg = _chain_regions([x[reg_type] for x in ss],
-                                         [x['glue_state'] for x in ss])
+                    if 'scatter' in region_type and ss[0][reg_type] is None:
+                        # This happens for a scatter viewer subset when an image with WCS
+                        # is loaded in another viewer, since reg_type will be sky_region
+                        reg = _chain_regions([x['subset_state'] for x in ss],
+                                             [x['glue_state'] for x in ss])
+                    else:
+                        # Handle the real spatial subset case
+                        reg = _chain_regions([x[reg_type] for x in ss],
+                                            [x['glue_state'] for x in ss])
+
                     if reg is None:
                         failed_regs.add(subset_label)
                     else:
