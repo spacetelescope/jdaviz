@@ -1317,6 +1317,11 @@ class BaseConeSearchResolver(BaseResolver):
             if not self.returned_no_results:
                 self._loader_message(f"{n_results} results found.", color='success')
 
+        # We have to flush here because the common flush in add_to_data_collection
+        # filters messages on the source catalog importer when querying archive
+        self._app.state.snackbar_queue.flush_deferred(
+            msg_filter=lambda msg: isinstance(msg.sender, type(self)))
+
         self._resolver_input_updated()
 
     @with_spinner(spinner_traitlet="results_loading")
