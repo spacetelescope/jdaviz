@@ -645,9 +645,14 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
 
         kwargs.setdefault('history', True)
         kwargs.setdefault('popup', True)
-        # Default to defer=True because we want to defer messages
-        # until after loading is completed
-        kwargs.setdefault('defer', True)
+        if raise_msg:
+            # if raising an error/warning, we want to show the snackbar immediately
+            kwargs.setdefault('defer', False)
+        else:
+            # else default to defer=True so that the snackbar is
+            # shown after loading is completed
+            kwargs.setdefault('defer', True)
+            
         self._app.state.snackbar_queue.put(self._app.state,
                                            self._app._jdaviz_helper.plugins['Logger'],
                                            snackbar_msg_w_traceback,
