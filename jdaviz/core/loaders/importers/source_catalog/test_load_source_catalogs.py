@@ -217,8 +217,8 @@ def test_import_enabled_disabled(imviz_helper):
     ldr.importer.col_dec.selected = '---'
     ldr.importer.col_x.selected = '---'
     ldr.importer.col_y.selected = '---'
-    # no coordinate column pair selected, import should still be enabled
-    assert len(ldr.importer._obj.import_disabled_msg) == 0
+    # no coordinate column pair selected, import should be disabled
+    assert len(ldr.importer._obj.import_disabled_msg) > 0
 
     # when RA is selected but Dec is not, import should be disabled
     ldr.importer.col_ra.selected = 'RA'
