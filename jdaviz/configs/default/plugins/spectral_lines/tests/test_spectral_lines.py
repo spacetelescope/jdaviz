@@ -168,6 +168,8 @@ def test_spectral_lines_components(deconfigged_helper, spectrum1d):
     plugin.component.rename_choice('second', 'renamed')
     assert plugin._get_data_component_id(line_data, 'observed wavelength:second') is None
     assert_allclose(col('renamed'), rest_wav * 1.1)
+    renamed_cid = plugin._get_data_component_id(line_data, 'observed wavelength:renamed')
+    assert line_data.get_component(renamed_cid).units == line_data.get_component('wavelength').units
     assert plugin.component_selected == 'renamed'
     assert plugin.component_redshift == 0.1
 
@@ -194,3 +196,82 @@ def test_spectral_lines_components(deconfigged_helper, spectrum1d):
     # component_lines reflects the fallback to 'default', unshifted and visible
     assert_allclose(component_lines_field('obs'), rest_wav)
     assert component_lines_field('show') == [True, True]
+
+
+def test_spectral_lines_shared_default_redshift(deconfigged_helper):
+    deconfigged_helper._app.state.dev_spectral_lines_plugin = True
+    plugin = deconfigged_helper._app.get_tray_item_from_name('g-spectral-lines')
+    rest_wav = np.array([6562.8, 7000.0])
+
+    def import_lines(label, unit):
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = QTable({'wavelength': (rest_wav * u.AA).to(unit),
+                             'name': ['Ha', 'line2']})
+        ldr.format = 'Spectral Lines'
+        ldr.importer.data_label = label
+        # These producer tests need data collection entries, not table viewers.
+        ldr.importer.viewer.create_new = ''
+        ldr.importer()
+        return deconfigged_helper._app.data_collection[plugin.line_table]
+
+    def component_id(data, label='default'):
+        cid = plugin._get_data_component_id(data, f'observed wavelength:{label}')
+        assert cid is not None
+        return cid
+
+    first = import_lines('angstrom lines', u.AA)
+    first_cid = component_id(first)
+    first_component = first.get_component(first_cid)
+    plugin.component.add_choice('second')
+    plugin.component_redshift = 0.1
+    first_second_cid = component_id(first, 'second')
+
+    second = import_lines('nanometer lines', u.nm)
+    second_cid = component_id(second)
+    second_component = second.get_component(second_cid)
+    assert first_cid is not second_cid
+    assert first_cid.parent is first
+    assert second_cid.parent is second
+    assert first_component.units == first.get_component('wavelength').units
+    assert second_component.units == second.get_component('wavelength').units
+    assert u.Unit(first_component.units) == u.AA
+    assert u.Unit(second_component.units) == u.nm
+    assert_allclose(first[first_cid], rest_wav)
+    assert_allclose(second[second_cid], rest_wav / 10)
+
+    # Non-default redshift edits still affect only the latest table.
+    plugin.component_redshift = 0.2
+    assert_allclose(first[first_second_cid], rest_wav * 1.1)
+    assert_allclose(second[component_id(second, 'second')], rest_wav / 10 * 1.2)
+
+    plugin.component_selected = 'default'
+    plugin.component_redshift = 0.5
+    assert_allclose(first[first_cid], rest_wav * 1.5)
+    assert_allclose(second[second_cid], rest_wav / 10 * 1.5)
+    assert plugin.line_table == second.label
+    assert_allclose([line['rest'] for line in plugin.component_lines], rest_wav / 10)
+    assert_allclose([line['obs'] for line in plugin.component_lines], rest_wav / 10 * 1.5)
+
+    # A table imported after an edit starts at the current shared default redshift.
+    third = import_lines('later lines', u.AA)
+    third_cid = component_id(third)
+    third_component = third.get_component(third_cid)
+    assert third_cid is not first_cid
+    assert third_cid is not second_cid
+    assert_allclose(third[third_cid], rest_wav * 1.5)
+    assert plugin.line_table == third.label
+    assert plugin.component_redshift == 0.5
+
+    # Every edit recomputes from the original column, retaining IDs and Components.
+    for redshift in (0.25, 0):
+        plugin.component_redshift = redshift
+        for data, cid, component in ((first, first_cid, first_component),
+                                     (second, second_cid, second_component),
+                                     (third, third_cid, third_component)):
+            assert component_id(data) is cid
+            assert data.get_component(cid) is component
+            assert component.units == data.get_component('wavelength').units
+            assert_allclose(data[cid], data['wavelength'] * (1 + redshift))
+            assert data.meta['_jdaviz_plugin_component_column'].count(cid.label) == 1
+        assert_allclose([line['obs'] for line in plugin.component_lines],
+                        rest_wav * (1 + redshift))

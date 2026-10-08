@@ -1,3 +1,5 @@
+from glue.core.component import Component
+from glue.core.component_id import ComponentID
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 from traitlets import List, Unicode, observe
 
@@ -156,9 +158,15 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
 
         redshift = self._components.get(lbl, self._default_component_info())['redshift']
         col_name = self._component_col_name(lbl)
-        self._app._jdaviz_helper._set_data_component(
-            data, col_name, data[source_cid] * (1 + redshift)
-        )
+        values = data[source_cid] * (1 + redshift)
+        units = data.get_component(source_cid).units
+        cid = self._get_data_component_id(data, col_name)
+        if cid is None:
+            # IDs belong to this table, not the helper's global label-based cache.
+            data.add_component(Component(values, units=units), ComponentID(col_name))
+        else:
+            data.get_component(cid).units = units
+            data.update_components({cid: values})
         self._track_component_column(data, col_name)
 
     @staticmethod
@@ -248,8 +256,9 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
         old_cid = self._get_data_component_id(data, self._component_col_name(old_lbl))
         if old_cid is None:
             return
-        self._app._jdaviz_helper._set_data_component(
-            data, self._component_col_name(new_lbl), data[old_cid]
+        data.add_component(
+            Component(data[old_cid], units=data.get_component(old_cid).units),
+            ComponentID(self._component_col_name(new_lbl))
         )
         data.remove_component(old_cid)
         self._track_component_column(data, old_cid.label, remove=True)
@@ -295,8 +304,14 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
                 self._syncing_component_info = False
         self._components.setdefault(self.component_selected, self._default_component_info())
         self._components[self.component_selected]['redshift'] = self.component_redshift
-        # recompute this component's column from the original values
-        self._add_component_column(self.component_selected)
+        # The default component is shared by all importer tables; other components
+        # retain their existing behavior of editing only the latest table.
+        if self.component_selected == 'default':
+            for data in self._app.data_collection:
+                if data.meta.get('_importer') == 'SpectralLinesImporter':
+                    self._add_component_column('default', data=data)
+        else:
+            self._add_component_column(self.component_selected)
         self._update_component_lines()
 
     @property
