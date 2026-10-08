@@ -229,8 +229,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
-                    use_display_units=False, return_sky_region=None,
-                    wrt_data=None):
+                    use_display_units=False, wrt_data=None):
         """
         Return spatial and/or spectral subsets of ``region_type`` (spatial or
         spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
@@ -332,17 +331,6 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         else:
             reg_type = 'region'
 
-        # TODO: remove after deprecation period
-        # Temporarily allow return_sky_region to function as before if wrt_data
-        # is not set.
-        if return_sky_region is not None and wrt_data:
-            raise ValueError('return_sky_region no longer used, use wrt_data instead')
-        elif return_sky_region is not None:
-            wrt_data = self._app.data_collection[0].label
-            warnings.warn(f'return_sky_region no longer used, use wrt_data instead. '
-                          f'Defaulting to {wrt_data} for the wrt_data kwarg')
-            reg_type = 'sky_region' if return_sky_region else 'region'
-
         # first get ALL subsets of specified spatial/spectral type(s)
         subsets = self._app.get_subsets(spectral_only=region_type == ['spectral'],
                                         spatial_only=region_type == ['spatial'],
@@ -358,9 +346,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         for subset_label in labels:
             try:
                 ss = subsets[subset_label]
-                if isinstance(ss, SpectralRegion) or len(ss) == 1:
+                if isinstance(ss, SpectralRegion):
                     regions[subset_label] = ss
                 else:
+                    print(reg_type)
+                    print(ss)
                     reg = _chain_regions([x[reg_type] for x in ss],
                                          [x['glue_state'] for x in ss])
                     if reg is None:
