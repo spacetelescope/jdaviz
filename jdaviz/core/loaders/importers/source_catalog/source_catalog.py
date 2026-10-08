@@ -334,8 +334,10 @@ class SourceCatalogImporter(BaseCatalogImporter):
         already, to set the col_ra_has_unit and col_dec_has_unit traitlets.
         -  Make sure that ra and dec columns are not the same (unless SkyCoord) and
         disable the import button if they are the same.
-        - Check if only RA or Dec is selected without the other, and disable import
-        in that case.
+        - Check if only RA or Dec (or only X or Y) is selected without its pair,
+        and disable import in that case.
+        - Require at least one complete coordinate pair (RA/Dec or X/Y) to be
+        selected, otherwise disable import.
         """
 
         ra = self.col_ra_selected
@@ -343,12 +345,20 @@ class SourceCatalogImporter(BaseCatalogImporter):
         x = self.col_x_selected
         y = self.col_y_selected
 
-        import_disabled = False
-
         input = self.input_as_table
 
         if not isinstance(input, (Table, QTable)):
             return
+
+        ra_missing = ra in ('---', '', None)
+        dec_missing = dec in ('---', '', None)
+        x_missing = x in ('---', '', None)
+        y_missing = y in ('---', '', None)
+
+        # same ra and dec columns selected (and not a SkyCoord column, which
+        # contains both RA and Dec) is not a valid pair
+        ra_dec_same = (not ra_missing and ra == dec
+                       and not isinstance(input[ra], SkyCoord))
 
         if msg['name'] in ('col_ra_selected', 'col_dec_selected'):
 
@@ -360,55 +370,49 @@ class SourceCatalogImporter(BaseCatalogImporter):
                     self.col_ra_has_unit = True
                 elif msg['name'] == 'col_dec_selected':
                     self.col_dec_has_unit = True
-                # disable import if RA is selected but Dec is not (or vice versa)
-                if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
-                    import_disabled = True
-                self.coord_frame_selected = '----'
-                self.coord_equinox_selected = '----'
-                return
-
-            has_units = False
-            if isinstance(input[axis], SkyCoord):
-                has_units = True
-            elif hasattr(input[axis], 'unit'):
-                if input[axis].unit is not None:
-                    has_units = True
-                    # unit must be an angle unit
-                    if input[axis].unit.physical_type != 'angle':
-                        has_units = False
-
-            # set the 'has units' traitlets for ra/dec, which determine if the unit
-            # selection dropdowns should be exposed
-            if msg['name'] == 'col_ra_selected':
-                self.col_ra_has_unit = has_units
-            elif msg['name'] == 'col_dec_selected':
-                self.col_dec_has_unit = has_units
-
-            # disable import if the same ra and dec columns are selected
-            # and they are NOT a SkyCoord column (which contains both RA and Dec),
-            if ra == dec and not isinstance(input[axis], SkyCoord):
-                import_disabled = True
             else:
-                import_disabled = False
+                has_units = False
+                if isinstance(input[axis], SkyCoord):
+                    has_units = True
+                elif hasattr(input[axis], 'unit'):
+                    if input[axis].unit is not None:
+                        has_units = True
+                        # unit must be an angle unit
+                        if input[axis].unit.physical_type != 'angle':
+                            has_units = False
 
-            # disable import if RA is selected but Dec is not (or vice versa)
-            if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
-                import_disabled = True
+                # set the 'has units' traitlets for ra/dec, which determine if the unit
+                # selection dropdowns should be exposed
+                if msg['name'] == 'col_ra_selected':
+                    self.col_ra_has_unit = has_units
+                elif msg['name'] == 'col_dec_selected':
+                    self.col_dec_has_unit = has_units
 
             # sync coord_frame and coord_equinox with ra/dec selection state
-            ra_is_invalid = ra in ('---', '', None)
-            dec_is_invalid = dec in ('---', '', None)
-            if ra_is_invalid or dec_is_invalid:
+            if ra_missing or dec_missing:
                 self.coord_frame_selected = '----'
                 self.coord_equinox_selected = '----'
             elif self.coord_frame_selected == '----':
                 self.coord_frame_selected = 'icrs'
                 self.coord_equinox_selected = 'J2000.0'
 
-        elif msg['name'] in ('col_x_selected', 'col_y_selected'):
-            # disable import if RA is selected but Dec is not (or vice versa)
-            if (x in ['---', ''] or x is None) != (y in ['---', ''] or y is None):
-                import_disabled = True
+        # disable import if RA is selected but Dec is not (or vice versa), or if the
+        # same column is selected for both RA and Dec
+        ra_dec_mismatch = ra_missing != dec_missing
+        ra_dec_invalid = ra_dec_mismatch or ra_dec_same
+        ra_dec_complete = not ra_missing and not dec_missing and not ra_dec_same
+
+        # disable import if X is selected but Y is not (or vice versa)
+        xy_mismatch = x_missing != y_missing
+        xy_complete = not x_missing and not y_missing
+
+        if ra_dec_invalid or xy_mismatch:
+            import_disabled = True
+        elif not (ra_dec_complete or xy_complete):
+            # neither a complete RA/Dec pair nor a complete X/Y pair is selected
+            import_disabled = True
+        else:
+            import_disabled = False
 
         # finally, set the import_disabled_msg traitlet based on what was determined
         # from the checks above. Empty msg = enabled, non-empty = disabled
