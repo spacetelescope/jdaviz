@@ -371,6 +371,8 @@ class BaseImporterToDataCollection(BaseImporter):
         cls : class, optional
             The native data class to store in metadata for later export via
             ``get_data``. If not provided, uses the class of the input data.
+        data_type : str, optional
+            The data type to store in metadata for later export via ``get_data``.
         """
         if data_label is None:
             data_label = self.data_label_value.strip()
