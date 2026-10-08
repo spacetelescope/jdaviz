@@ -288,9 +288,10 @@ class SnackbarQueue:
             if msg_filter(msg):
                 self.put(state, logger_plg, msg, **kwargs)
 
-        logger_plg = deferred_copy[-1][1]
-        # Sort to orient the history by time, since deferred messages are added out of order
-        logger_plg.history = sorted(logger_plg.history, key=lambda x: x['time'])
+        if len(deferred_copy):
+            logger_plg = deferred_copy[-1][1]
+            # Sort to orient the history by time, since deferred messages are added out of order
+            logger_plg.history = sorted(logger_plg.history, key=lambda x: x['time'])
 
 
 def enable_hot_reloading():
