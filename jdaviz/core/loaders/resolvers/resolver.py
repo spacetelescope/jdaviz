@@ -110,6 +110,8 @@ class FormatSelect(SelectPluginComponent):
             self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
             return
 
+        # used for message deferral to history
+        valid_parsers_importers = []
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
@@ -124,9 +126,9 @@ class FormatSelect(SelectPluginComponent):
                         self._invalid_importers[parser_name] = f'Parser exception: {e}'
                         this_parser._cleanup()
                         continue
+                    valid_parsers_importers.append(Parser)
                 else:
                     self._invalid_importers[parser_name] = this_parser.is_valid.message
-                    self._invalid_importers.setdefault(parser_name, this_parser.is_valid.message)
                     this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
@@ -190,7 +192,7 @@ class FormatSelect(SelectPluginComponent):
                                     # this previous parser has preference over this one
                                     self._invalid_importers[label] = f'Parser {prev_parser} has preference over {parser_name}'  # noqa
                                     continue
-
+                            valid_parsers_importers.append(Importer)
                         else:
                             # we'll store the importer even if it isn't valid according to the
                             # filters so that they can be used when compiling the list of
@@ -198,6 +200,13 @@ class FormatSelect(SelectPluginComponent):
                             self._importers[importer_name] = this_importer
                     else:
                         self._invalid_importers[label] = this_importer.is_valid.message
+
+            # flush any snackbar messages to history that may
+            # have been queued during parser and importer checks
+            self._app.state.snackbar_queue.flush_deferred(
+                deferred_history=True,
+                msg_filter=lambda msg: any(isinstance(msg.sender, i)
+                                           for i in valid_parsers_importers))
 
         # if any choice has a non-zero/default confidence score, then sort by score
         # for any items with the same score, original ordering (ie import order in
@@ -1812,6 +1821,11 @@ def find_matching_resolver(app,
                 continue
             this_resolver.format.selected = fmt_item['label']
             valid_resolvers.append((this_resolver, resolver_name, fmt_item['label']))
+
+    # flush any snackbar messages to history that may have been queued during resolver checks
+    app.state.snackbar_queue.flush_deferred(
+        deferred_history=True,
+        msg_filter=lambda msg: msg.sender in [r[0] for r in valid_resolvers])
 
     if len(valid_resolvers) == 0:
         msg = (f'No valid loaders found for input. Tried:\n\n'
