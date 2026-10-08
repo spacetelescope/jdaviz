@@ -34,7 +34,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate
-from ipywidgets import widget_serialization
+from ipywidgets import Layout, widget_serialization
 from traitlets import Dict, Bool, List, Unicode, Any
 from specutils import Spectrum, SpectralRegion
 from specutils.utils.wcs_utils import SpectralGWCS
@@ -3368,6 +3368,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         viewer = self._application_handler.new_data_viewer(
             msg.cls, data=msg.data, show=False)
+        # Vue template widgets can default to no layout (ipyvue >= 1.13).
+        if viewer.figure_widget.layout is None:
+            viewer.figure_widget.layout = Layout()
         viewer.figure_widget.layout.height = '100%'
 
         linked_by_wcs = self._align_by == 'wcs'
@@ -3498,6 +3501,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                     viewer = self._application_handler.new_data_viewer(
                         viewer_registry.members.get(view['plot'])['cls'],
                         data=None, show=False)
+                    if viewer.figure_widget.layout is None:
+                        viewer.figure_widget.layout = Layout()
                     viewer.figure_widget.layout.height = '100%'
 
                     viewer_item = self._create_viewer_item(
