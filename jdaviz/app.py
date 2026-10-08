@@ -1350,15 +1350,23 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                 raise ValueError("Unable to find spectral axis units")
         else:
             data = subset_state.att.parent
-            ndim = data.get_component("flux").ndim
-            if ndim == 2:
-                units = u.pix
+            if "Catalog" in data.meta.get('_importer', ''):
+                units = u.Unit('')
             else:
-                handler, _ = data_translator.get_handler_for(Spectrum)
-                spec = handler.to_object(data)
-                units = spec.spectral_axis.unit
+                ndim = data.get_component("flux").ndim
+                if ndim == 2:
+                    units = u.pix
+                else:
+                    handler, _ = data_translator.get_handler_for(Spectrum)
+                    spec = handler.to_object(data)
+                    units = spec.spectral_axis.unit
 
-        if use_display_units and units != u.pix:
+        if "Catalog" in data.meta.get('_importer', ''):
+            # We don't want to turn this into a SpectralRegion in this case,
+            # and we don't need to simplify a spectral region
+            spec_region = [subset_state.lo, subset_state.hi]
+            simplify_spectral = False
+        elif use_display_units and units != u.pix:
             # converting may result in flipping order (wavelength <-> frequency)
             ret_units = self._get_display_unit('spectral')
             subset_bounds = [(subset_state.lo * units).to(ret_units, u.spectral()),
