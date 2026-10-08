@@ -75,6 +75,7 @@ class BaseImporter(PluginTemplateMixin, ValidatorMixin, LoaderBannerMessagesMixi
         # from all the importers in memory
         self._app.observe(self._update_existing_data_in_dc_traitlet, 'existing_data_in_dc')
         self._update_existing_data_in_dc_traitlet()
+        self.flush_deferred_messages = True
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
@@ -513,9 +514,10 @@ class BaseImporterToDataCollection(BaseImporter):
                                                         traceback=exceptions))
 
         # Flush all deferred messages to snackbar queue
-        # so that the user sees them immediately after import
-        self._app.state.snackbar_queue.flush_deferred(
-            lambda msg: isinstance(msg.sender, type(self)))
+        # so that the user sees them after import
+        if self.flush_deferred_messages:
+            self._app.state.snackbar_queue.flush_deferred(
+                lambda msg: isinstance(msg.sender, type(self)))
 
     @with_spinner('import_spinner')
     def __call__(self):
