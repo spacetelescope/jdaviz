@@ -8,7 +8,12 @@ from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
+from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers.image import ImageImporter
+from jdaviz.core.loaders.importers.spectrum1d import SpectrumImporter
+from jdaviz.core.loaders.importers.spectrum2d import Spectrum2DImporter
+from jdaviz.core.loaders.importers.source_catalog import SourceCatalogImporter
 from jdaviz.core.template_mixin import (LoaderBannerMessagesMixin,
                                         ViewerSelectCreateNew,
                                         with_spinner)
@@ -16,8 +21,6 @@ from jdaviz.core.user_api import ImporterUserApi
 
 
 __all__ = ['MOSImporter']
-
-from jdaviz.utils import defer_snackbars
 
 
 _SPECTRUM_1D_PATTERN = re.compile(r'_(?:x|c)1d\.fit(?:s)?(?:\.gz)?$', re.IGNORECASE)
@@ -32,21 +35,25 @@ _FITS_PATTERN = re.compile(r'\.fit(?:s)?(?:\.gz)?$', re.IGNORECASE)
 _MOS_PRODUCTS = {
     'spectrum1d': {'pattern': _SPECTRUM_1D_PATTERN,
                    'format': '1D Spectrum',
+                   'importer': SpectrumImporter,
                    'viewer_label': '1D Spectrum',
                    'viewer_reference': 'spectrum-1d-viewer',
                    'viewer_traitlet_prefix': 'viewer_1d'},
     'spectrum2d': {'pattern': _SPECTRUM_2D_PATTERN,
                    'format': '2D Spectrum',
+                   'importer': Spectrum2DImporter,
                    'viewer_label': '2D Spectrum',
                    'viewer_reference': 'spectrum-2d-viewer',
                    'viewer_traitlet_prefix': 'viewer_2d'},
     'image': {'pattern': _IMAGE_PATTERN,
               'format': 'Image',
+              'importer': ImageImporter,
               'viewer_label': 'Image',
               'viewer_reference': 'imviz-image-viewer',
               'viewer_traitlet_prefix': 'viewer_image'},
     'catalog': {'pattern': _CAT_PATTERN,
                 'format': 'Source Catalog',
+                'importer': SourceCatalogImporter,
                 'viewer_label': 'Source Catalog Table',
                 'viewer_reference': 'source-catalog-table-viewer',
                 'viewer_traitlet_prefix': 'viewer_catalog'},
@@ -320,6 +327,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         return [{'path': path,
                  'product_type': product_type,
                  'format': _MOS_PRODUCTS[product_type]['format'],
+                 'importer': _MOS_PRODUCTS[product_type]['importer'],
                  'suffix': _label_suffix(path.name)}
                 for path, product_type in _iter_input_files(input_path)
                 if product_type in _MOS_PRODUCTS]
@@ -444,14 +452,23 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
                 kwargs['ext_viewer'] = viewers_by_product_type.get('spectrum1d', [])
 
         try:
-            self._app._jdaviz_helper.load(
+            # Use find_matching_resolver to get the correct resolver for the file,
+            resolver = find_matching_resolver(
+                self._app,
                 str(file_info['path']),
-                loader='file',
-                format=file_info['format'],
-                data_label=data_label,
-                viewer=viewers_by_product_type[product_type],
-                ignore_invalid_kwargs=True,
-                **kwargs)
+                resolver='file',
+                format=file_info['format'])
+
+            # Access the importer and override the flag before loading
+            importer = resolver.importer
+            importer._obj.flush_deferred_messages = False
+
+            # Apply any other kwargs (similar to using .load() with kwargs)
+            importer._obj._apply_kwargs({
+                'data_label': data_label,
+                'viewer': viewers_by_product_type[product_type]})
+            resolver.load()
+
         except Exception as e:  # nosec
             failures.append(filename)
             self._loader_message(f"Failed to import '{filename}': {e}",
@@ -500,16 +517,20 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
 
         batched = [file_info for file_info in self.mos_files if not _defer(file_info)]
         deferred = [file_info for file_info in self.mos_files if _defer(file_info)]
+        importers_used = set()
 
-        with defer_snackbars(self._app):
-            with self._app._jdaviz_helper.batch_load():
-                for file_info in batched:
-                    self._import_file(file_info, viewers_by_product_type, data_label_prefix,
-                                      failures, imported_labels)
-
-            for file_info in deferred:
+        with self._app._jdaviz_helper.batch_load():
+            for file_info in batched:
                 self._import_file(file_info, viewers_by_product_type, data_label_prefix,
                                   failures, imported_labels)
+                importers_used.add(file_info['importer'])
+
+        for file_info in deferred:
+            self._import_file(file_info, viewers_by_product_type, data_label_prefix,
+                              failures, imported_labels)
+            importers_used.add(file_info['importer'])
 
         self._show_single_layer_per_viewer(preexisting_labels, imported_labels)
         self._report_import_summary(failures)
+        self._app.state.snackbar_queue.flush_deferred(
+            lambda msg: type(msg.sender) in importers_used)
