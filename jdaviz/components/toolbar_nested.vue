@@ -8,7 +8,7 @@
     >
       <v-btn class="custom-toolbar-mode-button" @click="restore_tools" style="background-color: #007ba1; color: white; border-bottom-right-radius: 0; border-top-right-radius: 0; margin-right: -6px; padding-top: 3px">
         <j-tooltip :tooltipcontent="`exit '${tool_override_mode}' mode and restore original toolbar`" span_style="height: inherit; display: inherit; pointer-events: cursor;">
-          <v-icon style="margin-left: 4px;">mdi-close</v-icon>
+          <v-icon class="custom-toolbar-mode-cancel" style="margin-left: 4px;">mdi-close</v-icon>
           <span class="custom-toolbar-mode-label" style="color: white; margin-top: 0px; margin-left: 12px">{{ tool_override_mode }}</span>
         </j-tooltip>
       </v-btn>
@@ -286,6 +286,9 @@
   flex: 0 0 auto !important;
   min-width: 42px !important;
 }
+.custom-toolbar-mode-cancel {
+  color: white !important;
+}
 .custom-toolbar-mode-label {
   display: inline-block;
   max-width: 240px;
@@ -305,6 +308,30 @@
 /* custom widgets shrink first so apply/confirm buttons stay visible */
 .custom-toolbar-widgets ~ .toolbar-nested-tools {
   flex: 0 0 auto !important;
+}
+.custom-toolbar-text-input,
+.custom-toolbar-text-input .v-field,
+.custom-toolbar-text-input .v-field__overlay {
+  background-color: #007ba1 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+.custom-toolbar-text-input .v-field__input,
+.custom-toolbar-text-input input {
+  color: white !important;
+  caret-color: white !important;
+}
+.custom-toolbar-text-input .v-field,
+.custom-toolbar-text-input .v-field::before,
+.custom-toolbar-text-input .v-field::after,
+.custom-toolbar-text-input .v-field__outline,
+.custom-toolbar-text-input .v-field__outline::before,
+.custom-toolbar-text-input .v-field__outline::after {
+  border-bottom-color: rgba(255, 255, 255, 0.75) !important;
+}
+.custom-toolbar-text-input input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+  opacity: 1 !important;
 }
 .custom-toolbar-select {
   flex: 1 1 auto !important;
