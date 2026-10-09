@@ -110,9 +110,12 @@ class FormatSelect(SelectPluginComponent):
             self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
             return
 
-        # used for message deferral to history
+        # messages emitted while checking validity are only kept (in the history, without
+        # popups) if they come from a parser/importer that turns out to be valid
         valid_parsers_importers = []
-        with warnings.catch_warnings():
+        deferral = self._app.state.snackbar_queue.deferring(
+            msg_filter=lambda msg: any(msg.sender is obj for obj in valid_parsers_importers))
+        with warnings.catch_warnings(), deferral:
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin._app, parser_input)
@@ -197,13 +200,6 @@ class FormatSelect(SelectPluginComponent):
                     else:
                         self._invalid_importers[label] = this_importer.is_valid.message
 
-            # flush any snackbar messages to history that may
-            # have been queued during parser and importer checks
-            self._app.state.snackbar_queue.flush_deferred(
-                flush_to_history_only=True,
-                msg_filter=lambda msg:
-                any(msg.sender is obj for obj in valid_parsers_importers))
-
         # if any choice has a non-zero/default confidence score, then sort by score
         # for any items with the same score, original ordering (ie import order in
         # importers/__init__.py) will be preserved.
@@ -271,7 +267,7 @@ class TargetSelect(SelectPluginComponent):
 
 
 class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin,
-                   ValidatorMixin, LoaderBannerMessagesMixin):
+                   ValidatorMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
@@ -1103,7 +1099,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.open_callback()
 
 
-class BaseConeSearchResolver(BaseResolver):
+class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
     viewer_items = List([]).tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
 
@@ -1312,11 +1308,6 @@ class BaseConeSearchResolver(BaseResolver):
             # "0 results found" message.
             if not self.returned_no_results:
                 self._loader_message(f"{n_results} results found.", color='success')
-
-        # We have to flush here because the common flush in add_to_data_collection
-        # filters messages on the source catalog importer when querying archive
-        self._app.state.snackbar_queue.flush_deferred(
-            msg_filter=lambda msg: msg.sender is self)
 
         self._resolver_input_updated()
 
@@ -1820,12 +1811,6 @@ def find_matching_resolver(app,
                 continue
             this_resolver.format.selected = fmt_item['label']
             valid_resolvers.append((this_resolver, resolver_name, fmt_item['label']))
-
-    # flush any snackbar messages to history that may have been queued during resolver checks
-    app.state.snackbar_queue.flush_deferred(
-        flush_to_history_only=True,
-        msg_filter=lambda msg: any(msg.sender is r[0] for r in valid_resolvers)
-    )
 
     if len(valid_resolvers) == 0:
         msg = (f'No valid loaders found for input. Tried:\n\n'
