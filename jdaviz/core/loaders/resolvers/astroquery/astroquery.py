@@ -104,7 +104,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
                 self._loader_message(
                     f"Radius for {self.telescope.selected} has max radius of {r_max}\' but got "
                     f"{radius.to(u.arcmin)}, using {r_max}.",
-                    color='warning', raise_msg=True)
+                    color='warning', raise_msg=True, popup=False)
                 radius = r_max
 
             # queries the region (based on the provided center point and radius)
