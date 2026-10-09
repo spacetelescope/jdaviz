@@ -144,8 +144,9 @@ class SnackbarQueue:
         if msg.color not in ['debug', 'info', 'warning', 'error', 'success', None]:
             raise ValueError(f"color ({msg.color}) must be on of: debug, info, warning, error, success")  # noqa
 
-        now = time.localtime()
-        timestamp = timestamp or f'{now.tm_hour}:{now.tm_min:02d}:{now.tm_sec:02d}'
+        # so that deferred messages can be sorted into the history on flush
+        if timestamp is None:
+            timestamp = time.time()
 
         if defer:
             # Store message for later display
@@ -154,7 +155,9 @@ class SnackbarQueue:
             return
 
         if not msg.loading and history and logger_plg is not None:
-            new_history = {'time': timestamp, 'text': msg.text,
+            t = time.localtime(timestamp)
+            new_history = {'time': f'{t.tm_hour}:{t.tm_min:02d}:{t.tm_sec:02d}',
+                           'timestamp': timestamp, 'text': msg.text,
                            'color': msg.color, 'traceback': msg.traceback}
             # for now, we'll hardcode the max length of the stored history
             if len(logger_plg.history) >= 50:
@@ -282,36 +285,35 @@ class SnackbarQueue:
         Parameters
         ----------
         flush_to_history_only : bool, optional
-            If True, we are using this function to flush deferred messages to history, but we
-            may still want to flush them to the snackbar queue for display.
+            If True, only write the messages to the logger history. Messages that
+            would pop up are kept deferred (without history) for a later flush.
         msg_filter : callable, optional
             A function that takes a message as input and returns True if the message
-            should be displayed, False otherwise.
+            should be flushed. Messages that do not pass the filter are discarded.
         """
         deferred_copy = list(self.deferred)
         self.deferred.clear()
 
-        if msg_filter is None:
-            def msg_filter(_):
-                return True
-
+        history_logger = None
         for state, logger_plg, msg, kwargs in deferred_copy:
-            if msg_filter(msg):
-                if flush_to_history_only:
-                    # we are flushing a deferred history, do not popup
-                    kwargs['popup'] = False
+            if msg_filter is not None and not msg_filter(msg):
+                continue
+
+            if flush_to_history_only:
+                self.put(state, logger_plg, msg, **{**kwargs, 'popup': False})
+                if kwargs['popup']:
+                    # avoid double populating the history on a future flush
+                    self.deferred.append((state, logger_plg, msg, {**kwargs, 'history': False}))
+            else:
                 self.put(state, logger_plg, msg, **kwargs)
 
-                if flush_to_history_only:
-                    # Set history to False to avoid double populating the logger history
-                    # with deferred messages on a future flush
-                    kwargs['history'] = False
-                    self.deferred.append((state, logger_plg, msg, kwargs))
+            if kwargs['history']:
+                history_logger = logger_plg
 
-        if len(deferred_copy):
-            logger_plg = deferred_copy[-1][1]
-            # Sort to orient the history by time, since deferred messages are added out of order
-            logger_plg.history = sorted(logger_plg.history, key=lambda x: x['time'])
+        if history_logger is not None:
+            # deferred messages were added to the history out of order
+            history_logger.history = sorted(history_logger.history,
+                                            key=lambda entry: entry.get('timestamp', 0))
 
 
 def enable_hot_reloading():
