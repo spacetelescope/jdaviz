@@ -342,21 +342,18 @@ class RampImporter(BaseImporterToDataCollection):
             # but still want to preserve the plugin metadata
             ext.meta['plugin'] = rext._plugin_name
         except Exception:
-            ext = None
-            msg = SnackbarMessage(
+            self._app.hub.broadcast(SnackbarMessage(
                 "Automatic ramp extraction failed. See the ramp extraction"
                 " plugin to perform a custom extraction",
-                color='error', sender=self, timeout=10000)
-        else:
-            msg = SnackbarMessage(
-                "The extracted 1D ramp integration was generated automatically."
-                " See the ramp extraction plugin for details or to"
-                " perform a custom extraction.",
-                color='warning', sender=self, timeout=10000)
-        self._app.hub.broadcast(msg)
+                sender=self, color='error', timeout=10000))
+            return
 
-        if ext is not None:
-            ext_viewer_selected = self.ext_viewer.create_new.selected if self.ext_viewer.create_new.selected != '' else self.ext_viewer.selected  # noqa
-            self._app._jdaviz_helper.load(ext, format='Ramp Integration',
-                                          data_label=ext_data_label,
-                                          viewer=ext_viewer_selected)
+        ext_viewer_selected = self.ext_viewer.create_new.selected if self.ext_viewer.create_new.selected != '' else self.ext_viewer.selected  # noqa
+        self._app._jdaviz_helper.load(ext, format='Ramp Integration',
+                                      data_label=ext_data_label,
+                                      viewer=ext_viewer_selected)
+        self._app.hub.broadcast(SnackbarMessage(
+            "The extracted 1D ramp integration was generated automatically."
+            " See the ramp extraction plugin for details or to"
+            " perform a custom extraction.",
+            sender=self, color='warning', timeout=10000))
