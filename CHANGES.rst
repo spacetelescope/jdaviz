@@ -140,6 +140,9 @@ New Features
 
 - Add update feature to standalone app to allow users to click to see if update is available. [#4400]
 
+- Snackbar messages shown during load are now instead shown as banners
+  and the popup delayed until after load is complete. [#4438]
+
 Mosviz
 ^^^^^^
 
