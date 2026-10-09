@@ -449,10 +449,8 @@ class MOSImporter(BaseImporterToDataCollection):
                 resolver='file',
                 format=file_info['format'])
 
-            # Access the (unwrapped) importer so it can be matched against message senders
-            # and override the flag before loading
+            # access the importer directly so that its banner messages can be collected
             importer = resolver.importer._obj
-            importer.flush_deferred_messages = False
 
             # Apply any other kwargs (similar to using .load() with kwargs)
             importer._apply_kwargs({
@@ -474,8 +472,6 @@ class MOSImporter(BaseImporterToDataCollection):
                     {**m, 'text': f"{filename}: {m['text']}"}
                     for m in importer.loader_message_items]
 
-        return importer
-
     @with_spinner('import_spinner')
     def __call__(self):
         if self.data_label_invalid_msg:
@@ -488,6 +484,7 @@ class MOSImporter(BaseImporterToDataCollection):
             for product_type, viewer_select in self._viewer_select_by_product_type.items()
         }
 
+        self._clear_loader_messages()
         failures = []
         data_label_prefix = self.data_label_value.strip()
 
@@ -515,20 +512,24 @@ class MOSImporter(BaseImporterToDataCollection):
 
         batched = [file_info for file_info in self.mos_files if not _defer(file_info)]
         deferred = [file_info for file_info in self.mos_files if _defer(file_info)]
-        importers_used = [self]
 
-        with self._app._jdaviz_helper.batch_load():
-            for file_info in batched:
-                importer = self._import_file(file_info, viewers_by_product_type, data_label_prefix,
-                                             failures, imported_labels)
-                importers_used.append(importer)
+        # avoid overwhelming the user with popups from every file. Messages are still logged
+        # to the history and the individual importers' banners are collected in this banner.
+        snackbar_queue = self._app.state.snackbar_queue
+        suppress_popups = snackbar_queue.suppress_popups
+        snackbar_queue.suppress_popups = True
+        try:
+            with self._app._jdaviz_helper.batch_load():
+                for file_info in batched:
+                    self._import_file(file_info, viewers_by_product_type, data_label_prefix,
+                                      failures, imported_labels)
 
-        for file_info in deferred:
-            importer = self._import_file(file_info, viewers_by_product_type, data_label_prefix,
-                                         failures, imported_labels)
-            importers_used.append(importer)
+            for file_info in deferred:
+                self._import_file(file_info, viewers_by_product_type, data_label_prefix,
+                                  failures, imported_labels)
 
-        self._show_single_layer_per_viewer(preexisting_labels, imported_labels)
+            self._show_single_layer_per_viewer(preexisting_labels, imported_labels)
+        finally:
+            snackbar_queue.suppress_popups = suppress_popups
+
         self._report_import_summary(failures)
-        self._app.state.snackbar_queue.flush_deferred(
-            msg_filter=lambda msg: any(msg.sender is i for i in importers_used))
