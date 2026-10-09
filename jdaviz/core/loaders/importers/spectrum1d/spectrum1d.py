@@ -1,9 +1,11 @@
-import numpy as np
+import warnings
+
+from astropy.io.fits import HDUList
 from astropy.nddata import StdDevUncertainty
 import astropy.units as u
+import numpy as np
 from specutils import Spectrum
 from traitlets import Bool, List, observe
-import warnings
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
@@ -31,6 +33,13 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
 
         # Add filter for unit compatibility
         def viewer_incompatible_units(viewer):
+            # Just return False right away if this triggered off another importer, otherwise
+            # trying to access self.output will cause a FileIO error due to closing the input
+            # HDUList on cleanup
+            if isinstance(self.input, HDUList) and (self.input._file is not None and
+                                                    self.input._file.closed):
+                return False
+
             viewer_x_unit = getattr(viewer.state, 'x_display_unit', None)
 
             # if the viewer unit is None, its an empty viewer and anything
