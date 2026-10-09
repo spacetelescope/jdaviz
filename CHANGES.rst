@@ -3,6 +3,8 @@
 
 Bug Fixes
 ---------
+- Fix recursion limit bug when attempting to set an invalid data menu layer in
+  multiselect mode. [#4419]
 
 
 - Fix viewer container width. [#4424, #4430]

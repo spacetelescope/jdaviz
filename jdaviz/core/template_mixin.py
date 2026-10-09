@@ -1616,17 +1616,31 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         self._selected_previous = event['old']
         self._clear_cache()
         valid = self.labels
+
+        new = event['new']
+        old = event['old']
+
         if self.is_multiselect:
-            if not isinstance(event['new'], list):
-                self.selected = [event['new']]
-                return
-            if not np.all([item in valid + [''] for item in event['new']]):
-                self.selected = event['old']
-                raise ValueError(f"not all items in {event['new']} are one of {valid}, reverting selection to {event['old']}")  # noqa
+            if not isinstance(new, list):
+                new = [new] if new != '' else []
+            if not all(item in valid + [''] for item in new):
+                # revert only to a valid label, otherwise the revert re-triggers
+                # this observer and can encounter a recursion limit
+                if isinstance(old, list) and all(item in valid + [''] for item in old):
+                    revert = old
+                else:
+                    revert = []
+                self.selected = revert
+                raise ValueError(f"Not all items in \'{new}\' are one of \'{old}\', "
+                                 f"reverting selection to \'{revert}\'.")
+
+            if new != event['new']:
+                self.selected = new
+            return
         else:
             if event['new'] not in valid + ['']:
                 self.selected = event['old']
-                raise ValueError(f"\'{event['new']}\' not one of {valid}, reverting selection to \'{event['old']}\'")  # noqa
+                raise ValueError(f"\'{new}\' not one of {valid}, reverting selection to \'{old}\'")
 
     def _update_selected_on_rename(self, old_label, new_label):
         """
