@@ -14,7 +14,7 @@ from specutils import Spectrum, SpectrumList, SpectrumCollection
 from specutils.io.parsing_utils import generic_spectrum_from_table
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.core.template_mixin import LoaderBannerMessagesMixin, SelectFileExtensionComponent
+from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.unit_conversion_utils import is_unit_per_solid_angle
 from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
 from jdaviz.utils import (standardize_metadata,
@@ -50,7 +50,7 @@ def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
     return physical_type
 
 
-class SpectrumInputExtensionsMixin(LoaderBannerMessagesMixin, VuetifyTemplate, HubListener):
+class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
     input_type = Unicode().tag(sync=True)
 
     multiselect = Bool(True).tag(sync=True)
@@ -610,6 +610,7 @@ class SpectrumInputExtensionsMixin(LoaderBannerMessagesMixin, VuetifyTemplate, H
                     mask_data = mask_data.T
                 if getattr(wcs, 'naxis', 0) == 2:
                     wcs = wcs.swapaxes(0, 1)
+                # the _loader_message method will be provided by the inheriting class
                 self._loader_message(
                     f"Transposed input data to {data.shape}",
                     color="warning")
