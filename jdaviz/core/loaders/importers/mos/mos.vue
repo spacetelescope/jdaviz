@@ -121,6 +121,8 @@
       hint="Select the viewer to use for the imported catalogs."
     ></plugin-viewer-create-new>
 
+    <j-loader-banner-messages :items="loader_message_items"></j-loader-banner-messages>
+
     <loader-import-button
       :spinner="import_spinner"
       :disabled_msg="import_disabled_msg"
@@ -132,7 +134,5 @@
       :data_label_overwrite_by_index="data_label_overwrite_by_index"
       @click="import_clicked">
     </loader-import-button>
-
-    <j-loader-banner-messages :items="loader_message_items"></j-loader-banner-messages>
   </v-container>
 </template>
