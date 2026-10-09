@@ -1253,7 +1253,7 @@ class BaseConeSearchResolver(BaseResolver):
             source_label = self._current_query_source_label or self.source
             self._loader_message(f"Failed to query {self._query_archive_label.strip()} "
                                  f"for source: {source_label}.",
-                                 color='error', traceback=e, popup=False)
+                                 color='error', traceback=e)
             return None
 
     def _source_to_skycoord(self, add_loader_message=True):
@@ -1278,7 +1278,7 @@ class BaseConeSearchResolver(BaseResolver):
         except Exception as e:  # nosec
             if add_loader_message:
                 self._loader_message(f"Unable to resolve source name: {self.source}",
-                                     color='error', traceback=e, popup=False)
+                                     color='error', traceback=e)
             return None
 
     def _finalize_query_output(self, output, hit_cap=False):
@@ -1301,17 +1301,17 @@ class BaseConeSearchResolver(BaseResolver):
             self._loader_message(
                 f"The search returned no results from {self._query_archive_label}. "
                 f"Please modify your query parameters and try again.",
-                color='error', popup=False)
+                color='error')
         elif self.returned_max_results:
             self._loader_message("The number of results returned has reached the maximum "
                                  f"limit set ({self.max_results}).",
-                                 color='success', popup=False)
+                                 color='success')
         else:
             # There can be a scenario where the query returns failures for every result
             # but the query itself was successful. In that case, we don't want to show the
             # "0 results found" message.
             if not self.returned_no_results:
-                self._loader_message(f"{n_results} results found.", color='success', popup=False)
+                self._loader_message(f"{n_results} results found.", color='success')
 
         # We have to flush here because the common flush in add_to_data_collection
         # filters messages on the source catalog importer when querying archive
@@ -1535,7 +1535,7 @@ class BaseConeSearchResolver(BaseResolver):
         if len(set(err_strings)) == 1:
             self._loader_message(
                 f"Single reason failure occurred during name resolution: {err_strings[0]}",
-                color='warning', popup=False)
+                color='warning')
 
         return coords
 
@@ -1634,7 +1634,7 @@ class BaseConeSearchResolver(BaseResolver):
                 f"Could not resolve {len(self._source_name_query_failures)}/{len(coords)} "
                 f"source names from the '{self.catalog_name_col_selected}' column. "
                 f"Check the source names in your catalog.",
-                color='warning', popup=False)
+                color='warning')
 
         self._finalize_query_output(output, hit_cap=hit_cap)
 

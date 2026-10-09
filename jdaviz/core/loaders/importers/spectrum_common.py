@@ -613,7 +613,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                 # the _loader_message method will be provided by the inheriting class
                 self._loader_message(
                     f"Transposed input data to {data.shape}",
-                    color="warning")
+                    color="warning", popup=True)
 
         # Check for data types that have a GWCS stored in ASDF
         telescop = metadata[PRIHDR_KEY].get('TELESCOP', '').lower()
