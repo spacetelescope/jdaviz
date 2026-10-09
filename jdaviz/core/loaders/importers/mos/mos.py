@@ -319,7 +319,6 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         return [{'path': path,
                  'product_type': product_type,
                  'format': _MOS_PRODUCTS[product_type]['format'],
-                 'importer': _MOS_PRODUCTS[product_type]['importer'],
                  'suffix': _label_suffix(path.name)}
                 for path, product_type in _iter_input_files(input_path)
                 if product_type in _MOS_PRODUCTS]
