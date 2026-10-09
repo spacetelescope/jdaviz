@@ -1320,7 +1320,7 @@ class BaseConeSearchResolver(BaseResolver):
         # We have to flush here because the common flush in add_to_data_collection
         # filters messages on the source catalog importer when querying archive
         self._app.state.snackbar_queue.flush_deferred(
-            msg_filter=lambda msg: isinstance(msg.sender, type(self)))
+            msg_filter=lambda msg: msg.sender is self)
 
         self._resolver_input_updated()
 
