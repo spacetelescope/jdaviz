@@ -117,9 +117,7 @@ class FormatSelect(SelectPluginComponent):
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
-
-                this_parser_is_valid = bool(this_parser.is_valid)
-                if this_parser_is_valid:
+                if this_parser.is_valid:
                     try:
                         importer_input = this_parser.output
                     except Exception as e:
@@ -158,9 +156,7 @@ class FormatSelect(SelectPluginComponent):
                         # skip importers that do not match the target
                         self._invalid_importers[label] = 'Not matching target'
                         continue
-
-                    this_importer_is_valid = bool(this_importer.is_valid)
-                    if this_importer_is_valid:
+                    if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
                             item = {'label': importer_name,
                                     'parser': parser_name,
@@ -1257,7 +1253,7 @@ class BaseConeSearchResolver(BaseResolver):
             source_label = self._current_query_source_label or self.source
             self._loader_message(f"Failed to query {self._query_archive_label.strip()} "
                                  f"for source: {source_label}.",
-                                 color='error', traceback=e)
+                                 color='error', traceback=e, popup=False)
             return None
 
     def _source_to_skycoord(self, add_loader_message=True):
@@ -1282,7 +1278,7 @@ class BaseConeSearchResolver(BaseResolver):
         except Exception as e:  # nosec
             if add_loader_message:
                 self._loader_message(f"Unable to resolve source name: {self.source}",
-                                     color='error', traceback=e)
+                                     color='error', traceback=e, popup=False)
             return None
 
     def _finalize_query_output(self, output, hit_cap=False):
@@ -1305,17 +1301,17 @@ class BaseConeSearchResolver(BaseResolver):
             self._loader_message(
                 f"The search returned no results from {self._query_archive_label}. "
                 f"Please modify your query parameters and try again.",
-                color='error')
+                color='error', popup=False)
         elif self.returned_max_results:
             self._loader_message("The number of results returned has reached the maximum "
                                  f"limit set ({self.max_results}).",
-                                 color='success')
+                                 color='success', popup=False)
         else:
             # There can be a scenario where the query returns failures for every result
             # but the query itself was successful. In that case, we don't want to show the
             # "0 results found" message.
             if not self.returned_no_results:
-                self._loader_message(f"{n_results} results found.", color='success')
+                self._loader_message(f"{n_results} results found.", color='success', popup=False)
 
         # We have to flush here because the common flush in add_to_data_collection
         # filters messages on the source catalog importer when querying archive
@@ -1539,7 +1535,7 @@ class BaseConeSearchResolver(BaseResolver):
         if len(set(err_strings)) == 1:
             self._loader_message(
                 f"Single reason failure occurred during name resolution: {err_strings[0]}",
-                color='warning')
+                color='warning', popup=False)
 
         return coords
 
@@ -1638,7 +1634,7 @@ class BaseConeSearchResolver(BaseResolver):
                 f"Could not resolve {len(self._source_name_query_failures)}/{len(coords)} "
                 f"source names from the '{self.catalog_name_col_selected}' column. "
                 f"Check the source names in your catalog.",
-                color='warning')
+                color='warning', popup=False)
 
         self._finalize_query_output(output, hit_cap=hit_cap)
 
@@ -1800,10 +1796,8 @@ def find_matching_resolver(app,
                 raise e
             continue
 
-        this_resolver_is_valid = bool(this_resolver.is_valid)
-        if not this_resolver_is_valid:
+        if not this_resolver.is_valid:
             invalid_resolvers[resolver_name] = this_resolver.is_valid.message
-            invalid_resolvers.setdefault(resolver_name, this_resolver.is_valid.message)
             continue
 
         if target is not None:
