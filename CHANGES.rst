@@ -140,8 +140,9 @@ New Features
 
 - Add update feature to standalone app to allow users to click to see if update is available. [#4400]
 
-- Snackbar messages shown during load are now instead shown as banners
-  and the popup delayed until after load is complete. [#4438]
+- Loader messages are now shown as banners in the importers, messages from parsers/importers
+  that are not valid for the input are no longer shown, and auto-extraction messages are
+  shown after the extracted data is loaded. [#4438]
 
 Mosviz
 ^^^^^^
