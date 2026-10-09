@@ -1830,7 +1830,8 @@ def find_matching_resolver(app,
     # flush any snackbar messages to history that may have been queued during resolver checks
     app.state.snackbar_queue.flush_deferred(
         flush_to_history_only=True,
-        msg_filter=lambda msg: msg.sender in [r[0] for r in valid_resolvers])
+        msg_filter=lambda msg: any(msg.sender is r[0] for r in valid_resolvers)
+    )
 
     if len(valid_resolvers) == 0:
         msg = (f'No valid loaders found for input. Tried:\n\n'
