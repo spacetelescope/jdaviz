@@ -10,9 +10,7 @@ from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
-from jdaviz.core.template_mixin import (LoaderBannerMessagesMixin,
-                                        ViewerSelectCreateNew,
-                                        with_spinner)
+from jdaviz.core.template_mixin import ViewerSelectCreateNew, with_spinner
 from jdaviz.core.user_api import ImporterUserApi
 
 
@@ -99,7 +97,7 @@ def _check_header(path):
 
 
 @loader_importer_registry('MOS')
-class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
+class MOSImporter(BaseImporterToDataCollection):
     template_file = __file__, "./mos.vue"
     parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
     allow_directory_input = True
@@ -388,7 +386,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
                                  f"({', '.join(failures)}).",
                                  color='warning', popup=True)
         else:
-            self._loader_message(f"{n_files} files imported.", color='success')
+            self._loader_message(f"{n_files} files imported.", color='success', popup=False)
 
     def _show_single_layer_per_viewer(self, preexisting_labels, imported_labels):
         """
@@ -451,28 +449,30 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
                 resolver='file',
                 format=file_info['format'])
 
-            # Access the importer and override the flag before loading
-            importer = resolver.importer
-            importer._obj.flush_deferred_messages = False
+            # Access the (unwrapped) importer so it can be matched against message senders
+            # and override the flag before loading
+            importer = resolver.importer._obj
+            importer.flush_deferred_messages = False
 
             # Apply any other kwargs (similar to using .load() with kwargs)
-            importer._obj._apply_kwargs({
+            importer._apply_kwargs({
                 'data_label': data_label,
-                'viewer': viewers_by_product_type[product_type]})
+                'viewer': viewers_by_product_type[product_type],
+                **kwargs})
             resolver.load()
 
         except Exception as e:  # nosec
             failures.append(filename)
             self._loader_message(f"Failed to import '{filename}': {e}",
-                                 color='error', traceback=e)
+                                 color='error', traceback=e, popup=False)
         else:
             for viewer_label in viewers_by_product_type[product_type]:
                 imported_labels[viewer_label].append(data_label)
         finally:
-            if importer:
+            if importer is not None:
                 self.loader_message_items = self.loader_message_items + [
                     {**m, 'text': f"{filename}: {m['text']}"}
-                    for m in importer._obj.loader_message_items]
+                    for m in importer.loader_message_items]
 
         return importer
 
@@ -488,7 +488,6 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
             for product_type, viewer_select in self._viewer_select_by_product_type.items()
         }
 
-        self._clear_loader_messages()
         failures = []
         data_label_prefix = self.data_label_value.strip()
 
@@ -516,7 +515,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
 
         batched = [file_info for file_info in self.mos_files if not _defer(file_info)]
         deferred = [file_info for file_info in self.mos_files if _defer(file_info)]
-        importers_used = []
+        importers_used = [self]
 
         with self._app._jdaviz_helper.batch_load():
             for file_info in batched:
