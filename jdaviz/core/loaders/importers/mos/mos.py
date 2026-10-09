@@ -51,6 +51,7 @@ _MOS_PRODUCTS = {
                 'viewer_traitlet_prefix': 'viewer_catalog'},
 }
 
+
 def _iter_input_files(dir_path):
     """
     Yield the path and product type for every non-hidden file sorted by path.
