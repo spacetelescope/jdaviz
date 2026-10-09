@@ -518,7 +518,7 @@ class BaseImporterToDataCollection(BaseImporter):
         # so that the user sees them after import
         if self.flush_deferred_messages:
             self._app.state.snackbar_queue.flush_deferred(
-                msg_filter=lambda msg: isinstance(msg.sender, type(self)))
+                msg_filter=lambda msg: msg.sender is self)
 
     @with_spinner('import_spinner')
     def __call__(self):
