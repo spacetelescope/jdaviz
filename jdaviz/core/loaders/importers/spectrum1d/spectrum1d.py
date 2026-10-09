@@ -166,7 +166,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
                     msg = 'All uncertainties are nonfinite, replacing with uncertainty=None.'
                     self._app.hub.broadcast(SnackbarMessage(msg,
                                                             color="warning",
-                                                            sender=self.app))
+                                                            sender=self))
             output.append(data)
 
         if self.concatenate and len(output) > 1:
