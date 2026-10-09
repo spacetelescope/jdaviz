@@ -644,7 +644,7 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
                                                    traceback=traceback, timeout=timeout)
 
         kwargs.setdefault('history', True)
-        popup = kwargs.setdefault('popup', True)
+        popup = kwargs.setdefault('popup', False)
         # defer popups until loading is complete, unless raising (shown immediately).
         # Messages without a popup are logged immediately (nothing to defer).
         kwargs.setdefault('defer', popup and not raise_msg)

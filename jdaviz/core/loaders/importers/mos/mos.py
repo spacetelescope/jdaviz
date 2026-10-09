@@ -386,7 +386,7 @@ class MOSImporter(BaseImporterToDataCollection):
                                  f"({', '.join(failures)}).",
                                  color='warning', popup=True)
         else:
-            self._loader_message(f"{n_files} files imported.", color='success', popup=False)
+            self._loader_message(f"{n_files} files imported.", color='success')
 
     def _show_single_layer_per_viewer(self, preexisting_labels, imported_labels):
         """
@@ -464,7 +464,7 @@ class MOSImporter(BaseImporterToDataCollection):
         except Exception as e:  # nosec
             failures.append(filename)
             self._loader_message(f"Failed to import '{filename}': {e}",
-                                 color='error', traceback=e, popup=False)
+                                 color='error', traceback=e)
         else:
             for viewer_label in viewers_by_product_type[product_type]:
                 imported_labels[viewer_label].append(data_label)
