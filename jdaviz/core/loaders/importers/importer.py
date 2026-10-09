@@ -11,7 +11,7 @@ from glue.core.message import (DataCollectionAddMessage,
 from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import (AutoTextField,
-                                        PluginTemplateMixin,
+                                        LoaderBannerMessagesMixin, PluginTemplateMixin,
                                         SelectPluginComponent,
                                         ViewerSelectCreateNew,
                                         with_spinner,
@@ -52,7 +52,7 @@ def _physical_type_from_component(comp_id, comp):
         return comp_units, None
 
 
-class BaseImporter(PluginTemplateMixin, ValidatorMixin):
+class BaseImporter(PluginTemplateMixin, ValidatorMixin, LoaderBannerMessagesMixin):
     # preference order of parsers, by registry name.  If empty, the first found match will
     # be used by default.  If not empty, the first match in the list will be used (including
     # over any parsers not included in the list).  If not empty but no valid parsers are in
@@ -369,6 +369,8 @@ class BaseImporterToDataCollection(BaseImporter):
         cls : class, optional
             The native data class to store in metadata for later export via
             ``get_data``. If not provided, uses the class of the input data.
+        data_type : str, optional
+            The data type to store in metadata for later export via ``get_data``.
         """
         if data_label is None:
             data_label = self.data_label_value.strip()

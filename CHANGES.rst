@@ -140,6 +140,10 @@ New Features
 
 - Add update feature to standalone app to allow users to click to see if update is available. [#4400]
 
+- Loader messages are now shown as banners in the importers, messages from parsers/importers
+  that are not valid for the input are no longer shown, and auto-extraction messages are
+  shown after the extracted data is loaded. [#4438]
+
 Mosviz
 ^^^^^^
 

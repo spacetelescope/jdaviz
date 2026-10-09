@@ -625,7 +625,8 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
     def _clear_loader_messages(self):
         self.loader_message_items = []
 
-    def _loader_message(self, text, color='error', popup=False, traceback=None, raise_msg=False):
+    def _loader_message(self, text, color='error', popup=False, traceback=None,
+                        raise_msg=False, timeout=5000):
         """
         Report ``text`` to the user through a persistent banner in the loader UI and
         added to the logger without necessarily raising a snackbar.
@@ -637,7 +638,8 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
         # add message to logger with/without broadcasting
         text_w_traceback = text + (f'; Traceback: {traceback}' if traceback is not None else '')
         snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
-                                                   color=color, sender=self, traceback=traceback)
+                                                   color=color, sender=self,
+                                                   traceback=traceback, timeout=timeout)
         self._app.state.snackbar_queue.put(self._app.state,
                                            self._app._jdaviz_helper.plugins['Logger'],
                                            snackbar_msg_w_traceback,
