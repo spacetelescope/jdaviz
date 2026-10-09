@@ -10,10 +10,6 @@ from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
-from jdaviz.core.loaders.importers.image import ImageImporter
-from jdaviz.core.loaders.importers.spectrum1d import SpectrumImporter
-from jdaviz.core.loaders.importers.spectrum2d import Spectrum2DImporter
-from jdaviz.core.loaders.importers.source_catalog import SourceCatalogImporter
 from jdaviz.core.template_mixin import (LoaderBannerMessagesMixin,
                                         ViewerSelectCreateNew,
                                         with_spinner)
@@ -35,30 +31,25 @@ _FITS_PATTERN = re.compile(r'\.fit(?:s)?(?:\.gz)?$', re.IGNORECASE)
 _MOS_PRODUCTS = {
     'spectrum1d': {'pattern': _SPECTRUM_1D_PATTERN,
                    'format': '1D Spectrum',
-                   'importer': SpectrumImporter,
                    'viewer_label': '1D Spectrum',
                    'viewer_reference': 'spectrum-1d-viewer',
                    'viewer_traitlet_prefix': 'viewer_1d'},
     'spectrum2d': {'pattern': _SPECTRUM_2D_PATTERN,
                    'format': '2D Spectrum',
-                   'importer': Spectrum2DImporter,
                    'viewer_label': '2D Spectrum',
                    'viewer_reference': 'spectrum-2d-viewer',
                    'viewer_traitlet_prefix': 'viewer_2d'},
     'image': {'pattern': _IMAGE_PATTERN,
               'format': 'Image',
-              'importer': ImageImporter,
               'viewer_label': 'Image',
               'viewer_reference': 'imviz-image-viewer',
               'viewer_traitlet_prefix': 'viewer_image'},
     'catalog': {'pattern': _CAT_PATTERN,
                 'format': 'Source Catalog',
-                'importer': SourceCatalogImporter,
                 'viewer_label': 'Source Catalog Table',
                 'viewer_reference': 'source-catalog-table-viewer',
                 'viewer_traitlet_prefix': 'viewer_catalog'},
 }
-
 
 def _iter_input_files(dir_path):
     """
@@ -451,6 +442,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
             if self.auto_extract_2d:
                 kwargs['ext_viewer'] = viewers_by_product_type.get('spectrum1d', [])
 
+        importer = None
         try:
             # Use find_matching_resolver to get the correct resolver for the file,
             resolver = find_matching_resolver(
@@ -476,6 +468,13 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         else:
             for viewer_label in viewers_by_product_type[product_type]:
                 imported_labels[viewer_label].append(data_label)
+        finally:
+            if importer:
+                self.loader_message_items = self.loader_message_items + [
+                    {**m, 'text': f"{filename}: {m['text']}"}
+                    for m in importer._obj.loader_message_items]
+
+        return importer
 
     @with_spinner('import_spinner')
     def __call__(self):
@@ -521,16 +520,16 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
 
         with self._app._jdaviz_helper.batch_load():
             for file_info in batched:
-                self._import_file(file_info, viewers_by_product_type, data_label_prefix,
-                                  failures, imported_labels)
-                importers_used.add(file_info['importer'])
+                importer = self._import_file(file_info, viewers_by_product_type, data_label_prefix,
+                                             failures, imported_labels)
+                importers_used.add(importer)
 
         for file_info in deferred:
-            self._import_file(file_info, viewers_by_product_type, data_label_prefix,
-                              failures, imported_labels)
-            importers_used.add(file_info['importer'])
+            importer = self._import_file(file_info, viewers_by_product_type, data_label_prefix,
+                                         failures, imported_labels)
+            importers_used.add(importer)
 
         self._show_single_layer_per_viewer(preexisting_labels, imported_labels)
         self._report_import_summary(failures)
         self._app.state.snackbar_queue.flush_deferred(
-            msg_filter=lambda msg: type(msg.sender) in importers_used)
+            msg_filter=lambda msg: any(msg.sender is i for i in importers_used))
