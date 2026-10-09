@@ -533,4 +533,4 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         self._show_single_layer_per_viewer(preexisting_labels, imported_labels)
         self._report_import_summary(failures)
         self._app.state.snackbar_queue.flush_deferred(
-            lambda msg: type(msg.sender) in importers_used)
+            msg_filter=lambda msg: type(msg.sender) in importers_used)
