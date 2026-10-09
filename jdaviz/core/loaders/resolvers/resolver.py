@@ -126,7 +126,7 @@ class FormatSelect(SelectPluginComponent):
                         self._invalid_importers[parser_name] = f'Parser exception: {e}'
                         this_parser._cleanup()
                         continue
-                    valid_parsers_importers.append(Parser)
+                    valid_parsers_importers.append(this_parser)
                 else:
                     self._invalid_importers[parser_name] = this_parser.is_valid.message
                     this_parser._cleanup()
@@ -192,7 +192,7 @@ class FormatSelect(SelectPluginComponent):
                                     # this previous parser has preference over this one
                                     self._invalid_importers[label] = f'Parser {prev_parser} has preference over {parser_name}'  # noqa
                                     continue
-                            valid_parsers_importers.append(Importer)
+                            valid_parsers_importers.append(this_importer)
                         else:
                             # we'll store the importer even if it isn't valid according to the
                             # filters so that they can be used when compiling the list of
@@ -205,8 +205,8 @@ class FormatSelect(SelectPluginComponent):
             # have been queued during parser and importer checks
             self._app.state.snackbar_queue.flush_deferred(
                 flush_to_history_only=True,
-                msg_filter=lambda msg: any(isinstance(msg.sender, i)
-                                           for i in valid_parsers_importers))
+                msg_filter=lambda msg:
+                any(msg.sender is obj for obj in valid_parsers_importers))
 
         # if any choice has a non-zero/default confidence score, then sort by score
         # for any items with the same score, original ordering (ie import order in
