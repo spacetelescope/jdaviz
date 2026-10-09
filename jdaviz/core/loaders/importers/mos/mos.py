@@ -516,18 +516,18 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
 
         batched = [file_info for file_info in self.mos_files if not _defer(file_info)]
         deferred = [file_info for file_info in self.mos_files if _defer(file_info)]
-        importers_used = set()
+        importers_used = []
 
         with self._app._jdaviz_helper.batch_load():
             for file_info in batched:
                 importer = self._import_file(file_info, viewers_by_product_type, data_label_prefix,
                                              failures, imported_labels)
-                importers_used.add(importer)
+                importers_used.append(importer)
 
         for file_info in deferred:
             importer = self._import_file(file_info, viewers_by_product_type, data_label_prefix,
                                          failures, imported_labels)
-            importers_used.add(importer)
+            importers_used.append(importer)
 
         self._show_single_layer_per_viewer(preexisting_labels, imported_labels)
         self._report_import_summary(failures)
