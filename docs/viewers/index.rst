@@ -45,6 +45,13 @@ See the individual viewer pages for detailed usage information.
 UI Access
 ---------
 
+In the UI, viewers can be moved by clicking and dragging on the gray tab on the top left of each viewer.  
+White dashed lines will appear as the viewer is dragged indicating where the viewer can be positioned in the app.
+Unclick at the desired location.  
+
+The viewer can be deleted by clicking on the `x` in the viewer tab.  This does **not** delete the data from the app.  
+It only deletes the viewer. 
+
 .. guidestar-demo:: _static/jdaviz-wireframe.html
    :repeat: false
    :init-steps-json: [{"action":"disable-toolbar-except","value":"loaders"}]
@@ -54,11 +61,20 @@ Data Menus
 ==========
 
 Each viewer has a legend in the top-right indicating what layers are currently displayed. Clicking on the legend opens a data menu where you can:
-- Toggle visibility of individual layers
-- Remove layers from the viewer
-- Rename viewers
+
+    - Toggle visibility of individual layers
+    - Remove layers from the viewer or the app
+    - Rename viewers
+    - Add new layers 
 
 For more information, see :ref:`data_menu`.
+
+Focus mode
+==========
+On the far right in the toolbar of each viewer, there is a `focus mode` button (indicated by a dashed box).
+Clicking on this button expands the viewer to fill the application, 
+and provides select plotting and visualization tools for each viewer.
+
 
 Plot Options
 ============

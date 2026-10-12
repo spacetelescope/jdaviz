@@ -5,51 +5,8 @@
 Quickstart
 **********
 
-Once installed, ``jdaviz`` can be run either in a Jupyter notebook or as a standalone web application.
+Once installed, ``jdaviz`` can be run either in a Jupyter notebook, from the command line, or as a standalone application.
 Detailed workflows are given within the documentation, but some quick-start tips are given below.
-
-
-Launching From the Command Line
-===============================
-
-.. note::
-    This feature is currently in development for the new generalized version of jdaviz, so the following may change in an upcoming release.
-
-.. note::
-    The command-line tool below has only been tested on Linux and MacOS and WSL on Windows.
-
-Jdaviz provides a command-line tool to start the standalone desktop application in a browser.
-To start the application, from a terminal, type::
-
-    jdaviz
-
-This will run the launcher. To then launch generalized jdaviz,
-click the Jdaviz logo in the center of the screen. Alternatively, you can still use
-the deprecated legacy functionality to select a file from the file picker, which will
-identify the best configuration according to the file type. You can also select the
-desired deprecated configuration by clicking one of the bottom buttons without specifying
-a file. A blank configuration will open and the ``IMPORT`` button will be available to select
-a file from the file picker.
-
-Jdaviz is now intended to be used in a flexible, generalized layout rather than the older "configs", but
-these deprecated configurations are still available from the command line. For compatibility with the older
-configurations during their deprecation period, you can specify ``--layout=flexible`` to launch the new
-generalized Jdaviz from the command line. To load a file into a configuration::
-
-    jdaviz --layout=[imviz|specviz|cubeviz|mosviz|specviz2d|flexible] --filepath="/path/to/data/file" --file_format="FileFormat"
-
-This will warn that the ``--layout`` argument is deprecated. In the future, running the ``jdaviz``
-command will simply launch the generalized Jdaviz application without going through a launcher page.
-You can also specify filepath and file format using the shorter ``-fp`` and ``-ff``, respectively, which
-may be useful if loading multiple files. Note that the file format is generally required because many files can be read by multiple loaders. See :ref:`loaders-formats` for the current list
-of available data formats. Note that you will need to enclose multi-word formats in quotation marks, for example
-``--file_format='1D Spectrum'``.
-
-To see a list of all options, from the terminal, type::
-
-    jdaviz --help
-
-.. jdavizclihelp::
 
 
 In a Jupyter Notebook
@@ -60,6 +17,8 @@ The power of Jdaviz is that it can integrated into your Jupyter notebook workflo
     import jdaviz as jd
 
     jd.show()
+
+A file or python object is loaded as:
     jd.load('filename.fits', format='Image', data_label='MyData')
 
 Jdaviz also provides a directory of :ref:`sample notebooks <sample_notebook>`
@@ -171,7 +130,47 @@ To do so, create a new Jdaviz app instance and store it in a custom variable:
 
 You can also access the current default application with :py:func:`jdaviz.gca` (get current application), and pass arguments to :py:func:`jdaviz.new_app` or :py:func:`jdaviz.gca` to manage which is considered the current application.
 
+Launching From the Command Line
+===============================
 
+.. .. note::
+..     This feature is currently in development for the new generalized version of jdaviz, so the following may change in an upcoming release.
+
+.. note::
+    The command-line tool below has only been tested on Linux and MacOS and WSL on Windows.
+
+Jdaviz provides a command-line tool to start the standalone desktop application in a browser.
+To start the application, from a terminal, type::
+
+    jdaviz
+
+This will run the launcher. To then launch generalized jdaviz,
+click the Jdaviz logo in the center of the screen. Alternatively, you can still use
+the deprecated legacy functionality to select a file from the file picker, which will
+identify the best configuration according to the file type. You can also select the
+desired deprecated configuration by clicking one of the bottom buttons without specifying
+a file. A blank configuration will open and the ``IMPORT`` button will be available to select
+a file from the file picker.
+
+Jdaviz is now intended to be used in a flexible, generalized layout rather than the older "configs", but
+these deprecated configurations are still available from the command line. For compatibility with the older
+configurations during their deprecation period, you can specify ``--layout=flexible`` to launch the new
+generalized Jdaviz from the command line. To load a file into a configuration::
+
+    jdaviz --layout=[imviz|specviz|cubeviz|mosviz|specviz2d|flexible] --filepath="/path/to/data/file" --file_format="FileFormat"
+
+This will warn that the ``--layout`` argument is deprecated. In the future, running the ``jdaviz``
+command will simply launch the generalized Jdaviz application without going through a launcher page.
+You can also specify filepath and file format using the shorter ``-fp`` and ``-ff``, respectively, which
+may be useful if loading multiple files. Note that the file format is generally required because many files can be read by multiple loaders. See :ref:`loaders-formats` for the current list
+of available data formats. Note that you will need to enclose multi-word formats in quotation marks, for example
+``--file_format='1D Spectrum'``.
+
+To see a list of all options, from the terminal, type::
+
+    jdaviz --help
+
+.. jdavizclihelp::
 
 
 Keyboard Shortcuts

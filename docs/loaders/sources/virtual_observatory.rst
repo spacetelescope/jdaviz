@@ -11,8 +11,8 @@ Loading from Virtual Observatory
 The Virtual Observatory (VO) loader allows you to access data through VO protocols
 using a simple cone search.
 
-.. note::
-    This feature is currently in development. Stay tuned for updates!
+.. .. note::
+..     This feature is currently in development. Stay tuned for updates!
 
 These protocols allow seamless access to astronomical data across multiple archives
 using standardized interfaces.

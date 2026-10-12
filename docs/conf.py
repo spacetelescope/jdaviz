@@ -139,6 +139,19 @@ rst_epilog += """
 .. |icon-viewer-data-select| image:: /img/icons/viewer_data_select.png
   :scale: 30
   :alt: data select icon
+
+.. |icon-cmap| image:: /img/icons/colormap.svg
+  :scale: 30
+  :alt: colormap icon
+
+.. |icon-stretch| image:: /img/icons/lin.svg
+  :scale: 30
+  :alt: stretch icon
+
+.. |icon-opacity| image:: /img/icons/opacity.svg
+  :scale: 30
+  :alt: opacity icon
+
 """  # noqa: F405
 
 # -- Project information ------------------------------------------------------
