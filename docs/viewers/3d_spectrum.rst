@@ -5,7 +5,9 @@
 3D Spectrum
 ************
 
-Documentation coming soon.
+3D Spectrum viewers show data loaded with `format = 3D Spectrum`. 
+Much of the functionality is available both from the application GUI and from the Jupyter notebook using API calls. 
+
 
 Spatial subsets created in an Image viewer are not added to 3D Spectrum viewers
 or offered as apertures or backgrounds for 3D Spectral Extraction. Create a
