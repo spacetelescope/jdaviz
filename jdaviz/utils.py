@@ -152,7 +152,7 @@ class SnackbarQueue:
         if timestamp is None:
             timestamp = time.time()
 
-        if self.deferring and not msg.loading:
+        if self._deferring and not msg.loading:
             # popups are never shown for deferred messages, so only keep those for the history
             if history and logger_plg is not None:
                 self.deferred.append((logger_plg, msg, timestamp))
