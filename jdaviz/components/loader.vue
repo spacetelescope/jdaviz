@@ -2,7 +2,13 @@
   <div style="position: relative; height: 100%;">
     <!-- Top sticky overlay - reserved space -->
     <div class="top-overlay" :class="{ 'hidden': spinner.length === 0 && (!spinner_success_message || success_dismissed) }">
-      <div v-if="spinner.length > 0" class="overlay-content">
+      <!-- invisible sizer: reserves exactly the height of the text + progress bar -->
+      <div class="overlay-content overlay-sizer" aria-hidden="true">
+        &nbsp;
+        <v-progress-linear height="6"></v-progress-linear>
+      </div>
+
+      <div v-if="spinner.length > 0" class="overlay-content overlay-float">
         {{ spinner }}
         <v-progress-linear
             color="#c75d2c"
@@ -11,7 +17,7 @@
           ></v-progress-linear>
       </div>
 
-      <div v-if="!spinner.length && spinner_success_message && !success_dismissed" class="overlay-content success-content">
+      <div v-if="!spinner.length && spinner_success_message && !success_dismissed" class="overlay-content overlay-float success-content">
         <v-icon small color="white" style="margin-right: 6px;">mdi-check-circle</v-icon>
         {{ spinner_success_message }}
       </div>
@@ -249,20 +255,29 @@ export default {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 10;
     padding: 0px;
-    min-height: 36px;
   }
 
   .top-overlay.hidden {
     background: transparent;
-    border-bottom: none;
+    border-bottom-color: transparent;
     box-shadow: none;
-    min-height: 36px;
   }
 
   .overlay-content {
     text-align: center;
     color: #666;
     font-size: 14px;
+  }
+
+  .overlay-sizer {
+    visibility: hidden;
+  }
+
+  .overlay-float {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
   }
 
   .overlay-content.success-content {
