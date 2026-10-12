@@ -54,14 +54,16 @@
     </div>
 
     <v-slide-x-transition appear>
-      <v-data-table
-        dense
+      <v-data-table-server
+        density="compact"
         :headers="[...headers]"
         :items="items"
-        :footer-props="{'items-per-page-options': [10,20,50,100]}"
-        :options.sync="options"
-        :items_per_page.sync="items_per_page"
-        :server-items-length="total_length"
+        :items-per-page-options="[10, 20, 25, 50, 100]"
+        :page="options.page"
+        :items-per-page="options.itemsPerPage"
+        :sort-by="tableSortBy"
+        :items-length="total_length"
+        @update:options="onOptionsUpdate"
         :class="['elevation-1', 'glue-data-table', scrollable && 'glue-data-table--scrollable']"
       >
       <template v-slot:headers>
@@ -134,7 +136,7 @@
           >{{ props.item[header.value] }}</td>
         </tr>
       </template>
-      </v-data-table>
+      </v-data-table-server>
     </v-slide-x-transition>
   </div>
 </template>
@@ -150,6 +152,17 @@ module.exports = {
       headerMode: null,     // 'rename' | 'remove' | null
       headerEditValue: ''   // live text in the rename input
     };
+  },
+  computed: {
+    tableSortBy() {
+      // Python sorts the full dataset using the legacy parallel-array format.
+      const sortBy = Array.isArray(this.options.sortBy) ? this.options.sortBy : [];
+      const sortDesc = Array.isArray(this.options.sortDesc) ? this.options.sortDesc : [];
+      return sortBy.map((key, index) => ({
+        key,
+        order: sortDesc[index] ? 'desc' : 'asc'
+      }));
+    }
   },
   methods: {
     onOptionsUpdate(vuetifyOpts) {
