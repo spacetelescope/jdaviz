@@ -1,6 +1,8 @@
 import io
 import os
 import re
+from unittest.mock import MagicMock
+
 import pytest
 import numpy as np
 import astropy.units as u
@@ -9,7 +11,8 @@ from specutils import SpectralRegion
 
 from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
-from jdaviz.core.template_mixin import TableMixin, Table, IsValidWrapper, ValidatorMixin
+from jdaviz.core.template_mixin import (TableMixin, Table, IsValidWrapper, ValidatorMixin,
+                                        LoaderBannerMessagesMixin)
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -630,3 +633,36 @@ def test_clear_table_resets_server_state(deconfigged_helper):
     assert t._all_items == []
     assert t.server_items_length == 0
     assert t.items == []
+
+
+class TestLoaderBannerMessagesMixin:
+    def setup_method(self):
+        self.obj = LoaderBannerMessagesMixin(template='')
+        self.obj._app = MagicMock()
+        self.put = self.obj._app.state.snackbar_queue.put
+
+    def test_loader_message(self):
+        self.obj._loader_message('Failed', traceback=ValueError('boom'), timeout=2000)
+
+        assert self.obj.loader_message_items == [
+            {'text': 'Failed', 'color': 'error', 'traceback': 'ValueError: boom'}]
+        msg = self.put.call_args.args[2]
+        assert (msg.text, msg.timeout, msg.sender) == ('Failed; Traceback: boom', 2000, self.obj)
+        assert self.put.call_args.kwargs == {'history': True, 'popup': False}
+
+        self.obj._clear_loader_messages()
+        assert self.obj.loader_message_items == []
+
+    def test_raise_msg(self):
+        # not warning or error, no raise
+        self.obj._loader_message('Failed', color='info', raise_msg=True)
+
+        with pytest.warns(UserWarning, match='careful'):
+            self.obj._loader_message('careful', color='warning', raise_msg=True)
+
+        # no traceback, no raise
+        self.obj._loader_message('Failed', raise_msg=True)
+
+        with pytest.raises(ValueError, match='boom'):
+            self.obj._loader_message('Failed', traceback=ValueError('boom'), raise_msg=True)
+        assert len(self.obj.loader_message_items) == 4

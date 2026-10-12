@@ -2,6 +2,7 @@ import os
 import warnings
 import numpy as np
 import threading
+import time
 
 import ipywidgets.widgets.widget as _widget_mod
 from comm import DummyComm
@@ -17,7 +18,8 @@ from jdaviz.utils import (alpha_index, download_uri_to_path,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
                           create_data_hash, parallelize_calculation,
                           in_ra_comps, in_dec_comps,
-                          suppress_widget_comms)
+                          suppress_widget_comms, SnackbarQueue)
+from jdaviz.core.events import SnackbarMessage
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -517,3 +519,59 @@ class TestSuppressWidgetComms:
                 raise ValueError("boom")
         assert _widget_mod.comm.create_comm() is self.sentinel
         assert not isinstance(_widget_mod.comm.create_comm(), DummyComm)
+
+
+class TestSnackbarQueue:
+    class _FakeState:
+        def __init__(self):
+            self.snackbar = {'show': False, 'text': '', 'color': None,
+                             'timeout': 0, 'loading': False}
+
+    class _FakeLogger:
+        def __init__(self):
+            self.history = []
+
+    def setup_method(self):
+        self.queue = SnackbarQueue()
+        self.state = self._FakeState()
+        self.logger = self._FakeLogger()
+
+    def _put(self, text, sender=None, **kwargs):
+        msg = SnackbarMessage(text, color='warning', sender=sender or self)
+        self.queue.put(self.state, self.logger, msg, **kwargs)
+
+    @property
+    def history_texts(self):
+        return [h['text'] for h in self.logger.history]
+
+    def test_deferring(self):
+        keep, skip = object(), object()
+        with self.queue.deferring(msg_filter=lambda msg: msg.sender is keep):
+            self._put('keep', sender=keep)
+            self._put('skip', sender=skip)
+            assert self.history_texts == []
+
+        # only messages that pass the filter are kept, and never as popups
+        assert self.history_texts == ['keep']
+        assert not self.state.snackbar['show']
+        assert len(self.queue.deferred) == 0
+
+        # messages outside the context are no longer deferred
+        self._put('after')
+        assert self.history_texts == ['keep', 'after']
+        assert self.state.snackbar['text'] == 'after'
+
+    def test_deferring_sorts_history_by_time(self):
+        # 9:59:59 vs 10:00:01 would sort incorrectly as strings
+        t0 = time.mktime((2026, 1, 1, 9, 59, 59, 0, 0, -1))
+        self.logger.history = [{'text': 'second', 'time': '10:00:01', 'timestamp': t0 + 2}]
+        with self.queue.deferring():
+            self._put('first', timestamp=t0)
+        assert self.history_texts == ['first', 'second']
+        assert self.logger.history[0]['time'] == '9:59:59'
+
+    def test_suppress_popups(self):
+        self.queue.suppress_popups = True
+        self._put('suppressed')
+        assert self.history_texts == ['suppressed']
+        assert not self.state.snackbar['show']
