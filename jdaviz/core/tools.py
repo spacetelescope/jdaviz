@@ -932,8 +932,8 @@ class TableAddColumn(Tool):
             ['jdaviz:table_apply_add_column'],
             'Add Column',
             custom_widgets=[
-                {'type': 'text', 'label': 'Column name', 'selected': ''},
-                {'type': 'text', 'label': 'Fill value (default: nan)', 'selected': ''},
+                {'type': 'text', 'label': 'Column Name', 'selected': ''},
+                {'type': 'text', 'label': 'Value', 'selected': ''},
             ],
         )
 
