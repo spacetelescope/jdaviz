@@ -1,8 +1,8 @@
 <template>
   <div style="position: relative; height: 100%;">
-    <!-- Top sticky overlay -->
-    <div v-if="spinner.length > 0" class="top-overlay">
-      <div class="overlay-content">
+    <!-- Top sticky overlay - reserved space -->
+    <div class="top-overlay" :class="{ 'hidden': spinner.length === 0 && (!spinner_success_message || success_dismissed) }">
+      <div v-if="spinner.length > 0" class="overlay-content">
         {{ spinner }}
         <v-progress-linear
             color="#c75d2c"
@@ -10,10 +10,8 @@
             height="6"
           ></v-progress-linear>
       </div>
-    </div>
 
-    <div v-if="!spinner.length && spinner_success_message && !success_dismissed" class="top-overlay success-overlay">
-      <div class="overlay-content">
+      <div v-if="!spinner.length && spinner_success_message && !success_dismissed" class="overlay-content success-content">
         <v-icon small color="white" style="margin-right: 6px;">mdi-check-circle</v-icon>
         {{ spinner_success_message }}
       </div>
@@ -251,11 +249,14 @@ export default {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 10;
     padding: 0px;
+    min-height: 36px;
   }
 
-  .top-overlay.success-overlay {
-    background: #4caf50;
-    border-bottom: 1px solid #45a049;
+  .top-overlay.hidden {
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
+    min-height: 36px;
   }
 
   .overlay-content {
@@ -264,9 +265,12 @@ export default {
     font-size: 14px;
   }
 
-  .success-overlay .overlay-content {
+  .overlay-content.success-content {
     color: white;
     font-weight: 500;
+    background: #4caf50;
+    border-bottom: 1px solid #45a049;
+    padding: 0px;
   }
 
   .table-title {
