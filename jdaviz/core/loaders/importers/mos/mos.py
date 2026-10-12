@@ -50,6 +50,10 @@ _MOS_PRODUCTS = {
                 'viewer_traitlet_prefix': 'viewer_catalog'},
 }
 
+_MAX_DEPTH = 3
+# limit breadth
+_MAX_FILES = 100
+
 
 def _iter_input_files(dir_path):
     """
@@ -67,9 +71,21 @@ def _iter_input_files(dir_path):
                 return product_type
         return None
 
-    for path in sorted(dir_path.rglob('*')):
-        if not path.name.startswith('.') and path.is_file():
-            yield path, _product_type(path.name)
+    def _walk(directory, depth):
+        for path in sorted(directory.iterdir()):
+            # skip symlinks to mimic rglob
+            if path.is_dir() and not path.is_symlink():
+                if depth < _MAX_DEPTH:
+                    yield from _walk(path, depth + 1)
+            elif not path.name.startswith('.') and path.is_file():
+                yield path
+
+    count = 0
+    for path in _walk(dir_path, 1):
+        if count >= _MAX_FILES:
+            break
+        yield path, _product_type(path.name)
+        count += 1
 
 
 def _check_header(path):
@@ -289,7 +305,7 @@ class MOSImporter(BaseImporterToDataCollection, LoaderBannerMessagesMixin):
         be interpreted as a filesystem path.
         """
         try:
-            return Path(self.input).expanduser()
+            return Path(self.input).expanduser().resolve()
         except (TypeError, ValueError, RuntimeError):
             return None
 
