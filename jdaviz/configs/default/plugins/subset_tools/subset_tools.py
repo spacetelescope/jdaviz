@@ -240,7 +240,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         region_type : str or None, optional
             Specifies the type of subsets to retrieve. Options are ``spatial``
             to retrieve only spatial subsets, ``spectral`` to retrieve only
-            spectral subsets, ``scatter`` to retrieve only unitless subsets from
+            spectral subsets, ``scatter`` to retrieve only subsets from
             scatter viewers, or ``None`` (default) to retrieve all types of
             subsets, when relevant to the current configuration.
 
