@@ -355,7 +355,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     if 'scatter' in region_type and ss[0][reg_type] is None:
                         # This happens for a scatter viewer subset when an image with WCS
                         # is loaded in another viewer, since reg_type will be sky_region
-                        reg = _chain_regions([x['subset_state'] for x in ss],
+                        reg = _chain_regions([x['region'] for x in ss],
                                              [x['glue_state'] for x in ss])
                     else:
                         # Handle the real spatial subset case
