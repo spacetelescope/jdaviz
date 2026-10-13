@@ -235,7 +235,6 @@ class BaseImporterToDataCollection(BaseImporter):
                                             'viewer_label_invalid_msg',
                                             multiselect='viewer_multiselect',
                                             default_mode='empty')
-        # filter to ignore when is_valid = False, but then need to update when input or is_valid changes
 
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=lambda _: self._on_label_changed())
