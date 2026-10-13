@@ -32,7 +32,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         super().__init__(*args, **kwargs)
 
         # Add filter for unit compatibility
-        def viewer_incompatible_units(viewer):
+        def viewer_compatible_units(viewer):
             # Just return False right away if this triggered off another importer, otherwise
             # trying to access self.output will cause a FileIO error due to closing the input
             # HDUList on cleanup
@@ -59,7 +59,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
                     return False
                 return True
 
-        self.viewer.add_filter(viewer_incompatible_units)
+        self.viewer.add_filter(viewer_compatible_units)
         self.viewer.select_default()
 
         # set default data-label
