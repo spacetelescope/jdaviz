@@ -1,25 +1,18 @@
 <template>
   <div style="position: relative; height: 100%;">
-    <!-- Top sticky overlay - reserved space -->
-    <div class="top-overlay" :class="{ 'hidden': spinner.length === 0 && (!spinner_success_message || success_dismissed) }">
-      <!-- invisible sizer: reserves exactly the height of the text + progress bar -->
-      <div class="overlay-content overlay-sizer" aria-hidden="true">
-        &nbsp;
-        <v-progress-linear height="6"></v-progress-linear>
-      </div>
-
-      <div v-if="spinner.length > 0" class="overlay-content overlay-float">
-        {{ spinner }}
+    <!-- Top sticky overlay, always rendered so its natural height is reserved
+         and content does not shift when the spinner appears -->
+    <div class="top-overlay"
+         :class="{ invisible: !show_spinner && !show_success, 'success-overlay': show_success }">
+      <div class="overlay-content">
+        <v-icon v-if="show_success" small color="white" style="margin-right: 6px;">mdi-check-circle</v-icon>
+        {{ show_success ? spinner_success_message : (spinner || '\u00a0') }}
         <v-progress-linear
+            :class="{ invisible: !show_spinner }"
             color="#c75d2c"
-            indeterminate
+            :indeterminate="show_spinner"
             height="6"
           ></v-progress-linear>
-      </div>
-
-      <div v-if="!spinner.length && spinner_success_message && !success_dismissed" class="overlay-content overlay-float success-content">
-        <v-icon small color="white" style="margin-right: 6px;">mdi-check-circle</v-icon>
-        {{ spinner_success_message }}
       </div>
     </div>
 
@@ -221,6 +214,14 @@ export default {
           'importer_widget', 'server_is_remote', 'hide_resolver', 'hide_resolver_inputs',
           'api_hints_enabled', 'valid_import_formats',
           'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled','image_data_loaded'],
+  computed: {
+    show_spinner() {
+      return this.spinner.length > 0;
+    },
+    show_success() {
+      return !this.show_spinner && !!this.spinner_success_message && !this.success_dismissed;
+    }
+  },
   watch: {
     spinner_success_message(newVal) {
       if (this.success_dismiss_timer) {
@@ -257,10 +258,13 @@ export default {
     padding: 0px;
   }
 
-  .top-overlay.hidden {
-    background: transparent;
-    border-bottom-color: transparent;
-    box-shadow: none;
+  .invisible {
+    visibility: hidden;
+  }
+
+  .top-overlay.success-overlay {
+    background: #4caf50;
+    border-bottom: 1px solid #45a049;
   }
 
   .overlay-content {
@@ -269,23 +273,9 @@ export default {
     font-size: 14px;
   }
 
-  .overlay-sizer {
-    visibility: hidden;
-  }
-
-  .overlay-float {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-  }
-
-  .overlay-content.success-content {
+  .success-overlay .overlay-content {
     color: white;
     font-weight: 500;
-    background: #4caf50;
-    border-bottom: 1px solid #45a049;
-    padding: 0px;
   }
 
   .table-title {
