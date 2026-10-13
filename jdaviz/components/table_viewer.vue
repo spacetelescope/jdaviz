@@ -504,6 +504,8 @@ module.exports = {
 .glue-data-table--scrollable thead > tr {
   position: sticky;
   top: 0;
+  /* Keep row checkboxes and their icons behind the sticky header. */
+  z-index: 2;
 }
 
 .glue-data-table--scrollable .v-data-table__wrapper,
@@ -514,8 +516,8 @@ module.exports = {
   background-color: inherit;
 }
 
-/* prevent checkboxes overlaying the table header */
-.glue-data-table--scrollable .v-data-table__wrapper > table thead {
+/* Support both Vuetify wrapper versions when layering the table header. */
+.glue-data-table--scrollable thead {
   position: relative;
   z-index: 1;
 }
