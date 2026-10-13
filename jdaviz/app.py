@@ -1365,7 +1365,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         if "Catalog" in data.meta.get('_importer', ''):
             # We use a wrapper around SpectralRegion with a more appropriate name
             spec_region = RangeRegion(subset_state.lo * units, subset_state.hi * units)
-        elif use_display_units and units not in (u.pix):
+        elif use_display_units and units not in (u.pix,):
             # converting may result in flipping order (wavelength <-> frequency)
             ret_units = self._get_display_unit('spectral')
             subset_bounds = [(subset_state.lo * units).to(ret_units, u.spectral()),
