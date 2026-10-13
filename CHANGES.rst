@@ -205,6 +205,8 @@ Bug Fixes
 - Fixed AttributeError: 'NoneType' object has no attribute 'height' by ensuring figure_widget has an assigned layout. [#4429]
 
 
+- Fix an IO error when loading another data type after loading a 1D spectrum. [#4428]
+
 Mosviz
 ^^^^^^
 

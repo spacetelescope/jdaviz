@@ -1710,6 +1710,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                     valid_filter = filter_callables[valid_filter]
                 except KeyError:
                     raise ValueError(f"{valid_filter} not an implemented filter.")
+
             if not valid_filter(item):
                 return False
         return True
