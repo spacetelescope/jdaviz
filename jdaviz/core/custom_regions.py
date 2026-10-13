@@ -2,6 +2,7 @@ import operator
 
 from specutils import SpectralRegion, CompoundSpectralRegion
 
+
 class RangeRegion(SpectralRegion):
     '''
     This class just wraps `~specutils.SpectralRegion` so that we can use its
