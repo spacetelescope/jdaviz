@@ -40,6 +40,7 @@ from specutils.utils.wcs_utils import SpectralGWCS
 from jdaviz import __version__
 from jdaviz import style_registry
 from jdaviz.core.config import read_configuration, get_configuration
+from jdaviz.core.custom_regions import RangeRegion
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 DataRenamedMessage, SnackbarMessage, RemoveDataMessage,
                                 SubsetRenameMessage, AddDataToViewerMessage,
@@ -1276,6 +1277,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                 continue
 
             # Is the subset spectral, spatial, temporal?
+            print(subset_region)
             is_spectral = self._is_subset_spectral(subset_region)
             is_temporal = self._is_subset_temporal(subset_region)
 
@@ -1362,11 +1364,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                     units = spec.spectral_axis.unit
 
         if "Catalog" in data.meta.get('_importer', ''):
-            # We don't want to turn this into a SpectralRegion in this case,
-            # and we don't need to simplify a spectral region
-            spec_region = [subset_state.lo, subset_state.hi]
-            simplify_spectral = False
-        elif use_display_units and units != u.pix:
+            # We use a wrapper around SpectralRegion with a more appropriate name
+            spec_region = RangeRegion(subset_state.lo * units, subset_state.hi * units)
+        elif use_display_units and units not in (u.pix):
             # converting may result in flipping order (wavelength <-> frequency)
             ret_units = self._get_display_unit('spectral')
             subset_bounds = [(subset_state.lo * units).to(ret_units, u.spectral()),
