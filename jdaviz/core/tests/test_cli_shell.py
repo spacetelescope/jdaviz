@@ -1,5 +1,5 @@
 import os
-import subprocess
+import subprocess  # nosec
 import sys
 from unittest.mock import Mock
 
@@ -37,7 +37,7 @@ def test_cli_popout():
     root = os.path.dirname(os.path.dirname(jdaviz.__file__))
     env['PYTHONPATH'] = os.pathsep.join(filter(None, [root, env.get('PYTHONPATH')]))
     result = subprocess.run([sys.executable, '-c', CLI_POPOUT_SCRIPT],
-                            capture_output=True, text=True, env=env)
+                            capture_output=True, text=True, env=env)  # nosec
     assert result.returncode == 0, result.stderr
     assert 'in_notebook False' in result.stdout
 
