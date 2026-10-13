@@ -4,7 +4,9 @@ from specutils import SpectralRegion, CompoundSpectralRegion
 
 class RangeRegion(SpectralRegion):
     '''
-    This is a
+    This class just wraps `~specutils.SpectralRegion` so that we can use its
+    machinery (which is mostly unit agnostic) for general range regions without
+    confusing the user by returning something with "Spectral" in the name.
     '''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
