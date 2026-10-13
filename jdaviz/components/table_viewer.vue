@@ -1,5 +1,8 @@
 <template>
-  <div class="glue-table-container">
+  <div
+    :class="['glue-table-container', scrollable && 'glue-table-container--scrollable']"
+    :style="scrollable && height != null && `height: ${height}`"
+  >
     <!-- Cell display/edit bar (always visible) -->
     <div class="glue-edit-bar elevation-1">
       <div class="edit-bar-cell-ref">
@@ -53,7 +56,6 @@
         :items_per_page.sync="items_per_page"
         :server-items-length="total_length"
         :class="['elevation-1', 'glue-data-table', scrollable && 'glue-data-table--scrollable']"
-        :style="scrollable && height != null && `height: ${height}`"
       >
       <template v-slot:headers>
           <tr>
@@ -259,18 +261,19 @@ module.exports = {
 .glue-edit-bar {
   display: flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: 2px 6px;
+  margin-right: 32px;
   background-color: #f5f5f5;
   border: 1px solid #e0e0e0;
   border-bottom: none;
   border-radius: 4px 4px 0 0;
-  gap: 8px;
+  gap: 6px;
 }
 
 .edit-bar-cell-ref {
   display: flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: 1px 6px;
   background-color: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
@@ -294,8 +297,26 @@ module.exports = {
 }
 
 .edit-bar-input .v-input__slot {
-  min-height: 32px !important;
+  min-height: 24px !important;
   background-color: #fff !important;
+}
+
+.edit-bar-input .v-field {
+  --v-input-control-height: 24px;
+  --v-field-input-padding-top: 0px;
+  --v-field-input-padding-bottom: 0px;
+  font-size: 12px;
+}
+
+.edit-bar-input .v-field__input {
+  min-height: 24px !important;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.edit-bar-actions .v-btn {
+  height: 24px !important;
+  width: 24px !important;
 }
 
 /* Vuetify puts the theme class on the text-field element itself, so target both
@@ -360,9 +381,62 @@ module.exports = {
   text-overflow: ellipsis;
 }
 
+/* Scrollable: fill the available height, scroll the rows, and keep the edit bar
+   and paging footer pinned so they never get clipped in short viewers. */
+.glue-table-container--scrollable {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.glue-table-container--scrollable > .glue-edit-bar {
+  flex: 0 0 auto;
+}
+
+.glue-data-table.glue-data-table--scrollable {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.glue-data-table--scrollable .v-table__wrapper,
 .glue-data-table--scrollable .v-data-table__wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  height: calc(100% - 59px);
+}
+
+.glue-data-table--scrollable .v-data-table-footer,
+.glue-data-table--scrollable .v-data-footer {
+  flex: 0 0 auto;
+}
+
+/* Compact paging footer */
+.glue-data-table .v-data-table-footer {
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.glue-data-table .v-data-table-footer__items-per-page .v-field {
+  --v-input-control-height: 24px;
+  --v-field-input-padding-top: 0px;
+  --v-field-input-padding-bottom: 0px;
+  font-size: 12px;
+}
+
+.glue-data-table .v-data-table-footer__items-per-page .v-field__input,
+.glue-data-table .v-data-table-footer__items-per-page .v-field__append-inner {
+  min-height: 24px;
+  padding-top: 0;
+  padding-bottom: 0;
+  align-items: center;
+}
+
+.glue-data-table .v-data-table-footer .v-btn {
+  height: 24px !important;
+  width: 24px !important;
 }
 
 .glue-data-table--scrollable thead > tr {

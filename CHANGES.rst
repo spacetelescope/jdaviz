@@ -138,6 +138,8 @@ New Features
 - Improve logic in unit conversion plugin to prevent stale or incompatible unit
   selections when data is removed from viewers. [#4423]
 
+- Add update feature to standalone app to allow users to click to see if update is available. [#4400]
+
 Mosviz
 ^^^^^^
 
@@ -198,7 +200,10 @@ Bug Fixes
 
 - Fix a bug in Line Analysis that looks for a (possibly) non-existent mask when getting the continuum [#4406]
 
-- Fix viewer container width. [#4424]
+- Fix viewer container width. [#4424, #4430]
+
+- Fixed AttributeError: 'NoneType' object has no attribute 'height' by ensuring figure_widget has an assigned layout. [#4429]
+
 
 Mosviz
 ^^^^^^
