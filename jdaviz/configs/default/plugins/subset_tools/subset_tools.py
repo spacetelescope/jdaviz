@@ -360,7 +360,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     else:
                         # Handle the real spatial subset case
                         reg = _chain_regions([x[reg_type] for x in ss],
-                                            [x['glue_state'] for x in ss])
+                                             [x['glue_state'] for x in ss])
 
                     if reg is None:
                         failed_regs.add(subset_label)
