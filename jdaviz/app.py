@@ -1278,7 +1278,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                 continue
 
             # Is the subset spectral, spatial, temporal?
-            print(subset_region)
             is_spectral = self._is_subset_spectral(subset_region)
             is_temporal = self._is_subset_temporal(subset_region)
 
