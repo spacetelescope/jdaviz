@@ -240,9 +240,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         region_type : str or None, optional
             Specifies the type of subsets to retrieve. Options are ``spatial``
             to retrieve only spatial subsets, ``spectral`` to retrieve only
-            spectral subsets, ``scatter`` to retrieve only subsets from
-            scatter viewers, or ``None`` (default) to retrieve all types of
-            subsets, when relevant to the current configuration.
+            spectral subsets, ``other`` to retrieve only non-spatial, non-spectral
+            subsets (e.g., from scatter viewers), or ``None`` (default) to retrieve
+            all types of subsets, when relevant to the current configuration.
 
         list_of_subset_labels : list of str or None, optional
             If specified, only subsets matching these labels will be included.
@@ -256,7 +256,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         wrt_data : str  or None
             Only applicable for spatial subsets, an error will be raised when ''region_type''
-            equals 'spectral' or 'scatter'. Otherwise, spectral and scatter subsets will not
+            equals 'spectral' or 'other'. Otherwise, spectral and other subsets will not
             be impacted when called. Controls return type of ``PixelRegion`` / ``SkyRegion``.
             To return a spatial subset in opposition with the current link type (e.g return
             ``PixelRegion`` when WCS linked, ``SkyRegion`` when pixel linked), ``wrt_data`` can
@@ -309,8 +309,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         if region_type is not None:
             region_type = region_type.lower()
-            if region_type not in ['spectral', 'spatial', 'scatter']:
-                raise ValueError("`region_type` must be 'spectral', 'spatial', 'scatter',"
+            if region_type not in ['spectral', 'spatial', 'other']:
+                raise ValueError("`region_type` must be 'spectral', 'spatial', 'other',"
                                  " or None for any.")
             elif region_type == 'spectral' and wrt_data:
                 raise ValueError('Unable to retrieve SkyRegion objects for spectral subsets')
@@ -322,7 +322,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         else:  # determine subset return type(s) by config, if not specified
             region_type = {'imviz': ['spatial'],
                            'specviz': ['spectral']}.get(self.config,
-                                                        ['spatial', 'spectral', 'scatter'])
+                                                        ['spatial', 'spectral', 'other'])
 
         if isinstance(wrt_data, str) and wrt_data not in self.data_collection:
             raise ValueError(f'{wrt_data} is not data in {self.data_collection}')
@@ -352,7 +352,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 if isinstance(ss, SpectralRegion):
                     regions[subset_label] = ss
                 else:
-                    if 'scatter' in region_type and ss[0][reg_type] is None:
+                    # TODO: Consider making this more specific or a case in the next level up
+                    if 'other' in region_type and ss[0][reg_type] is None:
                         # This happens for a scatter viewer subset when an image with WCS
                         # is loaded in another viewer, since reg_type will be sky_region
                         reg = _chain_regions([x['region'] for x in ss],

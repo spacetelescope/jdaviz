@@ -337,7 +337,7 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
     # test errors
     with pytest.raises(ValueError, match='No spectral subsets in imviz.'):
         imviz_helper.plugins['Subset Tools'].get_regions('spectral')
-    with pytest.raises(ValueError, match="`region_type` must be 'spectral', 'spatial', 'scatter', or None for any."):  # noqa E501
+    with pytest.raises(ValueError, match="`region_type` must be 'spectral', 'spatial', 'other', or None for any."):  # noqa E501
         plg.get_regions(region_type='fail')
     with pytest.raises(ValueError, match='Unable to retrieve SkyRegion objects for spectral subsets'):  # noqa E501
         plg.get_regions(region_type='spectral', wrt_data='3D Spectrum [FLUX]')
