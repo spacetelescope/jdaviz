@@ -51,8 +51,6 @@ _MOS_PRODUCTS = {
 }
 
 _MAX_DEPTH = 3
-# limit breadth
-_MAX_FILES = 100
 
 
 def _iter_input_files(dir_path):
@@ -82,8 +80,6 @@ def _iter_input_files(dir_path):
 
     count = 0
     for path in _walk(dir_path, 1):
-        if count >= _MAX_FILES:
-            break
         yield path, _product_type(path.name)
         count += 1
 
