@@ -24,6 +24,7 @@ A file or python object is loaded as:
 Jdaviz also provides a directory of :ref:`sample notebooks <sample_notebook>`
 to test the application, located in the :gh-tree:`notebooks` sub-directory of the Git repository.
 
+.. _quickstart_display:
 
 Customizing Notebook Display Layout
 -----------------------------------
