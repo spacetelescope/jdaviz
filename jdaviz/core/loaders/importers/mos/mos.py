@@ -75,6 +75,7 @@ def _iter_input_files(dir_path):
             if path.is_dir() and not path.is_symlink():
                 if depth < _MAX_DEPTH:
                     yield from _walk(path, depth + 1)
+            # skip hidden files and directories
             elif not path.name.startswith('.') and path.is_file():
                 yield path
 
