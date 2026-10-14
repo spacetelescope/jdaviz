@@ -240,6 +240,8 @@ will remain unchanged as you scrub through the cube. Please note that this featu
 development and will be improved in the future.
 
 
+.. _plot_options_1dspec_settings:
+
 1D Spectrum Viewer Settings
 ===========================
 
@@ -278,6 +280,8 @@ Here is an example on how to set the plot options from the API.
    plot_options.line_color = 'blue'
    plot_options.line_width = 3
    plot_options.uncertainty_visible = True
+
+.. _plot_options_scatter_settings: 
 
 Scatter Viewer Settings
 ===========================
@@ -364,6 +368,8 @@ being set for all the scatter points at once):
     plot_options.marker_color_mode = 'Fixed'
     plot_options.marker_color = '#ff00ff'
 
+.. _plot_options_histogram_settings:
+
 Histogram Viewer Settings
 ===========================
 
@@ -436,5 +442,43 @@ being set):
 
 Subsets
 =======
+
+Subsets plotting options are located within each viewer's plotting options.  Every subset will have: 
+
+Show Subset 
+~~~~~~~~~~~
+Toggle switch to indicate if the dataset is visible. 
+
+Otherwise, the plotting options differ for each type of viewer: 
+
+In Image, 3D Spectrum Viewer: 
+-----------------------------
+Subset Color 
+~~~~~~~~~~~
+Click the color picker to change the subset color. 
+
+Subset Opacity 
+~~~~~~~~~~~~~~
+Opacity of the subset. Maximum (1) is fully opaque and minimum (0) is fully transparent.
+
+In 2D Spectrum Viewer:
+----------------------
+Same settings as in `ref:plot_options_1dspec_settings`.
+
+In 1D Spectrum Viewer:
+----------------------
+Same settings as in `ref:plot_options_1dspec_settings`.
+
+In Scatter Viewer:
+------------------
+
+Same Settings as in `ref:plot_options_scatter_settings`.
+
+In Histogram Viewer:
+--------------------
+
+Same Settings as in `ref:plot_options_histogram_settings`.
+
+
 
 
