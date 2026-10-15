@@ -3,9 +3,9 @@
 
       <div class="invert-if-dark" style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
         Load generic tabular data into the data collection. For catalogs with
-        source positions or spectral lines, use the "Source Catalog" or
-        "Spectral Lines" loaders, respectively, to enable their specialized
-        features.
+        source positions (e.g. RA/Dec or x/y pixel) or spectral lines, use the
+        "Source Catalog" or "Spectral Lines" formats, respectively, to enable
+        their specialized features.
       </div>
 
       <j-plugin-section-header>Select Columns</j-plugin-section-header>
@@ -25,7 +25,7 @@
       v-model:auto="data_label_auto"
       :invalid_msg="data_label_invalid_msg"
       label="Catalog label"
-      api_hint="ldr.importer.label ="
+      api_hint="ldr.importer.data_label ="
       :api_hints_enabled="api_hints_enabled"
       hint="Label to assign to the catalog."
     ></plugin-auto-label>
