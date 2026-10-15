@@ -8,6 +8,9 @@ from glue_jupyter.bqplot.common.line_layers import BqplotVerticalLineLayerArtist
 from numpy.testing import assert_allclose
 from specutils import Spectrum
 
+from jdaviz.core.events import NewViewerMessage
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
+
 
 @pytest.fixture
 def line_helper(deconfigged_helper):
@@ -30,8 +33,10 @@ def import_lines(helper, label, positions, **columns):
 
 
 def empty_viewer(helper):
-    helper.new_viewers['1D Spectrum']()
-    return helper.viewers['1D Spectrum']._obj.glue_viewer
+    # Test line rendering independently of viewer-creator UI relevancy.
+    return helper._app._on_new_viewer(
+        NewViewerMessage(Spectrum1DViewer, None, sender=helper._app), name='1D Spectrum'
+    )
 
 
 def line_artist(viewer, data):
@@ -90,13 +95,21 @@ def test_line_only_menu_units_home_and_visibility(line_helper, first_unit):
     assert_allclose([viewer.state.x_min, viewer.state.x_max], np.array([6000, 8000]) * scale)
 
 
-def test_shared_default_redshift_redraws_both_native_layers(line_helper):
+@pytest.mark.parametrize('display_unit', [None, 'Angstrom', 'nm', 'Hz'])
+def test_shared_default_redshift_redraws_both_native_layers(
+        line_helper, spectrum1d, display_unit):
     viewer = empty_viewer(line_helper)
+    if display_unit is not None:
+        line_helper.load(spectrum1d, format='1D Spectrum', data_label='spectrum')
     first = import_lines(line_helper, 'angstrom lines', [6562.8, 7000] * u.AA)
     second = import_lines(line_helper, 'nanometer lines', [486.13, 500] * u.nm)
     viewer.data_menu.add_data(first.label, second.label)
+    if display_unit is not None:
+        line_helper.plugins['Unit Conversion'].spectral_unit = display_unit
     first_artist, second_artist = line_artist(viewer, first), line_artist(viewer, second)
     first_mark, second_mark = first_artist.line_mark, second_artist.line_mark
+    reference, x_att = viewer.state.reference_data, viewer.state.x_att
+    limits = [viewer.state.x_min, viewer.state.x_max]
     plugin = line_helper._app.get_tray_item_from_name('g-spectral-lines')
     plugin.component_selected = 'default'
 
@@ -104,9 +117,22 @@ def test_shared_default_redshift_redraws_both_native_layers(line_helper):
         plugin.component_redshift = redshift
         assert first_artist.line_mark is first_mark
         assert second_artist.line_mark is second_mark
-        assert_positions(first_artist, np.array([6562.8, 7000]) * (1 + redshift))
-        assert_positions(second_artist, np.array([4861.3, 5000]) * (1 + redshift))
-        assert viewer.state.reference_data is None
+        for data, artist, rest in (
+                (first, first_artist, [6562.8, 7000] * u.AA),
+                (second, second_artist, [486.13, 500] * u.nm)):
+            observed = rest * (1 + redshift)
+            assert_allclose(data['observed wavelength:default'], observed.value)
+            assert_positions(artist, observed.to_value(
+                viewer.state.x_display_unit, equivalencies=u.spectral()))
+        assert viewer.state.reference_data is reference
+        assert viewer.state.x_att is x_att
+        assert_allclose([viewer.state.x_min, viewer.state.x_max], limits)
+
+    # Direct observed-column edits must redraw as well: no plugin-only refresh
+    # or artificial axis/style change should be necessary.
+    first.update_components({first.id['observed wavelength:default']: [6600, 7100]})
+    assert_positions(first_artist, ([6600, 7100] * u.AA).to_value(
+        viewer.state.x_display_unit, equivalencies=u.spectral()))
 
 
 @pytest.mark.parametrize('lines_first', [True, False])

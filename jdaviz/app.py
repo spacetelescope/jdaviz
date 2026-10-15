@@ -863,10 +863,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
     def _link_new_data_by_component_type(self, new_data_label):
 
         new_data = self.data_collection[new_data_label]
-        # Spectral-line viewers explicitly link observed wavelengths. Automatic
-        # physical-type links would instead use the unredshifted rest column.
-        if new_data.meta.get('_importer') == 'SpectralLinesImporter':
-            return
 
         if (new_data.meta.get('_importer') in ('ImageImporter', 'SourceCatalogImporter') and
                 'Orientation' in self._jdaviz_helper.plugins):
@@ -892,8 +888,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             found_match = False
             for existing_data in self.data_collection:
                 if existing_data.label == new_data_label:
-                    continue
-                if existing_data.meta.get('_importer') == 'SpectralLinesImporter':
                     continue
 
                 # Skip linking WCS angle components between 2D spectra
@@ -3049,8 +3043,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             self.hub.broadcast(layers_finalized_message)
 
     def data_item_remove(self, data_label):
-        from jdaviz.configs.default.plugins.viewers import JdavizProfileView
-
         data = self.data_collection[data_label]
         orientation_plugin = self._jdaviz_helper.plugins.get("Orientation")
         if orientation_plugin is not None and orientation_plugin.align_by == "WCS":
@@ -3073,12 +3065,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             if len(viewer.layers) != 0 and getattr(viewer.state, 'reference_data', '') is None:
                 data_to_remove = [other_data.label for other_data in self.data_collection
                                   if other_data.label in viewer.data_menu.data_labels_loaded and
-                                  other_data.label != data_label and
-                                  not (isinstance(viewer, JdavizProfileView) and
-                                       other_data.meta.get('_importer') == 'SpectralLinesImporter')]
+                                  other_data.label != data_label]
 
-                if not data_to_remove:
-                    continue
                 _ = [self.remove_data_from_viewer(viewer_id, data_label)
                      for data_label in data_to_remove]
 
@@ -3800,26 +3788,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
     def _create_tray_item(self, tray_registry_member):
         tray_item_instance = tray_registry_member.get('cls')(app=self, tray_instance=True)
-
-        # A spectrum viewer can also hold native line layers. Plugins which
-        # select its profiles must not translate those tables into spectra.
-        dataset = getattr(tray_item_instance, 'dataset', None)
-        if dataset is not None and 'layer_in_spectrum_viewer' in dataset.filters:
-            dataset.add_filter(lambda data: data.meta.get('_importer') != 'SpectralLinesImporter')
-
-        # Some profile plugins (including legacy Line Lists) also read
-        # spectra directly from these messages. Keep their existing handlers,
-        # but do not send reference-independent tables to them. Unit Conversion
-        # must likewise wait for a real flux layer before selecting flux units.
-        if ((dataset is not None and 'layer_in_spectrum_viewer' in dataset.filters)
-            or tray_registry_member.get('name') in ('g-line-list', 'g-unit-conversion')):
-            for message in (AddDataMessage, RemoveDataMessage):
-                handler = self.hub.get_handler(tray_item_instance, message)
-                if handler is not None:
-                    self.hub.subscribe(
-                        tray_item_instance, message, handler=handler,
-                        filter=lambda msg: msg.data is None or
-                        msg.data.meta.get('_importer') != 'SpectralLinesImporter')
 
         # store a copy of the tray name in the instance so it can be accessed by the
         # plugin itself
