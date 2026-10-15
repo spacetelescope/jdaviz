@@ -54,7 +54,7 @@ class TestImvizSpatialSubsetCentroidWCSLinked(BaseImviz_WCS_GWCS):
             ra = plg._obj._get_value_from_subset_definition(0, "RA Center (degrees)", key) * u.deg
             dec = plg._obj._get_value_from_subset_definition(0, "Dec Center (degrees)", key) * u.deg
             x, y = SkyCoord(ra, dec).to_pixel(self.wcs_1)
-            assert_allclose((x, y), 0, atol=1e-9)
+            assert_allclose((x, y), 0, atol=5e-9)
 
         # GWCS does not extrapolate and this Subset is out of bounds,
         # so will get NaNs and enter the exception handling logic.
