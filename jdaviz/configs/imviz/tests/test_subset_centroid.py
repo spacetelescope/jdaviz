@@ -23,14 +23,14 @@ class TestImvizSpatialSubsetCentroidPixelLinked(BaseImviz_WCS_GWCS):
 
             # Calculate and move to centroid.
             for key in ("X Center (pixels)", "Y Center (pixels)"):
-                assert plg._obj._get_value_from_subset_definition(0, key, "value") == -1
-                assert plg._obj._get_value_from_subset_definition(0, key, "orig") == -1
+                assert plg._obj._get_value_from_subset_definition(0, key, "value") == 0
+                assert plg._obj._get_value_from_subset_definition(0, key, "orig") == 0
 
             # Radius will not be touched.
             for key in ("value", "orig"):
                 assert plg._obj._get_value_from_subset_definition(0, "Radius (pixels)", key) == 3
 
-        assert plg.get_center() == (-1, -1)
+        assert plg.get_center() == (0, 0)
 
 
 class TestImvizSpatialSubsetCentroidWCSLinked(BaseImviz_WCS_GWCS):
@@ -54,7 +54,7 @@ class TestImvizSpatialSubsetCentroidWCSLinked(BaseImviz_WCS_GWCS):
             ra = plg._obj._get_value_from_subset_definition(0, "RA Center (degrees)", key) * u.deg
             dec = plg._obj._get_value_from_subset_definition(0, "Dec Center (degrees)", key) * u.deg
             x, y = SkyCoord(ra, dec).to_pixel(self.wcs_1)
-            assert_allclose((x, y), -1)
+            assert_allclose((x, y), 0, atol=5e-9)
 
         # GWCS does not extrapolate and this Subset is out of bounds,
         # so will get NaNs and enter the exception handling logic.
