@@ -1,18 +1,17 @@
 from astropy.coordinates import ICRS, SkyCoord
-from astropy.io.fits import BinTableHDU, HDUList, TableHDU
-from astropy.table import Table, QTable, vstack
+from astropy.table import Table, QTable
 import astropy.units as u
 import numpy as np
 import re
 from regions import PixCoord
-from traitlets import Any, Bool, List, Unicode, observe
+from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.loaders.importers import BaseCatalogImporter
-from jdaviz.core.template_mixin import SelectFileExtensionComponent, SelectPluginComponent
+from jdaviz.core.template_mixin import SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import create_data_hash, COORD_WORDS_TO_EXCLUDE
+from jdaviz.utils import COORD_WORDS_TO_EXCLUDE
 
 from .row_link import get_catalog_row_link_manager
 
@@ -65,45 +64,11 @@ class SourceCatalogImporter(BaseCatalogImporter):
     col_id_items = List().tag(sync=True)
     col_id_selected = Unicode().tag(sync=True)
 
-    # HDUList-specific options
-    input_has_extensions = Bool(False).tag(sync=True)
-    extension_items = List().tag(sync=True)
-    extension_selected = Any().tag(sync=True)
-    extension_multiselect = Bool(True).tag(sync=True)
-    no_common_col_msg = Unicode().tag(sync=True)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if not self.is_valid:
             return
-
-        if isinstance(self.input, HDUList):
-            self.input_has_extensions = True
-
-            ext_options = [{'label': f"{index}: [{hdu.name},{hdu.ver}]",
-                            'name': hdu.name,
-                            'ver': hdu.ver,
-                            'name_ver': f"{hdu.name},{hdu.ver}",
-                            'index': index,
-                            'data_hash': create_data_hash(hdu),
-                            'obj': hdu} for index, hdu in enumerate(self.input)]
-
-            self.extension = SelectFileExtensionComponent(self,
-                                                          items='extension_items',
-                                                          selected='extension_selected',
-                                                          multiselect='extension_multiselect',
-                                                          manual_options=ext_options,
-                                                          filters=[self._validate_fits_tablehdu])
-
-            # the choices have already been filtered to only valid table HDUs, so
-            # choose the 0th to select the first valid table HDU by default
-            self.extension.selected = [self.extension.choices[0]]
-
-        else:
-            # otherwise, we got a Table object as input and can proceed
-            # to create the column selection components directly
-            self.input_has_extensions = False
 
         input = self.input_as_table
 
@@ -171,55 +136,6 @@ class SourceCatalogImporter(BaseCatalogImporter):
         # dropdowns for (optional) additional columns
         self._init_col_other(input.colnames)
 
-    @property
-    def input_as_table(self):
-        if hasattr(self, 'extension'):
-            if self.extension.selected in [None, '', []]:
-                return None
-
-            table_ext = self.extension.selected_obj
-
-            # reset message about no common columns between extensions each time
-            # we get the input as table, so that if the user changes to a different
-            # extension or selection of extensions, the message will be cleared
-            self.no_common_col_msg = ''
-            table_types = (TableHDU, BinTableHDU)
-
-            if len(table_ext) == 1 and isinstance(table_ext[0], table_types):
-                return QTable(table_ext[0].data)
-
-            elif len(table_ext) > 1 and all(isinstance(t, table_types) for t in table_ext):
-                # combine tables, only including columns that are common beween
-                # all tables in the selection. There will be text in the UI to
-                # indicate this and suggest loading tables individually if the
-                # the selected extensions contain different column names.
-                tables = [QTable(ext.data) for ext in table_ext]
-                common_cols = set(tables[0].colnames)
-                for tab in tables[1:]:
-                    common_cols = common_cols & set(tab.colnames)
-
-                common_cols = list(common_cols)
-
-                # if there are no common columns between tables, we can't combine
-                # them. return None and the UI will indicate that the user should
-                # load tables separately.
-                if len(common_cols) == 0:
-                    msg = (
-                        "The selected extensions have no columns in common. "
-                        "Please select a single extension to load, or select "
-                        "multiple extensions that have at least one column "
-                        "name in common to enable loading in multiselect mode."
-                    )
-                    self.no_common_col_msg = msg
-                    return None
-
-                combined_table = vstack([t[common_cols] for t in tables],
-                                        join_type="exact")
-
-                return combined_table
-
-        return self.input
-
     def _check_is_valid(self):
         basic_check = self._basic_table_validity_checks(self.input)
         if basic_check:
@@ -249,38 +165,8 @@ class SourceCatalogImporter(BaseCatalogImporter):
             return 1
         return -1
 
-    @observe('extension_selected')
-    def _on_extension_selected_change(self, event):
-        # when the selected extension changes, we need to update the column selection dropdowns
-        # with the columns from the newly selected extension
-        if not hasattr(self, 'extension'):
-            return
-
-        # if no column selection dropdowns have been created yet, we can skip
-        # the update since they will be created with the correct columns based
-        # on the selected extension in the __init__
-        if not hasattr(self, 'col_x'):
-            return
-
-        input = self.input_as_table
-
-        if input is None:
-            # if input is None, that means the selected extensions had no common
-            # columns, so we should clear out the column selection dropdowns
-            # options (this section will be hidden in the UI)
-            for col in ['ra', 'dec', 'x', 'y']:
-                self._update_col_items_and_selected(f'col_{col}', ['---'])
-            self._update_col_items_and_selected('col_other', ['---'], select_first=False)
-            return
-
-        if not isinstance(input, (Table, QTable)):
-            return
-
-        # update column selection dropdowns with columns from the newly selected extension
-        for col in ['ra', 'dec', 'x', 'y']:
-            self._update_col_items_and_selected(f'col_{col}', self._guess_coord_cols(col))
-
-        self._update_col_items_and_selected('col_other', input.colnames, select_first=False)
+    def _guess_cols_for_extension_change(self):
+        return {f'col_{col}': self._guess_coord_cols(col) for col in ['ra', 'dec', 'x', 'y']}
 
     def _guess_coord_cols(self, col):
         """
