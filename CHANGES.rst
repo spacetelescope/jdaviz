@@ -140,6 +140,8 @@ New Features
 
 - Add update feature to standalone app to allow users to click to see if update is available. [#4400]
 
+- Allow loading all tabular data types from FITS table extensions. [#4443]
+
 Mosviz
 ^^^^^^
 
