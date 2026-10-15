@@ -321,8 +321,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         else:  # determine subset return type(s) by config, if not specified
             region_type = {'imviz': ['spatial'],
-                           'specviz': ['spectral']}.get(self.config,
-                                                        ['spatial', 'spectral', 'other'])
+                           'specviz': ['spectral']}.get(self.config, None)
 
         if isinstance(wrt_data, str) and wrt_data not in self.data_collection:
             raise ValueError(f'{wrt_data} is not data in {self.data_collection}')
@@ -353,7 +352,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     regions[subset_label] = ss
                 else:
                     # TODO: Consider making this more specific or a case in the next level up
-                    if 'other' in region_type and ss[0][reg_type] is None:
+                    if (region_type is None or 'other' in region_type) and ss[0][reg_type] is None:
                         # This happens for a scatter viewer subset when an image with WCS
                         # is loaded in another viewer, since reg_type will be sky_region
                         reg = _chain_regions([x['region'] for x in ss],
