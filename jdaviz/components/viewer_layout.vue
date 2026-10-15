@@ -1,6 +1,7 @@
 <template>
   <div ref="host" class="jdz-viewer-layout" :class="{ 'jdz-viewer-layout--dragging': gesture?.active }"
-       :style="cssVariables" @pointermove="move" @pointercancel="cancel" @lostpointercapture="lostCapture">
+       :style="cssVariables" @pointermove="move" @pointercancel="cancel" @lostpointercapture="lostCapture"
+       @dragstart.prevent>
     <section v-for="pane in geometry.panes" :key="pane.key" class="jdz-viewer-layout__pane" :style="boxStyle(pane)">
       <header v-if="hasHeaders" class="jdz-viewer-layout__header">
         <div :ref="(element) => setTabElement(pane.key, element)" class="jdz-viewer-layout__tabs" role="tablist">

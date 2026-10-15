@@ -127,6 +127,17 @@ def test_viewer_docking(page: Page, docking_server):
     resized = inspect()['layout']
     assert resized != before
 
+    # Pressing inside a text selection must still resize, not drag the selection.
+    page.evaluate('getSelection().selectAllChildren(document.body)')
+    box = separator.bounding_box()
+    page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+    page.mouse.down()
+    page.mouse.move(box['x'] - 40, box['y'] + box['height'] / 2, steps=5)
+    page.mouse.up()
+    dragged = inspect()['layout']
+    assert dragged != resized
+    resized = dragged
+
     drag_to(area['x'] + 2, area['y'] + area['height'] / 2)
     page.keyboard.press('Escape')
     page.mouse.up()
