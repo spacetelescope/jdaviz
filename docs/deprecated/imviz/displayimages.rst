@@ -4,7 +4,7 @@
 Displaying Images
 *****************
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 Imviz uses image viewers to visualize data from supported formats.
 Much of the functionality is available both from the application GUI and
@@ -12,7 +12,7 @@ from the Jupyter notebook using API calls.
 The Toolbar below gives you several image display options.
 Right-click will open a dropdown with access to different options for each button.
 
-.. image:: ../img/toolbar.png
+.. image:: ../../img/toolbar.png
     :alt: Imviz Toolbar
 
 .. _imviz-selecting-data:
@@ -24,7 +24,7 @@ Data can be selected and de-selected in each viewer's data menu, opened by click
 the legend in the top right of the viewer. Here, all the data and subset layers are listed
 and their visibility can be toggled with the "eye" icon on the right.
 
-.. image:: ../img/data_menu.png
+.. image:: ../../img/data_menu.png
     :alt: Imviz Data Menu
 
 To add an additional data layer or interactively create a new subset, click the "+" icon in
@@ -256,7 +256,7 @@ To access all of the different display settings for an image viewer, click the
 Changing the display settings **does not** change the underlying data, only the
 visualization of that data.
 
-.. image:: ../img/imviz_plot_options.png
+.. image:: ../../img/imviz_plot_options.png
     :alt: Imviz Plot Options
 
 If you wish to access plot options via API

@@ -80,7 +80,7 @@ The object can be selected and shown in the viewer via the
 Model Fitting
 =============
 
-.. image:: ../img/model_fitting_components.png
+.. image:: ../../img/model_fitting_components.png
     :alt: Model Fitting plugin
 
 Astropy models can be fit to a spectrum via the Model Fitting plugin.
@@ -242,7 +242,7 @@ They are loaded and displayed by pressing :guilabel:`Load List`.
 Each loaded list is shown under :guilabel:`Loaded Lines` and can
 be be removed manually.
 
-.. image:: ../img/line_lists.png
+.. image:: ../../img/line_lists.png
 
 Loaded Lines includes a :guilabel:`Custom` line list which is
 automatically created, but populated with no lines.
