@@ -1,4 +1,4 @@
-.. |imviz_logo| image:: ../logos/imviz\ icon.svg
+.. |imviz_logo| image:: ../../logos/imviz\ icon.svg
     :height: 42px
 
 .. _imviz:
@@ -7,7 +7,7 @@
 |imviz_logo| Imviz
 ##################
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 .. image:: https://stsci.box.com/shared/static/56jhed2cqr3nr2w5a3e5gwwkvytmc00n.gif
     :alt: Introductory video tour of the Imviz configuration and its features

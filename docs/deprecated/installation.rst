@@ -86,13 +86,13 @@ you will have to first create a new environment within the navigator interface.
 Click on Environments in the left bar and then click on Create in the bottom part of
 the interface.
 
-.. image:: ./img/navigator_env.png
+.. image:: ../img/navigator_env.png
     :alt: Create environment with Anaconda Navigator
 
 Give a name to the environment (in this example we call it jdaviz_navigator) and
 select Python with a version greater than or equal to 3.12.
 
-.. image:: ./img/navigator_nameenv.png
+.. image:: ../img/navigator_nameenv.png
     :alt: Name environment with Anaconda Navigator
 
 When the environment is ready, you will find it in the list of available environments
@@ -110,7 +110,7 @@ tab. Make sure the environment is selected at the top, then click Launch under J
 This will open a Jupyter Lab instance in your default browser and you
 are ready to use ``jdaviz``.
 
-.. image:: ./img/navigator_launchlab.png
+.. image:: ../img/navigator_launchlab.png
     :alt: Launch Jupyter Lab within Anaconda Navigator
 
 In case the terminal returns errors or cannot run the ``pip`` command, there is
@@ -120,7 +120,7 @@ a workaround. In the Navigator interface, click on the environment you created
 at the bottom right of the interface. Click again Apply after it has resolved
 the necessary packages.
 
-.. image:: ./img/navigator_jupyter.png
+.. image:: ../img/navigator_jupyter.png
     :alt: Install jupyter in Anaconda Navigator
 
 This installs ``jupyter`` in the environment. When it is done, go back to the Home tab

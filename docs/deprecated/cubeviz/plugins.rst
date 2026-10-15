@@ -2,14 +2,14 @@
 Data Analysis Plugins
 *********************
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 The Cubeviz data analysis plugins are meant to aid quick-look analysis
 of 2D image data, and both 1D and 3D spectroscopic data.
 All plugins are accessed via the :guilabel:`plugin`
 icon in the upper right corner of the Cubeviz application.
 
-.. image:: ./img/cubevizplugins.jpg
+.. image:: ../img/cubevizplugins.jpg
     :alt: Cubeviz Plugins
     :width: 200px
 
@@ -125,7 +125,7 @@ or spatial dimensions of a cube.
 Collapse
 ========
 
-.. image:: ../img/collapse_plugin.png
+.. image:: ../../img/collapse_plugin.png
 
 The Collapse plugin collapses a spectral cube along
 the wavelength axis to create a 2D spatial image.
@@ -206,7 +206,7 @@ not provided.
 Moment Maps
 ===========
 
-.. image:: ../img/moment1_map.png
+.. image:: ../../img/moment1_map.png
 
 The Moment Maps plugin can be used to create a 2D image from
 a data cube. Mathematically, a moment is an integral
@@ -246,7 +246,7 @@ and providing a reference wavelength, commonly that of the spectral line of inte
 Line or Continuum Maps
 ----------------------
 
-.. image:: ../img/moment0_line_map.png
+.. image:: ../../img/moment0_line_map.png
 
 There are at least three ways to make a line map using
 one of three Cubeviz plugins: :ref:`Collapse <collapse>`,
@@ -292,7 +292,7 @@ spectral region of interest.
 3D Spectral Extraction
 ======================
 
-.. image:: ../img/cubeviz_spectral_extraction.png
+.. image:: ../../img/cubeviz_spectral_extraction.png
 
 
 The 3D Spectral Extraction plugin produces a 1D spectrum from a spectral

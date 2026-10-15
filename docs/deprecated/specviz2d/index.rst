@@ -1,4 +1,4 @@
-.. |specviz2d_logo| image:: ../logos/specviz2d\ icon.svg
+.. |specviz2d_logo| image:: ../../logos/specviz2d\ icon.svg
     :height: 42px
 
 .. _specviz2d:
@@ -7,7 +7,7 @@
 |specviz2d_logo| Specviz2D
 ##########################
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 .. image:: https://stsci.box.com/shared/static/xn3x7642zjjqz5ysu5i4obvqt0p7wb27.gif
     :alt: Introductory video tour of the Specviz2d configuration and its features

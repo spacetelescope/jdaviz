@@ -1,4 +1,4 @@
-.. |rampviz_logo| image:: ../logos/rampviz.svg
+.. |rampviz_logo| image:: ../../logos/rampviz.svg
     :height: 42px
 
 .. _rampviz:
@@ -8,7 +8,7 @@
 |rampviz_logo| Rampviz
 ######################
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 .. warning::
 
