@@ -329,7 +329,7 @@ The reference wavelength for the cone can be changed using the
 The method of aperture masking can also be changed using the
 :guilabel:`Aperture masking method` dropdown. To see a description
 for each of these options, please see
-:ref:`photutils:photutils-aperture-overlap`. Using the exact aperture
+:ref:`photutils:aperture-mask-methods`. Using the exact aperture
 method with the min or max functions is not supported.
 
 
