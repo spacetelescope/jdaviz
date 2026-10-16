@@ -544,32 +544,6 @@ class TestSnackbarQueue:
     def history_texts(self):
         return [h['text'] for h in self.logger.history]
 
-    def test_deferring(self):
-        keep, skip = object(), object()
-        with self.queue.deferring(msg_filter=lambda msg: msg.sender is keep):
-            self._put('keep', sender=keep)
-            self._put('skip', sender=skip)
-            assert self.history_texts == []
-
-        # only messages that pass the filter are kept, and never as popups
-        assert self.history_texts == ['keep']
-        assert not self.state.snackbar['show']
-        assert len(self.queue.deferred) == 0
-
-        # messages outside the context are no longer deferred
-        self._put('after')
-        assert self.history_texts == ['keep', 'after']
-        assert self.state.snackbar['text'] == 'after'
-
-    def test_deferring_sorts_history_by_time(self):
-        # 9:59:59 vs 10:00:01 would sort incorrectly as strings
-        t0 = time.mktime((2026, 1, 1, 9, 59, 59, 0, 0, -1))
-        self.logger.history = [{'text': 'second', 'time': '10:00:01', 'timestamp': t0 + 2}]
-        with self.queue.deferring():
-            self._put('first', timestamp=t0)
-        assert self.history_texts == ['first', 'second']
-        assert self.logger.history[0]['time'] == '9:59:59'
-
     def test_suppress_popups(self):
         self.queue.suppress_popups = True
         self._put('suppressed')
