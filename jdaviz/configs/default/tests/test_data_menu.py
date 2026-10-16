@@ -1,3 +1,4 @@
+import re
 from astropy.io import fits
 from astropy.nddata import NDData
 import astropy.units as u
