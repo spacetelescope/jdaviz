@@ -397,7 +397,7 @@ class MOSImporter(BaseImporterToDataCollection):
         if len(failures):
             self._loader_message(f"{len(failures)} of {n_files} files could not be imported "
                                  f"({', '.join(failures)}).",
-                                 color='warning', popup=True)
+                                 color='warning', history=True, popup=True)
         else:
             self._loader_message(f"{n_files} files imported.", color='success')
 
