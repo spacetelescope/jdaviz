@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core.edit_subset_mode import ReplaceMode, NewMode
-from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI
+from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI, XRangeROI
 from numpy.testing import assert_allclose
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion,
                      CircleSkyRegion, CompoundPixelRegion, CompoundSkyRegion,
@@ -16,6 +16,7 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion,
 from specutils import SpectralRegion
 
 from jdaviz.configs.default.plugins.subset_tools import utils
+from jdaviz.core.custom_regions import RangeRegion
 from jdaviz.core.region_translators import regions2roi
 
 
@@ -484,6 +485,45 @@ def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
 
     with pytest.raises(ValueError, match='fake is not data in '):
         st.get_regions(wrt_data='fake')
+
+
+def test_get_regions_scatter_with_image(deconfigged_helper, image_2d_wcs,
+                                        sky_coord_only_source_catalog):
+    # load an image
+    image_data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    deconfigged_helper.load(image_data, format='Image', data_label='image')
+
+    # change app to WCS linking
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+
+    # load the catalog
+    deconfigged_helper.load(sky_coord_only_source_catalog,
+                            format='Source Catalog',
+                            data_label='my_catalog')
+
+    # create a scatter viewer
+    create_scatter_viewer = deconfigged_helper.new_viewers['Scatter']
+    create_scatter_viewer.dataset = 'my_catalog'
+    create_scatter_viewer()
+
+    plot_opts = deconfigged_helper.plugins['Plot Options']
+    plot_opts.viewer = 'Scatter'
+    print(plot_opts.xatt.choices)
+    plot_opts.xatt = 'ra'
+    plot_opts.yatt = 'dec'
+
+    reg = RangeRegion(1*u.Unit(''), 2*u.Unit(''))
+
+    viewer_scatter = deconfigged_helper.viewers['Scatter']
+    viewer_scatter._obj.glue_viewer.apply_roi(XRangeROI(12.0, 14.0))
+
+    # get region from scatter viewer
+    regions = deconfigged_helper.plugins['Subset Tools'].get_regions()
+
+    out_reg = regions['Subset 1']
+    assert isinstance(out_reg, RangeRegion)
+    assert out_reg.lower == 12.0
+    assert out_reg.upper == 14.0
 
 
 def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
