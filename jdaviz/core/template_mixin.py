@@ -697,6 +697,9 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
             traceback = msg.get('traceback', None)
             timestamp = msg.get('timestamp', None)
 
+            # Note: we do *not* explicitly protect against duplication because _loader_messages
+            # that have already been added to history are tied to failing states. This may change
+            # in the future.
             _, snackbar_msg_w_traceback = self._prepare_message(text, color, traceback)
             self._app.state.snackbar_queue.put(self._app.state,
                                                logger,
