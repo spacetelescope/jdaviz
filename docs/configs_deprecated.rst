@@ -8,7 +8,7 @@ Deprecated Config Access
    .. grid-item-card::
       :img-top: logos/imviz\ icon.svg
 
-      .. button-ref:: imviz/index
+      .. button-ref:: deprecated/imviz/index
          :expand:
          :color: primary
          :click-parent:
@@ -18,7 +18,7 @@ Deprecated Config Access
    .. grid-item-card::
       :img-top: logos/specicon.svg
 
-      .. button-ref:: specviz/index
+      .. button-ref:: deprecated/specviz/index
          :expand:
          :color: primary
          :click-parent:
@@ -28,7 +28,7 @@ Deprecated Config Access
    .. grid-item-card::
       :img-top: logos/cube.svg
 
-      .. button-ref:: cubeviz/index
+      .. button-ref:: deprecated/cubeviz/index
          :expand:
          :color: primary
          :click-parent:
@@ -38,7 +38,7 @@ Deprecated Config Access
    .. grid-item-card::
       :img-top: logos/specviz2d\ icon.svg
 
-      .. button-ref:: specviz2d/index
+      .. button-ref:: deprecated/specviz2d/index
          :expand:
          :color: primary
          :click-parent:
@@ -48,7 +48,7 @@ Deprecated Config Access
    .. grid-item-card::
       :img-top: logos/mos.svg
 
-      .. button-ref:: mosviz/index
+      .. button-ref:: deprecated/mosviz/index
          :expand:
          :color: primary
          :click-parent:
@@ -58,7 +58,7 @@ Deprecated Config Access
    .. grid-item-card::
       :img-top: logos/rampviz.svg
 
-      .. button-ref:: rampviz/index
+      .. button-ref:: deprecated/rampviz/index
          :expand:
          :color: primary
          :click-parent:
@@ -117,22 +117,22 @@ Using Jdaviz
 .. toctree::
   :maxdepth: 2
 
-  installation
-  quickstart_configs
-  load
-  imviz/index
-  specviz/index
-  cubeviz/index
-  specviz2d/index
-  mosviz/index
-  rampviz/index
-  display
-  video_tutorials
-  sample_notebooks
-  create_products
-  save_state
-  plugin_api
-  known_bugs
+  deprecated/installation
+  deprecated/quickstart_configs
+  deprecated/load
+  deprecated/imviz/index
+  deprecated/specviz/index
+  deprecated/cubeviz/index
+  deprecated/specviz2d/index
+  deprecated/mosviz/index
+  deprecated/rampviz/index
+  deprecated/display
+  deprecated/video_tutorials
+  deprecated/sample_notebooks
+  deprecated/create_products
+  deprecated/save_state
+  deprecated/plugin_api
+  deprecated/known_bugs
 
 
 *******************************
@@ -142,7 +142,7 @@ JWST Instrument Modes in Jdaviz
 .. toctree::
   :maxdepth: 2
 
-  index_jwst_modes
+  deprecated/index_jwst_modes
 
 *********************
 License & Attribution
@@ -151,5 +151,5 @@ License & Attribution
 .. toctree::
    :maxdepth: 2
 
-   index_citation
+   deprecated/index_citation
 

@@ -5,8 +5,10 @@
 3D Spectrum
 ************
 
-3D Spectrum viewers show data loaded with `format = 3D Spectrum`. 
+3D Spectrum viewers show data loaded with ``format = 3D Spectrum``. 
 Much of the functionality is available both from the application GUI and from the Jupyter notebook using API calls. 
+
+.. _viewers-spectrum_3d-toolbar:
 
 Toolbar
 =======
@@ -16,7 +18,7 @@ display options. Right click will open a dropdown with access to different optio
 for each button.
 
 Home
---------------------
+----
 This button will reset your zoom and panning to display the entire image.
 
 Previous zoom is also available by right-clicking on the home icon and selecting the previous zoom icon. 
@@ -32,7 +34,7 @@ Single-viewer Box Zoom is also available and is used in a similar way as in othe
 To access this option when there are multiple viewers, right-click on the Linked Box Zoom button and 
 left-click on the second option down to select it.
 
-.. _image-pan-zoom:
+.. _viewers-spectrum_3d-toolbar-panzoom:
 
 Pan/Zoom and Linked Pan/Zoom
 ----------------------------
@@ -48,6 +50,8 @@ Linked Pan/Zoom button and left-click on the second option down to select it.
 
 When in either of these modes, clicking on the image will recenter the image to the
 location under cursor.
+
+.. _viewers-spectrum_3d-toolbar-regions:
 
 Defining Spatial Regions
 ------------------------
@@ -72,7 +76,7 @@ If you are satisfied with the positioning of your region of interest, simply cli
 viewer to lock it in place.
 
 There are other options available for region of interest. Clicking on the data menu, select the region of interest, 
-and then select `EDIT SUBSET` on the bottom right of the data menu. Several options will pop up.  
+and then select ``EDIT SUBSET`` on the bottom right of the data menu. Several options will pop up.  
 * ``Resize in Viewer`` allows you to resize the subset directly in the viewer by dragging the white boxes on the corners.
 * ``Edit in plugin`` opens up the Subset tools plugin. 
 Below are several options: 
@@ -100,7 +104,7 @@ You can use these options to further adjust the region of interest and adapt it 
 There are options available in the `Plotting Option <settings-plot_options>` 
 to make subsets visible or invisible, to change their color, and to change their opacity.
 
-.. _3dspec-spectrum-at-spaxel:
+.. _viewers-spectrum_3d-toolbar-spectrum-at-spaxel:
 
 Spectrum At Spaxel
 ------------------
@@ -114,7 +118,7 @@ alt key (Alt key on Windows, Option key on Mac) while clicking on a spaxel creat
 that point instead of moving the previously created region.
 You can then compare spectra at different spaxels using the spectrum viewer.
 You can also use the subset modes that are explained in the
-:ref:`Spatial Regions <imviz-defining-spatial-regions>`
+:ref:`Spatial Regions <viewers-spectrum_3d-toolbar-regions>`
 section above in the same way you would with the other subset selection tools.
 
 Note that moving the cursor outside of the image viewer or deactivating the spectrum-at-spaxel tool
@@ -131,7 +135,7 @@ Click on the Focus mode button again to exit.
 Clone Viewer
 ------------
 Under the Focus mode button, there is a |icon-clone| button to clone the viewer. Clicking this button duplicates the viewer with the same
-data and subsets with name: `Original Name[X]`, where `X` is the number of times the viewer has been cloned.
+data and subsets with name: ``Original Name[X]``, where ``X`` is the number of times the viewer has been cloned.
 
 Detach Viewer 
 -------------

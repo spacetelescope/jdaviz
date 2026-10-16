@@ -5,12 +5,14 @@
 2D Spectrum
 ************
 
-2D Spectrum viewers show data loaded with `format = 2D Spectrum`. 
+2D Spectrum viewers show data loaded with ``format = 2D Spectrum``. 
 Much of the functionality is available both from the application GUI and from the Jupyter notebook using API calls. 
 
 .. note::
-   Even if a spectral axis is provided in the file or :class:`~specutils.Spectrum` object, the x-axis will display as `x: pixels`.
+   Even if a spectral axis is provided in the file or :class:`~specutils.Spectrum` object, the x-axis will display as ``x: pixels``.
    This is to account for non-linear spectral axes and non-linear pixel sizes when the spectrum is displayed.  
+
+.. _viewers-spectrum_2d-toolbar:
 
 Toolbar
 =======
@@ -18,6 +20,8 @@ Toolbar
 The Toolbar on the top right of the viewer gives you several spectroscopic
 display options. Right click will open a dropdown with access to different options
 for each button.
+
+.. _viewers-spectrum_2d-toolbar-home:
 
 Home and Linked Home
 --------------------
@@ -29,6 +33,8 @@ multiple different viewers simultaneously.
 Previous zoom is also available by right-clicking on the home icon and selecting the previous zoom icon. 
 This will revert to the last saved zoom state. Zoom states are saved when beginning a zoom selection or when 
 activating a pan/zoom tool.
+
+.. _viewers-spectrum_2d-toolbar-zoom:
 
 Zoom and Linked Zoom
 ----------------------------
@@ -48,7 +54,7 @@ You can switch between the different zoom tools by right-clicking
 (or your trackpad equivalent) on the currently selected zoom icon on the viewer
 toolbar, which will open a menu of choices as in the screenshot below.
 
-.. _image-pan-zoom:
+.. _viewers-spectrum_2d-toolbar-panzoom:
 
 Pan/Zoom and Linked Pan/Zoom
 ----------------------------
@@ -77,8 +83,10 @@ Horizontal/Vertical Zoom
 The |icon-zoom-pan-horiz| (Horizontal) and |icon-zoom-pan-vert| (Vertical) Zoom tools allow you to zoom along each axis,
 while locking the other.  You can also zoom by scrolling.
 
+.. _viewers-spectrum_2d-toolbar-range:
+
 Range Selection
-===============
+---------------
 
 This button will allow you to create a spectral region. Spectral regions allow users to 
 select subsets of the spectral array for use in
@@ -92,7 +100,7 @@ desired spectral region, after which you release the mouse button.
 The selected region will display in color, and coded to subset number and listed under the subsets dropdown.
 
 There are other options available for region of interest. Clicking on the data menu, select the region of interest, 
-and then select `EDIT SUBSET` on the bottom right of the data menu. Several options will pop up.  
+and then select ``EDIT SUBSET`` on the bottom right of the data menu. Several options will pop up.  
 * ``Resize in Viewer`` allows you to resize the subset directly in the viewer by dragging the sides of the region.
 * ``Edit in plugin`` opens up the Subset tools plugin. 
 Below are several options: 
@@ -117,14 +125,16 @@ You can use these options to further adjust the region of interest and adapt it 
     `Defining subsets using glue <http://docs.glueviz.org/en/stable/getting_started/#defining-subsets>`_
         Glueviz documentation on defining and refining subsets. Slightly different UI but same approach.
 
-There are options available in the `Plotting Option <settings-plot_options>` 
+There are options available in the :ref:`Plotting Option <settings-plot_options>` 
 to make subsets visible or invisible, to change their color, and to change their opacity.
 
-Contrast/Bias
-=============
+.. _viewers-spectrum_2d-toolbar-contrast:
 
-In addition to changing :ref:`contrast` and :ref:`bias` in the :ref:`settings-plot_options`,
-the 2D Spectrum viewer has a |icon-white-to-black| button that can also
+Contrast/Bias
+-------------
+
+In addition to changing :ref:`settings-plot_options-viewer_settings-contrast` and :ref:`settings-plot_options-viewer_settings-bias` 
+in the :ref:`settings-plot_options`, the 2D Spectrum viewer has a |icon-white-to-black| button that can also
 adjust those values.
 
 Click on the constrast/bias icon to activate it.
@@ -133,59 +143,72 @@ and bias. Moving along the X-axis will change the bias and moving along the Y-ax
 contrast. If you would like to reset to the default contrast and bias settings, you can
 double-click on the display while the mode is active.
 
-Colormap
-========
+.. _viewers-spectrum_2d-toolbar-colormap:
 
-In addition to changing :ref:`contrast` and :ref:`bias` in the :ref:`settings-plot_options`,
+Colormap
+--------
+
+In addition to changing :ref:`settings-plot_options-viewer_settings-color` in the :ref:`settings-plot_options`,
 the Image viewer has a |icon-cmap| button under the |icon-white-to-black| menu that can also
 adjust those values.
 
 After right-clicking on the contrast/bias icon, left click on the colormap icon to activate it.
 Now you can change the colormap on the toolbar by clicking the dropdown and selecting your colormap. 
-Click the `x` next to `COLORMAP` to leave this feature. 
+Click the ``x`` next to ``COLORMAP`` to leave this feature. 
+
+.. _viewers-spectrum_2d-toolbar-stretch:
 
 Stretch
-=======
+-------
 
-In addition to changing :ref:`stretch` in the :ref:`settings-plot_options`,
+In addition to changing :ref:`settings-plot_options-viewer_settings-stretch` in the :ref:`settings-plot_options`,
 the Image viewer has a |icon-stretch| button under the |icon-white-to-black| menu that can also
 adjust those values.
 
 After right-clicking on the contrast/bias icon, left click on the stretch icon to activate it.
 Now you can change the stretch on the toolbar by clicking on the dropdown and selecting your stretch. 
-Click the `x` next to `STRETCH` to leave this feature. For fine tuning the min/max values, see :ref:`settings-plot_options`. 
+Click the ``x`` next to ``STRETCH`` to leave this feature. For fine tuning the min/max values, see :ref:`settings-plot_options`. 
+
+.. _viewers-spectrum_2d-toolbar-opacity:
 
 Opacity
-=======
+-------
 
-In addition to changing :ref:`opacity` in the :ref:`settings-plot_options`,
+In addition to changing :ref:`settings-plot_options-viewer_settings-opacity` in the :ref:`settings-plot_options`,
 the Image viewer has a |icon-opacity| button under the |icon-white-to-black| menu that can also
 adjust those values.
 
 After right-clicking on the contrast/bias icon, left click on the opacity icon to activate it.  
 Now you can change the opacity in the toolbar by dragging the bar.  The number on the right is the opacity between 0 (transparent) and 1 (opaque). 
-Click the `x` next to `OPACITY` to leave this feature. 
+Click the ``x`` next to ``OPACITY`` to leave this feature. 
 
+
+.. _viewers-spectrum_2d-toolbar-focusmode:
 
 Focus mode 
-==========
+----------
 Clicking on the focus mode button expands the viewer to fill the application.  
 The right hand plugin feature is not accessible in the UI. Hovering over a pixel show the cursor information. 
 Click on the Focus mode button again to exit. 
 
+.. _viewers-spectrum_2d-toolbar-clone:
+
 Clone Viewer
-===========
+------------
 Under the Focus mode button, there is a |icon-clone| button to clone the viewer. Clicking this button duplicates the viewer with the same
-data and subsets with name: `Original Name[X]`, where `X` is the number of times the viewer has been cloned.
+data and subsets with name: ``Original Name[X]``, where ``X`` is the number of times the viewer has been cloned.
+
+.. _viewers-spectrum_2d-toolbar-detach:
 
 Detach Viewer 
-=============
+-------------
 Under the Focus mode button, there is a |icon-detach| button to detach the viewer from the app. Clicking this button 
 opens a new window which displays the viewer of choice.  Use your computer's native exit button to delete the viewer.
 Note: anything you do in this viewer is replicated in the main application, and deleting this viewer does **not** delete the viewer in the main application.
 
 If nothing appears, check that popups are allowed on your browser. 
 
+.. _viewers-spectrum_2d-cursor:
 
 Cursor Information
 ==================
@@ -196,6 +219,7 @@ This information is displayed in the top bar of the UI, on the middle-left side.
 By default, the cursor information will correspond to the top spectral layer in the viewer. 
 To change to a specific data-layer, click the layer-icon in the top bar to cycle between “auto”, “cursor”, or specific data layers.
 
+.. _viewers-spectrum_2d-ui:
 
 UI Access
 =========

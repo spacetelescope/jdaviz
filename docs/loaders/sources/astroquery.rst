@@ -11,19 +11,32 @@ Loading from Astroquery
 
 The Astroquery loader allows you to query and load data directly from astronomical archives.
 
-.. .. note::
-..     This feature is currently in development. Stay tuned for updates!
+.. note::
+  Astroquery works by finding data whose footprint overlaps *at all* within the given search radius 
+  around source coordinates using :class:`astroquery.mast.MastMissionsClass`. This occurs because
+  :class:`astroquery.mast.MastMissionsClass` searches for observations  whose footprint contains the source coordinates 
+  or within a given radius from the source. 
+  
+  The ``ra`` and ``dec`` you input are the central coordinates of that footprint, but that footprint could match the input radius 
+  at the corner of the observation such that ``ra`` and ``dec`` are further away than the input radius. 
+  Conversely, if the footprint is centered on the input source coordinates, then you can have astroquery matches 
+  even within a vanishingly small radius.
+
+  This is specific to :class:`astroquery.mast.MastMissionsClass`; virtual observatory services do not show this quirk.
+
 
 Usage
 =============
 
 Query data from:
 
-- MAST (Mikulski Archive for Space Telescopes)
-  - JWST
-  - HST 
-- SDSS (Sloan Digital Sky Survey)
-- Gaia
+* MAST (Mikulski Archive for Space Telescopes)
+
+  * JWST
+  * HST 
+
+* SDSS (Sloan Digital Sky Survey)
+* Gaia
 
 .. Check back for updates or `follow our GitHub repository <https://github.com/spacetelescope/jdaviz>`_
 .. for announcements.
@@ -91,7 +104,8 @@ truncating the final table.
     ldr.query_archive()
 
 
-Since there are many options and the exposed options depend on previous selections, the best way to write a script to write a workflow loading from astroquery is to enable :ref:`userapi-api_hints`,
+Since there are many options and the exposed options depend on previous selections, the best way 
+to write a script to write a workflow loading from astroquery is to enable :ref:`userapi-api_hints`,
 and interactively do a search in the UI and reproduce in a notebook cell:
 
 .. .. guidestar-demo:: _static/jdaviz-wireframe.html
@@ -100,7 +114,7 @@ and interactively do a search in the UI and reproduce in a notebook cell:
 ..    :repeat: false
 ..    :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 0}, {"action": "select-dropdown", "value": "Source:astroquery", "delay": 0}, {"action": "highlight", "target": "#source-select", "delay": 0}, {"action": "pause", "delay": 1000}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}]
 
-   UI Access
+UI Access
 =========
 
 .. guidestar-demo:: _static/jdaviz-wireframe.html

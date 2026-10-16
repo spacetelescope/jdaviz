@@ -50,4 +50,5 @@ UI Access
 See Also
 ========
 
-- :doc:`../../rampviz/index` - For information on displaying and analyzing ramp data
+- :ref:`loaders-format-ramp-integration` - For information on loading 1D integration profiles extracted
+from JWST ramp data

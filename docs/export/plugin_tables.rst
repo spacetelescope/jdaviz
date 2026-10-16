@@ -45,6 +45,7 @@ Top-Level API Access
 To access plugin tables in a Jupyter notebook, you can export the tables by directly calling the plugin:
 
 .. code-block:: python 
+
    regions = jdaviz.plugins["Aperture Photometry"].export_table()
 
 This returns a :class:`~astropy.table.QTable` for the given plugin table.  
@@ -187,7 +188,7 @@ by calling :meth:`~jdaviz.core.template_mixin.TableMixin.export_table` (see :ref
 .. _plugin_tables_export-distance:
 
 Distance Table
-=============
+==============
 
 All mouseover information in the :ref:`distance tool <distance-tool>` can be exported to an
 :ref:`astropy table <astropy:astropy-table>`
