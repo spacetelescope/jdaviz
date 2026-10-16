@@ -31,14 +31,10 @@
           <j-tooltip tooltipcontent="add data to viewer">
             <span
               style="cursor: pointer; width: 100%"
-              :class="api_hints_enabled ? 'api-hint' : ''"
               @click="() => {$emit('add-data', data.label)}"
             >
-              {{ api_hints_enabled ?
-                'dm.add_data(\''+data.label+'\')'
-                :
-                data.label
-              }}
+              <j-api-hint v-if="api_hints_enabled">dm.add_data('{{ data.label }}')</j-api-hint>
+              <template v-else>{{ data.label }}</template>
             </span>
           </j-tooltip>
         </div>

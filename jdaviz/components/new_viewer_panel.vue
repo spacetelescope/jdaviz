@@ -22,9 +22,9 @@
         </v-alert>
       </j-flex-row>
 
-      <span v-if="new_viewer_selected && new_viewer_selected.length > 0 && api_hints_enabled" class="api-hint" style="font-weight: bold; padding-left: 6px">
+      <j-api-hint v-if="new_viewer_selected && new_viewer_selected.length > 0 && api_hints_enabled" style="font-weight: bold; padding-left: 6px">
         vc = {{ api_hints_obj }}.new_viewers['{{ new_viewer_selected }}']
-      </span>
+      </j-api-hint>
     </v-container>
 
     <jupyter-widget v-if="selected_new_viewer_widget" :widget="selected_new_viewer_widget" :key="selected_new_viewer_widget"></jupyter-widget>

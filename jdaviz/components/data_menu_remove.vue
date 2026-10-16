@@ -29,14 +29,10 @@
           >
             <span
               style="cursor: pointer; width: 100%"
-              :class="api_hints_enabled ? 'api-hint' : ''"
               @click="() => {$emit('remove-from-viewer')}"
             >
-              {{ api_hints_enabled ?
-                'dm.remove_from_viewer()'
-                :
-                'Remove from viewer'
-              }}
+              <j-api-hint v-if="api_hints_enabled">dm.remove_from_viewer()</j-api-hint>
+              <template v-else>Remove from viewer</template>
             </span>
           </j-tooltip>
         </div>
@@ -48,15 +44,11 @@
           >
             <span
               :style="'width: 100%; ' + (delete_app_enabled ? 'cursor: pointer;' : '')"
-              :class="api_hints_enabled ? 'api-hint' : ''"
               :disabled="!delete_app_enabled"
               @click="() => {if (delete_app_enabled) {$emit('remove-from-app')}}"
             >
-            {{ api_hints_enabled ?
-                'dm.remove_from_app()'
-                :
-                'Delete from app'
-              }}
+              <j-api-hint v-if="api_hints_enabled">dm.remove_from_app()</j-api-hint>
+              <template v-else>Delete from app</template>
             </span>
           </j-tooltip>
         </div>

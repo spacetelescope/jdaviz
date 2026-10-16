@@ -327,6 +327,7 @@ span.api-hint, span.api-hint-header {
   font-size: 12px;
   letter-spacing: -0.05em !important;
   text-transform: none !important;
+  overflow-wrap: anywhere;
 }
 
 span.api-hint-header {
@@ -360,6 +361,15 @@ span.api-hint-header {
   font-size: 12px !important;
   overflow-wrap: break-word;
   text-transform: none !important;
+  height: auto !important;
+  min-height: var(--v-btn-height);
+  max-width: 100%;
+}
+
+.api-hint.v-btn .v-btn__content {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
 }
 
 .api-hint-invert-color span {

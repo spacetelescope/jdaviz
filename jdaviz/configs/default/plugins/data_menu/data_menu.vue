@@ -71,9 +71,7 @@
           <v-list ref="dataMenuContent" style="width: 400px; max-height: 600px; overflow-y: auto" class="overflow-y-auto">
             <v-list-item v-if="api_hints_enabled" style="min-height: 12px">
               <div class="v-list-item-content">
-                <span class="api-hint">
-                  <b>dm = {{ api_hints_obj }}.viewers['{{viewer_reference}}'].data_menu</b>
-                </span>
+                <j-api-hint style="font-weight: bold">dm = {{ api_hints_obj }}.viewers['{{viewer_reference}}'].data_menu</j-api-hint>
               </div>
             </v-list-item>
             <v-list-item class="dm-header">
@@ -164,7 +162,7 @@
               v-if="api_hints_enabled"
             >
               <div class="v-list-item-content">
-                <span class="api-hint">dm.layer = {{ layer_selected }}</span>
+                <j-api-hint>dm.layer = {{ layer_selected }}</j-api-hint>
               </div>
             </v-list-item>
             <v-item-group

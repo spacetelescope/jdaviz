@@ -1,7 +1,7 @@
 <template>
     <j-flex-row justify="end" class="row-no-outside-padding">
         <div v-if="api_hints_enabled && api_hint">
-            <span class="api-hint" style="margin-right: 6px">{{ api_hint }}</span>
+            <j-api-hint style="margin-right: 6px">{{ api_hint }}</j-api-hint>
         </div>
         <span v-if="api_hints_enabled && api_hint && selected === 'Any'" class="api-hint">'Any'</span>
 

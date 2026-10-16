@@ -174,7 +174,7 @@
               </v-alert>
           </j-flex-row>
           <j-flex-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
-              <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">ldr.format = '{{ format_selected }}'</span>
+              <j-api-hint v-if="api_hints_enabled" style="margin-right: 6px">ldr.format = '{{ format_selected }}'</j-api-hint>
               <span v-else><b>Format:</b> {{ format_selected }}</span>
           </j-flex-row>
           <plugin-select

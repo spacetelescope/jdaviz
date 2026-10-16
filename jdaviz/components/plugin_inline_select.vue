@@ -1,9 +1,7 @@
 <template>
   <div>
     <j-flex-row v-if="api_hints_enabled && api_hint">
-      <span class="api-hint">
-        {{ api_hint }}
-      </span>
+      <j-api-hint>{{ api_hint }}</j-api-hint>
     </j-flex-row>
     <j-flex-row v-for="item in items" class="row-min-bottom-padding">
       <plugin-inline-select-item

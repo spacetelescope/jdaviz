@@ -2,9 +2,7 @@
   <v-list-item
   >
     <div class="v-list-item-content">
-        <span class="api-hint">
-        {{ hover_api_hint }}
-        </span>
+        <j-api-hint>{{ hover_api_hint }}</j-api-hint>
     </div>
     <v-list-item-action style="margin-right: -8px">
       <j-tooltip

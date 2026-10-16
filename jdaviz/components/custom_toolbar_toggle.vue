@@ -7,9 +7,9 @@
         @click="$emit('toggle-custom-toolbar')"
       >
         <slot></slot>
-        <span v-if="api_hints_enabled && api_hint_enable" :class="enabled ? 'api-hint api-hint-invert-color' : 'api-hint'">
+        <j-api-hint v-if="api_hints_enabled && api_hint_enable" :class="enabled ? 'api-hint-invert-color' : null">
           {{ enabled ? api_hint_disable : api_hint_enable }}
-        </span>
+        </j-api-hint>
         <span v-else>
           {{ (enabled ? 'Disable' : 'Enable') + ' ' + text }}
         </span>

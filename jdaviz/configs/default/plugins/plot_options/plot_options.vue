@@ -247,7 +247,7 @@
           <plugin-action-button
             :spinner="apply_RGB_presets_spinner"
             :results_isolated_to_plugin="false"
-            :class="api_hints_enabled ? 'api-hint' : null"
+            :api_hints_enabled="api_hints_enabled"
             @click="apply_RGB_presets"
           >
             {{ api_hints_enabled ?
@@ -332,14 +332,10 @@
     <!-- LAYER OPTIONS -->
     <div v-if="api_hints_enabled">
       <j-flex-row v-if="layer_items.length> 1">
-        <span class="api-hint">
-          plg.layer.multiselect = {{ boolToString(layer_multiselect) }}
-        </span>
+        <j-api-hint>plg.layer.multiselect = {{ boolToString(layer_multiselect) }}</j-api-hint>
       </j-flex-row>
       <j-flex-row>
-        <span class="api-hint">
-          plg.layer = {{ layer_multiselect ? layer_selected : '\''+layer_selected+'\'' }}
-        </span>
+        <j-api-hint>plg.layer = {{ layer_multiselect ? layer_selected : '\''+layer_selected+'\'' }}</j-api-hint>
       </j-flex-row>
     </div>
 

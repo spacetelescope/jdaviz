@@ -1,8 +1,8 @@
 <template>
   <div>
-  <span v-if="api_hints_enabled" class="api-hint" style="margin-left: -12px">
+  <j-api-hint v-if="api_hints_enabled" style="margin-left: -12px">
     {{ normalizedApiHint() }}.create_new = '{{ create_new_selected }}'
-  </span>
+  </j-api-hint>
   <div v-if="create_new_selected.length > 0">
     <plugin-auto-label
       :value="new_label_value"
@@ -25,9 +25,7 @@
   <div v-else>
     <div>
       <j-flex-row v-if="show_multiselect_toggle && api_hints_enabled && api_hint_multiselect">
-        <span :class="api_hints_enabled && api_hint_multiselect ? 'api-hint' : null">
-          {{  api_hint_multiselect }} {{  multiselect ? 'True' : 'False' }}
-        </span>
+        <j-api-hint>{{  api_hint_multiselect }} {{  multiselect ? 'True' : 'False' }}</j-api-hint>
       </j-flex-row>
       <div v-if="show_multiselect_toggle" style="position: absolute; width: 32px; right: 0px; margin-right: 12px; margin-top: -2px; z-index: 999;">
         <j-tooltip tipid='viewer-multiselect-toggle'>

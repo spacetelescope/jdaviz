@@ -294,9 +294,11 @@
                   :hint="parameter_hints[item.name]"
                   persistent-hint>
                     <template v-slot:label>
-                        <span :style="api_hints_enabled ? 'overflow-wrap: anywhere; font-size: 8pt' : 'overflow-wrap: anywhere; font-size: 12pt'"
-                              :class="api_hints_enabled ? 'api-hint' : 'font-weight-bold'">
-                          {{ api_hints_enabled ? `plg.set_fitter_parameter('${item.name}', ${item.value.toString()[0].toUpperCase() + item.value.toString().slice(1)})` : item.name }}
+                        <j-api-hint v-if="api_hints_enabled" style="overflow-wrap: anywhere; font-size: 8pt">
+                          {{ `plg.set_fitter_parameter('${item.name}', ${item.value.toString()[0].toUpperCase() + item.value.toString().slice(1)})` }}
+                        </j-api-hint>
+                        <span v-else class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 12pt">
+                          {{ item.name }}
                         </span>
                      </template>
                 </v-switch>

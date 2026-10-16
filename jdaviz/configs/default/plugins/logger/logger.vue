@@ -51,9 +51,7 @@
         style="width: 100%; overflow: scroll; white-space: wrap; word-wrap: break-word;"
         :type="hist.color">
           <j-flex-row v-if="api_hints_enabled">
-            <span class="api-hint" style="margin-left: 12px">
-              plg.history[{{history.length - 1 - index}}]
-            </span>
+            <j-api-hint style="margin-left: 12px">plg.history[{{history.length - 1 - index}}]</j-api-hint>
           </j-flex-row>
           [{{hist.time}}]: {{hist.text}}
       </v-alert>

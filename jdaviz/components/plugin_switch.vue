@@ -11,9 +11,9 @@
     >
       <v-icon>mdi-{{ use_icon == 'speaker' ? 'speaker' : 'eye'}}{{ value ? '' : '-off' }}</v-icon>
     </v-btn>
-    <span v-if="api_hints_enabled && api_hint" class="api-hint">
+    <j-api-hint v-if="api_hints_enabled && api_hint">
       {{ api_hint + boolToString(value) }}
-    </span>
+    </j-api-hint>
     <span v-else>
       {{ label }}
     </span>
