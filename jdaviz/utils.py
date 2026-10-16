@@ -293,11 +293,11 @@ class SnackbarQueue:
     def deferring(self, msg_filter=None):
         """
         Defer messages within this context (e.g. while checking the validity of loader
-        inputs) so that messages from parsers/importers that turn out to be irrelevant are
-        never shown. On exit, deferred messages are added to the history (without popups),
-        unless they do not pass ``msg_filter``, in which case they are discarded.
+        inputs) so that messages from irrelevant parsers/importers are never shown.
+        On exit, deferred messages are added to the history (without popups),
+        unless they don't pass ``msg_filter``, in which case they're discarded.
 
-        Note: do not nest this context manager, as it will not work correctly without adjustments
+        Note: don't nest this context manager, it won't work correctly without adjustments
         to its logic.
 
         Parameters
