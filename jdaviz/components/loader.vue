@@ -1,21 +1,18 @@
 <template>
   <div style="position: relative; height: 100%;">
-    <!-- Top sticky overlay -->
-    <div v-if="spinner.length > 0" class="top-overlay">
+    <!-- Top sticky overlay, always rendered so its natural height is reserved
+         and content does not shift when the spinner appears -->
+    <div class="top-overlay"
+         :class="{ invisible: !show_spinner && !show_success, 'success-overlay': show_success }">
       <div class="overlay-content">
-        {{ spinner }}
+        <v-icon v-if="show_success" small color="white" style="margin-right: 6px;">mdi-check-circle</v-icon>
+        {{ show_success ? spinner_success_message : (spinner || '\u00a0') }}
         <v-progress-linear
+            :class="{ invisible: !show_spinner }"
             color="#c75d2c"
-            indeterminate
+            :indeterminate="show_spinner"
             height="6"
           ></v-progress-linear>
-      </div>
-    </div>
-
-    <div v-if="!spinner.length && spinner_success_message && !success_dismissed" class="top-overlay success-overlay">
-      <div class="overlay-content">
-        <v-icon small color="white" style="margin-right: 6px;">mdi-check-circle</v-icon>
-        {{ spinner_success_message }}
       </div>
     </div>
 
@@ -217,6 +214,14 @@ export default {
           'importer_widget', 'server_is_remote', 'hide_resolver', 'hide_resolver_inputs',
           'api_hints_enabled', 'valid_import_formats',
           'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled','image_data_loaded'],
+  computed: {
+    show_spinner() {
+      return this.spinner.length > 0;
+    },
+    show_success() {
+      return !this.show_spinner && !!this.spinner_success_message && !this.success_dismissed;
+    }
+  },
   watch: {
     spinner_success_message(newVal) {
       if (this.success_dismiss_timer) {
@@ -251,6 +256,10 @@ export default {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 10;
     padding: 0px;
+  }
+
+  .invisible {
+    visibility: hidden;
   }
 
   .top-overlay.success-overlay {
