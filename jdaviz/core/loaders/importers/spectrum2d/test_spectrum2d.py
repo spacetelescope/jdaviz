@@ -1,5 +1,3 @@
-from astropy.io import fits
-from jdaviz.conftest import _generate_mos_spectrum2d
 from jdaviz.core.loaders.importers.spectrum2d.spectrum2d import Spectrum2DImporter
 
 

@@ -2,7 +2,6 @@ import os
 import warnings
 import numpy as np
 import threading
-import time
 
 import ipywidgets.widgets.widget as _widget_mod
 from comm import DummyComm
