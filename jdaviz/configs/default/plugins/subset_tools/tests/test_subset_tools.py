@@ -512,8 +512,6 @@ def test_get_regions_scatter_with_image(deconfigged_helper, image_2d_wcs,
     plot_opts.xatt = 'ra'
     plot_opts.yatt = 'dec'
 
-    reg = RangeRegion(1*u.Unit(''), 2*u.Unit(''))
-
     viewer_scatter = deconfigged_helper.viewers['Scatter']
     viewer_scatter._obj.glue_viewer.apply_roi(XRangeROI(12.0, 14.0))
 
