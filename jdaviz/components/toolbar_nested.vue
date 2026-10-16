@@ -106,7 +106,7 @@
       :open-on-hover="false"
       :close-on-click="close_on_click"
     >
-      <v-list>
+      <v-list class="toolbar-nested-suboptions">
         <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)" :key="id">
           <v-tooltip
             v-if="menu_ind==suboptions_ind && visible && !should_hide_in_popout(id)"
@@ -245,6 +245,10 @@
 </script>
 
 <style>
+.toolbar-nested-suboptions .v-list-item__content {
+  /* Vuetify reserves 40px for content, but these items contain only a 20px icon. */
+  min-width: 0;
+}
 .suboptions-carrot {
   transform: rotate(-45deg);
   bottom: 0px;
