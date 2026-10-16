@@ -1,4 +1,4 @@
-5.0.5 (unreleased)
+5.0.5 (2026-10-16)
 ==================
 
 Bug Fixes
@@ -6,16 +6,11 @@ Bug Fixes
 - Fix recursion limit bug when attempting to set an invalid data menu layer in
   multiselect mode. [#4419]
 
-
 - Fix viewer container width. [#4424, #4430]
 
 - Fixed AttributeError: 'NoneType' object has no attribute 'height' by ensuring figure_widget has an assigned layout. [#4429]
 
-
 - Fix an IO error when loading another data type after loading a 1D spectrum. [#4428]
-
-Mosviz
-^^^^^
 
 
 5.0.4 (2026-09-23)
