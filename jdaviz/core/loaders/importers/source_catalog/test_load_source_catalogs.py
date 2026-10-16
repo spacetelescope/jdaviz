@@ -256,6 +256,14 @@ def test_import_enabled_disabled(imviz_helper):
     ldr.importer.col_y.selected = 'Y'
     assert len(ldr.importer._obj.import_disabled_msg) == 0
 
+    # selecting the same column for both X and Y should disable import
+    ldr.importer.col_y.selected = 'X'
+    assert ldr.importer._obj.import_disabled_msg == (
+        "X and Y cannot be the same column. Select different "
+        "columns for X and Y, or clear both to use RA/Dec instead."
+    )
+    ldr.importer.col_y.selected = 'Y'
+
 
 @pytest.mark.parametrize("from_file", [True, False])
 @pytest.mark.parametrize("with_units", [True, False])

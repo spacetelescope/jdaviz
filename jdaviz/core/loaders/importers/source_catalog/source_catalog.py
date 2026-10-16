@@ -331,7 +331,8 @@ class SourceCatalogImporter(BaseCatalogImporter):
         """
         Determine whether a valid coordinate pair is selected (a complete
         RA/Dec pair and/or a complete X/Y pair, with RA and Dec not pointing
-        to the same non-SkyCoord column), and set ``import_disabled_msg``
+        to the same non-SkyCoord column, and X and Y not pointing to the
+        same non-PixCoord column), and set ``import_disabled_msg``
         accordingly. Empty msg = enabled, non-empty = disabled.
         """
         ra = self.col_ra_selected
@@ -349,6 +350,11 @@ class SourceCatalogImporter(BaseCatalogImporter):
         ra_dec_same = (not ra_missing and ra == dec
                        and not isinstance(input[ra], SkyCoord))
 
+        # same x and y columns selected (and not a PixCoord column, which
+        # contains both X and Y) is not a valid pair
+        xy_same = (not x_missing and x == y
+                   and not isinstance(input[x], PixCoord))
+
         # disable import if RA is selected but Dec is not (or vice versa), or if the
         # same column is selected for both RA and Dec
         ra_dec_mismatch = ra_missing != dec_missing
@@ -356,12 +362,17 @@ class SourceCatalogImporter(BaseCatalogImporter):
 
         # disable import if X is selected but Y is not (or vice versa)
         xy_mismatch = x_missing != y_missing
-        xy_complete = not x_missing and not y_missing
+        xy_complete = not x_missing and not y_missing and not xy_same
 
         if ra_dec_same:
             self.import_disabled_msg = (
                 "RA and Dec cannot be the same column. Select different "
                 "columns for RA and Dec, or clear both to use X/Y instead."
+            )
+        elif xy_same:
+            self.import_disabled_msg = (
+                "X and Y cannot be the same column. Select different "
+                "columns for X and Y, or clear both to use RA/Dec instead."
             )
         elif ra_dec_mismatch:
             self.import_disabled_msg = (
