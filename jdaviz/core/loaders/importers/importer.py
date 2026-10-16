@@ -425,6 +425,8 @@ class BaseImporterToDataCollection(BaseImporter):
         # Add the data to data collection.
         self._app.add_data(data, data_label=data_label)
 
+        self._flush_loader_messages()
+
         # Set up parent-child relationship if specified
         if parent is not None:
             self._app._set_assoc_data_as_child(data_label, parent)
