@@ -140,14 +140,8 @@ New Features
 
 - Add update feature to standalone app to allow users to click to see if update is available. [#4400]
 
-Mosviz
-^^^^^^
-
 API Changes
 -----------
-
-Mosviz
-^^^^^^
 
 Bug Fixes
 ---------
@@ -164,8 +158,6 @@ Bug Fixes
 - Fix color picker not showing correctly. [#4332]
 
 - Fix error when typing while renaming data or subset. [#4359]
-
-
 
 Mosviz
 ^^^^^^
@@ -190,7 +182,18 @@ Other Changes and Additions
 - Changing visible columns in the table viewer has been moved from the Plot Options
   plugin to a tool in the table viewer toolbar (with deprecation). [#4382]
 
-5.0.5 (unreleased)
+
+5.0.6 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Mosviz
+^^^^^^
+
+
+5.0.5 (2026-10-16)
 ==================
 
 Bug Fixes
