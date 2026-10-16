@@ -110,12 +110,7 @@ class FormatSelect(SelectPluginComponent):
             self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
             return
 
-        # messages emitted while checking validity are only kept (in the history, without
-        # popups) if they come from a parser/importer that turns out to be valid
-        valid_parsers_importers = []
-        deferral = self._app.state.snackbar_queue.deferring(
-            msg_filter=lambda msg: any(msg.sender is obj for obj in valid_parsers_importers))
-        with warnings.catch_warnings(), deferral:
+        with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin._app, parser_input)
@@ -127,7 +122,6 @@ class FormatSelect(SelectPluginComponent):
                         self._invalid_importers[parser_name] = f'Parser exception: {e}'
                         this_parser._cleanup()
                         continue
-                    valid_parsers_importers.append(this_parser)
                 else:
                     self._invalid_importers[parser_name] = this_parser.is_valid.message
                     this_parser._cleanup()
@@ -191,7 +185,6 @@ class FormatSelect(SelectPluginComponent):
                                     # this previous parser has preference over this one
                                     self._invalid_importers[label] = f'Parser {prev_parser} has preference over {parser_name}'  # noqa
                                     continue
-                            valid_parsers_importers.append(this_importer)
                         else:
                             # we'll store the importer even if it isn't valid according to the
                             # filters so that they can be used when compiling the list of
@@ -1309,6 +1302,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             if not self.returned_no_results:
                 self._loader_message(f"{n_results} results found.", color='success')
 
+        self._flush_loader_messages(clear=False)
         self._resolver_input_updated()
 
     @with_spinner(spinner_traitlet="results_loading")
