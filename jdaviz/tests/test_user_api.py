@@ -74,18 +74,18 @@ def test_wildcard_match_extensions(specviz_helper, premade_spectrum_list):
     # Resetting to empty
     selection_obj.selected = []
 
-    err_str1 = "not all items in"
-    err_str2 = f"are one of {selection_obj.choices}, reverting selection to []"
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *'] {err_str2}")):
+    s = "Not all items in"
+
+    m = f"{s} '['bad *']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer.extension = 'bad *'
 
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *', '* result'] {err_str2}")):
+    m = f"{s} '['bad *', '* result']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer.extension = ['bad *', '* result']
 
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['another', 'bad * result'] {err_str2}")):
+    m = f"{s} '['another', 'bad * result']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer.extension = ['another', 'bad * result']
 
     # Check that selected is still/reverted successfully to []
@@ -124,18 +124,18 @@ def test_wildcard_match_extension(imviz_helper, multi_extension_image_hdu_wcs):
     assert selection_obj.selected == []
     assert selection_obj.choices == default_choices
 
-    err_str1 = "not all items in"
-    err_str2 = f"are one of {selection_obj.choices}, reverting selection to []"
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *'] {err_str2}")):
+    s = "Not all items in"
+
+    m = f"{s} '['bad *']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer._obj.user_api.extension = 'bad *'
 
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *', '* result'] {err_str2}")):
+    m = f"{s} '['bad *', '* result']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer._obj.user_api.extension = ['bad *', '* result']
 
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['another', 'bad * result'] {err_str2}")):
+    m = f"{s} '['another', 'bad * result']' are one of '[]', reverting selection to '[]'."
+    with pytest.raises(ValueError, match=re.escape(m)):
         ldr.importer._obj.user_api.extension = ['another', 'bad * result']
 
     # Check that selected is still/reverted successfully to []
