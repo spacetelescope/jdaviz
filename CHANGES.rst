@@ -140,6 +140,9 @@ New Features
 
 - Add update feature to standalone app to allow users to click to see if update is available. [#4400]
 
+- Add restriction to Source Catalog loader that either an ra/dec pair or an x/y
+   pair must be selected for import. [#4435]
+
 Mosviz
 ^^^^^^
 
