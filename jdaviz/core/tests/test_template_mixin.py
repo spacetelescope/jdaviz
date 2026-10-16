@@ -645,10 +645,12 @@ class TestLoaderBannerMessagesMixin:
         self.obj._loader_message('Failed', traceback=ValueError('boom'), timeout=2000)
 
         assert self.obj.loader_message_items == [
-            {'text': 'Failed', 'color': 'error', 'traceback': 'ValueError: boom'}]
+            {'text': 'Failed', 'color': 'error', 'timestamp': None,
+             'traceback': 'ValueError: boom'}]
         msg = self.put.call_args.args[2]
-        assert (msg.text, msg.timeout, msg.sender) == ('Failed; Traceback: boom', 2000, self.obj)
-        assert self.put.call_args.kwargs == {'history': True, 'popup': False}
+        assert (msg.text, msg.timeout, msg.sender) == ('Failed; Traceback: ValueError: boom',
+                                                       2000, self.obj)
+        assert self.put.call_args.kwargs == {'history': False, 'popup': False, 'timestamp': None}
 
         self.obj._clear_loader_messages()
         assert self.obj.loader_message_items == []
