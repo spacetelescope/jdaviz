@@ -631,30 +631,85 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
     def _clear_loader_messages(self):
         self.loader_message_items = []
 
-    def _loader_message(self, text, color='error', popup=False, traceback=None, raise_msg=False):
+    def _prepare_message(self, text, color='error', traceback=None, timeout=5000):
+
+        traceback_str = None
+        text_w_traceback = text
+        if traceback is not None:
+            traceback_str = f"{type(traceback).__name__}: {traceback}"
+            # add message to logger with/without broadcasting
+            text_w_traceback += f'; Traceback: {traceback_str}'
+
+        snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
+                                                   color=color, sender=self,
+                                                   traceback=traceback, timeout=timeout)
+
+        return traceback_str, snackbar_msg_w_traceback
+
+    def _loader_message(self, text, color='error',
+                        history=False, popup=False, timestamp=None,
+                        traceback=None, raise_msg=False, timeout=5000):
         """
         Report ``text`` to the user through a persistent banner in the loader UI and
         added to the logger without necessarily raising a snackbar.
         """
-        self.loader_message_items = (self.loader_message_items +
-                                     [{'text': text, 'color': color,
-                                       'traceback': f"{type(traceback).__name__}: {traceback}"}])
 
-        # add message to logger with/without broadcasting
-        text_w_traceback = text + (f'; Traceback: {traceback}' if traceback is not None else '')
-        snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
-                                                   color=color, sender=self, traceback=traceback)
+        traceback_str, snackbar_msg_w_traceback = self._prepare_message(text, color,
+                                                                        traceback, timeout)
+
+        self.loader_message_items = (self.loader_message_items +
+                                     [{'text': text, 'color': color, 'timestamp': timestamp,
+                                       'traceback': traceback_str}])
+
         self._app.state.snackbar_queue.put(self._app.state,
                                            self._app._jdaviz_helper.plugins['Logger'],
                                            snackbar_msg_w_traceback,
-                                           history=True,
-                                           popup=popup)
+                                           history=history,
+                                           popup=popup,
+                                           timestamp=timestamp)
 
         if raise_msg and color == 'warning':
             warnings.warn(text)
 
         elif raise_msg and color == 'error' and traceback is not None:
             raise traceback
+
+    def _flush_loader_messages(self, popup=False, clear=True):
+        """
+        Flush all loader messages to the logger, (optionally) clear the loader message list, and
+        sort the logger history by timestamp to ensure chronological order.
+
+        Parameters
+        ----------
+        popup : bool, optional
+            Whether replayed messages should be displayed as snackbar popups.
+        clear : bool, optional
+            Whether to clear ``loader_message_items`` after replaying the messages.
+        """
+        logger = self._app._jdaviz_helper.plugins['Logger']
+        for msg in self.loader_message_items:
+            text = msg.get('text', '')
+            color = msg.get('color', 'error')
+            traceback = msg.get('traceback', None)
+            timestamp = msg.get('timestamp', None)
+
+            # Note: we do *not* explicitly protect against duplication because _loader_messages
+            # that have already been added to history are tied to failing states. This may change
+            # in the future.
+            _, snackbar_msg_w_traceback = self._prepare_message(text, color, traceback)
+            self._app.state.snackbar_queue.put(self._app.state,
+                                               logger,
+                                               snackbar_msg_w_traceback,
+                                               history=True,
+                                               popup=popup,
+                                               timestamp=timestamp)
+
+        if clear:
+            self._clear_loader_messages()
+
+        # Sort the logger history by timestamp to ensure chronological order
+        logger.history = sorted(logger.history,
+                                key=lambda entry: entry.get('timestamp', 0))
 
 
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
