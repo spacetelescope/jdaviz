@@ -657,6 +657,23 @@ def mos_spectrum2d_as_hdulist():
     return hdulist
 
 
+@pytest.fixture(scope='class')
+def transposed_mos_spectrum2d_as_hdulist():
+    data, header = _generate_mos_spectrum2d()
+    hdu = fits.ImageHDU(data.T.value)
+    hdu.header.update(header)
+
+    # This layout is to trick specutils to think it is JWST s2d
+    hdulist = fits.HDUList([fits.PrimaryHDU(), hdu, hdu])
+    hdulist[0].header["TELESCOP"] = "JWST"
+    hdulist[1].name = "SCI"
+    hdulist[1].ver = 1
+    hdulist[2].name = "SCI"
+    hdulist[2].ver = 2
+
+    return hdulist
+
+
 @pytest.fixture
 def hst_product_hdulist():
     """Factory for synthetic HST FITS products that can be either imaging or
