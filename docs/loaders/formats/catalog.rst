@@ -69,9 +69,9 @@ the format will default to **Source Catalog**. Otherwise, it will default to **G
     Sometimes multi-object spectral or image files can be auto-parsed as a catalog. 
     Either change format if the correct format is detected, or use the API to load the data in using the correct format. 
 
-Once the catalog is parsed, the `Viewer`` must be selected.  The `Viewer`` will default to load as a **Source Catalog Table** or **Generic Table**,
-but it can be loaded as a **Scatter** `Viewer` or **Histogram** `Viewer`.  If it is a **Source Catalog**, 
-the catalog can be loaded onto an **Image** `Viewer`` as markers (if a prior image has been loaded). 
+Once the catalog is parsed, the ``Viewer`` must be selected.  The ``Viewer`` will default to load as a **Source Catalog Table** or **Generic Table**,
+but it can be loaded as a **Scatter** ``Viewer`` or **Histogram** ``Viewer``.  If it is a **Source Catalog**, 
+the catalog can be loaded onto an **Image** ``Viewer`` as markers (if a prior image has been loaded). 
 
 UI Access
 =========

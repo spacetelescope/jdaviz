@@ -19,7 +19,7 @@ The URL loader supports:
 - FTP URLs
 - Data URLs
 - Cloud URIs (e.g. s3)
-- `MAST <https://mast.stsci.edu/search/ui/#/>`_ URIs (mast:[telescope]/product/[filepath])
+- `MAST <https://mast.stsci.edu/search/ui/#/>`_ URIs (`mast:[telescope]/product/[filepath]`)
 
 The file at the URL should be in one of the supported formats (FITS, ASDF, etc.).
 

@@ -21,8 +21,8 @@ Subsets can be exported as:
 
 Depending on the subset, it is exported as either:
 
-- an astropy :class:`region <https://astropy-regions.readthedocs.io/en/stable/index.html>`_ (spatial),
-- a :class:`specutils.spectra.SpectralRegion <https://specutils.readthedocs.io/en/stable/api/specutils.SpectralRegion.html>`_ (spectral)
+- an astropy :py:class:`~regions.core.core.Region` (spatial),
+- a :py:class:`specutils.spectra.SpectralRegion` (spectral)
 
 
 API Access
@@ -48,9 +48,10 @@ UI Access
 Top-Level API Access
 ====================
 
-To access subsets in a Jupyter notebook, you can export the region(s) by directly calling the `Subset Tools` plugin:
+To access subsets in a Jupyter notebook, you can export the region(s) by directly calling the ``Subset Tools`` plugin:
 
 .. code-block:: python 
+   
    regions = jd.plugins["Subset Tools"].get_regions()
 
-This returns a dictionary where each subset is given as either an astropy :class:`region` or :class:`specutils.spectra.SpectralRegion`.
+This returns a dictionary where each subset is given as either an astropy :py:class:`~regions.core.core.Region` or :class:`specutils.spectra.SpectralRegion`.

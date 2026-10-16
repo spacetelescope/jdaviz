@@ -7,19 +7,19 @@ Settings & Options
 
 Jdaviz provides flexible configuration options for customizing your analysis environment:
 
-**:ref:`settings-plot_options`**
+:ref:`settings-plot_options`
   Control the visual appearance of plots including colors, line styles, markers,
   and other display properties.
 
-**:ref:`settings-display_units`**
+:ref:`settings-display_units`
   Configure the units used for displaying spectral axes (wavelength, frequency, energy)
   and flux values.
 
-.. .. toctree::
-..    :maxdepth: 1
+.. toctree::
+   :maxdepth: 1
 
-..    plot_options
-..    display_units
+   plot_options
+   display_units
 
 
 UI Access

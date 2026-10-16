@@ -9,22 +9,28 @@ Once installed, ``jdaviz`` can be run either in a Jupyter notebook, from the com
 Detailed workflows are given within the documentation, but some quick-start tips are given below.
 
 
+.. _quickstart-notebook:
+
 In a Jupyter Notebook
 =====================
 
-The power of Jdaviz is that it can integrated into your Jupyter notebook workflow::
+The power of Jdaviz is that it can integrated into your Jupyter notebook workflow:
 
+.. code-block:: python
+    
     import jdaviz as jd
-
     jd.show()
 
 A file or python object is loaded as:
+
+.. code-block:: python
+
     jd.load('filename.fits', format='Image', data_label='MyData')
 
 Jdaviz also provides a directory of :ref:`sample notebooks <sample_notebook>`
 to test the application, located in the :gh-tree:`notebooks` sub-directory of the Git repository.
 
-.. _quickstart_display:
+.. _quickstart-display:
 
 Customizing Notebook Display Layout
 -----------------------------------
@@ -53,6 +59,8 @@ For example, ``inline`` can be specified manually with:
 
     jd.show(loc='inline')
 
+.. _quickstart-popout:
+
 Detached Popout
 ^^^^^^^^^^^^^^^
 Jdaviz can also be displayed in a detached window, separate from your working Jupyter interface.
@@ -77,6 +85,7 @@ You can also popout to a new browser tab by specifying a ``tab`` anchor:
 
     jd.show(loc='popout:tab')
 
+.. _quickstart-sidecar:
 
 Sidecar (Jupyter Lab)
 ^^^^^^^^^^^^^^^^^^^^^
@@ -98,6 +107,8 @@ To manually specify the anchor location, append the anchor to sidecar, separated
 Other anchors include: ``split-right``, ``split-left``, ``split-top``, ``split-bottom``,
 ``tab-before``, ``tab-after``, ``right``. An up-to-date list can be found at
 `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_.
+
+.. _quickstart-multiple:
 
 Multiple Jdaviz Instances
 -------------------------
@@ -130,6 +141,8 @@ To do so, create a new Jdaviz app instance and store it in a custom variable:
 
 
 You can also access the current default application with :py:func:`jdaviz.gca` (get current application), and pass arguments to :py:func:`jdaviz.new_app` or :py:func:`jdaviz.gca` to manage which is considered the current application.
+
+.. _quickstart-commandline:
 
 Launching From the Command Line
 ===============================
@@ -173,6 +186,7 @@ To see a list of all options, from the terminal, type::
 
 .. jdavizclihelp::
 
+.. _quickstart-keyboard:
 
 Keyboard Shortcuts
 ------------------

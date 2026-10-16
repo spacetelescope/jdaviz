@@ -12,6 +12,7 @@ To access all of the different display settings for an image viewer, click the
 Changing the display settings **does not** change the underlying data, only the
 visualization of that data.
 
+.. _settings-plot_options-api:
 
 API Access 
 ==========
@@ -30,6 +31,7 @@ later in this Section.
     plot_options.stretch_vmin = 0.05
     plot_options.stretch_vmax = 1.0
 
+.. _settings-plot_options-ui:
 
 UI Access
 =========
@@ -38,20 +40,28 @@ UI Access
    :repeat: false
    :init-steps-json: [{"action":"show-sidebar","value":"settings"},{"action":"select-tab","value":"Plot Options"},{"action":"disable-toolbar-except","value":"settings"}]
 
+.. _settings-plot_options-settings:
+
 Settings
 ========
 
 Plot option settings vary for the type of dataset.  Below we list the general settings for all viewers and then split the settings 
 by viewer type. 
 
+.. _settings-plot_options-settings-viewer:
+
 Viewer
 ------
 This option allows you to select which viewer for which you are changing the plot settings. 
+
+.. _settings-plot_options-settings-viewerbounds:
 
 Viewer Bounds
 -------------
 
 This dropdown allows you to change the plot pixel limits.  
+
+.. _settings-plot_options-settings-dataset:
 
 Dataset
 -------
@@ -65,16 +75,21 @@ be applied to that dataset.  However, it might *not* be the top layer shown on t
 in the viewer is indicated by an orange outline. 
 
 If you select an dataset which is not the top layer, a blue banner appears in the plotting features indicating that the 
-changes made to the layer maybe not be visible as it is not the top layer in the viewer.  Selecting `MOVE [Image] to TOP` will move the layer 
-to the top.  *You do not have to do this if you do not want to change the layer order*
+changes made to the layer maybe not be visible as it is not the top layer in the viewer.  Selecting ``MOVE [Image] to TOP`` will move the layer 
+to the top.  *You do not have to do this if you do not want to change the layer order.*
 
+.. _settings-plot_options-viewer_settings:
 
 Image, 2D Spectrum, 3D Spectrum Viewer Settings
 ===============================================
 
+.. _settings-plot_options-viewer_settings-axes:
+
 Show axes
---------
+---------
 Toggle switch to indicate if the axes are visible. 
+
+.. _settings-plot_options-viewer_settings-color:
 
 Color mode
 ----------
@@ -83,7 +98,7 @@ This option allows you to choose whether to use a colormap or or a single color 
 The colormap can be selected from a dropdown under the "Image" section. 
 
 In "Color" mode, the color can be chosen from a color picker under "Image Color"
-within the "Image" section. The option `ASSIGN RGB PRESETS`` also appears. This will automatically
+within the "Image" section. The option ``ASSIGN RGB PRESETS`` also appears. This will automatically
 assign colors (spanning from blue to red) to the available layers and will adjust opacity and
 stretch to produce a composite color image (also known as an RGB image). You will then
 be able to fine tune all options within each "Image" section.
@@ -110,7 +125,7 @@ being set for all the images at once):
     plot_options.image_colormap = 'Viridis'
 
 Adding Custom Colormap
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 A custom colormap can only be added when Jdaviz is run in a notebook, not from the
 command line. The custom colormap must be added to ``glue`` *before* starting Jdaviz.
@@ -132,23 +147,27 @@ Only after the above is done can you start Jdaviz and use the custom colormap:
     jdaviz.load('myimage.fits', format='Image')
     jdaviz.default_viewer.set_colormap('photutils_cmap')
 
+.. _settings-plot_options-viewer_settings-showimage:
+
 Show Image 
 ----------
 Selecting the eyeball changes the data visibility. 
+
+.. _settings-plot_options-viewer_settings-opacity:
 
 Opacity 
 -------
 
 Change the translucence of the image.
 
-.. _contrast:
+.. _settings-plot_options-viewer_settings-contrast:
 
 Contrast
 --------
 
 Change the luminance of the color in the image.
 
-.. _bias:
+.. _settings-plot_options-viewer_settings-bias:
 
 Bias
 ----
@@ -157,6 +176,8 @@ Set a constant to subtract from every point in the data array before
 applying the conversion between data value and displayed pixel saturation.
 The :guilabel:`bias` slider center position is 0 bias, such that a user can apply negative
 bias values by sliding it left.
+
+.. _settings-plot_options-viewer_settings-stretch:
 
 Stretch
 -------
@@ -176,7 +197,7 @@ includes a toggle to limit the histogram to the current zoom limits (which is no
 and fields to set :guilabel:`min` and :guilabel:`max` manually.
 
 From the API
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 The stretch function for just the image being displayed
 (the acceptable values are as defined by ``glue`` backend) can be set using
@@ -229,6 +250,8 @@ Or it can be set using the Plugin API for one image or all the images at once:
     plot_options.stretch_vmin = 0
     plot_options.stretch_vmax = 1000
 
+.. _settings-plot_options-viewer_settings-contour:
+
 Contour
 -------
 
@@ -240,7 +263,7 @@ will remain unchanged as you scrub through the cube. Please note that this featu
 development and will be improved in the future.
 
 
-.. _plot_options_1dspec_settings:
+.. _settings-plot_options-1dspec_settings:
 
 1D Spectrum Viewer Settings
 ===========================
@@ -250,7 +273,7 @@ Plot uncertainties
 Toggle on to view uncertainties attached to the spectrum, if any.
 
 Show Line
---------
+---------
 Toggle switch to indicate if the data layer is visible. 
 
 Line Color
@@ -266,7 +289,7 @@ Line Opacity
 Opacity of the line. Maximum (1) is fully opaque and minimum (0) is fully transparent.
 
 Plot as steps
-------------
+-------------
 Toggle on to view the spectrum as a continuous line or a step function.
 
 From the API 
@@ -281,7 +304,7 @@ Here is an example on how to set the plot options from the API.
    plot_options.line_width = 3
    plot_options.uncertainty_visible = True
 
-.. _plot_options_scatter_settings: 
+.. _settings-plot_options-scatter_settings:
 
 Scatter Viewer Settings
 ===========================
@@ -304,7 +327,7 @@ Show Line
 Toggle switch to indicate if the data layer is visible. 
 
 Fill Marker
-----------
+-----------
 Toggle switch to indicate if the markers are filled. 
 
 Opacity
@@ -314,7 +337,7 @@ Opacity of the markers. Maximum (1) is fully opaque and minimum (0) is fully tra
 Size Mode
 ---------
 
-Sets the mode of the markers: `Fixed` or `Linear`
+Sets the mode of the markers: ``Fixed`` or ``Linear``
 
 Size 
 ----
@@ -331,26 +354,25 @@ Color Mode
 
 Sets the colormapping of the markers:
    
-   - `Fixed`: every marker is the same color 
+- ``Fixed``: every marker is the same color 
 
 Color
 ~~~~~
 Click the color picker to change the marker color. 
 
-
-   - `Linear`: the markers vary based on colormap mapped to specific column values
+- ``Linear``: the markers vary based on colormap mapped to specific column values
 
 Column 
 ~~~~~~
-Column to scale the chosen colormap for the `Linear` color mode
+Column to scale the chosen colormap for the ``Linear`` color mode
 
 Colormap 
 ~~~~~~~~
-Colormap to use for the `Linear` color mode
+Colormap to use for the ``Linear`` color mode
 
 vmin / vmax 
 ~~~~~~~~~~~
-Vmin and vmax for the `Linear` color mode
+Vmin and vmax for the ``Linear`` color mode
 
 From the API 
 ------------
@@ -368,7 +390,7 @@ being set for all the scatter points at once):
     plot_options.marker_color_mode = 'Fixed'
     plot_options.marker_color = '#ff00ff'
 
-.. _plot_options_histogram_settings:
+.. _settings-plot_options-histogram_settings:
 
 Histogram Viewer Settings
 ===========================
@@ -402,7 +424,7 @@ Normalize
 Toggle switch to normalize the histogram.
 
 Update Bins on Reset Limits 
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Toggle switch to change the bins if the limits are reset.  
 
 Show axes
@@ -440,44 +462,46 @@ being set):
     plot_options.hist_opacity = 3
     plot_options.hist_color = '#ff00ff'
 
+.. _settings-plot_options-subsets:
+
 Subsets
 =======
 
 Subsets plotting options are located within each viewer's plotting options.  Every subset will have: 
 
 Show Subset 
-~~~~~~~~~~~
+-----------
 Toggle switch to indicate if the dataset is visible. 
 
 Otherwise, the plotting options differ for each type of viewer: 
 
-In Image, 3D Spectrum Viewer: 
+In Image, 3D Spectrum Viewer
 -----------------------------
 Subset Color 
-~~~~~~~~~~~
+~~~~~~~~~~~~
 Click the color picker to change the subset color. 
 
 Subset Opacity 
 ~~~~~~~~~~~~~~
 Opacity of the subset. Maximum (1) is fully opaque and minimum (0) is fully transparent.
 
-In 2D Spectrum Viewer:
+In 2D Spectrum Viewer
 ----------------------
-Same settings as in `ref:plot_options_1dspec_settings`.
+Same settings as in :ref:`settings-plot_options-1dspec_settings`.
 
-In 1D Spectrum Viewer:
+In 1D Spectrum Viewer
 ----------------------
-Same settings as in `ref:plot_options_1dspec_settings`.
+Same settings as in :ref:`settings-plot_options-1dspec_settings`.
 
-In Scatter Viewer:
+In Scatter Viewer
 ------------------
 
-Same Settings as in `ref:plot_options_scatter_settings`.
+Same Settings as in :ref:`settings-plot_options-1dspec_settings`.
 
-In Histogram Viewer:
+In Histogram Viewer
 --------------------
 
-Same Settings as in `ref:plot_options_histogram_settings`.
+Same Settings as in :ref:`settings-plot_options-1dspec_settings`.
 
 
 

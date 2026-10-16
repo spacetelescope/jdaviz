@@ -1,9 +1,9 @@
 .. _loaders-formats:
 .. rst-class:: section-icon-mdi-plus-box
 
-*************************
+************
 Data Formats
-*************************
+************
 
 When loading data into Jdaviz, you specify a format that determines how the data
 will be parsed and which tools can visualize it:

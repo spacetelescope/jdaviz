@@ -13,6 +13,7 @@ Load three-dimensional spectroscopic data cubes.
     Only a single cube can be displayed in an instance of Jdaviz at a given time.
     To open a second cube, you must first initiate a second instance of Jdaviz.
 
+.. _loaders-format-3d-spectrum-overview:
 
 Overview
 ========
@@ -31,6 +32,8 @@ Usage
     # Load a 3D spectrum cube
     jdaviz.load('cube.fits', format='3D Spectrum')
 
+.. _loaders-format-3d-spectrum-data:
+
 Data Requirements
 =================
 
@@ -42,6 +45,8 @@ The data should be a 3D array where:
 
 This format is commonly used for Integral Field Unit (IFU) spectroscopy data.
 
+.. _loaders-format-3d-spectrum-fileformat:
+
 Supported File Formats
 ======================
 
@@ -49,6 +54,7 @@ Supported File Formats
 - JWST MIRI and NIRSpec IFU data (s3d files)
 - Other IFU instrument data cubes
 
+.. _loaders-format-3d-spectrum-dataparsing:
 
 Data Parsing
 ============
@@ -59,17 +65,17 @@ and allows the Python-level interface and parsing tools to
 be defined in ``specutils`` instead of being duplicated in Jdaviz.
 :class:`~specutils.Spectrum` objects are very flexible in their capabilities, however,
 and hence should address most astronomical spectrum use cases.
-If you are creating your own data products, please read the page :ref:`configs_create_products`.
+If you are creating your own data products, please read the page :ref:`loaders-jdaviz_readable_products`.
 
 For the best experience, 3D Spectrum loaded into Jdaviz should contain valid WCS keywords. 
 For more information on how Spectrum uses WCS, please go to the the `Spectrum defining WCS section <https://specutils.readthedocs.io/en/stable/spectrum.html#defining-wcs>`_.
 To check if your FITS file contains valid WCS keywords, please use `Astropy WCS validate <astropy.wcs.validate>`.
-For an example on loading a cube with valid WCS keywords, please see the :ref:`_3dcube-import` section below.
+For an example on loading a cube with valid WCS keywords, please see the :ref:`loaders-format-3d-spectrum-import` section below.
 
 Loading data without WCS is also possible as long as they are compatible with :class:`~specutils.Spectrum`.
 However, not all plugins will work with this data.
 
-.. _3dcube-import:
+.. _loaders-format-3d-spectrum-import:
 
 Importing data
 ==============
@@ -106,7 +112,7 @@ In the API, these can be changed when loading a file using the loaders plugins:
     ldr.importer.dq_add_to_flux_viewer = True
 
 Additionally, Jdaviz can auto extract a 1D spectrum from the entire cube. 
-Toggle the `Extract 1D Spectrum` toggle under the `Extracted Spectrum` section of the loader to turn on/off this feature.
+Toggle the ``Extract 1D Spectrum`` toggle under the ``Extracted Spectrum`` section of the loader to turn on/off this feature.
 In the API, it can be called:
 
 .. code-block:: python
@@ -140,5 +146,6 @@ UI Access
 See Also
 ========
 
-.. - :doc:`../../cubeviz/displaycubes` - For information on displaying spectral cubes
-- :doc:`../../plugins` - For extracting spectra from cubes and creating moment maps
+- :ref:`viewers-spectrum_3d` - For information on displaying spectral cubes
+- :ref:`plugins-spectral_extraction_3d` - For extracting 1D spectra from 3D data
+- :ref:`plugins-moment_maps` - For creating moment maps

@@ -5,8 +5,10 @@
 Image
 *****
 
-Image viewers show data loaded with `format = Image`. 
+Image viewers show data loaded with ``format = Image``. 
 Much of the functionality is available both from the application GUI and from the Jupyter notebook using API calls. 
+
+.. _viewers-image-toolbar:
 
 Toolbar
 =======
@@ -36,7 +38,7 @@ Single-viewer Box Zoom is also available and is used in a similar way as in othe
 To access this option when there are multiple viewers, right-click on the Linked Box Zoom button and 
 left-click on the second option down to select it.
 
-.. _image-pan-zoom:
+.. _viewers-image-toolbar-panzoom:
 
 Pan/Zoom and Linked Pan/Zoom
 ----------------------------
@@ -92,7 +94,7 @@ If you are satisfied with the positioning of your region of interest, simply cli
 viewer to lock it in place.
 
 There are other options available for region of interest. Clicking on the data menu, select the region of interest, 
-and then select `EDIT SUBSET` on the bottom right of the data menu. Several options will pop up.  
+and then select ``EDIT SUBSET`` on the bottom right of the data menu. Several options will pop up.  
 * ``Resize in Viewer`` allows you to resize the subset directly in the viewer by dragging the white boxes on the corners.
 * ``Edit in plugin`` opens up the Subset tools plugin. 
 Below are several options: 
@@ -120,12 +122,13 @@ You can use these options to further adjust the region of interest and adapt it 
 There are options available in the `Plotting Option <settings-plot_options>` 
 to make subsets visible or invisible, to change their color, and to change their opacity.
 
+.. _viewers-image-toolbar-blink:
 
 Blinking
 --------
 
 Blinking allows a user to quickly switch
-between viewing two or more images, as long as they are linked (see :ref:`image-pan-zoom` for
+between viewing two or more images, as long as they are linked (see :ref:`viewers-image-toolbar-panzoom` for
 more on linking behavior). This can be done by selecting the |icon-blink| icon (only available if
 there are more than one image loaded in the viewer) and then left-clicking on the image to blink
 forward; right-clicking to blink backwards.
@@ -152,7 +155,8 @@ And to blink backwards:
 Contrast/Bias
 =============
 
-In addition to changing :ref:`contrast` and :ref:`bias` in the :ref:`settings-plot_options`,
+In addition to changing :ref:`settings-plot_options-viewer_settings-contrast` and :ref:`settings-plot_options-viewer_settings-bias` 
+in the :ref:`settings-plot_options`,
 the Image viewer has a |icon-white-to-black| button under the |icon-blink| menu that can also
 adjust those values.
 
@@ -165,35 +169,35 @@ double-click on the display while the mode is active.
 Colormap
 ========
 
-In addition to changing :ref:`contrast` and :ref:`bias` in the :ref:`settings-plot_options`,
+In addition to changing :ref:`settings-plot_options-viewer_settings-color:` in the :ref:`settings-plot_options`,
 the Image viewer has a |icon-cmap| button under the |icon-blink| menu that can also
 adjust those values.
 
 After right-clicking on the blink icon, left click on the colormap icon to activate it.
 Now you can change the colormap on the toolbar by clicking the dropdown and selecting your colormap. 
-Click the `x` next to `COLORMAP` to leave this feature. 
+Click the ``x`` next to ``COLORMAP`` to leave this feature. 
 
 Stretch
 =======
 
-In addition to changing :ref:`stretch` in the :ref:`settings-plot_options`,
+In addition to changing :ref:`settings-plot_options-viewer_settings-stretch` in the :ref:`settings-plot_options`,
 the Image viewer has a |icon-stretch| button under the |icon-blink| menu that can also
 adjust those values.
 
 After right-clicking on the blink icon, left click on the stretch icon to activate it.
 Now you can change the stretch on the toolbar by clicking on the dropdown and selecting your stretch. 
-Click the `x` next to `STRETCH` to leave this feature. For fine tuning the min/max values, see :ref:`settings-plot_options`. 
+Click the ``x`` next to ``STRETCH`` to leave this feature. For fine tuning the min/max values, see :ref:`settings-plot_options`. 
 
 Opacity
 =======
 
-In addition to changing :ref:`opacity` in the :ref:`settings-plot_options`,
+In addition to changing :ref:`settings-plot_options-viewer_settings-opacity` in the :ref:`settings-plot_options`,
 the Image viewer has a |icon-opacity| button under the |icon-blink| menu that can also
 adjust those values.
 
 After right-clicking on the blink icon, left click on the opacity icon to activate it.  
 Now you can change the opacity in the toolbar by dragging the bar.  The number on the right is the opacity between 0 (transparent) and 1 (opaque). 
-Click the `x` next to `OPACITY` to leave this feature. 
+Click the ``x`` next to ``OPACITY`` to leave this feature. 
 
 
 Focus mode 
@@ -203,9 +207,9 @@ The right hand plugin feature is not accessible in the UI. Hovering over a pixel
 Click on the Focus mode button again to exit. 
 
 Clone Viewer
-===========
+============
 Under the Focus mode button, there is a |icon-clone| button to clone the viewer. Clicking this button duplicates the viewer with the same
-data and subsets with name: `Original Name[X]`, where `X` is the number of times the viewer has been cloned.
+data and subsets with name: ``Original Name[X]``, where ``X`` is the number of times the viewer has been cloned.
 
 Detach Viewer 
 =============
@@ -214,7 +218,6 @@ opens a new window which displays the viewer of choice.  Use your computer's nat
 Note: anything you do in this viewer is replicated in the main application, and deleting this viewer does **not** delete the viewer in the main application.
 
 If nothing appears, check that popups are allowed on your browser. 
-
 
 Cursor Information
 ==================
