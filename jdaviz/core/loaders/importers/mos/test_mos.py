@@ -5,6 +5,7 @@ from astropy.io import fits
 from astropy.table import Table
 from specutils import Spectrum
 
+from jdaviz.core.loaders.importers.mos import mos
 from jdaviz.core.loaders.importers.mos.mos import MOSImporter
 
 
@@ -12,7 +13,6 @@ class TestMOSImporter:
     """
     Tests for the MOS importer that all share a single on-disk MOS directory.
     """
-
     @pytest.fixture(scope='class')
     @classmethod
     def mos_dir(cls, tmp_path_factory):
@@ -266,3 +266,49 @@ class TestMOSImporter:
                                                             'mosdir_jw00001_x1d',
                                                             'mosdir_jw00000_s2d (auto-ext)'}
         self._assert_visible('1D Spectrum', ['mosdir_jw00000_x1d'])
+
+
+class TestIterInputFiles:
+    """
+    Tests for the directory walk used to discover MOS products, all sharing one
+    on-disk directory tree.
+    """
+    @pytest.fixture(scope='class')
+    @classmethod
+    def _tree(cls, tmp_path_factory):
+        base = tmp_path_factory.mktemp('iter_input_files')
+        outside = base / 'outside'
+        outside.mkdir()
+        (outside / 'linked_x1d.fits').touch()
+
+        root = base / 'root'
+        directory = root
+        for level in range(1, mos._MAX_DEPTH + 3):
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / f'level{level}_x1d.fits').touch()
+            directory = directory / f'sub{level}'
+
+        (root / '.hidden_x1d.fits').touch()
+        (root / 'unknown.xyz').touch()
+        (root / 'link').symlink_to(outside, target_is_directory=True)
+        return root
+
+    def test_respects_max_depth(self, _tree):
+        names = {path.name for path, _ in mos._iter_input_files(_tree)}
+
+        within = {f'level{i}_x1d.fits' for i in range(1, mos._MAX_DEPTH + 1)}
+        beyond = {f'level{i}_x1d.fits' for i in range(mos._MAX_DEPTH + 1, mos._MAX_DEPTH + 3)}
+        assert within <= names
+        assert not beyond & names
+
+    def test_skips_hidden_symlinks_and_classifies(self, _tree):
+        results = list(mos._iter_input_files(_tree))
+        items = {path.name: ptype for path, ptype in results}
+
+        assert '.hidden_x1d.fits' not in items
+        assert 'linked_x1d.fits' not in items
+        assert items['level1_x1d.fits'] == 'spectrum1d'
+        assert items['unknown.xyz'] is None
+
+        paths = [path for path, _ in results]
+        assert paths == sorted(paths)
