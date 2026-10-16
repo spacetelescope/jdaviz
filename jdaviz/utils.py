@@ -128,10 +128,7 @@ class SnackbarQueue:
 
     def __init__(self):
         self.queue = deque()
-        # for messages emitted while validating loader inputs (see ``deferring``)
-        self.deferred = deque()
-        self._deferring = False
-        # suppress popups but still log to history
+        # suppress popups but potentially still log to history
         self.suppress_popups = False
         # track whether we're showing a loading message which won't clear by timeout,
         # but instead requires another message with msg.loading = False to clear
@@ -144,15 +141,8 @@ class SnackbarQueue:
         if msg.color not in ['debug', 'info', 'warning', 'error', 'success', None]:
             raise ValueError(f"color ({msg.color}) must be on of: debug, info, warning, error, success")  # noqa
 
-        # so that deferred messages can be sorted into the history when released
         if timestamp is None:
             timestamp = time.time()
-
-        if self._deferring and not msg.loading:
-            # popups are never shown for deferred messages, so only keep those for the history
-            if history and logger_plg is not None:
-                self.deferred.append((logger_plg, msg, timestamp))
-            return
 
         if self.suppress_popups:
             popup = False
@@ -284,42 +274,6 @@ class SnackbarQueue:
                              args=(timeout, msg.text),
                              daemon=True)
         x.start()
-
-    @contextmanager
-    def deferring(self, msg_filter=None):
-        """
-        Defer messages within this context (e.g. while checking the validity of loader
-        inputs) so that messages from irrelevant parsers/importers are never shown.
-        On exit, deferred messages are added to the history (without popups),
-        unless they don't pass ``msg_filter``, in which case they're discarded.
-
-        Note: don't nest this context manager, it won't work correctly without adjustments
-        to its logic.
-
-        Parameters
-        ----------
-        msg_filter : callable, optional
-            A function that takes a message as input and returns True if the message
-            should be kept. Evaluated on exit.
-        """
-        self._deferring = True
-        try:
-            yield
-        finally:
-            self._deferring = False
-            released = list(self.deferred)
-            self.deferred.clear()
-
-            history_logger = None
-            for logger_plg, msg, timestamp in released:
-                if msg_filter is None or msg_filter(msg):
-                    self._add_to_history(logger_plg, msg, timestamp)
-                    history_logger = logger_plg
-
-            if history_logger is not None:
-                # deferred messages were added to the history out of order
-                history_logger.history = sorted(history_logger.history,
-                                                key=lambda entry: entry.get('timestamp', 0))
 
 
 def enable_hot_reloading():
