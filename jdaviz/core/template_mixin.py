@@ -676,7 +676,15 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
 
     def _flush_loader_messages(self, popup=False, clear=True):
         """
-        Flush all loader messages to the logger and clear the loader message list.
+        Flush all loader messages to the logger, (optionally) clear the loader message list, and
+        sort the logger history by timestamp to ensure chronological order.
+
+        Parameters
+        ----------
+        popup : bool, optional
+            Whether replayed messages should be displayed as snackbar popups.
+        clear : bool, optional
+            Whether to clear ``loader_message_items`` after replaying the messages.
         """
         logger = self._app._jdaviz_helper.plugins['Logger']
         for msg in self.loader_message_items:
