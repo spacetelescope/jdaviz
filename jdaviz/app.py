@@ -3044,6 +3044,12 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
     def data_item_remove(self, data_label):
         data = self.data_collection[data_label]
+        # Component plotting entries belong to their source table, but are
+        # independent layers (not subsets or profile reference data).
+        from jdaviz.core.spectral_line_layers import component_datasets, is_spectral_line_table
+        for component_data in list(component_datasets(data).values()):
+            if component_data in self.data_collection:
+                self.data_item_remove(component_data.label)
         orientation_plugin = self._jdaviz_helper.plugins.get("Orientation")
         if orientation_plugin is not None and orientation_plugin.align_by == "WCS":
             from jdaviz.configs.imviz.plugins.orientation.orientation import base_wcs_layer_label
@@ -3063,13 +3069,19 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             self.remove_data_from_viewer(viewer_id, data_label)
 
             if len(viewer.layers) != 0 and getattr(viewer.state, 'reference_data', '') is None:
-                data_to_remove = [other_data.label for other_data in self.data_collection
-                                  if other_data.label in viewer.data_menu.data_labels_loaded and
-                                  other_data.label != data_label]
+                data_to_remove = [
+                    other_data.label for other_data in self.data_collection
+                    if other_data.label in viewer.data_menu.data_labels_loaded
+                    and other_data.label != data_label
+                    and not (hasattr(viewer, '_sync_spectral_line_links')
+                             and is_spectral_line_table(other_data))
+                ]
 
                 _ = [self.remove_data_from_viewer(viewer_id, data_label)
                      for data_label in data_to_remove]
 
+                if not data_to_remove:
+                    continue
                 snackbar_message = SnackbarMessage(
                     f"Reference data for viewer '{viewer_id}' was removed from the app. "
                     f"The viewer no longer supports the following data: "

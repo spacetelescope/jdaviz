@@ -4947,6 +4947,9 @@ class DatasetSelect(SelectPluginComponent):
             return False
 
         def layer_in_spectrum_viewer(data):
+            from jdaviz.core.spectral_line_layers import is_spectral_line_table
+            if is_spectral_line_table(data):
+                return False
             if not len(self._app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return False

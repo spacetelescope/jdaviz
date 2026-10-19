@@ -188,6 +188,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                                  if isinstance(v, Spectrum1DViewer)]
 
     def _on_viewer_data_changed(self, msg):
+        from jdaviz.core.spectral_line_layers import is_spectral_line_table
+        if msg is not None and is_spectral_line_table(msg.data):
+            return
         self._set_relevant()
         if self.disabled_msg or self.irrelevant_msg:
             return

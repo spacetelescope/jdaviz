@@ -264,3 +264,134 @@ def test_plot_options_line_layer_selection_smoke(line_helper, spectrum1d, with_s
         options.layer.selected = data.label
         assert options.layer.selected == data.label
         assert line_artist(viewer, data).line_mark.visible
+
+
+@pytest.mark.parametrize('with_spectrum', [False, True])
+def test_component_layers_independent_updates_and_controls(line_helper, spectrum1d, with_spectrum):
+    from jdaviz.core.spectral_line_layers import component_datasets
+
+    viewer = empty_viewer(line_helper)
+    if with_spectrum:
+        line_helper.load(spectrum1d, format='1D Spectrum', data_label='spectrum')
+    source = import_lines(line_helper, 'lines', [6000, 6500] * u.AA)
+    viewer.data_menu.add_data(source.label)
+    plugin = line_helper._app.get_tray_item_from_name('g-spectral-lines')
+    plugin.component.add_choice('second')
+    plugin.component_redshift = 0.1
+    second = next(iter(component_datasets(source).values()))
+    assert second.label == 'lines [second]'
+    assert second.label in viewer.data_menu.layer.choices
+    first_artist, second_artist = line_artist(viewer, source), line_artist(viewer, second)
+    assert_positions(first_artist, [6000, 6500])
+    assert_positions(second_artist, [6600, 7150])
+
+    options = line_helper._app.get_tray_item_from_name('g-plot-options')
+    options.viewer.selected = '1D Spectrum'
+    options.plugin_opened = True
+    assert source.label in options.layer.choices
+    assert second.label in options.layer.choices
+    options.layer.selected = second.label
+    options.line_color.value = '#ff0000'
+    options.line_width.value = 4
+    options.line_opacity.value = 0.4
+    assert second_artist.state.color == '#ff0000'
+    assert second_artist.state.linewidth == 4
+    assert second_artist.state.alpha == 0.4
+    assert first_artist.state.linewidth != 4
+    viewer.data_menu.set_layer_visibility(second.label, False)
+    assert not second_artist.line_mark.visible
+    assert first_artist.line_mark.visible
+
+    source.update_components({source.id['observed wavelength:second']: [7000, 7500]})
+    assert_positions(second_artist, [7000, 7500])
+    assert_positions(first_artist, [6000, 6500])
+    assert not second_artist.line_mark.visible
+    viewer.data_menu.set_layer_visibility(second.label, True)
+    if with_spectrum:
+        line_helper.plugins['Unit Conversion'].spectral_unit = 'Hz'
+        assert_positions(second_artist, ([7000, 7500] * u.AA).to_value(u.Hz, u.spectral()))
+
+    mark = second_artist.line_mark
+    plugin.component.rename_choice('second', 'renamed')
+    assert second.label == 'lines [renamed]'
+    assert second.label in viewer.data_menu.layer.choices
+    assert second.label in options.layer.choices
+    assert second_artist.line_mark is mark
+    assert second_artist.state.linewidth == 4
+    plugin.component_redshift = 0.2
+    assert_positions(second_artist, ([7200, 7800] * u.AA).to_value(
+        viewer.state.x_display_unit, u.spectral()))
+    plugin.component.remove_choice('renamed')
+    assert second not in line_helper._app.data_collection
+    assert not any(candidate is mark for candidate in viewer.figure.marks)
+    assert source.label in viewer.data_menu.layer.choices
+
+
+def test_components_created_before_plot_and_multiple_tables(line_helper):
+    from jdaviz.core.spectral_line_layers import component_datasets
+
+    viewer = empty_viewer(line_helper)
+    plugin = line_helper._app.get_tray_item_from_name('g-spectral-lines')
+    plugin.component.add_choice('second')
+    plugin.component_redshift = 0.1
+    first = import_lines(line_helper, 'first', [6000, 6500] * u.AA)
+    second = import_lines(line_helper, 'second', [500, 550] * u.nm)
+    assert component_datasets(first) == {}
+    viewer.data_menu.add_data(first.label, second.label)
+    extra_first = next(iter(component_datasets(first).values()))
+    extra_second = next(iter(component_datasets(second).values()))
+    assert_positions(line_artist(viewer, extra_first), [6600, 7150])
+    assert_positions(line_artist(viewer, extra_second), [5500, 6050])
+    plugin.component_redshift = 0.2
+    assert_positions(line_artist(viewer, extra_first), [7200, 7800])
+    assert_positions(line_artist(viewer, extra_second), [6000, 6600])
+    plugin.component_selected = 'default'
+    plugin.component_redshift = 0.3
+    assert_positions(line_artist(viewer, first), [7800, 8450])
+    assert_positions(line_artist(viewer, extra_first), [7200, 7800])
+    line_helper._app.rename_data(first.label, 'renamed source')
+    assert extra_first.label == 'renamed source [second]'
+    line_helper._app.data_item_remove(first.label)
+    assert extra_first not in line_helper._app.data_collection
+    assert extra_second in line_helper._app.data_collection
+    assert_positions(line_artist(viewer, extra_second), [6000, 6600])
+
+
+def test_component_layer_multiple_viewers_and_explicit_removal(line_helper):
+    from jdaviz.core.spectral_line_layers import component_datasets
+
+    first_viewer = empty_viewer(line_helper)
+    source = import_lines(line_helper, 'lines', [6000, 6500] * u.AA)
+    first_viewer.data_menu.add_data(source.label)
+    second_viewer = line_helper._app._on_new_viewer(
+        NewViewerMessage(Spectrum1DViewer, None, sender=line_helper._app), name='Other spectrum')
+    second_viewer.data_menu.add_data(source.label)
+    second_viewer.state.x_display_unit = 'nm'
+    plugin = line_helper._app.get_tray_item_from_name('g-spectral-lines')
+    plugin.component.add_choice('second')
+    extra = next(iter(component_datasets(source).values()))
+    assert_positions(line_artist(first_viewer, extra), [6000, 6500])
+    assert_positions(line_artist(second_viewer, extra), [600, 650])
+    first_viewer.data_menu.layer.selected = [extra.label]
+    first_viewer.data_menu.remove_from_viewer()
+    plugin.component_redshift = 0.1
+    assert not any(artist.layer is extra for artist in first_viewer.layers)
+    assert_positions(line_artist(second_viewer, extra), [660, 715])
+    first_viewer.data_menu.add_data(extra.label)
+    assert_positions(line_artist(first_viewer, extra), [6600, 7150])
+
+
+def test_primary_component_rename_preserves_layer(line_helper):
+    viewer = empty_viewer(line_helper)
+    source = import_lines(line_helper, 'lines', [6000, 6500] * u.AA)
+    viewer.data_menu.add_data(source.label)
+    artist = line_artist(viewer, source)
+    mark = artist.line_mark
+    plugin = line_helper._app.get_tray_item_from_name('g-spectral-lines')
+    plugin.component.rename_choice('default', 'primary')
+    plugin.component_redshift = 0.1
+    assert artist.line_mark is mark
+    assert_positions(artist, [6600, 7150])
+    plugin.component.add_choice('second')
+    plugin.component.remove_choice('primary')
+    assert_positions(line_artist(viewer, source), [6000, 6500])

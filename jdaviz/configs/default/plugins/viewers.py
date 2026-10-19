@@ -50,7 +50,8 @@ from jdaviz.core.events import (SnackbarMessage,
                                 TableSelectRowClickMessage)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.spectral_line_layers import (
-    is_spectral_line_table, observed_wavelength_id, sync_spectral_line_links)
+    is_spectral_line_table, observed_wavelength_id, sync_spectral_line_links,
+    sync_spectral_line_components, component_datasets)
 from jdaviz.core.marks import (LineUncertainties, ScatterMask,
                                OffscreenLinesMarks, TableSelectionMark)
 from jdaviz.core.registries import viewer_registry
@@ -1219,10 +1220,13 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                 return True
             if observed_wavelength_id(data) is None or data not in self.session.data_collection:
                 return False
+            sync_spectral_line_components(self.jdaviz_app, data, create=True)
             artist = add_vertical_lines(self, data)
             for attr, value in dict(layer_state, color=color, alpha=alpha).items():
-                if value is not None:
+                if value is not None and hasattr(artist.state, attr):
                     setattr(artist.state, attr, value)
+            for component_data in component_datasets(data).values():
+                self.jdaviz_app.add_data_to_viewer(self.reference, component_data.label)
             self.state.reset_limits()
             self.set_plot_axes()
             return True
