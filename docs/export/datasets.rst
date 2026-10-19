@@ -8,6 +8,11 @@ Datasets
 After data have been manipulated or analyzed, it is possible to export those data back into your Jupyter notebook. 
 This is an API feature and cannot be accessed via the UI. 
 
+.. note::
+     If you export the dataset into a notebook from ``jdaviz``, it will export in the original units.  
+     Change units in the :ref:`Units <settings-display_units>` plugin only changes the units *displayed*
+   in the viewers. 
+
 Top Level API Access
 ====================
 

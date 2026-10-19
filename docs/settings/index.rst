@@ -32,4 +32,4 @@ UI Access
 See Also
 ========
 
-- :ref:`quickstart_display` - For information on customizing notebook display layout
+- :ref:`quickstart-display` - For information on customizing notebook display layout

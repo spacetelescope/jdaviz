@@ -339,15 +339,31 @@ Size Mode
 
 Sets the mode of the markers: ``Fixed`` or ``Linear``
 
+- ``Fixed``: Sets every data point to the exact same size, ignoring any data values. Essentially the same as using ``Scale``. 
+- ``Linear``: Links point size to a chosen data column, scaling sizes proportionally between a min and max value.
+
+
 Size 
 ----
 
-Sets the marker size
+Sets the marker size based on the chosen mode.
+
+Column
+------
+
+Column to scale the chosen marker size for the ``Linear`` size mode
+
+vmin / vmax 
+-----------
+Vmin and vmax for the ``Linear`` size mode
+
 
 Scale 
 -----
 
-Sets the scale of the marker
+Sets the global scale of the marker. Expands or shrinks all scatter markers 
+proportionally without changing the underlying data. 
+
 
 Color Mode
 ----------
@@ -385,7 +401,6 @@ being set for all the scatter points at once):
     plot_options.viewer = 'Scatter'
     plot_options.layer = 'Catalog'
     plot_options.marker_opacity = 3
-    plot_options.marker_size = 7
     plot_options.marker_size_scale = 10
     plot_options.marker_color_mode = 'Fixed'
     plot_options.marker_color = '#ff00ff'

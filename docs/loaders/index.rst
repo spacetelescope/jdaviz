@@ -73,8 +73,6 @@ The loaders are accessed through the ``loaders`` property on the helper:
     # Import the data
     ldr.load()
 
-
-
 The loaders interface provides access to parameters and options that control how the
 data is loaded and processed.
 
