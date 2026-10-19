@@ -271,3 +271,56 @@ def test_coord_frame_default_and_reset(deconfigged_helper):
     tab2 = QTable({'flux': [1.0], 'name': ['src']})
     ldr.object = tab2
     assert 'Source Catalog' not in ldr.format.choices
+
+
+def test_import_enabled_disabled(deconfigged_helper):
+    """
+    Verify that import is disabled unless a complete RA/Dec or X/Y coordinate
+    column pair is selected, that an incomplete pair (only RA, only Dec, only
+    X, or only Y) disables import, and that selecting the same column for
+    both RA and Dec disables import.
+    """
+    tab = QTable({'ra': [10.0] * u.deg, 'dec': [-5.0] * u.deg,
+                 'x': [1.0], 'y': [2.0]})
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = tab
+    ldr.format = 'Source Catalog'
+    importer = ldr.importer
+
+    # ra/dec and x/y are all auto-detected, so import should be enabled by default
+    assert importer.col_ra.selected == 'ra'
+    assert importer.col_dec.selected == 'dec'
+    assert importer.col_x.selected == 'x'
+    assert importer.col_y.selected == 'y'
+    assert len(importer._obj.import_disabled_msg) == 0
+
+    # unselecting ra/dec leaves a valid x/y pair, so import should remain enabled
+    importer.col_ra.selected = '---'
+    importer.col_dec.selected = '---'
+    assert len(importer._obj.import_disabled_msg) == 0
+
+    # unselecting x too (y still selected) is an incomplete pair, with no
+    # other valid pair available, so import should be disabled
+    importer.col_x.selected = '---'
+    assert len(importer._obj.import_disabled_msg) > 0
+
+    # unselecting y as well leaves no pair at all selected, still disabled
+    importer.col_y.selected = '---'
+    assert len(importer._obj.import_disabled_msg) > 0
+
+    # re-selecting only x (without y) is still an incomplete pair, import disabled
+    importer.col_x.selected = 'x'
+    assert len(importer._obj.import_disabled_msg) > 0
+
+    # with both x and y selected again, import should be enabled
+    importer.col_y.selected = 'y'
+    assert len(importer._obj.import_disabled_msg) == 0
+
+    # re-selecting ra/dec (valid pair) keeps import enabled, even though x/y is also valid
+    importer.col_ra.selected = 'ra'
+    importer.col_dec.selected = 'dec'
+    assert len(importer._obj.import_disabled_msg) == 0
+
+    # selecting the same column for ra and dec disables import, even though x/y is valid
+    importer.col_dec.selected = 'ra'
+    assert len(importer._obj.import_disabled_msg) > 0
