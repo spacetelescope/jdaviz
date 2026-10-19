@@ -4,6 +4,7 @@
 Bug Fixes
 ---------
 
+- Fix using ``get_regions`` when a subset is defined on scatter data. [#4433]
 
 5.0.5 (2026-10-16)
 ==================
