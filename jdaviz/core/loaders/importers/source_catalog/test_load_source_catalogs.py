@@ -203,7 +203,8 @@ def test_import_enabled_disabled(imviz_helper):
     Verify that when no coordinate column pair (RA/Dec or X/Y) is selected,
     importing is disabled, when at least one coordinate column pair is selected
     importing is enabled, and when RA is selected but Dec is not (and vice versa,
-    along with the same logic for X/Y) importing is disabled.
+    along with the same logic for X/Y) importing is disabled, each with the
+    expected specific disabled message.
     """
 
     catalog_obj = _make_catalog_xy_radec(with_units=True)
@@ -217,26 +218,51 @@ def test_import_enabled_disabled(imviz_helper):
     ldr.importer.col_dec.selected = '---'
     ldr.importer.col_x.selected = '---'
     ldr.importer.col_y.selected = '---'
-    # no coordinate column pair selected, import should still be enabled
-    assert len(ldr.importer._obj.import_disabled_msg) == 0
+    # no coordinate column pair selected, import should be disabled
+    assert ldr.importer._obj.import_disabled_msg == (
+        "Cannot import catalog without valid coordinate column pair. "
+        "Select both RA and Dec and/or both X and Y coordinates."
+    )
 
     # when RA is selected but Dec is not, import should be disabled
     ldr.importer.col_ra.selected = 'RA'
-    assert len(ldr.importer._obj.import_disabled_msg) > 0
+    assert ldr.importer._obj.import_disabled_msg == (
+        "Cannot import catalog with only RA or only Dec selected. "
+        "Select both RA and Dec, or clear both to use X/Y instead."
+    )
     # and then when Dec is selected too, import should be enabled
     ldr.importer.col_dec.selected = 'Dec'
     assert len(ldr.importer._obj.import_disabled_msg) == 0
+
+    # selecting the same column for both RA and Dec should disable import
+    ldr.importer.col_dec.selected = 'RA'
+    assert ldr.importer._obj.import_disabled_msg == (
+        "RA and Dec cannot be the same column. Select different "
+        "columns for RA and Dec, or clear both to use X/Y instead."
+    )
+    ldr.importer.col_dec.selected = 'Dec'
 
     # reset and test the same logic for X/Y
     ldr.importer.col_ra.selected = '---'
     ldr.importer.col_dec.selected = '---'
     ldr.importer.col_x.selected = 'X'
     ldr.importer.col_y.selected = '---'
-    # now with no coordinate column pair selected, import should be disabled
-    assert len(ldr.importer._obj.import_disabled_msg) > 0
+    # now with only X selected (no coordinate column pair selected), import should be disabled
+    assert ldr.importer._obj.import_disabled_msg == (
+        "Cannot import catalog with only X or only Y selected. "
+        "Select both X and Y, or clear both to use RA/Dec instead."
+    )
     # when Y is selected too, import should be enabled
     ldr.importer.col_y.selected = 'Y'
     assert len(ldr.importer._obj.import_disabled_msg) == 0
+
+    # selecting the same column for both X and Y should disable import
+    ldr.importer.col_y.selected = 'X'
+    assert ldr.importer._obj.import_disabled_msg == (
+        "X and Y cannot be the same column. Select different "
+        "columns for X and Y, or clear both to use RA/Dec instead."
+    )
+    ldr.importer.col_y.selected = 'Y'
 
 
 @pytest.mark.parametrize("from_file", [True, False])
