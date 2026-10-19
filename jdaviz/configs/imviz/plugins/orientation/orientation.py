@@ -83,6 +83,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     linking_in_progress = Bool(False).tag(sync=True)
     need_clear_subsets = Bool(False).tag(sync=True)
     show_subset_warning = Bool(False).tag(sync=True)
+    cube_was_loaded = Bool(False).tag(sync=True)
 
     # this `rotation_angle` traitlet contains the contents of
     # the orientation plugin's `Rotation angle` user input textbox,
@@ -493,6 +494,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if all_wcs_only_layers and msg.data.meta.get(_wcs_only_label, False):
             # on adding first data layer, reset the limits:
             self.viewer.selected_obj.state.reset_limits()
+        if msg.data.ndim == 3:
+            self.cube_was_loaded = True
 
     def vue_add_orientation(self, *args, **kwargs):
         self._add_orientation(set_on_create=True, from_ui=True)
