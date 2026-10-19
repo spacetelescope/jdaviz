@@ -11,16 +11,13 @@
         <v-icon size="22" v-if="multiselect">{{isSelected() ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
         <v-icon size="22" v-else>{{isSelected() ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
     </v-btn>
-    <span :class="api_hints_enabled ? 'api-hint' : null">
-      <j-layer-viewer-icon v-if="item.icon && !api_hints_enabled" :icon="item.icon" :prevent_invert_if_dark="false"></j-layer-viewer-icon>
-      <v-icon v-else-if="item.color && item.type && !api_hints_enabled" start :color="item.color">
+    <j-api-hint v-if="api_hints_enabled">'{{ item.label }}'</j-api-hint>
+    <span v-else>
+      <j-layer-viewer-icon v-if="item.icon" :icon="item.icon" :prevent_invert_if_dark="false"></j-layer-viewer-icon>
+      <v-icon v-else-if="item.color && item.type" start :color="item.color">
         {{ item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
       </v-icon>
-      {{ api_hints_enabled ?
-          '\'' + item.label + '\''
-          :
-          item.label
-      }}
+      {{ item.label }}
     </span>
   </div>
 </template>

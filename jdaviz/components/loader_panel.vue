@@ -16,9 +16,9 @@
       style="width: 100%; margin-top: 12px; padding-left: 6px; padding-right: 6px;"
     ></v-select>
 
-    <span v-if="loader_selected && loader_selected.length && (api_hints_enabled || (loader_selected === 'object' && !hide_resolver))" class="api-hint" style="font-weight: bold; margin-left: 12px">
+    <j-api-hint v-if="loader_selected && loader_selected.length && (api_hints_enabled || (loader_selected === 'object' && !hide_resolver))" style="font-weight: bold; margin-left: 12px">
       ldr = {{ api_hints_obj }}.loaders['{{ loader_selected }}']
-    </span>
+    </j-api-hint>
 
     <jupyter-widget v-if="selected_loader_widget" :widget="selected_loader_widget" :key="selected_loader_widget"></jupyter-widget>
 

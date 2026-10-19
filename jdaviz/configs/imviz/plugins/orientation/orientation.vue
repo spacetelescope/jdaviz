@@ -51,11 +51,8 @@
           Existing subsets must be deleted before changing alignment/linking options.
           <j-flex-row justify="end" style="margin-right: 2px; margin-top: 16px">
             <v-btn @click="delete_subsets">
-              {{ api_hints_enabled ?
-                'plg.delete_subsets()'
-                :
-                'Clear Subsets'
-              }}
+              <j-api-hint v-if="api_hints_enabled">plg.delete_subsets()</j-api-hint>
+              <template v-else>Clear Subsets</template>
             </v-btn>
           </j-flex-row>
         </v-alert>
@@ -135,11 +132,7 @@
                 @click="select_default_orientation"
               >
                 <v-icon>mdi-image-outline</v-icon>
-                {{ api_hints_enabled ?
-                  'plg.orientation = \''+base_wcs_layer_label+'\''
-                  :
-                  null
-                }}
+                <j-api-hint v-if="api_hints_enabled">plg.orientation = '{{ base_wcs_layer_label }}'</j-api-hint>
               </v-btn>
             </j-tooltip>
             <j-tooltip tooltipcontent="north up, east left">
@@ -149,11 +142,7 @@
                 @click="select_north_up_east_left"
               >
                 <img :src="icons['nuel']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
-                {{ api_hints_enabled ?
-                  'plg.set_north_up_east_left()'
-                  :
-                  null
-                }}
+                <j-api-hint v-if="api_hints_enabled">plg.set_north_up_east_left()</j-api-hint>
               </v-btn>
             </j-tooltip>
             <j-tooltip tooltipcontent="north up, east right">
@@ -163,11 +152,7 @@
                 @click="select_north_up_east_right"
               >
                 <img :src="icons['nuer']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
-                {{ api_hints_enabled ?
-                  'plg.set_north_up_east_right()'
-                  :
-                  null
-                }}
+                <j-api-hint v-if="api_hints_enabled">plg.set_north_up_east_right()</j-api-hint>
               </v-btn>
             </j-tooltip>
           </j-flex-row>
@@ -220,11 +205,8 @@
                         @click="add_orientation"
                         variant="text"
                       >
-                        {{ api_hints_enabled ?
-                          'plg.add_orientation()'
-                          :
-                          'Add Orientation'
-                        }}
+                        <j-api-hint v-if="api_hints_enabled">plg.add_orientation()</j-api-hint>
+                        <template v-else>Add Orientation</template>
                       </v-btn>
                     </j-tooltip>
                   </j-flex-row>

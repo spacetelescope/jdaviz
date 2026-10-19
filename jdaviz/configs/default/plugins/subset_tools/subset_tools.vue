@@ -19,9 +19,7 @@
     ></plugin-loaders-panel>
 
     <j-flex-row v-if="api_hints_enabled && config === 'imviz'">
-      <span class="api-hint">
-        plg.subset.multiselect = {{ boolToString(multiselect) }}
-      </span>
+      <j-api-hint>plg.subset.multiselect = {{ boolToString(multiselect) }}</j-api-hint>
     </j-flex-row>
     <j-flex-row v-if="config === 'imviz'">
       <div style="width: calc(100% - 32px)">
@@ -65,9 +63,7 @@
     </v-row>
 
     <j-flex-row v-if="api_hints_enabled" style="margin-top: -12px">
-      <span class="api-hint">
-        plg.combination_mode = '{{ combination_mode_selected }}'
-      </span>
+      <j-api-hint>plg.combination_mode = '{{ combination_mode_selected }}'</j-api-hint>
     </j-flex-row>
 
     <!-- Sub-plugin for recentering of spatial subset (Imviz only) -->
@@ -95,11 +91,8 @@
                   @click="recenter_subset"
                   :class="api_hints_enabled ? 'api-hint' : null"
                 >
-                  {{ api_hints_enabled ?
-                    'plg.recenter()'
-                    :
-                    'Recenter'
-                  }}
+                  <j-api-hint v-if="api_hints_enabled">plg.recenter()</j-api-hint>
+                  <template v-else>Recenter</template>
                 </v-btn>
               </j-tooltip>
             </j-flex-row>

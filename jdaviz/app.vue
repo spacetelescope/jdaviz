@@ -131,11 +131,11 @@
                         <div class="app-search-result-content">
                           <div class="app-search-result-title">Loader: {{ ldrItem.label }}</div>
                           <div v-if="state_show_api_hints" class="app-search-result-api-hint api-hint">
-                            <span class="api-hint">ldr = {{ api_hints_obj || config }}.loaders['{{ ldrItem.label }}']</span>
+                            <j-api-hint>ldr = {{ api_hints_obj || config }}.loaders['{{ ldrItem.label }}']</j-api-hint>
                           </div>
                           <template v-if="state_show_api_hints && state_global_search.length">
                             <div v-for="api_method in trayItemMethodMatch(ldrItem, state_global_search)" :key="`loader-${ldrItem.label}-${api_method}`" class="app-search-result-api-hint api-hint">
-                              <span class="api-hint">ldr.{{ api_method }}</span>
+                              <j-api-hint>ldr.{{ api_method }}</j-api-hint>
                             </div>
                           </template>
                         </div>
@@ -148,11 +148,11 @@
                         <div class="app-search-result-content">
                           <div class="app-search-result-title">New Viewer: {{ vcItem.label }}</div>
                           <div v-if="state_show_api_hints" class="app-search-result-api-hint api-hint">
-                            <span class="api-hint">vc = {{ api_hints_obj || config }}.new_viewers['{{ vcItem.label }}']</span>
+                            <j-api-hint>vc = {{ api_hints_obj || config }}.new_viewers['{{ vcItem.label }}']</j-api-hint>
                           </div>
                           <template v-if="state_show_api_hints && state_global_search.length">
                             <div v-for="api_method in trayItemMethodMatch(vcItem, state_global_search)" :key="`new-viewer-${vcItem.label}-${api_method}`" class="app-search-result-api-hint api-hint">
-                              <span class="api-hint">vc.{{ api_method }}</span>
+                              <j-api-hint>vc.{{ api_method }}</j-api-hint>
                             </div>
                           </template>
                         </div>
@@ -165,11 +165,11 @@
                         <div class="app-search-result-content">
                           <div class="app-search-result-title">Data Menu: {{ dmItem.name }}</div>
                           <div v-if="state_show_api_hints" class="app-search-result-api-hint api-hint">
-                            <span class="api-hint">dm = {{ api_hints_obj || config }}.viewers['{{ dmItem.name }}'].data_menu</span>
+                            <j-api-hint>dm = {{ api_hints_obj || config }}.viewers['{{ dmItem.name }}'].data_menu</j-api-hint>
                           </div>
                           <template v-if="state_show_api_hints && state_global_search.length">
                             <div v-for="api_method in trayItemMethodMatch(dmItem, state_global_search)" :key="`data-menu-${dmItem.name}-${api_method}`" class="app-search-result-api-hint api-hint">
-                              <span class="api-hint">dm.{{ api_method }}</span>
+                              <j-api-hint>dm.{{ api_method }}</j-api-hint>
                             </div>
                           </template>
                         </div>
@@ -184,11 +184,11 @@
                             {{ trayItem.label }}
                           </div>
                           <div v-if="state_show_api_hints" class="app-search-result-api-hint api-hint">
-                            <span class="api-hint">plg = {{ api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
+                            <j-api-hint>plg = {{ api_hints_obj || config }}.plugins['{{ trayItem.label }}']</j-api-hint>
                           </div>
                           <template v-if="state_show_api_hints && state_global_search.length">
                             <div v-for="api_method in trayItemMethodMatch(trayItem, state_global_search)" :key="`tray-${trayItem.name}-${api_method}`" class="app-search-result-api-hint api-hint">
-                              <span class="api-hint">plg.{{ api_method }}</span>
+                              <j-api-hint>plg.{{ api_method }}</j-api-hint>
                             </div>
                           </template>
                           <div class="app-search-result-description">
@@ -266,7 +266,7 @@
               </v-window>
             </v-card>
             <v-card v-if="state_drawer_content === 'save' && !state_settings.server_is_remote" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px;">plg = {{  api_hints_obj || config }}.plugins['Export']</span>
+              <j-api-hint v-if="state_show_api_hints" style="font-weight: bold; margin-left: 12px;">plg = {{  api_hints_obj || config }}.plugins['Export']</j-api-hint>
               <jupyter-widget v-if="trayWidget('Export')" :widget="trayWidget('Export')" :key="trayWidget('Export')"></jupyter-widget>
             </v-card>
             <v-card v-if="state_drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
@@ -289,11 +289,11 @@
                           </j-tooltip>
                         </div>
                         <div v-if="state_show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint" :style="state_tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
+                          <j-api-hint :style="state_tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</j-api-hint>
                         </div>
                         <template v-if="state_show_api_hints && state_tray_items_filter.length">
                           <div v-for="api_method in trayItemMethodMatch(trayItem, state_tray_items_filter)" :key="`drawer-decfg-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                            <span class="api-hint">plg.{{ api_method }}</span>
+                            <j-api-hint>plg.{{ api_method }}</j-api-hint>
                           </div>
                         </template>
                         <div class="text-caption text-medium-emphasis">
@@ -317,21 +317,21 @@
               </v-tabs>
               <v-window v-model="state_info_subtab" style="overflow-y: auto">
                 <v-window-item style="padding-bottom: 40px">
-                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
+                  <j-api-hint v-if="state_show_api_hints" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Metadata']</j-api-hint>
                   <jupyter-widget v-if="trayWidget('Metadata')" :widget="trayWidget('Metadata')" :key="trayWidget('Metadata')"></jupyter-widget>
                 </v-window-item>
                 <v-window-item style="padding-bottom: 40px">
-                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
+                  <j-api-hint v-if="state_show_api_hints" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Markers']</j-api-hint>
                   <jupyter-widget v-if="trayWidget('Markers')" :widget="trayWidget('Markers')" :key="trayWidget('Markers')"></jupyter-widget>
                 </v-window-item>
                 <v-window-item style="padding-bottom: 40px">
-                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Logger']</span>
+                  <j-api-hint v-if="state_show_api_hints" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Logger']</j-api-hint>
                   <jupyter-widget v-if="trayWidget('Logger')" :widget="trayWidget('Logger')" :key="trayWidget('Logger')"></jupyter-widget>
                 </v-window-item>
               </v-window>
             </v-card>
             <v-card v-if="state_drawer_content === 'subsets'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</span>
+              <j-api-hint v-if="state_show_api_hints" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</j-api-hint>
               <jupyter-widget v-if="trayWidget('Subset Tools')" :widget="trayWidget('Subset Tools')" :key="trayWidget('Subset Tools')"></jupyter-widget>
             </v-card>
             <v-card v-if="state_drawer_content === 'settings'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
@@ -341,11 +341,11 @@
               </v-tabs>
               <v-window v-model="state_settings_subtab" style="overflow-y: auto">
                 <v-window-item style="padding-bottom: 40px">
-                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
+                  <j-api-hint v-if="state_show_api_hints" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</j-api-hint>
                   <jupyter-widget v-if="trayWidget('Plot Options')" :widget="trayWidget('Plot Options')" :key="trayWidget('Plot Options')"></jupyter-widget>
                 </v-window-item>
                 <v-window-item style="padding-bottom: 40px">
-                  <span v-if="state_show_api_hints" class="api-hint" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Unit Conversion']</span>
+                  <j-api-hint v-if="state_show_api_hints" style="font-weight: bold; margin-left: 12px">plg = {{  api_hints_obj || config }}.plugins['Unit Conversion']</j-api-hint>
                   <jupyter-widget v-if="trayWidget('Unit Conversion')" :widget="trayWidget('Unit Conversion')" :key="trayWidget('Unit Conversion')"></jupyter-widget>
                 </v-window-item>
               </v-window>
@@ -420,11 +420,11 @@
                           </j-tooltip>
                         </div>
                         <div v-if="state_show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint" :style="state_tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
+                          <j-api-hint :style="state_tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</j-api-hint>
                         </div>
                         <template v-if="state_show_api_hints && state_tray_items_filter.length">
                           <div v-for="api_method in trayItemMethodMatch(trayItem, state_tray_items_filter)" :key="`drawer-cfg-${trayItem.name}-${api_method}`" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                            <span class="api-hint">plg.{{ api_method }}</span>
+                            <j-api-hint>plg.{{ api_method }}</j-api-hint>
                           </div>
                         </template>
                         <div class="text-caption text-medium-emphasis">

@@ -33,9 +33,7 @@
       Select a file with data you want to load into this instance of Jdaviz.
     </j-flex-row>
     <j-flex-row v-if="api_hints_enabled">
-      <span class="api-hint">
-        ldr.filepath = '{{ filepath }}'
-      </span>
+      <j-api-hint>ldr.filepath = '{{ filepath }}'</j-api-hint>
     </j-flex-row>
     <jupyter-widget
       v-if="file_chooser_widget && !server_is_remote && !hide_resolver_inputs"

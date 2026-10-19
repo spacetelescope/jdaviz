@@ -207,6 +207,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'data-menu-remove': 'components/data_menu_remove.vue',
                      'data-menu-subset-edit': 'components/data_menu_subset_edit.vue',
                      'hover-api-hint': 'components/hover_api_hint.vue',
+                     'j-api-hint': 'components/api_hint_text.vue',
                      'j-rename-text': 'components/j_rename_text.vue'}
 
 # Register pure vue component. This allows us to do recursive component instantiation only in the

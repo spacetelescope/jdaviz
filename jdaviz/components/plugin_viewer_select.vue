@@ -1,9 +1,7 @@
 <template>
   <div>
     <j-flex-row v-if="show_multiselect_toggle && api_hints_enabled && api_hint_multiselect">
-      <span :class="api_hints_enabled && api_hint_multiselect ? 'api-hint' : null">
-        {{  api_hint_multiselect }} {{  multiselect ? 'True' : 'False' }}
-      </span>
+      <j-api-hint>{{  api_hint_multiselect }} {{  multiselect ? 'True' : 'False' }}</j-api-hint>
     </j-flex-row>
     <div v-if="show_multiselect_toggle" style="position: absolute; width: 32px; right: 0px; margin-right: 12px; margin-top: -2px; z-index: 999;">
       <j-tooltip tipid='viewer-multiselect-toggle'>

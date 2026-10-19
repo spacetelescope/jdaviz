@@ -45,9 +45,9 @@
       type="warning"
       style="width: 100%; padding-top: 16px; padding-bottom: 16px"
     >
-      <span v-if="api_hints_enabled && api_hint_remove" class="api-hint">
+      <j-api-hint v-if="api_hints_enabled && api_hint_remove">
         {{api_hint_remove}}('{{selected}}')
-      </span>
+      </j-api-hint>
       <span v-else>
         remove '{{selected}}' {{label.toLowerCase()}}?
       </span>

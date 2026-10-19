@@ -14,7 +14,8 @@
       style="margin-right: 4px"
     ></v-progress-circular>
     <span v-if="spinner === false" style="width: 24px"></span>
-    <slot/>
+    <j-api-hint v-if="api_hints_enabled"><slot/></j-api-hint>
+    <slot v-else/>
   </v-btn>
 </template>
 

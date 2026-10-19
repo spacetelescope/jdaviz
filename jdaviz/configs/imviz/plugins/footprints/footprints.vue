@@ -150,11 +150,8 @@
             @click="() => center_on_viewer(viewer_ref)"
             :class="api_hints_enabled ? 'api-hint' : null"
           >
-            {{ api_hints_enabled ?
-                'plg.center_on_viewer(\''+viewer_ref+'\')'
-                :
-                viewer_ref
-            }}
+            <j-api-hint v-if="api_hints_enabled">plg.center_on_viewer('{{ viewer_ref }}')</j-api-hint>
+            <template v-else>{{ viewer_ref }}</template>
           </v-btn>
           </j-tooltip>
         </j-flex-row>
