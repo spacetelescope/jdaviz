@@ -189,6 +189,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fix using ``get_regions`` when a subset is defined on scatter data. [#4433]
+
 Mosviz
 ^^^^^^
 
@@ -207,10 +209,7 @@ Bug Fixes
 
 - Fixed AttributeError: 'NoneType' object has no attribute 'height' by ensuring figure_widget has an assigned layout. [#4429]
 
-
 - Fix an IO error when loading another data type after loading a 1D spectrum. [#4428]
-
-- Fix using ``get_regions`` when a subset is defined on scatter data. [#4433]
 
 Mosviz
 ^^^^^^
