@@ -82,6 +82,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     plugin_markers_exist = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
     need_clear_subsets = Bool(False).tag(sync=True)
+    show_subset_warning = Bool(False).tag(sync=True)
 
     # this `rotation_angle` traitlet contains the contents of
     # the orientation plugin's `Rotation angle` user input textbox,
@@ -242,6 +243,10 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self.need_clear_subsets:
             setattr(self, msg.get('name'), msg.get('old'))
             self.linking_in_progress = False
+
+            if msg.get('name') == 'align_by_selected':
+                self.show_subset_warning = True
+
             raise ValueError("Link type can only be changed after existing subsets "
                              f"are deleted, but {len(self._app.data_collection.subset_groups)} "
                              f"subset(s) still exist. To delete them, you can use "
@@ -298,6 +303,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         """
         # subsets will be deleted on changing link type:
         self._app.delete_subsets()
+        self.show_subset_warning = False
 
     def vue_delete_subsets(self, *args):
         self.delete_subsets()
