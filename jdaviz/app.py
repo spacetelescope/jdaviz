@@ -1353,6 +1353,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         else:
             data = subset_state.att.parent
             if "Catalog" in data.meta.get('_importer', ''):
+                # TODO: Handle catalog data with units of the x and y axes of the scatter plot
                 units = u.Unit('')
             else:
                 ndim = data.get_component("flux").ndim
