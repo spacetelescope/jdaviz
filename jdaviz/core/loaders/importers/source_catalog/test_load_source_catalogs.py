@@ -221,7 +221,7 @@ def test_import_enabled_disabled(imviz_helper):
     # no coordinate column pair selected, import should be disabled
     assert ldr.importer._obj.import_disabled_msg == (
         "Cannot import catalog without valid coordinate column pair. "
-        "Select both RA and Dec, or both X and Y coordinates."
+        "Select both RA and Dec and/or both X and Y coordinates."
     )
 
     # when RA is selected but Dec is not, import should be disabled
