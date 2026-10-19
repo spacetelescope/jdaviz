@@ -1781,7 +1781,7 @@ class ImageOpacityTool(_BaseTopImageLyrLool):
                 current = float(layer_state.alpha)
             except Exception:  # nosec
                 pass
-        return [{'type': 'slider', 'label': 'Opacity',
+        return [{'type': 'slider',
                  'min': 0.0, 'max': 1.0, 'step': 0.02,
                  'selected': current}]
 

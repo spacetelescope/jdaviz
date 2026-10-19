@@ -41,7 +41,7 @@
             :step="widget.step !== undefined ? widget.step : 0.01"
             density="compact"
             hide-details
-            style="min-width: 140px; max-width: 220px; margin: 16px 4px 0 4px; align-self: flex-start;"
+            style="min-width: 140px; max-width: 220px; margin: 0 4px; align-self: center;"
             class="custom-toolbar-slider"
             color="white"
             track-color="rgba(255,255,255,0.4)"
@@ -106,7 +106,7 @@
       :open-on-hover="false"
       :close-on-click="close_on_click"
     >
-      <v-list>
+      <v-list class="toolbar-nested-suboptions">
         <template v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)" :key="id">
           <v-tooltip
             v-if="menu_ind==suboptions_ind && visible && !should_hide_in_popout(id)"
@@ -245,6 +245,10 @@
 </script>
 
 <style>
+.toolbar-nested-suboptions .v-list-item__content {
+  /* Vuetify reserves 40px for content, but these items contain only a 20px icon. */
+  min-width: 0;
+}
 .suboptions-carrot {
   transform: rotate(-45deg);
   bottom: 0px;
@@ -431,6 +435,10 @@
 }
 .custom-toolbar-slider .v-slider-thumb__surface {
   background-color: white !important;
+}
+.custom-toolbar-slider.v-slider .v-slider__container {
+  /* Cancel the global slider bottom margin so the track stays vertically centered. */
+  margin-bottom: 0;
 }
 .custom-toolbar-slider .v-input__control {
   min-height: unset !important;
