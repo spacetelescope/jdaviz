@@ -22,8 +22,12 @@
           Please add at least one data with valid WCS to align by sky (WCS).
         </v-alert>
 
-        <v-alert type='info' style="margin-left: -12px; margin-right: -12px">
-            Orientation options apply to images only, not data cubes.
+        <v-alert
+          v-if="cube_was_loaded"
+          type='info'
+          style="margin-left: -12px; margin-right: -12px"
+        >
+          Orientation options apply to images only, not data cubes.
         </v-alert>
 
         <v-alert
