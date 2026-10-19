@@ -498,7 +498,7 @@ def test_get_regions_scatter_with_image(deconfigged_helper, image_2d_wcs,
 
     # load the catalog
     deconfigged_helper.load(sky_coord_only_source_catalog,
-                            format='Source Catalog',
+                            format='Catalog',
                             data_label='my_catalog')
 
     # create a scatter viewer
