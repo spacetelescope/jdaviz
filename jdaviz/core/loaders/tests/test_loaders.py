@@ -1355,10 +1355,11 @@ def table_spectrum_no_flux_column():
     wave = np.linspace(1000, 2000, n_points)
     data = np.random.random(n_points) * 1e-13  # Some data with non-flux column name
 
-    col_wave = fits.Column(name='WAVE', format=f'{n_points}E', unit='Angstrom', array=[wave])
+    col_wave = fits.Column(name='WAVE', format=f'{n_points}E', unit='Angstrom',
+                           array=[wave])
     # Use a column name that does NOT match any flux pattern
     col_data = fits.Column(name='INTENSITY', format=f'{n_points}E',
-                           unit='counts', array=[data])
+                           unit='count', array=[data])
 
     hdu = fits.BinTableHDU.from_columns([col_wave, col_data])
     hdu.name = 'SPECTRUM'
