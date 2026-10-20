@@ -2292,9 +2292,8 @@ class LayerSelect(SelectPluginComponent):
 
     def _on_viewer_renamed_message(self, msg):
         if isinstance(self.viewer, list):
-            for i, viewer in self.viewer:
-                if viewer == msg.old_viewer_ref:
-                    self.viewer[i] = msg.new_viewer_ref
+            self.viewer = [msg.new_viewer_ref if viewer == msg.old_viewer_ref else viewer
+                           for viewer in self.viewer]
         elif self.viewer == msg.old_viewer_ref:
             self.viewer = msg.new_viewer_ref
 
