@@ -143,6 +143,10 @@ New Features
 - Add restriction to Source Catalog loader that either an ra/dec pair or an x/y
   pair must be selected for import. [#4435]
 
+- Filter out any tabular data from the 'recenter' button dropdown in the subset
+  tools plugin, and remove the 'pixel' unit from scatter coordinates until unit
+  support is implemented. [#4462]
+
 Mosviz
 ^^^^^^
 
