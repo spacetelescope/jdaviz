@@ -171,6 +171,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self.components = {
             'g-subset-mode': SelectionModeMenu(session=self.session)
         }
+        self.components['g-subset-mode'].main.variant = 'text'
 
         self.session.hub.subscribe(self, EditSubsetMessage,
                                    handler=self._sync_selected_from_state)
