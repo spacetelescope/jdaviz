@@ -61,6 +61,37 @@ def test_subset_definition_with_composite_subset(cubeviz_helper, spectrum1d_cube
     cubeviz_helper._app.get_tray_item_from_name('g-subset-tools')
 
 
+def test_subset_pixels_label_omitted_for_scatter(deconfigged_helper,
+                                                 sky_coord_only_source_catalog):
+    """
+    "(pixels)" should not be appended to ROI subset attribute names for subsets
+    applied in a Scatter viewer (e.g. on a catalog), since scatter axes are not
+    necessarily in pixel units.
+    """
+    deconfigged_helper.load(sky_coord_only_source_catalog,
+                            format='Source Catalog',
+                            data_label='my_catalog')
+
+    create_scatter_viewer = deconfigged_helper.new_viewers['Scatter']
+    create_scatter_viewer.dataset = 'my_catalog'
+    create_scatter_viewer()
+
+    plot_opts = deconfigged_helper.plugins['Plot Options']
+    plot_opts.viewer = 'Scatter'
+    plot_opts.xatt = 'ra'
+    plot_opts.yatt = 'dec'
+
+    viewer_scatter = deconfigged_helper.viewers['Scatter']
+    viewer_scatter._obj.glue_viewer.apply_roi(
+        RectangularROI(xmin=330, xmax=340, ymin=-25, ymax=-15))
+
+    plg = deconfigged_helper.plugins['Subset Tools']
+    plg.subset = 'Subset 1'
+    names = [d['name'] for d in plg._obj.subset_definitions[0]]
+    assert 'Xmin' in names
+    assert 'Xmin (pixels)' not in names
+
+
 circle_subset_info = {'xc': {'pixel_name': 'X Center (pixels)', 'wcs_name':
                              'RA Center (degrees)', 'initial_value': 5,
                              'final_value': 6},
