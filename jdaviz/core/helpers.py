@@ -592,10 +592,11 @@ class ConfigHelper(HubListener):
         if tray is not None:
             self._app.state.drawer_content = tray
         elif self._app.config in CONFIGS_WITH_LOADERS or self._app.state.dev_loaders:  # noqa
-            if not len(self.viewers) or not len(self._app.state.data_items):
-                self._app.state.drawer_content = 'loaders'
-            else:
-                self._app.state.drawer_content = 'plugins'
+            if not len(self._app.state.drawer_content):
+                if not len(self.viewers) or not len(self._app.state.data_items):
+                    self._app.state.drawer_content = 'loaders'
+                else:
+                    self._app.state.drawer_content = 'plugins'
         else:
             self._app.state.drawer_content = 'plugins'
 
