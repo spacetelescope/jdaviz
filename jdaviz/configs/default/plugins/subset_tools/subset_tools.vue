@@ -67,7 +67,7 @@
     </j-flex-row>
 
     <!-- Sub-plugin for recentering of spatial subset (Imviz only) -->
-    <j-flex-row v-if="(config=='imviz' || config=='deconfigged') && is_centerable">
+    <j-flex-row v-if="(config=='imviz' || config=='deconfigged') && is_centerable && recenter_dataset_items.length > 0">
       <v-expansion-panels accordion v-model="subplugins_opened">
         <v-expansion-panel>
           <v-expansion-panel-title >
