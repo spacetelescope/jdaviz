@@ -7,17 +7,17 @@ Subsets & Regions
 
 Create and manage spatial and spectral subsets of your data.
 
-.. toctree::
-   :maxdepth: 1
+.. .. toctree::
+..    :maxdepth: 1
 
-   circular
-   rectangular
-   elliptical
-   polygonal
-   annulus
-   range
-   composite
-   extensions
+..    circular
+..    rectangular
+..    elliptical
+..    polygonal
+..    annulus
+..    range
+..    composite
+..    extensions
 
 Overview
 ========
@@ -83,6 +83,9 @@ For a simple subset, you can edit its parameters by changing the values
 in the corresponding editable text fields. Once you have entered the new
 value(s), click :guilabel:`Update` to apply. You should see the subset
 parameters, shape, and orientation (if applicable) all update concurrently.
+
+You can also edit subsets using the toolbar of the viewer.  
+See :ref:`viewers-image-toolbar-subsets` and :ref:`viewers-spectrum_1d-toolbar-range` for spatial and spectral subsets, respectively.
 
 For spatial subsets only, you can choose to recenter the viewer on a single subset or group of subsets. To switch to multiselect mode,
 click the icon in the top right of the tool and select multiple subsets from the drop-down menu. The centroid is calculated by
