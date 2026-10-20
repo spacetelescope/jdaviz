@@ -185,7 +185,7 @@ Bug Fixes
 
 - Prevent reparenting subset when there is no remaining valid data [#4538]
 
-- Fix subset warning behavior when changing alignment options in the Orientation plugin.
+- Fix subset warning behavior when changing alignment options in the Orientation plugin. [#4454]
 
 Mosviz
 ^^^^^^
