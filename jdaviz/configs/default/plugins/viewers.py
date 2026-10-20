@@ -9,8 +9,9 @@ from glue.config import data_translator
 from glue.core import BaseData
 from glue.core.edit_subset_mode import NewMode, ReplaceMode
 from glue.core.exceptions import IncompatibleAttribute
+from glue.core.message import EditSubsetMessage, SubsetUpdateMessage, SubsetDeleteMessage
 from glue.core.roi import CircularAnnulusROI, CircularROI, EllipticalROI, RectangularROI
-from glue.core.subset import Subset
+from glue.core.subset import Subset, ElementSubsetState
 from glue.core.subset_group import GroupedSubset
 from glue.viewers.histogram.state import HistogramViewerState
 from glue.viewers.scatter.state import ScatterViewerState
@@ -1646,6 +1647,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # themselves to their own catalog "kind" These filter names must be
     # registered with the data-menu dataset filter registry.
     _data_menu_filter = 'is_generic_table'
+    _table_subset_draft = None
 
     def __init__(self, session, *args, **kwargs):
         default_tool_priority = kwargs.pop('default_tool_priority', [])
@@ -1689,16 +1691,146 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         # Build the toolbar with the correct default-tool priority
         self.initialize_toolbar(default_tool_priority=default_tool_priority)
+        self.toolbar.observe(self._on_table_subset_toolbar_changed, names=['tool_override_mode'])
+        self.hub.subscribe(self, EditSubsetMessage, handler=self._on_table_subset_target_changed)
+        self.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_table_subset_updated)
+        self.hub.subscribe(self, SubsetDeleteMessage, handler=self._on_table_subset_deleted)
+
+    def _prepare_table_subset(self):
+        """Capture a create/edit target before rebuilding the selection toolbars."""
+        data = self.widget_table.data
+        if data is None:
+            self._table_subset_warning('Load a table before creating a table subset.')
+            return
+        targets = self.session.edit_subset_mode.edit_subset
+        target = targets[0] if len(targets) == 1 else None
+        if targets and (target is None or not self._is_table_subset(target, data)):
+            self._table_subset_warning(
+                'Only an explicit row subset created on this table can be edited here. '
+                'Select a table subset or Create New in Subset Tools.')
+            return
+        rows = (np.flatnonzero(target.subset_state.to_mask(data)) if target is not None
+                else np.array([], dtype=int))
+        return {'target': target, 'data': data, 'rows': rows,
+                'state': target.subset_state if target is not None else None,
+                'selection': tuple(targets),
+                'title': f'Editing: {target.label}' if target is not None
+                else 'Table Subset Selection'}
+
+    @staticmethod
+    def _is_table_subset(target, data):
+        # ElementSubsetState.data is the UUID, not a Glue Data instance.
+        return (isinstance(target.subset_state, ElementSubsetState)
+                and target.subset_state.data == data.uuid)
+
+    def _table_subset_warning(self, text):
+        self.hub.broadcast(SnackbarMessage(text, color='warning', sender=self))
+
+    def _on_table_subset_target_changed(self, msg):
+        draft = self._table_subset_draft
+        selection = tuple(self.session.edit_subset_mode.edit_subset)
+        if draft is None or selection == draft['selection']:
+            return
+        draft['selection'] = selection
+        original = (() if draft['target'] is None else (draft['target'],))
+        if selection != original:
+            operation = (f'editing "{draft["target"].label}"' if draft['target'] is not None
+                         else 'creating a new subset')
+            self._table_subset_warning(
+                f'This table tool is still {operation}. The selection change was ignored '
+                'by this tool. Close and reopen it to edit the newly selected subset.')
+
+    def _on_table_subset_toolbar_changed(self, change):
+        draft = self._table_subset_draft
+        if draft is not None and change['new'] != draft['title']:
+            self._table_subset_draft = None
+            if change['new']:
+                self._table_subset_tool_open = False
+
+    def _cancel_table_subset(self, reason):
+        self._table_subset_draft = None
+        self.toolbar.restore_tools()
+        self._table_subset_warning(reason + ' Close and reopen the table subset tool to continue.')
+
+    def _on_table_subset_updated(self, msg):
+        draft = self._table_subset_draft
+        if draft is None or draft['target'] is None:
+            return
+        target, data = draft['target'], draft['data']
+        if not any(msg.sender is subset for subset in target.subsets):
+            return
+        if (not self._is_table_subset(target, data)
+                or target.subset_state is not draft['state']
+                or not np.array_equal(np.flatnonzero(target.subset_state.to_mask(data)),
+                                      draft['rows'])):
+            self._cancel_table_subset('The subset definition changed; pending table edits '
+                                      'were discarded.')
+            return
+        title = f'Editing: {target.label}'
+        old_title = draft['title']
+        draft['title'] = title
+        for viewer in [self, *self.jdaviz_app.get_viewers_of_cls('ImvizImageView')]:
+            if viewer.toolbar.tool_override_mode == old_title:
+                viewer.toolbar.tool_override_mode = title
+
+    def _on_table_subset_deleted(self, msg):
+        draft = self._table_subset_draft
+        if (draft is not None and draft['target'] is not None
+                and draft['target'] not in self.session.data_collection.subset_groups):
+            self._cancel_table_subset('The subset was deleted; pending table edits were discarded.')
+
+    def _apply_table_subset(self):
+        """Commit the captured table operation without changing global edit state."""
+        draft = self._table_subset_draft
+        if draft is None:
+            return
+        target, data = draft['target'], draft['data']
+        dc = self.session.data_collection
+        if data is not self.widget_table.data or data not in dc:
+            self._cancel_table_subset('The table changed; pending subset edits were discarded.')
+            return
+        if target is not None and (target not in dc.subset_groups
+                                   or not self._is_table_subset(target, data)
+                                   or target.subset_state is not draft['state']
+                                   or not np.array_equal(
+                                       np.flatnonzero(target.subset_state.to_mask(data)),
+                                       draft['rows'])):
+            self._cancel_table_subset('The subset changed; pending table edits were discarded.')
+            return
+        rows = list(self.widget_table.checked)
+        if target is None and not rows:
+            return
+        mode = self.session.edit_subset_mode.mode
+        state = ElementSubsetState(indices=rows, data=data)
+        # Clear before broadcasting the commit, so our own updates are not
+        # mistaken for an external definition or edit-target change.
+        self._table_subset_draft = None
+        if target is None:
+            target = dc.new_subset_group(subset_state=state)
+            verb = 'created'
+        else:
+            target.subset_state = state
+            verb = 'updated'
+        if mode is not ReplaceMode:
+            self.hub.broadcast(SnackbarMessage(
+                f'Combination modes do not apply to table subsets. "{target.label}" '
+                f'was {verb} to match the checked rows.', color='info', sender=self))
 
     def _on_restore_toolbar(self, msg={}):
         """Hook for subclasses to clean up viewer-specific UI state (e.g.
         selection highlight marks) when the toolbar is restored."""
-        pass
+        self._table_subset_draft = None
+        if getattr(self, '_table_subset_tool_open', False):
+            # Restoration may activate TableRowSelect, but closing a subset
+            # operation must still hide its membership checkboxes.
+            self.widget_table.selection_enabled = False
+            self._table_subset_tool_open = False
 
     def _on_viewer_removed(self, msg):
         """Hook for subclasses to clean up viewer-specific UI state if this
         table viewer is removed."""
-        pass
+        if msg.viewer_id == self.reference_id:
+            self._table_subset_draft = None
 
     def _add_or_update_column(self, column_name, data=None):
         """
@@ -1859,6 +1991,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         observer fires before the layer is appended to self.layers.
         """
         data = change['new']
+        if (self._table_subset_draft is not None
+                and data is not self._table_subset_draft['data']):
+            self._cancel_table_subset('The table changed; pending subset edits were discarded.')
         if data is None:
             self.state.renameable_components = []
             self.state.removable_components = []
@@ -2137,10 +2272,12 @@ class JdavizSourceCatalogTableViewer(JdavizTableViewer):
 
     def _on_restore_toolbar(self, msg={}):
         """Clean up checkbox state when toolbar is restored."""
+        super()._on_restore_toolbar(msg)
         self._clear_selection_marks()
 
     def _on_viewer_removed(self, msg):
         """Clean up selection marks if this table viewer is removed."""
+        super()._on_viewer_removed(msg)
         if msg.viewer_id != self.reference_id:
             return
 

@@ -723,10 +723,22 @@ class TableHighlightSelected(_BaseTableSelectionTool):
 class TableSubset(_BaseTableSelectionTool):
     icon = os.path.join(ICON_DIR, 'table_subset.svg')
     tool_id = 'jdaviz:table_subset'
-    action_text = 'Create subset from table selection'
-    tool_tip = 'Enable row selection mode to create a subset from table rows'
+    action_text = 'Create or edit table subset'
+    tool_tip = 'Check rows to create a subset or edit the selected table subset'
     override_tools = ['jdaviz:table_apply_subset']
     override_title = 'Table Subset Selection'
+
+    def activate(self):
+        draft = self.viewer._prepare_table_subset()
+        if draft is None:
+            return
+        self.override_title = draft['title']
+        super().activate()
+        # Toolbar rebuilding deactivates the active-row tool first. Only then
+        # initialize membership, without inheriting another tool's checked rows.
+        self.viewer._table_subset_draft = draft
+        self.viewer._table_subset_tool_open = True
+        self.viewer.widget_table.checked = draft['rows'].tolist()
 
     def is_visible(self):
         if self.viewer.jdaviz_app.config != 'deconfigged':
@@ -741,10 +753,14 @@ class TableApplySubset(_BaseTableApplyTool):
     icon = os.path.join(ICON_DIR, 'check.svg')
     tool_id = 'jdaviz:table_apply_subset'
     action_text = 'Apply subset'
-    tool_tip = 'Create a subset from the currently checked table rows'
+    tool_tip = 'Save the subset membership from the currently checked table rows'
 
-    def on_apply(self, selected_rows):
-        self.viewer.apply_filter()
+    def activate(self):
+        # Unlike zoom or new-subset creation, membership editing must accept
+        # an empty list so that the last member can be removed.
+        self.viewer._apply_table_subset()
+        super().activate()
+        self.viewer.widget_table.selection_enabled = False
 
     def is_visible(self):
         if self.viewer.jdaviz_app.config != 'deconfigged':
@@ -754,6 +770,9 @@ class TableApplySubset(_BaseTableApplyTool):
         return True
 
     def disabled_msg(self):
+        draft = self.viewer._table_subset_draft
+        if draft is not None and draft['target'] is not None:
+            return ''
         if not len(self.viewer.widget_table.checked):
             return 'Select rows to create subset'
         return ''
