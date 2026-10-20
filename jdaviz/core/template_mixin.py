@@ -74,7 +74,7 @@ from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
     _wcs_only_label, layer_is_not_dq as utils_layer_is_not_dq,
-    wildcard_match, CONFIGS_WITH_LOADERS, layer_is_dq as utils_layer_is_dq
+    wildcard_match, layer_is_dq as utils_layer_is_dq
 )
 
 
@@ -5611,7 +5611,7 @@ class AddResults(BasePluginComponent):
 
         # Use loader when format is provided, ensures component types are set consistently
         # by importers. Mosviz still uses app.add_data(), as does the sonify_data plugin.
-        if self._app.config in CONFIGS_WITH_LOADERS and format is not None:
+        if self._app.config != 'mosviz' and format is not None:
             self._app._jdaviz_helper.load(data_item,
                                           loader='object', format=format,
                                           data_label=label, viewer=load_kwargs.pop('viewer', []),

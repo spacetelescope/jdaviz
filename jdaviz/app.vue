@@ -84,7 +84,7 @@
           </v-btn>
         </j-tooltip>
         <v-divider v-if="state_show_toolbar_buttons" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="(state_dev_loaders || config!=='mosviz') && (state_show_toolbar_buttons || state_drawer_content === 'loaders') && state_loader_items.length > 0" tipid="app-toolbar-loaders">
+        <j-tooltip v-if="config!=='mosviz' && (state_show_toolbar_buttons || state_drawer_content === 'loaders') && state_loader_items.length > 0" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state_drawer_content === 'loaders') {state_drawer_content = ''} else {state_drawer_content = 'loaders'}}" :class="{active : state_drawer_content === 'loaders'}">
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>

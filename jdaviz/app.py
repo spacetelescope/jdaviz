@@ -56,8 +56,7 @@ from jdaviz.core.registries import (tool_registry, tray_registry,
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, alpha_index_to_int, data_has_valid_wcs,
                           layer_is_table_data, MultiMaskSubsetState,
-                          _wcs_only_label, CONFIGS_WITH_LOADERS,
-                          _get_celestial_wcs)
+                          _wcs_only_label, _get_celestial_wcs)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
 from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
                                                all_flux_unit_conversion_equivs,
@@ -365,9 +364,6 @@ class ApplicationState(State):
 
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa
     layer_icons = DictCallbackProperty({}, docstring="Indexed icons (letters) for layers across the app")  # noqa
-
-    dev_loaders = CallbackProperty(
-        False, docstring='Whether to enable developer mode for new loaders infrastructure')
 
     # PRs to add to changelog when removing dev_mos_loader dev-flag: 4375
     dev_spectral_lines_plugin = CallbackProperty(
@@ -948,7 +944,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
-        if self.config in CONFIGS_WITH_LOADERS:
+        if self.config != 'mosviz':
             # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
@@ -3087,7 +3083,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                 self.hub.broadcast(snackbar_message)
 
         data_to_remove = self.data_collection[data_label]
-        if self.config in CONFIGS_WITH_LOADERS:
+        if self.config != 'mosviz':
             data_needing_relinking = []
             for link in self.data_collection.external_links:
                 if hasattr(link, 'data1') and hasattr(link, 'data2'):
@@ -3106,7 +3102,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         self.data_collection.remove(data_to_remove)
 
-        if self.config in CONFIGS_WITH_LOADERS:
+        if self.config != 'mosviz':
             for data in data_needing_relinking:
                 self._link_new_data_by_component_type(data.label)
 
@@ -3500,7 +3496,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         self._viewer_store[vid] = viewer
 
         # Add viewer locally
-        if (self.config in CONFIGS_WITH_LOADERS
+        if (self.config != 'mosviz'
                 and len(self.state.stack_items)):
             # add to bottom (eventually will want more control in placement)
             self.state.stack_items[0]['children'].append(new_stack_item)
@@ -3624,7 +3620,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             self.state.loader_selected = resolver
 
         # registry will be populated at import
-        if self.config in CONFIGS_WITH_LOADERS:
+        if self.config != 'mosviz':
             import jdaviz.core.loaders  # noqa
             # Determine which loaders to disable
             disabled_loaders = self.state.settings.get('disabled_loaders')
