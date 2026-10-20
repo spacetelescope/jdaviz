@@ -73,6 +73,7 @@ For example:
     viewer.zoom_level = 1  # Set the zoom level directly.
     viewer.zoom(2)  # Set the relative zoom based on current zoom level.
 
+.. _viewers-image-toolbar-subsets:
 
 Defining Spatial Regions
 ------------------------
