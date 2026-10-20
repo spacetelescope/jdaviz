@@ -17,7 +17,8 @@ from jdaviz.utils import (alpha_index, download_uri_to_path,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
                           create_data_hash, parallelize_calculation,
                           in_ra_comps, in_dec_comps,
-                          suppress_widget_comms)
+                          suppress_widget_comms, SnackbarQueue)
+from jdaviz.core.events import SnackbarMessage
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -517,3 +518,33 @@ class TestSuppressWidgetComms:
                 raise ValueError("boom")
         assert _widget_mod.comm.create_comm() is self.sentinel
         assert not isinstance(_widget_mod.comm.create_comm(), DummyComm)
+
+
+class TestSnackbarQueue:
+    class _FakeState:
+        def __init__(self):
+            self.snackbar = {'show': False, 'text': '', 'color': None,
+                             'timeout': 0, 'loading': False}
+
+    class _FakeLogger:
+        def __init__(self):
+            self.history = []
+
+    def setup_method(self):
+        self.queue = SnackbarQueue()
+        self.state = self._FakeState()
+        self.logger = self._FakeLogger()
+
+    def _put(self, text, sender=None, **kwargs):
+        msg = SnackbarMessage(text, color='warning', sender=sender or self)
+        self.queue.put(self.state, self.logger, msg, **kwargs)
+
+    @property
+    def history_texts(self):
+        return [h['text'] for h in self.logger.history]
+
+    def test_suppress_popups(self):
+        self.queue.suppress_popups = True
+        self._put('suppressed')
+        assert self.history_texts == ['suppressed']
+        assert not self.state.snackbar['show']

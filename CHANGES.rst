@@ -143,6 +143,9 @@ New Features
 - Add restriction to Source Catalog loader that either an ra/dec pair or an x/y
   pair must be selected for import. [#4435]
 
+- Snackbar messages shown during load are now instead shown as banners
+  and the popup delayed until after load is complete. [#4438]
+
 Mosviz
 ^^^^^^
 
