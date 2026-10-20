@@ -61,10 +61,6 @@ New Features
 - Improvements to spectral axis unit conversion logic to support workflows and
   avoid errors in mixed unit viewers in deconfigged. [#4292]
 
-- Add Line List Database loader. [#4305, #4314, #4319]
-
-- Add consolidated emission line list and ability to query database in API. [#4314]
-
 - Table viewer "active row" selection to control data visible in other viewers. [#4279, #4322, #4350, #4397]
 
 - Allow markers plugin table to create other viewer types besides Scatter (i.e. Table or Histogram). [#4331]
@@ -87,8 +83,6 @@ New Features
 - Keep visibility consistent between blink and plot options. [#4316]
 
 - Change appearance of the overwrite warning overlay shown in the export plugin. [#4338]
-
-- Add consolidated emission line list and ability to query database in API. [#4314, 4330]
 
 - Improvements to flux / surface brightness unit conversion logic to support
   workflows and avoid errors in mixed unit viewers in deconfigged. [#4336]
@@ -114,21 +108,13 @@ New Features
 
 - Fix issue where catalog datasets could not be deleted from scatter viewers when aligned by WCS. [#4389]
 
-- Some modifications to spectral lines loader and table, including disabling
-  deletion of line name / rest wavelengths columns assigned by the loader, removing
-  the selection of line medium in loader, and adding line name to table by
-  default. [#4386]
-
 - Refactoring and some renaming of table viewer classes and catalog loaders.
   The 'Source Catalog Table' viewer is now specialized for catalogs
-  with RA/Dec or X/Y position columns. The 'Spectral Line Table' viewer is now
-  specialized for spectral line lists with a line-name and/or spectral-location
-  column.  The existing 'Table' viewer class is now the base table viewer for
-  generic tabular data without columns with special roles. There are now three
-  tabular data loaders - 'Generic Catalog' for generic tabular data,
+  with RA/Dec or X/Y position columns. The existing 'Table' viewer class is now the base table viewer for
+  generic tabular data without columns with special roles. There are now two
+  tabular data loaders - 'Generic Catalog' for generic tabular data and
   'Source Catalog' (formerly 'Catalog') for catalogs with RA/Dec or X/Y position
-  columns, and 'Spectral Line' for spectral line lists with a line-name and/or
-  spectral-location column. [#4401]
+  columns. [#4401]
 
 - Logger is accessible in UI before data is loaded. [#4403]
 

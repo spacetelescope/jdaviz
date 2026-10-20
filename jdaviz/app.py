@@ -365,12 +365,16 @@ class ApplicationState(State):
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa
     layer_icons = DictCallbackProperty({}, docstring="Indexed icons (letters) for layers across the app")  # noqa
 
-    # PRs to add to changelog when removing dev_mos_loader dev-flag: 4375
-    dev_spectral_lines_plugin = CallbackProperty(
+    # PRs to add to changelog when removing dev_spectral_lines dev-flag:
+    # line list database loader: #4305, #4314, #4319, #4386, #4401
+    # - Add consolidated emission line list and ability to query database in API. [#4314, 4330]
+    # line list plugin: #4375
+    dev_spectral_lines = CallbackProperty(
         False, docstring='Whether to enable developer mode for the Spectral Lines plugin')
     # PRs to add to changelog when removing dev_mos_loader dev-flag: 4357
     dev_mos_loader = CallbackProperty(
         False, docstring='Whether to enable developer mode for the MOS loader')
+
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(

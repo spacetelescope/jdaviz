@@ -84,6 +84,7 @@ def test_format_selection_prefers_catalog_for_sky_coords(deconfigged_helper):
 def test_format_selection_prefers_spectral_lines_for_spectral_table(deconfigged_helper):
     table = QTable({'rest wavelength': [6562.8, 4861.3] * u.AA,
                     'linename': ['H-alpha', 'H-beta']})
+    deconfigged_helper._app.state.dev_spectral_lines = True
     ldr = deconfigged_helper.loaders['object']
 
     ldr.object = table

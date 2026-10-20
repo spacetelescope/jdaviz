@@ -31,6 +31,7 @@ API Access
 .. code-block:: python
 
     import jdaviz as jd
+    jd.gca()._app.state.dev_spectral_lines = True
     jd.show()
 
     ldr = jd.loaders['spectral line database']

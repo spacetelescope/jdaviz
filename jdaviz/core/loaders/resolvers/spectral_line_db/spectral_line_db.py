@@ -99,6 +99,8 @@ class SpectralLineDatabaseResolver(BaseResolver):
         return None
 
     def _check_is_valid(self):
+        if not self.app.state.dev_spectral_lines:
+            return "Spectral lines development mode is not enabled."
         if self._db is None:
             return "No spectral lines database loaded."
         return ""
