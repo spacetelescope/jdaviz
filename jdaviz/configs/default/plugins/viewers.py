@@ -19,6 +19,7 @@ from glue.utils import avoid_circular
 
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.bqplot.profile import BqplotProfileView
+from glue_jupyter.bqplot.common.line_layers import add_vertical_lines
 from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.scatter import BqplotScatterView
@@ -48,6 +49,9 @@ from jdaviz.core.events import (SnackbarMessage,
                                 RestoreToolbarMessage,
                                 TableSelectRowClickMessage)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
+from jdaviz.core.spectral_line_layers import (
+    is_spectral_line_table, observed_wavelength_id, sync_spectral_line_links,
+    sync_spectral_line_components, component_datasets)
 from jdaviz.core.marks import (LineUncertainties, ScatterMask,
                                OffscreenLinesMarks, TableSelectionMark)
 from jdaviz.core.registries import viewer_registry
@@ -1093,10 +1097,19 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         self.display_mask = False
 
+        self.state._spectral_line_link_callback = self._sync_spectral_line_links
+        for attribute in ('layers', 'reference_data', 'x_att', 'x_display_unit'):
+            self.state.add_callback(attribute, self._sync_spectral_line_links, priority=-1000)
+
         # Change collapse function to sum
         default_collapse_function = kwargs.pop('default_collapse_function', 'sum')
 
         self.state.function = default_collapse_function
+
+    def _sync_spectral_line_links(self, *args):
+        sync_spectral_line_links(self)
+        if any(is_spectral_line_table(layer.layer) for layer in self.state.layers):
+            self.set_plot_axes()
 
     def _expected_subset_layer_default(self, layer_state):
         super()._expected_subset_layer_default(layer_state)
@@ -1107,10 +1120,13 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         # Grab the user's chosen statistic for collapsing data
         statistic = getattr(self.state, 'function', None)
         data = []
+        _class = cls or self.default_class
 
         for layer_state in self.state.layers:
             if hasattr(layer_state, 'layer'):
                 lyr = layer_state.layer
+                if is_spectral_line_table(getattr(lyr, 'data', lyr)):
+                    continue
 
                 # For raw data, just include the data itself
                 if isinstance(lyr, BaseData):
@@ -1199,8 +1215,25 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         result : bool
             `True` if successful, `False` otherwise.
         """
-        # If this is the first loaded data, set things up for unit conversion.
-        if len(self.layers) == 0:
+        if is_spectral_line_table(data):
+            if data in self._layer_artist_container:
+                return True
+            if observed_wavelength_id(data) is None or data not in self.session.data_collection:
+                return False
+            sync_spectral_line_components(self.jdaviz_app, data, create=True)
+            artist = add_vertical_lines(self, data)
+            for attr, value in dict(layer_state, color=color, alpha=alpha).items():
+                if value is not None and hasattr(artist.state, attr):
+                    setattr(artist.state, attr, value)
+            for component_data in component_datasets(data).values():
+                self.jdaviz_app.add_data_to_viewer(self.reference, component_data.label)
+            self.state.reset_limits()
+            self.set_plot_axes()
+            return True
+
+        # A table is not a profile: the first real spectrum must still adopt
+        # its own coordinate frame and flux units.
+        if not any(hasattr(layer.state, 'attribute') for layer in self.layers):
             reset_plot_axes = True
         else:
             # Check if the new data flux unit is actually compatible since flux not linked.
@@ -1235,7 +1268,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
             x_units = data.get_component(self.state.x_att.label).units
 
             y_axis_component = (
-                'flux' if 'flux' in [comp.label for comp in self.state.layers[0].layer.components]
+                'flux' if 'flux' in [comp.label for comp in data.components]
                 else 'data'
             )
             y_units = data.get_component(y_axis_component).units
@@ -1270,6 +1303,8 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         # Loop through all active data in the viewer
         for index, layer_state in enumerate(self.state.layers):
             lyr = layer_state.layer
+            if is_spectral_line_table(getattr(lyr, 'data', lyr)):
+                continue
             comps = [str(component) for component in lyr.components]
 
             # Skip subsets
@@ -1320,6 +1355,8 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         for index, layer_state in enumerate(self.state.layers):
             lyr = layer_state.layer
 
+            if is_spectral_line_table(getattr(lyr, 'data', lyr)):
+                continue
             # Skip subsets
             if hasattr(lyr, "subset_state"):
                 continue
@@ -1489,6 +1526,9 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                 f"[{self.state.y_display_unit}]"
                 if self.state.y_display_unit not in ["None", None] else ""
             )
+            if self.state.reference_data is None and any(
+                    is_spectral_line_table(layer.layer) for layer in self.state.layers):
+                self.figure.axes[1].label = ''
 
             # Make it so axis labels are not covering tick numbers.
             self.figure.fig_margin["left"] = 95
