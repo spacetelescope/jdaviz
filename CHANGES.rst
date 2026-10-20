@@ -197,6 +197,8 @@ Bug Fixes
 
 - Fix using ``get_regions`` when a subset is defined on scatter data. [#4433]
 
+- Fix layer selector references when renaming viewers. [#4458]
+
 Mosviz
 ^^^^^^
 
