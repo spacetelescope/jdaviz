@@ -21,5 +21,6 @@ Using Jdaviz
   subsets/index
   mouseover/index
   data_menu/index
+  plugin_api
   examples/index
   faq/index
