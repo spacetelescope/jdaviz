@@ -123,10 +123,9 @@ if 'histogram' not in glue_viewer_registry.members.keys():
         pass
 
 
-def show_widget(widget, loc, title, height=None):
+def show_widget(widget, loc, title):
     from IPython import get_ipython
     from IPython.display import display
-    import ipywidgets as widgets
 
     # Displaying jdaviz in a sidecar can leave the frontend {'execution_state': 'busy'},
     # which causes timeout failures in notebook ci with `spacetelescope/notebook-ci-actions`, since
@@ -167,11 +166,6 @@ def show_widget(widget, loc, title, height=None):
         app_state.in_notebook = not in_solara
 
     if loc == "inline":
-        if height is not None:
-            if isinstance(height, int):
-                height = f"{height}px"
-            widget = widgets.Box([widget], layout=widgets.Layout(height=height, width="100%"))
-
         display(widget)
 
     elif loc.startswith('sidecar'):

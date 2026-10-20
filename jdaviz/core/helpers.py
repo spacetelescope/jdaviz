@@ -17,6 +17,7 @@ from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from glue.core.subset import Subset, MaskSubsetState
 from glue.config import data_translator
 from ipywidgets.widgets import widget_serialization
+from ipywidgets import Layout
 
 from astropy.nddata import NDDataArray, CCDData, StdDevUncertainty
 import astropy.units as u
@@ -582,13 +583,16 @@ class ConfigHelper(HubListener):
         if height is not None:
             if isinstance(height, int):
                 height = f"{height}px"
+            # There seem to be rare cases where we can get here while layout is still None
+            if self._app.layout is None:
+                self._app.layout = Layout()
             self._app.layout.height = height
             self._app.state.settings['context']['notebook']['max_height'] = height
 
         if tray is not None:
             self._app.state.drawer_content = tray
         elif self._app.config in CONFIGS_WITH_LOADERS or self._app.state.dev_loaders:  # noqa
-            if not len(self.viewers) and not len(self._app.state.drawer_content):
+            if not len(self.viewers) or not len(self._app.state.data_items):
                 self._app.state.drawer_content = 'loaders'
             else:
                 self._app.state.drawer_content = 'plugins'
