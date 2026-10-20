@@ -6,6 +6,7 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
+from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core.edit_subset_mode import ReplaceMode, NewMode
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI, XRangeROI
@@ -35,6 +36,22 @@ def test_plugin(specviz_helper, spectrum1d):
     po = specviz_helper.plugins['Plot Options']
     po.layer = 'Subset 1'
     po.line_color = 'green'
+
+
+def test_recenter_dataset_excludes_catalogs(imviz_helper, image_2d_wcs):
+    """
+    Datasets loaded through the catalog loaders (Source/Spectral Lines/Generic
+    Catalog) are not images and should not appear as recentering targets.
+    """
+    data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
+    imviz_helper.load(data)
+
+    catalog = Table({'col1': ['A', 'B'], 'col2': [1, 2]})
+    imviz_helper.load(catalog, col_other=['col1', 'col2'], format='Generic Catalog')
+
+    plg = imviz_helper.plugins['Subset Tools']
+    assert 'Generic Catalog' not in plg.recenter_dataset.choices
+    assert 'Image[DATA]' in plg.recenter_dataset.choices
 
 
 def test_subset_definition_with_composite_subset(cubeviz_helper, spectrum1d_cube):

@@ -204,6 +204,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self.recenter_dataset = DatasetSelect(self, 'recenter_dataset_items',
                                               'recenter_dataset_selected',
                                               multiselect=None)
+        # catalogs loaded through the catalog loaders are not images/cubes and
+        # cannot be used for recentering subsets
+        self.recenter_dataset.add_filter('not_catalog')
 
         self.combination_mode = SelectPluginComponent(self,
                                                       items='combination_mode_items',

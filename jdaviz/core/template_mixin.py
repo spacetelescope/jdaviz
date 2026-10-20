@@ -4995,6 +4995,9 @@ class DatasetSelect(SelectPluginComponent):
         def is_catalog(data):
             return is_source_catalog_table(data) or is_spectral_lines_list_table(data) or is_generic_table(data)  # noqa
 
+        def not_catalog(data):
+            return not is_catalog(data)
+
         def is_catalog_or_image_not_spectrum(data):
             return is_catalog(data) or is_image_not_spectrum(data)
 
