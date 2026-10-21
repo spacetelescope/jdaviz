@@ -143,6 +143,8 @@ New Features
 - Add restriction to Source Catalog loader that either an ra/dec pair or an x/y
   pair must be selected for import. [#4435]
 
+- Allow loading all tabular data types from FITS table extensions. [#4443]
+
 Mosviz
 ^^^^^^
 
