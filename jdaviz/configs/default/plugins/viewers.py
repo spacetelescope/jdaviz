@@ -973,10 +973,10 @@ class JdavizViewerWindow(TemplateMixin):
             self.coords_info_has_data = bool(coords_info.icon)
             self.coords_info_icon = coords_info.icon
             self.coords_info_dataset_icon = coords_info.dataset_icon
-            coords_info.observe(self._on_coords_info_icon_changed, names=['icon'])
-            coords_info.observe(self._on_coords_info_dataset_icon_changed, names=['dataset_icon'])
+
         self._app.state.add_callback('focus_viewer', self._on_focus_viewer_changed)
-        self._on_focus_viewer_changed()
+        # Set this manually here now that there's more code in _on_focus_viewer_changed
+        self.focus_mode = (self._app.state.focus_viewer == self.reference)
 
         self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
 
@@ -987,14 +987,35 @@ class JdavizViewerWindow(TemplateMixin):
         pass  # no-op, can be defined by subclasses
 
     def _on_focus_viewer_changed(self, *args):
+        coords_info = self._app.session.application._tools.get('g-coords-info')
         self.focus_mode = (self._app.state.focus_viewer == self.reference)
 
+        # Add coords_info observe handlers if this viewer is being focused, remove if not
+        if self.focus_mode:
+            if ('icon' not in coords_info._trait_notifiers or self._on_coords_info_icon_changed not
+                    in coords_info._trait_notifiers['icon']['change']):
+                coords_info.observe(self._on_coords_info_icon_changed, names=['icon'])
+                coords_info.observe(self._on_coords_info_dataset_icon_changed, names=['dataset_icon'])
+        # Remove observers when un-focusing this viewer
+        elif 'icon' in coords_info._trait_notifiers and self._app.state.focus_viewer == '':
+            if self._on_coords_info_icon_changed in coords_info._trait_notifiers['icon']['change']:
+                coords_info.unobserve(self._on_coords_info_icon_changed, names=['icon'])
+                coords_info.unobserve(self._on_coords_info_dataset_icon_changed,
+                                      names=['dataset_icon'])
+
     def _on_coords_info_icon_changed(self, change):
-        self.coords_info_has_data = bool(change['new'])
-        self.coords_info_icon = change['new']
+        print(f'change new in info_icon is {change['new']}')
+        if self.coords_info_has_data != bool(change['new']):
+            print(f"Updating has_data from {self.coords_info_has_data} to {bool(change['new'])}")
+            self.coords_info_has_data = bool(change['new'])
+        if self.coords_info_icon != change['new']:
+            print(f"updating info_icon from {self.coords_info_icon} to {change['new']}")
+            self.coords_info_icon = change['new']
 
     def _on_coords_info_dataset_icon_changed(self, change):
-        self.coords_info_dataset_icon = change['new']
+        print(f'change new in dataset_icon is {change['new']}')
+        if self.coords_info_dataset_icon != change['new']:
+            self.coords_info_dataset_icon = change['new']
 
     def vue_cycle_coords_dataset(self, *args):
         coords_info = self._app.session.application._tools.get('g-coords-info')
