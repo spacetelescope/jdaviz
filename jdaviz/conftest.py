@@ -767,7 +767,7 @@ if os.getenv("USE_LCVIZ") == "1":
         successfully. Exit the session early otherwise (no need to waste time/resources).
         """
         try:
-            import lcviz  # noqa
+            import lcviz  # noqa: F401
         except ImportError as e:
             pytest.exit(f"Failed to import lcviz: {str(e)}", exitcode=1)
         yield
@@ -777,7 +777,7 @@ if os.getenv("USE_LCVIZ") == "1":
         """
         Import lcviz once per test module to ensure the plugin is available.
         """
-        import lcviz  # noqa
+        import lcviz  # noqa: F401
         yield
 
 
