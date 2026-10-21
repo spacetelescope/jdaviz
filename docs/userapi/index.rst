@@ -2,7 +2,7 @@
 .. rst-class:: section-icon-mdi-code-tags
 
 ************************
-API & Notebook Access
+Quickstart API & Notebook Access
 ************************
 
 Programmatic access to Jdaviz functionality for notebook workflows.
@@ -36,5 +36,5 @@ Quick Examples
 See Also
 ========
 
-- :doc:`../quickstart` - Getting started with Jdaviz
-- :doc:`../plugin_api` - Plugin API documentation
+- :ref:`quickstart` - Getting started with Jdaviz
+- :doc:`plugin_api` - Plugin API documentation

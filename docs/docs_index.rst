@@ -12,6 +12,8 @@ Using Jdaviz
   :maxdepth: 2
 
   quickstart
+  userapi/cheatsheet
+  userapi/index
   loaders/index
   viewers/index
   export/index
@@ -24,3 +26,4 @@ Using Jdaviz
   plugin_api
   examples/index
   faq/index
+  cite_jdaviz.rst

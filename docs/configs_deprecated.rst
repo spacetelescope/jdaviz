@@ -115,7 +115,7 @@ Using Jdaviz
 ************
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 3
 
   deprecated/installation
   deprecated/quickstart_configs
