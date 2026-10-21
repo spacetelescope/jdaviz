@@ -7,6 +7,24 @@
         "Source Catalog" or "Spectral Lines" formats, respectively, to enable
         their specialized features.
       </div>
+    <plugin-select v-if="extension_items.length"
+      :items="extension_items"
+      :exists_in_dc="existing_data_in_dc"
+      v-model:selected="extension_selected"
+      :show_if_single_entry="true"
+      :multiselect="extension_multiselect"
+      :search="extension_items.length > 3"
+      label="Extension"
+      api_hint="ldr.importer.extension ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Table extension(s) to import. If multiple selected, only columns common to all selected tables will be available for import. If column names differ, it is recommended to load tables individually."
+    ></plugin-select>
+
+    <div v-if="no_common_col_msg !== ''" style="font-size: 10px; color: red; margin-bottom: 5px;">
+      {{ no_common_col_msg }}
+    </div>
+
+    <div v-if="!input_has_extensions || (extension_selected && extension_selected.length > 0 && no_common_col_msg === '')">
 
       <j-plugin-section-header>Select Columns</j-plugin-section-header>
       <plugin-select
@@ -57,5 +75,8 @@
         @click="import_clicked">
       </loader-import-button>
 
+    </div>
+
   </v-container>
 </template>
+
