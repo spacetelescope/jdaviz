@@ -759,6 +759,28 @@ def image_nddata_wcs_sb():
     return _image_nddata_wcs(unit=u.Unit('Jy/sr'))
 
 
+if os.getenv("USE_LCVIZ") == "1":
+    @pytest.fixture(autouse=True, scope='session')
+    def _initial_import():
+        """
+        Import lcviz at the start of the test session to ensure that the lcviz plugin loads
+        successfully. Exit the session early otherwise (no need to waste time/resources).
+        """
+        try:
+            import lcviz
+        except ImportError as e:
+            pytest.exit(f"Failed to import lcviz: {str(e)}", exitcode=1)
+        yield
+
+    @pytest.fixture(autouse=True, scope='module')
+    def _per_module_import():
+        """
+        Import lcviz once per test module to ensure the plugin is available.
+        """
+        import lcviz
+        yield
+
+
 # Copied over from https://github.com/spacetelescope/ci_watson
 @pytest.fixture(scope='function')
 def _jail(tmp_path):
