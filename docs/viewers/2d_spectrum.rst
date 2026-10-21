@@ -99,21 +99,13 @@ then clicking and dragging (using the mouse) until the
 desired spectral region, after which you release the mouse button. 
 The selected region will display in color, and coded to subset number and listed under the subsets dropdown.
 
-There are other options available for region of interest. Clicking on the data menu, select the region of interest, 
-and then select ``EDIT SUBSET`` on the bottom right of the data menu. Several options will pop up.  
-* ``Resize in Viewer`` allows you to resize the subset directly in the viewer by dragging the sides of the region.
-* ``Edit in plugin`` opens up the Subset tools plugin. 
-Below are several options: 
-
-* ``replace``: will remove the previously created selection and place the newly created subset.
-* ``or``: allows you to create another subset that extends the existing subset.
-* ``and``: only leaves behind the overlapping region between the existing subset and any additional subsets.
-* ``xor``: only leaves behind the non-overlapping region between the existing subset and any additional subsets.
-* ``andnot``: will de-select any parts of the existing subset that overlaps with any additional subsets.
-
-You can use these options to further adjust the region of interest and adapt it to your use case.
+There are other options available for region of interest. 
 
 .. seealso::
+    
+    :ref:`data_menu-edit_subsets <Edit subsets in Data Menu>`
+        Edit subsets directly in the viewer from the ``data menu``  
+
     :ref:`Subsets & Regions <subsets>`
         Create and manage spatial and spectral subsets of your data.
 
