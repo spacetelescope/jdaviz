@@ -404,7 +404,7 @@ def test_loaders_not_implemented_without_dev_flag(deconfigged_helper, mosviz_hel
     not supporting loaders.
     """
     # Mosviz does not currently support loaders
-    with pytest.raises(NotImplementedError, match='loaders is under active development'):
+    with pytest.raises(NotImplementedError, match='loaders is not supported in mosviz'):
         _ = mosviz_helper.loaders
 
 
