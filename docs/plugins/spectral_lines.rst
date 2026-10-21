@@ -1,4 +1,5 @@
 .. _plugins-spectral_lines:
+
 :dev-only: true
 
 .. rst-class:: section-icon-mdi-tune-variant
