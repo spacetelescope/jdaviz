@@ -987,33 +987,31 @@ class JdavizViewerWindow(TemplateMixin):
         pass  # no-op, can be defined by subclasses
 
     def _on_focus_viewer_changed(self, *args):
+
         coords_info = self._app.session.application._tools.get('g-coords-info')
         self.focus_mode = (self._app.state.focus_viewer == self.reference)
 
+        print(f"Calling focus_viewer_changed for {self.reference} with focus_mode = {self.focus_mode}")
+
         # Add coords_info observe handlers if this viewer is being focused, remove if not
         if self.focus_mode:
-            if ('icon' not in coords_info._trait_notifiers or self._on_coords_info_icon_changed not
-                    in coords_info._trait_notifiers['icon']['change']):
+            if ('icon' not in coords_info._trait_notifiers or
+                    'change' not in coords_info._trait_notifiers['icon'] or
+                    len(coords_info._trait_notifiers['icon']['change']) == 0):
                 coords_info.observe(self._on_coords_info_icon_changed, names=['icon'])
                 coords_info.observe(self._on_coords_info_dataset_icon_changed, names=['dataset_icon'])
         # Remove observers when un-focusing this viewer
-        elif 'icon' in coords_info._trait_notifiers and self._app.state.focus_viewer == '':
-            if self._on_coords_info_icon_changed in coords_info._trait_notifiers['icon']['change']:
-                coords_info.unobserve(self._on_coords_info_icon_changed, names=['icon'])
-                coords_info.unobserve(self._on_coords_info_dataset_icon_changed,
-                                      names=['dataset_icon'])
+        elif self._app.state.focus_viewer in ('', None):
+            coords_info.unobserve(None, names='icon')
+            coords_info.unobserve(None, names='dataset_icon')
 
     def _on_coords_info_icon_changed(self, change):
-        print(f'change new in info_icon is {change['new']}')
         if self.coords_info_has_data != bool(change['new']):
-            print(f"Updating has_data from {self.coords_info_has_data} to {bool(change['new'])}")
             self.coords_info_has_data = bool(change['new'])
         if self.coords_info_icon != change['new']:
-            print(f"updating info_icon from {self.coords_info_icon} to {change['new']}")
             self.coords_info_icon = change['new']
 
     def _on_coords_info_dataset_icon_changed(self, change):
-        print(f'change new in dataset_icon is {change['new']}')
         if self.coords_info_dataset_icon != change['new']:
             self.coords_info_dataset_icon = change['new']
 
