@@ -18,3 +18,16 @@ Here is some documentation specific for developers.
   specviz_selection
   links
   win_dev
+
+Spectral-lines development documentation
+=========================================
+
+These pages describe spectral-lines features that are still under development.
+They are intentionally kept out of the user-facing documentation indexes.
+
+.. toctree::
+  :maxdepth: 1
+
+  ../loaders/sources/spectral_line_db
+  ../loaders/formats/spectral_lines
+  ../plugins/spectral_lines

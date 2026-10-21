@@ -454,6 +454,7 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
     Reads metadata from RST files in the format:
     :data-types: image 2d 3d
     :excl_platforms: desktop mast
+    :dev-only: true
     """
     links = []
     dir_path = os.path.join(base_path, directory)
@@ -490,6 +491,7 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
 
             # Parse RST file for metadata
             rst_path = os.path.join(dir_path, filename)
+            dev_only = False
             try:
                 with open(rst_path, 'r', encoding='utf-8') as f:
                     content = f.read()
@@ -504,8 +506,15 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
                             excl_platforms = line.split(':', 2)[2].strip()
                             if excl_platforms:
                                 link_data['excl_platforms'] = excl_platforms
+                        elif line.startswith(':dev-only:'):
+                            dev_only = line.split(':', 2)[2].strip().lower() in (
+                                'true', 'yes', '1'
+                            )
             except Exception as e:
                 print(f"Warning: Could not parse {rst_path}: {e}")
+
+            if dev_only:
+                continue
 
             # Fallback to data_type_map if provided and no metadata found
             if 'data_types' not in link_data and data_type_map and filename[:-4] in data_type_map:

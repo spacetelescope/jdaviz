@@ -3,11 +3,16 @@
 .. rst-class:: section-icon-mdi-plus-box
 
 :data-types: spectral-lines
+:dev-only: true
 
 *********************
 Spectral Lines Format
 *********************
 
+.. warning::
+
+    This feature is under active development and is available only when
+    ``app.state.dev_spectral_lines = True``.
 
 Overview
 ========

@@ -1,9 +1,17 @@
 .. _plugins-spectral_lines:
+:dev-only: true
+
 .. rst-class:: section-icon-mdi-tune-variant
 
 **************
 Spectral Lines
 **************
+
+.. warning::
+
+   This feature is under active development and is available only when
+   ``app.state.dev_spectral_lines = True``.
+
 .. plugin-availability::
 
 Plot spectral lines from a loaded line list, grouped into components.
@@ -16,14 +24,6 @@ one or more named "components". Each component tracks its own redshift, which is
 applied to the lines to compute their observed wavelengths independently of other
 components. These changes are reflected in the displayed observed wavelengths
 for each line in both the plugin and in the associated data table.
-
-.. warning::
-
-   The Spectral Lines plugin is still under active development. The API is
-   not yet fully exposed, line plotting functionality has not been implemented
-   yet, and there are planned changes to the interface for loading lines.
-   It is currently only available when developer mode for the plugin is
-   enabled (``app.state.dev_spectral_lines = True``).
 
 **Key Features:**
 
