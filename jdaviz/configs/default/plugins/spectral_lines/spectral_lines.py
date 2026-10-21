@@ -363,7 +363,7 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
 
         loader_items = []
         for name, Resolver in loader_resolver_registry.members.items():
-            if name in disabled_loaders:
+            if name in disabled_loaders or not Resolver.is_available(self._app):
                 continue
             loader = Resolver(app=self._app,
                               open_callback=open_accordion,
@@ -373,6 +373,7 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
                 'name': name,
                 'label': name,
                 'requires_api_support': loader.requires_api_support,
+                'required_dev_flags': list(Resolver.required_dev_flags),
                 'widget': 'IPY_MODEL_' + loader.model_id
             })
         self.loader_items = loader_items

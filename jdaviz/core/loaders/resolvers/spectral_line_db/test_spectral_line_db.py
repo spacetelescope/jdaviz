@@ -2,9 +2,13 @@ import pytest
 from astropy.table import QTable
 
 
+@pytest.fixture(autouse=True)
+def enable_spectral_lines_dev_flag(deconfigged_helper):
+    deconfigged_helper._app.state.dev_spectral_lines = True
+
+
 def test_db_loads(deconfigged_helper):
     """DB should load successfully on init and resolver should be valid."""
-    deconfigged_helper._app.state.dev_spectral_lines = True
     ldr = deconfigged_helper.loaders["spectral line database"]
     assert ldr._obj._db is not None
     assert len(ldr._obj._db) > 0
@@ -288,7 +292,6 @@ def test_parse_input_after_unstage(deconfigged_helper):
 
 def test_stage_across_multiple_searches(deconfigged_helper):
     """Lines staged from two separate searches accumulate correctly."""
-    deconfigged_helper._app.state.dev_spectral_lines = True
     # First search
     ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.element.selected = "H"
@@ -326,7 +329,6 @@ def test_stage_across_multiple_searches(deconfigged_helper):
 def test_load_staged_lines_end_to_end(deconfigged_helper):
     """Staged lines load through the Spectral Lines importer into the
     data collection and a table viewer."""
-    deconfigged_helper._app.state.dev_spectral_lines = True
     ldr = deconfigged_helper.loaders["spectral line database"]
     ldr.wavelength_unit.selected = "Angstrom"
     ldr.wavelength_min = "6500"

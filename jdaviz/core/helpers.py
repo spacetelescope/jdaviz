@@ -151,8 +151,11 @@ class ConfigHelper(HubListener):
         """
         if self._app.config == 'mosviz':  # noqa
             raise NotImplementedError("loaders is not supported in mosviz")  # noqa
-        loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
-                   for item in self._app.state.loader_items}
+        loaders = {}
+        for item in self._app.state.loader_items:
+            loader = widget_serialization['from_json'](item['widget'], None).user_api
+            if loader._obj.is_available(self._app):
+                loaders[item['label']] = loader
         return loaders
 
     def _get_loader(self, resolver_name, parser_name=None, importer_name=None):

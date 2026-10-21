@@ -267,6 +267,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     default_input = None
     default_input_cast = None
     requires_api_support = False
+    required_dev_flags = ()
     _update_format_spinner_text = 'searching for valid formats...'
 
     spinner = Unicode("").tag(sync=True)
@@ -295,6 +296,16 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     file_timeout = FloatHandleEmpty(10).tag(sync=True)
 
     importer_widget = Unicode().tag(sync=True)
+
+    @classmethod
+    def is_available(cls, app):
+        """Whether this resolver should be exposed in the app's loader lists.
+
+        Subclasses can name application-state developer flags in
+        ``required_dev_flags`` to hide under-development resolvers by default.
+        """
+        return all(bool(getattr(app.state, flag, False))
+                   for flag in cls.required_dev_flags)
 
     # Set remote server options based on the app configuration
     # read-only: change via app.state.settings['server_is_remote']

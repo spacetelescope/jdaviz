@@ -3646,6 +3646,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                     'name': name,
                     'label': name,
                     'requires_api_support': loader.requires_api_support,
+                    'required_dev_flags': list(Resolver.required_dev_flags),
                     'widget': "IPY_MODEL_" + loader.model_id,
                     'api_methods': loader.api_methods,
                 })
@@ -3751,6 +3752,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             'name': name,
             'label': name,
             'requires_api_support': loader.requires_api_support,
+            'required_dev_flags': list(PresetResolverClass.required_dev_flags),
             'widget': "IPY_MODEL_" + loader.model_id,
             'api_methods': loader.api_methods,
         })

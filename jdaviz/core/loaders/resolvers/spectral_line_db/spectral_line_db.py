@@ -46,6 +46,7 @@ class SpectralLineDatabaseResolver(BaseResolver):
 
     template_file = (__file__, "spectral_line_db.vue")
     requires_api_support = False
+    required_dev_flags = ('dev_spectral_lines',)
 
     title = Unicode("Spectral Line Database").tag(sync=True)
 
