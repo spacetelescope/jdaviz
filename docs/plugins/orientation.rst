@@ -33,7 +33,7 @@ with distorted WCS would show as distorted on the display. Furthermore,
 any data without WCS can no longer be shown in WCS linking mode.
 
 For the best experience, it is recommended that you decide what kind of
-link you want and set it at the beginning of your Imviz session,
+link you want and set it at the beginning of your ``jdaviz`` session,
 rather than later.
 
 For more details on linking, see :ref:`dev_glue_linking`.

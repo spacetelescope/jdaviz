@@ -9,6 +9,9 @@ Sonify Data
 
 Convert data to audio for sonification analysis.
 
+.. note::
+   :py:class:`strauss` must be installed for the :guilabel:`sonification` plugin to work.
+
 Description
 ===========
 

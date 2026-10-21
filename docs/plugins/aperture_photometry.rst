@@ -98,14 +98,13 @@ UI Access
 Opening the Plugin
 ------------------
 
-**Imviz/Cubeviz:**
-  Click the :guilabel:`Aperture Photometry` icon in the plugin toolbar.
+Click the :guilabel:`Aperture Photometry` icon in the plugin toolbar.
 
 Workflow
 --------
 
-1. **Load data** into Imviz or Cubeviz
-2. **Draw aperture region(s)** using subset tools (see :ref:`imviz-defining-spatial-regions` or :ref:`cubeviz-defining-spatial-regions`)
+1. **Load data** into ``jdaviz``
+2. **Draw aperture region(s)** using subset tools (see :ref:`subsets`)
 3. **Select dataset** from :guilabel:`Data` dropdown
 4. **Select aperture** from :guilabel:`Aperture` dropdown
 5. **Configure background** (optional):
