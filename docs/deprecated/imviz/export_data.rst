@@ -4,7 +4,7 @@
 Exporting Data from Imviz
 *************************
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 .. _imviz-export-regions:
 

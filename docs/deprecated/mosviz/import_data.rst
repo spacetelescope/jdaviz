@@ -4,7 +4,7 @@
 Importing Data into Mosviz
 **************************
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 Mosviz provides two different ways to load data:
 

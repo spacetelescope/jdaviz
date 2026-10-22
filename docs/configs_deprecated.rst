@@ -131,7 +131,6 @@ Using Jdaviz
   deprecated/sample_notebooks
   deprecated/create_products
   deprecated/save_state
-  deprecated/plugin_api
   deprecated/known_bugs
 
 
