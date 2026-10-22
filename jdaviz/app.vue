@@ -551,8 +551,6 @@ export default {
     },
     onLayoutChange(v) {
       this.golden_layout_state = v;
-      /* Workaround for #1677, can be removed when bqplot/bqplot#1531 is released */
-      window.dispatchEvent(new Event('resize'));
     },
     trayWidget(label) {
       const index = this.state_tray_items.findIndex(ti => ti.label === label);
