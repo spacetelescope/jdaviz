@@ -19,11 +19,11 @@ Overview
 
 .. _loaders-load:
 
-Using :py:attr:`~jdaviz.configs.deconfigged.helper.App.load`
+Using :py:class:`~jdaviz.load`
 =============================================================
 
 
-The recommended way to load data is to use the :py:attr:`~jdaviz.configs.deconfigged.helper.App.load`
+The recommended way to load data is to use the :py:class:`~jdaviz.load`
 method on the configuration helper, whether that's the deconfigged mode as shown below, or a 
 specific configuration such as ``Specviz``, ``Cubeviz``, etc. This provides a simple interface for loading data:
 
@@ -136,7 +136,7 @@ needed to reproduce your actions programmatically.
 Differences from the Loaders API
 ================================
 
-For most use cases, :class:`~jdaviz.configs.deconfigged.helper.App.load` provides a simpler interface. Use the Loaders API when you need:
+For most use cases, :py:class:`~jdaviz.load` provides a simpler interface. Use the Loaders API when you need:
 
 - More control over loading options
 - Interactive configuration
