@@ -64,7 +64,7 @@ Supported File Formats
 - ECSV files with the required columns
 - Python `astropy.table.QTable` objects created in memory
 
-When loading from a file, ensure the file can be read by :py:class:`astropy.table.QTable.read`
+When loading from a file, ensure the file can be read by ``astropy.table.QTable.read``
 and contains the required columns with proper units.
 
 Data Validation
