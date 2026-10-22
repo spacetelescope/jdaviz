@@ -11,7 +11,8 @@ Overlay instrument footprints on sky images.
 
 .. note::
 
-   `pysaif` must be installed for the :guilabel:`Footprint` plugin to work.
+   ``pysaif`` must be installed for the :guilabel:`Footprint` plugin to work.
+   See `https://pysiaf.readthedocs.io/en/latest/`_ for details. 
 
 Description
 ===========

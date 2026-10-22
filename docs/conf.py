@@ -133,33 +133,43 @@ rst_epilog += """
   :alt: data select icon
 
 .. |icon-cmap| image:: /img/icons/colormap.svg
+  :height: 1em
   :alt: colormap icon
 
 .. |icon-stretch| image:: /img/icons/lin.svg
+  :height: 1em
   :alt: stretch icon
 
 .. |icon-opacity| image:: /img/icons/opacity.svg
+  :height: 1em
   :alt: opacity icon
 
 .. |icon-gear| image:: /img/icons/cog.svg
+  :height: 1em
   :alt: gear icon
 
 .. |icon-box-zoom| image:: /img/icons/zoom_box.svg
+  :height: 1em
   :alt: zoom box icon
 
 .. |icon-xrange-zoom| image:: /img/icons/zoom_xrange.svg
+  :height: 1em
   :alt: zoom xrange icon
 
 .. |icon-yrange-zoom| image:: /img/icons/zoom_yrange.svg
+  :height: 1em
   :alt: zoom yrange icon
 
 .. |icon-region-spec| image:: /img/icons/select_circle.svg
+  :height: 1em
   :alt: region icon
 
 .. |icon-detach| image:: /img/icons/popout.svg
+  :height: 1em
   :alt: detach icon
 
 .. |icon-clone| image:: /img/icons/viewer_clone.svg
+  :height: 1em
   :alt: clone icon
 
 
