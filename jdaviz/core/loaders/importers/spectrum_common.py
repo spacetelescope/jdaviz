@@ -1,4 +1,5 @@
 import itertools
+import warnings
 import numpy as np
 
 from asdf import AsdfFile
@@ -509,8 +510,25 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
     def _spectrum_from_table_hdu(self, hdulist, hdu):
         """Extract spectrum from Binary Table HDU with array-valued columns."""
-        # Read the HDU as an astropy Table
-        table = Table.read(hdu)
+        # Read the HDU as an astropy Table. TUNIT parsing uses the strict FITS
+        # unit standard, which can reject otherwise-valid unit strings (e.g. 'AA'
+        # for Angstrom); the resulting UnitsWarning is suppressed since any such
+        # columns are re-parsed leniently immediately below.
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=u.UnitsWarning)
+            table = Table.read(hdu)
+
+        # Table.read parses TUNIT values using the strict FITS unit standard, which
+        # rejects some otherwise-valid unit strings seen in the wild (e.g. 'AA' for
+        # Angstrom, instead of the FITS-compliant 'Angstrom'), leaving the column's
+        # unit as an UnrecognizedUnit. Re-parse those leniently so downstream
+        # unit-based column identification (generic_spectrum_from_table) still works.
+        for col in table.itercols():
+            if isinstance(col.unit, u.UnrecognizedUnit):
+                try:
+                    col.unit = u.Unit(str(col.unit))
+                except Exception:  # nosec
+                    pass
 
         # if columns are shape (1, N), flatten them before passing to generic_spectrum_from_table
         needs_flattening = any(
