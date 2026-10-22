@@ -98,7 +98,7 @@ There are other options available for region of interest.
 
 .. seealso::
     
-    :ref:`data_menu-edit_subsets <Edit subsets in Data Menu>`
+    :ref:`Edit subsets in Data Menu <data_menu-edit_subsets>`
         Edit subsets directly in the viewer from the ``data menu``        
 
     :ref:`Subsets & Regions <subsets>`
@@ -112,7 +112,7 @@ There are other options available for region of interest.
     `Defining subsets using glue <http://docs.glueviz.org/en/stable/getting_started/#defining-subsets>`_
         Glueviz documentation on defining and refining subsets. Slightly different UI but same approach.
 
-There are options available in the `Plotting Option <settings-plot_options>` 
+There are options available in the :ref:`Plotting Option <settings-plot_options>` 
 to make subsets visible or invisible, to change their color, and to change their opacity.
 
 .. _viewers-image-toolbar-blink:

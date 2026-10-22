@@ -299,6 +299,6 @@ Persistence
 See Also
 ========
 
-* :doc:`cheatsheet` - Quick reference for common operations
-* :doc:`../quickstart` - Getting started guide
-* :doc:`../plugin_api` - Plugin API documentation
+* :ref:`userapi-cheatsheet` - Quick reference for common operations
+* :ref:`quickstart` - Getting started guide
+* :ref:`plugin-apis` - Plugin API documentation
