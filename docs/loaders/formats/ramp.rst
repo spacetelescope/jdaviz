@@ -50,5 +50,4 @@ UI Access
 See Also
 ========
 
-- :ref:`loaders-format-ramp-integration` - For information on loading 1D integration profiles extracted
-from JWST ramp data
+- :ref:`loaders-format-ramp-integration` - For information on loading 1D integration profiles extracted from JWST ramp data
