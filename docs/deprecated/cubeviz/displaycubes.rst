@@ -5,7 +5,7 @@
 Displaying Cubes
 ****************
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 The Cubeviz layout includes two image viewers (at the top of the app)
 and one spectrum viewer (at the bottom of the app), which it attempts to

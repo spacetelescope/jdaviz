@@ -4,7 +4,7 @@
 Setting Redshift/RV
 *******************
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 The :ref:`Line Lists Plugin <mosviz-line-lists>` contains a redshift slider as well as the ability to
 view and set the redshift and/or radial velocity.

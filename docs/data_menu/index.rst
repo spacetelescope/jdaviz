@@ -70,6 +70,7 @@ After Clicking ``EDIT SUBSET`` another menu opens with the following items:
 
 * ``Resize in Viewer`` allows you to resize the subset directly in the viewer by dragging the white boxes on the corners.
 * ``Edit in plugin`` opens up the Subset tools plugin. 
+
 Below are several options: 
 
 * ``replace``: will remove the previously created selection and place the newly created subset.

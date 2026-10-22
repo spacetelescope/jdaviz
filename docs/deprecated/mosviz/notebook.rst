@@ -4,7 +4,7 @@
 Exporting data from Mosviz
 ***************************
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 Initialize an instance of the Mosviz app in a Jupyter notebook using the following code:
 

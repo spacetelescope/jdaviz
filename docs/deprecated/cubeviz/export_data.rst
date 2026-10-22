@@ -4,7 +4,7 @@
 Exporting Data from Cubeviz
 ***************************
 
-.. include:: ../_templates/deprecated_config_banner.rst
+.. include:: ../../_templates/deprecated_config_banner.rst
 
 After data have been manipulated or analyzed, it is possible to export
 those data back into your Jupyter notebook.
