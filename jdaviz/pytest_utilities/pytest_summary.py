@@ -1,15 +1,11 @@
 """Combine JUnit XML reports from several pytest runs into a single summary.
 
-Used in CI after running pytest in multiple invocations (e.g. pytest-split
-groups), so that all failures are listed in one place instead of at the end of
+Used in CI after running pytest in multiple invocations via pytest-split,
+so that all failures are listed in one place at the end of
 each invocation's log. The summary is printed to stdout and, when available,
 appended to the GitHub Actions job summary ($GITHUB_STEP_SUMMARY).
 
-Usage: python pytest_summary.py [--title TITLE] REPORT.xml [REPORT.xml ...]
-
-A missing report means that pytest invocation never finished (e.g. it crashed
-or was killed for running out of memory), which is reported as well. This
-script always exits 0; the test step itself is responsible for failing the job.
+Usage: python jdaviz/pytest_utilities/pytest_summary.py [--title TITLE] REPORT.xml [REPORT.xml ...]
 """
 import argparse
 import os
@@ -44,26 +40,41 @@ def summarize_report(path):
     return counts, problems
 
 
+def format_table(header, rows):
+    """Markdown table padded so columns also line up in the plain-text log.
+
+    The first column is left-aligned and the numeric columns right-aligned.
+    """
+    widths = [max(len(r[i]) for r in [header, *rows]) for i in range(len(header))]
+
+    def fmt(row):
+        cells = [row[0].ljust(widths[0])] + [c.rjust(w) for c, w in zip(row[1:], widths[1:])]
+        return '| ' + ' | '.join(cells) + ' |'
+
+    divider = ['-' * widths[0]] + ['-' * (w - 1) + ':' for w in widths[1:]]
+    return [fmt(header), '| ' + ' | '.join(divider) + ' |', *(fmt(r) for r in rows)]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('--title', default='Test summary')
     parser.add_argument('reports', nargs='+', type=Path)
     args = parser.parse_args()
 
+    header = ['Run', 'Passed', 'Failed', 'Errors', 'Skipped', 'Total']
     rows, problems, missing = [], [], []
     for path in args.reports:
-        if not path.is_file():
+        try:
+            counts, report_problems = summarize_report(path)
+        except (OSError, ET.ParseError):
             missing.append(path.stem)
-            rows.append(f'| {path.stem} | no report | | | | |')
+            rows.append([path.stem, 'no report', '', '', '', ''])
             continue
-        counts, report_problems = summarize_report(path)
         problems.extend(f'[{path.stem}] {p}' for p in report_problems)
-        rows.append(f"| {path.stem} | {counts['passed']} | {counts['failures']} "
-                    f"| {counts['errors']} | {counts['skipped']} | {counts['tests']} |")
+        rows.append([path.stem] + [str(counts[k]) for k in
+                                   ('passed', 'failures', 'errors', 'skipped', 'tests')])
 
-    lines = [f'### {args.title}', '',
-             '| Run | Passed | Failed | Errors | Skipped | Total |',
-             '|---|---|---|---|---|---|', *rows, '']
+    lines = [f'### {args.title}', '', *format_table(header, rows), '']
     if missing:
         lines += [f":warning: No report for: {', '.join(missing)}. That pytest run did "
                   "not finish (it may have crashed or run out of memory); check its log.",
