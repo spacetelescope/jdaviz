@@ -81,3 +81,5 @@ See Also
 ========
 
 - :ref:`export-subsets` - Exporting subsets for reuse
+- :ref:`subsets` - Using subsets
+- :ref:`data_menu-edit_subsets` - Editing subsets in the data menu

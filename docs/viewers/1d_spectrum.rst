@@ -33,7 +33,7 @@ for each button.
 
 Home and Linked Home
 --------------------
-This button will reset your zoom and panning to display the entire image.
+This |icon-home|  button will reset your zoom and panning to display the entire image.
 
 Linked Home is enabled only when there are multiple viewers that allows the user to reset in 
 multiple different viewers simultaneously. 
@@ -127,9 +127,9 @@ to make subsets visible or invisible, to change their color, and to change their
 
 Focus mode 
 ----------
-Clicking on the focus mode button expands the viewer to fill the application.  
+Clicking on the |icon-focus| focus mode button expands the viewer to fill the application.  
 The right hand plugin feature is not accessible in the UI. Hovering over a pixel show the cursor information. 
-Click on the Focus mode button again to exit. 
+Click on the |icon-focus-exit| focus mode exit button to exit. 
 
 .. _viewers-spectrum_1d-toolbar-clone:
 

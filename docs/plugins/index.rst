@@ -65,12 +65,6 @@ Plugins provide specialized analysis capabilities tailored to different data typ
   catalog_search
   data_quality
 
-.. toctree::
-  :maxdepth: 1
-  :caption: Other
-
-  extensions
-
 UI Access
 =========
 
@@ -96,3 +90,12 @@ programmatically via the API:
     plg.show()
 
 See the individual plugin pages for detailed usage information.
+
+Plugin extensions
+=================
+
+.. toctree::
+   :maxdepth: 1
+   
+   extensions
+

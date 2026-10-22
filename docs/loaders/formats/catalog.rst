@@ -22,7 +22,7 @@ There are two types of catalogs that can be loaded:
 
     - **Source Catalog** (formally Catalog) - catalog where each row likely represents an object on the sky.  Must contain object coordinates. 
     - **Generic Catalog** - catalog with any type of data
-    
+
 Usage
 =====
 
@@ -45,8 +45,8 @@ The **Source Catalog** or **Generic Catalog** format imports any :class:`astropy
 
 **Source Catalog** requires the following columns:
 
-    - Right Ascention (RA) and/or X pixel
-    - Declination (Dec) and/or Y pixel
+- Right Ascention (RA) and/or X pixel
+- Declination (Dec) and/or Y pixel
 
 
 Supported File Formats
@@ -54,9 +54,9 @@ Supported File Formats
 
 The catalog should be in:
 
-    - FITS table
-    - ESCV 
-    - VOTable 
+- FITS table
+- ESCV 
+- VOTable 
 
 
 Catalog Parsing

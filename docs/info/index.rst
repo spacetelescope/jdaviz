@@ -7,23 +7,29 @@ Data Information Tools
 
 Jdaviz provides tools to inspect and interact with your data:
 
-**Metadata Viewer**
-  View FITS headers and other metadata associated with your loaded datasets.
+.. toctree::
+   :maxdepth: 1
 
-**Interactive Markers**
-  Place markers on images and spectra to mark points of interest and extract
-  information at specific locations.
+   metadata 
 
-**Logger**
-  View system messages, warnings, and errors from Jdaviz operations.
+- View FITS headers and other metadata associated with your loaded datasets.
 
 
 .. toctree::
    :maxdepth: 1
 
-   metadata
-   markers
-   logger
+    markers
+
+- Place markers on images and spectra to mark points of interest and extract
+  information at specific locations.
+
+
+.. toctree::
+   :maxdepth: 1
+
+    logger
+
+- View system messages, warnings, and errors from Jdaviz operations.
 
 
 UI Access
