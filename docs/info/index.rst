@@ -9,7 +9,7 @@ Jdaviz provides tools to inspect and interact with your data:
 
 .. toctree::
    :maxdepth: 1
-
+   
    metadata 
 
 - View FITS headers and other metadata associated with your loaded datasets.
@@ -17,8 +17,8 @@ Jdaviz provides tools to inspect and interact with your data:
 
 .. toctree::
    :maxdepth: 1
-
-    markers
+   
+   markers
 
 - Place markers on images and spectra to mark points of interest and extract
   information at specific locations.
@@ -26,8 +26,8 @@ Jdaviz provides tools to inspect and interact with your data:
 
 .. toctree::
    :maxdepth: 1
-
-    logger
+   
+   logger
 
 - View system messages, warnings, and errors from Jdaviz operations.
 

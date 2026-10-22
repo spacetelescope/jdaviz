@@ -204,7 +204,7 @@ rst_epilog += """
   :height: 1em
   :alt: table visible column icon
 
-  .. |icon-table-zoom| image:: /img/icons/table_zoom_to_selected.svg
+.. |icon-table-zoom| image:: /img/icons/table_zoom_to_selected.svg
   :height: 1em
   :alt: table zoom icon
 
