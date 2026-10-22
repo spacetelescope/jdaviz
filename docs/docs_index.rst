@@ -13,7 +13,6 @@ Using Jdaviz
 
   quickstart
   userapi/cheatsheet
-  userapi/index
   loaders/index
   viewers/index
   export/index
