@@ -1,4 +1,4 @@
-.. _cite-jdaviz:
+.. _citation:
 
 ********
 Citation
