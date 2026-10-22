@@ -7,17 +7,6 @@ Subsets & Regions
 
 Create and manage spatial and spectral subsets of your data.
 
-.. .. toctree::
-..    :maxdepth: 1
-
-..    circular
-..    rectangular
-..    elliptical
-..    polygonal
-..    annulus
-..    range
-..    composite
-..    extensions
 
 Overview
 ========
@@ -154,3 +143,11 @@ If you set a value for ``edit_subset`` but not ``combination_mode``, the assumpt
 that the new region is replacing the existing subset named in ``edit_subset``.
 This API method acts independently of the UI so all settings from before ``import_region``
 was called will be restored afterward.
+
+Subset extensions
+=================
+
+.. toctree::
+   :maxdepth: 1
+   
+   extensions

@@ -11,7 +11,7 @@ Allows exporting the current view in a Viewer as an image.
    The image size will be the exact size and state of the viewer (i.e. as if you took a screenshot of the viewer).  
    Confirm the viewer height and width before exporting.  
 
-The image can be saved as either a `.png` or `.svg`. 
+The image can be saved as either a ``.png`` or ``.svg``. 
 
 
 API Access

@@ -392,6 +392,7 @@ intersphinx_mapping.update({  # noqa: F405
     'romancal': ('https://roman-pipeline.readthedocs.io/en/stable/', None),
     'fsspec': ('https://filesystem-spec.readthedocs.io/en/latest/', None),
     's3fs': ('https://s3fs.readthedocs.io/en/latest/', None),
+    'pysaif': ('https://pysiaf.readthedocs.io/en/latest', None),
 })
 
 # Options for linkcheck
