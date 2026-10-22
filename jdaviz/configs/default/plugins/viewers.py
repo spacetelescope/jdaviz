@@ -991,15 +991,14 @@ class JdavizViewerWindow(TemplateMixin):
         coords_info = self._app.session.application._tools.get('g-coords-info')
         self.focus_mode = (self._app.state.focus_viewer == self.reference)
 
-        print(f"Calling focus_viewer_changed for {self.reference} with focus_mode = {self.focus_mode}")
-
         # Add coords_info observe handlers if this viewer is being focused, remove if not
         if self.focus_mode:
             if ('icon' not in coords_info._trait_notifiers or
                     'change' not in coords_info._trait_notifiers['icon'] or
                     len(coords_info._trait_notifiers['icon']['change']) == 0):
                 coords_info.observe(self._on_coords_info_icon_changed, names=['icon'])
-                coords_info.observe(self._on_coords_info_dataset_icon_changed, names=['dataset_icon'])
+                coords_info.observe(self._on_coords_info_dataset_icon_changed,
+                                    names=['dataset_icon'])
         # Remove observers when un-focusing this viewer
         elif self._app.state.focus_viewer in ('', None):
             coords_info.unobserve(None, names='icon')
