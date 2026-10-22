@@ -17,7 +17,7 @@ prompt you to select the appropriate format if needed.
 For cases where the Jupyter kernel is not running on the local machine,
 the file drop loader provides the capability to upload files from the local
 machine.  Otherwise, the file drop loader provides the same functionality as
-the :ref:`loaders-source-file` loader but with a more interactive interface.
+the :ref:`loaders-source-file_loading` loader but with a more interactive interface.
 
 UI Access
 =========

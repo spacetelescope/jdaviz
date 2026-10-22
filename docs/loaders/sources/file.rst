@@ -4,6 +4,8 @@
 
 :excl_platforms: mast
 
+.. _loaders-source-file_loading:
+
 ********************
 Loading from File
 ********************
