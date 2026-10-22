@@ -12,5 +12,7 @@ py:class ipywidgets.widgets.valuewidget.ValueWidget
 py:class ipywidgets.widgets.widget_box.VBox
 py:class glue_jupyter.bqplot.common.tools.BqplotPanZoomMode
 py:class glue_jupyter.bqplot.image.state.BqplotImageViewerState
+py:class astropy.units 
+py:class photutils.photutils-aperture-overlap
 
 py:class t.Any

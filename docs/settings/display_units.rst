@@ -19,7 +19,8 @@ Units
 =====
 Spectral Unit (spectrum viewers)
 --------------------------------
-Change the global display unit for spectral axes for a spectrum viewer. See :py:class:`astropy.units` for more details.
+Change the global display unit for spectral axes for a spectrum viewer. 
+See :py:class:`astropy.units` for more details.
 
 +--------------+---------------+------------------------+
 | Jdaviz Name  | Full Name     | Unit definition        | 
