@@ -133,7 +133,6 @@ jobs:
         fi
 
     - name: Test package
-      id: test
       run: |
         cd ..
         echo "pytest args ${{ steps.build-pytestargs.outputs.pytestargs }}"
@@ -144,11 +143,9 @@ jobs:
         for group in 1 2 3 4; do
           testenv/bin/pytest -p no:warnings -n auto --dist loadscope --splits 4 --group $group --durations-path=${{ github.workspace }}/jdaviz/pytest_utilities/.test_durations --astropy-header --remote-data --junitxml=${{ github.workspace }}/junit/group$group.xml ${{ steps.build-pytestargs.outputs.pytestargs }} --pyargs jdaviz || status=1
         done
+        # Print one combined summary of all groups at the end of the log.
+        python ${{ github.workspace }}/jdaviz/pytest_utilities/pytest_summary.py --title "Package tests" ${{ github.workspace }}/junit/group{1,2,3,4}.xml
         exit $status
-
-    - name: Summarize test results
-      if: ${{ !cancelled() && steps.test.outcome != 'skipped' }}
-      run: python .github/scripts/pytest_summary.py --title "Package tests" junit/group{1,2,3,4}.xml
 
     - name: Upload distribution artifacts
       if: github.event_name == 'release'
