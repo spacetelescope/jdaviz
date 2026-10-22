@@ -165,6 +165,9 @@ jobs:
           echo "No .fits files found in cache - tests will download files as needed"
         fi
     - name: Test/run with tox
+      env:
+        # Title of the combined test summary printed by tox
+        PYTEST_SUMMARY_TITLE: ${{ matrix.name }}
       run: tox -e ${{ matrix.toxenv }} -- ${{ steps.build-toxposargs.outputs.toxposargs }}
 
     - name: Upload coverage to artifacts
