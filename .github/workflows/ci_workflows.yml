@@ -94,6 +94,12 @@ jobs:
             toxenv: py312-test-romandeps
             allow_failure: true
 
+          - name: Python 3.13 with dev version of lcviz
+            os: ubuntu-latest
+            python: '3.13'
+            toxenv: py313-test-lcvizdev
+            allow_failure: true
+
     steps:
     - name: Build toxposargs from labels
       id: build-toxposargs
