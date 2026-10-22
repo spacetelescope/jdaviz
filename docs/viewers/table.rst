@@ -110,7 +110,7 @@ Click on the Focus mode button again to exit.
 Clone Viewer
 ------------
 Under the Focus mode button, there is a |icon-clone| button to clone the viewer. Clicking this button duplicates the viewer with the same
-data and subsets with name: ``Original Name[X]``, where `X` is the number of times the viewer has been cloned.
+data and subsets with name: ``Original Name[X]``, where ``X`` is the number of times the viewer has been cloned.
 
 Detach Viewer 
 -------------

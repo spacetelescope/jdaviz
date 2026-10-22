@@ -8,7 +8,7 @@ Quickstart
 Once installed, ``jdaviz`` can be run either in a Jupyter notebook, from the command line, or as a standalone application.
 Detailed workflows are given within the documentation, but some quick-start tips are given below.
 
-For a quick cheatsheet to use the ``jdaviz`` API, see: :ref:`userapi/cheatsheet`
+For a quick cheatsheet to use the ``jdaviz`` API, see: :ref:`userapi-cheatsheet`
 
 .. _quickstart-notebook:
 

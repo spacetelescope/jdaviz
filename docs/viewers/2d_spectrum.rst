@@ -103,7 +103,7 @@ There are other options available for region of interest.
 
 .. seealso::
     
-    :ref:`data_menu-edit_subsets <Edit subsets in Data Menu>`
+    :ref:`Edit subsets in Data Menu <data_menu-edit_subsets>`
         Edit subsets directly in the viewer from the ``data menu``  
 
     :ref:`Subsets & Regions <subsets>`

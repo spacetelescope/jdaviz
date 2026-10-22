@@ -37,4 +37,4 @@ See Also
 ========
 
 - :ref:`quickstart` - Getting started with Jdaviz
-- :doc:`plugin_api` - Plugin API documentation
+- :ref:`plugin-apis` - Plugin API documentation
