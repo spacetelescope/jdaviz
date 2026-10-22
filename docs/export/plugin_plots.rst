@@ -5,7 +5,34 @@
 Plugin Plots
 ************
 
-Documentation coming soon.
+
+Several plugins produce plots that can be exported:
+
+- back into your Jupyter notebook
+- as a file
+
+Supported Formats
+=================
+
+Subsets can be exported as:
+
+- PNG 
+
+.. note::
+   The image size will be the exact size and state of the plugin plot (i.e. as if you took a screenshot of the plot).  
+   Confirm the plot height and width before exporting.  
+
+
+API Access
+==========
+
+.. code-block:: python
+
+   plg = jd.plugins['Export']
+   plg.plugin_plot = 'Plugin Name: plot'
+   plg.filename = 'my-subset'
+   plg.export()
+
 
 UI Access
 =========

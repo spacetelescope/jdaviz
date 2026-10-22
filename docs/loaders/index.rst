@@ -5,21 +5,27 @@
 Importing Data
 **************
 
-Learn how to import data into Jdaviz from various sources and in different formats.
+Learn how to import data into ``jdaviz`` from various sources and in different formats.
+
+.. _loaders-overview:
 
 Overview
 ========
 
-Jdaviz provides flexible data loading through a combination of **sources** and **formats**:
+``jdaviz`` provides flexible data loading through a combination of **sources** and **formats**:
 
 - **Sources** define *where* your data comes from (file, URL, Python object, etc.)
 - **Formats** define *how* your data should be interpreted (1D spectrum, image, cube, etc.)
 
-Using load()
-============
+.. _loaders-load:
 
-The recommended way to load data is to use the :py:meth:`~jdaviz.core.helpers.ConfigHelper._load`
-method on the configuration helper, whether that's the deconfigged mode as shown below, or a specific configuration such as ``Specviz``, ``Cubeviz``, etc. This provides a simple interface for loading data:
+Using :py:class:`~jdaviz.load`
+=============================================================
+
+
+The recommended way to load data is to use the :py:class:`~jdaviz.load`
+method on the configuration helper, whether that's the deconfigged mode as shown below, or a 
+specific configuration such as ``Specviz``, ``Cubeviz``, etc. This provides a simple interface for loading data:
 
 .. code-block:: python
 
@@ -33,6 +39,8 @@ method on the configuration helper, whether that's the deconfigged mode as shown
     specviz.show()
     specviz.load('myspectrum.fits')
 
+
+.. _loaders-loaders_api:
 
 Using Loaders API (Interactive)
 ===============================
@@ -68,6 +76,8 @@ The loaders are accessed through the ``loaders`` property on the helper:
 The loaders interface provides access to parameters and options that control how the
 data is loaded and processed.
 
+.. _loaders-available_loaders:
+
 Available Loaders
 -----------------
 
@@ -76,6 +86,8 @@ Available Loaders
 
    sources/index
 
+
+.. _loaders-available_formats:
 
 Available formats
 -----------------
@@ -119,16 +131,30 @@ set various loader attributes. For example:
 The hints update as you interact with the UI, showing you the exact Python code
 needed to reproduce your actions programmatically.
 
+.. _loaders-diff_loaders_api:
+
 Differences from the Loaders API
 ================================
 
-For most use cases, ``load()`` provides a simpler interface. Use the Loaders API when you need:
+For most use cases, :py:class:`~jdaviz.load` provides a simpler interface. Use the Loaders API when you need:
 
 - More control over loading options
 - Interactive configuration
 - Data preview before loading
 - Access to specialized loader features
 
+.. _loaders-ui:
+
+UI Access 
+=========
+
+After selecting your :ref:`loaders-sources` and parsing your file, the
+the file format is automatically determined (similar to using ``format`` in the ``load()`` API call).  
+Scrolling down in the loader plugin will allow you to change importing properties, including the data label, 
+your orientation choice (WCS or pixels), and the type of viewer into which
+you will load the file. Select :guilabel:`Import` to load the data a viewer. 
+
+.. _loaders-jdaviz_readable_products:
 
 Creating Jdaviz-readable Products
 =================================
@@ -139,23 +165,27 @@ essentially two methods, i.e., loading :class:`~specutils.Spectrum` objects or
 from FITS files. Here, we list a few ways in which data can be packaged to be easily loaded
 into a ``jdaviz`` configuration.
 
+.. _loaders-database_data:
+
 Data in a database
 ------------------
 
 If the data are stored in a database, we recommend storing a :class:`~specutils.Spectrum` object
 per entry. This would allow the user to query the data and visualize it in
-``jdaviz`` with few lines of code; also see :ref:`create_product_spectrum1d_obj`.
+``jdaviz`` with few lines of code; also see :ref:`loaders-create_product_spectrum1d_obj`.
+
+.. _loaders-data_fits:
 
 Data in FITS files
 ------------------
 
 If the data are stored as FITS files, we propose three options:
 
-* :ref:`create_product_specutils_loader`
-* :ref:`create_product_dedicated_loader`
-* :ref:`create_product_spectrum1d_obj`
+* :ref:`loaders-create_product_specutils_loader`
+* :ref:`loaders-create_product_dedicated_loader`
+* :ref:`loaders-create_product_spectrum1d_obj`
 
-.. _create_product_specutils_loader:
+.. _loaders-create_product_specutils_loader:
 
 Using an available specutils loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -173,7 +203,7 @@ are more generic and adaptable: ``ASCII``, ``ECSV``, ``tabular-fits``, and
 these loaders can be found on the `specutils GitHub repository
 <https://github.com/astropy/specutils/tree/main/specutils/io/default_loaders>`_.
 
-.. _create_product_dedicated_loader:
+.. _loaders-create_product_dedicated_loader:
 
 Creating a dedicated loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -183,7 +213,7 @@ The `specutils documentation on how to create a custom loader
 is available. We are working on the necessary documentation to prompt
 ``jdaviz`` to recognize a custom loader developed in ``specutils``.
 
-.. _create_product_spectrum1d_obj:
+.. _loaders-create_product_spectrum1d_obj:
 
 Providing scripts to load the data as Spectrum objects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -199,4 +229,3 @@ Learn More
 
 - :ref:`loaders-sources` - Learn about different data sources
 - :ref:`loaders-formats` - Learn about supported data formats
-- :ref:`import-data` - See the full data import documentation

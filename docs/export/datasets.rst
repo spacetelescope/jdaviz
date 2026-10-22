@@ -5,17 +5,14 @@
 Datasets
 ********
 
-Documentation coming soon. See :ref:`export` for general export information.
+After data have been manipulated or analyzed, it is possible to export those data back into your Jupyter notebook. 
+This is an API feature and cannot be accessed via the UI. 
 
-UI Access
-=========
+.. note::
+     If you export the dataset into a notebook from ``jdaviz``, it will export in the original units.  
+     Change units in the :ref:`Units <settings-display_units>` plugin only changes the units *displayed* in the viewers. 
 
-.. guidestar-demo:: _static/jdaviz-wireframe.html
-   :repeat: false
-   :init-steps-json: [{"action":"disable-toolbar-except","value":"save"}]
-   :steps-json: [{"action": "show-sidebar", "value": "save", "delay": 1500, "caption": "Open the export sidebar"}]
-
-Top-Level API Access
+Top Level API Access
 ====================
 
 
@@ -69,3 +66,11 @@ Add a dataset to a specific viewer programmatically:
 
     # Add data to a viewer
     jd.datasets['spectrum'].add_to_viewer('spectrum-viewer')
+
+.. UI Access
+.. =========
+
+.. .. guidestar-demo:: _static/jdaviz-wireframe.html
+..    :repeat: false
+..    :init-steps-json: [{"action":"disable-toolbar-except","value":"save"}]
+..    :steps-json: [{"action": "show-sidebar", "value": "save", "delay": 1500, "caption": "Open the export sidebar"}]

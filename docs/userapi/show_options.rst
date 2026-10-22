@@ -12,8 +12,6 @@ Description
 The ``show()`` method controls how Jdaviz applications are displayed in Jupyter environments.
 You can customize the location (inline, sidecar, popout) and size (height) to fit your workflow.
 
-This applies to all Jdaviz configurations: Imviz, Specviz, Cubeviz, Specviz2d, Mosviz, and Rampviz.
-
 Display Locations
 =================
 
@@ -24,16 +22,15 @@ The default display mode shows Jdaviz inline in your notebook, directly below th
 
 .. code-block:: python
 
-    from jdaviz import Imviz
+    import jdaviz as jd
 
-    imviz = Imviz()
-    imviz.show()  # Default: loc='inline'
+    jd.show()  # Default: loc='inline'
 
 This is equivalent to:
 
 .. code-block:: python
 
-    imviz.show(loc='inline')
+    jd.show(loc='inline')
 
 Inline display is best for:
 
@@ -49,32 +46,32 @@ In JupyterLab, you can display Jdaviz in a separate pane while keeping your note
 
 .. code-block:: python
 
-    imviz.show(loc='sidecar')
+    jd.show(loc='sidecar')
 
 This opens Jdaviz to the right of your notebook by default. You can specify the anchor position:
 
 .. code-block:: python
 
     # Right side (default)
-    imviz.show(loc='sidecar:right')
+    jd.show(loc='sidecar:right')
 
     # New tab before current notebook
-    imviz.show(loc='sidecar:tab-before')
+    jd.show(loc='sidecar:tab-before')
 
     # New tab after current notebook
-    imviz.show(loc='sidecar:tab-after')
+    jd.show(loc='sidecar:tab-after')
 
     # Split pane to the right
-    imviz.show(loc='sidecar:split-right')
+    jd.show(loc='sidecar:split-right')
 
     # Split pane to the left
-    imviz.show(loc='sidecar:split-left')
+    jd.show(loc='sidecar:split-left')
 
     # Split pane on top
-    imviz.show(loc='sidecar:split-top')
+    jd.show(loc='sidecar:split-top')
 
     # Split pane on bottom
-    imviz.show(loc='sidecar:split-bottom')
+    jd.show(loc='sidecar:split-bottom')
 
 .. note::
    Sidecar display is only available in JupyterLab. In classic Jupyter notebooks,
@@ -95,11 +92,11 @@ Popout mode opens Jdaviz in a separate browser window or tab:
 .. code-block:: python
 
     # New browser window
-    imviz.show(loc='popout')
-    imviz.show(loc='popout:window')
+    jd.show(loc='popout')
+    jd.show(loc='popout:window')
 
     # New browser tab
-    imviz.show(loc='popout:tab')
+    jd.show(loc='popout:tab')
 
 .. note::
    Your browser must allow popups for this to work. Check your browser's popup blocker settings.
@@ -122,10 +119,10 @@ You can customize the height of the display (primarily for inline mode):
 .. code-block:: python
 
     # Height in pixels (integer)
-    imviz.show(height=800)
+    jd.show(height=800)
 
     # Height as string with units
-    imviz.show(height='800px')
+    jd.show(height='800px')
 
 The default height is typically 600 pixels. Adjust based on:
 
@@ -148,12 +145,12 @@ You can set a custom title for sidecar and popout displays:
 .. code-block:: python
 
     # Custom title for sidecar
-    imviz.show(loc='sidecar', title='HST Image Analysis')
+    jd.show(loc='sidecar', title='HST Image Analysis')
 
     # Custom title for popout
-    imviz.show(loc='popout', title='Spectrum Viewer')
+    jd.show(loc='popout', title='Spectrum Viewer')
 
-If not specified, the title defaults to the configuration name (e.g., "imviz").
+If not specified, the title defaults to the configuration name (e.g., "jdaviz").
 
 API Access
 ==========
@@ -186,6 +183,18 @@ The full ``show()`` method signature:
             Display height in pixels
         """
 
+Top-Level API
+-------------
+
+The top-level ``jdaviz.show()`` also accepts these parameters:
+
+.. code-block:: python
+
+    import jdaviz
+
+    # Auto-create instance with custom display
+    jdaviz.show(loc='sidecar', height=800)
+
 Configuration-Specific Examples
 -------------------------------
 
@@ -216,37 +225,25 @@ Configuration-Specific Examples
     cubeviz = Cubeviz()
     cubeviz.show(height=1200)  # Inline with custom height
 
-Top-Level API
--------------
-
-The top-level ``jdaviz.show()`` also accepts these parameters:
-
-.. code-block:: python
-
-    import jdaviz
-
-    # Auto-create instance with custom display
-    jdaviz.show(loc='sidecar', height=800)
-
 Advanced Usage
 ==============
 
 Multiple Instances
 ------------------
 
-You can create and display multiple instances with different configurations:
+You can create and display multiple instances:
 
 .. code-block:: python
 
-    from jdaviz import Imviz, Specviz
+    import jdaviz as jd
 
-    # Image viewer in sidecar
-    imviz = Imviz()
-    imviz.show(loc='sidecar:split-left', title='Images')
+    # app 1 in sidecar
+    jd1 = jd.new_app()
+    jd1.show(loc='sidecar:split-left', title='Images')
 
-    # Spectrum viewer inline
-    specviz = Specviz()
-    specviz.show(loc='inline', height=600)
+    # app 2 inline
+    jd2 = jd.new_app()
+    jd2.show(loc='inline', height=600)
 
 Dynamic Display
 ---------------
@@ -255,16 +252,14 @@ You can call ``show()`` multiple times to change the display:
 
 .. code-block:: python
 
-    imviz = Imviz()
-
     # Start inline
-    imviz.show(loc='inline')
+    jd.show(loc='inline')
 
     # Later, move to sidecar
-    imviz.show(loc='sidecar')
+    jd.show(loc='sidecar')
 
     # Then popout
-    imviz.show(loc='popout')
+    jd.show(loc='popout')
 
 Direct App Display
 ------------------
@@ -273,10 +268,9 @@ Alternatively, you can display the app object directly:
 
 .. code-block:: python
 
-    imviz = Imviz()
-    imviz._app  # Display in notebook cell output
+    jd._app  # Display in notebook cell output
 
-This is equivalent to ``imviz.show(loc='inline')`` but provides less control over the display.
+This is equivalent to ``jd.show(loc='inline')`` but provides less control over the display.
 
 Details
 =======
@@ -305,7 +299,6 @@ Persistence
 See Also
 ========
 
-* :doc:`../display` - Detailed documentation on display customization
-* :doc:`cheatsheet` - Quick reference for common operations
-* :doc:`../quickstart` - Getting started guide
-* :doc:`../plugin_api` - Plugin API documentation
+* :ref:`userapi-cheatsheet` - Quick reference for common operations
+* :ref:`quickstart` - Getting started guide
+* :ref:`plugin-apis` - Plugin API documentation

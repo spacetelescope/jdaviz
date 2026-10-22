@@ -61,7 +61,7 @@ and ``DQ`` extensions), the importer can *associate* extensions with one another
 setting up a parent-child relationship. An associated (child) data entry is nested
 under its parent in the data menu and is treated as a layer of the parent rather than
 as an independent image, e.g., child layers are **not** cycled through when
-:ref:`blinking <imviz-blinking>`; only top-level (parent) data are blinked.
+:ref:`blinking <viewers-image-toolbar-blink>`; only top-level (parent) data are blinked.
 
 The ``Parent Dataset`` dropdown controls this behavior:
 
@@ -90,5 +90,7 @@ The ``Parent Dataset`` dropdown controls this behavior:
 See Also
 ========
 
-- :doc:`../../imviz/displayimages` - For information on displaying images
-- :doc:`../../imviz/plugins` - For photometric analysis
+- :ref:`viewers-image` - For information on displaying images
+- :ref:`plugins-aperture_photometry` - For photometric aperture photometry
+- :ref:`plugins-compass` - For displaying compass
+- :ref:`plugins-orientation` - For changing orientation
