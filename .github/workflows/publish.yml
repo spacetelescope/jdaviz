@@ -143,8 +143,8 @@ jobs:
         for group in 1 2 3 4; do
           testenv/bin/pytest -p no:warnings -n auto --dist loadscope --splits 4 --group $group --durations-path=${{ github.workspace }}/jdaviz/pytest_utilities/.test_durations --astropy-header --remote-data --junitxml=${{ github.workspace }}/junit/group$group.xml ${{ steps.build-pytestargs.outputs.pytestargs }} --pyargs jdaviz || status=1
         done
-        # Print one combined summary of all groups at the end of the log.
-        python ${{ github.workspace }}/jdaviz/pytest_utilities/pytest_summary.py --title "Package tests" ${{ github.workspace }}/junit/group{1,2,3,4}.xml
+        # Print one combined summary of all groups at the end of the log
+        python ${{ github.workspace }}/.github/scripts/pytest_summary.py --title "Package tests" ${{ github.workspace }}/junit/group{1,2,3,4}.xml || true
         exit $status
 
     - name: Upload distribution artifacts

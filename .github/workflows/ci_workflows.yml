@@ -165,20 +165,10 @@ jobs:
           echo "No .fits files found in cache - tests will download files as needed"
         fi
     - name: Test/run with tox
-      shell: bash
-      run: |
-        status=0
-        tox -e ${{ matrix.toxenv }} -- ${{ steps.build-toxposargs.outputs.toxposargs }} || status=$?
-
-        # Print one combined summary of all pytest runs at the end of the log.
-        # Report names must match the --junitxml outputs of the pytest commands in tox.ini.
-        if [[ "${{ matrix.toxenv }}" == *-test* ]]; then
-          if [[ "${{ matrix.toxenv }}" == *remotedata* ]]; then runs="remotedata"; else runs="doctest group1 group2"; fi
-          reports=()
-          for run in $runs; do reports+=(".tox/${{ matrix.toxenv }}/junit/$run.xml"); done
-          python jdaviz/pytest_utilities/pytest_summary.py --title "${{ matrix.name }}" "${reports[@]}"
-        fi
-        exit $status
+      env:
+        # Title of the combined test summary printed by tox
+        PYTEST_SUMMARY_TITLE: ${{ matrix.name }}
+      run: tox -e ${{ matrix.toxenv }} -- ${{ steps.build-toxposargs.outputs.toxposargs }}
 
     - name: Upload coverage to artifacts
       if: "contains(matrix.toxenv, '-cov')"
