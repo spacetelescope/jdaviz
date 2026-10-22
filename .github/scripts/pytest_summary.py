@@ -52,6 +52,8 @@ def summarize_report(path):
         # classname is the dotted module (and class) path, e.g.
         # "jdaviz.core.tests.test_foo.TestBar", not a file path
         node = f"{case.get('classname', '')}::{case.get('name', '')}"
+        # remove the leading junk from tox
+        node = node[node.index('jdaviz'):]
         failure, error = case.find('failure'), case.find('error')
         if failure is not None:
             outcome = 'failed'
