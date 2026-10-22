@@ -162,7 +162,7 @@ double-click on the display while the mode is active.
 Colormap
 ========
 
-In addition to changing :ref:`settings-plot_options-viewer_settings-color:` in the :ref:`settings-plot_options`,
+In addition to changing :ref:`settings-plot_options-viewer_settings-color` in the :ref:`settings-plot_options`,
 the Image viewer has a |icon-cmap| button under the |icon-blink| menu that can also
 adjust those values.
 

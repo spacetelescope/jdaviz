@@ -109,10 +109,8 @@ The selected region will display in color, and coded to subset number and listed
 
 There are other options available for region of interest.
 .. seealso::
-
     :ref:`Edit subsets in Data Menu <data_menu-edit_subsets>`
         Edit subsets directly in the viewer from the ``data menu``  
-
     :ref:`Subsets & Regions <subsets>`
         Create and manage spatial and spectral subsets of your data.
 
