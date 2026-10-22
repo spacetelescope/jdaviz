@@ -11,7 +11,7 @@ Convert data to audio for sonification analysis.
 
 .. note::
    ``Strauss`` must be installed for the :guilabel:`sonification` plugin to work.
-   See `https://strauss.readthedocs.io/en/latest/`_ for details. 
+   See https://strauss.readthedocs.io/en/latest/ for details. 
 
 Description
 ===========
