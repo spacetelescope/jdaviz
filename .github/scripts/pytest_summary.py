@@ -53,7 +53,7 @@ def summarize_report(path):
         # "jdaviz.core.tests.test_foo.TestBar", not a file path
         node = f"{case.get('classname', '')}::{case.get('name', '')}"
         # remove the leading junk from tox
-        node = node[node.index('jdaviz'):]
+        node = node.split('site-packages.')[-1]
         failure, error = case.find('failure'), case.find('error')
         if failure is not None:
             outcome = 'failed'
