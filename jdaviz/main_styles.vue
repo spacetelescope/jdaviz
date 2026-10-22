@@ -78,64 +78,8 @@ div.splitpanes__pane.container:has(.gl-compat-root) {
   width: 100% !important;
 }
 
-.lm_goldenlayout {
-  background: #f8f8f8;
-}
-
-.lm_content {
-  background: #ffffff;
-  border: none;
-  /*border-top: 1px solid #cccccc;*/
-}
-
 .jdaviz-viewer-figure-container .lm-Widget.bqplot.figure.jupyter-widgets.classic {
   margin: 0 !important;
-}
-
-.lm_splitter {
-  background: #e2e4e8;
-  opacity: 1;
-  z-index: 1;
-}
-
-/* .lm_splitter.lm_vertical {
-  height: 1px !important;
-}
-
-.lm_splitter.lm_horizontal {
-  width: 1px !important;
-} */
-
-.lm_header .lm_tab {
-  padding-top: 0px;
-  margin-top: 0px;
-}
-
-.lm_header ul {
-  padding-left: 0;
-}
-
-.lm_popout {
-  display: none;
-}
-
-.lm_close {
-  /* hide the close button on the right (which allows closing an entire group of tabs)
-  so that we can control the ability to close tabs at the per-viewer level */
-  display: none !important;
-}
-
-.cubeviz .lm_close_tab {
-  /* do not allow closing any viewer tabs in cubeviz */
-  /* deconfigging: temporarily do not allow closing
-     tabs until viewer creator is migrated */
-  display: none;
-}
-
-.imviz .lm_tab[title="imviz-0"] > .lm_close_tab {
-  /* hide the close button on the tab for imviz-0 only to
-     prevent closing the default viewer */
-  display: none;
 }
 
 .v-toolbar-items .v-btn {

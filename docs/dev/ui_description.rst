@@ -46,15 +46,15 @@ interface. It is meant to be the standard scaffolding supporting the
 display of the individual viewers, and implementation of data management functions and
 user plugins in much the same way that the Qt desktop version does.
 
-The implementation leverages three primary packages:
+The implementation uses two primary packages and Jdaviz's own viewer layout component:
 
 1. `glue-jupyter <https://github.com/glue-viz/glue-jupyter>`_: handles the data and state management, including
    the plugin infrastructure that provides the registry of available
    viewers, analysis functions, etc.
 2. `ipyvuetify <https://github.com/mariobuikhuizen/ipyvuetify>`_: provides the UI widgets for composing the web-based
    front-end.
-3. `ipygoldenlayout <https://github.com/nmearl/ipygoldenlayout>`_: an additional widget that supports tabbing and
-   docking the displayed viewers.
+3. Jdaviz's own viewer layout component provides tabbing and docking of the
+   displayed viewers. See :doc:`viewer_layout` for its configuration and runtime model.
 
 Widget design
 -------------
