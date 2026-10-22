@@ -43,7 +43,7 @@ multiple different viewers simultaneously.
 
 Single-viewer Zoom is also available and is used in a similar way as in other Jdaviz tools. 
 To access this option when there are multiple viewers, right-click on the Linked Box Zoom button and 
-left-click on the second option down to select it.
+left-click on the |icon-box-zoom| icon to select it.
 
 The |icon-box-zoom| (box),  |icon-xrange-zoom| (x-range), and |icon-yrange-zoom| zoom tools allow you to zoom by
 clicking and dragging with your mouse. The box zoom tool adjusts both the x and y range of
@@ -65,7 +65,8 @@ based on the way they are linked together. For 2D and 1D Spectrum viewers, these
 
 Single-viewer Pan/Zoom is also available and is used in a similar way as in
 other Jdaviz tools. To access this option when there are multiple viewers, right-click on the
-Linked Pan/Zoom button and left-click on the second option down to select it.
+Linked Pan/Zoom button and left-click on the |icon-zoom-pan-2d| to select it.
+
 
 There are several ways to pan around a spectrum or zoom in on features of
 interest. Right click will open a dropdown with access to different

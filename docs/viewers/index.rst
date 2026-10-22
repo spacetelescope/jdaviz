@@ -68,10 +68,10 @@ Data Menus
 
 Each viewer has a legend in the top-right indicating what layers are currently displayed. Clicking on the legend opens a data menu where you can:
 
-    - Toggle visibility of individual layers
-    - Remove layers from the viewer or the app
-    - Rename viewers
-    - Add new layers 
+- Toggle visibility of individual layers
+- Remove layers from the viewer or the app
+- Rename viewers
+- Add new layers 
 
 For more information, see :ref:`data_menu`.
 
@@ -79,7 +79,7 @@ For more information, see :ref:`data_menu`.
 
 Focus mode
 ==========
-On the far right in the toolbar of each viewer, there is a ``focus mode`` button (indicated by a dashed box).
+On the far right in the toolbar of each viewer, there is a ``focus mode`` button (indicated by |icon-focus|).
 Clicking on this button expands the viewer to fill the application, 
 and provides select plotting and visualization tools for each viewer.
 

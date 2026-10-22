@@ -51,7 +51,7 @@ multiple different viewers simultaneously.
 
 Single-viewer Zoom is also available and is used in a similar way as in other Jdaviz tools. 
 To access this option when there are multiple viewers, right-click on the Linked Box Zoom button and 
-left-click on the second option down to select it.
+left-click on the |icon-box-zoom| icon to select it.
 
 The |icon-box-zoom| (box),  |icon-xrange-zoom| (x-range), and |icon-yrange-zoom| zoom tools allow you to zoom by
 clicking and dragging with your mouse. The box zoom tool adjusts both the x and y range of

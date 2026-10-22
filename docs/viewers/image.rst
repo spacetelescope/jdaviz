@@ -58,10 +58,10 @@ From the API
 
 From the API, you can programmatically zoom in and out. Zoom level:
 
-    * 1 - real-pixel-size
-    * 2 - zoomed in by a factor of 2
-    * 0.5 - zoomed out by a factor of 2
-    * ``'fit'`` - zoomed to fit the whole image width into display
+* 1 - real-pixel-size
+* 2 - zoomed in by a factor of 2
+* 0.5 - zoomed out by a factor of 2
+* ``'fit'`` - zoomed to fit the whole image width into display
 
 For example:
 

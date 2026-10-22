@@ -46,7 +46,8 @@ based on the way they are linked together.
 
 Single-viewer Pan/Zoom is also available and is used in a similar way as in
 other Jdaviz tools. To access this option when there are multiple viewers, right-click on the
-Linked Pan/Zoom button and left-click on the second option down to select it.
+Linked Pan/Zoom button and left-click on the |icon-zoom-pan-2d| to select it.
+
 
 When in either of these modes, clicking on the image will recenter the image to the
 location under cursor.
