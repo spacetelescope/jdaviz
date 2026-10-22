@@ -5,10 +5,15 @@ import pytest
 from jdaviz.core.loaders.importers.spectral_lines.spectral_lines import SpectralLinesImporter
 
 
+@pytest.fixture(autouse=True)
+def enable_spectral_lines_dev_flag(deconfigged_helper):
+    """Exercise spectral-line importer behavior with the feature enabled."""
+    deconfigged_helper._app.state.dev_spectral_lines = True
+
+
 def test_spectral_lines_importer_is_valid(deconfigged_helper):
     """Test _check_is_valid for SpectralLinesImporter: success and failure cases."""
     app = deconfigged_helper._app
-    app.state.dev_spectral_lines = True
 
     valid_table = QTable({'wavelength': [6562.8, 4861.3] * u.AA,
                           'name': ['Ha', 'Hb']})
@@ -42,7 +47,6 @@ def test_wavelength_column_detection(deconfigged_helper, col_name):
     'spectral_loc'. Added some variation in capitalization / spacing to ensure
     flexibility.
     """
-    deconfigged_helper._app.state.dev_spectral_lines = True
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({col_name: [6562.8, 4861.3], 'flux': [1.0, 0.5]})
     assert ldr.format == 'Spectral Lines'
@@ -63,7 +67,6 @@ def test_spectral_unit_column_detection(deconfigged_helper):
     even if the column name doesn't indicate that it is a frequency or
     wavelength column.
     """
-    deconfigged_helper._app.state.dev_spectral_lines = True
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'pos': [6562.8, 4861.3] * u.AA, 'name': ['Ha', 'Hb']})
     assert ldr.format == 'Spectral Lines'
@@ -76,7 +79,6 @@ def test_spectral_loc_excludes_non_numeric_columns(deconfigged_helper):
     Non-numeric columns should be filtered out of spectral_loc choices,
     otherwise an error is raised when they are cast to a float.
     """
-    deconfigged_helper._app.state.dev_spectral_lines = True
     ldr = deconfigged_helper.loaders['object']
     ldr.object = QTable({'wavelength': [6562.8, 4861.3],
                          'name': ['Ha', 'Hb'],       # string – not numeric
