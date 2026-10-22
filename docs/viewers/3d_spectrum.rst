@@ -19,7 +19,7 @@ for each button.
 
 Home
 ----
-This button will reset your zoom and panning to display the entire image.
+This |icon-home| button will reset your zoom and panning to display the entire image.
 
 Previous zoom is also available by right-clicking on the home icon and selecting the previous zoom icon. 
 This will revert to the last saved zoom state. Zoom states are saved when beginning a zoom selection or when 
@@ -32,7 +32,7 @@ multiple different viewers simultaneously.
 
 Single-viewer Box Zoom is also available and is used in a similar way as in other Jdaviz tools. 
 To access this option when there are multiple viewers, right-click on the Linked Box Zoom button and 
-left-click on the second option down to select it.
+left-click on the |icon-box-zoom| icon to select it.
 
 .. _viewers-spectrum_3d-toolbar-panzoom:
 
@@ -64,7 +64,7 @@ If a 1D Spectrum viewer has already been created, once a region is selected,
 the cube will be collapsed in wavelength space over the region, 
 and the resulting spectrum will be displayed in the 1D spectrum viewer.
 
-Regions can be created by first clicking the |icon-region-circ| icon (to draw a circular region),
+Regions can be created by first clicking the |icon-region-img| icon (to draw a circular region),
 then clicking and dragging (using the mouse) until the
 desired region is covered by a colored shape, after which you release the mouse button.
 If you want to draw other shapes, right click on the icon to see a dropdown of supported shapes
@@ -78,19 +78,14 @@ viewer to lock it in place.
 There are other options available for region of interest. 
 
 .. seealso::
-    
-    :ref:`Edit subsets in Data Menu <data_menu-edit_subsets>`
+
+    * :ref:`Edit subsets in Data Menu <data_menu-edit_subsets>`
         Edit subsets directly in the viewer from the ``data menu``  
-
-    :ref:`Subsets & Regions <subsets>`
+    * :ref:`Subsets & Regions <subsets>`
         Create and manage spatial and spectral subsets of your data.
-
-.. seealso::
-    :ref:`Exporting Spatial Regions <export-subsets>`
+    * :ref:`Exporting Spatial Regions <export-subsets>`
         Exporting regions from within the Jupyter notebook.
-
-.. seealso::
-    `Defining subsets using glue <http://docs.glueviz.org/en/stable/getting_started/#defining-subsets>`_
+    * `Defining subsets using glue <http://docs.glueviz.org/en/stable/getting_started/#defining-subsets>`_
         Glueviz documentation on defining and refining subsets. Slightly different UI but same approach.
 
 There are options available in the :ref:`Plotting Option <settings-plot_options>` 
@@ -103,7 +98,7 @@ Spectrum At Spaxel
 
 This tool allows the user to create a single-spaxel subset in an image viewer. This subset will then be
 visualized in the spectrum viewer by showing the spectrum at that spaxel.
-While this tool is active, hovering over a pixel in the image viewer will show a preview of the spectrum
+After clicking on the |icon-spaxel| icon, hovering over a pixel in the image viewer will show a preview of the spectrum
 at that spaxel in the spectrum viewer, and left-clicking will create a new subset at that spaxel.
 Click again to move the region to a new location under the cursor. Holding down the
 alt key (Alt key on Windows, Option key on Mac) while clicking on a spaxel creates a new subset at
@@ -120,9 +115,9 @@ created using the tool.
 
 Focus mode 
 ----------
-Clicking on the focus mode button expands the viewer to fill the application.  
+Clicking on the |icon-focus| focus mode button expands the viewer to fill the application.  
 The right hand plugin feature is not accessible in the UI. Hovering over a pixel show the cursor information. 
-Click on the Focus mode button again to exit. 
+Click on the |icon-focus-exit| focus mode exit button to exit. 
 
 Clone Viewer
 ------------

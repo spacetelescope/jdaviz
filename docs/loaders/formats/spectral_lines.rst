@@ -5,6 +5,8 @@
 :data-types: spectral-lines
 :dev-only: true
 
+.. _loaders-format-spectral-lines-format:
+
 *********************
 Spectral Lines Format
 *********************
@@ -14,13 +16,14 @@ Spectral Lines Format
     This feature is under active development and is available only when
     ``app.state.dev_spectral_lines = True``.
 
+
 Overview
 ========
 
 The **Spectral Lines** format imports any :class:`astropy.table.Table` or
 :class:`~astropy.table.QTable` as a spectral line dataset in the data
 collection.  This will become the eventual replacement of the
-:ref:`loaders-format-line-list` format and :ref:`plugins-line_lists` plugin.
+:ref:`loaders-format-line-list-format` format and :ref:`plugins-line_lists` plugin.
 
 
 UI Access

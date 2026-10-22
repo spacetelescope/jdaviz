@@ -7,8 +7,8 @@ Plugin Tables
 
 Several plugins produce tables that can be exported:
 
-- back into your Jupyter notebook,
-- as a file.
+- back into your Jupyter notebook
+- as a file
 
 
 Supported Formats

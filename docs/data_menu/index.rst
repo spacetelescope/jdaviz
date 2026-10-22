@@ -34,7 +34,7 @@ Clicking the clickboard icon next to the data or subset layer name copies the la
 
 Visibility 
 ----------
-Clicking the eyeball icon next to the data or subset layer name toggles the visibility of the layer. 
+Clicking the |icon-eye| eyeball icon next to the data or subset layer name toggles the visibility of the layer. 
 
 Adding data
 -----------
@@ -50,6 +50,7 @@ Clicking on the compass icon opens the ``Orientation`` plugin allowing you to ch
 Trash can
 ---------
 After clicking on data or subset layer(s), clicking the trashcan icon allows you to either:
+
 - Remove from viewer: removes the layer from the viewer, but the dataset is still loaded in the app
 - Delete from app: deletes the dataset from ``jdaviz``.  You must use the ``Loader`` plugin to reload the data.
 

@@ -70,12 +70,12 @@ templates_path = ['_templates']
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
 rst_epilog += """
-.. |icon-white-to-black| image:: /img/icons/white_to_black.png
-  :scale: 80
+.. |icon-white-to-black| image:: /img/icons/contrast.svg
+  :height: 1em
   :alt: white to black icon
 
-.. |icon-blink| image:: /img/icons/blink.png
-  :scale: 80
+.. |icon-blink| image:: /img/icons/blink.svg
+  :height: 1em
   :alt: blink icon
 
 .. |icon-plus| image:: /img/icons/picture_with_plus.png
@@ -160,9 +160,13 @@ rst_epilog += """
   :height: 1em
   :alt: zoom yrange icon
 
-.. |icon-region-spec| image:: /img/icons/select_circle.svg
+.. |icon-region-spec| image:: /img/icons/select_x.svg
   :height: 1em
-  :alt: region icon
+  :alt: region spectrum icon
+
+.. |icon-region-img| image:: /img/icons/select_circle.svg
+  :height: 1em
+  :alt: region image icon
 
 .. |icon-detach| image:: /img/icons/popout.svg
   :height: 1em
@@ -171,6 +175,38 @@ rst_epilog += """
 .. |icon-clone| image:: /img/icons/viewer_clone.svg
   :height: 1em
   :alt: clone icon
+
+.. |icon-focus| image:: /img/icons/fullscreen.svg
+  :height: 1em
+  :alt: clone icon
+
+.. |icon-focus-exit| image:: /img/icons/fullscreen-exit.svg
+  :height: 1em
+  :alt: clone icon
+
+.. |icon-spaxel| image:: /img/icons/pixelspectra.svg
+  :height: 1em
+  :alt: spaxel icon
+
+.. |icon-home| image:: /img/icons/home.svg
+  :height: 1em
+  :alt: spaxel home icon
+
+.. |icon-table-subset| image:: /img/icons/table_subset.svg
+  :height: 1em
+  :alt: table subset icon
+
+.. |icon-column-add| image:: /img/icons/table-column-plus-after.svg
+  :height: 1em
+  :alt: table add column icon
+
+.. |icon-column-visible| image:: /img/icons/table-columns-visible.svg
+  :height: 1em
+  :alt: table visible column icon
+
+  .. |icon-table-zoom| image:: /img/icons/table_zoom_to_selected.svg
+  :height: 1em
+  :alt: table zoom icon
 
 
 

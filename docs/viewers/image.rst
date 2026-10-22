@@ -16,11 +16,10 @@ Toolbar
 On the top right of the viewer is the toolbar, which provides you with several image display options. 
 Right-click or clicking on the bottom right of the button will open a dropdown with access to different options for each button.
 
-The primary buttons:
 
 Home and Linked Home
 --------------------
-This button will reset your zoom and panning to display the entire image.
+This |icon-home| button will reset your zoom and panning to display the entire image.
 
 Linked Home is enabled only when there are multiple viewers that allows the user to reset in 
 multiple different viewers simultaneously. 
@@ -36,7 +35,7 @@ multiple different viewers simultaneously.
 
 Single-viewer Box Zoom is also available and is used in a similar way as in other Jdaviz tools. 
 To access this option when there are multiple viewers, right-click on the Linked Box Zoom button and 
-left-click on the second option down to select it.
+left-click on the |icon-box-zoom| icon to select it.
 
 .. _viewers-image-toolbar-panzoom:
 
@@ -49,7 +48,7 @@ but you can re-link them via WCS using :ref:`plugins-orientation`.
 
 Single-viewer Pan/Zoom is also available and is used in a similar way as in
 other Jdaviz tools. To access this option when there are multiple viewers, right-click on the
-Linked Pan/Zoom button and left-click on the second option down to select it.
+Linked Pan/Zoom button and left-click on the |icon-zoom-pan-2d| to select it.
 
 When in either of these modes, clicking on the image will recenter the image to the
 location under cursor.
@@ -83,7 +82,7 @@ specific analysis functions in the plugin toolbar, for example in the
 :ref:`plugins-aperture_photometry` plugin.
 Users can create spatial regions either in Jdaviz or the Jupyter notebook.
 
-Regions can be created by first clicking the |icon-region-circ| icon (to draw a circular region),
+Regions can be created by first clicking the |icon-region-img| icon (to draw a circular region),
 then clicking and dragging (using the mouse) until the
 desired region is covered by a colored shape, after which you release the mouse button.
 If you want to draw other shapes, right click on the icon to see a dropdown of supported shapes
@@ -97,19 +96,14 @@ viewer to lock it in place.
 There are other options available for region of interest. 
 
 .. seealso::
-    
-    :ref:`Edit subsets in Data Menu <data_menu-edit_subsets>`
-        Edit subsets directly in the viewer from the ``data menu``        
 
-    :ref:`Subsets & Regions <subsets>`
+    * :ref:`Edit subsets in Data Menu <data_menu-edit_subsets>`
+        Edit subsets directly in the viewer from the ``data menu``  
+    * :ref:`Subsets & Regions <subsets>`
         Create and manage spatial and spectral subsets of your data.
-
-.. seealso::
-    :ref:`Exporting Spatial Regions <export-subsets>`
+    * :ref:`Exporting Spatial Regions <export-subsets>`
         Exporting regions from within the Jupyter notebook.
-
-.. seealso::
-    `Defining subsets using glue <http://docs.glueviz.org/en/stable/getting_started/#defining-subsets>`_
+    * `Defining subsets using glue <http://docs.glueviz.org/en/stable/getting_started/#defining-subsets>`_
         Glueviz documentation on defining and refining subsets. Slightly different UI but same approach.
 
 There are options available in the :ref:`Plotting Option <settings-plot_options>` 
@@ -195,9 +189,9 @@ Click the ``x`` next to ``OPACITY`` to leave this feature.
 
 Focus mode 
 ==========
-Clicking on the focus mode button expands the viewer to fill the application.  
+Clicking on the |icon-focus| focus mode button expands the viewer to fill the application.  
 The right hand plugin feature is not accessible in the UI. Hovering over a pixel show the cursor information. 
-Click on the Focus mode button again to exit. 
+Click on the |icon-focus-exit| focus mode exit button to exit. 
 
 Clone Viewer
 ============

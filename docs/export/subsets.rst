@@ -7,8 +7,8 @@ Subsets
 
 After subsets have been created or manipulated, it is possible to export those subsets: 
 
-- back into your Jupyter notebook,
-- as a file.
+- back into your Jupyter notebook
+- as a file
 
 Supported Formats
 =================
