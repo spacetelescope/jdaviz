@@ -1,9 +1,9 @@
 .. _userapi:
 .. rst-class:: section-icon-mdi-code-tags
 
-************************
+********************************
 Quickstart API & Notebook Access
-************************
+********************************
 
 Programmatic access to Jdaviz functionality for notebook workflows.
 
