@@ -28,6 +28,7 @@ Table viewer features
 =====================
 
 - Show cell value: 
+
 Clicking on a cell shows the cell value in the top gray bar below the toolbar.  
 On the far left, the column name and column number will show in the white box.  On the right, the cell value will be shown in the gray box.
 For non-index cells, to the right of the gray box, a green check and a red x will be shown, indicating the cell
@@ -35,11 +36,13 @@ value can be changed.  Click in the gray box, update the value, and select the g
 the red x to disregard the change.  The value in the cell of the table will then be updated. 
 
 - Edit column name: 
+
 When hovering over or clicking on the column name cell, a small black pencil appears to the right of the column name.
 Selecting the pencil allows you to change the column name.  Select the black check to apply the value, or
 the black x to disregard the change.  The column name will then be updated. 
 
 - Page counter: 
+
 The bottom of the viewer shows the number of rows in the page, and allows you to 
 select how many rows to show in the viewer per page.  Select the dropdown to change the row counts.
 To the right is the row and page counter, which tells you which rows you are viewing and how many rows are 
