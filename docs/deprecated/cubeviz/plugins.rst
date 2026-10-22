@@ -9,7 +9,7 @@ of 2D image data, and both 1D and 3D spectroscopic data.
 All plugins are accessed via the :guilabel:`plugin`
 icon in the upper right corner of the Cubeviz application.
 
-.. image:: ../img/cubevizplugins.jpg
+.. image:: img/cubevizplugins.jpg
     :alt: Cubeviz Plugins
     :width: 200px
 
