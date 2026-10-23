@@ -18,6 +18,7 @@
       <v-switch v-if="label_overwrite"
         class="hide-input"
         label="Show in viewers"
+        color="primary"
         :disabled="true"
         :hint="'Visibility of the modified entry will be adopted from the current \''+label+'\' data entry.'"
         persistent-hint
@@ -46,6 +47,7 @@
 
     <j-flex-row v-if="show_viewer_switch !== false && add_to_viewer_items.length === 2">
       <v-switch v-if="label_overwrite"
+        color="primary"
         :model-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
         :label="addToViewerText"
         :class="api_hints_enabled && add_results_api_hint ? 'api-hint hide-input' : 'hide-input'"
@@ -54,6 +56,7 @@
         persistent-hint
       ></v-switch>
       <v-switch v-else
+        color="primary"
         :model-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
         @update:modelValue="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
         :label="addToViewerText"
@@ -70,6 +73,7 @@
     <j-flex-row v-if="auto_update_result !== undefined">
       <v-switch
         v-model="auto_update_result"
+        color="primary"
         @change="(e) => {$emit('update:auto_update_result', auto_update_result)}"
         label="Auto-update result"
         hint="Regenerate the resulting data-product whenever any inputs are changed"

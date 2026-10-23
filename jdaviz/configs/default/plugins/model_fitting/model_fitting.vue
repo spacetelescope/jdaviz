@@ -291,6 +291,7 @@
               <div v-for="item in fitter_parameters.parameters">
                 <v-switch v-if="isBoolean(item.value)"
                   v-model="item.value"
+                  color="primary"
                   :hint="parameter_hints[item.name]"
                   persistent-hint>
                     <template v-slot:label>

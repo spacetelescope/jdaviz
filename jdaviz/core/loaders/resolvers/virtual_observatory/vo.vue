@@ -88,6 +88,7 @@
             <div style="display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 8px">
               <v-switch
                 v-model="coord_follow_viewer_pan"
+                color="primary"
                 hide-details
                 density="compact"
               ></v-switch>

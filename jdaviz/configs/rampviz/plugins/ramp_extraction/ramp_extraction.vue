@@ -20,6 +20,7 @@
               <v-switch
                 v-model="show_live_preview"
                 label="Show live ramp extraction"
+                color="primary"
                 hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
                 persistent-hint
               ></v-switch>
@@ -28,6 +29,7 @@
               <v-switch
                 v-model="show_subset_preview"
                 label="Show subset ramp profiles"
+                color="primary"
                 hint="Show each pixel's ramp profile within a subset."
                 persistent-hint
               ></v-switch>
