@@ -8,6 +8,7 @@ from specutils import Spectrum
 
 from jdaviz.configs.imviz.tests.utils import _image_nddata_wcs
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.events import ViewerRemovedMessage
 
 
 # On failure, should not crash; essentially a no-op.
@@ -618,6 +619,36 @@ def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catal
     deconfigged_helper.load(image_nddata_wcs, format='Image',
                             data_label='test_image')
     assert plg._obj.disabled_msg == ''
+
+
+def test_plugin_disabled_on_viewer_removed(deconfigged_helper, image_nddata_wcs, spectrum1d):
+    """
+    Test that the Unit Conversion plugin responds to viewers being removed, i.e. it
+    stays enabled while a relevant viewer with data remains, and is disabled
+    once no relevant viewer with data remains.
+    """
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec')
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='img')
+
+    plg = deconfigged_helper.plugins["Unit Conversion"]._obj
+    app = deconfigged_helper._app
+    assert plg.disabled_msg == ''
+
+    # the base TemplateMixin subscription must not be clobbered (one handler per
+    # subscriber/message class in glue's hub) and should dispatch to the UC handler
+    handler = app.hub._subscriptions[plg][ViewerRemovedMessage][0]
+    assert handler.func.__name__ == '_on_viewer_removed'
+
+    viewer_ids = list(app._viewer_store.keys())
+    assert len(viewer_ids) == 2
+
+    # removing one viewer leaves data in the other, so the plugin stays enabled
+    app.vue_destroy_viewer_item(viewer_ids[0])
+    assert plg.disabled_msg == ''
+
+    # removing the last relevant viewer disables the plugin
+    app.vue_destroy_viewer_item(viewer_ids[1])
+    assert plg.disabled_msg == 'Unit Conversion unavailable without data loaded in a viewer'
 
 
 def test_unit_reset_on_all_data_removed(deconfigged_helper, spectrum1d):
