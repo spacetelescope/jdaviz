@@ -1,10 +1,17 @@
 .. _loaders-source-spectral-line-db:
 
+:dev-only: true
+
 .. rst-class:: section-icon-mdi-plus-box
 
 *****************************
 Spectral Line Database
 *****************************
+
+.. warning::
+
+  This feature is under active development and is available only when
+  ``app.state.dev_spectral_lines = True``.
 
 Search the built-in Spectral Line Database and stage a custom list of lines to be
 loaded into jdaviz via the :ref:`loaders-format-line-list` importer.
@@ -31,6 +38,7 @@ API Access
 .. code-block:: python
 
     import jdaviz as jd
+    jd.gca()._app.state.dev_spectral_lines = True
     jd.show()
 
     ldr = jd.loaders['spectral line database']

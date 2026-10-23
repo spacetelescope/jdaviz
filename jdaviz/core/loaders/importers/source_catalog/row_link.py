@@ -61,6 +61,7 @@ class CatalogRowLinkManager(HubListener):
         self.app = app
         # viewer_id -> (viewer, checked callback, data callback) for table viewers
         self._observed = {}
+        app.state.add_callback('dev_mos_loader', self._on_dev_flag_changed)
 
         app.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
         app.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewer_removed)
@@ -103,6 +104,9 @@ class CatalogRowLinkManager(HubListener):
             If ``data_label`` is not a catalog, a viewer cannot be resolved, or a
             per-viewer list does not have one entry per catalog row.
         """
+        if not self._is_enabled:
+            raise RuntimeError("Catalog row linking requires dev_mos_loader to be enabled.")
+
         data = self.app.data_collection[data_label]
         if data.meta.get('_importer') != 'SourceCatalogImporter':
             raise ValueError(f"Data '{data_label}' is not a source catalog.")
@@ -191,6 +195,8 @@ class CatalogRowLinkManager(HubListener):
 
     def _on_active_row_changed(self, viewer, change):
         """Repopulate the listed viewers from the newly active (checked) row."""
+        if not self._is_enabled:
+            return
         # Only react when the row-select tool is active; other tools (zoom,
         # highlight, subset) also use checked rows and should not trigger
         # row-link viewer repopulation.
@@ -259,7 +265,7 @@ class CatalogRowLinkManager(HubListener):
         exist, the toolbar visibility is refreshed so the ``TableRowSelect`` tool
         appears.
         """
-        if viewer is None or hasattr(viewer, 'widget_table'):
+        if not self._is_enabled or viewer is None or hasattr(viewer, 'widget_table'):
             return
         viewer_ref = self._viewer_ref(viewer)
         if not viewer_ref:
@@ -286,6 +292,9 @@ class CatalogRowLinkManager(HubListener):
         Creates ``Data:`` columns for every non-table viewer already in the
         app so the table is immediately ready for two-way sync.
         """
+        if not self._is_enabled:
+            return
+
         table_data = getattr(getattr(table_viewer, 'widget_table', None), 'data', None)
         if table_data is not None and table_data.meta.get('_importer') == 'SourceCatalogImporter':
             catalog = table_data
@@ -310,6 +319,9 @@ class CatalogRowLinkManager(HubListener):
         the catalog's ``Data: <viewer_ref>`` column at the active row index so
         that selecting the same row later restores the exact viewer state.
         """
+        if not self._is_enabled:
+            return
+
         viewer_ref = msg.viewer_reference
         viewer = self.app.get_viewer(viewer_ref)
         if viewer is None or hasattr(viewer, 'widget_table'):
@@ -335,6 +347,27 @@ class CatalogRowLinkManager(HubListener):
                 self._set_object_column(catalog, column_name, values)
             except Exception:  # nosec
                 pass
+
+    @property
+    def _is_enabled(self):
+        return bool(getattr(self.app.state, 'dev_mos_loader', False))
+
+    def _on_dev_flag_changed(self, *args):
+        """Refresh row-link columns and tools when the feature flag changes."""
+        viewers = list(self.app._viewer_store.values())
+        if self._is_enabled:
+            for viewer in viewers:
+                if hasattr(viewer, 'widget_table'):
+                    self._on_table_data_changed(viewer)
+                else:
+                    self._auto_create_column_for_viewer(viewer)
+
+        for viewer in viewers:
+            if not hasattr(viewer, 'widget_table'):
+                continue
+            viewer.widget_table._update_columns()
+            if getattr(viewer, 'toolbar', None) is not None:
+                viewer.toolbar._update_tool_visibilities()
 
     @staticmethod
     def _is_column_synced_in_viewer(table_viewer, column_name):

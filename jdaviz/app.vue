@@ -84,7 +84,7 @@
           </v-btn>
         </j-tooltip>
         <v-divider v-if="state_show_toolbar_buttons" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="(state_dev_loaders || config!=='mosviz') && (state_show_toolbar_buttons || state_drawer_content === 'loaders') && state_loader_items.length > 0" tipid="app-toolbar-loaders">
+        <j-tooltip v-if="config!=='mosviz' && (state_show_toolbar_buttons || state_drawer_content === 'loaders') && state_loader_items.length > 0" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state_drawer_content === 'loaders') {state_drawer_content = ''} else {state_drawer_content = 'loaders'}}" :class="{active : state_drawer_content === 'loaders'}">
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>
@@ -246,7 +246,7 @@
               <v-window v-model="state_add_subtab" style="overflow-y: auto">
                 <v-window-item style="padding-bottom: 40px">
                   <j-loader-panel
-                    :loader_items="state_loader_items"
+                    :loader_items="loader_items_filtered"
                     v-model:loader_selected="state_loader_selected"
                     :api_hints_enabled="state_show_api_hints"
                     :api_hints_obj="api_hints_obj || config"
@@ -386,7 +386,7 @@
           <pane size="25" min-size="25" v-if="config !== 'deconfigged' && state_drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
             <v-card v-if="state_drawer_content === 'loaders'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <j-loader-panel
-                :loader_items="state_loader_items"
+                :loader_items="loader_items_filtered"
                 v-model:loader_selected="state_loader_selected"
                 :api_hints_enabled="state_show_api_hints"
                 :api_hints_obj="api_hints_obj || config"
@@ -515,7 +515,10 @@ export default {
         }
       }
       return this.state_loader_items.filter(item => {
-        return !disabled_loaders.includes(item.name);
+        const devFlagsEnabled = (item.required_dev_flags || []).every(flag =>
+          Boolean(this[`state_${flag}`])
+        );
+        return !disabled_loaders.includes(item.name) && devFlagsEnabled;
       });
     },
     snackbarTimeout() {

@@ -1633,6 +1633,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
             apply_filter=self.apply_filter,
             state=self.state,
         )
+        self.widget_table.jdaviz_viewer = self
 
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True

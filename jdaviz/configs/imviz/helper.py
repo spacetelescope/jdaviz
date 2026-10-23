@@ -47,9 +47,6 @@ class Imviz(ImageConfigHelper):
         global _current_app
         _current_app = self
 
-        # Temporary during deconfig process
-        self._app.state.dev_loaders = True
-
     def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.
 

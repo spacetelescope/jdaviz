@@ -21,12 +21,27 @@ from jdaviz.utils import cached_uri
 
 def test_loaders_registry(specviz_helper):
     # built-in loaders: file, url, etc
-    assert len(specviz_helper.loaders) == len(loader_resolver_registry.members)
+    visible_resolvers = [Resolver for Resolver in loader_resolver_registry.members.values()
+                         if Resolver.is_available(specviz_helper._app)]
+    assert len(specviz_helper.loaders) == len(visible_resolvers)
+
+
+def test_dev_flag_controls_spectral_line_database_loader_visibility(deconfigged_helper):
+    app = deconfigged_helper._app
+    loader_name = 'spectral line database'
+
+    assert loader_name not in deconfigged_helper.loaders
+    loader_item = next(item for item in app.state.loader_items if item['name'] == loader_name)
+    assert loader_item['required_dev_flags'] == ['dev_spectral_lines']
+
+    app.state.dev_spectral_lines = True
+    assert loader_name in deconfigged_helper.loaders
+
+    app.state.dev_spectral_lines = False
+    assert loader_name not in deconfigged_helper.loaders
 
 
 def test_open_close(specviz_helper):
-    specviz_helper._app.state.dev_loaders = True
-
     assert specviz_helper._app.state.drawer_content == ''
 
     loader = specviz_helper.loaders['file']
@@ -86,6 +101,7 @@ def test_format_selection_prefers_catalog_for_sky_coords(deconfigged_helper):
 def test_format_selection_prefers_spectral_lines_for_spectral_table(deconfigged_helper):
     table = QTable({'rest wavelength': [6562.8, 4861.3] * u.AA,
                     'linename': ['H-alpha', 'H-beta']})
+    deconfigged_helper._app.state.dev_spectral_lines = True
     ldr = deconfigged_helper.loaders['object']
 
     ldr.object = table

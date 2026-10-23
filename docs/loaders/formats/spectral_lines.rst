@@ -3,11 +3,16 @@
 .. rst-class:: section-icon-mdi-plus-box
 
 :data-types: spectral-lines
+:dev-only: true
 
 *********************
 Spectral Lines Format
 *********************
 
+.. warning::
+
+    This feature is under active development and is available only when
+    ``app.state.dev_spectral_lines = True``.
 
 Overview
 ========
@@ -36,7 +41,7 @@ API Access
     import astropy.units as u
 
     jd.show()
-    jd.app.state.dev_loaders = True   # required while under development
+    jd.app.state.dev_spectral_lines = True   # required while under development
 
     # Any table with a spectral column works
     lines = QTable({

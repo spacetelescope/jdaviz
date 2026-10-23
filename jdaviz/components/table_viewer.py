@@ -92,6 +92,13 @@ class JdavizTableGlue(TableGlue):
             return []
         components = self.get_visible_components()
         assoc_columns = set(self.data.meta.get('_viewer_data_columns') or {})
+        viewer = getattr(self, 'jdaviz_viewer', None)
+        app = getattr(viewer, 'jdaviz_app', None)
+        state = getattr(app, 'state', None)
+        dev_mos_loader = bool(getattr(state, 'dev_mos_loader', False))
+        if not dev_mos_loader:
+            components = [component for component in components
+                          if str(component) not in assoc_columns]
         return [
             {
                 'text': str(k),

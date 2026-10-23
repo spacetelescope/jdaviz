@@ -20,7 +20,6 @@ from jdaviz.core.template_mixin import (AutoTextField,
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (standardize_metadata,
                           _wcs_only_label,
-                          CONFIGS_WITH_LOADERS,
                           create_data_hash)
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin',
@@ -440,7 +439,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
         # link the new data to existing data in the collection based on matching
         # component types
-        if self._app.config in CONFIGS_WITH_LOADERS:
+        if self._app.config != 'mosviz':
             self._app._link_new_data_by_component_type(data_label)
 
         # Determine which viewer(s) to add the data to.

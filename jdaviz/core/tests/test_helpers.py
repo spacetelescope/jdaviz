@@ -401,10 +401,10 @@ def test_load_with_both_viewer_and_show_in_viewer_raises_error(deconfigged_helpe
 def test_loaders_not_implemented_without_dev_flag(deconfigged_helper, mosviz_helper):
     """
     Test loaders property raises NotImplementedError without dev flag/or for configs
-    not in CONFIGS_WITH_LOADERS.
+    not supporting loaders.
     """
-    # Mosviz is not in CONFIGS_WITH_LOADERS (for now)
-    with pytest.raises(NotImplementedError, match='loaders is under active development'):
+    # Mosviz does not currently support loaders
+    with pytest.raises(NotImplementedError, match='loaders is not supported in mosviz'):
         _ = mosviz_helper.loaders
 
 
