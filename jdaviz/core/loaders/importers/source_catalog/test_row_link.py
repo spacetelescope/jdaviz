@@ -1,10 +1,14 @@
 from astropy.nddata import NDData
 from astropy.table import QTable
 import numpy as np
+import pytest
 
 
-def test_row_data_association(deconfigged_helper, image_2d_wcs):
-    deconfigged_helper._app.state.dev_mos_loader = True
+@pytest.mark.parametrize('dev_mos_loader', [True, False])
+def test_row_data_association(deconfigged_helper, image_2d_wcs, dev_mos_loader):
+    app = deconfigged_helper._app
+    assert app.state.dev_mos_loader is False
+    app.state.dev_mos_loader = dev_mos_loader
     # Create a table to load
     ra = "ra"
     dec = "dec"
@@ -27,42 +31,37 @@ def test_row_data_association(deconfigged_helper, image_2d_wcs):
 
     # Make sure the columns are responsive to viewer changes even though
     # the catalog isn't loaded in a table viewer
-    assert cat.find_component_id('Data: Image') is not None
+    if dev_mos_loader:
+        assert cat.find_component_id('Data: Image') is not None
+    else:
+        assert cat.find_component_id('Data: Image') is None
 
     vc = deconfigged_helper.new_viewers['Scatter']
     vc.viewer_label = "Test Scatter"
     vc()
 
-    assert cat.find_component_id('Data: Test Scatter') is not None
+    if dev_mos_loader:
+        assert cat.find_component_id('Data: Test Scatter') is not None
+    else:
+        assert cat.find_component_id('Data: Test Scatter') is None
 
-    deconfigged_helper._app.vue_destroy_viewer_item('Image')
+    # Add the catalog to a table viewer and check the row-link UI in both modes.
+    vc = deconfigged_helper.new_viewers['Source Catalog Table']
+    vc.dataset.select_all()
+    table_viewer = vc()._obj.glue_viewer
+
+    assert bool(cat.meta.get('_viewer_data_columns')) is dev_mos_loader
+    assert any(str(component).startswith('Data: ')
+               for component in cat.components) is dev_mos_loader
+    assert any(header['value'].startswith('Data: ')
+               for header in table_viewer.widget_table._get_headers()) is dev_mos_loader
+    assert any(item['value'].startswith('Data: ')
+               for item in table_viewer.toolbar.tools['jdaviz:table_columns_visible']
+               ._build_custom_widgets()[0]['items']) is dev_mos_loader
+    table_viewer.toolbar._update_tool_visibilities()
+    assert (table_viewer.toolbar.tools_data['jdaviz:table_row_select']['visible']
+            is dev_mos_loader)
+
+    app.vue_destroy_viewer_item('Image')
 
     assert cat.find_component_id('Data: Image') is None
-
-
-def test_row_data_association_disabled_without_dev_flag(deconfigged_helper, image_2d_wcs,
-                                                        sky_coord_only_source_catalog):
-    app = deconfigged_helper._app
-    assert app.state.dev_mos_loader is False
-
-    deconfigged_helper.load(NDData(np.ones((32, 32)), wcs=image_2d_wcs), data_label='image')
-    loader = deconfigged_helper.loaders['object']
-    loader.object = sky_coord_only_source_catalog
-    loader.format = 'Source Catalog'
-    loader.importer.viewer.create_new = 'Source Catalog Table'
-    loader.load()
-
-    catalog = next(data for data in app.data_collection
-                   if data.meta.get('_importer') == 'SourceCatalogImporter')
-    table_viewer = deconfigged_helper.viewers['Source Catalog Table']._obj.glue_viewer
-
-    assert not catalog.meta.get('_viewer_data_columns')
-    assert all(not str(component).startswith('Data: ')
-               for component in catalog.components)
-    assert all(not header['value'].startswith('Data: ')
-               for header in table_viewer.widget_table._get_headers())
-    assert not any(item['value'].startswith('Data: ')
-                   for item in table_viewer.toolbar.tools['jdaviz:table_columns_visible']
-                   ._build_custom_widgets()[0]['items'])
-    table_viewer.toolbar._update_tool_visibilities()
-    assert not table_viewer.toolbar.tools_data['jdaviz:table_row_select']['visible']
