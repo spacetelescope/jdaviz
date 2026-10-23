@@ -311,7 +311,7 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     assert np.all(qtab['ID'] == np.arange(len(catalog_obj)))
     # make sure only ra and dec (plus index) loaded,
     # since we didn't specify more columns
-    # once dev_mos_loader is removed, this should be increased to 4
+    # TODO: once dev_mos_loader is removed, this should be increased to 4
     assert len(qtab.colnames) == 3
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
@@ -385,7 +385,7 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     assert 'SkyCoord_Dec' in qtab.colnames
     # make sure only ra and dec (plus index) loaded,
     # since we didn't specify more columns
-    # Restore the data-association column expectation (4) when dev_mos_loader is removed.
+    # TODO: Restore the data-association column expectation (4) when dev_mos_loader is removed.
     assert len(qtab.colnames) == 3
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned

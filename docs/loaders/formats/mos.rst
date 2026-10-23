@@ -31,21 +31,14 @@ The directory must contain at least one 1D spectrum matching ``*_x1d.fits`` or
 +-------------------------+----------------------+------------------------+
 | Filename pattern        | Product              | Default viewer         |
 +=========================+======================+========================+
-| ``*_x1d.fits``          | 1D spectrum          | 1D Spectrum            |
+| ``*_x1d/c1d.fits``         | 1D spectrum          | 1D Spectrum              |
 +-------------------------+----------------------+------------------------+
-| ``*_c1d.fits``          | 1D spectrum          | 1D Spectrum            |
+| ``*_s2d/cal.fits``         | 2D spectrum          | 2D Spectrum              |
 +-------------------------+----------------------+------------------------+
-| ``*_s2d.fits``          | 2D spectrum          | 2D Spectrum            |
+| ``*_i2d.fits``                | Image                     | Image                          |
 +-------------------------+----------------------+------------------------+
-| ``*_cal.fits``          | 2D spectrum          | 2D Spectrum            |
+| ``*_cat.ecsv/csv/fits`` | Source catalog       | Source Catalog Table |
 +-------------------------+----------------------+------------------------+
-| ``*_i2d.fits``          | Image                | Image                  |
-+-------------------------+----------------------+------------------------+
-| ``*_cat.ecsv``          | Source catalog       | Source Catalog Table   |
-+-------------------------+----------------------+------------------------+
-| ``*_cat.csv``           | Source catalog       | Source Catalog Table   |
-+-------------------------+----------------------+------------------------+
-| ``*_cat.fits``          | Source catalog       | Source Catalog Table   |
 +-------------------------+----------------------+------------------------+
 
 FITS products are checked for readable image or table data before import.
