@@ -19,8 +19,7 @@ Overview
 The **MOS** format imports a directory of multi-object spectroscopy products.
 It discovers supported files recursively (up to three directory levels) and
 routes each product through the existing single-file importer to a compatible
-viewer. The importer is currently supported in the generalized (deconfigged)
-Jdaviz application only.
+viewer.
 
 Supported Products
 ==================
