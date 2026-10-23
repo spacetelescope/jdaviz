@@ -19,7 +19,7 @@ from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, SliceToolStateMessage,
                                 SliceSelectSliceMessage, SliceValueUpdatedMessage,
-                                NewViewerMessage, ViewerAddedMessage, ViewerRemovedMessage,
+                                NewViewerMessage, ViewerAddedMessage,
                                 GlobalDisplayUnitChanged)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
@@ -93,8 +93,6 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
         # Listen for new viewers/data.
         self.session.hub.subscribe(self, ViewerAddedMessage,
                                    handler=self._on_viewer_added)
-        self.session.hub.subscribe(self, ViewerRemovedMessage,
-                                   handler=self._on_viewer_removed)
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_add_data)
         self.hub.subscribe(self, RemoveDataMessage,
@@ -231,6 +229,8 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
         self._check_if_cube_viewer_exists()
 
     def _on_viewer_removed(self, msg):
+        # subscribed to ViewerRemovedMessage
+        super()._on_viewer_removed(msg)
         self._check_if_cube_viewer_exists()
 
     def _on_add_data(self, msg):

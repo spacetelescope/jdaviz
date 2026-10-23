@@ -14,7 +14,7 @@ from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_units_and_equivs import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 from jdaviz.core.events import (GlobalDisplayUnitChanged, AddDataMessage,
                                 RemoveDataMessage, SliceValueUpdatedMessage,
-                                SnackbarMessage, ViewerRemovedMessage)
+                                SnackbarMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
                                         SelectPluginComponent, PluginUserApi)
@@ -113,8 +113,6 @@ class UnitConversion(PluginTemplateMixin):
         self.session.hub.subscribe(self, DataCollectionDeleteMessage,
                                    handler=self._on_data_collection_delete,
                                    priority=999)
-        self.session.hub.subscribe(self, ViewerRemovedMessage,
-                                   handler=self._on_viewer_removed)
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
@@ -352,9 +350,31 @@ class UnitConversion(PluginTemplateMixin):
         self.spectral_y_type_selected = ''
 
     def _on_viewer_removed(self, msg):
+        # NOTE: subscribed to ViewerRemovedMessage. Do not
+        # subscribe directly here, as glue's Hub only keeps a single handler per
+        # (subscriber, message class) and would clobber the base-class subscription.
+        super()._on_viewer_removed(msg)
+
+        # the removed viewer is no longer in the viewer store, so any cached layers
+        # from it are now stale
+        self._clear_cache('image_layers')
 
         if self._no_data_in_relevant_viewers():
             self.disabled_msg = 'Unit Conversion unavailable without data loaded in a viewer'
+            return
+
+        # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
+        #  access. this may need to be generalized for deconfigged and removed
+        #  once the configs are deprecated
+        if (self.config in ('specviz', 'specviz2d')
+                and not any(getattr(v, 'reference', None) == 'spectrum-viewer'
+                            for v in self._app._viewer_store.values())):
+            self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer'  # noqa
+            return
+
+        # data that was only loaded in the removed viewer may have been the reason
+        # for the current angle/sb selections, so realign them to the remaining data
+        self._reset_angle_unit_to_remaining_data()
 
     def _on_add_data_to_viewer(self, msg):
 

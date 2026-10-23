@@ -22,7 +22,6 @@ from jdaviz.core.events import (AddDataMessage,
                                 FootprintOverlayClickMessage,
                                 LinkUpdatedMessage,
                                 ViewerAddedMessage,
-                                ViewerRemovedMessage,
                                 SubsetRenameMessage)
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
@@ -1181,7 +1180,8 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
                 for d in self._app.data_collection
             )
         )
-        for message in (ViewerAddedMessage, ViewerRemovedMessage,
+        # NOTE: ViewerRemovedMessage is handled by _on_viewer_removed
+        for message in (ViewerAddedMessage,
                         DataCollectionAddMessage, DataCollectionDeleteMessage):
             self.hub.subscribe(self, message,
                                handler=lambda lambda_msg=None: self.search_input._update_items())  # noqa
@@ -1353,6 +1353,10 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
 
     def parse_input(self):
         return self._output
+
+    def _on_viewer_removed(self, msg):
+        super()._on_viewer_removed(msg)
+        self.search_input._update_items()
 
     @observe('catalog_selected')
     def _on_catalog_selected(self, msg=None):
