@@ -11,8 +11,8 @@ from scipy.interpolate import interp1d
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 
-from jdaviz.core.events import (AddDataToViewerMessage,
-                                RemoveDataFromViewerMessage,
+from jdaviz.core.events import (AddDataMessage,
+                                RemoveDataMessage,
                                 SpectralMarksChangedMessage,
                                 LineIdentifyMessage)
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
@@ -384,9 +384,9 @@ class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
         # Setup viewer option defaults
         self.state.aspect = 'auto'
 
-        self.session.hub.subscribe(self, AddDataToViewerMessage,
+        self.session.hub.subscribe(self, AddDataMessage,
                                    handler=self._on_viewer_data_changed)
-        self.session.hub.subscribe(self, RemoveDataFromViewerMessage,
+        self.session.hub.subscribe(self, RemoveDataMessage,
                                    handler=self._on_viewer_data_changed)
 
         for k in ('x_min', 'x_max'):
@@ -474,7 +474,7 @@ class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
         return out_lims
 
     def _on_viewer_data_changed(self, msg):
-        if msg.viewer_reference != self.reference:
+        if msg.viewer is not self:
             return
         # clear cached properties that are based on reference data - this is probably
         # overly-conservative and we might be able to limit the clearing for only when

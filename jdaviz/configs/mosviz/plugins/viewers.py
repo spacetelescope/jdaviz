@@ -4,9 +4,7 @@ from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
 
-from jdaviz.core.events import (AddDataToViewerMessage,
-                                RemoveDataFromViewerMessage,
-                                TableClickMessage)
+from jdaviz.core.events import TableClickMessage
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
@@ -195,11 +193,11 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
         for data_item in self.jdaviz_app.data_collection:
             if data_item.meta.get('plugin') is not None:
                 if data_item.meta.get('mosviz_row') == selected_index:
-                    self.session.hub.broadcast(AddDataToViewerMessage(
-                        self._default_spectrum_viewer_reference_name, data_item.label, sender=self))
+                    self.jdaviz_app.add_data_to_viewer(
+                        self._default_spectrum_viewer_reference_name, data_item.label)
                 else:
-                    self.session.hub.broadcast(RemoveDataFromViewerMessage(
-                        self._default_spectrum_viewer_reference_name, data_item.label, sender=self))
+                    self.jdaviz_app.remove_data_from_viewer(
+                        self._default_spectrum_viewer_reference_name, data_item.label)
 
         for component in mos_data.components:
             comp_data = mos_data.get_component(component).data
@@ -216,10 +214,6 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
                                          if prev_data in x]
                         for modified_prev_data in all_prev_data:
                             if modified_prev_data:
-                                remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                                    self._default_spectrum_viewer_reference_name,
-                                    modified_prev_data, sender=self
-                                )
                                 # reset the counter in the spectrum viewer's color cycler
                                 # so that the newly selected row is displayed in gray and
                                 # future additions will have other colors:
@@ -228,13 +222,12 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
                                 )
                                 spectrum_viewer.color_cycler.reset()
 
-                                self.session.hub.broadcast(remove_data_from_viewer_message)
+                                self.jdaviz_app.remove_data_from_viewer(
+                                    self._default_spectrum_viewer_reference_name,
+                                    modified_prev_data)
 
-                    add_data_to_viewer_message = AddDataToViewerMessage(
-                        self._default_spectrum_viewer_reference_name,
-                        selected_data, sender=self
-                    )
-                    self.session.hub.broadcast(add_data_to_viewer_message)
+                    self.jdaviz_app.add_data_to_viewer(
+                        self._default_spectrum_viewer_reference_name, selected_data)
 
                     self._selected_data[
                         self._default_spectrum_viewer_reference_name
@@ -244,17 +237,11 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
                 prev_data = self._selected_data.get(self._default_spectrum_2d_viewer_reference_name)
                 if prev_data != selected_data:
                     if prev_data:
-                        remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                            self._default_spectrum_2d_viewer_reference_name,
-                            prev_data, sender=self
-                        )
-                        self.session.hub.broadcast(remove_data_from_viewer_message)
+                        self.jdaviz_app.remove_data_from_viewer(
+                            self._default_spectrum_2d_viewer_reference_name, prev_data)
 
-                    add_data_to_viewer_message = AddDataToViewerMessage(
-                        self._default_spectrum_2d_viewer_reference_name,
-                        selected_data, sender=self
-                    )
-                    self.session.hub.broadcast(add_data_to_viewer_message)
+                    self.jdaviz_app.add_data_to_viewer(
+                        self._default_spectrum_2d_viewer_reference_name, selected_data)
 
                     self._selected_data[
                         self._default_spectrum_2d_viewer_reference_name
@@ -264,13 +251,11 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
                 prev_data = self._selected_data.get(self._default_image_viewer_reference_name)
                 if prev_data != selected_data:
                     if prev_data:
-                        remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                            self._default_image_viewer_reference_name, prev_data, sender=self)
-                        self.session.hub.broadcast(remove_data_from_viewer_message)
+                        self.jdaviz_app.remove_data_from_viewer(
+                            self._default_image_viewer_reference_name, prev_data)
 
-                    add_data_to_viewer_message = AddDataToViewerMessage(
-                        self._default_image_viewer_reference_name, selected_data, sender=self)
-                    self.session.hub.broadcast(add_data_to_viewer_message)
+                    self.jdaviz_app.add_data_to_viewer(
+                        self._default_image_viewer_reference_name, selected_data)
 
                     self._selected_data[self._default_image_viewer_reference_name] = selected_data
 

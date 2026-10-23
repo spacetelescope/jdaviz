@@ -56,15 +56,7 @@ class ViewerAddedMessage(Message):
 
 
 class ViewerRemovedMessage(Message):
-    """
-    Message emitted after a viewer is destroyed by the application.
-
-    NOTE: subclasses of `~jdaviz.core.template_mixin.TemplateMixin` (including all
-    plugins) are already subscribed to this message and should override
-    ``_on_viewer_removed`` (calling ``super()._on_viewer_removed(msg)``) rather than
-    subscribing directly, since glue's hub only keeps one handler per subscriber and
-    message class.
-    """
+    """Emitted after a viewer is removed from the app."""
     def __init__(self, viewer_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -135,7 +127,10 @@ class LayersFinalizedMessage(Message):
 
 class AddDataMessage(Message):
     """
-    Emitted AFTER data is added to a viewer
+    Emitted AFTER data is added to a viewer.
+
+    This is the counterpart to `RemoveDataMessage` and is what plugins and viewers should
+    subscribe to in order to respond to data being added to a viewer.
     """
     def __init__(self, data, viewer, viewer_id=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -159,14 +154,10 @@ class AddDataMessage(Message):
 
 class RemoveDataMessage(Message):
     """
-    Emitted AFTER data is removed from a viewer (by ``PrivateApplication.remove_data_from_viewer``).
+    Emitted AFTER data is removed from a viewer.
 
-    This is the "notification" counterpart of `AddDataMessage` and is what plugins
-    and viewers should subscribe to in order to respond to data being removed from a
-    viewer. To request that data be removed from a viewer, broadcast a
-    `RemoveDataFromViewerMessage` instead. Note that data being removed from the
-    app entirely (i.e., from the data collection) is signaled by glue's
-    ``DataCollectionDeleteMessage``.
+    This is the counterpart to `AddDataMessage` and is what plugins and viewers should
+    subscribe to in order to respond to data being removed from a viewer.
     """
     def __init__(self, data, viewer, viewer_id=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -301,50 +292,6 @@ class ConfigurationLoadedMessage(Message):
     @property
     def config(self):
         return self._config
-
-
-class AddDataToViewerMessage(Message):
-    """
-    Emitted to request data is added to a viewer (BEFORE the data is actually added)
-    """
-    def __init__(self, viewer_reference, data_label, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self._viewer_reference = viewer_reference
-        self._data_label = data_label
-
-    @property
-    def viewer_reference(self):
-        return self._viewer_reference
-
-    @property
-    def data_label(self):
-        return self._data_label
-
-
-class RemoveDataFromViewerMessage(Message):
-    """
-    Emitted to request data is removed from a viewer (BEFORE the data is actually removed).
-
-    This is the "request" counterpart of `AddDataToViewerMessage`. The application
-    subscribes to this message and handles it by calling
-    ``PrivateApplication.remove_data_from_viewer``, which in turn broadcasts a
-    `RemoveDataMessage` once the data has been removed. Subscribe to
-    `RemoveDataMessage` (not this message) to respond to data having been removed.
-    """
-    def __init__(self, viewer_reference, data_label, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self._viewer_reference = viewer_reference
-        self._data_label = data_label
-
-    @property
-    def viewer_reference(self):
-        return self._viewer_reference
-
-    @property
-    def data_label(self):
-        return self._data_label
 
 
 class ViewerVisibleLayersChangedMessage(Message):
