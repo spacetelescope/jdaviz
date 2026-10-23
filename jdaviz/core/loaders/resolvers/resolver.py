@@ -1061,8 +1061,14 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # if the resolver was initialized with a list of valid import formats,
             # use that instead of the registry
             return [self._restrict_to_target]
-        # fallback on all items available in the registry
-        return loader_importer_registry.members.keys()
+        # fallback on all items available in the registry (minus those behind dev-flags)
+        loaders_disabled_by_dev_flags = []
+        if not self._app.state.dev_mos_loader:
+            loaders_disabled_by_dev_flags.append('MOS')
+        if not self._app.state.dev_spectral_lines:
+            loaders_disabled_by_dev_flags.append('Spectral Lines')
+        return [loader_name for loader_name in loader_importer_registry.members.keys()
+                if loader_name not in loaders_disabled_by_dev_flags]
 
     @observe('format_selected')
     def _on_format_selected_changed(self, change={}):
