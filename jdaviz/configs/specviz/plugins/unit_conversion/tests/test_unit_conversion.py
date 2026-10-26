@@ -6,6 +6,7 @@ from astropy.nddata import NDData
 from astropy.wcs import WCS
 from specutils import Spectrum
 
+from jdaviz.configs.default.plugins.viewers import JdavizProfileView
 from jdaviz.configs.imviz.tests.utils import _image_nddata_wcs
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.core.events import ViewerRemovedMessage
@@ -649,6 +650,44 @@ def test_plugin_disabled_on_viewer_removed(deconfigged_helper, image_nddata_wcs,
     # removing the last relevant viewer disables the plugin
     app.vue_destroy_viewer_item(viewer_ids[1])
     assert plg.disabled_msg == 'Unit Conversion unavailable without data loaded in a viewer'
+
+
+def test_spectral_unit_kept_on_reference_data_removed(deconfigged_helper):
+    """
+    Test that removing the reference data from a 1D spectrum viewer keeps the selected
+    spectral unit instead of reverting to the new reference data's native unit.
+    """
+    flux = np.linspace(1, 2, 10) * u.Jy
+    deconfigged_helper.load(Spectrum(flux, spectral_axis=np.linspace(1, 2, 10) * u.um),
+                            format='1D Spectrum', data_label='spec_um')
+    deconfigged_helper.load(Spectrum(flux, spectral_axis=np.linspace(1000, 2000, 10) * u.nm),
+                            format='1D Spectrum', data_label='spec_nm')
+
+    app = deconfigged_helper._app
+    [viewer] = [v for v in app._viewer_store.values() if isinstance(v, JdavizProfileView)]
+    assert viewer.state.reference_data.label == 'spec_um'
+
+    deconfigged_helper.plugins['Unit Conversion'].spectral_unit = 'Angstrom'
+    assert viewer.state.x_display_unit == 'Angstrom'
+
+    app.remove_data_from_viewer(viewer.reference, 'spec_um')
+    assert viewer.state.reference_data.label == 'spec_nm'
+    assert viewer.state.x_display_unit == 'Angstrom'
+
+
+def test_plugin_enabled_with_only_spectrum2d_viewer(deconfigged_helper, spectrum2d):
+    """
+    Test that the Unit Conversion plugin stays enabled when the 1D spectrum viewer is
+    removed but the 2D spectrum viewer still has data.
+    """
+    deconfigged_helper.load(spectrum2d, format='2D Spectrum')
+    plg = deconfigged_helper.plugins['Unit Conversion']._obj
+    app = deconfigged_helper._app
+
+    [viewer_1d_id] = [vid for vid, v in app._viewer_store.items()
+                      if isinstance(v, JdavizProfileView)]
+    app.vue_destroy_viewer_item(viewer_1d_id)
+    assert plg.disabled_msg == ''
 
 
 def test_unit_reset_on_all_data_removed(deconfigged_helper, spectrum1d):
