@@ -56,7 +56,7 @@ class ViewerAddedMessage(Message):
 
 
 class ViewerRemovedMessage(Message):
-    """Emitted after a viewer is removed from the app."""
+    """Message emitted after a viewer is destroyed by the application."""
     def __init__(self, viewer_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
