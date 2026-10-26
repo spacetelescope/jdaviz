@@ -1181,6 +1181,8 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             )
         )
         # NOTE: ViewerRemovedMessage is handled by _on_viewer_removed
+        # TODO: Investigate these other messages to see if they should be approached
+        #  similarly
         for message in (ViewerAddedMessage,
                         DataCollectionAddMessage, DataCollectionDeleteMessage):
             self.hub.subscribe(self, message,
