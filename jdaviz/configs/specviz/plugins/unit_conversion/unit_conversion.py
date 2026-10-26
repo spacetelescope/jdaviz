@@ -95,8 +95,6 @@ class UnitConversion(PluginTemplateMixin):
         if self.config == 'deconfigged':
             self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/settings/display_units.html'  # noqa
 
-        self._cached_properties = ['image_layers']
-
         if self.config not in ['specviz', 'specviz2d', 'cubeviz', 'deconfigged']:
             # TODO [mosviz] x_display_unit is not implemented in glue for image viewer
             # TODO [mosviz]: add to yaml file
@@ -220,21 +218,13 @@ class UnitConversion(PluginTemplateMixin):
         # stale display units.
         self._reset_angle_unit_to_remaining_data()
 
-        # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
-        # access. this may need to be generalized for deconfigged and removed
-        # once the configs are deprecated
-        if self.config in ('specviz', 'specviz2d'):
-
-            # if no layers remain in spectrum viewer, disable the unit conversion plugin.
-            if viewer.reference == 'spectrum-viewer' and not len(viewer.layers):
-                self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer' # noqa
-
-            # if layers do remain in the viewer, re-validate and re-apply the
-            # current spectral x unit to the viewer state and refresh plot axes.
-            elif viewer.reference == 'spectrum-viewer' and len(viewer.layers):
-                xunit = valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
-                viewer.state.x_display_unit = xunit
-                viewer.set_plot_axes()
+        # glue resets x_display_unit to the native unit of the new reference data if the
+        # reference data was removed, so re-apply the selected spectral unit.
+        if (isinstance(viewer, Spectrum1DViewer) and len(viewer.layers)
+                and len(self.spectral_unit_selected)):
+            xunit = valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
+            viewer.state.x_display_unit = xunit
+            viewer.set_plot_axes()
 
     def _on_data_collection_delete(self, msg):
         if len(self._app.data_collection) == 0:
@@ -299,7 +289,6 @@ class UnitConversion(PluginTemplateMixin):
         if not self.has_angle or not len(self.angle_unit_selected):
             return
 
-        self._clear_cache('image_layers')
         relevant = self._relevant_data_for_unit_conversion()
         if not len(relevant):
             return
@@ -355,21 +344,8 @@ class UnitConversion(PluginTemplateMixin):
         # (subscriber, message class) and would clobber the base-class subscription.
         super()._on_viewer_removed(msg)
 
-        # the removed viewer is no longer in the viewer store, so any cached layers
-        # from it are now stale
-        self._clear_cache('image_layers')
-
         if self._no_data_in_relevant_viewers():
             self.disabled_msg = 'Unit Conversion unavailable without data loaded in a viewer'
-            return
-
-        # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
-        #  access. this may need to be generalized for deconfigged and removed
-        #  once the configs are deprecated
-        if (self.config in ('specviz', 'specviz2d')
-                and not any(getattr(v, 'reference', None) == 'spectrum-viewer'
-                            for v in self._app._viewer_store.values())):
-            self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer'  # noqa
             return
 
         # data that was only loaded in the removed viewer may have been the reason
@@ -388,14 +364,6 @@ class UnitConversion(PluginTemplateMixin):
                 self.pixar_sr_exists = False
 
         viewer = msg.viewer
-
-        # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
-        # access. this may need to be generalized for deconfigged and removed
-        # once the configs are deprecated.
-        # If we disabled the unit conversion plugin due to no data in the
-        # spectrum viewer, re-enable it.
-        if self.config in ('specviz', 'specviz2d') and viewer.reference == 'spectrum-viewer':
-            self.disabled_msg = ''
 
         # if we disabled the unit conversion plugin due to no data in any
         # image/spectrum/cube, viewer, but data is being added to one of those
@@ -578,7 +546,6 @@ class UnitConversion(PluginTemplateMixin):
 
             if self.angle_unit:
                 self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
-            self._clear_cache('image_layers')
 
     def _on_slice_changed(self, msg):
         if self.config != "cubeviz":
