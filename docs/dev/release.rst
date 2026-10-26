@@ -108,6 +108,10 @@ You can do a release from your fork directly without a clean code check-out.
 
 10. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
     to make sure that the new GitHub release triggered PyPI upload successfully.
+    Note that the upload waits for the CI run triggered by the release tag and only
+    proceeds if that run passes (jobs that are allowed to fail do not block it). If it
+    fails, re-run the failed jobs in the CI run for the tag, then re-run the failed jobs
+    in the Release workflow run.
     Also check that `files on PyPI <https://pypi.org/project/jdaviz/#files>`_ contain
     both the source tarball and the wheel for that release.
 
@@ -263,6 +267,10 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
 
 10. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
     to make sure that the new GitHub release triggered PyPI upload successfully.
+    Note that the upload waits for the CI run triggered by the release tag and only
+    proceeds if that run passes (jobs that are allowed to fail do not block it). If it
+    fails, re-run the failed jobs in the CI run for the tag, then re-run the failed jobs
+    in the Release workflow run.
     Also check that `files on PyPI <https://pypi.org/project/jdaviz/#files>`_ contain
     both the source tarball and the wheel for that release.
 
