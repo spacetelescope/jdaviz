@@ -699,11 +699,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
             window_features='popup,width=400,height=600'
         )
         self._viewer_callbacks = {}
-        # NOTE: glue's Hub only stores a single handler per (subscriber, message class), so
-        # any later ``hub.subscribe(self, ViewerRemovedMessage, ...)`` call (e.g., in a
-        # subclass) would silently replace this subscription (and vice versa). Subclasses
-        # should NOT subscribe to ViewerRemovedMessage themselves, but instead
-        # override ``_on_viewer_removed`` and call ``super()._on_viewer_removed(msg)``.
+        # see _on_viewer_removed for more info on ViewerRemovedMessage usage in subclasses
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=self._on_viewer_removed)
 
@@ -784,9 +780,13 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
 
     def _on_viewer_removed(self, msg):
         """
-        Handler for `~jdaviz.core.events.ViewerRemovedMessage`. Subclasses that need to
-        respond to a viewer being removed should override this method and call
-        ``super()._on_viewer_removed(msg)`` rather than subscribing to the message directly.
+        Handler for `~jdaviz.core.events.ViewerRemovedMessage`.
+
+        Subclasses that need to respond to a viewer being removed should override this method
+        and call ``super()._on_viewer_removed(msg)`` rather than subscribing to the message
+        directly. This is because the glue Hub stores a single handler per
+        (subscriber, message class), so any later ``hub.subscribe(self, ViewerRemovedMessage, ...)``
+        call (e.g., in a subclass) would silently replace this subscription (and vice versa).
         """
         self._remove_viewer_callbacks(msg.viewer_id)
 
