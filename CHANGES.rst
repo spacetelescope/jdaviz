@@ -11,6 +11,8 @@ Bug Fixes
 - Max-pin glue-jupyter and vue to specific versions to ensure compatibility before
   vue3 compatible glue-jupyter release. [#4463]
 
+- Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
+
 Mosviz
 ^^^^^^
 
