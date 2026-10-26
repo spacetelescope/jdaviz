@@ -141,9 +141,9 @@ API Changes
 Bug Fixes
 ---------
 
-- Unit Conversion plugin now responds to viewers being removed.
+- Unit Conversion plugin now responds to viewers being removed. [#4480]
 
-- 2D spectrum viewer now refreshes its cached spectral axis whenever data is added or removed.
+- 2D spectrum viewer now refreshes its cached spectral axis whenever data is added or removed. [#4480]
 
 - HST products (as defined by ``OBSTYPE``) are now correctly identified as being
   either images or 2D spectra. [#4217]
