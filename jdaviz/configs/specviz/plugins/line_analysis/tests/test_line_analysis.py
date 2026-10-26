@@ -678,10 +678,10 @@ def test_line_analysis_load_table_into_data_collection(deconfigged_helper, spect
 
     # Now test loading the table back into the data collection
     # Open the loader panel
-    la.table.loader_panel_ind = 0
+    la._obj.table.loader_panel_ind = 0
 
     # Access the object loader via the loaders property
-    loaders = la.table.user_api.loaders
+    loaders = la._obj.table.user_api.loaders
     object_loader = loaders['object']
 
     # The object should be set to the table
