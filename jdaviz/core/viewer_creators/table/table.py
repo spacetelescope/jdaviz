@@ -35,7 +35,7 @@ class SourceCatalogTableViewerCreator(BaseViewerCreator):
     def __init__(self, app, **kwargs):
         super().__init__(app, **kwargs)
         self.dataset.filters = ['is_source_catalog_table']
-        self.viewer_label_default = 'JdavizSourceCatalogTableViewer'
+        self.viewer_label_default = 'Source Catalog Table'
 
     @property
     def user_api(self):
@@ -53,7 +53,7 @@ class SpectralLineTableViewerCreator(BaseViewerCreator):
     def __init__(self, app, **kwargs):
         super().__init__(app, **kwargs)
         self.dataset.filters = ['is_spectral_lines_list_table']
-        self.viewer_label_default = 'JdavizSpectralLineTableViewer'
+        self.viewer_label_default = 'Spectral Line Table'
 
     @property
     def user_api(self):
