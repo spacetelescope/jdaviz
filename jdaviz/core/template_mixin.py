@@ -167,11 +167,11 @@ def show_widget(widget, loc, title, height=None):
         app_state.in_notebook = not in_solara
 
     if loc == "inline":
+        # This is used for displaying viewers inline in the notebook
         if height is not None:
             if isinstance(height, int):
                 height = f"{height}px"
             widget = widgets.Box([widget], layout=widgets.Layout(height=height, width="100%"))
-
         display(widget)
 
     elif loc.startswith('sidecar'):
