@@ -989,18 +989,12 @@ class JdavizViewerWindow(TemplateMixin):
     def _on_focus_viewer_changed(self, *args):
 
         coords_info = self._app.session.application._tools.get('g-coords-info')
-
         focus_mode = (self._app.state.focus_viewer == self.reference)
-
-        print(f"Checking if {self.reference} has {self.focus_mode} != {focus_mode}")
 
         if self.focus_mode == focus_mode:
             return
 
-        print(f"Calling focus_viewer_changed for {self.reference} with {self.focus_mode} != {focus_mode}")
-
         self.focus_mode = (self._app.state.focus_viewer == self.reference)
-
 
         # Add coords_info observe handlers if this viewer is being focused, remove if not
         if self.focus_mode:
