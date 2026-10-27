@@ -31,15 +31,6 @@
         </v-alert>
 
         <v-alert
-          v-if="wcs_linking_available && !need_clear_astrowidget_markers && !need_clear_subsets"
-          type='warning'
-          class="ignore-api-hints"
-          style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px"
-        >
-          Switching alignment will reset zoom.
-        </v-alert>
-
-        <v-alert
           v-if="plugin_markers_exist && !need_clear_astrowidget_markers && !need_clear_subsets"
           type='warning'
           style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px"
@@ -58,11 +49,15 @@
           <v-radio-group
             :label="api_hints_enabled ? 'plg.align_by = ' : 'Align by'"
             :class="api_hints_enabled ? 'api-hint' : null"
-            hint="Align individual image layers by pixels or on the sky by WCS."
             v-model="align_by_selected"
             :disabled="!wcs_linking_available || need_clear_astrowidget_markers"
             persistent-hint
             row>
+
+            <div class="text-medium-emphasis text-caption">
+              Align individual image layers by pixels or on the sky by WCS. Switching alignment will reset zoom.
+            </div>
+
             <v-radio
               v-for="item in align_by_items"
               :key="item.label"
