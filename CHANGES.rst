@@ -3,6 +3,7 @@
 
 New Features
 ------------
+- Exposed Line Analysis table and updated relevant API hints. [#4478]
 
 - Data menu/legend overflow: more data label icons are now shown and two or more icons must be
   present beyond the overflow limit before the overflow icon will appear. [#4160]

@@ -6498,7 +6498,7 @@ class Table(PluginSubcomponent):
         # Also link api_hints_enabled to the ObjectResolver so it respects the app toggle
         link((self._plugin, 'api_hints_enabled'), (self._object_loader, 'api_hints_enabled'))
         # Set api_hints_obj to reflect the table path (e.g., plg.table)
-        self.api_hints_obj = f"{self._plugin.api_hints_obj}.{self._table_name}"
+        self.api_hints_obj = f"plg.{self._table_name}"
 
     @observe('loader_panel_ind')
     def _loader_panel_ind_changed(self, change):
