@@ -75,7 +75,7 @@
               {{ api_hints_enabled ?
                 'plg.delete_subsets()'
                 :
-                'Clear Subsets'
+                'Delete Subsets'
               }}
             </v-btn>
           </j-flex-row>
