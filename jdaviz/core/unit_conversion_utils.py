@@ -529,15 +529,16 @@ def flux_unit_conversion(values, original_unit, target_unit,
     solid_angle_in_targ = is_unit_per_solid_angle(
         target_unit, return_unit=True)
 
-    # if the solid angle component of the original unit is 'sr', and the target
-    # unit is 'pix2', we assume the app is set in 'pix2' because the initial dataset
-    # loaded was in flux not surface brightness and we want to avoid trying to convert
-    # steradians to pixels, effectively ignoring the display solid angle unit in the
-    # conversion. This allows Jy / sr to be converted to MJy / sr, for example,
-    # when the app is set to display in 'pix2'.
+    # When one unit uses steradians and the other square pixels, normalize the
+    # differing component to steradians. This avoids converting between solid
+    # angle conventions when the app's display unit differs from the dataset,
+    # allowing Jy / sr to convert to MJy / sr when the app is set to 'pix2'.
     if solid_angle_in_orig == u.sr and solid_angle_in_targ == PIX2:
         solid_angle_in_targ = u.sr
         target_unit = target_unit * PIX2 / u.sr
+    elif solid_angle_in_orig == PIX2 and solid_angle_in_targ == u.sr:
+        solid_angle_in_targ = PIX2
+        target_unit = target_unit * u.sr / PIX2
 
     if original_unit == target_unit:
         if not with_unit:
