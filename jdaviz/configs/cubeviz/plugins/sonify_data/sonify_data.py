@@ -22,7 +22,7 @@ __all__ = ['SonifyData']
 try:
     import strauss  # noqa
     import sounddevice as sd
-except ImportError:
+except Exception:  # nosec
     class Empty:
         pass
     sd = Empty()

@@ -5,7 +5,11 @@ from numpy.testing import assert_allclose
 import pytest
 from specutils import SpectralRegion
 
-pytest.importorskip("strauss")
+try:
+    import strauss  # noqa: F401
+except Exception:  # nosec
+    # PortAudioError is not an ImportError
+    pytest.skip("strauss unavailable", allow_module_level=True)
 IN_GITHUB_ACTIONS = os.environ.get("CI", "false") == "true"
 
 

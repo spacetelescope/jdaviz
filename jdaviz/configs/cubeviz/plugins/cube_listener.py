@@ -9,7 +9,8 @@ try:
     from strauss.sources import Events
     from strauss.score import Score
     from strauss.generator import Spectralizer
-except ImportError:
+except Exception:  # nosec
+    # sounddevice raises PortAudioError (not ImportError) on import without an audio server
     pass
 
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import generate_spaxel_list
