@@ -632,8 +632,13 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
     """
     loader_message_items = List([]).tag(sync=True)
 
-    def _clear_loader_messages(self):
+    def _clear_loader_messages(self, return_messages=False):
+        messages = None
+        if return_messages:
+            messages = self.loader_message_items.copy()
+
         self.loader_message_items = []
+        return messages
 
     def _prepare_message(self, text, color='error', traceback=None, timeout=5000):
 
