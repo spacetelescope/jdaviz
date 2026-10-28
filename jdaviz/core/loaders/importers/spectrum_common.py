@@ -490,11 +490,10 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if self.supported_flux_ndim == 2 and change.get('name', '') == 'extension_selected':
             manual_options = self.extension.manual_options
             selected_index = self.extension.selected_index
-            if hasattr(self, '_clear_loader_messages'):
+            if hasattr(self, 'loader_message_items'):
                 for man_opt in self.extension.manual_options:
                     if man_opt['label'] == change.get('old', None):
-                        man_opt['extension_messages'] = self._clear_loader_messages(
-                            return_messages=True)
+                        man_opt['extension_messages'] = self.loader_message_items.copy()
                         break
 
                 self.loader_message_items = manual_options[selected_index]['extension_messages']
