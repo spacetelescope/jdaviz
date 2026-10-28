@@ -212,6 +212,8 @@ Bug Fixes
   while aligned by WCS, including broken links between a cube and its uncertainty cube
   after relinking. [#4490]
 
+- Prevent spatial and spectral subsets from entering table viewer(s) data menu. [#4489]
+
 Mosviz
 ^^^^^^
 
