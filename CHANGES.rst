@@ -154,6 +154,8 @@ Bug Fixes
 
 - Fix error when typing while renaming data or subset. [#4359]
 
+- Prevent spatial and spectral subsets from entering table viewer(s) data menu. [#4489]
+
 Mosviz
 ^^^^^^
 
