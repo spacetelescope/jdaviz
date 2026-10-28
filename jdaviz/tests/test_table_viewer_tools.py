@@ -18,6 +18,7 @@ class TestTableViewerTools:
     @pytest.fixture(autouse=True)
     def setup_method(self, deconfigged_helper, image_2d_wcs, sky_coord_only_source_catalog):
         """Set up deconfigged app with image and catalog data using existing fixtures."""
+        deconfigged_helper._app.state.dev_mos_loader = True
         # Create image using the fixture WCS
         arr = np.arange(10000).reshape((100, 100))
         ndd = NDData(arr, wcs=image_2d_wcs)
@@ -810,6 +811,7 @@ class TestTableViewerViewerDataColumns:
     def setup_method(self, deconfigged_helper, image_2d_wcs, spectrum1d,
                      sky_coord_only_source_catalog):
         """Set up deconfigged app with images, spectra, dedicated viewers, and a Table."""
+        deconfigged_helper._app.state.dev_mos_loader = True
         # images
         arr = np.arange(10000).reshape((100, 100))
         deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
@@ -1015,6 +1017,7 @@ class TestTableViewerTwoWaySync:
     @pytest.fixture(autouse=True)
     def setup_method(self, deconfigged_helper, image_2d_wcs, spectrum1d,
                      sky_coord_only_source_catalog):
+        deconfigged_helper._app.state.dev_mos_loader = True
         arr = np.arange(10000).reshape((100, 100))
         deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
         deconfigged_helper.load(NDData(arr + 1, wcs=image_2d_wcs), data_label='img_b')
@@ -1145,6 +1148,7 @@ class TestTableViewerImageFirstWorkflow:
     @pytest.fixture(autouse=True)
     def setup_method(self, deconfigged_helper, image_2d_wcs,
                      sky_coord_only_source_catalog):
+        deconfigged_helper._app.state.dev_mos_loader = True
         # 1. Load image first — creates the image viewer
         arr = np.arange(10000).reshape((100, 100))
         deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
@@ -1195,6 +1199,7 @@ class TestTableViewerLateCatalogAttachWorkflow:
     @pytest.fixture(autouse=True)
     def setup_method(self, deconfigged_helper, image_2d_wcs,
                      sky_coord_only_source_catalog):
+        deconfigged_helper._app.state.dev_mos_loader = True
         # 1. Load image first so there is an existing non-table viewer.
         arr = np.arange(10000).reshape((100, 100))
         deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
@@ -1249,6 +1254,7 @@ class TestTableRowSelectToolBehavior:
 
     @pytest.fixture(autouse=True)
     def setup_method(self, deconfigged_helper, image_2d_wcs, sky_coord_only_source_catalog):
+        deconfigged_helper._app.state.dev_mos_loader = True
         arr = np.arange(10000).reshape((100, 100))
         deconfigged_helper.load(NDData(arr, wcs=image_2d_wcs), data_label='img_a')
 

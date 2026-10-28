@@ -31,6 +31,8 @@ class SourceCatalogImporter(BaseCatalogImporter):
 
     template_file = __file__, "./source_catalog.vue"
 
+    dev_spectral_lines = Bool(False).tag(sync=True)
+
     # for catalogs with source positions in sky coordinates
     col_ra_items = List().tag(sync=True)
     col_ra_selected = Unicode().tag(sync=True)
@@ -66,6 +68,8 @@ class SourceCatalogImporter(BaseCatalogImporter):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.dev_spectral_lines = self._app.state.dev_spectral_lines
 
         if not self.is_valid:
             return

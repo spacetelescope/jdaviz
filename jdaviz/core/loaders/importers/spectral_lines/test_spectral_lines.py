@@ -7,6 +7,12 @@ import pytest
 from jdaviz.core.loaders.importers.spectral_lines.spectral_lines import SpectralLinesImporter
 
 
+@pytest.fixture(autouse=True)
+def enable_spectral_lines_dev_flag(deconfigged_helper):
+    """Exercise spectral-line importer behavior with the feature enabled."""
+    deconfigged_helper._app.state.dev_spectral_lines = True
+
+
 def test_spectral_lines_importer_is_valid(deconfigged_helper):
     """Test _check_is_valid for SpectralLinesImporter: success and failure cases."""
     app = deconfigged_helper._app

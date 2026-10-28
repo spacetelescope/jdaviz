@@ -589,6 +589,8 @@ class TableRowSelect(CheckableTool, HubListener):
         self.viewer.widget_table.checked = [single]
 
     def is_visible(self):
+        if not getattr(self.viewer.jdaviz_app.state, 'dev_mos_loader', False):
+            return False
         if not hasattr(self.viewer, 'widget_table'):
             return False
         data = getattr(self.viewer.widget_table, 'data', None)
@@ -996,7 +998,12 @@ class TableColumnsVisible(Tool, HubListener):
         data = getattr(getattr(self.viewer, 'widget_table', None), 'data', None)
         if data is None:
             return []
-        return list(data.main_components) + list(data.derived_components)
+        components = list(data.main_components) + list(data.derived_components)
+        if not getattr(self.viewer.jdaviz_app.state, 'dev_mos_loader', False):
+            assoc_columns = set(data.meta.get('_viewer_data_columns') or {})
+            components = [component for component in components
+                          if str(component) not in assoc_columns]
+        return components
 
     def _build_custom_widgets(self):
         components = self._get_components()

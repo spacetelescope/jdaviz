@@ -2,6 +2,11 @@ import pytest
 from astropy.table import QTable
 
 
+@pytest.fixture(autouse=True)
+def enable_spectral_lines_dev_flag(deconfigged_helper):
+    deconfigged_helper._app.state.dev_spectral_lines = True
+
+
 def test_db_loads(deconfigged_helper):
     """DB should load successfully on init and resolver should be valid."""
     ldr = deconfigged_helper.loaders["spectral line database"]

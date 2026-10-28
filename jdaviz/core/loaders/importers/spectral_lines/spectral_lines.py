@@ -93,6 +93,8 @@ class SpectralLinesImporter(BaseCatalogImporter):
                 'linename': self._guess_linename_col()}
 
     def _check_is_valid(self):
+        if not self._app.state.dev_spectral_lines:
+            return "Spectral lines dev mode is not enabled."
         basic_check = self._basic_table_validity_checks(self.input)
         if basic_check:
             return basic_check

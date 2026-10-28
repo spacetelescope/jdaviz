@@ -267,6 +267,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     default_input = None
     default_input_cast = None
     requires_api_support = False
+    required_dev_flags = ()
     _update_format_spinner_text = 'searching for valid formats...'
 
     spinner = Unicode("").tag(sync=True)
@@ -295,6 +296,16 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     file_timeout = FloatHandleEmpty(10).tag(sync=True)
 
     importer_widget = Unicode().tag(sync=True)
+
+    @classmethod
+    def is_available(cls, app):
+        """Whether this resolver should be exposed in the app's loader lists.
+
+        Subclasses can name application-state developer flags in
+        ``required_dev_flags`` to hide under-development resolvers by default.
+        """
+        return all(bool(getattr(app.state, flag, False))
+                   for flag in cls.required_dev_flags)
 
     # Set remote server options based on the app configuration
     # read-only: change via app.state.settings['server_is_remote']
@@ -1050,8 +1061,14 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             # if the resolver was initialized with a list of valid import formats,
             # use that instead of the registry
             return [self._restrict_to_target]
-        # fallback on all items available in the registry
-        return loader_importer_registry.members.keys()
+        # fallback on all items available in the registry (minus those behind dev-flags)
+        loaders_disabled_by_dev_flags = []
+        if not self._app.state.dev_mos_loader:
+            loaders_disabled_by_dev_flags.append('MOS')
+        if not self._app.state.dev_spectral_lines:
+            loaders_disabled_by_dev_flags.append('Spectral Lines')
+        return [loader_name for loader_name in loader_importer_registry.members.keys()
+                if loader_name not in loaders_disabled_by_dev_flags]
 
     @observe('format_selected')
     def _on_format_selected_changed(self, change={}):

@@ -309,9 +309,10 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     # we didn't specify a specific ID column, so it should just be the index
     # of each source
     assert np.all(qtab['ID'] == np.arange(len(catalog_obj)))
-    # make sure only ra and dec (plus index and data association) loaded,
+    # make sure only ra and dec (plus index) loaded,
     # since we didn't specify more columns
-    assert len(qtab.colnames) == 4
+    # TODO: once dev_mos_loader is removed, this should be increased to 4
+    assert len(qtab.colnames) == 3
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
@@ -382,9 +383,10 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     qtab = imviz_helper._app.data_collection[0].get_object(QTable)
     assert 'SkyCoord_RA' in qtab.colnames
     assert 'SkyCoord_Dec' in qtab.colnames
-    # make sure only ra and dec (plus index and data association) loaded,
+    # make sure only ra and dec (plus index) loaded,
     # since we didn't specify more columns
-    assert len(qtab.colnames) == 4
+    # TODO: Restore the data-association column expectation (4) when dev_mos_loader is removed.
+    assert len(qtab.colnames) == 3
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader

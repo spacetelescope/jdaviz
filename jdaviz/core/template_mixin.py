@@ -74,7 +74,7 @@ from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
     _wcs_only_label, layer_is_not_dq as utils_layer_is_not_dq,
-    wildcard_match, CONFIGS_WITH_LOADERS, layer_is_dq as utils_layer_is_dq
+    wildcard_match, layer_is_dq as utils_layer_is_dq
 )
 
 
@@ -570,8 +570,11 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         if not len(self.loader_items):
             self._update_loader_items()
         from ipywidgets.widgets import widget_serialization
-        loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
-                   for item in self.loader_items}
+        loaders = {}
+        for item in self.loader_items:
+            loader = widget_serialization['from_json'](item['widget'], None).user_api
+            if loader._obj.is_available(self._app):
+                loaders[item['label']] = loader
         return loaders
 
     @observe('loader_panel_ind')
@@ -604,7 +607,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
             else:
                 disabled_loaders = []
         for name, Resolver in loader_resolver_registry.members.items():
-            if name in disabled_loaders:
+            if name in disabled_loaders or not Resolver.is_available(self._app):
                 continue
             loader = Resolver(app=self._app,
                               open_callback=open_accordion,
@@ -615,6 +618,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
                 'name': name,
                 'label': name,
                 'requires_api_support': loader.requires_api_support,
+                'required_dev_flags': list(Resolver.required_dev_flags),
                 'widget': "IPY_MODEL_" + loader.model_id
             })
         self.loader_items = loader_items
@@ -5611,7 +5615,7 @@ class AddResults(BasePluginComponent):
 
         # Use loader when format is provided, ensures component types are set consistently
         # by importers. Mosviz still uses app.add_data(), as does the sonify_data plugin.
-        if self._app.config in CONFIGS_WITH_LOADERS and format is not None:
+        if self._app.config != 'mosviz' and format is not None:
             self._app._jdaviz_helper.load(data_item,
                                           loader='object', format=format,
                                           data_label=label, viewer=load_kwargs.pop('viewer', []),

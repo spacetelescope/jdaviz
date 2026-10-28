@@ -3,9 +3,15 @@
 
       <div class="invert-if-dark" style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
         Load generic tabular data into the data collection. For catalogs with
-        source positions (e.g. RA/Dec or x/y pixel) or spectral lines, use the
-        "Source Catalog" or "Spectral Lines" formats, respectively, to enable
-        their specialized features.
+        <span v-if="dev_spectral_lines">
+          source positions (e.g. RA/Dec or x/y pixel) or spectral lines, use the
+          "Source Catalog" or "Spectral Lines" formats, respectively, to enable
+          their specialized features.
+        </span>
+        <span v-else>
+          source positions (e.g. RA/Dec or x/y pixel), use the "Source Catalog"
+          format to enable its specialized features.
+        </span>
       </div>
     <plugin-select v-if="extension_items.length"
       :items="extension_items"

@@ -32,7 +32,7 @@ from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.core.user_api import (DataApi, SpectralDataApi, SpatialDataApi,
                                   TemporalSpatialDataApi, SpectralSpatialDataApi)
-from jdaviz.utils import (JDAVIZ_CONFIGS, data_has_valid_wcs, CONFIGS_WITH_LOADERS,
+from jdaviz.utils import (JDAVIZ_CONFIGS, data_has_valid_wcs,
                           suppress_widget_comms)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                is_unit_per_solid_angle,
@@ -150,10 +150,13 @@ class ConfigHelper(HubListener):
         loaders : dict
             dict of loader objects
         """
-        if not (self._app.state.dev_loaders or self._app.config in CONFIGS_WITH_LOADERS):  # noqa
-            raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
-        loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
-                   for item in self._app.state.loader_items}
+        if self._app.config == 'mosviz':  # noqa
+            raise NotImplementedError("loaders is not supported in mosviz")  # noqa
+        loaders = {}
+        for item in self._app.state.loader_items:
+            loader = widget_serialization['from_json'](item['widget'], None).user_api
+            if loader._obj.is_available(self._app):
+                loaders[item['label']] = loader
         return loaders
 
     def _get_loader(self, resolver_name, parser_name=None, importer_name=None):
@@ -591,7 +594,7 @@ class ConfigHelper(HubListener):
 
         if tray is not None:
             self._app.state.drawer_content = tray
-        elif self._app.config in CONFIGS_WITH_LOADERS or self._app.state.dev_loaders:  # noqa
+        elif self._app.config != 'mosviz':  # noqa
             if not len(self._app.state.drawer_content):
                 if not len(self.viewers) or not len(self._app.state.data_items):
                     self._app.state.drawer_content = 'loaders'

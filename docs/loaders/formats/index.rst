@@ -18,7 +18,6 @@ will be parsed and which tools can visualize it:
    catalog
    ramp
    line_list
-   spectral_lines
    subset
    footprint
    trace
