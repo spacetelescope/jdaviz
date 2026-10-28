@@ -5,15 +5,151 @@
 Quickstart
 **********
 
-Once installed, ``jdaviz`` can be run either in a Jupyter notebook or as a standalone web application.
+Once installed, ``jdaviz`` can be run either in a Jupyter notebook, from the command line, or as a standalone application.
 Detailed workflows are given within the documentation, but some quick-start tips are given below.
 
+For a quick cheatsheet to use the ``jdaviz`` API, see: :ref:`userapi-cheatsheet`
+
+.. _quickstart-notebook:
+
+In a Jupyter Notebook
+=====================
+
+The power of Jdaviz is that it can integrated into your Jupyter notebook workflow:
+
+.. code-block:: python
+    
+    import jdaviz as jd
+    jd.show()
+
+A file or python object is loaded as:
+
+.. code-block:: python
+
+    jd.load('filename.fits', format='Image', data_label='MyData')
+
+Jdaviz also provides a directory of :ref:`sample notebooks <sample_notebook>`
+to test the application, located in the :gh-tree:`notebooks` sub-directory of the Git repository.
+
+.. _quickstart-display:
+
+Customizing Notebook Display Layout
+-----------------------------------
+
+By default, calling ``show()`` will display your visualization tool *inline* in your notebook,
+that is the tool will show underneath the notebook cell it was called from:
+
+.. code-block:: python
+
+    import jdaviz as jd
+
+    jd.show()
+    jd.load('filename.fits', format='Image')
+
+The height of the application in the notebook can be changed by passing an integer
+specifying the height in pixels to the ``height`` argument of ``show``, for example:
+
+.. code-block:: python
+
+    jd.show(height=800)
+
+You can additionally specify the location with the ``loc`` argument.
+For example, ``inline`` can be specified manually with:
+
+.. code-block:: python
+
+    jd.show(loc='inline')
+
+.. _quickstart-popout:
+
+Detached Popout
+^^^^^^^^^^^^^^^
+Jdaviz can also be displayed in a detached window, separate from your working Jupyter interface.
+
+.. note:: Popups must be allowed in your browser to display properly.
+
+The following shows ``jdaviz`` in a new popout window:
+
+.. code-block:: python
+
+    jd.show(loc='popout')
+
+To manually specify the anchor location, append the anchor to popout, separated by a colon:
+
+.. code-block:: python
+
+    jd.show(loc='popout:window')
+
+You can also popout to a new browser tab by specifying a ``tab`` anchor:
+
+.. code-block:: python
+
+    jd.show(loc='popout:tab')
+
+.. _quickstart-sidecar:
+
+Sidecar (Jupyter Lab)
+^^^^^^^^^^^^^^^^^^^^^
+
+In Jupyter Lab, ``sidecar`` provides additional methods to customize where to show the viewer
+in your workspace. The following shows ``jdaviz`` in the default sidecar location,
+to the right of the notebook:
+
+.. code-block:: python
+
+    jd.show(loc='sidecar')
+
+To manually specify the anchor location, append the anchor to sidecar, separated by a colon:
+
+.. code-block:: python
+
+    jd.show(loc='sidecar:right')
+
+Other anchors include: ``split-right``, ``split-left``, ``split-top``, ``split-bottom``,
+``tab-before``, ``tab-after``, ``right``. An up-to-date list can be found at
+`jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_.
+
+.. _quickstart-multiple:
+
+Multiple Jdaviz Instances
+-------------------------
+
+By default, any commands sent to ``jdaviz`` will be sent to the current default application.
+For example:
+
+.. code-block:: python
+
+    import jdaviz as jd
+
+    jd.show()  # shows the default application
+    jd.load('filename.fits', format='Image')  # loads into the default application
+
+However, multiple independent instances of Jdaviz can be created and displayed in the same notebook.
+To do so, create a new Jdaviz app instance and store it in a custom variable:
+
+.. code-block:: python
+
+    import jdaviz as jd
+
+    app1 = jd.new_app()
+    app2 = jd.new_app()
+
+    app1.show(loc='sidecar:right')
+    app2.show(loc='sidecar:left')
+
+    app1.load('filename1.fits', format='Image')
+    app2.load('filename2.fits', format='Image')
+
+
+You can also access the current default application with :py:func:`jdaviz.gca` (get current application), and pass arguments to :py:func:`jdaviz.new_app` or :py:func:`jdaviz.gca` to manage which is considered the current application.
+
+.. _quickstart-commandline:
 
 Launching From the Command Line
 ===============================
 
-.. note::
-    This feature is currently in development for the new generalized version of jdaviz, so the following may change in an upcoming release.
+.. .. note::
+..     This feature is currently in development for the new generalized version of jdaviz, so the following may change in an upcoming release.
 
 .. note::
     The command-line tool below has only been tested on Linux and MacOS and WSL on Windows.
@@ -51,128 +187,7 @@ To see a list of all options, from the terminal, type::
 
 .. jdavizclihelp::
 
-
-In a Jupyter Notebook
-=====================
-
-The power of Jdaviz is that it can integrated into your Jupyter notebook workflow::
-
-    import jdaviz as jd
-
-    jd.show()
-    jd.load('filename.fits', format='Image', data_label='MyData')
-
-Jdaviz also provides a directory of :ref:`sample notebooks <sample_notebook>`
-to test the application, located in the :gh-tree:`notebooks` sub-directory of the Git repository.
-
-
-Customizing Notebook Display Layout
------------------------------------
-
-By default, calling ``show()`` will display your visualization tool *inline* in your notebook,
-that is the tool will show underneath the notebook cell it was called from:
-
-.. code-block:: python
-
-    import jdaviz as jd
-
-    jd.show()
-    jd.load('filename.fits', format='Image')
-
-The height of the application in the notebook can be changed by passing an integer
-specifying the height in pixels to the ``height`` argument of ``show``, for example:
-
-.. code-block:: python
-
-    jd.show(height=800)
-
-You can additionally specify the location with the ``loc`` argument.
-For example, ``inline`` can be specified manually with:
-
-.. code-block:: python
-
-    jd.show(loc='inline')
-
-Detached Popout
-^^^^^^^^^^^^^^^
-Jdaviz can also be displayed in a detached window, separate from your working Jupyter interface.
-
-.. note:: Popups must be allowed in your browser to display properly.
-
-The following shows ``jdaviz`` in a new popout window:
-
-.. code-block:: python
-
-    jd.show(loc='popout')
-
-To manually specify the anchor location, append the anchor to popout, separated by a colon:
-
-.. code-block:: python
-
-    jd.show(loc='popout:window')
-
-You can also popout to a new browser tab by specifying a ``tab`` anchor:
-
-.. code-block:: python
-
-    jd.show(loc='popout:tab')
-
-
-Sidecar (Jupyter Lab)
-^^^^^^^^^^^^^^^^^^^^^
-
-In Jupyter Lab, ``sidecar`` provides additional methods to customize where to show the viewer
-in your workspace. The following shows ``jdaviz`` in the default sidecar location,
-to the right of the notebook:
-
-.. code-block:: python
-
-    jd.show(loc='sidecar')
-
-To manually specify the anchor location, append the anchor to sidecar, separated by a colon:
-
-.. code-block:: python
-
-    jd.show(loc='sidecar:right')
-
-Other anchors include: ``split-right``, ``split-left``, ``split-top``, ``split-bottom``,
-``tab-before``, ``tab-after``, ``right``. An up-to-date list can be found at
-`jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_.
-
-Multiple Jdaviz Instances
--------------------------
-
-By default, any commands sent to ``jdaviz`` will be sent to the current default application.
-For example:
-
-.. code-block:: python
-
-    import jdaviz as jd
-
-    jd.show()  # shows the default application
-    jd.load('filename.fits', format='Image')  # loads into the default application
-
-However, multiple independent instances of Jdaviz can be created and displayed in the same notebook.
-To do so, create a new Jdaviz app instance and store it in a custom variable:
-
-.. code-block:: python
-
-    import jdaviz as jd
-
-    app1 = jd.new_app()
-    app2 = jd.new_app()
-
-    app1.show(loc='sidecar:right')
-    app2.show(loc='sidecar:left')
-
-    app1.load('filename1.fits', format='Image')
-    app2.load('filename2.fits', format='Image')
-
-
-You can also access the current default application with :py:func:`jdaviz.gca` (get current application), and pass arguments to :py:func:`jdaviz.new_app` or :py:func:`jdaviz.gca` to manage which is considered the current application.
-
-
-
+.. _quickstart-keyboard:
 
 Keyboard Shortcuts
 ------------------

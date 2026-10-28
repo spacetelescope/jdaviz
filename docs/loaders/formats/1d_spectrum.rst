@@ -55,4 +55,5 @@ UI Access
 See Also
 ========
 
-- :ref:`specviz-displaying` - For information on displaying 1D spectra
+- :ref:`viewers-spectrum_1d` - For information on displaying 1D spectra
+- :ref:`plugins-gaussian_smooth` - For information on gaussian smoothing 1D spectra

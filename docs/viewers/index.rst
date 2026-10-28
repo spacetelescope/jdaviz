@@ -19,6 +19,8 @@ Jdaviz provides specialized viewers for different types of astronomical data.
    histogram
    extensions
 
+.. _viewers-creation:
+
 Creating Viewers
 ================
 
@@ -42,23 +44,47 @@ You can also create viewers programmatically:
 
 See the individual viewer pages for detailed usage information.
 
+.. _viewers-creation-ui:
+
 UI Access
 ---------
+
+In the UI, viewers can be moved by clicking and dragging on the gray tab on the top left of each viewer.  
+White dashed lines will appear as the viewer is dragged indicating where the viewer can be positioned in the app.
+Unclick at the desired location.  
+
+The viewer can be deleted by clicking on the ``x`` in the viewer tab.  This does **not** delete the data from the app.  
+It only deletes the viewer. 
 
 .. guidestar-demo:: _static/jdaviz-wireframe.html
    :repeat: false
    :init-steps-json: [{"action":"disable-toolbar-except","value":"loaders"}]
    :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-tab", "value": "Viewer", "delay": 1500, "caption": "Select the Viewer tab"}]
 
+.. _viewers-datamenu:
+
 Data Menus
 ==========
 
 Each viewer has a legend in the top-right indicating what layers are currently displayed. Clicking on the legend opens a data menu where you can:
+
 - Toggle visibility of individual layers
-- Remove layers from the viewer
+- Remove layers from the viewer or the app
 - Rename viewers
+- Add new layers 
 
 For more information, see :ref:`data_menu`.
+
+.. _viewers-focusmode:
+
+Focus mode
+==========
+On the far right in the toolbar of each viewer, there is a ``focus mode`` button (indicated by |icon-focus|).
+Clicking on this button expands the viewer to fill the application, 
+and provides select plotting and visualization tools for each viewer.
+
+
+.. _viewers-plotoptions:
 
 Plot Options
 ============

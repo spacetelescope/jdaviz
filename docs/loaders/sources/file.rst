@@ -4,11 +4,16 @@
 
 :excl_platforms: mast
 
+.. _loaders-source-file_loading:
+
 ********************
 Loading from File
 ********************
 
-The file loader allows you to load data from local files on your system.
+The file loader allows you to load data from files in your system. 
+If you are using ``jdaviz`` on a Platform, the file browser in the UI will show files 
+that have been uploaded to the platform.
+On your local machine, you will see your local files.  
 
 Usage
 =====
@@ -35,12 +40,14 @@ The file loader supports various astronomical data formats through the underlyin
 - FITS files (``.fits``, ``.fit``)
 - ASDF files (``.asdf``)
 - ECSV files (``.ecsv``)
-- And more formats supported by ``astropy`` and ``specutils``
+- And more formats supported by ``astropy`` and ``specutils``. 
 
 See :ref:`loaders-formats` for information on available data formats.
 
 UI Access
 =========
+
+In the UI, double click to navigate through the browser before click your desired file.  
 
 .. guidestar-demo:: _static/jdaviz-wireframe.html
    :js: jdaviz-wireframe-actions.js

@@ -56,5 +56,5 @@ UI Access
 See Also
 ========
 
-- :ref:`specviz2d-displaying` - For information on displaying 2D spectra
-- :ref:`specviz2d-spectral-extraction` - For extracting 1D spectra from 2D data
+- :ref:`viewers-spectrum_2d` - For information on displaying 2D spectra
+- :ref:`plugins-spectral_extraction_2d` - For extracting 1D spectra from 2D data

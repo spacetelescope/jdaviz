@@ -6,71 +6,64 @@ Analysis Plugins
 *********************
 
 Jdaviz provides a wide range of data analysis plugins for different types of astronomical data.
-
-.. toctree::
-   :maxdepth: 1
-
-   model_fitting
-   line_analysis
-   line_lists
-   spectral_lines
-   gaussian_smooth
-   collapse
-   moment_maps
-   aperture_photometry
-   2d_spectral_extraction
-   3d_spectral_extraction
-   ramp_extraction
-   cross_dispersion_profile
-   image_profiles
-   compass
-   catalog_search
-   data_quality
-   orientation
-   footprints
-   sonify
-   spectral_slice
-   ramp_slice
-   extensions
+  
 
 Overview
 ========
 
 Plugins provide specialized analysis capabilities tailored to different data types:
 
-**Spectroscopic Analysis (1D)**
-  - Model Fitting
-  - Line Analysis
-  - Line Lists
-  - Spectral Lines
-  - Gaussian Smooth
+.. toctree::
+  :maxdepth: 1
+  :caption: Spectroscopic Analysis (1D)
 
-**Cube Analysis (3D)**
-  - Collapse
-  - Moment Maps
-  - Spectral Extraction
-  - Spectral Slice
-  - Sonify Data
+  model_fitting
+  line_analysis
+  line_lists
+  spectral_lines
+  gaussian_smooth
 
-**Image Analysis (2D)**
-  - Aperture Photometry
-  - Image Profiles (XY)
-  - Compass
-  - Orientation
-  - Footprints
+.. toctree::
+  :maxdepth: 1
+  :caption: Cube Analysis (3D)
 
-**2D Spectroscopy**
-  - Spectral Extraction
-  - Cross Dispersion Profile
-  - Slit Overlay
+  collapse
+  moment_maps
+  3d_spectral_extraction
+  spectral_slice
+  sonify
 
-**Ramp Data**
-  - Ramp Extraction
-  - Ramp Slice
+.. toctree::
+  :maxdepth: 1
+  :caption: Image Analysis (2D)
 
-**Catalog & Quality**
-  - Catalog Search
-  - Data Quality
+  aperture_photometry
+  image_profiles
+  compass
+  orientation
+  footprints
+
+
+.. toctree::
+  :maxdepth: 1
+  :caption: 2D Spectroscopy
+
+  2d_spectral_extraction
+  cross_dispersion_profile
+
+.. toctree::
+  :maxdepth: 1
+  :caption: Ramp Data
+
+  ramp_extraction
+  ramp_slice
+
+.. toctree::
+  :maxdepth: 1
+  :caption: Catalog & Quality
+
+  catalog_search
+  data_quality
 
 UI Access
 =========
@@ -97,3 +90,12 @@ programmatically via the API:
     plg.show()
 
 See the individual plugin pages for detailed usage information.
+
+Plugin extensions
+=================
+
+.. toctree::
+   :maxdepth: 1
+   
+   extensions
+

@@ -8,16 +8,16 @@
 Loading via File Drop
 ************************
 
-The file drop loader allows you to drag and drop files directly into the Jdaviz interface.
+The file drop loader allows you to drag and drop files directly into the ``jdaviz`` interface.
 
-In the Jdaviz application interface, simply drag and drop a file from your file system
+In the ``jdaviz`` application interface, simply drag and drop a file from your file system
 onto the viewer area. The application will automatically detect the file type and
 prompt you to select the appropriate format if needed.
 
 For cases where the Jupyter kernel is not running on the local machine,
 the file drop loader provides the capability to upload files from the local
 machine.  Otherwise, the file drop loader provides the same functionality as
-the :ref:`loaders-source-file` loader but with a more interactive interface.
+the :ref:`loaders-source-file_loading` loader but with a more interactive interface.
 
 UI Access
 =========
@@ -29,9 +29,9 @@ UI Access
    :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-dropdown", "value": "Source:file drop", "delay": 1000, "caption": "Set source to file drop"}, {"action": "highlight", "target": "#source-select", "delay": 1500}]
 
 API Access
-==============
+==========
 
-When using Jdaviz in a Jupyter notebook:
+When using ``jdaviz`` in a Jupyter notebook:
 
 .. code-block:: python
 

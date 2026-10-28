@@ -7,7 +7,7 @@ Spectral Line Database
 *****************************
 
 Search the built-in Spectral Line Database and stage a custom list of lines to be
-loaded into jdaviz via the :ref:`loaders-format-line-list` importer.
+loaded into jdaviz via the :ref:`loaders-format-line-list-format` importer.
 
 Overview
 ========
@@ -130,4 +130,4 @@ format selector.  The imported ``QTable`` has exactly two columns:
 See Also
 ========
 
-- :ref:`loaders-format-line-list` — the target format for staged lines
+- :ref:`loaders-format-line-list-format` — the target format for staged lines
