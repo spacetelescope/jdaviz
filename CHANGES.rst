@@ -242,6 +242,10 @@ Bug Fixes
 
 - Fix Data Quality plugin visibility when a cube with DQ is loaded after other data. [#4532]
 
+- Prevent spatial subsets and spectral subsets from entering table viewer(s)
+  data menu. Spatial subsets are only shown in Source Catalog Table viewers,
+  and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
+
 Mosviz
 ^^^^^^
 
