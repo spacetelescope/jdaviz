@@ -168,6 +168,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             raise TypeError(f"Input type not supported for SpectrumInputExtensionsMixin: "
                             f"{type(self.input).__name__} ({type(self.input).__module__})")
 
+        # Store per extension messages to handle clearing messages when extension selection changes
+        ext_options = [e_o.update({'extension_messages': []}) or e_o for e_o in ext_options]
+
         self.extension = SelectFileExtensionComponent(self,
                                                       items='extension_items',
                                                       selected='extension_selected',
@@ -481,7 +484,19 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
         if not hasattr(self, 'extension'):
             return
+
         self.data_label_is_prefix = self.multiselect and len(self.extension.selected) > 1
+
+        if self.supported_flux_ndim == 2 and change.get('name', '') == 'extension_selected':
+            manual_options = self.extension.manual_options
+            selected_index = self.extension.selected_index
+            if hasattr(self, '_clear_loader_messages'):
+                manual_options[selected_index]['extension_messages'] = self._clear_loader_messages(
+                    return_messages=True)
+                [old_extension_messages] = [man_opt['extension_messages'] for man_opt in
+                                            self.extension.manual_options
+                                            if man_opt['label'] == change.get('old', None)]
+                self.loader_message_items = old_extension_messages
 
     def _to_list_of_spectra(self, inp):
         def this_row(field, i):

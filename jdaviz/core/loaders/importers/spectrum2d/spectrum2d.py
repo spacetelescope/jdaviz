@@ -51,9 +51,6 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # Initialize _spectrum_unit before filters are added (set in output property)
         self._spectrum_unit = None
 
-        # Store per extension messages to handle clearing messages when extension selection changes
-        self.extension_messages = {}
-
         if self.default_data_label_from_resolver:
             self.data_label.default = self.default_data_label_from_resolver
         elif self._app.config == 'specviz2d':
@@ -159,11 +156,6 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             self.import_disabled_msg = "Please select an extension to import."
         else:
             self.import_disabled_msg = ""
-
-        if hasattr(self, 'extension_messages'):
-            self.extension_messages[change['old']] = self._clear_loader_messages(return_messages=True)  # noqa
-            if change['new'] in self.extension_messages:
-                self.loader_message_items = self.extension_messages[change['new']]
 
     @observe('data_label_value')
     def _data_label_changed(self, msg={}):
