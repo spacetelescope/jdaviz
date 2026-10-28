@@ -994,7 +994,7 @@ class JdavizViewerWindow(TemplateMixin):
         if self.focus_mode == focus_mode:
             return
 
-        self.focus_mode = (self._app.state.focus_viewer == self.reference)
+        self.focus_mode = focus_mode
 
         # Add coords_info observe handlers if this viewer is being focused, remove if not
         if self.focus_mode:
