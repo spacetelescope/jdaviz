@@ -157,6 +157,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         else:
             self.import_disabled_msg = ""
 
+        self._clear_loader_messages()
+
     @observe('data_label_value')
     def _data_label_changed(self, msg={}):
         self.ext_data_label_default = f"{self.data_label_value} (auto-ext)"
