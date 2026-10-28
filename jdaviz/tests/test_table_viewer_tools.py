@@ -8,6 +8,7 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
+from glue.core.subset import RangeSubsetState
 
 from jdaviz.core.marks import PluginScatter, TableSelectionMark
 
@@ -47,6 +48,26 @@ class TestTableViewerTools:
         # Get the table viewer
         self.table_viewer_user_api = deconfigged_helper.viewers['Source Catalog Table']
         self.table_viewer = self.table_viewer_user_api._obj.glue_viewer
+
+    @pytest.mark.parametrize('composite', [False, True])
+    def test_spectral_subsets_excluded(self, spectrum1d, composite):
+        self._app.load(spectrum1d, format='1D Spectrum', data_label='spectrum')
+        app = self._app._app
+        spectrum = app.data_collection['spectrum']
+        att = spectrum.world_component_ids[0]
+        state = RangeSubsetState(6200, 6800, att=att)
+        if composite:
+            state = state | RangeSubsetState(7000, 7400, att=att)
+        group = app.data_collection.new_subset_group(
+            label='Spectral subset', subset_state=state)
+
+        assert all(layer.layer.label != group.label for layer in self.table_viewer.state.layers)
+
+        # Existing subsets must also be excluded when table data is added again.
+        catalog = self.table_viewer.widget_table.data
+        self.table_viewer.remove_data(catalog)
+        self.table_viewer.add_data(catalog)
+        assert all(layer.layer.label != group.label for layer in self.table_viewer.state.layers)
 
     def test_focus_mode_tool_visibility(self):
         toolbar = self.table_viewer.toolbar
@@ -266,6 +287,8 @@ class TestTableViewerTools:
         # A new subset should have been created
         new_subset_count = len(self._app._app.data_collection.subset_groups)
         assert new_subset_count == initial_subset_count + 1
+        group = self._app._app.data_collection.subset_groups[-1]
+        assert any(layer.layer.label == group.label for layer in self.table_viewer.state.layers)
 
     def test_select_table_row_tool_in_image_viewer(self):
         """Test that SelectTableRow tool is available in image viewer when table tool is active."""
