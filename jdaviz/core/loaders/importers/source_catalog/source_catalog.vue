@@ -2,8 +2,10 @@
   <v-container>
 
     <div class="invert-if-dark" style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
-      Load a table of sources with RA/Dec and/or X/Y positions. 
-      For loading a table of spectral lines, see the "Spectral Lines" format.
+      Load a table of sources with RA/Dec and/or X/Y positions.
+      <span v-if="dev_spectral_lines">
+        For loading a table of spectral lines, see the "Spectral Lines" format.
+      </span>
       For other generic tabular data, use the "Generic Catalog" format.
     </div>
 

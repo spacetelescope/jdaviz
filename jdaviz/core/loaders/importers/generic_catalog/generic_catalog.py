@@ -1,5 +1,6 @@
 import numpy as np
 from astropy.table import Table, QTable
+from traitlets import Bool
 
 from jdaviz.core.loaders.importers import BaseCatalogImporter
 from jdaviz.core.registries import loader_importer_registry
@@ -14,8 +15,12 @@ class GenericCatalogImporter(BaseCatalogImporter):
 
     template_file = __file__, "./generic_catalog.vue"
 
+    dev_spectral_lines = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.dev_spectral_lines = self._app.state.dev_spectral_lines
 
         if not self.is_valid:
             return
