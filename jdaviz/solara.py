@@ -40,8 +40,6 @@ def create_shared_widgets():
         ipyvue.register_component_from_file(None, name,
                                             os.path.join(os.path.dirname(jdaviz.__file__), path))
 
-    ipyvue.register_component_from_file('g-viewer-tab', "container.vue", jdaviz.__file__)
-
 
 def get_app_or_launcher():
     '''

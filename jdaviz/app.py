@@ -33,7 +33,7 @@ from echo.vue import autoconnect_callbacks_to_vue
 from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate, theme as vuetify_theme
 from ipywidgets import Layout, widget_serialization
-from traitlets import Dict, Bool, List, Unicode, Any
+from traitlets import Dict, Bool, Int, List, Unicode, Any
 from specutils import Spectrum, SpectralRegion
 from specutils.utils.wcs_utils import SpectralGWCS
 
@@ -59,6 +59,8 @@ from jdaviz.utils import (SnackbarQueue, alpha_index, alpha_index_to_int, data_h
                           _wcs_only_label, CONFIGS_WITH_LOADERS,
                           _get_celestial_wcs)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
+from jdaviz.core.viewer_layout import (ViewerLayoutError, add_viewer, remove_viewer,
+                                       rename_viewer, validate_and_normalize)
 from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
                                                all_flux_unit_conversion_equivs,
                                                combine_flux_and_angle_units,
@@ -75,7 +77,8 @@ enable_spaxel_unit()
 warnings.filterwarnings('ignore', message="The unit 'Angstrom' has been deprecated"
                         "in the VOUnit standard")
 
-CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
+# Configuration containers that hold structural children become splits.
+SPLIT_TYPES = dict(row='row', col='column', stack='column')
 EXT_TYPES = dict(flux=['flux', 'sci'],
                  uncert=['ivar', 'err', 'var', 'uncert'],
                  mask=['mask', 'dq'])
@@ -153,11 +156,7 @@ glue_settings.UNIT_CONVERTER = 'custom-jdaviz'
 custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'splitpanes': 'temp_components/splitpanes.vue',
                      'pane': 'temp_components/pane.vue',
-                     'golden-layout': 'temp_components/golden-layout.vue',
-                     'gl-row': 'temp_components/gl-row.vue',
-                     'gl-col': 'temp_components/gl-col.vue',
-                     'gl-stack': 'temp_components/gl-stack.vue',
-                     'gl-component': 'temp_components/gl-component.vue',
+                     'j-viewer-layout': 'components/viewer_layout.vue',
                      'j-flex-row': 'components/flex_row.vue',
                      'j-external-link': 'components/external_link.vue',
                      'j-docs-link': 'components/docs_link.vue',
@@ -211,13 +210,10 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-api-hint': 'components/api_hint_text.vue',
                      'j-rename-text': 'components/j_rename_text.vue'}
 
-# Register pure vue component. This allows us to do recursive component instantiation only in the
-# vue component file
+# Register the Vue components from their single-file component sources.
 for name, path in custom_components.items():
     ipyvue.register_component_from_file(None, name,
                                         os.path.join(os.path.dirname(__file__), path))
-
-ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
 
 vuetify_theme.themes.light.primary = "#00617E"
@@ -399,11 +395,11 @@ class ApplicationState(State):
     tray_items_filter = CallbackProperty(
         '', docstring='User-filter on tray items')
 
-    stack_items = ListCallbackProperty(
-        docstring="Nested collection of viewers constructed to support the "
-                  "Golden Layout viewer area.")
+    viewer_layout = DictCallbackProperty(
+        {'version': 1, 'root': None},
+        docstring="Split and tab layout of the viewer area.")
     viewer_items = ListCallbackProperty(
-        docstring="List (flat) of viewer objects")
+        docstring="Authoritative flat list of live viewer objects.")
 
     focus_viewer = CallbackProperty(
         '', docstring="The viewer that is currently in focus mode - or an empty string "
@@ -433,7 +429,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
     popout_button = Any().tag(sync=True, **widget_serialization)
     style_registry_instance = Any().tag(sync=True, **widget_serialization)
     invisible_children = List(Any()).tag(sync=True, **widget_serialization)
-    golden_layout_state = Dict(default_value=None, allow_none=True).tag(sync=True)
+    # Incremented by _reject_viewer_layout_edit to make the browser roll back a preview.
+    viewer_layout_reset = Int(0).tag(sync=True)
     force_open_about = Bool(False).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
@@ -2445,10 +2442,21 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # optionally update the viewer IDs:
         if update_id:
             old_id = viewer_item['id']
-            viewer_item['id'] = new_reference
             self._viewer_store[new_reference] = self._viewer_store.pop(old_id)
             self._viewer_store[new_reference]._reference_id = new_reference
-            self.state.viewer_icons[new_reference] = self.state.viewer_icons.pop(old_id)
+            # Replace the containers rather than editing them in place: in-place
+            # edits are not deferred by delay_callback, and the layout must not
+            # reach the frontend naming an ID that the viewer items do not have.
+            with delay_callback(self.state, 'viewer_items', 'viewer_icons', 'viewer_layout'):
+                self.state.viewer_items = [dict(item, id=new_reference) if item['id'] == old_id
+                                           else item for item in self.state.viewer_items]
+                self.state.viewer_icons = {(new_reference if key == old_id else key): value
+                                           for key, value in self.state.viewer_icons.items()}
+                self.state.viewer_layout = rename_viewer(self.state.viewer_layout, old_id,
+                                                         new_reference)
+
+        if self.state.focus_viewer == old_reference:
+            self.state.focus_viewer = new_reference
 
         # update the viewer name attributes on the helper:
         old_viewer_ref_attrs = [
@@ -2553,21 +2561,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             The dictionary containing the viewer instances and associated
             attributes.
         """
-        def find_viewer_item(stack_items):
-            for stack_item in stack_items:
-                for viewer_item in stack_item.get('viewers'):
-                    if viewer_item.get('id') == vid:
-                        return viewer_item
-
-                if len(stack_item.get('children')) > 0:
-                    result = find_viewer_item(stack_item.get('children'))
-                    if result is not None:
-                        return result
-            return None
-
-        viewer_item = find_viewer_item(self.state.stack_items)
-
-        return viewer_item
+        return next((item for item in self.state.viewer_items
+                     if item.get('id') == vid), None)
 
     def _viewer_by_reference(self, reference, fallback_to_id=False):
         """
@@ -2605,23 +2600,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             The dictionary containing the viewer instances and associated
             attributes.
         """
-        def find_viewer_item(stack_items):
-            out_viewer_item = None
-
-            for stack_item in stack_items:
-                for viewer_item in stack_item.get('viewers'):
-                    if viewer_item['reference'] == reference:
-                        out_viewer_item = viewer_item
-                        break
-
-                if len(stack_item.get('children')) > 0:
-                    out_viewer_item = find_viewer_item(stack_item.get('children'))
-
-            return out_viewer_item
-
-        viewer_item = find_viewer_item(self.state.stack_items)
-
-        return viewer_item
+        return next((item for item in self.state.viewer_items
+                     if item.get('reference') == reference), None)
 
     def _get_viewer_item(self, ref_or_id):
         """
@@ -2867,41 +2847,68 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                 subset_message = SubsetUpdateMessage(sender=subset)
                 self.hub.broadcast(subset_message)
 
+    def vue_set_viewer_layout(self, layout):
+        """Validate and store a user-originated canonical viewer layout."""
+        viewer_ids = [item['id'] for item in self.state.viewer_items]
+        self.state.viewer_layout = self._validate_user_viewer_layout(layout, viewer_ids)
+
+    def _reject_viewer_layout_edit(self):
+        """Tell the browser to roll back an optimistic edit that Python did not accept.
+
+        A rejected edit may leave the accepted layout unchanged, so the ordinary
+        trait update cannot carry that signal.
+        """
+        self.viewer_layout_reset += 1
+
+    def _validate_user_viewer_layout(self, layout, viewer_ids):
+        try:
+            return validate_and_normalize(layout, viewer_ids=viewer_ids)
+        except ViewerLayoutError:
+            self._reject_viewer_layout_edit()
+            raise
+
+    def vue_close_viewer(self, event):
+        """Validate a browser close request, including its post-close layout."""
+        cid = event.get('viewerId')
+        viewer_item = self._viewer_item_by_id(cid)
+        if viewer_item is None:
+            self._reject_viewer_layout_edit()
+            return
+        if viewer_item.get('closable') is False:
+            self._reject_viewer_layout_edit()
+            raise ViewerLayoutError(f"Viewer {cid!r} cannot be closed from the layout")
+
+        next_layout = self._validate_user_viewer_layout(
+            event.get('layout'),
+            [item['id'] for item in self.state.viewer_items if item['id'] != cid])
+        self._remove_viewer_item(viewer_item, next_layout)
+
     def vue_destroy_viewer_item(self, cid):
-        """
-        Callback for when viewer area tabs are destroyed. Finds the viewer item
-        associated with the provided id and removes it from the ``stack_items``
-        list.
+        """Remove a viewer by ID, including viewers protected from UI closure."""
+        viewer_item = self._viewer_item_by_id(cid)
+        if viewer_item is None:
+            return
+        self._remove_viewer_item(viewer_item, remove_viewer(self.state.viewer_layout, cid))
 
-        Parameters
-        ----------
-        cid : str
-            The viewer ID associated with the viewer item dictionary.
-        """
-        def remove(stack_items):
-            for stack in stack_items:
-                for viewer in stack['viewers']:
-                    if viewer['id'] == cid:
-                        stack['viewers'].remove(viewer)
+    def _remove_viewer_item(self, viewer_item, next_layout):
+        """Apply a validated removal to the layout, registry, and viewer metadata."""
+        cid = viewer_item['id']
+        with delay_callback(self.state, 'viewer_layout', 'viewer_items',
+                            'viewer_icons', 'focus_viewer'):
+            self.state.viewer_layout = next_layout
+            self.state.viewer_items = [item for item in self.state.viewer_items
+                                       if item['id'] != cid]
 
-                if len(stack.get('children', [])) > 0:
-                    stack['children'] = remove(stack['children'])
+            if cid in self.state.viewer_icons:
+                self.state.viewer_icons = {key: value
+                                           for key, value in self.state.viewer_icons.items()
+                                           if key != cid}
 
-            for empty_stack in [s for s in stack_items
-                                if not s['viewers'] and not s.get('children')]:
-                stack_items.remove(empty_stack)
-
-            return stack_items
-
-        remove(self.state.stack_items)
+            if self.state.focus_viewer in (cid, viewer_item.get('reference')):
+                self.state.focus_viewer = ''
 
         # Also remove the viewer from the stored viewer instance dictionary
-        if cid in self._viewer_store:
-            del self._viewer_store[cid]
-
-        # clear from the viewer icons dictionary
-        if cid in self.state.viewer_icons:
-            del self.state.viewer_icons[cid]
+        self._viewer_store.pop(cid, None)
 
         self.hub.broadcast(ViewerRemovedMessage(cid, sender=self))
 
@@ -3307,37 +3314,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             'parent': None,
         }
 
-    @staticmethod
-    def _create_stack_item(container='gl-stack', children=None, viewers=None):
-        """
-        Convenience method for generating stack item dictionaries.
-
-        Parameters
-        ----------
-        container : str
-            The GoldenLayout container type used to encapsulate the children
-            items within this stack item.
-        children : list
-            List of children stack item dictionaries used for recursively
-            including layout items within each GoldenLayout component cell.
-        viewers : list
-            List of viewer item dictionaries containing the information used
-            to render the viewer and associated tool widgets.
-
-        Returns
-        -------
-        dict
-            Dictionary containing information for this stack item.
-        """
-        children = [] if children is None else children
-        viewers = [] if viewers is None else viewers
-
-        return {
-            'id': str(uuid.uuid4()),
-            'container': container,
-            'children': children,
-            'viewers': viewers}
-
     def _next_viewer_num(self, prefix):
         all_vids = self.get_viewer_ids(prefix=prefix)
         if len(all_vids) == 0:
@@ -3360,7 +3336,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         vid : str or `None`, optional
             The ID of the viewer.
         name : str or `None`, optional
-            The name shown in the GoldenLayout tab for this viewer.
+            The name shown in the viewer tab.
             If `None`, it is the same as viewer ID.
         reference : str, optional
             The reference associated with this viewer as defined in the yaml
@@ -3399,10 +3375,14 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
         viewer_container = JdavizViewerWindow(viewer, app=self, reference=reference, name=name)
 
+        # Cubeviz viewers and the default Imviz viewer cannot be closed from the UI.
+        protected = self.config == 'cubeviz' or (self.config == 'imviz' and vid == 'imviz-0')
+
         return {
             'id': vid,
             'reference': reference or name or vid,
             'name': name or vid,
+            'closable': not protected,
             'widget': "IPY_MODEL_" + viewer_container.model_id,
             'api_methods': viewer._data_menu.api_methods if hasattr(viewer, '_data_menu') else [],
             'reference_data_label': reference_data_label,
@@ -3441,6 +3421,11 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The new viewer instance.
         """
+        if vid is not None:
+            if not isinstance(vid, str) or not vid:
+                raise ViewerLayoutError('Viewer ID must be a non-empty string')
+            if vid in self._viewer_store:
+                raise ViewerLayoutError(f"Viewer ID {vid!r} already exists")
 
         viewer = self._application_handler.new_data_viewer(
             msg.cls, data=msg.data, show=False)
@@ -3488,26 +3473,21 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             if hasattr(viewer, 'reference'):
                 viewer.state.reference_data = ref_data
 
-        new_stack_item = self._create_stack_item(
-            container='gl-stack',
-            viewers=[new_viewer_item])
-
-        self.state.viewer_items.append(new_viewer_item)
+        vid = new_viewer_item['id']
+        # New viewers go below the existing layout in configurations with loaders
+        # and beside it otherwise. The layout model itself holds no placement policy.
+        next_layout = add_viewer(
+            self.state.viewer_layout, vid,
+            container='column' if self.config in CONFIGS_WITH_LOADERS else 'row')
 
         # Store the glupyter viewer object so we can access the add and remove
-        #  data methods in the future
-        vid = new_viewer_item['id']
+        # data methods in the future
         self._viewer_store[vid] = viewer
 
-        # Add viewer locally
-        if (self.config in CONFIGS_WITH_LOADERS
-                and len(self.state.stack_items)):
-            # add to bottom (eventually will want more control in placement)
-            self.state.stack_items[0]['children'].append(new_stack_item)
-        else:
-            self.state.stack_items.append(new_stack_item)
-
-        self.session.application.viewers.append(viewer)
+        # Update metadata and geometry as one converged state.
+        with delay_callback(self.state, 'viewer_layout', 'viewer_items'):
+            self.state.viewer_items = [*self.state.viewer_items, new_viewer_item]
+            self.state.viewer_layout = next_layout
 
         if add_layers_to_viewer:
             for layer_label in add_layers_to_viewer:
@@ -3564,14 +3544,13 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         self.state.settings.update(config.get('settings'))
 
+        viewer_items = []
+
         def compose_viewer_area(viewer_area_items):
-            stack_items = []
+            layout_items = []
 
             for item in viewer_area_items:
-                stack_item = self._create_stack_item(
-                    container=CONTAINER_TYPES[item.get('container')])
-
-                stack_items.append(stack_item)
+                viewer_ids = []
 
                 for view in item.get('viewers', []):
                     viewer = self._application_handler.new_data_viewer(
@@ -3587,19 +3566,28 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                         reference=view.get('reference'))
 
                     self._viewer_store[viewer_item['id']] = viewer
+                    viewer_items.append(viewer_item)
+                    viewer_ids.append(viewer_item['id'])
 
-                    stack_item.get('viewers').append(viewer_item)
+                children = compose_viewer_area(item.get('children', []))
+                if item['container'] == 'stack' and not children:
+                    layout_items.append({'type': 'stack', 'viewers': viewer_ids})
+                else:
+                    # The existing configuration renders structural children before
+                    # its own viewers, but creates parent viewers first (above).
+                    children.extend({'type': 'stack', 'viewers': [vid]} for vid in viewer_ids)
+                    layout_items.append({'type': SPLIT_TYPES[item['container']],
+                                         'children': children})
 
-                if len(item.get('children', [])) > 0:
-                    child_stack_items = compose_viewer_area(
-                        item.get('children'))
-                    stack_item['children'] = child_stack_items
-
-            return stack_items
+            return layout_items
 
         if config.get('viewer_area') is not None:
-            stack_items = compose_viewer_area(config.get('viewer_area'))
-            self.state.stack_items.extend(stack_items)
+            root = {'type': 'row', 'children': compose_viewer_area(config['viewer_area'])}
+            with delay_callback(self.state, 'viewer_items', 'viewer_layout'):
+                self.state.viewer_items = [*self.state.viewer_items, *viewer_items]
+                self.state.viewer_layout = validate_and_normalize(
+                    {'version': 1, 'root': root},
+                    viewer_ids=[item['id'] for item in self.state.viewer_items])
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):

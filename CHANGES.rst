@@ -152,6 +152,11 @@ Mosviz
 API Changes
 -----------
 
+- The viewer area is now rendered by Jdaviz's own viewer layout component instead of Golden Layout.
+  Viewer configuration files are unchanged. ``app.state.stack_items`` and the
+  ``golden_layout_state`` trait are replaced by ``app.state.viewer_layout``, a split-and-tab
+  tree of viewer IDs; viewer metadata lives only in ``app.state.viewer_items``. [#4460]
+
 Bug Fixes
 ---------
 
