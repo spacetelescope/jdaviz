@@ -26,7 +26,7 @@ from jdaviz.utils import get_subset_type, MultiMaskSubsetState
 _reg_ver = Version(regions.__version__)
 IS_REGIONS_0_11_OR_OLDER = _reg_ver <= Version('0.11')
 IS_BETWEEN_REGIONS_0_11_0_12 = Version('0.11') < _reg_ver <= Version('0.12')
-IS_BETWEEN_REGIONS_0_12_0_13 = Version('0.12') < _reg_ver <= Version('0.13')
+IS_REGIONS_NEWER_THAN_0_12 = Version('0.12') < _reg_ver
 
 
 def test_region_from_subset_2d(cubeviz_helper):
@@ -423,8 +423,8 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     assert_quantity_allclose(reg[-1]['region'].width, ellipse1.width)
     assert_quantity_allclose(reg[-1]['region'].height, ellipse1.height)
     # regions 0.13 returns 360 instead of 0 now
-    assert_quantity_allclose(reg[-1]['region'].angle - 360 * u.deg, ellipse1.angle,
-                             atol=1e-7 * u.deg)
+    assert (np.isclose(reg[-1]['region'].angle.value - 360, ellipse1.angle.value, atol=1e-7) or
+            np.isclose(reg[-1]['region'].angle.value, ellipse1.angle.value, atol=1e-7))
 
     expected_sky = ellipse1.to_sky(image_2d_wcs)
     assert_quantity_allclose(reg[-1]['sky_region'].center.ra, expected_sky.center.ra)
@@ -971,7 +971,7 @@ class TestRegionsFromSubsets:
             assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
         elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region.radius.arcsec, 27843.243375)
-        elif IS_BETWEEN_REGIONS_0_12_0_13:
+        elif IS_REGIONS_NEWER_THAN_0_12:
             assert_allclose(sky_region.radius.arcsec, 27794.327242)
         else:
             raise Exception(f'sky region radius value: {sky_region.radius.arcsec}. '
@@ -995,7 +995,7 @@ class TestRegionsFromSubsets:
             assert_allclose(sky_region_0.radius.arcsec, 28001.08106569353)
         elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region_0.radius.arcsec, 27843.243375)
-        elif IS_BETWEEN_REGIONS_0_12_0_13:
+        elif IS_REGIONS_NEWER_THAN_0_12:
             assert_allclose(sky_region_0.radius.arcsec, 27794.327242)
         else:
             raise Exception(f'sky region radius value: {sky_region_0.radius.arcsec}. '
@@ -1006,7 +1006,7 @@ class TestRegionsFromSubsets:
             assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
         elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region_1.radius.arcsec, 25662.37978)
-        elif IS_BETWEEN_REGIONS_0_12_0_13:
+        elif IS_REGIONS_NEWER_THAN_0_12:
             assert_allclose(sky_region_1.radius.arcsec, 25478.764496)
         else:
             raise Exception(f'sky region radius value: {sky_region_1.radius.arcsec}. '
@@ -1040,7 +1040,7 @@ class TestRegionsFromSubsets:
             assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
         elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region.radius.arcsec, 27843.243375)
-        elif IS_BETWEEN_REGIONS_0_12_0_13:
+        elif IS_REGIONS_NEWER_THAN_0_12:
             assert_allclose(sky_region.radius.arcsec, 27794.327242)
         else:
             raise Exception(f'sky region radius value: {sky_region.radius.arcsec}. '
@@ -1060,7 +1060,7 @@ class TestRegionsFromSubsets:
             assert_allclose(sky_region_0.radius.arcsec, 28001.08106569353)
         elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region_0.radius.arcsec, 27843.243375)
-        elif IS_BETWEEN_REGIONS_0_12_0_13:
+        elif IS_REGIONS_NEWER_THAN_0_12:
             assert_allclose(sky_region_0.radius.arcsec, 27794.327242)
         else:
             raise Exception(f'sky region radius value: {sky_region_0.radius.arcsec}. '
@@ -1071,7 +1071,7 @@ class TestRegionsFromSubsets:
             assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
         elif IS_BETWEEN_REGIONS_0_11_0_12:
             assert_allclose(sky_region_1.radius.arcsec, 25662.37978)
-        elif IS_BETWEEN_REGIONS_0_12_0_13:
+        elif IS_REGIONS_NEWER_THAN_0_12:
             assert_allclose(sky_region_1.radius.arcsec, 25478.764496)
         else:
             raise Exception(f'sky region radius value: {sky_region_1.radius.arcsec}. '
