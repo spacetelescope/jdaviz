@@ -1,3 +1,4 @@
+from copy import deepcopy
 import itertools
 import warnings
 import numpy as np
@@ -493,7 +494,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             if hasattr(self, 'loader_message_items'):
                 for man_opt in self.extension.manual_options:
                     if man_opt['label'] == change.get('old', None):
-                        man_opt['extension_messages'] = self.loader_message_items.copy()
+                        man_opt['extension_messages'] = deepcopy(self.loader_message_items)
                         break
 
                 self.loader_message_items = manual_options[selected_index]['extension_messages']
