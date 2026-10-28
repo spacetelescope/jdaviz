@@ -1004,7 +1004,8 @@ class JdavizViewerWindow(TemplateMixin):
                 coords_info.observe(self._on_coords_info_icon_changed, names=['icon'])
                 coords_info.observe(self._on_coords_info_dataset_icon_changed,
                                     names=['dataset_icon'])
-        # Remove observers when un-focusing this viewer
+        # Remove observers when un-focusing this viewer. This can't be an else because all
+        # viewers have this triggered when any viewer is focused.
         elif self._app.state.focus_viewer in ('', None):
             coords_info.unobserve(None, names='icon')
             coords_info.unobserve(None, names='dataset_icon')
