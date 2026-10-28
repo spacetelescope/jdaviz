@@ -423,8 +423,8 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     assert_quantity_allclose(reg[-1]['region'].width, ellipse1.width)
     assert_quantity_allclose(reg[-1]['region'].height, ellipse1.height)
     # regions 0.13 returns 360 instead of 0 now
-    assert_quantity_allclose(reg[-1]['region'].angle - 360 * u.deg, ellipse1.angle,
-                             atol=1e-7 * u.deg)
+    assert (np.isclose(reg[-1]['region'].angle.value - 360, ellipse1.angle.value, atol=1e-7) or
+            np.isclose(reg[-1]['region'].angle.value, ellipse1.angle.value, atol=1e-7))
 
     expected_sky = ellipse1.to_sky(image_2d_wcs)
     assert_quantity_allclose(reg[-1]['sky_region'].center.ra, expected_sky.center.ra)
