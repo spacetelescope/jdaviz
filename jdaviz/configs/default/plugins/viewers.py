@@ -1628,7 +1628,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     * `JdavizSpectralLineTableViewer` -- spectral line lists with a
       line-name and/or spectral-location column.
 
-    Spectral subsets are not displayed in table viewers.
+    Spatial and spectral subsets are not displayed in table viewers.
     """
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     # NOTE: no active-row-select tool here -- highlighting a row only makes
@@ -1694,7 +1694,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def add_subset(self, subset, *args, **kwargs):
         # Inspect the defining state, not the table data the subset propagated to.
-        if get_subset_type(subset.subset_state) == 'spectral':
+        if get_subset_type(subset.subset_state) in ('spatial', 'spectral'):
             return False
         return super().add_subset(subset, *args, **kwargs)
 
