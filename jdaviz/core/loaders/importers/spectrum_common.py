@@ -491,12 +491,13 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             manual_options = self.extension.manual_options
             selected_index = self.extension.selected_index
             if hasattr(self, '_clear_loader_messages'):
-                manual_options[selected_index]['extension_messages'] = self._clear_loader_messages(
-                    return_messages=True)
-                [old_extension_messages] = [man_opt['extension_messages'] for man_opt in
-                                            self.extension.manual_options
-                                            if man_opt['label'] == change.get('old', None)]
-                self.loader_message_items = old_extension_messages
+                for man_opt in self.extension.manual_options:
+                    if man_opt['label'] == change.get('old', None):
+                        man_opt['extension_messages'] = self._clear_loader_messages(
+                            return_messages=True)
+                        break
+
+                self.loader_message_items = manual_options[selected_index]['extension_messages']
 
     def _to_list_of_spectra(self, inp):
         def this_row(field, i):
