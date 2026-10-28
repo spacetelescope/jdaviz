@@ -25,8 +25,11 @@ class GenericCatalogImporter(BaseCatalogImporter):
         if not self.is_valid:
             return
 
+        input_table = self.input_as_table
+
         # dropdown to select columns to import
-        self._init_col_other(self.input.colnames)
+        colnames = input_table.colnames if isinstance(input_table, (Table, QTable)) else []
+        self._init_col_other(colnames)
 
     def _check_is_valid(self):
         return self._basic_table_validity_checks(self.input)
@@ -46,24 +49,28 @@ class GenericCatalogImporter(BaseCatalogImporter):
     def user_api(self):
 
         expose = ['col_other']
+        if self.input_has_extensions:
+            expose += ['extension']
 
         return ImporterUserApi(self, expose=expose)
 
     @property
     def output_cols(self):
 
-        if not isinstance(self.input, (Table, QTable)):
+        input_table = self.input_as_table
+        if not isinstance(input_table, (Table, QTable)):
             return
 
-        return [col for col in set(self.col_other_selected) if col in self.input.colnames]
+        return [col for col in set(self.col_other_selected) if col in input_table.colnames]
 
     @property
     def output(self):
 
-        if not isinstance(self.input, (Table, QTable)):
+        input_table = self.input_as_table
+        if not isinstance(input_table, (Table, QTable)):
             return
 
-        table = self.input[self.output_cols]
+        table = input_table[self.output_cols]
         output_table = QTable()
 
         # assign an ID column to the table

@@ -3,6 +3,7 @@
 
 New Features
 ------------
+- Exposed Line Analysis table and updated relevant API hints. [#4478]
 
 - Data menu/legend overflow: more data label icons are now shown and two or more icons must be
   present beyond the overflow limit before the overflow icon will appear. [#4160]
@@ -129,6 +130,8 @@ New Features
 - Add restriction to Source Catalog loader that either an ra/dec pair or an x/y
   pair must be selected for import. [#4435]
 
+- Allow loading all tabular data types from FITS table extensions. [#4443]
+
 Mosviz
 ^^^^^^
 
@@ -187,6 +190,8 @@ Bug Fixes
 
 - Max-pin glue-jupyter and vue to specific versions to ensure compatibility before
   vue3 compatible glue-jupyter release. [#4463]
+
+- Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
 
 Mosviz
 ^^^^^^

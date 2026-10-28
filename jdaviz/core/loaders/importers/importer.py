@@ -1,7 +1,7 @@
 import os
 import re
 
-from astropy.table import Table, QTable
+from astropy.table import Table, QTable, vstack
 from astropy import units as u
 from astropy.io.fits import BinTableHDU, HDUList, TableHDU
 from traitlets import Any, Bool, List, Unicode, observe
@@ -12,6 +12,7 @@ from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import (AutoTextField,
                                         PluginTemplateMixin,
+                                        SelectFileExtensionComponent,
                                         SelectPluginComponent,
                                         ViewerSelectCreateNew,
                                         with_spinner,
@@ -558,6 +559,147 @@ class BaseCatalogImporter(BaseImporterToDataCollection):
     col_other_items = List().tag(sync=True)
     col_other_selected = List().tag(sync=True)
     col_other_multiselect = Bool(True).tag(sync=True)
+
+    # HDUList-specific options: lets the user pick which table extension(s)
+    # to import from when the input is a FITS HDUList.
+    input_has_extensions = Bool(False).tag(sync=True)
+    extension_items = List().tag(sync=True)
+    extension_selected = Any().tag(sync=True)
+    extension_multiselect = Bool(True).tag(sync=True)
+    no_common_col_msg = Unicode().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if not self.is_valid:
+            return
+
+        if isinstance(self.input, HDUList):
+            self.input_has_extensions = True
+
+            ext_options = [{'label': f"{index}: [{hdu.name},{hdu.ver}]",
+                            'name': hdu.name,
+                            'ver': hdu.ver,
+                            'name_ver': f"{hdu.name},{hdu.ver}",
+                            'index': index,
+                            'data_hash': create_data_hash(hdu),
+                            'obj': hdu} for index, hdu in enumerate(self.input)]
+
+            self.extension = SelectFileExtensionComponent(self,
+                                                          items='extension_items',
+                                                          selected='extension_selected',
+                                                          multiselect='extension_multiselect',
+                                                          manual_options=ext_options,
+                                                          filters=[self._validate_fits_tablehdu])
+
+            # the choices have already been filtered to only valid table HDUs, so
+            # choose the 0th to select the first valid table HDU by default
+            self.extension.selected = [self.extension.choices[0]]
+        else:
+            self.input_has_extensions = False
+
+    @property
+    def input_as_table(self):
+        """
+        Resolve ``self.input`` to an astropy ``Table``/``QTable``. For plain
+        table input, this is just ``self.input``. For an ``HDUList`` input,
+        this resolves to the table in the currently selected extension (or,
+        if multiple extensions are selected, the combination of those tables
+        restricted to columns common to all of them).
+        """
+        if hasattr(self, 'extension'):
+            if self.extension.selected in [None, '', []]:
+                return None
+
+            table_ext = self.extension.selected_obj
+
+            # reset message about no common columns between extensions each time
+            # we get the input as table, so that if the user changes to a different
+            # extension or selection of extensions, the message will be cleared
+            self.no_common_col_msg = ''
+            table_types = (TableHDU, BinTableHDU)
+
+            if len(table_ext) == 1 and isinstance(table_ext[0], table_types):
+                return QTable.read(table_ext[0])
+
+            elif len(table_ext) > 1 and all(isinstance(t, table_types) for t in table_ext):
+                # combine tables, only including columns that are common beween
+                # all tables in the selection. There will be text in the UI to
+                # indicate this and suggest loading tables individually if the
+                # the selected extensions contain different column names.
+                tables = [QTable.read(ext) for ext in table_ext]
+                common_cols_set = set(tables[0].colnames)
+                for tab in tables[1:]:
+                    common_cols_set = common_cols_set & set(tab.colnames)
+
+                # preserve the first table's column order (instead of the
+                # arbitrary order of a set) so the dropdown/combined table
+                # is the same across repeated loads
+                common_cols = [col for col in tables[0].colnames if col in common_cols_set]
+
+                # if there are no common columns between tables, we can't combine
+                # them. return None and the UI will indicate that the user should
+                # load tables separately.
+                if len(common_cols) == 0:
+                    msg = (
+                        "The selected extensions have no columns in common. "
+                        "Please select a single extension to load, or select "
+                        "multiple extensions that have at least one column "
+                        "name in common to enable loading in multiselect mode."
+                    )
+                    self.no_common_col_msg = msg
+                    return None
+
+                combined_table = vstack([t[common_cols] for t in tables],
+                                        join_type="exact")
+
+                return combined_table
+
+        return self.input
+
+    def _guess_cols_for_extension_change(self):
+        """
+        Return a dict mapping role-specific column-selection base attribute
+        names (e.g. ``'col_ra'``, ``'spectral_loc'``) to their guessed
+        options, to be refreshed when the selected extension(s) change.
+        Subclasses with role-specific column selectors should override this;
+        the base implementation returns an empty dict so that only
+        ``col_other`` is refreshed.
+        """
+        return {}
+
+    @observe('extension_selected')
+    def _on_extension_selected_change(self, event):
+        # when the selected extension changes, we need to update the column selection
+        # dropdowns with the columns from the newly selected extension
+        if not hasattr(self, 'extension'):
+            return
+
+        # if column selection dropdowns have not been created yet, we can skip
+        # the update since they will be created with the correct columns based
+        # on the selected extension in __init__
+        if not hasattr(self, 'col_other'):
+            return
+
+        input_table = self.input_as_table
+
+        if input_table is None:
+            # if input is None, that means the selected extensions had no common
+            # columns, so we should clear out the column selection dropdowns
+            # options (this section will be hidden in the UI)
+            for attr in self._guess_cols_for_extension_change():
+                self._update_col_items_and_selected(attr, ['---'])
+            self._update_col_items_and_selected('col_other', ['---'], select_first=False)
+            return
+
+        if not isinstance(input_table, (Table, QTable)):
+            return
+
+        # update column selection dropdowns with columns from the newly selected extension
+        for attr, guess in self._guess_cols_for_extension_change().items():
+            self._update_col_items_and_selected(attr, guess)
+
+        self._update_col_items_and_selected('col_other', input_table.colnames, select_first=False)
 
     def _has_selected_col(self, attr):
         selected = getattr(self, f'{attr}_selected', None)
