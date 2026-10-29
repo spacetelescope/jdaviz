@@ -2468,7 +2468,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         self.hub.broadcast(ViewerRenamedMessage(old_reference, new_reference, sender=self))
 
     def _get_first_viewer_reference_name(
-            self, require_no_selected_data=False,
+            self,
+            require_loaded_data=False,
             require_spectrum_viewer=False,
             require_spectrum_2d_viewer=False,
             require_table_viewer=False,
@@ -2478,8 +2479,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
     ):
         """
         Return the viewer reference name of the first available viewer.
-        Optionally use ``require_no_selected_data`` to require that the
-        viewer has not yet loaded data, or e.g. ``require_spectrum_viewer``
+        Optionally use ``require_loaded_data`` to require that the
+        viewer has loaded data, or e.g. ``require_spectrum_viewer``
         to require that the viewer supports spectrum visualization.
         """
         from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
@@ -2502,8 +2503,8 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         for vid in self._viewer_store:
             viewer_item = self._viewer_item_by_id(vid)
             is_returnable = (
-                (require_no_selected_data and not len(viewer_item['selected_data_items'])) or
-                (not require_no_selected_data)
+                (require_loaded_data and len(self._viewer_store[vid].layers)) or
+                not require_loaded_data
             )
             if require_spectrum_viewer:
                 if isinstance(self._viewer_store[vid], spectral_viewers) and is_returnable:
