@@ -23,7 +23,7 @@ Depending on the subset, it is exported as either:
 
 - an astropy :py:class:`~regions.core.core.Region` (spatial),
 - a :py:class:`specutils.spectra.SpectralRegion` (spectral)
-
+- a :py:class:`jdaviz.core.custom_regions.RangeRegion` (scatter regions)
 
 API Access
 ==========
@@ -54,4 +54,5 @@ To access subsets in a Jupyter notebook, you can export the region(s) by directl
    
    regions = jd.plugins["Subset Tools"].get_regions()
 
-This returns a dictionary where each subset is given as either an astropy :py:class:`~regions.core.core.Region` or :class:`specutils.spectra.SpectralRegion`.
+This returns a dictionary where each subset is given as either an astropy :py:class:`~regions.core.core.Region`,
+:class:`specutils.spectra.SpectralRegion`, or :py:class:`jdaviz.core.custom_regions.RangeRegion`.

@@ -65,9 +65,9 @@ plugin for the selected data.
 Edit subset
 -----------
 
-If a subset layer is in the data menu, when you select it, a ``EDIT SUBSET`` icon appears 
+If a subset layer is in the data menu, when you select it, an ``EDIT SUBSET`` icon appears 
 on the bottom right of the data menu.  
-After Clicking ``EDIT SUBSET`` another menu opens with the following items: 
+After clicking ``EDIT SUBSET`` another menu opens with the following items: 
 
 * ``Resize in Viewer`` allows you to resize the subset directly in the viewer by dragging the white boxes on the corners.
 * ``Edit in plugin`` opens up the Subset tools plugin. 

@@ -19,25 +19,18 @@ Overview
 
 .. _loaders-load:
 
-Using :py:class:`~jdaviz.load`
-=============================================================
+Using :py:func:`load() <~jdaviz.load>`
+======================================
 
 
-The recommended way to load data is to use the :py:class:`~jdaviz.load`
-method on the configuration helper, whether that's the deconfigged mode as shown below, or a 
-specific configuration such as ``Specviz``, ``Cubeviz``, etc. This provides a simple interface for loading data:
+The recommended way to load data is to use the :py:func:`load() <~jdaviz.load>`
+method on the configuration helper, whether that's the deconfigged mode as shown below, or a .  This provides a simple interface for loading data:
 
 .. code-block:: python
 
     import jdaviz
     jdaviz.show()
     jdaviz.load('myspectrum.fits', format='1D Spectrum')
-
-    # Alternatively
-    from jdaviz import Specviz
-    specviz = Specviz()
-    specviz.show()
-    specviz.load('myspectrum.fits')
 
 
 .. _loaders-loaders_api:
@@ -136,7 +129,7 @@ needed to reproduce your actions programmatically.
 Differences from the Loaders API
 ================================
 
-For most use cases, :py:class:`~jdaviz.load` provides a simpler interface. Use the Loaders API when you need:
+For most use cases, :py:func:`load() <~jdaviz.load>` provides a simpler interface. Use the Loaders API when you need:
 
 - More control over loading options
 - Interactive configuration
@@ -147,12 +140,12 @@ For most use cases, :py:class:`~jdaviz.load` provides a simpler interface. Use t
 
 UI Access 
 =========
-
-After selecting your :ref:`loaders-sources` and parsing your file, the
-the file format is automatically determined (similar to using ``format`` in the ``load()`` API call).  
+.. TODO: change file to files when multi-file selection is implemented.
+After selecting your :ref:`Data Source <loaders-sources>` and parsing your file, the
+the file format is automatically determined (similar to using ``format`` in the ``load()`` API call).   
 Scrolling down in the loader plugin will allow you to change importing properties, including the data label, 
 your orientation choice (WCS or pixels), and the type of viewer into which
-you will load the file. Select :guilabel:`Import` to load the data a viewer. 
+you will load the file. Select :guilabel:`Import` to load the data into a viewer. 
 
 .. _loaders-jdaviz_readable_products:
 

@@ -70,8 +70,8 @@ have been collected.
     ldr.query_archive()
 
 
-Since there are many options and the exposed options depend on previous selections, the best way to write a 
-script to write a workflow loading from the virtual observatory is to enable :ref:`userapi-api_hints`,
+Since there are many options and the exposed options depend on previous selections, the best way to create a 
+workflow to load data from the virtual observatory is to enable :ref:`userapi-api_hints`,
 and interactively do a search in the UI and reproduce in a notebook cell:
 
 .. guidestar-demo:: _static/jdaviz-wireframe.html

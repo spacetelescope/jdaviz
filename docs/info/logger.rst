@@ -7,7 +7,7 @@ Logger
 
 View system messages, warnings, and errors from Jdaviz operations. These messages can appear
 as popups on the top right of ``jdaviz`` as temporary messages, and/or will appear in the Logger plugin. 
-These give information on how the underlying data changes (data being logged, changing alignment and linking).  
+These give information on how the underlying data changes (data being loaded, changing alignment and linking).  
 
 popup verbosity
 ===============
@@ -18,7 +18,7 @@ Minimum level to show a popup message.  The default is ``warning``.
 history verbosity
 =================
 
-Minimum level to show a in the :guilabel:`Logger` plugin.  The default is ``info``. 
+Minimum level to show in the :guilabel:`Logger` plugin.  The default is ``info``. 
 
 
 Verbosity Levels

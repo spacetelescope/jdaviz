@@ -10,10 +10,8 @@
 Loading from File
 ********************
 
-The file loader allows you to load data from files in your system. 
-If you are using ``jdaviz`` on a Platform, the file browser in the UI will show files 
-that have been uploaded to the platform.
-On your local machine, you will see your local files.  
+The file loader allows you to load data from files local to your system.  For example, if you are using ``jdaviz`` 
+on a Platform, the file browser in the UI will show files that have been uploaded to the platform.
 
 Usage
 =====
@@ -47,7 +45,7 @@ See :ref:`loaders-formats` for information on available data formats.
 UI Access
 =========
 
-In the UI, double click to navigate through the browser before click your desired file.  
+In the UI, double click to navigate directories in the file browser before single clicking to select your desired file.
 
 .. guidestar-demo:: _static/jdaviz-wireframe.html
    :js: jdaviz-wireframe-actions.js
