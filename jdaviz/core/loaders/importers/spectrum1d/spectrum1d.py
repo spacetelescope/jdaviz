@@ -1,5 +1,3 @@
-import warnings
-
 from astropy.io.fits import HDUList
 from astropy.nddata import StdDevUncertainty
 import astropy.units as u
@@ -7,7 +5,6 @@ import numpy as np
 from specutils import Spectrum
 from traitlets import Bool, List, observe
 
-from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
                                            SpectrumInputExtensionsMixin,
