@@ -154,8 +154,6 @@ Bug Fixes
 
 - Fix error when typing while renaming data or subset. [#4359]
 
-- Prevent spatial and spectral subsets from entering table viewer(s) data menu. [#4489]
-
 Mosviz
 ^^^^^^
 
@@ -194,6 +192,8 @@ Bug Fixes
   vue3 compatible glue-jupyter release. [#4463]
 
 - Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
+
+- Prevent spatial and spectral subsets from entering table viewer(s) data menu. [#4489]
 
 Mosviz
 ^^^^^^
