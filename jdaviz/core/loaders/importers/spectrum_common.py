@@ -488,15 +488,20 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
         self.data_label_is_prefix = self.multiselect and len(self.extension.selected) > 1
 
+        # Handle loader messages for 2d spectra which may raise 'transposed data'
+        # banner during is_valid check (first extension only but handled generally)
         if self.supported_flux_ndim == 2 and change.get('name', '') == 'extension_selected':
             manual_options = self.extension.manual_options
             selected_index = self.extension.selected_index
             if hasattr(self, 'loader_message_items'):
                 for man_opt in self.extension.manual_options:
                     if man_opt['label'] == change.get('old', None):
+                        # Store the loader messages for the old extension so they
+                        # can be restored if the user switches back to it
                         man_opt['extension_messages'] = deepcopy(self.loader_message_items)
                         break
 
+                # Restore the loader messages for the new extension
                 self.loader_message_items = manual_options[selected_index]['extension_messages']
 
     def _to_list_of_spectra(self, inp):
