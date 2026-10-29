@@ -490,7 +490,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
         # Handle loader messages for 2d spectra which may raise 'transposed data'
         # banner during is_valid check (first extension only but handled generally)
-        if self.supported_flux_ndim == 2 and change.get('name', '') == 'extension_selected':
+        if change.get('name', '') == 'extension_selected':
             manual_options = self.extension.manual_options
             selected_index = self.extension.selected_index
             if hasattr(self, 'loader_message_items'):
