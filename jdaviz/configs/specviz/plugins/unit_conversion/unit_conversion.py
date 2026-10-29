@@ -218,13 +218,21 @@ class UnitConversion(PluginTemplateMixin):
         # stale display units.
         self._reset_angle_unit_to_remaining_data()
 
-        # glue resets x_display_unit to the native unit of the new reference data if the
-        # reference data was removed, so re-apply the selected spectral unit.
-        if (isinstance(viewer, Spectrum1DViewer) and len(viewer.layers)
-                and len(self.spectral_unit_selected)):
-            xunit = valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
-            viewer.state.x_display_unit = xunit
-            viewer.set_plot_axes()
+        # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
+        # access. this may need to be generalized for deconfigged and removed
+        # once the configs are deprecated
+        if self.config in ('specviz', 'specviz2d'):
+
+            # if no layers remain in spectrum viewer, disable the unit conversion plugin.
+            if viewer.reference == 'spectrum-viewer' and not len(viewer.layers):
+                self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer' # noqa
+
+            # if layers do remain in the viewer, re-validate and re-apply the
+            # current spectral x unit to the viewer state and refresh plot axes.
+            elif viewer.reference == 'spectrum-viewer' and len(viewer.layers):
+                xunit = valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
+                viewer.state.x_display_unit = xunit
+                viewer.set_plot_axes()
 
     def _on_data_collection_delete(self, msg):
         if len(self._app.data_collection) == 0:
