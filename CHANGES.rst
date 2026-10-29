@@ -193,6 +193,8 @@ Bug Fixes
 
 - Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
 
+- Prevent spatial and spectral subsets from entering table viewer(s) data menu. [#4489]
+
 Mosviz
 ^^^^^^
 
