@@ -2450,6 +2450,11 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             self._viewer_store[new_reference]._reference_id = new_reference
             self.state.viewer_icons[new_reference] = self.state.viewer_icons.pop(old_id)
 
+        viewer_window = self._viewer_store[viewer_item['id']]._viewer_window
+        viewer_window.id = viewer_item['id']
+        viewer_window.reference = viewer_item['reference']
+        viewer_window.name = viewer_item['name']
+
         # update the viewer name attributes on the helper:
         old_viewer_ref_attrs = [
             attr for attr in dir(self._jdaviz_helper)
@@ -3398,6 +3403,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
         viewer_container = JdavizViewerWindow(viewer, app=self, reference=reference, name=name)
+        viewer._viewer_window = viewer_container
 
         return {
             'id': vid,

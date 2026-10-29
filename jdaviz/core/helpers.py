@@ -26,7 +26,6 @@ from regions.core.core import Region
 from specutils import Spectrum, SpectralRegion
 
 from jdaviz.app import PrivateApplication
-from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
 from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
@@ -407,9 +406,9 @@ class ConfigHelper(HubListener):
         Returns
         -------
         viewers : dict
-            dict of viewer objects
+            dict of viewer API objects
         """
-        return {viewer._ref_or_id: JdavizViewerWindow(viewer, app=self._app).user_api
+        return {viewer._ref_or_id: viewer._viewer_window.user_api
                 for viewer in list(self._app._viewer_store.values())}
 
     def _get_clone_viewer_reference(self, reference):
@@ -912,7 +911,7 @@ class ImageConfigHelper(ConfigHelper):
     def default_viewer(self):
         """Default viewer instance. This is typically the first viewer
         (e.g., "imviz-0" or "cubeviz-0")."""
-        return JdavizViewerWindow(self._default_viewer, app=self._app).user_api
+        return self._default_viewer._viewer_window.user_api
 
     @deprecated(since="4.2", alternative="subset_tools.import_region")
     def load_regions_from_file(self, region_file, region_format='ds9', max_num_regions=20,

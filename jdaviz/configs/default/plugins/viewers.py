@@ -525,7 +525,7 @@ class JdavizViewerMixin(WithCache):
                     continue
                 setattr(new_layer_state, k, v)
 
-        return JdavizViewerWindow(new_viewer, app=self.jdaviz_app).user_api
+        return new_viewer._viewer_window.user_api
 
     def toggle_focus_mode(self, focus=None):
         """

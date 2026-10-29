@@ -20,8 +20,12 @@ def test_viewer_creator_relevance(deconfigged_helper, spectrum1d, spectrum2d):
 def test_viewer_creation(deconfigged_helper, spectrum1d):
     deconfigged_helper.load(spectrum1d, format='1D Spectrum')
     assert len(deconfigged_helper.viewers) == 1
-    deconfigged_helper.new_viewers['1D Spectrum']()
+    created = deconfigged_helper.new_viewers['1D Spectrum']()
     assert len(deconfigged_helper.viewers) == 2
+    viewer = created._obj.glue_viewer
+    assert deconfigged_helper.viewers[viewer.reference]._obj is created._obj
+    assert deconfigged_helper._app._viewer_item_by_id(viewer.reference_id)['widget'] == (
+        'IPY_MODEL_' + created._obj.model_id)
 
 
 class TestViewerCreatorObject:
