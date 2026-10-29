@@ -14,7 +14,7 @@ Several plugins produce tables that can be exported:
 Supported Formats
 =================
 
-Subsets can be exported as:
+Tables can be exported as:
 
 - ECSV 
 
@@ -131,7 +131,7 @@ The columns are as follow:
     You can use the :ref:`subsets` plugin to center it first on the
     object of interest, if you wish.
 
-Once you have the results in a table, you can further manipulated them as
+Once you have the results in a table, you can further manipulate them as
 documented in :ref:`astropy:astropy-table`.
 
 .. _plugin_tables_export-model:

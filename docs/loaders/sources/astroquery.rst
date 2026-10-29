@@ -12,15 +12,16 @@ Loading from Astroquery
 The Astroquery loader allows you to query and load data directly from astronomical archives.
 
 .. note::
-  Astroquery works by finding data whose footprint overlaps *at all* within the given search radius 
-  around source coordinates using :class:`astroquery.mast.MastMissionsClass`. This occurs because
-  :class:`astroquery.mast.MastMissionsClass` searches for observations  whose footprint contains the source coordinates 
-  or within a given radius from the source. 
+  Astroquery uses :class:`astroquery.mast.MastMissionsClass` to find observations whose footprints 
+  overlap the search region defined by the input source coordinates and search radius. 
+  Specifically, it returns observations whose footprints contain the source coordinates 
+  or extend into the region within the specified radius.
   
-  The ``ra`` and ``dec`` you input are the central coordinates of that footprint, but that footprint could match the input radius 
-  at the corner of the observation such that ``ra`` and ``dec`` are further away than the input radius. 
-  Conversely, if the footprint is centered on the input source coordinates, then you can have astroquery matches 
-  even within a vanishingly small radius.
+  The ``ra`` and ``dec`` represent the central coordinates of an observation's footprint, 
+  but the footprint itself can extend well beyond these coordinates. As a result, an observation 
+  may overlap the search region only near one of its corners, even if its central coordinates 
+  lie farther from the source than the specified search radius. Conversely, if an observation's 
+  footprint is centered on the source coordinates, it may be returned even when the search radius is arbitrarily small.
 
   This is specific to :class:`astroquery.mast.MastMissionsClass`; virtual observatory services do not show this quirk.
 
@@ -55,7 +56,7 @@ API Access
 
     ldr.search_input = 'Source'
     ldr.source = 'M4'
-    lr.coordframe = 'icrs'
+    ldr.coordframe = 'icrs'
     ldr.radius = 1 
     ldr.radius_unit = 'deg'
 
@@ -105,7 +106,7 @@ truncating the final table.
 
 
 Since there are many options and the exposed options depend on previous selections, the best way 
-to write a script to write a workflow loading from astroquery is to enable :ref:`userapi-api_hints`,
+to create a workflow to to load data from astroquery is to enable :ref:`userapi-api_hints`,
 and interactively do a search in the UI and reproduce in a notebook cell:
 
 .. .. guidestar-demo:: _static/jdaviz-wireframe.html

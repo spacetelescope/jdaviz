@@ -14,7 +14,7 @@ Several plugins produce plots that can be exported:
 Supported Formats
 =================
 
-Subsets can be exported as:
+Plots can be exported as:
 
 - PNG 
 
