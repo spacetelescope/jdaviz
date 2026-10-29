@@ -19,11 +19,11 @@ Overview
 
 .. _loaders-load:
 
-Using :py:func:`load() <~jdaviz.load>`
+Using :py:class:`~jdaviz.load`
 ======================================
 
 
-The recommended way to load data is to use the :py:func:`load() <~jdaviz.load>`
+The recommended way to load data is to use the :py:class:`~jdaviz.load`
 method on the configuration helper, whether that's the deconfigged mode as shown below, or a .  This provides a simple interface for loading data:
 
 .. code-block:: python
@@ -129,7 +129,7 @@ needed to reproduce your actions programmatically.
 Differences from the Loaders API
 ================================
 
-For most use cases, :py:func:`load() <~jdaviz.load>` provides a simpler interface. Use the Loaders API when you need:
+For most use cases, :py:class:`~jdaviz.load` provides a simpler interface. Use the Loaders API when you need:
 
 - More control over loading options
 - Interactive configuration
@@ -140,7 +140,7 @@ For most use cases, :py:func:`load() <~jdaviz.load>` provides a simpler interfac
 
 UI Access 
 =========
-.. TODO: change file to files when multi-file selection is implemented.
+
 After selecting your :ref:`Data Source <loaders-sources>` and parsing your file, the
 the file format is automatically determined (similar to using ``format`` in the ``load()`` API call).   
 Scrolling down in the loader plugin will allow you to change importing properties, including the data label, 
