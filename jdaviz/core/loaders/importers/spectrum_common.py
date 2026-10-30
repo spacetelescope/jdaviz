@@ -1,3 +1,4 @@
+from copy import deepcopy
 import itertools
 import warnings
 import numpy as np
@@ -15,7 +16,6 @@ from specutils import Spectrum, SpectrumList, SpectrumCollection
 from specutils.io.parsing_utils import generic_spectrum_from_table
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.unit_conversion_utils import is_unit_per_solid_angle
 from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
@@ -168,6 +168,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         else:
             raise TypeError(f"Input type not supported for SpectrumInputExtensionsMixin: "
                             f"{type(self.input).__name__} ({type(self.input).__module__})")
+
+        # Store per extension messages to handle clearing messages when extension selection changes
+        ext_options = [e_o.update({'extension_messages': []}) or e_o for e_o in ext_options]
 
         self.extension = SelectFileExtensionComponent(self,
                                                       items='extension_items',
@@ -482,7 +485,27 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
         if not hasattr(self, 'extension'):
             return
+
         self.data_label_is_prefix = self.multiselect and len(self.extension.selected) > 1
+
+        # Handle loader messages for 2d spectra which may raise 'transposed data'
+        # banner during is_valid check (first extension only but handled generally)
+        if change.get('name', '') == 'extension_selected':
+            manual_options = self.extension.manual_options
+            selected_index = self.extension.selected_index
+            if selected_index is None:
+                return
+
+            if hasattr(self, 'loader_message_items'):
+                for man_opt in self.extension.manual_options:
+                    if man_opt['label'] == change.get('old', None):
+                        # Store the loader messages for the old extension so they
+                        # can be restored if the user switches back to it
+                        man_opt['extension_messages'] = deepcopy(self.loader_message_items)
+                        break
+
+                # Restore the loader messages for the new extension
+                self.loader_message_items = manual_options[selected_index]['extension_messages']
 
     def _to_list_of_spectra(self, inp):
         def this_row(field, i):
@@ -629,9 +652,10 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     mask_data = mask_data.T
                 if getattr(wcs, 'naxis', 0) == 2:
                     wcs = wcs.swapaxes(0, 1)
-                self._app.hub.broadcast(SnackbarMessage(
+                # the _loader_message method will be provided by the inheriting class
+                self._loader_message(
                     f"Transposed input data to {data.shape}",
-                    sender=self, color="warning"))
+                    color="warning")
 
         # Check for data types that have a GWCS stored in ASDF
         telescop = metadata[PRIHDR_KEY].get('TELESCOP', '').lower()

@@ -15,7 +15,7 @@ class TestMOSImporter:
     """
     @pytest.fixture(scope='class')
     @classmethod
-    def mos_dir(cls, tmp_path_factory):
+    def mos_dir(cls, tmp_path_factory, transposed_mos_spectrum2d_as_hdulist):
         """
         A MOS directory containing one of each supported product, plus one image
         product that passes the (cheap) header check but fails on import.
@@ -49,6 +49,8 @@ class TestMOSImporter:
         Table({'label': [1, 2], 'ra': [1.0, 2.0], 'dec': [1.0, 2.0]}
               ).write(path / 'jw00000_cat.ecsv')
 
+        transposed_mos_spectrum2d_as_hdulist.writeto(path / 'transposed_s2d.fits')
+
         return path
 
     @pytest.fixture(autouse=True)
@@ -58,9 +60,9 @@ class TestMOSImporter:
         self.mos_dir = mos_dir
 
     def _loader_for_mos_dir(self):
-        loader = self.helper.loaders['file']
-        loader.filepath = str(self.mos_dir)
-        return loader
+        ldr = self.helper.loaders['file']
+        ldr.filepath = str(self.mos_dir)
+        return ldr
 
     def _assert_visible(self, viewer_label, expected):
         """
@@ -124,10 +126,10 @@ class TestMOSImporter:
                 'Input directory does not contain any MOS 1D spectra matching *_x1d.fits.')
 
     def test_import_all(self):
-        loader = self._loader_for_mos_dir()
-        assert loader.format.choices == ['MOS']
+        ldr = self._loader_for_mos_dir()
+        assert ldr.format.choices == ['MOS']
 
-        importer = loader.importer._obj
+        importer = ldr.importer._obj
         # the data-label defaults to a prefix based on the directory name, with one
         # suffix per file
         assert importer.data_label_is_prefix
@@ -135,9 +137,10 @@ class TestMOSImporter:
         # use set to avoid any potential ordering issues
         assert set(importer.data_label_suffices) == {
             'jw00000_cat', 'jw00000_i2d', 'jw00000_s2d',
-            'jw00000_x1d', 'jw00001_i2d', 'jw00001_x1d'
+            'jw00000_x1d', 'jw00001_i2d', 'jw00001_x1d',
+            'transposed_s2d'
         }
-        assert [item['count'] for item in importer.product_items] == [2, 1, 2, 1]
+        assert [item['count'] for item in importer.product_items] == [2, 2, 2, 1]
         assert importer.product_types == ['spectrum1d', 'spectrum2d', 'image', 'catalog']
 
         # each product type defaults to creating its own (compatible) viewer
@@ -149,11 +152,11 @@ class TestMOSImporter:
         # MOS directories are expected to provide their own 1D spectra
         assert importer.auto_extract_2d is False
 
-        loader.load()
+        ldr.load()
 
         assert set((data.label for data in self.helper._app.data_collection)) == {
             'mosdir_jw00000_cat', 'mosdir_jw00000_i2d', 'mosdir_jw00000_s2d',
-            'mosdir_jw00000_x1d', 'mosdir_jw00001_x1d'
+            'mosdir_jw00000_x1d', 'mosdir_jw00001_x1d', 'mosdir_transposed_s2d'
         }
 
         viewers = self.helper.viewers
@@ -161,7 +164,8 @@ class TestMOSImporter:
                                        'Source Catalog Table'}
         assert set(viewers['1D Spectrum'].data_menu.data_labels_loaded) == {
             'mosdir_jw00000_x1d', 'mosdir_jw00001_x1d'}
-        assert viewers['2D Spectrum'].data_menu.data_labels_loaded == ['mosdir_jw00000_s2d']
+        assert set(viewers['2D Spectrum'].data_menu.data_labels_loaded) == {'mosdir_jw00000_s2d',
+                                                                            'mosdir_transposed_s2d'}
         assert viewers['Image'].data_menu.data_labels_loaded == ['mosdir_jw00000_i2d']
         assert viewers['Source Catalog Table'].data_menu.data_labels_loaded == ['mosdir_jw00000_cat']  # noqa
 
@@ -175,7 +179,7 @@ class TestMOSImporter:
         messages = importer.loader_message_items
         assert [item['color'] for item in messages] == ['error', 'warning']
         assert messages[0]['text'].startswith("Failed to import 'jw00001_i2d.fits': ")
-        assert messages[1]['text'] == ('1 of 6 files could not be imported '
+        assert messages[1]['text'] == ('1 of 7 files could not be imported '
                                        '(jw00001_i2d.fits).')
 
     def test_show_single_layer_per_viewer(self):
@@ -211,15 +215,15 @@ class TestMOSImporter:
         self._assert_visible('1D Spectrum', ['mosdir_jw00000_x1d'])
 
         # import the same directory again, this time into the now-existing viewers
-        loader = self._loader_for_mos_dir()
-        importer = loader.importer._obj
+        ldr = self._loader_for_mos_dir()
+        importer = ldr.importer._obj
         for viewer_select, viewer_label in ((importer.viewer, '1D Spectrum'),
                                             (importer.viewer_2d, '2D Spectrum'),
                                             (importer.viewer_image, 'Image'),
                                             (importer.viewer_catalog, 'Source Catalog Table')):
             viewer_select.create_new.selected = ''
             viewer_select.selected = [viewer_label]
-        loader.load()
+        ldr.load()
 
         # the entries were overwritten rather than duplicated, and only the first is
         # left visible
@@ -238,34 +242,56 @@ class TestMOSImporter:
                          format='1D Spectrum', data_label='preexisting')
         self._assert_visible('1D Spectrum', ['preexisting'])
 
-        loader = self._loader_for_mos_dir()
-        importer = loader.importer._obj
+        ldr = self._loader_for_mos_dir()
+        importer = ldr.importer._obj
         importer.viewer.create_new.selected = ''
         importer.viewer.selected = ['1D Spectrum']
-        loader.load()
+        ldr.load()
 
         self._assert_visible('1D Spectrum', ['preexisting', 'mosdir_jw00000_x1d'])
 
     def test_auto_extract_2d(self):
-        loader = self._loader_for_mos_dir()
-        importer = loader.importer._obj
+        ldr = self._loader_for_mos_dir()
+        importer = ldr.importer._obj
         importer.auto_extract_2d = True
 
-        loader.load()
+        ldr.load()
 
         labels = [data.label for data in self.helper._app.data_collection]
         # the 2D spectrum (and its extraction) are imported after the other
         # products, since auto-extraction can't happen within ``batch_load``
         assert set(labels) == {'mosdir_jw00000_cat', 'mosdir_jw00000_i2d',
                                'mosdir_jw00000_x1d', 'mosdir_jw00001_x1d',
-                               'mosdir_jw00000_s2d', 'mosdir_jw00000_s2d (auto-ext)'}
+                               'mosdir_jw00000_s2d', 'mosdir_jw00000_s2d (auto-ext)',
+                               'mosdir_transposed_s2d', 'mosdir_transposed_s2d (auto-ext)'}
 
         # the auto-extracted spectrum joins the imported 1D spectra, but isn't visible
         spectrum_1d_menu = self.helper.viewers['1D Spectrum'].data_menu
         assert set(spectrum_1d_menu.data_labels_loaded) == {'mosdir_jw00000_x1d',
                                                             'mosdir_jw00001_x1d',
-                                                            'mosdir_jw00000_s2d (auto-ext)'}
+                                                            'mosdir_jw00000_s2d (auto-ext)',
+                                                            'mosdir_transposed_s2d (auto-ext)'}
         self._assert_visible('1D Spectrum', ['mosdir_jw00000_x1d'])
+
+        # Check some messages in the logger
+        auto_extraction_msg = ('The extracted 1D spectrum was generated automatically. '
+                               'See the 2D spectral extraction plugin for details or '
+                               'to perform a custom extraction.')
+        transpose_msg = 'Transposed input data to'
+        image_failure_logger_msg = 'files could not be imported (jw00001_i2d.fits).'
+
+        logger = self.helper.plugins['Logger'].history
+        auto_extraction_msgs = [msg for msg in logger if auto_extraction_msg in msg['text']]
+        assert len(auto_extraction_msgs) == 2
+        assert any([transpose_msg in msg['text'] for msg in logger])
+        assert any([image_failure_logger_msg in msg['text'] for msg in logger])
+
+        # Check the loader messages for the image failure message
+        image_failure_loader_msg = 'Input is not a supported image data type.'
+        # the image failure message is purposefully left in the
+        # loader message items per _report_import_summary
+        assert any([image_failure_loader_msg in msg['text']
+                    for msg in importer.loader_message_items])
 
 
 class TestIterInputFiles:
