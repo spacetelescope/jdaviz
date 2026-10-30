@@ -106,12 +106,12 @@ jobs:
     # if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
-        os: [macos-14]
+        os: [macos-latest]
     steps:
     # osx signing based on https://melatonin.dev/blog/how-to-code-sign-and-notarize-macos-audio-plugins-in-ci/
     # - name: Import Certificates (macOS)
     #   uses: apple-actions/import-codesign-certs@77ba2a2a8f5cfc8c405ebf3159f767c323e238f9 # v7.1.0
-    #   if: ${{ matrix.os == 'macos-14' }}
+    #   if: ${{ matrix.os == 'macos-latest' }}
     #   with:
     #     p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}
     #     p12-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
@@ -139,7 +139,7 @@ jobs:
       run: (cd standalone; pyinstaller ./jdaviz.spec)
 
     # - name: Codesign (OSX)
-    #   if: ${{ matrix.os == 'macos-14' }}
+    #   if: ${{ matrix.os == 'macos-latest' }}
     #   run: |
     #     cd standalone/dist
     #     codesign --deep --force --options=runtime --entitlements ../entitlements.plist --sign ${{ secrets.DEVELOPER_ID_APPLICATION }} --timestamp jdaviz.app
@@ -149,7 +149,7 @@ jobs:
           
     # - name: Create dmg (OSX)
     #   # if we do not call always() GHA will && with success()
-    #   if: ${{ always() && (matrix.os == 'macos-14') }}
+    #   if: ${{ always() && (matrix.os == 'macos-latest') }}
     #   # it seems ditto (not zip) should be used in combination with notarization
     #   # see https://developer.apple.com/forums/thread/116831
     #   # but dmg also works
@@ -160,7 +160,7 @@ jobs:
     #     # hdiutil create -volname "Jdaviz" -srcfolder standalone/dist -ov -format UDZO standalone/dist/jdaviz.dmg
     
     # - name: Notary step + stapling (OSX)
-    #   if: ${{ matrix.os == 'macos-14' }}
+    #   if: ${{ matrix.os == 'macos-latest' }}
     #   run: |
     #     output=$(xcrun notarytool submit standalone/dist/jdaviz.dmg --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true
     #     echo "$output"
@@ -175,12 +175,12 @@ jobs:
     #     fi
 
     # - name: Validate app (OSX)
-    #   if: ${{ matrix.os == 'macos-14' }}
+    #   if: ${{ matrix.os == 'macos-latest' }}
     #   run: |
     #     spctl -a -vvv -t execute standalone/dist/jdaviz.app
 
     - name: Run jdaviz cmd in background
-      if: ${{ matrix.os == 'macos-14' }}
+      if: ${{ matrix.os == 'macos-latest' }}
       env:
         ASTROPY_ALLOW_INTERNET: "False"
       run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli --port=8765 &
@@ -208,7 +208,7 @@ jobs:
         path: standalone/test-results
 
     # - name: Upload jdaviz standalone (OSX)
-    #   if: ${{ always() && (matrix.os == 'macos-14') }}
+    #   if: ${{ always() && (matrix.os == 'macos-latest') }}
     #   uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
     #   with:
     #     name: jdaviz-standlone-macosx
