@@ -574,6 +574,12 @@ def _combine_if_annulus(region1, region2, op):
                                         outer_radius=region1.radius)
 
 
+def _is_image_spatial_subset(subset):
+    """Whether a spatial subset is defined entirely on 2D data, including WCS-only data."""
+    return (get_subset_type(subset) == 'spatial'
+            and all(att.parent.ndim == 2 for att in subset.subset_state.attributes))
+
+
 def get_subset_type(subset):
     """
     Determine the subset type of a subset or layer

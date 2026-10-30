@@ -7,6 +7,10 @@
 
 Documentation coming soon.
 
+Spatial subsets created in an Image viewer are not added to 3D Spectrum viewers
+or offered as apertures or backgrounds for 3D Spectral Extraction. Create a
+spatial subset in the 3D Spectrum viewer to apply it to a cube.
+
 UI Access
 =========
 

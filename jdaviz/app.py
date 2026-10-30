@@ -1403,9 +1403,12 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # but want to do so without raising an error (since many subsets could be requested)
         roi_as_sky_region = None
         if wcs is not None:
-            if self.config == 'cubeviz':
-                # the value for wcs returned above will be in 2D dimensions, which is needed
-                # for this translation to work
+            parent_coords = subset_state.attributes[0].parent.coords
+            if (self.config == 'cubeviz'
+                    or getattr(parent_coords, 'world_n_dim', None) == 3):
+                # for subsets defined on a cube, the parent's full WCS cannot be
+                # used for the sky translation, but the value for wcs returned
+                # above is the (2D) celestial WCS, which is what is needed here
                 roi_as_sky_region = roi_subset_state_to_region(subset_state).to_sky(wcs)
             else:
                 roi_as_sky_region = roi_subset_state_to_region(subset_state, to_sky=True)

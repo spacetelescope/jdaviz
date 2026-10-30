@@ -28,6 +28,7 @@ from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                is_unit_per_solid_angle)
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
+from jdaviz.utils import _is_image_spatial_subset
 
 
 __all__ = ['SpectralExtraction3D']
@@ -148,6 +149,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.aperture._default_text = 'Entire Cube'
         self.aperture._manual_options = ['Entire Cube']
         self.aperture.items = [{"label": "Entire Cube"}]
+        self.aperture.add_filter(lambda subset: not _is_image_spatial_subset(subset))
         self.aperture._subset_selected_changed_callback = self._update_extract
         # need to reinitialize choices since we overwrote items and some subsets may already
         # exist.
@@ -163,6 +165,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                multiselect=None,
                                                default_text='None',
                                                subset_selected_changed_callback=self._update_extract)  # noqa
+        self.background.add_filter(lambda subset: not _is_image_spatial_subset(subset))
 
         self.bg_spec_add_results = AddResults(self, 'bg_spec_results_label',
                                               'bg_spec_results_label_default',

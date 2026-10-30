@@ -202,6 +202,13 @@ Bug Fixes
 - Fix unit conversion error that occurs with mixed per-steradian and per-square-pixel
   surface brightness units. [#4483]
 
+- Fix bug when creating a subset on an image viewer when there is a cube loaded 
+  by preventing those subsets from appearing in the cube viewer.. [#4490]
+
+- Fix spectrum auto-extraction and other errors when creating a subset on a cube viewer
+  while aligned by WCS, including broken links between a cube and its uncertainty cube
+  after relinking. [#4490]
+
 Mosviz
 ^^^^^^
 
