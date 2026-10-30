@@ -614,6 +614,21 @@ def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catal
     assert 'Source Catalog Table' in deconfigged_helper.viewers
     assert plg._obj.disabled_msg == msg
 
+    # Check that a seconds spectrum viewer with data will allow this to work even if
+    # the first spectrum viewer has no data.
+    second_viewer = deconfigged_helper.new_viewers['1D Spectrum']()
+    second_viewer.data_menu.add_data('test')
+    assert plg._obj.disabled_msg == ''
+    plg.spectral_y_type = "Surface Brightness"
+    assert plg.spectral_y_type == "Surface Brightness"
+
+    plg.spectral_y_type = "Flux"
+    assert plg.spectral_y_type == "Flux"
+
+    second_viewer.data_menu.layer = 'test'
+    second_viewer.data_menu.remove_from_viewer()
+    assert plg._obj.disabled_msg == msg
+
     # loading an image should re-enable the plugin
     deconfigged_helper.load(image_nddata_wcs, format='Image',
                             data_label='test_image')
