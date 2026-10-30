@@ -202,6 +202,9 @@ Bug Fixes
 - Fix unit conversion error that occurs with mixed per-steradian and per-square-pixel
   surface brightness units. [#4483]
 
+- Fix a bug in unit conversion when there are multiple spectrum viewers and
+  the first has no loaded data. [#4491]
+
 Mosviz
 ^^^^^^
 
