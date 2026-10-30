@@ -21,6 +21,23 @@ from astropy.coordinates import SkyCoord
 import time
 from pathlib import Path
 
+def _should_show_startup_splash(args):
+    browser = None
+    for index, arg in enumerate(args):
+        if arg == "--browser":
+            browser = args[index + 1] if index + 1 < len(args) else None
+        elif arg.startswith("--browser="):
+            browser = arg.split("=", 1)[1]
+    return browser in (None, "qt")
+
+def test_startup_splash_is_limited_to_qt_browser():
+    assert _should_show_startup_splash([])
+    assert _should_show_startup_splash(["--browser", "qt"])
+    assert _should_show_startup_splash(["--browser=qt"])
+    assert not _should_show_startup_splash(["--browser", "/usr/bin/true %s"])
+    assert not _should_show_startup_splash(["--browser=/usr/bin/true %s"])
+    assert not _should_show_startup_splash(["--browser", "qt", "--browser", "/usr/bin/true %s"])
+
 
 def test_solara_basics(page: Page):
 
@@ -35,12 +52,13 @@ def test_solara_basics(page: Page):
     # page.locator('img[alt="Launch Jdaviz"]').click()
     # page.screenshot(path="debug1.png")
 
-    page.locator("text=Source").wait_for()
+    source_selector = page.locator(".v-select")
+    source_selector.wait_for()
     page.locator("#loader-container").wait_for(state="hidden")
 
     # # Find the string text "Source"
     # # 1. Wait for any text block containing "Source" to appear globally
-    page.locator(".v-input", has_text="Source").click()
+    source_selector.click()
     
     page.screenshot(path="debug2.png")
 
