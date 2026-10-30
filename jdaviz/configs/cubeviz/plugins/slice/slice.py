@@ -229,7 +229,7 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
         self._check_if_cube_viewer_exists()
 
     def _on_viewer_removed(self, msg):
-        # subscribed to ViewerRemovedMessage
+        # subscription to ViewerRemovedMessage inherited from TemplateMixin
         super()._on_viewer_removed(msg)
         self._check_if_cube_viewer_exists()
 

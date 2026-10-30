@@ -404,9 +404,10 @@ class UnitConversion(PluginTemplateMixin):
         self.spectral_y_type_selected = ''
 
     def _on_viewer_removed(self, msg):
-        # NOTE: subscribed to ViewerRemovedMessage. Do not
-        # subscribe directly here, as glue's Hub only keeps a single handler per
-        # (subscriber, message class) and would clobber the base-class subscription.
+        # subscription to ViewerRemovedMessage inherited from TemplateMixin
+        # NOTE: Do not subscribe directly to ViewerRemovedMessage here,
+        # as glue's Hub only keeps a single handler per (subscriber, message class)
+        # and would clobber the base-class subscription.
         super()._on_viewer_removed(msg)
 
         if self._no_data_in_relevant_viewers():

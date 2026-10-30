@@ -181,7 +181,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         return [item["value"] for item in self.line_menu_items]
 
     def _on_viewer_removed(self, msg):
-        # subscribed to ViewerRemovedMessage
+        # subscription to ViewerRemovedMessage inherited from TemplateMixin
         super()._on_viewer_removed(msg)
         self._on_viewers_changed(msg)
 

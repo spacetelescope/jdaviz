@@ -1030,7 +1030,7 @@ class JdavizViewerWindow(TemplateMixin):
         return ViewerWindowUserApi(self, expose=['show'])
 
     def _on_viewer_removed(self, msg):
-        # subscribed to ViewerRemovedMessage
+        # subscription to ViewerRemovedMessage inherited from TemplateMixin
         super()._on_viewer_removed(msg)
         if msg.viewer_id == self.id:
             self.viewer_destroyed = True
