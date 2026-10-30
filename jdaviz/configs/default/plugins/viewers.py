@@ -9,7 +9,7 @@ from glue.config import data_translator
 from glue.core import BaseData
 from glue.core.edit_subset_mode import NewMode, ReplaceMode
 from glue.core.exceptions import IncompatibleAttribute
-from glue.core.message import EditSubsetMessage, SubsetUpdateMessage, SubsetDeleteMessage
+from glue.core.message import EditSubsetMessage
 from glue.core.roi import CircularAnnulusROI, CircularROI, EllipticalROI, RectangularROI
 from glue.core.subset import Subset, ElementSubsetState
 from glue.core.subset_group import GroupedSubset
@@ -1693,8 +1693,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self.initialize_toolbar(default_tool_priority=default_tool_priority)
         self.toolbar.observe(self._on_table_subset_toolbar_changed, names=['tool_override_mode'])
         self.hub.subscribe(self, EditSubsetMessage, handler=self._on_table_subset_target_changed)
-        self.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_table_subset_updated)
-        self.hub.subscribe(self, SubsetDeleteMessage, handler=self._on_table_subset_deleted)
 
     def _prepare_table_subset(self):
         """Capture a create/edit target before rebuilding the selection toolbars."""
@@ -1751,33 +1749,6 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         self._table_subset_draft = None
         self.toolbar.restore_tools()
         self._table_subset_warning(reason + ' Close and reopen the table subset tool to continue.')
-
-    def _on_table_subset_updated(self, msg):
-        draft = self._table_subset_draft
-        if draft is None or draft['target'] is None:
-            return
-        target, data = draft['target'], draft['data']
-        if not any(msg.sender is subset for subset in target.subsets):
-            return
-        if (not self._is_table_subset(target, data)
-                or target.subset_state is not draft['state']
-                or not np.array_equal(np.flatnonzero(target.subset_state.to_mask(data)),
-                                      draft['rows'])):
-            self._cancel_table_subset('The subset definition changed; pending table edits '
-                                      'were discarded.')
-            return
-        title = f'Editing: {target.label}'
-        old_title = draft['title']
-        draft['title'] = title
-        for viewer in [self, *self.jdaviz_app.get_viewers_of_cls('ImvizImageView')]:
-            if viewer.toolbar.tool_override_mode == old_title:
-                viewer.toolbar.tool_override_mode = title
-
-    def _on_table_subset_deleted(self, msg):
-        draft = self._table_subset_draft
-        if (draft is not None and draft['target'] is not None
-                and draft['target'] not in self.session.data_collection.subset_groups):
-            self._cancel_table_subset('The subset was deleted; pending table edits were discarded.')
 
     def _apply_table_subset(self):
         """Commit the captured table operation without changing global edit state."""
