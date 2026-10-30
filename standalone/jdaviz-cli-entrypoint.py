@@ -57,20 +57,20 @@ def _show_early_splash():
     _STARTUP_APP.processEvents()
 
 
-# def _should_show_startup_splash(args):
-#     browser = None
-#     for index, arg in enumerate(args):
-#         if arg == "--browser":
-#             browser = args[index + 1] if index + 1 < len(args) else None
-#         elif arg.startswith("--browser="):
-#             browser = arg.split("=", 1)[1]
-#     return browser in (None, "qt")
+def _should_show_startup_splash(args):
+    browser = None
+    for index, arg in enumerate(args):
+        if arg == "--browser":
+            browser = args[index + 1] if index + 1 < len(args) else None
+        elif arg.startswith("--browser="):
+            browser = arg.split("=", 1)[1]
+    return browser in (None, "qt")
 
 
 if __name__ == "__main__":
 
-    # if _should_show_startup_splash(sys.argv[1:]):
-    _show_early_splash()
+    if _should_show_startup_splash(sys.argv[1:]):
+        _show_early_splash()
 
     # This avoids a backend error when the CLI imports pyplot. Importing the
     # backend here also makes PyInstaller include and register it.
