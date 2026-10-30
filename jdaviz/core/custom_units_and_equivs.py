@@ -65,7 +65,8 @@ SPEC_PHOTON_FLUX_DENSITY_UNITS = _spectral_and_photon_flux_density_units()
 def _eqv_pixar_sr(pixar_sr):
     """
     Return Equivalencies to convert from flux to flux per solid
-    angle (aka surface brightness) using scale ratio ``pixar_sr``
+    angle (aka surface brightness), and between per-steradian and
+    per-square-pixel surface brightness, using scale ratio ``pixar_sr``
     (steradians per pixel).
     """
     def converter_flux(x):  # Surface Brightness -> Flux
@@ -79,7 +80,12 @@ def _eqv_pixar_sr(pixar_sr):
         (u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr), u.erg / (u.s * u.cm**2 * u.Angstrom), converter_flux, iconverter_flux),  # noqa
         (u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), u.ph / (u.Angstrom * u.s * u.cm**2), converter_flux, iconverter_flux),  # noqa
         (u.ph / (u.Hz * u.s * u.cm**2  * u.sr), u.ph / (u.Hz * u.s * u.cm**2), converter_flux, iconverter_flux),  # noqa
-        (u.ct / u.sr, u.ct, converter_flux, iconverter_flux)  # noqa
+        (u.ct / u.sr, u.ct, converter_flux, iconverter_flux),  # noqa
+        (u.MJy / u.sr, u.MJy / PIX2, converter_flux, iconverter_flux),
+        (u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr), u.erg / (u.s * u.cm**2 * u.Angstrom * PIX2), converter_flux, iconverter_flux),  # noqa
+        (u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), u.ph / (u.Angstrom * u.s * u.cm**2 * PIX2), converter_flux, iconverter_flux),  # noqa
+        (u.ph / (u.Hz * u.s * u.cm**2  * u.sr), u.ph / (u.Hz * u.s * u.cm**2 * PIX2), converter_flux, iconverter_flux),  # noqa
+        (u.ct / u.sr, u.ct / PIX2, converter_flux, iconverter_flux)  # noqa
     ]
 
 

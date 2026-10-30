@@ -66,11 +66,28 @@ def test_general_flux_conversion():
             [1, 2, 3], original_unit, target_unit, equivalencies)
         assert len(converted) == 3
 
-    # test that a unit combination passed in without the correct equivalency
     # raises the correct error
-    msg = 'Could not convert Jy / pix2 to Jy / sr with provided equivalencies.'
+    msg = 'Could not convert'
     with pytest.raises(u.UnitConversionError, match=msg):
-        converted = flux_unit_conversion([1, 2, 3], u.Jy / PIX2, u.Jy / u.sr)
+        converted = flux_unit_conversion([1, 2, 3], u.Jy / u.sr,
+                                         u.erg / (u.s * u.cm**2 * u.AA * u.sr))
+
+    # conversions between per-steradian and per-pixel-squared surface
+    # brightnesses convert when the pixar_sr equivalency is provided
+    converted = flux_unit_conversion([1, 2, 3], u.Jy / u.sr, u.Jy / PIX2, equivalencies)
+    assert converted.unit == u.Jy / PIX2
+    assert_allclose(converted.value, [4, 8, 12])
+
+    converted = flux_unit_conversion([1, 2, 3], u.Jy / PIX2, u.Jy / u.sr, equivalencies)
+    assert converted.unit == u.Jy / u.sr
+    assert_allclose(converted.value, [0.25, 0.5, 0.75])
+
+    # without the pixar_sr equivalency, sr<>pix2 conversions return the
+    # input unchanged in its original unit
+    for orig, targ in [(u.Jy / PIX2, u.Jy / u.sr), (u.Jy / u.sr, u.Jy / PIX2)]:
+        converted = flux_unit_conversion([1, 2, 3], orig, targ)
+        assert converted.unit == orig
+        assert_allclose(converted.value, [1, 2, 3])
 
     # and finally, numerically verify a subset of possible unit conversion combos
     # a case of each 'type' of conversion is covered here
@@ -86,6 +103,10 @@ def test_general_flux_conversion():
                           (u.MJy / u.sr, u.erg / (u.s * u.cm**2 * u.AA * u.sr), 0.29979246),
                           (u.MJy / u.sr, u.erg / (u.s * u.cm**2 * u.AA), 1.1991698),
                           (u.MJy / u.sr, u.erg / (u.s * u.cm**2 * u.AA), 1.1991698),
+                          (u.MJy / u.sr, u.MJy / PIX2, 4.0),
+                          (u.MJy / PIX2, u.MJy / u.sr, 0.25),
+                          (u.MJy / u.sr, u.erg / (u.s * u.cm**2 * u.AA * PIX2), 1.1991698),
+                          (u.MJy / PIX2, u.erg / (u.s * u.cm**2 * u.AA * u.sr), 0.074948115),
                           (u.MJy, u.erg / (u.s * u.cm**2 * u.AA * u.sr), 0.07494811)]
 
     equivalencies = all_flux_unit_conversion_equivs(pixar_sr=4, cube_wave=1*u.nm)
