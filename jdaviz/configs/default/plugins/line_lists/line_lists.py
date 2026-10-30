@@ -180,6 +180,9 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
         old_viewer.erase_spectral_lines()
 
     def _on_viewer_data_changed(self, msg=None):
+        from jdaviz.core.spectral_line_layers import is_spectral_line_table
+        if msg is not None and is_spectral_line_table(getattr(msg, 'data', None)):
+            return
         """
         Callback method for when data is added or removed from a viewer, or
         when a subset is created, deleted, or updated. This method receives
