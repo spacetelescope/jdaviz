@@ -199,6 +199,9 @@ Bug Fixes
 
 - Fix handling of units to load HLSP JADES DR4 spectra x1D/S2D files. [#4477]
 
+- Fix unit conversion error that occurs with mixed per-steradian and per-square-pixel
+  surface brightness units. [#4483]
+
 Mosviz
 ^^^^^^
 
