@@ -264,8 +264,7 @@ class ViewerPropertiesMixin:
     @property
     def spectrum_viewer(self):
         viewer_reference = self._app._get_first_viewer_reference_name(
-            require_spectrum_viewer=True,
-            require_loaded_data=True
+            require_spectrum_viewer=True
         )
         if viewer_reference is None:
             return None

@@ -187,6 +187,18 @@ class UnitConversion(PluginTemplateMixin):
         return PluginUserApi(self, expose=expose, readonly=readonly)
 
     @property
+    def spectrum_viewer(self):
+        # Override the default spectrum_viewer property to require loaded data
+        viewer_reference = self._app._get_first_viewer_reference_name(
+            require_spectrum_viewer=True,
+            require_loaded_data=True
+        )
+        if viewer_reference is None:
+            return None
+
+        return self._app.get_viewer(viewer_reference)
+
+    @property
     def sb_unit(self):
         # expose selected surface-brightness unit as read-only
         # (rather than exposing a select object)
