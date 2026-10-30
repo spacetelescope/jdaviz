@@ -204,6 +204,10 @@ Bug Fixes
 
 - Fix bug when creating a subset on an image viewer when there is a cube loaded. [#4490]
 
+- Fix errors when creating a subset on a cube viewer and extracting a spectrum from it
+  while aligned by WCS, including broken links between a cube and its uncertainty cube
+  after relinking. [#4490]
+
 Mosviz
 ^^^^^^
 

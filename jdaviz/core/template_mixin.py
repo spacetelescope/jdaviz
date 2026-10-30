@@ -74,7 +74,8 @@ from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
     _wcs_only_label, layer_is_not_dq as utils_layer_is_not_dq,
-    wildcard_match, layer_is_dq as utils_layer_is_dq, _is_image_spatial_subset
+    wildcard_match, layer_is_dq as utils_layer_is_dq, _is_image_spatial_subset,
+    _get_celestial_wcs
 )
 
 
@@ -3712,6 +3713,9 @@ class ApertureSubsetSelect(SubsetSelect):
                                     'aperture_message': 'no viewer available'}
                         return [], [], validity
                 wcs = getattr(viewer.state.reference_data, 'coords', None)
+                if getattr(wcs, 'world_n_dim', None) == 3:
+                    # sky region to_pixel requires only the celestial axes of a cube WCS
+                    wcs = _get_celestial_wcs(wcs)
                 if wcs is None:
                     validity = {'is_aperture': False,
                                 'aperture_message': 'invalid wcs'}
@@ -3782,9 +3786,16 @@ class ApertureSubsetSelect(SubsetSelect):
             return mask_weights
 
         # Center is reverse coordinates if spectral axis is last
-        center = (self.selected_spatial_region.center.y,
-                  self.selected_spatial_region.center.x)
-        aperture = regions2aperture(self.selected_spatial_region)
+        spatial_region = self.selected_spatial_region
+        if not isinstance(spatial_region, PixelRegion):
+            # when aligned by WCS, selected_spatial_region is a SkyRegion;
+            # retrieve the equivalent pixel region in the frame of the
+            # subset's parent data (the cube) instead
+            spatial_region = self._app.get_subsets(subset_name=self.selected,
+                                                   spatial_only=True)[0]['region']
+        center = (spatial_region.center.y,
+                  spatial_region.center.x)
+        aperture = regions2aperture(spatial_region)
         if slice_axis == 2:
             aperture.positions = center
 

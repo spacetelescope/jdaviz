@@ -79,6 +79,50 @@ def test_image_subset_with_cube(deconfigged_helper,
     assert 'Subset 1' not in extraction.background.choices
 
 
+@pytest.mark.parametrize('align_by', ['Pixels', 'WCS'])
+@pytest.mark.parametrize('draw_in', ['3D Spectrum', '3D Spectrum (1)'])
+def test_cube_subset_with_image_extraction(deconfigged_helper,
+                                           spectrum1d_cube_fluxunit_jy_per_steradian,
+                                           align_by, draw_in):
+    # Subsets drawn on either the flux or uncertainty cube viewer must remain
+    # usable for spectral extraction when an image is also loaded, including
+    # when aligned by WCS (relinking must not disconnect the cubes).
+    helper = deconfigged_helper
+    cube = spectrum1d_cube_fluxunit_jy_per_steradian
+    helper.load(cube, data_label='cube')
+    image = NDData(np.ones((10, 10)), wcs=cube.wcs.celestial, unit=u.Jy / u.sr)
+    helper.load(image, data_label='image', format='Image')
+    helper.plugins['Orientation'].align_by = align_by
+
+    viewer = helper.viewers[draw_in]._obj.glue_viewer
+    viewer.apply_roi(CircularROI(xc=1.5, yc=2, radius=1.5))
+
+    # the subset mask must be computable on both the flux and uncertainty
+    # cubes, so that the subset is drawable in both cube viewers and
+    # extraction can propagate uncertainties
+    dc = helper._app.data_collection
+    subset_state = dc.subset_groups[0].subset_state
+    for label in ('cube', 'cube [UNC]'):
+        assert dc[label].get_mask(subset_state=subset_state).sum() > 0
+
+    for name in ('3D Spectrum', '3D Spectrum (1)'):
+        cube_viewer = helper.viewers[name]._obj.glue_viewer
+        assert any(layer.layer.label == 'Subset 1' for layer in cube_viewer.layers)
+        assert 'Subset 1' in cube_viewer.data_menu.layer.choices
+
+    extraction = helper.plugins['3D Spectral Extraction']
+    assert 'Subset 1' in extraction.aperture.choices
+    # the subset creation triggered a successful automatic extraction
+    assert any('Subset 1, sum' in d.label for d in dc)
+
+    extraction.aperture = 'Subset 1'
+    assert extraction._obj.aperture_selected_validity['is_aperture']
+    spectrum = extraction.extract()
+    assert spectrum.flux.ndim == 1
+    assert np.any(np.isfinite(spectrum.flux))
+    assert spectrum.uncertainty is not None
+
+
 def test_region_from_subset_2d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 1)), data_label='Test 2D Flux')
 

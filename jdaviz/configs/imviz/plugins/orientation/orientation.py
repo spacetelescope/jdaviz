@@ -806,6 +806,9 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
     links_list = []
     ids0 = refdata.pixel_component_ids
     ndim_range = range(2)  # We only support 2D
+    # data for which new links are created here; existing links between
+    # only unmanaged data (e.g. cubes) are preserved on a full relink
+    relinked_data = {refdata}
 
     for i, data in enumerate(app.data_collection):
 
@@ -837,6 +840,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
 
                     links_list += [ComponentLink([ref_ra], cat_ra),
                                    ComponentLink([ref_dec], cat_dec)]
+                    relinked_data.add(data)
 
                     continue
 
@@ -858,6 +862,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
 
                     links_list += [ComponentLink([ref_x], cat_x),
                                    ComponentLink([ref_y], cat_y)]
+                    relinked_data.add(data)
 
                     continue
 
@@ -906,12 +911,25 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
                             f"{repr(e)}", color="warning", timeout=8000, sender=app))
                         continue
             links_list += new_links
+            relinked_data.add(data)
 
     if len(links_list) > 0:
         with app.data_collection.delay_link_manager_update():
             if len(data_already_linked):
                 app.data_collection.add_link(links_list)  # Add to existing
             else:
+                # set_links replaces all links in the data collection, so
+                # existing links between data not managed here (e.g. a cube
+                # and its uncertainty or extracted spectrum) must be
+                # preserved explicitly to avoid disconnecting them
+                for link in app.data_collection.external_links:
+                    if hasattr(link, 'data1'):  # LinkCollection (LinkSame, WCSLink, ...)
+                        link_data = {link.data1, link.data2}
+                    else:  # plain ComponentLink
+                        link_data = ({cid.parent for cid in link.get_from_ids()} |
+                                     {link.get_to_id().parent})
+                    if not (link_data & relinked_data):
+                        links_list.append(link)
                 app.data_collection.set_links(links_list)  # Redo all links
 
         app.hub.broadcast(SnackbarMessage(
