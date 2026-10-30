@@ -145,6 +145,8 @@ API Changes
 Bug Fixes
 ---------
 
+- Make all toggle switches blue when ON. [#4479]
+
 - HST products (as defined by ``OBSTYPE``) are now correctly identified as being
   either images or 2D spectra. [#4217]
 

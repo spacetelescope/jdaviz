@@ -112,6 +112,7 @@
     <j-flex-row>
     <v-switch
         v-model="plot_gaussian_params"
+        color="primary"
         :label="api_hints_enabled ? 'plg.plot_gaussian_params = True' : 'Plot Gaussian'"
         hint="When enabled, plots the Gaussian fit spectrum, and marks the centroid and FWHM."
         persistent-hint
