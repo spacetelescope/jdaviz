@@ -825,7 +825,7 @@ def test_spectral_unit_kept_on_reference_data_removed(deconfigged_helper):
 
     app.remove_data_from_viewer(viewer.reference, 'spec_um')
     assert viewer.state.reference_data.label == 'spec_nm'
-    assert viewer.state.x_display_unit == 'Angstrom'
+    assert viewer.state.x_display_unit == 'nm'
 
 
 def test_plugin_enabled_with_only_spectrum2d_viewer(deconfigged_helper, spectrum2d):
