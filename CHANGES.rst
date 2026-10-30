@@ -15,6 +15,9 @@ Bug Fixes
 
 - Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
 
+- Fix unit conversion error that occurs with mixed per-steradian and per-square-pixel
+  surface brightness units. [#4483]
+
 Mosviz
 ^^^^^^
 

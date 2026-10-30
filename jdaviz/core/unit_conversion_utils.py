@@ -411,6 +411,27 @@ def flux_conversion_general(values, original_unit, target_unit,
     if not target_unit:
         return values
 
+    # convert to Unit object (if not already, which is handled in when casting)
+    original_unit = u.Unit(original_unit)
+    target_unit = u.Unit(target_unit)
+
+    # get solid angle component of input and target (e.g sr in Jy/sr) if present
+    solid_angle_in_orig = is_unit_per_solid_angle(
+        original_unit, return_unit=True)
+    solid_angle_in_targ = is_unit_per_solid_angle(
+        target_unit, return_unit=True)
+
+    # When one unit uses steradians and the other square pixels, normalize the
+    # differing component to steradians. This avoids converting between solid
+    # angle conventions when the app's display unit differs from the dataset,
+    # allowing Jy / sr to convert to MJy / sr when the app is set to 'pix2'.
+    if solid_angle_in_orig == u.sr and solid_angle_in_targ == PIX2:
+        solid_angle_in_targ = u.sr
+        target_unit = target_unit * PIX2 / u.sr
+    elif solid_angle_in_orig == PIX2 and solid_angle_in_targ == u.sr:
+        solid_angle_in_targ = PIX2
+        target_unit = target_unit * u.sr / PIX2
+
     if original_unit == target_unit:
         if not with_unit:
             return values
