@@ -19,7 +19,6 @@ from jdaviz.core.events import (AddDataMessage,
                                 RedshiftMessage,
                                 GlobalDisplayUnitChanged,
                                 ViewerAddedMessage,
-                                ViewerRemovedMessage,
                                 SnackbarMessage)
 from jdaviz.core.marks import BaseSpectrumVerticalLine, PluginLine
 from jdaviz.core.registries import tray_registry
@@ -139,8 +138,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                            handler=self._on_global_display_unit_changed)
         self.hub.subscribe(self, ViewerAddedMessage,
                            handler=self._on_viewers_changed)
-        self.hub.subscribe(self, ViewerRemovedMessage,
-                           handler=self._on_viewers_changed)
 
         stats = ['Line Flux', 'Equivalent Width', 'Gaussian Sigma Width',
                  'Gaussian FWHM', 'Centroid']
@@ -182,6 +179,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
     def line_items(self):
         # Return list of only the table indices ("name_rest" in line table) from line_menu_items
         return [item["value"] for item in self.line_menu_items]
+
+    def _on_viewer_removed(self, msg):
+        # subscription to ViewerRemovedMessage inherited from TemplateMixin
+        super()._on_viewer_removed(msg)
+        self._on_viewers_changed(msg)
 
     def _on_viewers_changed(self, msg):
         # when accessing the selected data, access the spectrum-viewer version

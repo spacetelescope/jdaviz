@@ -127,7 +127,10 @@ class LayersFinalizedMessage(Message):
 
 class AddDataMessage(Message):
     """
-    Emitted AFTER data is added to a viewer
+    Emitted AFTER data is added to a viewer.
+
+    This is the counterpart to `RemoveDataMessage` and is what plugins and viewers should
+    subscribe to in order to respond to data being added to a viewer.
     """
     def __init__(self, data, viewer, viewer_id=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -150,6 +153,12 @@ class AddDataMessage(Message):
 
 
 class RemoveDataMessage(Message):
+    """
+    Emitted AFTER data is removed from a viewer.
+
+    This is the counterpart to `AddDataMessage` and is what plugins and viewers should
+    subscribe to in order to respond to data being removed from a viewer.
+    """
     def __init__(self, data, viewer, viewer_id=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -283,41 +292,6 @@ class ConfigurationLoadedMessage(Message):
     @property
     def config(self):
         return self._config
-
-
-class AddDataToViewerMessage(Message):
-    """
-    Emitted to request data is added to a viewer (BEFORE the data is actually added)
-    """
-    def __init__(self, viewer_reference, data_label, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self._viewer_reference = viewer_reference
-        self._data_label = data_label
-
-    @property
-    def viewer_reference(self):
-        return self._viewer_reference
-
-    @property
-    def data_label(self):
-        return self._data_label
-
-
-class RemoveDataFromViewerMessage(Message):
-    def __init__(self, viewer_reference, data_label, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self._viewer_reference = viewer_reference
-        self._data_label = data_label
-
-    @property
-    def viewer_reference(self):
-        return self._viewer_reference
-
-    @property
-    def data_label(self):
-        return self._data_label
 
 
 class ViewerVisibleLayersChangedMessage(Message):

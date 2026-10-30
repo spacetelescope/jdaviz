@@ -699,8 +699,9 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
             window_features='popup,width=400,height=600'
         )
         self._viewer_callbacks = {}
+        # see _on_viewer_removed for more info on ViewerRemovedMessage usage in subclasses
         self.hub.subscribe(self, ViewerRemovedMessage,
-                           handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
+                           handler=self._on_viewer_removed)
 
         self._app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
         self._update_api_hints_enabled()
@@ -776,6 +777,18 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
         # assumed destroyed, so we do not need to remove the event callback itself from the viewer)
         self._viewer_callbacks = {k: v for k, v in self._viewer_callbacks.items()
                                   if k.split(':')[0] != viewer_id}
+
+    def _on_viewer_removed(self, msg):
+        """
+        Handler for `~jdaviz.core.events.ViewerRemovedMessage`.
+
+        Subclasses that need to respond to a viewer being removed should override this method
+        and call ``super()._on_viewer_removed(msg)`` rather than subscribing to the message
+        directly. This is because the glue Hub stores a single handler per
+        (subscriber, message class), so any later ``hub.subscribe(self, ViewerRemovedMessage, ...)``
+        call (e.g., in a subclass) would silently replace this subscription (and vice versa).
+        """
+        self._remove_viewer_callbacks(msg.viewer_id)
 
     def _update_api_hints_enabled(self, *args):
         self.api_hints_enabled = self._app.state.show_api_hints

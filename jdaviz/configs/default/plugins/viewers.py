@@ -978,8 +978,6 @@ class JdavizViewerWindow(TemplateMixin):
         # Set this manually here now that there's more code in _on_focus_viewer_changed
         self.focus_mode = (self._app.state.focus_viewer == self.reference)
 
-        self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
-
     def _on_toolbar_override_change(self, change):
         self.tool_override_mode = change['new']
 
@@ -1032,6 +1030,8 @@ class JdavizViewerWindow(TemplateMixin):
         return ViewerWindowUserApi(self, expose=['show'])
 
     def _on_viewer_removed(self, msg):
+        # subscription to ViewerRemovedMessage inherited from TemplateMixin
+        super()._on_viewer_removed(msg)
         if msg.viewer_id == self.id:
             self.viewer_destroyed = True
 

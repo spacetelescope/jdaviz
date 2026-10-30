@@ -109,3 +109,21 @@ class TestResetLimitsTwoTests:
 
         sv.state._reset_y_limits()
         assert sv.state.y_min == orig_ylims[0]
+
+
+def test_spectrum2d_viewer_cache_updates_on_data_changes(deconfigged_helper, mos_spectrum2d):
+    from jdaviz.configs.specviz.plugins.viewers import Spectrum2DViewer
+
+    deconfigged_helper.load(mos_spectrum2d, data_label='spec2d', format='2D Spectrum')
+    app = deconfigged_helper._app
+    [viewer] = [v for v in app._viewer_store.values() if isinstance(v, Spectrum2DViewer)]
+
+    # removing data through the app should clear the cache
+    viewer.__dict__['reference_spectral_axis'] = 'stale'
+    app.remove_data_from_viewer(viewer.reference, 'spec2d')
+    assert 'reference_spectral_axis' not in viewer.__dict__
+
+    # adding data back should clear the stale value and recompute from the new reference data
+    viewer.__dict__['reference_spectral_axis'] = 'stale'
+    app.add_data_to_viewer(viewer.reference, 'spec2d')
+    assert isinstance(viewer.reference_spectral_axis, np.ndarray)

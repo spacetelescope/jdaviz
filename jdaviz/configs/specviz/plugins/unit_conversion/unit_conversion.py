@@ -14,7 +14,7 @@ from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_units_and_equivs import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 from jdaviz.core.events import (GlobalDisplayUnitChanged, AddDataMessage,
                                 RemoveDataMessage, SliceValueUpdatedMessage,
-                                SnackbarMessage, ViewerRemovedMessage)
+                                SnackbarMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
                                         SelectPluginComponent, PluginUserApi)
@@ -95,8 +95,6 @@ class UnitConversion(PluginTemplateMixin):
         if self.config == 'deconfigged':
             self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/settings/display_units.html'  # noqa
 
-        self._cached_properties = ['image_layers']
-
         if self.config not in ['specviz', 'specviz2d', 'cubeviz', 'deconfigged']:
             # TODO [mosviz] x_display_unit is not implemented in glue for image viewer
             # TODO [mosviz]: add to yaml file
@@ -113,8 +111,6 @@ class UnitConversion(PluginTemplateMixin):
         self.session.hub.subscribe(self, DataCollectionDeleteMessage,
                                    handler=self._on_data_collection_delete,
                                    priority=999)
-        self.session.hub.subscribe(self, ViewerRemovedMessage,
-                                   handler=self._on_viewer_removed)
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
@@ -220,7 +216,7 @@ class UnitConversion(PluginTemplateMixin):
         # update the angle unit (and dependent sb/y-display units) before other
         # plugins react to this message and potentially reprocess data using
         # stale display units.
-        self._reset_angle_unit_to_remaining_data()
+        self._reset_units_to_remaining_data()
 
         # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
         # access. this may need to be generalized for deconfigged and removed
@@ -243,7 +239,7 @@ class UnitConversion(PluginTemplateMixin):
             self._reset_unit_selections()
             return
 
-        self._reset_angle_unit_to_remaining_data()
+        self._reset_units_to_remaining_data()
 
     def _relevant_data_for_unit_conversion(self):
         """
@@ -279,64 +275,120 @@ class UnitConversion(PluginTemplateMixin):
                     relevant.append((label, data_obj))
         return relevant
 
-    def _reset_angle_unit_to_remaining_data(self):
+    def _reset_flux_unit_to_remaining_data(self, native_units):
         """
-        If every dataset relevant to unit conversion that remains loaded shares
-        the same native solid angle unit (defaulting to 'pix2' for datasets
-        that are not surface brightness units), reset the angle and
-        surface-brightness unit selections to match. This prevents those
-        selections from being stuck on a previous choice (e.g. pix2 from a
-        dataset in Jy) after the dataset(s) that required that choice have
-        been removed, leaving the remaining dataset(s) (e.g. in Jy/sr) unable
-        to be viewed in their native surface brightness unit.
-
-        The surface-brightness unit is realigned explicitly here (rather than
-        relying solely on the flux_unit_selected -> sb cascade in
-        ``_on_unit_selected``) because ``flux_unit_selected`` is not populated
-        for all data sources (e.g. images loaded via the generic Image
-        importer), in which case that cascade would be skipped, leaving a stale
-        ``attribute_display_unit`` that can crash glue's rendering when it
-        later tries to convert the remaining data using incompatible units.
+        If none of the remaining datasets carry a physical flux unit (e.g. only
+        counts remain), clear the flux selection and choices since they could
+        only have come from data that is no longer loaded. If a remaining
+        dataset does carry a physical flux unit but no flux selection exists
+        yet, populate the selection from it. An existing flux selection is
+        otherwise kept, since any physical flux unit remains a valid display
+        unit for the remaining data.
         """
-        if not self.has_angle or not len(self.angle_unit_selected):
-            return
+        physical_flux_units = [flux_unit for flux_unit, _ in native_units
+                               if is_physical_flux_unit(flux_unit)]
 
-        self._clear_cache('image_layers')
+        if not len(physical_flux_units):
+            if len(self.flux_unit_selected) or len(self.flux_unit.choices):
+                self.flux_unit.choices = []
+                self.flux_unit_selected = ''
+        elif not len(self.flux_unit_selected):
+            flux_unit = physical_flux_units[0]
+            self.flux_unit.choices = create_equivalent_flux_units_list(flux_unit)
+            try:
+                self.flux_unit.selected = str(flux_unit)
+            except ValueError:
+                self.flux_unit.selected = ''
+
+    def _reset_angle_unit_to_remaining_data(self, native_units):
+        """
+        If every remaining dataset shares the same native solid angle unit
+        (defaulting to 'pix2' for datasets that are not surface brightness
+        units), reset the angle selection to match. This prevents the selection
+        from being stuck on a previous choice (e.g. pix2 from a dataset in Jy)
+        after the dataset(s) that required that choice have been removed,
+        leaving the remaining dataset(s) (e.g. in Jy/sr) unable to be viewed
+        in their native surface brightness unit.
+
+        Returns True if the remaining data agree on a single native angle unit
+        (whether or not the selection needed to change), False otherwise.
+        """
+        native_angle_strs = {str(angle_unit) if angle_unit is not None else 'pix2'
+                             for _, angle_unit in native_units}
+        if len(native_angle_strs) != 1:
+            # remaining datasets don't agree on a single native angle unit, so
+            # there isn't an unambiguous choice to reset to
+            return False
+
+        new_angle_str = native_angle_strs.pop()
+        if new_angle_str == self.angle_unit_selected:
+            return True
+
+        _, angle_unit = native_units[0]
+        self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
+        try:
+            self.angle_unit.selected = new_angle_str
+        except ValueError:
+            msg = f"Could not reset solid angle unit to '{new_angle_str}' to match remaining data."  # noqa: E501
+            self.hub.broadcast(SnackbarMessage(msg, color='warning', sender=self))
+        return True
+
+    def _reset_sb_unit_to_remaining_data(self, native_units):
+        """
+        Derive the surface-brightness unit from the (possibly user-selected)
+        flux unit and the current angle unit when a flux selection exists,
+        otherwise from the native unit of the remaining data. This is done
+        explicitly here (rather than relying solely on the flux/angle -> sb
+        cascade in ``_on_unit_selected``) because ``flux_unit_selected`` is not
+        populated for all data sources (e.g. counts data), in which case that
+        cascade would be skipped, leaving a stale ``attribute_display_unit``
+        that can crash glue's rendering when it later tries to convert the
+        remaining data using incompatible units.
+        """
+        if len(self.flux_unit_selected):
+            new_sb_str = flux_to_sb_unit(self.flux_unit_selected, self.angle_unit_selected)
+        else:
+            plain_flux_unit, _ = native_units[0]
+            new_sb_str = flux_to_sb_unit(str(plain_flux_unit), self.angle_unit_selected)
+
+        if new_sb_str != self.sb_unit_selected:
+            self.sb_unit_selected = new_sb_str
+
+    def _reset_units_to_remaining_data(self):
+        """
+        Realign the flux, solid angle, and surface-brightness unit selections
+        with the dataset(s) relevant to unit conversion that remain loaded,
+        after data has been removed from a viewer or the app.
+
+        The native units of the remaining data are gathered once here and then
+        handed to ``_reset_flux_unit_to_remaining_data``,
+        ``_reset_angle_unit_to_remaining_data``, and
+        ``_reset_sb_unit_to_remaining_data`` in that order, since the sb unit
+        is derived from the (possibly updated) flux and angle selections.
+        """
         relevant = self._relevant_data_for_unit_conversion()
         if not len(relevant):
             return
 
-        def _native_angle_str(data_obj):
+        def _native_units(data_obj):
             native_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
             angle_unit = is_unit_per_solid_angle(native_unit, return_unit=True)
-            return str(angle_unit) if angle_unit is not None else 'pix2'
+            plain_flux_unit = native_unit if angle_unit is None else native_unit * angle_unit
+            return plain_flux_unit, angle_unit
 
-        native_angle_strs = {_native_angle_str(data_obj) for _, data_obj in relevant}
-        if len(native_angle_strs) != 1:
-            # remaining datasets don't agree on a single native angle unit, so
-            # there isn't an unambiguous choice to reset to
+        # list of (plain_flux_unit, angle_unit) per remaining dataset, where
+        # angle_unit is None for data not in surface brightness units
+        native_units = [_native_units(data_obj) for _, data_obj in relevant]
+
+        self._reset_flux_unit_to_remaining_data(native_units)
+
+        if not self.has_angle or not len(self.angle_unit_selected):
             return
 
-        new_angle_str = native_angle_strs.pop()
+        if not self._reset_angle_unit_to_remaining_data(native_units):
+            return
 
-        _, first_data_obj = relevant[0]
-        native_unit = (first_data_obj.flux.unit if hasattr(first_data_obj, 'flux')
-                       else first_data_obj.unit)
-        angle_unit = is_unit_per_solid_angle(native_unit, return_unit=True)
-        plain_flux_unit = native_unit if angle_unit is None else native_unit * angle_unit
-        new_sb_str = flux_to_sb_unit(str(plain_flux_unit), new_angle_str)
-
-        if new_angle_str != self.angle_unit_selected:
-            self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
-            try:
-                self.angle_unit.selected = new_angle_str
-            except ValueError:
-                msg = f"Could not reset solid angle unit to '{new_angle_str}' to match remaining data."  # noqa: E501
-                self.hub.broadcast(SnackbarMessage(msg, color='warning', sender=self))
-                pass
-
-        if new_sb_str != self.sb_unit_selected:
-            self.sb_unit_selected = new_sb_str
+        self._reset_sb_unit_to_remaining_data(native_units)
 
     def _reset_unit_selections(self):
         """Clear all unit selections when no data remains in the app."""
@@ -352,9 +404,19 @@ class UnitConversion(PluginTemplateMixin):
         self.spectral_y_type_selected = ''
 
     def _on_viewer_removed(self, msg):
+        # subscription to ViewerRemovedMessage inherited from TemplateMixin
+        # NOTE: Do not subscribe directly to ViewerRemovedMessage here,
+        # as glue's Hub only keeps a single handler per (subscriber, message class)
+        # and would clobber the base-class subscription.
+        super()._on_viewer_removed(msg)
 
         if self._no_data_in_relevant_viewers():
             self.disabled_msg = 'Unit Conversion unavailable without data loaded in a viewer'
+            return
+
+        # data that was only loaded in the removed viewer may have been the reason
+        # for the current flux/angle/sb selections, so realign them to the remaining data
+        self._reset_units_to_remaining_data()
 
     def _on_add_data_to_viewer(self, msg):
 
@@ -368,14 +430,6 @@ class UnitConversion(PluginTemplateMixin):
                 self.pixar_sr_exists = False
 
         viewer = msg.viewer
-
-        # TODO: this logic is specviz(2d)-specific, due to the 'spectrum-viewer'
-        # access. this may need to be generalized for deconfigged and removed
-        # once the configs are deprecated.
-        # If we disabled the unit conversion plugin due to no data in the
-        # spectrum viewer, re-enable it.
-        if self.config in ('specviz', 'specviz2d') and viewer.reference == 'spectrum-viewer':
-            self.disabled_msg = ''
 
         # if we disabled the unit conversion plugin due to no data in any
         # image/spectrum/cube, viewer, but data is being added to one of those
@@ -558,7 +612,6 @@ class UnitConversion(PluginTemplateMixin):
 
             if self.angle_unit:
                 self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
-            self._clear_cache('image_layers')
 
     def _on_slice_changed(self, msg):
         if self.config != "cubeviz":
