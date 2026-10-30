@@ -1357,6 +1357,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         return self._output
 
     def _on_viewer_removed(self, msg):
+        # subscription to ViewerRemovedMessage inherited from TemplateMixin
         super()._on_viewer_removed(msg)
         self.search_input._update_items()
 
