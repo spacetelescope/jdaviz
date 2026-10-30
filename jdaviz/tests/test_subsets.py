@@ -29,6 +29,56 @@ IS_BETWEEN_REGIONS_0_11_0_12 = Version('0.11') < _reg_ver <= Version('0.12')
 IS_REGIONS_NEWER_THAN_0_12 = Version('0.12') < _reg_ver
 
 
+@pytest.mark.parametrize('align_by', ['Pixels', 'WCS'])
+def test_image_subset_with_cube(deconfigged_helper,
+                                spectrum1d_cube_fluxunit_jy_per_steradian, align_by):
+    helper = deconfigged_helper
+    cube = spectrum1d_cube_fluxunit_jy_per_steradian
+    helper.load(cube, data_label='cube')
+    image = NDData(np.ones((10, 10)), wcs=cube.wcs.celestial, unit=u.Jy / u.sr)
+    helper.load(image, data_label='image', format='Image')
+    helper.plugins['Orientation'].align_by = align_by
+
+    image_viewer = helper.viewers['Image']._obj.glue_viewer
+    cube_viewer = helper.viewers['3D Spectrum']._obj.glue_viewer
+    image_viewer.apply_roi(CircularROI(xc=4, yc=4, radius=2))
+
+    subsets = helper._app.data_collection.subset_groups
+    assert len(subsets) == 1
+    assert subsets[0].subset_state.xatt.parent is image_viewer.state.reference_data
+    region = helper.plugins['Subset Tools'].get_regions()['Subset 1']
+    assert isinstance(region, CircleSkyRegion if align_by == 'WCS' else CirclePixelRegion)
+
+    assert any(layer.layer.label == 'Subset 1' for layer in image_viewer.layers)
+    assert all(layer.layer.label != 'Subset 1' for layer in cube_viewer.layers)
+    assert 'Subset 1' not in cube_viewer.data_menu.layer.choices
+
+    aperture = helper.plugins['Aperture Photometry']._obj.aperture
+    aperture.selected = 'Subset 1'
+    x, y, validity = aperture._get_mark_coords_and_validate(image_viewer)
+    assert validity['is_aperture']
+    assert len(x) == len(y) > 1
+    assert np.any(np.isfinite(x) & np.isfinite(y))
+    x, y, validity = aperture._get_mark_coords_and_validate(cube_viewer)
+    assert not validity['is_aperture']
+    assert len(x) == len(y) == 0
+
+    extraction = helper.plugins['3D Spectral Extraction']
+    assert 'Subset 1' not in extraction.aperture.choices
+    assert 'Subset 1' not in extraction.background.choices
+
+    # Composite subsets must remain excluded, including when cube data is re-added.
+    state = subsets[0].subset_state
+    subsets[0].subset_state = state | state.copy()
+    helper._app.remove_data_from_viewer(cube_viewer.reference, 'cube')
+    helper._app.add_data_to_viewer(cube_viewer.reference, 'cube')
+    assert any(layer.layer.label == 'Subset 1' for layer in image_viewer.layers)
+    assert all(layer.layer.label != 'Subset 1' for layer in cube_viewer.layers)
+    assert 'Subset 1' not in cube_viewer.data_menu.layer.choices
+    assert 'Subset 1' not in extraction.aperture.choices
+    assert 'Subset 1' not in extraction.background.choices
+
+
 def test_region_from_subset_2d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 1)), data_label='Test 2D Flux')
 

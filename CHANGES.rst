@@ -202,6 +202,8 @@ Bug Fixes
 - Fix unit conversion error that occurs with mixed per-steradian and per-square-pixel
   surface brightness units. [#4483]
 
+- Fix bug when creating a subset on an image viewer when there is a cube loaded. [#4490]
+
 Mosviz
 ^^^^^^
 

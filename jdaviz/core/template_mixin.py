@@ -74,7 +74,7 @@ from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
     _wcs_only_label, layer_is_not_dq as utils_layer_is_not_dq,
-    wildcard_match, layer_is_dq as utils_layer_is_dq
+    wildcard_match, layer_is_dq as utils_layer_is_dq, _is_image_spatial_subset
 )
 
 
@@ -3668,6 +3668,14 @@ class ApertureSubsetSelect(SubsetSelect):
         if selected in self._manual_options:
             validity = {'is_aperture': False,
                         'aperture_message': 'no subset selected'}
+            return [], [], validity
+
+        if (viewer is not None
+                and getattr(viewer.state.reference_data, 'ndim', None) == 3
+                and any(_is_image_spatial_subset(self._get_subset_state(subset))
+                        for subset in (selected if isinstance(selected, list) else [selected]))):
+            validity = {'is_aperture': False,
+                        'aperture_message': 'image subsets cannot be applied to cubes'}
             return [], [], validity
 
         # if any of the selected entries are composite, then _get_spatial_region

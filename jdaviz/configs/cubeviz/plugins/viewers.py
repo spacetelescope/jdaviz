@@ -13,6 +13,7 @@ from jdaviz.configs.cubeviz.plugins.cube_listener import MINVOL
 from jdaviz.core.sonified_layers import (SonifiedDataLayerArtist,
                                          SonifiedLayerStateWidget,
                                          SonifiedLayerState)
+from jdaviz.utils import _is_image_spatial_subset
 
 
 __all__ = ['CubevizImageView', 'CubevizProfileView']
@@ -110,6 +111,11 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
+
+    def add_subset(self, subset, *args, **kwargs):
+        if _is_image_spatial_subset(subset):
+            return False
+        return super().add_subset(subset, *args, **kwargs)
 
     @cached_property
     def combined_sonified_grid(self):
