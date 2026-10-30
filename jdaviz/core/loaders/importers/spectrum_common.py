@@ -493,6 +493,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if change.get('name', '') == 'extension_selected':
             manual_options = self.extension.manual_options
             selected_index = self.extension.selected_index
+            if selected_index is None:
+                return
+
             if hasattr(self, 'loader_message_items'):
                 for man_opt in self.extension.manual_options:
                     if man_opt['label'] == change.get('old', None):
