@@ -44,6 +44,9 @@ jobs:
     - name: Setup headless display
       uses: pyvista/setup-headless-display-action@c103a2ff45650d38cb71684b5dc6cdfeb9442c79 # v5.1.0
 
+    - name: Install pysaif
+      run: pip install pysaif
+
     - name: Install jdaviz
       run: pip install ".[test,qt]"
 
@@ -120,6 +123,9 @@ jobs:
     - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
       with:
         python-version: "3.12"
+
+    - name: Install pysaif
+      run: pip install pysaif
 
     - name: Install jdaviz
       run: pip install ".[test,qt]"
