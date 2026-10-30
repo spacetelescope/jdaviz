@@ -132,6 +132,10 @@ New Features
 
 - Allow loading all tabular data types from FITS table extensions. [#4443]
 
+- Filter out any tabular data from the 'recenter' button dropdown in the subset
+  tools plugin, and remove the 'pixel' unit from scatter coordinates until unit
+  support is implemented. [#4462]
+
 Mosviz
 ^^^^^^
 

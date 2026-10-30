@@ -204,6 +204,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self.recenter_dataset = DatasetSelect(self, 'recenter_dataset_items',
                                               'recenter_dataset_selected',
                                               multiselect=None)
+        # catalogs loaded through the catalog loaders are not images/cubes and
+        # cannot be used for recentering subsets
+        self.recenter_dataset.add_filter('not_catalog')
 
         self.combination_mode = SelectPluginComponent(self,
                                                       items='combination_mode_items',
@@ -523,6 +526,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     "value": subset_state.xatt.parent.label,
                     "orig": subset_state.xatt.parent.label})
 
+                # TODO: "pixels" doesnt apply to scatter plots until units for
+                # scatter viewers are implemented. Only append it for image-like data
+                pixel_suffix = " (pixels)" if len(subset_state.xatt.parent.shape) == 2 else ""
+
                 sky_region = spec['sky_region']
                 if self.display_sky_coordinates and (sky_region is not None):
                     subset_definition += utils._sky_region_to_subset_def(sky_region)
@@ -532,11 +539,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                         x, y = subset_state.roi.center()
                         r = subset_state.roi.radius
                         subset_definition += [
-                            {"name": "X Center (pixels)", "att": "xc",
+                            {"name": f"X Center{pixel_suffix}", "att": "xc",
                              "value": x, "orig": x},
-                            {"name": "Y Center (pixels)", "att": "yc",
+                            {"name": f"Y Center{pixel_suffix}", "att": "yc",
                              "value": y, "orig": y},
-                            {"name": "Radius (pixels)", "att": "radius",
+                            {"name": f"Radius{pixel_suffix}", "att": "radius",
                              "value": r, "orig": r}]
 
                     elif isinstance(subset_state.roi, RectangularROI):
@@ -544,7 +551,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                             real_att = att.lower()
                             val = getattr(subset_state.roi, real_att)
                             subset_definition.append(
-                                {"name": att + " (pixels)", "att": real_att,
+                                {"name": att + pixel_suffix, "att": real_att,
                                  "value": val, "orig": val})
 
                         theta = np.around(np.degrees(subset_state.roi.theta),
@@ -560,13 +567,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                           decimals=_around_decimals)
 
                         subset_definition += [
-                            {"name": "X Center (pixels)", "att": "xc",
+                            {"name": f"X Center{pixel_suffix}", "att": "xc",
                              "value": xc, "orig": xc},
-                            {"name": "Y Center (pixels)", "att": "yc",
+                            {"name": f"Y Center{pixel_suffix}", "att": "yc",
                              "value": yc, "orig": yc},
-                            {"name": "X Radius (pixels)", "att": "radius_x",
+                            {"name": f"X Radius{pixel_suffix}", "att": "radius_x",
                              "value": rx, "orig": rx},
-                            {"name": "Y Radius (pixels)", "att": "radius_y",
+                            {"name": f"Y Radius{pixel_suffix}", "att": "radius_y",
                              "value": ry, "orig": ry},
                             {"name": "Angle", "att": "theta",
                              "value": theta, "orig": theta}]
@@ -575,14 +582,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                         xc, yc = subset_state.roi.center()
                         inner_r = subset_state.roi.inner_radius
                         outer_r = subset_state.roi.outer_radius
-                        subset_definition += [{"name": "X Center (pixels)",
+                        subset_definition += [{"name": f"X Center{pixel_suffix}",
                                                "att": "xc", "value": xc, "orig": xc},
-                                              {"name": "Y Center (pixels)",
+                                              {"name": f"Y Center{pixel_suffix}",
                                                "att": "yc", "value": yc, "orig": yc},
-                                              {"name": "Inner Radius (pixels)",
+                                              {"name": f"Inner Radius{pixel_suffix}",
                                                "att": "inner_radius",
                                                "value": inner_r, "orig": inner_r},
-                                              {"name": "Outer Radius (pixels)",
+                                              {"name": f"Outer Radius{pixel_suffix}",
                                                "att": "outer_radius",
                                                "value": outer_r, "orig": outer_r}]
 

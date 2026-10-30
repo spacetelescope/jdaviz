@@ -15,7 +15,7 @@
       v-model:loader_selected="loader_selected"
       :api_hints_enabled="api_hints_enabled"
       :api_hints_obj="api_hints_obj"
-      style="margin-bottom: 12px"
+      style="margin-bottom: 24px"
     ></plugin-loaders-panel>
 
     <j-flex-row v-if="api_hints_enabled && config === 'imviz'">
@@ -67,7 +67,8 @@
     </j-flex-row>
 
     <!-- Sub-plugin for recentering of spatial subset (Imviz only) -->
-    <j-flex-row v-if="(config=='imviz' || config=='deconfigged') && is_centerable">
+    <j-flex-row v-if="(config=='imviz' || config=='deconfigged') && is_centerable && recenter_dataset_items.length > 0"
+                style="padding-top: 16px">
       <v-expansion-panels accordion v-model="subplugins_opened">
         <v-expansion-panel>
           <v-expansion-panel-title >
@@ -102,7 +103,7 @@
     </j-flex-row>
 
     <!-- Show all subregions of a subset, including Glue state and subset type. -->
-    <div v-for="(region, index) in subset_definitions">
+    <div v-for="(region, index) in subset_definitions" style="padding-top: 16px">
       <j-plugin-section-header style="margin: 0px; margin-left: -12px; text-align: left; font-size: larger; font-weight: bold">
        Subregion {{ index }}</j-plugin-section-header>
       <j-flex-row class="row-no-outside-padding">
