@@ -84,6 +84,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     need_clear_subsets = Bool(False).tag(sync=True)
     show_subset_warning = Bool(False).tag(sync=True)
     cube_was_loaded = Bool(False).tag(sync=True)
+    pending_align_by = Unicode('').tag(sync=True)
 
     # this `rotation_angle` traitlet contains the contents of
     # the orientation plugin's `Rotation angle` user input textbox,
@@ -242,6 +243,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.linking_in_progress = True  # Prevent recursion
 
         if self.need_clear_subsets:
+            if msg.get('name') == 'align_by_selected':
+                self.pending_align_by = msg.get('new')
+
             setattr(self, msg.get('name'), msg.get('old'))
             self.linking_in_progress = False
 
@@ -305,6 +309,11 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # subsets will be deleted on changing link type:
         self._app.delete_subsets()
         self.show_subset_warning = False
+
+        if self.pending_align_by:
+            align_by = self.pending_align_by
+            self.pending_align_by = ''
+            self.align_by_selected = align_by
 
     def vue_delete_subsets(self, *args):
         self.delete_subsets()
