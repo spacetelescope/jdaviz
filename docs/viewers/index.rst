@@ -39,7 +39,7 @@ You can also create viewers programmatically:
 .. code-block:: python
 
     # Create a new viewer
-    viewer_creator = jdaviz.viewers['1D Spectrum']
+    viewer_creator = jdaviz.new_viewers['1D Spectrum']
     new_viewer = viewer_creator()
 
 See the individual viewer pages for detailed usage information.

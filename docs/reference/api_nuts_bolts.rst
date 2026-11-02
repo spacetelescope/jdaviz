@@ -58,6 +58,10 @@ Application Module
    :no-inheritance-diagram:
    :no-inherited-members:
 
+.. automodapi:: jdaviz.core.custom_regions
+   :no-inheritance-diagram:
+   :no-inherited-members:
+
 .. automodapi:: jdaviz.core.data_formats
    :no-inheritance-diagram:
    :no-inherited-members:
