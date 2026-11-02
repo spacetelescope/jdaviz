@@ -212,6 +212,10 @@ Bug Fixes
   while aligned by WCS, including broken links between a cube and its uncertainty cube
   after relinking. [#4490]
 
+- Prevent spatial subsetsand spectral subsets from entering table viewer(s)
+  data menu. Spatial subsets are only shown in Source Catalog Table viewers,
+  and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
+
 Mosviz
 ^^^^^^
 
