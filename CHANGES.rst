@@ -136,6 +136,9 @@ New Features
   tools plugin, and remove the 'pixel' unit from scatter coordinates until unit
   support is implemented. [#4462]
 
+- Snackbar messages shown during load are now instead shown as banners
+  and the popup delayed until after load is complete. [#4438]
+
 Mosviz
 ^^^^^^
 
