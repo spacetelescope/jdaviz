@@ -477,13 +477,13 @@ class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
         if msg.viewer is not self:
             return
         # clear cached properties that are based on reference data - this is probably
-        # overly-conservative and we might be able to limit the clearing for only when
+        # overly-conservative, and we might be able to limit the clearing for only when
         # reference data is changed (perhaps with a callback on the state for reference_data)
         for attr in ('reference_spectral_axis', 'inverted_x_axis',
                      'pixel_to_world_interp', 'world_to_pixel_interp'):
             if attr in self.__dict__:
                 del self.__dict__[attr]
-        if len(self.data()):
+        if self.state.reference_data is not None:
             self._handle_x_axis_orientation()
 
     @cached_property
