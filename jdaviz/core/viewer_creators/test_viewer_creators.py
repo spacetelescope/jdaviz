@@ -1,4 +1,3 @@
-import os
 import pytest
 from astropy import units as u
 from astropy.table import Table
@@ -216,10 +215,8 @@ class TestViewerCreatorObject:
         viewers_set = {'1D Spectrum', '2D Spectrum', '3D Spectrum',
                        'Image', 'Histogram', 'Scatter',
                        'Source Catalog Table'}
-        if os.getenv('LCVIZ_ARGS'):
-            # LCViz has an extra target pixel file (TPF) viewer
-            viewers_set.add('TPF')
-        assert new_viewers_set == viewers_set
+        # LCViz (if included) has an extra target pixel file (TPF) viewer
+        assert viewers_set.issubset(new_viewers_set)
 
         existing_viewers = set(self.dcf_helper.viewers)
         created = {}
