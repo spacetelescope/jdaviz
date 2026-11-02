@@ -1462,6 +1462,11 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         data = stretch(data, out=data)
 
         if color_mode == 'Colormaps':
+            if self.image_colormap.text is None:
+                # image_colormap may not be synced to the newly selected layer yet,
+                # so we can't compute the color-mapped image. Returning early is OK
+                # because _update_stretch_curve will be called again once the sync is complete.
+                return False
             cmap = glue_colormaps[self.image_colormap.text]
             if hasattr(cmap, "get_bad"):
                 bad_color = cmap.get_bad().tolist()[:3]

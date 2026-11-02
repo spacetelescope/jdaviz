@@ -9,7 +9,7 @@ from numpy.testing import assert_allclose
 from packaging.version import Version
 from photutils.datasets import make_4gaussians_image
 from regions import CirclePixelRegion, PixCoord
-from jdaviz.configs.imviz.tests.utils import _image_hdu_wcs
+from jdaviz.configs.imviz.tests.utils import _image_hdu_wcs, _image_nddata_wcs
 
 from jdaviz.configs.default.plugins.plot_options.plot_options import SplineStretch
 
@@ -547,6 +547,24 @@ def test_table_viewer_plot_options(deconfigged_helper):
     # Layer options should be empty/excluded when only table viewer is selected
     # (layers are excluded via the not_in_table_viewer filter)
     assert len(po.layer.choices) == 0
+
+
+def test_switch_from_spectrum_to_image_viewer(deconfigged_helper, spectrum1d, image_hdu_wcs):
+    # Switching from a spectrum viewer to an image viewer while the plugin is
+    # open used to raise a KeyError in _update_stretch_curve (before the colormap was
+    # synced). This aborted syncing the remaining options and left opacity at 0.
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec')
+    deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='img')
+
+    po = deconfigged_helper.plugins['Plot Options']._obj
+    po.plugin_opened = True
+    assert po.viewer.selected == '1D Spectrum'
+
+    po.viewer.selected = 'Image'
+    layer_state = deconfigged_helper._app.get_viewer('Image').layers[0].state
+    assert po.image_opacity_value == layer_state.alpha == 1
+    assert po.image_colormap_value == layer_state.cmap.name
+    assert len(po.stretch_histogram.marks['colorbar'].colors) > 0
 
 
 def test_set_layer_to_top_wcs_linked(imviz_helper):
