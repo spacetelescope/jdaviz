@@ -9,7 +9,7 @@ from numpy.testing import assert_allclose
 from packaging.version import Version
 from photutils.datasets import make_4gaussians_image
 from regions import CirclePixelRegion, PixCoord
-from jdaviz.configs.imviz.tests.utils import _image_hdu_wcs, _image_nddata_wcs
+from jdaviz.configs.imviz.tests.utils import _image_hdu_wcs
 
 from jdaviz.configs.default.plugins.plot_options.plot_options import SplineStretch
 
