@@ -91,6 +91,7 @@
               <v-switch
                 v-model="use_pccut"
                 label="Use Flux Percentile Cut?"
+                color="primary"
                 hint="Whether to only sonify flux above a min. percentile (else use absolute values)"
                 persistent-hint
                ></v-switch>
@@ -110,6 +111,7 @@
                <v-switch
                  v-model="eln"
                  label="Equal Loudness Equalisation"
+                 color="primary"
                  hint="Whether to equalise for uniform perceived loudness"
                  persistent-hint
                 ></v-switch>
