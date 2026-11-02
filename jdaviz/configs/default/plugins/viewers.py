@@ -1628,7 +1628,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     * `JdavizSpectralLineTableViewer` -- spectral line lists with a
       line-name and/or spectral-location column.
 
-    Spatial and spectral subsets are not displayed in table viewers.
+    Spatial and spectral subsets are not displayed in generic table viewers.
+    Subclasses narrow ``_excluded_subset_types`` to allow subsets relevant to
+    their catalog kind (e.g. spatial subsets in source catalog viewers).
     """
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     # NOTE: no active-row-select tool here -- highlighting a row only makes
@@ -1648,6 +1650,11 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # themselves to their own catalog "kind" These filter names must be
     # registered with the data-menu dataset filter registry.
     _data_menu_filter = 'is_generic_table'
+
+    # Subset types (as returned by ``get_subset_type``) that are never added
+    # as layers to this viewer. Subclasses narrow this to the types that are
+    # not meaningful for their catalog kind.
+    _excluded_subset_types = ('spatial', 'spectral')
 
     def __init__(self, session, *args, **kwargs):
         default_tool_priority = kwargs.pop('default_tool_priority', [])
@@ -1694,7 +1701,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def add_subset(self, subset, *args, **kwargs):
         # Inspect the defining state, not the table data the subset propagated to.
-        if get_subset_type(subset.subset_state) in ('spatial', 'spectral'):
+        if get_subset_type(subset.subset_state) in self._excluded_subset_types:
             return False
         return super().add_subset(subset, *args, **kwargs)
 
@@ -2006,6 +2013,8 @@ class JdavizSourceCatalogTableViewer(JdavizTableViewer):
                    ]
 
     _data_menu_filter = 'is_source_catalog_table'
+    # spatial subsets are meaningful for catalogs of sky/pixel positions
+    _excluded_subset_types = ('spectral',)
 
     def __init__(self, session, *args, **kwargs):
         kwargs.setdefault('default_tool_priority', ['jdaviz:table_row_select'])
@@ -2169,3 +2178,5 @@ class JdavizSpectralLineTableViewer(JdavizTableViewer):
     and for the ability to add specialized functionality in the future.
     """
     _data_menu_filter = 'is_spectral_lines_list_table'
+    # spectral subsets are meaningful for line lists with a spectral location
+    _excluded_subset_types = ('spatial',)
