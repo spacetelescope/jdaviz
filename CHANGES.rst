@@ -159,13 +159,13 @@ Bug Fixes
 
 - Fix error when typing while renaming data or subset. [#4359]
 
-- Fix subset warning behavior when changing alignment options in the Orientation plugin. [#4454]
-
 Mosviz
 ^^^^^^
 
 Other Changes and Additions
 ---------------------------
+
+- Improve subset warning behavior when changing alignment options in the Orientation plugin. [#4454]
 
 - Speed up product table loading in the astroquery loader by using server-side
   pagination in the UI and fetching product lists in a background thread so the
