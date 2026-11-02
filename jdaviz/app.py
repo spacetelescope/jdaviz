@@ -43,9 +43,8 @@ from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.custom_regions import RangeRegion
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 DataRenamedMessage, SnackbarMessage, RemoveDataMessage,
-                                SubsetRenameMessage, AddDataToViewerMessage,
-                                RemoveDataFromViewerMessage, ViewerAddedMessage,
-                                ViewerRemovedMessage, ViewerRenamedMessage, ChangeRefDataMessage,
+                                SubsetRenameMessage, ViewerAddedMessage, ViewerRemovedMessage,
+                                ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage, LayersFinalizedMessage)
 from jdaviz.core.loaders.resolvers.file.file import PresetFileResolver
 from jdaviz.core.loaders.resolvers.object.object import PresetObjectResolver
@@ -513,14 +512,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         #  application-level data collection object
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=self._on_data_deleted)
-
-        self.hub.subscribe(self, AddDataToViewerMessage,
-                           handler=lambda msg: self.add_data_to_viewer(
-                               msg.viewer_reference, msg.data_label))
-
-        self.hub.subscribe(self, RemoveDataFromViewerMessage,
-                           handler=lambda msg: self.remove_data_from_viewer(
-                               msg.viewer_reference, msg.data_label))
 
         # Subscribe to snackbar messages and tie them to the display of the
         #  message box

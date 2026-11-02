@@ -6,8 +6,10 @@ from astropy.nddata import NDData
 from astropy.wcs import WCS
 from specutils import Spectrum
 
+from jdaviz.configs.default.plugins.viewers import JdavizProfileView
 from jdaviz.configs.imviz.tests.utils import _image_nddata_wcs
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.events import ViewerRemovedMessage
 
 
 # On failure, should not crash; essentially a no-op.
@@ -618,6 +620,227 @@ def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catal
     deconfigged_helper.load(image_nddata_wcs, format='Image',
                             data_label='test_image')
     assert plg._obj.disabled_msg == ''
+
+
+def test_plugin_disabled_on_viewer_removed(deconfigged_helper, image_nddata_wcs, spectrum1d):
+    """
+    Test that the Unit Conversion plugin responds to viewers being removed, i.e. it
+    stays enabled while a relevant viewer with data remains, and is disabled
+    once no relevant viewer with data remains.
+    """
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec')
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='img')
+
+    plg = deconfigged_helper.plugins["Unit Conversion"]._obj
+    app = deconfigged_helper._app
+    assert plg.disabled_msg == ''
+
+    # the base TemplateMixin subscription must not be clobbered (one handler per
+    # subscriber/message class in glue's hub) and should dispatch to the UC handler
+    handler = app.hub._subscriptions[plg][ViewerRemovedMessage][0]
+    assert handler.func.__name__ == '_on_viewer_removed'
+
+    viewer_ids = list(app._viewer_store.keys())
+    assert len(viewer_ids) == 2
+
+    # removing one viewer leaves data in the other, so the plugin stays enabled
+    app.vue_destroy_viewer_item(viewer_ids[0])
+    assert plg.disabled_msg == ''
+
+    # removing the last relevant viewer disables the plugin
+    app.vue_destroy_viewer_item(viewer_ids[1])
+    assert plg.disabled_msg == 'Unit Conversion unavailable without data loaded in a viewer'
+
+
+def test_flux_unit_cleared_on_viewer_removed(deconfigged_helper, image_2d_wcs):
+    """
+    Test that when the viewer holding the only dataset with a physical flux unit
+    is removed, leaving only counts data behind, the flux unit selection and
+    choices (which could only have come from the removed data) are cleared, and
+    the surface brightness unit is realigned to the remaining data.
+    """
+    spec_jy = Spectrum(flux=np.linspace(1, 2, 10) * u.Jy,
+                       spectral_axis=np.linspace(1, 2, 10) * u.um)
+    img_ct = NDData(np.ones(100).reshape(10, 10) * u.ct, wcs=image_2d_wcs)
+    deconfigged_helper.load(spec_jy, format='1D Spectrum', data_label='spec_jy')
+    deconfigged_helper.load(img_ct, format='Image', data_label='img_ct')
+
+    plg = deconfigged_helper.plugins["Unit Conversion"]._obj
+    app = deconfigged_helper._app
+
+    assert plg.flux_unit_selected == 'Jy'
+    assert len(plg.flux_unit.choices) > 0
+    assert plg.angle_unit_selected == 'pix^2'
+    assert plg.sb_unit_selected == 'Jy / pix2'
+
+    [spec_viewer_id] = [vid for vid, v in app._viewer_store.items()
+                        if isinstance(v, JdavizProfileView)]
+    app.vue_destroy_viewer_item(spec_viewer_id)
+
+    # only counts data remains, so the stale Jy flux selection is cleared
+    assert plg.disabled_msg == ''
+    assert plg.flux_unit_selected == ''
+    assert plg.flux_unit.choices == []
+    assert plg.angle_unit_selected == 'pix^2'
+    assert plg.sb_unit_selected == 'ct / pix2'
+
+    # loading new data with a physical flux unit repopulates the flux selection
+    deconfigged_helper.load(spec_jy, format='1D Spectrum', data_label='spec_jy_2')
+    assert plg.flux_unit_selected == 'Jy'
+    assert plg.sb_unit_selected == 'Jy / pix2'
+
+
+def test_flux_unit_kept_on_viewer_removed(deconfigged_helper, image_2d_wcs):
+    """
+    Test that when a viewer is removed and the remaining data has a different
+    (but convertible) native flux unit, the flux unit selection is kept (any
+    physical flux unit is still a valid display unit), while the angle unit is
+    reset to the remaining data and the surface brightness unit is derived from
+    the kept flux selection rather than the remaining data's native unit.
+    """
+    spec_jy = Spectrum(flux=np.linspace(1, 2, 10) * u.Jy,
+                       spectral_axis=np.linspace(1, 2, 10) * u.um)
+    img_mjy_sr = NDData(np.ones(100).reshape(10, 10) * u.MJy / u.sr, wcs=image_2d_wcs)
+    deconfigged_helper.load(spec_jy, format='1D Spectrum', data_label='spec_jy')
+    deconfigged_helper.load(img_mjy_sr, format='Image', data_label='img_mjy_sr')
+
+    plg = deconfigged_helper.plugins["Unit Conversion"]._obj
+    app = deconfigged_helper._app
+
+    assert plg.flux_unit_selected == 'Jy'
+    assert plg.angle_unit_selected == 'pix^2'
+    assert plg.sb_unit_selected == 'Jy / pix2'
+
+    [spec_viewer_id] = [vid for vid, v in app._viewer_store.items()
+                        if isinstance(v, JdavizProfileView)]
+    app.vue_destroy_viewer_item(spec_viewer_id)
+
+    assert plg.disabled_msg == ''
+    assert plg.flux_unit_selected == 'Jy'
+    assert plg.angle_unit_selected == 'sr'
+    assert plg.sb_unit_selected == 'Jy / sr'
+
+    # flux selection remains functional and cascades to sb
+    plg.flux_unit_selected = 'MJy'
+    assert plg.sb_unit_selected == 'MJy / sr'
+
+
+class TestResetUnitsToRemainingData:
+    """
+    Unit tests for the helpers that realign unit selections with the data that
+    remains loaded. Each helper is driven directly with a synthetic
+    ``native_units`` list of (plain_flux_unit, angle_unit) pairs, where
+    ``angle_unit`` is None for data not in surface brightness units.
+    """
+
+    @pytest.fixture
+    def plg(self, deconfigged_helper, spectrum1d):
+        # spectrum1d is in Jy, which in deconfigged selects flux=Jy, angle=pix2, sb=Jy/pix2
+        deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec')
+        plg = deconfigged_helper.plugins["Unit Conversion"]._obj
+        assert plg.flux_unit_selected == 'Jy'
+        assert plg.angle_unit_selected == 'pix^2'
+        assert plg.sb_unit_selected == 'Jy / pix2'
+        return plg
+
+    @staticmethod
+    def _clear_flux(plg):
+        plg.flux_unit.choices = []
+        plg.flux_unit_selected = ''
+        assert plg.flux_unit_selected == ''
+
+    # --- _reset_flux_unit_to_remaining_data ---
+
+    def test_flux_cleared_when_no_physical_flux_remains(self, plg):
+        plg._reset_flux_unit_to_remaining_data([(u.ct, None), (u.DN, None)])
+        assert plg.flux_unit_selected == ''
+        assert plg.flux_unit.choices == []
+
+    def test_flux_populated_when_empty_and_physical_flux_remains(self, plg):
+        self._clear_flux(plg)
+        plg._reset_flux_unit_to_remaining_data([(u.MJy, u.sr)])
+        assert plg.flux_unit_selected == 'MJy'
+        assert 'MJy' in plg.flux_unit.choices
+
+    def test_flux_kept_when_physical_flux_remains(self, plg):
+        plg._reset_flux_unit_to_remaining_data([(u.MJy, u.sr)])
+        assert plg.flux_unit_selected == 'Jy'
+
+    def test_flux_kept_when_mixed_physical_and_counts_remain(self, plg):
+        plg._reset_flux_unit_to_remaining_data([(u.ct, None), (u.MJy, None)])
+        assert plg.flux_unit_selected == 'Jy'
+
+    # --- _reset_angle_unit_to_remaining_data ---
+
+    def test_angle_disagreement_returns_false_and_leaves_selection(self, plg):
+        assert plg._reset_angle_unit_to_remaining_data([(u.Jy, None), (u.Jy, u.sr)]) is False
+        assert plg.angle_unit_selected == 'pix^2'
+
+    def test_angle_already_matching_returns_true(self, plg):
+        assert plg._reset_angle_unit_to_remaining_data([(u.Jy, None), (u.ct, None)]) is True
+        assert plg.angle_unit_selected == 'pix^2'
+
+    def test_angle_reset_to_remaining_data(self, plg):
+        assert plg._reset_angle_unit_to_remaining_data([(u.MJy, u.sr)]) is True
+        assert plg.angle_unit_selected == 'sr'
+        assert 'sr' in plg.angle_unit.choices
+        # with a flux selection present, the angle change cascades to sb
+        assert plg.sb_unit_selected == 'Jy / sr'
+
+    # --- _reset_sb_unit_to_remaining_data ---
+
+    def test_sb_derived_from_flux_selection(self, plg):
+        plg.sb_unit_selected = 'MJy / pix2'
+        plg._reset_sb_unit_to_remaining_data([(u.MJy, None)])
+        # flux selection (Jy) takes precedence over the native unit (MJy)
+        assert plg.sb_unit_selected == 'Jy / pix2'
+
+    def test_sb_derived_from_native_unit_without_flux_selection(self, plg):
+        self._clear_flux(plg)
+        plg._reset_sb_unit_to_remaining_data([(u.ct, None)])
+        assert plg.sb_unit_selected == 'ct / pix2'
+
+    def test_sb_unchanged_when_already_consistent(self, plg):
+        plg._reset_sb_unit_to_remaining_data([(u.MJy, None)])
+        assert plg.sb_unit_selected == 'Jy / pix2'
+
+
+def test_spectral_unit_kept_on_reference_data_removed(deconfigged_helper):
+    """
+    Test that removing the reference data from a 1D spectrum viewer keeps the selected
+    spectral unit instead of reverting to the new reference data's native unit.
+    """
+    flux = np.linspace(1, 2, 10) * u.Jy
+    deconfigged_helper.load(Spectrum(flux, spectral_axis=np.linspace(1, 2, 10) * u.um),
+                            format='1D Spectrum', data_label='spec_um')
+    deconfigged_helper.load(Spectrum(flux, spectral_axis=np.linspace(1000, 2000, 10) * u.nm),
+                            format='1D Spectrum', data_label='spec_nm')
+
+    app = deconfigged_helper._app
+    [viewer] = [v for v in app._viewer_store.values() if isinstance(v, JdavizProfileView)]
+    assert viewer.state.reference_data.label == 'spec_um'
+
+    deconfigged_helper.plugins['Unit Conversion'].spectral_unit = 'Angstrom'
+    assert viewer.state.x_display_unit == 'Angstrom'
+
+    app.remove_data_from_viewer(viewer.reference, 'spec_um')
+    assert viewer.state.reference_data.label == 'spec_nm'
+    assert viewer.state.x_display_unit == 'nm'
+
+
+def test_plugin_enabled_with_only_spectrum2d_viewer(deconfigged_helper, spectrum2d):
+    """
+    Test that the Unit Conversion plugin stays enabled when the 1D spectrum viewer is
+    removed but the 2D spectrum viewer still has data.
+    """
+    deconfigged_helper.load(spectrum2d, format='2D Spectrum')
+    plg = deconfigged_helper.plugins['Unit Conversion']._obj
+    app = deconfigged_helper._app
+
+    [viewer_1d_id] = [vid for vid, v in app._viewer_store.items()
+                      if isinstance(v, JdavizProfileView)]
+    app.vue_destroy_viewer_item(viewer_1d_id)
+    assert plg.disabled_msg == ''
 
 
 def test_unit_reset_on_all_data_removed(deconfigged_helper, spectrum1d):
