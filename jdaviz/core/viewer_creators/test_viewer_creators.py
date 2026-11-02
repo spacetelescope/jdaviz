@@ -212,9 +212,11 @@ class TestViewerCreatorObject:
         self.dcf_helper.load(catalog, format='Source Catalog')
 
         new_viewers_set = set(self.dcf_helper.new_viewers.keys())
-        assert new_viewers_set == {'1D Spectrum', '2D Spectrum', '3D Spectrum',
-                                   'Image', 'Histogram', 'Scatter',
-                                   'Source Catalog Table'}
+        viewers_set = {'1D Spectrum', '2D Spectrum', '3D Spectrum',
+                       'Image', 'Histogram', 'Scatter',
+                       'Source Catalog Table'}
+        # LCViz (if included) has an extra target pixel file (TPF) viewer
+        assert viewers_set.issubset(new_viewers_set)
 
         existing_viewers = set(self.dcf_helper.viewers)
         created = {}
