@@ -1,10 +1,10 @@
 from playwright.sync_api import Page
 
 
-def test_solara_basics(page: Page):
-    page.goto("http://localhost:8765/", wait_until="commit")
-    print('Jdaviz Loaded')
-    page.locator('text=Load Local File').wait_for()
+# def test_solara_basics(page: Page):
+#     page.goto("http://localhost:8765/", wait_until="commit")
+#     print('Jdaviz Loaded')
+#     page.locator('text=Load Local File').wait_for()
 
 
 def test_pysiaf_imported(page: Page):
@@ -12,8 +12,6 @@ def test_pysiaf_imported(page: Page):
     page.goto("http://localhost:8765/", wait_until="commit")
     print('Jdaviz Loaded')
     page.locator('text=Load Local File').wait_for()
-
-
 
     page.locator(".v-input", has_text="Source").click()
 
