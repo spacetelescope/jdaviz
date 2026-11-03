@@ -725,7 +725,8 @@ class BaseCatalogImporter(BaseImporterToDataCollection):
         elif isinstance(input, HDUList):
             # check for the presence of at least one TableHDU/BinTableHDU extension
             for _, hdu in enumerate(input):
-                if isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0:
+                if (isinstance(hdu, (TableHDU, BinTableHDU)) and len(hdu.data) > 0 and
+                        hdu.header['EXTNAME'][0:4] != 'ASDF'):
                     return ''
             return 'No valid TableHDU/BinTableHDU extensions found.'
 
