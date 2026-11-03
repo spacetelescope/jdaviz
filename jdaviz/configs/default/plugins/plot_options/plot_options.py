@@ -1461,12 +1461,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         data = contrast_bias(data, out=data)
         data = stretch(data, out=data)
 
-        if color_mode == 'Colormaps':
-            if self.image_colormap.text is None:
-                # image_colormap may not be synced to the newly selected layer yet,
-                # so we can't compute the color-mapped image. Returning early is OK
-                # because _update_stretch_curve will be called again once the sync is complete.
-                return False
+        # image_colormap may not be synced to the newly selected layer yet,
+        # so we can't compute the color-mapped image
+        if color_mode == 'Colormaps' and self.image_colormap.text is not None:
             cmap = glue_colormaps[self.image_colormap.text]
             if hasattr(cmap, "get_bad"):
                 bad_color = cmap.get_bad().tolist()[:3]
