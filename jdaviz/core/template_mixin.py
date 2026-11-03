@@ -2456,6 +2456,7 @@ class LayerSelect(SelectPluginComponent):
         # to the init and defined in _is_valid_item()
         self.add_filter('not_spatial_subset_in_profile_viewer')
         self.add_filter('not_spectral_subset_in_image_viewer')
+        self.add_filter('subset_applies_to_data_in_image_viewer')
 
         self.filter_is_root = is_root
         self.has_children = has_children
@@ -2532,6 +2533,25 @@ class LayerSelect(SelectPluginComponent):
                 return not isinstance(lyr.subset_state, RangeSubsetState)
 
             return True
+
+        def subset_applies_to_data_in_image_viewer(lyr):
+            """
+            Guards against a glue-related bug where subsets are added to image viewers,
+            even if they don't apply, e.g. a subset drawn on an 2D spectrum with pixel axes
+            is not applicable to an image viewer (and vice versa) since the pixels represent
+            different physical quantities.
+            """
+            if not hasattr(lyr, 'subset_state'):
+                return True
+
+            if not np.all([isinstance(viewer, BqplotImageView) for viewer in self.viewer_objs]):
+                return True
+
+            attributes = getattr(lyr.subset_state, 'attributes', None)
+            if attributes is None:
+                return True
+
+            return all(lyr.data.find_component_id(att) is not None for att in attributes)
 
         def is_trace(lyr):
             return 'Trace' in getattr(getattr(lyr, 'data', None), 'meta', [])
