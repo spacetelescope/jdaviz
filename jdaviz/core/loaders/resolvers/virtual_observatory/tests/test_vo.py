@@ -567,7 +567,7 @@ class TestVOSSARemote:
         # Make sure we got products
         ssa_out = vo_loader._obj._output
         if ssa_out is None:
-            pytest.skip(f"SSAP search returned no results, service may be down.")
+            pytest.skip("SSAP search returned no results, service may be down.")
         assert len(ssa_out) > 0
 
         # Load first data product
