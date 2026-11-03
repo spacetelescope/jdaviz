@@ -5328,6 +5328,27 @@ class AutoTextField(BasePluginComponent):
     def map_value(self, attr, value):
         # Apply return_unique_name when setting default if unique_in_data_collection is True
         if attr == 'default' and self._unique_in_data_collection and value:
+            if getattr(self._plugin, 'data_label_is_prefix', False):
+                suffices = getattr(self._plugin, 'data_label_suffices', [])
+                if suffices:
+                    existing_labels = self._app.data_collection.labels
+                    if any(f'{value}{suffix}' in existing_labels for suffix in suffices):
+                        duplicate_numbers = []
+                        for existing_label in existing_labels:
+                            for suffix in suffices:
+                                match = re.fullmatch(
+                                    rf'{re.escape(value)} \((\d+)\){re.escape(suffix)}',
+                                    existing_label)
+                                if match:
+                                    duplicate_numbers.append(int(match.group(1)))
+
+                        number = max(duplicate_numbers, default=0) + 1
+                        candidate = f'{value} ({number})'
+                        while any(f'{candidate}{suffix}' in existing_labels
+                                  for suffix in suffices):
+                            number += 1
+                            candidate = f'{value} ({number})'
+                        return candidate
             return self._app.return_unique_name(value)
         return value
 
