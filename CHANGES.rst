@@ -216,6 +216,8 @@ Bug Fixes
   while aligned by WCS, including broken links between a cube and its uncertainty cube
   after relinking. [#4490]
 
+- Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
+
 Mosviz
 ^^^^^^
 
