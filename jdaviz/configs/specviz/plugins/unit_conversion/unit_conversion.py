@@ -4,6 +4,7 @@ from astropy import units as u
 from glue.core import Data as glue_core_data
 from glue.core.message import DataCollectionDeleteMessage
 from glue.core.subset_group import GroupedSubset
+from glue.viewers.scatter.state import ScatterLayerState
 from glue_jupyter.bqplot.image import BqplotImageView
 from specreduce import tracing
 from specutils import Spectrum
@@ -259,7 +260,8 @@ class UnitConversion(PluginTemplateMixin):
             if not isinstance(v, (JdavizProfileView, BqplotImageView)):
                 continue
             for layer in v.layers:
-                if isinstance(layer.layer, GroupedSubset):
+                if (isinstance(layer.state, ScatterLayerState)
+                        or isinstance(layer.layer, GroupedSubset)):
                     continue
                 label = layer.layer.label
                 if label in seen_labels:
