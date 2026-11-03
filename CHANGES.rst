@@ -13,6 +13,8 @@ Bug Fixes
 
 - Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
 
+- Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
+
 Mosviz
 ^^^^^^
 
