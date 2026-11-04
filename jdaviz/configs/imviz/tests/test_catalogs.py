@@ -21,6 +21,8 @@ is correct and the removal of the points outside the zoom limits is correctly do
 This may need to instead be tested for in the future.
 '''
 
+import requests
+
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest
@@ -269,7 +271,13 @@ def test_catalog_reingestion(deconfigged_helper, tmp_path):
     # search Gaia to get exportable data
     catalog_plg.catalog = 'Gaia'
     catalog_plg.max_sources = 10
-    catalog_plg.search(error_on_fail=True)
+    try:
+        catalog_plg.search(error_on_fail=True)
+    except requests.exceptions.HTTPError as exc:
+        msg = str(exc)
+        if '503' in msg:
+            pytest.skip(f"Archive server unavailable: {exc}")
+        raise
 
     export_plg.plugin_table = 'Catalog Search: table'
     export_plg.filename = 'test.ecsv'

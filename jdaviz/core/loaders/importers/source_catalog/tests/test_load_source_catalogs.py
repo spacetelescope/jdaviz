@@ -408,7 +408,7 @@ def test_astroquery_load_catalog_source(deconfigged_helper):
         pytest.skip(f"Name resolution failed (Sesame unavailable): {exc}")
     except requests.exceptions.HTTPError as exc:
         msg = str(exc)
-        if '408' in msg or 'timeout' in msg.lower() or 'aborted' in msg.lower():
+        if '408' in msg or '503' in msg or 'timeout' in msg.lower() or 'aborted' in msg.lower():
             pytest.skip(f"Remote archive query timed out: {exc}")
         raise
     except requests.exceptions.RequestException as exc:
