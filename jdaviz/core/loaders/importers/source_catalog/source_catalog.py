@@ -469,33 +469,33 @@ class SourceCatalogImporter(BaseCatalogImporter):
             if isinstance(input[self.col_x_selected][0], str):
                 try:
                     x_col = [float(x) for x in table[self.col_x_selected]]
-                    output_table['X'] = x_col
+                    output_table[self.col_x_selected] = x_col
                 except ValueError:
                     raise ValueError("Could not parse X column as numeric values.")
             # if input is a PixCoord instance, isolate x
             elif isinstance(input[self.col_x_selected][0], PixCoord):
                 try:
                     x_col = [float(x.x) for x in table[self.col_x_selected]]
-                    output_table['X'] = x_col
+                    output_table[self.col_x_selected] = x_col
                 except ValueError:
                     raise ValueError("Could not parse X column as PixCoord values.")
             else:
-                output_table['X'] = table[self.col_x_selected].astype(float)
+                output_table[self.col_x_selected] = table[self.col_x_selected].astype(float)
 
             if isinstance(input[self.col_y_selected][0], str):
                 try:
                     y_col = [float(y) for y in table[self.col_y_selected]]
-                    output_table['Y'] = y_col
+                    output_table[self.col_y_selected] = y_col
                 except ValueError:
                     raise ValueError("Could not parse Y column as numeric values.")
             elif isinstance(input[self.col_y_selected][0], PixCoord):
                 try:
                     y_col = [float(y.y) for y in table[self.col_y_selected]]
-                    output_table['Y'] = y_col
+                    output_table[self.col_y_selected] = y_col
                 except ValueError:
                     raise ValueError("Could not parse Y column as PixCoord values.")
             else:
-                output_table['Y'] = table[self.col_y_selected].astype(float)
+                output_table[self.col_y_selected] = table[self.col_y_selected].astype(float)
 
             output_table[self.col_x_selected] = table[self.col_x_selected]
             output_table[self.col_y_selected] = table[self.col_y_selected]
