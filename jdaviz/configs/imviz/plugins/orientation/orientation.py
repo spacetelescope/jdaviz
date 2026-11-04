@@ -249,9 +249,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             setattr(self, msg.get('name'), msg.get('old'))
             self.linking_in_progress = False
 
-            if msg.get('name') == 'align_by_selected':
-                self.show_subset_warning = True
-
             raise ValueError("Link type can only be changed after existing subsets "
                              f"are deleted, but {len(self._app.data_collection.subset_groups)} "
                              f"subset(s) still exist. To delete them, you can use "
@@ -298,6 +295,13 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # Clear previous zoom limits because they no longer mean anything.
         for v in self._app._viewer_store.values():
             v._prev_limits = None
+
+    def vue_request_align_by(self, value):
+        print(value)
+        if self.need_clear_subsets:
+            self.show_subset_warning = True
+        else:
+            self.align_by_selected = value
 
     def _on_subset_change(self, msg):
         self.need_clear_subsets = len(self._app.data_collection.subset_groups) > 0

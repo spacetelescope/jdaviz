@@ -49,7 +49,8 @@
           <v-radio-group
             :label="api_hints_enabled ? 'plg.align_by = ' : 'Align by'"
             :class="api_hints_enabled ? 'api-hint' : null"
-            v-model="align_by_selected"
+            :model-value="align_by_selected"
+            @update:model-value="request_align_by($event)"
             :disabled="!wcs_linking_available || need_clear_astrowidget_markers"
             persistent-hint
             row>
