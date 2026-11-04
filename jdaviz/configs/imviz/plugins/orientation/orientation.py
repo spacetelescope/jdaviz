@@ -300,6 +300,10 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         else:
             self.align_by_selected = value
 
+    def vue_cancel_align_by(self, *args):
+        self.pending_align_by = ''
+        self.show_subset_warning = False
+
     def _on_subset_change(self, msg):
         self.need_clear_subsets = len(self._app.data_collection.subset_groups) > 0
 
