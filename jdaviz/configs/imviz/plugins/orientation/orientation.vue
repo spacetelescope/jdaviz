@@ -50,7 +50,6 @@
             :label="api_hints_enabled ? 'plg.align_by = ' : 'Align by'"
             :class="api_hints_enabled ? 'api-hint' : null"
             :model-value="align_by_selected"
-            @update:model-value="request_align_by($event)"
             :disabled="!wcs_linking_available || need_clear_astrowidget_markers"
             persistent-hint
             row>
@@ -65,6 +64,7 @@
               :class="api_hints_enabled ? 'api-hint' : null"
               :label="item.label == 'WCS' && !api_hints_enabled ? 'WCS (Sky)' : (api_hints_enabled ? '\''+item.label+'\'' : item.label)"
               :value="item.label"
+              @click.prevent="request_align_by(item.label)"
             ></v-radio>
           </v-radio-group>
         </j-flex-row>

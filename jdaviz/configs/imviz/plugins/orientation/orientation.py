@@ -243,9 +243,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.linking_in_progress = True  # Prevent recursion
 
         if self.need_clear_subsets:
-            if msg.get('name') == 'align_by_selected':
-                self.pending_align_by = msg.get('new')
-
             setattr(self, msg.get('name'), msg.get('old'))
             self.linking_in_progress = False
 
@@ -297,9 +294,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             v._prev_limits = None
 
     def vue_request_align_by(self, value):
-        print(value)
         if self.need_clear_subsets:
             self.show_subset_warning = True
+            self.pending_align_by = value
         else:
             self.align_by_selected = value
 
@@ -314,13 +311,13 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self._app.delete_subsets()
         self.show_subset_warning = False
 
-        if self.pending_align_by:
-            align_by = self.pending_align_by
-            self.pending_align_by = ''
-            self.align_by_selected = align_by
-
     def vue_delete_subsets(self, *args):
         self.delete_subsets()
+
+        if self.pending_align_by:
+                    align_by = self.pending_align_by
+                    self.pending_align_by = ''
+                    self.align_by_selected = align_by
 
     def vue_reset_astrowidget_markers(self, *args):
         for viewer in self._app._viewer_store.values():
