@@ -1,6 +1,7 @@
 import numpy as np
 from traitlets import Any, Bool, List, Unicode, observe
 from astropy import units as u
+from astropy.io import fits
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
@@ -422,6 +423,24 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         if self.has_dq:
             expose += ['dq_extension']
         return ImporterUserApi(self, expose)
+
+    @property
+    def import_confidence_score(self):
+        # 3D spectra should be strongly preferred when detected.
+        # this ensures data with ndim==3 default to 3D Spectrum instead of
+        # Source Catalog even when RA/Dec/X/Y pairs are present in bintable HDU extensions
+
+        # check against hdulist and spectrum objects
+        if isinstance(self.input, fits.HDUList):
+            if any(hdu.data is not None and hdu.data.ndim == 3
+                   for hdu in self.input):
+                return 2
+
+        flux = getattr(self.input, 'flux', None)
+        if flux is not None and flux.ndim == 3:
+            return 2
+
+        return 0
 
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'cubeviz'):
