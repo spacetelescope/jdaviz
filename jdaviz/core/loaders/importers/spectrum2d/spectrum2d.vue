@@ -93,6 +93,8 @@
       ></plugin-viewer-create-new>
     </div>
 
+    <j-loader-banner-messages :items="loader_message_items"></j-loader-banner-messages>
+
     <loader-import-button
       :spinner="import_spinner"
       :disabled_msg="import_disabled_msg"

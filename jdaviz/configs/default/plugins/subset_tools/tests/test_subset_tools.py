@@ -6,6 +6,7 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
+from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core.edit_subset_mode import ReplaceMode, NewMode
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI, XRangeROI
@@ -37,11 +38,58 @@ def test_plugin(specviz_helper, spectrum1d):
     po.line_color = 'green'
 
 
+def test_recenter_dataset_excludes_catalogs(imviz_helper, image_2d_wcs):
+    """
+    Datasets loaded through the catalog loaders (Source/Spectral Lines/Generic
+    Catalog) are not images and should not appear as recentering targets.
+    """
+    data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
+    imviz_helper.load(data)
+
+    catalog = Table({'col1': ['A', 'B'], 'col2': [1, 2]})
+    imviz_helper.load(catalog, col_other=['col1', 'col2'], format='Generic Catalog')
+
+    plg = imviz_helper.plugins['Subset Tools']
+    assert 'Generic Catalog' not in plg.recenter_dataset.choices
+    assert 'Image[DATA]' in plg.recenter_dataset.choices
+
+
 def test_subset_definition_with_composite_subset(cubeviz_helper, spectrum1d_cube):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         cubeviz_helper.load_data(spectrum1d_cube)
     cubeviz_helper._app.get_tray_item_from_name('g-subset-tools')
+
+
+def test_subset_pixels_label_omitted_for_scatter(deconfigged_helper,
+                                                 sky_coord_only_source_catalog):
+    """
+    "(pixels)" should not be appended to ROI subset attribute names for subsets
+    applied in a Scatter viewer (e.g. on a catalog), since scatter axes are not
+    necessarily in pixel units.
+    """
+    deconfigged_helper.load(sky_coord_only_source_catalog,
+                            format='Source Catalog',
+                            data_label='my_catalog')
+
+    create_scatter_viewer = deconfigged_helper.new_viewers['Scatter']
+    create_scatter_viewer.dataset = 'my_catalog'
+    create_scatter_viewer()
+
+    plot_opts = deconfigged_helper.plugins['Plot Options']
+    plot_opts.viewer = 'Scatter'
+    plot_opts.xatt = 'ra'
+    plot_opts.yatt = 'dec'
+
+    viewer_scatter = deconfigged_helper.viewers['Scatter']
+    viewer_scatter._obj.glue_viewer.apply_roi(
+        RectangularROI(xmin=330, xmax=340, ymin=-25, ymax=-15))
+
+    plg = deconfigged_helper.plugins['Subset Tools']
+    plg.subset = 'Subset 1'
+    names = [d['name'] for d in plg._obj.subset_definitions[0]]
+    assert 'Xmin' in names
+    assert 'Xmin (pixels)' not in names
 
 
 circle_subset_info = {'xc': {'pixel_name': 'X Center (pixels)', 'wcs_name':

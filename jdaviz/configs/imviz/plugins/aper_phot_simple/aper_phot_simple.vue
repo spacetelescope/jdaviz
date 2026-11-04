@@ -102,6 +102,7 @@
           <v-switch
             v-model="pixel_area_multi_auto"
             label="Auto pixel area"
+            color="primary"
             :hint="pixel_area_multi_auto ? 'Pixel area will be automatically computed for each selected data entry separately and exposed in the output table.' : 'Pixel area will be held fixed at the value below for each iteration.'"
             persistent-hint
           />
@@ -138,6 +139,7 @@
           <v-switch
             v-model="flux_scaling_multi_auto"
             label="Auto flux scaling"
+            color="primary"
             :hint="flux_scaling_multi_auto ? 'Flux scaling will be automatically computed for each selected data entry separately and exposed in the output table.' : 'Flux scaling will be held fixed at the value below for each iteration.'"
             persistent-hint
           />
@@ -182,6 +184,7 @@
           <v-switch
             hint="Fit Gaussian1D to radial profile"
             v-model="fit_radial_profile"
+            color="primary"
             persistent-hint
             :label="api_hints_enabled ? 'plg.fit_radial_profile =' : 'Fit Gaussian'"
             :class="api_hints_enabled ? 'api-hint' : null">

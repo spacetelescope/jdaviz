@@ -29,6 +29,100 @@ IS_BETWEEN_REGIONS_0_11_0_12 = Version('0.11') < _reg_ver <= Version('0.12')
 IS_REGIONS_NEWER_THAN_0_12 = Version('0.12') < _reg_ver
 
 
+@pytest.mark.parametrize('align_by', ['Pixels', 'WCS'])
+def test_image_subset_with_cube(deconfigged_helper,
+                                spectrum1d_cube_fluxunit_jy_per_steradian, align_by):
+    helper = deconfigged_helper
+    cube = spectrum1d_cube_fluxunit_jy_per_steradian
+    helper.load(cube, data_label='cube')
+    image = NDData(np.ones((10, 10)), wcs=cube.wcs.celestial, unit=u.Jy / u.sr)
+    helper.load(image, data_label='image', format='Image')
+    helper.plugins['Orientation'].align_by = align_by
+
+    image_viewer = helper.viewers['Image']._obj.glue_viewer
+    cube_viewer = helper.viewers['3D Spectrum']._obj.glue_viewer
+    image_viewer.apply_roi(CircularROI(xc=4, yc=4, radius=2))
+
+    subsets = helper._app.data_collection.subset_groups
+    assert len(subsets) == 1
+    assert subsets[0].subset_state.xatt.parent is image_viewer.state.reference_data
+    region = helper.plugins['Subset Tools'].get_regions()['Subset 1']
+    assert isinstance(region, CircleSkyRegion if align_by == 'WCS' else CirclePixelRegion)
+
+    assert any(layer.layer.label == 'Subset 1' for layer in image_viewer.layers)
+    assert all(layer.layer.label != 'Subset 1' for layer in cube_viewer.layers)
+    assert 'Subset 1' not in cube_viewer.data_menu.layer.choices
+
+    aperture = helper.plugins['Aperture Photometry']._obj.aperture
+    aperture.selected = 'Subset 1'
+    x, y, validity = aperture._get_mark_coords_and_validate(image_viewer)
+    assert validity['is_aperture']
+    assert len(x) == len(y) > 1
+    assert np.any(np.isfinite(x) & np.isfinite(y))
+    x, y, validity = aperture._get_mark_coords_and_validate(cube_viewer)
+    assert not validity['is_aperture']
+    assert len(x) == len(y) == 0
+
+    extraction = helper.plugins['3D Spectral Extraction']
+    assert 'Subset 1' not in extraction.aperture.choices
+    assert 'Subset 1' not in extraction.background.choices
+
+    # Composite subsets must remain excluded, including when cube data is re-added.
+    state = subsets[0].subset_state
+    subsets[0].subset_state = state | state.copy()
+    helper._app.remove_data_from_viewer(cube_viewer.reference, 'cube')
+    helper._app.add_data_to_viewer(cube_viewer.reference, 'cube')
+    assert any(layer.layer.label == 'Subset 1' for layer in image_viewer.layers)
+    assert all(layer.layer.label != 'Subset 1' for layer in cube_viewer.layers)
+    assert 'Subset 1' not in cube_viewer.data_menu.layer.choices
+    assert 'Subset 1' not in extraction.aperture.choices
+    assert 'Subset 1' not in extraction.background.choices
+
+
+@pytest.mark.parametrize('align_by', ['Pixels', 'WCS'])
+@pytest.mark.parametrize('draw_in', ['3D Spectrum', '3D Spectrum (1)'])
+def test_cube_subset_with_image_extraction(deconfigged_helper,
+                                           spectrum1d_cube_fluxunit_jy_per_steradian,
+                                           align_by, draw_in):
+    # Subsets drawn on either the flux or uncertainty cube viewer must remain
+    # usable for spectral extraction when an image is also loaded, including
+    # when aligned by WCS (relinking must not disconnect the cubes).
+    helper = deconfigged_helper
+    cube = spectrum1d_cube_fluxunit_jy_per_steradian
+    helper.load(cube, data_label='cube')
+    image = NDData(np.ones((10, 10)), wcs=cube.wcs.celestial, unit=u.Jy / u.sr)
+    helper.load(image, data_label='image', format='Image')
+    helper.plugins['Orientation'].align_by = align_by
+
+    viewer = helper.viewers[draw_in]._obj.glue_viewer
+    viewer.apply_roi(CircularROI(xc=1.5, yc=2, radius=1.5))
+
+    # the subset mask must be computable on both the flux and uncertainty
+    # cubes, so that the subset is drawable in both cube viewers and
+    # extraction can propagate uncertainties
+    dc = helper._app.data_collection
+    subset_state = dc.subset_groups[0].subset_state
+    for label in ('cube', 'cube [UNC]'):
+        assert dc[label].get_mask(subset_state=subset_state).sum() > 0
+
+    for name in ('3D Spectrum', '3D Spectrum (1)'):
+        cube_viewer = helper.viewers[name]._obj.glue_viewer
+        assert any(layer.layer.label == 'Subset 1' for layer in cube_viewer.layers)
+        assert 'Subset 1' in cube_viewer.data_menu.layer.choices
+
+    extraction = helper.plugins['3D Spectral Extraction']
+    assert 'Subset 1' in extraction.aperture.choices
+    # the subset creation triggered a successful automatic extraction
+    assert any('Subset 1, sum' in d.label for d in dc)
+
+    extraction.aperture = 'Subset 1'
+    assert extraction._obj.aperture_selected_validity['is_aperture']
+    spectrum = extraction.extract()
+    assert spectrum.flux.ndim == 1
+    assert np.any(np.isfinite(spectrum.flux))
+    assert spectrum.uncertainty is not None
+
+
 def test_region_from_subset_2d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 1)), data_label='Test 2D Flux')
 
@@ -55,13 +149,13 @@ def test_region_from_subset_2d(cubeviz_helper):
     assert subset_plugin._obj.is_centerable
     for key in ("orig", "value"):
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "X Center (pixels)", key) == 1
+            0, "X Center", key) == 1
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "Y Center (pixels)", key) == 3.5
+            0, "Y Center", key) == 3.5
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "X Radius (pixels)", key) == 1.2
+            0, "X Radius", key) == 1.2
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "Y Radius (pixels)", key) == 3.3
+            0, "Y Radius", key) == 3.3
         assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", key) == 0
 
     # Recenter GUI should not be exposed, but API call would raise exception.
@@ -95,26 +189,26 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert subset_plugin._obj.is_centerable
     assert subset_plugin.get_center() == (2.25, 1.55)
     for key in ("orig", "value"):
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin (pixels)", key) == 1
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmax (pixels)", key) == 3.5
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin (pixels)", key) == -0.2
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymax (pixels)", key) == 3.3
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin", key) == 1
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmax", key) == 3.5
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin", key) == -0.2
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymax", key) == 3.3
         assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", key) == 0
 
     # Mimic user changing something in Subset GUI.
-    subset_plugin._obj._set_value_in_subset_definition(0, "Xmin (pixels)", "value", 2)
-    subset_plugin._obj._set_value_in_subset_definition(0, "Ymin (pixels)", "value", 0)
+    subset_plugin._obj._set_value_in_subset_definition(0, "Xmin", "value", 2)
+    subset_plugin._obj._set_value_in_subset_definition(0, "Ymin", "value", 0)
     subset_plugin._obj._set_value_in_subset_definition(0, "Angle", "value", 45)  # ccw deg
     # "orig" is unchanged until user clicks Update button.
-    assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin (pixels)", "orig") == 1
-    assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin (pixels)", "orig") == -0.2
+    assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin", "orig") == 1
+    assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin", "orig") == -0.2
     assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", "orig") == 0
     subset_plugin._obj.vue_update_subset()
     for key in ("orig", "value"):
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin (pixels)", key) == 2
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmax (pixels)", key) == 3.5
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin (pixels)", key) == 0
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymax (pixels)", key) == 3.3
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin", key) == 2
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmax", key) == 3.5
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin", key) == 0
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymax", key) == 3.3
         assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", key) == 45
 
     subsets = cubeviz_helper._app.get_subsets()
@@ -145,11 +239,11 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert subset_plugin._obj.is_centerable
     for key in ("orig", "value"):
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "X Center (pixels)", key) == 3
+            0, "X Center", key) == 3
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "Y Center (pixels)", key) == 4
+            0, "Y Center", key) == 4
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "Radius (pixels)", key) == 2.4
+            0, "Radius", key) == 2.4
 
     # Circular Annulus Subset
     subset_plugin.import_region(CircularAnnulusROI(xc=5, yc=6, inner_radius=2, outer_radius=4))
@@ -159,13 +253,13 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert subset_plugin._obj.subset_types == ["CircularAnnulusROI"]
     for key in ("orig", "value"):
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "X Center (pixels)", key) == 5
+            0, "X Center", key) == 5
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "Y Center (pixels)", key) == 6
+            0, "Y Center", key) == 6
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "Inner Radius (pixels)", key) == 2
+            0, "Inner Radius", key) == 2
         assert subset_plugin._obj._get_value_from_subset_definition(
-            0, "Outer Radius (pixels)", key) == 4
+            0, "Outer Radius", key) == 4
 
 
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):

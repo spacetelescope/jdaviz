@@ -262,7 +262,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         dq_layers = [
             layer for viewer in viewers
-            for layer in viewer.layers if
+            for layer in getattr(viewer, 'layers', []) if
             layer.layer.label == self.dq_layer_selected
         ]
         return dq_layers
@@ -277,7 +277,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         science_layers = [
             layer for viewer in viewers
-            for layer in viewer.layers if
+            for layer in getattr(viewer, 'layers', []) if
             layer.layer.label == self.science_layer_selected
         ]
         return science_layers

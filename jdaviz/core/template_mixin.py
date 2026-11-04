@@ -74,7 +74,8 @@ from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
     _wcs_only_label, layer_is_not_dq as utils_layer_is_not_dq,
-    wildcard_match, layer_is_dq as utils_layer_is_dq
+    wildcard_match, layer_is_dq as utils_layer_is_dq, _is_image_spatial_subset,
+    _get_celestial_wcs
 )
 
 
@@ -632,33 +633,88 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
     """
     loader_message_items = List([]).tag(sync=True)
 
-    def _clear_loader_messages(self):
+    def _clear_loader_messages(self, return_messages=False):
         self.loader_message_items = []
 
-    def _loader_message(self, text, color='error', popup=False, traceback=None, raise_msg=False):
+    def _prepare_message(self, text, color='error', traceback=None, timeout=5000):
+
+        traceback_str = None
+        text_w_traceback = text
+        if traceback is not None:
+            traceback_str = f"{type(traceback).__name__}: {traceback}"
+            # add message to logger with/without broadcasting
+            text_w_traceback += f'; Traceback: {traceback_str}'
+
+        snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
+                                                   color=color, sender=self,
+                                                   traceback=traceback, timeout=timeout)
+
+        return traceback_str, snackbar_msg_w_traceback
+
+    def _loader_message(self, text, color='error',
+                        history=False, popup=False, timestamp=None,
+                        traceback=None, raise_msg=False, timeout=5000):
         """
         Report ``text`` to the user through a persistent banner in the loader UI and
         added to the logger without necessarily raising a snackbar.
         """
-        self.loader_message_items = (self.loader_message_items +
-                                     [{'text': text, 'color': color,
-                                       'traceback': f"{type(traceback).__name__}: {traceback}"}])
 
-        # add message to logger with/without broadcasting
-        text_w_traceback = text + (f'; Traceback: {traceback}' if traceback is not None else '')
-        snackbar_msg_w_traceback = SnackbarMessage(text_w_traceback,
-                                                   color=color, sender=self, traceback=traceback)
+        traceback_str, snackbar_msg_w_traceback = self._prepare_message(text, color,
+                                                                        traceback, timeout)
+
+        self.loader_message_items = (self.loader_message_items +
+                                     [{'text': text, 'color': color, 'timestamp': timestamp,
+                                       'traceback': traceback_str}])
+
         self._app.state.snackbar_queue.put(self._app.state,
                                            self._app._jdaviz_helper.plugins['Logger'],
                                            snackbar_msg_w_traceback,
-                                           history=True,
-                                           popup=popup)
+                                           history=history,
+                                           popup=popup,
+                                           timestamp=timestamp)
 
         if raise_msg and color == 'warning':
             warnings.warn(text)
 
         elif raise_msg and color == 'error' and traceback is not None:
             raise traceback
+
+    def _flush_loader_messages(self, popup=False, clear=True):
+        """
+        Flush all loader messages to the logger, (optionally) clear the loader message list, and
+        sort the logger history by timestamp to ensure chronological order.
+
+        Parameters
+        ----------
+        popup : bool, optional
+            Whether replayed messages should be displayed as snackbar popups.
+        clear : bool, optional
+            Whether to clear ``loader_message_items`` after replaying the messages.
+        """
+        logger = self._app._jdaviz_helper.plugins['Logger']
+        for msg in self.loader_message_items:
+            text = msg.get('text', '')
+            color = msg.get('color', 'error')
+            traceback = msg.get('traceback', None)
+            timestamp = msg.get('timestamp', None)
+
+            # Note: we do *not* explicitly protect against duplication because _loader_messages
+            # that have already been added to history are tied to failing states. This may change
+            # in the future.
+            _, snackbar_msg_w_traceback = self._prepare_message(text, color, traceback)
+            self._app.state.snackbar_queue.put(self._app.state,
+                                               logger,
+                                               snackbar_msg_w_traceback,
+                                               history=True,
+                                               popup=popup,
+                                               timestamp=timestamp)
+
+        if clear:
+            self._clear_loader_messages()
+
+        # Sort the logger history by timestamp to ensure chronological order
+        logger.history = sorted(logger.history,
+                                key=lambda entry: entry.get('timestamp', 0))
 
 
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
@@ -699,8 +755,9 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
             window_features='popup,width=400,height=600'
         )
         self._viewer_callbacks = {}
+        # see _on_viewer_removed for more info on ViewerRemovedMessage usage in subclasses
         self.hub.subscribe(self, ViewerRemovedMessage,
-                           handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
+                           handler=self._on_viewer_removed)
 
         self._app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
         self._update_api_hints_enabled()
@@ -776,6 +833,18 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
         # assumed destroyed, so we do not need to remove the event callback itself from the viewer)
         self._viewer_callbacks = {k: v for k, v in self._viewer_callbacks.items()
                                   if k.split(':')[0] != viewer_id}
+
+    def _on_viewer_removed(self, msg):
+        """
+        Handler for `~jdaviz.core.events.ViewerRemovedMessage`.
+
+        Subclasses that need to respond to a viewer being removed should override this method
+        and call ``super()._on_viewer_removed(msg)`` rather than subscribing to the message
+        directly. This is because the glue Hub stores a single handler per
+        (subscriber, message class), so any later ``hub.subscribe(self, ViewerRemovedMessage, ...)``
+        call (e.g., in a subclass) would silently replace this subscription (and vice versa).
+        """
+        self._remove_viewer_callbacks(msg.viewer_id)
 
     def _update_api_hints_enabled(self, *args):
         self.api_hints_enabled = self._app.state.show_api_hints
@@ -3670,6 +3739,14 @@ class ApertureSubsetSelect(SubsetSelect):
                         'aperture_message': 'no subset selected'}
             return [], [], validity
 
+        if (viewer is not None
+                and getattr(viewer.state.reference_data, 'ndim', None) == 3
+                and any(_is_image_spatial_subset(self._get_subset_state(subset))
+                        for subset in (selected if isinstance(selected, list) else [selected]))):
+            validity = {'is_aperture': False,
+                        'aperture_message': 'image subsets cannot be applied to cubes'}
+            return [], [], validity
+
         # if any of the selected entries are composite, then _get_spatial_region
         # (or selected_spatial_region) will fail.
         if np.any([len(obj) > 1 for obj in objs]):
@@ -3704,6 +3781,9 @@ class ApertureSubsetSelect(SubsetSelect):
                                     'aperture_message': 'no viewer available'}
                         return [], [], validity
                 wcs = getattr(viewer.state.reference_data, 'coords', None)
+                if getattr(wcs, 'world_n_dim', None) == 3:
+                    # sky region to_pixel requires only the celestial axes of a cube WCS
+                    wcs = _get_celestial_wcs(wcs)
                 if wcs is None:
                     validity = {'is_aperture': False,
                                 'aperture_message': 'invalid wcs'}
@@ -3774,9 +3854,16 @@ class ApertureSubsetSelect(SubsetSelect):
             return mask_weights
 
         # Center is reverse coordinates if spectral axis is last
-        center = (self.selected_spatial_region.center.y,
-                  self.selected_spatial_region.center.x)
-        aperture = regions2aperture(self.selected_spatial_region)
+        spatial_region = self.selected_spatial_region
+        if not isinstance(spatial_region, PixelRegion):
+            # when aligned by WCS, selected_spatial_region is a SkyRegion;
+            # retrieve the equivalent pixel region in the frame of the
+            # subset's parent data (the cube) instead
+            spatial_region = self._app.get_subsets(subset_name=self.selected,
+                                                   spatial_only=True)[0]['region']
+        center = (spatial_region.center.y,
+                  spatial_region.center.x)
+        aperture = regions2aperture(spatial_region)
         if slice_axis == 2:
             aperture.positions = center
 
@@ -4997,6 +5084,9 @@ class DatasetSelect(SelectPluginComponent):
 
         def is_catalog(data):
             return is_source_catalog_table(data) or is_spectral_lines_list_table(data) or is_generic_table(data)  # noqa
+
+        def not_catalog(data):
+            return not is_catalog(data)
 
         def is_catalog_or_image_not_spectrum(data):
             return is_catalog(data) or is_image_not_spectrum(data)

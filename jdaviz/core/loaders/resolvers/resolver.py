@@ -22,7 +22,6 @@ from jdaviz.core.events import (AddDataMessage,
                                 FootprintOverlayClickMessage,
                                 LinkUpdatedMessage,
                                 ViewerAddedMessage,
-                                ViewerRemovedMessage,
                                 SubsetRenameMessage)
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
@@ -124,7 +123,6 @@ class FormatSelect(SelectPluginComponent):
                         continue
                 else:
                     self._invalid_importers[parser_name] = this_parser.is_valid.message
-                    self._invalid_importers.setdefault(parser_name, this_parser.is_valid.message)
                     this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
@@ -186,7 +184,6 @@ class FormatSelect(SelectPluginComponent):
                                     # this previous parser has preference over this one
                                     self._invalid_importers[label] = f'Parser {prev_parser} has preference over {parser_name}'  # noqa
                                     continue
-
                         else:
                             # we'll store the importer even if it isn't valid according to the
                             # filters so that they can be used when compiling the list of
@@ -1181,7 +1178,10 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
                 for d in self._app.data_collection
             )
         )
-        for message in (ViewerAddedMessage, ViewerRemovedMessage,
+        # NOTE: ViewerRemovedMessage is handled by _on_viewer_removed
+        # TODO: Investigate these other messages to see if they should be approached
+        #  similarly
+        for message in (ViewerAddedMessage,
                         DataCollectionAddMessage, DataCollectionDeleteMessage):
             self.hub.subscribe(self, message,
                                handler=lambda lambda_msg=None: self.search_input._update_items())  # noqa
@@ -1321,6 +1321,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             if not self.returned_no_results:
                 self._loader_message(f"{n_results} results found.", color='success')
 
+        self._flush_loader_messages(clear=False)
         self._resolver_input_updated()
 
     @with_spinner(spinner_traitlet="results_loading")
@@ -1353,6 +1354,11 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
 
     def parse_input(self):
         return self._output
+
+    def _on_viewer_removed(self, msg):
+        # subscription to ViewerRemovedMessage inherited from TemplateMixin
+        super()._on_viewer_removed(msg)
+        self.search_input._update_items()
 
     @observe('catalog_selected')
     def _on_catalog_selected(self, msg=None):
@@ -1801,7 +1807,6 @@ def find_matching_resolver(app,
 
         if not this_resolver.is_valid:
             invalid_resolvers[resolver_name] = this_resolver.is_valid.message
-            invalid_resolvers.setdefault(resolver_name, this_resolver.is_valid.message)
             continue
 
         if target is not None:

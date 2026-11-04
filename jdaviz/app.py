@@ -43,9 +43,8 @@ from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.custom_regions import RangeRegion
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 DataRenamedMessage, SnackbarMessage, RemoveDataMessage,
-                                SubsetRenameMessage, AddDataToViewerMessage,
-                                RemoveDataFromViewerMessage, ViewerAddedMessage,
-                                ViewerRemovedMessage, ViewerRenamedMessage, ChangeRefDataMessage,
+                                SubsetRenameMessage, ViewerAddedMessage, ViewerRemovedMessage,
+                                ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage, LayersFinalizedMessage)
 from jdaviz.core.loaders.resolvers.file.file import PresetFileResolver
 from jdaviz.core.loaders.resolvers.object.object import PresetObjectResolver
@@ -513,14 +512,6 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         #  application-level data collection object
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=self._on_data_deleted)
-
-        self.hub.subscribe(self, AddDataToViewerMessage,
-                           handler=lambda msg: self.add_data_to_viewer(
-                               msg.viewer_reference, msg.data_label))
-
-        self.hub.subscribe(self, RemoveDataFromViewerMessage,
-                           handler=lambda msg: self.remove_data_from_viewer(
-                               msg.viewer_reference, msg.data_label))
 
         # Subscribe to snackbar messages and tie them to the display of the
         #  message box
@@ -1403,9 +1394,12 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         # but want to do so without raising an error (since many subsets could be requested)
         roi_as_sky_region = None
         if wcs is not None:
-            if self.config == 'cubeviz':
-                # the value for wcs returned above will be in 2D dimensions, which is needed
-                # for this translation to work
+            parent_coords = subset_state.attributes[0].parent.coords
+            if (self.config == 'cubeviz'
+                    or getattr(parent_coords, 'world_n_dim', None) == 3):
+                # for subsets defined on a cube, the parent's full WCS cannot be
+                # used for the sky translation, but the value for wcs returned
+                # above is the (2D) celestial WCS, which is what is needed here
                 roi_as_sky_region = roi_subset_state_to_region(subset_state).to_sky(wcs)
             else:
                 roi_as_sky_region = roi_subset_state_to_region(subset_state, to_sky=True)
@@ -2450,6 +2444,11 @@ class PrivateApplication(VuetifyTemplate, HubListener):
             self._viewer_store[new_reference]._reference_id = new_reference
             self.state.viewer_icons[new_reference] = self.state.viewer_icons.pop(old_id)
 
+        viewer_window = self._viewer_store[viewer_item['id']]._viewer_window
+        viewer_window.id = viewer_item['id']
+        viewer_window.reference = viewer_item['reference']
+        viewer_window.name = viewer_item['name']
+
         # update the viewer name attributes on the helper:
         old_viewer_ref_attrs = [
             attr for attr in dir(self._jdaviz_helper)
@@ -3398,6 +3397,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
         viewer_container = JdavizViewerWindow(viewer, app=self, reference=reference, name=name)
+        viewer._viewer_window = viewer_container
 
         return {
             'id': vid,

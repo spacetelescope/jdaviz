@@ -20,6 +20,7 @@
   </span>
   <v-switch
     v-else
+    color="primary"
     :label="api_hints_enabled && api_hint ? api_hint+' '+boolToString(value) : label"
     :class="api_hints_enabled && api_hint ? 'api-hint' : null"
     :hint="hint"

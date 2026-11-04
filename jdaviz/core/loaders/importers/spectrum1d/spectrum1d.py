@@ -1,5 +1,3 @@
-import warnings
-
 from astropy.io.fits import HDUList
 from astropy.nddata import StdDevUncertainty
 import astropy.units as u
@@ -7,7 +5,6 @@ import numpy as np
 from specutils import Spectrum
 from traitlets import Bool, List, observe
 
-from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
                                            SpectrumInputExtensionsMixin,
@@ -103,9 +100,8 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
             msg_str = (f"The default extension selection ({self.extension.selected}) will be used.\n"  # noqa
                        f"To load additional sources, please specify them via dropdown or "
                        f"as follows:\n'{self.config}.load(filename, extension=[...]).")
-            msg = SnackbarMessage(msg_str, color='warning', sender=self, timeout=10000)
-            self._app.hub.broadcast(msg)
-            warnings.warn(msg_str)
+            # raise_msg here will raise a warnings.warn warning since the color is 'warning'
+            self._loader_message(msg_str, color='warning', timeout=10000, raise_msg=True)
         return applied_kwargs
 
     @property
@@ -172,10 +168,10 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
                     data.uncertainty = None
 
                     # alert user that we have changed their all-nan uncertainty array to None
-                    msg = 'All uncertainties are nonfinite, replacing with uncertainty=None.'
-                    self._app.hub.broadcast(SnackbarMessage(msg,
-                                                            color="warning",
-                                                            sender=self.app))
+                    self._loader_message(
+                        'All uncertainties are nonfinite, replacing with uncertainty=None.',
+                        color="warning"
+                    )
             output.append(data)
 
         if self.concatenate and len(output) > 1:

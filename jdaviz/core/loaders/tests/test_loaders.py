@@ -345,6 +345,9 @@ def test_hst_product_identification_and_load(deconfigged_helper, hst_product_hdu
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
+@pytest.mark.filterwarnings(
+    r"ignore:background window extends beyond image boundaries:UserWarning"
+)
 def test_fits_spectrum2d(deconfigged_helper):
     uri = cached_uri('mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits')
     if 'mast' in uri:

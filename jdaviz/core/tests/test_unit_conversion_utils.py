@@ -1,3 +1,5 @@
+import re
+
 import astropy.units as u
 from itertools import combinations
 from numpy.testing import assert_allclose
@@ -66,11 +68,18 @@ def test_general_flux_conversion():
             [1, 2, 3], original_unit, target_unit, equivalencies)
         assert len(converted) == 3
 
+    # Jy / pix2 to Jy / sr conversion without equivalencies convert the numerator
+    # only and avoid requiring equivalencies for the angle conversion
+    converted = flux_unit_conversion([1, 2, 3], u.Jy / PIX2, u.MJy / u.sr)
+    assert len(converted) == 3
+    assert converted.unit == u.MJy / PIX2
+    assert_allclose(converted.value, [1e-6, 2e-6, 3e-6])
+
     # test that a unit combination passed in without the correct equivalency
     # raises the correct error
-    msg = 'Could not convert Jy / pix2 to Jy / sr with provided equivalencies.'
-    with pytest.raises(u.UnitConversionError, match=msg):
-        converted = flux_unit_conversion([1, 2, 3], u.Jy / PIX2, u.Jy / u.sr)
+    msg = 'Could not convert erg / (Angstrom s cm2) to Jy with provided equivalencies.'
+    with pytest.raises(u.UnitConversionError, match=re.escape(msg)):
+        converted = flux_unit_conversion(1, u.erg / (u.s * u.cm**2 * u.AA), u.Jy)
 
     # and finally, numerically verify a subset of possible unit conversion combos
     # a case of each 'type' of conversion is covered here
