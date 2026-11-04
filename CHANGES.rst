@@ -132,6 +132,8 @@ New Features
 
 - Allow loading all tabular data types from FITS table extensions. [#4443]
 
+- Improved behavior for creating/editing subsets in table viewers. [#4488]
+
 Mosviz
 ^^^^^^
 
