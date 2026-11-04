@@ -1,4 +1,6 @@
 import os
+import requests
+
 import asdf
 import numpy as np
 import pytest

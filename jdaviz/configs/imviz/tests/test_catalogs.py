@@ -21,6 +21,8 @@ is correct and the removal of the points outside the zoom limits is correctly do
 This may need to instead be tested for in the future.
 '''
 
+import requests
+
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest
