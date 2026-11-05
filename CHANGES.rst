@@ -223,6 +223,9 @@ Bug Fixes
 
 - Skip marker layers when resetting Unit Conversion units. [#4501]
 
+- Fixed invisible WCS-only orientation layer becoming visible in subsets when a new
+  image viewer is created. [#4511]
+
 Mosviz
 ^^^^^^
 
