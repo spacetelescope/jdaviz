@@ -353,6 +353,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 ss = subsets[subset_label]
                 if isinstance(ss, SpectralRegion):
                     regions[subset_label] = ss
+                elif ss is None:
+                    failed_regs.add(subset_label)
+                    continue
                 else:
                     # TODO: Consider making this more specific or a case in the next level up
                     if (region_type is None or 'other' in region_type) and ss[0][reg_type] is None:
