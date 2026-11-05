@@ -1245,9 +1245,12 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                                                      wrt_data=wrt_data)
 
             elif isinstance(subset.subset_state, RoiSubsetState):
-                subset_region = self._get_roi_subset_definition(subset.subset_state,
-                                                                to_sky=include_sky_region,
-                                                                wrt_data=wrt_data)
+                if subset.subset_state.roi.width() <= 0 or subset.subset_state.roi.height() <= 0:
+                    subset_region = None
+                else:
+                    subset_region = self._get_roi_subset_definition(subset.subset_state,
+                                                                    to_sky=include_sky_region,
+                                                                    wrt_data=wrt_data)
 
             elif isinstance(subset.subset_state, RangeSubsetState):
                 # 2D regions represented as SpectralRegion objects
