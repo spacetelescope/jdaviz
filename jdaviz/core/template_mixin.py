@@ -2536,10 +2536,8 @@ class LayerSelect(SelectPluginComponent):
 
         def subset_applies_to_data_in_image_viewer(lyr):
             """
-            Guards against a glue-related bug where subsets are added to image viewers,
-            even if they don't apply, e.g. a subset drawn on an 2D spectrum with pixel axes
-            is not applicable to an image viewer (and vice versa) since the pixels represent
-            different physical quantities.
+            Guards against a bug where subsets drawn on other viewers with pixel axes
+            (e.g. 2D spectrum viewer) are added to image viewers and vice versa.
             """
             if not hasattr(lyr, 'subset_state'):
                 return True
