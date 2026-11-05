@@ -223,6 +223,9 @@ Bug Fixes
 
 - Skip marker layers when resetting Unit Conversion units. [#4501]
 
+- Fix using a 3D spectrum viewer as the coordinate source for astoquery search
+  target in the astroquery loader. [#4512]
+
 Mosviz
 ^^^^^^
 
