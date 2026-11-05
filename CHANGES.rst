@@ -223,6 +223,9 @@ Bug Fixes
 
 - Skip marker layers when resetting Unit Conversion units. [#4501]
 
+- Fix bug where spectral subsets would appear in image viewers when the 2d spectrum viewer
+  has units of pixels. [#]
+
 Mosviz
 ^^^^^^
 
