@@ -232,6 +232,9 @@ Bug Fixes
 - Prevent cube and 2D-spectrum viewers from inheriting WCS linking intended for
   image viewers. [#4497]
 
+- Fixed invisible WCS-only orientation layer becoming visible in subsets when a new
+  image viewer is created. [#4511]
+
 - Fix using a 3D spectrum viewer as the coordinate source for astoquery search
   target in the astroquery loader. [#4512]
 
