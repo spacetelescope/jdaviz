@@ -68,7 +68,7 @@ def test_hlsp_goods_s2d(specviz2d_helper):
     assert len(specviz2d_helper._app.data_collection.external_links) == 2
 
     dc_0 = specviz2d_helper._app.data_collection[0]
-    assert dc_0.get_component('flux').shape == (27, 674)
+    assert dc_0.get_component('flux').shape == (27, 706)
 
 
 @pytest.mark.remote_data
@@ -82,7 +82,7 @@ def test_hlsp_goods_s2d_deconfigged(deconfigged_helper):
     assert len(deconfigged_helper._app.data_collection) == 2
 
     dc_0 = deconfigged_helper._app.data_collection[0]
-    assert dc_0.get_component('flux').shape == (27, 674)
+    assert dc_0.get_component('flux').shape == (27, 706)
     assert isinstance(deconfigged_helper.plugins['2D Spectral Extraction'].trace_dataset.selected_obj, Spectrum)  # noqa
     assert isinstance(deconfigged_helper.datasets['2D Spectrum'].get_data(), Spectrum)
 

@@ -1,4 +1,5 @@
 import os
+import requests
 
 import asdf
 import numpy as np
@@ -367,4 +368,10 @@ def test_markers_gwcs_lonlat(imviz_helper):
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
     catalogs_plugin.catalog.selected = 'Gaia'
     catalogs_plugin.max_sources = 10
-    catalogs_plugin.search(error_on_fail=True)
+    try:
+        catalogs_plugin.search(error_on_fail=True)
+    except requests.exceptions.HTTPError as exc:
+        msg = str(exc)
+        if '503' in msg:
+            pytest.skip(f"Archive server unavailable: {exc}")
+        raise

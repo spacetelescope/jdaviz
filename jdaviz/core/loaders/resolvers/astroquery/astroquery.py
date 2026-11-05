@@ -128,7 +128,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
             # finds all the sources in that region
             try:
                 output = SDSS.query_region(skycoord_center, radius=radius,
-                                           data_release=17)
+                                           data_release=20)
             except Exception as e:  # nosec
                 errmsg = (f"Failed to query {self.telescope.selected} with c={skycoord_center} and "
                           f"r={radius}: {repr(e)}")
