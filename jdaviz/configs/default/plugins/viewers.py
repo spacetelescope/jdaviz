@@ -1785,7 +1785,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         if mode is not ReplaceMode:
             self.hub.broadcast(SnackbarMessage(
                 f'Combination modes do not apply to table subsets. "{target.label}" '
-                f'was {verb} to match the checked rows.', color='info', sender=self))
+                f'was {verb} to match the checked rows.', color='warning', sender=self))
 
     def _on_restore_toolbar(self, msg={}):
         """Hook for subclasses to clean up viewer-specific UI state (e.g.
