@@ -521,7 +521,7 @@
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_size_mode_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_mode')">
           <glue-state-select
             :items="marker_size_mode_sync.choices"
-            :selected.syn="marker_size_mode_value"
+            v-model:selected="marker_size_mode_value"
             label="Size Mode"
             api_hint="plg.marker_size_mode = "
             :api_hints_enabled="api_hints_enabled"
