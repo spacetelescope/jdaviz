@@ -165,6 +165,9 @@ Bug Fixes
 
 - Fix error when typing while renaming data or subset. [#4359]
 
+- Fix bug which prevented the user from setting the scatter plot marker size mode 
+  in the UI. [#4504]
+
 Mosviz
 ^^^^^^
 
@@ -217,9 +220,6 @@ Bug Fixes
   after relinking. [#4490]
 
 - Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
-
-- Fix bug which prevented the user from setting the scatter plot marker size mode 
-  in the UI. [#4504]
 
 Mosviz
 ^^^^^^
