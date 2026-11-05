@@ -1274,15 +1274,24 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         source cannot be resolved, e.g. because the name is unknown or because
         the Sesame name resolution service is unreachable.
         """
+        from astropy.coordinates.name_resolve import sesame_url
+        from astropy.utils.data import conf
+
+        # Add backup url for name resolution services
+        sesame_url.set(sesame_url.get() + ['https://vizier.idia.ac.za/viz-bin/nph-sesame/',
+                                           'http://vizier.nao.ac.jp/viz-bin/nph-sesame/'])
+
         # Strip parentheses from source if present
         stripped_source = self.source.strip('()')
         try:
-            return SkyCoord(stripped_source, unit=u.deg, frame=self.coordframe_selected)
+            with conf.set_temp('remote_timeout', 30):
+                return SkyCoord(stripped_source, unit=u.deg, frame=self.coordframe_selected)
         except Exception:  # nosec
             pass
 
         try:
-            return SkyCoord.from_name(stripped_source, frame=self.coordframe_selected)
+            with conf.set_temp('remote_timeout', 30):
+                return SkyCoord.from_name(stripped_source, frame=self.coordframe_selected)
         except Exception as e:  # nosec
             if add_loader_message:
                 self._loader_message(f"Unable to resolve source name: {self.source}",
