@@ -470,7 +470,6 @@ class SourceCatalogImporter(BaseCatalogImporter):
                 try:
                     x_col = [float(x) for x in table[self.col_x_selected]]
                     output_table[self.col_x_selected] = x_col
-                    output_table[self.col_x_selected] = table[self.col_x_selected]
                 except ValueError:
                     raise ValueError("Could not parse X column as numeric values.")
             # if input is a PixCoord instance, isolate x
@@ -478,7 +477,6 @@ class SourceCatalogImporter(BaseCatalogImporter):
                 try:
                     x_col = [float(x.x) for x in table[self.col_x_selected]]
                     output_table['X'] = x_col
-                    output_table['X'] = table[self.col_x_selected]
                 except ValueError:
                     raise ValueError("Could not parse X column as PixCoord values.")
             else:
@@ -488,14 +486,12 @@ class SourceCatalogImporter(BaseCatalogImporter):
                 try:
                     y_col = [float(y) for y in table[self.col_y_selected]]
                     output_table[self.col_y_selected] = y_col
-                    output_table[self.col_y_selected] = table[self.col_y_selected]
                 except ValueError:
                     raise ValueError("Could not parse Y column as numeric values.")
             elif isinstance(input[self.col_y_selected][0], PixCoord):
                 try:
                     y_col = [float(y.y) for y in table[self.col_y_selected]]
                     output_table['Y'] = y_col
-                    output_table['Y'] = table[self.col_y_selected]
                 except ValueError:
                     raise ValueError("Could not parse Y column as PixCoord values.")
             else:
