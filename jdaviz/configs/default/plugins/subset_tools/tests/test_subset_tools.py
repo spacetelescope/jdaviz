@@ -743,3 +743,22 @@ def test_data_menu_subset_delete(cubeviz_helper, spectrum1d_cube):
     assert (len(cubeviz_helper.viewers['spectrum-viewer'].data_menu.layer.choices) ==
             expected_dm_layer_len)
     assert dm.layer not in cubeviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_loaded
+
+
+def test_import_spatial_region_with_table_viewer_first(deconfigged_helper, spectrum1d_cube):
+    """The default viewer for ``import_region`` must be one that can take an ROI, even
+    when a table viewer (which cannot) was created first."""
+    helper = deconfigged_helper
+    ldr = helper.loaders['object']
+    ldr.object = Table({'col1': ['A', 'B'], 'col2': [1, 2]})
+    ldr.format = 'Generic Catalog'
+    ldr.importer.viewer.create_new = 'Table'
+    ldr.importer.col_other = ['col1', 'col2']
+    ldr.load()
+    helper.load(spectrum1d_cube, format='3D Spectrum')
+    assert list(helper.viewers)[0].startswith('Table')
+
+    helper.plugins['Subset Tools'].import_region(
+        CirclePixelRegion(PixCoord(1, 1), radius=1))
+
+    assert len(helper._app.data_collection.subset_groups) == 1

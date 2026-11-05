@@ -1336,7 +1336,15 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         msg_count = _next_subset_num(msg_prefix, self._app.data_collection.subset_groups)
 
         viewer_parameter = kwargs.pop('viewer', None)
-        viewer_name = viewer_parameter or list(self._app._jdaviz_helper.viewers.keys())[0]
+        viewer_name = viewer_parameter
+        if viewer_name is None:
+            viewer_names = list(self._app._jdaviz_helper.viewers.keys())
+            # default to the first viewer with reference data (image and profile
+            # viewers), since table, scatter, and histogram viewers cannot
+            # take an ROI defined in reference data coordinates
+            viewer_name = next((name for name in viewer_names
+                                if hasattr(self._app.get_viewer(name).state, 'reference_data')),
+                               viewer_names[0])
         viewer = self._app.get_viewer(viewer_name)
         # Subset is global but reference data is viewer-dependent.
         if refdata_label is None and hasattr(viewer.state, 'reference_data'):
