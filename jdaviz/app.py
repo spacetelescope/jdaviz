@@ -1245,7 +1245,9 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                                                      wrt_data=wrt_data)
 
             elif isinstance(subset.subset_state, RoiSubsetState):
-                if subset.subset_state.roi.width() <= 0 or subset.subset_state.roi.height() <= 0:
+                if (hasattr(subset.subset_state.roi, 'width')
+                        and (subset.subset_state.roi.width() <= 0
+                             or subset.subset_state.roi.height() <= 0)):
                     subset_region = None
                 else:
                     subset_region = self._get_roi_subset_definition(subset.subset_state,
