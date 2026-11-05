@@ -1,8 +1,10 @@
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from astropy.nddata import InverseVariance
 from astropy.nddata import NDData
+from astropy.table import Table
 from astropy.wcs import WCS
 from specutils import Spectrum
 
@@ -904,3 +906,23 @@ def test_solid_angle_unit_reset(deconfigged_helper, image_2d_wcs):
     deconfigged_helper._app.data_collection.remove(app.data_collection['img_ct[DATA]'])
 
     assert plg.angle_unit_selected == 'sr'
+
+
+def test_removing_sky_markers_does_not_break_unit_conversion(deconfigged_helper,
+                                                             image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, data_label='image', format='Image')
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+    viewer = deconfigged_helper._app.get_viewer('Image')
+
+    marker_table = Table({
+        'coord': [SkyCoord(337.5202808, -20.83333306, unit='deg')]
+    })
+    viewer.add_markers(marker_table, use_skycoord=True, marker_name='my_sky')
+
+    unit_conversion = deconfigged_helper.plugins['Unit Conversion']._obj
+    assert 'my_sky' not in [label for label, _ in
+                            unit_conversion._relevant_data_for_unit_conversion()]
+
+    viewer.remove_markers(marker_name='my_sky')
+
+    assert 'my_sky' not in deconfigged_helper._app.data_collection.labels

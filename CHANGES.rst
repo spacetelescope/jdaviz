@@ -221,6 +221,8 @@ Bug Fixes
 
 - Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
 
+- Skip marker layers when resetting Unit Conversion units. [#4501]
+
 Mosviz
 ^^^^^^
 
