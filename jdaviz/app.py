@@ -54,7 +54,7 @@ from jdaviz.core.registries import (tool_registry, tray_registry,
                                     data_parser_registry, loader_resolver_registry)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, alpha_index_to_int, data_has_valid_wcs,
-                          layer_is_table_data, MultiMaskSubsetState,
+                          layer_is_table_data, layer_is_2d_spectrum, MultiMaskSubsetState,
                           _wcs_only_label, _get_celestial_wcs)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
 from jdaviz.core.unit_conversion_utils import (is_unit_per_solid_angle,
@@ -890,6 +890,14 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                     if comp_type == 'angle' or (comp_type and ':angle' in comp_type):
                         continue
 
+                # The pixel axes of a 2D spectrum aren't spatially related to the pixel axes
+                # of non-spectral data (e.g. images)
+                restrict_pixel_links = (layer_is_2d_spectrum(new_data)
+                                        != layer_is_2d_spectrum(existing_data))
+                if (restrict_pixel_links and is_pixel_comp
+                        and not (comp_type or '').startswith('spectral_axis')):
+                    continue
+
                 for existing_comp in existing_data.components:
                     existing_comp_type = getattr(existing_comp, '_component_type', None)
                     existing_is_pixel = self._is_pixel_component(existing_comp)
@@ -904,8 +912,12 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                     if comp_type is not None and comp_type == existing_comp_type:
                         components_match = True
                     elif (is_pixel_comp and existing_is_pixel and
-                          new_comp.label == existing_comp.label):
-                        # Link pixel components by label for 2D spectra
+                          new_comp.label == existing_comp.label and
+                          'pixel' in (comp_type, existing_comp_type)):
+                        # Link pixel components by label for 2D spectra, but only when
+                        # at least one side has a generic (non axis-specific) pixel type.
+                        # Otherwise, something like 'spectral_axis:pixel' could be linked to an
+                        # image via 'x:pixel' just because both are labeled 'Pixel Axis 1 [x]'.
                         components_match = True
 
                     if components_match:
