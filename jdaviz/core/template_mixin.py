@@ -2456,7 +2456,7 @@ class LayerSelect(SelectPluginComponent):
         # to the init and defined in _is_valid_item()
         self.add_filter('not_spatial_subset_in_profile_viewer')
         self.add_filter('not_spectral_subset_in_image_viewer')
-        self.add_filter('subset_applies_to_data_in_image_viewer')
+        self.add_filter('not_subset_with_missing_attributes_in_image_viewer')
 
         self.filter_is_root = is_root
         self.has_children = has_children
@@ -2534,21 +2534,31 @@ class LayerSelect(SelectPluginComponent):
 
             return True
 
-        def subset_applies_to_data_in_image_viewer(lyr):
+        def not_subset_with_missing_attributes_in_image_viewer(lyr):
             """
             Guards against a bug where subsets drawn on other viewers with pixel axes
             (e.g. 2D spectrum viewer) are added to image viewers and vice versa.
+
+            Returns True to keep the layer and False to exclude it. If this filter
+            doesn't apply, the layer is kept (return True). The only exclusion comes
+            from the final line, which checks that every attribute the subset was
+            defined on exists in the layer's data.
             """
+            # not a subset, so this filter doesn't apply
             if not hasattr(lyr, 'subset_state'):
                 return True
 
+            # this filter only applies when every selected viewer is an image viewer
             if not np.all([isinstance(viewer, BqplotImageView) for viewer in self.viewer_objs]):
                 return True
 
+            # the subset state has no attributes to check against the data
             attributes = getattr(lyr.subset_state, 'attributes', None)
             if attributes is None:
                 return True
 
+            # keep the subset only if every attribute it was defined on exists
+            # in the layer's data
             return all(lyr.data.find_component_id(att) is not None for att in attributes)
 
         def is_trace(lyr):
