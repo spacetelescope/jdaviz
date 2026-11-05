@@ -1496,17 +1496,18 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
 
         # Obtain center point of the current image and convert into sky coordinates
         helper = self._app._jdaviz_helper
-        if 'Orientation' in helper.plugins and helper.plugins["Orientation"].align_by == "WCS":
+
+        if viewer.state.reference_data.ndim == 3:
+            coords = _get_celestial_wcs(viewer.state.reference_data.coords)
+            skycoord_center = coords.pixel_to_world(
+                viewer.state.zoom_center_x, viewer.state.zoom_center_y
+            )
+        elif 'Orientation' in helper.plugins and helper.plugins["Orientation"].align_by == "WCS":
             skycoord_center = SkyCoord(
                 viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
             )
         else:
-            if viewer.state.reference_data.ndim == 3:
-                coords = _get_celestial_wcs(viewer.state.reference_data.coords)
-            else:
-                coords = viewer.state.reference_data.coords
-
-            skycoord_center = coords.pixel_to_world(
+            skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
                 viewer.state.zoom_center_x, viewer.state.zoom_center_y
             )
 
