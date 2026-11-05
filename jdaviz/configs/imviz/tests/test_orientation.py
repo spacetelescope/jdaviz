@@ -167,8 +167,15 @@ def test_load_cube_when_aligned_by_wcs(deconfigged_helper,
     helper.load(image, data_label='image', format='Image')
     helper.plugins['Orientation'].align_by = 'WCS'
 
-    # previously raised while resetting the limits of the new cube viewer
-    helper.load(cube, data_label='cube')
+    # # previously raised while resetting the limits of the new cube viewer
+    # helper.load(cube, data_label='cube')
+
+    # load cube and make sure correct format was determined automatically
+    ldr = helper.loaders['object']
+    ldr.object = cube
+    ldr.importer.data_label = 'cube'
+    assert ldr.format == '3D Spectrum'
+    ldr.load()
 
     image_viewer = helper.viewers['Image']._obj.glue_viewer
     assert image_viewer.state.linked_by_wcs is True
