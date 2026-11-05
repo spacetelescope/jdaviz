@@ -42,7 +42,7 @@ from jdaviz.core.registries import (loader_resolver_registry,
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
-                          find_polygon_mark_with_skewer,
+                          find_polygon_mark_with_skewer, _get_celestial_wcs,
                           layer_is_image_data)
 from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMessage,
                                SubsetCreateMessage, SubsetDeleteMessage)
@@ -1495,7 +1495,14 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             return
 
         # Obtain center point of the current image and convert into sky coordinates
-        if self._app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
+        helper = self._app._jdaviz_helper
+
+        if viewer.state.reference_data.ndim == 3:
+            coords = _get_celestial_wcs(viewer.state.reference_data.coords)
+            skycoord_center = coords.pixel_to_world(
+                viewer.state.zoom_center_x, viewer.state.zoom_center_y
+            )
+        elif 'Orientation' in helper.plugins and helper.plugins["Orientation"].align_by == "WCS":
             skycoord_center = SkyCoord(
                 viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
             )
