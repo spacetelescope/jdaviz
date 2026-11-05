@@ -319,9 +319,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.delete_subsets()
 
         if self.pending_align_by:
-                    align_by = self.pending_align_by
-                    self.pending_align_by = ''
-                    self.align_by_selected = align_by
+            align_by = self.pending_align_by
+            self.pending_align_by = ''
+            self.align_by_selected = align_by
 
     def vue_reset_astrowidget_markers(self, *args):
         for viewer in self._app._viewer_store.values():
