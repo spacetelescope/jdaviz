@@ -1154,7 +1154,7 @@ def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):
     ('align_by', ), (('WCS', ), ('Pixels', ))
 )
 def test_align_by_and_astroquery_loader(deconfigged_helper, image_nddata_wcs,
-                                                            image_cube_hdu_obj, align_by):
+                                        image_cube_hdu_obj, align_by):
 
     ldr = deconfigged_helper.loaders['object']
     ldr.object = image_nddata_wcs
