@@ -68,36 +68,36 @@ The bottom of the plugin shows a table of past results, along with the subset
 and data used to compute them.  These results can be exported as an `~astropy.table.QTable` 
 as in :ref:`plugin_table_toplevelapi`.
 
-The output table contains the results you see in the plugin and then some.
-The columns are as follow:
+The output table contains the results you see in the plugin as well as other information.
+The columns are as follows:
 
 * :attr:`~photutils.aperture.ApertureStats.id`: ID number assigned to the row,
   starting from 1.
-* ``xcenter``, ``ycenter``: Center of the aperture (0-indexed).
+* ``xcenter``, ``ycenter``: Central pixels of the aperture (0-indexed).
 * ``sky_center``: `~astropy.coordinates.SkyCoord` associated with the center.
   If WCS is not available, this field is `None`.
 * ``background``: The value from :guilabel:`Background value`, with unit attached.
 * :attr:`~photutils.aperture.ApertureStats.sum`: Sum of flux in the aperture.
-  If per steradian is in input data unit, total pixel area covered in steradian
+  If "per steradian" is in the input data unit, the total pixel area covered in steradian
   is already multiplied here, if applicable, so there will be no per steradian
   in its unit. Otherwise, it has the same unit as input data. For more details
   on how the photometry is done, see :ref:`photutils:photutils-aperture`.
 * :attr:`~photutils.aperture.ApertureStats.sum_aper_area`: The pixel area
   covered by the region. Partial coverage is reported as fraction.
-* ``pixarea_tot``: If per steradian is in input data unit and pixel area is
+* ``pixarea_tot``: If "per steradian" is in the input data unit and pixel area is
   provided, this contains the conversion factor for the *sum* to take out
   the steradian unit. Otherwise, it is `None`.
-* ``aperture_sum_counts``: This is the aperture sum converted to counts,
+* ``aperture_sum_counts``: The aperture sum converted to counts,
   if :guilabel:`Counts conversion factor` was set. Otherwise, it is `None`.
   This calculation is done without taking account of ``pixarea_tot``, even
   when it is available.
-* ``aperture_sum_counts_err``: This is the Poisson uncertainty (square root)
+* ``aperture_sum_counts_err``: The Poisson uncertainty (square root of `N`)
   for ``aperture_sum_counts``. Other uncertainty factors like readnoise are
-  not included. In the plugin, it is displayed within parenthesis next to
+  not included. In the plugin, it is displayed within parentheses next to
   the value for ``aperture_sum_counts``, if applicable.
 * ``counts_fac``: The value from :guilabel:`Counts conversion factor`, with
   unit attached, if applicable. Otherwise, it is `None`.
-* ``aperture_sum_mag``: This is the aperture sum converted to magnitude, if
+* ``aperture_sum_mag``: The aperture sum converted to magnitude, if
   :guilabel:`Flux scaling` was set. Otherwise, it is `None`. This calculation
   is done without taking account of ``pixarea_tot``, even when it is available.
 * ``flux_scaling``: The value from :guilabel:`Flux scaling`, with unit attached,
@@ -114,8 +114,8 @@ The columns are as follow:
   :attr:`~photutils.aperture.ApertureStats.biweight_midvariance`: Basic statistics
   from the aperture.
 * :attr:`~photutils.aperture.ApertureStats.fwhm`,
-  ``semimajor_axis`` (or ``semimajor_sigma`` for Photutils <3),
-  ``semiminor_axis`` (or ``semiminor_sigma`` for Photutils <3),
+  ``semimajor_axis`` (or ``semimajor_sigma`` for Photutils v<3),
+  ``semiminor_axis`` (or ``semiminor_sigma`` for Photutils v<3),
   :attr:`~photutils.aperture.ApertureStats.orientation`,
   :attr:`~photutils.aperture.ApertureStats.eccentricity`: Properties of a 2D
   Gaussian function that has the same second-order central moments as the source.

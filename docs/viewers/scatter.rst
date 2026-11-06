@@ -72,9 +72,8 @@ specific analysis functions in the plugin toolbar.
 Users can create regions either in Jdaviz or the Jupyter notebook.
 
 Regions can be created by first clicking the |icon-region-spec| icon
-then clicking and dragging (using the mouse) until the
-desired region, after which you release the mouse button. 
-The selected region will display in color, and coded to subset number and listed under the subsets dropdown.
+then clicking and dragging to the desired region size. 
+The selected region will display as a new color, with the name ``Subset X`` (where ``X`` is the next number available), and listed under the subsets dropdown.
 
 Right click will open a dropdown with access to different types of subset create: 
 select points based on the y-range and rectangular subsets.

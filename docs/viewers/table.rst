@@ -5,15 +5,15 @@
 Source Catalog and Generic Tables
 *********************************
 
-Most of the functionality between Source Catalogs and Generic Catalogs viewers 
-are identical. The difference between the two are related to how the data is stored in the tables.
- 
+Most of the functionality between Source Catalogs and Generic Catalogs viewers is identical. 
+The main difference is related to how the data is stored in the tables.
+
 .. _viewers-table-sourcecatalog:
 
 Source Catalog Table
 ====================
 Source Catalog Table viewers show data loaded with ``format = Source Catalog``. 
-In this table, the ``ID``, ``RA``/``X``, ``Dec``/``Y``` columns are the index columns, and the values are not changeable.  
+In this table, the ``ID``, ``RA``/``X``, ``Dec``/``Y`` columns are the index columns, and the values are not changeable.  
 
 .. _viewers-table-generic:
 
@@ -32,8 +32,8 @@ Table viewer features
 Clicking on a cell shows the cell value in the top gray bar below the toolbar.  
 On the far left, the column name and column number will show in the white box.  On the right, the cell value will be shown in the gray box.
 For non-index cells, to the right of the gray box, a green check and a red x will be shown, indicating the cell
-value can be changed.  Click in the gray box, update the value, and select the green check to apply the value, or
-the red x to disregard the change.  The value in the cell of the table will then be updated. 
+value can be changed.  To update the value, click in the gray box and update the value, then select the green check to apply the value or the red x 
+to disregard the change.  The value in the cell of the table will then be updated. 
 
 - Edit column name: 
 
@@ -102,15 +102,15 @@ Press the ``X`` next to ``ADD COLUMN`` to exit.
 Visible Columns
 ---------------
 Clicking on the visible columns |icon-column-visible| icon opens up the toolbar.  Once open, you can 
-select from the dropdown in the toolbar which columns to show in the table viewer.  Selecting/unselecting
-the column names.  As you select/deselect columns, the table will automatically update. 
+select from the dropdown in the toolbar which columns to show in the table viewer. 
+As you select/deselect columns, the table will automatically update. 
 These columns are not deleted from jdaviz, they are just hidden from view in the viewer.   
 Press the ``X`` next to ``VISIBLE COLUMNS`` to exit.  
 
 Focus mode 
 ----------
 Clicking on the |icon-focus| focus mode button expands the viewer to fill the application.  
-The right hand plugin feature is not accessible in the UI. Hovering over a pixel show the cursor information. 
+The right hand plugin feature is not accessible in the UI. Hovering over a pixel shows the cursor information. 
 Click on the |icon-focus-exit| focus mode exit button to exit. 
 
 Clone Viewer

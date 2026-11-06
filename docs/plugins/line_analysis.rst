@@ -28,7 +28,7 @@ returned. For more information on the algorithms used, refer to the `specutils d
 <https://specutils.readthedocs.io/en/stable/analysis.html>`_.
 
 The Gaussian used to fit the line, alone with a horizontal line for the FWHM, and a vertical line 
-for the Gaussian mean are shown on the spectral line while the viewer is open.  
+for the Gaussian mean are shown on the spectral line while the plugin is open.  
 
 The line flux results are automatically converted to Watts/meter2,
 when appropriate.

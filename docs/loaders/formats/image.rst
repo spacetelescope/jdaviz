@@ -91,6 +91,6 @@ See Also
 ========
 
 - :ref:`viewers-image` - For information on displaying images
-- :ref:`plugins-aperture_photometry` - For photometric aperture photometry
+- :ref:`plugins-aperture_photometry` - For imaging aperture photometry
 - :ref:`plugins-compass` - For displaying compass
 - :ref:`plugins-orientation` - For changing orientation

@@ -20,7 +20,8 @@ overlaid on images, added as a Table, and used for analysis.
 
 There are two types of catalogs that can be loaded:
 
-    - **Source Catalog** (formally Catalog) - catalog where each row likely represents an object on the sky.  Must contain object coordinates. 
+    - **Source Catalog** (formerly Catalog) - catalog where each row likely represents an object on the sky.  
+    Must contain object coordinates (pixels, sky coordinates, or SkyCoord objects). 
     - **Generic Catalog** - catalog with any type of data
 
 Usage
@@ -45,8 +46,8 @@ The **Source Catalog** or **Generic Catalog** format imports any :class:`astropy
 
 **Source Catalog** requires the following columns:
 
-- Right Ascention (RA) and/or X pixel
-- Declination (Dec) and/or Y pixel
+- A pair of sky coordinates (RA and Dec)
+- A pair of pixel coordinates (X and Y)
 
 
 Supported File Formats
@@ -62,12 +63,12 @@ The catalog should be in:
 Catalog Parsing
 ===============
 
-If loaded through the UI, if RA and Dec, or X and Y columns are parsable in the catalog, 
+When loading via the UI, if a pair of RA/Dec or X/Y columns are parsable in the catalog, 
 the format will default to **Source Catalog**. Otherwise, it will default to **Generic Catalog**.
 
 .. note::
     Sometimes multi-object spectral or image files can be auto-parsed as a catalog. 
-    Either change format if the correct format is detected, or use the API to load the data in using the correct format. 
+    Either change format if the incorrect format is detected, or use the API to load the data in using the correct format. 
 
 Once the catalog is parsed, the ``Viewer`` must be selected.  The ``Viewer`` will default to load as a **Source Catalog Table** or **Generic Table**,
 but it can be loaded as a **Scatter** ``Viewer`` or **Histogram** ``Viewer``.  If it is a **Source Catalog**, 

@@ -81,9 +81,9 @@ Importing data
 ==============
 
 By default, the Jdaviz importer will attempt to parse and find the Flux, Uncertainty, and 
-Data Quality (DQ) cubes within the loaded file. When loading a file in via the UI, these will populate in
-the Importer section when you load data. Here, you have the option to change the data labels, viewer names, and 
-extension location of each data cube.  
+Data Quality (DQ) cubes within the loaded file. These will populate in
+the Importer section when you load data via the UI. Here, you have the option to change the data labels, viewer names, and 
+extension location of each data cube.
 
 In the API, these can be changed when loading a file using the loaders plugins:
 
