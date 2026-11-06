@@ -223,6 +223,9 @@ Bug Fixes
 
 - Skip marker layers when resetting Unit Conversion units. [#4501]
 
+- Prevent cube and 2D-spectrum viewers from inheriting WCS linking intended for
+  image viewers. [#4497]
+
 Mosviz
 ^^^^^^
 
