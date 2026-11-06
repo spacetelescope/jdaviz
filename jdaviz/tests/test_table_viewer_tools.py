@@ -247,6 +247,37 @@ class TestTableViewerTools:
 
         toolbar.restore_tools()
 
+    @pytest.mark.parametrize('accept', [False, True])
+    @pytest.mark.parametrize('editing', [False, True])
+    def test_table_subset_close_hides_checkboxes(self, accept, editing):
+        from glue.core.subset import ElementSubsetState
+
+        table = self.table_viewer
+        dc = table.session.data_collection
+        target = None
+        if editing:
+            target = dc.new_subset_group(subset_state=ElementSubsetState(
+                indices=[0, 1], data=table.widget_table.data))
+            table.session.edit_subset_mode.edit_subset = [target]
+        else:
+            table.session.edit_subset_mode.edit_subset = []
+        count = len(dc.subset_groups)
+        table.toolbar.tools['jdaviz:table_subset'].activate()
+        table.widget_table.checked = [2]
+        assert table.widget_table.selection_enabled
+
+        if accept:
+            table.toolbar.tools['jdaviz:table_apply_subset'].activate()
+        else:
+            table.toolbar.vue_restore_tools()
+
+        assert not table.widget_table.selection_enabled
+        assert table.toolbar.tool_override_mode == ''
+        assert table._table_subset_draft is None
+        assert len(dc.subset_groups) == count + int(accept and not editing)
+        if editing:
+            assert list(target.subset_state.indices) == ([2] if accept else [0, 1])
+
     def test_table_subset_creates_subset(self):
         """Test that applying subset creates a subset in the data collection."""
         toolbar = self.table_viewer.toolbar
