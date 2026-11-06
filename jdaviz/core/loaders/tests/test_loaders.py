@@ -128,6 +128,9 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
                           ' used to avoid an error when handling 3D WCS with 2D data.'
                           'The temporary fix will be removed once an upstream solution'
                           'is implemented.')
+@pytest.mark.filterwarnings(
+    r"ignore:background window extends beyond image boundaries:UserWarning"
+)
 def test_fits_spectrum2d(deconfigged_helper):
     uri = cached_uri('mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits')
     if 'mast' in uri:
