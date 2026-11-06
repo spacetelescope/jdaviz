@@ -5,7 +5,7 @@
 Display Units
 *************
 
-This plugin gives access to changing global spectral axis and flux units. Changing the units in the plugin
+This plugin allows you to change global spectral axis and flux units. Changing the units in the plugin
 will change them across all viewers and all layers where applicable.  
 
 .. note::
@@ -57,7 +57,7 @@ Flux Unit
 ---------
 
 Change the global display unit for flux axes. This changes the flux unit for *all* viewers.  
- For example, if you have a 1D spectrum viewer and an Image viewer, the flux unit will change for both viewers.
+ For example, if you have a 1D Spectrum viewer and an Image viewer, the flux unit will change for both viewers.
 
 +-----------------------+-------------------------------+
 | Jdaviz Name           | Full Name/meaning             | 

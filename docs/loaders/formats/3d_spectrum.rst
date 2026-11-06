@@ -111,9 +111,9 @@ In the API, these can be changed when loading a file using the loaders plugins:
     ldr.importer.dq_data_label = '3D cube dq'
     ldr.importer.dq_add_to_flux_viewer = True
 
-Additionally, Jdaviz can auto extract a 1D spectrum from the entire cube. 
-Toggle the ``Extract 1D Spectrum`` toggle under the ``Extracted Spectrum`` section of the loader to turn on/off this feature.
-In the API, it can be called:
+Additionally, Jdaviz can automatically extract a 1D spectrum from the entire cube. 
+Toggle the ``Extract 1D Spectrum`` toggle under the ``Extracted Spectrum`` section of the loader to turn this feature on or off.
+In the API, it can be called as follows:
 
 .. code-block:: python
     

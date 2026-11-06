@@ -40,10 +40,10 @@ Usage
 Data Requirements
 =================
 
-The **Source Catalog** or **Generic Catalog** format imports any :class:`astropy.table.Table` or
-:class:`~astropy.table.QTable` as a data collection. 
+The Source Catalog or Generic Catalog format imports any :class:`astropy.table.Table` or
+:class:`~astropy.table.QTable` as a data collection entry. 
 
-**Source Catalog** requires the following columns:
+Source Catalog requires the following columns:
 
 - A pair of sky coordinates (RA and Dec)
 - A pair of pixel coordinates (X and Y)
@@ -63,15 +63,15 @@ Catalog Parsing
 ===============
 
 When loading via the UI, if a pair of RA/Dec or X/Y columns are parsable in the catalog, 
-the format will default to **Source Catalog**. Otherwise, it will default to **Generic Catalog**.
+the format will default to Source Catalog. Otherwise, it will default to Generic Catalog.
 
 .. note::
     Sometimes multi-object spectral or image files can be auto-parsed as a catalog. 
-    Either change format if the incorrect format is detected, or use the API to load the data in using the correct format. 
+    You can either change the format in the loader UI if the incorrect format is detected, or use the API to load the data using the correct format. 
 
-Once the catalog is parsed, the ``Viewer`` must be selected.  The ``Viewer`` will default to load as a **Source Catalog Table** or **Generic Table**,
-but it can be loaded as a **Scatter** ``Viewer`` or **Histogram** ``Viewer``.  If it is a **Source Catalog**, 
-the catalog can be loaded onto an **Image** ``Viewer`` as markers (if a prior image has been loaded). 
+Once the catalog is parsed, the ``Viewer`` must be selected.  The ``Viewer`` will default to load as a Source Catalog Table or Generic Table,
+but it can be loaded as a Scatter ``Viewer`` or Histogram ``Viewer``.  If it is a Source Catalog, 
+the catalog can be loaded onto an Image ``Viewer`` as markers (if a prior image has been loaded). 
 
 UI Access
 =========

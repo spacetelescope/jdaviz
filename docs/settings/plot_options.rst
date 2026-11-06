@@ -74,7 +74,7 @@ The selected dataset is shown with a blue line above the icon in the UI.  All ch
 be applied to that dataset.  However, it might *not* be the top layer shown on the viewer. The data that is the top layer
 in the viewer is indicated by an orange outline. 
 
-If you select an dataset which is not the top layer, a blue banner appears in the plotting features indicating that the 
+If you select a dataset which is not the top layer, a blue banner appears in the plotting features indicating that the 
 changes made to the layer maybe not be visible as it is not the top layer in the viewer.  Selecting ``MOVE [Image] to TOP`` will move the layer 
 to the top.  *You do not have to do this if you do not want to change the layer order.*
 
@@ -94,7 +94,7 @@ Toggle switch to indicate if the axes are visible.
 Color mode
 ----------
 
-This option allows you to choose whether to use a colormap or or a single color to visualize the image.
+This option allows you to choose whether to use a colormap or a single color to visualize the image.
 The colormap can be selected from a dropdown under the "Image" section. 
 
 In "Color" mode, the color can be chosen from a color picker under "Image Color"
