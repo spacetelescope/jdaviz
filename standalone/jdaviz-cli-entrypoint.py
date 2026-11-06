@@ -42,17 +42,26 @@ def _show_early_splash():
     font = message.font()
     font.setPointSize(20)
     message.setFont(font)
+    message.setStyleSheet("color: black;")
     message.setAlignment(QtCore.Qt.AlignCenter)
 
-    message2 = QLabel("(JAY-dee-a-viz)")
+    message2 = QLabel("(JAY-dee-A-viz)")
     font = message2.font()
     font.setPointSize(14)
+    message2.setStyleSheet("color: black;")
     message2.setFont(font)
     message2.setAlignment(QtCore.Qt.AlignCenter)
 
     layout.addWidget(message)
     layout.addWidget(message2)
     layout.addWidget(logo)
+    _STARTUP_SPLASH.adjustSize()
+    screen = _STARTUP_APP.primaryScreen()
+    if screen is not None:
+        splash_geometry = _STARTUP_SPLASH.frameGeometry()
+        splash_geometry.moveCenter(screen.availableGeometry().center())
+        _STARTUP_SPLASH.move(splash_geometry.topLeft())
+
     _STARTUP_SPLASH.show()
     _STARTUP_APP.processEvents()
 

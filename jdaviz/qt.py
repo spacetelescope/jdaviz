@@ -402,7 +402,22 @@ def run_qt(url, app_name="Jdaviz"):
     layout.addWidget(menu_bar)
     layout.addWidget(web)
 
-    window_container.resize(1024, 1024)
+    # get screen size and scale app to 70% of the window size
+    screen = QApplication.primaryScreen()
+    screen_geometry = screen.availableGeometry()
+    
+    screen_width = screen_geometry.width()
+    screen_height = screen_geometry.height()
+
+    target_width = int(screen_width * 0.7)
+    target_height = int(screen_height * 0.7)
+
+    window_container.resize(target_width, target_height)
+
+    # set window to be in the center of the screen
+    x = int((screen_width - target_width) / 2)
+    y = int((screen_height - target_height) / 2)
+    window_container.move(x, y)
     window_container.show()
 
     app.setApplicationDisplayName(app_name)
