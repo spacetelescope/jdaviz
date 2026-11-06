@@ -429,18 +429,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # 3D spectra should be strongly preferred when detected.
         # this ensures data with ndim==3 default to 3D Spectrum instead of
         # Source Catalog even when RA/Dec/X/Y pairs are present in bintable HDU extensions
-
-        # check against hdulist and spectrum objects
-        if isinstance(self.input, fits.HDUList):
-            if any(hdu.data is not None and hdu.data.ndim == 3
-                   for hdu in self.input):
-                return 2
-
-        flux = getattr(self.input, 'flux', None)
-        if flux is not None and flux.ndim == 3:
-            return 2
-
-        return 0
+        return 2
 
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'cubeviz'):
