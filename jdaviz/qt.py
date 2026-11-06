@@ -409,8 +409,8 @@ def run_qt(url, app_name="Jdaviz"):
     screen_width = screen_geometry.width()
     screen_height = screen_geometry.height()
 
-    target_width = int(screen_width * 0.7)
-    target_height = int(screen_height * 0.7)
+    target_width = int(screen_width * 0.9)
+    target_height = int(screen_height * 0.9)
 
     window_container.resize(target_width, target_height)
 

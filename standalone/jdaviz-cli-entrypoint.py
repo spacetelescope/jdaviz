@@ -62,6 +62,7 @@ def _show_early_splash():
         splash_geometry.moveCenter(screen.availableGeometry().center())
         _STARTUP_SPLASH.move(splash_geometry.topLeft())
 
+    _STARTUP_SPLASH.setFixedSize(400, 400)
     _STARTUP_SPLASH.show()
     _STARTUP_APP.processEvents()
 
