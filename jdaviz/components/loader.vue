@@ -142,17 +142,6 @@
           <!-- format (parser/importer) selection and UI -->
           <j-plugin-section-header>Importer</j-plugin-section-header>
 
-          <j-flex-row v-if="target_items.length>= 2" style="padding-right: 16px">
-            <plugin-select-filter
-              :items="target_items"
-              :selected="target_selected"
-              @update:selected="$emit('update:target_selected', $event)"
-              tooltip_suffix="compatible formats"
-              api_hint="ldr.target ="
-              :api_hints_enabled="api_hints_enabled"
-            />
-          </j-flex-row>
-
           <j-flex-row v-if="parsed_input_not_resolvable_message">
             <v-alert type="warning" style="margin-right: -12px; width: 100%">
                 Input cannot be resolved: {{ parsed_input_not_resolvable_message }}
