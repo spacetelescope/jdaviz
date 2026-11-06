@@ -8,7 +8,7 @@ from pathlib import Path
 import os
 
 from qtpy import QtCore
-from qtpy.QtGui import QPixmap
+from qtpy.QtGui import QPixmap, QFont
 from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 
@@ -38,17 +38,19 @@ def _show_early_splash():
     logo.setPixmap(pixmap.scaled(320, 320, QtCore.Qt.KeepAspectRatio,
                                  QtCore.Qt.SmoothTransformation))
     _STARTUP_SPLASH.setStyleSheet("background-color: white")
+
     message = QLabel("Initializing Jdaviz")
     font = message.font()
-    font.setPointSize(20)
+    font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 1.)
+    message.setStyleSheet("color: black; font-family: 'Roboto'; font-size: 20pt;font-weight:400;")
     message.setFont(font)
-    message.setStyleSheet("color: black;")
+    
     message.setAlignment(QtCore.Qt.AlignCenter)
 
     message2 = QLabel("(JAY-dee-A-viz)")
     font = message2.font()
-    font.setPointSize(14)
-    message2.setStyleSheet("color: black;")
+    font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, .9)
+    message2.setStyleSheet("color: black; font-family: 'Roboto'; font-size: 14pt;font-weight:500;")
     message2.setFont(font)
     message2.setAlignment(QtCore.Qt.AlignCenter)
 
