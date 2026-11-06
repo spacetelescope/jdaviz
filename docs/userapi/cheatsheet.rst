@@ -27,6 +27,14 @@ Creating and Displaying
 
     jd.show()
 
+**Create new app:**
+
+.. code-block:: python
+
+    import jdaviz as jd
+
+    jd2 = jd.new_app()
+
 **Customize display height:**
 
 .. code-block:: python
@@ -62,6 +70,13 @@ Loading Data
 
     jd.load('myimage.fits', format='Image')
 
+
+**Load from MAST URI:**
+
+.. code-block:: python
+
+    jd.load('mast:JWST/product/myfile_x1d.fits', format='1D Spectrum')
+
 **Load Python object:**
 
 .. code-block:: python
@@ -79,6 +94,31 @@ Loading Data
     ldr = jd.loaders['file']
     ldr.filename = 'mydata.fits'
     ldr.format = 'Image'
+    ldr.load()
+
+**Using loaders for astroquery with Gaia:**
+
+.. code-block:: python
+
+    ldr = jd.loaders['astroquery']
+    ldr.search_input = 'Source'
+    ldr.viewer = 'Image' 
+    ldr.source = '259, 43' # RA_degree, Dec_degree
+    ldr.telescope='Gaia'
+    ldr.max_results = 10
+    ldr.query_archive()
+
+    ldr.target='Source Catalog Table'
+    ldr.format='Source Catalog'
+
+    ldr.importer.col_ra = 'ra'
+    ldr.importer.col_dec = 'dec'
+    ldr.importer.coord_frame = 'icrs'
+    ldr.importer.col_other = ['source_id', 'parallax']
+    ldr.importer.col_id = 'Default (index)'
+    ldr.importer.data_label = 'Source Catalog'
+    ldr.importer.viewer.create_new = 'Source Catalog Table'
+    ldr.importer.viewer.new_label = 'Source Catalog Table'
     ldr.load()
 
 Working with Plugins
@@ -126,7 +166,10 @@ Working with Viewers
 
 .. code-block:: python
 
-    viewer = jd.new_viewers['Scatter']()
+    viewer = jd.new_viewers['Scatter']
+    viewer.dataset = 'dataset name'
+    viewer.viewer_label = 'my scatterplot'
+    viewer()
 
 Working with Subsets
 --------------------
@@ -140,6 +183,20 @@ Working with Subsets
     region = CirclePixelRegion(PixCoord(50, 50), 10)
     jd.load(region, format='Subset', data_label='My Region')
 
+**Import region:**
+
+.. code-block:: python
+
+    from astropy.coordinates import SkyCoord, Angle
+
+    c = SkyCoord('00h37m41.1171s -33d42m58.5745s')
+
+    my_aper_sky = SkyCircularAperture(c, 2 * u.arcsec)
+    my_reg_sky = CircleSkyRegion(c, Angle(4, u.arcsec))
+
+    my_regions = [my_aper_sky, my_reg_sky]
+    jd.plugins['Subset Tools'].import_region(my_regions, combination_mode='new')
+
 **Get all subsets:**
 
 .. code-block:: python
@@ -150,7 +207,13 @@ Working with Subsets
 Exporting Data
 --------------
 
-Coming soon
+.. code-block:: python
+
+    datasets = jd.datasets
+    # Returns: {'datasetname': <Data API for spectrum>}
+
+    data_api = jd.datasets['datasetname']
+    data = jd.datasets['datasetname'].get_data()
 
 API Hints
 ---------

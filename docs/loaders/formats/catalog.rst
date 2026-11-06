@@ -9,24 +9,69 @@ Catalog Format
 
 Load astronomical catalogs for overlay and analysis.
 
-.. note::
-    This feature is currently in development. Stay tuned for updates!
+.. .. note::
+..     This feature is currently in development. Stay tuned for updates!
 
 Overview
 ========
 
-The Catalog format will be used for loading astronomical source catalogs that can be
-overlaid on images and used for analysis.
+The Catalog format will be used for loading astronomical catalogs that can be
+overlaid on images, added as a Table, and used for analysis.
 
-Planned Features
-================
+There are two types of catalogs that can be loaded:
 
-Future support will include:
+    - **Source Catalog** (formerly Catalog) - catalog where each row likely represents an object on the sky. Must contain object coordinates (pixels, sky coordinates, or SkyCoord objects). 
+    - **Generic Catalog** - catalog with any type of data
+    
+Usage
+=====
 
-- Loading catalogs from files (FITS tables, ECSV, VOTable)
-- Overlaying catalog sources on images
-- Selecting sources for analysis
-- Cross-matching with loaded data
+.. code-block:: python
+
+    import jdaviz
+    jdaviz.show()
+
+    # Load a source catalog
+    jdaviz.load('source_catalog.ecsv', format='Source Catalog') 
+
+    # Load a generic catalog
+    jdaviz.load('catalog.ecsv', format='Generic Catalog') 
+
+Data Requirements
+=================
+
+The Source Catalog or Generic Catalog format imports any :class:`astropy.table.Table` or
+:class:`~astropy.table.QTable` as a data collection entry. 
+
+Source Catalog requires the following columns:
+
+- A pair of sky coordinates (RA and Dec)
+- A pair of pixel coordinates (X and Y)
+
+
+Supported File Formats
+======================
+
+The catalog should be in:
+
+- FITS table
+- ESCV 
+- VOTable 
+
+
+Catalog Parsing
+===============
+
+When loading via the UI, if a pair of RA/Dec or X/Y columns are parsable in the catalog, 
+the format will default to Source Catalog. Otherwise, it will default to Generic Catalog.
+
+.. note::
+    Sometimes multi-object spectral or image files can be auto-parsed as a catalog. 
+    You can either change the format in the loader UI if the incorrect format is detected, or use the API to load the data using the correct format. 
+
+Once the catalog is parsed, the ``Viewer`` must be selected.  The ``Viewer`` will default to load as a Source Catalog Table or Generic Table,
+but it can be loaded as a Scatter ``Viewer`` or Histogram ``Viewer``.  If it is a Source Catalog, 
+the catalog can be loaded onto an Image ``Viewer`` as markers (if a prior image has been loaded). 
 
 UI Access
 =========
@@ -36,7 +81,10 @@ UI Access
    :init-steps-json: [{"action":"disable-toolbar-except","value":"loaders"}]
    :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-dropdown", "value": "Format:Catalog", "delay": 1000, "caption": "Set format to Catalog"}, {"action": "highlight", "target": "#format-select", "delay": 1500}]
 
-See Also
-========
 
-- :doc:`../../imviz/plugins` - For the current catalog search functionality
+
+
+.. See Also
+.. ========
+
+.. - :doc:`../../imviz/plugins` - For the current catalog search functionality

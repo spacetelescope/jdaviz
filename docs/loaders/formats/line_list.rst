@@ -3,6 +3,8 @@
 
 :data-types: line-list
 
+.. _loaders-format-line-list-format:
+
 ****************
 Line List Format
 ****************
@@ -18,8 +20,8 @@ specify the rest wavelengths of emission or absorption features and their labels
 
 .. warning::
 
-   This imports lines into the :ref:`line-lists` plugin, which will soon be deprecated
-   in favor of using the :ref:`loaders-format-spectral-lines` format.
+   This imports lines into the :ref:`plugins-line_lists` plugin, which will soon be deprecated
+   in favor of using the :ref:`loaders-format-spectral-lines-format` format.
 
 Usage
 =====
@@ -42,7 +44,7 @@ Usage
 Data Requirements
 =================
 
-The data must be an ``astropy.table.QTable`` with the following structure:
+The data must be an `astropy.table.QTable` with the following structure:
 
 Required Columns
 ----------------
@@ -60,7 +62,7 @@ Supported File Formats
 ======================
 
 - ECSV files with the required columns
-- Python ``astropy.table.QTable`` objects created in memory
+- Python `astropy.table.QTable` objects created in memory
 
 When loading from a file, ensure the file can be read by ``astropy.table.QTable.read``
 and contains the required columns with proper units.
@@ -99,4 +101,4 @@ UI Access
 See Also
 ========
 
-- :ref:`line-lists` - Managing and using line lists in analysis
+- :ref:`plugins-line_lists` - Managing and using line lists in analysis

@@ -70,12 +70,12 @@ templates_path = ['_templates']
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
 rst_epilog += """
-.. |icon-white-to-black| image:: /img/icons/white_to_black.png
-  :scale: 80
+.. |icon-white-to-black| image:: /img/icons/contrast.svg
+  :height: 1em
   :alt: white to black icon
 
-.. |icon-blink| image:: /img/icons/blink.png
-  :scale: 80
+.. |icon-blink| image:: /img/icons/blink.svg
+  :height: 1em
   :alt: blink icon
 
 .. |icon-plus| image:: /img/icons/picture_with_plus.png
@@ -122,14 +122,6 @@ rst_epilog += """
   :scale: 40
   :alt: color square icon
 
-.. |icon-box-zoom| image:: /img/icons/box_zoom.png
-  :scale: 40
-  :alt: box zoom icon
-
-.. |icon-xrange-zoom| image:: /img/icons/xrange_zoom.png
-  :scale: 40
-  :alt: xrange zoom icon
-
 
 .. |icon-line-select| image:: /img/icons/line_select.png
   :scale: 40
@@ -139,6 +131,85 @@ rst_epilog += """
 .. |icon-viewer-data-select| image:: /img/icons/viewer_data_select.png
   :scale: 30
   :alt: data select icon
+
+.. |icon-cmap| image:: /img/icons/colormap.svg
+  :height: 1em
+  :alt: colormap icon
+
+.. |icon-stretch| image:: /img/icons/lin.svg
+  :height: 1em
+  :alt: stretch icon
+
+.. |icon-opacity| image:: /img/icons/opacity.svg
+  :height: 1em
+  :alt: opacity icon
+
+.. |icon-gear| image:: /img/icons/cog.svg
+  :height: 1em
+  :alt: gear icon
+
+.. |icon-box-zoom| image:: /img/icons/zoom_box.svg
+  :height: 1em
+  :alt: zoom box icon
+
+.. |icon-xrange-zoom| image:: /img/icons/zoom_xrange.svg
+  :height: 1em
+  :alt: zoom xrange icon
+
+.. |icon-yrange-zoom| image:: /img/icons/zoom_yrange.svg
+  :height: 1em
+  :alt: zoom yrange icon
+
+.. |icon-region-spec| image:: /img/icons/select_x.svg
+  :height: 1em
+  :alt: region spectrum icon
+
+.. |icon-region-img| image:: /img/icons/select_circle.svg
+  :height: 1em
+  :alt: region image icon
+
+.. |icon-detach| image:: /img/icons/popout.svg
+  :height: 1em
+  :alt: detach icon
+
+.. |icon-clone| image:: /img/icons/viewer_clone.svg
+  :height: 1em
+  :alt: clone icon
+
+.. |icon-focus| image:: /img/icons/fullscreen.svg
+  :height: 1em
+  :alt: clone icon
+
+.. |icon-focus-exit| image:: /img/icons/fullscreen-exit.svg
+  :height: 1em
+  :alt: clone icon
+
+.. |icon-spaxel| image:: /img/icons/pixelspectra.svg
+  :height: 1em
+  :alt: spaxel icon
+
+.. |icon-home| image:: /img/icons/home.svg
+  :height: 1em
+  :alt: spaxel home icon
+
+.. |icon-table-subset| image:: /img/icons/table_subset.svg
+  :height: 1em
+  :alt: table subset icon
+
+.. |icon-column-add| image:: /img/icons/table-column-plus-after.svg
+  :height: 1em
+  :alt: table add column icon
+
+.. |icon-column-visible| image:: /img/icons/table-columns-visible.svg
+  :height: 1em
+  :alt: table visible column icon
+
+.. |icon-table-zoom| image:: /img/icons/table_zoom_to_selected.svg
+  :height: 1em
+  :alt: table zoom icon
+
+
+
 """  # noqa: F405
 
 # -- Project information ------------------------------------------------------
@@ -357,6 +428,7 @@ intersphinx_mapping.update({  # noqa: F405
     'romancal': ('https://roman-pipeline.readthedocs.io/en/stable/', None),
     'fsspec': ('https://filesystem-spec.readthedocs.io/en/latest/', None),
     's3fs': ('https://s3fs.readthedocs.io/en/latest/', None),
+    'pysaif': ('https://pysiaf.readthedocs.io/en/latest', None),
 })
 
 # Options for linkcheck

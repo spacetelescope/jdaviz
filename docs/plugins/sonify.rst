@@ -9,13 +9,17 @@ Sonify Data
 
 Convert data to audio for sonification analysis.
 
+.. note::
+   ``Strauss`` must be installed for the :guilabel:`sonification` plugin to work.
+   See https://strauss.readthedocs.io/en/latest/ for details. 
+
 Description
 ===========
 
 The Sonify Data plugin converts spectral or spatial data into audio, providing
 an alternative way to explore data patterns through sound.
 
-The plugin requires the `Strauss <https://strauss.readthedocs.io/en/latest/>`_ package to
+The plugin requires the ``Strauss`` package to
 turn data cubes into audio grids. The audio produced by this sonification
 (via the :guilabel:`Sonify Data` button) can be played by hovering the mouse over the
 :ref:`viewers-spectrum_3d` viewer. A range of the cube can be sonified by applying a spectral
