@@ -139,6 +139,8 @@ New Features
 - Snackbar messages shown during load are now instead shown as banners
   and the popup delayed until after load is complete. [#4438]
 
+- Improve logic for guessing the format of 3D Spectrum files that could be interpreted as Source Catalogs. [#4505]
+
 Mosviz
 ^^^^^^
 
