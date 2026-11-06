@@ -148,8 +148,12 @@ def test_load_catalog_with_string_coord_cols(deconfigged_helper):
     assert_quantity_allclose(qtab['Dec'], sc.dec.deg * u.deg)
 
     # cast data collection X/Y back to strings for comparison
-    assert np.all(qtab['X'].astype(str) == catalog_obj['X'].astype(str))
-    assert np.all(qtab['Y'].astype(str) == catalog_obj['Y'].astype(str))
+    qtab_strX = np.asarray(qtab['X'], dtype=float).astype(str)
+    catobj_strX = np.asarray(catalog_obj['X'], dtype=float).astype(str)
+    assert np.all(qtab_strX == catobj_strX)
+    qtab_strY = np.asarray(qtab['Y'], dtype=float).astype(str)
+    catobj_strY = np.asarray(catalog_obj['Y'], dtype=float).astype(str)
+    assert np.all(qtab_strY == catobj_strY)
 
 
 @pytest.mark.parametrize("from_file", [True, False])
