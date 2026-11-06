@@ -133,10 +133,14 @@ def clear_cache(clear_all=False):
 
 
 def run_qt(url, app_name="Jdaviz"):
-    app = QApplication([])
-    window_container = QWidget()
+    app = QApplication.instance() or QApplication([])
+    splash = next((widget for widget in app.topLevelWidgets()
+                   if widget.objectName() == "jdavizStartupSplash" and widget.isVisible()), None)
     web = QWebEngineViewWithPopup()
+    if splash is not None:
+        web.loadFinished.connect(lambda _success: splash.close())
     web.setUrl(QtCore.QUrl(url))
+    window_container = QWidget()
 
     layout = QVBoxLayout(window_container)
     layout.setContentsMargins(0, 0, 0, 0)
@@ -398,7 +402,22 @@ def run_qt(url, app_name="Jdaviz"):
     layout.addWidget(menu_bar)
     layout.addWidget(web)
 
-    window_container.resize(1024, 1024)
+    # get screen size and scale app to 70% of the window size
+    screen = QApplication.primaryScreen()
+    screen_geometry = screen.availableGeometry()
+    
+    screen_width = screen_geometry.width()
+    screen_height = screen_geometry.height()
+
+    target_width = int(screen_width * 0.9)
+    target_height = int(screen_height * 0.9)
+
+    window_container.resize(target_width, target_height)
+
+    # set window to be in the center of the screen
+    x = int((screen_width - target_width) / 2)
+    y = int((screen_height - target_height) / 2)
+    window_container.move(x, y)
     window_container.show()
 
     app.setApplicationDisplayName(app_name)
