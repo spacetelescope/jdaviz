@@ -24,6 +24,7 @@ from jdaviz.core.unit_conversion_utils import (spectral_unit_conversion,
                                                all_flux_unit_conversion_equivs)
 from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS
 from jdaviz.core.freezable_state import FreezableProfileViewerState
+from jdaviz.core.spectral_line_layers import is_spectral_line_table, observed_wavelength_id
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin, JdavizProfileView
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 
@@ -53,6 +54,18 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
         super().__init__(*args, **kwargs)
 
         def compatible_units(data):
+            if is_spectral_line_table(data):
+                cid = observed_wavelength_id(data)
+                if cid is None:
+                    return False
+                if self.state.x_display_unit is None:
+                    return True
+                try:
+                    spectral_unit_conversion([1], data.get_component(cid).units,
+                                             self.state.x_display_unit)
+                except u.UnitConversionError:
+                    return False
+                return True
             if not len(self.layers):
                 return True
 
@@ -86,7 +99,12 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
 
             return True
 
-        self.data_menu._obj.dataset.add_filter('is_spectrum', compatible_units)
+        def spectrum_or_lines(data):
+            return (is_spectral_line_table(data)
+                    or data.meta.get('_importer') == 'SpectrumImporter'
+                    or data.meta.get('_data_type') == '1D Spectrum')
+
+        self.data_menu._obj.dataset.add_filter(spectrum_or_lines, compatible_units)
         self.data_menu.layer.add_filter('not_trace', 'not_spatial_subset_in_profile_viewer')
 
     @property

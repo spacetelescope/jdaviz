@@ -1,4 +1,7 @@
-from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
+from glue.core.component import Component
+from glue.core.component_id import ComponentID
+from glue.core.message import (ComponentsChangedMessage, DataCollectionAddMessage,
+                               DataCollectionDeleteMessage, NumericalDataChangedMessage)
 from traitlets import List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -42,6 +45,7 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
         self._components = {}
 
         self._syncing_component_info = False
+        self._renaming_component = False
 
         self.viewer.add_filter('is_spectrum_viewer')
 
@@ -75,6 +79,11 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
 
         self.hub.subscribe(self, DataRenamedMessage,
                            handler=self._on_data_renamed)
+
+        self.hub.subscribe(self, NumericalDataChangedMessage,
+                           handler=self._on_line_table_changed)
+        self.hub.subscribe(self, ComponentsChangedMessage,
+                           handler=self._on_line_table_changed)
 
         self.observe_traitlets_for_relevancy(
             traitlets_to_observe=['viewer_items'],
@@ -129,6 +138,19 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
             return self._app.data_collection[self.line_table]
         return None
 
+    def _line_table_data(self):
+        """Snapshot of original importer tables, excluding component projections."""
+        return [data for data in self._app.data_collection
+                if data.meta.get('_importer') == 'SpectralLinesImporter']
+
+    def _on_line_table_changed(self, msg):
+        if (self._renaming_component
+                or msg.sender.meta.get('_importer') != 'SpectralLinesImporter'):
+            return
+        from jdaviz.core.spectral_line_layers import sync_spectral_line_components
+        # Do not activate unplotted sources; the helper owns projection recursion.
+        sync_spectral_line_components(self._app, msg.sender, create=False)
+
     def _get_data_component_id(self, data, col_name):
         """ComponentID in ``data`` with label ``col_name``, or None."""
         for cid in data.components:
@@ -156,10 +178,16 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
 
         redshift = self._components.get(lbl, self._default_component_info())['redshift']
         col_name = self._component_col_name(lbl)
-        self._app._jdaviz_helper._set_data_component(
-            data, col_name, data[source_cid] * (1 + redshift)
-        )
+        values = data[source_cid] * (1 + redshift)
+        units = data.get_component(source_cid).units
+        cid = self._get_data_component_id(data, col_name)
         self._track_component_column(data, col_name)
+        if cid is None:
+            # IDs belong to this table, not the helper's global label-based cache.
+            data.add_component(Component(values, units=units), ComponentID(col_name))
+        else:
+            data.get_component(cid).units = units
+            data.update_components({cid: values})
 
     @staticmethod
     def _track_component_column(data, col_name, remove=False):
@@ -225,35 +253,58 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
         self._update_component_lines()
 
     def _remove_component_column(self, lbl):
-        data = self._get_line_table_data()
-        if data is None:
-            return
-        cid = self._get_data_component_id(data, self._component_col_name(lbl))
-        if cid is not None:
-            data.remove_component(cid)
-            self._track_component_column(data, cid.label, remove=True)
+        from jdaviz.core.spectral_line_layers import sync_spectral_line_components
+
+        for data in self._line_table_data():
+            cid = self._get_data_component_id(data, self._component_col_name(lbl))
+            if cid is not None:
+                # Install the replacement primary link before Glue redraws
+                # artists whose source column is being removed.
+                with self._app.data_collection.delay_link_manager_update():
+                    self._track_component_column(data, cid.label, remove=True)
+                    sync_spectral_line_components(self._app, data, create=False)
+                    for viewer in list(self._app._viewer_store.values()):
+                        if hasattr(viewer, '_sync_spectral_line_links'):
+                            viewer._sync_spectral_line_links()
+                data.remove_component(cid)
 
     def _on_component_add(self, lbl):
         self._components.setdefault(lbl, self._default_component_info())
-        self._add_component_column(lbl)
+        for data in self._line_table_data():
+            self._add_component_column(lbl, data=data)
 
     def _on_component_rename(self, old_lbl, new_lbl):
+        from jdaviz.core.spectral_line_layers import (
+            rename_spectral_line_component, sync_spectral_line_components)
+
         info = self._components.pop(old_lbl, self._default_component_info())
         self._components[new_lbl] = info
 
-        # move the old column to the new name in the line table
-        data = self._get_line_table_data()
-        if data is None:
-            return
-        old_cid = self._get_data_component_id(data, self._component_col_name(old_lbl))
-        if old_cid is None:
-            return
-        self._app._jdaviz_helper._set_data_component(
-            data, self._component_col_name(new_lbl), data[old_cid]
-        )
-        data.remove_component(old_cid)
-        self._track_component_column(data, old_cid.label, remove=True)
-        self._track_component_column(data, self._component_col_name(new_lbl))
+        tables = self._line_table_data()
+        old_col = self._component_col_name(old_lbl)
+        new_col = self._component_col_name(new_lbl)
+        self._renaming_component = True
+        try:
+            # Rename projections first, so sync never deletes/recreates them while
+            # the source columns transition to their new names.
+            rename_spectral_line_component(self._app, old_lbl, new_lbl)
+            for data in tables:
+                cid = self._get_data_component_id(data, old_col)
+                if cid is None:
+                    continue
+                self._track_component_column(data, old_col, remove=True)
+                self._track_component_column(data, new_col)
+                # Preserve links and artists holding this exact local ID.
+                cid.label = new_col
+            # The label setter emits DataRenameComponentMessage, not
+            # ComponentsChangedMessage. Notify other component consumers once
+            # every source column and its metadata have been renamed.
+            for data in tables:
+                self.hub.broadcast(ComponentsChangedMessage(data))
+        finally:
+            self._renaming_component = False
+        for data in tables:
+            sync_spectral_line_components(self._app, data, create=False)
 
     def _on_component_remove(self, lbl):
         self._components.pop(lbl, None)
@@ -295,8 +346,8 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
                 self._syncing_component_info = False
         self._components.setdefault(self.component_selected, self._default_component_info())
         self._components[self.component_selected]['redshift'] = self.component_redshift
-        # recompute this component's column from the original values
-        self._add_component_column(self.component_selected)
+        for data in self._line_table_data():
+            self._add_component_column(self.component_selected, data=data)
         self._update_component_lines()
 
     @property

@@ -421,6 +421,11 @@ class UnitConversion(PluginTemplateMixin):
         self._reset_units_to_remaining_data()
 
     def _on_add_data_to_viewer(self, msg):
+        from jdaviz.core.spectral_line_layers import is_spectral_line_table
+        if is_spectral_line_table(msg.data):
+            # Line artists already follow viewer display units; they have no
+            # flux axis and must not initialize spectral-profile unit controls.
+            return
 
         # toggle warning message for cubes without PIXAR_SR defined
         if self.config == 'cubeviz':
