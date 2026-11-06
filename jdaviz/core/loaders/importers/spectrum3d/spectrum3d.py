@@ -1,7 +1,6 @@
 import numpy as np
 from traitlets import Any, Bool, List, Unicode, observe
 from astropy import units as u
-from astropy.io import fits
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
