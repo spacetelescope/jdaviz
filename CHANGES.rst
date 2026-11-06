@@ -139,6 +139,8 @@ New Features
 - Snackbar messages shown during load are now instead shown as banners
   and the popup delayed until after load is complete. [#4438]
 
+- Improve logic for incrementing default data-labels when extensions are also appended. [#4503]
+
 Mosviz
 ^^^^^^
 

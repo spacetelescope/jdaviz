@@ -55,6 +55,28 @@ def test_image_importer_is_valid(deconfigged_helper):
     assert importer._check_is_valid() == 'Input has spectral WCS coordinates.'
 
 
+def test_distinct_nddata_inputs_get_unique_default_labels(deconfigged_helper):
+    y, x = np.mgrid[:50, :50]
+    source = np.exp(-((x - 25)**2 + (y - 25)**2) / (2 * 4**2))
+
+    image_jy = NDData(1 + 10 * source, unit=u.Jy)
+    image_counts_per_sr = NDData(5 + 100 * source, unit=u.count / u.sr)
+
+    loader = deconfigged_helper.loaders['object']
+    loader.object = image_jy
+    loader.format = 'Image'
+    assert loader.importer.data_label.value == 'Image'
+    loader.load()
+
+    loader.object = image_counts_per_sr
+    loader.format = 'Image'
+    assert loader.importer.data_label.value == 'Image (1)'
+    loader.load()
+
+    labels = deconfigged_helper._app.data_collection.labels
+    assert labels == ['Image[DATA]', 'Image (1)[DATA]']
+
+
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
 def test_roman_level_3(deconfigged_helper, roman_level_3_mosaic):
     resolver = deconfigged_helper.loaders['object']._obj
