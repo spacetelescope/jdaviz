@@ -82,6 +82,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     plugin_markers_exist = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
     need_clear_subsets = Bool(False).tag(sync=True)
+    show_subset_warning = Bool(False).tag(sync=True)
+    cube_was_loaded = Bool(False).tag(sync=True)
+    pending_align_by = Unicode('').tag(sync=True)
 
     # this `rotation_angle` traitlet contains the contents of
     # the orientation plugin's `Rotation angle` user input textbox,
@@ -242,6 +245,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self.need_clear_subsets:
             setattr(self, msg.get('name'), msg.get('old'))
             self.linking_in_progress = False
+
             raise ValueError("Link type can only be changed after existing subsets "
                              f"are deleted, but {len(self._app.data_collection.subset_groups)} "
                              f"subset(s) still exist. To delete them, you can use "
@@ -289,6 +293,17 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         for v in self._app._viewer_store.values():
             v._prev_limits = None
 
+    def vue_request_align_by(self, value):
+        if self.need_clear_subsets:
+            self.show_subset_warning = True
+            self.pending_align_by = value
+        else:
+            self.align_by_selected = value
+
+    def vue_cancel_align_by(self, *args):
+        self.pending_align_by = ''
+        self.show_subset_warning = False
+
     def _on_subset_change(self, msg):
         self.need_clear_subsets = len(self._app.data_collection.subset_groups) > 0
 
@@ -298,9 +313,15 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         """
         # subsets will be deleted on changing link type:
         self._app.delete_subsets()
+        self.show_subset_warning = False
 
     def vue_delete_subsets(self, *args):
         self.delete_subsets()
+
+        if self.pending_align_by:
+            align_by = self.pending_align_by
+            self.pending_align_by = ''
+            self.align_by_selected = align_by
 
     def vue_reset_astrowidget_markers(self, *args):
         for viewer in self._app._viewer_store.values():
@@ -487,6 +508,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if all_wcs_only_layers and msg.data.meta.get(_wcs_only_label, False):
             # on adding first data layer, reset the limits:
             self.viewer.selected_obj.state.reset_limits()
+        if msg.data.ndim == 3:
+            self.cube_was_loaded = True
 
     def vue_add_orientation(self, *args, **kwargs):
         self._add_orientation(set_on_create=True, from_ui=True)

@@ -23,12 +23,11 @@
         </v-alert>
 
         <v-alert
-          v-if="wcs_linking_available && !need_clear_astrowidget_markers && !need_clear_subsets"
-          type='warning'
-          class="ignore-api-hints"
-          style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px"
+          v-if="cube_was_loaded"
+          type='info'
+          style="margin-left: -12px; margin-right: -12px"
         >
-          Switching alignment will reset zoom.
+          Orientation options apply to images only, not data cubes.
         </v-alert>
 
         <v-alert
@@ -46,36 +45,45 @@
           </j-flex-row>
         </v-alert>
 
-
-        <v-alert v-if="need_clear_subsets" type='warning' style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px">
-          Existing subsets must be deleted before changing alignment/linking options.
-          <j-flex-row justify="end" style="margin-right: 2px; margin-top: 16px">
-            <v-btn @click="delete_subsets">
-              <j-api-hint v-if="api_hints_enabled">plg.delete_subsets()</j-api-hint>
-              <template v-else>Clear Subsets</template>
-            </v-btn>
-          </j-flex-row>
-        </v-alert>
-
         <j-flex-row class="row-min-bottom-padding">
           <v-radio-group
             :label="api_hints_enabled ? 'plg.align_by = ' : 'Align by'"
             :class="api_hints_enabled ? 'api-hint' : null"
-            hint="Align individual image layers by pixels or on the sky by WCS."
-            v-model="align_by_selected"
-            @change="delete_subsets($event)"
-            :disabled="!wcs_linking_available || need_clear_astrowidget_markers || need_clear_subsets"
+            :model-value="align_by_selected"
+            :disabled="!wcs_linking_available || need_clear_astrowidget_markers"
             persistent-hint
             row>
+
+            <div class="text-medium-emphasis text-caption">
+              Align individual image layers by pixels or on the sky by WCS. Switching alignment will reset zoom.
+            </div>
+
             <v-radio
               v-for="item in align_by_items"
               :key="item.label"
               :class="api_hints_enabled ? 'api-hint' : null"
               :label="item.label == 'WCS' && !api_hints_enabled ? 'WCS (Sky)' : (api_hints_enabled ? '\''+item.label+'\'' : item.label)"
               :value="item.label"
+              @click.prevent="request_align_by(item.label)"
             ></v-radio>
           </v-radio-group>
         </j-flex-row>
+
+        <v-alert v-if="show_subset_warning" type='warning' style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px">
+          Delete existing subsets to change alignment.
+          <j-flex-row justify="end" style="margin-right: 2px; margin-top: 16px">
+            <v-btn class="mr-2" @click="delete_subsets">
+              {{ api_hints_enabled ?
+                'plg.delete_subsets()'
+                :
+                'Delete Subsets'
+              }}
+            </v-btn>
+            <v-btn @click="cancel_align_by">
+              Cancel
+            </v-btn>
+          </j-flex-row>
+        </v-alert>
 
         <j-flex-row>
           <plugin-switch
