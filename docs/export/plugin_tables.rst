@@ -91,7 +91,7 @@ The columns are as follows:
   if :guilabel:`Counts conversion factor` was set. Otherwise, it is `None`.
   This calculation is done without taking account of ``pixarea_tot``, even
   when it is available.
-* ``aperture_sum_counts_err``: The Poisson uncertainty (square root of `N`)
+* ``aperture_sum_counts_err``: The Poisson uncertainty (square root of ``N``)
   for ``aperture_sum_counts``. Other uncertainty factors like readnoise are
   not included. In the plugin, it is displayed within parentheses next to
   the value for ``aperture_sum_counts``, if applicable.
