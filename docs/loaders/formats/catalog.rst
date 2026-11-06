@@ -20,10 +20,9 @@ overlaid on images, added as a Table, and used for analysis.
 
 There are two types of catalogs that can be loaded:
 
-    - **Source Catalog** (formerly Catalog) - catalog where each row likely represents an object on the sky.  
-    Must contain object coordinates (pixels, sky coordinates, or SkyCoord objects). 
+    - **Source Catalog** (formerly Catalog) - catalog where each row likely represents an object on the sky. Must contain object coordinates (pixels, sky coordinates, or SkyCoord objects). 
     - **Generic Catalog** - catalog with any type of data
-
+    
 Usage
 =====
 
