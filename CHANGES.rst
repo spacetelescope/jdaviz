@@ -38,6 +38,9 @@ Bug Fixes
 
 - Fix image importer support for Roman L3 mosaic files. [#4309]
 
+- Prevent cube and 2D-spectrum viewers from inheriting WCS linking intended for
+  image viewers. [#4497]
+
 Mosviz
 ^^^^^^
 
