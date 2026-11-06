@@ -29,7 +29,7 @@ def _show_early_splash():
     _STARTUP_SPLASH.setObjectName("jdavizStartupSplash")
     _STARTUP_SPLASH.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint |
                                    QtCore.Qt.FramelessWindowHint)
-    _STARTUP_SPLASH.setWindowTitle("Setting up Jdaviz")
+    _STARTUP_SPLASH.setWindowTitle("Initializing Jdaviz")
 
     layout = QVBoxLayout(_STARTUP_SPLASH)
     logo = QLabel()
@@ -38,7 +38,7 @@ def _show_early_splash():
     logo.setPixmap(pixmap.scaled(320, 320, QtCore.Qt.KeepAspectRatio,
                                  QtCore.Qt.SmoothTransformation))
     _STARTUP_SPLASH.setStyleSheet("background-color: white")
-    message = QLabel("Jdaviz is being set up...")
+    message = QLabel("Initializing Jdaviz")
     font = message.font()
     font.setPointSize(20)
     message.setFont(font)
