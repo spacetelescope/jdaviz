@@ -761,3 +761,24 @@ def test_data_menu_subset_delete(cubeviz_helper, spectrum1d_cube):
     assert (len(cubeviz_helper.viewers['spectrum-viewer'].data_menu.layer.choices) ==
             expected_dm_layer_len)
     assert dm.layer not in cubeviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_loaded
+
+
+def test_import_region_with_units(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    # import a spectral region with units of microns
+    spec_region_um = SpectralRegion(5.75 * u.um, 6.05 * u.um)
+    plg.import_region(spec_region_um, subset_label='um subset')
+
+    # import a spectral region with units of nanometers
+    spec_region_nm = SpectralRegion(575 * u.nm, 605 * u.nm)
+    plg.import_region(spec_region_nm, subset_label='nm subset')
+
+    subsets = cubeviz_helper._app.get_subsets()
+    assert len(subsets) == 2
+    assert subsets['um subset'].lower == 5.75e-06 * u.m
+    assert subsets['um subset'].upper == 6.05e-06 * u.m
+    assert subsets['nm subset'].lower == 575e-09 * u.m
+    assert subsets['nm subset'].upper == 605e-09 * u.m
+    

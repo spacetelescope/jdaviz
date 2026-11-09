@@ -1452,12 +1452,19 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                              EllipticalROI, RectangularROI)):
                         viewer.apply_roi(region)
 
+
                     elif isinstance(region, SpectralRegion):
-                        # Use viewer_name if provided in kwarg, otherwise use
-                        # default spectrum viewer name
-                        range_viewer = self.app.get_viewer(viewer_parameter) if viewer_parameter else self.spectrum_viewer  # noqa
-                        s = RangeSubsetState(lo=region.lower.value, hi=region.upper.value,
-                                             att=range_viewer.state.x_att)
+                        range_viewer = self.app.get_viewer(
+                            viewer_parameter) if viewer_parameter else self.spectrum_viewer
+                        x_att = range_viewer.state.x_att
+                        base_units = range_viewer.state.reference_data.get_component(x_att).units
+
+                        # convert the input region to the base units
+                        region_lower = region.lower.to(u.Unit(base_units))
+                        region_upper = region.upper.to(u.Unit(base_units))
+                        s = RangeSubsetState(lo=region_lower.value, hi=region_upper.value,
+                                             att=x_att)
+
                         range_viewer.apply_subset_state(s)
 
                     # Last resort: Masked Subset that is static (if data is not a cube)
