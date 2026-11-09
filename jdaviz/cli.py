@@ -82,7 +82,7 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
 
 def run_solara(host, port, theme, browser, production: bool = True):
     os.environ["SOLARA_APP"] = "jdaviz.solara"
-    
+
     import jinja2
     import solara.server.server
     import solara.server.starlette

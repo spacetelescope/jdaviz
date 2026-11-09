@@ -405,7 +405,7 @@ def run_qt(url, app_name="Jdaviz"):
     # get screen size and scale app to 70% of the window size
     screen = QApplication.primaryScreen()
     screen_geometry = screen.availableGeometry()
-    
+
     screen_width = screen_geometry.width()
     screen_height = screen_geometry.height()
 

@@ -44,7 +44,7 @@ def _show_early_splash():
     font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 1.)
     message.setStyleSheet("color: black; font-family: 'Roboto'; font-size: 20pt;font-weight:400;")
     message.setFont(font)
-    
+
     message.setAlignment(QtCore.Qt.AlignCenter)
 
     message2 = QLabel("(JAY-dee-A-viz)")
