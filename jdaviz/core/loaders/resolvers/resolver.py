@@ -1502,7 +1502,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             skycoord_center = coords.pixel_to_world(
                 viewer.state.zoom_center_x, viewer.state.zoom_center_y
             )
-        elif 'Orientation' in helper.plugins and helper.plugins["Orientation"].align_by == "WCS":
+        elif 'Orientation' in helper.plugins and helper.plugins['Orientation'].align_by == 'WCS':
             skycoord_center = SkyCoord(
                 viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
             )
