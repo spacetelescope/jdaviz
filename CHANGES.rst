@@ -139,6 +139,8 @@ New Features
 - Snackbar messages shown during load are now instead shown as banners
   and the popup delayed until after load is complete. [#4438]
 
+- Add support for importing subsets on scatter viewers. [#4517]
+
 Mosviz
 ^^^^^^
 
