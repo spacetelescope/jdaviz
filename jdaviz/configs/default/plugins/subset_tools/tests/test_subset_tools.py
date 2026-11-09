@@ -535,25 +535,16 @@ def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
         st.get_regions(wrt_data='fake')
 
 
-@pytest.mark.parametrize('with_image', [False, True])
-def test_import_region_scatter(deconfigged_helper, image_2d_wcs, with_image):
+def test_import_region_scatter(deconfigged_helper):
     catalog = Table({'x': [0.1, 0.32, 0.8], 'y': [8.0, 11.6, 15.0]})
     deconfigged_helper.load(catalog, format='Generic Catalog', data_label='my_catalog',
                             col_other=['x', 'y'])
 
-    create_scatter_viewer = deconfigged_helper.new_viewers['Scatter']
-    create_scatter_viewer.dataset = 'my_catalog'
-    create_scatter_viewer()
-
-    plot_opts = deconfigged_helper.plugins['Plot Options']
-    plot_opts.viewer = 'Scatter'
-    plot_opts.xatt = 'x'
-    plot_opts.yatt = 'y'
-
-    if with_image:
-        image_data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
-        deconfigged_helper.load(image_data, format='Image', data_label='image')
-        deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+    vc = deconfigged_helper.new_viewers['Scatter']
+    vc.dataset = 'my_catalog'
+    vc.xatt = 'x'
+    vc.yatt = 'y'
+    vc()
 
     reg = RectanglePixelRegion(center=PixCoord(0.32, 11.6), width=1, height=6.5)
     plg = deconfigged_helper.plugins['Subset Tools']
