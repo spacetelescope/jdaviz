@@ -226,8 +226,14 @@ Bug Fixes
 
 - Skip marker layers when resetting Unit Conversion units. [#4501]
 
+- Refactoring of some of the unit conversion logic in aperture photometry, in
+  particular handling of mixed-unit datasets and display unit conversions. [#4496]
+
 - Prevent cube and 2D-spectrum viewers from inheriting WCS linking intended for
   image viewers. [#4497]
+
+- Fix using a 3D spectrum viewer as the coordinate source for astoquery search
+  target in the astroquery loader. [#4512]
 
 Mosviz
 ^^^^^^
