@@ -120,7 +120,8 @@ New Features
 - Logger is accessible in UI before data is loaded. [#4403]
 
 - Format choices are now sorted so that the most likely format is at the top of the list
-  and selected by default. [#4402]
+  and selected by default. Catalog versus image/spectrum format ranking is based on the presence of
+  expected catalog keywords compared with the dimensions of the input data. [#4402, #4505]
 
 - Improve logic in unit conversion plugin to prevent stale or incompatible unit
   selections when data is removed from viewers. [#4423]
