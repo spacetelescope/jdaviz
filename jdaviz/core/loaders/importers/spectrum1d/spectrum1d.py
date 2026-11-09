@@ -141,6 +141,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
                                      and not self.concatenate)
         # data_label_is_prefix is set in SpectrumInputExtensionsMixin,
         # but may be updated after this
+        data_label_suffices = []
         if not hasattr(self, 'extension'):
             default_label = self.default_data_label_prefix
         elif self.multiselect and len(self.extension.selected) > 1 and self.concatenate:
@@ -150,12 +151,11 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
             default_label = f"{self.default_data_label_prefix}_{item_dict['suffix']}"
         else:
             if self.multiselect and len(self.extension.selected) > 1:
-                self.data_label_suffices = [f"_{item_dict['suffix']}" for item_dict in
-                                            self.extension.selected_item_list]
-            else:
-                self.data_label_suffices = []
+                data_label_suffices = [f"_{item_dict['suffix']}" for item_dict in
+                                       self.extension.selected_item_list]
             default_label = self.default_data_label_prefix
 
+        self.data_label_suffices = data_label_suffices
         self.data_label.default = default_label
 
     @property
