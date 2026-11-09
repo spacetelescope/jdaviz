@@ -558,3 +558,25 @@ def test_switch_from_spectrum_to_image_viewer(deconfigged_helper, spectrum1d, im
     assert po.image_opacity_value == layer_state.alpha == 1
     assert po.image_colormap_value == layer_state.cmap.name
     assert len(po.stretch_histogram.marks['colorbar'].colors) > 0
+
+
+def test_line_as_steps_and_uncertainty_visible_user_api(deconfigged_helper, spectrum1d):
+    """
+    Test that ``line_as_steps`` and ``uncertainty_visible`` are exposed in the
+    Plot Options user API and sync to glue state.
+    """
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spectrum')
+    po = deconfigged_helper.plugins['Plot Options']
+    assert hasattr(po, 'line_as_steps')
+    assert hasattr(po, 'uncertainty_visible')
+
+    viewer = deconfigged_helper._app.get_viewer('1D Spectrum')
+    layer_state = viewer.state.layers[0]
+
+    for new_value in (not layer_state.as_steps, layer_state.as_steps):
+        po.line_as_steps = new_value
+        assert po.line_as_steps.value is layer_state.as_steps is new_value
+
+    for new_value in (True, False):
+        po.uncertainty_visible = new_value
+        assert po.uncertainty_visible.value == viewer.state.show_uncertainty == new_value
