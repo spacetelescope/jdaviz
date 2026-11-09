@@ -168,6 +168,9 @@ Bug Fixes
 
 - Fix error when typing while renaming data or subset. [#4359]
 
+- Fix unit conversion error that occurs with mixed per-steradian and per-square-pixel
+  surface brightness units. [#4483]
+
 Mosviz
 ^^^^^^
 
@@ -208,9 +211,6 @@ Bug Fixes
 - Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
 
 - Fix handling of units to load HLSP JADES DR4 spectra x1D/S2D files. [#4477]
-
-- Fix unit conversion error that occurs with mixed per-steradian and per-square-pixel
-  surface brightness units. [#4483]
 
 - Fix bug when creating a subset on an image viewer when there is a cube loaded
   by preventing those subsets from appearing in the cube viewer.. [#4490]
