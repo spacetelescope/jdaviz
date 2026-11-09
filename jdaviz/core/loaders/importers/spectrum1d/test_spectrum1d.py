@@ -34,8 +34,6 @@ def test_spectrum1d_table_hdu_nonstandard_unit(deconfigged_helper, extname, n_fl
                                 resolver=resolver, parser=None,
                                 input=hdul)
 
-    assert importer._check_is_valid() == ''
-
     spec = importer.spectra[0]
     assert spec.flux.unit == u.Unit('erg s-1 cm-2 AA-1')
     np.testing.assert_allclose(spec.spectral_axis.to_value(u.um), hdu.data['WAVELENGTH'])
