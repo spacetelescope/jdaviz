@@ -168,8 +168,8 @@ Bug Fixes
 
 - Fix error when typing while renaming data or subset. [#4359]
 
-- Fix unit conversion error that occurs with mixed per-steradian and per-square-pixel
-  surface brightness units. [#4483]
+- Refactoring of some of the unit conversion logic in aperture photometry, in
+  particular handling of mixed-unit datasets and display unit conversions. [#4483, #4496]
 
 Mosviz
 ^^^^^^
@@ -228,9 +228,6 @@ Bug Fixes
 
 - Prevent cube and 2D-spectrum viewers from inheriting WCS linking intended for
   image viewers. [#4497]
-
-- Refactoring of some of the unit conversion logic in aperture photometry, in
-  particular handling of mixed-unit datasets and display unit conversions. [#4496]
 
 Mosviz
 ^^^^^^
