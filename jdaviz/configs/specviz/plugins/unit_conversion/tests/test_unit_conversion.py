@@ -589,6 +589,28 @@ def test_mixed_1d_2d_flux_unit_load_order(deconfigged_helper, ct_spec, dim_1d_fi
     assert u.Unit(plg.flux_unit.selected) == u.MJy
 
 
+def test_change_display_units_with_empty_spectrum_viewer(deconfigged_helper, spectrum1d):
+    """
+    Test that changing the flux display unit when the spectrum viewer is
+    empty works as intended
+    """
+    deconfigged_helper.load(spectrum1d, data_label='spec', format='1D Spectrum')
+    plg = deconfigged_helper.plugins['Unit Conversion']
+
+    dm = deconfigged_helper.viewers['1D Spectrum'].data_menu
+    for label in list(dm.data_labels_loaded):
+        dm.layer = label
+        dm.remove_from_viewer()
+    assert len(dm.data_labels_loaded) == 0
+
+    plg.flux_unit = 'mJy'
+    assert plg.flux_unit.selected == 'mJy'
+
+    deconfigged_helper.load(spectrum1d, data_label='spec 2', format='1D Spectrum')
+    viewer = deconfigged_helper.viewers['1D Spectrum']._obj.glue_viewer
+    assert viewer.state.y_display_unit == 'mJy'
+
+
 def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catalog,
                                  image_nddata_wcs, spectrum1d):
     """
