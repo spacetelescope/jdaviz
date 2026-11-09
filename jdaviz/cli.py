@@ -4,7 +4,7 @@ import inspect
 import os
 import pathlib
 
-from jdaviz import __version__, __file__
+from jdaviz import __version__
 from jdaviz.app import ALL_JDAVIZ_CONFIGS
 from jdaviz.configs.default.plugins.logger import _verbosity_levels
 from jdaviz import configs

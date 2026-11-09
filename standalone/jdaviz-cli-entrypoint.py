@@ -42,7 +42,7 @@ def _show_early_splash():
     message = QLabel("Initializing Jdaviz")
     font = message.font()
     font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 1.)
-    message.setStyleSheet("color: black; font-family: 'Roboto'; font-size: 20pt;font-weight:400;")
+    message.setStyleSheet("color: black; font-size: 20pt;font-weight:400;")
     message.setFont(font)
 
     message.setAlignment(QtCore.Qt.AlignCenter)
@@ -50,7 +50,7 @@ def _show_early_splash():
     message2 = QLabel("(JAY-dee-A-viz)")
     font = message2.font()
     font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, .9)
-    message2.setStyleSheet("color: black; font-family: 'Roboto'; font-size: 14pt;font-weight:500;")
+    message2.setStyleSheet("color: black; font-size: 14pt;font-weight:500;")
     message2.setFont(font)
     message2.setAlignment(QtCore.Qt.AlignCenter)
 
