@@ -3380,11 +3380,12 @@ class SubsetSelect(SelectPluginComponent):
 
         return self._get_subset_mask()
 
-    def _get_spatial_region(self, dataset, subset=None):
+    def _get_spatial_region(self, subset=None):
         """
         Retrieve the spatial region object for a subset.
 
-        Returns a SkyRegion if in Imviz with WCS alignment, otherwise a PixelRegion.
+        Returns a SkyRegion if the subset is defined on a WCS-only reference layer,
+        otherwise a PixelRegion in the frame of the data the subset was defined on.
         The subset label is stored in the returned region's metadata.
         """
         if subset is None:
@@ -3395,7 +3396,10 @@ class SubsetSelect(SelectPluginComponent):
         if subset_state is None:
             return None
 
-        if self._app.config in ('imviz', 'deconfigged') and self._app._align_by == 'wcs':
+        # A subset parented to a WCS-only layer has pixel coordinates in that layer's frame,
+        # so it must be passed as a SkyRegion
+        if (self._app._align_by == 'wcs'
+                and all(is_wcs_only(att.parent) for att in subset_state.attributes)):
             region_type = 'sky_region'
         else:
             region_type = 'region'
@@ -3419,8 +3423,8 @@ class SubsetSelect(SelectPluginComponent):
         if np.any([type not in ('spatial', None, False) for type in types]):
             raise TypeError("This action is only supported on spatial-type subsets")
         if self.is_multiselect:
-            return [self._get_spatial_region(dataset=self.dataset.selected, subset=subset) for subset in self.selected]  # noqa
-        return self._get_spatial_region(dataset=self.dataset.selected)
+            return [self._get_spatial_region(subset=subset) for subset in self.selected]  # noqa
+        return self._get_spatial_region(subset=self.selected)
 
     def selected_min_max(self, dataset):
         """
@@ -3783,9 +3787,8 @@ class ApertureSubsetSelect(SubsetSelect):
             return [], [], validity
 
         if multiselect or selected != self.selected:
-            # assume first dataset (for retrieving the region object)
-            # but iterate over all subsets
-            spatial_regions = [self._get_spatial_region(dataset=self.dataset.selected[0], subset=subset)  # noqa
+            # iterate over all subsets
+            spatial_regions = [self._get_spatial_region(subset=subset)  # noqa
                                for subset in selected if subset != self._manual_options]
         else:
             # use cached version

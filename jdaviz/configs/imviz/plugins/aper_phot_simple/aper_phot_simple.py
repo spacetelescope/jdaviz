@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 from astropy import units as u
+from astropy.coordinates import SpectralCoord
 from astropy.modeling.fitting import TRFLSQFitter
 from astropy.modeling import Parameter
 from astropy.modeling.models import Gaussian1D
@@ -794,8 +795,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 raise ValueError(f"aperture must be one of {self.aperture.choices}")
 
         if aperture is not None or dataset is not None:
-            reg = self.aperture._get_spatial_region(subset=aperture if aperture is not None else self.aperture.selected,  # noqa
-                                                    dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
+            reg = self.aperture._get_spatial_region(subset=aperture if aperture is not None else self.aperture.selected)  # noqa
 
             # determine if a valid aperture (since selected_validity only applies to selected entry)
             # we don't need to pass in 'viewer' here (which is used to obtain a WCS
@@ -846,8 +846,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             background_value = self.background_value
             bg_in_display_units = True
         else:
-            bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  # noqa
-                                                       dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
+            bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected)  # noqa
             background_value = self._calc_background_median(bg_reg, data=data)
             bg_in_display_units = True
 
@@ -869,8 +868,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if hasattr(reg, 'to_pixel'):
             sky_center = reg.center
             if self.is_cube:
-                ycenter, xcenter = w.world_to_pixel(self._cube_wave, sky_center)[1]
-            else:  # "imviz"
+                ycenter, xcenter, _ = w.world_to_pixel(sky_center, SpectralCoord(self._cube_wave))
+            else:  # images
                 xcenter, ycenter = w.world_to_pixel(sky_center)
         else:
             xcenter = reg.center.x
@@ -882,7 +881,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     else:
                         sky = w.pixel_to_world(self._cube_slice_ind, ycenter, xcenter)
                     sky_center = [coord for coord in sky if hasattr(coord, "icrs")][0]
-                else:  # "imviz"
+                else:  # images
                     sky_center = w.pixel_to_world(xcenter, ycenter)
             else:
                 sky_center = None
