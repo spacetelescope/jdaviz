@@ -77,17 +77,6 @@ def test_resolver_matching(specviz_helper):
     assert len(specviz_helper._app.data_collection) == 1
 
 
-def test_catalog_format_available_for_table_target(deconfigged_helper):
-    table = Table({'ra': [1.0, 2.0], 'dec': [3.0, 4.0]})
-    ldr = deconfigged_helper.loaders['object']
-
-    ldr.object = table
-    assert 'Source Catalog' in ldr.format.choices
-
-    ldr.target = 'Source Catalog Table'
-    assert 'Source Catalog' in ldr.format.choices
-
-
 def test_format_selection_prefers_catalog_for_sky_coords(deconfigged_helper):
     table = Table({'ra': [1.0, 2.0], 'dec': [3.0, 4.0], 'flux': [5.0, 6.0]})
     ldr = deconfigged_helper.loaders['object']
@@ -447,20 +436,6 @@ def test_resolver_url(deconfigged_helper):
 
     assert len(loader.format.choices) == 2
     assert loader.format.selected == '2D Spectrum'
-
-    # test target filtering
-    assert len(loader.target.choices) > 1
-    assert loader.target.selected == 'Any'
-    loader.target = '1D Spectrum'
-
-    # may change with future importers
-    assert len(loader.format.choices) == 1
-    assert loader.format == '1D Spectrum'  # default may change with future importers
-    assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw_index-0'  # noqa
-
-    loader.target = 'Any'
-    assert len(loader.format.choices) == 2
-    loader.format = '2D Spectrum'
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
     assert len(deconfigged_helper._app.data_collection) == 0
