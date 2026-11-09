@@ -180,8 +180,8 @@ class MOSImporter(BaseImporterToDataCollection):
 
         # every file gets its own data-label, built from a common prefix
         self.data_label_is_prefix = True
+        self.data_label_suffices = [f"_{f['suffix']}" for f in self.mos_files]
         self.data_label.default = self.default_data_label_prefix
-        self.data_label_suffices = [f['suffix'] for f in self.mos_files]
 
     def _init_product_viewer(self, product_type):
         """

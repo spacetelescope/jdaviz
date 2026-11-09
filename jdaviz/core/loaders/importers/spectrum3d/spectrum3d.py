@@ -423,6 +423,13 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             expose += ['dq_extension']
         return ImporterUserApi(self, expose)
 
+    @property
+    def import_confidence_score(self):
+        # 3D spectra should be strongly preferred when detected.
+        # this ensures data with ndim==3 default to 3D Spectrum instead of
+        # Source Catalog even when RA/Dec/X/Y pairs are present in bintable HDU extensions
+        return 2
+
     def _check_is_valid(self):
         if self._app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
