@@ -13,6 +13,8 @@ Bug Fixes
 
 - Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
 
+- Fix handling of units to load HLSP JADES DR4 spectra x1D/S2D files. [#4477]
+
 - Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
 
 Mosviz
