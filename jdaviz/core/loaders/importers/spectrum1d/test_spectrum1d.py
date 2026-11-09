@@ -2,6 +2,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 from astropy.io import fits
+from specutils import Spectrum
 
 from jdaviz.core.loaders.importers.spectrum1d.spectrum1d import SpectrumImporter
 
@@ -63,3 +64,23 @@ def test_spectrum1d_table_hdu_nonstandard_unit(deconfigged_helper, extname, n_fl
     assert spec.flux.unit == u.Unit('erg s-1 cm-2 AA-1')
     np.testing.assert_allclose(spec.spectral_axis.to_value(u.um), hdu.data['WAVELENGTH'])
     np.testing.assert_allclose(spec.flux.value, hdu.data['FLUX'])
+
+
+def test_distinct_spectrum_inputs_get_unique_default_labels(deconfigged_helper):
+    spectral_axis = np.arange(3) * u.um
+    spectrum1 = Spectrum(flux=np.array([1, 2, 3]) * u.Jy,
+                         spectral_axis=spectral_axis)
+    spectrum2 = Spectrum(flux=np.array([4, 5, 6]) * u.Jy,
+                         spectral_axis=spectral_axis)
+
+    loader = deconfigged_helper.loaders['object']
+    loader.object = spectrum1
+    assert loader.importer.data_label.value == '1D Spectrum'
+    loader.load()
+
+    loader.object = spectrum2
+    assert loader.importer.data_label.value == '1D Spectrum (1)'
+    loader.load()
+
+    assert deconfigged_helper._app.data_collection.labels == [
+        '1D Spectrum', '1D Spectrum (1)']

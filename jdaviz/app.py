@@ -3456,7 +3456,14 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
         linked_by_wcs = self._align_by == 'wcs'
 
-        if hasattr(viewer.state, 'linked_by_wcs'):
+        # NOTE: ``linked_by_wcs`` lives in FreezableBqplotImageViewerState, which is
+        # shared by image, cube, and 2D spectrum viewers. Only image viewers currently
+        # support WCS linking with the Orientation plugin (see link_image_data),
+        # so this flag must only ever be set True for Image viewers, not cube or 2d spectrum
+        # When orientation support is extended to cube viewers, this check should
+        # be widened to include them (and extract the spatial component of the WCS).
+        if (hasattr(viewer.state, 'linked_by_wcs')
+                and viewer.__class__.__name__ == 'ImvizImageView'):
             orientation_plugin = self._jdaviz_helper.plugins.get('Orientation', None)
             if orientation_plugin is not None:
                 linked_by_wcs = orientation_plugin.align_by.selected == 'WCS'

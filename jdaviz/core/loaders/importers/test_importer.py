@@ -2,6 +2,9 @@ from unittest.mock import patch
 import pytest
 
 import astropy.units as u
+from astropy.io import fits
+from astropy.wcs import WCS
+import numpy as np
 from specutils import Spectrum, SpectrumList
 
 from jdaviz.core.loaders.importers.importer import BaseImporter
@@ -399,3 +402,38 @@ def test_add_to_data_collection_viewer_select_false(deconfigged_helper):
     for viewer in deconfigged_helper._app._viewer_store.values():
         if hasattr(viewer, '_data_menu'):
             assert label not in viewer._data_menu.data_labels_loaded
+
+
+def test_s3d_confidence_score(deconfigged_helper):
+    """
+    Test that the import_confidence_score property for 3D spectra is higher than
+    other formats even when Source Catalog is a valid option due to the presence of
+    RA/Dec/X/Y pairs in the FITS file.
+    """
+    shape = (2, 2, 4)
+    wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
+                "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
+                "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0, "PIXAR_SR": 10.}
+    w = WCS(wcs_dict)
+    primary_hdu = fits.PrimaryHDU(data=np.ones((shape)), header=w.to_header())
+    sci_hdu = fits.ImageHDU(data=np.ones(shape), header=w.to_header(), name='FLUX')
+    hdr_tab = fits.BinTableHDU(data=None, name='HDR_TAB', header=fits.Header())
+
+    # add keywords that would nominally satisfy the Ra/Dec/X/Y pairs for a source catalog
+    ra = fits.Column(name='TARG_RA', array=np.array([10.0, 20.0]), format='D')
+    dec = fits.Column(name='TARG_DEC', array=np.array([10.0, 20.0]), format='D')
+    gwax = fits.Column(name='GWA_XTIL', array=np.zeros(10), format='D')
+    gway = fits.Column(name='GWA_YTIL', array=np.zeros(10), format='D')
+    cols = fits.ColDefs([ra, dec, gwax, gway])
+    fits_rec_data = fits.FITS_rec.from_columns(cols)
+    hdr_tab.data = fits_rec_data
+
+    hdulist = fits.HDUList([primary_hdu, sci_hdu, hdr_tab])
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdulist
+
+    assert ldr.format.items[0]['label'] == '3D Spectrum'
+    assert ldr.format.items[1]['label'] == 'Source Catalog'
+    assert ldr.format.items[0]['import_confidence_score'] > ldr.format.items[1]['import_confidence_score'] # noqa
