@@ -15,8 +15,6 @@
     :file_table_populated="file_table_populated"
     :file_cache="file_cache"
     :file_timeout="file_timeout"
-    :target_items="target_items"
-    v-model:target_selected="target_selected"
     :format_items="format_items"
     v-model:format_selected="format_selected"
     :importer_widget="importer_widget"

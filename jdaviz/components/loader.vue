@@ -198,7 +198,6 @@ export default {
           'observation_table', 'observation_table_populated',
           'file_table', 'file_table_populated', 'spinner_success_message',
           'file_cache', 'file_timeout',
-          'target_items', 'target_selected',
           'format_items', 'format_selected',
           'importer_widget', 'server_is_remote', 'hide_resolver', 'hide_resolver_inputs',
           'api_hints_enabled', 'valid_import_formats',
