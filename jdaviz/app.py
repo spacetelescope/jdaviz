@@ -2778,10 +2778,25 @@ class PrivateApplication(VuetifyTemplate, HubListener):
         if isinstance(new_parent, str):
             new_parent = self.data_collection[new_parent]
         elif new_parent is None:
+            # only data of the same dimensionality that is not a catalog can take over the
+            # subset definitions (e.g. a spectral subset cannot move to a catalog table)
+            catalog_importers = ('SourceCatalogImporter', 'SpectralLinesImporter',
+                                 'GenericCatalogImporter')
             for data in self.data_collection:
-                if data is not old_parent:
+                if (data is not old_parent and data.ndim == old_parent.ndim
+                        and data.meta.get('_importer') not in catalog_importers):
                     new_parent = data
                     break
+
+        if new_parent is None:
+            # nothing to move the subset definitions to, so remove the subsets that
+            # are defined on old_parent rather than leaving them on soon-to-be-removed data
+            labels = [key for key, subset_list in self.get_subsets(simplify_spectral=False).items()
+                      if any(subset['subset_state'].attributes[0].parent is old_parent
+                             for subset in subset_list)]
+            if labels:
+                self.delete_subsets(labels)
+            return
 
         # Set subset attributes to match a remaining data collection member, using get_subsets to
         # get components of composite subsets.
