@@ -781,4 +781,3 @@ def test_import_region_with_units(cubeviz_helper, spectrum1d_cube):
     assert subsets['um subset'].upper == 6.05e-06 * u.m
     assert subsets['nm subset'].lower == 575e-09 * u.m
     assert subsets['nm subset'].upper == 605e-09 * u.m
-    

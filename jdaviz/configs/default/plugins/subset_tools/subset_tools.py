@@ -1452,7 +1452,6 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                              EllipticalROI, RectangularROI)):
                         viewer.apply_roi(region)
 
-
                     elif isinstance(region, SpectralRegion):
                         range_viewer = self.app.get_viewer(
                             viewer_parameter) if viewer_parameter else self.spectrum_viewer
