@@ -21,12 +21,14 @@ Bug Fixes
 - Fix using a 3D spectrum viewer as the coordinate source for astoquery search
   target in the astroquery loader. [#4512]
 
-- Fix bug when creating a subset on an image viewer when there is a cube loaded 
+- Fix bug when creating a subset on an image viewer when there is a cube loaded
   by preventing those subsets from appearing in the cube viewer.. [#4490]
 
 - Fix spectrum auto-extraction and other errors when creating a subset on a cube viewer
   while aligned by WCS, including broken links between a cube and its uncertainty cube
   after relinking. [#4490]
+
+- Fix Data Quality plugin visibility when a cube with DQ is loaded after other data. [#4532]
 
 Mosviz
 ^^^^^^
