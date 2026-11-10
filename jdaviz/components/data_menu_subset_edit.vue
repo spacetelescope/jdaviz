@@ -56,7 +56,7 @@
         @mouseleave="() => {if (hover_mode == mode_item.glue_name) {hover_mode=''}}"
       >
         <v-list-item-action style="margin-right: 4px">
-          <img :src="mode_item.icon"/>
+          <img :src="mode_item.icon" width="20"/>
         </v-list-item-action>
         <div class="v-list-item-content">
           <!--
@@ -73,7 +73,7 @@
               :tooltipcontent="api_hints_enabled ? '' : 'Interactively apply \'' + mode_item.glue_name + '\' logic to ' + subset_selected + ' using the ' + tool.name + ' tool'"
             >
               <v-btn
-                icon
+                variant="text"
                 max-height="24px"
                 max-width="24px"
                 @mouseover="() => {hover_api_hint = 'dm.modify_subset(\''+mode_item.glue_name+'\', \''+tool.name+'\')'}"
