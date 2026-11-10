@@ -15,6 +15,9 @@ Bug Fixes
 
 - Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
 
+- Fix using a 3D spectrum viewer as the coordinate source for astoquery search
+  target in the astroquery loader. [#4512]
+
 Mosviz
 ^^^^^^
 
