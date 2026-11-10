@@ -6,7 +6,6 @@
   <div v-if="create_new_selected.length > 0">
     <plugin-auto-label
       :value="new_label_value"
-      @change="$emit('update:new_label_value', $event)"
       @update:value="$emit('update:new_label_value', $event)"
       :default="new_label_default"
       :auto="new_label_auto"
