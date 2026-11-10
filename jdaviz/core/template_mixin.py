@@ -3423,7 +3423,7 @@ class SubsetSelect(SelectPluginComponent):
         if np.any([type not in ('spatial', None, False) for type in types]):
             raise TypeError("This action is only supported on spatial-type subsets")
         if self.is_multiselect:
-            return [self._get_spatial_region(subset=subset) for subset in self.selected]  # noqa
+            return [self._get_spatial_region(subset=subset) for subset in self.selected]
         return self._get_spatial_region(subset=self.selected)
 
     def selected_min_max(self, dataset):
@@ -3788,7 +3788,7 @@ class ApertureSubsetSelect(SubsetSelect):
 
         if multiselect or selected != self.selected:
             # iterate over all subsets
-            spatial_regions = [self._get_spatial_region(subset=subset)  # noqa
+            spatial_regions = [self._get_spatial_region(subset=subset)
                                for subset in selected if subset != self._manual_options]
         else:
             # use cached version
