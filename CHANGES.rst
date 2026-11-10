@@ -168,6 +168,8 @@ Bug Fixes
 
 - Fix error when typing while renaming data or subset. [#4359]
 
+- Fix handling of units to load HLSP JADES DR4 spectra x1D/S2D files. [#4477]
+
 - Refactoring of some of the unit conversion logic in aperture photometry, in
   particular handling of mixed-unit datasets and display unit conversions. [#4483, #4496]
 
@@ -209,8 +211,6 @@ Bug Fixes
   vue3 compatible glue-jupyter release. [#4463]
 
 - Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
-
-- Fix handling of units to load HLSP JADES DR4 spectra x1D/S2D files. [#4477]
 
 - Fix bug when creating a subset on an image viewer when there is a cube loaded
   by preventing those subsets from appearing in the cube viewer.. [#4490]
