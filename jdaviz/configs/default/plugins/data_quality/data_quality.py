@@ -1,21 +1,22 @@
 from itertools import chain
 import os
-from traitlets import Any, Dict, Bool, List, Unicode, Float, observe
 
 import numpy as np
-from glue_jupyter.common.toolbar_vuetify import read_icon
 from echo import delay_callback
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from matplotlib.colors import hex2color
+from traitlets import Any, Dict, Bool, List, Unicode, Float, observe
 
+from jdaviz.configs.default.plugins.data_quality.dq_utils import (
+    decode_flags, generate_listed_colormap, dq_flag_map_paths, load_flag_map
+)
+from jdaviz.core.events import AddDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
     PluginTemplateMixin, LayerSelect, ViewerSelectMixin, _is_image_viewer as is_image_viewer
 )
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.configs.default.plugins.data_quality.dq_utils import (
-    decode_flags, generate_listed_colormap, dq_flag_map_paths, load_flag_map
-)
 
 
 __all__ = ['DataQuality']
@@ -97,6 +98,8 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             is_child_of=self.science_layer.selected
         )
         self.dq_layer.add_filter('is_dq_layer')
+
+        self.hub.subscribe(self, AddDataMessage, handler=self._set_irrelevant)
 
         self.load_default_flag_maps()
         self.init_decoding()

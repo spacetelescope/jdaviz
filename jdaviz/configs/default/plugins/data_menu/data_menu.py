@@ -3,18 +3,9 @@ import os
 from contextlib import contextmanager
 from traitlets import Bool, Dict, Unicode, Integer, List, observe
 
-from jdaviz.core.template_mixin import (SnackbarMessage, TemplateMixin, LayerSelect,
-                                        LayerSelectMixin, DatasetSelectMixin)
-from jdaviz.core.user_api import UserApiWrapper
-from jdaviz.core.events import (AddDataMessage, ChangeRefDataMessage,
-                                IconsUpdatedMessage, LayersFinalizedMessage,
-                                LinkUpdatedMessage, ViewerRenamedMessage)
-from glue.core.message import SubsetDeleteMessage
-from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
-from jdaviz.utils import cmap_samples, is_not_wcs_only
-
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
+from glue.core.message import SubsetDeleteMessage
 from glue.core.roi import (RectangularROI, CircularROI,
                            EllipticalROI, CircularAnnulusROI, XRangeROI)
 from glue.core.subset import CompositeSubsetState, RangeSubsetState, RoiSubsetState
@@ -24,7 +15,15 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue.viewers.scatter.state import ScatterLayerState
 from glue_jupyter.bqplot.image import BqplotImageView
 
-# import ipyvuedraggable
+from jdaviz.core.events import (AddDataMessage, ChangeRefDataMessage,
+                                IconsUpdatedMessage, LayersFinalizedMessage,
+                                LinkUpdatedMessage, ViewerRenamedMessage)
+from jdaviz.core.template_mixin import (SnackbarMessage, TemplateMixin, LayerSelect,
+                                        LayerSelectMixin, DatasetSelectMixin)
+from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
+from jdaviz.core.user_api import UserApiWrapper
+from jdaviz.utils import cmap_samples, is_not_wcs_only
+
 
 __all__ = ['DataMenu']
 
