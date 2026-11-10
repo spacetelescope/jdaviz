@@ -549,6 +549,24 @@ def test_table_viewer_plot_options(deconfigged_helper):
     assert len(po.layer.choices) == 0
 
 
+def test_switch_from_spectrum_to_image_viewer(deconfigged_helper, spectrum1d, image_hdu_wcs):
+    # Switching from a spectrum viewer to an image viewer while the plugin is
+    # open used to raise a KeyError in _update_stretch_curve (before the colormap was
+    # synced). This aborted syncing the remaining options and left opacity at 0.
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spec')
+    deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='img')
+
+    po = deconfigged_helper.plugins['Plot Options']._obj
+    po.plugin_opened = True
+    assert po.viewer.selected == '1D Spectrum'
+
+    po.viewer.selected = 'Image'
+    layer_state = deconfigged_helper._app.get_viewer('Image').layers[0].state
+    assert po.image_opacity_value == layer_state.alpha == 1
+    assert po.image_colormap_value == layer_state.cmap.name
+    assert len(po.stretch_histogram.marks['colorbar'].colors) > 0
+
+
 def test_set_layer_to_top_wcs_linked(imviz_helper):
     """Test set_layer_to_top with WCS-linked images, orientation layer, and subsets.
 
@@ -734,3 +752,25 @@ def test_image_visibility_consistent_with_blink(imviz_helper):
     po.image_visible.value = True
     assert layer.bitmap_visible is True
     assert layer.visible is True
+
+
+def test_line_as_steps_and_uncertainty_visible_user_api(deconfigged_helper, spectrum1d):
+    """
+    Test that ``line_as_steps`` and ``uncertainty_visible`` are exposed in the
+    Plot Options user API and sync to glue state.
+    """
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='spectrum')
+    po = deconfigged_helper.plugins['Plot Options']
+    assert hasattr(po, 'line_as_steps')
+    assert hasattr(po, 'uncertainty_visible')
+
+    viewer = deconfigged_helper._app.get_viewer('1D Spectrum')
+    layer_state = viewer.state.layers[0]
+
+    for new_value in (not layer_state.as_steps, layer_state.as_steps):
+        po.line_as_steps = new_value
+        assert po.line_as_steps.value is layer_state.as_steps is new_value
+
+    for new_value in (True, False):
+        po.uncertainty_visible = new_value
+        assert po.uncertainty_visible.value == viewer.state.show_uncertainty == new_value

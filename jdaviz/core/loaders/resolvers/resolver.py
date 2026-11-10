@@ -42,7 +42,7 @@ from jdaviz.core.registries import (loader_resolver_registry,
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
-                          find_polygon_mark_with_skewer,
+                          find_polygon_mark_with_skewer, _get_celestial_wcs,
                           layer_is_image_data)
 from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMessage,
                                SubsetCreateMessage, SubsetDeleteMessage)
@@ -1274,15 +1274,24 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         source cannot be resolved, e.g. because the name is unknown or because
         the Sesame name resolution service is unreachable.
         """
+        from astropy.coordinates.name_resolve import sesame_url
+        from astropy.utils.data import conf
+
+        # Add backup url for name resolution services
+        sesame_url.set(sesame_url.get() + ['https://vizier.idia.ac.za/viz-bin/nph-sesame/',
+                                           'http://vizier.nao.ac.jp/viz-bin/nph-sesame/'])
+
         # Strip parentheses from source if present
         stripped_source = self.source.strip('()')
         try:
-            return SkyCoord(stripped_source, unit=u.deg, frame=self.coordframe_selected)
+            with conf.set_temp('remote_timeout', 30):
+                return SkyCoord(stripped_source, unit=u.deg, frame=self.coordframe_selected)
         except Exception:  # nosec
             pass
 
         try:
-            return SkyCoord.from_name(stripped_source, frame=self.coordframe_selected)
+            with conf.set_temp('remote_timeout', 30):
+                return SkyCoord.from_name(stripped_source, frame=self.coordframe_selected)
         except Exception as e:  # nosec
             if add_loader_message:
                 self._loader_message(f"Unable to resolve source name: {self.source}",
@@ -1486,7 +1495,14 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             return
 
         # Obtain center point of the current image and convert into sky coordinates
-        if self._app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
+        helper = self._app._jdaviz_helper
+
+        if viewer.state.reference_data.ndim == 3:
+            coords = _get_celestial_wcs(viewer.state.reference_data.coords)
+            skycoord_center = coords.pixel_to_world(
+                viewer.state.zoom_center_x, viewer.state.zoom_center_y
+            )
+        elif 'Orientation' in helper.plugins and helper.plugins['Orientation'].align_by == 'WCS':
             skycoord_center = SkyCoord(
                 viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
             )

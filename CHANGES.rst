@@ -120,7 +120,8 @@ New Features
 - Logger is accessible in UI before data is loaded. [#4403]
 
 - Format choices are now sorted so that the most likely format is at the top of the list
-  and selected by default. [#4402]
+  and selected by default. Catalog versus image/spectrum format ranking is based on the presence of
+  expected catalog keywords compared with the dimensions of the input data. [#4402, #4505]
 
 - Improve logic in unit conversion plugin to prevent stale or incompatible unit
   selections when data is removed from viewers. [#4423]
@@ -138,6 +139,8 @@ New Features
 
 - Snackbar messages shown during load are now instead shown as banners
   and the popup delayed until after load is complete. [#4438]
+
+- Improve logic for incrementing default data-labels when extensions are also appended. [#4503]
 
 - Improved behavior for creating/editing subsets in table viewers. [#4488]
 
@@ -166,6 +169,11 @@ Bug Fixes
 - Fix color picker not showing correctly. [#4332]
 
 - Fix error when typing while renaming data or subset. [#4359]
+
+- Fix handling of units to load HLSP JADES DR4 spectra x1D/S2D files. [#4477]
+
+- Refactoring of some of the unit conversion logic in aperture photometry, in
+  particular handling of mixed-unit datasets and display unit conversions. [#4483, #4496]
 
 Mosviz
 ^^^^^^
@@ -197,7 +205,7 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-- Fix using ``get_regions`` when a subset is defined on scatter data. [#4433]
+- Fix using ``get_regions`` when a subset is defined on scatter data. [#4433, #4510]
 
 - Fix layer selector references when renaming viewers. [#4458]
 
@@ -206,19 +214,28 @@ Bug Fixes
 
 - Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
 
-- Fix handling of units to load HLSP JADES DR4 spectra x1D/S2D files. [#4477]
-
-- Fix unit conversion error that occurs with mixed per-steradian and per-square-pixel
-  surface brightness units. [#4483]
-
-- Fix bug when creating a subset on an image viewer when there is a cube loaded 
+- Fix bug when creating a subset on an image viewer when there is a cube loaded
   by preventing those subsets from appearing in the cube viewer.. [#4490]
 
 - Fix spectrum auto-extraction and other errors when creating a subset on a cube viewer
   while aligned by WCS, including broken links between a cube and its uncertainty cube
   after relinking. [#4490]
 
+- Added backup source name resolution servers and increased timeouts for astroquery
+  search to address upstream server issues. [#4498]
+
 - Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
+
+- Skip marker layers when resetting Unit Conversion units. [#4501]
+
+- Refactoring of some of the unit conversion logic in aperture photometry, in
+  particular handling of mixed-unit datasets and display unit conversions. [#4496]
+
+- Prevent cube and 2D-spectrum viewers from inheriting WCS linking intended for
+  image viewers. [#4497]
+
+- Fix using a 3D spectrum viewer as the coordinate source for astoquery search
+  target in the astroquery loader. [#4512]
 
 Mosviz
 ^^^^^^

@@ -381,14 +381,17 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                                        spectrum_template.spectral_axis.value.max(),
                                        5*len(spectrum_template.spectral_axis.value))
         continuum_offset = interp1d(spectrum_template.spectral_axis.value,
-                                    parameters['continuum'].to(parameters['amplitude'].unit).value)
+                                    parameters['continuum'].to(parameters['amplitude'].unit,
+                                                               equivalencies=u.spectral_density(
+                                                                   parameters['centroid'])).value)
         flux_values = gaussian_model(interp_spec_axis) + continuum_offset(interp_spec_axis)
 
         x_display_unit = self.spectrum_viewer.state.x_display_unit
         y_display_unit = self.spectrum_viewer.state.y_display_unit
         try:
             self._gaussian_spectrum = Spectrum(spectral_axis=interp_spec_axis * u.Unit(x_display_unit), # noqa
-                                         flux=(flux_values * parameters['amplitude'].unit).to(y_display_unit)) # noqa
+                                               flux=(flux_values * parameters['amplitude'].unit).to(
+                                             y_display_unit,equivalencies=u.spectral_density(parameters['centroid']))) # noqa
         except UnitConversionError:
             return None
 
@@ -494,7 +497,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         try:
             centroid_value = parameters['centroid'].to(u.Unit(spec_viewer.state.x_display_unit))
             fwhm_value = parameters['fwhm'].to(u.Unit(spec_viewer.state.x_display_unit))
-            amplitude_value = parameters['amplitude'].to(u.Unit(spec_viewer.state.y_display_unit))
+            amplitude_value = parameters['amplitude'].to(u.Unit(spec_viewer.state.y_display_unit),
+                                                         equivalencies=u.spectral_density(
+                                                             parameters['centroid']))
             continuum = parameters['continuum'].to(u.Unit(spec_viewer.state.y_display_unit))
 
             if self.plot_gaussian_params:

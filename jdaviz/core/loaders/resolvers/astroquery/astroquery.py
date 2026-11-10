@@ -110,7 +110,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
             # queries the region (based on the provided center point and radius)
             # finds all the sources in that region
             output = SDSS.query_region(skycoord_center, radius=radius,
-                                       data_release=17)
+                                       data_release=20)
 
         elif self.telescope.selected == 'Gaia':
             from astroquery.gaia import Gaia

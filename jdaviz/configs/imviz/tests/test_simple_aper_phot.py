@@ -18,8 +18,9 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
 from photutils.datasets import make_4gaussians_image
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
+from specutils import Spectrum
 
-from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
+from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_plots import (
     _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseDeconfiggedImage_WCS_WCS, BaseImviz_WCS_NoWCS
 from jdaviz.core.custom_units_and_equivs import PIX2
@@ -591,6 +592,178 @@ def test_aper_phot_basic(helper_name, image_2d_wcs, request):
 
     tbl = phot_plugin.export_table()
     assert len(tbl) == 1
+
+
+@pytest.mark.parametrize('load_order', [('surface_brightness', 'counts'),
+                                        ('counts', 'surface_brightness')])
+@pytest.mark.parametrize('plot_type', ['Curve of Growth', 'Radial Profile', 'Radial Profile (Raw)'])
+@pytest.mark.parametrize('image_units', [(u.Jy / u.sr, u.count), (u.Jy, u.count / u.sr)])
+@pytest.mark.parametrize('helper_name', ['imviz_helper', 'deconfigged_helper'])
+def test_aper_phot_mixed_units(helper_name, image_2d_wcs, load_order, plot_type, image_units,
+                               request):
+    """Mixed-unit photometry must retain each dataset's applicable units.
+
+    In imviz (no Unit Conversion plugin), display units always resolve to
+    the native data units. In deconfigged, datasets that cannot be converted
+    to the global display units (e.g. counts) retain their native units.
+    """
+    helper = request.getfixturevalue(helper_name)
+    images = {
+        'surface_brightness': NDData(np.full((10, 10), 10.0),
+                                     wcs=image_2d_wcs, unit=image_units[0]),
+        'counts': NDData(np.full((10, 10), 20.0), wcs=image_2d_wcs, unit=image_units[1]),
+    }
+    for label in load_order:
+        helper.load(images[label], data_label=label, format='Image')
+
+    aperture = RectanglePixelRegion(center=PixCoord(x=5, y=5), width=2, height=2)
+    helper.plugins['Subset Tools'].import_region(aperture)
+    phot_plugin = helper.plugins['Aperture Photometry']
+    phot_plugin.aperture.selected = 'Subset 1'
+    phot_plugin.background.selected = 'Manual'
+    phot_plugin.current_plot_type = plot_type
+
+    for label in load_order:
+        phot_plugin.dataset.selected = f'{label}[DATA]'
+        native_unit = images[label].unit
+        assert u.Unit(phot_plugin._obj.display_unit) == native_unit
+        solid_angle = u.sr if native_unit in (u.Jy / u.sr, u.count / u.sr) else None
+        assert phot_plugin._obj.display_solid_angle_unit == ('sr' if solid_angle else '')
+        assert u.Unit(phot_plugin._obj.flux_scaling_display_unit) == (
+            native_unit * (solid_angle or u.dimensionless_unscaled))
+        phot_plugin.background_value = 0
+        phot_plugin.pixel_area = 1
+        result, _ = phot_plugin.calculate_photometry()
+        expected_sum = 4 * images[label].data[0, 0] * native_unit
+        if solid_angle:
+            expected_sum *= (1 * u.arcsec**2).to(u.sr)
+
+        assert len(result) == 1
+        assert result['data_label'][0] == f'{label}[DATA]'
+        assert result['subset_label'][0] == 'Subset 1'
+        assert_quantity_allclose(result['sum'][0], expected_sum)
+        assert_quantity_allclose(result['sum_aper_area'][0], 4 * PIX2)
+        assert_quantity_allclose(result['mean'][0], images[label].data[0, 0] * images[label].unit)
+        assert_quantity_allclose(result['var'][0], 0 * images[label].unit**2)
+        if plot_type == 'Curve of Growth':
+            assert u.Unit(phot_plugin.plot._obj.figure.axes[1].label) == expected_sum.unit
+
+
+def test_aper_phot_mixed_units_with_spectrum(deconfigged_helper, image_2d_wcs):
+    """
+    Mixed viewer types: images (image viewer) and a 1D spectrum (spectrum
+    viewer) share the app-wide display units. Changing the global flux unit
+    should convert photometry of convertible datasets while counts data
+    retains its native units.
+    """
+    deconfigged_helper.load(NDData(np.ones((10, 10)), wcs=image_2d_wcs, unit=u.MJy / u.sr),
+                            data_label='sb', format='Image')
+    deconfigged_helper.load(NDData(np.full((10, 10), 2.0), wcs=image_2d_wcs, unit=u.count),
+                            data_label='ct', format='Image')
+    spec = Spectrum(spectral_axis=np.linspace(1, 2, 10) * u.um, flux=np.ones(10) * u.Jy)
+    deconfigged_helper.load(spec, format='1D Spectrum', data_label='spec')
+
+    uc = deconfigged_helper.plugins['Unit Conversion']
+    assert uc.flux_unit.selected == 'MJy'
+    assert uc.angle_unit.selected == 'sr'
+
+    deconfigged_helper.plugins['Subset Tools'].import_region(
+        RectanglePixelRegion(center=PixCoord(x=5, y=5), width=2, height=2))
+    phot_plugin = deconfigged_helper.plugins['Aperture Photometry']
+    phot_plugin.aperture.selected = 'Subset 1'
+    phot_plugin.background.selected = 'Manual'
+
+    # surface brightness image uses the global sb display unit, counts image
+    # retains its native units
+    phot_plugin.dataset.selected = 'sb[DATA]'
+    assert phot_plugin._obj.display_unit == 'MJy / sr'
+    phot_plugin.dataset.selected = 'ct[DATA]'
+    assert phot_plugin._obj.display_unit == 'ct'
+
+    # change the global flux unit (also changes the spectrum viewer display)
+    uc.flux_unit = 'Jy'
+    assert deconfigged_helper._app._get_display_unit('spectral_y') == 'Jy'
+
+    phot_plugin.dataset.selected = 'sb[DATA]'
+    assert phot_plugin._obj.display_unit == 'Jy / sr'
+    phot_plugin.background_value = 0
+    phot_plugin.pixel_area = 1
+    result, _ = phot_plugin.calculate_photometry()
+    expected_sum = (4 * u.MJy * (1 * u.arcsec ** 2).to(u.sr) / u.sr).to(u.Jy)
+    assert_quantity_allclose(result['sum'][0], expected_sum)
+    assert_quantity_allclose(result['mean'][0], 1 * u.MJy / u.sr)
+
+    # counts data is unaffected by the global flux unit change
+    phot_plugin.dataset.selected = 'ct[DATA]'
+    assert phot_plugin._obj.display_unit == 'ct'
+    phot_plugin.background_value = 0
+    result, _ = phot_plugin.calculate_photometry()
+    assert_quantity_allclose(result['sum'][0], 8 * u.count)
+    assert_quantity_allclose(result['mean'][0], 2 * u.count)
+
+
+@pytest.mark.parametrize('helper_name', ['imviz_helper', 'deconfigged_helper'])
+def test_aper_phot_wcs_aligned_mixed_units(helper_name, image_2d_wcs, request):
+    """
+    Mixed-unit images aligned by WCS via the Orientation plugin: photometry
+    from a sky region should retain each dataset's applicable units.
+    """
+    helper = request.getfixturevalue(helper_name)
+    helper.load(NDData(np.ones((10, 10)), wcs=image_2d_wcs, unit=u.MJy / u.sr),
+                data_label='sb', format='Image')
+    helper.load(NDData(np.full((10, 10), 2.0), wcs=image_2d_wcs, unit=u.count),
+                data_label='ct', format='Image')
+
+    helper.plugins['Orientation'].align_by = 'WCS'
+
+    sky_region = RectanglePixelRegion(center=PixCoord(x=5, y=5),
+                                      width=2, height=2).to_sky(image_2d_wcs)
+    helper.plugins['Subset Tools'].import_region(sky_region)
+
+    phot_plugin = helper.plugins['Aperture Photometry']
+    phot_plugin.aperture.selected = 'Subset 1'
+    phot_plugin.background.selected = 'Manual'
+
+    expected = {'sb[DATA]': ('MJy / sr',
+                             4 * u.MJy * (1 * u.arcsec ** 2).to(u.sr) / u.sr,
+                             1 * u.MJy / u.sr),
+                'ct[DATA]': ('ct', 8 * u.count, 2 * u.count)}
+    for label, (display_unit, expected_sum, expected_mean) in expected.items():
+        phot_plugin.dataset.selected = label
+        assert phot_plugin._obj.display_unit == display_unit
+        phot_plugin.background_value = 0
+        phot_plugin.pixel_area = 1
+        result, _ = phot_plugin.calculate_photometry()
+        assert result['data_label'][0] == label
+        assert_quantity_allclose(result['sum'][0], expected_sum)
+        assert_quantity_allclose(result['mean'][0], expected_mean)
+
+
+def test_aper_phot_unitless_data_with_global_units(deconfigged_helper, image_2d_wcs):
+    """
+    Unitless (dimensionless) data should not claim the app-wide display
+    units set by other datasets, and photometry should return plain values.
+    """
+    deconfigged_helper.load(NDData(np.ones((10, 10)), wcs=image_2d_wcs, unit=u.MJy / u.sr),
+                            data_label='sb', format='Image')
+    deconfigged_helper.load(NDData(np.full((10, 10), 2.0), wcs=image_2d_wcs),
+                            data_label='unitless', format='Image')
+    assert deconfigged_helper.plugins['Unit Conversion'].flux_unit.selected == 'MJy'
+
+    deconfigged_helper.plugins['Subset Tools'].import_region(
+        RectanglePixelRegion(center=PixCoord(x=5, y=5), width=2, height=2))
+    phot_plugin = deconfigged_helper.plugins['Aperture Photometry']
+    phot_plugin.aperture.selected = 'Subset 1'
+    phot_plugin.background.selected = 'Manual'
+
+    phot_plugin.dataset.selected = 'unitless[DATA]'
+    assert phot_plugin._obj.display_unit == ''
+    assert not phot_plugin._obj._has_display_unit_support
+
+    phot_plugin.background_value = 0
+    result, _ = phot_plugin.calculate_photometry()
+    assert not isinstance(result['sum'][0], u.Quantity)
+    assert_allclose(result['sum'][0], 8)
 
 
 def test_aper_phot_load_table_into_data_collection(deconfigged_helper, image_2d_wcs):
