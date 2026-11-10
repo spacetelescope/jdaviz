@@ -6,7 +6,7 @@
       <div style="width: 32px">
         <j-tooltip :tooltipcontent="tooltip || 'Toggle multiselect'">
           <v-btn
-            icon
+            variant="text"
             style="opacity: 0.7"
             @click="() => $emit('update:multiselect', !multiselect)"
           >

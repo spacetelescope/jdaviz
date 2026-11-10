@@ -3,7 +3,7 @@
     <div v-if="show_multiselect_toggle" style="position: absolute; width: 32px; right: 0px; margin-right: 12px; margin-top: -32px">
       <j-tooltip tipid='layer-multiselect-toggle'>
         <v-btn
-          icon
+          variant="text"
           style="opacity: 0.7"
           @click="$emit('update:multiselect', !multiselect)"
         >
