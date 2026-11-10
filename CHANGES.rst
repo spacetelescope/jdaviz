@@ -15,6 +15,9 @@ Bug Fixes
 
 - Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
 
+- Fixed invisible WCS-only orientation layer becoming visible in subsets when a new
+  image viewer is created. [#4511]
+
 - Fix using a 3D spectrum viewer as the coordinate source for astoquery search
   target in the astroquery loader. [#4512]
 
