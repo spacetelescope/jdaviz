@@ -240,6 +240,8 @@ Bug Fixes
 - Fix using a 3D spectrum viewer as the coordinate source for astoquery search
   target in the astroquery loader. [#4512]
 
+- Fix Data Quality plugin visibility when a cube with DQ is loaded after other data. [#4532]
+
 Mosviz
 ^^^^^^
 
