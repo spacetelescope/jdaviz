@@ -1782,7 +1782,7 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         else:
             target.subset_state = state
             verb = 'updated'
-        if mode is not ReplaceMode:
+        if mode not in (NewMode, ReplaceMode):
             self.hub.broadcast(SnackbarMessage(
                 f'Combination modes do not apply to table subsets. "{target.label}" '
                 f'was {verb} to match the checked rows.', color='warning', sender=self))
