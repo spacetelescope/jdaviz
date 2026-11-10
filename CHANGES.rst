@@ -196,6 +196,8 @@ Other Changes and Additions
 - Changing visible columns in the table viewer has been moved from the Plot Options
   plugin to a tool in the table viewer toolbar (with deprecation). [#4382]
 
+- Added splash screen and changed loading screens for standalone application [#4495]
+
 
 5.0.6 (unreleased)
 ==================
