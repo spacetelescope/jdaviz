@@ -67,7 +67,7 @@ For example:
 
 .. code-block:: python
 
-    viewer = imviz.default_viewer
+    viewer = jdaviz.viewers['Image']
     viewer.zoom_level
     viewer.zoom_level = 1  # Set the zoom level directly.
     viewer.zoom(2)  # Set the relative zoom based on current zoom level.
@@ -249,7 +249,7 @@ To avoid inaccurate transforms, consider one of the following workflows:
 .. warning::
 
     If you rely on the GWCS bounding box, it will be set to ``None`` when
-    you data is loaded into Imviz, but the original bounding box,
+    you data is loaded into ``jdaviz``, but the original bounding box,
     if available, is now in a hidden ``_orig_bounding_box``
     attribute of the GWCS object. You can restore the bounding box by
     assigning the value of ``_orig_bounding_box`` back to its

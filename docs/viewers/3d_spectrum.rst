@@ -97,7 +97,8 @@ to make subsets visible or invisible, to change their color, and to change their
 Spectrum At Spaxel
 ------------------
 
-This tool allows the user to create a single-spaxel subset in an image viewer. This subset will then be
+This tool allows the user to create a single-`spaxel <https://jwst-docs.stsci.edu/methods-and-roadmaps/jwst-integral-field-spectroscopy/jwst-integral-field-spectroscopy-terminology#gsc.tab=0>`_ 
+subset in an image viewer. This subset will then be
 visualized in the spectrum viewer by showing the spectrum at that spaxel.
 After clicking on the |icon-spaxel| icon, hovering over a pixel in the image viewer will show a preview of the spectrum
 at that spaxel in the spectrum viewer, and left-clicking will create a new subset at that spaxel.
