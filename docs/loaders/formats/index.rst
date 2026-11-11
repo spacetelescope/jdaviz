@@ -15,7 +15,8 @@ will be parsed and which tools can visualize it:
    2d_spectrum
    3d_spectrum
    image
-   catalog
+   source_catalog
+   generic_catalog
    ramp
    line_list
    subset

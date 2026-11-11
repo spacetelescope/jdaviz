@@ -1,27 +1,22 @@
 .. _loaders-format-catalog:
 .. rst-class:: section-icon-mdi-plus-box
 
-:data-types: catalog
+:data-types: sourcecatalog
+
+.. _loaders-format-catalog-overview:
 
 *********************
-Catalog Format
+Source Catalog Format
 *********************
 
-Load astronomical catalogs for overlay and analysis.
 
-.. .. note::
-..     This feature is currently in development. Stay tuned for updates!
 
 Overview
 ========
 
-The Catalog format will be used for loading astronomical catalogs that can be
+Load astronomical catalogs for overlay and analysis. The Catalog format will be used for loading astronomical catalogs that can be
 overlaid on images, added as a Table, and used for analysis.
-
-There are two types of catalogs that can be loaded:
-
-    - **Source Catalog** (formerly Catalog) - catalog where each row likely represents an object on the sky. Must contain object coordinates (pixels, sky coordinates, or SkyCoord objects). 
-    - **Generic Catalog** - catalog with any type of data
+Each row likely represents an object on the sky. Must contain object coordinates (pixels, sky coordinates, or SkyCoord objects). 
     
 Usage
 =====
@@ -34,13 +29,11 @@ Usage
     # Load a source catalog
     jdaviz.load('source_catalog.ecsv', format='Source Catalog') 
 
-    # Load a generic catalog
-    jdaviz.load('catalog.ecsv', format='Generic Catalog') 
 
 Data Requirements
 =================
 
-The Source Catalog or Generic Catalog format imports any :class:`astropy.table.Table` or
+The Source Catalog  format imports any :class:`astropy.table.Table` or
 :class:`~astropy.table.QTable` as a data collection entry. 
 
 Source Catalog requires the following columns:
@@ -63,15 +56,15 @@ Catalog Parsing
 ===============
 
 When loading via the UI, if a pair of RA/Dec or X/Y columns are parsable in the catalog, 
-the format will default to Source Catalog. Otherwise, it will default to Generic Catalog.
+the format will default to Source Catalog. 
 
 .. note::
     Sometimes multi-object spectral or image files can be auto-parsed as a catalog. 
     You can either change the format in the loader UI if the incorrect format is detected, or use the API to load the data using the correct format. 
 
-Once the catalog is parsed, the ``Viewer`` must be selected.  The ``Viewer`` will default to load as a Source Catalog Table or Generic Table,
-but it can be loaded as a Scatter ``Viewer`` or Histogram ``Viewer``.  If it is a Source Catalog, 
-the catalog can be loaded onto an Image ``Viewer`` as markers (if a prior image has been loaded). 
+Once the catalog is parsed, the ``Viewer`` must be selected.  The ``Viewer`` will default to load as a Source Catalog Table,
+but it can be loaded as a Scatter ``Viewer`` or Histogram ``Viewer``. 
+The catalog can be loaded onto an Image ``Viewer`` as markers (if a prior image has been loaded). 
 
 UI Access
 =========
@@ -84,7 +77,7 @@ UI Access
 
 
 
-.. See Also
-.. ========
+See Also
+========
 
-.. - :doc:`../../imviz/plugins` - For the current catalog search functionality
+- :ref:`loaders-format-generic_catalog-overview` - For the generic catalog functionality

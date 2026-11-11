@@ -14,7 +14,8 @@ Jdaviz provides specialized viewers for different types of astronomical data.
    2d_spectrum
    3d_spectrum
    image
-   table
+   source_catalog_table
+   generic_table
    scatter
    histogram
    extensions

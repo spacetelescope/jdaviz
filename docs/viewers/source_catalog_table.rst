@@ -1,49 +1,39 @@
 .. _viewers-table:
 .. rst-class:: section-icon-mdi-plus-box
 
-*********************************
-Source Catalog and Generic Tables
-*********************************
-
-Most of the functionality between Source Catalogs and Generic Catalogs viewers is identical. 
-The main difference is related to how the data is stored in the tables.
+****************************
+Source Catalog Table
+****************************
 
 .. _viewers-table-sourcecatalog:
 
-Source Catalog Table
-====================
+Source Catalog Tables
+=====================
 Source Catalog Table viewers show data loaded with ``format = Source Catalog``. 
 In this table, the ``ID``, ``RA``/``X``, ``Dec``/``Y`` columns are the index columns, and the values are not changeable.  
 
-.. _viewers-table-generic:
 
-Generic Table
-=============
-Generic Table viewers show data loaded with ``format = Generic Catalog``. 
-In this table, the ``ID`` column is the index column, and the values are not changeable.  
+.. note:: 
+   
+   Most of the functionality between Source Catalogs and Generic Catalogs viewers is identical. 
+   The main difference is related to how the data is stored in the tables.
 
 .. _viewers-table-tablefeatures:
 
 Table viewer features
 =====================
 
-- Show cell value: 
-
-Clicking on a cell shows the cell value in the top gray bar below the toolbar.  
+**Show cell value:** Clicking on a cell shows the cell value in the top gray bar below the toolbar.  
 On the far left, the column name and column number will show in the white box.  On the right, the cell value will be shown in the gray box.
 For non-index cells, to the right of the gray box, a green check and a red x will be shown, indicating the cell
 value can be changed.  To update the value, click in the gray box and update the value, then select the green check to apply the value or the red x 
 to disregard the change.  The value in the cell of the table will then be updated. 
 
-- Edit column name: 
-
-When hovering over or clicking on the column name cell, a small black pencil appears to the right of the column name.
+**Edit column name:** When hovering over or clicking on the column name cell, a small black pencil appears to the right of the column name.
 Selecting the pencil allows you to change the column name.  Select the black check to apply the value, or
 the black x to disregard the change.  The column name will then be updated. 
 
-- Page counter: 
-
-The bottom of the viewer shows the number of rows in the page, and allows you to 
+**Page counter:** The bottom of the viewer shows the number of rows in the page, and allows you to 
 select how many rows to show in the viewer per page.  Select the dropdown to change the row counts.
 To the right is the row and page counter, which tells you which rows you are viewing and how many rows are 
 in the table.  Finally, there are four arrows, which allow you to go to the previous/next or first/final page.
@@ -135,3 +125,8 @@ UI Access
    :repeat: false
    :init-steps-json: [{"action":"disable-toolbar-except","value":"loaders"}]
    :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-tab", "value": "Viewer", "delay": 1500, "caption": "Select the Viewer tab"}, {"action": "select-dropdown", "value": "Viewer Type:Table", "delay": 1500, "caption": "Set viewer type to Table"}]
+
+See Also
+========
+
+- :ref:`viewers-generic_table` - For the generic catalog viewer functionality
