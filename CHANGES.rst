@@ -223,6 +223,9 @@ Bug Fixes
   while aligned by WCS, including broken links between a cube and its uncertainty cube
   after relinking. [#4490]
 
+- Fix a bug in unit conversion when there are multiple spectrum viewers and
+  the first has no loaded data. [#4491]
+
 - Added backup source name resolution servers and increased timeouts for astroquery
   search to address upstream server issues. [#4498]
 
