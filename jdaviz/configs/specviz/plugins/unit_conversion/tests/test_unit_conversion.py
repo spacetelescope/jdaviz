@@ -369,3 +369,75 @@ def test_toggle_spectral_y_type_deconfigged(deconfigged_helper, spectrum1d):
 
     plg.spectral_y_type = "Flux"
     assert plg.spectral_y_type == "Flux"
+
+
+def test_change_display_units_with_empty_spectrum_viewer(deconfigged_helper, spectrum1d):
+    """
+    Test that changing the flux display unit when the spectrum viewer is
+    empty works as intended
+    """
+    deconfigged_helper.load(spectrum1d, data_label='spec', format='1D Spectrum')
+    plg = deconfigged_helper.plugins['Unit Conversion']
+
+    dm = deconfigged_helper.viewers['1D Spectrum'].data_menu
+    for label in list(dm.data_labels_loaded):
+        dm.layer = label
+        dm.remove_from_viewer()
+    assert len(dm.data_labels_loaded) == 0
+
+    plg.flux_unit = 'mJy'
+    assert plg.flux_unit.selected == 'mJy'
+
+    deconfigged_helper.load(spectrum1d, data_label='spec 2', format='1D Spectrum')
+    viewer = deconfigged_helper.viewers['1D Spectrum']._obj.glue_viewer
+    assert viewer.state.y_display_unit == 'mJy'
+
+
+def test_plugin_enabled_disabled(deconfigged_helper, sky_coord_only_source_catalog,
+                                 image_nddata_wcs, spectrum1d):
+    """
+    Test that the Unit Conversion plugin is enabled when data is loaded in a
+    relevant viewer, disabled when all data is removed, and re-enabled when
+    data is added back.
+    """
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label="test")
+
+    plg = deconfigged_helper.plugins["Unit Conversion"]
+
+    msg = 'Unit Conversion unavailable without data loaded in a viewer'
+
+    # plugin should be enabled when data is loaded
+    assert plg._obj.disabled_msg == ''
+
+    # remove the data from the viewer, plugin should become disabled
+    dm = deconfigged_helper.viewers['1D Spectrum'].data_menu
+    dm.layer.selected = ['test']
+    dm.remove_from_viewer()
+    assert plg._obj.disabled_msg == msg
+
+    # load a source catalog, which will be added to a new scatter viewer by default.
+    # the unit conversion plugin should still be disabled since the check for
+    # relevancy is for data in spectrum/image/cube viewers
+    deconfigged_helper.load(sky_coord_only_source_catalog, format='Source Catalog')
+    assert 'Source Catalog Table' in deconfigged_helper.viewers
+    assert plg._obj.disabled_msg == msg
+
+    # Check that a seconds spectrum viewer with data will allow this to work even if
+    # the first spectrum viewer has no data.
+    second_viewer = deconfigged_helper.new_viewers['1D Spectrum']()
+    second_viewer.data_menu.add_data('test')
+    assert plg._obj.disabled_msg == ''
+    plg.spectral_y_type = "Surface Brightness"
+    assert plg.spectral_y_type == "Surface Brightness"
+
+    plg.spectral_y_type = "Flux"
+    assert plg.spectral_y_type == "Flux"
+
+    second_viewer.data_menu.layer = 'test'
+    second_viewer.data_menu.remove_from_viewer()
+    assert plg._obj.disabled_msg == msg
+
+    # loading an image should re-enable the plugin
+    deconfigged_helper.load(image_nddata_wcs, format='Image',
+                            data_label='test_image')
+    assert plg._obj.disabled_msg == ''
