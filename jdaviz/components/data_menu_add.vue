@@ -50,7 +50,7 @@
             :tooltipcontent="api_hints_enabled ? '' : 'Create new '+tool.name+' subset'"
           >
             <v-btn
-              icon
+              variant="text"
               @mouseover="() => {hover_api_hint = 'dm.create_subset(\''+tool.name+'\')'}"
               @mouseleave="() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
               @click="() => {$emit('create-subset', tool.name)}"
