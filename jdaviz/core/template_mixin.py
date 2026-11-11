@@ -613,8 +613,8 @@ class LoadersMixin(VuetifyTemplate, HubListener):
             loader = Resolver(app=self._app,
                               open_callback=open_accordion,
                               close_callback=close_accordion,
-                              set_active_loader_callback=set_active_loader,
-                              restrict_to_target=self._registry_label)
+                              set_active_loader_callback=set_active_loader
+                              )
             loader_items.append({
                 'name': name,
                 'label': name,
