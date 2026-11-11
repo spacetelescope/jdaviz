@@ -683,10 +683,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
 
         try:
-            type = 'sky_region' if self._app._align_by == 'wcs' else 'region'
-            reg = self._app.get_subsets(subset_name=self.background_selected,
-                                        include_sky_region=type == 'sky_region',
-                                        spatial_only=True)[0][type]
+            reg = self.aperture._get_spatial_region(subset=background_selected,
+                                                    wrt_data=self.dataset.selected_dc_item)
             self.background_value = self._calc_background_median(reg)
         except Exception as e:
             self.background_value = 0
@@ -795,13 +793,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 raise ValueError(f"aperture must be one of {self.aperture.choices}")
 
         if aperture is not None or dataset is not None:
-            reg = self.aperture._get_spatial_region(subset=aperture if aperture is not None else self.aperture.selected)  # noqa
+            reg = self.aperture._get_spatial_region(subset=aperture if aperture is not None else self.aperture.selected,  # noqa
+                                                    wrt_data=data)
 
             # determine if a valid aperture (since selected_validity only applies to selected entry)
             # we don't need to pass in 'viewer' here (which is used to obtain a WCS
-            # to translate Sky Regions to Pixel Regions). If we are in deconfigged,
-            # then _get_spatial_region always returns a PixelRegion. If we are in Imviz or
-            # Cubeviz, _get_mark_coords_and_validate will use the app's default viewer.
+            # to translate Sky Regions to Pixel Regions). If the region is a SkyRegion,
+            # _get_mark_coords_and_validate will use the app's default viewer.
             _, _, validity = self.aperture._get_mark_coords_and_validate(selected=aperture)
             if not validity.get('is_aperture'):
                 raise ValueError(f"Selected aperture {aperture} is not valid: {validity.get('aperture_message')}")  # noqa
@@ -846,7 +844,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             background_value = self.background_value
             bg_in_display_units = True
         else:
-            bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected)  # noqa
+            bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  # noqa
+                                                       wrt_data=data)
             background_value = self._calc_background_median(bg_reg, data=data)
             bg_in_display_units = True
 
