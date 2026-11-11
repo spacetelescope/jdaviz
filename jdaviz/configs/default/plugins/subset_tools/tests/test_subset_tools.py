@@ -68,7 +68,9 @@ def test_subset_pixels_label_omitted_for_scatter(deconfigged_helper, image_2d_wc
     applied in a Scatter viewer (e.g. on a catalog), since scatter axes are not
     necessarily in pixel units.
     """
-    # load an image first to ensure that the Scatter viewer is created with a WCS link type
+
+    # TODO: currently need to load an image first to ensure that the Scatter viewer
+    #  is created with a WCS link type; won't be necessary once we add units to Table viewers
     image_data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
     deconfigged_helper.load(image_data, format='Image', data_label='image')
 
