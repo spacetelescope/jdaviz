@@ -66,6 +66,21 @@ class TestTableViewerTools:
         toolbar.tools['jdaviz:table_add_column'].activate()
         assert toolbar._is_visible('jdaviz:table_apply_add_column')
 
+    def test_data_association_column_sync_state(self):
+        column_name = next(
+            header['value'] for header in self.table_viewer.widget_table._get_headers()
+            if header['value'].startswith('Data: ')
+        )
+        assert self.table_viewer.state.is_synced(column_name)
+
+        self.table_viewer.state.column_sync_state = {column_name: False}
+
+        headers = {
+            header['value']: header
+            for header in self.table_viewer.widget_table._get_headers()
+        }
+        assert not headers[column_name]['synced']
+
     def test_table_highlight_tool_activates(self):
         """Test that TableHighlightSelected tool activates properly."""
         toolbar = self.table_viewer.toolbar

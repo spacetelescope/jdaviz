@@ -1659,6 +1659,8 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         )
         self.widget_table.jdaviz_viewer = self
 
+        self.state.add_callback('column_sync_state', self._update_column_sync_state)
+
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True
 
@@ -1689,6 +1691,9 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         # Build the toolbar with the correct default-tool priority
         self.initialize_toolbar(default_tool_priority=default_tool_priority)
+
+    def _update_column_sync_state(self, *args):
+        self.widget_table._update_columns()
 
     def _on_restore_toolbar(self, msg={}):
         """Hook for subclasses to clean up viewer-specific UI state (e.g.
