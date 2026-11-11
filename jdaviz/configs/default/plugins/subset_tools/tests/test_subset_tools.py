@@ -71,7 +71,7 @@ def test_subset_pixels_label_omitted_for_scatter(deconfigged_helper, image_2d_wc
     # load an image first to ensure that the Scatter viewer is created with a WCS link type
     image_data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
     deconfigged_helper.load(image_data, format='Image', data_label='image')
-    
+
     deconfigged_helper.load(sky_coord_only_source_catalog,
                             format='Source Catalog',
                             data_label='my_catalog')
