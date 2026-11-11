@@ -142,6 +142,8 @@ New Features
 
 - Improve logic for incrementing default data-labels when extensions are also appended. [#4503]
 
+- Render the out-of-bounds regions of image layers as transparent. [#4536]
+
 Mosviz
 ^^^^^^
 

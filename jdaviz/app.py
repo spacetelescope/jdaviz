@@ -2980,7 +2980,14 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                     color = viewer.scatter_color_cycler()
                 else:
                     color = viewer.color_cycler()
-            viewer.add_data(data, percentile=95, color=color)
+
+            # `cmap_bad` is an image layer state attribute that specifies the RGBA tuple
+            # assigned to pixels with nans, without data, or outside of the bounds;
+            # in matplotlib `Colormap` terms, these are "bad" values. the jdaviz default will
+            # set "bad" pixels to be fully transparent (though technically "transparent black").
+            cmap_bad = (0, 0, 0, 0)
+
+            viewer.add_data(data, percentile=95, color=color, cmap_bad=cmap_bad)
 
             # Specviz removes the data from collection in viewer.py if flux unit incompatible.
             if data_label not in self.data_collection:
