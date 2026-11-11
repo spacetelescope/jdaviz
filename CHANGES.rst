@@ -175,6 +175,8 @@ Bug Fixes
 - Refactoring of some of the unit conversion logic in aperture photometry, in
   particular handling of mixed-unit datasets and display unit conversions. [#4483, #4496]
 
+- Fix issue with mouseover units when lined 1D spectrum viewer is empty. [#4526]
+
 Mosviz
 ^^^^^^
 

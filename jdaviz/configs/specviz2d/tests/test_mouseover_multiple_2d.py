@@ -78,3 +78,25 @@ class TestMouseoverMultiple2DSpectra:
                                 format='2D Spectrum')
         assert self._mouseover_and_check_line_visible(viewer_2d, label_mouseover, 5, 5)
         assert self._mouseover_and_check_line_visible(viewer_1d, label_mouseover, 5, 5)
+
+    def test_mouseover_2d_after_removing_all_1d_spectra(self, deconfigged_helper, spectrum2d):
+        """
+        With no data left in the 1D spectrum viewer, its x display unit is None.
+        Mouseover on the 2D viewer must not try to convert to that unit.
+        """
+        deconfigged_helper.load(spectrum2d, data_label='2D Spectrum', format='2D Spectrum')
+
+        dm = deconfigged_helper.viewers['1D Spectrum'].data_menu
+        for label in list(dm.data_labels_loaded):
+            dm.layer = label
+            dm.remove_from_viewer()
+
+        viewer_1d = deconfigged_helper.viewers['1D Spectrum']._obj.glue_viewer
+        viewer_2d = deconfigged_helper.viewers['2D Spectrum']._obj.glue_viewer
+        assert viewer_1d.state.x_display_unit is None
+
+        label_mouseover = deconfigged_helper._coords_info
+        label_mouseover._viewer_mouse_event(
+            viewer_2d, {'event': 'mousemove', 'domain': {'x': 5, 'y': 5}})
+        assert not any(mark.visible for marker_id, mark in label_mouseover.marks.items()
+                       if marker_id.endswith(':matched'))
