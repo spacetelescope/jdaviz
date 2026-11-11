@@ -40,6 +40,7 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.helpers import _next_subset_num
 from jdaviz.utils import (MultiMaskSubsetState, _chain_regions, data_has_valid_wcs,
                           _get_celestial_wcs)
+from jdaviz.core.unit_conversion_utils import spectral_unit_conversion
 
 from jdaviz.configs.default.plugins.subset_tools import utils
 
@@ -1453,16 +1454,17 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                         viewer.apply_roi(region)
 
                     elif isinstance(region, SpectralRegion):
-                        range_viewer = self.app.get_viewer(
-                            viewer_parameter) if viewer_parameter else self.spectrum_viewer
+                        range_viewer = self.app.get_viewer(viewer_parameter) \
+                            if viewer_parameter else self.spectrum_viewer
                         x_att = range_viewer.state.x_att
                         base_units = range_viewer.state.reference_data.get_component(x_att).units
 
                         # convert the input region to the base units
-                        region_lower = region.lower.to(u.Unit(base_units))
-                        region_upper = region.upper.to(u.Unit(base_units))
-                        s = RangeSubsetState(lo=region_lower.value, hi=region_upper.value,
-                                             att=x_att)
+                        region_lower = spectral_unit_conversion(region.lower.value,
+                                                                region.lower.unit, base_units)
+                        region_upper = spectral_unit_conversion(region.upper.value,
+                                                                region.upper.unit, base_units)
+                        s = RangeSubsetState(lo=region_lower, hi=region_upper, att=x_att)
 
                         range_viewer.apply_subset_state(s)
 
