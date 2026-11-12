@@ -13,6 +13,9 @@ Bug Fixes
 
 - Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
 
+- Fix a bug in unit conversion when there are multiple spectrum viewers and
+  the first has no loaded data. [#4491]
+
 - Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
 
 - Fixed invisible WCS-only orientation layer becoming visible in subsets when a new
