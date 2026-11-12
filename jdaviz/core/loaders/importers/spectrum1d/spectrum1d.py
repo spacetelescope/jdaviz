@@ -19,7 +19,7 @@ __all__ = ['SpectrumImporter']
 @loader_importer_registry('1D Spectrum')
 class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "./spectrum1d.vue"
-    parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
+    parser_preference = ['fits', 'asdf', 'object', 'specutils.Spectrum']
     multiselect = Bool(True).tag(sync=True)
     data_label_suffices = List().tag(sync=True)
 
@@ -27,6 +27,10 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        if (self.input_type == 'fits:hdulist'
+                and len(self.extension.choices) > 1):
+            self.extension.select_all()
 
         # Add filter for unit compatibility
         def viewer_compatible_units(viewer):
@@ -95,8 +99,15 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         return ''
 
     def _apply_kwargs(self, kwargs):
+        fits_multi_extension = (
+                self.input_type == 'fits:hdulist'
+                and len(self.extension.choices) > 1
+        )
+
         applied_kwargs = super()._apply_kwargs(kwargs)
-        if 'extension' not in applied_kwargs and len(self.extension.choices) > 1:
+        if (not fits_multi_extension
+                and 'extension' not in applied_kwargs
+                and len(self.extension.choices) > 1):
             msg_str = (f"The default extension selection ({self.extension.selected}) will be used.\n"  # noqa
                        f"To load additional sources, please specify them via dropdown or "
                        f"as follows:\n'{self.config}.load(filename, extension=[...]).")
@@ -136,27 +147,64 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
 
         if not hasattr(self, 'extension') or not hasattr(self, 'data_label'):
             return
+
+        selected_items = self.extension.selected_item_list
+        fits_multi_extension = (
+                self.input_type == 'fits:hdulist'
+                and len(self.extension.choices) > 1
+        )
+
         self.data_label_is_prefix = (self.multiselect
-                                     and len(self.extension.selected) > 1
-                                     and not self.concatenate)
+                                     and not self.concatenate
+                                     and (len(selected_items) > 1
+                                          or fits_multi_extension)
+                                     )
+
         # data_label_is_prefix is set in SpectrumInputExtensionsMixin,
         # but may be updated after this
         data_label_suffices = []
-        if not hasattr(self, 'extension'):
+        if self.data_label_is_prefix:
             default_label = self.default_data_label_prefix
+            data_label_suffices = [
+                self._extension_label_suffix(item)
+                for item in selected_items
+            ]
         elif self.multiselect and len(self.extension.selected) > 1 and self.concatenate:
             default_label = f"{self.default_data_label_prefix}_concat"
         elif self.multiselect and len(self.extension.selected) == 1 and len(self.extension.choices) > 1:  # noqa
-            item_dict = self.extension.selected_item_list[0]
-            default_label = f"{self.default_data_label_prefix}_{item_dict['suffix']}"
+            default_label = (
+                f"{self.default_data_label_prefix}"
+                f"{self._extension_label_suffix(selected_items[0])}"
+            )
         else:
-            if self.multiselect and len(self.extension.selected) > 1:
-                data_label_suffices = [f"_{item_dict['suffix']}" for item_dict in
-                                       self.extension.selected_item_list]
             default_label = self.default_data_label_prefix
 
         self.data_label_suffices = data_label_suffices
         self.data_label.default = default_label
+
+    def _extension_label_suffix(self, item):
+        if self.input_type == 'fits:hdulist':
+            name = item['name']
+            if not name:
+                return f"[{item['index']}]"
+
+            matching_names = [
+                candidate for candidate in self.extension.items
+                if candidate['name'] == name
+            ]
+            if len(matching_names) > 1:
+                matching_versions = [
+                    candidate for candidate in matching_names
+                    if candidate['ver'] == item['ver']
+                ]
+                if len(matching_versions) > 1:
+                    return f"[{item['index']}]"
+
+                return f"[{name},{item['ver']}]"
+
+            return f"[{name}]"
+
+        return f"_{item['suffix']}"
 
     @property
     def output(self):
@@ -222,7 +270,10 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         with self._app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.extension.selected_item_list):
                 if self.data_label_is_prefix:
-                    data_label = f"{self.data_label_value}_{item_dict['suffix']}"
+                    data_label = (
+                        f"{self.data_label_value}"
+                        f"{self._extension_label_suffix(item_dict)}"
+                    )
                 else:
                     data_label = self.data_label_value
                 self.add_to_data_collection(spec_obj, data_label,

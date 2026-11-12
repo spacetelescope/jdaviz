@@ -84,3 +84,80 @@ def test_distinct_spectrum_inputs_get_unique_default_labels(deconfigged_helper):
 
     assert deconfigged_helper._app.data_collection.labels == [
         '1D Spectrum', '1D Spectrum (1)']
+
+
+def test_unique_default_labels_hdu_extensions(deconfigged_helper):
+    """
+    Test that the default data labels for multiple extensions of a single HDU
+    are unique, and that the suffixes are consistent with the extension names.
+    """
+    wavelength = np.linspace(4000, 8000, 1000)
+    hdus = [fits.PrimaryHDU()]
+
+    for name, center in [("SPECTRUM1", 5500), ("SPECTRUM2", 6500)]:
+        flux = 1 + 5 * np.exp(-0.5 * ((wavelength - center) / 100) ** 2)
+
+        columns = [
+            fits.Column(
+                name="WAVELENGTH", format="D", unit="Angstrom", array=wavelength
+            ),
+            fits.Column(name="FLUX", format="D", unit="Jy", array=flux),
+        ]
+        hdus.append(fits.BinTableHDU.from_columns(columns, name=name))
+    hdu = fits.HDUList(hdus)
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdu
+    ldr.format = '1D Spectrum'
+    ldr.importer.data_label = 'my_spectrum'
+    ldr.load()
+
+    assert len(deconfigged_helper._app.data_collection) == 2
+
+    loaded_labels = deconfigged_helper.viewers['1D Spectrum'].data_menu.data_labels_loaded
+    assert 'my_spectrum[SPECTRUM1]' in loaded_labels
+    assert 'my_spectrum[SPECTRUM2]' in loaded_labels
+
+    assert '[SPECTRUM1]' in ldr.importer._obj.data_label_suffices
+    assert '[SPECTRUM2]' in ldr.importer._obj.data_label_suffices
+    assert '1: SPECTRUM1' in ldr.importer._obj.extension.choices
+    assert '2: SPECTRUM2' in ldr.importer._obj.extension.choices
+
+
+def test_unique_default_labels_hdu_extensions_versions(deconfigged_helper):
+    """
+    Test that the default data labels for multiple extensions of a single HDU
+    are unique, and that the suffixes are consistent with extension
+    names and versions, i.e. HDU[NAME, VERSION].
+    """
+    wavelength = np.linspace(4000, 8000, 1000)
+    hdus = [fits.PrimaryHDU()]
+
+    for name, center, version in [("SPECTRUM1", 5500, 1), ("SPECTRUM1", 6500, 2)]:
+        flux = 1 + 5 * np.exp(-0.5 * ((wavelength - center) / 100) ** 2)
+
+        columns = [
+            fits.Column(
+                name="WAVELENGTH", format="D", unit="Angstrom", array=wavelength
+            ),
+            fits.Column(name="FLUX", format="D", unit="Jy", array=flux),
+        ]
+        hdus.append(fits.BinTableHDU.from_columns(columns, name=name, ver=version))
+    hdu = fits.HDUList(hdus)
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = hdu
+    ldr.format = '1D Spectrum'
+    ldr.importer.data_label = 'my_spectrum'
+    ldr.load()
+
+    assert len(deconfigged_helper._app.data_collection) == 2
+
+    loaded_labels = deconfigged_helper.viewers['1D Spectrum'].data_menu.data_labels_loaded
+    assert 'my_spectrum[SPECTRUM1,1]' in loaded_labels
+    assert 'my_spectrum[SPECTRUM1,2]' in loaded_labels
+
+    assert '[SPECTRUM1,1]' in ldr.importer._obj.data_label_suffices
+    assert '[SPECTRUM1,2]' in ldr.importer._obj.data_label_suffices
+    assert '1: SPECTRUM1' in ldr.importer._obj.extension.choices
+    assert '2: SPECTRUM1' in ldr.importer._obj.extension.choices
