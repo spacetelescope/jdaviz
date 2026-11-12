@@ -12,7 +12,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from jdaviz.configs.imviz import wcs_utils
 from jdaviz.core.aida_api import AIDAMixin
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, ViewerAddedMessage
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
@@ -56,6 +56,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         self.state.add_callback('x_max', self.on_limits_change)
         self.state.add_callback('y_min', self.on_limits_change)
         self.state.add_callback('y_max', self.on_limits_change)
+        self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
         self.state.show_axes = False
         self.figure.fig_margin = {'left': 0, 'bottom': 0, 'top': 0, 'right': 0}
@@ -190,6 +191,14 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             data = lyr.layer
             if layer_is_image_data(data):
                 return data
+
+    def _on_viewer_added(self, msg):
+        # Make sure we keep the subset layer on wcs-only layers invisible
+        # Unclear why this was happening at all, this is more of a hacky workaround but
+        # the performance is good.
+        for layer in self.layers:
+            if '_WCS_ONLY' in layer.layer.data.meta and layer.layer.data.meta['_WCS_ONLY']:
+                layer.visible = False
 
     def _get_real_xy(self, image, x, y, reverse=False):
         """Return real (X, Y) position and status in case of dithering as well as whether the

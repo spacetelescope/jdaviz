@@ -734,9 +734,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 if coords_status and hasattr(getattr(image, 'coords', None), 'pixel_to_world'):
                     # should already have wave computed from setting the coords-info
                     matched_viewer = self._app.get_viewer(matched_marker_id.split(':matched')[0])
-                    wave_matched = spectral_unit_conversion(wave.value,
-                                                            wave.unit,
-                                                            matched_viewer.state.x_display_unit)  # noqa
+                    matched_unit = matched_viewer.state.x_display_unit
+                    if matched_unit is None:
+                        # matched viewer has no data (e.g. all spectra removed), so there
+                        # is no spectral axis to place the marker on
+                        self.marks[matched_marker_id].visible = False
+                        continue
+                    wave_matched = spectral_unit_conversion(wave.value, wave.unit, matched_unit)
                     self.marks[matched_marker_id].update_xy([wave_matched, wave_matched], [0, 1])
                     self.marks[matched_marker_id].visible = True
                 else:

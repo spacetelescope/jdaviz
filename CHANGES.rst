@@ -142,6 +142,8 @@ New Features
 
 - Improve logic for incrementing default data-labels when extensions are also appended. [#4503]
 
+- Render the out-of-bounds regions of image layers as transparent. [#4536]
+
 - Improved behavior for creating/editing subsets in table viewers. [#4488]
 
 Mosviz
@@ -175,6 +177,8 @@ Bug Fixes
 - Refactoring of some of the unit conversion logic in aperture photometry, in
   particular handling of mixed-unit datasets and display unit conversions. [#4483, #4496]
 
+- Fix issue with mouseover units when lined 1D spectrum viewer is empty. [#4526]
+
 Mosviz
 ^^^^^^
 
@@ -197,6 +201,8 @@ Other Changes and Additions
 
 - Changing visible columns in the table viewer has been moved from the Plot Options
   plugin to a tool in the table viewer toolbar (with deprecation). [#4382]
+
+- Added splash screen and changed loading screens for standalone application [#4495]
 
 
 5.0.6 (unreleased)
@@ -221,6 +227,9 @@ Bug Fixes
   while aligned by WCS, including broken links between a cube and its uncertainty cube
   after relinking. [#4490]
 
+- Fix a bug in unit conversion when there are multiple spectrum viewers and
+  the first has no loaded data. [#4491]
+
 - Added backup source name resolution servers and increased timeouts for astroquery
   search to address upstream server issues. [#4498]
 
@@ -234,8 +243,17 @@ Bug Fixes
 - Prevent cube and 2D-spectrum viewers from inheriting WCS linking intended for
   image viewers. [#4497]
 
+- Fixed invisible WCS-only orientation layer becoming visible in subsets when a new
+  image viewer is created. [#4511]
+
 - Fix using a 3D spectrum viewer as the coordinate source for astoquery search
   target in the astroquery loader. [#4512]
+
+- Fix Data Quality plugin visibility when a cube with DQ is loaded after other data. [#4532]
+
+- Prevent spatial subsets and spectral subsets from entering table viewer(s)
+  data menu. Spatial subsets are only shown in Source Catalog Table viewers,
+  and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
 
 Mosviz
 ^^^^^^

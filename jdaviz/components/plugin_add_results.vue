@@ -2,7 +2,6 @@
   <div>
     <plugin-auto-label
       :value="label"
-      @change="$emit('update:label', $event)"
       @update:value="$emit('update:label', $event)"
       :default="label_default"
       :auto="label_auto"

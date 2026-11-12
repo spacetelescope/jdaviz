@@ -27,7 +27,7 @@
       <div style="width: 32px">
         <j-tooltip tooltipcontent="Multiselect for recentering subsets">
           <v-btn
-            icon
+            variant="text"
             style="opacity: 0.7"
             @click="() => {multiselect = !multiselect}"
           >
