@@ -9,78 +9,22 @@ TO REVERT once upstream glue-jupyter is updated:
   3. Update the glue-jupyter version pin.
 """
 
-from echo import DictCallbackProperty, ListCallbackProperty
-from glue_jupyter.table.viewer import TableGlue, TableState, TableViewer
+from echo import DictCallbackProperty
+from glue_jupyter.table.viewer import TableGlue, TableState
 
 
-# ---------------------------------------------------------------------------
-# Patch TableState — adds renameable_components / removable_components.
-# Guards against double-patching (e.g. pytest re-imports).
-# ---------------------------------------------------------------------------
-
-if not hasattr(TableState, 'renameable_components'):
-    TableState.renameable_components = ListCallbackProperty(
-        docstring='Attributes whose column header can be renamed')
-    TableState.removable_components = ListCallbackProperty(
-        docstring='Attributes whose column can be removed from the table')
-    # absent key means synced; only de-synced columns are stored as False
-    TableState.column_sync_state = DictCallbackProperty(
-        docstring='Per column-label sync enable state; absent == True (synced)')
-
-    def _is_renameable(self, component_id):
-        """Check if a component's header can be renamed (identity comparison)."""
-        for cid in self.renameable_components:
-            if component_id is cid:
-                return True
-        return False
-
-    def _is_removable(self, component_id):
-        """Check if a component can be removed from the table (identity comparison)."""
-        for cid in self.removable_components:
-            if component_id is cid:
-                return True
-        return False
-
-    def _is_synced(self, column_label):
-        return self.column_sync_state.get(str(column_label), True)
-
-    TableState.is_renameable = _is_renameable
-    TableState.is_removable = _is_removable
-    TableState.is_synced = _is_synced
+# Track per-column row-linking sync-state
+# Absent keys are synced; only de-synced columns are stored as False.
+TableState.column_sync_state = DictCallbackProperty(
+    docstring='Per column-label sync enable state; absent == True (synced)')
 
 
-# ---------------------------------------------------------------------------
-# Patch TableViewer — registers renameable/removable callbacks (once only).
-# ---------------------------------------------------------------------------
-
-if not hasattr(TableViewer, '_shim_patched'):
-    _orig_viewer_init = TableViewer.__init__
-
-    def _patched_viewer_init(self, session, state=None):
-        _orig_viewer_init(self, session, state=state)
-        self.state.add_callback('renameable_components', self._update_renameable)
-        self.state.add_callback('removable_components', self._update_removable)
-        self.state.add_callback('column_sync_state', self._update_sync_state)
-
-    def _update_renameable(self, *args):
-        self.widget_table._update_columns()
-
-    def _update_removable(self, *args):
-        self.widget_table._update_columns()
-
-    def _update_sync_state(self, *args):
-        self.widget_table._update_columns()
-
-    TableViewer.__init__ = _patched_viewer_init
-    TableViewer._update_renameable = _update_renameable
-    TableViewer._update_removable = _update_removable
-    TableViewer._update_sync_state = _update_sync_state
-    TableViewer._shim_patched = True
+def _is_synced(self, column_label):
+    return self.column_sync_state.get(str(column_label), True)
 
 
-# ---------------------------------------------------------------------------
-# JdavizTableGlueShim — TableGlue subclass with new template + methods.
-# ---------------------------------------------------------------------------
+TableState.is_synced = _is_synced
+
 
 class JdavizTableGlue(TableGlue):
     """Temporary TableGlue subclass bundling pending glue-jupyter changes."""

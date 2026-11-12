@@ -142,6 +142,8 @@ New Features
 
 - Improve logic for incrementing default data-labels when extensions are also appended. [#4503]
 
+- Render the out-of-bounds regions of image layers as transparent. [#4536]
+
 - Add support for importing subsets on scatter viewers. [#4517]
 
 Mosviz
@@ -170,6 +172,13 @@ Bug Fixes
 
 - Fix error when typing while renaming data or subset. [#4359]
 
+- Fix handling of units to load HLSP JADES DR4 spectra x1D/S2D files. [#4477]
+
+- Refactoring of some of the unit conversion logic in aperture photometry, in
+  particular handling of mixed-unit datasets and display unit conversions. [#4483, #4496]
+
+- Fix issue with mouseover units when lined 1D spectrum viewer is empty. [#4526]
+
 Mosviz
 ^^^^^^
 
@@ -193,6 +202,8 @@ Other Changes and Additions
 - Changing visible columns in the table viewer has been moved from the Plot Options
   plugin to a tool in the table viewer toolbar (with deprecation). [#4382]
 
+- Added splash screen and changed loading screens for standalone application [#4495]
+
 
 5.0.6 (unreleased)
 ==================
@@ -200,7 +211,7 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-- Fix using ``get_regions`` when a subset is defined on scatter data. [#4433]
+- Fix using ``get_regions`` when a subset is defined on scatter data. [#4433, #4510]
 
 - Fix layer selector references when renaming viewers. [#4458]
 
@@ -209,17 +220,15 @@ Bug Fixes
 
 - Fix rare traceback when passing ``height`` keyword to ``jdaviz.show()``. [#4464]
 
-- Fix handling of units to load HLSP JADES DR4 spectra x1D/S2D files. [#4477]
-
-- Fix unit conversion error that occurs with mixed per-steradian and per-square-pixel
-  surface brightness units. [#4483]
-
 - Fix bug when creating a subset on an image viewer when there is a cube loaded
   by preventing those subsets from appearing in the cube viewer.. [#4490]
 
 - Fix spectrum auto-extraction and other errors when creating a subset on a cube viewer
   while aligned by WCS, including broken links between a cube and its uncertainty cube
   after relinking. [#4490]
+
+- Fix a bug in unit conversion when there are multiple spectrum viewers and
+  the first has no loaded data. [#4491]
 
 - Added backup source name resolution servers and increased timeouts for astroquery
   search to address upstream server issues. [#4498]
@@ -228,11 +237,23 @@ Bug Fixes
 
 - Skip marker layers when resetting Unit Conversion units. [#4501]
 
+- Refactoring of some of the unit conversion logic in aperture photometry, in
+  particular handling of mixed-unit datasets and display unit conversions. [#4496]
+
 - Prevent cube and 2D-spectrum viewers from inheriting WCS linking intended for
   image viewers. [#4497]
 
-- Refactoring of some of the unit conversion logic in aperture photometry, in
-  particular handling of mixed-unit datasets and display unit conversions. [#4496]
+- Fixed invisible WCS-only orientation layer becoming visible in subsets when a new
+  image viewer is created. [#4511]
+
+- Fix using a 3D spectrum viewer as the coordinate source for astoquery search
+  target in the astroquery loader. [#4512]
+
+- Fix Data Quality plugin visibility when a cube with DQ is loaded after other data. [#4532]
+
+- Prevent spatial subsets and spectral subsets from entering table viewer(s)
+  data menu. Spatial subsets are only shown in Source Catalog Table viewers,
+  and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
 
 Mosviz
 ^^^^^^

@@ -4,7 +4,23 @@
 .widget-output {
     margin: 0;
 }
-.v-content.jdaviz__content--not-in-notebook {
+.solara-content-main:has(.v-application.jdaviz) {
+    width: 100vw;
+    max-width: 100vw;
+    min-width: 0;
+    overflow: hidden;
+}
+.solara-content-main:has(.v-application.jdaviz) .v-application.jdaviz,
+.solara-content-main:has(.v-application.jdaviz) .v-application__wrap,
+.solara-content-main:has(.v-application.jdaviz) .v-main,
+.solara-content-main:has(.v-application.jdaviz) .v-main > .v-container,
+.solara-content-main:has(.v-application.jdaviz) .splitpanes,
+.solara-content-main:has(.v-application.jdaviz) .splitpanes__pane {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+.v-main.jdaviz__content--not-in-notebook {
     height: 100vh;
     max-height: 100vh;
 }

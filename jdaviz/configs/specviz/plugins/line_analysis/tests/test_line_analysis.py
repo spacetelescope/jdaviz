@@ -757,7 +757,7 @@ def test_plot_line_analysis(deconfigged_helper):
     assert len(vert_marks_subset_change) <= 1
 
 
-def test_plot_line_analysis_with_units(deconfigged_helper):
+def test_plot_line_analysis_with_flux_units(deconfigged_helper):
     """
     Test that line analysis results obey global display units.
     """
@@ -801,3 +801,50 @@ def test_plot_line_analysis_with_units(deconfigged_helper):
     assert la._obj._gaussian_spectrum is not None
     assert la._obj._gaussian_spectrum.spectral_axis.unit == u.AA
     assert la._obj._gaussian_spectrum.flux.unit == u.Jy
+
+
+def test_plot_line_analysis_with_flam_units(deconfigged_helper):
+    """
+    Test that line analysis results obey global display units.
+    """
+    # Create a spectrum with an emission line and Gaussian noise
+    wave = np.linspace(.40, .70, 500)
+    continuum = 5
+    line = Gaussian1D(amplitude=50, mean=0.55, stddev=0.02)
+    flux_1d = (line(wave) + continuum) * u.erg / (u.AA * u.s * u.cm**2.)
+
+    rng = np.random.default_rng(42)
+    noise = rng.normal(loc=0.0, scale=0.05, size=wave.shape)/1000 * u.erg / (u.AA * u.s * u.cm**2.)
+    flux_1d += noise
+
+    # input in micron
+    spec1d = Spectrum(spectral_axis=wave * u.um, flux=flux_1d)
+
+    # Load data into deconfigged helper
+    deconfigged_helper.load(spec1d, format='1D Spectrum')
+
+    # use Unit Conversion plugin to convert to Angstrom
+    uc = deconfigged_helper.plugins['Unit Conversion']
+    uc.spectral_unit = 'Angstrom'
+    uc.flux_unit = 'erg / (Angstrom s cm2)'
+
+    # Create a spectral subset
+    st = deconfigged_helper.plugins['Subset Tools']
+    st.import_region(SpectralRegion(0.538 * u.um, 0.565 * u.um))
+
+    # Use Line Analysis plugin
+    la = deconfigged_helper.plugins['Line Analysis']
+    la.spectral_subset = 'Subset 1'
+    la.continuum = 'Surrounding'
+    la.continuum_width = 3
+    la.plot_gaussian_params = True
+    la.get_results(add_to_table=True)
+
+    assert la._obj.params['continuum'].unit.is_equivalent(la._obj.params['amplitude'].unit,
+                                                          equivalencies=u.spectral_density(
+                                                              la._obj.params['amplitude']))
+
+    # verify that line analysis parameters are in display units
+    assert la._obj._gaussian_spectrum is not None
+    assert la._obj._gaussian_spectrum.spectral_axis.unit == u.AA
+    assert la._obj._gaussian_spectrum.flux.unit == u.erg / (u.AA * u.s * u.cm**2.)

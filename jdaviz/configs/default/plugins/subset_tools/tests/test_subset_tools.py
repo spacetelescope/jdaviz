@@ -142,6 +142,25 @@ rectangular_subset_info = {'xmin': {'pixel_name': 'Xmin (pixels)', 'wcs_name':
                                     'final_value': 6.}}
 
 
+def test_subset_visibility_on_wcs_layer(deconfigged_helper, image_2d_wcs):
+
+    arr = np.ones((10, 10))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    deconfigged_helper.load(ndd, format='Image', data_label='dataset1')
+
+    # Swap to WCS linking and load data
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+    deconfigged_helper.plugins['Subset Tools'].import_region(CircularROI(5, 5, 5))
+
+    # Create new viewer
+    deconfigged_helper.new_viewers['Image']()
+
+    iv = deconfigged_helper.viewers['Image']._obj.glue_viewer
+    for layer in iv.layers:
+        if '_WCS_ONLY' in layer.layer.data.meta and layer.layer.data.meta['_WCS_ONLY']:
+            assert layer.visible is False
+
+
 @pytest.mark.parametrize("roi_class, subset_info", [(CircularROI, circle_subset_info),
                                                     (EllipticalROI, elliptical_subset_info),
                                                     (CircularAnnulusROI, circ_annulus_subset_info),
@@ -578,7 +597,6 @@ def test_get_regions_scatter_with_image(deconfigged_helper, image_2d_wcs,
 
     plot_opts = deconfigged_helper.plugins['Plot Options']
     plot_opts.viewer = 'Scatter'
-    print(plot_opts.xatt.choices)
     plot_opts.xatt = 'ra'
     plot_opts.yatt = 'dec'
 
