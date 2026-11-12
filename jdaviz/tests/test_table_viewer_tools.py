@@ -10,7 +10,7 @@ from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 from astropy.table import QTable, Table
 from glue.core.roi import CircularROI
-from glue.core.subset import RangeSubsetState, RoiSubsetState
+from glue.core.subset import ElementSubsetState, RangeSubsetState, RoiSubsetState
 
 from jdaviz.core.marks import PluginScatter, TableSelectionMark
 
@@ -329,6 +329,151 @@ class TestTableViewerTools:
         assert image_toolbar.tool_override_mode == 'Table Subset Selection'
 
         toolbar.restore_tools()
+
+    @pytest.mark.parametrize('accept', [False, True])
+    @pytest.mark.parametrize('editing', [False, True])
+    def test_table_subset_close_hides_checkboxes(self, accept, editing):
+        table = self.table_viewer
+        dc = table.session.data_collection
+        target = None
+        if editing:
+            target = dc.new_subset_group(subset_state=ElementSubsetState(
+                indices=[0, 1], data=table.widget_table.data))
+            table.session.edit_subset_mode.edit_subset = [target]
+        else:
+            table.session.edit_subset_mode.edit_subset = []
+        count = len(dc.subset_groups)
+        table.toolbar.tools['jdaviz:table_subset'].activate()
+        table.widget_table.checked = [2]
+        assert table.widget_table.selection_enabled
+
+        if accept:
+            table.toolbar.tools['jdaviz:table_apply_subset'].activate()
+        else:
+            table.toolbar.vue_restore_tools()
+
+        assert not table.widget_table.selection_enabled
+        assert table.toolbar.tool_override_mode == ''
+        assert table._table_subset_draft is None
+        assert len(dc.subset_groups) == count + int(accept and not editing)
+        if editing:
+            assert list(target.subset_state.indices) == ([2] if accept else [0, 1])
+
+    def test_table_subset_warns_without_table(self):
+        table = self.table_viewer
+        tool = table.toolbar.tools['jdaviz:table_subset']
+        table.widget_table.data = None
+
+        tool.activate()
+
+        assert self._app.plugins['Logger'].history[-1]['text'] == (
+            'Load a table before creating a table subset.')
+        assert self._app.plugins['Logger'].history[-1]['color'] == 'warning'
+        assert table._table_subset_draft is None
+        assert table.toolbar.tool_override_mode == ''
+
+    def test_table_subset_warns_for_non_table_subset(self):
+        table = self.table_viewer
+        data = table.widget_table.data
+        dc = table.session.data_collection
+        target = dc.new_subset_group(
+            subset_state=RangeSubsetState(0, 1, att=data.main_components[0]))
+        self._app.plugins['Subset Tools'].subset.selected = target.label
+
+        table.toolbar.tools['jdaviz:table_subset'].activate()
+
+        warning = self._app.plugins['Logger'].history[-1]
+        assert warning['text'] == (
+            'Only an explicit row subset created on this table can be edited here. '
+            'Select a table subset or Create New in Subset Tools.')
+        assert warning['color'] == 'warning'
+        assert table.toolbar.tool_override_mode == ''
+
+    def test_table_subset_warns_when_target_changes(self):
+        table = self.table_viewer
+        dc = table.session.data_collection
+        toolbar = table.toolbar
+        toolbar.tools['jdaviz:table_subset'].activate()
+        table.widget_table.checked = [0]
+        toolbar.tools['jdaviz:table_apply_subset'].activate()
+        target = dc.subset_groups[-1]
+
+        table.toolbar.tools['jdaviz:table_subset'].activate()
+        table.widget_table.checked = [1]
+        self._app.plugins['Subset Tools'].subset.selected = target.label
+        warning = self._app.plugins['Logger'].history[-1]
+        assert warning['text'] == (
+            'This table tool is still creating a new subset. The selection change was ignored '
+            'by this tool. Close and reopen it to edit the newly selected subset.')
+        assert warning['color'] == 'warning'
+        toolbar.tools['jdaviz:table_apply_subset'].activate()
+        assert list(dc.subset_groups[-1].subset_state.indices) == [1]
+        assert list(target.subset_state.indices) == [0]
+
+    def test_table_subset_warns_when_table_changes(self):
+        table = self.table_viewer
+        dc = table.session.data_collection
+        table.toolbar.tools['jdaviz:table_subset'].activate()
+        table.widget_table.checked = [1]
+        count = len(dc.subset_groups)
+
+        table.remove_data(table.widget_table.data)
+
+        warning = self._app.plugins['Logger'].history[-1]
+        assert warning['text'] == (
+            'The table changed; pending subset edits were discarded. '
+            'Close and reopen the table subset tool to continue.')
+        assert warning['color'] == 'warning'
+        assert table._table_subset_draft is None
+        assert table.toolbar.tool_override_mode == ''
+        assert len(dc.subset_groups) == count
+
+    def test_table_subset_warns_when_subset_changes(self):
+        table = self.table_viewer
+        dc = table.session.data_collection
+        data = table.widget_table.data
+        toolbar = table.toolbar
+        toolbar.tools['jdaviz:table_subset'].activate()
+        table.widget_table.checked = [0]
+        toolbar.tools['jdaviz:table_apply_subset'].activate()
+        target = dc.subset_groups[-1]
+        self._app.plugins['Subset Tools'].subset.selected = target.label
+        toolbar.tools['jdaviz:table_subset'].activate()
+        table.widget_table.checked = [1]
+
+        target.subset_state = ElementSubsetState(indices=[2], data=data)
+        toolbar.tools['jdaviz:table_apply_subset'].activate()
+
+        warning = self._app.plugins['Logger'].history[-1]
+        assert warning['text'] == (
+            'The subset changed; pending table edits were discarded. '
+            'Close and reopen the table subset tool to continue.')
+        assert warning['color'] == 'warning'
+        assert table.toolbar.tool_override_mode == ''
+        assert list(target.subset_state.indices) == [2]
+
+    def test_table_subset_combination_mode_warning(self):
+        table = self.table_viewer
+        dc = table.session.data_collection
+        toolbar = table.toolbar
+        toolbar.tools['jdaviz:table_subset'].activate()
+        table.widget_table.checked = [0]
+        toolbar.tools['jdaviz:table_apply_subset'].activate()
+        target = dc.subset_groups[-1]
+
+        subset_tools = self._app.plugins['Subset Tools']
+        subset_tools.subset.selected = target.label
+        subset_tools.combination_mode.selected = 'and'
+        toolbar.tools['jdaviz:table_subset'].activate()
+        table.widget_table.checked = [1]
+        toolbar.tools['jdaviz:table_apply_subset'].activate()
+
+        warning = self._app.plugins['Logger'].history[-1]
+        assert warning['text'] == (
+            f'Combination modes do not apply to table subsets. "{target.label}" '
+            'was updated to match the checked rows.')
+        assert warning['color'] == 'warning'
+        assert list(target.subset_state.indices) == [1]
 
     def test_table_subset_creates_subset(self):
         """Test that applying subset creates a subset in the data collection."""

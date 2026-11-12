@@ -191,7 +191,7 @@
           </plugin-action-button>
         </j-tooltip>
         <plugin-action-button
-          :disabled="subset_selected === 'Create New'"
+          :disabled="subset_selected === 'Create New' || subset_types.includes('Table Selection')"
           :results_isolated_to_plugin="false"
           @click="update_subset"
         >

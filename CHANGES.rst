@@ -144,6 +144,8 @@ New Features
 
 - Render the out-of-bounds regions of image layers as transparent. [#4536]
 
+- Improved behavior for creating/editing subsets in table viewers. [#4488]
+
 Mosviz
 ^^^^^^
 
