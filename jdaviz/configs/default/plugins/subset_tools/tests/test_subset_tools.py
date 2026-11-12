@@ -559,11 +559,10 @@ def test_import_region_scatter(deconfigged_helper):
     deconfigged_helper.load(catalog, format='Generic Catalog', data_label='my_catalog',
                             col_other=['x', 'y'])
 
-    vc = deconfigged_helper.new_viewers['Scatter']
-    vc.dataset = 'my_catalog'
-    vc.xatt = 'x'
-    vc.yatt = 'y'
-    vc()
+    po = deconfigged_helper.plugins['Plot Options']
+    po.viewer = 'Scatter'
+    po.xatt = 'x'
+    po.yatt = 'y'
 
     reg = RectanglePixelRegion(center=PixCoord(0.32, 11.6), width=1, height=6.5)
     plg = deconfigged_helper.plugins['Subset Tools']
