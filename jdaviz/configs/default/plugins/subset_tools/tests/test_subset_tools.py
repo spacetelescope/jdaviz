@@ -13,7 +13,7 @@ from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, Rectan
 from numpy.testing import assert_allclose
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion,
                      CircleSkyRegion, CompoundPixelRegion, CompoundSkyRegion,
-                     PixCoord)
+                     PixCoord, RectanglePixelRegion)
 from specutils import SpectralRegion
 
 from jdaviz.configs.default.plugins.subset_tools import utils
@@ -552,6 +552,27 @@ def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
 
     with pytest.raises(ValueError, match='fake is not data in '):
         st.get_regions(wrt_data='fake')
+
+
+def test_import_region_scatter(deconfigged_helper):
+    catalog = Table({'x': [0.1, 0.32, 0.8], 'y': [8.0, 11.6, 15.0]})
+    deconfigged_helper.load(catalog, format='Generic Catalog', data_label='my_catalog',
+                            col_other=['x', 'y'])
+
+    po = deconfigged_helper.plugins['Plot Options']
+    po.viewer = 'Scatter'
+    po.xatt = 'x'
+    po.yatt = 'y'
+
+    reg = RectanglePixelRegion(center=PixCoord(0.32, 11.6), width=1, height=6.5)
+    plg = deconfigged_helper.plugins['Subset Tools']
+    plg.import_region(reg)
+    regions = plg.get_regions('other')
+
+    assert list(regions) == ['Subset 1']
+    assert regions['Subset 1'] == reg
+    subset = deconfigged_helper._app.data_collection['my_catalog'].subsets[0]
+    assert np.array_equal(subset.to_mask(), [False, True, False])
 
 
 def test_get_regions_scatter_with_image(deconfigged_helper, image_2d_wcs,

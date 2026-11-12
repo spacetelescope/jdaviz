@@ -144,6 +144,8 @@ New Features
 
 - Render the out-of-bounds regions of image layers as transparent. [#4536]
 
+- Add support for importing subsets on scatter viewers. [#4517]
+
 Mosviz
 ^^^^^^
 

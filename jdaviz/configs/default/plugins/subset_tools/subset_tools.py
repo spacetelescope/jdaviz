@@ -42,6 +42,7 @@ from jdaviz.utils import (MultiMaskSubsetState, _chain_regions, data_has_valid_w
                           _get_celestial_wcs)
 
 from jdaviz.configs.default.plugins.subset_tools import utils
+from jdaviz.configs.default.plugins.viewers import ScatterViewer
 
 
 __all__ = ['SubsetTools']
@@ -1168,6 +1169,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         """
         Method for creating subsets from regions or region files.
 
+        For scatter viewers, use pixel regions with coordinates in the viewer's
+        axis values. These coordinates are not converted using image WCS,
+        even when the app is WCS-linked.
+
         Parameters
         ----------
         region : region, list of region objects, or str
@@ -1408,7 +1413,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                             RectangularAperture, CircularAnnulus,
                                             CirclePixelRegion, EllipsePixelRegion,
                                             RectanglePixelRegion, CircleAnnulusPixelRegion))
-                            and self._app._align_by == 'wcs'):
+                            and self._app._align_by == 'wcs'
+                            and not isinstance(viewer, ScatterViewer)):
                         if has_wcs:
                             wcs = data.coords
                             if getattr(wcs, 'world_n_dim', None) == 3:
