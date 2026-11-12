@@ -84,7 +84,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     need_clear_subsets = Bool(False).tag(sync=True)
     show_subset_warning = Bool(False).tag(sync=True)
     cube_is_loaded = Bool(False).tag(sync=True)
-    pending_align_by = Unicode('').tag(sync=True)
 
     # this `rotation_angle` traitlet contains the contents of
     # the orientation plugin's `Rotation angle` user input textbox,
@@ -296,12 +295,10 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     def vue_request_align_by(self, value):
         if self.need_clear_subsets:
             self.show_subset_warning = True
-            self.pending_align_by = value
         else:
             self.align_by_selected = value
 
     def vue_cancel_align_by(self, *args):
-        self.pending_align_by = ''
         self.show_subset_warning = False
 
     def _on_subset_change(self, msg):
@@ -317,11 +314,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def vue_delete_subsets(self, *args):
         self.delete_subsets()
-
-        if self.pending_align_by:
-            align_by = self.pending_align_by
-            self.pending_align_by = ''
-            self.align_by_selected = align_by
 
     def vue_reset_astrowidget_markers(self, *args):
         for viewer in self._app._viewer_store.values():
