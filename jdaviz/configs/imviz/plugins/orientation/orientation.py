@@ -83,7 +83,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     linking_in_progress = Bool(False).tag(sync=True)
     need_clear_subsets = Bool(False).tag(sync=True)
     show_subset_warning = Bool(False).tag(sync=True)
-    cube_was_loaded = Bool(False).tag(sync=True)
+    cube_is_loaded = Bool(False).tag(sync=True)
     pending_align_by = Unicode('').tag(sync=True)
 
     # this `rotation_angle` traitlet contains the contents of
