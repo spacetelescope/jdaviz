@@ -13,6 +13,7 @@ from glue.viewers.histogram.state import HistogramViewerState
 from glue.viewers.histogram.state import HistogramLayerState as BqplotHistogramLayerState
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
+from glue.viewers.common.line_layers import LineLayerState
 from glue.viewers.image.state import ImageSubsetLayerState, ImageViewerState
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue.viewers.image.composite_array import COLOR_CONVERTER
@@ -560,7 +561,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             return is_scatter(state) or is_histogram(state)
 
         def supports_line(state):
-            return is_profile(state) or is_scatter(state)
+            return is_profile(state) or is_scatter(state) or isinstance(state, LineLayerState)
 
         def is_image(state):
             return isinstance(state, BqplotImageLayerState)
