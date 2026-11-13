@@ -3871,8 +3871,8 @@ class ApertureSubsetSelect(SubsetSelect):
                     pixel_region = spatial_region.to_pixel(wcs)
                 except ValueError:
                     # the region has no pixel position in this viewer's frame
-                    # (e.g., it lies outside the valid region of the projection),
-                    # so there is nothing to draw here
+                    # (i.e. it lies outside the valid region of the projection),
+                    # so there's nothing to draw here
                     continue
             roi = regions2roi(pixel_region)
 
