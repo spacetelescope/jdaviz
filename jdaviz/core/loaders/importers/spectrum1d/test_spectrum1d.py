@@ -84,3 +84,56 @@ def test_distinct_spectrum_inputs_get_unique_default_labels(deconfigged_helper):
 
     assert deconfigged_helper._app.data_collection.labels == [
         '1D Spectrum', '1D Spectrum (1)']
+
+
+@pytest.mark.parametrize('include_version,include_name,duplicate_version', [
+    (False, True, False),
+    (True, True, False),
+    (True, False, False),
+    (True, True, True),
+])
+def test_unique_default_labels_hdu_extensions(
+        deconfigged_helper, include_version, include_name, duplicate_version):
+    wavelength = np.linspace(4000, 8000, 1000)
+    if not include_name:
+        extensions = [("", 5500, 3), ("", 6500, 7)]
+    elif duplicate_version:
+        extensions = [("SPECTRUM1", 5500, 3), ("SPECTRUM1", 6500, 3)]
+    elif include_version:
+        extensions = [("SPECTRUM1", 5500, 1), ("SPECTRUM1", 6500, 2)]
+    else:
+        extensions = [("SPECTRUM1", 5500, None), ("SPECTRUM2", 6500, None)]
+
+    hdus = [fits.PrimaryHDU()]
+    for name, center, version in extensions:
+        flux = 1 + 5 * np.exp(-0.5 * ((wavelength - center) / 100) ** 2)
+        columns = [
+            fits.Column(name="WAVELENGTH", format="D", unit="Angstrom", array=wavelength),
+            fits.Column(name="FLUX", format="D", unit="Jy", array=flux),
+        ]
+        kwargs = {'name': name} if include_name else {}
+        if include_version:
+            kwargs['ver'] = version
+        hdus.append(fits.BinTableHDU.from_columns(columns, **kwargs))
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = fits.HDUList(hdus)
+    ldr.format = '1D Spectrum'
+    ldr.importer.data_label = 'my_spectrum'
+    ldr.load()
+
+    assert len(deconfigged_helper._app.data_collection) == 2
+
+    loaded_labels = deconfigged_helper.viewers['1D Spectrum'].data_menu.data_labels_loaded
+    suffixes = [
+        f'[{index}]' if not include_name or duplicate_version
+        else f'[{name},{version}]' if include_version
+        else f'[{name}]'
+        for index, (name, _, version) in enumerate(extensions, start=1)
+    ]
+    for suffix in suffixes:
+        assert f'my_spectrum{suffix}' in loaded_labels
+        assert suffix in ldr.importer._obj.data_label_suffices
+
+    for index, (name, _, _) in enumerate(extensions, start=1):
+        assert f'{index}: {name}' in ldr.importer._obj.extension.choices

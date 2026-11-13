@@ -183,6 +183,9 @@ Bug Fixes
 
 - Prevent reparenting subset when there is no remaining valid data [#4538]
 
+- 1D Spectrum files with multiple extensions of the same type (e.g. multiple S1D extensions) now
+  have their default data labels incremented to avoid silent overwrites. [#4540]
+
 Mosviz
 ^^^^^^
 
