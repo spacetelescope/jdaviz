@@ -181,6 +181,8 @@ Bug Fixes
 
 - Fix units error when importing a SpectralRegion with units different from the display units of the reference data. [#4527]
 
+- Prevent reparenting subset when there is no remaining valid data [#4538]
+
 Mosviz
 ^^^^^^
 

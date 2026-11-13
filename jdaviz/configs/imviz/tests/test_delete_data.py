@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from glue.core.roi import XRangeROI
 from astropy.coordinates import Angle
 from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
@@ -159,3 +160,46 @@ def test_delete_image_with_catalog(deconfigged_helper, align_by, reference_data_
         assert 'catalog' in deconfigged_helper._app.data_collection.labels
         cat_layer = [lyr for lyr in glue_viewer.layers if lyr.layer.label == 'catalog'][0]
         assert cat_layer.enabled
+
+
+@pytest.mark.parametrize('remaining', [None, 'catalog', 'other_type'])
+@pytest.mark.parametrize('data_type', ['image', 'spectrum'])
+def test_delete_data_with_subset_and_no_valid_parent(deconfigged_helper, spectrum1d, data_type,
+                                                     remaining, wcs_linked_mixed_coord_catalog):
+    """Subsets cannot be reparented if the remaining data (if any) is a catalog or a
+    different type of data. They are removed along with the data they are defined on."""
+    if data_type == 'image':
+        deconfigged_helper.load(NDData(np.ones((10, 10))), data_label='image', format='Image')
+        deconfigged_helper.plugins['Subset Tools'].import_region(
+            CirclePixelRegion(PixCoord(5, 5), radius=2))
+        viewer_name, label = 'Image', 'image[DATA]'
+    else:
+        deconfigged_helper.load(spectrum1d, data_label='spec', format='1D Spectrum')
+        glue_viewer = deconfigged_helper.viewers['1D Spectrum']._obj.glue_viewer
+        glue_viewer.apply_roi(XRangeROI(6000, 7000))
+        viewer_name, label = '1D Spectrum', 'spec'
+
+    if remaining == 'catalog':
+        deconfigged_helper.load(wcs_linked_mixed_coord_catalog, format='Source Catalog',
+                                data_label='catalog')
+        remaining_labels = ['catalog']
+    elif remaining == 'other_type':
+        if data_type == 'image':
+            deconfigged_helper.load(spectrum1d, data_label='spec', format='1D Spectrum')
+            remaining_labels = ['spec']
+        else:
+            deconfigged_helper.load(NDData(np.ones((10, 10))), data_label='image',
+                                    format='Image')
+            remaining_labels = ['image[DATA]']
+    else:
+        remaining_labels = []
+
+    dc = deconfigged_helper._app.data_collection
+    assert len(dc.subset_groups) == 1
+
+    data_menu = deconfigged_helper.viewers[viewer_name].data_menu
+    data_menu.layer = label
+    data_menu.remove_from_app()
+
+    assert dc.labels == remaining_labels
+    assert len(dc.subset_groups) == 0
