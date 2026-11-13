@@ -501,7 +501,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             # on adding first data layer, reset the limits:
             self.viewer.selected_obj.state.reset_limits()
         if msg.data.ndim == 3:
-            self.cube_was_loaded = True
+            self.cube_is_loaded = True
 
     def vue_add_orientation(self, *args, **kwargs):
         self._add_orientation(set_on_create=True, from_ui=True)
