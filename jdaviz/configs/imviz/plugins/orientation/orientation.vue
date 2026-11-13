@@ -72,14 +72,14 @@
         <v-alert v-if="show_subset_warning" type='warning' style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px">
           Delete existing subsets to change alignment.
           <j-flex-row justify="end" style="margin-right: 2px; margin-top: 16px">
-            <j-tooltip :tooltipcontent="'Delete Subsets'">
-              <v-btn icon class="mr-2" @click="delete_subsets">
-                <v-icon>mdi-check</v-icon>
-              </v-btn>
-            </j-tooltip>
             <j-tooltip :tooltipcontent="'Cancel'">
               <v-btn icon @click="cancel_align_by">
                 <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </j-tooltip>
+            <j-tooltip :tooltipcontent="'Delete Subsets'">
+              <v-btn icon class="mr-2" @click="delete_subsets">
+                <v-icon>mdi-check</v-icon>
               </v-btn>
             </j-tooltip>
           </j-flex-row>
