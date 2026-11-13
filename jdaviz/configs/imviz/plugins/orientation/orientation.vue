@@ -23,7 +23,7 @@
         </v-alert>
 
         <v-alert
-          v-if="cube_was_loaded"
+          v-if="cube_is_loaded"
           type='info'
           style="margin-left: -12px; margin-right: -12px"
         >
