@@ -3380,25 +3380,70 @@ class SubsetSelect(SelectPluginComponent):
 
         return self._get_subset_mask()
 
-    def _get_spatial_region(self, dataset, subset=None):
+    def _resolve_wrt_data(self, wrt_data):
+        """
+        Resolve ``wrt_data`` (a data label, a single-element list of labels, or a glue
+        ``Data`` object) to a glue ``Data`` object, or `None` if it can't be resolved
+        to a single entry in the data collection.
+
+        wrt_data mimics the behavior of the ``wrt_data`` argument of various subset methods.
+        """
+        if isinstance(wrt_data, (list, tuple)):
+            wrt_data = wrt_data[0] if len(wrt_data) == 1 else None
+
+        if isinstance(wrt_data, str):
+            dc = self._app.data_collection
+            wrt_data = dc[wrt_data] if wrt_data in dc.labels else None
+
+        return wrt_data
+
+    def _spatial_region_type(self, subset_state, wrt_data=None):
+        """
+        Determine whether ``subset_state`` must be retrieved as a SkyRegion ('sky_region')
+        or can be retrieved as a PixelRegion ('region') for use in the frame of ``wrt_data``.
+
+        When aligned by WCS, the pixel coordinates of a subset are only valid in the frame
+        of the data it's defined on (its parent), so a PixelRegion is only returned if
+        ``wrt_data`` is that parent. Otherwise, a SkyRegion is returned that must be
+        translated through the WCS of the target data.
+        """
+        if self._app._align_by != 'wcs' or subset_state is None:
+            return 'region'
+
+        wrt_data = self._resolve_wrt_data(wrt_data)
+        if (wrt_data is not None
+                and all(att.parent is wrt_data for att in subset_state.attributes)):
+            return 'region'
+
+        return 'sky_region'
+
+    def _get_spatial_region(self, subset=None, wrt_data=None):
         """
         Retrieve the spatial region object for a subset.
 
-        Returns a SkyRegion if in Imviz with WCS alignment, otherwise a PixelRegion.
-        The subset label is stored in the returned region's metadata.
+        Returns a PixelRegion if not aligned by WCS or if the subset is defined on
+        ``wrt_data`` itself, otherwise a SkyRegion. The subset label is stored in
+        the returned region's metadata.
+
+        Parameters
+        ----------
+        subset : str, optional
+            Label of the subset. Defaults to the selected subset.
+        wrt_data : str, list of str, or glue ``Data``, optional
+            Data or data label in whose pixel frame the region will be used.
+            If not provided (or not a single data entry), a SkyRegion is returned
+            whenever aligned by WCS.
         """
         if subset is None:
             subset = self.selected
             subset_state = self.selected_subset_state
         else:
             subset_state = self._get_subset_state(subset)
+
         if subset_state is None:
             return None
 
-        if self._app.config in ('imviz', 'deconfigged') and self._app._align_by == 'wcs':
-            region_type = 'sky_region'
-        else:
-            region_type = 'region'
+        region_type = self._spatial_region_type(subset_state, wrt_data)
 
         reg = self._app.get_subsets(subset_name=subset,
                                     include_sky_region=region_type == 'sky_region',
@@ -3419,8 +3464,9 @@ class SubsetSelect(SelectPluginComponent):
         if np.any([type not in ('spatial', None, False) for type in types]):
             raise TypeError("This action is only supported on spatial-type subsets")
         if self.is_multiselect:
-            return [self._get_spatial_region(dataset=self.dataset.selected, subset=subset) for subset in self.selected]  # noqa
-        return self._get_spatial_region(dataset=self.dataset.selected)
+            return [self._get_spatial_region(subset=subset, wrt_data=self.dataset.selected)
+                    for subset in self.selected]
+        return self._get_spatial_region(subset=self.selected, wrt_data=self.dataset.selected)
 
     def selected_min_max(self, dataset):
         """
@@ -3782,14 +3828,18 @@ class ApertureSubsetSelect(SubsetSelect):
                         'aperture_message': 'composite subsets are not supported'}
             return [], [], validity
 
+        # the polygon coordinates are drawn in the pixel frame of the viewer's reference data
+        wrt_data = getattr(getattr(viewer, 'state', None), 'reference_data', None)
         if multiselect or selected != self.selected:
-            # assume first dataset (for retrieving the region object)
-            # but iterate over all subsets
-            spatial_regions = [self._get_spatial_region(dataset=self.dataset.selected[0], subset=subset)  # noqa
+            # iterate over all subsets
+            spatial_regions = [self._get_spatial_region(subset=subset, wrt_data=wrt_data)
                                for subset in selected if subset != self._manual_options]
-        else:
-            # use cached version
+        elif (self._spatial_region_type(self.selected_subset_state, wrt_data)
+              == self._spatial_region_type(self.selected_subset_state, self.dataset.selected)):
+            # the cached version (in the frame of the selected dataset) is valid in this viewer
             spatial_regions = [self.selected_spatial_region]
+        else:
+            spatial_regions = [self._get_spatial_region(subset=self.selected, wrt_data=wrt_data)]
 
         x_coords, y_coords = np.array([]), np.array([])
         for spatial_region in spatial_regions:
@@ -3816,7 +3866,14 @@ class ApertureSubsetSelect(SubsetSelect):
                     validity = {'is_aperture': False,
                                 'aperture_message': 'invalid wcs'}
                     return [], [], validity
-                pixel_region = spatial_region.to_pixel(wcs)
+
+                try:
+                    pixel_region = spatial_region.to_pixel(wcs)
+                except ValueError:
+                    # the region has no pixel position in this viewer's frame
+                    # (i.e. it lies outside the valid region of the projection),
+                    # so there's nothing to draw here
+                    continue
             roi = regions2roi(pixel_region)
 
             # NOTE: this assumes that we'll apply the same radius factor to all subsets (all will

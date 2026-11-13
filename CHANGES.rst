@@ -250,7 +250,7 @@ Bug Fixes
 - Fixed invisible WCS-only orientation layer becoming visible in subsets when a new
   image viewer is created. [#4511]
 
-- Fix using a 3D spectrum viewer as the coordinate source for astoquery search
+- Fix using a 3D spectrum viewer as the coordinate source for astroquery search
   target in the astroquery loader. [#4512]
 
 - Fix Data Quality plugin visibility when a cube with DQ is loaded after other data. [#4532]
@@ -261,6 +261,9 @@ Bug Fixes
 
 - Fix bug where spectral subsets would appear in image viewers when the 2d spectrum viewer
   has units of pixels. [#4507]
+
+- Fix bug when attempting to perform aperture photometry on a cube when a WCS aligned image
+  is also present. [#4529]
 
 Mosviz
 ^^^^^^
