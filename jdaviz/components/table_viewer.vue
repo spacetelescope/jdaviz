@@ -75,7 +75,7 @@
               </v-btn>
             </th>
             <th style="padding: 0 1px" v-for="(header, index) in headers_selections" :key="header.text">
-              <v-icon style="padding: 0 1px" :key="index" :color="selection_colors[index]">brightness_1</v-icon>
+              <v-icon style="padding: 0 1px" :key="index" :color="selection_colors[index]">mdi-circle</v-icon>
             </th>
             <th v-for="header in headers"
                 :key="header.text"
@@ -124,7 +124,7 @@
                 v-if="props.item[header.value]"
                 v-model="props.item[header.value]"
                 :color="selection_colors[index]"
-              >brightness_1</v-icon>
+              >mdi-circle</v-icon>
             </v-fade-transition>
           </td>
           <td v-for="header in headers"
