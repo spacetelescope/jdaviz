@@ -601,8 +601,8 @@ def test_cube_aperphot_with_images_aligned_by_wcs(deconfigged_helper, image_ndda
     assert_quantity_allclose(tbl['sum'][-1], 1.819266e-10 * u.Jy, rtol=1e-4)
 
 
-def test_cube_subset_aperphot_on_image_aligned_by_wcs(deconfigged_helper,
-                                                      spectrum1d_cube_fluxunit_jy_per_steradian):
+def test_image_aperphot_with_subset_drawn_on_cube(deconfigged_helper,
+                                                  spectrum1d_cube_fluxunit_jy_per_steradian):
     """
     A subset drawn on a cube has pixel coordinates in the cube's frame, so when used on an
     image (or in an image viewer) while aligned by WCS, it must be translated through the sky.
