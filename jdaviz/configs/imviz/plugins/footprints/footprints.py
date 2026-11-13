@@ -171,8 +171,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
         disable footprint selection tools in the viewer toolbar
     """
     template_file = __file__, "footprints.vue"
+    loaders_restrict_to_formats = ['Footprints']
     uses_active_status = Bool(True).tag(sync=True)
-
     is_pixel_linked = Bool(True).tag(sync=True)  # plugin disabled if linked by pixel (default)
 
     # OVERLAY LABEL

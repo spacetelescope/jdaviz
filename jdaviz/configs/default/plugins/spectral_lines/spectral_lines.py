@@ -14,6 +14,7 @@ __all__ = ['SpectralLines']
 @tray_registry('g-spectral-lines', label="Spectral Lines", category="data:analysis")
 class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
     template_file = __file__, "spectral_lines.vue"
+    loaders_restrict_to_formats = ['Spectral Lines']
 
     component_mode = Unicode().tag(sync=True)
     component_edit_value = Unicode().tag(sync=True)
@@ -333,12 +334,6 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
             self.line_table = msg.new_label
 
     def _update_loader_items(self):
-        # override to skip restrict_to_target: the Spectral Line Database loader
-        # (and any other source loading spectral lines) uses BaseImporterToDataCollection
-        # rather than BaseImporterToPlugin, so importers would never match this plugin's
-        # target if restricted. Instead, just default the source to the Spectral Line
-        # Database loader.
-
         super()._update_loader_items()
 
         default_name = 'spectral line database'
