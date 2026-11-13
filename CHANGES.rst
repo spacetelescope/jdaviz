@@ -179,6 +179,8 @@ Bug Fixes
 
 - Fix issue with mouseover units when lined 1D spectrum viewer is empty. [#4526]
 
+- Fix units error when importing a SpectralRegion with units different from the display units of the reference data. [#4527]
+
 Mosviz
 ^^^^^^
 
