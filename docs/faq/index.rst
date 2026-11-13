@@ -4,12 +4,9 @@
 FAQ
 ***
 
-Documentation coming soon.
 
-
-***************************************
 Saving the State of Your Jdaviz Session
-***************************************
+=======================================
 
 While Jdaviz has no :guilabel:`Save` button, the various data products created
 within Jdaviz can be :ref:`exported to the notebook or file <export>`.

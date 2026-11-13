@@ -1,0 +1,83 @@
+.. _loaders-format-catalog:
+.. rst-class:: section-icon-mdi-plus-box
+
+:data-types: sourcecatalog
+
+.. _loaders-format-catalog-overview:
+
+*********************
+Source Catalog Format
+*********************
+
+
+
+Overview
+========
+
+Load astronomical catalogs for overlay and analysis. The Catalog format will be used for loading astronomical catalogs that can be
+overlaid on images, added as a Table, and used for analysis.
+Each row likely represents an object on the sky. Must contain object coordinates (pixels, sky coordinates, or SkyCoord objects). 
+    
+Usage
+=====
+
+.. code-block:: python
+
+    import jdaviz
+    jdaviz.show()
+
+    # Load a source catalog
+    jdaviz.load('source_catalog.ecsv', format='Source Catalog') 
+
+
+Data Requirements
+=================
+
+The Source Catalog  format imports any :class:`astropy.table.Table` or
+:class:`~astropy.table.QTable` as a data collection entry. 
+
+Source Catalog requires the following columns:
+
+- A pair of sky coordinates (RA and Dec)
+- A pair of pixel coordinates (X and Y)
+
+
+Supported File Formats
+======================
+
+The catalog should be in:
+
+- FITS table
+- ESCV 
+- VOTable 
+
+
+Catalog Parsing
+===============
+
+When loading via the UI, if a pair of RA/Dec or X/Y columns are parsable in the catalog, 
+the format will default to Source Catalog. 
+
+.. note::
+    Sometimes multi-object spectral or image files can be auto-parsed as a catalog. 
+    You can either change the format in the loader UI if the incorrect format is detected, or use the API to load the data using the correct format. 
+
+Once the catalog is parsed, the ``Viewer`` must be selected.  The ``Viewer`` will default to load as a Source Catalog Table,
+but it can be loaded as a Scatter ``Viewer`` or Histogram ``Viewer``. 
+The catalog can be loaded onto an Image ``Viewer`` as markers (if a prior image has been loaded). 
+
+UI Access
+=========
+
+.. guidestar-demo:: _static/jdaviz-wireframe.html
+   :repeat: false
+   :init-steps-json: [{"action":"disable-toolbar-except","value":"loaders"}]
+   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-dropdown", "value": "Format:Catalog", "delay": 1000, "caption": "Set format to Catalog"}, {"action": "highlight", "target": "#format-select", "delay": 1500}]
+
+
+
+
+See Also
+========
+
+- :ref:`loaders-format-generic_catalog-overview` - For the generic catalog functionality

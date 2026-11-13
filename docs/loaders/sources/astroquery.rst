@@ -12,28 +12,35 @@ Loading from Astroquery
 The Astroquery loader allows you to query and load data directly from astronomical archives.
 
 .. note::
-    This feature is currently in development. Stay tuned for updates!
+  Astroquery uses :class:`astroquery.mast.MastMissionsClass` to find observations whose footprints 
+  overlap the search region defined by the input source coordinates and search radius. 
+  Specifically, it returns observations whose footprints contain the source coordinates 
+  or extend into the region within the specified radius.
+  
+  The ``ra`` and ``dec`` represent the central coordinates of an observation's footprint, 
+  but the footprint itself can extend well beyond these coordinates. As a result, an observation 
+  may overlap the search region only near one of its corners, even if its central coordinates 
+  lie farther from the source than the specified search radius. Conversely, if an observation's 
+  footprint is centered on the source coordinates, it may be returned even when the search radius is arbitrarily small.
 
-Planned Usage
+  This is specific to :class:`astroquery.mast.MastMissionsClass`; virtual observatory services do not show this quirk.
+
+
+Usage
 =============
 
-Future support will include querying data from:
+Query data from:
 
-- MAST (Mikulski Archive for Space Telescopes)
-- SDSS (Sloan Digital Sky Survey)
-- Other archives supported by Astroquery
+* MAST (Mikulski Archive for Space Telescopes)
 
-Check back for updates or `follow our GitHub repository <https://github.com/spacetelescope/jdaviz>`_
-for announcements.
+  * JWST
+  * HST 
 
-UI Access
-=========
+* SDSS (Sloan Digital Sky Survey)
+* Gaia
 
-.. guidestar-demo:: _static/jdaviz-wireframe.html
-   :js: jdaviz-wireframe-actions.js
-   :css: jdaviz-wireframe.css
-   :repeat: false
-   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-dropdown", "value": "Source:astroquery", "delay": 1500, "caption": "Set source to astroquery"}]
+.. Check back for updates or `follow our GitHub repository <https://github.com/spacetelescope/jdaviz>`_
+.. for announcements.
 
 API Access
 ==========
@@ -47,8 +54,14 @@ API Access
     ldr = jd.loaders['astroquery']
     ldr.show()
 
+    ldr.search_input = 'Source'
     ldr.source = 'M4'
-    ...
+    ldr.coordframe = 'icrs'
+    ldr.radius = 1 
+    ldr.radius_unit = 'deg'
+
+    ldr.telescope = 'JWST'
+    ldr.max_results = 1000
     ldr.query_archive()
 
 
@@ -56,7 +69,7 @@ Input Modes
 ===========
 
 The archive can be pointed at coordinates in one of three ways via the
-``Input`` selector (``ldr.input_select``):
+``Input`` selector (``ldr.search_input``):
 
 - **Source**: enter a source name or ``"[RA] [Dec]"`` coordinates manually.
 - **Viewer**: use the center of a selected image viewer (optionally following
@@ -86,17 +99,27 @@ truncating the final table.
 .. code-block:: python
 
     ldr = jd.loaders['astroquery']
-    ldr.input_select = 'Catalog'
+    ldr.search_input = 'Catalog'
     ldr.catalog = 'my_catalog'
     ldr.telescope = 'JWST'
     ldr.query_archive()
 
 
-Since there are many options and the exposed options depend on previous selections, the best way to write a script to write a workflow loading from astroquery is to enable :ref:`userapi-api_hints`,
+Since there are many options and the exposed options depend on previous selections, the best way 
+to create a workflow to to load data from astroquery is to enable :ref:`userapi-api_hints`,
 and interactively do a search in the UI and reproduce in a notebook cell:
+
+.. .. guidestar-demo:: _static/jdaviz-wireframe.html
+..    :js: jdaviz-wireframe-actions.js
+..    :css: jdaviz-wireframe.css
+..    :repeat: false
+..    :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 0}, {"action": "select-dropdown", "value": "Source:astroquery", "delay": 0}, {"action": "highlight", "target": "#source-select", "delay": 0}, {"action": "pause", "delay": 1000}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}]
+
+UI Access
+=========
 
 .. guidestar-demo:: _static/jdaviz-wireframe.html
    :js: jdaviz-wireframe-actions.js
    :css: jdaviz-wireframe.css
    :repeat: false
-   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 0}, {"action": "select-dropdown", "value": "Source:astroquery", "delay": 0}, {"action": "highlight", "target": "#source-select", "delay": 0}, {"action": "pause", "delay": 1000}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}]
+   :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 1500, "caption": "Open the data loader"}, {"action": "select-dropdown", "value": "Source:astroquery", "delay": 1500, "caption": "Set source to astroquery"}]
