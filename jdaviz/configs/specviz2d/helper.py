@@ -33,7 +33,7 @@ class Specviz2d(Specviz):
             self._specviz = Specviz(app=self._app)
         return self._specviz
 
-    def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+    def load(self, inp=None, loader=None, format=None, **kwargs):
         """
         Load data into the app.  A single valid loader/importer must be able to be
         matched based on the input, otherwise an error will be raised suggesting
@@ -48,13 +48,11 @@ class Specviz2d(Specviz):
             Only consider a specific loader/resolver
         format : string, optional
             Only consider a specific format
-        target : string, optional
-            Only consider a specific target
         kwargs :
             Additional kwargs are passed on to both the loader and importer, as applicable.
             Any kwargs that do not match valid inputs are silently ignored.
         """
-        return self._load(inp=inp, loader=loader, format=format, target=target, **kwargs)
+        return self._load(inp=inp, loader=loader, format=format, **kwargs)
 
     @deprecated(since="4.3", alternative="load")
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,

@@ -144,20 +144,15 @@ class FormatSelect(SelectPluginComponent):
                     except Exception as e:  # nosec
                         self._invalid_importers[label] = f'Importer exception: {e}'
                         continue
+
                     if self.debug:
                         self._dbg_importers[label] = this_importer
-                    if (self.plugin._restrict_to_target is not None and
-                            not any(target.get('label') == self.plugin._restrict_to_target
-                                    for target in this_importer.targets)):
-                        # skip importers that do not match the target
-                        self._invalid_importers[label] = 'Not matching target'
-                        continue
+
                     if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
                             item = {'label': importer_name,
                                     'parser': parser_name,
                                     'importer': importer_name,
-                                    'targets': this_importer.targets,
                                     'import_confidence_score': this_importer.import_confidence_score}  # noqa
                             parser_pref = this_importer.parser_preference
                             if importer_name not in self._importers:
@@ -201,61 +196,6 @@ class FormatSelect(SelectPluginComponent):
                                  reverse=True)
         self.items = all_formats
         self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
-
-
-class TargetSelect(SelectPluginComponent):
-    """
-    Select component for the target (filter on format) of a resolver.
-
-    Parameters
-    ----------
-    plugin
-        the parent plugin object
-    items : str
-        the name of the items traitlet defined in ``plugin``
-    selected : str
-        the name of the selected traitlet defined in ``plugin``
-    default_mode : str, optional
-        What mode to use when making the default selection.  Valid options: first, default_text,
-        empty.
-    """
-
-    def __init__(self, plugin, items, selected, default_mode='first'):
-        self._importers = {}
-        super().__init__(plugin,
-                         items=items,
-                         selected=selected,
-                         default_mode=default_mode)
-
-    def _is_valid_item(self, item):
-        return super()._is_valid_item(item, locals())
-
-    def set_filter_target_in(self, targets):
-        def filter_factory(targets):
-            def filter_target(item):
-                return item['label'] in targets
-            return filter_target
-        self.filters = [filter_factory(targets)]
-
-    @observe('filters')
-    def _update_items(self, msg={}):
-        if not self.plugin.is_valid:
-            self.items = []
-            self._apply_default_selection()
-            return
-
-        # loop through choices on format and compile list of targets
-        # note that the selection of a target may affect the available formats
-        # so we want to store all importers in the target select even if they are not valid there
-        # and use that list when compiling list of valid targets
-        all_targets = []
-        for importer in self.plugin.format._importers.values():
-            for target in importer.targets:
-                if target not in all_targets:
-                    all_targets.append(target)
-
-        self.items = [{'label': 'Any'}] + [item for item in all_targets if self._is_valid_item(item)]  # noqa
-        self._apply_default_selection()
 
 
 class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDisplayMixin,
@@ -316,9 +256,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     format_selected = Unicode().tag(sync=True)
     valid_import_formats = Unicode().tag(sync=True)
 
-    target_items = List().tag(sync=True)
-    target_selected = Unicode().tag(sync=True)
-
     is_wcs_linked = Bool(False).tag(sync=True)
     image_data_loaded = Bool(False).tag(sync=True)
     footprint_select_icon = Unicode(read_icon(os.path.join(
@@ -328,7 +265,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self.set_active_loader_callback = kwargs.pop('set_active_loader_callback', None)
         self.open_callback = kwargs.pop('open_callback', None)
         self.close_callback = kwargs.pop('close_callback', None)
-        self._restrict_to_target = kwargs.pop('restrict_to_target', None)
 
         super().__init__(*args, **kwargs)
 
@@ -382,10 +318,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
         self._restrict_to_formats = kwargs.get('format', None)
         if isinstance(self._restrict_to_formats, str):
             self._restrict_to_formats = [self._restrict_to_formats]
-
-        self.target = TargetSelect(self,
-                                   items='target_items',
-                                   selected='target_selected')
 
         # Ensure traitlet and app state are in sync at init
         self.server_is_remote = self._app.state.settings.get('server_is_remote',
@@ -934,7 +866,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _update_format_items(self, reset_selection=False):
         # NOTE: this will call self.output
         self.format._update_items(reset_selection=reset_selection)
-        self.target._update_items()  # assumes format._importers is updated from above
         # ensure the importer updates even if the format selection remains fixed
         self._on_format_selected_changed()
 
@@ -1039,25 +970,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             raise ValueError(self.importer.import_disabled_msg)
         return self.importer()
 
-    @observe('target_selected')
-    def _on_target_selected_changed(self, change={}):
-        def matches_target_factory(target):
-            def matches_target(importer):
-                return any(item.get('label', '') == target for item in importer.targets)
-            return matches_target
-
-        if self._restrict_to_target is not None:
-            self.format.filters = [matches_target_factory(self._restrict_to_target)]
-        elif self.target_selected == 'Any':
-            self.format.filters = []
-        else:
-            self.format.filters = [matches_target_factory(self.target_selected)]
-
     def _get_valid_import_formats(self):
-        if self._restrict_to_target is not None:
-            # if the resolver was initialized with a list of valid import formats,
-            # use that instead of the registry
-            return [self._restrict_to_target]
         # fallback on all items available in the registry (minus those behind dev-flags)
         loaders_disabled_by_dev_flags = []
         if not self._app.state.dev_mos_loader:
@@ -1073,7 +986,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
             self.importer_widget = ''
 
             if (hasattr(self.format._invalid_importers, 'keys') and
-               self.format._invalid_importers.keys()) and self.target_selected:
+               self.format._invalid_importers.keys()):
                 # if no valid importer for format_selected, provide supported sources/formats
                 # to user in a warning message
                 self.valid_import_formats = ", ".join(self._get_valid_import_formats())
@@ -1800,7 +1713,6 @@ def find_matching_resolver(app,
                            inp=None,
                            resolver=None,
                            format=None,
-                           target=None,
                            **kwargs):
     formats = format if isinstance(format, (list, tuple)) else [format]
     invalid_resolvers = {}
@@ -1825,12 +1737,6 @@ def find_matching_resolver(app,
             invalid_resolvers[resolver_name] = this_resolver.is_valid.message
             continue
 
-        if target is not None:
-            try:
-                this_resolver.target = target
-            except ValueError:
-                invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
-                continue
         if not len(this_resolver.format.items):
             invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
             continue

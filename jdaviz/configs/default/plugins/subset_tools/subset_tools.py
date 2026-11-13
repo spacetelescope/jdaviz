@@ -104,6 +104,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     * :meth:`delete_subset`
     """
     template_file = __file__, "subset_tools.vue"
+    loaders_restrict_to_formats = ['Subset']
+
     select = List([]).tag(sync=True)
     subset_select_mode = Unicode().tag(sync=True)
     subset_edit_value = Any().tag(sync=True)
