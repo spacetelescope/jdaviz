@@ -255,6 +255,9 @@ Bug Fixes
   data menu. Spatial subsets are only shown in Source Catalog Table viewers,
   and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
 
+- Fix bug where spectral subsets would appear in image viewers when the 2d spectrum viewer
+  has units of pixels. [#4507]
+
 Mosviz
 ^^^^^^
 
