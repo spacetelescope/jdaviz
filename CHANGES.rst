@@ -33,6 +33,9 @@ Bug Fixes
 
 - Fix Data Quality plugin visibility when a cube with DQ is loaded after other data. [#4532]
 
+- Fix bug where spectral subsets would appear in image viewers when the 2d spectrum viewer
+  has units of pixels. [#4507]
+
 Mosviz
 ^^^^^^
 
