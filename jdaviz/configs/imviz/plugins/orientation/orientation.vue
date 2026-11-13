@@ -73,12 +73,12 @@
           Delete existing subsets to change alignment.
           <j-flex-row justify="end" style="margin-right: 2px; margin-top: 16px">
             <j-tooltip :tooltipcontent="'Cancel'">
-              <v-btn icon @click="cancel_align_by">
+              <v-btn icon class="mr-2" @click="cancel_align_by">
                 <v-icon>mdi-close</v-icon>
               </v-btn>
             </j-tooltip>
             <j-tooltip :tooltipcontent="'Delete Subsets'">
-              <v-btn icon class="mr-2" @click="delete_subsets">
+              <v-btn icon @click="delete_subsets">
                 <v-icon>mdi-check</v-icon>
               </v-btn>
             </j-tooltip>
