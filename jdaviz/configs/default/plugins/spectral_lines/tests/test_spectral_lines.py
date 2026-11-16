@@ -1,6 +1,8 @@
 import astropy.units as u
 import numpy as np
 from astropy.table import QTable
+from glue.core import Data
+from glue.core.message import ComponentsChangedMessage
 from numpy.testing import assert_allclose
 
 
@@ -194,3 +196,103 @@ def test_spectral_lines_components(deconfigged_helper, spectrum1d):
     # component_lines reflects the fallback to 'default', unshifted and visible
     assert_allclose(component_lines_field('obs'), rest_wav)
     assert component_lines_field('show') == [True, True]
+
+
+def test_components_all_importer_tables(deconfigged_helper, monkeypatch):
+    """Components are shared, but units and IDs remain local to each source."""
+    from jdaviz.core import spectral_line_layers
+
+    app = deconfigged_helper._app
+    plugin = app.get_tray_item_from_name('g-spectral-lines')
+    sync_calls = []
+    rename_calls = []
+
+    def sync(app_arg, source, create=False):
+        assert app_arg is app
+        assert create is False
+        sync_calls.append(source)
+
+    def rename(app_arg, old, new):
+        assert app_arg is app
+        assert plugin._renaming_component
+        # Projection rename precedes every original-column rename.
+        for source in plugin._line_table_data():
+            assert plugin._get_data_component_id(source, plugin._component_col_name(old))
+            assert plugin._get_data_component_id(source, plugin._component_col_name(new)) is None
+        rename_calls.append((old, new))
+
+    # Isolate the plugin/helper contract; the helper's projection lifecycle is
+    # tested separately from these real Glue source-table mutations.
+    monkeypatch.setattr(spectral_line_layers, 'sync_spectral_line_components', sync,
+                        raising=False)
+    monkeypatch.setattr(spectral_line_layers, 'rename_spectral_line_component', rename,
+                        raising=False)
+
+    def load_lines(values, unit):
+        loader = deconfigged_helper.loaders['object']
+        loader.object = QTable({'wavelength': values * unit, 'name': ['one', 'two']})
+        loader.format = 'Spectral Lines'
+        loader.importer()
+        return app.data_collection[plugin.line_table]
+
+    first = load_lines(np.array([6500., 7000.]), u.AA)
+    second = load_lines(np.array([500., 600.]), u.nm)
+    auxiliary = Data(label='auxiliary', wavelength=[1., 2.])
+    auxiliary.meta['_jdaviz_loader_spectral_loc_col'] = 'wavelength'
+    app.data_collection.append(auxiliary)
+    sync_calls.clear()
+
+    plugin.component.add_choice('second')
+    plugin.component_redshift = 0.1
+    third = load_lines(np.array([1., 2.]), u.um)
+    tables = [first, second, third]
+    ids = [plugin._get_data_component_id(data, 'observed wavelength:second')
+           for data in tables]
+    assert len({id(cid) for cid in ids}) == 3
+
+    def check_columns(label, redshift):
+        for data, cid in zip(tables, ids):
+            assert plugin._get_data_component_id(data, plugin._component_col_name(label)) is cid
+            source = plugin._get_data_component_id(data, 'wavelength')
+            assert_allclose(data[cid], data[source] * (1 + redshift))
+            assert data.get_component(cid).units == data.get_component(source).units
+            assert cid.parent is data
+            assert plugin._component_col_name(label) in data.meta['_jdaviz_plugin_component_column']
+            assert_allclose(data['observed wavelength:default'], data[source])
+
+    check_columns('second', 0.1)
+    plugin.component_redshift = 0.2
+    check_columns('second', 0.2)
+    assert plugin.line_table == third.label
+    assert_allclose([line['rest'] for line in plugin.component_lines], [1., 2.])
+    assert_allclose([line['obs'] for line in plugin.component_lines], [1.2, 2.4])
+
+    sync_calls.clear()
+    plugin.component.rename_choice('second', 'renamed')
+    assert rename_calls == [('second', 'renamed')]
+    assert len(sync_calls) == 3
+    assert all(actual is expected for actual, expected in zip(sync_calls, tables))
+    check_columns('renamed', 0.2)
+    for data in tables:
+        assert plugin._get_data_component_id(data, 'observed wavelength:second') is None
+        assert 'observed wavelength:second' not in data.meta['_jdaviz_plugin_component_column']
+
+    # Both kinds of Glue changes sync only original sources, never auxiliaries.
+    sync_calls.clear()
+    first.update_components({ids[0]: first[ids[0]] + 1})
+    app.hub.broadcast(ComponentsChangedMessage(second))
+    auxiliary.update_components({auxiliary.id['wavelength']: [3., 4.]})
+    app.hub.broadcast(ComponentsChangedMessage(auxiliary))
+    assert len(sync_calls) == 2
+    assert sync_calls[0] is first
+    assert sync_calls[1] is second
+
+    plugin.component.remove_choice('renamed')
+    for data in tables:
+        assert plugin._get_data_component_id(data, 'observed wavelength:renamed') is None
+        assert 'observed wavelength:renamed' not in data.meta['_jdaviz_plugin_component_column']
+    assert plugin.component_selected == 'default'
+    plugin.component_redshift = 0.3
+    for data in tables:
+        assert_allclose(data['observed wavelength:default'], data['wavelength'] * 1.3)
+    assert [cid.label for cid in auxiliary.main_components] == ['wavelength']

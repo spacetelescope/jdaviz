@@ -4,11 +4,15 @@ import numpy as np
 
 from astropy import units as u
 from glue.core import BaseData
+from glue.core.component_id import ComponentID
+from glue.core.units import find_unit_choices
 from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
 
 from jdaviz.utils import get_reference_image_data
+from jdaviz.core.spectral_line_layers import (
+    is_spectral_line_table, line_tables, observed_wavelength_id, line_positions)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_unit_conversion,
                                                spectral_unit_conversion)
@@ -30,16 +34,94 @@ class FreezableState:
 class FreezableProfileViewerState(ProfileViewerState, FreezableState):
     show_uncertainty = DDCProperty(False, docstring='Whether to show data uncertainties')
 
+    def _update_combo_ref_data(self):
+        # Echo resumes global callbacks before property callbacks. Complete
+        # the coordinate-frame transition before native artists see the new
+        # reference paired with the old, virtual line-only x component.
+        before = self.reference_data
+        with delay_callback(self, *self.callback_properties()):
+            self.ref_data_helper.set_multiple_data([data for data in self.layers_data
+                                                    if not is_spectral_line_table(data)])
+            if before is not self.reference_data:
+                self._reference_data_changed(before, self.reference_data)
+            if self.reference_data is None:
+                self._update_line_only_axis()
+            if hasattr(self, '_spectral_line_link_callback'):
+                self._spectral_line_link_callback()
+
+    def _reference_data_changed(self, before=None, after=None):
+        super()._reference_data_changed(before, after)
+        if self.reference_data is None:
+            self._update_line_only_axis()
+
+    def _update_line_only_axis(self):
+        tables = line_tables(self)
+        if tables:
+            if not hasattr(self, '_spectral_line_x_att'):
+                self._spectral_line_x_att = ComponentID('Observed wavelength')
+            # ComponentIDComboHelper has no set_choices API. Use the actual
+            # selection callback property, without making a table a reference.
+            type(self).x_att.set_choices(self, [self._spectral_line_x_att])
+            self.x_att = self._spectral_line_x_att
+            self._update_x_display_unit_choices()
+            self.y_display_unit = None
+            self._reset_y_limits()
+        elif hasattr(self, '_spectral_line_x_att'):
+            type(self).x_att.set_choices(self, [])
+            type(self).x_display_unit.set_choices(self, [])
+
+    def _update_att(self, *args):
+        if self.reference_data is None:
+            # Glue's default unit-choice update requires reference data.
+            self.x_att_pixel = None
+            self._update_x_display_unit_choices()
+            self._reset_x_limits()
+            return
+        super()._update_att(*args)
+
+    def _update_x_display_unit_choices(self):
+        if self.reference_data is not None:
+            return super()._update_x_display_unit_choices()
+        tables = line_tables(self)
+        if not tables:
+            return
+        data = tables[0]
+        cid = observed_wavelength_id(data)
+        if cid is None:
+            return
+        units = data.get_component(cid).units
+        current = self.x_display_unit
+        choices = find_unit_choices([(data, cid, units)])
+        if current and current not in choices:
+            choices.append(current)
+        type(self).x_display_unit.set_choices(self, choices)
+        self.x_display_unit = current or units
+
+    def _reset_y_limits(self, *event):
+        if self.reference_data is None and line_tables(self):
+            with delay_callback(self, 'y_min', 'y_max'):
+                self.y_min, self.y_max = 0, 1
+            return
+        super()._reset_y_limits(*event)
+
     def _reset_x_limits(self, *event):
         # override glue's _reset_x_limits to account for all layers,
         # not just reference data (_reset_y_limits already does so)
         # This is essentially copied directly from Glue's
         # ProfileViewerState._reset_y_limits but modified for x-limits
-        if self.reference_data is None or self.x_att_pixel is None:
+        if self.x_att is None:
             return
 
         x_min, x_max = np.inf, -np.inf
         for layer in self.layers:
+            if is_spectral_line_table(layer.layer):
+                if layer.visible:
+                    x = np.asarray(line_positions(layer.layer, self.x_display_unit))
+                    x = x[np.isfinite(x)]
+                    if len(x):
+                        x_min = min(x_min, x.min())
+                        x_max = max(x_max, x.max())
+                continue
             try:
                 profile = layer.profile
             except Exception:  # nosec
@@ -54,6 +136,9 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
         if not np.all(np.isfinite([x_min, x_max])):
             return
 
+        if x_min == x_max:
+            padding = abs(x_min) * 0.05 or 1
+            x_min, x_max = x_min - padding, x_max + padding
         with delay_callback(self, 'x_min', 'x_max'):
             self.x_min = x_min
             self.x_max = x_max
