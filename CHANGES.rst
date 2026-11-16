@@ -146,6 +146,8 @@ New Features
 
 - Add support for importing subsets on scatter viewers. [#4517]
 
+- Improved behavior for creating/editing subsets in table viewers. [#4488]
+
 Mosviz
 ^^^^^^
 
