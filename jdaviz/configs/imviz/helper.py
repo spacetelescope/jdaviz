@@ -98,7 +98,7 @@ class Imviz(ImageConfigHelper):
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self._app.vue_destroy_viewer_item(viewer_id)
 
-    def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+    def load(self, inp=None, loader=None, format=None, **kwargs):
         """
         Load data into the app.  A single valid loader/importer must be able to be
         matched based on the input, otherwise an error will be raised suggesting
@@ -113,13 +113,11 @@ class Imviz(ImageConfigHelper):
             Only consider a specific loader/resolver
         format : string, optional
             Only consider a specific format
-        target : string, optional
-            Only consider a specific target
         kwargs :
             Additional kwargs are passed on to both the loader and importer, as applicable.
             Any kwargs that do not match valid inputs are silently ignored.
         """
-        return self._load(inp=inp, loader=loader, format=format, target=target, **kwargs)
+        return self._load(inp=inp, loader=loader, format=format, **kwargs)
 
     @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, show_in_viewer=True,

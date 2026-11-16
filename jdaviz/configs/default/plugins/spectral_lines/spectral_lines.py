@@ -14,6 +14,7 @@ __all__ = ['SpectralLines']
 @tray_registry('g-spectral-lines', label="Spectral Lines", category="data:analysis")
 class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
     template_file = __file__, "spectral_lines.vue"
+    loaders_restrict_to_formats = ['Spectral Lines']
 
     component_mode = Unicode().tag(sync=True)
     component_edit_value = Unicode().tag(sync=True)
@@ -333,53 +334,8 @@ class SpectralLines(PluginTemplateMixin, ViewerSelectMixin, LoadersMixin):
             self.line_table = msg.new_label
 
     def _update_loader_items(self):
-        # override to skip restrict_to_target: the Spectral Line Database loader
-        # (and any other source loading spectral lines) uses BaseImporterToDataCollection
-        # rather than BaseImporterToPlugin, so importers would never match this plugin's
-        # target if restricted. Instead, just default the source to the Spectral Line
-        # Database loader.
-
-        def open_accordion():
-            self.open_in_tray()
-            self.loader_panel_ind = 0
-
-        def close_accordion():
-            self.loader_panel_ind = None
-
-        def set_active_loader(resolver):
-            self.loader_selected = resolver
-
-        import jdaviz.core.loaders  # noqa
-        from jdaviz.core.registries import loader_resolver_registry
-
-        disabled_loaders = self._app.state.settings.get('disabled_loaders')
-        if disabled_loaders is None:
-            # Default: disable loaders based on server_is_remote setting
-            if self._app.state.settings.get('server_is_remote', False):
-                disabled_loaders = ['file', 'file drop', 'url', 'object',
-                                    'astroquery', 'virtual observatory']
-            else:
-                disabled_loaders = []
-
-        loader_items = []
-        for name, Resolver in loader_resolver_registry.members.items():
-            if name in disabled_loaders or not Resolver.is_available(self._app):
-                continue
-            loader = Resolver(app=self._app,
-                              open_callback=open_accordion,
-                              close_callback=close_accordion,
-                              set_active_loader_callback=set_active_loader)
-            loader_items.append({
-                'name': name,
-                'label': name,
-                'requires_api_support': loader.requires_api_support,
-                'required_dev_flags': list(Resolver.required_dev_flags),
-                'widget': 'IPY_MODEL_' + loader.model_id
-            })
-        self.loader_items = loader_items
+        super()._update_loader_items()
 
         default_name = 'spectral line database'
-        if any(item['name'] == default_name for item in loader_items):
+        if any(item['name'] == default_name for item in self.loader_items):
             self.loader_selected = default_name
-        elif len(loader_items):
-            self.loader_selected = loader_items[0]['name']

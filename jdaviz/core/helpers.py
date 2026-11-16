@@ -235,7 +235,6 @@ class ConfigHelper(HubListener):
               inp=None,
               loader=None,
               format=None,
-              target=None,
               ignore_invalid_kwargs=False,
               **kwargs):
         """
@@ -252,8 +251,6 @@ class ConfigHelper(HubListener):
             Only consider a specific loader/resolver
         format : string, optional
             Only consider a specific format
-        target : string, optional
-            Only consider a specific target
         ignore_invalid_kwargs : bool, optional
             If True, silently ignore kwargs that do not match valid inputs for the
             selected loader/importer. If False (default), raise an error for invalid kwargs.
@@ -270,7 +267,6 @@ class ConfigHelper(HubListener):
             resolver = find_matching_resolver(self._app, inp,
                                               resolver=loader,
                                               format=format,
-                                              target=target,
                                               **kwargs)
 
         if 'show_in_viewer' in kwargs.keys():

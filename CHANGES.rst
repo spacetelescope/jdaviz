@@ -88,8 +88,6 @@ New Features
 - Improvements to flux / surface brightness unit conversion logic to support
   workflows and avoid errors in mixed unit viewers in deconfigged. [#4336]
 
-- Importers can now support multiple targets when filtering format options based on target. [#4345]
-
 - Fix table selection color in dark mode, rename "Remove from app" to "Delete from app", and allow line profile to use upper or lower case "L". [#4348]
 
 - Updated documentation for the application and caching, updated the jdaviz logo,
@@ -212,10 +210,11 @@ Other Changes and Additions
 
 - Added splash screen and changed loading screens for standalone application [#4495]
 
+- Removed the concept of target viewer type from loaders. [#4514]
+
 - Added a warning when attempting to zoom to data that is extremely separated on the
   sky from the reference data (>100 degrees or so), as zooming will fail in these
   cases. [#4542]
-
 
 5.0.6 (unreleased)
 ==================

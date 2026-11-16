@@ -131,9 +131,7 @@ The ``load()`` method replaces the older ``load_data()`` method. Key differences
 
 2. Format Selection - Provides more control over data format via the ``format`` parameter
 
-3. Target Specification - Can direct data to specific viewers using ``target``
-
-4. Consistent Interface - Works consistently across different data types
+3. Consistent Interface - Works consistently across different data types
 
 Differences from the Loaders API
 ================================

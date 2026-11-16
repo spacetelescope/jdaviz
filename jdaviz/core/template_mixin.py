@@ -562,6 +562,12 @@ class FootprintDisplayMixin:
 
 
 class LoadersMixin(VuetifyTemplate, HubListener):
+    """
+    Provide plugin loaders, optionally restricted to importer format names by
+    the plugin's ``loaders_restrict_to_formats`` class attribute.
+    """
+    loaders_restrict_to_formats = None
+
     loader_items = List([]).tag(sync=True)
     loader_selected = Unicode().tag(sync=True)
     loader_panel_ind = Any(None).tag(sync=True)  # None: close, 0: open
@@ -611,10 +617,10 @@ class LoadersMixin(VuetifyTemplate, HubListener):
             if name in disabled_loaders or not Resolver.is_available(self._app):
                 continue
             loader = Resolver(app=self._app,
+                              format=self.loaders_restrict_to_formats,
                               open_callback=open_accordion,
                               close_callback=close_accordion,
-                              set_active_loader_callback=set_active_loader,
-                              restrict_to_target=self._registry_label)
+                              set_active_loader_callback=set_active_loader)
             loader_items.append({
                 'name': name,
                 'label': name,
