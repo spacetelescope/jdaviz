@@ -12,15 +12,15 @@ Loading from Astroquery
 The Astroquery loader allows you to query and load data directly from astronomical archives.
 
 .. note::
-  Astroquery uses :class:`astroquery.mast.MastMissionsClass` to find observations whose footprints 
-  overlap the search region defined by the input source coordinates and search radius. 
-  Specifically, it returns observations whose footprints contain the source coordinates 
+  Astroquery uses :class:`astroquery.mast.MastMissionsClass` to find observations whose footprints
+  overlap the search region defined by the input source coordinates and search radius.
+  Specifically, it returns observations whose footprints contain the source coordinates
   or extend into the region within the specified radius.
-  
-  The ``ra`` and ``dec`` represent the central coordinates of an observation's footprint, 
-  but the footprint itself can extend well beyond these coordinates. As a result, an observation 
-  may overlap the search region only near one of its corners, even if its central coordinates 
-  lie farther from the source than the specified search radius. Conversely, if an observation's 
+
+  The ``ra`` and ``dec`` represent the central coordinates of an observation's footprint,
+  but the footprint itself can extend well beyond these coordinates. As a result, an observation
+  may overlap the search region only near one of its corners, even if its central coordinates
+  lie farther from the source than the specified search radius. Conversely, if an observation's
   footprint is centered on the source coordinates, it may be returned even when the search radius is arbitrarily small.
 
   This is specific to :class:`astroquery.mast.MastMissionsClass`; virtual observatory services do not show this quirk.
@@ -34,7 +34,8 @@ Query data from:
 * MAST (Mikulski Archive for Space Telescopes)
 
   * JWST
-  * HST 
+  * Roman
+  * HST
 
 * SDSS (Sloan Digital Sky Survey)
 * Gaia
@@ -57,7 +58,7 @@ API Access
     ldr.search_input = 'Source'
     ldr.source = 'M4'
     ldr.coordframe = 'icrs'
-    ldr.radius = 1 
+    ldr.radius = 1
     ldr.radius_unit = 'deg'
 
     ldr.telescope = 'JWST'
@@ -105,7 +106,7 @@ truncating the final table.
     ldr.query_archive()
 
 
-Since there are many options and the exposed options depend on previous selections, the best way 
+Since there are many options and the exposed options depend on previous selections, the best way
 to create a workflow to to load data from astroquery is to enable :ref:`userapi-api_hints`,
 and interactively do a search in the UI and reproduce in a notebook cell:
 
@@ -114,6 +115,23 @@ and interactively do a search in the UI and reproduce in a notebook cell:
 ..    :css: jdaviz-wireframe.css
 ..    :repeat: false
 ..    :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 0}, {"action": "select-dropdown", "value": "Source:astroquery", "delay": 0}, {"action": "highlight", "target": "#source-select", "delay": 0}, {"action": "pause", "delay": 1000}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}]
+
+MAST API Token
+==============
+
+To access proprietary data from MAST archives (JWST, Roman, HST), you need an API token. Set the environment variable ``MAST_API_TOKEN`` with your token before running queries. For example:
+
+.. code-block:: bash
+
+    export MAST_API_TOKEN="your_token_here"
+
+
+or
+
+.. code-block:: python
+
+    import os
+    os.environ["MAST_API_TOKEN"] = "your_token_here"
 
 UI Access
 =========
