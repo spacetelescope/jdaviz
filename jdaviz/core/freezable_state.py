@@ -9,6 +9,7 @@ from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
 
 from jdaviz.utils import get_reference_image_data
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_unit_conversion,
                                                spectral_unit_conversion)
@@ -277,6 +278,15 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                     x_max = max(x_max, x_pix_max + 0.5)
                     y_min = min(y_min, y_pix_min - 0.5)
                     y_max = max(y_max, y_pix_max + 0.5)
+
+                    # If these are all nan or inf, warn user that data is too far on the sky from
+                    # the reference data.
+                    if not np.all(np.isfinite((x_min, x_max, y_min, y_max))):
+                        msg = SnackbarMessage(
+                                        f'{layer.layer.label} is too far from the reference'
+                                        ' data, zooming will not function correctly.',
+                                        color='warning', sender=self)
+                        layer.layer.hub.broadcast(msg)
                 wcs_success = True
 
         if not wcs_success:

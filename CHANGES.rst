@@ -210,6 +210,10 @@ Other Changes and Additions
 
 - Added splash screen and changed loading screens for standalone application [#4495]
 
+- Added a warning when attempting to zoom to data that is extremely separated on the
+  sky from the reference data (>100 degrees or so), as zooming will fail in these
+  cases. [#4542]
+
 
 5.0.6 (unreleased)
 ==================
