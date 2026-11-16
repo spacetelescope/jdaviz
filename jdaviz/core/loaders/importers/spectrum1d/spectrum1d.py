@@ -28,10 +28,6 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if (self.input_type == 'fits:hdulist'
-                and len(self.extension.choices) > 1):
-            self.extension.select_all()
-
         # Add filter for unit compatibility
         def viewer_compatible_units(viewer):
             # Just return False right away if this triggered off another importer, otherwise
