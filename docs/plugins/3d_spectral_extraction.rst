@@ -101,13 +101,12 @@ UI Access
 Opening the Plugin
 ------------------
 
-**Cubeviz:**
-  Click the :guilabel:`3D Spectral Extraction` icon in the plugin toolbar.
+Click the :guilabel:`3D Spectral Extraction` icon in the plugin toolbar.
 
 Workflow
 --------
 
-1. **Load cube** into Jdaviz
+1. **Load cube** into ``jdaviz``
 2. **(Optional) Draw spatial region** for aperture
 3. **Select dataset** from :guilabel:`Data` dropdown
 4. **Select function** from :guilabel:`Function` dropdown

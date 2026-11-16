@@ -46,7 +46,7 @@ from ipyvue import watch
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index', 'alpha_index_to_int',
            'get_subset_type', 'cached_uri', 'download_uri_to_path', 'layer_is_2d',
-           'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
+           'layer_is_2d_spectrum', 'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
            'wildcard_match', 'cmap_samples', 'glue_colormaps',
@@ -984,6 +984,17 @@ def layer_is_2d(layer):
     # returns True for subclasses of BaseData with ndim=2, both for
     # layers that are WCS-only as well as images containing data:
     return isinstance(layer, BaseData) and layer.ndim == 2
+
+
+def layer_is_2d_spectrum(layer):
+    # returns True for 2D spectrum data (one spectral and one
+    # cross-dispersion axis) rather than a spatial image.
+    if not layer_is_2d(layer):
+        return False
+    if layer.meta.get('_importer') == 'Spectrum2DImporter':
+        return True
+    return any((getattr(comp, '_component_type', None) or '').startswith('spectral_axis')
+               for comp in layer.components)
 
 
 def layer_is_3d(layer):

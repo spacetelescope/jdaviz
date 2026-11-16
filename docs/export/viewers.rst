@@ -5,7 +5,32 @@
 Viewers
 *******
 
-Documentation coming soon.
+Allows exporting the current view in a Viewer as an image.  
+
+.. note::
+   The image size will be the exact size and state of the viewer (i.e. as if you took a screenshot of the viewer).  
+   Confirm the viewer height and width before exporting.  
+
+Supported Formats
+=================
+
+Subsets can be exported as:
+
+- PNG 
+- SVG 
+
+
+API Access
+==========
+
+.. code-block:: python
+
+   plg = jdaviz.plugins['Export']
+   plg.viewer = 'Viewer Name'
+   plg.viewer_format = 'png'
+   plg.filename = 'my-viewer'
+   plg.export()
+
 
 UI Access
 =========

@@ -3,10 +3,11 @@
 
 :data-types: ramp
 
+.. _loaders-format-ramp-format:
 
-******************
+***********
 Ramp Format
-******************
+***********
 
 Load Level 1 ramp data products.
 
@@ -50,4 +51,4 @@ UI Access
 See Also
 ========
 
-- :doc:`../../rampviz/index` - For information on displaying and analyzing ramp data
+- :ref:`loaders-format-ramp-integration-format` - For information on loading 1D integration profiles extracted from JWST ramp data

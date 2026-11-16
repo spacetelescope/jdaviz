@@ -31,8 +31,9 @@ API Access
 .. code-block:: python
 
    plg = jdaviz.plugins['Export']
-   plg.dataset = 'my-dataset'
-   plg.dataset_format = 'FITS'
+   plg.viewer = 'Viewer Name'
+   plg.viewer_format = 'png'
+   plg.filename = 'my-viewer'
    plg.export()
 
 Since there are many options and the exposed options depend on previous selections, the best way to explore API options is to enable :ref:`userapi-api_hints`:

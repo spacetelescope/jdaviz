@@ -56,6 +56,7 @@ Footprint Label
 ===============
 
 When importing a footprint, you can specify a custom label:
+
 .. code-block:: python
 
     jd.load('fov.reg', format='Footprint', footprint_label='Instrument FOV')

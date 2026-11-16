@@ -13,7 +13,7 @@ from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, Rectan
 from numpy.testing import assert_allclose
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion,
                      CircleSkyRegion, CompoundPixelRegion, CompoundSkyRegion,
-                     PixCoord)
+                     PixCoord, RectanglePixelRegion)
 from specutils import SpectralRegion
 
 from jdaviz.configs.default.plugins.subset_tools import utils
@@ -61,8 +61,7 @@ def test_subset_definition_with_composite_subset(cubeviz_helper, spectrum1d_cube
     cubeviz_helper._app.get_tray_item_from_name('g-subset-tools')
 
 
-def test_subset_pixels_label_omitted_for_scatter(deconfigged_helper,
-                                                 sky_coord_only_source_catalog):
+def test_subset_pixels_label_omitted_for_scatter(deconfigged_helper, sky_coord_only_source_catalog):
     """
     "(pixels)" should not be appended to ROI subset attribute names for subsets
     applied in a Scatter viewer (e.g. on a catalog), since scatter axes are not
@@ -554,6 +553,27 @@ def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
         st.get_regions(wrt_data='fake')
 
 
+def test_import_region_scatter(deconfigged_helper):
+    catalog = Table({'x': [0.1, 0.32, 0.8], 'y': [8.0, 11.6, 15.0]})
+    deconfigged_helper.load(catalog, format='Generic Catalog', data_label='my_catalog',
+                            col_other=['x', 'y'])
+
+    po = deconfigged_helper.plugins['Plot Options']
+    po.viewer = 'Scatter'
+    po.xatt = 'x'
+    po.yatt = 'y'
+
+    reg = RectanglePixelRegion(center=PixCoord(0.32, 11.6), width=1, height=6.5)
+    plg = deconfigged_helper.plugins['Subset Tools']
+    plg.import_region(reg)
+    regions = plg.get_regions('other')
+
+    assert list(regions) == ['Subset 1']
+    assert regions['Subset 1'] == reg
+    subset = deconfigged_helper._app.data_collection['my_catalog'].subsets[0]
+    assert np.array_equal(subset.to_mask(), [False, True, False])
+
+
 def test_get_regions_scatter_with_image(deconfigged_helper, image_2d_wcs,
                                         sky_coord_only_source_catalog):
     # load an image
@@ -761,3 +781,23 @@ def test_data_menu_subset_delete(cubeviz_helper, spectrum1d_cube):
     assert (len(cubeviz_helper.viewers['spectrum-viewer'].data_menu.layer.choices) ==
             expected_dm_layer_len)
     assert dm.layer not in cubeviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_loaded
+
+
+def test_import_region_with_units(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    # import a spectral region with units of microns
+    spec_region_um = SpectralRegion(5.75 * u.um, 6.05 * u.um)
+    plg.import_region(spec_region_um, subset_label='um subset')
+
+    # import a spectral region with units of nanometers
+    spec_region_nm = SpectralRegion(575 * u.nm, 605 * u.nm)
+    plg.import_region(spec_region_nm, subset_label='nm subset')
+
+    subsets = cubeviz_helper._app.get_subsets()
+    assert len(subsets) == 2
+    assert subsets['um subset'].lower == 5.75e-06 * u.m
+    assert subsets['um subset'].upper == 6.05e-06 * u.m
+    assert subsets['nm subset'].lower == 575e-09 * u.m
+    assert subsets['nm subset'].upper == 605e-09 * u.m

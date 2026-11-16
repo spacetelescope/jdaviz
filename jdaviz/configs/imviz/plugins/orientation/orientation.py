@@ -27,7 +27,7 @@ from jdaviz.core.template_mixin import (
 )
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import (get_wcs_only_layer_labels, get_reference_image_data,
-                          layer_is_2d, _wcs_only_label)
+                          layer_is_2d, layer_is_2d_spectrum, _wcs_only_label)
 
 __all__ = ['Orientation']
 
@@ -870,7 +870,8 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
             # 1. We are not touching any existing Subsets or Table. They keep their own links.
             # 2. We are not touching fake WCS layers in pixel linking.
             # 3. We are not touching data without WCS in WCS linking.
-            if ((not layer_is_2d(data)) or
+            # 4. We are not touching 2D spectra, which are not spatially aligned with images.
+            if ((not layer_is_2d(data)) or layer_is_2d_spectrum(data) or
                     (align_by == "pixels" and data.meta.get(_wcs_only_label)) or
                     (align_by == "wcs" and not hasattr(data.coords, 'pixel_to_world'))):
                 continue

@@ -195,7 +195,11 @@ def test_fit_cube_no_wcs(cubeviz_helper):
 
 
 def test_toggle_cube_fit_subset(cubeviz_helper):
-    sp = Spectrum(flux=np.ones((7, 8, 9)) * u.nJy, spectral_axis_index=2)  # ny, nx, nz
+    nx, ny, nspec = 7, 8, 9
+    # need spectral units to import a SpectralRegion
+    wave = np.linspace(6000, 7000, nspec) * u.AA
+    sp = Spectrum(flux=np.ones((nx, ny, nspec)) * u.nJy, spectral_axis=wave, spectral_axis_index=2)
+
     cubeviz_helper.load_data(sp, data_label="test_cube")
     mf = cubeviz_helper.plugins['Model Fitting']
 

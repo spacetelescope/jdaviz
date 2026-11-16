@@ -144,6 +144,8 @@ New Features
 
 - Render the out-of-bounds regions of image layers as transparent. [#4536]
 
+- Add support for importing subsets on scatter viewers. [#4517]
+
 - Improved behavior for creating/editing subsets in table viewers. [#4488]
 
 Mosviz
@@ -178,6 +180,10 @@ Bug Fixes
   particular handling of mixed-unit datasets and display unit conversions. [#4483, #4496]
 
 - Fix issue with mouseover units when lined 1D spectrum viewer is empty. [#4526]
+
+- Fix units error when importing a SpectralRegion with units different from the display units of the reference data. [#4527]
+
+- Prevent reparenting subset when there is no remaining valid data [#4538]
 
 Mosviz
 ^^^^^^
@@ -254,6 +260,9 @@ Bug Fixes
 - Prevent spatial subsets and spectral subsets from entering table viewer(s)
   data menu. Spatial subsets are only shown in Source Catalog Table viewers,
   and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
+
+- Fix bug where spectral subsets would appear in image viewers when the 2d spectrum viewer
+  has units of pixels. [#4507]
 
 Mosviz
 ^^^^^^

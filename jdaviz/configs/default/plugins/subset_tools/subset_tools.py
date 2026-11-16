@@ -40,8 +40,10 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.helpers import _next_subset_num
 from jdaviz.utils import (MultiMaskSubsetState, _chain_regions, data_has_valid_wcs,
                           _get_celestial_wcs)
+from jdaviz.core.unit_conversion_utils import spectral_unit_conversion
 
 from jdaviz.configs.default.plugins.subset_tools import utils
+from jdaviz.configs.default.plugins.viewers import ScatterViewer
 
 
 __all__ = ['SubsetTools']
@@ -1169,6 +1171,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         """
         Method for creating subsets from regions or region files.
 
+        For scatter viewers, use pixel regions with coordinates in the viewer's
+        axis values. These coordinates are not converted using image WCS,
+        even when the app is WCS-linked.
+
         Parameters
         ----------
         region : region, list of region objects, or str
@@ -1409,7 +1415,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                             RectangularAperture, CircularAnnulus,
                                             CirclePixelRegion, EllipsePixelRegion,
                                             RectanglePixelRegion, CircleAnnulusPixelRegion))
-                            and self._app._align_by == 'wcs'):
+                            and self._app._align_by == 'wcs'
+                            and not isinstance(viewer, ScatterViewer)):
                         if has_wcs:
                             wcs = data.coords
                             if getattr(wcs, 'world_n_dim', None) == 3:
@@ -1454,11 +1461,18 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                         viewer.apply_roi(region)
 
                     elif isinstance(region, SpectralRegion):
-                        # Use viewer_name if provided in kwarg, otherwise use
-                        # default spectrum viewer name
-                        range_viewer = self.app.get_viewer(viewer_parameter) if viewer_parameter else self.spectrum_viewer  # noqa
-                        s = RangeSubsetState(lo=region.lower.value, hi=region.upper.value,
-                                             att=range_viewer.state.x_att)
+                        range_viewer = self.app.get_viewer(viewer_parameter) \
+                            if viewer_parameter else self.spectrum_viewer
+                        x_att = range_viewer.state.x_att
+                        base_units = range_viewer.state.reference_data.get_component(x_att).units
+
+                        # convert the input region to the base units
+                        region_lower = spectral_unit_conversion(region.lower.value,
+                                                                region.lower.unit, base_units)
+                        region_upper = spectral_unit_conversion(region.upper.value,
+                                                                region.upper.unit, base_units)
+                        s = RangeSubsetState(lo=region_lower, hi=region_upper, att=x_att)
+
                         range_viewer.apply_subset_state(s)
 
                     # Last resort: Masked Subset that is static (if data is not a cube)

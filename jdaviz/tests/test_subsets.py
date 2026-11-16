@@ -9,6 +9,7 @@ from astropy.utils.data import get_pkg_data_filename
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from packaging.version import Version
 
+from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset_group import GroupedSubset
 from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, RectanglePixelRegion,
                      EllipsePixelRegion, CircleAnnulusPixelRegion)
@@ -1218,3 +1219,53 @@ class TestRegionsFromSubsets:
 
         get_data_3_mask = np.where(~get_data_3.mask)
         assert (get_data_1_mask[0] == get_data_3_mask[0]).all()
+
+
+@pytest.mark.parametrize('image_first', [True, False])
+def test_spectral_subset_not_on_image(deconfigged_helper, mos_image, mos_spectrum2d, image_first):
+    # A spectral subset should propagate between the 2D spectrum and its extracted
+    # 1D spectrum, but never to an image, whose pixel axes are unrelated to the
+    # dispersion/cross-dispersion pixel axes of the 2D spectrum.
+    loads = [(mos_image, 'Image', 'img'), (mos_spectrum2d, '2D Spectrum', 's2d')]
+    for data, fmt, label in (loads if image_first else loads[::-1]):
+        deconfigged_helper.load(data, format=fmt, data_label=label)
+
+    dc = deconfigged_helper._app.data_collection
+    img = [d for d in dc if d.label.startswith('img')][0]
+    s2d = dc['s2d']
+
+    for link in dc.external_links:
+        linked = {cid.parent for cid in link.cids1 + link.cids2}
+        if {img, s2d}.issubset(linked):
+            assert not any(deconfigged_helper._app._is_pixel_component(cid)
+                           for cid in link.cids1 + link.cids2)
+
+    sa = mos_spectrum2d.spectral_axis
+    deconfigged_helper.plugins['Subset Tools'].import_region(SpectralRegion(sa[100], sa[200]))
+
+    subsets = {s.data.label: s for s in dc.subset_groups[0].subsets}
+    assert subsets['s2d'].to_mask().sum() > 0
+    assert subsets['s2d (auto-ext)'].to_mask().sum() > 0
+    with pytest.raises(IncompatibleAttribute):
+        subsets[img.label].to_mask()
+
+
+@pytest.mark.parametrize('image_first', [True, False])
+def test_unrelated_subsets_not_in_data_menu(deconfigged_helper, mos_image, mos_spectrum2d,
+                                            image_first):
+    # A subset drawn on an image should not be listed in the data menu of the 2D spectrum
+    # viewer (and vice versa) since the image and 2D spectrum pixel axes are not linked.
+    loads = [(mos_image, 'Image', 'img'), (mos_spectrum2d, '2D Spectrum', 's2d')]
+    for data, fmt, label in (loads if image_first else loads[::-1]):
+        deconfigged_helper.load(data, format=fmt, data_label=label)
+
+    img_viewer = deconfigged_helper.viewers['Image']
+    s2d_viewer = deconfigged_helper.viewers['2D Spectrum']
+
+    img_viewer._obj.glue_viewer.apply_roi(CircularROI(xc=50, yc=50, radius=10))
+    s2d_viewer._obj.glue_viewer.apply_roi(RectangularROI(5, 50, 2, 8))
+
+    img_choices = img_viewer.data_menu.layer.choices
+    s2d_choices = s2d_viewer.data_menu.layer.choices
+    assert 'Subset 1' in img_choices and 'Subset 2' not in img_choices
+    assert 'Subset 2' in s2d_choices and 'Subset 1' not in s2d_choices

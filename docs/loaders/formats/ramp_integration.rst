@@ -3,6 +3,8 @@
 
 :data-types: ramp-integration
 
+.. _loaders-format-ramp-integration-format:
+
 ***********************
 Ramp Integration Format
 ***********************
@@ -96,4 +98,4 @@ UI Access
 See Also
 ========
 
-- :ref:`loaders-format-ramp` - Loading full ramp cubes
+- :ref:`loaders-format-ramp-format` - Loading full ramp cubes
