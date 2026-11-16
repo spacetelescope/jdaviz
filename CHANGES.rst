@@ -266,11 +266,6 @@ Bug Fixes
 - Fix bug where spectral subsets would appear in image viewers when the 2d spectrum viewer
   has units of pixels. [#4507]
 
-- Fix layer selector references when renaming viewers. [#4458]
-
-- Max-pin glue-jupyter and vue to specific versions to ensure compatibility before
-  vue3 compatible glue-jupyter release. [#4463]
-
 Mosviz
 ^^^^^^
 
