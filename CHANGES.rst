@@ -146,6 +146,11 @@ New Features
 
 - Improved behavior for creating/editing subsets in table viewers. [#4488]
 
+- Adds support for querying Roman data from astroquery. [#4544]
+
+- Adds support for using MAST API token from environment variable ``MAST_API_TOKEN``
+  when querying astroquery. [#4544]
+
 Mosviz
 ^^^^^^
 
