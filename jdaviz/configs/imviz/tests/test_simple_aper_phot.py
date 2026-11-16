@@ -11,13 +11,14 @@ from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils import minversion
 from astropy.utils.data import get_pkg_data_filename
+from glue.core.roi import CircularROI
 from numpy.testing import assert_allclose, assert_array_equal
 import photutils
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
 from photutils.datasets import make_4gaussians_image
-from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
-                     RectanglePixelRegion, PixCoord)
+from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, CircleSkyRegion,
+                     EllipsePixelRegion, RectanglePixelRegion, PixCoord)
 from specutils import Spectrum
 
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_plots import (
@@ -567,6 +568,82 @@ def test_cubeviz_batch(deconfigged_helper, spectrum1d_cube_fluxunit_jy_per_stera
     assert_quantity_allclose(tbl['sum'],
                              [5.980836e-12, 2.037396e-10, 5.980836e-12, 2.037396e-10] * u.Jy,
                              rtol=1e-4)
+
+
+def test_cube_aperphot_with_images_aligned_by_wcs(deconfigged_helper, image_nddata_wcs_sb,
+                                                  spectrum1d_cube_fluxunit_jy_per_steradian):
+    """
+    Cubes are not yet WCS-linked, so a subset drawn on a cube is parented to the cube
+    itself and must be returned as a PixelRegion even when images are aligned by WCS.
+
+    If this test fails because the region is a SkyRegion (or the subset is
+    parented to a WCS-only layer), cubes have likely gained WCS-linking support and
+    aperture photometry on cubes needs to handle SkyRegions with a 3D WCS.
+    """
+    deconfigged_helper.load(image_nddata_wcs_sb, data_label='image', format='Image')
+    deconfigged_helper.plugins['Orientation'].align_by = 'WCS'
+    deconfigged_helper.load(spectrum1d_cube_fluxunit_jy_per_steradian,
+                            data_label='cube', format='3D Spectrum')
+
+    cube_viewer = deconfigged_helper.viewers['3D Spectrum']._obj.glue_viewer
+    cube_viewer.apply_roi(CircularROI(2, 1.5, 1.5))
+
+    subset_state = deconfigged_helper._app.data_collection.subset_groups[0].subset_state
+    assert subset_state.attributes[0].parent.label == 'cube'
+
+    phot_plugin = deconfigged_helper.plugins['Aperture Photometry']
+    phot_plugin.dataset.selected = 'cube'
+    phot_plugin.aperture.selected = 'Subset 1'
+    assert isinstance(phot_plugin.aperture.selected_spatial_region, CirclePixelRegion)
+
+    phot_plugin.calculate_photometry()
+    tbl = phot_plugin.export_table()
+    assert_quantity_allclose(tbl['sum'][-1], 1.819266e-10 * u.Jy, rtol=1e-4)
+
+
+def test_image_aperphot_with_subset_drawn_on_cube(deconfigged_helper,
+                                                  spectrum1d_cube_fluxunit_jy_per_steradian):
+    """
+    A subset drawn on a cube has pixel coordinates in the cube's frame, so when used on an
+    image (or in an image viewer) while aligned by WCS, it must be translated through the sky.
+    """
+    cube = spectrum1d_cube_fluxunit_jy_per_steradian
+    # image on the same sky as the cube, but with its pixel grid offset
+    wcs = cube.wcs.celestial
+    wcs.wcs.crpix += [10, 20]
+    img = NDData(np.arange(3600.).reshape(60, 60) * u.Jy / u.sr, wcs=wcs)
+
+    deconfigged_helper.load(img, data_label='image', format='Image', align_by='WCS')
+    image_viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+
+    deconfigged_helper.load(cube, data_label='cube', format='3D Spectrum')
+    cube_viewer = deconfigged_helper.viewers['3D Spectrum']._obj.glue_viewer
+    cube_viewer.apply_roi(CircularROI(2, 1.5, 1))
+
+    assert deconfigged_helper.plugins['Orientation'].align_by == 'WCS'
+
+    phot_plugin = deconfigged_helper.plugins['Aperture Photometry']
+    phot_plugin.dataset.selected = 'image[DATA]'
+    phot_plugin.aperture.selected = 'Subset 1'
+    phot_plugin.background.selected = 'Subset 1'
+    sky_region = phot_plugin.aperture.selected_spatial_region
+    assert isinstance(sky_region, CircleSkyRegion)
+
+    # aperture overlay in the image viewer is drawn in the frame of its reference layer
+    # check center coords
+    x, y, _ = phot_plugin.aperture._get_mark_coords_and_validate(image_viewer)
+    ref_center = sky_region.to_pixel(image_viewer.state.reference_data.coords).center
+    assert_allclose((np.nanmean(x), np.nanmean(y)), (ref_center.x, ref_center.y), atol=0.1)
+
+    # and background
+    expected = sky_region.to_pixel(wcs)
+    assert_allclose(phot_plugin.background_value,
+                    np.nanmedian(expected.to_mask(mode='center').get_values(img.data)))
+
+    phot_plugin.calculate_photometry()
+    tbl = phot_plugin.export_table()
+    assert_allclose((tbl['xcenter'][-1].value, tbl['ycenter'][-1].value),
+                    (expected.center.x, expected.center.y))
 
 
 @pytest.mark.parametrize('helper_name', ['imviz_helper', 'deconfigged_helper'])

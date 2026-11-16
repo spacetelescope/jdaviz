@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 from astropy import units as u
+from astropy.coordinates import SpectralCoord
 from astropy.modeling.fitting import TRFLSQFitter
 from astropy.modeling import Parameter
 from astropy.modeling.models import Gaussian1D
@@ -682,10 +683,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
 
         try:
-            type = 'sky_region' if self._app._align_by == 'wcs' else 'region'
-            reg = self._app.get_subsets(subset_name=self.background_selected,
-                                        include_sky_region=type == 'sky_region',
-                                        spatial_only=True)[0][type]
+            reg = self.aperture._get_spatial_region(subset=background_selected,
+                                                    wrt_data=self.dataset.selected_dc_item)
             self.background_value = self._calc_background_median(reg)
         except Exception as e:
             self.background_value = 0
@@ -795,13 +794,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         if aperture is not None or dataset is not None:
             reg = self.aperture._get_spatial_region(subset=aperture if aperture is not None else self.aperture.selected,  # noqa
-                                                    dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
+                                                    wrt_data=data)
 
             # determine if a valid aperture (since selected_validity only applies to selected entry)
             # we don't need to pass in 'viewer' here (which is used to obtain a WCS
-            # to translate Sky Regions to Pixel Regions). If we are in deconfigged,
-            # then _get_spatial_region always returns a PixelRegion. If we are in Imviz or
-            # Cubeviz, _get_mark_coords_and_validate will use the app's default viewer.
+            # to translate Sky Regions to Pixel Regions). If the region is a SkyRegion,
+            # _get_mark_coords_and_validate will use the app's default viewer.
             _, _, validity = self.aperture._get_mark_coords_and_validate(selected=aperture)
             if not validity.get('is_aperture'):
                 raise ValueError(f"Selected aperture {aperture} is not valid: {validity.get('aperture_message')}")  # noqa
@@ -847,7 +845,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             bg_in_display_units = True
         else:
             bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  # noqa
-                                                       dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
+                                                       wrt_data=data)
             background_value = self._calc_background_median(bg_reg, data=data)
             bg_in_display_units = True
 
@@ -869,8 +867,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if hasattr(reg, 'to_pixel'):
             sky_center = reg.center
             if self.is_cube:
-                ycenter, xcenter = w.world_to_pixel(self._cube_wave, sky_center)[1]
-            else:  # "imviz"
+                ycenter, xcenter, _ = w.world_to_pixel(sky_center, SpectralCoord(self._cube_wave))
+            else:  # images
                 xcenter, ycenter = w.world_to_pixel(sky_center)
         else:
             xcenter = reg.center.x
@@ -882,7 +880,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     else:
                         sky = w.pixel_to_world(self._cube_slice_ind, ycenter, xcenter)
                     sky_center = [coord for coord in sky if hasattr(coord, "icrs")][0]
-                else:  # "imviz"
+                else:  # images
                     sky_center = w.pixel_to_world(xcenter, ycenter)
             else:
                 sky_center = None
