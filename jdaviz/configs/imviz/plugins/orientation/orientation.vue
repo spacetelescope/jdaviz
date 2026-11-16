@@ -70,7 +70,7 @@
         </j-flex-row>
 
         <v-alert v-if="show_subset_warning" type='warning' style="margin-left: -12px; margin-right: -12px; margin-bottom: 16px">
-          Delete existing subsets to change alignment.
+          Existing subsets must be deleted before changing alignment. Delete subsets?
           <j-flex-row justify="end" style="margin-right: 2px; margin-top: 16px">
             <j-tooltip :tooltipcontent="'Cancel'">
               <v-btn icon class="mr-2" @click="cancel_align_by">
