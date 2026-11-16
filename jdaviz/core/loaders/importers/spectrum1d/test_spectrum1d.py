@@ -119,6 +119,7 @@ def test_unique_default_labels_hdu_extensions(
     ldr = deconfigged_helper.loaders['object']
     ldr.object = fits.HDUList(hdus)
     ldr.format = '1D Spectrum'
+    ldr.importer.extension.select_all()
     ldr.importer.data_label = 'my_spectrum'
     ldr.load()
 
