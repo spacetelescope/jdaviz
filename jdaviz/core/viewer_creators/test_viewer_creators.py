@@ -28,6 +28,55 @@ def test_viewer_creation(deconfigged_helper, spectrum1d):
         'IPY_MODEL_' + created._obj.model_id)
 
 
+@pytest.mark.parametrize('axis', ['xatt', 'yatt'])
+@pytest.mark.parametrize(('selected', 'expected'), [
+    ([], []),
+    (['table1'], ['ID', 'shared_x', 'shared_y', 'unique1']),
+    (['table2'], ['ID', 'shared_x', 'shared_y', 'unique2']),
+    (['table1', 'table2'], ['ID', 'shared_x', 'shared_y']),
+    (['table2', 'table1'], ['ID', 'shared_x', 'shared_y']),
+])
+def test_scatter_viewer_creator_attribute_choices(deconfigged_helper, axis, selected, expected):
+    """Axis choices must be the intersection of the selected datasets' columns."""
+    table1 = Table({'shared_x': [1, 2], 'shared_y': [3, 4], 'unique1': [5, 6]})
+    table2 = Table({'shared_x': [7, 8], 'shared_y': [9, 10], 'unique2': [11, 12]})
+    for label, table in [('table1', table1), ('table2', table2)]:
+        deconfigged_helper.load(table, format='Generic Catalog', data_label=label,
+                                col_other=table.colnames)
+
+    creator = deconfigged_helper.new_viewers['Scatter']
+    # Start with both selected to also exercise removing datasets and clearing choices.
+    creator.dataset = ['table1', 'table2']
+    creator.dataset = selected
+
+    # The catalog importer adds an ID column to both tables.
+    assert sorted(getattr(creator, axis).choices) == expected
+
+
+@pytest.mark.parametrize('axis', ['xatt', 'yatt'])
+def test_scatter_viewer_creator_attribute_selection(deconfigged_helper, axis):
+    for label, unique in [('table1', 'unique1'), ('table2', 'unique2')]:
+        table = Table({'shared_x': [1, 2], 'shared_y': [3, 4], unique: [5, 6]})
+        deconfigged_helper.load(table, format='Generic Catalog', data_label=label,
+                                col_other=table.colnames)
+
+    creator = deconfigged_helper.new_viewers['Scatter']
+    creator.dataset = ['table1']
+    att = getattr(creator, axis)
+    att.selected = 'unique1'
+
+    creator.dataset = ['table1', 'table2']
+    assert att.selected in att.choices
+    assert att.selected != 'unique1'
+
+    att.selected = 'shared_y'
+    creator.dataset = ['table2']
+    assert att.selected == 'shared_y'
+
+    creator.dataset = []
+    assert att.selected == ''
+
+
 class TestViewerCreatorObject:
     @pytest.fixture(autouse=True)
     def _setup(self, deconfigged_helper, spectrum1d, spectrum1d_nm, spectrum2d):
