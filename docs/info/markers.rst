@@ -12,6 +12,9 @@ This tool allows for interactively creating markers in any viewer and logging in
 the location of that marker along with the applicable data and viewer labels into a table. It also
 allows the user to measure distances between points in a viewer.
 
+To overlay positions from an existing catalog on an image, use the
+:ref:`Source Catalog loader <loaders-format-catalog-overview>`.
+
 UI Access
 =========
 
