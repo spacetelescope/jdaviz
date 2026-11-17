@@ -6,6 +6,7 @@
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#data-quality'"
     @plugin-visibility="plugin_visibility($event)"
+    :visibility_context="visibility_context"
     :popout_button="popout_button">
 
     <plugin-layer-select

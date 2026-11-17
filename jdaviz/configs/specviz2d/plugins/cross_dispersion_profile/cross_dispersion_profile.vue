@@ -8,6 +8,7 @@
     :uses_active_status="uses_active_status"
     v-model:keep_active="keep_active"
     @plugin-visibility="plugin_visibility($event)"
+    :visibility_context="visibility_context"
     :popout_button="popout_button"
     :disabled_msg="disabled_msg"
     v-model:scroll_to="scroll_to">

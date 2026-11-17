@@ -1001,6 +1001,7 @@ class PluginTemplateMixin(TemplateMixin):
         if self._docs_link_fmt:
             self.docs_link = self._docs_link_fmt.format(vdocs=self.vdocs)
     plugin_opened = Bool(False).tag(sync=True)  # noqa any frontend view of the plugin is open and visible
+    visibility_context = Dict().tag(sync=True)
     uses_active_status = Bool(False).tag(sync=True)  # noqa whether the plugin has live-preview marks, set to True in plugins to expose keep_active switch
     keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
     is_active = Bool(False).tag(sync=True)  # noqa read-only: whether the previews should be shown according to plugin_opened and keep_active
@@ -1048,6 +1049,8 @@ class PluginTemplateMixin(TemplateMixin):
         self.supports_auto_update = hasattr(self, '__call__')
 
         super().__init__(app=app, **kwargs)
+        self.visibility_context = {'app_id': app._model_id, 'plugin_id': self._model_id}
+        app._plugin_visibility_instances[self._model_id] = self
 
     def new(self):
         new = self.__class__(app=self._app)

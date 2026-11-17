@@ -142,6 +142,33 @@ def test_independent_plugin_instances(plugin):
     assert other.is_active is True
 
 
+def test_popout_close_relay(plugin):
+    plugin.vue_plugin_visibility({'view_id': 'tray', 'visible': True})
+    plugin.vue_plugin_visibility({'view_id': 'popout', 'visible': True})
+    plugin.vue_plugin_visibility({'view_id': 'tray', 'visible': False})
+    assert plugin.is_active is True
+    assert plugin.visibility_context == {
+        'app_id': plugin._app._model_id, 'plugin_id': plugin._model_id}
+
+    plugin._app.vue_plugin_view_closed({
+        **plugin.visibility_context, 'view_id': 'popout'})
+    assert plugin.is_active is False
+    assert plugin._visible_views == set()
+    # A duplicate direct/relayed close is harmless.
+    plugin._app.vue_plugin_view_closed({
+        **plugin.visibility_context, 'view_id': 'popout'})
+    assert plugin.is_active is False
+
+
+def test_popout_close_preserves_other_views(plugin):
+    for view_id in ('inline', 'popout', 'another-popout'):
+        plugin.vue_plugin_visibility({'view_id': view_id, 'visible': True})
+    plugin._app.vue_plugin_view_closed({
+        **plugin.visibility_context, 'view_id': 'popout'})
+    assert plugin._visible_views == {'inline', 'another-popout'}
+    assert plugin.is_active is True
+
+
 @pytest.mark.parametrize('event', [
     {'view_id': '', 'visible': True},
     {'view_id': None, 'visible': True},

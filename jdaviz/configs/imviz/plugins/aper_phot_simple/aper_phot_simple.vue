@@ -5,6 +5,7 @@
     :uses_active_status="uses_active_status"
     v-model:api_hints_enabled="api_hints_enabled"
     @plugin-visibility="plugin_visibility($event)"
+    :visibility_context="visibility_context"
     v-model:keep_active="keep_active"
     :popout_button="popout_button"
     v-model:scroll_to="scroll_to">

@@ -37,8 +37,11 @@
 export default {
   props: ['config', 'plugin_key', 'irrelevant_msg', 'disabled_msg', 'description',
           'api_hints_enabled', 'link', 'popout_button',
-          'uses_active_status', 'keep_active', 'scroll_to'],
+          'uses_active_status', 'keep_active', 'scroll_to', 'visibility_context'],
   methods: {
+    createViewId() {
+      return Array.from(this._window.crypto.getRandomValues(new Uint32Array(4))).join('-')
+    },
     boolToString(b) {
       if (b) {
         return 'True'
@@ -84,7 +87,7 @@ export default {
   mounted() {
     this._document = this.$el.ownerDocument
     this._window = this._document.defaultView
-    this._viewId = Array.from(this._window.crypto.getRandomValues(new Uint32Array(4))).join('-')
+    this._viewId = this.createViewId()
     this._visible = false
     this._pageHidden = false
     this._disposed = false
@@ -92,8 +95,22 @@ export default {
     this._onPageHide = () => {
       this._pageHidden = true
       this.updateVisibility()
+      // The popout's kernel connection may already be disposed by beforeunload.
+      // Ask the surviving opener to send the close through its own connection.
+      const opener = this._window.opener
+      if (this.visibility_context && opener && !opener.closed) {
+        opener.postMessage({
+          type: 'jdaviz:plugin-view-closed',
+          ...this.visibility_context,
+          view_id: this._viewId,
+        }, this._window.location.origin)
+      }
     }
     this._onPageShow = () => {
+      // A delayed close relayed by the opener must not hide a restored BFCache view.
+      if (this._pageHidden) {
+        this._viewId = this.createViewId()
+      }
       this._pageHidden = false
       this.updateVisibility()
     }

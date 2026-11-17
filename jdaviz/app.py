@@ -4,6 +4,7 @@ import pathlib
 import re
 import uuid
 import warnings
+from weakref import WeakValueDictionary
 import ipyvue
 from astropy import units as u
 from astropy.nddata import NDData, NDDataArray
@@ -434,9 +435,12 @@ class PrivateApplication(VuetifyTemplate, HubListener):
     invisible_children = List(Any()).tag(sync=True, **widget_serialization)
     golden_layout_state = Dict(default_value=None, allow_none=True).tag(sync=True)
     force_open_about = Bool(False).tag(sync=True)
+    visibility_id = Unicode("").tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.visibility_id = self._model_id
+        self._plugin_visibility_instances = WeakValueDictionary()
         self._jdaviz_helper = None
         self.popout_button = PopoutButton(self)
         self.style_registry_instance = style_registry.get_style_registry()
@@ -546,6 +550,11 @@ class PrivateApplication(VuetifyTemplate, HubListener):
                                 lambda value: self.hub.broadcast(IconsUpdatedMessage('viewer', value, sender=self)))  # noqa
         self.state.add_callback('layer_icons',
                                 lambda value: self.hub.broadcast(IconsUpdatedMessage('layer', value, sender=self)))  # noqa
+
+    def vue_plugin_view_closed(self, event):
+        """Forward a popout close received over a surviving app view's connection."""
+        plugin = self._plugin_visibility_instances[event['plugin_id']]
+        plugin.vue_plugin_visibility({'view_id': event['view_id'], 'visible': False})
 
     def _on_plugin_table_added(self, msg):
         if msg.plugin._plugin_name is None:

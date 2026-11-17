@@ -24,6 +24,11 @@ try to adhere to the following principles:
   hiding an ancestor, or detaching a view removes that view from the active set; showing or
   reattaching it registers it again. ``keep_active`` and plugin relevance still determine
   ``is_active`` as before. There are no periodic messages or timeout threads.
+  Also pass ``:visibility_context="visibility_context"`` so a closing popout can relay its
+  view ID to the surviving main app window. The main app forwards that close over its own
+  kernel connection, since Solara may dispose the popout's connection before ``pagehide``.
+  This relay is scoped to the same origin and app instance and requires the opener's main
+  app view to remain mounted.
   Browser page-exit notifications are best-effort: a crashed or disconnected frontend cannot
   reliably report that it has disappeared, and may leave stale activity in a surviving kernel.
 * ``disabled_msg`` should be set to replace the UI with a message explaining why the plugin is disabled.
@@ -90,6 +95,7 @@ UI/UX Example Code
         :disabled_msg="disabled_msg"
         :uses_active_status="uses_active_status"
         @plugin-visibility="plugin_visibility($event)"
+        :visibility_context="visibility_context"
         :keep_active.sync="keep_active"
         :popout_button="popout_button"
         :scroll_to.sync="scroll_to">
