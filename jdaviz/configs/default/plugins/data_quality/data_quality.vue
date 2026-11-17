@@ -5,8 +5,7 @@
     v-model:api_hints_enabled="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#data-quality'"
-    @plugin-visibility="plugin_visibility($event)"
-    :visibility_context="visibility_context"
+    :visibility="{...visibility_context, report: plugin_visibility}"
     :popout_button="popout_button">
 
     <plugin-layer-select

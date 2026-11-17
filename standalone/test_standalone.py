@@ -35,11 +35,16 @@ def visibility_probe(page):
         const onMessage = appComponent.methods.onPluginViewClosed.bind(relay);
         window.addEventListener('message', onMessage);
         const app = Vue.createApp({
-            render: () => Vue.h(component, {
-                ...props,
-                'onPlugin-visibility': event => events.push(event),
-                'onUpdate:scroll_to': value => { props.scroll_to = value; },
+            components: {'visibility-probe': component},
+            setup: () => ({
+                props,
+                visibility_context: {app_id: 'test-app', plugin_id: 'test-plugin'},
+                plugin_visibility: event => events.push(event),
             }),
+            template: `<visibility-probe
+                v-model:scroll_to="props.scroll_to"
+                :visibility="{...visibility_context, report: plugin_visibility}"
+            />`,
         });
         app.mount(host);
         const element = host.firstElementChild;
@@ -104,6 +109,8 @@ def test_visibility_popout_close_after_transport_disposal(visibility_probe):
     with page.expect_popup() as popup_info:
         page.evaluate("window.open(location.origin + '/lab', '_blank')")
     popup = popup_info.value
+    errors = []
+    popup.on('pageerror', lambda error: errors.append(str(error)))
     popup.wait_for_load_state('domcontentloaded')
     popup.evaluate("""() => {
         const {Vue, visibilityProbe} = opener;
@@ -114,9 +121,12 @@ def test_visibility_popout_close_after_transport_disposal(visibility_probe):
         window.addEventListener('beforeunload', () => { connected = false; });
         Vue.createApp({
             render: () => Vue.h(visibilityProbe.component, {
-                visibility_context: {app_id: 'test-app', plugin_id: 'test-plugin'},
-                'onPlugin-visibility': event => {
-                    if (connected) visibilityProbe.events.push(event);
+                visibility: {
+                    app_id: 'test-app', plugin_id: 'test-plugin',
+                    report: event => {
+                        if (!connected) throw new Error('Cannot send');
+                        visibilityProbe.events.push(event);
+                    },
                 },
             }),
         }).mount(host);
@@ -132,6 +142,7 @@ def test_visibility_popout_close_after_transport_disposal(visibility_probe):
         'plugin_id': 'test-plugin',
         'view_id': popup_id,
     }
+    assert errors == []
 
 
 def test_visibility_restored_page_gets_new_id(visibility_probe):

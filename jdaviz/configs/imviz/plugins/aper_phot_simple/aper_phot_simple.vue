@@ -4,8 +4,7 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#aperture-photometry'"
     :uses_active_status="uses_active_status"
     v-model:api_hints_enabled="api_hints_enabled"
-    @plugin-visibility="plugin_visibility($event)"
-    :visibility_context="visibility_context"
+    :visibility="{...visibility_context, report: plugin_visibility}"
     v-model:keep_active="keep_active"
     :popout_button="popout_button"
     v-model:scroll_to="scroll_to">

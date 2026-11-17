@@ -37,7 +37,7 @@
 export default {
   props: ['config', 'plugin_key', 'irrelevant_msg', 'disabled_msg', 'description',
           'api_hints_enabled', 'link', 'popout_button',
-          'uses_active_status', 'keep_active', 'scroll_to', 'visibility_context'],
+          'uses_active_status', 'keep_active', 'scroll_to', 'visibility'],
   methods: {
     createViewId() {
       return Array.from(this._window.crypto.getRandomValues(new Uint32Array(4))).join('-')
@@ -58,7 +58,9 @@ export default {
     reportVisibility(visible) {
       if (visible !== this._visible) {
         this._visible = visible
-        this.$emit('plugin-visibility', {view_id: this._viewId, visible})
+        if (this.visibility) {
+          this.visibility.report({view_id: this._viewId, visible})
+        }
       }
     },
     updateVisibility() {
@@ -94,16 +96,19 @@ export default {
     this._onVisibilityChange = () => this.updateVisibility()
     this._onPageHide = () => {
       this._pageHidden = true
-      this.updateVisibility()
       // The popout's kernel connection may already be disposed by beforeunload.
-      // Ask the surviving opener to send the close through its own connection.
+      // Use the opener instead: a direct report can throw before the relay runs.
       const opener = this._window.opener
-      if (this.visibility_context && opener && !opener.closed) {
+      if (this.visibility && opener && !opener.closed) {
+        this._visible = false
         opener.postMessage({
           type: 'jdaviz:plugin-view-closed',
-          ...this.visibility_context,
+          app_id: this.visibility.app_id,
+          plugin_id: this.visibility.plugin_id,
           view_id: this._viewId,
         }, this._window.location.origin)
+      } else {
+        this.updateVisibility()
       }
     }
     this._onPageShow = () => {
