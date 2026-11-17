@@ -24,16 +24,21 @@ testing:
     - '**/conftest.py'
     - tox.ini
 
-UI/UX😍:
-- changed-files:
-  - any-glob-to-any-file:
-    - jdaviz/**/*.vue
-
 plugin:
 - changed-files:
   - any-glob-to-any-file:
     - '**/plugins/**/*'
     - '!**/plugins/viewers.py'
+
+loaders:
+- changed-files:
+  - any-glob-to-any-file:
+    - 'jdaviz/core/loaders/**/*'
+
+subsets:
+- changed-files:
+  - any-glob-to-any-file:
+    - 'jdaviz/configs/default/plugins/subset_*/**/*'
 
 mosviz:
 - changed-files:
