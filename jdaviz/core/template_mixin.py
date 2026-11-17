@@ -1671,7 +1671,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     @observe('filters')
     def _update_items(self, msg={}):
         manual_options = [self._to_item(opt) for opt in self.manual_options]
-        non_manual_options = [item for item in self.items if item not in manual_options]
+        # items are keyed by their (required) 'label' entry, so comparing by label avoids an
+        # O(len(self.items) * len(manual_options)) blow-up for components with many options
+        # (e.g. thousands of manual options) that `item not in manual_options` would incur.
+        manual_option_labels = {item.get('label') for item in manual_options}
+        non_manual_options = [item for item in self.items
+                              if item.get('label') not in manual_option_labels]
         if self._apply_filters_to_manual_options:
             self.items = [item for item in non_manual_options + manual_options
                           if self._is_valid_item(item)]

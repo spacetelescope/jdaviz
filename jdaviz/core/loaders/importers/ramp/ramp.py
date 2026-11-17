@@ -100,7 +100,17 @@ class RampImporter(BaseImporterToDataCollection):
             integration_options = [str(i) for i in range(len(self.input.data))]
         elif isinstance(self.input, fits.HDUList):
             # TODO: this will need to be adjusted if adding extension selection
-            integration_options = [str(i) for i in range(len(self.input[1].data))]
+            hdu = self.input[1]
+            naxis = hdu.header.get('NAXIS', 0)
+            if naxis == 4:
+                # use the header to get the number of integrations instead of
+                # accessing hdu.data, which would force a full (and potentially
+                # very slow) read of the extension's data from disk just to
+                # populate this list, even for non-ramp FITS files (e.g. large
+                # tables) that will ultimately fail validation below.
+                integration_options = [str(i) for i in range(hdu.header[f'NAXIS{naxis}'])]
+            else:
+                integration_options = []
         else:
             integration_options = []
         self.integration = SelectPluginComponent(self,
