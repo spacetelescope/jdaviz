@@ -36,6 +36,8 @@ Bug Fixes
 - Fix bug where spectral subsets would appear in image viewers when the 2d spectrum viewer
   has units of pixels. [#4507]
 
+- Fix image importer support for Roman L3 mosaic files. [#4309]
+
 Mosviz
 ^^^^^^
 
