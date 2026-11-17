@@ -168,6 +168,7 @@
     </div>
 
       <j-flex-row v-if="!multiselect" justify="end" no-gutters>
+        <!-- NOTE: can_freeze is only currently true if lcviz is imported -->
         <j-tooltip v-if="can_freeze" tooltipcontent="Freeze subset to a mask on the underlying data entries">
           <plugin-action-button
             :disabled="subset_selected === 'Create New' || subset_types.includes('Mask')"
