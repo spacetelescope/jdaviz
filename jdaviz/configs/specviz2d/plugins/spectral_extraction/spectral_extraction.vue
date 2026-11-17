@@ -6,7 +6,7 @@
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
     :uses_active_status="uses_active_status"
-    @plugin-ping="plugin_ping($event)"
+    @plugin-visibility="plugin_visibility($event)"
     v-model:keep_active="keep_active"
     :popout_button="popout_button"
     v-model:scroll_to="scroll_to">

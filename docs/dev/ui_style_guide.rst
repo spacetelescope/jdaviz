@@ -14,10 +14,18 @@ try to adhere to the following principles:
   to all popout instances via ``PopoutStyleWrapper`` (exists on anything that inherits ``TemplateMixin``).
 * Any tray plugin should utilize ``<j-tray-plugin :disabled_msg='disabled_msg' :popout_button="popout_button" :scroll_to.sync="scroll_to">`` as the
   outer-container (which provides consistent styling rules).  If the plugin makes use of active status
-  (live-preview marks or viewer callbacks), then also pass ``:uses_active_status="uses_active_status" @plugin-ping="plugin_ping($event)"``.
-  To enable the "Keep active" check, pass ``:uses_active_status="uses_active_status" @plugin-ping="plugin_ping($event)" :keep_active.sync="keep_active"``.
+  (live-preview marks or viewer callbacks), then also pass ``:uses_active_status="uses_active_status" @plugin-visibility="plugin_visibility($event)"``.
+  To enable the "Keep active" check, pass ``:uses_active_status="uses_active_status" @plugin-visibility="plugin_visibility($event)" :keep_active.sync="keep_active"``.
   Any changes to style across all plugins should then take place in the
   ``j-tray-plugin`` stylesheet (``jdaviz/components/tray_plugin.vue``).
+  Each rendered view reports visibility transitions with its own ID; ``plugin_opened`` is true
+  while any view is attached, CSS-visible, and in a visible browser document. Scrolling a view
+  outside the viewport does not deactivate it. Clearing/replacing notebook output, unmounting,
+  hiding an ancestor, or detaching a view removes that view from the active set; showing or
+  reattaching it registers it again. ``keep_active`` and plugin relevance still determine
+  ``is_active`` as before. There are no periodic messages or timeout threads.
+  Browser page-exit notifications are best-effort: a crashed or disconnected frontend cannot
+  reliably report that it has disappeared, and may leave stale activity in a surviving kernel.
 * ``disabled_msg`` should be set to replace the UI with a message explaining why the plugin is disabled.
   ``irrelevant_msg`` should be set to skip the plugin in the UI entirely where the user would not need an explanation
   (for example, when cube data is not present, the slice plugin is irrelevant).
@@ -81,7 +89,7 @@ UI/UX Example Code
         :irrelevant_msg="irrelevant_msg"
         :disabled_msg="disabled_msg"
         :uses_active_status="uses_active_status"
-        @plugin-ping="plugin_ping($event)"
+        @plugin-visibility="plugin_visibility($event)"
         :keep_active.sync="keep_active"
         :popout_button="popout_button"
         :scroll_to.sync="scroll_to">

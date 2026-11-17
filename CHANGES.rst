@@ -155,6 +155,10 @@ API Changes
 Bug Fixes
 ---------
 
+- Replaced plugin visibility pings and timeout threads with per-view visibility events.
+  Live previews remain active while any plugin view is visible, including inline notebook
+  outputs, sidecars, and popouts, without continuous kernel/browser traffic.
+
 - Unit Conversion plugin now responds to viewers being removed. [#4480]
 
 - 2D spectrum viewer now refreshes its cached spectral axis whenever data is added or removed. [#4480]

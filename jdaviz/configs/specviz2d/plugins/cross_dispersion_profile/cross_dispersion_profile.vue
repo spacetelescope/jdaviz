@@ -7,7 +7,7 @@
     :link="docs_link"
     :uses_active_status="uses_active_status"
     v-model:keep_active="keep_active"
-    @plugin-ping="plugin_ping($event)"
+    @plugin-visibility="plugin_visibility($event)"
     :popout_button="popout_button"
     :disabled_msg="disabled_msg"
     v-model:scroll_to="scroll_to">
