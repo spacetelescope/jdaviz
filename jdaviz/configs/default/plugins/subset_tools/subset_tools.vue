@@ -170,6 +170,7 @@
       <j-flex-row v-if="!multiselect" justify="end" no-gutters>
         <j-tooltip v-if="can_freeze" tooltipcontent="Freeze subset to a mask on the underlying data entries">
           <plugin-action-button
+            :disabled="subset_selected === 'Create New' || subset_types.includes('Mask')"
             :results_isolated_to_plugin="false"
             @click="freeze_subset"
           >
@@ -191,7 +192,7 @@
           </plugin-action-button>
         </j-tooltip>
         <plugin-action-button
-          :disabled="subset_selected === 'Create New' || subset_types.includes('Table Selection')"
+          :disabled="subset_selected === 'Create New' || subset_types.includes('Table Selection') || subset_types.includes('Mask')"
           :results_isolated_to_plugin="false"
           @click="update_subset"
         >
