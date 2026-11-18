@@ -155,6 +155,62 @@ def test_delete_create_viewer_preserves_wcs_linking():
     assert orientation.align_by.selected == 'WCS'
 
 
+def test_load_cube_when_aligned_by_wcs(deconfigged_helper,
+                                       spectrum1d_cube_fluxunit_jy_per_steradian):
+    """Loading a cube into an app already aligned by WCS must not mark the new
+    cube viewers as WCS-linked: only image viewers participate in WCS linking,
+    and the cube viewer state cannot evaluate a 3D WCS with 2D pixel inputs
+    when resetting its limits."""
+    helper = deconfigged_helper
+    cube = spectrum1d_cube_fluxunit_jy_per_steradian
+    image = NDData(np.ones((10, 10)), wcs=cube.wcs.celestial, unit=u.Jy / u.sr)
+    helper.load(image, data_label='image', format='Image')
+    helper.plugins['Orientation'].align_by = 'WCS'
+
+    # # previously raised while resetting the limits of the new cube viewer
+    # helper.load(cube, data_label='cube')
+
+    # load cube and make sure correct format was determined automatically
+    ldr = helper.loaders['object']
+    ldr.object = cube
+    ldr.importer.data_label = 'cube'
+    assert ldr.format == '3D Spectrum'
+    ldr.load()
+
+    image_viewer = helper.viewers['Image']._obj.glue_viewer
+    assert image_viewer.state.linked_by_wcs is True
+
+    for name in ('3D Spectrum', '3D Spectrum (1)'):
+        cube_viewer = helper.viewers[name]._obj.glue_viewer
+        assert cube_viewer.state.linked_by_wcs is False
+        assert cube_viewer.state.reference_data.ndim == 3
+        # limits are the pixel extent of the cube's spatial axes
+        state = cube_viewer.state
+        assert np.all(np.isfinite([state.x_min, state.x_max, state.y_min, state.y_max]))
+        assert_allclose((state.x_min, state.x_max), (-0.5, cube.shape[2] - 0.5))
+        assert_allclose((state.y_min, state.y_max), (-0.5, cube.shape[1] - 0.5))
+
+
+def test_load_2d_spectrum_when_aligned_by_wcs(
+        deconfigged_helper, image_nddata_wcs, mos_spectrum2d):
+    """Loading a 2D spectrum after enabling WCS alignment must not link its viewer by WCS."""
+    helper = deconfigged_helper
+    helper.load(image_nddata_wcs, data_label='image', format='Image')
+    helper.plugins['Orientation'].align_by = 'WCS'
+
+    helper.load(mos_spectrum2d, data_label='spectrum2d', format='2D Spectrum')
+
+    image_viewer = helper.viewers['Image']._obj.glue_viewer
+    spectrum2d_viewer = helper.viewers['2D Spectrum']._obj.glue_viewer
+    assert image_viewer.state.linked_by_wcs is True
+    assert spectrum2d_viewer.state.linked_by_wcs is False
+    assert spectrum2d_viewer.state.reference_data.ndim == 2
+    assert np.all(np.isfinite([spectrum2d_viewer.state.x_min,
+                               spectrum2d_viewer.state.x_max,
+                               spectrum2d_viewer.state.y_min,
+                               spectrum2d_viewer.state.y_max]))
+
+
 class TestNonDefaultOrientation(BaseDeconfiggedImage_WCS_WCS):
     def test_N_up_multi_viewer(self):
         lc_plugin = self.orientation_plugin
