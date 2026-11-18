@@ -681,17 +681,20 @@ def test_fetch_and_populate_file_table_success(deconfigged_helper):
     ldr = deconfigged_helper.loaders['object']
     resolver = ldr._obj
 
-    mock_file_table = Table({'name': ['file1.fits', 'file2.fits'],
-                             'location': ['http://a.fits', 'http://b.fits']})
+    locations = [f'https://example.invalid/{i}.fits' for i in range(25)]
+    mock_file_table = Table({'location': locations})
 
     with patch.object(resolver, '_get_product_list', return_value=mock_file_table), \
          patch.object(resolver, '_parsed_input_to_file_table', return_value=mock_file_table):
         resolver._fetch_and_populate_file_table(['dataset1'])
 
     assert resolver.file_table_populated is True
-    assert resolver.file_table.server_items_length == 2
-    assert len(resolver.file_table._all_items) == 2
+    assert resolver.file_table.server_items_length == 25
+    assert [row['location'] for row in resolver.file_table.items] == locations[:10]
     assert resolver.file_table.selected_rows == []
+
+    resolver.file_table.set_state({'table_options': {'page': 2, 'itemsPerPage': 10}})
+    assert [row['location'] for row in resolver.file_table.items] == locations[10:20]
 
 
 def test_fetch_and_populate_file_table_no_products(deconfigged_helper):

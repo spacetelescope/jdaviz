@@ -46,7 +46,9 @@
     </j-flex-row>
 
     <j-flex-row style="margin: 0px 0px 8px 0px !important">
-      <v-data-table
+      <component
+        :is="server_pagination ? 'v-data-table-server' : 'v-data-table'"
+        v-bind="server_pagination ? server_table_props : {}"
         density="compact"
         :headers="headers_visible_sorted.map(item => {return {'title': item, 'key': item}})"
         :items="items"
@@ -55,10 +57,9 @@
         :select-strategy="multiselect ? 'page' : 'single'"
         return-object
         v-model="selected_rows"
-        :server-items-length="server_pagination ? server_items_length : -1"
-        v-model:options="table_options"
+        @update:options="table_options = $event"
         class="elevation-1 width-100"
-      ></v-data-table>
+      ></component>
     </j-flex-row>
 
     <j-flex-row v-if="enable_clear && clear_table && items.length" justify="end">
@@ -89,6 +90,14 @@ export default {
   computed: {
     headers_visible_sorted() {
       return this.headers_avail.filter(item => this.headers_visible.indexOf(item) !== -1);
+    },
+    server_table_props() {
+      return {
+        itemsLength: this.server_items_length,
+        page: this.table_options.page,
+        itemsPerPage: this.table_options.itemsPerPage,
+        disableSort: true
+      };
     },
   }
 };
