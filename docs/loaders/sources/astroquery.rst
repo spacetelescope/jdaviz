@@ -116,23 +116,6 @@ and interactively do a search in the UI and reproduce in a notebook cell:
 ..    :repeat: false
 ..    :steps-json: [{"action": "show-sidebar", "value": "loaders", "delay": 0}, {"action": "select-dropdown", "value": "Source:astroquery", "delay": 0}, {"action": "highlight", "target": "#source-select", "delay": 0}, {"action": "pause", "delay": 1000}, {"action": "api-toggle", "delay": 1500, "caption": "Toggle the API code hint"}]
 
-MAST API Token
-==============
-
-To access proprietary data from MAST archives (JWST, Roman, HST), you need an API token. Set the environment variable ``MAST_API_TOKEN`` with your token before running queries. For example:
-
-.. code-block:: bash
-
-    export MAST_API_TOKEN="your_token_here"
-
-
-or
-
-.. code-block:: python
-
-    import os
-    os.environ["MAST_API_TOKEN"] = "your_token_here"
-
 UI Access
 =========
 

@@ -1,4 +1,3 @@
-import os
 from astropy import units as u
 
 from traitlets import Unicode, List
@@ -96,8 +95,6 @@ class AstroqueryResolver(BaseConeSearchResolver):
             from astroquery.mast import MastMissions
 
             mission = MastMissions(mission=self.telescope.selected)
-            if mast_token := os.environ.get('MAST_API_TOKEN'):
-                mission.login(token=mast_token)
             output = mission.query_region(skycoord_center, radius=radius.value)
 
         elif self.telescope.selected == 'SDSS':
