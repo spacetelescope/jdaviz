@@ -1526,6 +1526,15 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         finally:
             self.app._importing_regions = False
 
+        n_requested = len(regions)
+        if max_num_regions is not None:
+            n_requested = min(n_requested, max_num_regions)
+
+        if n_requested >= 5:
+            self._app.hub.broadcast(SnackbarMessage(
+                f"Loading {n_requested} regions in one call may significantly slow down Jdaviz.",
+                color="warning", timeout=8000, sender=self.app))
+
         # Revert edit mode and subset to before the import_region call
         self._app.session.edit_subset_mode.edit_subset = previous_subset
         self._app.session.edit_subset_mode.mode = previous_mode
