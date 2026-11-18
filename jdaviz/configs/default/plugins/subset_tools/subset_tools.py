@@ -1389,6 +1389,16 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     # self.app.session.edit_subset_mode.edit_subset = None
                     self.subset.selected = self.subset.default_text
 
+                n_requested = len(regions)
+                if max_num_regions is not None:
+                    n_requested = min(n_requested, max_num_regions)
+
+                on_rrn = 'roman' in os.environ.get('JUPYTER_IMAGE', '').lower()
+                if n_requested >= 5 and on_rrn is True:
+                    self._app.hub.broadcast(SnackbarMessage(
+                        f"Loading {n_requested} regions in one call may significantly slow down Jdaviz.", # noqa
+                        color="warning", timeout=8000, sender=self.app))
+
                 label_index = 0
                 for index, region in enumerate(regions):
                     # Set combination mode for how region will be applied to current subset
@@ -1525,16 +1535,6 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         finally:
             self.app._importing_regions = False
-
-        n_requested = len(regions)
-        if max_num_regions is not None:
-            n_requested = min(n_requested, max_num_regions)
-
-        on_rrn = 'roman' in os.environ.get('JUPYTER_IMAGE', '').lower()
-        if n_requested >= 5 and on_rrn is True:
-            self._app.hub.broadcast(SnackbarMessage(
-                f"Loading {n_requested} regions in one call may significantly slow down Jdaviz.",
-                color="warning", timeout=8000, sender=self.app))
 
         # Revert edit mode and subset to before the import_region call
         self._app.session.edit_subset_mode.edit_subset = previous_subset
