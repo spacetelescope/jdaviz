@@ -196,7 +196,7 @@ Other Changes and Additions
 
 - Speed up product table loading in the astroquery loader by using server-side
   pagination in the UI and fetching product lists in a background thread so the
-  app remains responsive. [#4131]
+  app remains responsive. [#4131, #4557]
 
 - Footprint selection in loaders now defaults to skewer mode. [#4186]
 
