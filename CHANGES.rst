@@ -1,4 +1,37 @@
-5.1 (unreleased)
+5.2.0 (unreleased)
+================
+
+New Features
+------------
+
+Mosviz
+^^^^^^
+
+API Changes
+-----------
+
+Mosviz
+^^^^^^
+
+Bug Fixes
+---------
+
+Mosviz
+^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+5.1.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Mosviz
+^^^^^^
+
+5.1 (2026-11-18)
 ================
 
 New Features
@@ -148,16 +181,10 @@ New Features
 
 - Snackbar message warns users of a slowdown in performance when attempting to load N>=5 subsets
   in one API call on the Roman Research Nexus. [#4556]
-  
+
 - Prevent spatial subsets and spectral subsets from entering table viewer(s)
   data menu. Spatial subsets are only shown in Source Catalog Table viewers,
   and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
-
-Mosviz
-^^^^^^
-
-API Changes
------------
 
 Bug Fixes
 ---------
@@ -195,9 +222,6 @@ Bug Fixes
 
 - Skip marker layers when resetting Unit Conversion units. [#4501]
 
-Mosviz
-^^^^^^
-
 Other Changes and Additions
 ---------------------------
 
@@ -228,7 +252,7 @@ Other Changes and Additions
   sky from the reference data (>100 degrees or so), as zooming will fail in these
   cases. [#4542]
 
-5.0.6 (unreleased)
+5.0.6 (2026-11-18)
 ==================
 
 Bug Fixes
@@ -272,16 +296,11 @@ Bug Fixes
 
 - Fix Data Quality plugin visibility when a cube with DQ is loaded after other data. [#4532]
 
-
 - Fix bug where spectral subsets would appear in image viewers when the 2d spectrum viewer
   has units of pixels. [#4507]
 
 - Fix bug when attempting to perform aperture photometry on a cube when a WCS aligned image
   is also present. [#4529]
-
-Mosviz
-^^^^^^
-
 
 5.0.5 (2026-10-16)
 ==================

@@ -36,6 +36,9 @@ authors:
 - family-names: "Green"
   given-names: "Gilbert"
   orcid: "https://orcid.org/0009-0004-2370-0699"
+- family-names: "Gunasekera"
+  given-names: "Chamani"
+  orcid: "https://orcid.org/0000-0002-4634-5966"
 - family-names: "Jones"
   given-names: "Craig"
 - family-names: "Karatay"
@@ -84,9 +87,9 @@ authors:
 - family-names: "Volfman"
   given-names: "Sabrina"
 title: "Jdaviz"
-version: 5.0.5
+version: 5.1.0
 doi: https://doi.org/10.5281/zenodo.5513927
-date-released: 2026-10-16
+date-released: 2026-11-18
 url: "https://github.com/spacetelescope/jdaviz"
 
 # see a full list of contributors here: https://github.com/spacetelescope/jdaviz/graphs/contributors
