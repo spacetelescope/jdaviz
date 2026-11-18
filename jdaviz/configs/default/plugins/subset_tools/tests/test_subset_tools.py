@@ -1,6 +1,5 @@
 import operator
 import warnings
-from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -804,11 +803,25 @@ def test_import_region_with_units(cubeviz_helper, spectrum1d_cube):
     assert subsets['nm subset'].upper == 605e-09 * u.m
 
 
-def test_warning_message_on_rrn(deconfigged_helper, image_2d_wcs):
-    """
-    Test that a snackbar message warning pops up only on RRN when
-    N>5 subsets are loaded in a single API call.
-    """
+@pytest.mark.parametrize(
+    ("jupyter_image", "n_regions", "max_num_regions", "expected_count"),
+    [
+        ("registry.example/RomanNexus:2026.2", 6, None, 6),
+        ("registry.example/RomanNexus:2026.2", 5, None, 5),
+        ("registry.example/RomanNexus:2026.2", 4, None, None),
+        ("registry.example/RomanNexus:2026.2", 6, 4, None),
+        ("registry.example/jupyter:latest", 6, None, None),
+        (None, 6, None, None),
+    ],
+)
+def test_warning_message_on_rrn(deconfigged_helper, image_2d_wcs, monkeypatch,
+                                jupyter_image, n_regions, max_num_regions, expected_count):
+    """Warn for imports of five or more regions only in a Roman Research Nexus environment."""
+    if jupyter_image is None:
+        monkeypatch.delenv("JUPYTER_IMAGE", raising=False)
+    else:
+        monkeypatch.setenv("JUPYTER_IMAGE", jupyter_image)
+
     arr = np.ones((10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
     deconfigged_helper.load(ndd, format='Image')
@@ -827,13 +840,19 @@ def test_warning_message_on_rrn(deconfigged_helper, image_2d_wcs):
 
     tools = deconfigged_helper.plugins["Subset Tools"]
     logger = deconfigged_helper.plugins["Logger"]
-    logger.popup_verbosity = "warning"
 
     start = len(logger.history)
-    with patch("sys.prefix", "/opt/conda/envs/RomanNexus-2026.2"):
-        tools.import_region(apertures, max_num_regions=None)
+    tools.import_region(apertures[:n_regions], max_num_regions=max_num_regions)
 
-    assert any(
-        msg["color"] == "warning" and "may significantly slow down" in msg["text"]
+    slowdown_messages = [
+        (msg["color"], msg["text"])
         for msg in logger.history[start:]
-    )
+        if "may significantly slow down" in msg["text"]
+    ]
+    if expected_count is None:
+        assert slowdown_messages == []
+    else:
+        assert slowdown_messages == [
+            ("warning", f"Loading {expected_count} regions in one call may significantly "
+                        "slow down Jdaviz.")
+        ]

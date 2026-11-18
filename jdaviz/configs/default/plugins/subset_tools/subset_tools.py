@@ -1532,7 +1532,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if max_num_regions is not None:
             n_requested = min(n_requested, max_num_regions)
 
-        if n_requested >= 5 and Path(sys.prefix).name.startswith("RomanNexus-"):
+        on_rrn = 'roman' in os.environ.get('JUPYTER_IMAGE', '').lower()
+        if n_requested >= 5 and on_rrn==True:
             self._app.hub.broadcast(SnackbarMessage(
                 f"Loading {n_requested} regions in one call may significantly slow down Jdaviz.",
                 color="warning", timeout=8000, sender=self.app))
