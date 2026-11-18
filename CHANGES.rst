@@ -146,6 +146,8 @@ New Features
 
 - Improved behavior for creating/editing subsets in table viewers. [#4488]
 
+- Snackbar message warns users when attempting to load N>=5 subsets in one API call following a slowdown in performance in certain environments. [#4556]
+
 Mosviz
 ^^^^^^
 
