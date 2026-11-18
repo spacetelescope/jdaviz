@@ -1,7 +1,5 @@
 import os
-import sys
 import warnings
-from pathlib import Path
 
 import numpy as np
 
@@ -1533,7 +1531,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             n_requested = min(n_requested, max_num_regions)
 
         on_rrn = 'roman' in os.environ.get('JUPYTER_IMAGE', '').lower()
-        if n_requested >= 5 and on_rrn==True:
+        if n_requested >= 5 and on_rrn is True:
             self._app.hub.broadcast(SnackbarMessage(
                 f"Loading {n_requested} regions in one call may significantly slow down Jdaviz.",
                 color="warning", timeout=8000, sender=self.app))
