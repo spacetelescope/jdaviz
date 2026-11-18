@@ -144,7 +144,7 @@ jobs:
         codesign --deep --force --options=runtime --entitlements ../entitlements.plist --sign ${{ secrets.DEVELOPER_ID_APPLICATION }} --timestamp Jdaviz.app
 
     - name: Install dmgbuild
-      run: pip install dmgbuild 
+      run: pip install dmgbuild==1.6.7
           
     - name: Create dmg (OSX)
       # if we do not call always() GHA will && with success()
