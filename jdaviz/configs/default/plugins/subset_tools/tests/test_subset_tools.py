@@ -1,5 +1,6 @@
 import operator
 import warnings
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -801,3 +802,38 @@ def test_import_region_with_units(cubeviz_helper, spectrum1d_cube):
     assert subsets['um subset'].upper == 6.05e-06 * u.m
     assert subsets['nm subset'].lower == 575e-09 * u.m
     assert subsets['nm subset'].upper == 605e-09 * u.m
+
+
+def test_warning_message_on_rrn(deconfigged_helper, image_2d_wcs):
+    """
+    Test that a snackbar message warning pops up only on RRN when
+    N>5 subsets are loaded in a single API call.
+    """
+    arr = np.ones((10, 10))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    deconfigged_helper.load(ndd, format='Image')
+
+    ra_dec = np.array([
+        (201.70022355, -47.47149884),
+        (201.70063553, -47.47077343),
+        (201.70112562, -47.4714947),
+        (201.69904576, -47.47153201),
+        (201.70102296, -47.47013743),
+        (201.69896, -47.47052)])
+    coords = SkyCoord(*ra_dec.T, unit='deg')
+
+    aperture_radius = 0.3 * u.arcsec
+    apertures = [CircleSkyRegion(coord, radius=aperture_radius) for coord in coords]
+
+    tools = deconfigged_helper.plugins["Subset Tools"]
+    logger = deconfigged_helper.plugins["Logger"]
+    logger.popup_verbosity = "warning"
+
+    start = len(logger.history)
+    with patch("sys.prefix", "/opt/conda/envs/RomanNexus-2026.2"):
+        tools.import_region(apertures, max_num_regions=None)
+
+    assert any(
+        msg["color"] == "warning" and "may significantly slow down" in msg["text"]
+        for msg in logger.history[start:]
+    )

@@ -1,5 +1,7 @@
 import os
+import sys
 import warnings
+from pathlib import Path
 
 import numpy as np
 
@@ -1530,7 +1532,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if max_num_regions is not None:
             n_requested = min(n_requested, max_num_regions)
 
-        if n_requested >= 5:
+        if n_requested >= 5 and Path(sys.prefix).name.startswith("RomanNexus-"):
             self._app.hub.broadcast(SnackbarMessage(
                 f"Loading {n_requested} regions in one call may significantly slow down Jdaviz.",
                 color="warning", timeout=8000, sender=self.app))
