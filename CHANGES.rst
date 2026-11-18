@@ -1,4 +1,4 @@
-5.0.6 (unreleased)
+5.0.6 (2026-11-18)
 ==================
 
 Bug Fixes
@@ -43,10 +43,6 @@ Bug Fixes
 
 - Fix bug when attempting to perform aperture photometry on a cube when a WCS aligned image
   is also present. [#4529]
-
-Mosviz
-^^^^^^
-
 
 5.0.5 (2026-10-16)
 ==================
