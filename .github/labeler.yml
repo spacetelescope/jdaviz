@@ -24,44 +24,23 @@ testing:
     - '**/conftest.py'
     - tox.ini
 
-embed:
-- changed-files:
-  - any-glob-to-any-file:
-    - jdaviz/*.vue
-    - share/**/*
-
 plugin:
 - changed-files:
-  - all-globs-to-any-file:
+  - any-glob-to-any-file:
     - '**/plugins/**/*'
     - '!**/plugins/viewers.py'
 
-cubeviz:
+loaders:
 - changed-files:
   - any-glob-to-any-file:
-    - jdaviz/configs/cubeviz/**/*
+    - 'jdaviz/core/loaders/**/*'
 
-imviz:
+subsets:
 - changed-files:
   - any-glob-to-any-file:
-    - jdaviz/configs/imviz/**/*
+    - 'jdaviz/configs/default/plugins/subset_*/**/*'
 
 mosviz:
 - changed-files:
   - any-glob-to-any-file:
     - jdaviz/configs/mosviz/**/*
-
-specviz:
-- changed-files:
-  - any-glob-to-any-file:
-    - jdaviz/configs/specviz/**/*
-
-specviz2d:
-- changed-files:
-  - any-glob-to-any-file:
-    - jdaviz/configs/specviz2d/**/*
-
-rampviz:
-- changed-files:
-  - any-glob-to-any-file:
-    - jdaviz/configs/rampviz/**/*

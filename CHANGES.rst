@@ -148,6 +148,10 @@ New Features
 
 - Snackbar message warns users of a slowdown in performance when attempting to load N>=5 subsets
   in one API call on the Roman Research Nexus. [#4556]
+  
+- Prevent spatial subsets and spectral subsets from entering table viewer(s)
+  data menu. Spatial subsets are only shown in Source Catalog Table viewers,
+  and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
 
 Mosviz
 ^^^^^^
@@ -199,7 +203,7 @@ Other Changes and Additions
 
 - Speed up product table loading in the astroquery loader by using server-side
   pagination in the UI and fetching product lists in a background thread so the
-  app remains responsive. [#4131]
+  app remains responsive. [#4131, #4557]
 
 - Footprint selection in loaders now defaults to skewer mode. [#4186]
 
@@ -268,9 +272,6 @@ Bug Fixes
 
 - Fix Data Quality plugin visibility when a cube with DQ is loaded after other data. [#4532]
 
-- Prevent spatial subsets and spectral subsets from entering table viewer(s)
-  data menu. Spatial subsets are only shown in Source Catalog Table viewers,
-  and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
 
 - Fix bug where spectral subsets would appear in image viewers when the 2d spectrum viewer
   has units of pixels. [#4507]
