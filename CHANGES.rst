@@ -146,6 +146,9 @@ New Features
 
 - Improved behavior for creating/editing subsets in table viewers. [#4488]
 
+- Fixed slow loading of large tabular FITS files (e.g. TESS light curves with
+  hundreds of thousands of rows). [#4555]
+
 Mosviz
 ^^^^^^
 
