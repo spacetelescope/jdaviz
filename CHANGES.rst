@@ -193,6 +193,8 @@ Bug Fixes
 - 1D Spectrum files with multiple extensions of the same type (e.g. multiple S1D extensions) now
   have their default data labels incremented to avoid silent overwrites. [#4540]
 
+- Skip marker layers when resetting Unit Conversion units. [#4501]
+
 Mosviz
 ^^^^^^
 
@@ -255,8 +257,6 @@ Bug Fixes
   search to address upstream server issues. [#4498]
 
 - Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
-
-- Skip marker layers when resetting Unit Conversion units. [#4501]
 
 - Refactoring of some of the unit conversion logic in aperture photometry, in
   particular handling of mixed-unit datasets and display unit conversions. [#4496]
