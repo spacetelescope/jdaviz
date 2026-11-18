@@ -146,6 +146,9 @@ New Features
 
 - Improved behavior for creating/editing subsets in table viewers. [#4488]
 
+- Snackbar message warns users of a slowdown in performance when attempting to load N>=5 subsets
+  in one API call on the Roman Research Nexus. [#4556]
+  
 - Prevent spatial subsets and spectral subsets from entering table viewer(s)
   data menu. Spatial subsets are only shown in Source Catalog Table viewers,
   and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
