@@ -1,11 +1,21 @@
 from functools import cached_property
-from jdaviz.core.template_mixin import WithCache, ValidatorMixin
+from traitlets import Unicode
+from jdaviz.core.template_mixin import WithCache, ValidatorMixin, LoaderBannerMessagesMixin
 
 __all__ = ['BaseParser']
 
 
-class BaseParser(WithCache, ValidatorMixin):
+class BaseParser(WithCache, ValidatorMixin, LoaderBannerMessagesMixin):
+    # rendered by the resolver (via parser_widgets) so that any _loader_message
+    # calls from the parser are displayed in the loader UI
+    template = Unicode("""
+        <template>
+            <j-loader-banner-messages :items="loader_message_items"></j-loader-banner-messages>
+        </template>
+        """).tag(sync=True)
+
     def __init__(self, app, inp):
+        super().__init__()
         self._app = app
         self._input = inp
 
