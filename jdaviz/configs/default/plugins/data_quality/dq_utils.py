@@ -48,6 +48,8 @@ class LookupStretch:
     @property
     def scaled_flags(self):
         # renormalize the flags on range (0, 1):
+        if self.flag_range == 0:
+            return self.flags
         return (self.flags - np.min(self.flags)) / self.flag_range
 
     def dq_array_to_flag_index(self, values):
