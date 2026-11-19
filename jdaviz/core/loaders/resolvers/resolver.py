@@ -85,13 +85,14 @@ class FormatSelect(SelectPluginComponent):
     @observe('filters', 'debug')
     def _update_items(self, msg={}, reset_selection=False):
         skip_if_current_valid = not reset_selection
+        # reset before any early return so stale parsers (and their messages) aren't displayed
+        self._parsers = {}
         if not self.plugin.is_valid:
             self.items = []
             self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
             return
 
         all_formats = []
-        self._parsers = {}
         self._dbg_importers = {}
         self._invalid_importers = {}
         self._importers = {}
@@ -114,7 +115,8 @@ class FormatSelect(SelectPluginComponent):
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
-                if this_parser.is_valid:
+                parser_is_valid = this_parser.is_valid
+                if parser_is_valid:
                     try:
                         importer_input = this_parser.output
                     except Exception as e:
@@ -122,7 +124,7 @@ class FormatSelect(SelectPluginComponent):
                         this_parser._cleanup()
                         continue
                 else:
-                    self._invalid_importers[parser_name] = this_parser.is_valid.message
+                    self._invalid_importers[parser_name] = parser_is_valid.message
                     this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
@@ -233,6 +235,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     file_timeout = FloatHandleEmpty(10).tag(sync=True)
 
     importer_widget = Unicode().tag(sync=True)
+    parser_widgets = List().tag(sync=True)
 
     @classmethod
     def is_available(cls, app):
@@ -984,6 +987,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _on_format_selected_changed(self, change={}):
         if self.format_selected == '':
             self.importer_widget = ''
+            # nothing can be loaded, so show messages from any/all parsers
+            # (currently used for loading roman files when missing the dependency)
+            self.parser_widgets = ["IPY_MODEL_" + parser.model_id
+                                   for parser in self.format._parsers.values()]
 
             if (hasattr(self.format._invalid_importers, 'keys') and
                self.format._invalid_importers.keys()):
@@ -992,6 +999,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.valid_import_formats = ", ".join(self._get_valid_import_formats())
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
+            self.parser_widgets = ["IPY_MODEL_" + self.parser.model_id]
             self.valid_import_formats = ''
 
             self.importer.reset_and_check_existing_data_in_dc()
