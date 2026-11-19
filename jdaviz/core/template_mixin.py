@@ -6638,7 +6638,10 @@ class Table(PluginSubcomponent):
         self._all_items = all_items
         self.server_items_length = len(all_items)
         self.table_options = {**self.table_options, 'page': 1}
-        self._push_current_page()
+        if self.server_pagination:
+            self._push_current_page()
+        else:
+            self.items = all_items
 
     def set_all_items_from_table(self, table):
         """

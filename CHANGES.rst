@@ -1,4 +1,39 @@
-5.1 (unreleased)
+5.2.0 (unreleased)
+================
+
+New Features
+------------
+
+Mosviz
+^^^^^^
+
+API Changes
+-----------
+
+Mosviz
+^^^^^^
+
+Bug Fixes
+---------
+
+Mosviz
+^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+5.1.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- Adds support for querying Roman data from astroquery. [#4544]
+
+Mosviz
+^^^^^^
+
+5.1 (2026-11-18)
 ================
 
 New Features
@@ -146,13 +181,12 @@ New Features
 
 - Improved behavior for creating/editing subsets in table viewers. [#4488]
 
-- Adds support for querying Roman data from astroquery. [#4544]
+- Snackbar message warns users of a slowdown in performance when attempting to load N>=5 subsets
+  in one API call on the Roman Research Nexus. [#4556]
 
-Mosviz
-^^^^^^
-
-API Changes
------------
+- Prevent spatial subsets and spectral subsets from entering table viewer(s)
+  data menu. Spatial subsets are only shown in Source Catalog Table viewers,
+  and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
 
 Bug Fixes
 ---------
@@ -188,8 +222,7 @@ Bug Fixes
 - 1D Spectrum files with multiple extensions of the same type (e.g. multiple S1D extensions) now
   have their default data labels incremented to avoid silent overwrites. [#4540]
 
-Mosviz
-^^^^^^
+- Skip marker layers when resetting Unit Conversion units. [#4501]
 
 Other Changes and Additions
 ---------------------------
@@ -198,7 +231,7 @@ Other Changes and Additions
 
 - Speed up product table loading in the astroquery loader by using server-side
   pagination in the UI and fetching product lists in a background thread so the
-  app remains responsive. [#4131]
+  app remains responsive. [#4131, #4557]
 
 - Footprint selection in loaders now defaults to skewer mode. [#4186]
 
@@ -221,7 +254,7 @@ Other Changes and Additions
   sky from the reference data (>100 degrees or so), as zooming will fail in these
   cases. [#4542]
 
-5.0.6 (unreleased)
+5.0.6 (2026-11-18)
 ==================
 
 Bug Fixes
@@ -251,8 +284,6 @@ Bug Fixes
 
 - Fix error when deleting all viewers after loading a 3D spectral cube. [#4500]
 
-- Skip marker layers when resetting Unit Conversion units. [#4501]
-
 - Refactoring of some of the unit conversion logic in aperture photometry, in
   particular handling of mixed-unit datasets and display unit conversions. [#4496]
 
@@ -267,19 +298,11 @@ Bug Fixes
 
 - Fix Data Quality plugin visibility when a cube with DQ is loaded after other data. [#4532]
 
-- Prevent spatial subsets and spectral subsets from entering table viewer(s)
-  data menu. Spatial subsets are only shown in Source Catalog Table viewers,
-  and spectral subsets are only shown in Spectral Line Table viewers. [#4489]
-
 - Fix bug where spectral subsets would appear in image viewers when the 2d spectrum viewer
   has units of pixels. [#4507]
 
 - Fix bug when attempting to perform aperture photometry on a cube when a WCS aligned image
   is also present. [#4529]
-
-Mosviz
-^^^^^^
-
 
 5.0.5 (2026-10-16)
 ==================
