@@ -1,6 +1,6 @@
 from functools import cached_property
 import asdf
-import warnings
+from pathlib import Path
 
 from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
@@ -34,22 +34,26 @@ class ASDFParser(BaseParser):
         if HAS_ROMAN_DATAMODELS:
             try:
                 return rdd.open(self.input)
-            except (ImportError, TypeError) as e:  # noqa: F841
-                warnings.warn(
-                    f"{self.input} could not be opened with the `roman_datamodels` package, "
-                    f"as it gave the following error: {e}. This file will be loaded with the `asdf` package directly",  # noqa: E501
-                    UserWarning
-                )
-        else:
-            warnings.warn(
-                f"{self.input} should be opened with the `roman_datamodels` package, "
-                "which is not installed in this environment. To install optional "
-                "jdaviz dependencies for Roman, you can run:  \n\n"
-                "pip install -U jdaviz[roman]\n\n"
-                "This file will be loaded with the `asdf` package instead.\n\n",
-                UserWarning
-            )
-        return asdf.open(self.input)
+            except (ImportError, TypeError) as e:
+                msg_txt = (f"{Path(self.input).name} could not be opened with the "
+                           f"`roman_datamodels` package: {e} "
+                           f"This file will be loaded with the `asdf` package directly.")
+                self._loader_message(msg_txt, color='warning', raise_msg=True, traceback=e)
+
+        output = asdf.open(self.input)
+
+        try:
+            # attempting to access the data triggers the error
+            _ = hasattr(output['roman']['data'], '_')
+        except (ModuleNotFoundError, ImportError) as e:
+            msg_txt = f"{Path(self.input).name} could not be opened: {e} "
+            # the input is asdf, but requires optional dependencies (e.g., lz4) which is/are
+            # dependencies of roman_datamodels
+            if not HAS_ROMAN_DATAMODELS:
+                msg_txt += f"To install optional jdaviz dependencies for Roman, you can run: "\
+                           f"pip install -U jdaviz[roman]"
+            self._loader_message(msg_txt, color='error', traceback=e, raise_msg=True)
+        return output
 
     def _cleanup(self):
         if 'output' not in self.__dict__:
