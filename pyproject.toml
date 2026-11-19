@@ -12,7 +12,7 @@ dependencies = [
     "traitlets>=5.0.5",
     "bqplot>=0.12.45,<0.13",
     "glue-core>=1.24.0",
-    "glue-jupyter @ git+https://github.com/glue-viz/glue-jupyter.git",
+    "glue-jupyter>=0.30.0",
     "echo>=0.15.0",
     "ipykernel>=7.1.0",
     "ipyvuetify>=3.0.0",
@@ -109,6 +109,7 @@ zip-safe = false
 include-package-data = true
 
 [tool.setuptools.packages.find]
+include = ["jdaviz", "jdaviz.*"]
 namespaces = true
 
 [tool.setuptools.package-data]

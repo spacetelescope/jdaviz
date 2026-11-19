@@ -67,7 +67,7 @@ jobs:
         ASTROPY_ALLOW_INTERNET: "False"
       run: |
         # Start the app in the background so it immediately returns
-        ./standalone/dist/jdaviz/jdaviz-cli --port 8765 &
+        ./standalone/dist/jdaviz/jdaviz-cli --port 8765 --browser none &
         
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
@@ -79,7 +79,6 @@ jobs:
       uses: ifaxity/wait-on-action@a7d13170ec542bdca4ef8ac4b15e9c6aa00a6866 # v1.2.1
       with:
         resource: tcp:8765
-        delay: 20000
         timeout: 60000
 
     - name: Test standalone
@@ -142,10 +141,10 @@ jobs:
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
         cd standalone/dist
-        codesign --deep --force --options=runtime --entitlements ../entitlements.plist --sign ${{ secrets.DEVELOPER_ID_APPLICATION }} --timestamp jdaviz.app
+        codesign --deep --force --options=runtime --entitlements ../entitlements.plist --sign ${{ secrets.DEVELOPER_ID_APPLICATION }} --timestamp Jdaviz.app
 
     - name: Install dmgbuild
-      run: pip install dmgbuild 
+      run: pip install dmgbuild==1.6.7
           
     - name: Create dmg (OSX)
       # if we do not call always() GHA will && with success()
@@ -157,18 +156,18 @@ jobs:
       run: |
         rm -rf standalone/dist/jdaviz
         dmgbuild -s standalone/dmgbuild_settings.py -D app=standalone/dist/Jdaviz.app "Jdaviz" standalone/dist/Jdaviz.dmg
-        # hdiutil create -volname "Jdaviz" -srcfolder standalone/dist -ov -format UDZO standalone/dist/jdaviz.dmg
     
     - name: Notary step + stapling (OSX)
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
-        output=$(xcrun notarytool submit standalone/dist/jdaviz.dmg --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true
+        output=$(xcrun notarytool submit standalone/dist/Jdaviz.dmg --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true
         echo "$output"
         uuid=$(echo "$output" | awk -F '[ :]+' '/id:/ {print $3; exit}')
         echo "UUID: $uuid"
         if [[ $output == *"status: Accepted"* ]]; then
           echo "Great, notarization succeeded, staple it!"
-          xcrun stapler staple standalone/dist/jdaviz.dmg
+          xcrun stapler staple standalone/dist/Jdaviz.dmg
+          xcrun stapler staple standalone/dist/Jdaviz.app
         else
           echo "Log output for failed notarization: $uuid"
           xcrun notarytool log --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --password ${{ secrets.NOTARIZATION_PASSWORD }} $uuid || true
@@ -177,13 +176,13 @@ jobs:
     - name: Validate app (OSX)
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
-        spctl -a -vvv -t execute standalone/dist/jdaviz.app
+        spctl -a -vvv -t execute standalone/dist/Jdaviz.app
 
     - name: Run jdaviz cmd in background
       if: ${{ matrix.os == 'macos-latest' }}
       env:
         ASTROPY_ALLOW_INTERNET: "False"
-      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli --port=8765 &
+      run: ./standalone/dist/Jdaviz.app/Contents/MacOS/jdaviz-cli --port=8765 --browser none &
 
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)

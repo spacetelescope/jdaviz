@@ -801,3 +801,58 @@ def test_import_region_with_units(cubeviz_helper, spectrum1d_cube):
     assert subsets['um subset'].upper == 6.05e-06 * u.m
     assert subsets['nm subset'].lower == 575e-09 * u.m
     assert subsets['nm subset'].upper == 605e-09 * u.m
+
+
+@pytest.mark.parametrize(
+    ("jupyter_image", "n_regions", "max_num_regions", "expected_count"),
+    [
+        ("registry.example/RomanNexus:2026.2", 6, None, 6),
+        ("registry.example/RomanNexus:2026.2", 5, None, 5),
+        ("registry.example/RomanNexus:2026.2", 4, None, None),
+        ("registry.example/RomanNexus:2026.2", 6, 4, None),
+        ("registry.example/jupyter:latest", 6, None, None),
+        (None, 6, None, None),
+    ],
+)
+def test_warning_message_on_rrn(deconfigged_helper, image_2d_wcs, monkeypatch,
+                                jupyter_image, n_regions, max_num_regions, expected_count):
+    """Warn for imports of five or more regions only in a Roman Research Nexus environment."""
+    if jupyter_image is None:
+        monkeypatch.delenv("JUPYTER_IMAGE", raising=False)
+    else:
+        monkeypatch.setenv("JUPYTER_IMAGE", jupyter_image)
+
+    arr = np.ones((10, 10))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    deconfigged_helper.load(ndd, format='Image')
+
+    ra_dec = np.array([
+        (201.70022355, -47.47149884),
+        (201.70063553, -47.47077343),
+        (201.70112562, -47.4714947),
+        (201.69904576, -47.47153201),
+        (201.70102296, -47.47013743),
+        (201.69896, -47.47052)])
+    coords = SkyCoord(*ra_dec.T, unit='deg')
+
+    aperture_radius = 0.3 * u.arcsec
+    apertures = [CircleSkyRegion(coord, radius=aperture_radius) for coord in coords]
+
+    tools = deconfigged_helper.plugins["Subset Tools"]
+    logger = deconfigged_helper.plugins["Logger"]
+
+    start = len(logger.history)
+    tools.import_region(apertures[:n_regions], max_num_regions=max_num_regions)
+
+    slowdown_messages = [
+        (msg["color"], msg["text"])
+        for msg in logger.history[start:]
+        if "may significantly slow down" in msg["text"]
+    ]
+    if expected_count is None:
+        assert slowdown_messages == []
+    else:
+        assert slowdown_messages == [
+            ("warning", f"Loading {expected_count} regions in one call may significantly "
+                        "slow down Jdaviz.")
+        ]
