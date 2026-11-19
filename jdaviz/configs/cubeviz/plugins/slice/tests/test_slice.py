@@ -26,6 +26,23 @@ def test_cube_data_exists(deconfigged_helper):
     assert sl.cube_data_exists is False
 
 
+def test_plugin_relevant_after_cube_data_removed(deconfigged_helper, spectrum1d_cube):
+    deconfigged_helper.load(spectrum1d_cube, data_label='test', format='3D Spectrum')
+    app = deconfigged_helper._app
+    plugin = deconfigged_helper.plugins['Spectral Slice']._obj
+
+    assert '3D Spectrum' in deconfigged_helper.viewers
+    assert plugin.irrelevant_msg == ''
+    assert plugin.cube_data_exists is True
+
+    app.data_item_remove('test')
+
+    assert '3D Spectrum' in deconfigged_helper.viewers
+    assert 'Spectral Slice' not in deconfigged_helper.plugins
+    assert plugin.irrelevant_msg == 'No spectral cube data loaded'
+    assert plugin.cube_data_exists is False
+
+
 def test_slice(deconfigged_helper, spectrum1d_cube):
     app = deconfigged_helper._app
     sl = SpectralSlice(app=app)
