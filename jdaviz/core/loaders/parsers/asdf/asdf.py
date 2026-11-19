@@ -19,11 +19,12 @@ __all__ = ['ASDFParser']
 class ASDFParser(BaseParser):
 
     def _check_is_valid(self):
-        # generalized jdaviz isn't the valid config name, but we can
-        # drop it here for the string output.
-        accepted_configs = ['imviz', 'specviz', 'specviz2d', 'rampviz', 'generalized jdaviz']
+        accepted_configs = ['imviz', 'specviz', 'specviz2d', 'rampviz']
+        # NOTE: temporary during deconfig process
         if self._app.config not in ['deconfigged'] + accepted_configs:
-            # NOTE: temporary during deconfig process
+            # generalized jdaviz isn't the valid config name, but we can
+            # drop it here for the string output.
+            accepted_configs += ['generalized jdaviz']
             return f"asdf format is only supported in {', '.join(accepted_configs)}."
 
         _ = self.output
@@ -50,8 +51,8 @@ class ASDFParser(BaseParser):
             # the input is asdf, but requires optional dependencies (e.g., lz4) which is/are
             # dependencies of roman_datamodels
             if not HAS_ROMAN_DATAMODELS:
-                msg_txt += f"To install optional jdaviz dependencies for Roman, you can run: "\
-                           f"pip install -U jdaviz[roman]"
+                msg_txt += "To install optional jdaviz dependencies for Roman, you can run: "\
+                           "pip install -U jdaviz[roman]"
             self._loader_message(msg_txt, color='error', traceback=e, raise_msg=True)
         return output
 
