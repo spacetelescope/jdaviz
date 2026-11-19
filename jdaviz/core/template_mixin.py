@@ -663,6 +663,25 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
         """
         Report ``text`` to the user through a persistent banner in the loader UI and
         added to the logger without necessarily raising a snackbar.
+
+        Parameters
+        ----------
+        text : str
+            The message to display to the user.
+        color : str, optional
+            The color of the message. Default is 'error'.
+        history : bool, optional
+            Whether to add the message to the logger history. Default is False.
+        popup : bool, optional
+            Whether to display the message as a snackbar popup. Default is False.
+        timestamp : float, optional
+            The timestamp of the message. If None, the current time is used.
+        traceback : Exception, optional
+            The exception traceback to include in the message. Default is None.
+        raise_msg : bool, optional
+            Whether to raise a warning or exception based on the color of the message.
+        timeout : int, optional
+            The duration (in milliseconds) for which the snackbar message should be displayed.
         """
 
         traceback_str, snackbar_msg_w_traceback = self._prepare_message(text, color,
