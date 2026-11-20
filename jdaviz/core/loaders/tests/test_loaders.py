@@ -77,6 +77,38 @@ def test_resolver_matching(specviz_helper):
     assert len(specviz_helper._app.data_collection) == 1
 
 
+def test_resolver_error_report_filters():
+    from jdaviz.core.loaders.resolvers.resolver import _format_resolver_error
+
+    invalid = {'fits': 'fits failed',
+               'asdf': 'asdf failed',
+               'jpgpng': 'jpgpng failed',
+               'Regions': 'regions failed',
+               'specutils.Spectrum': 'specutils failed',
+               'object > Image': 'object failed'}
+
+    def shown_entries(inp, formats=None):
+        report = _format_resolver_error({'file': dict(invalid), 'url': 'url failed'},
+                                        formats=formats, inp=inp)
+        assert 'url' in report
+        return {line.strip().split('..')[0] for line in report.splitlines()
+                if line.startswith('  ')}
+
+    # unknown extension and no format: all entries are shown
+    assert shown_entries('file.txt') == set(invalid)
+
+    # unknown extension with a format: parser-only entries aren't relabeled
+    assert shown_entries('file.txt', ['Image']) == {'object > Image'}
+
+    # only the extension's primary parser is relabeled with the requested importer format
+    assert shown_entries('file.asdf', ['Image']) == {'asdf > Image'}
+    assert shown_entries('file.asdf') == {'asdf'}
+    assert shown_entries('file.fits', ['Image']) == {'fits > Image', 'object > Image'}
+    assert shown_entries(Path('file.FITS')) == {'fits', 'specutils.Spectrum', 'object > Image'}
+    assert shown_entries('file.jpeg') == {'jpgpng'}
+    assert shown_entries('file.reg', ['Subset']) == {'Regions > Subset'}
+
+
 def test_format_selection_prefers_catalog_for_sky_coords(deconfigged_helper):
     table = Table({'ra': [1.0, 2.0], 'dec': [3.0, 4.0], 'flux': [5.0, 6.0]})
     ldr = deconfigged_helper.loaders['object']

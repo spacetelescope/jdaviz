@@ -17,6 +17,7 @@
     :format_items="format_items"
     v-model:format_selected="format_selected"
     :importer_widget="importer_widget"
+    :parser_widgets="parser_widgets"
     :api_hints_enabled="api_hints_enabled"
     :valid_import_formats="valid_import_formats"
     :server_is_remote="server_is_remote"

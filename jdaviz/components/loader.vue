@@ -27,6 +27,8 @@
         <v-container v-if="!hide_resolver && !hide_resolver_inputs" style="padding: 4px">
           <slot/>
         </v-container>
+        <!-- Parser loader banner messages -->
+        <jupyter-widget v-for="parser_widget in parser_widgets" :widget="parser_widget" :key="parser_widget"></jupyter-widget>
 
         <v-container>
           <v-alert v-if="image_data_loaded && is_wcs_linked !== undefined && treat_table_as_query && observation_table_populated && !is_wcs_linked"
@@ -197,9 +199,9 @@ export default {
           'can_filter_science', 'limit_to_science_products',
           'observation_table', 'observation_table_populated',
           'file_table', 'file_table_populated', 'spinner_success_message',
-          'file_cache', 'file_timeout',
+          'file_cache', 'file_timeout', 'loader_message_items',
           'format_items', 'format_selected',
-          'importer_widget', 'server_is_remote', 'hide_resolver', 'hide_resolver_inputs',
+          'importer_widget', 'parser_widgets', 'server_is_remote', 'hide_resolver', 'hide_resolver_inputs',
           'api_hints_enabled', 'valid_import_formats',
           'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled','image_data_loaded'],
   computed: {

@@ -28,6 +28,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Provide better reporting of issues with Roman asdf files when the roman dependency is not installed. [#4566]
+
 Mosviz
 ^^^^^^
 

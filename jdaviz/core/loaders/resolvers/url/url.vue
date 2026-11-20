@@ -16,6 +16,7 @@
     :format_items="format_items"
     v-model:format_selected="format_selected"
     :importer_widget="importer_widget"
+    :parser_widgets="parser_widgets"
     :api_hints_enabled="api_hints_enabled"
     :hide_resolver="hide_resolver"
     :hide_resolver_inputs="hide_resolver_inputs"
