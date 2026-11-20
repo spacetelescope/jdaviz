@@ -151,7 +151,8 @@ class FormatSelect(SelectPluginComponent):
                     if self.debug:
                         self._dbg_importers[label] = this_importer
 
-                    if this_importer.is_valid:
+                    this_importer_is_valid = this_importer.is_valid
+                    if this_importer_is_valid:
                         if self._is_valid_item(this_importer):
                             item = {'label': importer_name,
                                     'parser': parser_name,
@@ -188,7 +189,7 @@ class FormatSelect(SelectPluginComponent):
                             # target filters
                             self._importers[importer_name] = this_importer
                     else:
-                        self._invalid_importers[label] = this_importer.is_valid.message
+                        self._invalid_importers[label] = this_importer_is_valid.message
 
         # if any choice has a non-zero/default confidence score, then sort by score
         # for any items with the same score, original ordering (ie import order in
@@ -1796,8 +1797,9 @@ def find_matching_resolver(app,
                 raise e
             continue
 
-        if not this_resolver.is_valid:
-            invalid_resolvers[resolver_name] = this_resolver.is_valid.message
+        this_resolver_is_valid = this_resolver.is_valid
+        if not this_resolver_is_valid:
+            invalid_resolvers[resolver_name] = this_resolver_is_valid.message
             continue
 
         if not len(this_resolver.format.items):
