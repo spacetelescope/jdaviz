@@ -32,6 +32,8 @@ Bug Fixes
 
 - Fix a divide by zero error when there is only one flag in the DQ extension. [#4565]
 
+- Provide better reporting of issues with Roman asdf files when the roman dependency is not installed. [#4566]
+
 Mosviz
 ^^^^^^
 
