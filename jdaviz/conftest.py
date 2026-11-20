@@ -19,6 +19,7 @@ from astropy.utils.masked import Masked
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz, App
 from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
+                                              create_example_gwcs,
                                               _image_hdu_nowcs,
                                               _image_hdu_wcs,
                                               _image_nddata_wcs)
@@ -779,10 +780,13 @@ def image_nddata_wcs_sb():
 
 @pytest.fixture
 def roman_asdf_tree():
-    x = np.arange(0, 10, dtype=float)
+    # looks like a Roman image but isn't a roman_datamodels model, with units on the data
+    shape = (4, 4)
+    x = np.arange(np.prod(shape), dtype=np.float32).reshape(shape)
     return {
-        "meta": {"name": "roman asdf tree", "telescope": "ROMAN"},
-        "data": x,
+        "meta": {"name": "roman asdf tree", "telescope": "ROMAN",
+                 "wcs": create_example_gwcs(shape)},
+        "data": x * u.Jy,
         "dq": np.zeros_like(x, dtype=np.int32),
         "err": np.ones_like(x, dtype=np.float32),
         "var_poisson": np.ones_like(x, dtype=np.float64),

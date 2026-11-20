@@ -41,16 +41,17 @@ class ASDFParser(BaseParser):
                            f"This file will be loaded with the `asdf` package directly.")
                 self._loader_message(msg_txt, color='warning', raise_msg=True, traceback=e)
 
-        output = asdf.open(self.input)
-
+        output = None
         try:
-            # accessing the data may require optional dependencies from roman_datamodels
-            # e.g., lz4 for decompression
+            # opening or accessing the data may require optional dependencies
+            # from roman_datamodels, e.g., lz4 for decompression
+            output = asdf.open(self.input)
             _ = hasattr(output['roman']['data'], '_')
 
         except ImportError as e:
-            # output is not cached when raising, so _cleanup cannot close it later
-            output.close()
+            # output isn't cached when raising, so _cleanup can't close it later
+            if output is not None:
+                output.close()
 
             msg_txt = f"{Path(self.input).name} could not be opened: {e}"
             if not HAS_ROMAN_DATAMODELS:
