@@ -659,7 +659,8 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
 
     def _loader_message(self, text, color='error',
                         history=False, popup=False, timestamp=None,
-                        traceback=None, raise_msg=False, timeout=5000):
+                        traceback=None, cause=None, raise_msg=False,
+                        timeout=5000):
         """
         Report ``text`` to the user through a persistent banner in the loader UI and
         added to the logger without necessarily raising a snackbar.
@@ -678,6 +679,8 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
             The timestamp of the message. If None, the current time is used.
         traceback : Exception, optional
             The exception traceback to include in the message. Default is None.
+        cause : Exception, optional
+            The exception that caused the message. Default is None.
         raise_msg : bool, optional
             Whether to raise a warning or exception based on the color of the message.
         timeout : int, optional
@@ -702,7 +705,7 @@ class LoaderBannerMessagesMixin(VuetifyTemplate):
             warnings.warn(text)
 
         elif raise_msg and color == 'error' and traceback is not None:
-            raise traceback
+            raise traceback from cause
 
     def _flush_loader_messages(self, popup=False, clear=True):
         """

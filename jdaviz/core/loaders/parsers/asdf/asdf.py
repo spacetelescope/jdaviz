@@ -39,7 +39,8 @@ class ASDFParser(BaseParser):
                 msg_txt = (f"{Path(self.input).name} could not be opened with the "
                            f"`roman_datamodels` package: {e} "
                            f"This file will be loaded with the `asdf` package directly.")
-                self._loader_message(msg_txt, color='warning', traceback=msg_txt, raise_msg=True)
+                self._loader_message(msg_txt, color='warning',
+                                     traceback=Exception(msg_txt), cause=e, raise_msg=True)
 
         output = None
         try:
@@ -58,7 +59,8 @@ class ASDFParser(BaseParser):
             if not HAS_ROMAN_DATAMODELS:
                 msg_txt += " To install optional jdaviz dependencies for Roman, you can run: "\
                            "pip install -U jdaviz[roman]"
-            self._loader_message(msg_txt, color='error', traceback=msg_txt, raise_msg=True)
+            self._loader_message(msg_txt, color='error',
+                                 traceback=Exception(msg_txt), cause=e, raise_msg=True)
 
         return output
 
