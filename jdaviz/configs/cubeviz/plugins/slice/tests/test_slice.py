@@ -1,7 +1,46 @@
 import warnings
 import pytest
+import numpy as np
+from glue.core import Data
 
 from jdaviz.configs.cubeviz.plugins.slice.slice import SpectralSlice
+
+
+def test_cube_data_exists(deconfigged_helper):
+    app = deconfigged_helper._app
+    sl = SpectralSlice(app=app)
+
+    assert sl.cube_data_exists is False
+
+    ramp_data = Data(label='ramp', flux=np.zeros((2, 2, 2)))
+    ramp_data.meta['_importer'] = 'RampImporter'
+    app.add_data(ramp_data)
+    assert sl.cube_data_exists is False
+
+    spectral_data = Data(label='spectral', flux=np.zeros((2, 2, 2)))
+    spectral_data.meta['_importer'] = 'Spectrum3DImporter'
+    app.add_data(spectral_data)
+    assert sl.cube_data_exists is True
+
+    app.data_collection.remove(app.data_collection['spectral'])
+    assert sl.cube_data_exists is False
+
+
+def test_plugin_relevant_after_cube_data_removed(deconfigged_helper, spectrum1d_cube):
+    deconfigged_helper.load(spectrum1d_cube, data_label='test', format='3D Spectrum')
+    app = deconfigged_helper._app
+    plugin = deconfigged_helper.plugins['Spectral Slice']._obj
+
+    assert '3D Spectrum' in deconfigged_helper.viewers
+    assert plugin.irrelevant_msg == ''
+    assert plugin.cube_data_exists is True
+
+    app.data_item_remove('test')
+
+    assert '3D Spectrum' in deconfigged_helper.viewers
+    assert 'Spectral Slice' not in deconfigged_helper.plugins
+    assert plugin.irrelevant_msg == 'No spectral cube data loaded'
+    assert plugin.cube_data_exists is False
 
 
 def test_slice(deconfigged_helper, spectrum1d_cube):
@@ -13,6 +52,7 @@ def test_slice(deconfigged_helper, spectrum1d_cube):
     assert len(sl.slice_indicator_viewers) == 0
     assert len(sl.valid_indicator_values_sorted) == 0
     assert len(sl.valid_selection_values_sorted) == 0
+    assert sl.cube_data_exists is False
 
     # Make sure nothing crashes if plugin used without data]
     sl.vue_play_next()
@@ -20,6 +60,7 @@ def test_slice(deconfigged_helper, spectrum1d_cube):
     assert not sl.is_playing
 
     deconfigged_helper.load(spectrum1d_cube, data_label='test', format='3D Spectrum')
+    assert sl.cube_data_exists is True
     app.add_data_to_viewer("3D Spectrum", "test")
     app.add_data_to_viewer("3D Spectrum", "test")
     app.add_data_to_viewer("1D Spectrum", "test (sum)")

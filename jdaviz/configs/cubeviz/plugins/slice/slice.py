@@ -6,6 +6,7 @@ from functools import cached_property
 import numpy as np
 from astropy import units as u
 from astropy.units import UnitsWarning
+from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 from traitlets import Bool, Int, Unicode, observe
 
 from jdaviz.configs.cubeviz.plugins.viewers import (
@@ -50,6 +51,7 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
       Whether to show slice value in label to right of indicator.
     """
 
+    cube_data_exists = Bool(False).tag(sync=True)
     cube_viewer_exists = Bool(True).tag(sync=True)
 
     allow_disable_snapping = Bool(False).tag(sync=True)  # noqa internal use to show and allow disabling snap-to-slice
@@ -97,12 +99,17 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
                            handler=self._on_add_data)
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=lambda _: self._clear_cache())
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=self._check_if_cube_data_exists)
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=self._check_if_cube_data_exists)
 
         # connect any pre-existing viewers
         for viewer in self._app._viewer_store.values():
             self._connect_viewer(viewer)
 
         # initialize if cube viewer exists
+        self._check_if_cube_data_exists()
         self._check_if_cube_viewer_exists()
 
         # update internal value (wavelength/frequency) when x display unit is changed
@@ -201,18 +208,26 @@ class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
             return
         self.cube_viewer_exists = False
 
+    def _is_cube_data(self, data):
+        return data.ndim == 3
+
+    def _check_if_cube_data_exists(self, *args):
+        self.cube_data_exists = any(self._is_cube_data(data)
+                                    for data in self._app.data_collection)
+
     def vue_create_cube_viewer(self, *args):
-        cls = RampvizImageView if self._app.config == 'rampviz' else CubevizImageView
+        cube_data = [data for data in self._app.data_collection
+                     if self._is_cube_data(data)]
+        if not cube_data:
+            return
+
+        cls = self._cube_viewer_cls
         self._app._on_new_viewer(NewViewerMessage(cls, data=None, sender=self.app),
                                  vid=self._cube_viewer_default_label,
                                  name=self._cube_viewer_default_label)
 
-        dc = self._app.data_collection
-        for data in dc:
-            if data.ndim == 3:
-                # only load the first cube-like data
-                self._app.set_data_visibility(self._cube_viewer_default_label, data.label, True)
-                break
+        self._app.set_data_visibility(self._cube_viewer_default_label,
+                                      cube_data[0].label, True)
 
     def _connect_viewer(self, viewer):
         if isinstance(viewer, WithSliceIndicator):
@@ -440,14 +455,17 @@ class SpectralSlice(BaseSlicePlugin):
             self.hub.subscribe(self, RemoveDataMessage, handler=self._set_relevant)
         self._set_relevant()
 
-    @observe('viewer_items')
+    @observe('viewer_items', 'cube_data_exists')
     def _set_relevant(self, *args):
         if (self.config == 'deconfigged' and
-                not any(d.meta.get('_importer') == 'Spectrum3DImporter'
-                        for d in self._app.data_collection)):
+                not self.cube_data_exists):
             self.irrelevant_msg = 'No spectral cube data loaded'
             return
         super()._set_relevant(*args)
+
+    def _is_cube_data(self, data):
+        return (super()._is_cube_data(data) and
+                data.meta.get('_importer') == 'Spectrum3DImporter')
 
     def _on_add_data(self, msg):
         self._set_relevant()
@@ -516,6 +534,10 @@ class RampSlice(BaseSlicePlugin):
 
         self.viewer.add_filter(lambda viewer: isinstance(viewer, (RampvizImageView, RampvizProfileView)))  # noqa
         self._set_relevant()
+
+    def _is_cube_data(self, data):
+        return (super()._is_cube_data(data) and
+                data.meta.get('_importer') == 'RampImporter')
 
     def _on_select_slice_message(self, msg):
         # Ignore messages from tools in non-rampviz viewers so that ramp and other
