@@ -24,7 +24,7 @@ class ASDFParser(BaseParser):
         if self._app.config not in ['deconfigged'] + accepted_configs:
             # generalized jdaviz isn't the valid config name, but we can
             # drop it here for the string output.
-            accepted_configs += ['generalized jdaviz']
+            accepted_configs += ['and generalized jdaviz']
             return f"asdf format is only supported in {', '.join(accepted_configs)}."
 
         _ = self.output
@@ -46,7 +46,11 @@ class ASDFParser(BaseParser):
         try:
             # attempting to access the data triggers the error
             _ = hasattr(output['roman']['data'], '_')
+
         except (ModuleNotFoundError, ImportError) as e:
+            # output is not cached when raising, so _cleanup cannot close it later
+            output.close()
+
             msg_txt = f"{Path(self.input).name} could not be opened: {e} "
             # the input is asdf, but requires optional dependencies (e.g., lz4) which is/are
             # dependencies of roman_datamodels
@@ -54,6 +58,7 @@ class ASDFParser(BaseParser):
                 msg_txt += "To install optional jdaviz dependencies for Roman, you can run: "\
                            "pip install -U jdaviz[roman]"
             self._loader_message(msg_txt, color='error', traceback=e, raise_msg=True)
+
         return output
 
     def _cleanup(self):
