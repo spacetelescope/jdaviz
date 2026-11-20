@@ -50,15 +50,14 @@ class ScatterViewerCreator(BaseViewerCreator):
         dc_items = self.dataset.selected_dc_item
         if not self.dataset.is_multiselect:
             dc_items = [dc_items] if dc_items else []
-        valid_atts = []
-        for dc_item in dc_items:
-            valid_atts += [c.label for c in dc_item.components
-                           if 'Pixel Axis' not in c.label]
-        valid_atts = sorted(set(valid_atts))
-        self.xatt._manual_options = valid_atts
-        self.xatt._update_items()
-        self.yatt._manual_options = valid_atts
-        self.yatt._update_items()
+        # use intersection of component labels across all selected datasets
+        # to ensure that ALL data can be plotted in the scatter plot under initial selection
+        att_sets = [{c.label for c in dc_item.components if 'Pixel Axis' not in c.label}
+                    for dc_item in dc_items]
+        valid_atts = sorted(set.intersection(*att_sets)) if att_sets else []
+        for att in (self.xatt, self.yatt):
+            att.choices = valid_atts
+            att._apply_default_selection()
 
     def __call__(self):
         nv = super().__call__()
