@@ -1,6 +1,5 @@
 from astropy import units as u
 
-
 from traitlets import Unicode, List
 
 from jdaviz.core.registries import loader_resolver_registry
@@ -11,6 +10,8 @@ from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.user_api import LoaderUserApi
 
 __all__ = ["AstroqueryResolver"]
+
+_all_telescopes = ['JWST', 'Roman', 'HST', 'SDSS', 'Gaia']
 
 
 @loader_resolver_registry("astroquery")
@@ -25,7 +26,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
         # Get list of available telescopes, filtering out disabled ones
         self.can_filter_science = True
-        all_telescopes = ['JWST', 'HST', 'SDSS', 'Gaia']
+        all_telescopes = _all_telescopes
         disabled_telescopes = self.app.state.settings.get('disabled_astroquery_telescopes', [])
         available_telescopes = [t for t in all_telescopes if t not in disabled_telescopes]
 
@@ -45,7 +46,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
         super()._on_app_settings_changed(new_settings_dict)
 
         # Recalculate available telescopes based on new settings
-        all_telescopes = ['JWST', 'HST', 'SDSS', 'Gaia']
+        all_telescopes = _all_telescopes
         disabled_telescopes = new_settings_dict.get('disabled_astroquery_telescopes', [])
         available_telescopes = [t for t in all_telescopes if t not in disabled_telescopes]
 
@@ -90,7 +91,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
         """
         radius = self.radius * u.Unit(self.radius_unit.selected)
 
-        if self.telescope.selected in ('JWST', 'HST'):
+        if self.telescope.selected in ('JWST', 'Roman', 'HST'):
             from astroquery.mast import MastMissions
 
             mission = MastMissions(mission=self.telescope.selected)

@@ -28,6 +28,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Adds support for querying Roman data from astroquery. [#4544]
+
 Mosviz
 ^^^^^^
 
