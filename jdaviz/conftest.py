@@ -8,6 +8,7 @@ import warnings
 
 import numpy as np
 import pytest
+from asdf import AsdfFile
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import CCDData, StdDevUncertainty
@@ -774,6 +775,26 @@ def image_nddata_wcs():
 @pytest.fixture
 def image_nddata_wcs_sb():
     return _image_nddata_wcs(unit=u.Unit('Jy/sr'))
+
+
+@pytest.fixture
+def roman_asdf_tree():
+    x = np.arange(0, 10, dtype=float)
+    return {
+        "meta": {"name": "roman asdf tree", "telescope": "ROMAN"},
+        "data": x,
+        "dq": np.zeros_like(x, dtype=np.int32),
+        "err": np.ones_like(x, dtype=np.float32),
+        "var_poisson": np.ones_like(x, dtype=np.float64),
+        "chisq": np.ones_like(x, dtype=np.float64)
+    }
+
+
+@pytest.fixture
+def roman_asdf_file(tmp_path, roman_asdf_tree):
+    path = tmp_path / 'roman.asdf'
+    AsdfFile({'roman': roman_asdf_tree}).write_to(path)
+    return str(path)
 
 
 # Copied over from https://github.com/spacetelescope/ci_watson
