@@ -44,18 +44,17 @@ class ASDFParser(BaseParser):
         output = asdf.open(self.input)
 
         try:
-            # attempting to access the data triggers the error
+            # accessing the data may require optional dependencies from roman_datamodels
+            # e.g., lz4 for decompression
             _ = hasattr(output['roman']['data'], '_')
 
-        except (ModuleNotFoundError, ImportError) as e:
+        except ImportError as e:
             # output is not cached when raising, so _cleanup cannot close it later
             output.close()
 
-            msg_txt = f"{Path(self.input).name} could not be opened: {e} "
-            # the input is asdf, but requires optional dependencies (e.g., lz4) which is/are
-            # dependencies of roman_datamodels
+            msg_txt = f"{Path(self.input).name} could not be opened: {e}"
             if not HAS_ROMAN_DATAMODELS:
-                msg_txt += "To install optional jdaviz dependencies for Roman, you can run: "\
+                msg_txt += " To install optional jdaviz dependencies for Roman, you can run: "\
                            "pip install -U jdaviz[roman]"
             self._loader_message(msg_txt, color='error', traceback=e, raise_msg=True)
 
