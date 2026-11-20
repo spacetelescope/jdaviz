@@ -1,6 +1,7 @@
 from contextlib import nullcontext
 from pathlib import Path
 
+import numpy as np
 import pytest
 from asdf import AsdfFile
 
@@ -12,8 +13,7 @@ def _write_lz4_asdf(path, tree):
     # files without it being installed. It may be worth switching this for a real/sim
     # roman data file at some point.
     af = AsdfFile({'roman': tree})
-    af.set_array_compression(af['roman']['data'], 'zlib')
-    af.write_to(path)
+    af.write_to(path, all_array_compression='zlib')
     path.write_bytes(path.read_bytes().replace(b'zlib', b'lz4\x00'))
     return str(path)
 
@@ -48,19 +48,38 @@ class TestASDFParser:
 
         assert parser.loader_message_items == []
 
-    def test_output(self):
-        if HAS_ROMAN_DATAMODELS:
-            from roman_datamodels.datamodels import ImageModel
-            assert isinstance(self.parser.output, ImageModel)
-        else:
-            assert isinstance(self.parser.output, AsdfFile)
-            assert self.parser.output['roman']['meta'] == self.roman_asdf_tree['meta']
-        assert self.parser.loader_message_items == []
+    @pytest.mark.parametrize('from_file', [True, False])
+    def test_output(self, from_file):
+        if from_file:
+            if HAS_ROMAN_DATAMODELS:
+                from roman_datamodels.datamodels import ImageModel
+                assert isinstance(self.parser.output, ImageModel)
+            else:
+                assert isinstance(self.parser.output, AsdfFile)
+                # the wcs isn't compared since gwcs objects don't support equality
+                for key in ('name', 'telescope'):
+                    assert (self.parser.output['roman']['meta'][key] ==
+                            self.roman_asdf_tree['meta'][key])
+            assert self.parser.loader_message_items == []
 
-        # cleanup closes and clears the cached output, and is safe to call repeatedly
-        self.parser._cleanup()
-        assert 'output' not in self.parser.__dict__
-        self.parser._cleanup()
+            # cleanup closes and clears the cached output, and is safe to call repeatedly
+            self.parser._cleanup()
+            assert 'output' not in self.parser.__dict__
+            self.parser._cleanup()
+
+            inp = self.roman_asdf_file
+        else:
+            # in-memory AsdfFile objects are handled by the object parser
+            inp = AsdfFile({'roman': self.roman_asdf_tree})
+
+        # roman_asdf_file isn't a roman_datamodels model, but should load with units
+        # with or without roman_datamodels installed. Keys are sorted when read from file,
+        # so request the data extension explicitly.
+        self.helper.load(inp, extension='data')
+        out_component = self.helper._app.data_collection[0].get_component('DATA')
+        in_data = self.roman_asdf_tree['data']
+        np.testing.assert_array_equal(in_data.value, out_component.data)
+        assert out_component.units == str(in_data.unit)
 
     def test_loader_message(self, tmp_path):
         if HAS_ROMAN_DATAMODELS:
@@ -95,3 +114,10 @@ class TestASDFParser:
             asdf_parser = resolver.format._parsers['asdf']
             assert f"IPY_MODEL_{asdf_parser.model_id}" in resolver.parser_widgets
             assert [m['color'] for m in asdf_parser.loader_message_items] == ['error']
+
+    @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason='roman_datamodels is not installed')
+    def test_load_asdf_via_rdm(self, roman_imagemodel):
+        # roman_datamodels ImageModels are loaded without units
+        self.helper.load(roman_imagemodel)
+        out_component = self.helper._app.data_collection[0].get_component('DATA')
+        np.testing.assert_array_equal(roman_imagemodel.data, out_component.data)
