@@ -46,6 +46,7 @@ class ASDFParser(BaseParser):
             # opening or accessing the data may require optional dependencies
             # from roman_datamodels, e.g., lz4 for decompression
             output = asdf.open(self.input)
+            # requesting 'roman' matches the check in the image importer
             _ = hasattr(output['roman']['data'], '_')
 
         except ImportError as e:
