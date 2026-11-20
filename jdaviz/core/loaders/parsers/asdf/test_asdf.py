@@ -9,9 +9,14 @@ from jdaviz.core.loaders.parsers.asdf.asdf import ASDFParser, HAS_ROMAN_DATAMODE
 
 
 def _write_lz4_asdf(path, tree):
-    # lz4 is a roman datamodels dependency that triggers an error when reading roman asdf
-    # files without it being installed. It may be worth switching this for a real/sim
-    # roman data file at some point.
+    """
+    lz4 is a roman datamodels dependency that triggers an error when reading roman asdf
+    files without it being installed. It may be worth switching this for a real/sim
+    roman data file at some point.
+    """
+    # data is a plain, lazily loaded array, not a Quantity,
+    # which asdf would convert on open and re-emit the lz4 ImportError as a warning instead.
+    tree = {k: getattr(v, 'value', v) for k, v in tree.items()}
     af = AsdfFile({'roman': tree})
     af.write_to(path, all_array_compression='zlib')
     path.write_bytes(path.read_bytes().replace(b'zlib', b'lz4\x00'))
@@ -81,6 +86,9 @@ class TestASDFParser:
         np.testing.assert_array_equal(in_data.value, out_component.data)
         assert out_component.units == str(in_data.unit)
 
+    # The lz4-compressed gwcs fails to convert on open, which asdf
+    # only warns about before the parser raises on accessing the data.
+    @pytest.mark.filterwarnings('ignore::asdf.exceptions.AsdfConversionWarning')
     def test_loader_message(self, tmp_path):
         if HAS_ROMAN_DATAMODELS:
             path = self.roman_asdf_file
