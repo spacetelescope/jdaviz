@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+* Improves layout of "about" menu. [#4564]
+
 Mosviz
 ^^^^^^
 
