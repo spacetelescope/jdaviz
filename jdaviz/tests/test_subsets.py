@@ -7,6 +7,7 @@ from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
+from glue.core.subset import RangeSubsetState, RoiSubsetState
 from packaging.version import Version
 
 from glue.core.exceptions import IncompatibleAttribute
@@ -28,6 +29,15 @@ _reg_ver = Version(regions.__version__)
 IS_REGIONS_0_11_OR_OLDER = _reg_ver <= Version('0.11')
 IS_BETWEEN_REGIONS_0_11_0_12 = Version('0.11') < _reg_ver <= Version('0.12')
 IS_REGIONS_NEWER_THAN_0_12 = Version('0.12') < _reg_ver
+
+
+def test_mixed_subset_classification():
+    spatial_state = RoiSubsetState(roi=CircularROI(xc=0, yc=0, radius=1))
+    spectral_state = RangeSubsetState(1, 2)
+
+    assert get_subset_type(spatial_state) == 'spatial'
+    assert get_subset_type(spectral_state) == 'temporal'
+    assert get_subset_type(spatial_state | spectral_state) == 'mixed'
 
 
 @pytest.mark.parametrize('align_by', ['Pixels', 'WCS'])

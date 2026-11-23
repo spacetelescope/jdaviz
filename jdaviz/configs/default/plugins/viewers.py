@@ -402,10 +402,53 @@ class JdavizViewerMixin(WithCache):
             edit_subset_mode._mode = ReplaceMode
 
         try:
-            super().apply_roi(roi, use_current=use_current)
+            subset_state = self._roi_to_subset_state(roi)
+            if self._subset_state_type_error(
+                    subset_state,
+                    override_mode=ReplaceMode if needs_override else None) is not None:
+                return False
+            return super().apply_roi(roi, use_current=use_current)
         finally:
             if needs_override:
                 edit_subset_mode._mode = original_mode
+
+    def apply_subset_state(self, subset_state, override_mode=None):
+        if self._subset_state_type_error(subset_state, override_mode=override_mode) is not None:
+            return False
+        return super().apply_subset_state(subset_state, override_mode=override_mode)
+
+    def _subset_state_type_error(self, subset_state, override_mode=None):
+        subset_type = get_subset_type(subset_state)
+        if subset_type == 'mixed':
+            message = ('Cannot create a mixed subset containing '
+                       'multiple selection types.')
+            guidance = 'Split the selections into separate, single-type subsets.'
+        else:
+            edit_subset_mode = self.session.edit_subset_mode
+            mode = (override_mode if override_mode is not None
+                    else edit_subset_mode.mode)
+            if subset_type is None or mode is NewMode or mode is ReplaceMode:
+                return None
+
+            target_types = {get_subset_type(target)
+                            for target in edit_subset_mode.edit_subset}
+            target_types.discard(None)
+
+            if 'mixed' in target_types or len(target_types) > 1:
+                message = 'Cannot modify an existing mixed subset with a combination mode.'
+            elif target_types and target_types != {subset_type}:
+                target_type = next(iter(target_types))
+                message = (f'Cannot combine a {subset_type} selection with the selected '
+                           f'{target_type} subset.')
+            else:
+                return None
+            guidance = ('Use Create New to create a separate subset, or Replace to change '
+                        'the selected subset.')
+
+        self.hub.broadcast(SnackbarMessage(
+            f'{message} {guidance}',
+            color='warning', timeout=8000, sender=self))
+        return message
 
     @property
     def user_api(self):
@@ -1729,8 +1772,8 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     @staticmethod
     def _is_table_subset(target, data):
         # ElementSubsetState.data is the UUID, not a Glue Data instance.
-        return (isinstance(target.subset_state, ElementSubsetState)
-                and target.subset_state.data == data.uuid)
+        return (get_subset_type(target) == 'table'
+                and getattr(target.subset_state, 'data', None) == data.uuid)
 
     def _table_subset_warning(self, text):
         self.hub.broadcast(SnackbarMessage(text, color='warning', sender=self))
@@ -1803,7 +1846,8 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
     def add_subset(self, subset, *args, **kwargs):
         # Inspect the defining state, not the table data the subset propagated to.
-        if get_subset_type(subset.subset_state) in self._excluded_subset_types:
+        subset_type = get_subset_type(subset.subset_state)
+        if subset_type == 'mixed' or subset_type in self._excluded_subset_types:
             return False
         return super().add_subset(subset, *args, **kwargs)
 
