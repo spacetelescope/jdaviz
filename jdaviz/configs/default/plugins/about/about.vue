@@ -3,8 +3,12 @@
     :description="docs_description"
     v-model:scroll_to="scroll_to">
 
-    <j-flex-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'" linktext="Jdaviz Documentation">
+    <j-flex-row align="baseline" justify="end">
+      <h3 style="flex: 1 1 120px">About jdaviz</h3>
+      <j-docs-link
+        :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'"
+        linktext="jdaviz Documentation"
+        style="flex: 0 0 auto; margin-left: auto;">
       </j-docs-link>
     </j-flex-row>
 
@@ -14,7 +18,6 @@
         class="v-messages v-messages__message text--secondary"
         v-model="jdaviz_version"
         label="jdaviz version"
-        hint="Version of installed Jdaviz."
         readonly>
       </v-text-field>
     </j-flex-row>
@@ -46,16 +49,26 @@
       </j-docs-link>
     </j-flex-row>
 
-    <v-row v-for="pkg in downstream_packages" :key="pkg.name">
-      <v-text-field
-        variant="underlined"
-        class="v-messages v-messages__message text--secondary"
-        :value="pkg.version"
-        :label="pkg.name + ' version'"
-        :hint="'Version of installed ' + pkg.name + '.'"
-        readonly>
-      </v-text-field>
-    </v-row>
+    <div v-for="pkg in downstream_packages" :key="pkg.name">
+      <j-flex-row align="baseline" justify="end" style="margin-top: 16px">
+        <h3 style="flex: 1 1 120px">About {{ pkg.name }}</h3>
+        <j-docs-link
+          :link="pkg.docs_link"
+          :linktext="pkg.name + ' Documentation'"
+          style="flex: 0 0 auto; margin-left: auto">
+        </j-docs-link>
+      </j-flex-row>
+
+      <j-flex-row>
+        <v-text-field
+          variant="underlined"
+          class="v-messages v-messages__message text--secondary"
+          v-model="pkg.version"
+          :label="pkg.name + ' version'"
+          readonly>
+        </v-text-field>
+      </j-flex-row>
+    </div>
 
   </j-tray-plugin>
 </template>
