@@ -44,13 +44,13 @@ def test_scatter_viewer_creator_attribute_choices(deconfigged_helper, axis, sele
         deconfigged_helper.load(table, format='Generic Catalog', data_label=label,
                                 col_other=table.colnames)
 
-    creator = deconfigged_helper.new_viewers['Scatter']
+    vc = deconfigged_helper.new_viewers['Scatter']
     # Start with both selected to also exercise removing datasets and clearing choices.
-    creator.dataset = ['table1', 'table2']
-    creator.dataset = selected
+    vc.dataset = ['table1', 'table2']
+    vc.dataset = selected
 
     # The catalog importer adds an ID column to both tables.
-    assert sorted(getattr(creator, axis).choices) == expected
+    assert sorted(getattr(vc, axis).choices) == expected
 
 
 @pytest.mark.parametrize('axis', ['xatt', 'yatt'])
@@ -60,20 +60,20 @@ def test_scatter_viewer_creator_attribute_selection(deconfigged_helper, axis):
         deconfigged_helper.load(table, format='Generic Catalog', data_label=label,
                                 col_other=table.colnames)
 
-    creator = deconfigged_helper.new_viewers['Scatter']
-    creator.dataset = ['table1']
-    att = getattr(creator, axis)
+    vc = deconfigged_helper.new_viewers['Scatter']
+    vc.dataset = ['table1']
+    att = getattr(vc, axis)
     att.selected = 'unique1'
 
-    creator.dataset = ['table1', 'table2']
+    vc.dataset = ['table1', 'table2']
     assert att.selected in att.choices
     assert att.selected != 'unique1'
 
     att.selected = 'shared_y'
-    creator.dataset = ['table2']
+    vc.dataset = ['table2']
     assert att.selected == 'shared_y'
 
-    creator.dataset = []
+    vc.dataset = []
     assert att.selected == ''
 
 
