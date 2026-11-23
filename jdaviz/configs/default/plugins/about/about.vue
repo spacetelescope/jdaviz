@@ -7,7 +7,7 @@
       <h3 style="flex: 1 1 120px">About jdaviz</h3>
       <j-docs-link
         :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'"
-        linktext="Jdaviz Documentation"
+        linktext="jdaviz Documentation"
         style="flex: 0 0 auto; margin-left: auto;">
       </j-docs-link>
     </j-flex-row>
