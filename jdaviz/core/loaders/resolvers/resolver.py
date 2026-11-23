@@ -50,6 +50,12 @@ from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMes
 
 __all__ = ['BaseResolver', 'BaseConeSearchResolver', 'find_matching_resolver']
 
+# regular expressions to guess which meta fields correspond to ra and dec
+COORD_PATTERNS = {
+    "ra": re.compile(r'^ra$|^ra|ra$|^rightascension$|^rightascension|rightascension$|^right$|^ascension$', re.IGNORECASE), # noqa
+    "dec": re.compile(r'^dec$|^dec|dec$|^declination$|^declination|declination$', re.IGNORECASE), # noqa
+}
+
 
 class FormatSelect(SelectPluginComponent):
     """
@@ -1076,7 +1082,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             self,
             items='search_input_items',
             selected='search_input_selected',
-            manual_options=['Source', 'Viewer', 'Catalog'],
+            manual_options=['Source', 'Viewer', 'Catalog', 'Metadata'],
             apply_filters_to_manual_options=True,
             default_mode='first',
         )
@@ -1314,6 +1320,30 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         """When switching to Viewer mode, immediately center on the current viewer."""
         if self.search_input_selected == 'Viewer':
             self.vue_center_on_data()
+
+    @observe("dataset_selected", type="change")
+    def vue_dataset_changed(self, _=None):
+        # Check mixin object initialized
+        if not hasattr(self, "dataset"):
+            return
+        if hasattr(self.dataset.selected_dc_item, 'meta'):
+            meta = self.dataset.selected_dc_item.meta
+            target_coords = {}
+
+            for coord in ('ra', 'dec'):
+                pattern = COORD_PATTERNS[coord]
+                for key, value in meta.items():
+                    tokens = re.split(r'[\s_\-\.]+', str(key).lower().strip())
+
+                    if any(pattern.search(t) for t in tokens):
+                        target_coords[coord] = value
+                        break
+            if 'ra' not in target_coords or 'dec' not in target_coords:
+                self.source = ""
+                return
+            self.source = f"{target_coords['ra']:.8f} {target_coords['dec']:.8f}"
+        else:
+            self.source = ""
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):

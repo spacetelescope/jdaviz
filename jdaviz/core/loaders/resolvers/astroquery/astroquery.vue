@@ -54,14 +54,6 @@
           </v-text-field>
         </j-flex-row>
 
-        <plugin-select
-          :items="coordframe_choices.map(i => i.label)"
-          v-model:selected="coordframe_selected"
-          label="Coordinate Frame"
-          api_hint="ldr.coordframe ="
-          :api_hints_enabled="api_hints_enabled"
-          hint="Astronomical Coordinate Frame of the provided Coordinates."
-        ></plugin-select>
       </div>
 
       <!-- Viewer mode -->
@@ -92,16 +84,6 @@
             Automatically adjust coordinates as viewer pans and zooms.
           </div>
         </div>
-
-        <plugin-select
-          :items="coordframe_choices.map(i => i.label)"
-          v-model:selected="coordframe_selected"
-          label="Coordinate Frame"
-          api_hint="ldr.coordframe ="
-          :api_hints_enabled="api_hints_enabled"
-          hint="Astronomical Coordinate Frame of the provided Coordinates."
-          :disabled="true"
-        ></plugin-select>
       </div>
 
       <!-- Metadata mode -->
@@ -115,33 +97,16 @@
           :api_hints_enabled="api_hints_enabled"
           hint="Select a dataset to retrieve target coordinates from metadata."
         />
-
-        <div style="display: flex; flex-direction: column; gap: 2px; padding-top: 4px; padding-bottom: 4px">
-          <div style="display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 8px">
-            <v-switch
-              v-model="coord_follow_viewer_pan"
-              color="primary"
-              hide-details
-              density="compact"
-            ></v-switch>
-            <span style="font-size: 1rem; font-weight: 500; padding-left: 8px">Follow Viewer Center</span>
-            <div></div>
-            <span class="text-medium-emphasis" style="font-size: 0.875rem; margin-top: -6px; padding-left: 8px">{{ source }}</span>
-          </div>
-          <div class="text-medium-emphasis" style="font-size: 0.75rem; margin-top: 2px">
-            Automatically adjust coordinates as viewer pans and zooms.
-          </div>
-        </div>
-
-        <plugin-select
-          :items="coordframe_choices.map(i => i.label)"
-          v-model:selected="coordframe_selected"
-          label="Coordinate Frame"
-          api_hint="ldr.coordframe ="
+        <plugin-dataset-select
+          :items="dataset_items"
+          v-model:selected="dataset_selected"
+          :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1"
+          label="Data"
+          api_hint='plg.dataset ='
           :api_hints_enabled="api_hints_enabled"
-          hint="Astronomical Coordinate Frame of the provided Coordinates."
-          :disabled="true"
-        ></plugin-select>
+          hint="Select the data from which to retrieve target coordinates."
+        />
+        <span class="text-medium-emphasis" style="font-size: 0.875rem; margin-top: -6px; padding-left: 8px">{{ source }}</span>
       </div>
 
       <!-- Catalog mode -->
@@ -210,7 +175,9 @@
             Large catalogs may take significant time.
           </v-alert>
         </j-flex-row>
+      </div>
 
+      <div>
         <plugin-select
           :items="coordframe_choices.map(i => i.label)"
           v-model:selected="coordframe_selected"
