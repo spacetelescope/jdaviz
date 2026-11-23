@@ -28,6 +28,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fix the xatt/yatt choices for creating a scatter viewer to be the common columns across
+  all selected datasets. [#4562]
+
 Mosviz
 ^^^^^^
 
