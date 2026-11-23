@@ -88,6 +88,10 @@ class RampImporter(BaseImporterToDataCollection):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # skip building components (notably the integration select, which has one entry per
+        # row of input[1].data) for inputs this importer will reject anyway
+        if not self.is_valid:
+            return
 
         def viewer_in_registry_names(supported_viewers):
             def viewer_filter(viewer):
