@@ -68,7 +68,7 @@ class About(PluginTemplateMixin):
     def show_popup(self):
         self._app.force_open_about = True
 
-    def register_downstream_package(self, name, version, abbreviation=None):
+    def register_downstream_package(self, name, version, abbreviation=None, docs_link=None):
         """
         Register a downstream package to be listed in the About panel.
 
@@ -81,9 +81,13 @@ class About(PluginTemplateMixin):
         abbreviation : str, optional
             Short label shown as a badge on the version button in the app bar.
             Defaults to the first two characters of ``name`` in lowercase.
+        docs_link : str, optional
+            URL to the documentation for the downstream package.
+            Defaults to name.readthedocs.io
         """
         entry = {'name': name, 'version': version,
-                 'abbreviation': abbreviation or name[:2].lower()}
+                 'abbreviation': abbreviation or name[:2].lower(),
+                 'docs_link': docs_link or f'https://{name}.readthedocs.io'}
         if entry not in self.downstream_packages:
             self.downstream_packages = self.downstream_packages + [entry]
             self._app.state.downstream_packages = self._app.state.downstream_packages + [entry]
