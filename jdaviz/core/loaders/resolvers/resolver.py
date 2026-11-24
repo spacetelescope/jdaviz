@@ -1494,15 +1494,14 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         self._center_on_data(self._get_viewer_info())
 
     def _center_on_data(self, info):
-        if len(info) == 0:
+        if info is None:
             # No data with WCS in the viewer
             self.source = ""
             return
 
         # Show center value in plugin
-        ra, dec = info.get("ra_deg"), info.get("dec_deg")
-        self.source = "" if ra is None or dec is None else f"{ra:.8f} {dec:.8f}"
-        self.coordframe_selected = info.get('frame')
+        self.source = f"{info['ra_deg']:.8f} {info['dec_deg']:.8f}"
+        self.coordframe_selected = info['frame']
 
         self.viewer_centered = True
 
