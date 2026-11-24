@@ -7,10 +7,16 @@ try:
     from qtpy.QtWebEngineWidgets import QWebEngineView
     from qtpy.QtWebChannel import QWebChannel
     from qtpy import QtCore, QtGui
-except ModuleNotFoundError as e:
-    raise ModuleNotFoundError("""Qt browser requires Qt dependencies, run:
-$ pip install jdaviz[qt]
-to install.""") from e
+except ImportError as e:
+    if sys.version_info >= (3, 15):
+        msg = ("The Qt browser is not supported on Python 3.15 or later "
+               "because PySide6 is incompatible with lazy imports. Use the "
+               "default browser instead.")
+    else:
+        msg = ("Qt browser requires Qt dependencies, run:\n"
+               "$ pip install jdaviz[qt]\n"
+               "to install.")
+    raise ModuleNotFoundError(msg) from e
 import signal
 from pathlib import Path
 from importlib.metadata import version
