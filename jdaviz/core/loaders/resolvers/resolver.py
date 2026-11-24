@@ -1344,28 +1344,29 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
 
     def _get_viewer_info(self):
         """
-        Return a dict with the selected viewer's sky center and ``fov_radius``.
+        Return a dict with the selected viewer's sky center and ``fov_radius``, or `None` if the
+        viewer has no data with WCS.
         """
         # Check mixin object initialized
         if not hasattr(self, "viewer"):
-            return {}
+            return None
 
         viewer = self.viewer.selected_obj
         helper = self.app._jdaviz_helper
         if viewer is None or helper is None or len(helper.datasets) < 1:
-            return {}
+            return None
 
         # nothing happens when there's no image in the viewer/the data doesn't have WCS
         state = viewer.state
         ref_data = state.reference_data
         if ref_data is None or ref_data.coords is None:
-            return {}
+            return None
 
         # obtain center point of the current image and convert to sky coordinates
         if ref_data.ndim == 3:
             coords = self._get_viewer_celestial_wcs(ref_data.coords)
             if coords is None:
-                return {}
+                return None
             skycoord_center = coords.pixel_to_world(
                 state.zoom_center_x, state.zoom_center_y
             )
@@ -1394,10 +1395,14 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         Update the live viewer center and FOV radius displays from ``info`` and,
         if enabled, set the query radius to the FOV.
         """
-        ra = info.get('ra_deg', "")
-        dec = info.get('dec_deg', "")
-        self.viewer_center_value = f"{ra:.8f} {dec:.8f}".strip()
-        fov_radius = info.get('fov_radius')
+        if info is None:
+            self.viewer_center_value = ""
+            self.viewer_fov_radius_value = ""
+            return
+
+        self.viewer_center_value = f"{info['ra_deg']:.8f} {info['dec_deg']:.8f}"
+
+        fov_radius = info['fov_radius']
         if fov_radius is None:
             self.viewer_fov_radius_value = ""
             return
@@ -1489,14 +1494,15 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         self._center_on_data(self._get_viewer_info())
 
     def _center_on_data(self, info):
-        if info is None:
+        if len(info) == 0:
             # No data with WCS in the viewer
             self.source = ""
             return
 
         # Show center value in plugin
-        self.source = f"{info['ra_deg']:.8f} {info['dec_deg']:.8f}"
-        self.coordframe_selected = info['frame']
+        ra, dec = info.get("ra_deg"), info.get("dec_deg")
+        self.source = "" if ra is None or dec is None else f"{ra:.8f} {dec:.8f}"
+        self.coordframe_selected = info.get('frame')
 
         self.viewer_centered = True
 
