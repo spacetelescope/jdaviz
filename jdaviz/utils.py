@@ -17,6 +17,7 @@ from joblib import Parallel, delayed
 import asdf
 import fsspec
 import numpy as np
+from astropy import units as u
 from astropy.io import fits
 from astropy.utils import minversion
 from astropy.utils.data import download_file
@@ -52,7 +53,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'wildcard_match', 'cmap_samples', 'glue_colormaps',
            'att_to_componentid', 'create_data_hash',
            'in_ra_comps', 'in_dec_comps', 'SPECTRAL_AXIS_COMP_LABELS',
-           'hst_obstype', 'suppress_widget_comms']
+           'hst_obstype', 'suppress_widget_comms', 'get_viewer_fov_radius']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -1418,6 +1419,60 @@ def _get_celestial_wcs(wcs):
     else:
         return None
     return data_wcs
+
+
+def get_viewer_fov_radius(state, skycoord_center, wcs=None):
+    """
+    Return the radius of a cone centered on ``skycoord_center`` that covers the
+    visible part of the reference data in an image viewer.
+
+    The viewer limits are clipped to the extent of the reference data and the
+    radius is the largest separation between ``skycoord_center`` and the clipped
+    corners. ``x_min``/``x_max``/``y_min``/``y_max`` are always in pixel units of
+    the reference data, so this works for pixel and WCS alignment and for 2D and
+    3D reference data.
+
+    Parameters
+    ----------
+    state : `~glue.viewers.image.state.Cube/ImageViewerState`
+        State of the cube/image viewer.
+    skycoord_center : `~astropy.coordinates.SkyCoord`
+        Sky coordinate of the cone center.
+    wcs : WCS or `None`, optional
+        WCS used to convert the clipped pixel corners to sky coordinates.
+        Must accept two pixel arrays (i.e., a celestial WCS for 3D data).
+        Defaults to ``state.reference_data.coords``.
+
+    Returns
+    -------
+    radius : `~astropy.units.Quantity` or `None`
+        Radius in degrees, or `None` if it can't be computed (e.g., no WCS,
+        viewer limits undefined, or viewer doesn't overlap the reference data).
+    """
+    ref_data = state.reference_data
+    if ref_data is None:
+        return None
+    if wcs is None:
+        wcs = ref_data.coords
+
+    x_axis = getattr(state.x_att, 'axis', None)
+    y_axis = getattr(state.y_att, 'axis', None)
+    if (wcs is None or None in (x_axis, y_axis)
+            or None in (state.x_min, state.x_max, state.y_min, state.y_max)):
+        return None
+
+    nx, ny = ref_data.shape[x_axis], ref_data.shape[y_axis]
+    x_min, x_max = max(0, state.x_min), min(nx, state.x_max)
+    y_min, y_max = max(0, state.y_min), min(ny, state.y_max)
+    if x_min >= x_max or y_min >= y_max:
+        return None
+
+    corners = wcs.pixel_to_world([x_min, x_min, x_max, x_max],
+                                 [y_min, y_max, y_max, y_min])
+    radius = np.nanmax(skycoord_center.separation(corners).deg)
+    if not np.isfinite(radius):
+        return None
+    return radius * u.deg
 
 
 def closest_point_on_segment(px, py, x1, y1, x2, y2):
