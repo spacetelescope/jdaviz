@@ -82,6 +82,7 @@
           hint="Select a viewer to retrieve center coordinates."
         />
 
+        <div style="display: flex; flex-direction: column; gap: 2px; padding-top: 4px; padding-bottom: 4px">
           <div style="display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 8px">
             <v-switch
               v-model="coord_follow_viewer_pan"
