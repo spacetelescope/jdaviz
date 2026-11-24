@@ -410,6 +410,43 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
         plg.get_regions(region_type='spectral', wrt_data='3D Spectrum [FLUX]')
 
 
+def test_import_region_rejects_mixed_subset_types(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plugin = cubeviz_helper.plugins['Subset Tools']
+    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+
+    plugin.import_region(SpectralRegion(1 * unit, 2 * unit))
+    subset_group = cubeviz_helper._app.data_collection.subset_groups[0]
+    spectral_state = subset_group.subset_state.copy()
+
+    spatial_region = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
+    bad_regions = plugin.import_region(
+        spatial_region, edit_subset=subset_group.label, combination_mode='or',
+        return_bad_regions=True)
+
+    assert len(bad_regions) == 1
+    assert bad_regions[0][1] == 'Subset types cannot be combined'
+    assert isinstance(subset_group.subset_state, type(spectral_state))
+
+    plugin.import_region(
+        spatial_region, edit_subset=subset_group.label, combination_mode='replace')
+    assert not isinstance(subset_group.subset_state, type(spectral_state))
+
+    bad_regions = plugin.import_region(
+        SpectralRegion(2 * unit, 3 * unit), edit_subset=subset_group.label,
+        combination_mode='and', return_bad_regions=True)
+
+    assert len(bad_regions) == 1
+    assert bad_regions[0][1] == 'Subset types cannot be combined'
+
+    viewer = cubeviz_helper.default_viewer._obj.glue_viewer
+    n_subsets = len(cubeviz_helper._app.data_collection.subset_groups)
+    cubeviz_helper._app.session.edit_subset_mode.mode = NewMode
+    assert viewer.apply_subset_state(
+        spectral_state | subset_group.subset_state.copy()) is False
+    assert len(cubeviz_helper._app.data_collection.subset_groups) == n_subsets
+
+
 def test_get_regions_composite(imviz_helper):
     """
     Test the behavior of retrieving composite subsets as regions

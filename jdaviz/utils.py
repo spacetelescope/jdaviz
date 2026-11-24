@@ -38,7 +38,8 @@ from glue.config import settings
 from glue.config import colormaps as glue_colormaps
 from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
-from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
+from glue.core.subset import (CompositeSubsetState, ElementSubsetState, MaskSubsetState,
+                              RangeSubsetState, RoiSubsetState, SubsetState)
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from ipyvue import watch
 
@@ -592,6 +593,101 @@ def _is_image_spatial_subset(subset):
             and all(att.parent.ndim == 2 for att in subset.subset_state.attributes))
 
 
+def _range_subset_type(subset):
+    """Return the type of a RangeSubsetState."""
+    # Look within a SubsetGroup, or a single Subset, when possible. The state
+    # itself is sufficient in the common case where its attribute has a parent.
+    subset_list = getattr(subset, 'subsets', [subset])
+
+    for ss in subset_list:
+        state = getattr(ss, 'subset_state', ss)
+        att = getattr(state, 'att', None)
+        if hasattr(ss, 'data'):
+            ss_data = ss.data
+        elif hasattr(att, 'parent'):
+            ss_data = att.parent
+        else:
+            continue
+
+        # check for spectral coordinate in GWCS by looking for SpectralFrame
+        if isinstance(ss_data.coords, gwcs):
+            if isinstance(ss_data.coords, (SpectralFrame, SpectralGWCS)):
+                return 'spectral'
+            elif isinstance(ss_data.coords, CompositeFrame):
+                if np.any([isinstance(frame, SpectralFrame) for frame in
+                           ss_data.coords.output_frame.frames]):
+                    return 'spectral'
+            else:
+                continue
+
+        # check for a spectral coordinate in FITS WCS:
+        wcs_coords = (
+            ss_data.coords.wcs.ctype if hasattr(ss_data.coords, 'wcs')
+            else []
+        )
+
+        has_spectral_coords = (
+            any(str(coord).startswith('WAVE') for coord in wcs_coords) or
+
+            # also check for a spectral coordinate from the glue_astronomy translator:
+            isinstance(ss_data.coords, (SpectralCoordinates, SpectralGWCS))
+        )
+
+        if has_spectral_coords:
+            return 'spectral'
+
+    # otherwise, assume temporal:
+    return 'temporal'
+
+
+def _get_subset_types(subset):
+    """
+    Determine all semantic types represented by a subset or subset state.
+
+    Parameters
+    ----------
+    subset : glue.core.subset.Subset, glue.core.subset_group.GroupedSubset, or SubsetState
+        A subset, subset group, or subset state to inspect.
+
+    Returns
+    -------
+    subset_types : set of str
+        A set containing zero or more of ``'spatial'``, ``'spectral'``,
+        ``'temporal'``, ``'table'``, and ``'other'``. Non-subset objects return
+        an empty set.
+    """
+    state = getattr(subset, 'subset_state', subset)
+
+    if isinstance(state, CompositeSubsetState):
+        subset_types = _get_subset_types(state.state1)
+        if state.state2 is not None:
+            subset_types |= _get_subset_types(state.state2)
+        return subset_types
+
+    states = getattr(state, 'states', None)
+    if states is not None:
+        return set().union(*(_get_subset_types(child) for child in states))
+
+    if isinstance(state, RoiSubsetState):
+        return {'spatial'}
+    elif isinstance(state, RangeSubsetState):
+        return {_range_subset_type(subset)}
+    elif isinstance(state, ElementSubsetState):
+        return {'table'}
+    elif isinstance(state, MaskSubsetState):
+        parents = {getattr(cid, 'parent', None) for cid in state.cids}
+        if parents and None not in parents and all(parent.ndim >= 2 for parent in parents):
+            return {'spatial'}
+        return {'other'}
+    elif isinstance(state, MultiMaskSubsetState):
+        # Freezing intentionally replaces the original state with per-data masks,
+        # so the semantic type is no longer recoverable from the state.
+        return set()
+    elif isinstance(state, SubsetState):
+        return {'other'}
+    return set()
+
+
 def get_subset_type(subset):
     """
     Determine the subset type of a subset or layer
@@ -604,64 +700,13 @@ def get_subset_type(subset):
     Returns
     -------
     subset_type : str or None
-        'spatial', 'spectral', 'temporal', or None
+        'spatial', 'spectral', 'temporal', 'table', 'other', 'mixed', or None
     """
-    if not hasattr(subset, 'subset_state'):
-        return None
-
-    while hasattr(subset.subset_state, 'state1'):
-        # this assumes no mixing between spatial and spectral subsets and just
-        # taking the first component (down the hierarchical tree) to determine the type
-        subset = subset.subset_state.state1
-
-    if isinstance(subset.subset_state, RoiSubsetState):
-        return 'spatial'
-    elif isinstance(subset.subset_state, RangeSubsetState):
-        # look within a SubsetGroup, or a single Subset
-        subset_list = getattr(subset, 'subsets', [subset])
-
-        for ss in subset_list:
-            if hasattr(ss, 'data'):
-                ss_data = ss.data
-            elif hasattr(ss.att, 'parent'):
-                # if `ss` is a subset state, it won't have a `data` attr,
-                # check the world coordinate's parent data:
-                ss_data = ss.att.parent
-            else:
-                # if we reach this `else`, continue searching
-                # through other subsets in the group to identify the
-                # subset type:
-                continue
-
-            # check for spectral coordinate in GWCS by looking for SpectralFrame
-            if isinstance(ss_data.coords, gwcs):
-                if isinstance(ss_data.coords, (SpectralFrame, SpectralGWCS)):
-                    return 'spectral'
-                elif isinstance(ss_data.coords, CompositeFrame):
-                    if np.any([isinstance(frame, SpectralFrame) for frame in
-                               ss_data.coords.output_frame.frames]):
-                        return 'spectral'
-                else:
-                    continue
-
-            # check for a spectral coordinate in FITS WCS:
-            wcs_coords = (
-                ss_data.coords.wcs.ctype if hasattr(ss_data.coords, 'wcs')
-                else []
-            )
-
-            has_spectral_coords = (
-                any(str(coord).startswith('WAVE') for coord in wcs_coords) or
-
-                # also check for a spectral coordinate from the glue_astronomy translator:
-                isinstance(ss_data.coords, (SpectralCoordinates, SpectralGWCS))
-            )
-
-            if has_spectral_coords:
-                return 'spectral'
-
-        # otherwise, assume temporal:
-        return 'temporal'
+    subset_types = _get_subset_types(subset)
+    if len(subset_types) == 1:
+        return subset_types.pop()
+    elif len(subset_types) > 1:
+        return 'mixed'
     else:
         return None
 

@@ -1466,11 +1466,15 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                                     f' meta tag not in {data.label}'))
                                 continue
                             state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'])
-                        viewer.apply_roi(state)
+                        if viewer.apply_roi(state) is False:
+                            bad_regions.append((region, 'Subset types cannot be combined'))
+                            continue
 
                     elif isinstance(region, (CircularROI, CircularAnnulusROI,
                                              EllipticalROI, RectangularROI)):
-                        viewer.apply_roi(region)
+                        if viewer.apply_roi(region) is False:
+                            bad_regions.append((region, 'Subset types cannot be combined'))
+                            continue
 
                     elif isinstance(region, SpectralRegion):
                         range_viewer = self.app.get_viewer(viewer_parameter) \
@@ -1485,7 +1489,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                                                 region.upper.unit, base_units)
                         s = RangeSubsetState(lo=region_lower, hi=region_upper, att=x_att)
 
-                        range_viewer.apply_subset_state(s)
+                        if range_viewer.apply_subset_state(s) is False:
+                            bad_regions.append((region, 'Subset types cannot be combined'))
+                            continue
 
                     # Last resort: Masked Subset that is static (if data is not a cube)
                     elif data.ndim == 2:
@@ -1517,6 +1523,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                         try:
                             mask_label = f'{msg_prefix} {msg_count}'
                             state = MaskSubsetState(im, data.pixel_component_ids)
+                            if hasattr(viewer, '_subset_state_type_error'):
+                                message = viewer._subset_state_type_error(state)
+                                if message is not None:
+                                    bad_regions.append((region, message))
+                                    continue
                             self.app.data_collection.new_subset_group(mask_label, state)
                             msg_count += 1
                         except Exception as e:  # pragma: no cover
