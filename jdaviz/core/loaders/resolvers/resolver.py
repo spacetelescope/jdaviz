@@ -14,6 +14,7 @@ from astropy.coordinates.name_resolve import NameResolveError
 from astropy.table import Table as astropyTable
 from astropy import units as u
 from astroquery.mast import MastMissions
+from gwcs.wcs import WCS as GWCS
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.events import (AddDataMessage,
@@ -43,7 +44,7 @@ from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
                           find_polygon_mark_with_skewer, _get_celestial_wcs,
-                          layer_is_image_data)
+                          get_viewer_fov_radius, layer_is_image_data)
 from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMessage,
                                SubsetCreateMessage, SubsetDeleteMessage)
 
@@ -1050,11 +1051,14 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
     source = Unicode("").tag(sync=True)
     coord_follow_viewer_pan = Bool(False).tag(sync=True)
     viewer_centered = Bool(False).tag(sync=True)
+    viewer_center_value = Unicode("").tag(sync=True)
     coordframe_choices = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
     radius = FloatHandleEmpty(1).tag(sync=True)
     radius_unit_items = List().tag(sync=True)
     radius_unit_selected = Unicode("deg").tag(sync=True)
+    viewer_fov_radius_value = Unicode("").tag(sync=True)
+    radius_follow_viewer_fov = Bool(False).tag(sync=True)
 
     max_results = IntHandleEmpty(1000).tag(sync=True)
     returned_no_results = Bool(False).tag(sync=True)
@@ -1148,6 +1152,10 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
+
+        # viewer_selected may have been set while constructing ViewerSelect, before
+        # self.viewer existed, in which case the viewer callbacks were never subscribed
+        self.vue_viewer_changed()
 
     @property
     def _query_archive_label(self):
@@ -1315,6 +1323,106 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         if self.search_input_selected == 'Viewer':
             self.vue_center_on_data()
 
+    def _get_viewer_celestial_wcs(self, coords):
+        """
+        Return the celestial WCS of ``coords``, cached per ``coords`` object.
+        """
+        cached = getattr(self, '_celestial_wcs_cache', None)
+        if cached is not None and cached[0] is coords:
+            return cached[1]
+
+        try:
+            wcs = _get_celestial_wcs(coords)
+        except ValueError as err:
+            # Some GWCS can't be approximated by FITS SIP. A 2D GWCS can still be used
+            # directly, although it returns NaN outside its bounding box
+            warnings.warn(f"Could not convert GWCS to FITS SIP: {err}", UserWarning)
+            wcs = coords if isinstance(coords, GWCS) and coords.pixel_n_dim == 2 else None
+
+        self._celestial_wcs_cache = (coords, wcs)
+        return wcs
+
+    def _get_viewer_info(self):
+        """
+        Return a dict with the selected viewer's sky center and ``fov_radius``.
+        """
+        # Check mixin object initialized
+        if not hasattr(self, "viewer"):
+            return {}
+
+        viewer = self.viewer.selected_obj
+        helper = self.app._jdaviz_helper
+        if viewer is None or helper is None or len(helper.datasets) < 1:
+            return {}
+
+        # nothing happens when there's no image in the viewer/the data doesn't have WCS
+        state = viewer.state
+        ref_data = state.reference_data
+        if ref_data is None or ref_data.coords is None:
+            return {}
+
+        # obtain center point of the current image and convert to sky coordinates
+        if ref_data.ndim == 3:
+            coords = self._get_viewer_celestial_wcs(ref_data.coords)
+            if coords is None:
+                return {}
+            skycoord_center = coords.pixel_to_world(
+                state.zoom_center_x, state.zoom_center_y
+            )
+        elif 'Orientation' in helper.plugins and helper.plugins['Orientation'].align_by == 'WCS':
+            skycoord_center = SkyCoord(
+                state.zoom_center_x, state.zoom_center_y, unit="deg"
+            )
+        else:
+            skycoord_center = ref_data.coords.pixel_to_world(
+                state.zoom_center_x, state.zoom_center_y
+            )
+
+        wcs = self._get_viewer_celestial_wcs(state.reference_data.coords)
+        fov_radius = None if wcs is None else (
+            get_viewer_fov_radius(state, skycoord_center, wcs=wcs))
+
+        return {
+            'ra_deg': skycoord_center.ra.deg,
+            'dec_deg': skycoord_center.dec.deg,
+            'frame': skycoord_center.frame.name.lower(),
+            'fov_radius': fov_radius,
+        }
+
+    def _update_viewer_values(self, info):
+        """
+        Update the live viewer center and FOV radius displays from ``info`` and,
+        if enabled, set the query radius to the FOV.
+        """
+        ra = info.get('ra_deg', "")
+        dec = info.get('dec_deg', "")
+        self.viewer_center_value = f"{ra:.8f} {dec:.8f}".strip()
+        fov_radius = info.get('fov_radius')
+        if fov_radius is None:
+            self.viewer_fov_radius_value = ""
+            return
+
+        fov_radius = fov_radius.to_value(self.radius_unit_selected)
+        self.viewer_fov_radius_value = f"{fov_radius:.8f} {self.radius_unit_selected}"
+        if self.radius_follow_viewer_fov:
+            self.radius = fov_radius
+
+    @observe('radius_follow_viewer_fov', 'radius_unit_selected')
+    def _on_radius_settings_changed(self, _=None):
+        if self.search_input_selected != 'Viewer':
+            return
+        self._update_viewer_values(self._get_viewer_info())
+
+    def _on_viewer_zoom_center_changed(self, *args):
+        self.vue_center_on_data(user_zoom_trigger=True)
+
+    def _on_viewer_zoom_radius_changed(self, *args):
+        # Zooming around the center doesn't change zoom_center_x/y, so the FOV
+        # needs its own callback. The center is unchanged, so don't touch viewer_centered.
+        if self.search_input_selected != 'Viewer':
+            return
+        self._update_viewer_values(self._get_viewer_info())
+
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
         # Check mixin object initialized
@@ -1323,33 +1431,20 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
 
         # Clear all existing subscriptions and resubscribe to selected viewer
         # NOTE: Viewer subscription needed regardless of coord_follow_viewer_pan in order
-        #   to detect when coords are centered on viewer, regardless of viewer tracking
+        #   to detect when coords are centered on viewer, regardless of viewer tracking,
+        #   and to keep the live viewer center and FOV displays up to date.
+        callbacks = (("zoom_center_x", self._on_viewer_zoom_center_changed),
+                     ("zoom_center_y", self._on_viewer_zoom_center_changed),
+                     ("zoom_radius", self._on_viewer_zoom_radius_changed))
         for viewer in self.viewer.viewers:
-            if viewer == self.viewer.selected_obj:
-                viewer.state.add_callback(
-                    "zoom_center_x",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
-                viewer.state.add_callback(
-                    "zoom_center_y",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
-            else:
-                # If not subscribed anyways, remove_callback should produce a no-op
-                try:
-                    viewer.state.remove_callback(
-                        "zoom_center_x",
-                        lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                    )
-                except TypeError:
-                    pass
-                try:
-                    viewer.state.remove_callback(
-                        "zoom_center_y",
-                        lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                    )
-                except TypeError:
-                    pass
+            for attr, callback in callbacks:
+                if not viewer.state.is_callback_property(attr):
+                    continue
+                if viewer == self.viewer.selected_obj:
+                    viewer.state.add_callback(attr, callback)
+                else:
+                    # nothing happens if not subscribed
+                    viewer.state.remove_callback(attr, callback)
         self.vue_center_on_data()
 
     @observe("coord_follow_viewer_pan", type="change")
@@ -1375,63 +1470,33 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         if self.search_input_selected != 'Viewer':
             return
 
+        info = self._get_viewer_info()
+        self._update_viewer_values(info)
+
         # If the user panned but tracking not enabled, don't recenter
-        if (user_zoom_trigger) and not self.coord_follow_viewer_pan:
+        if user_zoom_trigger and not self.coord_follow_viewer_pan:
             # Thus, we're no longer centered
             self.viewer_centered = False
             return
 
-        self.center_on_data()
+        self._center_on_data(info)
 
     def center_on_data(self):
         """
         If data is present in the default viewer, center the plugin's coordinates on
         the viewer's center WCS coordinates.
         """
-        if not hasattr(self, "viewer"):
-            # mixin object not yet initialized
-            return
+        self._center_on_data(self._get_viewer_info())
 
-        # gets the current viewer
-        viewer = self.viewer.selected_obj
-        ref_data = viewer.state.reference_data
-
-        # nothing happens in the case there is no image in the viewer
-        # additionally if the data does not have WCS
-        if (
-
-            len(self.app._jdaviz_helper.datasets) < 1
-            or ref_data is None
-            or ref_data.coords is None
-        ):
+    def _center_on_data(self, info):
+        if info is None:
+            # No data with WCS in the viewer
             self.source = ""
             return
 
-        # Obtain center point of the current image and convert into sky coordinates
-        helper = self._app._jdaviz_helper
-
-        if viewer.state.reference_data.ndim == 3:
-            coords = _get_celestial_wcs(viewer.state.reference_data.coords)
-            skycoord_center = coords.pixel_to_world(
-                viewer.state.zoom_center_x, viewer.state.zoom_center_y
-            )
-        elif 'Orientation' in helper.plugins and helper.plugins['Orientation'].align_by == 'WCS':
-            skycoord_center = SkyCoord(
-                viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
-            )
-        else:
-            skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
-                viewer.state.zoom_center_x, viewer.state.zoom_center_y
-            )
-
-        # Extract SkyCoord values as strings for plugin display
-        ra_deg = skycoord_center.ra.deg
-        dec_deg = skycoord_center.dec.deg
-        frame = skycoord_center.frame.name.lower()
-
         # Show center value in plugin
-        self.source = f"{ra_deg:.8f} {dec_deg:.8f}"
-        self.coordframe_selected = frame
+        self.source = f"{info['ra_deg']:.8f} {info['dec_deg']:.8f}"
+        self.coordframe_selected = info['frame']
 
         self.viewer_centered = True
 

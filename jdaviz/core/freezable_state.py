@@ -226,9 +226,11 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         # now x_min/max, y_min/max are in axes units (degrees if WCS-linked, pixels otherwise)
 
         with self.during_zoom_sync():
-            self.zoom_radius = abs(0.5 * min(x_max - x_min, y_max - y_min))
-            self.zoom_center_x = 0.5 * (x_max + x_min)
-            self.zoom_center_y = 0.5 * (y_max + y_min)
+            # Update atomically so listeners never see a partially-updated zoom state
+            with delay_callback(self, 'zoom_radius', 'zoom_center_x', 'zoom_center_y'):
+                self.zoom_radius = abs(0.5 * min(x_max - x_min, y_max - y_min))
+                self.zoom_center_x = 0.5 * (x_max + x_min)
+                self.zoom_center_y = 0.5 * (y_max + y_min)
 
     def _get_reset_limits(self, return_as_world=False):
         wcs_success = False
