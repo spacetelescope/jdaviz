@@ -528,6 +528,14 @@ export default {
     },
   },
   methods: {
+    onPluginViewClosed(event) {
+      const data = event.data;
+      if (event.origin === this._visibilityWindow.location.origin
+          && data && data.type === 'jdaviz:plugin-view-closed'
+          && data.app_id === this.visibility_id) {
+        this.plugin_view_closed(data);
+      }
+    },
     checkNotebookContext() {
       this.notebook_context = document.getElementById("ipython-main-app")
         || document.querySelector('.jp-LabShell')
@@ -567,6 +575,9 @@ export default {
     /* Workaround for https://github.com/jupyter-widgets/ipywidgets/issues/2499, can be removed when ipywidgets 8 is
      * released */
     const el = this.$refs.mainapp.$el;
+    this._visibilityWindow = el.ownerDocument.defaultView;
+    this._onPluginViewClosed = this.onPluginViewClosed;
+    this._visibilityWindow.addEventListener('message', this._onPluginViewClosed);
     const jpOutputElem = el.closest('.jp-OutputArea-output');
     if (jpOutputElem) {
       jpOutputElem.classList.remove('jupyter-widgets');
@@ -604,7 +615,10 @@ export default {
         }, 100);
       }, 500);
     }
-  }
+  },
+  beforeUnmount() {
+    this._visibilityWindow.removeEventListener('message', this._onPluginViewClosed);
+  },
 };
 </script>
 

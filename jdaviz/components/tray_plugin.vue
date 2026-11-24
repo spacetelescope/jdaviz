@@ -39,8 +39,11 @@
 export default {
   props: ['config', 'plugin_key', 'irrelevant_msg', 'disabled_msg', 'description',
           'api_hints_enabled', 'link', 'popout_button',
-          'uses_active_status', 'keep_active', 'scroll_to'],
+          'uses_active_status', 'keep_active', 'scroll_to', 'visibility'],
   methods: {
+    createViewId() {
+      return Array.from(this._window.crypto.getRandomValues(new Uint32Array(4))).join('-')
+    },
     boolToString(b) {
       if (b) {
         return 'True'
@@ -54,39 +57,98 @@ export default {
     getDisabledMsg() {
       return this.irrelevant_msg || this.disabled_msg || ''
     },
-    sendPing(recursive) {
-      if (!this.$el.isConnected) {
+    reportVisibility(visible) {
+      if (visible !== this._visible) {
+        this._visible = visible
+        if (this.visibility) {
+          this.visibility.report({view_id: this._viewId, visible})
+        }
+      }
+    },
+    updateVisibility() {
+      if (this._disposed) {
         return
       }
-      if (!document.hidden) {
-        this.$emit('plugin-ping', Date.now())
-      }
-      if (this.scroll_to) {
+      const style = this._window.getComputedStyle(this.$el)
+      const visible = !this._pageHidden && !this._document.hidden
+        && this.$el.isConnected && this.$el.getClientRects().length > 0
+        && style.visibility !== 'hidden' && style.visibility !== 'collapse'
+      this.reportVisibility(visible)
+      this.scrollIfRequested()
+    },
+    scrollIfRequested() {
+      if (this.scroll_to && this._visible) {
         this.$emit('update:scroll_to', false)
         this.$el.scrollIntoView({behavior: "smooth", block: "nearest", inline: "start"});
       }
-      if (!recursive) {
-        return
-      }
-      setTimeout(() => {
-        this.sendPing(true)
-      }, 200)  // ms
     },
-    checkNotebookContext() {
-      // copied from app.vue
-      this.notebook_context = document.getElementById("ipython-main-app")
-        || document.querySelector('.jp-LabShell')
-        || document.querySelector(".lm-Widget#main"); /* Notebook 7 */
-      return this.notebook_context;
+  },
+  watch: {
+    scroll_to() {
+      this.$nextTick(() => this.scrollIfRequested())
     },
   },
   mounted() {
-    this.sendPing(true);
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        this.sendPing(false)
+    this._document = this.$el.ownerDocument
+    this._window = this._document.defaultView
+    this._viewId = this.createViewId()
+    this._visible = false
+    this._pageHidden = false
+    this._disposed = false
+    this._onVisibilityChange = () => this.updateVisibility()
+    this._onPageHide = () => {
+      this._pageHidden = true
+      // The popout's kernel connection may already be disposed by beforeunload.
+      // Use the opener instead: a direct report can throw before the relay runs.
+      const opener = this._window.opener
+      if (this.visibility && opener && !opener.closed) {
+        this._visible = false
+        opener.postMessage({
+          type: 'jdaviz:plugin-view-closed',
+          app_id: this.visibility.app_id,
+          plugin_id: this.visibility.plugin_id,
+          view_id: this._viewId,
+        }, this._window.location.origin)
+      } else {
+        this.updateVisibility()
       }
-    });
+    }
+    this._onPageShow = () => {
+      // A delayed close relayed by the opener must not hide a restored BFCache view.
+      if (this._pageHidden) {
+        this._viewId = this.createViewId()
+      }
+      this._pageHidden = false
+      this.updateVisibility()
+    }
+    // Notebook outputs can be detached without unmounting Vue. Also watch ancestors
+    // for CSS hiding (e.g. inactive notebook/sidecar tabs), but not viewport intersection.
+    this._visibilityObserver = new this._window.MutationObserver(records => {
+      if (records.some(record => record.type === 'attributes'
+        ? record.target.contains(this.$el)
+        : [...record.addedNodes, ...record.removedNodes].some(node => node.contains(this.$el)))) {
+        this.updateVisibility()
+      }
+    })
+    this._visibilityObserver.observe(this._document.documentElement, {
+      subtree: true, childList: true, attributes: true,
+      attributeFilter: ['class', 'style', 'hidden'],
+    })
+    this._resizeObserver = new this._window.ResizeObserver(this._onVisibilityChange)
+    this._resizeObserver.observe(this.$el)
+    this._document.addEventListener('visibilitychange', this._onVisibilityChange)
+    this._window.addEventListener('pagehide', this._onPageHide)
+    this._window.addEventListener('pageshow', this._onPageShow)
+    this.updateVisibility()
+  },
+  beforeUnmount() {
+    this._disposed = true
+    this.reportVisibility(false)
+    this._visibilityObserver.disconnect()
+    this._resizeObserver.disconnect()
+    this._document.removeEventListener('visibilitychange', this._onVisibilityChange)
+    this._window.removeEventListener('pagehide', this._onPageHide)
+    this._window.removeEventListener('pageshow', this._onPageShow)
   },
 };
 </script>
