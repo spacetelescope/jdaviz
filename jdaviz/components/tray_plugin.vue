@@ -2,33 +2,35 @@
   <v-container
     class="tray-plugin"
     style="padding-left: 24px; padding-right: 24px; padding-top: 12px" >
-    <j-flex-row>
-      <div style="width: calc(100% - 32px)">
-        <j-docs-link :link="link">{{ description }}</j-docs-link>
-      </div>
+    <div style="min-width: 400px">
+      <j-flex-row>
+        <div style="width: calc(100% - 32px)">
+          <j-docs-link :link="link">{{ description }}</j-docs-link>
+        </div>
 
-      <div style="width: 32px">
-        <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
-      </div>
-    </j-flex-row>
-
-    <j-flex-row v-if="isDisabled()">
-      <span> {{ getDisabledMsg() }}</span>
-    </j-flex-row>
-    <div v-else>
-      <j-flex-row v-if="uses_active_status && keep_active !== undefined" style="padding-bottom: 24px">
-        <!-- TODO: update:keep_active is not working!!! -->
-        <plugin-switch
-          :value="keep_active"
-          @update:value="$emit('update:keep_active', $event)"
-          label="Keep active"
-          api_hint="plg.keep_active = "
-          :api_hints_enabled="api_hints_enabled"
-          hint="Consider plugin active (showing any previews and enabling all keypress events) even when not opened"
-        />
+        <div style="width: 32px">
+          <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
+        </div>
       </j-flex-row>
 
-      <slot></slot>
+      <j-flex-row v-if="isDisabled()">
+        <span> {{ getDisabledMsg() }}</span>
+      </j-flex-row>
+      <div v-else>
+        <j-flex-row v-if="uses_active_status && keep_active !== undefined" style="padding-bottom: 24px">
+          <!-- TODO: update:keep_active is not working!!! -->
+          <plugin-switch
+            :value="keep_active"
+            @update:value="$emit('update:keep_active', $event)"
+            label="Keep active"
+            api_hint="plg.keep_active = "
+            :api_hints_enabled="api_hints_enabled"
+            hint="Consider plugin active (showing any previews and enabling all keypress events) even when not opened"
+          />
+        </j-flex-row>
+
+        <slot></slot>
+      </div>
     </div>
   </v-container>
 </template>
