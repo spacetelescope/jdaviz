@@ -30,6 +30,10 @@ Bug Fixes
 
 * Improves layout of "about" menu. [#4564, #4572]
 
+* Fixed extremely slow loading of FITS files containing large binary tables (e.g. TESS/Kepler
+  light curve products): the Ramp importer no longer builds a per-row integration select for
+  inputs it will reject as invalid. [#4565]
+
 Mosviz
 ^^^^^^
 
