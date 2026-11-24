@@ -28,7 +28,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-* Improves layout of "about" menu. [#4564, #4572]
+- Improves layout of "about" menu. [#4564, #4572]
+
+- Fix a divide by zero error when there is only one flag in the DQ extension. [#4565]
 
 Mosviz
 ^^^^^^
