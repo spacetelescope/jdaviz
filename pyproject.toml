@@ -71,7 +71,8 @@ all = [
     "pysiaf",
     "strauss",
     "qtpy",
-    "PySide6",
+    # PySide6 6.12 breaks Python 3.15 lazy imports (e.g., in humanize)
+    "PySide6; python_version < '3.15'",
     "roman_datamodels>=0.26.0"
 ]
 test = [
@@ -94,7 +95,8 @@ strauss = [
 ]
 qt = [
     "qtpy",
-    "PySide6"
+    # PySide6 6.12 breaks Python 3.15 lazy imports (e.g., in humanize)
+    "PySide6; python_version < '3.15'"
 ]
 
 [build-system]
