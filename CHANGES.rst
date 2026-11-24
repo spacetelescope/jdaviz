@@ -28,7 +28,7 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-* Improves layout of "about" menu. [#4564]
+* Improves layout of "about" menu. [#4564, #4572]
 
 Mosviz
 ^^^^^^
