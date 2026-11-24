@@ -74,7 +74,8 @@ class AstroqueryResolver(BaseConeSearchResolver):
                 "telescope",
                 "max_results",
                 "query_archive",
-                "limit_to_science_products"
+                "limit_to_science_products",
+                "radius_follow_viewer_fov"
             ],
         )
 
