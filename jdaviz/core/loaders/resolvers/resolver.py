@@ -1056,9 +1056,9 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
     coordframe_selected = Unicode("icrs").tag(sync=True)
     radius = FloatHandleEmpty(1).tag(sync=True)
     radius_unit_items = List().tag(sync=True)
-    radius_unit_selected = Unicode("deg").tag(sync=True)
+    radius_unit_selected = Unicode("arcmin").tag(sync=True)
     viewer_fov_radius_value = Unicode("").tag(sync=True)
-    radius_follow_viewer_fov = Bool(False).tag(sync=True)
+    radius_sync_with_viewer_fov = Bool(False).tag(sync=True)
 
     max_results = IntHandleEmpty(1000).tag(sync=True)
     returned_no_results = Bool(False).tag(sync=True)
@@ -1069,6 +1069,8 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
     _catalog_source_index_colname = 'source_index'
     # label of the source currently being queried, used in query failure messages
     _current_query_source_label = None
+    # last viewer limits handled by _on_viewer_limits_changed, used to skip repeat callbacks
+    _last_viewer_limits = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1147,10 +1149,10 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             self, items="radius_unit_items", selected="radius_unit_selected"
         )
         self.radius_unit.choices = ["deg", "rad", "arcmin", "arcsec"]
-        self.radius_unit.selected = "deg"
+        self.radius_unit.selected = "arcmin"
 
-        self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
-        self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
+        self.hub.subscribe(self, AddDataMessage, handler=self._refresh_from_viewer)
+        self.hub.subscribe(self, RemoveDataMessage, handler=self._refresh_from_viewer)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
 
         # viewer_selected may have been set while constructing ViewerSelect, before
@@ -1317,12 +1319,6 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             # Otherwise default to first choice if any are valid
             self.catalog_name_col.selected = self.catalog_name_col.choices[0]
 
-    @observe('search_input_selected')
-    def _on_search_input_selected(self, msg=None):
-        """When switching to Viewer mode, immediately center on the current viewer."""
-        if self.search_input_selected == 'Viewer':
-            self.vue_center_on_data()
-
     def _get_viewer_celestial_wcs(self, coords):
         """
         Return the celestial WCS of ``coords``, cached per ``coords`` object.
@@ -1390,43 +1386,57 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             'fov_radius': fov_radius,
         }
 
-    def _update_viewer_values(self, info):
+    @observe('search_input_selected', 'coord_follow_viewer_pan')
+    def _refresh_from_viewer(self, *args, recenter=True):
         """
-        Update the live viewer center and FOV radius displays from ``info`` and,
-        if enabled, set the query radius to the FOV.
+        Sync with the selected viewer when in Viewer input mode: update the live viewer
+        center and FOV displays, ``radius`` (if synced to the FOV) and ``viewer_centered``,
+        and recenter ``source`` on the viewer if ``recenter``. Positional arguments are
+        ignored so this can be used directly as a traitlet or hub callback.
         """
-        if info is None:
-            self.viewer_center_value = ""
-            self.viewer_fov_radius_value = ""
+        if self.search_input_selected != 'Viewer':
             return
+        info = self._get_viewer_info()
 
-        self.viewer_center_value = f"{info['ra_deg']:.8f} {info['dec_deg']:.8f}"
+        center_value = fov_value = ""
+        if info is not None:
+            center_value = f"{info['ra_deg']:.8f} {info['dec_deg']:.8f}"
+            if recenter:
+                self.source = center_value
+                self.coordframe_selected = info['frame']
+            if info['fov_radius'] is not None:
+                fov_radius = info['fov_radius'].to_value(self.radius_unit_selected)
+                fov_value = f"{fov_radius:.8f} {self.radius_unit_selected}"
+                if self.radius_sync_with_viewer_fov:
+                    self.radius = fov_radius
+        elif recenter:
+            # No data with WCS in the viewer
+            self.source = ""
 
-        fov_radius = info['fov_radius']
-        if fov_radius is None:
-            self.viewer_fov_radius_value = ""
-            return
+        self.viewer_center_value = center_value
+        self.viewer_fov_radius_value = fov_value
+        self.viewer_centered = (info is not None
+                                and self.source == center_value
+                                and self.coordframe_selected == info['frame'])
 
-        fov_radius = fov_radius.to_value(self.radius_unit_selected)
-        self.viewer_fov_radius_value = f"{fov_radius:.8f} {self.radius_unit_selected}"
-        if self.radius_follow_viewer_fov:
-            self.radius = fov_radius
-
-    @observe('radius_follow_viewer_fov', 'radius_unit_selected')
+    @observe('radius_sync_with_viewer_fov', 'radius_unit_selected')
     def _on_radius_settings_changed(self, _=None):
+        self._refresh_from_viewer(recenter=False)
+
+    def _on_viewer_limits_changed(self, *args):
+        """
+        Callback for the selected viewer's limits, which both the center and FOV are
+        derived from. A single pan/zoom fires this once per changed limit, so skip
+        repeats for limits that were already handled.
+        """
         if self.search_input_selected != 'Viewer':
             return
-        self._update_viewer_values(self._get_viewer_info())
-
-    def _on_viewer_zoom_center_changed(self, *args):
-        self.vue_center_on_data(user_zoom_trigger=True)
-
-    def _on_viewer_zoom_radius_changed(self, *args):
-        # Zooming around the center doesn't change zoom_center_x/y, so the FOV
-        # needs its own callback. The center is unchanged, so don't touch viewer_centered.
-        if self.search_input_selected != 'Viewer':
+        state = self.viewer.selected_obj.state
+        limits = (state.x_min, state.x_max, state.y_min, state.y_max)
+        if limits == self._last_viewer_limits:
             return
-        self._update_viewer_values(self._get_viewer_info())
+        self._last_viewer_limits = limits
+        self._refresh_from_viewer(recenter=self.coord_follow_viewer_pan)
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
@@ -1438,72 +1448,21 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         # NOTE: Viewer subscription needed regardless of coord_follow_viewer_pan in order
         #   to detect when coords are centered on viewer, regardless of viewer tracking,
         #   and to keep the live viewer center and FOV displays up to date.
-        callbacks = (("zoom_center_x", self._on_viewer_zoom_center_changed),
-                     ("zoom_center_y", self._on_viewer_zoom_center_changed),
-                     ("zoom_radius", self._on_viewer_zoom_radius_changed))
+        self._last_viewer_limits = None
         for viewer in self.viewer.viewers:
-            for attr, callback in callbacks:
+            for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
                 if not viewer.state.is_callback_property(attr):
                     continue
                 if viewer == self.viewer.selected_obj:
-                    viewer.state.add_callback(attr, callback)
+                    viewer.state.add_callback(attr, self._on_viewer_limits_changed)
                 else:
                     # nothing happens if not subscribed
-                    viewer.state.remove_callback(attr, callback)
-        self.vue_center_on_data()
+                    viewer.state.remove_callback(attr, self._on_viewer_limits_changed)
+        self._refresh_from_viewer()
 
-    @observe("coord_follow_viewer_pan", type="change")
-    def _toggle_viewer_pan_tracking(self, _=None):
-        """Detects when live viewer tracking toggle is clicked and centers on data if necessary"""
-        if self.search_input_selected != 'Viewer':
-            return
-        # Center on data if we're enabling the toggle
-        if self.coord_follow_viewer_pan:
-            self.vue_center_on_data()
-
-    def _on_link_type_updated(self, _=None, user_zoom_trigger=False):
+    def _on_link_type_updated(self, _=None):
         super()._on_link_type_updated()
-        self.vue_center_on_data(user_zoom_trigger=user_zoom_trigger)
-
-    def vue_center_on_data(self, _=None, user_zoom_trigger=False):
-        """
-        This vue method serves two purposes:
-        * UI entrypoint for the manual viewer center button
-        * Callback method for user panning (sub'ed to zoom_center_x/zoom_center_y)
-        """
-        # Only auto center when in Viewer input mode
-        if self.search_input_selected != 'Viewer':
-            return
-
-        info = self._get_viewer_info()
-        self._update_viewer_values(info)
-
-        # If the user panned but tracking not enabled, don't recenter
-        if user_zoom_trigger and not self.coord_follow_viewer_pan:
-            # Thus, we're no longer centered
-            self.viewer_centered = False
-            return
-
-        self._center_on_data(info)
-
-    def center_on_data(self):
-        """
-        If data is present in the default viewer, center the plugin's coordinates on
-        the viewer's center WCS coordinates.
-        """
-        self._center_on_data(self._get_viewer_info())
-
-    def _center_on_data(self, info):
-        if info is None:
-            # No data with WCS in the viewer
-            self.source = ""
-            return
-
-        # Show center value in plugin
-        self.source = f"{info['ra_deg']:.8f} {info['dec_deg']:.8f}"
-        self.coordframe_selected = info['frame']
-
-        self.viewer_centered = True
+        self._refresh_from_viewer()
 
     def _get_catalog_row_indices(self, data):
         """
