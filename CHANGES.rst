@@ -1,11 +1,10 @@
-5.2.0 (unreleased)
+5.2 (unreleased)
 ================
 
 New Features
 ------------
 
-- Allow user to toggle whether to use the viewer FOV as the radius for a
-  query in the astroquery and VO loaders. [#4576]
+- Allow user to toggle whether to use the viewer FOV as the radius for a query in the astroquery and VO loaders. [#4576]
 
 Mosviz
 ^^^^^^
