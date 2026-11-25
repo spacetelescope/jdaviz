@@ -1434,7 +1434,7 @@ def get_viewer_fov_radius(state, skycoord_center, wcs=None):
 
     Parameters
     ----------
-    state : `~glue.viewers.image.state.Cube/ImageViewerState`
+    state : `~glue.viewers.image.state.ImageViewerState`
         State of the cube/image viewer.
     skycoord_center : `~astropy.coordinates.SkyCoord`
         Sky coordinate of the cone center.
