@@ -9,14 +9,10 @@ from jdaviz.core.events import FootprintOverlayClickMessage
 import numpy as np
 import pytest
 from astropy import units as u
-from astropy.coordinates import ICRS
 from astropy.io import fits
-from astropy.modeling import models
 from astropy.nddata import NDData
 from astropy.table import QTable, Table
-from gwcs import coordinate_frames as cf, wcs as gwcs_wcs
 from numpy.testing import assert_allclose
-from specutils import Spectrum
 
 
 # Create a minimal test class that mimics the resolver behavior
