@@ -1,14 +1,22 @@
 from jdaviz.app import PrivateApplication
+from jdaviz.configs.imviz.tests.utils import create_example_gwcs
 from jdaviz.core.loaders.resolvers.resolver import BaseResolver, find_closest_polygon_mark
 from jdaviz.core.marks import RegionOverlay
-from jdaviz.utils import find_polygon_mark_with_skewer
+from jdaviz.utils import (find_polygon_mark_with_skewer, get_viewer_fov_radius,
+                          _get_celestial_wcs)
 from jdaviz.core.events import FootprintOverlayClickMessage
 
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.coordinates import ICRS
 from astropy.io import fits
+from astropy.modeling import models
+from astropy.nddata import NDData
 from astropy.table import QTable, Table
+from gwcs import coordinate_frames as cf, wcs as gwcs_wcs
+from numpy.testing import assert_allclose
+from specutils import Spectrum
 
 
 # Create a minimal test class that mimics the resolver behavior
@@ -882,3 +890,138 @@ class TestIsValid:
 
         with pytest.raises(ValueError, match='No valid loaders found for input.'):
             deconfigged_helper.load('this_file_does_not_exist.fits')
+
+
+class TestConeSearchViewerFOV:
+
+    @pytest.fixture(autouse=True)
+    def _setup(self, deconfigged_helper, image_2d_wcs):
+        deconfigged_helper.load(NDData(np.ones((10, 10)), wcs=image_2d_wcs),
+                                format='Image', data_label='img')
+        self.helper = deconfigged_helper
+        self.ldr = deconfigged_helper.loaders['virtual observatory']._obj
+        viewer = deconfigged_helper.viewers['Image']._obj.glue_viewer
+        # Since we're not displaying, need this to test zoom
+        viewer.shape = (100, 100)
+        viewer.state._set_axes_aspect_ratio(1)
+        self.state = viewer.state
+
+    def _expected(self, unit=u.deg):
+        state = self.state
+        center = state.reference_data.coords.pixel_to_world(state.zoom_center_x,
+                                                            state.zoom_center_y)
+        return center, get_viewer_fov_radius(state, center).to_value(unit)
+
+    def test_radius_follows_fov(self):
+        ldr = self.ldr
+
+        ldr.radius = 2
+        ldr.radius_follow_viewer_fov = True
+        assert ldr.radius == 2
+        assert ldr.viewer_center_value == ldr.viewer_fov_radius_value == ''
+
+        ldr.search_input.selected = 'Viewer'
+        center, fov = self._expected()
+        assert_allclose([float(v) for v in ldr.viewer_center_value.split()],
+                        [center.ra.deg, center.dec.deg])
+        assert ldr.source == ldr.viewer_center_value
+        assert ldr.viewer_fov_radius_value == f'{fov:.8f} deg'
+        assert_allclose(ldr.radius, fov)
+
+        # changing the unit converts the radius and FOV display
+        ldr.radius_unit.selected = 'arcsec'
+        _, fov = self._expected(u.arcsec)
+        assert ldr.viewer_fov_radius_value == f'{fov:.8f} {ldr.radius_unit.selected}'
+        assert_allclose(ldr.radius, fov)
+
+        # zooming around the center updates the radius but leaves the query centered
+        source = ldr.source
+        self.state.zoom_radius /= 4
+        _, fov = self._expected(u.arcsec)
+        assert_allclose(ldr.radius, fov)
+        assert ldr.source == source and ldr.viewer_centered
+
+        # when not following, the FOV display updates but the radius doesn't
+        ldr.radius_follow_viewer_fov = False
+        self.state.zoom_radius *= 2
+        _, fov = self._expected(u.arcsec)
+        assert ldr.viewer_fov_radius_value == f'{fov:.8f} {ldr.radius_unit.selected}'
+        assert ldr.radius != fov
+
+    def test_pan(self):
+        ldr = self.ldr
+        ldr.search_input.selected = 'Viewer'
+        ldr.radius_follow_viewer_fov = True
+        source = ldr.source
+
+        # panning without tracking updates the viewer display, not the query
+        self.state.zoom_center_x += 1
+        center, _ = self._expected()
+        assert ldr.viewer_center_value == f'{center.ra.deg:.8f} {center.dec.deg:.8f}'
+        assert ldr.source == source and not ldr.viewer_centered
+
+        ldr.coord_follow_viewer_pan = True
+        assert ldr.source == ldr.viewer_center_value and ldr.viewer_centered
+
+        # panning off the data clears the FOV, the radius keeps its last value
+        radius = ldr.radius
+        self.state.x_min, self.state.x_max = 100, 200
+        assert ldr.viewer_fov_radius_value == ''
+        assert ldr.radius == radius
+
+    def test_viewer_callbacks(self):
+        self.helper.new_viewers['Image']()
+        self.helper._app.add_data_to_viewer('Image (1)', 'img[DATA]')
+        state_1 = self.helper.viewers['Image (1)']._obj.glue_viewer.state
+
+        # a resolver constructed after the viewer exists must still subscribe to it
+        ldr = type(self.ldr)(app=self.ldr.app)
+        ldr.search_input.selected = 'Viewer'
+        assert ldr.viewer.selected == 'Image' and ldr.viewer_centered
+        self.state.zoom_center_x += 1
+        assert not ldr.viewer_centered
+
+        # switching viewers moves the subscriptions
+        ldr.viewer.selected = 'Image (1)'
+        values = (ldr.viewer_center_value, ldr.viewer_fov_radius_value)
+        self.state.zoom_center_x += 1
+        self.state.zoom_radius /= 4
+        assert (ldr.viewer_center_value, ldr.viewer_fov_radius_value) == values
+        state_1.zoom_radius /= 4
+        assert ldr.viewer_fov_radius_value != values[1]
+        state_1.zoom_center_x += 1
+        assert ldr.viewer_center_value != values[0]
+
+    def test_wcs_alignment(self):
+        ldr = self.ldr
+        ldr.search_input.selected = 'Viewer'
+        expected = [float(v) for v in
+                    (ldr.viewer_center_value.split() + ldr.viewer_fov_radius_value.split()[:1])]
+        self.helper.plugins['Orientation'].align_by = 'WCS'
+        result = [float(v) for v in
+                  (ldr.viewer_center_value.split() + ldr.viewer_fov_radius_value.split()[:1])]
+        assert_allclose(result, expected, rtol=1e-6)
+
+    def test_get_viewer_celestial_wcs(self, image_2d_wcs):
+        # WCS.celestial returns a new object on every call, so identity means it was cached
+        wcs = self.ldr._get_viewer_celestial_wcs(image_2d_wcs)
+        assert self.ldr._get_viewer_celestial_wcs(image_2d_wcs) is wcs
+
+        # if conversion fails, a 2D GWCS is used directly, anything else isn't usable
+        gwcs = create_example_gwcs((10, 10))
+        gwcs.bounding_box = None
+        with pytest.warns(UserWarning, match='Could not convert GWCS to FITS SIP'):
+            assert self.ldr._get_viewer_celestial_wcs(gwcs) is gwcs
+
+
+def test_cone_search_cube_viewer(deconfigged_helper, spectrum1d_cube_larger):
+    deconfigged_helper.load(spectrum1d_cube_larger, format='3D Spectrum', data_label='cube')
+    ldr = deconfigged_helper.loaders['virtual observatory']._obj
+    state = ldr.viewer.selected_obj.state
+    ldr.search_input.selected = 'Viewer'
+
+    wcs = _get_celestial_wcs(state.reference_data.coords)
+    center = wcs.pixel_to_world(state.zoom_center_x, state.zoom_center_y)
+    fov = get_viewer_fov_radius(state, center, wcs=wcs).to_value(u.deg)
+    assert ldr.viewer_center_value == f'{center.ra.deg:.8f} {center.dec.deg:.8f}'
+    assert ldr.viewer_fov_radius_value == f'{fov:.8f} deg'
