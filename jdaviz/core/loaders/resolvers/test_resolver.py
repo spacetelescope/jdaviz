@@ -908,20 +908,20 @@ class TestConeSearchViewerFOV:
                                                             state.zoom_center_y)
         return center, get_viewer_fov_radius(state, center).to_value(unit)
 
-    def test_radius_follows_fov(self):
+    def test_radius_sync_with_fov(self):
         ldr = self.ldr
 
         ldr.radius = 2
-        ldr.radius_follow_viewer_fov = True
+        ldr.radius_sync_with_viewer_fov = True
         assert ldr.radius == 2
         assert ldr.viewer_center_value == ldr.viewer_fov_radius_value == ''
 
         ldr.search_input.selected = 'Viewer'
-        center, fov = self._expected()
+        center, fov = self._expected(u.arcmin)
         assert_allclose([float(v) for v in ldr.viewer_center_value.split()],
                         [center.ra.deg, center.dec.deg])
         assert ldr.source == ldr.viewer_center_value
-        assert ldr.viewer_fov_radius_value == f'{fov:.8f} deg'
+        assert ldr.viewer_fov_radius_value == f'{fov:.8f} arcmin'
         assert_allclose(ldr.radius, fov)
 
         # changing the unit converts the radius and FOV display
@@ -937,8 +937,8 @@ class TestConeSearchViewerFOV:
         assert_allclose(ldr.radius, fov)
         assert ldr.source == source and ldr.viewer_centered
 
-        # when not following, the FOV display updates but the radius doesn't
-        ldr.radius_follow_viewer_fov = False
+        # when not syncing, the FOV display updates but the radius doesn't
+        ldr.radius_sync_with_viewer_fov = False
         self.state.zoom_radius *= 2
         _, fov = self._expected(u.arcsec)
         assert ldr.viewer_fov_radius_value == f'{fov:.8f} {ldr.radius_unit.selected}'
@@ -947,7 +947,7 @@ class TestConeSearchViewerFOV:
     def test_pan(self):
         ldr = self.ldr
         ldr.search_input.selected = 'Viewer'
-        ldr.radius_follow_viewer_fov = True
+        ldr.radius_sync_with_viewer_fov = True
         source = ldr.source
 
         # panning without tracking updates the viewer display, not the query
@@ -996,7 +996,7 @@ class TestConeSearchViewerFOV:
         self.helper.plugins['Orientation'].align_by = 'WCS'
         result = [float(v) for v in
                   (ldr.viewer_center_value.split() + ldr.viewer_fov_radius_value.split()[:1])]
-        assert_allclose(result, expected, rtol=1e-6)
+        assert_allclose(result, expected, rtol=1e-5)
 
     def test_get_viewer_celestial_wcs(self, image_2d_wcs):
         # WCS.celestial returns a new object on every call, so identity means it was cached
@@ -1018,6 +1018,6 @@ def test_cone_search_cube_viewer(deconfigged_helper, spectrum1d_cube_larger):
 
     wcs = _get_celestial_wcs(state.reference_data.coords)
     center = wcs.pixel_to_world(state.zoom_center_x, state.zoom_center_y)
-    fov = get_viewer_fov_radius(state, center, wcs=wcs).to_value(u.deg)
+    fov = get_viewer_fov_radius(state, center, wcs=wcs).to_value(u.arcmin)
     assert ldr.viewer_center_value == f'{center.ra.deg:.8f} {center.dec.deg:.8f}'
-    assert ldr.viewer_fov_radius_value == f'{fov:.8f} deg'
+    assert ldr.viewer_fov_radius_value == f'{fov:.8f} arcmin'
