@@ -84,11 +84,10 @@
               hide-details
               density="compact"
             ></v-switch>
-            <span style="font-size: 1rem; font-weight: 500; padding-left: 8px">Follow Viewer Center</span>
+            <span style="font-size: 1rem; font-weight: 500; padding-left: 8px;">Follow Viewer Center</span>
             <div></div>
-            <span class="text-medium-emphasis" style="font-size: 0.875rem; margin-top: -6px; padding-left: 8px">Viewer: {{ viewer_center_value }}</span>
-            <div v-if="!viewer_centered && source"></div>
-            <span v-if="!viewer_centered && source" class="text-medium-emphasis" style="font-size: 0.875rem; padding-left: 8px">Query: {{ source }}</span>
+            <span v-if="viewer_centered && viewer_center_value" class="text-medium-emphasis" style="font-size: 0.875rem; padding-left: 8px">{{ viewer_center_value }}</span>
+            <span v-else-if="source" class="text-medium-emphasis" style="font-size: 0.875rem; margin-top: -6px; padding-left: 8px">{{ source }}</span>
           </div>
           <div class="text-medium-emphasis" style="font-size: 0.75rem; margin-top: 2px">
             Automatically adjust coordinates as viewer pans and zooms.
@@ -98,17 +97,17 @@
         <div style="display: flex; flex-direction: column; gap: 2px; padding-top: 4px; padding-bottom: 4px">
           <div style="display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 8px">
             <v-switch
-              v-model="radius_follow_viewer_fov"
+              v-model="radius_sync_with_viewer_fov"
               color="primary"
               hide-details
               density="compact"
             ></v-switch>
-            <span style="font-size: 1rem; font-weight: 500; padding-left: 8px">Set Radius from FOV</span>
+            <span style="font-size: 1rem; font-weight: 500; padding-left: 8px">Sync Radius with FOV</span>
             <div></div>
             <span class="text-medium-emphasis" style="font-size: 0.875rem; margin-top: -6px; padding-left: 8px">{{ viewer_fov_radius_value }}</span>
           </div>
-          <div class="text-medium-emphasis" style="font-size: 0.75rem; margin-top: 2px">
-            Set the query radius to match the viewer's field of view.
+          <div class="text-medium-emphasis" style="font-size: 0.75rem; margin-top: 2px; margin-bottom: 10px">
+            Sync the query radius with the viewer's field of view.
           </div>
         </div>
 
@@ -206,7 +205,7 @@
             variant="underlined"
             v-model.number="radius"
             type="number"
-            :disabled="search_input_selected === 'Viewer' && radius_follow_viewer_fov"
+            :disabled="search_input_selected === 'Viewer' && radius_sync_with_viewer_fov"
             :label="api_hints_enabled ? 'ldr.radius =' : 'Radius'"
             :class="api_hints_enabled ? 'api-hint' : null">
           </v-text-field>
