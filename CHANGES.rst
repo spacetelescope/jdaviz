@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Allow pulling coordinates from metadata for astroquery search. [#4571]
+
 Mosviz
 ^^^^^^
 
