@@ -606,3 +606,18 @@ def test_select_catalog_table_rows(deconfigged_helper, image_2d_wcs):
     # test select_none
     catalogs_plugin.select_none()
     assert len(plugin_table.selected_rows) == 0
+
+
+def test_search_no_viewer_overlap(deconfigged_helper, image_2d_wcs):
+    """The search is skipped, with a warning, when the viewer doesn't overlap the data."""
+    deconfigged_helper.load(NDData(np.ones((10, 10)), wcs=image_2d_wcs),
+                            format='Image', data_label='img')
+    catalogs_plugin = deconfigged_helper.plugins["Catalog Search"]._obj
+    viewer = catalogs_plugin.viewer.selected_obj
+    viewer.state.x_min, viewer.state.x_max = 100, 200
+
+    assert catalogs_plugin.search() is None
+    assert not catalogs_plugin.results_available
+    assert catalogs_plugin.number_of_results == 0
+    assert ("Couldn't determine search radius"
+            in deconfigged_helper.plugins['Logger'].history[-1]['text'])

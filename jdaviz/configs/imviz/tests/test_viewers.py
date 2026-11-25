@@ -3,6 +3,7 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
+from echo import delay_callback
 from regions import CirclePixelRegion, PixCoord, PolygonSkyRegion
 
 from jdaviz.app import PrivateApplication
@@ -149,6 +150,30 @@ def test_zoom_center_radius_init(deconfigged_helper):
     assert viewer._obj.glue_viewer.state.zoom_center_x > 0
     assert viewer._obj.glue_viewer.state.zoom_center_y > 0
     assert viewer._obj.glue_viewer.state.zoom_radius > 0
+
+
+def test_zoom_center_radius_update_atomic(deconfigged_helper):
+    """Listeners of any zoom property see the fully-updated zoom state."""
+    deconfigged_helper.load(np.ones((10, 10)), data_label='my_array', format='Image')
+    state = deconfigged_helper.viewers['Image']._obj.glue_viewer.state
+
+    seen = []
+
+    def _record(*args):
+        seen.append((state.zoom_radius, state.zoom_center_x, state.zoom_center_y))
+
+    for attr in ('zoom_radius', 'zoom_center_x', 'zoom_center_y'):
+        state.add_callback(attr, _record)
+
+    # pan and zoom at once so all three properties change
+    with delay_callback(state, 'x_min', 'x_max', 'y_min', 'y_max'):
+        state.x_min, state.x_max, state.y_min, state.y_max = 2, 4, 3, 5
+
+    assert len(seen) > 0
+    expected = (state.zoom_radius, state.zoom_center_x, state.zoom_center_y)
+    assert_allclose(expected, (1, 3, 4))
+    for values in seen:
+        assert values == expected
 
 
 def test_catalog_in_image_viewer(deconfigged_helper, image_2d_wcs,
