@@ -1387,7 +1387,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         }
 
     @observe('search_input_selected', 'coord_follow_viewer_pan')
-    def _refresh_from_viewer(self, *args, recenter=True):
+    def _refresh_from_viewer(self, change=None, recenter=True):
         """
         Sync with the selected viewer when in Viewer input mode: update the live viewer
         center and FOV displays, ``radius`` (if synced to the FOV) and ``viewer_centered``,
