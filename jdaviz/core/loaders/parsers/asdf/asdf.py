@@ -1,6 +1,6 @@
 from functools import cached_property
 import asdf
-import warnings
+from pathlib import Path
 
 from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
@@ -19,11 +19,12 @@ __all__ = ['ASDFParser']
 class ASDFParser(BaseParser):
 
     def _check_is_valid(self):
-        # generalized jdaviz isn't the valid config name, but we can
-        # drop it here for the string output.
-        accepted_configs = ['imviz', 'specviz', 'specviz2d', 'rampviz', 'generalized jdaviz']
+        accepted_configs = ['imviz', 'specviz', 'specviz2d', 'rampviz']
+        # NOTE: temporary during deconfig process
         if self._app.config not in ['deconfigged'] + accepted_configs:
-            # NOTE: temporary during deconfig process
+            # generalized jdaviz isn't the valid config name, but we can
+            # drop it here for the string output.
+            accepted_configs += ['and generalized jdaviz']
             return f"asdf format is only supported in {', '.join(accepted_configs)}."
 
         _ = self.output
@@ -34,22 +35,34 @@ class ASDFParser(BaseParser):
         if HAS_ROMAN_DATAMODELS:
             try:
                 return rdd.open(self.input)
-            except (ImportError, TypeError) as e:  # noqa: F841
-                warnings.warn(
-                    f"{self.input} could not be opened with the `roman_datamodels` package, "
-                    f"as it gave the following error: {e}. This file will be loaded with the `asdf` package directly",  # noqa: E501
-                    UserWarning
-                )
-        else:
-            warnings.warn(
-                f"{self.input} should be opened with the `roman_datamodels` package, "
-                "which is not installed in this environment. To install optional "
-                "jdaviz dependencies for Roman, you can run:  \n\n"
-                "pip install -U jdaviz[roman]\n\n"
-                "This file will be loaded with the `asdf` package instead.\n\n",
-                UserWarning
-            )
-        return asdf.open(self.input)
+            except (ImportError, TypeError) as e:
+                msg_txt = (f"{Path(self.input).name} could not be opened with the "
+                           f"`roman_datamodels` package: {e} "
+                           f"This file will be loaded with the `asdf` package directly.")
+                self._loader_message(msg_txt, color='warning',
+                                     traceback=Exception(msg_txt), cause=e, raise_msg=True)
+
+        output = None
+        try:
+            # opening or accessing the data may require optional dependencies
+            # from roman_datamodels, e.g., lz4 for decompression
+            output = asdf.open(self.input)
+            # requesting 'roman' matches the check in the image importer
+            _ = hasattr(output['roman']['data'], '_')
+
+        except ImportError as e:
+            # output isn't cached when raising, so _cleanup can't close it later
+            if output is not None:
+                output.close()
+
+            msg_txt = f"{Path(self.input).name} could not be opened: {e}"
+            if not HAS_ROMAN_DATAMODELS:
+                msg_txt += " To install optional jdaviz dependencies for Roman, you can run: "\
+                           "pip install -U jdaviz[roman]"
+            self._loader_message(msg_txt, color='error',
+                                 traceback=Exception(msg_txt), cause=e, raise_msg=True)
+
+        return output
 
     def _cleanup(self):
         if 'output' not in self.__dict__:

@@ -4,6 +4,7 @@ import threading
 import warnings
 from contextlib import contextmanager
 from functools import cached_property
+from pathlib import Path
 from traitlets import Bool, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
@@ -85,13 +86,14 @@ class FormatSelect(SelectPluginComponent):
     @observe('filters', 'debug')
     def _update_items(self, msg={}, reset_selection=False):
         skip_if_current_valid = not reset_selection
+        # reset before any early return so stale parsers (and their messages) aren't displayed
+        self._parsers = {}
         if not self.plugin.is_valid:
             self.items = []
             self._apply_default_selection(skip_if_current_valid=skip_if_current_valid)
             return
 
         all_formats = []
-        self._parsers = {}
         self._dbg_importers = {}
         self._invalid_importers = {}
         self._importers = {}
@@ -114,7 +116,8 @@ class FormatSelect(SelectPluginComponent):
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin._app, parser_input)
                 self._parsers[parser_name] = this_parser
-                if this_parser.is_valid:
+                parser_is_valid = this_parser.is_valid
+                if parser_is_valid:
                     try:
                         importer_input = this_parser.output
                     except Exception as e:
@@ -122,7 +125,7 @@ class FormatSelect(SelectPluginComponent):
                         this_parser._cleanup()
                         continue
                 else:
-                    self._invalid_importers[parser_name] = this_parser.is_valid.message
+                    self._invalid_importers[parser_name] = parser_is_valid.message
                     this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
@@ -148,7 +151,8 @@ class FormatSelect(SelectPluginComponent):
                     if self.debug:
                         self._dbg_importers[label] = this_importer
 
-                    if this_importer.is_valid:
+                    this_importer_is_valid = this_importer.is_valid
+                    if this_importer_is_valid:
                         if self._is_valid_item(this_importer):
                             item = {'label': importer_name,
                                     'parser': parser_name,
@@ -185,7 +189,7 @@ class FormatSelect(SelectPluginComponent):
                             # target filters
                             self._importers[importer_name] = this_importer
                     else:
-                        self._invalid_importers[label] = this_importer.is_valid.message
+                        self._invalid_importers[label] = this_importer_is_valid.message
 
         # if any choice has a non-zero/default confidence score, then sort by score
         # for any items with the same score, original ordering (ie import order in
@@ -233,6 +237,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     file_timeout = FloatHandleEmpty(10).tag(sync=True)
 
     importer_widget = Unicode().tag(sync=True)
+    parser_widgets = List().tag(sync=True)
 
     @classmethod
     def is_available(cls, app):
@@ -984,6 +989,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
     def _on_format_selected_changed(self, change={}):
         if self.format_selected == '':
             self.importer_widget = ''
+            # nothing can be loaded, so show messages from any/all parsers
+            # (currently used for loading roman files when missing the dependency)
+            self.parser_widgets = ["IPY_MODEL_" + parser.model_id
+                                   for parser in self.format._parsers.values()]
 
             if (hasattr(self.format._invalid_importers, 'keys') and
                self.format._invalid_importers.keys()):
@@ -992,6 +1001,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, FootprintDispl
                 self.valid_import_formats = ", ".join(self._get_valid_import_formats())
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
+            self.parser_widgets = ["IPY_MODEL_" + self.parser.model_id]
             self.valid_import_formats = ''
 
             self.importer.reset_and_check_existing_data_in_dc()
@@ -1593,13 +1603,15 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         return ''
 
 
-def _format_resolver_error(resolver_dict, formats=None, no_align=False):
+def _format_resolver_error(resolver_dict, formats=None, no_align=False, inp=None):
     """
     Format a resolver results dictionary into a readable table string.
 
     Formats the dictionary of resolver outcomes (failed or valid) into a
     human-readable, dot-aligned table. When ``formats`` is provided,
     only entries whose key contains one of the requested format strings are shown.
+    When ``inp`` is a file path, nested parser entries that don't apply to its
+    file extension are hidden.
 
     Parameters
     ----------
@@ -1612,6 +1624,12 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
         included. Top-level (non-nested) entries are always shown.
     no_align : bool, optional
         If True, do not attempt to align resolver/format names with dots.
+    inp : str, os.PathLike, or None, optional
+        The input being loaded. When it's a file path with a recognized
+        extension, nested entries for parsers that don't apply are hidden,
+        and failures of the extension's expected parser (which never reach
+        the importers) are labeled 'parser > format' for each requested
+        importer format so they aren't hidden by the format filter.
 
     Returns
     -------
@@ -1681,6 +1699,53 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
         # No arrow: use substring matching logic
         return _check_substring_match(key, formats)
 
+    # Parsers to show based on the input file extension. 'primary' is the expected
+    # parser per extension. If 'exclude' is given, only those parsers are hidden,
+    # otherwise only the primary parser is shown. Extensions not listed are left unfiltered.
+    fits_ext_filter = {'primary': ('fits',), 'exclude': ('jpgpng', 'asdf', 'Regions')}
+    jpgpng_ext_filter = {'primary': ('jpgpng',)}
+    ext_parser_filters = {
+        '.fits': fits_ext_filter,
+        '.fit': fits_ext_filter,
+        '.asdf': {'primary': ('asdf',)},
+        '.jpg': jpgpng_ext_filter,
+        '.jpeg': jpgpng_ext_filter,
+        '.png': jpgpng_ext_filter,
+        '.reg': {'primary': ('Regions',)},
+    }
+    ext = Path(inp).suffix.lower() if isinstance(inp, (str, os.PathLike)) else ''
+    ext_filter = ext_parser_filters.get(ext, {})
+    primary_parsers = ext_filter.get('primary', ())
+    excluded_parsers = ext_filter.get('exclude')
+    importer_formats = [fmt for fmt in (formats or [])
+                        if fmt in loader_importer_registry.members]
+
+    def _matches_extension(key):
+        """
+        Return True if the parser in *key* ('parser' or 'parser > importer')
+        applies to the input's file extension.
+        """
+        parser_name = key.split(' > ')[0]
+        if excluded_parsers is not None:
+            return parser_name not in excluded_parsers
+        return not primary_parsers or parser_name in primary_parsers
+
+    def _filter_entries(entries):
+        """
+        Filter nested entries by file extension and requested formats.
+        """
+        filtered = {}
+        for key, status in entries.items():
+            if not _matches_extension(key):
+                continue
+            if importer_formats and key in primary_parsers:
+                # the expected parser failed before reaching any importer
+                for fmt in importer_formats:
+                    filtered.setdefault(f'{key} > {fmt}', status)
+            elif _matches_format(key):
+                filtered[key] = status
+        return filtered
+
     lines = []
 
     if 'object' in resolver_dict:
@@ -1690,8 +1755,7 @@ def _format_resolver_error(resolver_dict, formats=None, no_align=False):
     for resolver_name, resolver_info in resolver_dict.items():
         status_str = str(resolver_info).replace('\n', ' ')
         if isinstance(resolver_info, dict):
-            filtered = {k: v for k, v in resolver_info.items()
-                        if _matches_format(k)}
+            filtered = _filter_entries(resolver_info)
             if not filtered:
                 continue
 
@@ -1733,8 +1797,9 @@ def find_matching_resolver(app,
                 raise e
             continue
 
-        if not this_resolver.is_valid:
-            invalid_resolvers[resolver_name] = this_resolver.is_valid.message
+        this_resolver_is_valid = this_resolver.is_valid
+        if not this_resolver_is_valid:
+            invalid_resolvers[resolver_name] = this_resolver_is_valid.message
             continue
 
         if not len(this_resolver.format.items):
@@ -1754,7 +1819,7 @@ def find_matching_resolver(app,
 
     if len(valid_resolvers) == 0:
         msg = (f'No valid loaders found for input. Tried:\n\n'
-               f'{_format_resolver_error(invalid_resolvers, formats=formats)}\n')  # noqa
+               f'{_format_resolver_error(invalid_resolvers, formats=formats, inp=inp)}\n')  # noqa
         raise ValueError(msg)
     elif len(valid_resolvers) > 1:
         # Convert valid_resolvers to a dict structure for formatting

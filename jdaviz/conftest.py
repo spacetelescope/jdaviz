@@ -8,6 +8,7 @@ import warnings
 
 import numpy as np
 import pytest
+from asdf import AsdfFile
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import CCDData, StdDevUncertainty
@@ -18,6 +19,7 @@ from astropy.utils.masked import Masked
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz, App
 from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
+                                              create_example_gwcs,
                                               _image_hdu_nowcs,
                                               _image_hdu_wcs,
                                               _image_nddata_wcs)
@@ -774,6 +776,29 @@ def image_nddata_wcs():
 @pytest.fixture
 def image_nddata_wcs_sb():
     return _image_nddata_wcs(unit=u.Unit('Jy/sr'))
+
+
+@pytest.fixture
+def roman_asdf_tree():
+    # looks like a Roman image but isn't a roman_datamodels model, with units on the data
+    shape = (4, 4)
+    x = np.arange(np.prod(shape), dtype=np.float32).reshape(shape)
+    return {
+        "meta": {"name": "roman asdf tree", "telescope": "ROMAN",
+                 "wcs": create_example_gwcs(shape)},
+        "data": x * u.Jy,
+        "dq": np.zeros_like(x, dtype=np.int32),
+        "err": np.ones_like(x, dtype=np.float32),
+        "var_poisson": np.ones_like(x, dtype=np.float64),
+        "chisq": np.ones_like(x, dtype=np.float64)
+    }
+
+
+@pytest.fixture
+def roman_asdf_file(tmp_path, roman_asdf_tree):
+    path = tmp_path / 'roman.asdf'
+    AsdfFile({'roman': roman_asdf_tree}).write_to(path)
+    return str(path)
 
 
 # Copied over from https://github.com/spacetelescope/ci_watson
