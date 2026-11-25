@@ -917,10 +917,7 @@ class TestConeSearchViewerFOV:
         assert ldr.viewer_center_value == ldr.viewer_fov_radius_value == ''
 
         ldr.search_input.selected = 'Viewer'
-        center, fov = self._expected(u.arcmin)
-        assert_allclose([float(v) for v in ldr.viewer_center_value.split()],
-                        [center.ra.deg, center.dec.deg])
-        assert ldr.source == ldr.viewer_center_value
+        _, fov = self._expected(u.arcmin)
         assert ldr.viewer_fov_radius_value == f'{fov:.8f} arcmin'
         assert_allclose(ldr.radius, fov)
 

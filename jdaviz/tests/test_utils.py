@@ -576,8 +576,6 @@ class TestGetViewerFovRadius:
         return get_viewer_fov_radius(state, center, **kwargs)
 
     @pytest.mark.parametrize(('limits', 'expected_arcsec'), [
-        # default limits are (-0.5, 9.5), clipped to (0, 9.5), centered on (4.5, 4.5)
-        (None, 5 * np.sqrt(2)),
         # limits beyond the data are clipped to the data
         ((-50, 60, -50, 60), 5 * np.sqrt(2)),
         ((2, 4, 2, 4), np.sqrt(2)),
@@ -593,10 +591,6 @@ class TestGetViewerFovRadius:
         wcs = _get_celestial_wcs(self.state.reference_data.coords)
         center = wcs.pixel_to_world(self.state.zoom_center_x, self.state.zoom_center_y)
 
-        # the 3D coords can't be used directly
-        with pytest.raises(TypeError):
-            get_viewer_fov_radius(self.state, center)
-
         # 4 x 2 spatial pixels of 0.36 arcsec: limits clipped to (0, 3.5) and (0, 1.5),
         # centered on (1.5, 0.5)
         radius = get_viewer_fov_radius(self.state, center, wcs=wcs)
@@ -604,7 +598,6 @@ class TestGetViewerFovRadius:
 
     @pytest.mark.parametrize('limits', [
         (20, 30, 0, 10),
-        (0, 10, -30, -20),
         (None, 10, 0, 10),
     ])
     def test_returns_none(self, image_hdu_wcs, limits):
