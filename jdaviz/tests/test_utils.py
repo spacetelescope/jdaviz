@@ -7,8 +7,11 @@ import ipywidgets.widgets.widget as _widget_mod
 from comm import DummyComm
 
 import pytest
+from astropy import units as u
 from astropy.io import fits
 from astropy.units.quantity import Quantity
+from astropy.wcs import WCS
+from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.core.loaders import SpectrumImporter
@@ -17,7 +20,8 @@ from jdaviz.utils import (alpha_index, download_uri_to_path,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
                           create_data_hash, parallelize_calculation,
                           in_ra_comps, in_dec_comps,
-                          suppress_widget_comms, SnackbarQueue)
+                          suppress_widget_comms, SnackbarQueue, get_viewer_fov_radius,
+                          _get_celestial_wcs)
 from jdaviz.core.events import SnackbarMessage
 
 
@@ -548,3 +552,86 @@ class TestSnackbarQueue:
         self._put('suppressed')
         assert self.history_texts == ['suppressed']
         assert not self.state.snackbar['show']
+
+
+class TestGetViewerFovRadius:
+
+    @pytest.fixture(autouse=True)
+    def _setup(self, deconfigged_helper):
+        self.helper = deconfigged_helper
+
+    def _load_data(self, data, data_format):
+        self.helper.load(data, format=data_format)
+        if data_format == 'Image':
+            self.wcs = WCS(data.header)
+        elif 'Spectrum' in data_format:
+            self.wcs = data.wcs
+        self.state = self.helper.viewers[data_format]._obj.glue_viewer.state
+
+    def _radius(self, limits=None, center_xy=None, **kwargs):
+        state = self.state
+        if limits is not None:
+            state.x_min, state.x_max, state.y_min, state.y_max = limits
+        center = self.wcs.pixel_to_world(*(center_xy or (state.zoom_center_x, state.zoom_center_y)))
+        return get_viewer_fov_radius(state, center, **kwargs)
+
+    @pytest.mark.parametrize(('limits', 'expected_arcsec'), [
+        # default limits are (-0.5, 9.5), clipped to (0, 9.5), centered on (4.5, 4.5)
+        (None, 5 * np.sqrt(2)),
+        # limits beyond the data are clipped to the data
+        ((-50, 60, -50, 60), 5 * np.sqrt(2)),
+        ((2, 4, 2, 4), np.sqrt(2)),
+    ])
+    def test_radius(self, image_hdu_wcs, limits, expected_arcsec):
+        self._load_data(image_hdu_wcs, 'Image')
+        radius = self._radius(limits)
+        assert radius.unit == u.deg
+        assert_allclose(radius.to_value(u.arcsec), expected_arcsec, rtol=1e-4)
+
+    def test_radius_cube(self, spectrum1d_cube):
+        self._load_data(spectrum1d_cube, '3D Spectrum')
+        wcs = _get_celestial_wcs(self.state.reference_data.coords)
+        center = wcs.pixel_to_world(self.state.zoom_center_x, self.state.zoom_center_y)
+
+        # the 3D coords can't be used directly
+        with pytest.raises(TypeError):
+            get_viewer_fov_radius(self.state, center)
+
+        # 4 x 2 spatial pixels of 0.36 arcsec: limits clipped to (0, 3.5) and (0, 1.5),
+        # centered on (1.5, 0.5)
+        radius = get_viewer_fov_radius(self.state, center, wcs=wcs)
+        assert_allclose(radius.to_value(u.arcsec), np.hypot(2, 1) * 0.36, rtol=1e-4)
+
+    @pytest.mark.parametrize('limits', [
+        (20, 30, 0, 10),
+        (0, 10, -30, -20),
+        (None, 10, 0, 10),
+    ])
+    def test_returns_none(self, image_hdu_wcs, limits):
+        self._load_data(image_hdu_wcs, 'Image')
+        assert self._radius(limits) is None
+
+    def test_no_reference_data(self, image_hdu_wcs):
+        self._load_data(image_hdu_wcs, 'Image')
+        self.helper.new_viewers['Image']()
+        new_state = self.helper.viewers['Image (1)']._obj.glue_viewer.state
+        assert get_viewer_fov_radius(new_state, None) is None
+
+    def test_nan_corners(self, image_hdu_wcs):
+        class _NaNWCS:
+            # mimics a GWCS that returns NaN outside its bounding box
+            def __init__(self, wcs, mask):
+                self.wcs, self.mask = wcs, mask
+
+            def pixel_to_world(self, x, y):
+                return self.wcs.pixel_to_world(np.where(self.mask, np.nan, x), y)
+
+        self._load_data(image_hdu_wcs, 'Image')
+        # corners are (0, 0), (0, 10), (10, 10), (10, 0): drop the farthest one
+        limits = (0, 10, 0, 10)
+        radius = self._radius(limits, (0, 0),
+                              wcs=_NaNWCS(self.wcs, [False, False, True, False]))
+        assert_allclose(radius.to_value(u.arcsec), 10, rtol=1e-4)
+
+        with pytest.warns(RuntimeWarning, match='All-NaN slice encountered'):
+            assert self._radius(limits, wcs=_NaNWCS(self.wcs, [True] * 4)) is None
