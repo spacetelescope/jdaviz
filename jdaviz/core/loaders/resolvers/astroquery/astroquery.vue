@@ -106,6 +106,26 @@
           :api_hints_enabled="api_hints_enabled"
           hint="Select the data from which to retrieve target coordinates."
         />
+        <v-row>
+          <v-col>
+            <plugin-select
+              :items="potential_ra_keys.map(i => i.label)"
+              v-model:selected="ra_key_selected"
+              :show_if_single_entry="false"
+              label="RA key"
+              hint="Select metadata key to use for RA"
+            ></plugin-select>
+          </v-col>
+          <v-col>
+            <plugin-select
+              :items="potential_dec_keys.map(i => i.label)"
+              v-model:selected="dec_key_selected"
+              :show_if_single_entry="false"
+              label="Dec key"
+              hint="Select metadata key to use for Dec"
+            ></plugin-select>
+          </v-col>
+        </v-row>
         <span class="text-medium-emphasis" style="font-size: 0.875rem; margin-top: -6px; padding-left: 8px">{{ source }}</span>
       </div>
 
