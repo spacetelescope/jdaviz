@@ -74,7 +74,8 @@ class VOResolver(BaseConeSearchResolver):
                 "query_progress",
                 "resource_filter_coverage", "waveband", "resource",
                 "max_results",
-                "query_archive"
+                "query_archive",
+                "radius_sync_with_viewer_fov"
             ],
         )
 

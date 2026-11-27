@@ -18,7 +18,7 @@ from jdaviz.core.events import CatalogResultsChangedMessage, CatalogSelectClickE
 from jdaviz.core.marks import CatalogMark
 from jdaviz.core.template_mixin import Table, TableMixin
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.utils import get_top_layer_index
+from jdaviz.utils import get_top_layer_index, get_viewer_fov_radius
 
 __all__ = ['Catalogs']
 
@@ -238,19 +238,23 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
         y_center = (viewer.state.y_min + viewer.state.y_max) * 0.5
         skycoord_center = viewer.state.reference_data.coords.pixel_to_world(x_center, y_center)
 
-        # obtains the viewer's zoom limits based on the visible layer
+        # radius for querying the region is based on the distance between the center point
+        # and the farthest visible corner of the data
+        zoom_radius = get_viewer_fov_radius(viewer.state, skycoord_center)
+        if zoom_radius is None:
+            self.hub.broadcast(SnackbarMessage(
+                "Couldn't determine search radius: viewer doesn't overlap the data "
+                "or WCS couldn't be evaluated.", color='warning', sender=self))
+            self.results_available = False
+            self.number_of_results = 0
+            return
+
+        # obtains the viewer's zoom limits based on the visible layer (used to filter results)
         ny, nx = viewer.state.reference_data.shape
         zoom_x_min = max(0, viewer.state.x_min)
         zoom_x_max = min(nx, viewer.state.x_max)
         zoom_y_min = max(0, viewer.state.y_min)
         zoom_y_max = min(ny, viewer.state.y_max)
-        zoom_coordinate = viewer.state.reference_data.coords.pixel_to_world(
-            [zoom_x_min, zoom_x_min, zoom_x_max, zoom_x_max],
-            [zoom_y_min, zoom_y_max, zoom_y_max, zoom_y_min])
-
-        # radius for querying the region is based on:
-        # the distance between the longest zoom limits and the center point
-        zoom_radius = max(skycoord_center.separation(zoom_coordinate))
 
         max_sources_used = False
 

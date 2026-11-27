@@ -170,7 +170,6 @@ def test_link_type_autocoord(imviz_helper):
     # Use Viewer mode so that link-type changes trigger auto-centering
     vo_ldr.search_input.selected = "Viewer"
     vo_ldr.viewer.selected = "imviz-0"
-    vo_ldr.center_on_data()
     ra_str, dec_str = vo_ldr.source.split()
     np.testing.assert_allclose(float(ra_str), 284.2101962057667)
     np.testing.assert_allclose(float(dec_str), 32.23616603681311)
