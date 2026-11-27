@@ -1189,7 +1189,7 @@ class PrivateApplication(VuetifyTemplate, HubListener):
 
     def get_subsets(self, subset_name=None, spectral_only=False,
                     spatial_only=False, object_only=False,
-                    simplify_spectral=True, use_display_units=False,
+                    simplify_spectral=True, use_display_units=True,
                     include_sky_region=False, wrt_data=None):
         """
         Returns all branches of glue subset tree in the form that subset plugin
