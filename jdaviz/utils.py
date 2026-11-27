@@ -1461,9 +1461,8 @@ def get_viewer_fov_radius(state, skycoord_center, wcs=None):
             or None in (state.x_min, state.x_max, state.y_min, state.y_max)):
         return None
 
-    nx, ny = ref_data.shape[x_axis], ref_data.shape[y_axis]
-    x_min, x_max = max(0, state.x_min), min(nx, state.x_max)
-    y_min, y_max = max(0, state.y_min), min(ny, state.y_max)
+    x_min, x_max = max(0, state.x_min), state.x_max
+    y_min, y_max = max(0, state.y_min), state.y_max
     if x_min >= x_max or y_min >= y_max:
         return None
 

@@ -576,8 +576,8 @@ class TestGetViewerFovRadius:
         return get_viewer_fov_radius(state, center, **kwargs)
 
     @pytest.mark.parametrize(('limits', 'expected_arcsec'), [
-        # limits beyond the data are clipped to the data
-        ((-50, 60, -50, 60), 5 * np.sqrt(2)),
+        # limits are not clipped to data bounds
+        ((-50, 60, -50, 60), 55 * np.sqrt(2)),
         ((2, 4, 2, 4), np.sqrt(2)),
     ])
     def test_radius(self, image_hdu_wcs, limits, expected_arcsec):
@@ -597,7 +597,7 @@ class TestGetViewerFovRadius:
         assert_allclose(radius.to_value(u.arcsec), np.hypot(2, 1) * 0.36, rtol=1e-4)
 
     @pytest.mark.parametrize('limits', [
-        (20, 30, 0, 10),
+        (10, 10, 0, 10),  # x_min >= x_max
         (None, 10, 0, 10),
     ])
     def test_returns_none(self, image_hdu_wcs, limits):
