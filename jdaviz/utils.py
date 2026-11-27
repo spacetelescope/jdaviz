@@ -67,6 +67,15 @@ SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
                              'Velocity', 'Wavenumber',
                              'World 0', 'World 1',
                              'Pixel Axis 0 [x]', 'Pixel Axis 1 [x]')
+
+# regular expressions to guess which columns correspond to ra, dec, x, y
+COORD_PATTERNS = {
+    "ra": re.compile(r'^ra$|^ra|ra$|^rightascension$|^rightascension|rightascension$|^right$|^ascension$', re.IGNORECASE), # noqa
+    "dec": re.compile(r'^dec$|^dec|dec$|^declination$|^declination|declination$', re.IGNORECASE), # noqa
+    "x": re.compile(r'^x(pix(el)?)$|^x$|^x', re.IGNORECASE),
+    "y": re.compile(r'^y(pix(el)?)$|^y$|^y', re.IGNORECASE),
+}
+
 COORD_WORDS_TO_EXCLUDE = ['radius', 'radio', 'radial', 'extragalactic',
                           'infrared', 'fraction', 'gradient', 'ratio',
                           'integrated,' 'radian', 'random', 'parallax', 'range',

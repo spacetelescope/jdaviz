@@ -43,18 +43,12 @@ from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
                           find_polygon_mark_with_skewer, _get_celestial_wcs,
-                          layer_is_image_data, COORD_WORDS_TO_EXCLUDE)
+                          layer_is_image_data, COORD_WORDS_TO_EXCLUDE, COORD_PATTERNS)
 from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMessage,
                                SubsetCreateMessage, SubsetDeleteMessage)
 
 
 __all__ = ['BaseResolver', 'BaseConeSearchResolver', 'find_matching_resolver']
-
-# regular expressions to guess which meta fields correspond to ra and dec
-COORD_PATTERNS = {
-    "ra": re.compile(r'^ra$|^ra|ra$|^rightascension$|^rightascension|rightascension$|^right$|^ascension$', re.IGNORECASE), # noqa
-    "dec": re.compile(r'^dec$|^dec|dec$|^declination$|^declination|declination$', re.IGNORECASE), # noqa
-}
 
 
 class FormatSelect(SelectPluginComponent):
@@ -1352,6 +1346,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             # Recursively handle nested dictionaries
             if isinstance(value, dict):
                 coord_matches = coord_matches | self._coord_from_meta_dict(coord, value)
+                continue
 
             tokens = re.split(r'[\s_\-\.]+', str(key).lower().strip())
 
@@ -1361,7 +1356,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             if any(pattern.search(t) for t in tokens):
                 try:
                     coord_matches[key] = float(value)
-                except ValueError:
+                except ValueError, TypeError:
                     continue
 
         return coord_matches
@@ -1389,6 +1384,10 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         self.metadata_dec = target_coords['dec'] if 'dec' in target_coords else {}
         self.potential_dec_keys = [{'label': k, 'value': k} for k in self.metadata_dec.keys()]
 
+        if not len(self.potential_ra_keys) or not len(self.potential_dec_keys):
+            self.source = ""
+            return
+
         self.ra_key_selected = self.potential_ra_keys[0]['value']
         self.dec_key_selected = self.potential_dec_keys[0]['value']
 
@@ -1397,8 +1396,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
 
         self.source = f"{ra:.8f} {dec:.8f}"
 
-    @observe("ra_key_selected", type="change")
-    @observe("dec_key_selected", type="change")
+    @observe("ra_key_selected", "dec_key_selected", type="change")
     def vue_metadata_ra_or_dec_changed(self, _=None):
         if (self.ra_key_selected in (None, '') or self.dec_key_selected in (None, '') or
                 self.ra_key_selected not in self.metadata_ra or

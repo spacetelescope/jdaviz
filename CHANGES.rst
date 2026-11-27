@@ -1,4 +1,4 @@
-5.2.0 (unreleased)
+5.2 (unreleased)
 ================
 
 New Features
