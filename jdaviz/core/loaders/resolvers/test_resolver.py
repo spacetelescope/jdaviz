@@ -956,11 +956,12 @@ class TestConeSearchViewerFOV:
         ldr.coord_follow_viewer_pan = True
         assert ldr.source == ldr.viewer_center_value and ldr.viewer_centered
 
-        # panning off the data clears the FOV, the radius keeps its last value
-        radius = ldr.radius
+        # pan off the data, FOV radius is still calculated
         self.state.x_min, self.state.x_max = 100, 200
-        assert ldr.viewer_fov_radius_value == ''
-        assert ldr.radius == radius
+        # radius is recalculated for the new region
+        new_expected_center, new_expected_fov = self._expected(u.arcmin)
+        assert ldr.viewer_fov_radius_value == f'{new_expected_fov:.8f} arcmin'
+        assert_allclose(ldr.radius, new_expected_fov)
 
     def test_viewer_callbacks(self):
         self.helper.new_viewers['Image']()
