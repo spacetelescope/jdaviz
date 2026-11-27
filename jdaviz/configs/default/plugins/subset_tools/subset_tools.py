@@ -237,7 +237,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
-                    use_display_units=False, wrt_data=None):
+                    use_display_units=True, wrt_data=None):
         """
         Return spatial and/or spectral subsets of ``region_type`` (spatial or
         spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
