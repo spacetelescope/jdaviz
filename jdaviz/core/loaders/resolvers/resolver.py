@@ -1356,7 +1356,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             if any(pattern.search(t) for t in tokens):
                 try:
                     coord_matches[key] = float(value)
-                except ValueError, TypeError:
+                except (ValueError, TypeError):
                     continue
 
         return coord_matches
