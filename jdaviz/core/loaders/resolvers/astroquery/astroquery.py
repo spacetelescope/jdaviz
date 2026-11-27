@@ -5,7 +5,7 @@ from traitlets import Unicode, List
 
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.template_mixin import (
-    SelectPluginComponent,
+    SelectPluginComponent, DatasetSelectMixin,
 )
 from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.user_api import LoaderUserApi
@@ -14,7 +14,7 @@ __all__ = ["AstroqueryResolver"]
 
 
 @loader_resolver_registry("astroquery")
-class AstroqueryResolver(BaseConeSearchResolver):
+class AstroqueryResolver(BaseConeSearchResolver, DatasetSelectMixin):
     template_file = __file__, "astroquery.vue"
 
     telescope_items = List([]).tag(sync=True)

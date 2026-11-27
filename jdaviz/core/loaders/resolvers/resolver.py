@@ -43,7 +43,7 @@ from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
                           find_polygon_mark_with_skewer, _get_celestial_wcs,
-                          layer_is_image_data)
+                          layer_is_image_data, COORD_WORDS_TO_EXCLUDE, COORD_PATTERNS)
 from glue.core.message import (DataCollectionAddMessage, DataCollectionDeleteMessage,
                                SubsetCreateMessage, SubsetDeleteMessage)
 
@@ -1034,6 +1034,12 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
     catalog_items = List([]).tag(sync=True)
     catalog_selected = Unicode("").tag(sync=True)
 
+    # Used for metadata input
+    potential_ra_keys = List([]).tag(sync=True)
+    ra_key_selected = Unicode("").tag(sync=True)
+    potential_dec_keys = List([]).tag(sync=True)
+    dec_key_selected = Unicode("").tag(sync=True)
+
     # Catalog subsets
     catalog_subset_items = List([]).tag(sync=True)
     catalog_subset_selected = Unicode("Entire Catalog").tag(sync=True)
@@ -1076,7 +1082,7 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             self,
             items='search_input_items',
             selected='search_input_selected',
-            manual_options=['Source', 'Viewer', 'Catalog'],
+            manual_options=['Source', 'Viewer', 'Catalog', 'Metadata'],
             apply_filters_to_manual_options=True,
             default_mode='first',
         )
@@ -1122,6 +1128,24 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
             items="catalog_name_col_items",
             selected="catalog_name_col_selected",
         )
+
+        # Let the user select which matching key from the metadata to use for the coords
+        self.ra_key_from_metadata = SelectPluginComponent(
+            self,
+            items="potential_ra_keys",
+            selected="ra_key_selected",
+            default_mode='first',
+        )
+        self.dec_key_from_metadata = SelectPluginComponent(
+            self,
+            items="potential_dec_keys",
+            selected="dec_key_selected",
+            default_mode='first',
+        )
+
+        # Dicts to hold the actual key + value from the metadata
+        self.metadata_ra = {}
+        self.metadata_dec = {}
 
         def _update_catalog_subset_items(msg=None):
             subset_names = [sg.label for sg in self._app.data_collection.subset_groups]
@@ -1314,6 +1338,76 @@ class BaseConeSearchResolver(BaseResolver, LoaderBannerMessagesMixin):
         """When switching to Viewer mode, immediately center on the current viewer."""
         if self.search_input_selected == 'Viewer':
             self.vue_center_on_data()
+
+    def _coord_from_meta_dict(self, coord, meta):
+        pattern = COORD_PATTERNS[coord]
+        coord_matches = {}
+        for key, value in meta.items():
+            # Recursively handle nested dictionaries
+            if isinstance(value, dict):
+                coord_matches = coord_matches | self._coord_from_meta_dict(coord, value)
+                continue
+
+            tokens = re.split(r'[\s_\-\.]+', str(key).lower().strip())
+
+            if any(token in COORD_WORDS_TO_EXCLUDE for token in tokens):
+                continue
+
+            if any(pattern.search(t) for t in tokens):
+                try:
+                    coord_matches[key] = float(value)
+                except (ValueError, TypeError):
+                    continue
+
+        return coord_matches
+
+    @observe("dataset_selected", type="change")
+    def vue_dataset_changed(self, _=None):
+        '''
+        Function to pull potential RA/Dec values from dataset's metadata for use as
+        target of cone search.
+        '''
+        # Check mixin object initialized
+        if not hasattr(self, "dataset"):
+            return
+        target_coords = {}
+        if hasattr(self.dataset.selected_dc_item, 'meta'):
+            meta = self.dataset.selected_dc_item.meta
+
+            for coord in ('ra', 'dec'):
+                target_coord = self._coord_from_meta_dict(coord, meta)
+                if target_coord is not None:
+                    target_coords[coord] = target_coord
+
+        self.metadata_ra = target_coords['ra'] if 'ra' in target_coords else {}
+        self.potential_ra_keys = [{'label': k, 'value': k} for k in self.metadata_ra.keys()]
+        self.metadata_dec = target_coords['dec'] if 'dec' in target_coords else {}
+        self.potential_dec_keys = [{'label': k, 'value': k} for k in self.metadata_dec.keys()]
+
+        if not len(self.potential_ra_keys) or not len(self.potential_dec_keys):
+            self.source = ""
+            return
+
+        self.ra_key_selected = self.potential_ra_keys[0]['value']
+        self.dec_key_selected = self.potential_dec_keys[0]['value']
+
+        ra = self.metadata_ra[self.ra_key_selected]
+        dec = self.metadata_dec[self.dec_key_selected]
+
+        self.source = f"{ra:.8f} {dec:.8f}"
+
+    @observe("ra_key_selected", "dec_key_selected", type="change")
+    def vue_metadata_ra_or_dec_changed(self, _=None):
+        if (self.ra_key_selected in (None, '') or self.dec_key_selected in (None, '') or
+                self.ra_key_selected not in self.metadata_ra or
+                self.dec_key_selected not in self.metadata_dec):
+            self.source = ""
+            return
+
+        ra = self.metadata_ra[self.ra_key_selected]
+        dec = self.metadata_dec[self.dec_key_selected]
+
+        self.source = f"{ra:.8f} {dec:.8f}"
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):

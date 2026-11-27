@@ -54,14 +54,6 @@
           </v-text-field>
         </j-flex-row>
 
-        <plugin-select
-          :items="coordframe_choices.map(i => i.label)"
-          v-model:selected="coordframe_selected"
-          label="Coordinate Frame"
-          api_hint="ldr.coordframe ="
-          :api_hints_enabled="api_hints_enabled"
-          hint="Astronomical Coordinate Frame of the provided Coordinates."
-        ></plugin-select>
       </div>
 
       <!-- Viewer mode -->
@@ -92,16 +84,49 @@
             Automatically adjust coordinates as viewer pans and zooms.
           </div>
         </div>
+      </div>
 
+      <!-- Metadata mode -->
+      <div v-if="search_input_selected === 'Metadata'">
         <plugin-select
-          :items="coordframe_choices.map(i => i.label)"
-          v-model:selected="coordframe_selected"
-          label="Coordinate Frame"
-          api_hint="ldr.coordframe ="
+          :items="data_items"
+          v-model:selected="data_selected"
+          :show_if_single_entry="false"
+          label="Data"
+          api_hint="ldr.dataset ="
           :api_hints_enabled="api_hints_enabled"
-          hint="Astronomical Coordinate Frame of the provided Coordinates."
-          :disabled="true"
-        ></plugin-select>
+          hint="Select a dataset to retrieve target coordinates from metadata."
+        />
+        <plugin-dataset-select
+          :items="dataset_items"
+          v-model:selected="dataset_selected"
+          :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1"
+          label="Data"
+          api_hint='plg.dataset ='
+          :api_hints_enabled="api_hints_enabled"
+          hint="Select the data from which to retrieve target coordinates."
+        />
+        <v-row>
+          <v-col>
+            <plugin-select
+              :items="potential_ra_keys.map(i => i.label)"
+              v-model:selected="ra_key_selected"
+              :show_if_single_entry="false"
+              label="RA key"
+              hint="Select metadata key to use for RA"
+            ></plugin-select>
+          </v-col>
+          <v-col>
+            <plugin-select
+              :items="potential_dec_keys.map(i => i.label)"
+              v-model:selected="dec_key_selected"
+              :show_if_single_entry="false"
+              label="Dec key"
+              hint="Select metadata key to use for Dec"
+            ></plugin-select>
+          </v-col>
+        </v-row>
+        <span class="text-medium-emphasis" style="font-size: 0.875rem; margin-top: -6px; padding-left: 8px">{{ source }}</span>
       </div>
 
       <!-- Catalog mode -->
@@ -170,7 +195,9 @@
             Large catalogs may take significant time.
           </v-alert>
         </j-flex-row>
+      </div>
 
+      <div>
         <plugin-select
           :items="coordframe_choices.map(i => i.label)"
           v-model:selected="coordframe_selected"

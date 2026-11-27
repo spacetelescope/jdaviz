@@ -1,8 +1,10 @@
-5.2.0 (unreleased)
+5.2 (unreleased)
 ================
 
 New Features
 ------------
+
+- Allow pulling coordinates from metadata for astroquery search. [#4571]
 
 Mosviz
 ^^^^^^
